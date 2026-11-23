@@ -9,27 +9,29 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins/quiz"
 )
 
-// F030-AC-20 (T036): the registry resolves only types of the release with a plugin (video_lesson since F065, audio_lesson and simulation since F066).
+// F030-AC-20 (T036): the registry resolves only types of the release with a plugin (video_lesson since F065, audio_lesson
+// and simulation since F066, minigame since F073-AC-14).
 func TestRegistryResolve(t *testing.T) {
 	r := plugins.Registry()
-	for _, ok := range []string{"quiz", "interactive_exercise", "video_lesson", "audio_lesson", "simulation"} {
+	for _, ok := range []string{"quiz", "interactive_exercise", "video_lesson", "audio_lesson", "simulation", "minigame"} {
 		if p, err := r.Resolve(ok); err != nil || string(p.Info().Type) != ok {
 			t.Fatalf("%s: %v", ok, err)
 		}
 	}
-	for _, no := range []string{"minigame", "speaking", "written_response", "project", ""} {
+	for _, no := range []string{"speaking", "written_response", "project", ""} {
 		if _, err := r.Resolve(no); !errors.Is(err, activity.ErrNotSupported) {
 			t.Fatalf("%s: %v", no, err)
 		}
 	}
-	if got := r.Missing([]string{"quiz", "minigame", "minigame"}); len(got) != 1 || got[0] != "minigame" {
+	if got := r.Missing([]string{"quiz", "minigame", "speaking", "speaking"}); len(got) != 1 || got[0] != "speaking" {
 		t.Fatalf("missing: %v", got)
 	}
-	if r.MinClientVersion("quiz") == "" || r.MinClientVersion("minigame") != "" {
+	if r.MinClientVersion("quiz") == "" || r.MinClientVersion("minigame") == "" || r.MinClientVersion("speaking") != "" {
 		t.Fatal("min client version")
 	}
-	if infos := r.Infos(); len(infos) != 5 || infos[0].Type != activity.AudioLesson || infos[1].Type != activity.InteractiveExercise ||
-		infos[2].Type != activity.Quiz || infos[3].Type != activity.Simulation || infos[4].Type != activity.VideoLesson {
+	if infos := r.Infos(); len(infos) != 6 || infos[0].Type != activity.AudioLesson || infos[1].Type != activity.InteractiveExercise ||
+		infos[2].Type != activity.Minigame || infos[3].Type != activity.Quiz || infos[4].Type != activity.Simulation ||
+		infos[5].Type != activity.VideoLesson {
 		t.Fatalf("infos: %v", infos)
 	}
 }

@@ -154,6 +154,9 @@ type Step struct {
 	Count           int         `json:"count,omitempty"`
 	ContentRef      *ContentRef `json:"content_ref,omitempty"`
 	PassRule        *PassRule   `json:"pass_rule,omitempty"`
+	// MiniGameConfigID and MiniGameConfigVersion are the mini-game of a minigame step (F073; no version = current).
+	MiniGameConfigID      string `json:"minigame_config_id,omitempty"`
+	MiniGameConfigVersion *int   `json:"minigame_config_version,omitempty"`
 }
 
 // Targets are the interactables a step points the player at (go_to, collect, discover).

@@ -254,6 +254,9 @@ var (
 		{Name: "active_device_token", Type: field.TypeString, Nullable: true, Size: 128},
 		{Name: "client_platform", Type: field.TypeString, Nullable: true, Size: 64},
 		{Name: "game_session_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "game_score", Type: field.TypeInt, Nullable: true, SchemaType: map[string]string{"postgres": "integer"}},
+		{Name: "game_streak", Type: field.TypeInt, Nullable: true, SchemaType: map[string]string{"postgres": "integer"}},
+		{Name: "minigame_config_version_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// AttemptsTable holds the schema information for the "attempts" table.
 	AttemptsTable = &schema.Table{

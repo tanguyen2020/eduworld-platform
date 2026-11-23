@@ -284,7 +284,7 @@ func (e *env) server(ctx context.Context, t *testing.T) {
 			Options: e.options, TTL: e.profileCfg.SuggestionTTL},
 		World: worldProxy{e}, WorldQueries: e.worldQueries(), Quests: questProxy{e}, QuestQueries: questQueryProxy{e},
 		ProgressionQueries: progressionQueryProxy{e}, EconomyQueries: economyQueryProxy{e}, EconomyCommands: economyCommandProxy{e},
-		LiveOpsQueries: liveQueryProxy{e}, LiveOpsCommands: liveCommandProxy{e}}
+		LiveOpsQueries: liveQueryProxy{e}, LiveOpsCommands: liveCommandProxy{e}, MiniGames: miniGameProxy{e}}
 	if err := gamehttp.Register(s, h); err != nil {
 		t.Fatal(err)
 	}

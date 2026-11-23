@@ -141,3 +141,13 @@ var GameStream = natsx.EventStream("game")
 func QuestLearningEventSubjects() []string {
 	return []string{natsx.EventSubject("game", "quest.completed")}
 }
+
+// MinigameConfigProjectionName is the durable consumer that keeps the projection ref.minigame_config_versions of the
+// mini-game configurations published by module game (F073-AC-04); it reads the platform events content.published of
+// the game stream and keeps item_type minigame_config only.
+const MinigameConfigProjectionName = "learning.minigame_config_projection"
+
+// MinigameConfigProjectionSubjects are the filter subjects of learning.minigame_config_projection.
+func MinigameConfigProjectionSubjects() []string {
+	return []string{natsx.EventSubject("game", "content.published")}
+}

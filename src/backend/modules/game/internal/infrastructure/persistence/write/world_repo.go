@@ -25,6 +25,10 @@ type contentTable struct {
 }
 
 var contentTables = map[string]contentTable{
+	// F073: mini-game configs (question_types = result of validateMinigameQuestionSource at publish).
+	write.ItemMiniGameConfig: {identity: "minigame_configs", idCol: "minigame_config_id", versions: "minigame_config_versions",
+		versionCol: "minigame_config_version_id", parent: []string{"code"}, columns: []string{"code", "minigame_type", "grade_levels", "subject_id",
+			"question_types"}},
 	write.ItemWorldArea: {identity: "world_areas", idCol: "area_id", versions: "world_area_versions", versionCol: "area_version_id",
 		columns: []string{"region_code", "area_class", "subject_code"}},
 	write.ItemStoryChapter: {identity: "story_chapters", idCol: "chapter_code", versions: "story_chapter_versions",
@@ -70,7 +74,7 @@ func (c contentTable) sch() string {
 
 // jsonColumns are the typed version columns stored as jsonb.
 var jsonColumns = map[string]bool{"grade_levels": true, "objective_ids": true, "name": true, "sources": true, "asset_refs": true,
-	"trigger_event_types": true, "decoration_areas": true, "allowed_params": true}
+	"trigger_event_types": true, "question_types": true, "decoration_areas": true, "allowed_params": true}
 
 // GameContentRepo implements write.GameContentStore (platform content, written under PlatformScope only).
 type GameContentRepo struct{}

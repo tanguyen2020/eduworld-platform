@@ -191,6 +191,11 @@ func displayLanguage(acceptLanguage string, title json.RawMessage, contentLangua
 // newActivityAttempt pins the items of an activity version and inserts the attempt with its activity.started events.
 func (h Attempts) newActivityAttempt(ctx context.Context, p authz.Principal, school uuid.UUID, src ActivitySource, mode attempt.Mode, ctxType string,
 	ctxID uuid.UUID, recommendation *uuid.UUID, acceptLanguage, key string, now time.Time) (attempt.Attempt, []question.Rendered, error) {
+	// Mini-game activities (F073-AC-14): the configuration version is pinned and the items come from its question source.
+	if _, ok := src.Plugin.(activity.GameScored); ok {
+		return h.startMinigameActivity(ctx, p, school, src, minigameStart{mode: mode, ctxType: ctxType, ctxID: ctxID,
+			recommendation: recommendation, acceptLanguage: acceptLanguage, key: key, now: now})
+	}
 	seed := randomSeed()
 	allowed := src.Plugin.AllowedQuestionTypes(src.Config)
 	// Media activities (F065): the items are the embedded questions by at_ms, never shuffled; the video must be ready.
@@ -297,7 +302,19 @@ func (h Attempts) Respond(ctx context.Context, in RespondInput) (out dto.Respons
 		now := h.now()
 		ans, err := a.Respond(in.Position, now, pol, pol.AnswerLimit(grade), activity.Bool(v.Config.Interaction.AllowUnscoredRetry, true), in.ClientElapsedMS)
 		if err != nil {
+			// F073-AC-11: a late answer of a timed mini-game (past deadline_at + deadline_grace, or already expired).
+			if a.GameScored() && a.DeadlinePassed(now, pol) {
+				return problem.New(problem.AttemptDeadlinePassed, "")
+			}
 			return attemptProblem(err)
+		}
+		// F073-AC-08: the served moment of the item is the previous answer or the start (read before this answer is stored).
+		var last *time.Time
+		if a.GameScored() {
+			if last, err = h.Store.LastAnsweredAt(ctx, a.ID); err != nil {
+				return err
+			}
+			ans.ServerMS = attempt.ServedInterval(a.StartedAt, last, now)
 		}
 		it, _ := a.Item(in.Position)
 		var pres question.Presentation
@@ -316,6 +333,16 @@ func (h Attempts) Respond(ctx context.Context, in RespondInput) (out dto.Respons
 		}
 		rapid := h.Self.rapidGuess(a, *it, qv, ans, grade)
 		a.Record(ans, g.IsCorrect, score)
+		// F073-AC-08, AC-09: game points from the server interval, the streak and the grade only — never a score,
+		// correctness, game score or elapsed time sent by the client.
+		var game *activity.GamePoints
+		if gs, ok := plugin.(activity.GameScored); ok && a.GameScored() {
+			v.StudentGrade = grade
+			gp := gs.ScoreAnswer(v, activity.GameAnswer{Correct: g.IsCorrect, Scored: ans.IsScored, ServerMS: ans.ServerMS, Streak: a.GameStreak,
+				Score: *a.GameScore})
+			a.ApplyGame(gp)
+			game = &gp
+		}
 		it, _ = a.Item(in.Position)
 		if err := h.Store.UpdateItem(ctx, *it); err != nil {
 			return err
@@ -360,6 +387,11 @@ func (h Attempts) Respond(ctx context.Context, in RespondInput) (out dto.Respons
 				return err
 			}
 			out.Feedback = fb
+			// The game points would reveal the correctness: returned only with the item feedback (F073-AC-08).
+			if game != nil {
+				pts, streak := game.Points, game.Streak
+				out.GamePoints, out.Streak = &pts, &streak
+			}
 		}
 		return idempotency.SetResult(ctx, out)
 	})
@@ -504,6 +536,9 @@ func (h Attempts) gradeAttempt(ctx context.Context, a *attempt.Attempt, reason s
 			}
 		}
 	}
+	// F073-AC-10: the game score kept by the answers and the completion rule of the pinned configuration, apart from the
+	// learning score.
+	mg := outcomeOf(plugin, v, *a, a.ItemResults())
 	if err := a.Submit(h.now(), h.policy(), reason, res); err != nil {
 		return nil, nil, attemptProblem(err)
 	}
@@ -514,14 +549,20 @@ func (h Attempts) gradeAttempt(ctx context.Context, a *attempt.Attempt, reason s
 		return nil, nil, err
 	}
 	evID := ids.New()
-	details, _ := json.Marshal(map[string]any{"items": a.ItemResults(), "strategies": res.Strategies})
+	d := map[string]any{"items": a.ItemResults(), "strategies": res.Strategies}
+	if mg != nil {
+		d["minigame"] = mg.details()
+	}
+	details, _ := json.Marshal(d)
 	if err := h.Store.InsertEvaluation(ctx, write.EvaluationRow{ID: evID, AttemptID: a.ID, Source: "system", Status: "final", Score: res.Score,
 		MaxScore: res.MaxScore, Passed: res.Passed, Details: details, Effective: true}); err != nil {
 		return nil, nil, err
 	}
-	if err := h.graded(ctx, *a, res, evID); err != nil {
+	if err := h.graded(ctx, *a, res, evID, mg); err != nil {
 		return nil, nil, err
 	}
-	return &dto.EvaluationView{EvaluationID: evID, AttemptID: a.ID, Source: "system", Status: "final", Score: res.Score, MaxScore: res.MaxScore,
-		Passed: res.Passed, Effective: true, CreatedAt: *a.GradedAt}, src, nil
+	ev := &dto.EvaluationView{EvaluationID: evID, AttemptID: a.ID, Source: "system", Status: "final", Score: res.Score, MaxScore: res.MaxScore,
+		Passed: res.Passed, Effective: true, CreatedAt: *a.GradedAt}
+	mg.view(ev)
+	return ev, src, nil
 }

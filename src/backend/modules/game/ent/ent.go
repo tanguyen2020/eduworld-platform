@@ -48,6 +48,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfig"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfigversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameplay"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
@@ -177,6 +180,9 @@ func checkColumn(t, c string) error {
 			levelsession.Table:              levelsession.ValidColumn,
 			levelversion.Table:              levelversion.ValidColumn,
 			loginevent.Table:                loginevent.ValidColumn,
+			minigameconfig.Table:            minigameconfig.ValidColumn,
+			minigameconfigversion.Table:     minigameconfigversion.ValidColumn,
+			minigameplay.Table:              minigameplay.ValidColumn,
 			nicknamechange.Table:            nicknamechange.ValidColumn,
 			npcdialogue.Table:               npcdialogue.ValidColumn,
 			npcdialogueversion.Table:        npcdialogueversion.ValidColumn,

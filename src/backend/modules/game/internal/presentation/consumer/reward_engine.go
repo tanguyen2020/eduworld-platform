@@ -97,6 +97,11 @@ func Trigger(e outbox.Envelope) (uuid.UUID, reward.Trigger, error) {
 		if p.Passed == nil || *p.Passed { // activity.completed needs the pass rule met (PROGRESSION_SYSTEM §3.1)
 			t.SourceCodes = []string{"activity.completed"}
 		}
+		if p.Mode == "minigame" {
+			// F073: a free mini-game play is rewarded once through minigame.completed (reward_rule_id, plays of the day), never
+			// a second time through its activity.graded.
+			t.SourceCodes = nil
+		}
 		return p.StudentID, t, nil
 	case "lesson.completed":
 		var p struct {
@@ -164,6 +169,34 @@ func Trigger(e outbox.Envelope) (uuid.UUID, reward.Trigger, error) {
 			t.SourceCodes = []string{"quest.daily_completed"}
 		case "weekly":
 			t.SourceCodes = []string{"quest.weekly_completed"}
+		}
+		return p.StudentID, t, nil
+	case "minigame.completed":
+		var p struct {
+			PlayID          uuid.UUID  `json:"play_id"`
+			StudentID       uuid.UUID  `json:"student_id"`
+			ConfigID        uuid.UUID  `json:"minigame_config_id"`
+			ConfigVersionID uuid.UUID  `json:"minigame_config_version_id"`
+			CorrectCount    *int       `json:"correct_count"`
+			ItemCount       *int       `json:"item_count"`
+			CompletionMet   bool       `json:"completion_met"`
+			RewardsEligible bool       `json:"rewards_eligible"`
+			RewardRuleID    *uuid.UUID `json:"reward_rule_id"`
+			GradeLevels     []int      `json:"grade_levels"`
+			SubjectID       *uuid.UUID `json:"subject_id"`
+		}
+		if err := decode(e, &p); err != nil {
+			return uuid.Nil, t, err
+		}
+		if p.PlayID == uuid.Nil || p.StudentID == uuid.Nil || p.ConfigID == uuid.Nil || p.ConfigVersionID == uuid.Nil || !grades(p.GradeLevels) {
+			return uuid.Nil, t, invalid(e.EventType, "play_id, student_id and the minigame config are required")
+		}
+		config, version := p.ConfigID, p.ConfigVersionID
+		t.SourceType, t.SourceID, t.ContentID, t.ContentVersionID, t.Mode = "minigame", p.PlayID, &config, &version, "minigame"
+		t.CorrectCount, t.ItemCount, t.FirstTryCorrect, t.ContentGrades, t.SubjectID = p.CorrectCount, p.ItemCount, p.CorrectCount, p.GradeLevels, p.SubjectID
+		t.RuleID = p.RewardRuleID
+		if p.CompletionMet && p.RewardsEligible { // F073-AC-19: a play over max_plays_per_day earns nothing (practice only)
+			t.SourceCodes = []string{"activity.completed"}
 		}
 		return p.StudentID, t, nil
 	case "world.discovery_found":

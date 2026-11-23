@@ -43,6 +43,10 @@ type Attempts struct {
 	Assignments AssignmentResults
 	// Recommendations reads the active recommendations of the student for the review (F063-AC-24); nil = none.
 	Recommendations ReviewRecommendations
+	// Minigames and Students serve the mini-game attempts (F073): the pinned configuration version and the grade of the
+	// student (no speed bonus announced for grades 1–5); nil = the mini-game attempts cannot be read.
+	Minigames read.MinigameConfigReadModel
+	Students  port.StudentDirectory
 }
 
 // ReviewRecommendations reads the active recommendations of a student (read.SelfStudyModel).
@@ -188,12 +192,15 @@ func (q Attempts) load(ctx context.Context, id uuid.UUID) (out loaded, err error
 		if out.ev, err = q.Model.Evaluation(ctx, id); err != nil {
 			return err
 		}
-		if a.ActivityID != nil {
+		if a.ActivityID != nil && a.SourceKind != attemptview.SourceKindMinigameConfig {
 			src, err := q.source(ctx, *a.ActivityID, a.SourceVersionID)
 			if err != nil {
 				return err
 			}
 			out.src = &src
+		}
+		if err := q.minigame(ctx, &out); err != nil {
+			return err
 		}
 		if q.Runs != nil && a.ActivityType == string(activity.Simulation) {
 			if out.runs, err = q.Runs.RunCount(ctx, a.ID); err != nil {

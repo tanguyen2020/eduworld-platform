@@ -1,7 +1,7 @@
 extends Node
 ## Autoload `ActivityRendererRegistry` (GODOT_ARCHITECTURE §6.2, ADR-0048, ACTIVITY_ENGINE §12): `activity_type` →
 ## renderer scene under scenes/learning/activity_renderers/. F063 registers `quiz` and `interactive_exercise`,
-## F065 `video_lesson`, F066 `audio_lesson` and `simulation`; F073 (`minigame`) adds its own. Before a renderer is
+## F065 `video_lesson`, F066 `audio_lesson` and `simulation`, F073 `minigame` (MiniGameHost + MiniGameRegistry). Before a renderer is
 ## opened, `check()` refuses an unknown type or a version newer than this client (`ActivityRender.min_client_version`,
 ## `ContentManifest.activity_min_client_versions`): the player shows "update required" instead (F063-AC-25).
 
@@ -16,6 +16,7 @@ var renderers: Dictionary = {
 	"video_lesson": "res://scenes/learning/activity_renderers/video_lesson/VideoLessonRenderer.tscn",
 	"audio_lesson": "res://scenes/learning/activity_renderers/audio_lesson/AudioLessonRenderer.tscn",
 	"simulation": "res://scenes/learning/activity_renderers/simulation/SimulationRenderer.tscn",
+	"minigame": "res://scenes/learning/activity_renderers/minigame/MinigameRenderer.tscn",
 }
 
 

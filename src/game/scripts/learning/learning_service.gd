@@ -20,6 +20,10 @@ signal access_denied(code: String)
 const PATH_ACTIVITIES: String = "/learning/activities/%s/attempts"
 const PATH_ATTEMPTS: String = "/learning/activity-attempts"
 const PATH_LESSON: String = "/learning/lessons/%s"
+## `startMiniGame` of module game (F073): free play / quest-step mini-game → `MiniGameSession`.
+const PATH_MINIGAME_START: String = "/game/minigames/%s:start"
+## `startMiniGame` body `context_type` enum (specs/openapi).
+const MINIGAME_CONTEXTS: PackedStringArray = ["free_play", "quest_step", "assignment"]
 const CODE_ALREADY_SUBMITTED: String = "ATTEMPT_ALREADY_SUBMITTED"
 const CODE_NOT_SUPPORTED: String = "ACTIVITY_TYPE_NOT_SUPPORTED"
 const CODE_HINTS_EXHAUSTED: String = "HINTS_EXHAUSTED"
@@ -43,6 +47,8 @@ const ACCESS_DENIED_CODES: PackedStringArray = [
 ]
 const TELEMETRY_UPDATE_REQUIRED: String = "activity_update_required"
 const TELEMETRY_MATH_FAILED: String = "math_svg_failed"
+## A `minigame_type` this client has no scene for (F073-AC-21).
+const TELEMETRY_MINIGAME_UPDATE_REQUIRED: String = "minigame_update_required"
 const TELEMETRY_OPEN_KIND: String = "activity_open"
 const SCENE_CODE: String = "activity_host"
 
@@ -137,6 +143,39 @@ func start(args: Dictionary) -> AttemptModel:
 		_failed(result)
 		return null
 	return _loaded(result)
+
+
+## Coroutine: starts (or resumes) a mini-game from its configuration (`startMiniGame`, F073; MINIGAME_ENGINE §5):
+## `POST /game/minigames/{id}:start` with an Idempotency-Key kept on retry and `{context_type, context_id?}`. The
+## module game pins the configuration version and creates the attempt (mode `minigame`) through module learning; the
+## answers then go through `respond()` / `submit()` like every activity attempt. Null on failure (`last_error_code`).
+func start_minigame(config_id: String, context_type: String = "free_play", context_id: String = "") -> MiniGameSessionModel:
+	if not Uuid.is_valid(config_id):
+		_failed(ApiResult.failure(CODE_NOT_FOUND))
+		return null
+	var body: Dictionary = {"context_type": context_type if context_type in MINIGAME_CONTEXTS else "free_play"}
+	if Uuid.is_valid(context_id):
+		body["context_id"] = context_id
+	var req: ApiRequest = ApiRequest.make_post(PATH_MINIGAME_START % config_id, body)
+	var signature: String = "minigame|%s|%s" % [config_id, JSON.stringify(body)]
+	req.idempotency_key = _key(signature)
+	var result: ApiResult = await _send(req)
+	if not result.is_transient():
+		_forget(signature)
+	if not result.ok:
+		_failed(result)
+		return null
+	var session: MiniGameSessionModel = MiniGameSessionModel.from_dict(result.body(), _now_unix())
+	if session == null:
+		_failed(ApiResult.failure(ApiResult.CODE_INVALID_RESPONSE))
+		return null
+	if attempt == null or attempt.attempt_id != session.attempt.attempt_id:
+		pending.clear()
+		_set_offline(false)
+	attempt = session.attempt
+	last_error_code = ""
+	attempt_loaded.emit(session.attempt)
+	return session
 
 
 ## Coroutine: reloads an attempt from `getActivityAttempt` (resume on this or another device, F063-AC-07).
@@ -384,6 +423,11 @@ func clear() -> void:
 func report_update_required(activity_type: String) -> void:
 	if telemetry != null:
 		telemetry.queue_client_error(TELEMETRY_UPDATE_REQUIRED, activity_type.left(TelemetryService.CODE_MAX_LENGTH))
+
+
+func report_minigame_update_required(minigame_type: String) -> void:
+	if telemetry != null:
+		telemetry.queue_client_error(TELEMETRY_MINIGAME_UPDATE_REQUIRED, minigame_type.left(TelemetryService.CODE_MAX_LENGTH))
 
 
 func report_math_failed() -> void:

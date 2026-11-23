@@ -1260,6 +1260,135 @@ var (
 		Columns:    LoginEventsColumns,
 		PrimaryKey: []*schema.Column{LoginEventsColumns[0]},
 	}
+	// MinigameConfigsColumns holds the columns for the "minigame_configs" table.
+	MinigameConfigsColumns = []*schema.Column{
+		{Name: "minigame_config_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "platform"},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// MinigameConfigsTable holds the schema information for the "minigame_configs" table.
+	MinigameConfigsTable = &schema.Table{
+		Name:       "minigame_configs",
+		Columns:    MinigameConfigsColumns,
+		PrimaryKey: []*schema.Column{MinigameConfigsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "minigame_configs_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{MinigameConfigsColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// MinigameConfigVersionsColumns holds the columns for the "minigame_config_versions" table.
+	MinigameConfigVersionsColumns = []*schema.Column{
+		{Name: "minigame_config_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "minigame_config_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "minigame_type", Type: field.TypeString, Size: 64},
+		{Name: "grade_levels", Type: field.TypeJSON},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "question_types", Type: field.TypeJSON},
+	}
+	// MinigameConfigVersionsTable holds the schema information for the "minigame_config_versions" table.
+	MinigameConfigVersionsTable = &schema.Table{
+		Name:       "minigame_config_versions",
+		Columns:    MinigameConfigVersionsColumns,
+		PrimaryKey: []*schema.Column{MinigameConfigVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "minigame_config_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{MinigameConfigVersionsColumns[9], MinigameConfigVersionsColumns[10]},
+			},
+		},
+	}
+	// MinigamePlaysColumns holds the columns for the "minigame_plays" table.
+	MinigamePlaysColumns = []*schema.Column{
+		{Name: "play_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "minigame_config_id", Type: field.TypeUUID},
+		{Name: "minigame_config_version_id", Type: field.TypeUUID},
+		{Name: "minigame_type", Type: field.TypeString, Size: 64},
+		{Name: "attempt_id", Type: field.TypeUUID},
+		{Name: "context_type", Type: field.TypeString, Size: 64},
+		{Name: "context_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "play_date", Type: field.TypeString, Size: 10},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "learning_score", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "numeric(7,2)"}},
+		{Name: "max_score", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "numeric(7,2)"}},
+		{Name: "game_score", Type: field.TypeInt, Nullable: true},
+		{Name: "correct_count", Type: field.TypeInt, Nullable: true},
+		{Name: "item_count", Type: field.TypeInt, Nullable: true},
+		{Name: "completion_met", Type: field.TypeBool, Nullable: true},
+		{Name: "rewards_eligible", Type: field.TypeBool, Nullable: true},
+		{Name: "started_at", Type: field.TypeTime},
+		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
+	}
+	// MinigamePlaysTable holds the schema information for the "minigame_plays" table.
+	MinigamePlaysTable = &schema.Table{
+		Name:       "minigame_plays",
+		Columns:    MinigamePlaysColumns,
+		PrimaryKey: []*schema.Column{MinigamePlaysColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "minigame_plays_attempt_uq",
+				Unique:  true,
+				Columns: []*schema.Column{MinigamePlaysColumns[1], MinigamePlaysColumns[15]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "minigame_plays_day_idx",
+				Unique:  false,
+				Columns: []*schema.Column{MinigamePlaysColumns[1], MinigamePlaysColumns[10], MinigamePlaysColumns[12], MinigamePlaysColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// NicknameChangesColumns holds the columns for the "nickname_changes" table.
 	NicknameChangesColumns = []*schema.Column{
 		{Name: "nickname_change_id", Type: field.TypeUUID},
@@ -2455,6 +2584,9 @@ var (
 		LevelSessionsTable,
 		LevelVersionsTable,
 		LoginEventsTable,
+		MinigameConfigsTable,
+		MinigameConfigVersionsTable,
+		MinigamePlaysTable,
 		NicknameChangesTable,
 		NpcDialoguesTable,
 		NpcDialogueVersionsTable,
@@ -2599,6 +2731,15 @@ func init() {
 	}
 	LoginEventsTable.Annotation = &entsql.Annotation{
 		Table: "login_events",
+	}
+	MinigameConfigsTable.Annotation = &entsql.Annotation{
+		Table: "minigame_configs",
+	}
+	MinigameConfigVersionsTable.Annotation = &entsql.Annotation{
+		Table: "minigame_config_versions",
+	}
+	MinigamePlaysTable.Annotation = &entsql.Annotation{
+		Table: "minigame_plays",
 	}
 	NicknameChangesTable.Annotation = &entsql.Annotation{
 		Table: "nickname_changes",

@@ -953,6 +953,36 @@ msgstr "[!! Vëŕšïöñ {version} ~~~~~~~ !!]"
 msgid "ui.login.wait_hint"
 msgstr "[!! Ïƒ ýöü ğöţ ïţ ŵŕöñğ šëvëŕáĺ ţïɱëš, ŵáïţ á ƒëŵ ɱïñüţëš áñđ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.minigame.completed"
+msgstr "[!! Ýöü çöɱþĺëţëđ ţĥë ğáɱë! ~~~~~~~~~~ !!]"
+
+msgid "ui.minigame.continue"
+msgstr "[!! Çöñţïñüë ~~~~ !!]"
+
+msgid "ui.minigame.done"
+msgstr "[!! Đöñë ~~ !!]"
+
+msgid "ui.minigame.game_score"
+msgstr "[!! Ğáɱë šçöŕë: {points} ~~~~~~~~ !!]"
+
+msgid "ui.minigame.not_completed"
+msgstr "[!! Ñöţ çöɱþĺëţëđ ýëţ, þĺáý áğáïñ! ~~~~~~~~~~~~ !!]"
+
+msgid "ui.minigame.points"
+msgstr "[!! ⭐ {points} ~~~~ !!]"
+
+msgid "ui.minigame.streak"
+msgstr "[!! 🔥 {streak} ~~~~ !!]"
+
+msgid "ui.minigame.submit_state"
+msgstr "[!! Šüƀɱïţ ţĥë ëxþëŕïɱëñţ ~~~~~~~~~ !!]"
+
+msgid "ui.minigame.summary_title"
+msgstr "[!! Ğáɱë övëŕ ~~~~ !!]"
+
+msgid "ui.minigame.time_up"
+msgstr "[!! Ţïɱë ïš üþ! ~~~~~ !!]"
+
 msgid "ui.notification.assignment_new"
 msgstr "[!! Ñëŵ ŵöŕķ: {title} ~~~~~~~ !!]"
 

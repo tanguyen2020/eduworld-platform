@@ -79,6 +79,9 @@ type Docs struct {
 	// Activities is the Activity Registry and ActivitySchema the JSON Schemas of its types (F030); nil refuses activities.
 	Activities     *activity.Registry
 	ActivitySchema port.ActivitySchema
+	// Minigames reads the projection ref.minigame_config_versions: a minigame activity wraps a projected configuration
+	// (F073-AC-15); nil refuses minigame activities.
+	Minigames write.MinigameConfigs
 }
 
 func (h Docs) trash() TrashDeps {

@@ -45,6 +45,9 @@ func (c QuestOnActivityGraded) Handle(ctx context.Context, e outbox.Envelope) er
 		CorrectCount *int      `json:"correct_count"`
 		ItemCount    *int      `json:"item_count"`
 		Passed       *bool     `json:"passed"`
+		MiniGame     *struct {
+			CompletionMet bool `json:"completion_met"`
+		} `json:"minigame"`
 	}
 	if err := decode(e, &p); err != nil {
 		return reject(messaging.QuestActivityGradedName, err)
@@ -55,8 +58,13 @@ func (c QuestOnActivityGraded) Handle(ctx context.Context, e outbox.Envelope) er
 	if p.Mode != "" && p.Mode != "quest" {
 		return nil // only quest attempts can be linked to a quest step
 	}
-	return c.Quests.ApplyActivityResult(ctx, command.GradedAttempt{TenantID: *e.TenantID, AttemptID: p.AttemptID, StudentID: p.StudentID,
-		CorrectCount: p.CorrectCount, ItemCount: p.ItemCount, Passed: p.Passed, OccurredAt: e.OccurredAt.UTC()})
+	g := command.GradedAttempt{TenantID: *e.TenantID, AttemptID: p.AttemptID, StudentID: p.StudentID, CorrectCount: p.CorrectCount,
+		ItemCount: p.ItemCount, Passed: p.Passed, OccurredAt: e.OccurredAt.UTC()}
+	if p.MiniGame != nil { // F073: a minigame step completes on completion_met
+		met := p.MiniGame.CompletionMet
+		g.CompletionMet = &met
+	}
+	return c.Quests.ApplyActivityResult(ctx, g)
 }
 
 // QuestOnDiscoveryFound is the consumer game.quest_on_discovery_found (F072-AC-12, T024): world.discovery_found (owner

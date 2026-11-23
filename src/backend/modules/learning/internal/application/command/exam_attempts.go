@@ -606,7 +606,7 @@ func (h Exams) gradeAttempt(ctx context.Context, id uuid.UUID) error {
 		r := attempt.ReasonTimeout
 		ga.SubmitReason = &r
 	}
-	if err := h.Att.graded(ctx, ga, res, evID); err != nil {
+	if err := h.Att.graded(ctx, ga, res, evID, nil); err != nil {
 		return err
 	}
 	part, err := h.Store.Participation(ctx, s.ID, a.StudentID, true)

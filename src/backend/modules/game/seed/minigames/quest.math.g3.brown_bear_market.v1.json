@@ -1,0 +1,91 @@
+{
+  "schema_version": 2,
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "party_mode": "solo",
+  "completion_rule": {
+    "type": "all_required_steps"
+  },
+  "objective_ids": [
+    "01936b2e-0000-7000-8000-00000000c311"
+  ],
+  "rewards": [
+    {
+      "type": "xp",
+      "amount": 30
+    }
+  ],
+  "quest_id": "0193a5f4-6c1e-7b2a-9d1f-00000073b101",
+  "code": "math.g3.brown_bear_market",
+  "quest_type": "learning",
+  "name": {
+    "vi": "Phiên chợ của bác Gấu Nâu",
+    "en": "Brown Bear's Market Day"
+  },
+  "description": {
+    "vi": "Bác Gấu Nâu cần em ghép phép nhân để định giá hàng.",
+    "en": "Brown Bear needs you to match multiplications to price the goods."
+  },
+  "narrative": {
+    "vi": "Phiên chợ sắp mở! Giúp bác Gấu Nâu ghép đúng các phép nhân nhé.",
+    "en": "The market is about to open! Help Brown Bear match the multiplications."
+  },
+  "giver_npc_id": "npc.mr_numbers",
+  "area_id": "learning_zone.math",
+  "grade_levels": [
+    3
+  ],
+  "subject_id": "0193a5f4-6c1e-7b2a-9d1f-0000000720f1",
+  "subject_code": "math",
+  "estimated_minutes": 5,
+  "start_trigger": {
+    "kind": "quest_board",
+    "area_id": "learning_zone.math"
+  },
+  "steps": [
+    {
+      "step_id": "meet_mr_numbers",
+      "order": 1,
+      "type": "talk_npc",
+      "title": {
+        "vi": "Gặp Ông Số",
+        "en": "Meet Mr. Numbers"
+      },
+      "npc_id": "npc.mr_numbers",
+      "area_id": "learning_zone.math"
+    },
+    {
+      "step_id": "match_prices",
+      "order": 2,
+      "type": "minigame",
+      "title": {
+        "vi": "Ghép thẻ bảng nhân",
+        "en": "Match the times table cards"
+      },
+      "hint": {
+        "vi": "Ôn lại bảng nhân 6 đến 9.",
+        "en": "Review the 6 to 9 times tables."
+      },
+      "minigame_config_id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e5a01",
+      "pass_rule": {
+        "min_correct_ratio": 0.7,
+        "min_questions": 3,
+        "max_attempts_per_day": 3
+      }
+    },
+    {
+      "step_id": "report_back",
+      "order": 3,
+      "depends_on": [
+        "match_prices"
+      ],
+      "type": "talk_npc",
+      "title": {
+        "vi": "Báo lại cho Ông Số",
+        "en": "Report back to Mr. Numbers"
+      },
+      "npc_id": "npc.mr_numbers",
+      "area_id": "learning_zone.math"
+    }
+  ]
+}

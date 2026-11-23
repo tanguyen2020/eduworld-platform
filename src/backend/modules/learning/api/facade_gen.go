@@ -24,6 +24,7 @@ import (
 const (
 	ActivityRefContentTypeActivity               ActivityRefContentType = "activity"
 	ActivityRefContentTypeAssessmentBlueprint    ActivityRefContentType = "assessment_blueprint"
+	ActivityRefContentTypeMinigameConfig         ActivityRefContentType = "minigame_config"
 	ActivityRefContentTypeMinigameQuestionSource ActivityRefContentType = "minigame_question_source"
 	ActivityRefContentTypeQuestionSet            ActivityRefContentType = "question_set"
 )
@@ -34,6 +35,8 @@ func (e ActivityRefContentType) Valid() bool {
 	case ActivityRefContentTypeActivity:
 		return true
 	case ActivityRefContentTypeAssessmentBlueprint:
+		return true
+	case ActivityRefContentTypeMinigameConfig:
 		return true
 	case ActivityRefContentTypeMinigameQuestionSource:
 		return true
@@ -149,6 +152,93 @@ func (e AttemptStatus) Valid() bool {
 	}
 }
 
+// Defines values for MinigameQuestionSourceCheckQuestionSourceKind.
+const (
+	MinigameQuestionSourceCheckQuestionSourceKindQuestionSet   MinigameQuestionSourceCheckQuestionSourceKind = "question_set"
+	MinigameQuestionSourceCheckQuestionSourceKindSelectionRule MinigameQuestionSourceCheckQuestionSourceKind = "selection_rule"
+)
+
+// Valid indicates whether the value is a known member of the MinigameQuestionSourceCheckQuestionSourceKind enum.
+func (e MinigameQuestionSourceCheckQuestionSourceKind) Valid() bool {
+	switch e {
+	case MinigameQuestionSourceCheckQuestionSourceKindQuestionSet:
+		return true
+	case MinigameQuestionSourceCheckQuestionSourceKindSelectionRule:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MinigameQuestionSourceResultReasonsCode.
+const (
+	IncompatibleQuestionType MinigameQuestionSourceResultReasonsCode = "incompatible_question_type"
+	InsufficientQuestions    MinigameQuestionSourceResultReasonsCode = "insufficient_questions"
+	QuestionSetNotPublished  MinigameQuestionSourceResultReasonsCode = "question_set_not_published"
+	UnboundedQuestionTypes   MinigameQuestionSourceResultReasonsCode = "unbounded_question_types"
+)
+
+// Valid indicates whether the value is a known member of the MinigameQuestionSourceResultReasonsCode enum.
+func (e MinigameQuestionSourceResultReasonsCode) Valid() bool {
+	switch e {
+	case IncompatibleQuestionType:
+		return true
+	case InsufficientQuestions:
+		return true
+	case QuestionSetNotPublished:
+		return true
+	case UnboundedQuestionTypes:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MinigameType.
+const (
+	MinigameTypeCalculation       MinigameType = "calculation"
+	MinigameTypeDragAndDrop       MinigameType = "drag_and_drop"
+	MinigameTypeFillInBlank       MinigameType = "fill_in_blank"
+	MinigameTypeMatching          MinigameType = "matching"
+	MinigameTypeMultipleChoice    MinigameType = "multiple_choice"
+	MinigameTypeOrdering          MinigameType = "ordering"
+	MinigameTypePuzzle            MinigameType = "puzzle"
+	MinigameTypeScienceSimulation MinigameType = "science_simulation"
+	MinigameTypeTimedChallenge    MinigameType = "timed_challenge"
+	MinigameTypeTrueFalse         MinigameType = "true_false"
+	MinigameTypeWordGame          MinigameType = "word_game"
+)
+
+// Valid indicates whether the value is a known member of the MinigameType enum.
+func (e MinigameType) Valid() bool {
+	switch e {
+	case MinigameTypeCalculation:
+		return true
+	case MinigameTypeDragAndDrop:
+		return true
+	case MinigameTypeFillInBlank:
+		return true
+	case MinigameTypeMatching:
+		return true
+	case MinigameTypeMultipleChoice:
+		return true
+	case MinigameTypeOrdering:
+		return true
+	case MinigameTypePuzzle:
+		return true
+	case MinigameTypeScienceSimulation:
+		return true
+	case MinigameTypeTimedChallenge:
+		return true
+	case MinigameTypeTrueFalse:
+		return true
+	case MinigameTypeWordGame:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for QuestionPlanRequestMode.
 const (
 	Battle1v1     QuestionPlanRequestMode = "battle_1v1"
@@ -178,43 +268,43 @@ func (e QuestionPlanRequestMode) Valid() bool {
 
 // Defines values for QuestionType.
 const (
-	DragDrop       QuestionType = "drag_drop"
-	FillInBlank    QuestionType = "fill_in_blank"
-	ImageBased     QuestionType = "image_based"
-	Interactive    QuestionType = "interactive"
-	Matching       QuestionType = "matching"
-	MultipleChoice QuestionType = "multiple_choice"
-	Numeric        QuestionType = "numeric"
-	Ordering       QuestionType = "ordering"
-	ShortAnswer    QuestionType = "short_answer"
-	SingleChoice   QuestionType = "single_choice"
-	TrueFalse      QuestionType = "true_false"
+	QuestionTypeDragDrop       QuestionType = "drag_drop"
+	QuestionTypeFillInBlank    QuestionType = "fill_in_blank"
+	QuestionTypeImageBased     QuestionType = "image_based"
+	QuestionTypeInteractive    QuestionType = "interactive"
+	QuestionTypeMatching       QuestionType = "matching"
+	QuestionTypeMultipleChoice QuestionType = "multiple_choice"
+	QuestionTypeNumeric        QuestionType = "numeric"
+	QuestionTypeOrdering       QuestionType = "ordering"
+	QuestionTypeShortAnswer    QuestionType = "short_answer"
+	QuestionTypeSingleChoice   QuestionType = "single_choice"
+	QuestionTypeTrueFalse      QuestionType = "true_false"
 )
 
 // Valid indicates whether the value is a known member of the QuestionType enum.
 func (e QuestionType) Valid() bool {
 	switch e {
-	case DragDrop:
+	case QuestionTypeDragDrop:
 		return true
-	case FillInBlank:
+	case QuestionTypeFillInBlank:
 		return true
-	case ImageBased:
+	case QuestionTypeImageBased:
 		return true
-	case Interactive:
+	case QuestionTypeInteractive:
 		return true
-	case Matching:
+	case QuestionTypeMatching:
 		return true
-	case MultipleChoice:
+	case QuestionTypeMultipleChoice:
 		return true
-	case Numeric:
+	case QuestionTypeNumeric:
 		return true
-	case Ordering:
+	case QuestionTypeOrdering:
 		return true
-	case ShortAnswer:
+	case QuestionTypeShortAnswer:
 		return true
-	case SingleChoice:
+	case QuestionTypeSingleChoice:
 		return true
-	case TrueFalse:
+	case QuestionTypeTrueFalse:
 		return true
 	default:
 		return false
@@ -450,7 +540,7 @@ func (e CommonInternalCommonV1UserLifecycleResultStatus) Valid() bool {
 type ActivityRef struct {
 	ContentId openapi_types.UUID `json:"content_id"`
 
-	// ContentType activity = learning activity đã publish (F030, ghim version); question_set = bộ câu hỏi đã publish
+	// ContentType activity = learning activity đã publish (F030, ghim version); question_set = bộ câu hỏi đã publish; minigame_config = cấu hình mini-game của module game (F073, content_id = minigame_config_id, content_version_id = version ghim, bắt buộc; đọc projection ref.minigame_config_versions)
 	ContentType ActivityRefContentType `json:"content_type"`
 
 	// ContentVersionId Bỏ trống = version published hiện hành
@@ -459,7 +549,7 @@ type ActivityRef struct {
 	TimeLimitSeconds *int                `json:"time_limit_seconds,omitempty"`
 }
 
-// ActivityRefContentType activity = learning activity đã publish (F030, ghim version); question_set = bộ câu hỏi đã publish
+// ActivityRefContentType activity = learning activity đã publish (F030, ghim version); question_set = bộ câu hỏi đã publish; minigame_config = cấu hình mini-game của module game (F073, content_id = minigame_config_id, content_version_id = version ghim, bắt buộc; đọc projection ref.minigame_config_versions)
 type ActivityRefContentType string
 
 // AttemptCreateRequest defines model for AttemptCreateRequest.
@@ -525,6 +615,52 @@ type AttemptStatus string
 
 // ItemId defines model for ItemId.
 type ItemId = string
+
+// MinigameQuestionSourceCheck defines model for MinigameQuestionSourceCheck.
+type MinigameQuestionSourceCheck struct {
+	// MinigameType Đồng bộ với specs/schemas/minigame-config.schema.json minigame_type.
+	MinigameType  MinigameType `json:"minigame_type"`
+	QuestionCount int          `json:"question_count"`
+
+	// QuestionSource question_source của minigame-config.schema.json (question_set hoặc selection_rule)
+	QuestionSource struct {
+		Kind          MinigameQuestionSourceCheckQuestionSourceKind `json:"kind"`
+		QuestionSetId *openapi_types.UUID                           `json:"question_set_id,omitempty"`
+		Rule          *struct {
+			DifficultyMax *int                  `json:"difficulty_max,omitempty"`
+			DifficultyMin *int                  `json:"difficulty_min,omitempty"`
+			GradeLevels   *[]int                `json:"grade_levels,omitempty"`
+			ObjectiveIds  *[]openapi_types.UUID `json:"objective_ids,omitempty"`
+			QuestionTypes *[]QuestionType       `json:"question_types,omitempty"`
+			SubjectId     *openapi_types.UUID   `json:"subject_id,omitempty"`
+			TopicIds      *[]openapi_types.UUID `json:"topic_ids,omitempty"`
+		} `json:"rule,omitempty"`
+		Version *int `json:"version,omitempty"`
+	} `json:"question_source"`
+}
+
+// MinigameQuestionSourceCheckQuestionSourceKind defines model for MinigameQuestionSourceCheck.QuestionSource.Kind.
+type MinigameQuestionSourceCheckQuestionSourceKind string
+
+// MinigameQuestionSourceResult defines model for MinigameQuestionSourceResult.
+type MinigameQuestionSourceResult struct {
+	// AvailableCount Số câu khả dụng (question set đã publish hoặc pool của selection rule)
+	AvailableCount int  `json:"available_count"`
+	Compatible     bool `json:"compatible"`
+
+	// QuestionTypes Các loại câu nguồn có thể trả (rỗng khi nguồn không giới hạn loại)
+	QuestionTypes []QuestionType `json:"question_types"`
+	Reasons       []struct {
+		Code    MinigameQuestionSourceResultReasonsCode `json:"code"`
+		Message string                                  `json:"message"`
+	} `json:"reasons"`
+}
+
+// MinigameQuestionSourceResultReasonsCode defines model for MinigameQuestionSourceResult.Reasons.Code.
+type MinigameQuestionSourceResultReasonsCode string
+
+// MinigameType Đồng bộ với specs/schemas/minigame-config.schema.json minigame_type.
+type MinigameType string
 
 // PlanAnswerScore defines model for PlanAnswerScore.
 type PlanAnswerScore struct {
@@ -973,6 +1109,9 @@ type RevealPlanItemParams struct {
 // CreateAttemptJSONRequestBody defines body for CreateAttempt for application/json ContentType.
 type CreateAttemptJSONRequestBody = AttemptCreateRequest
 
+// ValidateMinigameQuestionSourceJSONRequestBody defines body for ValidateMinigameQuestionSource for application/json ContentType.
+type ValidateMinigameQuestionSourceJSONRequestBody = MinigameQuestionSourceCheck
+
 // CleanupStudentDataJSONRequestBody defines body for CleanupStudentData for application/json ContentType.
 type CleanupStudentDataJSONRequestBody = CommonInternalCommonV1StudentCleanupRequest
 
@@ -1359,6 +1498,9 @@ type ServerInterface interface {
 	// GetAttemptResult Lấy trạng thái và kết quả đã chấm của attempt (không có đáp án)
 	// (GET /internal/v1/attempts/{attempt_id})
 	GetAttemptResult(w http.ResponseWriter, r *http.Request, attemptId openapi_types.UUID)
+	// ValidateMinigameQuestionSource Kiểm nguồn câu hỏi của cấu hình mini-game khi publish (loại câu tương thích, đủ câu, question set đã publish)
+	// (POST /internal/v1/minigame-question-sources:validate)
+	ValidateMinigameQuestionSource(w http.ResponseWriter, r *http.Request)
 	// CleanupStudentData Soft-delete dữ liệu của học sinh trong module này khi bị dọn do không đăng nhập (ADR-0032)
 	// (POST /internal/v1/platform/students/{student_id}:cleanup)
 	CleanupStudentData(w http.ResponseWriter, r *http.Request, studentId CommonInternalCommonV1StudentIdPath)
@@ -1440,6 +1582,20 @@ func (siw *ServerInterfaceWrapper) GetAttemptResult(w http.ResponseWriter, r *ht
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAttemptResult(w, r, attemptId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ValidateMinigameQuestionSource operation middleware
+func (siw *ServerInterfaceWrapper) ValidateMinigameQuestionSource(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ValidateMinigameQuestionSource(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1999,6 +2155,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/attempts", wrapper.CreateAttempt)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/attempts/{attempt_id}", wrapper.GetAttemptResult)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/minigame-question-sources:validate", wrapper.ValidateMinigameQuestionSource)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:cleanup", wrapper.CleanupStudentData)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:restore", wrapper.RestoreStudentData)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/platform/tenant-assignments", wrapper.ListResourceAssignments)
@@ -2198,6 +2355,76 @@ func (response GetAttemptResult404ApplicationProblemPlusJSONResponse) VisitGetAt
 	}
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ValidateMinigameQuestionSourceRequestObject struct {
+	Body *ValidateMinigameQuestionSourceJSONRequestBody
+}
+
+type ValidateMinigameQuestionSourceResponseObject interface {
+	VisitValidateMinigameQuestionSourceResponse(w http.ResponseWriter) error
+}
+
+type ValidateMinigameQuestionSource200JSONResponse MinigameQuestionSourceResult
+
+func (response ValidateMinigameQuestionSource200JSONResponse) VisitValidateMinigameQuestionSourceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ValidateMinigameQuestionSource401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response ValidateMinigameQuestionSource401ApplicationProblemPlusJSONResponse) VisitValidateMinigameQuestionSourceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ValidateMinigameQuestionSource403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response ValidateMinigameQuestionSource403ApplicationProblemPlusJSONResponse) VisitValidateMinigameQuestionSourceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ValidateMinigameQuestionSource422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response ValidateMinigameQuestionSource422ApplicationProblemPlusJSONResponse) VisitValidateMinigameQuestionSourceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -3290,6 +3517,9 @@ type StrictServerInterface interface {
 	// GetAttemptResult Lấy trạng thái và kết quả đã chấm của attempt (không có đáp án)
 	// (GET /internal/v1/attempts/{attempt_id})
 	GetAttemptResult(ctx context.Context, request GetAttemptResultRequestObject) (GetAttemptResultResponseObject, error)
+	// ValidateMinigameQuestionSource Kiểm nguồn câu hỏi của cấu hình mini-game khi publish (loại câu tương thích, đủ câu, question set đã publish)
+	// (POST /internal/v1/minigame-question-sources:validate)
+	ValidateMinigameQuestionSource(ctx context.Context, request ValidateMinigameQuestionSourceRequestObject) (ValidateMinigameQuestionSourceResponseObject, error)
 	// CleanupStudentData Soft-delete dữ liệu của học sinh trong module này khi bị dọn do không đăng nhập (ADR-0032)
 	// (POST /internal/v1/platform/students/{student_id}:cleanup)
 	CleanupStudentData(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
@@ -3420,6 +3650,37 @@ func (sh *strictHandler) GetAttemptResult(w http.ResponseWriter, r *http.Request
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetAttemptResultResponseObject); ok {
 		if err := validResponse.VisitGetAttemptResultResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ValidateMinigameQuestionSource operation middleware
+func (sh *strictHandler) ValidateMinigameQuestionSource(w http.ResponseWriter, r *http.Request) {
+	var request ValidateMinigameQuestionSourceRequestObject
+
+	var body ValidateMinigameQuestionSourceJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ValidateMinigameQuestionSource(ctx, request.(ValidateMinigameQuestionSourceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ValidateMinigameQuestionSource")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ValidateMinigameQuestionSourceResponseObject); ok {
+		if err := validResponse.VisitValidateMinigameQuestionSourceResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -3837,21 +4098,22 @@ var ErrNotFaked = errors.New("api: operation not faked")
 
 // Fake implements StrictServerInterface for caller tests: each method calls its <Name>Func.
 type Fake struct {
-	CreateAttemptFunc           func(ctx context.Context, request CreateAttemptRequestObject) (CreateAttemptResponseObject, error)
-	GetAttemptResultFunc        func(ctx context.Context, request GetAttemptResultRequestObject) (GetAttemptResultResponseObject, error)
-	CleanupStudentDataFunc      func(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
-	RestoreStudentDataFunc      func(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
-	ListResourceAssignmentsFunc func(ctx context.Context, request ListResourceAssignmentsRequestObject) (ListResourceAssignmentsResponseObject, error)
-	ApplyTenantAssignmentsFunc  func(ctx context.Context, request ApplyTenantAssignmentsRequestObject) (ApplyTenantAssignmentsResponseObject, error)
-	RevokeTenantAssignmentsFunc func(ctx context.Context, request RevokeTenantAssignmentsRequestObject) (RevokeTenantAssignmentsResponseObject, error)
-	ExecuteTenantCloneStepFunc  func(ctx context.Context, request ExecuteTenantCloneStepRequestObject) (ExecuteTenantCloneStepResponseObject, error)
-	ListTrashFunc               func(ctx context.Context, request ListTrashRequestObject) (ListTrashResponseObject, error)
-	RestoreTrashItemFunc        func(ctx context.Context, request RestoreTrashItemRequestObject) (RestoreTrashItemResponseObject, error)
-	AnonymizeUserDataFunc       func(ctx context.Context, request AnonymizeUserDataRequestObject) (AnonymizeUserDataResponseObject, error)
-	MergeUserDataFunc           func(ctx context.Context, request MergeUserDataRequestObject) (MergeUserDataResponseObject, error)
-	CreateQuestionPlanFunc      func(ctx context.Context, request CreateQuestionPlanRequestObject) (CreateQuestionPlanResponseObject, error)
-	ScorePlanAnswerFunc         func(ctx context.Context, request ScorePlanAnswerRequestObject) (ScorePlanAnswerResponseObject, error)
-	RevealPlanItemFunc          func(ctx context.Context, request RevealPlanItemRequestObject) (RevealPlanItemResponseObject, error)
+	CreateAttemptFunc                  func(ctx context.Context, request CreateAttemptRequestObject) (CreateAttemptResponseObject, error)
+	GetAttemptResultFunc               func(ctx context.Context, request GetAttemptResultRequestObject) (GetAttemptResultResponseObject, error)
+	ValidateMinigameQuestionSourceFunc func(ctx context.Context, request ValidateMinigameQuestionSourceRequestObject) (ValidateMinigameQuestionSourceResponseObject, error)
+	CleanupStudentDataFunc             func(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
+	RestoreStudentDataFunc             func(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
+	ListResourceAssignmentsFunc        func(ctx context.Context, request ListResourceAssignmentsRequestObject) (ListResourceAssignmentsResponseObject, error)
+	ApplyTenantAssignmentsFunc         func(ctx context.Context, request ApplyTenantAssignmentsRequestObject) (ApplyTenantAssignmentsResponseObject, error)
+	RevokeTenantAssignmentsFunc        func(ctx context.Context, request RevokeTenantAssignmentsRequestObject) (RevokeTenantAssignmentsResponseObject, error)
+	ExecuteTenantCloneStepFunc         func(ctx context.Context, request ExecuteTenantCloneStepRequestObject) (ExecuteTenantCloneStepResponseObject, error)
+	ListTrashFunc                      func(ctx context.Context, request ListTrashRequestObject) (ListTrashResponseObject, error)
+	RestoreTrashItemFunc               func(ctx context.Context, request RestoreTrashItemRequestObject) (RestoreTrashItemResponseObject, error)
+	AnonymizeUserDataFunc              func(ctx context.Context, request AnonymizeUserDataRequestObject) (AnonymizeUserDataResponseObject, error)
+	MergeUserDataFunc                  func(ctx context.Context, request MergeUserDataRequestObject) (MergeUserDataResponseObject, error)
+	CreateQuestionPlanFunc             func(ctx context.Context, request CreateQuestionPlanRequestObject) (CreateQuestionPlanResponseObject, error)
+	ScorePlanAnswerFunc                func(ctx context.Context, request ScorePlanAnswerRequestObject) (ScorePlanAnswerResponseObject, error)
+	RevealPlanItemFunc                 func(ctx context.Context, request RevealPlanItemRequestObject) (RevealPlanItemResponseObject, error)
 }
 
 var _ StrictServerInterface = (*Fake)(nil)
@@ -3870,6 +4132,14 @@ func (f *Fake) GetAttemptResult(a0 context.Context, a1 GetAttemptResultRequestOb
 		return nil, ErrNotFaked
 	}
 	return f.GetAttemptResultFunc(a0, a1)
+}
+
+// ValidateMinigameQuestionSource calls ValidateMinigameQuestionSourceFunc.
+func (f *Fake) ValidateMinigameQuestionSource(a0 context.Context, a1 ValidateMinigameQuestionSourceRequestObject) (ValidateMinigameQuestionSourceResponseObject, error) {
+	if f.ValidateMinigameQuestionSourceFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ValidateMinigameQuestionSourceFunc(a0, a1)
 }
 
 // CleanupStudentData calls CleanupStudentDataFunc.

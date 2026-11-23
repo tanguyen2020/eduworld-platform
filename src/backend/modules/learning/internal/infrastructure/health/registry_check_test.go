@@ -14,11 +14,12 @@ func TestRegistryCheck(t *testing.T) {
 	published := func(types ...string) PublishedTypes {
 		return func(context.Context) ([]string, error) { return types, nil }
 	}
-	if err := RegistryCheck(reg, published("quiz", "interactive_exercise"))(context.Background()); err != nil {
+	if err := RegistryCheck(reg, published("quiz", "interactive_exercise", "minigame"))(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	err := RegistryCheck(reg, published("quiz", "minigame"))(context.Background())
-	if !errors.Is(err, ErrPluginMissing) || err.Error() != "activity registry: published content has no plugin: minigame" {
+	// minigame has its plugin since F073: a type without plugin (outside the release) keeps the readiness down.
+	err := RegistryCheck(reg, published("quiz", "speaking"))(context.Background())
+	if !errors.Is(err, ErrPluginMissing) || err.Error() != "activity registry: published content has no plugin: speaking" {
 		t.Fatalf("missing plugin: %v", err)
 	}
 	failing := func(context.Context) ([]string, error) { return nil, errors.New("db down") }

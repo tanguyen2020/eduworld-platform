@@ -59,6 +59,8 @@ type Trigger struct {
 	RapidGuess       bool
 	ContentGrades    []int
 	RecommendationID *uuid.UUID
+	// RuleID restricts the trigger to one reward rule (reward_rule_id of a mini-game config, F073); nil = every matching rule.
+	RuleID *uuid.UUID
 }
 
 // Conditions are the rule conditions (reward-rule.schema.json conditions).
@@ -247,7 +249,7 @@ type Award struct {
 func (p Policy) Evaluate(t Trigger, rules []Rule, st Student, history func(Rule) History, granted map[string]int) []Award {
 	matching := make([]Rule, 0, len(rules))
 	for _, r := range rules {
-		if r.EventType == t.EventType && slices.Contains(t.SourceCodes, r.SourceCode) && p.modeAllowed(r, t.Mode) {
+		if r.EventType == t.EventType && slices.Contains(t.SourceCodes, r.SourceCode) && p.modeAllowed(r, t.Mode) && (t.RuleID == nil || *t.RuleID == r.RuleID) {
 			matching = append(matching, r)
 		}
 	}

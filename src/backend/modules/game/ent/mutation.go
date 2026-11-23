@@ -48,6 +48,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfig"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfigversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameplay"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
@@ -129,6 +132,9 @@ const (
 	TypeLevelSession              = "LevelSession"
 	TypeLevelVersion              = "LevelVersion"
 	TypeLoginEvent                = "LoginEvent"
+	TypeMiniGameConfig            = "MiniGameConfig"
+	TypeMiniGameConfigVersion     = "MiniGameConfigVersion"
+	TypeMiniGamePlay              = "MiniGamePlay"
 	TypeNicknameChange            = "NicknameChange"
 	TypeNpcDialogue               = "NpcDialogue"
 	TypeNpcDialogueVersion        = "NpcDialogueVersion"
@@ -48285,6 +48291,5308 @@ func (m *LoginEventMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *LoginEventMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown LoginEvent edge %s", name)
+}
+
+// MiniGameConfigMutation represents an operation that mutates the MiniGameConfig nodes in the graph.
+type MiniGameConfigMutation struct {
+	config
+	op                   Op
+	typ                  string
+	id                   *uuid.UUID
+	created_at           *time.Time
+	created_by           *uuid.UUID
+	updated_at           *time.Time
+	updated_by           *uuid.UUID
+	deleted_at           *time.Time
+	deleted_by           *uuid.UUID
+	delete_reason        *string
+	version              *int64
+	addversion           *int64
+	code                 *string
+	owner_scope          *string
+	current_version_id   *uuid.UUID
+	latest_version_no    *int
+	addlatest_version_no *int
+	clearedFields        map[string]struct{}
+	done                 bool
+	oldValue             func(context.Context) (*MiniGameConfig, error)
+	predicates           []predicate.MiniGameConfig
+}
+
+var _ ent.Mutation = (*MiniGameConfigMutation)(nil)
+
+// minigameconfigOption allows management of the mutation configuration using functional options.
+type minigameconfigOption func(*MiniGameConfigMutation)
+
+// newMiniGameConfigMutation creates new mutation for the MiniGameConfig entity.
+func newMiniGameConfigMutation(c config, op Op, opts ...minigameconfigOption) *MiniGameConfigMutation {
+	m := &MiniGameConfigMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMiniGameConfig,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMiniGameConfigID sets the ID field of the mutation.
+func withMiniGameConfigID(id uuid.UUID) minigameconfigOption {
+	return func(m *MiniGameConfigMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MiniGameConfig
+		)
+		m.oldValue = func(ctx context.Context) (*MiniGameConfig, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MiniGameConfig.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMiniGameConfig sets the old MiniGameConfig of the mutation.
+func withMiniGameConfig(node *MiniGameConfig) minigameconfigOption {
+	return func(m *MiniGameConfigMutation) {
+		m.oldValue = func(context.Context) (*MiniGameConfig, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MiniGameConfigMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MiniGameConfigMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MiniGameConfig entities.
+func (m *MiniGameConfigMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MiniGameConfigMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MiniGameConfigMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MiniGameConfig.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *MiniGameConfigMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *MiniGameConfigMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the MiniGameConfig entity.
+// If the MiniGameConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *MiniGameConfigMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *MiniGameConfigMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *MiniGameConfigMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the MiniGameConfig entity.
+// If the MiniGameConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *MiniGameConfigMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[minigameconfig.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *MiniGameConfigMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[minigameconfig.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *MiniGameConfigMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, minigameconfig.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *MiniGameConfigMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *MiniGameConfigMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the MiniGameConfig entity.
+// If the MiniGameConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *MiniGameConfigMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *MiniGameConfigMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *MiniGameConfigMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the MiniGameConfig entity.
+// If the MiniGameConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *MiniGameConfigMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[minigameconfig.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *MiniGameConfigMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[minigameconfig.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *MiniGameConfigMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, minigameconfig.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *MiniGameConfigMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *MiniGameConfigMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the MiniGameConfig entity.
+// If the MiniGameConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *MiniGameConfigMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[minigameconfig.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *MiniGameConfigMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[minigameconfig.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *MiniGameConfigMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, minigameconfig.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *MiniGameConfigMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *MiniGameConfigMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the MiniGameConfig entity.
+// If the MiniGameConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *MiniGameConfigMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[minigameconfig.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *MiniGameConfigMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[minigameconfig.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *MiniGameConfigMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, minigameconfig.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *MiniGameConfigMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *MiniGameConfigMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the MiniGameConfig entity.
+// If the MiniGameConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *MiniGameConfigMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[minigameconfig.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *MiniGameConfigMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[minigameconfig.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *MiniGameConfigMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, minigameconfig.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *MiniGameConfigMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *MiniGameConfigMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the MiniGameConfig entity.
+// If the MiniGameConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *MiniGameConfigMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *MiniGameConfigMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *MiniGameConfigMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetCode sets the "code" field.
+func (m *MiniGameConfigMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *MiniGameConfigMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the MiniGameConfig entity.
+// If the MiniGameConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigMutation) OldCode(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ClearCode clears the value of the "code" field.
+func (m *MiniGameConfigMutation) ClearCode() {
+	m.code = nil
+	m.clearedFields[minigameconfig.FieldCode] = struct{}{}
+}
+
+// CodeCleared returns if the "code" field was cleared in this mutation.
+func (m *MiniGameConfigMutation) CodeCleared() bool {
+	_, ok := m.clearedFields[minigameconfig.FieldCode]
+	return ok
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *MiniGameConfigMutation) ResetCode() {
+	m.code = nil
+	delete(m.clearedFields, minigameconfig.FieldCode)
+}
+
+// SetOwnerScope sets the "owner_scope" field.
+func (m *MiniGameConfigMutation) SetOwnerScope(s string) {
+	m.owner_scope = &s
+}
+
+// OwnerScope returns the value of the "owner_scope" field in the mutation.
+func (m *MiniGameConfigMutation) OwnerScope() (r string, exists bool) {
+	v := m.owner_scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerScope returns the old "owner_scope" field's value of the MiniGameConfig entity.
+// If the MiniGameConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigMutation) OldOwnerScope(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerScope: %w", err)
+	}
+	return oldValue.OwnerScope, nil
+}
+
+// ResetOwnerScope resets all changes to the "owner_scope" field.
+func (m *MiniGameConfigMutation) ResetOwnerScope() {
+	m.owner_scope = nil
+}
+
+// SetCurrentVersionID sets the "current_version_id" field.
+func (m *MiniGameConfigMutation) SetCurrentVersionID(u uuid.UUID) {
+	m.current_version_id = &u
+}
+
+// CurrentVersionID returns the value of the "current_version_id" field in the mutation.
+func (m *MiniGameConfigMutation) CurrentVersionID() (r uuid.UUID, exists bool) {
+	v := m.current_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrentVersionID returns the old "current_version_id" field's value of the MiniGameConfig entity.
+// If the MiniGameConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigMutation) OldCurrentVersionID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrentVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrentVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrentVersionID: %w", err)
+	}
+	return oldValue.CurrentVersionID, nil
+}
+
+// ClearCurrentVersionID clears the value of the "current_version_id" field.
+func (m *MiniGameConfigMutation) ClearCurrentVersionID() {
+	m.current_version_id = nil
+	m.clearedFields[minigameconfig.FieldCurrentVersionID] = struct{}{}
+}
+
+// CurrentVersionIDCleared returns if the "current_version_id" field was cleared in this mutation.
+func (m *MiniGameConfigMutation) CurrentVersionIDCleared() bool {
+	_, ok := m.clearedFields[minigameconfig.FieldCurrentVersionID]
+	return ok
+}
+
+// ResetCurrentVersionID resets all changes to the "current_version_id" field.
+func (m *MiniGameConfigMutation) ResetCurrentVersionID() {
+	m.current_version_id = nil
+	delete(m.clearedFields, minigameconfig.FieldCurrentVersionID)
+}
+
+// SetLatestVersionNo sets the "latest_version_no" field.
+func (m *MiniGameConfigMutation) SetLatestVersionNo(i int) {
+	m.latest_version_no = &i
+	m.addlatest_version_no = nil
+}
+
+// LatestVersionNo returns the value of the "latest_version_no" field in the mutation.
+func (m *MiniGameConfigMutation) LatestVersionNo() (r int, exists bool) {
+	v := m.latest_version_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatestVersionNo returns the old "latest_version_no" field's value of the MiniGameConfig entity.
+// If the MiniGameConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigMutation) OldLatestVersionNo(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatestVersionNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatestVersionNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatestVersionNo: %w", err)
+	}
+	return oldValue.LatestVersionNo, nil
+}
+
+// AddLatestVersionNo adds i to the "latest_version_no" field.
+func (m *MiniGameConfigMutation) AddLatestVersionNo(i int) {
+	if m.addlatest_version_no != nil {
+		*m.addlatest_version_no += i
+	} else {
+		m.addlatest_version_no = &i
+	}
+}
+
+// AddedLatestVersionNo returns the value that was added to the "latest_version_no" field in this mutation.
+func (m *MiniGameConfigMutation) AddedLatestVersionNo() (r int, exists bool) {
+	v := m.addlatest_version_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLatestVersionNo resets all changes to the "latest_version_no" field.
+func (m *MiniGameConfigMutation) ResetLatestVersionNo() {
+	m.latest_version_no = nil
+	m.addlatest_version_no = nil
+}
+
+// Where appends a list predicates to the MiniGameConfigMutation builder.
+func (m *MiniGameConfigMutation) Where(ps ...predicate.MiniGameConfig) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MiniGameConfigMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MiniGameConfigMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MiniGameConfig, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MiniGameConfigMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MiniGameConfigMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MiniGameConfig).
+func (m *MiniGameConfigMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MiniGameConfigMutation) Fields() []string {
+	fields := make([]string, 0, 12)
+	if m.created_at != nil {
+		fields = append(fields, minigameconfig.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, minigameconfig.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, minigameconfig.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, minigameconfig.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, minigameconfig.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, minigameconfig.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, minigameconfig.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, minigameconfig.FieldVersion)
+	}
+	if m.code != nil {
+		fields = append(fields, minigameconfig.FieldCode)
+	}
+	if m.owner_scope != nil {
+		fields = append(fields, minigameconfig.FieldOwnerScope)
+	}
+	if m.current_version_id != nil {
+		fields = append(fields, minigameconfig.FieldCurrentVersionID)
+	}
+	if m.latest_version_no != nil {
+		fields = append(fields, minigameconfig.FieldLatestVersionNo)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MiniGameConfigMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case minigameconfig.FieldCreatedAt:
+		return m.CreatedAt()
+	case minigameconfig.FieldCreatedBy:
+		return m.CreatedBy()
+	case minigameconfig.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case minigameconfig.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case minigameconfig.FieldDeletedAt:
+		return m.DeletedAt()
+	case minigameconfig.FieldDeletedBy:
+		return m.DeletedBy()
+	case minigameconfig.FieldDeleteReason:
+		return m.DeleteReason()
+	case minigameconfig.FieldVersion:
+		return m.Version()
+	case minigameconfig.FieldCode:
+		return m.Code()
+	case minigameconfig.FieldOwnerScope:
+		return m.OwnerScope()
+	case minigameconfig.FieldCurrentVersionID:
+		return m.CurrentVersionID()
+	case minigameconfig.FieldLatestVersionNo:
+		return m.LatestVersionNo()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MiniGameConfigMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case minigameconfig.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case minigameconfig.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case minigameconfig.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case minigameconfig.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case minigameconfig.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case minigameconfig.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case minigameconfig.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case minigameconfig.FieldVersion:
+		return m.OldVersion(ctx)
+	case minigameconfig.FieldCode:
+		return m.OldCode(ctx)
+	case minigameconfig.FieldOwnerScope:
+		return m.OldOwnerScope(ctx)
+	case minigameconfig.FieldCurrentVersionID:
+		return m.OldCurrentVersionID(ctx)
+	case minigameconfig.FieldLatestVersionNo:
+		return m.OldLatestVersionNo(ctx)
+	}
+	return nil, fmt.Errorf("unknown MiniGameConfig field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MiniGameConfigMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case minigameconfig.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case minigameconfig.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case minigameconfig.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case minigameconfig.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case minigameconfig.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case minigameconfig.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case minigameconfig.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case minigameconfig.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case minigameconfig.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case minigameconfig.FieldOwnerScope:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerScope(v)
+		return nil
+	case minigameconfig.FieldCurrentVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrentVersionID(v)
+		return nil
+	case minigameconfig.FieldLatestVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatestVersionNo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MiniGameConfig field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MiniGameConfigMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, minigameconfig.FieldVersion)
+	}
+	if m.addlatest_version_no != nil {
+		fields = append(fields, minigameconfig.FieldLatestVersionNo)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MiniGameConfigMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case minigameconfig.FieldVersion:
+		return m.AddedVersion()
+	case minigameconfig.FieldLatestVersionNo:
+		return m.AddedLatestVersionNo()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MiniGameConfigMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case minigameconfig.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case minigameconfig.FieldLatestVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLatestVersionNo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MiniGameConfig numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MiniGameConfigMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(minigameconfig.FieldCreatedBy) {
+		fields = append(fields, minigameconfig.FieldCreatedBy)
+	}
+	if m.FieldCleared(minigameconfig.FieldUpdatedBy) {
+		fields = append(fields, minigameconfig.FieldUpdatedBy)
+	}
+	if m.FieldCleared(minigameconfig.FieldDeletedAt) {
+		fields = append(fields, minigameconfig.FieldDeletedAt)
+	}
+	if m.FieldCleared(minigameconfig.FieldDeletedBy) {
+		fields = append(fields, minigameconfig.FieldDeletedBy)
+	}
+	if m.FieldCleared(minigameconfig.FieldDeleteReason) {
+		fields = append(fields, minigameconfig.FieldDeleteReason)
+	}
+	if m.FieldCleared(minigameconfig.FieldCode) {
+		fields = append(fields, minigameconfig.FieldCode)
+	}
+	if m.FieldCleared(minigameconfig.FieldCurrentVersionID) {
+		fields = append(fields, minigameconfig.FieldCurrentVersionID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MiniGameConfigMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MiniGameConfigMutation) ClearField(name string) error {
+	switch name {
+	case minigameconfig.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case minigameconfig.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case minigameconfig.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case minigameconfig.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case minigameconfig.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case minigameconfig.FieldCode:
+		m.ClearCode()
+		return nil
+	case minigameconfig.FieldCurrentVersionID:
+		m.ClearCurrentVersionID()
+		return nil
+	}
+	return fmt.Errorf("unknown MiniGameConfig nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MiniGameConfigMutation) ResetField(name string) error {
+	switch name {
+	case minigameconfig.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case minigameconfig.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case minigameconfig.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case minigameconfig.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case minigameconfig.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case minigameconfig.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case minigameconfig.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case minigameconfig.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case minigameconfig.FieldCode:
+		m.ResetCode()
+		return nil
+	case minigameconfig.FieldOwnerScope:
+		m.ResetOwnerScope()
+		return nil
+	case minigameconfig.FieldCurrentVersionID:
+		m.ResetCurrentVersionID()
+		return nil
+	case minigameconfig.FieldLatestVersionNo:
+		m.ResetLatestVersionNo()
+		return nil
+	}
+	return fmt.Errorf("unknown MiniGameConfig field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MiniGameConfigMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MiniGameConfigMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MiniGameConfigMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MiniGameConfigMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MiniGameConfigMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MiniGameConfigMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MiniGameConfigMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown MiniGameConfig unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MiniGameConfigMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown MiniGameConfig edge %s", name)
+}
+
+// MiniGameConfigVersionMutation represents an operation that mutates the MiniGameConfigVersion nodes in the graph.
+type MiniGameConfigVersionMutation struct {
+	config
+	op                   Op
+	typ                  string
+	id                   *uuid.UUID
+	created_at           *time.Time
+	created_by           *uuid.UUID
+	updated_at           *time.Time
+	updated_by           *uuid.UUID
+	deleted_at           *time.Time
+	deleted_by           *uuid.UUID
+	delete_reason        *string
+	version              *int64
+	addversion           *int64
+	minigame_config_id   *uuid.UUID
+	version_no           *int
+	addversion_no        *int
+	status               *string
+	payload              *map[string]interface{}
+	payload_sha256       *string
+	change_note          *string
+	snapshot_key         *string
+	snapshot_sha256      *string
+	based_on_version_id  *uuid.UUID
+	published_at         *time.Time
+	published_by         *uuid.UUID
+	code                 *string
+	minigame_type        *string
+	grade_levels         *[]int
+	appendgrade_levels   []int
+	subject_id           *uuid.UUID
+	question_types       *[]string
+	appendquestion_types []string
+	clearedFields        map[string]struct{}
+	done                 bool
+	oldValue             func(context.Context) (*MiniGameConfigVersion, error)
+	predicates           []predicate.MiniGameConfigVersion
+}
+
+var _ ent.Mutation = (*MiniGameConfigVersionMutation)(nil)
+
+// minigameconfigversionOption allows management of the mutation configuration using functional options.
+type minigameconfigversionOption func(*MiniGameConfigVersionMutation)
+
+// newMiniGameConfigVersionMutation creates new mutation for the MiniGameConfigVersion entity.
+func newMiniGameConfigVersionMutation(c config, op Op, opts ...minigameconfigversionOption) *MiniGameConfigVersionMutation {
+	m := &MiniGameConfigVersionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMiniGameConfigVersion,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMiniGameConfigVersionID sets the ID field of the mutation.
+func withMiniGameConfigVersionID(id uuid.UUID) minigameconfigversionOption {
+	return func(m *MiniGameConfigVersionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MiniGameConfigVersion
+		)
+		m.oldValue = func(ctx context.Context) (*MiniGameConfigVersion, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MiniGameConfigVersion.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMiniGameConfigVersion sets the old MiniGameConfigVersion of the mutation.
+func withMiniGameConfigVersion(node *MiniGameConfigVersion) minigameconfigversionOption {
+	return func(m *MiniGameConfigVersionMutation) {
+		m.oldValue = func(context.Context) (*MiniGameConfigVersion, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MiniGameConfigVersionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MiniGameConfigVersionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MiniGameConfigVersion entities.
+func (m *MiniGameConfigVersionMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MiniGameConfigVersionMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MiniGameConfigVersionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MiniGameConfigVersion.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *MiniGameConfigVersionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *MiniGameConfigVersionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *MiniGameConfigVersionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *MiniGameConfigVersionMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *MiniGameConfigVersionMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *MiniGameConfigVersionMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[minigameconfigversion.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[minigameconfigversion.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *MiniGameConfigVersionMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, minigameconfigversion.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *MiniGameConfigVersionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *MiniGameConfigVersionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *MiniGameConfigVersionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *MiniGameConfigVersionMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *MiniGameConfigVersionMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *MiniGameConfigVersionMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[minigameconfigversion.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[minigameconfigversion.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *MiniGameConfigVersionMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, minigameconfigversion.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *MiniGameConfigVersionMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *MiniGameConfigVersionMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *MiniGameConfigVersionMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[minigameconfigversion.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[minigameconfigversion.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *MiniGameConfigVersionMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, minigameconfigversion.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *MiniGameConfigVersionMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *MiniGameConfigVersionMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *MiniGameConfigVersionMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[minigameconfigversion.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[minigameconfigversion.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *MiniGameConfigVersionMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, minigameconfigversion.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *MiniGameConfigVersionMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *MiniGameConfigVersionMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *MiniGameConfigVersionMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[minigameconfigversion.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[minigameconfigversion.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *MiniGameConfigVersionMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, minigameconfigversion.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *MiniGameConfigVersionMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *MiniGameConfigVersionMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *MiniGameConfigVersionMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *MiniGameConfigVersionMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *MiniGameConfigVersionMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetMinigameConfigID sets the "minigame_config_id" field.
+func (m *MiniGameConfigVersionMutation) SetMinigameConfigID(u uuid.UUID) {
+	m.minigame_config_id = &u
+}
+
+// MinigameConfigID returns the value of the "minigame_config_id" field in the mutation.
+func (m *MiniGameConfigVersionMutation) MinigameConfigID() (r uuid.UUID, exists bool) {
+	v := m.minigame_config_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMinigameConfigID returns the old "minigame_config_id" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldMinigameConfigID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMinigameConfigID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMinigameConfigID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMinigameConfigID: %w", err)
+	}
+	return oldValue.MinigameConfigID, nil
+}
+
+// ResetMinigameConfigID resets all changes to the "minigame_config_id" field.
+func (m *MiniGameConfigVersionMutation) ResetMinigameConfigID() {
+	m.minigame_config_id = nil
+}
+
+// SetVersionNo sets the "version_no" field.
+func (m *MiniGameConfigVersionMutation) SetVersionNo(i int) {
+	m.version_no = &i
+	m.addversion_no = nil
+}
+
+// VersionNo returns the value of the "version_no" field in the mutation.
+func (m *MiniGameConfigVersionMutation) VersionNo() (r int, exists bool) {
+	v := m.version_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersionNo returns the old "version_no" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldVersionNo(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersionNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersionNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersionNo: %w", err)
+	}
+	return oldValue.VersionNo, nil
+}
+
+// AddVersionNo adds i to the "version_no" field.
+func (m *MiniGameConfigVersionMutation) AddVersionNo(i int) {
+	if m.addversion_no != nil {
+		*m.addversion_no += i
+	} else {
+		m.addversion_no = &i
+	}
+}
+
+// AddedVersionNo returns the value that was added to the "version_no" field in this mutation.
+func (m *MiniGameConfigVersionMutation) AddedVersionNo() (r int, exists bool) {
+	v := m.addversion_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersionNo resets all changes to the "version_no" field.
+func (m *MiniGameConfigVersionMutation) ResetVersionNo() {
+	m.version_no = nil
+	m.addversion_no = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *MiniGameConfigVersionMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *MiniGameConfigVersionMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *MiniGameConfigVersionMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetPayload sets the "payload" field.
+func (m *MiniGameConfigVersionMutation) SetPayload(value map[string]interface{}) {
+	m.payload = &value
+}
+
+// Payload returns the value of the "payload" field in the mutation.
+func (m *MiniGameConfigVersionMutation) Payload() (r map[string]interface{}, exists bool) {
+	v := m.payload
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPayload returns the old "payload" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldPayload(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPayload is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPayload requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPayload: %w", err)
+	}
+	return oldValue.Payload, nil
+}
+
+// ResetPayload resets all changes to the "payload" field.
+func (m *MiniGameConfigVersionMutation) ResetPayload() {
+	m.payload = nil
+}
+
+// SetPayloadSha256 sets the "payload_sha256" field.
+func (m *MiniGameConfigVersionMutation) SetPayloadSha256(s string) {
+	m.payload_sha256 = &s
+}
+
+// PayloadSha256 returns the value of the "payload_sha256" field in the mutation.
+func (m *MiniGameConfigVersionMutation) PayloadSha256() (r string, exists bool) {
+	v := m.payload_sha256
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPayloadSha256 returns the old "payload_sha256" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldPayloadSha256(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPayloadSha256 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPayloadSha256 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPayloadSha256: %w", err)
+	}
+	return oldValue.PayloadSha256, nil
+}
+
+// ResetPayloadSha256 resets all changes to the "payload_sha256" field.
+func (m *MiniGameConfigVersionMutation) ResetPayloadSha256() {
+	m.payload_sha256 = nil
+}
+
+// SetChangeNote sets the "change_note" field.
+func (m *MiniGameConfigVersionMutation) SetChangeNote(s string) {
+	m.change_note = &s
+}
+
+// ChangeNote returns the value of the "change_note" field in the mutation.
+func (m *MiniGameConfigVersionMutation) ChangeNote() (r string, exists bool) {
+	v := m.change_note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChangeNote returns the old "change_note" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldChangeNote(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChangeNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChangeNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChangeNote: %w", err)
+	}
+	return oldValue.ChangeNote, nil
+}
+
+// ClearChangeNote clears the value of the "change_note" field.
+func (m *MiniGameConfigVersionMutation) ClearChangeNote() {
+	m.change_note = nil
+	m.clearedFields[minigameconfigversion.FieldChangeNote] = struct{}{}
+}
+
+// ChangeNoteCleared returns if the "change_note" field was cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) ChangeNoteCleared() bool {
+	_, ok := m.clearedFields[minigameconfigversion.FieldChangeNote]
+	return ok
+}
+
+// ResetChangeNote resets all changes to the "change_note" field.
+func (m *MiniGameConfigVersionMutation) ResetChangeNote() {
+	m.change_note = nil
+	delete(m.clearedFields, minigameconfigversion.FieldChangeNote)
+}
+
+// SetSnapshotKey sets the "snapshot_key" field.
+func (m *MiniGameConfigVersionMutation) SetSnapshotKey(s string) {
+	m.snapshot_key = &s
+}
+
+// SnapshotKey returns the value of the "snapshot_key" field in the mutation.
+func (m *MiniGameConfigVersionMutation) SnapshotKey() (r string, exists bool) {
+	v := m.snapshot_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSnapshotKey returns the old "snapshot_key" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldSnapshotKey(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSnapshotKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSnapshotKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSnapshotKey: %w", err)
+	}
+	return oldValue.SnapshotKey, nil
+}
+
+// ClearSnapshotKey clears the value of the "snapshot_key" field.
+func (m *MiniGameConfigVersionMutation) ClearSnapshotKey() {
+	m.snapshot_key = nil
+	m.clearedFields[minigameconfigversion.FieldSnapshotKey] = struct{}{}
+}
+
+// SnapshotKeyCleared returns if the "snapshot_key" field was cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) SnapshotKeyCleared() bool {
+	_, ok := m.clearedFields[minigameconfigversion.FieldSnapshotKey]
+	return ok
+}
+
+// ResetSnapshotKey resets all changes to the "snapshot_key" field.
+func (m *MiniGameConfigVersionMutation) ResetSnapshotKey() {
+	m.snapshot_key = nil
+	delete(m.clearedFields, minigameconfigversion.FieldSnapshotKey)
+}
+
+// SetSnapshotSha256 sets the "snapshot_sha256" field.
+func (m *MiniGameConfigVersionMutation) SetSnapshotSha256(s string) {
+	m.snapshot_sha256 = &s
+}
+
+// SnapshotSha256 returns the value of the "snapshot_sha256" field in the mutation.
+func (m *MiniGameConfigVersionMutation) SnapshotSha256() (r string, exists bool) {
+	v := m.snapshot_sha256
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSnapshotSha256 returns the old "snapshot_sha256" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldSnapshotSha256(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSnapshotSha256 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSnapshotSha256 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSnapshotSha256: %w", err)
+	}
+	return oldValue.SnapshotSha256, nil
+}
+
+// ClearSnapshotSha256 clears the value of the "snapshot_sha256" field.
+func (m *MiniGameConfigVersionMutation) ClearSnapshotSha256() {
+	m.snapshot_sha256 = nil
+	m.clearedFields[minigameconfigversion.FieldSnapshotSha256] = struct{}{}
+}
+
+// SnapshotSha256Cleared returns if the "snapshot_sha256" field was cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) SnapshotSha256Cleared() bool {
+	_, ok := m.clearedFields[minigameconfigversion.FieldSnapshotSha256]
+	return ok
+}
+
+// ResetSnapshotSha256 resets all changes to the "snapshot_sha256" field.
+func (m *MiniGameConfigVersionMutation) ResetSnapshotSha256() {
+	m.snapshot_sha256 = nil
+	delete(m.clearedFields, minigameconfigversion.FieldSnapshotSha256)
+}
+
+// SetBasedOnVersionID sets the "based_on_version_id" field.
+func (m *MiniGameConfigVersionMutation) SetBasedOnVersionID(u uuid.UUID) {
+	m.based_on_version_id = &u
+}
+
+// BasedOnVersionID returns the value of the "based_on_version_id" field in the mutation.
+func (m *MiniGameConfigVersionMutation) BasedOnVersionID() (r uuid.UUID, exists bool) {
+	v := m.based_on_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBasedOnVersionID returns the old "based_on_version_id" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldBasedOnVersionID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBasedOnVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBasedOnVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBasedOnVersionID: %w", err)
+	}
+	return oldValue.BasedOnVersionID, nil
+}
+
+// ClearBasedOnVersionID clears the value of the "based_on_version_id" field.
+func (m *MiniGameConfigVersionMutation) ClearBasedOnVersionID() {
+	m.based_on_version_id = nil
+	m.clearedFields[minigameconfigversion.FieldBasedOnVersionID] = struct{}{}
+}
+
+// BasedOnVersionIDCleared returns if the "based_on_version_id" field was cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) BasedOnVersionIDCleared() bool {
+	_, ok := m.clearedFields[minigameconfigversion.FieldBasedOnVersionID]
+	return ok
+}
+
+// ResetBasedOnVersionID resets all changes to the "based_on_version_id" field.
+func (m *MiniGameConfigVersionMutation) ResetBasedOnVersionID() {
+	m.based_on_version_id = nil
+	delete(m.clearedFields, minigameconfigversion.FieldBasedOnVersionID)
+}
+
+// SetPublishedAt sets the "published_at" field.
+func (m *MiniGameConfigVersionMutation) SetPublishedAt(t time.Time) {
+	m.published_at = &t
+}
+
+// PublishedAt returns the value of the "published_at" field in the mutation.
+func (m *MiniGameConfigVersionMutation) PublishedAt() (r time.Time, exists bool) {
+	v := m.published_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedAt returns the old "published_at" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldPublishedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedAt: %w", err)
+	}
+	return oldValue.PublishedAt, nil
+}
+
+// ClearPublishedAt clears the value of the "published_at" field.
+func (m *MiniGameConfigVersionMutation) ClearPublishedAt() {
+	m.published_at = nil
+	m.clearedFields[minigameconfigversion.FieldPublishedAt] = struct{}{}
+}
+
+// PublishedAtCleared returns if the "published_at" field was cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) PublishedAtCleared() bool {
+	_, ok := m.clearedFields[minigameconfigversion.FieldPublishedAt]
+	return ok
+}
+
+// ResetPublishedAt resets all changes to the "published_at" field.
+func (m *MiniGameConfigVersionMutation) ResetPublishedAt() {
+	m.published_at = nil
+	delete(m.clearedFields, minigameconfigversion.FieldPublishedAt)
+}
+
+// SetPublishedBy sets the "published_by" field.
+func (m *MiniGameConfigVersionMutation) SetPublishedBy(u uuid.UUID) {
+	m.published_by = &u
+}
+
+// PublishedBy returns the value of the "published_by" field in the mutation.
+func (m *MiniGameConfigVersionMutation) PublishedBy() (r uuid.UUID, exists bool) {
+	v := m.published_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedBy returns the old "published_by" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldPublishedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedBy: %w", err)
+	}
+	return oldValue.PublishedBy, nil
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (m *MiniGameConfigVersionMutation) ClearPublishedBy() {
+	m.published_by = nil
+	m.clearedFields[minigameconfigversion.FieldPublishedBy] = struct{}{}
+}
+
+// PublishedByCleared returns if the "published_by" field was cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) PublishedByCleared() bool {
+	_, ok := m.clearedFields[minigameconfigversion.FieldPublishedBy]
+	return ok
+}
+
+// ResetPublishedBy resets all changes to the "published_by" field.
+func (m *MiniGameConfigVersionMutation) ResetPublishedBy() {
+	m.published_by = nil
+	delete(m.clearedFields, minigameconfigversion.FieldPublishedBy)
+}
+
+// SetCode sets the "code" field.
+func (m *MiniGameConfigVersionMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *MiniGameConfigVersionMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *MiniGameConfigVersionMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetMinigameType sets the "minigame_type" field.
+func (m *MiniGameConfigVersionMutation) SetMinigameType(s string) {
+	m.minigame_type = &s
+}
+
+// MinigameType returns the value of the "minigame_type" field in the mutation.
+func (m *MiniGameConfigVersionMutation) MinigameType() (r string, exists bool) {
+	v := m.minigame_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMinigameType returns the old "minigame_type" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldMinigameType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMinigameType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMinigameType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMinigameType: %w", err)
+	}
+	return oldValue.MinigameType, nil
+}
+
+// ResetMinigameType resets all changes to the "minigame_type" field.
+func (m *MiniGameConfigVersionMutation) ResetMinigameType() {
+	m.minigame_type = nil
+}
+
+// SetGradeLevels sets the "grade_levels" field.
+func (m *MiniGameConfigVersionMutation) SetGradeLevels(i []int) {
+	m.grade_levels = &i
+	m.appendgrade_levels = nil
+}
+
+// GradeLevels returns the value of the "grade_levels" field in the mutation.
+func (m *MiniGameConfigVersionMutation) GradeLevels() (r []int, exists bool) {
+	v := m.grade_levels
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGradeLevels returns the old "grade_levels" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldGradeLevels(ctx context.Context) (v []int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGradeLevels is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGradeLevels requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGradeLevels: %w", err)
+	}
+	return oldValue.GradeLevels, nil
+}
+
+// AppendGradeLevels adds i to the "grade_levels" field.
+func (m *MiniGameConfigVersionMutation) AppendGradeLevels(i []int) {
+	m.appendgrade_levels = append(m.appendgrade_levels, i...)
+}
+
+// AppendedGradeLevels returns the list of values that were appended to the "grade_levels" field in this mutation.
+func (m *MiniGameConfigVersionMutation) AppendedGradeLevels() ([]int, bool) {
+	if len(m.appendgrade_levels) == 0 {
+		return nil, false
+	}
+	return m.appendgrade_levels, true
+}
+
+// ResetGradeLevels resets all changes to the "grade_levels" field.
+func (m *MiniGameConfigVersionMutation) ResetGradeLevels() {
+	m.grade_levels = nil
+	m.appendgrade_levels = nil
+}
+
+// SetSubjectID sets the "subject_id" field.
+func (m *MiniGameConfigVersionMutation) SetSubjectID(u uuid.UUID) {
+	m.subject_id = &u
+}
+
+// SubjectID returns the value of the "subject_id" field in the mutation.
+func (m *MiniGameConfigVersionMutation) SubjectID() (r uuid.UUID, exists bool) {
+	v := m.subject_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubjectID returns the old "subject_id" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldSubjectID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubjectID: %w", err)
+	}
+	return oldValue.SubjectID, nil
+}
+
+// ResetSubjectID resets all changes to the "subject_id" field.
+func (m *MiniGameConfigVersionMutation) ResetSubjectID() {
+	m.subject_id = nil
+}
+
+// SetQuestionTypes sets the "question_types" field.
+func (m *MiniGameConfigVersionMutation) SetQuestionTypes(s []string) {
+	m.question_types = &s
+	m.appendquestion_types = nil
+}
+
+// QuestionTypes returns the value of the "question_types" field in the mutation.
+func (m *MiniGameConfigVersionMutation) QuestionTypes() (r []string, exists bool) {
+	v := m.question_types
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestionTypes returns the old "question_types" field's value of the MiniGameConfigVersion entity.
+// If the MiniGameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGameConfigVersionMutation) OldQuestionTypes(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestionTypes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestionTypes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestionTypes: %w", err)
+	}
+	return oldValue.QuestionTypes, nil
+}
+
+// AppendQuestionTypes adds s to the "question_types" field.
+func (m *MiniGameConfigVersionMutation) AppendQuestionTypes(s []string) {
+	m.appendquestion_types = append(m.appendquestion_types, s...)
+}
+
+// AppendedQuestionTypes returns the list of values that were appended to the "question_types" field in this mutation.
+func (m *MiniGameConfigVersionMutation) AppendedQuestionTypes() ([]string, bool) {
+	if len(m.appendquestion_types) == 0 {
+		return nil, false
+	}
+	return m.appendquestion_types, true
+}
+
+// ResetQuestionTypes resets all changes to the "question_types" field.
+func (m *MiniGameConfigVersionMutation) ResetQuestionTypes() {
+	m.question_types = nil
+	m.appendquestion_types = nil
+}
+
+// Where appends a list predicates to the MiniGameConfigVersionMutation builder.
+func (m *MiniGameConfigVersionMutation) Where(ps ...predicate.MiniGameConfigVersion) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MiniGameConfigVersionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MiniGameConfigVersionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MiniGameConfigVersion, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MiniGameConfigVersionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MiniGameConfigVersionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MiniGameConfigVersion).
+func (m *MiniGameConfigVersionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MiniGameConfigVersionMutation) Fields() []string {
+	fields := make([]string, 0, 24)
+	if m.created_at != nil {
+		fields = append(fields, minigameconfigversion.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, minigameconfigversion.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, minigameconfigversion.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, minigameconfigversion.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, minigameconfigversion.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, minigameconfigversion.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, minigameconfigversion.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, minigameconfigversion.FieldVersion)
+	}
+	if m.minigame_config_id != nil {
+		fields = append(fields, minigameconfigversion.FieldMinigameConfigID)
+	}
+	if m.version_no != nil {
+		fields = append(fields, minigameconfigversion.FieldVersionNo)
+	}
+	if m.status != nil {
+		fields = append(fields, minigameconfigversion.FieldStatus)
+	}
+	if m.payload != nil {
+		fields = append(fields, minigameconfigversion.FieldPayload)
+	}
+	if m.payload_sha256 != nil {
+		fields = append(fields, minigameconfigversion.FieldPayloadSha256)
+	}
+	if m.change_note != nil {
+		fields = append(fields, minigameconfigversion.FieldChangeNote)
+	}
+	if m.snapshot_key != nil {
+		fields = append(fields, minigameconfigversion.FieldSnapshotKey)
+	}
+	if m.snapshot_sha256 != nil {
+		fields = append(fields, minigameconfigversion.FieldSnapshotSha256)
+	}
+	if m.based_on_version_id != nil {
+		fields = append(fields, minigameconfigversion.FieldBasedOnVersionID)
+	}
+	if m.published_at != nil {
+		fields = append(fields, minigameconfigversion.FieldPublishedAt)
+	}
+	if m.published_by != nil {
+		fields = append(fields, minigameconfigversion.FieldPublishedBy)
+	}
+	if m.code != nil {
+		fields = append(fields, minigameconfigversion.FieldCode)
+	}
+	if m.minigame_type != nil {
+		fields = append(fields, minigameconfigversion.FieldMinigameType)
+	}
+	if m.grade_levels != nil {
+		fields = append(fields, minigameconfigversion.FieldGradeLevels)
+	}
+	if m.subject_id != nil {
+		fields = append(fields, minigameconfigversion.FieldSubjectID)
+	}
+	if m.question_types != nil {
+		fields = append(fields, minigameconfigversion.FieldQuestionTypes)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MiniGameConfigVersionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case minigameconfigversion.FieldCreatedAt:
+		return m.CreatedAt()
+	case minigameconfigversion.FieldCreatedBy:
+		return m.CreatedBy()
+	case minigameconfigversion.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case minigameconfigversion.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case minigameconfigversion.FieldDeletedAt:
+		return m.DeletedAt()
+	case minigameconfigversion.FieldDeletedBy:
+		return m.DeletedBy()
+	case minigameconfigversion.FieldDeleteReason:
+		return m.DeleteReason()
+	case minigameconfigversion.FieldVersion:
+		return m.Version()
+	case minigameconfigversion.FieldMinigameConfigID:
+		return m.MinigameConfigID()
+	case minigameconfigversion.FieldVersionNo:
+		return m.VersionNo()
+	case minigameconfigversion.FieldStatus:
+		return m.Status()
+	case minigameconfigversion.FieldPayload:
+		return m.Payload()
+	case minigameconfigversion.FieldPayloadSha256:
+		return m.PayloadSha256()
+	case minigameconfigversion.FieldChangeNote:
+		return m.ChangeNote()
+	case minigameconfigversion.FieldSnapshotKey:
+		return m.SnapshotKey()
+	case minigameconfigversion.FieldSnapshotSha256:
+		return m.SnapshotSha256()
+	case minigameconfigversion.FieldBasedOnVersionID:
+		return m.BasedOnVersionID()
+	case minigameconfigversion.FieldPublishedAt:
+		return m.PublishedAt()
+	case minigameconfigversion.FieldPublishedBy:
+		return m.PublishedBy()
+	case minigameconfigversion.FieldCode:
+		return m.Code()
+	case minigameconfigversion.FieldMinigameType:
+		return m.MinigameType()
+	case minigameconfigversion.FieldGradeLevels:
+		return m.GradeLevels()
+	case minigameconfigversion.FieldSubjectID:
+		return m.SubjectID()
+	case minigameconfigversion.FieldQuestionTypes:
+		return m.QuestionTypes()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MiniGameConfigVersionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case minigameconfigversion.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case minigameconfigversion.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case minigameconfigversion.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case minigameconfigversion.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case minigameconfigversion.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case minigameconfigversion.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case minigameconfigversion.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case minigameconfigversion.FieldVersion:
+		return m.OldVersion(ctx)
+	case minigameconfigversion.FieldMinigameConfigID:
+		return m.OldMinigameConfigID(ctx)
+	case minigameconfigversion.FieldVersionNo:
+		return m.OldVersionNo(ctx)
+	case minigameconfigversion.FieldStatus:
+		return m.OldStatus(ctx)
+	case minigameconfigversion.FieldPayload:
+		return m.OldPayload(ctx)
+	case minigameconfigversion.FieldPayloadSha256:
+		return m.OldPayloadSha256(ctx)
+	case minigameconfigversion.FieldChangeNote:
+		return m.OldChangeNote(ctx)
+	case minigameconfigversion.FieldSnapshotKey:
+		return m.OldSnapshotKey(ctx)
+	case minigameconfigversion.FieldSnapshotSha256:
+		return m.OldSnapshotSha256(ctx)
+	case minigameconfigversion.FieldBasedOnVersionID:
+		return m.OldBasedOnVersionID(ctx)
+	case minigameconfigversion.FieldPublishedAt:
+		return m.OldPublishedAt(ctx)
+	case minigameconfigversion.FieldPublishedBy:
+		return m.OldPublishedBy(ctx)
+	case minigameconfigversion.FieldCode:
+		return m.OldCode(ctx)
+	case minigameconfigversion.FieldMinigameType:
+		return m.OldMinigameType(ctx)
+	case minigameconfigversion.FieldGradeLevels:
+		return m.OldGradeLevels(ctx)
+	case minigameconfigversion.FieldSubjectID:
+		return m.OldSubjectID(ctx)
+	case minigameconfigversion.FieldQuestionTypes:
+		return m.OldQuestionTypes(ctx)
+	}
+	return nil, fmt.Errorf("unknown MiniGameConfigVersion field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MiniGameConfigVersionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case minigameconfigversion.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case minigameconfigversion.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case minigameconfigversion.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case minigameconfigversion.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case minigameconfigversion.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case minigameconfigversion.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case minigameconfigversion.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case minigameconfigversion.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case minigameconfigversion.FieldMinigameConfigID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMinigameConfigID(v)
+		return nil
+	case minigameconfigversion.FieldVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersionNo(v)
+		return nil
+	case minigameconfigversion.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case minigameconfigversion.FieldPayload:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPayload(v)
+		return nil
+	case minigameconfigversion.FieldPayloadSha256:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPayloadSha256(v)
+		return nil
+	case minigameconfigversion.FieldChangeNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChangeNote(v)
+		return nil
+	case minigameconfigversion.FieldSnapshotKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSnapshotKey(v)
+		return nil
+	case minigameconfigversion.FieldSnapshotSha256:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSnapshotSha256(v)
+		return nil
+	case minigameconfigversion.FieldBasedOnVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBasedOnVersionID(v)
+		return nil
+	case minigameconfigversion.FieldPublishedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedAt(v)
+		return nil
+	case minigameconfigversion.FieldPublishedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedBy(v)
+		return nil
+	case minigameconfigversion.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case minigameconfigversion.FieldMinigameType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMinigameType(v)
+		return nil
+	case minigameconfigversion.FieldGradeLevels:
+		v, ok := value.([]int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGradeLevels(v)
+		return nil
+	case minigameconfigversion.FieldSubjectID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubjectID(v)
+		return nil
+	case minigameconfigversion.FieldQuestionTypes:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestionTypes(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MiniGameConfigVersion field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MiniGameConfigVersionMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, minigameconfigversion.FieldVersion)
+	}
+	if m.addversion_no != nil {
+		fields = append(fields, minigameconfigversion.FieldVersionNo)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MiniGameConfigVersionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case minigameconfigversion.FieldVersion:
+		return m.AddedVersion()
+	case minigameconfigversion.FieldVersionNo:
+		return m.AddedVersionNo()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MiniGameConfigVersionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case minigameconfigversion.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case minigameconfigversion.FieldVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersionNo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MiniGameConfigVersion numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MiniGameConfigVersionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(minigameconfigversion.FieldCreatedBy) {
+		fields = append(fields, minigameconfigversion.FieldCreatedBy)
+	}
+	if m.FieldCleared(minigameconfigversion.FieldUpdatedBy) {
+		fields = append(fields, minigameconfigversion.FieldUpdatedBy)
+	}
+	if m.FieldCleared(minigameconfigversion.FieldDeletedAt) {
+		fields = append(fields, minigameconfigversion.FieldDeletedAt)
+	}
+	if m.FieldCleared(minigameconfigversion.FieldDeletedBy) {
+		fields = append(fields, minigameconfigversion.FieldDeletedBy)
+	}
+	if m.FieldCleared(minigameconfigversion.FieldDeleteReason) {
+		fields = append(fields, minigameconfigversion.FieldDeleteReason)
+	}
+	if m.FieldCleared(minigameconfigversion.FieldChangeNote) {
+		fields = append(fields, minigameconfigversion.FieldChangeNote)
+	}
+	if m.FieldCleared(minigameconfigversion.FieldSnapshotKey) {
+		fields = append(fields, minigameconfigversion.FieldSnapshotKey)
+	}
+	if m.FieldCleared(minigameconfigversion.FieldSnapshotSha256) {
+		fields = append(fields, minigameconfigversion.FieldSnapshotSha256)
+	}
+	if m.FieldCleared(minigameconfigversion.FieldBasedOnVersionID) {
+		fields = append(fields, minigameconfigversion.FieldBasedOnVersionID)
+	}
+	if m.FieldCleared(minigameconfigversion.FieldPublishedAt) {
+		fields = append(fields, minigameconfigversion.FieldPublishedAt)
+	}
+	if m.FieldCleared(minigameconfigversion.FieldPublishedBy) {
+		fields = append(fields, minigameconfigversion.FieldPublishedBy)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MiniGameConfigVersionMutation) ClearField(name string) error {
+	switch name {
+	case minigameconfigversion.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case minigameconfigversion.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case minigameconfigversion.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case minigameconfigversion.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case minigameconfigversion.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case minigameconfigversion.FieldChangeNote:
+		m.ClearChangeNote()
+		return nil
+	case minigameconfigversion.FieldSnapshotKey:
+		m.ClearSnapshotKey()
+		return nil
+	case minigameconfigversion.FieldSnapshotSha256:
+		m.ClearSnapshotSha256()
+		return nil
+	case minigameconfigversion.FieldBasedOnVersionID:
+		m.ClearBasedOnVersionID()
+		return nil
+	case minigameconfigversion.FieldPublishedAt:
+		m.ClearPublishedAt()
+		return nil
+	case minigameconfigversion.FieldPublishedBy:
+		m.ClearPublishedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown MiniGameConfigVersion nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MiniGameConfigVersionMutation) ResetField(name string) error {
+	switch name {
+	case minigameconfigversion.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case minigameconfigversion.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case minigameconfigversion.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case minigameconfigversion.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case minigameconfigversion.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case minigameconfigversion.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case minigameconfigversion.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case minigameconfigversion.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case minigameconfigversion.FieldMinigameConfigID:
+		m.ResetMinigameConfigID()
+		return nil
+	case minigameconfigversion.FieldVersionNo:
+		m.ResetVersionNo()
+		return nil
+	case minigameconfigversion.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case minigameconfigversion.FieldPayload:
+		m.ResetPayload()
+		return nil
+	case minigameconfigversion.FieldPayloadSha256:
+		m.ResetPayloadSha256()
+		return nil
+	case minigameconfigversion.FieldChangeNote:
+		m.ResetChangeNote()
+		return nil
+	case minigameconfigversion.FieldSnapshotKey:
+		m.ResetSnapshotKey()
+		return nil
+	case minigameconfigversion.FieldSnapshotSha256:
+		m.ResetSnapshotSha256()
+		return nil
+	case minigameconfigversion.FieldBasedOnVersionID:
+		m.ResetBasedOnVersionID()
+		return nil
+	case minigameconfigversion.FieldPublishedAt:
+		m.ResetPublishedAt()
+		return nil
+	case minigameconfigversion.FieldPublishedBy:
+		m.ResetPublishedBy()
+		return nil
+	case minigameconfigversion.FieldCode:
+		m.ResetCode()
+		return nil
+	case minigameconfigversion.FieldMinigameType:
+		m.ResetMinigameType()
+		return nil
+	case minigameconfigversion.FieldGradeLevels:
+		m.ResetGradeLevels()
+		return nil
+	case minigameconfigversion.FieldSubjectID:
+		m.ResetSubjectID()
+		return nil
+	case minigameconfigversion.FieldQuestionTypes:
+		m.ResetQuestionTypes()
+		return nil
+	}
+	return fmt.Errorf("unknown MiniGameConfigVersion field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MiniGameConfigVersionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MiniGameConfigVersionMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MiniGameConfigVersionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MiniGameConfigVersionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MiniGameConfigVersionMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MiniGameConfigVersionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown MiniGameConfigVersion unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MiniGameConfigVersionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown MiniGameConfigVersion edge %s", name)
+}
+
+// MiniGamePlayMutation represents an operation that mutates the MiniGamePlay nodes in the graph.
+type MiniGamePlayMutation struct {
+	config
+	op                         Op
+	typ                        string
+	id                         *uuid.UUID
+	tenant_id                  *uuid.UUID
+	created_at                 *time.Time
+	created_by                 *uuid.UUID
+	updated_at                 *time.Time
+	updated_by                 *uuid.UUID
+	deleted_at                 *time.Time
+	deleted_by                 *uuid.UUID
+	delete_reason              *string
+	version                    *int64
+	addversion                 *int64
+	student_id                 *uuid.UUID
+	school_id                  *uuid.UUID
+	minigame_config_id         *uuid.UUID
+	minigame_config_version_id *uuid.UUID
+	minigame_type              *string
+	attempt_id                 *uuid.UUID
+	context_type               *string
+	context_id                 *uuid.UUID
+	play_date                  *string
+	status                     *string
+	learning_score             *float64
+	addlearning_score          *float64
+	max_score                  *float64
+	addmax_score               *float64
+	game_score                 *int
+	addgame_score              *int
+	correct_count              *int
+	addcorrect_count           *int
+	item_count                 *int
+	additem_count              *int
+	completion_met             *bool
+	rewards_eligible           *bool
+	started_at                 *time.Time
+	completed_at               *time.Time
+	clearedFields              map[string]struct{}
+	done                       bool
+	oldValue                   func(context.Context) (*MiniGamePlay, error)
+	predicates                 []predicate.MiniGamePlay
+}
+
+var _ ent.Mutation = (*MiniGamePlayMutation)(nil)
+
+// minigameplayOption allows management of the mutation configuration using functional options.
+type minigameplayOption func(*MiniGamePlayMutation)
+
+// newMiniGamePlayMutation creates new mutation for the MiniGamePlay entity.
+func newMiniGamePlayMutation(c config, op Op, opts ...minigameplayOption) *MiniGamePlayMutation {
+	m := &MiniGamePlayMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMiniGamePlay,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMiniGamePlayID sets the ID field of the mutation.
+func withMiniGamePlayID(id uuid.UUID) minigameplayOption {
+	return func(m *MiniGamePlayMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MiniGamePlay
+		)
+		m.oldValue = func(ctx context.Context) (*MiniGamePlay, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MiniGamePlay.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMiniGamePlay sets the old MiniGamePlay of the mutation.
+func withMiniGamePlay(node *MiniGamePlay) minigameplayOption {
+	return func(m *MiniGamePlayMutation) {
+		m.oldValue = func(context.Context) (*MiniGamePlay, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MiniGamePlayMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MiniGamePlayMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MiniGamePlay entities.
+func (m *MiniGamePlayMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MiniGamePlayMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MiniGamePlayMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MiniGamePlay.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *MiniGamePlayMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *MiniGamePlayMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *MiniGamePlayMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *MiniGamePlayMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *MiniGamePlayMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *MiniGamePlayMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *MiniGamePlayMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *MiniGamePlayMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *MiniGamePlayMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[minigameplay.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *MiniGamePlayMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, minigameplay.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *MiniGamePlayMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *MiniGamePlayMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *MiniGamePlayMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *MiniGamePlayMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *MiniGamePlayMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *MiniGamePlayMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[minigameplay.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *MiniGamePlayMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, minigameplay.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *MiniGamePlayMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *MiniGamePlayMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *MiniGamePlayMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[minigameplay.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *MiniGamePlayMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, minigameplay.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *MiniGamePlayMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *MiniGamePlayMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *MiniGamePlayMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[minigameplay.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *MiniGamePlayMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, minigameplay.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *MiniGamePlayMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *MiniGamePlayMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *MiniGamePlayMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[minigameplay.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *MiniGamePlayMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, minigameplay.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *MiniGamePlayMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *MiniGamePlayMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *MiniGamePlayMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *MiniGamePlayMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *MiniGamePlayMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetStudentID sets the "student_id" field.
+func (m *MiniGamePlayMutation) SetStudentID(u uuid.UUID) {
+	m.student_id = &u
+}
+
+// StudentID returns the value of the "student_id" field in the mutation.
+func (m *MiniGamePlayMutation) StudentID() (r uuid.UUID, exists bool) {
+	v := m.student_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStudentID returns the old "student_id" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldStudentID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStudentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStudentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStudentID: %w", err)
+	}
+	return oldValue.StudentID, nil
+}
+
+// ResetStudentID resets all changes to the "student_id" field.
+func (m *MiniGamePlayMutation) ResetStudentID() {
+	m.student_id = nil
+}
+
+// SetSchoolID sets the "school_id" field.
+func (m *MiniGamePlayMutation) SetSchoolID(u uuid.UUID) {
+	m.school_id = &u
+}
+
+// SchoolID returns the value of the "school_id" field in the mutation.
+func (m *MiniGamePlayMutation) SchoolID() (r uuid.UUID, exists bool) {
+	v := m.school_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchoolID returns the old "school_id" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldSchoolID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchoolID: %w", err)
+	}
+	return oldValue.SchoolID, nil
+}
+
+// ClearSchoolID clears the value of the "school_id" field.
+func (m *MiniGamePlayMutation) ClearSchoolID() {
+	m.school_id = nil
+	m.clearedFields[minigameplay.FieldSchoolID] = struct{}{}
+}
+
+// SchoolIDCleared returns if the "school_id" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) SchoolIDCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldSchoolID]
+	return ok
+}
+
+// ResetSchoolID resets all changes to the "school_id" field.
+func (m *MiniGamePlayMutation) ResetSchoolID() {
+	m.school_id = nil
+	delete(m.clearedFields, minigameplay.FieldSchoolID)
+}
+
+// SetMinigameConfigID sets the "minigame_config_id" field.
+func (m *MiniGamePlayMutation) SetMinigameConfigID(u uuid.UUID) {
+	m.minigame_config_id = &u
+}
+
+// MinigameConfigID returns the value of the "minigame_config_id" field in the mutation.
+func (m *MiniGamePlayMutation) MinigameConfigID() (r uuid.UUID, exists bool) {
+	v := m.minigame_config_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMinigameConfigID returns the old "minigame_config_id" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldMinigameConfigID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMinigameConfigID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMinigameConfigID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMinigameConfigID: %w", err)
+	}
+	return oldValue.MinigameConfigID, nil
+}
+
+// ResetMinigameConfigID resets all changes to the "minigame_config_id" field.
+func (m *MiniGamePlayMutation) ResetMinigameConfigID() {
+	m.minigame_config_id = nil
+}
+
+// SetMinigameConfigVersionID sets the "minigame_config_version_id" field.
+func (m *MiniGamePlayMutation) SetMinigameConfigVersionID(u uuid.UUID) {
+	m.minigame_config_version_id = &u
+}
+
+// MinigameConfigVersionID returns the value of the "minigame_config_version_id" field in the mutation.
+func (m *MiniGamePlayMutation) MinigameConfigVersionID() (r uuid.UUID, exists bool) {
+	v := m.minigame_config_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMinigameConfigVersionID returns the old "minigame_config_version_id" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldMinigameConfigVersionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMinigameConfigVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMinigameConfigVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMinigameConfigVersionID: %w", err)
+	}
+	return oldValue.MinigameConfigVersionID, nil
+}
+
+// ResetMinigameConfigVersionID resets all changes to the "minigame_config_version_id" field.
+func (m *MiniGamePlayMutation) ResetMinigameConfigVersionID() {
+	m.minigame_config_version_id = nil
+}
+
+// SetMinigameType sets the "minigame_type" field.
+func (m *MiniGamePlayMutation) SetMinigameType(s string) {
+	m.minigame_type = &s
+}
+
+// MinigameType returns the value of the "minigame_type" field in the mutation.
+func (m *MiniGamePlayMutation) MinigameType() (r string, exists bool) {
+	v := m.minigame_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMinigameType returns the old "minigame_type" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldMinigameType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMinigameType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMinigameType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMinigameType: %w", err)
+	}
+	return oldValue.MinigameType, nil
+}
+
+// ResetMinigameType resets all changes to the "minigame_type" field.
+func (m *MiniGamePlayMutation) ResetMinigameType() {
+	m.minigame_type = nil
+}
+
+// SetAttemptID sets the "attempt_id" field.
+func (m *MiniGamePlayMutation) SetAttemptID(u uuid.UUID) {
+	m.attempt_id = &u
+}
+
+// AttemptID returns the value of the "attempt_id" field in the mutation.
+func (m *MiniGamePlayMutation) AttemptID() (r uuid.UUID, exists bool) {
+	v := m.attempt_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttemptID returns the old "attempt_id" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldAttemptID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttemptID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttemptID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttemptID: %w", err)
+	}
+	return oldValue.AttemptID, nil
+}
+
+// ResetAttemptID resets all changes to the "attempt_id" field.
+func (m *MiniGamePlayMutation) ResetAttemptID() {
+	m.attempt_id = nil
+}
+
+// SetContextType sets the "context_type" field.
+func (m *MiniGamePlayMutation) SetContextType(s string) {
+	m.context_type = &s
+}
+
+// ContextType returns the value of the "context_type" field in the mutation.
+func (m *MiniGamePlayMutation) ContextType() (r string, exists bool) {
+	v := m.context_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContextType returns the old "context_type" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldContextType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContextType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContextType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContextType: %w", err)
+	}
+	return oldValue.ContextType, nil
+}
+
+// ResetContextType resets all changes to the "context_type" field.
+func (m *MiniGamePlayMutation) ResetContextType() {
+	m.context_type = nil
+}
+
+// SetContextID sets the "context_id" field.
+func (m *MiniGamePlayMutation) SetContextID(u uuid.UUID) {
+	m.context_id = &u
+}
+
+// ContextID returns the value of the "context_id" field in the mutation.
+func (m *MiniGamePlayMutation) ContextID() (r uuid.UUID, exists bool) {
+	v := m.context_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContextID returns the old "context_id" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldContextID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContextID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContextID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContextID: %w", err)
+	}
+	return oldValue.ContextID, nil
+}
+
+// ClearContextID clears the value of the "context_id" field.
+func (m *MiniGamePlayMutation) ClearContextID() {
+	m.context_id = nil
+	m.clearedFields[minigameplay.FieldContextID] = struct{}{}
+}
+
+// ContextIDCleared returns if the "context_id" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) ContextIDCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldContextID]
+	return ok
+}
+
+// ResetContextID resets all changes to the "context_id" field.
+func (m *MiniGamePlayMutation) ResetContextID() {
+	m.context_id = nil
+	delete(m.clearedFields, minigameplay.FieldContextID)
+}
+
+// SetPlayDate sets the "play_date" field.
+func (m *MiniGamePlayMutation) SetPlayDate(s string) {
+	m.play_date = &s
+}
+
+// PlayDate returns the value of the "play_date" field in the mutation.
+func (m *MiniGamePlayMutation) PlayDate() (r string, exists bool) {
+	v := m.play_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlayDate returns the old "play_date" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldPlayDate(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlayDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlayDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlayDate: %w", err)
+	}
+	return oldValue.PlayDate, nil
+}
+
+// ResetPlayDate resets all changes to the "play_date" field.
+func (m *MiniGamePlayMutation) ResetPlayDate() {
+	m.play_date = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *MiniGamePlayMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *MiniGamePlayMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *MiniGamePlayMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetLearningScore sets the "learning_score" field.
+func (m *MiniGamePlayMutation) SetLearningScore(f float64) {
+	m.learning_score = &f
+	m.addlearning_score = nil
+}
+
+// LearningScore returns the value of the "learning_score" field in the mutation.
+func (m *MiniGamePlayMutation) LearningScore() (r float64, exists bool) {
+	v := m.learning_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLearningScore returns the old "learning_score" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldLearningScore(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLearningScore is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLearningScore requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLearningScore: %w", err)
+	}
+	return oldValue.LearningScore, nil
+}
+
+// AddLearningScore adds f to the "learning_score" field.
+func (m *MiniGamePlayMutation) AddLearningScore(f float64) {
+	if m.addlearning_score != nil {
+		*m.addlearning_score += f
+	} else {
+		m.addlearning_score = &f
+	}
+}
+
+// AddedLearningScore returns the value that was added to the "learning_score" field in this mutation.
+func (m *MiniGamePlayMutation) AddedLearningScore() (r float64, exists bool) {
+	v := m.addlearning_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLearningScore clears the value of the "learning_score" field.
+func (m *MiniGamePlayMutation) ClearLearningScore() {
+	m.learning_score = nil
+	m.addlearning_score = nil
+	m.clearedFields[minigameplay.FieldLearningScore] = struct{}{}
+}
+
+// LearningScoreCleared returns if the "learning_score" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) LearningScoreCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldLearningScore]
+	return ok
+}
+
+// ResetLearningScore resets all changes to the "learning_score" field.
+func (m *MiniGamePlayMutation) ResetLearningScore() {
+	m.learning_score = nil
+	m.addlearning_score = nil
+	delete(m.clearedFields, minigameplay.FieldLearningScore)
+}
+
+// SetMaxScore sets the "max_score" field.
+func (m *MiniGamePlayMutation) SetMaxScore(f float64) {
+	m.max_score = &f
+	m.addmax_score = nil
+}
+
+// MaxScore returns the value of the "max_score" field in the mutation.
+func (m *MiniGamePlayMutation) MaxScore() (r float64, exists bool) {
+	v := m.max_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMaxScore returns the old "max_score" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldMaxScore(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMaxScore is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMaxScore requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMaxScore: %w", err)
+	}
+	return oldValue.MaxScore, nil
+}
+
+// AddMaxScore adds f to the "max_score" field.
+func (m *MiniGamePlayMutation) AddMaxScore(f float64) {
+	if m.addmax_score != nil {
+		*m.addmax_score += f
+	} else {
+		m.addmax_score = &f
+	}
+}
+
+// AddedMaxScore returns the value that was added to the "max_score" field in this mutation.
+func (m *MiniGamePlayMutation) AddedMaxScore() (r float64, exists bool) {
+	v := m.addmax_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearMaxScore clears the value of the "max_score" field.
+func (m *MiniGamePlayMutation) ClearMaxScore() {
+	m.max_score = nil
+	m.addmax_score = nil
+	m.clearedFields[minigameplay.FieldMaxScore] = struct{}{}
+}
+
+// MaxScoreCleared returns if the "max_score" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) MaxScoreCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldMaxScore]
+	return ok
+}
+
+// ResetMaxScore resets all changes to the "max_score" field.
+func (m *MiniGamePlayMutation) ResetMaxScore() {
+	m.max_score = nil
+	m.addmax_score = nil
+	delete(m.clearedFields, minigameplay.FieldMaxScore)
+}
+
+// SetGameScore sets the "game_score" field.
+func (m *MiniGamePlayMutation) SetGameScore(i int) {
+	m.game_score = &i
+	m.addgame_score = nil
+}
+
+// GameScore returns the value of the "game_score" field in the mutation.
+func (m *MiniGamePlayMutation) GameScore() (r int, exists bool) {
+	v := m.game_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGameScore returns the old "game_score" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldGameScore(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGameScore is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGameScore requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGameScore: %w", err)
+	}
+	return oldValue.GameScore, nil
+}
+
+// AddGameScore adds i to the "game_score" field.
+func (m *MiniGamePlayMutation) AddGameScore(i int) {
+	if m.addgame_score != nil {
+		*m.addgame_score += i
+	} else {
+		m.addgame_score = &i
+	}
+}
+
+// AddedGameScore returns the value that was added to the "game_score" field in this mutation.
+func (m *MiniGamePlayMutation) AddedGameScore() (r int, exists bool) {
+	v := m.addgame_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearGameScore clears the value of the "game_score" field.
+func (m *MiniGamePlayMutation) ClearGameScore() {
+	m.game_score = nil
+	m.addgame_score = nil
+	m.clearedFields[minigameplay.FieldGameScore] = struct{}{}
+}
+
+// GameScoreCleared returns if the "game_score" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) GameScoreCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldGameScore]
+	return ok
+}
+
+// ResetGameScore resets all changes to the "game_score" field.
+func (m *MiniGamePlayMutation) ResetGameScore() {
+	m.game_score = nil
+	m.addgame_score = nil
+	delete(m.clearedFields, minigameplay.FieldGameScore)
+}
+
+// SetCorrectCount sets the "correct_count" field.
+func (m *MiniGamePlayMutation) SetCorrectCount(i int) {
+	m.correct_count = &i
+	m.addcorrect_count = nil
+}
+
+// CorrectCount returns the value of the "correct_count" field in the mutation.
+func (m *MiniGamePlayMutation) CorrectCount() (r int, exists bool) {
+	v := m.correct_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCorrectCount returns the old "correct_count" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldCorrectCount(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCorrectCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCorrectCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCorrectCount: %w", err)
+	}
+	return oldValue.CorrectCount, nil
+}
+
+// AddCorrectCount adds i to the "correct_count" field.
+func (m *MiniGamePlayMutation) AddCorrectCount(i int) {
+	if m.addcorrect_count != nil {
+		*m.addcorrect_count += i
+	} else {
+		m.addcorrect_count = &i
+	}
+}
+
+// AddedCorrectCount returns the value that was added to the "correct_count" field in this mutation.
+func (m *MiniGamePlayMutation) AddedCorrectCount() (r int, exists bool) {
+	v := m.addcorrect_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearCorrectCount clears the value of the "correct_count" field.
+func (m *MiniGamePlayMutation) ClearCorrectCount() {
+	m.correct_count = nil
+	m.addcorrect_count = nil
+	m.clearedFields[minigameplay.FieldCorrectCount] = struct{}{}
+}
+
+// CorrectCountCleared returns if the "correct_count" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) CorrectCountCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldCorrectCount]
+	return ok
+}
+
+// ResetCorrectCount resets all changes to the "correct_count" field.
+func (m *MiniGamePlayMutation) ResetCorrectCount() {
+	m.correct_count = nil
+	m.addcorrect_count = nil
+	delete(m.clearedFields, minigameplay.FieldCorrectCount)
+}
+
+// SetItemCount sets the "item_count" field.
+func (m *MiniGamePlayMutation) SetItemCount(i int) {
+	m.item_count = &i
+	m.additem_count = nil
+}
+
+// ItemCount returns the value of the "item_count" field in the mutation.
+func (m *MiniGamePlayMutation) ItemCount() (r int, exists bool) {
+	v := m.item_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldItemCount returns the old "item_count" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldItemCount(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldItemCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldItemCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldItemCount: %w", err)
+	}
+	return oldValue.ItemCount, nil
+}
+
+// AddItemCount adds i to the "item_count" field.
+func (m *MiniGamePlayMutation) AddItemCount(i int) {
+	if m.additem_count != nil {
+		*m.additem_count += i
+	} else {
+		m.additem_count = &i
+	}
+}
+
+// AddedItemCount returns the value that was added to the "item_count" field in this mutation.
+func (m *MiniGamePlayMutation) AddedItemCount() (r int, exists bool) {
+	v := m.additem_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearItemCount clears the value of the "item_count" field.
+func (m *MiniGamePlayMutation) ClearItemCount() {
+	m.item_count = nil
+	m.additem_count = nil
+	m.clearedFields[minigameplay.FieldItemCount] = struct{}{}
+}
+
+// ItemCountCleared returns if the "item_count" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) ItemCountCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldItemCount]
+	return ok
+}
+
+// ResetItemCount resets all changes to the "item_count" field.
+func (m *MiniGamePlayMutation) ResetItemCount() {
+	m.item_count = nil
+	m.additem_count = nil
+	delete(m.clearedFields, minigameplay.FieldItemCount)
+}
+
+// SetCompletionMet sets the "completion_met" field.
+func (m *MiniGamePlayMutation) SetCompletionMet(b bool) {
+	m.completion_met = &b
+}
+
+// CompletionMet returns the value of the "completion_met" field in the mutation.
+func (m *MiniGamePlayMutation) CompletionMet() (r bool, exists bool) {
+	v := m.completion_met
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCompletionMet returns the old "completion_met" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldCompletionMet(ctx context.Context) (v *bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCompletionMet is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCompletionMet requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCompletionMet: %w", err)
+	}
+	return oldValue.CompletionMet, nil
+}
+
+// ClearCompletionMet clears the value of the "completion_met" field.
+func (m *MiniGamePlayMutation) ClearCompletionMet() {
+	m.completion_met = nil
+	m.clearedFields[minigameplay.FieldCompletionMet] = struct{}{}
+}
+
+// CompletionMetCleared returns if the "completion_met" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) CompletionMetCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldCompletionMet]
+	return ok
+}
+
+// ResetCompletionMet resets all changes to the "completion_met" field.
+func (m *MiniGamePlayMutation) ResetCompletionMet() {
+	m.completion_met = nil
+	delete(m.clearedFields, minigameplay.FieldCompletionMet)
+}
+
+// SetRewardsEligible sets the "rewards_eligible" field.
+func (m *MiniGamePlayMutation) SetRewardsEligible(b bool) {
+	m.rewards_eligible = &b
+}
+
+// RewardsEligible returns the value of the "rewards_eligible" field in the mutation.
+func (m *MiniGamePlayMutation) RewardsEligible() (r bool, exists bool) {
+	v := m.rewards_eligible
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRewardsEligible returns the old "rewards_eligible" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldRewardsEligible(ctx context.Context) (v *bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRewardsEligible is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRewardsEligible requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRewardsEligible: %w", err)
+	}
+	return oldValue.RewardsEligible, nil
+}
+
+// ClearRewardsEligible clears the value of the "rewards_eligible" field.
+func (m *MiniGamePlayMutation) ClearRewardsEligible() {
+	m.rewards_eligible = nil
+	m.clearedFields[minigameplay.FieldRewardsEligible] = struct{}{}
+}
+
+// RewardsEligibleCleared returns if the "rewards_eligible" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) RewardsEligibleCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldRewardsEligible]
+	return ok
+}
+
+// ResetRewardsEligible resets all changes to the "rewards_eligible" field.
+func (m *MiniGamePlayMutation) ResetRewardsEligible() {
+	m.rewards_eligible = nil
+	delete(m.clearedFields, minigameplay.FieldRewardsEligible)
+}
+
+// SetStartedAt sets the "started_at" field.
+func (m *MiniGamePlayMutation) SetStartedAt(t time.Time) {
+	m.started_at = &t
+}
+
+// StartedAt returns the value of the "started_at" field in the mutation.
+func (m *MiniGamePlayMutation) StartedAt() (r time.Time, exists bool) {
+	v := m.started_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartedAt returns the old "started_at" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldStartedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartedAt: %w", err)
+	}
+	return oldValue.StartedAt, nil
+}
+
+// ResetStartedAt resets all changes to the "started_at" field.
+func (m *MiniGamePlayMutation) ResetStartedAt() {
+	m.started_at = nil
+}
+
+// SetCompletedAt sets the "completed_at" field.
+func (m *MiniGamePlayMutation) SetCompletedAt(t time.Time) {
+	m.completed_at = &t
+}
+
+// CompletedAt returns the value of the "completed_at" field in the mutation.
+func (m *MiniGamePlayMutation) CompletedAt() (r time.Time, exists bool) {
+	v := m.completed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCompletedAt returns the old "completed_at" field's value of the MiniGamePlay entity.
+// If the MiniGamePlay object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MiniGamePlayMutation) OldCompletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCompletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCompletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCompletedAt: %w", err)
+	}
+	return oldValue.CompletedAt, nil
+}
+
+// ClearCompletedAt clears the value of the "completed_at" field.
+func (m *MiniGamePlayMutation) ClearCompletedAt() {
+	m.completed_at = nil
+	m.clearedFields[minigameplay.FieldCompletedAt] = struct{}{}
+}
+
+// CompletedAtCleared returns if the "completed_at" field was cleared in this mutation.
+func (m *MiniGamePlayMutation) CompletedAtCleared() bool {
+	_, ok := m.clearedFields[minigameplay.FieldCompletedAt]
+	return ok
+}
+
+// ResetCompletedAt resets all changes to the "completed_at" field.
+func (m *MiniGamePlayMutation) ResetCompletedAt() {
+	m.completed_at = nil
+	delete(m.clearedFields, minigameplay.FieldCompletedAt)
+}
+
+// Where appends a list predicates to the MiniGamePlayMutation builder.
+func (m *MiniGamePlayMutation) Where(ps ...predicate.MiniGamePlay) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MiniGamePlayMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MiniGamePlayMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MiniGamePlay, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MiniGamePlayMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MiniGamePlayMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MiniGamePlay).
+func (m *MiniGamePlayMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MiniGamePlayMutation) Fields() []string {
+	fields := make([]string, 0, 28)
+	if m.tenant_id != nil {
+		fields = append(fields, minigameplay.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, minigameplay.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, minigameplay.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, minigameplay.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, minigameplay.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, minigameplay.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, minigameplay.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, minigameplay.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, minigameplay.FieldVersion)
+	}
+	if m.student_id != nil {
+		fields = append(fields, minigameplay.FieldStudentID)
+	}
+	if m.school_id != nil {
+		fields = append(fields, minigameplay.FieldSchoolID)
+	}
+	if m.minigame_config_id != nil {
+		fields = append(fields, minigameplay.FieldMinigameConfigID)
+	}
+	if m.minigame_config_version_id != nil {
+		fields = append(fields, minigameplay.FieldMinigameConfigVersionID)
+	}
+	if m.minigame_type != nil {
+		fields = append(fields, minigameplay.FieldMinigameType)
+	}
+	if m.attempt_id != nil {
+		fields = append(fields, minigameplay.FieldAttemptID)
+	}
+	if m.context_type != nil {
+		fields = append(fields, minigameplay.FieldContextType)
+	}
+	if m.context_id != nil {
+		fields = append(fields, minigameplay.FieldContextID)
+	}
+	if m.play_date != nil {
+		fields = append(fields, minigameplay.FieldPlayDate)
+	}
+	if m.status != nil {
+		fields = append(fields, minigameplay.FieldStatus)
+	}
+	if m.learning_score != nil {
+		fields = append(fields, minigameplay.FieldLearningScore)
+	}
+	if m.max_score != nil {
+		fields = append(fields, minigameplay.FieldMaxScore)
+	}
+	if m.game_score != nil {
+		fields = append(fields, minigameplay.FieldGameScore)
+	}
+	if m.correct_count != nil {
+		fields = append(fields, minigameplay.FieldCorrectCount)
+	}
+	if m.item_count != nil {
+		fields = append(fields, minigameplay.FieldItemCount)
+	}
+	if m.completion_met != nil {
+		fields = append(fields, minigameplay.FieldCompletionMet)
+	}
+	if m.rewards_eligible != nil {
+		fields = append(fields, minigameplay.FieldRewardsEligible)
+	}
+	if m.started_at != nil {
+		fields = append(fields, minigameplay.FieldStartedAt)
+	}
+	if m.completed_at != nil {
+		fields = append(fields, minigameplay.FieldCompletedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MiniGamePlayMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case minigameplay.FieldTenantID:
+		return m.TenantID()
+	case minigameplay.FieldCreatedAt:
+		return m.CreatedAt()
+	case minigameplay.FieldCreatedBy:
+		return m.CreatedBy()
+	case minigameplay.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case minigameplay.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case minigameplay.FieldDeletedAt:
+		return m.DeletedAt()
+	case minigameplay.FieldDeletedBy:
+		return m.DeletedBy()
+	case minigameplay.FieldDeleteReason:
+		return m.DeleteReason()
+	case minigameplay.FieldVersion:
+		return m.Version()
+	case minigameplay.FieldStudentID:
+		return m.StudentID()
+	case minigameplay.FieldSchoolID:
+		return m.SchoolID()
+	case minigameplay.FieldMinigameConfigID:
+		return m.MinigameConfigID()
+	case minigameplay.FieldMinigameConfigVersionID:
+		return m.MinigameConfigVersionID()
+	case minigameplay.FieldMinigameType:
+		return m.MinigameType()
+	case minigameplay.FieldAttemptID:
+		return m.AttemptID()
+	case minigameplay.FieldContextType:
+		return m.ContextType()
+	case minigameplay.FieldContextID:
+		return m.ContextID()
+	case minigameplay.FieldPlayDate:
+		return m.PlayDate()
+	case minigameplay.FieldStatus:
+		return m.Status()
+	case minigameplay.FieldLearningScore:
+		return m.LearningScore()
+	case minigameplay.FieldMaxScore:
+		return m.MaxScore()
+	case minigameplay.FieldGameScore:
+		return m.GameScore()
+	case minigameplay.FieldCorrectCount:
+		return m.CorrectCount()
+	case minigameplay.FieldItemCount:
+		return m.ItemCount()
+	case minigameplay.FieldCompletionMet:
+		return m.CompletionMet()
+	case minigameplay.FieldRewardsEligible:
+		return m.RewardsEligible()
+	case minigameplay.FieldStartedAt:
+		return m.StartedAt()
+	case minigameplay.FieldCompletedAt:
+		return m.CompletedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MiniGamePlayMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case minigameplay.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case minigameplay.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case minigameplay.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case minigameplay.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case minigameplay.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case minigameplay.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case minigameplay.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case minigameplay.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case minigameplay.FieldVersion:
+		return m.OldVersion(ctx)
+	case minigameplay.FieldStudentID:
+		return m.OldStudentID(ctx)
+	case minigameplay.FieldSchoolID:
+		return m.OldSchoolID(ctx)
+	case minigameplay.FieldMinigameConfigID:
+		return m.OldMinigameConfigID(ctx)
+	case minigameplay.FieldMinigameConfigVersionID:
+		return m.OldMinigameConfigVersionID(ctx)
+	case minigameplay.FieldMinigameType:
+		return m.OldMinigameType(ctx)
+	case minigameplay.FieldAttemptID:
+		return m.OldAttemptID(ctx)
+	case minigameplay.FieldContextType:
+		return m.OldContextType(ctx)
+	case minigameplay.FieldContextID:
+		return m.OldContextID(ctx)
+	case minigameplay.FieldPlayDate:
+		return m.OldPlayDate(ctx)
+	case minigameplay.FieldStatus:
+		return m.OldStatus(ctx)
+	case minigameplay.FieldLearningScore:
+		return m.OldLearningScore(ctx)
+	case minigameplay.FieldMaxScore:
+		return m.OldMaxScore(ctx)
+	case minigameplay.FieldGameScore:
+		return m.OldGameScore(ctx)
+	case minigameplay.FieldCorrectCount:
+		return m.OldCorrectCount(ctx)
+	case minigameplay.FieldItemCount:
+		return m.OldItemCount(ctx)
+	case minigameplay.FieldCompletionMet:
+		return m.OldCompletionMet(ctx)
+	case minigameplay.FieldRewardsEligible:
+		return m.OldRewardsEligible(ctx)
+	case minigameplay.FieldStartedAt:
+		return m.OldStartedAt(ctx)
+	case minigameplay.FieldCompletedAt:
+		return m.OldCompletedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown MiniGamePlay field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MiniGamePlayMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case minigameplay.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case minigameplay.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case minigameplay.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case minigameplay.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case minigameplay.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case minigameplay.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case minigameplay.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case minigameplay.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case minigameplay.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case minigameplay.FieldStudentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStudentID(v)
+		return nil
+	case minigameplay.FieldSchoolID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchoolID(v)
+		return nil
+	case minigameplay.FieldMinigameConfigID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMinigameConfigID(v)
+		return nil
+	case minigameplay.FieldMinigameConfigVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMinigameConfigVersionID(v)
+		return nil
+	case minigameplay.FieldMinigameType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMinigameType(v)
+		return nil
+	case minigameplay.FieldAttemptID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttemptID(v)
+		return nil
+	case minigameplay.FieldContextType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContextType(v)
+		return nil
+	case minigameplay.FieldContextID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContextID(v)
+		return nil
+	case minigameplay.FieldPlayDate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlayDate(v)
+		return nil
+	case minigameplay.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case minigameplay.FieldLearningScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLearningScore(v)
+		return nil
+	case minigameplay.FieldMaxScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMaxScore(v)
+		return nil
+	case minigameplay.FieldGameScore:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGameScore(v)
+		return nil
+	case minigameplay.FieldCorrectCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCorrectCount(v)
+		return nil
+	case minigameplay.FieldItemCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetItemCount(v)
+		return nil
+	case minigameplay.FieldCompletionMet:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCompletionMet(v)
+		return nil
+	case minigameplay.FieldRewardsEligible:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRewardsEligible(v)
+		return nil
+	case minigameplay.FieldStartedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartedAt(v)
+		return nil
+	case minigameplay.FieldCompletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCompletedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MiniGamePlay field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MiniGamePlayMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, minigameplay.FieldVersion)
+	}
+	if m.addlearning_score != nil {
+		fields = append(fields, minigameplay.FieldLearningScore)
+	}
+	if m.addmax_score != nil {
+		fields = append(fields, minigameplay.FieldMaxScore)
+	}
+	if m.addgame_score != nil {
+		fields = append(fields, minigameplay.FieldGameScore)
+	}
+	if m.addcorrect_count != nil {
+		fields = append(fields, minigameplay.FieldCorrectCount)
+	}
+	if m.additem_count != nil {
+		fields = append(fields, minigameplay.FieldItemCount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MiniGamePlayMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case minigameplay.FieldVersion:
+		return m.AddedVersion()
+	case minigameplay.FieldLearningScore:
+		return m.AddedLearningScore()
+	case minigameplay.FieldMaxScore:
+		return m.AddedMaxScore()
+	case minigameplay.FieldGameScore:
+		return m.AddedGameScore()
+	case minigameplay.FieldCorrectCount:
+		return m.AddedCorrectCount()
+	case minigameplay.FieldItemCount:
+		return m.AddedItemCount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MiniGamePlayMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case minigameplay.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case minigameplay.FieldLearningScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLearningScore(v)
+		return nil
+	case minigameplay.FieldMaxScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMaxScore(v)
+		return nil
+	case minigameplay.FieldGameScore:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGameScore(v)
+		return nil
+	case minigameplay.FieldCorrectCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCorrectCount(v)
+		return nil
+	case minigameplay.FieldItemCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddItemCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MiniGamePlay numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MiniGamePlayMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(minigameplay.FieldCreatedBy) {
+		fields = append(fields, minigameplay.FieldCreatedBy)
+	}
+	if m.FieldCleared(minigameplay.FieldUpdatedBy) {
+		fields = append(fields, minigameplay.FieldUpdatedBy)
+	}
+	if m.FieldCleared(minigameplay.FieldDeletedAt) {
+		fields = append(fields, minigameplay.FieldDeletedAt)
+	}
+	if m.FieldCleared(minigameplay.FieldDeletedBy) {
+		fields = append(fields, minigameplay.FieldDeletedBy)
+	}
+	if m.FieldCleared(minigameplay.FieldDeleteReason) {
+		fields = append(fields, minigameplay.FieldDeleteReason)
+	}
+	if m.FieldCleared(minigameplay.FieldSchoolID) {
+		fields = append(fields, minigameplay.FieldSchoolID)
+	}
+	if m.FieldCleared(minigameplay.FieldContextID) {
+		fields = append(fields, minigameplay.FieldContextID)
+	}
+	if m.FieldCleared(minigameplay.FieldLearningScore) {
+		fields = append(fields, minigameplay.FieldLearningScore)
+	}
+	if m.FieldCleared(minigameplay.FieldMaxScore) {
+		fields = append(fields, minigameplay.FieldMaxScore)
+	}
+	if m.FieldCleared(minigameplay.FieldGameScore) {
+		fields = append(fields, minigameplay.FieldGameScore)
+	}
+	if m.FieldCleared(minigameplay.FieldCorrectCount) {
+		fields = append(fields, minigameplay.FieldCorrectCount)
+	}
+	if m.FieldCleared(minigameplay.FieldItemCount) {
+		fields = append(fields, minigameplay.FieldItemCount)
+	}
+	if m.FieldCleared(minigameplay.FieldCompletionMet) {
+		fields = append(fields, minigameplay.FieldCompletionMet)
+	}
+	if m.FieldCleared(minigameplay.FieldRewardsEligible) {
+		fields = append(fields, minigameplay.FieldRewardsEligible)
+	}
+	if m.FieldCleared(minigameplay.FieldCompletedAt) {
+		fields = append(fields, minigameplay.FieldCompletedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MiniGamePlayMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MiniGamePlayMutation) ClearField(name string) error {
+	switch name {
+	case minigameplay.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case minigameplay.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case minigameplay.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case minigameplay.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case minigameplay.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case minigameplay.FieldSchoolID:
+		m.ClearSchoolID()
+		return nil
+	case minigameplay.FieldContextID:
+		m.ClearContextID()
+		return nil
+	case minigameplay.FieldLearningScore:
+		m.ClearLearningScore()
+		return nil
+	case minigameplay.FieldMaxScore:
+		m.ClearMaxScore()
+		return nil
+	case minigameplay.FieldGameScore:
+		m.ClearGameScore()
+		return nil
+	case minigameplay.FieldCorrectCount:
+		m.ClearCorrectCount()
+		return nil
+	case minigameplay.FieldItemCount:
+		m.ClearItemCount()
+		return nil
+	case minigameplay.FieldCompletionMet:
+		m.ClearCompletionMet()
+		return nil
+	case minigameplay.FieldRewardsEligible:
+		m.ClearRewardsEligible()
+		return nil
+	case minigameplay.FieldCompletedAt:
+		m.ClearCompletedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown MiniGamePlay nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MiniGamePlayMutation) ResetField(name string) error {
+	switch name {
+	case minigameplay.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case minigameplay.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case minigameplay.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case minigameplay.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case minigameplay.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case minigameplay.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case minigameplay.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case minigameplay.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case minigameplay.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case minigameplay.FieldStudentID:
+		m.ResetStudentID()
+		return nil
+	case minigameplay.FieldSchoolID:
+		m.ResetSchoolID()
+		return nil
+	case minigameplay.FieldMinigameConfigID:
+		m.ResetMinigameConfigID()
+		return nil
+	case minigameplay.FieldMinigameConfigVersionID:
+		m.ResetMinigameConfigVersionID()
+		return nil
+	case minigameplay.FieldMinigameType:
+		m.ResetMinigameType()
+		return nil
+	case minigameplay.FieldAttemptID:
+		m.ResetAttemptID()
+		return nil
+	case minigameplay.FieldContextType:
+		m.ResetContextType()
+		return nil
+	case minigameplay.FieldContextID:
+		m.ResetContextID()
+		return nil
+	case minigameplay.FieldPlayDate:
+		m.ResetPlayDate()
+		return nil
+	case minigameplay.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case minigameplay.FieldLearningScore:
+		m.ResetLearningScore()
+		return nil
+	case minigameplay.FieldMaxScore:
+		m.ResetMaxScore()
+		return nil
+	case minigameplay.FieldGameScore:
+		m.ResetGameScore()
+		return nil
+	case minigameplay.FieldCorrectCount:
+		m.ResetCorrectCount()
+		return nil
+	case minigameplay.FieldItemCount:
+		m.ResetItemCount()
+		return nil
+	case minigameplay.FieldCompletionMet:
+		m.ResetCompletionMet()
+		return nil
+	case minigameplay.FieldRewardsEligible:
+		m.ResetRewardsEligible()
+		return nil
+	case minigameplay.FieldStartedAt:
+		m.ResetStartedAt()
+		return nil
+	case minigameplay.FieldCompletedAt:
+		m.ResetCompletedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown MiniGamePlay field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MiniGamePlayMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MiniGamePlayMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MiniGamePlayMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MiniGamePlayMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MiniGamePlayMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MiniGamePlayMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MiniGamePlayMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown MiniGamePlay unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MiniGamePlayMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown MiniGamePlay edge %s", name)
 }
 
 // NicknameChangeMutation represents an operation that mutates the NicknameChange nodes in the graph.

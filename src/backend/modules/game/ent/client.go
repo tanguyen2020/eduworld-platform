@@ -51,6 +51,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfig"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfigversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameplay"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
@@ -165,6 +168,12 @@ type Client struct {
 	LevelVersion *LevelVersionClient
 	// LoginEvent is the client for interacting with the LoginEvent builders.
 	LoginEvent *LoginEventClient
+	// MiniGameConfig is the client for interacting with the MiniGameConfig builders.
+	MiniGameConfig *MiniGameConfigClient
+	// MiniGameConfigVersion is the client for interacting with the MiniGameConfigVersion builders.
+	MiniGameConfigVersion *MiniGameConfigVersionClient
+	// MiniGamePlay is the client for interacting with the MiniGamePlay builders.
+	MiniGamePlay *MiniGamePlayClient
 	// NicknameChange is the client for interacting with the NicknameChange builders.
 	NicknameChange *NicknameChangeClient
 	// NpcDialogue is the client for interacting with the NpcDialogue builders.
@@ -278,6 +287,9 @@ func (c *Client) init() {
 	c.LevelSession = NewLevelSessionClient(c.config)
 	c.LevelVersion = NewLevelVersionClient(c.config)
 	c.LoginEvent = NewLoginEventClient(c.config)
+	c.MiniGameConfig = NewMiniGameConfigClient(c.config)
+	c.MiniGameConfigVersion = NewMiniGameConfigVersionClient(c.config)
+	c.MiniGamePlay = NewMiniGamePlayClient(c.config)
 	c.NicknameChange = NewNicknameChangeClient(c.config)
 	c.NpcDialogue = NewNpcDialogueClient(c.config)
 	c.NpcDialogueVersion = NewNpcDialogueVersionClient(c.config)
@@ -442,6 +454,9 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		LevelSession:              NewLevelSessionClient(cfg),
 		LevelVersion:              NewLevelVersionClient(cfg),
 		LoginEvent:                NewLoginEventClient(cfg),
+		MiniGameConfig:            NewMiniGameConfigClient(cfg),
+		MiniGameConfigVersion:     NewMiniGameConfigVersionClient(cfg),
+		MiniGamePlay:              NewMiniGamePlayClient(cfg),
 		NicknameChange:            NewNicknameChangeClient(cfg),
 		NpcDialogue:               NewNpcDialogueClient(cfg),
 		NpcDialogueVersion:        NewNpcDialogueVersionClient(cfg),
@@ -530,6 +545,9 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		LevelSession:              NewLevelSessionClient(cfg),
 		LevelVersion:              NewLevelVersionClient(cfg),
 		LoginEvent:                NewLoginEventClient(cfg),
+		MiniGameConfig:            NewMiniGameConfigClient(cfg),
+		MiniGameConfigVersion:     NewMiniGameConfigVersionClient(cfg),
+		MiniGamePlay:              NewMiniGamePlayClient(cfg),
 		NicknameChange:            NewNicknameChangeClient(cfg),
 		NpcDialogue:               NewNpcDialogueClient(cfg),
 		NpcDialogueVersion:        NewNpcDialogueVersionClient(cfg),
@@ -601,16 +619,16 @@ func (c *Client) Use(hooks ...Hook) {
 		c.EventTemplateVersion, c.EventVersion, c.ExplorationProgress, c.GameProfile,
 		c.GameSession, c.InventoryItem, c.ItemDefinition, c.ItemDefinitionVersion,
 		c.ItemLedgerEntry, c.LevelDefinition, c.LevelHistory, c.LevelSession,
-		c.LevelVersion, c.LoginEvent, c.NicknameChange, c.NpcDialogue,
-		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.ProgressionCurve,
-		c.ProgressionCurveVersion, c.ProgressionLevel, c.QuestDefinition,
-		c.QuestProgress, c.QuestStepAttempt, c.QuestVersion, c.RewardGrant,
-		c.RewardRule, c.RewardRuleVersion, c.SeasonPointEntry, c.SeasonTrack,
-		c.SeasonTrackProgress, c.SeasonTrackVersion, c.ShopItem, c.ShopItemVersion,
-		c.ShopPurchase, c.StoryChapter, c.StoryChapterVersion, c.StoryProgress,
-		c.StudentAchievement, c.TenantResourceAssignment, c.Wallet, c.WorldArea,
-		c.WorldAreaUnlock, c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap,
-		c.XpLedgerEntry,
+		c.LevelVersion, c.LoginEvent, c.MiniGameConfig, c.MiniGameConfigVersion,
+		c.MiniGamePlay, c.NicknameChange, c.NpcDialogue, c.NpcDialogueVersion,
+		c.PeriodicQuestGrant, c.ProgressionCurve, c.ProgressionCurveVersion,
+		c.ProgressionLevel, c.QuestDefinition, c.QuestProgress, c.QuestStepAttempt,
+		c.QuestVersion, c.RewardGrant, c.RewardRule, c.RewardRuleVersion,
+		c.SeasonPointEntry, c.SeasonTrack, c.SeasonTrackProgress, c.SeasonTrackVersion,
+		c.ShopItem, c.ShopItemVersion, c.ShopPurchase, c.StoryChapter,
+		c.StoryChapterVersion, c.StoryProgress, c.StudentAchievement,
+		c.TenantResourceAssignment, c.Wallet, c.WorldArea, c.WorldAreaUnlock,
+		c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap, c.XpLedgerEntry,
 	} {
 		n.Use(hooks...)
 	}
@@ -629,16 +647,16 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.EventTemplateVersion, c.EventVersion, c.ExplorationProgress, c.GameProfile,
 		c.GameSession, c.InventoryItem, c.ItemDefinition, c.ItemDefinitionVersion,
 		c.ItemLedgerEntry, c.LevelDefinition, c.LevelHistory, c.LevelSession,
-		c.LevelVersion, c.LoginEvent, c.NicknameChange, c.NpcDialogue,
-		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.ProgressionCurve,
-		c.ProgressionCurveVersion, c.ProgressionLevel, c.QuestDefinition,
-		c.QuestProgress, c.QuestStepAttempt, c.QuestVersion, c.RewardGrant,
-		c.RewardRule, c.RewardRuleVersion, c.SeasonPointEntry, c.SeasonTrack,
-		c.SeasonTrackProgress, c.SeasonTrackVersion, c.ShopItem, c.ShopItemVersion,
-		c.ShopPurchase, c.StoryChapter, c.StoryChapterVersion, c.StoryProgress,
-		c.StudentAchievement, c.TenantResourceAssignment, c.Wallet, c.WorldArea,
-		c.WorldAreaUnlock, c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap,
-		c.XpLedgerEntry,
+		c.LevelVersion, c.LoginEvent, c.MiniGameConfig, c.MiniGameConfigVersion,
+		c.MiniGamePlay, c.NicknameChange, c.NpcDialogue, c.NpcDialogueVersion,
+		c.PeriodicQuestGrant, c.ProgressionCurve, c.ProgressionCurveVersion,
+		c.ProgressionLevel, c.QuestDefinition, c.QuestProgress, c.QuestStepAttempt,
+		c.QuestVersion, c.RewardGrant, c.RewardRule, c.RewardRuleVersion,
+		c.SeasonPointEntry, c.SeasonTrack, c.SeasonTrackProgress, c.SeasonTrackVersion,
+		c.ShopItem, c.ShopItemVersion, c.ShopPurchase, c.StoryChapter,
+		c.StoryChapterVersion, c.StoryProgress, c.StudentAchievement,
+		c.TenantResourceAssignment, c.Wallet, c.WorldArea, c.WorldAreaUnlock,
+		c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap, c.XpLedgerEntry,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -719,6 +737,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.LevelVersion.mutate(ctx, m)
 	case *LoginEventMutation:
 		return c.LoginEvent.mutate(ctx, m)
+	case *MiniGameConfigMutation:
+		return c.MiniGameConfig.mutate(ctx, m)
+	case *MiniGameConfigVersionMutation:
+		return c.MiniGameConfigVersion.mutate(ctx, m)
+	case *MiniGamePlayMutation:
+		return c.MiniGamePlay.mutate(ctx, m)
 	case *NicknameChangeMutation:
 		return c.NicknameChange.mutate(ctx, m)
 	case *NpcDialogueMutation:
@@ -5648,6 +5672,411 @@ func (c *LoginEventClient) mutate(ctx context.Context, m *LoginEventMutation) (V
 	}
 }
 
+// MiniGameConfigClient is a client for the MiniGameConfig schema.
+type MiniGameConfigClient struct {
+	config
+}
+
+// NewMiniGameConfigClient returns a client for the MiniGameConfig from the given config.
+func NewMiniGameConfigClient(c config) *MiniGameConfigClient {
+	return &MiniGameConfigClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `minigameconfig.Hooks(f(g(h())))`.
+func (c *MiniGameConfigClient) Use(hooks ...Hook) {
+	c.hooks.MiniGameConfig = append(c.hooks.MiniGameConfig, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `minigameconfig.Intercept(f(g(h())))`.
+func (c *MiniGameConfigClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MiniGameConfig = append(c.inters.MiniGameConfig, interceptors...)
+}
+
+// Create returns a builder for creating a MiniGameConfig entity.
+func (c *MiniGameConfigClient) Create() *MiniGameConfigCreate {
+	mutation := newMiniGameConfigMutation(c.config, OpCreate)
+	return &MiniGameConfigCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MiniGameConfig entities.
+func (c *MiniGameConfigClient) CreateBulk(builders ...*MiniGameConfigCreate) *MiniGameConfigCreateBulk {
+	return &MiniGameConfigCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MiniGameConfigClient) MapCreateBulk(slice any, setFunc func(*MiniGameConfigCreate, int)) *MiniGameConfigCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MiniGameConfigCreateBulk{err: fmt.Errorf("calling to MiniGameConfigClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MiniGameConfigCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MiniGameConfigCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MiniGameConfig.
+func (c *MiniGameConfigClient) Update() *MiniGameConfigUpdate {
+	mutation := newMiniGameConfigMutation(c.config, OpUpdate)
+	return &MiniGameConfigUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MiniGameConfigClient) UpdateOne(_m *MiniGameConfig) *MiniGameConfigUpdateOne {
+	mutation := newMiniGameConfigMutation(c.config, OpUpdateOne, withMiniGameConfig(_m))
+	return &MiniGameConfigUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MiniGameConfigClient) UpdateOneID(id uuid.UUID) *MiniGameConfigUpdateOne {
+	mutation := newMiniGameConfigMutation(c.config, OpUpdateOne, withMiniGameConfigID(id))
+	return &MiniGameConfigUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MiniGameConfig.
+func (c *MiniGameConfigClient) Delete() *MiniGameConfigDelete {
+	mutation := newMiniGameConfigMutation(c.config, OpDelete)
+	return &MiniGameConfigDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MiniGameConfigClient) DeleteOne(_m *MiniGameConfig) *MiniGameConfigDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MiniGameConfigClient) DeleteOneID(id uuid.UUID) *MiniGameConfigDeleteOne {
+	builder := c.Delete().Where(minigameconfig.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MiniGameConfigDeleteOne{builder}
+}
+
+// Query returns a query builder for MiniGameConfig.
+func (c *MiniGameConfigClient) Query() *MiniGameConfigQuery {
+	return &MiniGameConfigQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMiniGameConfig},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MiniGameConfig entity by its id.
+func (c *MiniGameConfigClient) Get(ctx context.Context, id uuid.UUID) (*MiniGameConfig, error) {
+	return c.Query().Where(minigameconfig.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MiniGameConfigClient) GetX(ctx context.Context, id uuid.UUID) *MiniGameConfig {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *MiniGameConfigClient) Hooks() []Hook {
+	hooks := c.hooks.MiniGameConfig
+	return append(hooks[:len(hooks):len(hooks)], minigameconfig.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *MiniGameConfigClient) Interceptors() []Interceptor {
+	inters := c.inters.MiniGameConfig
+	return append(inters[:len(inters):len(inters)], minigameconfig.Interceptors[:]...)
+}
+
+func (c *MiniGameConfigClient) mutate(ctx context.Context, m *MiniGameConfigMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MiniGameConfigCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MiniGameConfigUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MiniGameConfigUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MiniGameConfigDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MiniGameConfig mutation op: %q", m.Op())
+	}
+}
+
+// MiniGameConfigVersionClient is a client for the MiniGameConfigVersion schema.
+type MiniGameConfigVersionClient struct {
+	config
+}
+
+// NewMiniGameConfigVersionClient returns a client for the MiniGameConfigVersion from the given config.
+func NewMiniGameConfigVersionClient(c config) *MiniGameConfigVersionClient {
+	return &MiniGameConfigVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `minigameconfigversion.Hooks(f(g(h())))`.
+func (c *MiniGameConfigVersionClient) Use(hooks ...Hook) {
+	c.hooks.MiniGameConfigVersion = append(c.hooks.MiniGameConfigVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `minigameconfigversion.Intercept(f(g(h())))`.
+func (c *MiniGameConfigVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MiniGameConfigVersion = append(c.inters.MiniGameConfigVersion, interceptors...)
+}
+
+// Create returns a builder for creating a MiniGameConfigVersion entity.
+func (c *MiniGameConfigVersionClient) Create() *MiniGameConfigVersionCreate {
+	mutation := newMiniGameConfigVersionMutation(c.config, OpCreate)
+	return &MiniGameConfigVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MiniGameConfigVersion entities.
+func (c *MiniGameConfigVersionClient) CreateBulk(builders ...*MiniGameConfigVersionCreate) *MiniGameConfigVersionCreateBulk {
+	return &MiniGameConfigVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MiniGameConfigVersionClient) MapCreateBulk(slice any, setFunc func(*MiniGameConfigVersionCreate, int)) *MiniGameConfigVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MiniGameConfigVersionCreateBulk{err: fmt.Errorf("calling to MiniGameConfigVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MiniGameConfigVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MiniGameConfigVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MiniGameConfigVersion.
+func (c *MiniGameConfigVersionClient) Update() *MiniGameConfigVersionUpdate {
+	mutation := newMiniGameConfigVersionMutation(c.config, OpUpdate)
+	return &MiniGameConfigVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MiniGameConfigVersionClient) UpdateOne(_m *MiniGameConfigVersion) *MiniGameConfigVersionUpdateOne {
+	mutation := newMiniGameConfigVersionMutation(c.config, OpUpdateOne, withMiniGameConfigVersion(_m))
+	return &MiniGameConfigVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MiniGameConfigVersionClient) UpdateOneID(id uuid.UUID) *MiniGameConfigVersionUpdateOne {
+	mutation := newMiniGameConfigVersionMutation(c.config, OpUpdateOne, withMiniGameConfigVersionID(id))
+	return &MiniGameConfigVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MiniGameConfigVersion.
+func (c *MiniGameConfigVersionClient) Delete() *MiniGameConfigVersionDelete {
+	mutation := newMiniGameConfigVersionMutation(c.config, OpDelete)
+	return &MiniGameConfigVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MiniGameConfigVersionClient) DeleteOne(_m *MiniGameConfigVersion) *MiniGameConfigVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MiniGameConfigVersionClient) DeleteOneID(id uuid.UUID) *MiniGameConfigVersionDeleteOne {
+	builder := c.Delete().Where(minigameconfigversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MiniGameConfigVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for MiniGameConfigVersion.
+func (c *MiniGameConfigVersionClient) Query() *MiniGameConfigVersionQuery {
+	return &MiniGameConfigVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMiniGameConfigVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MiniGameConfigVersion entity by its id.
+func (c *MiniGameConfigVersionClient) Get(ctx context.Context, id uuid.UUID) (*MiniGameConfigVersion, error) {
+	return c.Query().Where(minigameconfigversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MiniGameConfigVersionClient) GetX(ctx context.Context, id uuid.UUID) *MiniGameConfigVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *MiniGameConfigVersionClient) Hooks() []Hook {
+	hooks := c.hooks.MiniGameConfigVersion
+	return append(hooks[:len(hooks):len(hooks)], minigameconfigversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *MiniGameConfigVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.MiniGameConfigVersion
+	return append(inters[:len(inters):len(inters)], minigameconfigversion.Interceptors[:]...)
+}
+
+func (c *MiniGameConfigVersionClient) mutate(ctx context.Context, m *MiniGameConfigVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MiniGameConfigVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MiniGameConfigVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MiniGameConfigVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MiniGameConfigVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MiniGameConfigVersion mutation op: %q", m.Op())
+	}
+}
+
+// MiniGamePlayClient is a client for the MiniGamePlay schema.
+type MiniGamePlayClient struct {
+	config
+}
+
+// NewMiniGamePlayClient returns a client for the MiniGamePlay from the given config.
+func NewMiniGamePlayClient(c config) *MiniGamePlayClient {
+	return &MiniGamePlayClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `minigameplay.Hooks(f(g(h())))`.
+func (c *MiniGamePlayClient) Use(hooks ...Hook) {
+	c.hooks.MiniGamePlay = append(c.hooks.MiniGamePlay, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `minigameplay.Intercept(f(g(h())))`.
+func (c *MiniGamePlayClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MiniGamePlay = append(c.inters.MiniGamePlay, interceptors...)
+}
+
+// Create returns a builder for creating a MiniGamePlay entity.
+func (c *MiniGamePlayClient) Create() *MiniGamePlayCreate {
+	mutation := newMiniGamePlayMutation(c.config, OpCreate)
+	return &MiniGamePlayCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MiniGamePlay entities.
+func (c *MiniGamePlayClient) CreateBulk(builders ...*MiniGamePlayCreate) *MiniGamePlayCreateBulk {
+	return &MiniGamePlayCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MiniGamePlayClient) MapCreateBulk(slice any, setFunc func(*MiniGamePlayCreate, int)) *MiniGamePlayCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MiniGamePlayCreateBulk{err: fmt.Errorf("calling to MiniGamePlayClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MiniGamePlayCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MiniGamePlayCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MiniGamePlay.
+func (c *MiniGamePlayClient) Update() *MiniGamePlayUpdate {
+	mutation := newMiniGamePlayMutation(c.config, OpUpdate)
+	return &MiniGamePlayUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MiniGamePlayClient) UpdateOne(_m *MiniGamePlay) *MiniGamePlayUpdateOne {
+	mutation := newMiniGamePlayMutation(c.config, OpUpdateOne, withMiniGamePlay(_m))
+	return &MiniGamePlayUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MiniGamePlayClient) UpdateOneID(id uuid.UUID) *MiniGamePlayUpdateOne {
+	mutation := newMiniGamePlayMutation(c.config, OpUpdateOne, withMiniGamePlayID(id))
+	return &MiniGamePlayUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MiniGamePlay.
+func (c *MiniGamePlayClient) Delete() *MiniGamePlayDelete {
+	mutation := newMiniGamePlayMutation(c.config, OpDelete)
+	return &MiniGamePlayDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MiniGamePlayClient) DeleteOne(_m *MiniGamePlay) *MiniGamePlayDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MiniGamePlayClient) DeleteOneID(id uuid.UUID) *MiniGamePlayDeleteOne {
+	builder := c.Delete().Where(minigameplay.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MiniGamePlayDeleteOne{builder}
+}
+
+// Query returns a query builder for MiniGamePlay.
+func (c *MiniGamePlayClient) Query() *MiniGamePlayQuery {
+	return &MiniGamePlayQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMiniGamePlay},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MiniGamePlay entity by its id.
+func (c *MiniGamePlayClient) Get(ctx context.Context, id uuid.UUID) (*MiniGamePlay, error) {
+	return c.Query().Where(minigameplay.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MiniGamePlayClient) GetX(ctx context.Context, id uuid.UUID) *MiniGamePlay {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *MiniGamePlayClient) Hooks() []Hook {
+	hooks := c.hooks.MiniGamePlay
+	return append(hooks[:len(hooks):len(hooks)], minigameplay.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *MiniGamePlayClient) Interceptors() []Interceptor {
+	inters := c.inters.MiniGamePlay
+	return append(inters[:len(inters):len(inters)], minigameplay.Interceptors[:]...)
+}
+
+func (c *MiniGamePlayClient) mutate(ctx context.Context, m *MiniGamePlayMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MiniGamePlayCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MiniGamePlayUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MiniGamePlayUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MiniGamePlayDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MiniGamePlay mutation op: %q", m.Op())
+	}
+}
+
 // NicknameChangeClient is a client for the NicknameChange schema.
 type NicknameChangeClient struct {
 	config
@@ -10113,12 +10542,13 @@ type (
 		EventPointEntry, EventRun, EventTemplate, EventTemplateVersion, EventVersion,
 		ExplorationProgress, GameProfile, GameSession, InventoryItem, ItemDefinition,
 		ItemDefinitionVersion, ItemLedgerEntry, LevelDefinition, LevelHistory,
-		LevelSession, LevelVersion, LoginEvent, NicknameChange, NpcDialogue,
-		NpcDialogueVersion, PeriodicQuestGrant, ProgressionCurve,
-		ProgressionCurveVersion, ProgressionLevel, QuestDefinition, QuestProgress,
-		QuestStepAttempt, QuestVersion, RewardGrant, RewardRule, RewardRuleVersion,
-		SeasonPointEntry, SeasonTrack, SeasonTrackProgress, SeasonTrackVersion,
-		ShopItem, ShopItemVersion, ShopPurchase, StoryChapter, StoryChapterVersion,
+		LevelSession, LevelVersion, LoginEvent, MiniGameConfig, MiniGameConfigVersion,
+		MiniGamePlay, NicknameChange, NpcDialogue, NpcDialogueVersion,
+		PeriodicQuestGrant, ProgressionCurve, ProgressionCurveVersion,
+		ProgressionLevel, QuestDefinition, QuestProgress, QuestStepAttempt,
+		QuestVersion, RewardGrant, RewardRule, RewardRuleVersion, SeasonPointEntry,
+		SeasonTrack, SeasonTrackProgress, SeasonTrackVersion, ShopItem,
+		ShopItemVersion, ShopPurchase, StoryChapter, StoryChapterVersion,
 		StoryProgress, StudentAchievement, TenantResourceAssignment, Wallet, WorldArea,
 		WorldAreaUnlock, WorldAreaVersion, WorldUnlockFact, XpDailyCap,
 		XpLedgerEntry []ent.Hook
@@ -10132,12 +10562,13 @@ type (
 		EventPointEntry, EventRun, EventTemplate, EventTemplateVersion, EventVersion,
 		ExplorationProgress, GameProfile, GameSession, InventoryItem, ItemDefinition,
 		ItemDefinitionVersion, ItemLedgerEntry, LevelDefinition, LevelHistory,
-		LevelSession, LevelVersion, LoginEvent, NicknameChange, NpcDialogue,
-		NpcDialogueVersion, PeriodicQuestGrant, ProgressionCurve,
-		ProgressionCurveVersion, ProgressionLevel, QuestDefinition, QuestProgress,
-		QuestStepAttempt, QuestVersion, RewardGrant, RewardRule, RewardRuleVersion,
-		SeasonPointEntry, SeasonTrack, SeasonTrackProgress, SeasonTrackVersion,
-		ShopItem, ShopItemVersion, ShopPurchase, StoryChapter, StoryChapterVersion,
+		LevelSession, LevelVersion, LoginEvent, MiniGameConfig, MiniGameConfigVersion,
+		MiniGamePlay, NicknameChange, NpcDialogue, NpcDialogueVersion,
+		PeriodicQuestGrant, ProgressionCurve, ProgressionCurveVersion,
+		ProgressionLevel, QuestDefinition, QuestProgress, QuestStepAttempt,
+		QuestVersion, RewardGrant, RewardRule, RewardRuleVersion, SeasonPointEntry,
+		SeasonTrack, SeasonTrackProgress, SeasonTrackVersion, ShopItem,
+		ShopItemVersion, ShopPurchase, StoryChapter, StoryChapterVersion,
 		StoryProgress, StudentAchievement, TenantResourceAssignment, Wallet, WorldArea,
 		WorldAreaUnlock, WorldAreaVersion, WorldUnlockFact, XpDailyCap,
 		XpLedgerEntry []ent.Interceptor
@@ -10183,6 +10614,9 @@ var (
 		LevelSession:              tableSchemas[0],
 		LevelVersion:              tableSchemas[0],
 		LoginEvent:                tableSchemas[0],
+		MiniGameConfig:            tableSchemas[0],
+		MiniGameConfigVersion:     tableSchemas[0],
+		MiniGamePlay:              tableSchemas[0],
 		NicknameChange:            tableSchemas[0],
 		NpcDialogue:               tableSchemas[0],
 		NpcDialogueVersion:        tableSchemas[0],

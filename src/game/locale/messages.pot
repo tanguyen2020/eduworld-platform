@@ -951,6 +951,36 @@ msgstr ""
 msgid "ui.login.wait_hint"
 msgstr ""
 
+msgid "ui.minigame.completed"
+msgstr ""
+
+msgid "ui.minigame.continue"
+msgstr ""
+
+msgid "ui.minigame.done"
+msgstr ""
+
+msgid "ui.minigame.game_score"
+msgstr ""
+
+msgid "ui.minigame.not_completed"
+msgstr ""
+
+msgid "ui.minigame.points"
+msgstr ""
+
+msgid "ui.minigame.streak"
+msgstr ""
+
+msgid "ui.minigame.submit_state"
+msgstr ""
+
+msgid "ui.minigame.summary_title"
+msgstr ""
+
+msgid "ui.minigame.time_up"
+msgstr ""
+
 msgid "ui.notification.assignment_new"
 msgstr ""
 

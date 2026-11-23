@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
@@ -196,6 +197,34 @@ func TemplateAssignments(dir string) ([]QuestAssignment, error) {
 	out := make([]QuestAssignment, 0, len(doc.Assignments))
 	for _, a := range doc.Assignments {
 		out = append(out, QuestAssignment{QuestID: a.TemplateID, Tenants: a.Tenants})
+	}
+	return out, nil
+}
+
+// MiniGames reads the F073 seed (seed/minigames): the mini-game configs (minigame_config) and the sample quest with a
+// minigame step. The configs are published only with the learning facade (validateMinigameQuestionSource checks their
+// question source against the Question Bank, F073-AC-02): never published without that check.
+func MiniGames(dir string) ([]command.ContentItem, error) {
+	files, err := filepath.Glob(filepath.Join(dir, "minigames", "*.v1.json"))
+	if err != nil {
+		return nil, err
+	}
+	sort.Strings(files)
+	var out []command.ContentItem
+	for _, f := range files {
+		base := filepath.Base(f)
+		if base == "assignments.v1.json" {
+			continue
+		}
+		raw, err := os.ReadFile(f) //nolint:gosec // repository seed path
+		if err != nil {
+			return nil, err
+		}
+		typ := write.ItemMiniGameConfig
+		if strings.HasPrefix(base, "quest.") {
+			typ = write.ItemQuest
+		}
+		out = append(out, command.ContentItem{Type: typ, Payload: raw})
 	}
 	return out, nil
 }

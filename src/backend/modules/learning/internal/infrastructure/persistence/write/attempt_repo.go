@@ -2,6 +2,7 @@ package write
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -30,13 +31,18 @@ func attemptErr(err error) error {
 }
 
 func modeOf(r *ent.Attempt) attempt.Attempt {
-	return attempt.Attempt{ID: r.ID, TenantID: r.TenantID, SchoolID: r.SchoolID, StudentID: r.StudentID, Mode: attempt.Mode(r.Mode),
+	a := attempt.Attempt{ID: r.ID, TenantID: r.TenantID, SchoolID: r.SchoolID, StudentID: r.StudentID, Mode: attempt.Mode(r.Mode),
 		ContextType: r.ContextType, ContextID: r.ContextID, ActivityID: r.ActivityID, ActivityType: r.ActivityType, SourceKind: r.SourceKind,
 		SourceVersionID: r.SourceVersionID, Status: attempt.Status(r.Status), Seed: r.Seed, StartedAt: r.StartedAt.UTC(), DeadlineAt: utc(r.DeadlineAt),
 		SubmittedAt: utc(r.SubmittedAt), GradedAt: utc(r.GradedAt), PausedAt: utc(r.PausedAt), PausedMS: r.PausedMs, LastActivityAt: r.LastActivityAt.UTC(),
 		Feedback: attempt.FeedbackTiming(r.FeedbackTiming), DisplayLanguage: r.DisplayLanguage, SubmitReason: r.SubmitReason, Score: r.Score,
 		MaxScore: r.MaxScore, DurationMS: r.DurationMs, ClientElapsedMS: r.ClientElapsedMs, ObjectiveIDs: r.ObjectiveIds,
-		RecommendationID: r.RecommendationID, IdempotencyKey: r.IdempotencyKey, RowVersion: r.Version}
+		RecommendationID: r.RecommendationID, IdempotencyKey: r.IdempotencyKey, RowVersion: r.Version, GameScore: r.GameScore,
+		MinigameConfigVersionID: r.MinigameConfigVersionID}
+	if r.GameStreak != nil {
+		a.GameStreak = *r.GameStreak
+	}
+	return a
 }
 
 func utc(t *time.Time) *time.Time {
@@ -53,6 +59,15 @@ func itemOf(r *ent.AttemptItem) attempt.Item {
 		AnswerCount: r.AnswerCount, FinalIsCorrect: r.FinalIsCorrect, FinalScore: r.FinalScore, HintsRevealed: r.HintsRevealed, RowVersion: r.Version}
 }
 
+// gameStreak is game_streak of a mini-game attempt (NULL outside the minigame plugin).
+func gameStreak(a attempt.Attempt) *int {
+	if a.GameScore == nil {
+		return nil
+	}
+	s := a.GameStreak
+	return &s
+}
+
 // InsertAttempt implements write.AttemptStore.
 func (AttemptRepo) InsertAttempt(ctx context.Context, a attempt.Attempt) error {
 	cl := client(ctx)
@@ -65,7 +80,8 @@ func (AttemptRepo) InsertAttempt(ctx context.Context, a attempt.Attempt) error {
 		SetSourceKind(a.SourceKind).SetSourceVersionID(a.SourceVersionID).SetStatus(string(a.Status)).SetSeed(a.Seed).SetStartedAt(a.StartedAt).
 		SetNillableDeadlineAt(a.DeadlineAt).SetLastActivityAt(a.LastActivityAt).SetFeedbackTiming(string(a.Feedback)).
 		SetDisplayLanguage(a.DisplayLanguage).SetItemCount(len(a.Items)).SetObjectiveIds(objectives).SetNillableRecommendationID(a.RecommendationID).
-		SetIdempotencyKey(a.IdempotencyKey).SetCreatedBy(a.StudentID).Exec(ctx)
+		SetIdempotencyKey(a.IdempotencyKey).SetCreatedBy(a.StudentID).SetNillableGameScore(a.GameScore).SetNillableGameStreak(gameStreak(a)).
+		SetNillableMinigameConfigVersionID(a.MinigameConfigVersionID).Exec(ctx)
 	if err != nil {
 		return MapCurriculumErr(err)
 	}
@@ -142,7 +158,7 @@ func (AttemptRepo) UpdateAttempt(ctx context.Context, a attempt.Attempt, ifRow i
 	u := client(ctx).Attempt.Update().Where(entatt.ID(a.ID), entatt.Version(ifRow)).SetStatus(string(a.Status)).
 		SetLastActivityAt(a.LastActivityAt).SetPausedMs(a.PausedMS).SetNillableSubmittedAt(a.SubmittedAt).SetNillableGradedAt(a.GradedAt).
 		SetNillableSubmitReason(a.SubmitReason).SetNillableScore(a.Score).SetNillableMaxScore(a.MaxScore).SetNillableDurationMs(a.DurationMS).
-		SetNillableClientElapsedMs(a.ClientElapsedMS).AddVersion(1)
+		SetNillableClientElapsedMs(a.ClientElapsedMS).SetNillableGameScore(a.GameScore).SetNillableGameStreak(gameStreak(a)).AddVersion(1)
 	if a.PausedAt != nil {
 		u.SetPausedAt(*a.PausedAt)
 	} else {
@@ -228,4 +244,23 @@ func (AttemptRepo) Due(ctx context.Context, idleBefore, resumeBefore, deadlineBe
 		out[i] = write.DueAttempt{ID: r.ID, TenantID: r.TenantID}
 	}
 	return out, nil
+}
+
+// LastAnsweredAt implements write.AttemptStore (the append-only answers of the attempt, partition-wide index on attempt_id).
+func (AttemptRepo) LastAnsweredAt(ctx context.Context, attemptID uuid.UUID) (*time.Time, error) {
+	tx, ok := entx.Tx(ctx)
+	if !ok {
+		return nil, entx.ErrNoTransaction
+	}
+	var at sql.NullTime
+	// tenancyguard:ok append-only table without deleted_at, filtered by the session tenant (RLS T as well)
+	if err := tx.QueryRowContext(ctx, `SELECT max(answered_at) FROM assessment.attempt_answers
+		WHERE attempt_id = $1 AND tenant_id = infra.current_tenant_id()`, attemptID).Scan(&at); err != nil {
+		return nil, fmt.Errorf("attempt answers: %w", err)
+	}
+	if !at.Valid {
+		return nil, nil
+	}
+	t := at.Time.UTC()
+	return &t, nil
 }

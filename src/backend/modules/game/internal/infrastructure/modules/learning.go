@@ -16,6 +16,7 @@ import (
 type LearningFacade interface {
 	CreateAttempt(ctx context.Context, req learningapi.CreateAttemptRequestObject) (learningapi.CreateAttemptResponseObject, error)
 	GetAttemptResult(ctx context.Context, req learningapi.GetAttemptResultRequestObject) (learningapi.GetAttemptResultResponseObject, error)
+	ValidateMinigameQuestionSource(ctx context.Context, req learningapi.ValidateMinigameQuestionSourceRequestObject) (learningapi.ValidateMinigameQuestionSourceResponseObject, error)
 }
 
 // LearningAttempts implements port.LearningAttempts on the learning facade (F072 T001): pkg/modcall gives the span, the
@@ -37,11 +38,23 @@ func (l LearningAttempts) CreateAttempt(ctx context.Context, in port.LearningAtt
 	}
 	step := in.StepID
 	qv := in.QuestVersionID
+	content := learningapi.ActivityRefContentTypeActivity
+	if in.ContentType == port.ContentMiniGameConfig {
+		content = learningapi.ActivityRefContentTypeMinigameConfig
+	}
 	body := learningapi.AttemptCreateRequest{StudentId: in.StudentID, Mode: learningapi.AttemptModeQuest,
-		Activity: learningapi.ActivityRef{ContentType: learningapi.ActivityRefContentTypeActivity, ContentId: in.ContentID, ContentVersionId: in.ContentVersionID}}
-	body.Context.ContextType = learningapi.QuestStep
-	body.Context.ContextId = in.QuestProgressID
-	body.Context.QuestVersionId, body.Context.StepId, body.Context.GameSessionId = &qv, &step, in.GameSessionID
+		Activity: learningapi.ActivityRef{ContentType: content, ContentId: in.ContentID, ContentVersionId: in.ContentVersionID}}
+	if in.MiniGamePlayID != nil {
+		// F073: a free mini-game play — mode minigame, context minigame_session of the play.
+		body.Mode = learningapi.AttemptModeMinigame
+		body.Context.ContextType = learningapi.MinigameSession
+		body.Context.ContextId = *in.MiniGamePlayID
+		body.Context.GameSessionId = in.GameSessionID
+	} else {
+		body.Context.ContextType = learningapi.QuestStep
+		body.Context.ContextId = in.QuestProgressID
+		body.Context.QuestVersionId, body.Context.StepId, body.Context.GameSessionId = &qv, &step, in.GameSessionID
+	}
 	op := modcall.Op{Caller: "game", Callee: "learning", Operation: "createAttempt", Kind: modcall.Write,
 		AllowedCallers: learningapi.AllowedCallers["createAttempt"], ContextRequired: learningapi.ContextRequired["createAttempt"]}
 	resp, err := modcall.Call(ctx, op, func(ctx context.Context) (learningapi.CreateAttemptResponseObject, error) {
@@ -49,6 +62,9 @@ func (l LearningAttempts) CreateAttempt(ctx context.Context, in port.LearningAtt
 	})
 	var pe *problem.Error
 	switch {
+	case errors.As(err, &pe) && pe.Code == problem.Conflict && in.ContentType == port.ContentMiniGameConfig:
+		// F073 edge case: the projection of module learning has not received the pinned version yet → 503 Retry-After.
+		return out, errors.Join(port.ErrLearningUnavailable, err)
 	case errors.As(err, &pe) && (pe.Code == problem.NotFound || pe.Code == problem.ContentNotPublished):
 		return out, problem.New(problem.ItemRefInvalid, "the learning content of the step is not published").Wrap(err)
 	case errors.As(err, &pe) && problem.Status(pe.Code) < 500:

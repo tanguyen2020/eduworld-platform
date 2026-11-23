@@ -453,8 +453,12 @@ func (h Regrades) reEvaluate(ctx context.Context, r write.RegradeRequest, ref wr
 			return err
 		}
 		newID := ids.New()
-		details, _ := json.Marshal(map[string]any{"items": next, "strategies": res.Strategies, "regrade_request_id": r.ID,
-			"action": string(r.Action)})
+		d := map[string]any{"items": next, "strategies": res.Strategies, "regrade_request_id": r.ID, "action": string(r.Action)}
+		// F073: a re-evaluated mini-game keeps its game score; the completion follows the new item results.
+		if mg := outcomeOf(plugin, v, a, results); mg != nil {
+			d["minigame"] = mg.details()
+		}
+		details, _ := json.Marshal(d)
 		reason := truncate(r.Reason, 500)
 		rid, sup, by := r.ID, prev.ID, r.RequestedBy
 		if err := h.Attempts.Store.InsertEvaluation(ctx, write.EvaluationRow{ID: newID, AttemptID: a.ID, Source: evaluation.SourceReEvaluation,

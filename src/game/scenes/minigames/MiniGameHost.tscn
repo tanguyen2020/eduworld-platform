@@ -1,0 +1,137 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/learning/minigame_host.gd" id="1_script"]
+
+[node name="MiniGameHost" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_script")
+
+[node name="Frame" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Layout" type="VBoxContainer" parent="Frame"]
+layout_mode = 2
+
+[node name="Hud" type="PanelContainer" parent="Frame/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudPanel"
+
+[node name="HudRow" type="HBoxContainer" parent="Frame/Layout/Hud"]
+layout_mode = 2
+
+[node name="Exit" type="Button" parent="Frame/Layout/Hud/HudRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.activity_player.exit"
+
+[node name="Title" type="Label" parent="Frame/Layout/Hud/HudRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudLabel"
+auto_translate_mode = 2
+text_overrun_behavior = 3
+
+[node name="Progress" type="Label" parent="Frame/Layout/Hud/HudRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+auto_translate_mode = 2
+
+[node name="Points" type="Label" parent="Frame/Layout/Hud/HudRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+auto_translate_mode = 2
+
+[node name="Streak" type="Label" parent="Frame/Layout/Hud/HudRow"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+auto_translate_mode = 2
+
+[node name="Clock" type="Label" parent="Frame/Layout/Hud/HudRow"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+auto_translate_mode = 2
+
+[node name="Offline" type="Label" parent="Frame/Layout/Hud/HudRow"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+text = "ui.activity_player.offline"
+autowrap_mode = 3
+
+[node name="Stage" type="VBoxContainer" parent="Frame/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StatePanel" type="VBoxContainer" parent="Frame/Layout"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="StateLabel" type="Label" parent="Frame/Layout/StatePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="StateButtons" type="HBoxContainer" parent="Frame/Layout/StatePanel"]
+layout_mode = 2
+alignment = 1
+
+[node name="Back" type="Button" parent="Frame/Layout/StatePanel/StateButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.activity_player.back"
+
+[node name="Retry" type="Button" parent="Frame/Layout/StatePanel/StateButtons"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "ui.common.retry"
+
+[node name="Footer" type="HBoxContainer" parent="Frame/Layout"]
+layout_mode = 2
+
+[node name="Status" type="Label" parent="Frame/Layout/Footer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 3
+
+[node name="Next" type="Button" parent="Frame/Layout/Footer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "ui.activity_player.next"
+
+[node name="Continue" type="Button" parent="Frame/Layout/Footer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "ui.minigame.continue"

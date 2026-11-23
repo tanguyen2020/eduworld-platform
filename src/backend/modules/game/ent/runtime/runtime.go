@@ -42,6 +42,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfig"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfigversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameplay"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
@@ -1664,6 +1667,161 @@ func init() {
 	logineventDescID := logineventMixinFields0[0].Descriptor()
 	// loginevent.DefaultID holds the default value on creation for the id field.
 	loginevent.DefaultID = logineventDescID.Default.(func() uuid.UUID)
+	minigameconfigMixin := schema.MiniGameConfig{}.Mixin()
+	minigameconfigMixinHooks0 := minigameconfigMixin[0].Hooks()
+	minigameconfig.Hooks[0] = minigameconfigMixinHooks0[0]
+	minigameconfigMixinInters0 := minigameconfigMixin[0].Interceptors()
+	minigameconfig.Interceptors[0] = minigameconfigMixinInters0[0]
+	minigameconfigMixinFields0 := minigameconfigMixin[0].Fields()
+	_ = minigameconfigMixinFields0
+	minigameconfigFields := schema.MiniGameConfig{}.Fields()
+	_ = minigameconfigFields
+	// minigameconfigDescCreatedAt is the schema descriptor for created_at field.
+	minigameconfigDescCreatedAt := minigameconfigMixinFields0[1].Descriptor()
+	// minigameconfig.DefaultCreatedAt holds the default value on creation for the created_at field.
+	minigameconfig.DefaultCreatedAt = minigameconfigDescCreatedAt.Default.(func() time.Time)
+	// minigameconfigDescUpdatedAt is the schema descriptor for updated_at field.
+	minigameconfigDescUpdatedAt := minigameconfigMixinFields0[3].Descriptor()
+	// minigameconfig.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	minigameconfig.DefaultUpdatedAt = minigameconfigDescUpdatedAt.Default.(func() time.Time)
+	// minigameconfig.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	minigameconfig.UpdateDefaultUpdatedAt = minigameconfigDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// minigameconfigDescDeleteReason is the schema descriptor for delete_reason field.
+	minigameconfigDescDeleteReason := minigameconfigMixinFields0[7].Descriptor()
+	// minigameconfig.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	minigameconfig.DeleteReasonValidator = minigameconfigDescDeleteReason.Validators[0].(func(string) error)
+	// minigameconfigDescVersion is the schema descriptor for version field.
+	minigameconfigDescVersion := minigameconfigMixinFields0[8].Descriptor()
+	// minigameconfig.DefaultVersion holds the default value on creation for the version field.
+	minigameconfig.DefaultVersion = minigameconfigDescVersion.Default.(int64)
+	// minigameconfigDescCode is the schema descriptor for code field.
+	minigameconfigDescCode := minigameconfigFields[0].Descriptor()
+	// minigameconfig.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	minigameconfig.CodeValidator = minigameconfigDescCode.Validators[0].(func(string) error)
+	// minigameconfigDescOwnerScope is the schema descriptor for owner_scope field.
+	minigameconfigDescOwnerScope := minigameconfigFields[1].Descriptor()
+	// minigameconfig.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	minigameconfig.DefaultOwnerScope = minigameconfigDescOwnerScope.Default.(string)
+	// minigameconfig.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	minigameconfig.OwnerScopeValidator = minigameconfigDescOwnerScope.Validators[0].(func(string) error)
+	// minigameconfigDescLatestVersionNo is the schema descriptor for latest_version_no field.
+	minigameconfigDescLatestVersionNo := minigameconfigFields[3].Descriptor()
+	// minigameconfig.DefaultLatestVersionNo holds the default value on creation for the latest_version_no field.
+	minigameconfig.DefaultLatestVersionNo = minigameconfigDescLatestVersionNo.Default.(int)
+	// minigameconfigDescID is the schema descriptor for id field.
+	minigameconfigDescID := minigameconfigMixinFields0[0].Descriptor()
+	// minigameconfig.DefaultID holds the default value on creation for the id field.
+	minigameconfig.DefaultID = minigameconfigDescID.Default.(func() uuid.UUID)
+	minigameconfigversionMixin := schema.MiniGameConfigVersion{}.Mixin()
+	minigameconfigversionMixinHooks0 := minigameconfigversionMixin[0].Hooks()
+	minigameconfigversion.Hooks[0] = minigameconfigversionMixinHooks0[0]
+	minigameconfigversionMixinInters0 := minigameconfigversionMixin[0].Interceptors()
+	minigameconfigversion.Interceptors[0] = minigameconfigversionMixinInters0[0]
+	minigameconfigversionMixinFields0 := minigameconfigversionMixin[0].Fields()
+	_ = minigameconfigversionMixinFields0
+	minigameconfigversionFields := schema.MiniGameConfigVersion{}.Fields()
+	_ = minigameconfigversionFields
+	// minigameconfigversionDescCreatedAt is the schema descriptor for created_at field.
+	minigameconfigversionDescCreatedAt := minigameconfigversionMixinFields0[1].Descriptor()
+	// minigameconfigversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	minigameconfigversion.DefaultCreatedAt = minigameconfigversionDescCreatedAt.Default.(func() time.Time)
+	// minigameconfigversionDescUpdatedAt is the schema descriptor for updated_at field.
+	minigameconfigversionDescUpdatedAt := minigameconfigversionMixinFields0[3].Descriptor()
+	// minigameconfigversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	minigameconfigversion.DefaultUpdatedAt = minigameconfigversionDescUpdatedAt.Default.(func() time.Time)
+	// minigameconfigversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	minigameconfigversion.UpdateDefaultUpdatedAt = minigameconfigversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// minigameconfigversionDescDeleteReason is the schema descriptor for delete_reason field.
+	minigameconfigversionDescDeleteReason := minigameconfigversionMixinFields0[7].Descriptor()
+	// minigameconfigversion.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	minigameconfigversion.DeleteReasonValidator = minigameconfigversionDescDeleteReason.Validators[0].(func(string) error)
+	// minigameconfigversionDescVersion is the schema descriptor for version field.
+	minigameconfigversionDescVersion := minigameconfigversionMixinFields0[8].Descriptor()
+	// minigameconfigversion.DefaultVersion holds the default value on creation for the version field.
+	minigameconfigversion.DefaultVersion = minigameconfigversionDescVersion.Default.(int64)
+	// minigameconfigversionDescStatus is the schema descriptor for status field.
+	minigameconfigversionDescStatus := minigameconfigversionFields[2].Descriptor()
+	// minigameconfigversion.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	minigameconfigversion.StatusValidator = minigameconfigversionDescStatus.Validators[0].(func(string) error)
+	// minigameconfigversionDescPayloadSha256 is the schema descriptor for payload_sha256 field.
+	minigameconfigversionDescPayloadSha256 := minigameconfigversionFields[4].Descriptor()
+	// minigameconfigversion.PayloadSha256Validator is a validator for the "payload_sha256" field. It is called by the builders before save.
+	minigameconfigversion.PayloadSha256Validator = minigameconfigversionDescPayloadSha256.Validators[0].(func(string) error)
+	// minigameconfigversionDescChangeNote is the schema descriptor for change_note field.
+	minigameconfigversionDescChangeNote := minigameconfigversionFields[5].Descriptor()
+	// minigameconfigversion.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	minigameconfigversion.ChangeNoteValidator = minigameconfigversionDescChangeNote.Validators[0].(func(string) error)
+	// minigameconfigversionDescSnapshotKey is the schema descriptor for snapshot_key field.
+	minigameconfigversionDescSnapshotKey := minigameconfigversionFields[6].Descriptor()
+	// minigameconfigversion.SnapshotKeyValidator is a validator for the "snapshot_key" field. It is called by the builders before save.
+	minigameconfigversion.SnapshotKeyValidator = minigameconfigversionDescSnapshotKey.Validators[0].(func(string) error)
+	// minigameconfigversionDescSnapshotSha256 is the schema descriptor for snapshot_sha256 field.
+	minigameconfigversionDescSnapshotSha256 := minigameconfigversionFields[7].Descriptor()
+	// minigameconfigversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
+	minigameconfigversion.SnapshotSha256Validator = minigameconfigversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// minigameconfigversionDescCode is the schema descriptor for code field.
+	minigameconfigversionDescCode := minigameconfigversionFields[11].Descriptor()
+	// minigameconfigversion.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	minigameconfigversion.CodeValidator = minigameconfigversionDescCode.Validators[0].(func(string) error)
+	// minigameconfigversionDescMinigameType is the schema descriptor for minigame_type field.
+	minigameconfigversionDescMinigameType := minigameconfigversionFields[12].Descriptor()
+	// minigameconfigversion.MinigameTypeValidator is a validator for the "minigame_type" field. It is called by the builders before save.
+	minigameconfigversion.MinigameTypeValidator = minigameconfigversionDescMinigameType.Validators[0].(func(string) error)
+	// minigameconfigversionDescID is the schema descriptor for id field.
+	minigameconfigversionDescID := minigameconfigversionMixinFields0[0].Descriptor()
+	// minigameconfigversion.DefaultID holds the default value on creation for the id field.
+	minigameconfigversion.DefaultID = minigameconfigversionDescID.Default.(func() uuid.UUID)
+	minigameplayMixin := schema.MiniGamePlay{}.Mixin()
+	minigameplayMixinHooks0 := minigameplayMixin[0].Hooks()
+	minigameplay.Hooks[0] = minigameplayMixinHooks0[0]
+	minigameplayMixinInters0 := minigameplayMixin[0].Interceptors()
+	minigameplay.Interceptors[0] = minigameplayMixinInters0[0]
+	minigameplayMixinFields0 := minigameplayMixin[0].Fields()
+	_ = minigameplayMixinFields0
+	minigameplayFields := schema.MiniGamePlay{}.Fields()
+	_ = minigameplayFields
+	// minigameplayDescCreatedAt is the schema descriptor for created_at field.
+	minigameplayDescCreatedAt := minigameplayMixinFields0[2].Descriptor()
+	// minigameplay.DefaultCreatedAt holds the default value on creation for the created_at field.
+	minigameplay.DefaultCreatedAt = minigameplayDescCreatedAt.Default.(func() time.Time)
+	// minigameplayDescUpdatedAt is the schema descriptor for updated_at field.
+	minigameplayDescUpdatedAt := minigameplayMixinFields0[4].Descriptor()
+	// minigameplay.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	minigameplay.DefaultUpdatedAt = minigameplayDescUpdatedAt.Default.(func() time.Time)
+	// minigameplay.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	minigameplay.UpdateDefaultUpdatedAt = minigameplayDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// minigameplayDescDeleteReason is the schema descriptor for delete_reason field.
+	minigameplayDescDeleteReason := minigameplayMixinFields0[8].Descriptor()
+	// minigameplay.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	minigameplay.DeleteReasonValidator = minigameplayDescDeleteReason.Validators[0].(func(string) error)
+	// minigameplayDescVersion is the schema descriptor for version field.
+	minigameplayDescVersion := minigameplayMixinFields0[9].Descriptor()
+	// minigameplay.DefaultVersion holds the default value on creation for the version field.
+	minigameplay.DefaultVersion = minigameplayDescVersion.Default.(int64)
+	// minigameplayDescMinigameType is the schema descriptor for minigame_type field.
+	minigameplayDescMinigameType := minigameplayFields[4].Descriptor()
+	// minigameplay.MinigameTypeValidator is a validator for the "minigame_type" field. It is called by the builders before save.
+	minigameplay.MinigameTypeValidator = minigameplayDescMinigameType.Validators[0].(func(string) error)
+	// minigameplayDescContextType is the schema descriptor for context_type field.
+	minigameplayDescContextType := minigameplayFields[6].Descriptor()
+	// minigameplay.ContextTypeValidator is a validator for the "context_type" field. It is called by the builders before save.
+	minigameplay.ContextTypeValidator = minigameplayDescContextType.Validators[0].(func(string) error)
+	// minigameplayDescPlayDate is the schema descriptor for play_date field.
+	minigameplayDescPlayDate := minigameplayFields[8].Descriptor()
+	// minigameplay.PlayDateValidator is a validator for the "play_date" field. It is called by the builders before save.
+	minigameplay.PlayDateValidator = minigameplayDescPlayDate.Validators[0].(func(string) error)
+	// minigameplayDescStatus is the schema descriptor for status field.
+	minigameplayDescStatus := minigameplayFields[9].Descriptor()
+	// minigameplay.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	minigameplay.StatusValidator = minigameplayDescStatus.Validators[0].(func(string) error)
+	// minigameplayDescStartedAt is the schema descriptor for started_at field.
+	minigameplayDescStartedAt := minigameplayFields[17].Descriptor()
+	// minigameplay.DefaultStartedAt holds the default value on creation for the started_at field.
+	minigameplay.DefaultStartedAt = minigameplayDescStartedAt.Default.(func() time.Time)
+	// minigameplayDescID is the schema descriptor for id field.
+	minigameplayDescID := minigameplayMixinFields0[0].Descriptor()
+	// minigameplay.DefaultID holds the default value on creation for the id field.
+	minigameplay.DefaultID = minigameplayDescID.Default.(func() uuid.UUID)
 	nicknamechangeMixin := schema.NicknameChange{}.Mixin()
 	nicknamechangeMixinHooks0 := nicknamechangeMixin[0].Hooks()
 	nicknamechange.Hooks[0] = nicknamechangeMixinHooks0[0]

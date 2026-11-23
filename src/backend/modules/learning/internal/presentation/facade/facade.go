@@ -39,6 +39,8 @@ type Facade struct {
 	// revealPlanItem; caller module competition, F105).
 	Plans   PlanCommands
 	Reveals PlanReveals
+	// MinigameSources serves validateMinigameQuestionSource (caller module game, F073-AC-02).
+	MinigameSources query.ValidateMinigameQuestionSourceHandler
 	// Idempotency stores the results of the writing operations (infra.idempotency_records, idempotency_record_ttl).
 	Idempotency *idempotency.Store
 }

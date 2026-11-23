@@ -93,6 +93,10 @@ const MasteryProjectionName = "game.mastery_projection"
 // MasteryProjectionEvents are the learning events it handles.
 var MasteryProjectionEvents = []string{"learning_objective.progressed"}
 
+// MiniGameActivityGradedName records the result of a mini-game play and publishes minigame.completed on the graded attempts
+// of module learning that carry the minigame block (F073-AC-18, DLQ ew.dlq.game.minigame_on_activity_graded).
+const MiniGameActivityGradedName = "game.minigame_on_activity_graded"
+
 // QuestActivityGradedName evaluates the pass rule of the quest steps on the graded attempts of module learning (F072
 // T031): activity.graded of an attempt linked to a quest step (game.quest_step_attempts).
 const QuestActivityGradedName = "game.quest_on_activity_graded"
@@ -120,11 +124,11 @@ const RewardEngineName = "game.reward_engine"
 var RewardEngineLearningEvents = []string{"activity.graded", "lesson.completed", "learning_objective.mastered"}
 
 // RewardEngineGameName is the Reward Engine on the events of module game itself (one durable consumer per stream:
-// a JetStream consumer reads one stream). minigame.completed joins when F073 defines its payload.
+// a JetStream consumer reads one stream); minigame.completed since F073.
 const RewardEngineGameName = "game.reward_engine_game"
 
-// RewardEngineGameEvents are the game events it handles (owners F071, F072).
-var RewardEngineGameEvents = []string{"quest.completed", "world.discovery_found", "world.area_completed"}
+// RewardEngineGameEvents are the game events it handles (owners F071, F072, F073).
+var RewardEngineGameEvents = []string{"quest.completed", "world.discovery_found", "world.area_completed", "minigame.completed"}
 
 // GradeTransitionName applies the school-year grade transition of a student (F074 T035, FR-GAM-010).
 const GradeTransitionName = "game.grade_transition"

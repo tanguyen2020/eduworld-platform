@@ -109,7 +109,7 @@ func ViewOf(p *quest.Progress, v quest.Version) ProgressView {
 		case quest.StepCollect, quest.StepDiscover:
 			c, t := st.Count, s.Target()
 			sv.Count, sv.Target = &c, &t
-		case quest.StepActivity:
+		case quest.StepActivity, quest.StepMinigame:
 			n := len(st.AttemptIDs)
 			sv.AttemptCount = &n
 		}

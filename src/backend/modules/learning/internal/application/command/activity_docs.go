@@ -73,6 +73,12 @@ func (h Docs) prepareActivity(ctx context.Context, v *dto.DocVersion, body map[s
 	if vs := p.ValidateConfig(cfg); len(vs) > 0 {
 		return configProblem(vs)
 	}
+	// F073-AC-15: a minigame activity wraps a projected configuration; its question set override must suit it.
+	if _, ok := p.(activity.GameScored); ok {
+		if err := (minigameChecker{Minigames: h.Minigames, Docs: h.Store, Questions: h.Questions}).check(ctx, raw); err != nil {
+			return err
+		}
+	}
 	if len(v.ObjectiveIDs) == 0 {
 		return problem.Invalid("/objective_ids", problem.SubRequired, "needs at least one learning objective")
 	}

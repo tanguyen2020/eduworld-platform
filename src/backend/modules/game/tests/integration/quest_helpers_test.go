@@ -21,6 +21,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/minigamesql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/questsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/worldsql"
 	writerepo "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
@@ -85,6 +86,9 @@ type fakeLearning struct {
 	fail  error // returned by createAttempt when set
 	delay time.Duration
 	f     *learningapi.Fake
+	// F073: the answer of validateMinigameQuestionSource (nil = compatible, 50 questions, the types of the rule) and its calls.
+	source  *learningapi.MinigameQuestionSourceResult
+	sources []learningapi.MinigameQuestionSourceCheck
 }
 
 func newFakeLearning() *fakeLearning {
@@ -115,6 +119,23 @@ func newFakeLearning() *fakeLearning {
 		return learningapi.CreateAttempt201JSONResponse{AttemptId: id, Status: "in_progress", QuestionCount: 3, StartedAt: time.Now().UTC(),
 			ContentVersionId: &cv}, nil
 	}}
+	l.f.ValidateMinigameQuestionSourceFunc = func(_ context.Context, req learningapi.ValidateMinigameQuestionSourceRequestObject) (learningapi.ValidateMinigameQuestionSourceResponseObject, error) {
+		l.mu.Lock()
+		defer l.mu.Unlock()
+		l.sources = append(l.sources, *req.Body)
+		if l.source != nil {
+			return learningapi.ValidateMinigameQuestionSource200JSONResponse(*l.source), nil
+		}
+		out := learningapi.MinigameQuestionSourceResult{Compatible: true, AvailableCount: 50, QuestionTypes: []learningapi.QuestionType{},
+			Reasons: []struct {
+				Code    learningapi.MinigameQuestionSourceResultReasonsCode `json:"code"`
+				Message string                                              `json:"message"`
+			}{}}
+		if r := req.Body.QuestionSource.Rule; r != nil && r.QuestionTypes != nil {
+			out.QuestionTypes = *r.QuestionTypes
+		}
+		return learningapi.ValidateMinigameQuestionSource200JSONResponse(out), nil
+	}
 	return l
 }
 
@@ -134,7 +155,7 @@ func (l *fakeLearning) setFail(err error, delay time.Duration) {
 func (e *env) questsUC() command.Quests {
 	return command.Quests{UoW: e.uow, AfterCommit: entx.AfterCommit, Content: questsql.Content{}, World: worldsql.Content{}, Store: writerepo.QuestRepo{},
 		Sessions: writerepo.SessionRepo{}, Events: writerepo.Publisher{W: e.writer}, Audit: writerepo.Auditor{R: e.rec}, Presence: e.presence,
-		Learning: modules.LearningAttempts{F: e.learning.f}, Realtime: e.questPush, Metrics: observability.QuestMetrics{}, Config: questCfg(),
+		Learning: modules.LearningAttempts{F: e.learning.f}, MiniGames: minigamesql.Content{}, Realtime: e.questPush, Metrics: observability.QuestMetrics{}, Config: questCfg(),
 		Now: e.clock.Now}
 }
 

@@ -14,10 +14,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/cache"
 	gameconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/liveopsschema"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/messaging"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/economysql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/liveopssql"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/minigamesql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/progressionsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/questsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/read"
@@ -133,6 +135,7 @@ func Register(r *module.Registry) (*Module, error) {
 	observability.RegisterProfile(r.Metrics())
 	observability.RegisterWorld(r.Metrics())
 	observability.RegisterQuest(r.Metrics())
+	observability.RegisterMiniGame(r.Metrics())
 	observability.RegisterProgression(r.Metrics())
 	observability.RegisterEconomy(r.Metrics())
 	observability.RegisterLiveOps(r.Metrics())
@@ -173,7 +176,11 @@ func Register(r *module.Registry) (*Module, error) {
 	learningLate := &modules.LateLearning{}
 	questUC := command.Quests{UoW: core.UoW, AfterCommit: entx.AfterCommit, Content: questsql.Content{}, World: worldsql.Content{},
 		Store: write.QuestRepo{}, Sessions: write.SessionRepo{}, Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder},
-		Presence: presence, Learning: learningLate, Realtime: realtime.QuestPublisher{C: vk}, Metrics: observability.QuestMetrics{}, Config: questCfg}
+		Presence: presence, Learning: learningLate, MiniGames: minigamesql.Content{}, Realtime: realtime.QuestPublisher{C: vk},
+		Metrics: observability.QuestMetrics{}, Config: questCfg}
+	// F073 mini-games: free plays through createAttempt of module learning (plugin minigame), results from activity.graded.
+	miniGameUC := command.MiniGames{UoW: core.UoW, Content: minigamesql.Content{}, World: worldsql.Content{}, Plays: write.MiniGamePlayRepo{},
+		Events: write.Publisher{W: core.Writer}, Learning: learningLate, Metrics: observability.MiniGameMetrics{}, LearningRetry: questCfg.LearningRetry}
 	// F074 progression: the Reward Engine, level-ups, curve rollout, grade transition, XP reconciliation, ledger merge.
 	progressionUC := command.Progression{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: write.ProgressionRepo{}, Scan: write.ProgressionRepo{},
 		Profiles: write.ProfileRepo{}, Students: worldsql.Content{}, Rules: progressionsql.Content{}, Curves: progressionsql.Content{},
@@ -220,7 +227,7 @@ func Register(r *module.Registry) (*Module, error) {
 			DailyCap: policy.DailyCap},
 		EconomyQueries: query.Economy{Read: core.ReadSession, Data: read.Economy{}, Cursors: cursors}, EconomyCommands: economyUC,
 		LiveOpsQueries: query.LiveOps{Read: core.ReadSession, Data: liveopssql.Store{}, Students: worldsql.Content{}, Counter: cache.GoalCounter{C: vk},
-			Cursors: cursors, Policy: liveCfg.Query}, LiveOpsCommands: liveOpsUC}
+			Cursors: cursors, Policy: liveCfg.Query}, LiveOpsCommands: liveOpsUC, MiniGames: miniGameUC}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
 	}
@@ -261,6 +268,9 @@ func Register(r *module.Registry) (*Module, error) {
 	})
 	r.Consumer("game.quest_on_activity_graded", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.QuestOnActivityGradedOptions(consumer.QuestOnActivityGraded{Quests: questUC}, core.UoW, core.App, js)
+	})
+	r.Consumer(messaging.MiniGameActivityGradedName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.MiniGameOnActivityGradedOptions(consumer.MiniGameOnActivityGraded{MiniGames: miniGameUC}, core.UoW, core.App, js)
 	})
 	r.Consumer("game.quest_on_discovery_found", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.QuestOnDiscoveryFoundOptions(consumer.QuestOnDiscoveryFound{Quests: questUC}, core.UoW, core.App, js)

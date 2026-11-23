@@ -155,6 +155,9 @@ func present(attempt: AttemptModel) -> void:
 		_show_error(ApiResult.CODE_INVALID_RESPONSE, start.bind(args))
 		return
 	renderer = ActivityRendererRegistry.instantiate(attempt.activity_type)
+	# A renderer that runs its own player on this attempt (mini-game, F073) gets the same service — never ApiClient.
+	if renderer.has_method("attach_service"):
+		renderer.call("attach_service", service)
 	renderer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_body.add_child(renderer)
 	renderer.response_submitted.connect(_on_response_submitted)
@@ -472,9 +475,13 @@ func _on_run_submitted(run: Dictionary) -> void:
 		renderer.run_refused(service.last_error_code)
 
 
-## The media renderer reached the end with nothing pending (F065-AC-21): submit.
+## The media renderer reached the end with nothing pending (F065-AC-21): submit; a finished mini-game shows its result.
 func _on_finish_requested() -> void:
 	if state in [State.PRESENTING, State.FEEDBACK]:
+		# A mini-game submits its attempt itself (F073): go straight to the result screen.
+		if service.attempt != null and service.attempt.is_finished():
+			await _show_results(true)
+			return
 		await _submit()
 
 

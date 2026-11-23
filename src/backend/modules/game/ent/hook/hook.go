@@ -441,6 +441,42 @@ func (f LoginEventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LoginEventMutation", m)
 }
 
+// The MiniGameConfigFunc type is an adapter to allow the use of ordinary
+// function as MiniGameConfig mutator.
+type MiniGameConfigFunc func(context.Context, *ent.MiniGameConfigMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MiniGameConfigFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MiniGameConfigMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MiniGameConfigMutation", m)
+}
+
+// The MiniGameConfigVersionFunc type is an adapter to allow the use of ordinary
+// function as MiniGameConfigVersion mutator.
+type MiniGameConfigVersionFunc func(context.Context, *ent.MiniGameConfigVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MiniGameConfigVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MiniGameConfigVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MiniGameConfigVersionMutation", m)
+}
+
+// The MiniGamePlayFunc type is an adapter to allow the use of ordinary
+// function as MiniGamePlay mutator.
+type MiniGamePlayFunc func(context.Context, *ent.MiniGamePlayMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MiniGamePlayFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MiniGamePlayMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MiniGamePlayMutation", m)
+}
+
 // The NicknameChangeFunc type is an adapter to allow the use of ordinary
 // function as NicknameChange mutator.
 type NicknameChangeFunc func(context.Context, *ent.NicknameChangeMutation) (ent.Value, error)

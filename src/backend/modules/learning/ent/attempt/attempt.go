@@ -99,6 +99,12 @@ const (
 	FieldClientPlatform = "client_platform"
 	// FieldGameSessionID holds the string denoting the game_session_id field in the database.
 	FieldGameSessionID = "game_session_id"
+	// FieldGameScore holds the string denoting the game_score field in the database.
+	FieldGameScore = "game_score"
+	// FieldGameStreak holds the string denoting the game_streak field in the database.
+	FieldGameStreak = "game_streak"
+	// FieldMinigameConfigVersionID holds the string denoting the minigame_config_version_id field in the database.
+	FieldMinigameConfigVersionID = "minigame_config_version_id"
 	// Table holds the table name of the attempt in the database.
 	Table = "attempts"
 )
@@ -148,6 +154,9 @@ var Columns = []string{
 	FieldActiveDeviceToken,
 	FieldClientPlatform,
 	FieldGameSessionID,
+	FieldGameScore,
+	FieldGameStreak,
+	FieldMinigameConfigVersionID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -423,4 +432,19 @@ func ByClientPlatform(opts ...sql.OrderTermOption) OrderOption {
 // ByGameSessionID orders the results by the game_session_id field.
 func ByGameSessionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldGameSessionID, opts...).ToFunc()
+}
+
+// ByGameScore orders the results by the game_score field.
+func ByGameScore(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGameScore, opts...).ToFunc()
+}
+
+// ByGameStreak orders the results by the game_streak field.
+func ByGameStreak(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGameStreak, opts...).ToFunc()
+}
+
+// ByMinigameConfigVersionID orders the results by the minigame_config_version_id field.
+func ByMinigameConfigVersionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMinigameConfigVersionID, opts...).ToFunc()
 }

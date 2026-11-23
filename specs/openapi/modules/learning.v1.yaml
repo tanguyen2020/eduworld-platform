@@ -9789,6 +9789,13 @@ components:
           type: boolean
         created_at:
           $ref: '#/components/schemas/Timestamp'
+        game_score:
+          type: integer
+          minimum: 0
+          description: 'Mini-game (F073): điểm vui server tính; không ảnh hưởng mastery (score là điểm học tập)'
+        completion_met:
+          type: boolean
+          description: 'Mini-game (F073): completion_rule của cấu hình thỏa'
     ActivityResponseSubmission:
       type: object
       description: Một câu trả lời trong attempt (thay AnswerSubmission/ActivityPartialResponse — ADR-0059). Server chấm; client không gửi điểm. `response` bắt buộc với kind question/cue_answer/simulation_question (thiếu → 422 INVALID_RESPONSE); kind branch_choice gửi `branch_point_id` + `option_id`, không có response (F065-AC-24).
@@ -15539,6 +15546,17 @@ components:
         next_segment_id:
           type: string
           maxLength: 64
+        game_points:
+          type:
+            - integer
+            - 'null'
+          description: 'Mini-game (F073): điểm vui của câu trả lời này do server tính (giờ server, chuỗi đúng); null khi feedback chưa cho hiện'
+        streak:
+          type:
+            - integer
+            - 'null'
+          minimum: 0
+          description: 'Mini-game (F073): chuỗi câu đúng liên tiếp hiện tại; null khi feedback chưa cho hiện'
       example:
         accepted: true
         position: 1

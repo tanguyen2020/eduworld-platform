@@ -103,7 +103,13 @@ type Attempt struct {
 	ClientPlatform *string `json:"client_platform,omitempty"`
 	// GameSessionID holds the value of the "game_session_id" field.
 	GameSessionID *uuid.UUID `json:"game_session_id,omitempty"`
-	selectValues  sql.SelectValues
+	// GameScore holds the value of the "game_score" field.
+	GameScore *int `json:"game_score,omitempty"`
+	// GameStreak holds the value of the "game_streak" field.
+	GameStreak *int `json:"game_streak,omitempty"`
+	// MinigameConfigVersionID holds the value of the "minigame_config_version_id" field.
+	MinigameConfigVersionID *uuid.UUID `json:"minigame_config_version_id,omitempty"`
+	selectValues            sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -111,13 +117,13 @@ func (*Attempt) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case attempt.FieldCreatedBy, attempt.FieldUpdatedBy, attempt.FieldDeletedBy, attempt.FieldActivityID, attempt.FieldRecommendationID, attempt.FieldExamPaperID, attempt.FieldGameSessionID:
+		case attempt.FieldCreatedBy, attempt.FieldUpdatedBy, attempt.FieldDeletedBy, attempt.FieldActivityID, attempt.FieldRecommendationID, attempt.FieldExamPaperID, attempt.FieldGameSessionID, attempt.FieldMinigameConfigVersionID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case attempt.FieldObjectiveIds:
 			values[i] = new([]byte)
 		case attempt.FieldScore, attempt.FieldMaxScore:
 			values[i] = new(sql.NullFloat64)
-		case attempt.FieldVersion, attempt.FieldSeed, attempt.FieldPausedMs, attempt.FieldDurationMs, attempt.FieldClientElapsedMs, attempt.FieldItemCount:
+		case attempt.FieldVersion, attempt.FieldSeed, attempt.FieldPausedMs, attempt.FieldDurationMs, attempt.FieldClientElapsedMs, attempt.FieldItemCount, attempt.FieldGameScore, attempt.FieldGameStreak:
 			values[i] = new(sql.NullInt64)
 		case attempt.FieldDeleteReason, attempt.FieldMode, attempt.FieldContextType, attempt.FieldActivityType, attempt.FieldSourceKind, attempt.FieldStatus, attempt.FieldFeedbackTiming, attempt.FieldDisplayLanguage, attempt.FieldSubmitReason, attempt.FieldIdempotencyKey, attempt.FieldActiveDeviceToken, attempt.FieldClientPlatform:
 			values[i] = new(sql.NullString)
@@ -420,6 +426,27 @@ func (_m *Attempt) assignValues(columns []string, values []any) error {
 				_m.GameSessionID = new(uuid.UUID)
 				*_m.GameSessionID = *value.S.(*uuid.UUID)
 			}
+		case attempt.FieldGameScore:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field game_score", values[i])
+			} else if value.Valid {
+				_m.GameScore = new(int)
+				*_m.GameScore = int(value.Int64)
+			}
+		case attempt.FieldGameStreak:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field game_streak", values[i])
+			} else if value.Valid {
+				_m.GameStreak = new(int)
+				*_m.GameStreak = int(value.Int64)
+			}
+		case attempt.FieldMinigameConfigVersionID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field minigame_config_version_id", values[i])
+			} else if value.Valid {
+				_m.MinigameConfigVersionID = new(uuid.UUID)
+				*_m.MinigameConfigVersionID = *value.S.(*uuid.UUID)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -619,6 +646,21 @@ func (_m *Attempt) String() string {
 	builder.WriteString(", ")
 	if v := _m.GameSessionID; v != nil {
 		builder.WriteString("game_session_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.GameScore; v != nil {
+		builder.WriteString("game_score=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.GameStreak; v != nil {
+		builder.WriteString("game_streak=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.MinigameConfigVersionID; v != nil {
+		builder.WriteString("minigame_config_version_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteByte(')')

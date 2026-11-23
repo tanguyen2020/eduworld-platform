@@ -19,6 +19,11 @@ var feedback: AnswerFeedback = null
 var hints_used: int = 0
 ## Segment to play after a branch choice of an interactive video (F065-AC-24), empty otherwise.
 var next_segment_id: String = ""
+## Mini-game attempts (F073): game points of this answer and the current correct streak, computed by the server
+## (MINIGAME_ENGINE §6); `has_game_points` false when the server sent none.
+var has_game_points: bool = false
+var game_points: int = 0
+var streak: int = 0
 
 
 ## Per-option feedback (`AnswerFeedback`).
@@ -58,6 +63,11 @@ static func from_dict(data: Dictionary) -> ResponseResultModel:
 	r.hints_used = maxi(0, int(used)) if used is int or used is float else 0
 	var segment: Variant = data.get("next_segment_id")
 	r.next_segment_id = (segment as String).left(64) if segment is String else ""
+	var points: Variant = data.get("game_points")
+	r.has_game_points = points is int or points is float
+	r.game_points = maxi(0, int(points)) if r.has_game_points else 0
+	var streak: Variant = data.get("streak")
+	r.streak = maxi(0, int(streak)) if streak is int or streak is float else 0
 	return r
 
 

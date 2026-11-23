@@ -199,7 +199,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	registry := plugins.Registry()
 	dcmd := command.Docs{UoW: e.uow, Store: write.DocRepo{}, Questions: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{}, Catalog: write.CatalogRepo{},
 		Schema: docSchema, Read: e.read, Resources: reg, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec},
-		Activities: registry, ActivitySchema: actSchema, ActivityEnabled: true, Media: write.MediaRepo{}}
+		Activities: registry, ActivitySchema: actSchema, ActivityEnabled: true, Media: write.MediaRepo{}, Minigames: write.MinigameConfigRepo{}}
 	dqry := query.Docs{Session: e.read, Model: read.DocModel{}, Pool: read.Delivery{}, Cursors: codec}
 	wf := command.Workflow{UoW: e.uow, Status: write.WorkflowRepo{}, Reviews: write.WorkflowRepo{}, Questions: write.QuestionRepo{}, Docs: write.DocRepo{},
 		Schema: schema, Media: write.MediaRepo{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Metrics: observability.WorkflowCounter{}}
@@ -218,7 +218,8 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		}
 	}
 	rel := command.Releases{UoW: e.uow, Workflow: wf, Store: write.ReleaseRepo{}, Schedules: write.ReleaseRepo{}, Events: write.Publisher{W: e.writer},
-		Audit: write.Auditor{R: e.rec}, Metrics: observability.ReleaseCounter{}, Activities: registry, ActivitySchema: actSchema}
+		Audit: write.Auditor{R: e.rec}, Metrics: observability.ReleaseCounter{}, Activities: registry, ActivitySchema: actSchema,
+		Minigames: write.MinigameConfigRepo{}}
 	reader := query.ContentReader{Questions: read.QuestionModel{}, Docs: read.DocModel{}}
 	if mk != nil {
 		rel.Cache, rel.CDN, rel.Signer, reader.Cache = mk.cache, mk.s3, mk.signer, mk.cache
@@ -235,7 +236,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		Clock: clk.Now, Metrics: observability.AttemptCounter{}, Rate: o.rate, AnswerRate: o.answerRate,
 		// F065: media activities — progress, branch choices, ready check and signed URLs (TEST signer key).
 		Progress: write.MediaProgressRepo{}, Media: write.MediaRepo{}, Signer: testSigner, MediaMetrics: observability.VideoCounter{},
-		Runs: write.SimulationRunRepo{}, SimMetrics: observability.SimulationCounter{}}
+		Runs: write.SimulationRunRepo{}, SimMetrics: observability.SimulationCounter{}, Minigames: write.MinigameConfigRepo{}}
 	// F031 US6: lesson sessions pinned at the start of an attempt in the context of a lesson.
 	lessons := command.Lessons{Store: write.LessonRepo{}, Docs: write.DocRepo{}, Learning: write.LearningEventWriter{},
 		Events: write.Publisher{W: e.writer}, UoW: e.uow, Clock: clk.Now}
@@ -280,7 +281,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	handlers.Lessons, handlers.LessonQueries = lessons, query.Lessons{Session: e.read, Model: read.LessonModel{}}
 	attq := query.Attempts{Session: e.read, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery, Registry: registry, Cursors: codec,
 		Clock: clk.Now, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: testSigner, Assignments: asgq, Runs: read.SimulationRunModel{},
-		Recommendations: read.SelfStudyModel{}}
+		Recommendations: read.SelfStudyModel{}, Minigames: read.MinigameConfigModel{}, Students: read.SchoolSettings{}}
 	handlers.Attempts, handlers.AttemptQueries = att, attq
 	examq := query.Exams{Session: e.read, Model: read.ExamModel{}, Attempts: attq, Cursors: codec, Clock: clk.Now}
 	handlers.ExamCommands, handlers.ExamQueries = exams, examq

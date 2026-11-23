@@ -1,0 +1,187 @@
+{
+  "attempt": {
+    "attempt_id": "0f730000-0000-7000-8000-000000000005",
+    "activity_type": "minigame",
+    "mode": "minigame",
+    "status": "in_progress",
+    "context_type": "free_play",
+    "started_at": "2026-11-20T02:05:00Z",
+    "server_time": "2026-11-20T02:05:00Z",
+    "deadline_at": "2026-11-20T02:08:00Z",
+    "feedback_timing": "immediate",
+    "result_release": "immediate",
+    "display_language": "vi-VN",
+    "items": [
+      {
+        "position": 1,
+        "question_version_id": "0f730000-0000-4000-8000-000000000008",
+        "type": "matching",
+        "hint_count": 0,
+        "render_payload": {
+          "stem": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "Nối phép nhân với kết quả đúng."
+              }
+            ]
+          },
+          "left": [
+            {
+              "id": "l_1",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "2 × 6"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "l_2",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "3 × 6"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "l_3",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "4 × 6"
+                  }
+                ]
+              }
+            }
+          ],
+          "right": [
+            {
+              "id": "r_1",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "18"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r_2",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "12"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r_3",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "24"
+                  }
+                ]
+              }
+            }
+          ],
+          "shuffle": true
+        }
+      }
+    ],
+    "saved_responses": [],
+    "render": {
+      "activity_type": "minigame",
+      "title": "Chợ phép nhân",
+      "render_payload": {
+        "minigame_type": "matching",
+        "minigame_config_version_id": "0f730000-0000-4000-8000-0000000c0005",
+        "config": {
+          "name": {
+            "vi": "Chợ phép nhân",
+            "en": "Multiplication market"
+          },
+          "instructions": {
+            "vi": "Chơi và trả lời từng câu nhé!",
+            "en": "Play and answer each question!"
+          },
+          "grade_levels": [
+            3
+          ],
+          "question_count": 1,
+          "time_limit_seconds": 180,
+          "feedback_timing": "immediate",
+          "show_explanation": true,
+          "show_correct_answer": false,
+          "scoring": {
+            "points_per_correct": 10,
+            "time_bonus_enabled": false,
+            "streak_bonus_enabled": true
+          },
+          "presentation": {
+            "scene_variant": "matching.market_cards",
+            "theme": "forest"
+          },
+          "resumable": true,
+          "prefetch_items": false
+        }
+      },
+      "math_assets": [
+        {
+          "math_id": "m_three_quarters",
+          "svg_url": "https://cdn.example.invalid/math/a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1.svg",
+          "sha256": "a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1",
+          "speech_text": "ba phần tư",
+          "display": "inline"
+        }
+      ],
+      "content_language": "vi",
+      "display_language": "vi-VN",
+      "translation_missing": false
+    }
+  },
+  "minigame_type": "matching",
+  "minigame_config_version_id": "0f730000-0000-4000-8000-0000000c0005",
+  "deadline_at": "2026-11-20T02:08:00Z",
+  "server_time": "2026-11-20T02:05:00Z",
+  "config": {
+    "name": {
+      "vi": "Chợ phép nhân",
+      "en": "Multiplication market"
+    },
+    "instructions": {
+      "vi": "Chơi và trả lời từng câu nhé!",
+      "en": "Play and answer each question!"
+    },
+    "grade_levels": [
+      3
+    ],
+    "question_count": 1,
+    "time_limit_seconds": 180,
+    "feedback_timing": "immediate",
+    "show_explanation": true,
+    "show_correct_answer": false,
+    "scoring": {
+      "points_per_correct": 10,
+      "time_bonus_enabled": false,
+      "streak_bonus_enabled": true
+    },
+    "presentation": {
+      "scene_variant": "matching.market_cards",
+      "theme": "forest"
+    },
+    "resumable": true,
+    "prefetch_items": false
+  }
+}

@@ -7,10 +7,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 )
@@ -140,4 +143,21 @@ func (RefRepo) MarkStudentDeleted(ctx context.Context, student, tenant uuid.UUID
 	// tenancyguard:ok projection of student.restored under the event TenantScope; deleted_at is the projected source state
 	return exec(ctx, `UPDATE ref.students SET deleted_at = NULL
 		WHERE student_id = $1 AND tenant_id = $2 AND deleted_at IS NOT NULL AND deleted_at <= $3`, student, tenant, at.UTC())
+}
+
+var _ write.MinigameConfigProjector = RefRepo{}
+
+// InsertMinigameConfigVersion implements write.MinigameConfigProjector: the projection ref.minigame_config_versions is
+// insert-only (F073-AC-04); a replayed event or another event about a version already projected changes nothing.
+func (RefRepo) InsertMinigameConfigVersion(ctx context.Context, v dto.MinigameConfigVersion) (bool, error) {
+	grades := make([]string, len(v.GradeLevels))
+	for i, g := range v.GradeLevels {
+		grades[i] = strconv.Itoa(g)
+	}
+	// tenancyguard:ok projection of platform content (no tenant_id, no deleted_at: DATABASE_DESIGN §2.17 rule 2), learning_platform only
+	return exec(ctx, `INSERT INTO ref.minigame_config_versions (minigame_config_version_id, minigame_config_id, version, minigame_type,
+			grade_levels, snapshot, published_at, source_version)
+		VALUES ($1, $2, $3, $4, $5::smallint[], $6::jsonb, $7, $8)
+		ON CONFLICT DO NOTHING`, v.ID, v.ConfigID, v.Version, v.Type, "{"+strings.Join(grades, ",")+"}", string(v.Snapshot),
+		v.PublishedAt.UTC(), v.SourceVersion)
 }

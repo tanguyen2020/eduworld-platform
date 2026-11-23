@@ -32,6 +32,19 @@ func (c *curEnv) outboxPayloads(ctx context.Context, t *testing.T, typ, field, i
 	if err := comp.AddResource(path, doc); err != nil {
 		t.Fatal(err)
 	}
+	// The shared enums the payload schemas reference by $id (activity.graded: ActivityType, AttemptMode, ResultRelease).
+	enumsFile, err := os.Open(filepath.Join(testkit.RepoRoot(t), "specs", "schemas", "common", "enums.schema.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer enumsFile.Close()
+	enums, err := jsonschema.UnmarshalJSON(enumsFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := comp.AddResource("https://schemas.eduworld.vn/common/enums.schema.json", enums); err != nil {
+		t.Fatal(err)
+	}
 	sch, err := comp.Compile(path)
 	if err != nil {
 		t.Fatal(err)

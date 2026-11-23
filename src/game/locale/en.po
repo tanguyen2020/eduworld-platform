@@ -954,6 +954,36 @@ msgstr "Version {version}"
 msgid "ui.login.wait_hint"
 msgstr "If you got it wrong several times, wait a few minutes and try again."
 
+msgid "ui.minigame.completed"
+msgstr "You completed the game!"
+
+msgid "ui.minigame.continue"
+msgstr "Continue"
+
+msgid "ui.minigame.done"
+msgstr "Done"
+
+msgid "ui.minigame.game_score"
+msgstr "Game score: {points}"
+
+msgid "ui.minigame.not_completed"
+msgstr "Not completed yet, play again!"
+
+msgid "ui.minigame.points"
+msgstr "⭐ {points}"
+
+msgid "ui.minigame.streak"
+msgstr "🔥 {streak}"
+
+msgid "ui.minigame.submit_state"
+msgstr "Submit the experiment"
+
+msgid "ui.minigame.summary_title"
+msgstr "Game over"
+
+msgid "ui.minigame.time_up"
+msgstr "Time is up!"
+
 msgid "ui.notification.assignment_new"
 msgstr "New work: {title}"
 

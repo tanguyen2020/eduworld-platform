@@ -165,7 +165,7 @@ Mọi chiến lược chấm đều tự động nên `submitted → graded` di�
 | quest, challenge | ✔ | theo quest/challenge (mặc định 24 giờ) | Boss/co-op: reconnect trong trận do module game xử lý |
 | practice, retry_wrong, diagnostic | ✔ | 24 giờ | Tối đa 1 attempt `in_progress` cho mỗi `source_version_id`; start lại → trả attempt cũ |
 | assignment | ✔ | đến `due_at` | |
-| minigame | ✘ | — | Thoát = abandoned |
+| minigame | ✔ (trừ `timed_challenge` và cấu hình `limits.resumable = false`) | `attempt_resume_window` | F073: lượt resumable tiếp tục trên version ghim; lượt không resumable đóng khi hết `deadline_at` |
 | competition | ✘ | — | Reconnect trong trận do module competition xử lý |
 | exam | ✔, deadline không dừng | đến `deadline_at` | [EXAM_ENGINE](EXAM_ENGINE.md) |
 
@@ -294,7 +294,7 @@ Endpoint riêng theo loại (cùng tiền tố, chi tiết ở tài liệu từn
 | `practice` | Thư viện Gió, khu luyện tập | `startActivityAttempt` hoặc `startAdHocAttempt` (`selection`/`question_set`) | `free_play`, `lesson`, `learning_path`, `recommendation` (tùy chọn) |
 | `assignment` | Bài nhà trường giao (Bưu tá Nhím, tab "Nhà trường giao" trong quest journal) | `startActivityAttempt` | `assignment` → `assignment_id` |
 | `quest` | Bước quest | facade `attempts` (spec internal) gọi từ module game | `quest_step` → `quest_progress_id` (+ `step_id`) |
-| `minigame` | Mini-game | `startActivityAttempt` hoặc internal từ module game | `minigame_session` → phiên mini-game |
+| `minigame` | Mini-game | `startActivityAttempt` (activity `minigame` bọc cấu hình, bài nhà trường giao) hoặc facade `createAttempt` từ module game (`startMiniGame`, `ActivityRef.content_type = minigame_config` + version ghim; bước quest dùng mode `quest`) — mọi đường hội tụ vào plugin `minigame` (F073, [MINIGAME_ENGINE §6.1](../08-game-client/MINIGAME_ENGINE.md#61-triển-khai-f073)) | `minigame_session` → `play_id` (lượt chơi `game.minigame_plays`) |
 | `challenge` | Challenge / phase boss | internal từ module game | `challenge_attempt_id` hoặc `boss_encounter_id` + `phase` |
 | `exam` | Tháp Thử Thách / đề kiểm tra | API riêng của đề kiểm tra `/api/v1/exams/...` ([EXAM_ENGINE](EXAM_ENGINE.md): cửa sổ thời gian, autosave, chấm trì hoãn); cùng entity Attempt | `exam_session` → `exam_session_id` |
 | `competition` | Trận 1v1/đội | internal từ module competition (question plan) | `match` → `match_id` |

@@ -82,6 +82,9 @@ type AttemptStore interface {
 	// Due lists in-progress attempts of every tenant (ctx carries tenancy.Bypass(platform_job)): not paused and inactive
 	// since before idleBefore, inactive since before resumeBefore, or past deadlineBefore; oldest first.
 	Due(ctx context.Context, idleBefore, resumeBefore, deadlineBefore time.Time, limit int) ([]DueAttempt, error)
+	// LastAnsweredAt is the server time of the last answer of an attempt (nil before the first): the moment the next item
+	// of a mini-game counts as served (F073-AC-08).
+	LastAnsweredAt(ctx context.Context, attemptID uuid.UUID) (*time.Time, error)
 }
 
 // LearningEvent is one row of learning.learning_events (EVENT_DESIGN §5, learning-event.schema.json): written in the

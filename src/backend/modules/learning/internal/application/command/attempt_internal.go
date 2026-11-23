@@ -6,7 +6,10 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/attemptview"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/attempt"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
@@ -50,8 +53,12 @@ func (h Attempts) CreateInternal(ctx context.Context, in CreateInternalInput) (o
 	if internalContexts[mode] != in.ContextType {
 		return out, problem.Invalid("/context/context_type", problem.SubInvalid, "does not match the mode")
 	}
-	if in.ContentType != "activity" {
-		return out, problem.Invalid("/activity/content_type", problem.SubInvalid, "only learning activities are opened in this release")
+	switch in.ContentType {
+	case "activity":
+	case contentMinigameConfig:
+		return h.createMinigameInternal(ctx, p, in, mode)
+	default:
+		return out, problem.Invalid("/activity/content_type", problem.SubInvalid, "only learning activities and mini-game configurations are opened")
 	}
 	key := idemKey(ctx)
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
@@ -107,4 +114,53 @@ func internalCreated(a attempt.Attempt) InternalCreated {
 	v := a.SourceVersionID
 	out.ContentVersionID = &v
 	return out
+}
+
+// contentMinigameConfig is ActivityRef.content_type of a mini-game configuration of module game (F073).
+const contentMinigameConfig = "minigame_config"
+
+// createMinigameInternal opens a mini-game play for module game (startMiniGame free_play, quest step minigame —
+// F073-AC-06, AC-16): content_id is the configuration, content_version_id the version module game pinned (required).
+// The version must be in the projection ref.minigame_config_versions, else 409 CONFLICT (module game answers 503 with
+// Retry-After); the items come from its question source (QUESTION_POOL_INSUFFICIENT without attempt when it is short).
+func (h Attempts) createMinigameInternal(ctx context.Context, p authz.Principal, in CreateInternalInput, mode attempt.Mode) (out InternalCreated, err error) {
+	if in.ContentVersionID == nil {
+		return out, problem.Invalid("/activity/content_version_id", problem.SubRequired, "is required for a mini-game configuration")
+	}
+	key := idemKey(ctx)
+	err = h.UoW.Do(ctx, func(ctx context.Context) error {
+		if prev, err := h.Store.AttemptByKey(ctx, p.UserID, key); err != nil || prev != nil {
+			if err == nil {
+				out = internalCreated(*prev)
+			}
+			return err
+		}
+		school, grade, err := h.studentSchool(ctx, p)
+		if err != nil {
+			return err
+		}
+		row, err := h.projected(ctx, *in.ContentVersionID)
+		if err != nil {
+			return err
+		}
+		if row.ConfigID != in.ContentID {
+			return problem.Invalid("/activity/content_version_id", problem.SubInvalid, "is not a version of the mini-game configuration")
+		}
+		plugin, err := ActivityPlugin(h.Registry, string(activity.Minigame))
+		if err != nil {
+			return err
+		}
+		src, err := attemptview.MinigameSource(row, plugin, grade)
+		if err != nil {
+			return problem.New(problem.ActivityConfigInvalid, "the mini-game configuration cannot be played")
+		}
+		a, _, err := h.newMinigameAttempt(ctx, p, school, minigameStart{src: src, mode: mode, ctxType: in.ContextType, ctxID: in.ContextID,
+			acceptLanguage: in.AcceptLanguage, key: key, now: h.now()})
+		if err != nil {
+			return err
+		}
+		out = internalCreated(a)
+		return idempotency.SetResult(ctx, out)
+	})
+	return out, err
 }

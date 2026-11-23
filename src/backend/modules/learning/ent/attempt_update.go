@@ -467,6 +467,60 @@ func (_u *AttemptUpdate) ClearGameSessionID() *AttemptUpdate {
 	return _u
 }
 
+// SetGameScore sets the "game_score" field.
+func (_u *AttemptUpdate) SetGameScore(v int) *AttemptUpdate {
+	_u.mutation.ResetGameScore()
+	_u.mutation.SetGameScore(v)
+	return _u
+}
+
+// SetNillableGameScore sets the "game_score" field if the given value is not nil.
+func (_u *AttemptUpdate) SetNillableGameScore(v *int) *AttemptUpdate {
+	if v != nil {
+		_u.SetGameScore(*v)
+	}
+	return _u
+}
+
+// AddGameScore adds value to the "game_score" field.
+func (_u *AttemptUpdate) AddGameScore(v int) *AttemptUpdate {
+	_u.mutation.AddGameScore(v)
+	return _u
+}
+
+// ClearGameScore clears the value of the "game_score" field.
+func (_u *AttemptUpdate) ClearGameScore() *AttemptUpdate {
+	_u.mutation.ClearGameScore()
+	return _u
+}
+
+// SetGameStreak sets the "game_streak" field.
+func (_u *AttemptUpdate) SetGameStreak(v int) *AttemptUpdate {
+	_u.mutation.ResetGameStreak()
+	_u.mutation.SetGameStreak(v)
+	return _u
+}
+
+// SetNillableGameStreak sets the "game_streak" field if the given value is not nil.
+func (_u *AttemptUpdate) SetNillableGameStreak(v *int) *AttemptUpdate {
+	if v != nil {
+		_u.SetGameStreak(*v)
+	}
+	return _u
+}
+
+// AddGameStreak adds value to the "game_streak" field.
+func (_u *AttemptUpdate) AddGameStreak(v int) *AttemptUpdate {
+	_u.mutation.AddGameStreak(v)
+	return _u
+}
+
+// ClearGameStreak clears the value of the "game_streak" field.
+func (_u *AttemptUpdate) ClearGameStreak() *AttemptUpdate {
+	_u.mutation.ClearGameStreak()
+	return _u
+}
+
 // Mutation returns the AttemptMutation object of the builder.
 func (_u *AttemptUpdate) Mutation() *AttemptMutation {
 	return _u.mutation
@@ -704,6 +758,27 @@ func (_u *AttemptUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.GameSessionIDCleared() {
 		_spec.ClearField(attempt.FieldGameSessionID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.GameScore(); ok {
+		_spec.SetField(attempt.FieldGameScore, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedGameScore(); ok {
+		_spec.AddField(attempt.FieldGameScore, field.TypeInt, value)
+	}
+	if _u.mutation.GameScoreCleared() {
+		_spec.ClearField(attempt.FieldGameScore, field.TypeInt)
+	}
+	if value, ok := _u.mutation.GameStreak(); ok {
+		_spec.SetField(attempt.FieldGameStreak, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedGameStreak(); ok {
+		_spec.AddField(attempt.FieldGameStreak, field.TypeInt, value)
+	}
+	if _u.mutation.GameStreakCleared() {
+		_spec.ClearField(attempt.FieldGameStreak, field.TypeInt)
+	}
+	if _u.mutation.MinigameConfigVersionIDCleared() {
+		_spec.ClearField(attempt.FieldMinigameConfigVersionID, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Attempt
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -1163,6 +1238,60 @@ func (_u *AttemptUpdateOne) ClearGameSessionID() *AttemptUpdateOne {
 	return _u
 }
 
+// SetGameScore sets the "game_score" field.
+func (_u *AttemptUpdateOne) SetGameScore(v int) *AttemptUpdateOne {
+	_u.mutation.ResetGameScore()
+	_u.mutation.SetGameScore(v)
+	return _u
+}
+
+// SetNillableGameScore sets the "game_score" field if the given value is not nil.
+func (_u *AttemptUpdateOne) SetNillableGameScore(v *int) *AttemptUpdateOne {
+	if v != nil {
+		_u.SetGameScore(*v)
+	}
+	return _u
+}
+
+// AddGameScore adds value to the "game_score" field.
+func (_u *AttemptUpdateOne) AddGameScore(v int) *AttemptUpdateOne {
+	_u.mutation.AddGameScore(v)
+	return _u
+}
+
+// ClearGameScore clears the value of the "game_score" field.
+func (_u *AttemptUpdateOne) ClearGameScore() *AttemptUpdateOne {
+	_u.mutation.ClearGameScore()
+	return _u
+}
+
+// SetGameStreak sets the "game_streak" field.
+func (_u *AttemptUpdateOne) SetGameStreak(v int) *AttemptUpdateOne {
+	_u.mutation.ResetGameStreak()
+	_u.mutation.SetGameStreak(v)
+	return _u
+}
+
+// SetNillableGameStreak sets the "game_streak" field if the given value is not nil.
+func (_u *AttemptUpdateOne) SetNillableGameStreak(v *int) *AttemptUpdateOne {
+	if v != nil {
+		_u.SetGameStreak(*v)
+	}
+	return _u
+}
+
+// AddGameStreak adds value to the "game_streak" field.
+func (_u *AttemptUpdateOne) AddGameStreak(v int) *AttemptUpdateOne {
+	_u.mutation.AddGameStreak(v)
+	return _u
+}
+
+// ClearGameStreak clears the value of the "game_streak" field.
+func (_u *AttemptUpdateOne) ClearGameStreak() *AttemptUpdateOne {
+	_u.mutation.ClearGameStreak()
+	return _u
+}
+
 // Mutation returns the AttemptMutation object of the builder.
 func (_u *AttemptUpdateOne) Mutation() *AttemptMutation {
 	return _u.mutation
@@ -1430,6 +1559,27 @@ func (_u *AttemptUpdateOne) sqlSave(ctx context.Context) (_node *Attempt, err er
 	}
 	if _u.mutation.GameSessionIDCleared() {
 		_spec.ClearField(attempt.FieldGameSessionID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.GameScore(); ok {
+		_spec.SetField(attempt.FieldGameScore, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedGameScore(); ok {
+		_spec.AddField(attempt.FieldGameScore, field.TypeInt, value)
+	}
+	if _u.mutation.GameScoreCleared() {
+		_spec.ClearField(attempt.FieldGameScore, field.TypeInt)
+	}
+	if value, ok := _u.mutation.GameStreak(); ok {
+		_spec.SetField(attempt.FieldGameStreak, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedGameStreak(); ok {
+		_spec.AddField(attempt.FieldGameStreak, field.TypeInt, value)
+	}
+	if _u.mutation.GameStreakCleared() {
+		_spec.ClearField(attempt.FieldGameStreak, field.TypeInt)
+	}
+	if _u.mutation.MinigameConfigVersionIDCleared() {
+		_spec.ClearField(attempt.FieldMinigameConfigVersionID, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Attempt
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

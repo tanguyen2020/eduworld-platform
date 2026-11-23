@@ -169,6 +169,12 @@ type Attempt struct {
 	IdempotencyKey   string
 	RowVersion       int64
 	Items            []Item
+	// GameScore and GameStreak are the game score and the current correct streak of a mini-game attempt (F073, server
+	// computed, never in the learning score); MinigameConfigVersionID is the pinned MiniGameConfigVersion. Nil outside
+	// the minigame plugin.
+	GameScore               *int
+	GameStreak              int
+	MinigameConfigVersionID *uuid.UUID
 }
 
 // Item returns the item at position.
@@ -218,6 +224,9 @@ type Answer struct {
 	AttemptNo  int
 	IsScored   bool
 	ResponseMS int64
+	// ServerMS is the uncapped server interval from the moment the item was served (the previous answer or the start) to
+	// this answer: the time of the speed bonus of a mini-game, never bounded by client_elapsed_ms (F073-AC-08).
+	ServerMS int64
 	// HintsUsed is the number of hint levels open before this answer (ACTIVITY_ENGINE §8.3, F032-AC-14).
 	HintsUsed int
 }

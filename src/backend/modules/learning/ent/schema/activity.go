@@ -91,6 +91,11 @@ func (Attempt) Fields() []ent.Field {
 		field.String("active_device_token").MaxLen(128).Optional().Nillable(),
 		field.String("client_platform").MaxLen(64).Optional().Nillable(),
 		field.UUID("game_session_id", uuid.UUID{}).Optional().Nillable(),
+		// F073: the game score and current correct streak of a mini-game attempt (server computed, never the learning
+		// score) and the pinned MiniGameConfigVersion (projection ref.minigame_config_versions).
+		field.Int("game_score").SchemaType(map[string]string{"postgres": "integer"}).Optional().Nillable(),
+		field.Int("game_streak").SchemaType(map[string]string{"postgres": "integer"}).Optional().Nillable(),
+		field.UUID("minigame_config_version_id", uuid.UUID{}).Optional().Nillable().Immutable(),
 	}
 }
 func (Attempt) Indexes() []ent.Index {

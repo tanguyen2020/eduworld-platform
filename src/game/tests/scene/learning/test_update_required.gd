@@ -48,18 +48,18 @@ func _assert_update_screen(activity_type: String) -> void:
 
 func test_registry_reasons() -> void:
 	assert_str(ActivityRendererRegistry.check("quiz", "1.2.3")).is_equal(ActivityRendererRegistry.REASON_OK)
-	assert_str(ActivityRendererRegistry.check("minigame", "1.2.3")).is_equal(ActivityRendererRegistry.REASON_UNKNOWN_TYPE)
+	assert_str(ActivityRendererRegistry.check("holo_lab", "1.2.3")).is_equal(ActivityRendererRegistry.REASON_UNKNOWN_TYPE)
 	assert_str(ActivityRendererRegistry.check("quiz", "1.2.3", ["1.3.0"])).is_equal(ActivityRendererRegistry.REASON_CLIENT_TOO_OLD)
 	assert_str(ActivityRendererRegistry.check("quiz", "1.2.3", ["", "1.2.3"])).is_equal(ActivityRendererRegistry.REASON_OK)
 
 
 func test_activity_type_without_renderer() -> void:
 	var data: Dictionary = LearningFixtures.fresh_attempt()
-	data["activity_type"] = "minigame"
-	(data["render"] as Dictionary)["activity_type"] = "minigame"
+	data["activity_type"] = "holo_lab"
+	(data["render"] as Dictionary)["activity_type"] = "holo_lab"
 	h.http.reply(LearningFixtures.ROUTE_START, 201, data)
 	await host.call("open", {"activity_id": LearningFixtures.ACTIVITY_ID})
-	_assert_update_screen("minigame")
+	_assert_update_screen("holo_lab")
 
 
 func test_known_type_of_the_intent_is_checked_before_start() -> void:

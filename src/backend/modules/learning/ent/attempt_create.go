@@ -473,6 +473,48 @@ func (_c *AttemptCreate) SetNillableGameSessionID(v *uuid.UUID) *AttemptCreate {
 	return _c
 }
 
+// SetGameScore sets the "game_score" field.
+func (_c *AttemptCreate) SetGameScore(v int) *AttemptCreate {
+	_c.mutation.SetGameScore(v)
+	return _c
+}
+
+// SetNillableGameScore sets the "game_score" field if the given value is not nil.
+func (_c *AttemptCreate) SetNillableGameScore(v *int) *AttemptCreate {
+	if v != nil {
+		_c.SetGameScore(*v)
+	}
+	return _c
+}
+
+// SetGameStreak sets the "game_streak" field.
+func (_c *AttemptCreate) SetGameStreak(v int) *AttemptCreate {
+	_c.mutation.SetGameStreak(v)
+	return _c
+}
+
+// SetNillableGameStreak sets the "game_streak" field if the given value is not nil.
+func (_c *AttemptCreate) SetNillableGameStreak(v *int) *AttemptCreate {
+	if v != nil {
+		_c.SetGameStreak(*v)
+	}
+	return _c
+}
+
+// SetMinigameConfigVersionID sets the "minigame_config_version_id" field.
+func (_c *AttemptCreate) SetMinigameConfigVersionID(v uuid.UUID) *AttemptCreate {
+	_c.mutation.SetMinigameConfigVersionID(v)
+	return _c
+}
+
+// SetNillableMinigameConfigVersionID sets the "minigame_config_version_id" field if the given value is not nil.
+func (_c *AttemptCreate) SetNillableMinigameConfigVersionID(v *uuid.UUID) *AttemptCreate {
+	if v != nil {
+		_c.SetMinigameConfigVersionID(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *AttemptCreate) SetID(v uuid.UUID) *AttemptCreate {
 	_c.mutation.SetID(v)
@@ -900,6 +942,18 @@ func (_c *AttemptCreate) createSpec() (*Attempt, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.GameSessionID(); ok {
 		_spec.SetField(attempt.FieldGameSessionID, field.TypeUUID, value)
 		_node.GameSessionID = &value
+	}
+	if value, ok := _c.mutation.GameScore(); ok {
+		_spec.SetField(attempt.FieldGameScore, field.TypeInt, value)
+		_node.GameScore = &value
+	}
+	if value, ok := _c.mutation.GameStreak(); ok {
+		_spec.SetField(attempt.FieldGameStreak, field.TypeInt, value)
+		_node.GameStreak = &value
+	}
+	if value, ok := _c.mutation.MinigameConfigVersionID(); ok {
+		_spec.SetField(attempt.FieldMinigameConfigVersionID, field.TypeUUID, value)
+		_node.MinigameConfigVersionID = &value
 	}
 	return _node, _spec
 }

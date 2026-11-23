@@ -1,0 +1,140 @@
+{
+  "attempt": {
+    "attempt_id": "0f730000-0000-7000-8000-000000000002",
+    "activity_type": "minigame",
+    "mode": "minigame",
+    "status": "in_progress",
+    "context_type": "free_play",
+    "started_at": "2026-11-20T02:05:00Z",
+    "server_time": "2026-11-20T02:05:00Z",
+    "deadline_at": "2026-11-20T02:08:00Z",
+    "feedback_timing": "immediate",
+    "result_release": "immediate",
+    "display_language": "vi-VN",
+    "items": [
+      {
+        "position": 1,
+        "question_version_id": "0f730000-0000-4000-8000-000000000003",
+        "type": "true_false",
+        "hint_count": 0,
+        "render_payload": {
+          "stem": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "6 × 7 = 42. Đúng hay sai?"
+              }
+            ]
+          },
+          "labels": {
+            "true": "Đúng",
+            "false": "Sai"
+          }
+        }
+      },
+      {
+        "position": 2,
+        "question_version_id": "0f730000-0000-4000-8000-000000000004",
+        "type": "true_false",
+        "hint_count": 0,
+        "render_payload": {
+          "stem": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "5 × 4 = 25. Đúng hay sai?"
+              }
+            ]
+          },
+          "labels": {
+            "true": "Đúng",
+            "false": "Sai"
+          }
+        }
+      }
+    ],
+    "saved_responses": [],
+    "render": {
+      "activity_type": "minigame",
+      "title": "Biển Đúng – Sai",
+      "render_payload": {
+        "minigame_type": "true_false",
+        "minigame_config_version_id": "0f730000-0000-4000-8000-0000000c0002",
+        "config": {
+          "name": {
+            "vi": "Biển Đúng – Sai",
+            "en": "True or false signs"
+          },
+          "instructions": {
+            "vi": "Chơi và trả lời từng câu nhé!",
+            "en": "Play and answer each question!"
+          },
+          "grade_levels": [
+            3
+          ],
+          "question_count": 2,
+          "time_limit_seconds": 180,
+          "feedback_timing": "immediate",
+          "show_explanation": true,
+          "show_correct_answer": false,
+          "scoring": {
+            "points_per_correct": 10,
+            "time_bonus_enabled": false,
+            "streak_bonus_enabled": true
+          },
+          "presentation": {
+            "scene_variant": "true_false.signs",
+            "theme": "forest"
+          },
+          "resumable": true,
+          "prefetch_items": false
+        }
+      },
+      "math_assets": [
+        {
+          "math_id": "m_three_quarters",
+          "svg_url": "https://cdn.example.invalid/math/a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1.svg",
+          "sha256": "a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1",
+          "speech_text": "ba phần tư",
+          "display": "inline"
+        }
+      ],
+      "content_language": "vi",
+      "display_language": "vi-VN",
+      "translation_missing": false
+    }
+  },
+  "minigame_type": "true_false",
+  "minigame_config_version_id": "0f730000-0000-4000-8000-0000000c0002",
+  "deadline_at": "2026-11-20T02:08:00Z",
+  "server_time": "2026-11-20T02:05:00Z",
+  "config": {
+    "name": {
+      "vi": "Biển Đúng – Sai",
+      "en": "True or false signs"
+    },
+    "instructions": {
+      "vi": "Chơi và trả lời từng câu nhé!",
+      "en": "Play and answer each question!"
+    },
+    "grade_levels": [
+      3
+    ],
+    "question_count": 2,
+    "time_limit_seconds": 180,
+    "feedback_timing": "immediate",
+    "show_explanation": true,
+    "show_correct_answer": false,
+    "scoring": {
+      "points_per_correct": 10,
+      "time_bonus_enabled": false,
+      "streak_bonus_enabled": true
+    },
+    "presentation": {
+      "scene_variant": "true_false.signs",
+      "theme": "forest"
+    },
+    "resumable": true,
+    "prefetch_items": false
+  }
+}

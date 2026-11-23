@@ -35,13 +35,18 @@ func utcp(t *time.Time) *time.Time {
 }
 
 func attemptOf(r *ent.Attempt) attempt.Attempt {
-	return attempt.Attempt{ID: r.ID, TenantID: r.TenantID, SchoolID: r.SchoolID, StudentID: r.StudentID, Mode: attempt.Mode(r.Mode),
+	a := attempt.Attempt{ID: r.ID, TenantID: r.TenantID, SchoolID: r.SchoolID, StudentID: r.StudentID, Mode: attempt.Mode(r.Mode),
 		ContextType: r.ContextType, ContextID: r.ContextID, ActivityID: r.ActivityID, ActivityType: r.ActivityType, SourceKind: r.SourceKind,
 		SourceVersionID: r.SourceVersionID, Status: attempt.Status(r.Status), Seed: r.Seed, StartedAt: r.StartedAt.UTC(), DeadlineAt: utcp(r.DeadlineAt),
 		SubmittedAt: utcp(r.SubmittedAt), GradedAt: utcp(r.GradedAt), PausedAt: utcp(r.PausedAt), PausedMS: r.PausedMs,
 		LastActivityAt: r.LastActivityAt.UTC(), Feedback: attempt.FeedbackTiming(r.FeedbackTiming), DisplayLanguage: r.DisplayLanguage,
 		SubmitReason: r.SubmitReason, Score: r.Score, MaxScore: r.MaxScore, DurationMS: r.DurationMs, ClientElapsedMS: r.ClientElapsedMs,
-		ObjectiveIDs: r.ObjectiveIds, RecommendationID: r.RecommendationID, IdempotencyKey: r.IdempotencyKey, RowVersion: r.Version}
+		ObjectiveIDs: r.ObjectiveIds, RecommendationID: r.RecommendationID, IdempotencyKey: r.IdempotencyKey, RowVersion: r.Version,
+		GameScore: r.GameScore, MinigameConfigVersionID: r.MinigameConfigVersionID}
+	if r.GameStreak != nil {
+		a.GameStreak = *r.GameStreak
+	}
+	return a
 }
 
 // Attempt implements read.AttemptReadModel.
@@ -137,8 +142,20 @@ func (AttemptModel) Evaluation(ctx context.Context, attemptID uuid.UUID) (*dto.E
 	if err != nil {
 		return nil, err
 	}
-	return &dto.EvaluationView{EvaluationID: r.ID, AttemptID: r.AttemptID, Source: r.Source, Status: r.Status, Score: r.Score, MaxScore: r.MaxScore,
-		Passed: r.Passed, Effective: r.Effective, CreatedAt: r.CreatedAt.UTC()}, nil
+	ev := &dto.EvaluationView{EvaluationID: r.ID, AttemptID: r.AttemptID, Source: r.Source, Status: r.Status, Score: r.Score, MaxScore: r.MaxScore,
+		Passed: r.Passed, Effective: r.Effective, CreatedAt: r.CreatedAt.UTC()}
+	// F073-AC-10: the game result of a mini-game attempt is kept in the details of its evaluation.
+	var d struct {
+		Minigame *struct {
+			GameScore     int  `json:"game_score"`
+			CompletionMet bool `json:"completion_met"`
+		} `json:"minigame"`
+	}
+	if len(r.Details) > 0 && json.Unmarshal(r.Details, &d) == nil && d.Minigame != nil {
+		gs, cm := d.Minigame.GameScore, d.Minigame.CompletionMet
+		ev.GameScore, ev.CompletionMet = &gs, &cm
+	}
+	return ev, nil
 }
 
 // ActivityVersion implements read.AttemptReadModel.

@@ -260,6 +260,21 @@ func GameSessionID(v uuid.UUID) predicate.Attempt {
 	return predicate.Attempt(sql.FieldEQ(FieldGameSessionID, v))
 }
 
+// GameScore applies equality check predicate on the "game_score" field. It's identical to GameScoreEQ.
+func GameScore(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldGameScore, v))
+}
+
+// GameStreak applies equality check predicate on the "game_streak" field. It's identical to GameStreakEQ.
+func GameStreak(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldGameStreak, v))
+}
+
+// MinigameConfigVersionID applies equality check predicate on the "minigame_config_version_id" field. It's identical to MinigameConfigVersionIDEQ.
+func MinigameConfigVersionID(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldMinigameConfigVersionID, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.Attempt {
 	return predicate.Attempt(sql.FieldEQ(FieldTenantID, v))
@@ -2398,6 +2413,156 @@ func GameSessionIDIsNil() predicate.Attempt {
 // GameSessionIDNotNil applies the NotNil predicate on the "game_session_id" field.
 func GameSessionIDNotNil() predicate.Attempt {
 	return predicate.Attempt(sql.FieldNotNull(FieldGameSessionID))
+}
+
+// GameScoreEQ applies the EQ predicate on the "game_score" field.
+func GameScoreEQ(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldGameScore, v))
+}
+
+// GameScoreNEQ applies the NEQ predicate on the "game_score" field.
+func GameScoreNEQ(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNEQ(FieldGameScore, v))
+}
+
+// GameScoreIn applies the In predicate on the "game_score" field.
+func GameScoreIn(vs ...int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldIn(FieldGameScore, vs...))
+}
+
+// GameScoreNotIn applies the NotIn predicate on the "game_score" field.
+func GameScoreNotIn(vs ...int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotIn(FieldGameScore, vs...))
+}
+
+// GameScoreGT applies the GT predicate on the "game_score" field.
+func GameScoreGT(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGT(FieldGameScore, v))
+}
+
+// GameScoreGTE applies the GTE predicate on the "game_score" field.
+func GameScoreGTE(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGTE(FieldGameScore, v))
+}
+
+// GameScoreLT applies the LT predicate on the "game_score" field.
+func GameScoreLT(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLT(FieldGameScore, v))
+}
+
+// GameScoreLTE applies the LTE predicate on the "game_score" field.
+func GameScoreLTE(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLTE(FieldGameScore, v))
+}
+
+// GameScoreIsNil applies the IsNil predicate on the "game_score" field.
+func GameScoreIsNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldIsNull(FieldGameScore))
+}
+
+// GameScoreNotNil applies the NotNil predicate on the "game_score" field.
+func GameScoreNotNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotNull(FieldGameScore))
+}
+
+// GameStreakEQ applies the EQ predicate on the "game_streak" field.
+func GameStreakEQ(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldGameStreak, v))
+}
+
+// GameStreakNEQ applies the NEQ predicate on the "game_streak" field.
+func GameStreakNEQ(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNEQ(FieldGameStreak, v))
+}
+
+// GameStreakIn applies the In predicate on the "game_streak" field.
+func GameStreakIn(vs ...int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldIn(FieldGameStreak, vs...))
+}
+
+// GameStreakNotIn applies the NotIn predicate on the "game_streak" field.
+func GameStreakNotIn(vs ...int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotIn(FieldGameStreak, vs...))
+}
+
+// GameStreakGT applies the GT predicate on the "game_streak" field.
+func GameStreakGT(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGT(FieldGameStreak, v))
+}
+
+// GameStreakGTE applies the GTE predicate on the "game_streak" field.
+func GameStreakGTE(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGTE(FieldGameStreak, v))
+}
+
+// GameStreakLT applies the LT predicate on the "game_streak" field.
+func GameStreakLT(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLT(FieldGameStreak, v))
+}
+
+// GameStreakLTE applies the LTE predicate on the "game_streak" field.
+func GameStreakLTE(v int) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLTE(FieldGameStreak, v))
+}
+
+// GameStreakIsNil applies the IsNil predicate on the "game_streak" field.
+func GameStreakIsNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldIsNull(FieldGameStreak))
+}
+
+// GameStreakNotNil applies the NotNil predicate on the "game_streak" field.
+func GameStreakNotNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotNull(FieldGameStreak))
+}
+
+// MinigameConfigVersionIDEQ applies the EQ predicate on the "minigame_config_version_id" field.
+func MinigameConfigVersionIDEQ(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldEQ(FieldMinigameConfigVersionID, v))
+}
+
+// MinigameConfigVersionIDNEQ applies the NEQ predicate on the "minigame_config_version_id" field.
+func MinigameConfigVersionIDNEQ(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNEQ(FieldMinigameConfigVersionID, v))
+}
+
+// MinigameConfigVersionIDIn applies the In predicate on the "minigame_config_version_id" field.
+func MinigameConfigVersionIDIn(vs ...uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldIn(FieldMinigameConfigVersionID, vs...))
+}
+
+// MinigameConfigVersionIDNotIn applies the NotIn predicate on the "minigame_config_version_id" field.
+func MinigameConfigVersionIDNotIn(vs ...uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotIn(FieldMinigameConfigVersionID, vs...))
+}
+
+// MinigameConfigVersionIDGT applies the GT predicate on the "minigame_config_version_id" field.
+func MinigameConfigVersionIDGT(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGT(FieldMinigameConfigVersionID, v))
+}
+
+// MinigameConfigVersionIDGTE applies the GTE predicate on the "minigame_config_version_id" field.
+func MinigameConfigVersionIDGTE(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldGTE(FieldMinigameConfigVersionID, v))
+}
+
+// MinigameConfigVersionIDLT applies the LT predicate on the "minigame_config_version_id" field.
+func MinigameConfigVersionIDLT(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLT(FieldMinigameConfigVersionID, v))
+}
+
+// MinigameConfigVersionIDLTE applies the LTE predicate on the "minigame_config_version_id" field.
+func MinigameConfigVersionIDLTE(v uuid.UUID) predicate.Attempt {
+	return predicate.Attempt(sql.FieldLTE(FieldMinigameConfigVersionID, v))
+}
+
+// MinigameConfigVersionIDIsNil applies the IsNil predicate on the "minigame_config_version_id" field.
+func MinigameConfigVersionIDIsNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldIsNull(FieldMinigameConfigVersionID))
+}
+
+// MinigameConfigVersionIDNotNil applies the NotNil predicate on the "minigame_config_version_id" field.
+func MinigameConfigVersionIDNotNil() predicate.Attempt {
+	return predicate.Attempt(sql.FieldNotNull(FieldMinigameConfigVersionID))
 }
 
 // And groups predicates with the AND operator between them.

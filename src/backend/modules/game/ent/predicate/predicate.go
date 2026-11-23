@@ -114,6 +114,15 @@ type LevelVersion func(*sql.Selector)
 // LoginEvent is the predicate function for loginevent builders.
 type LoginEvent func(*sql.Selector)
 
+// MiniGameConfig is the predicate function for minigameconfig builders.
+type MiniGameConfig func(*sql.Selector)
+
+// MiniGameConfigVersion is the predicate function for minigameconfigversion builders.
+type MiniGameConfigVersion func(*sql.Selector)
+
+// MiniGamePlay is the predicate function for minigameplay builders.
+type MiniGamePlay func(*sql.Selector)
+
 // NicknameChange is the predicate function for nicknamechange builders.
 type NicknameChange func(*sql.Selector)
 

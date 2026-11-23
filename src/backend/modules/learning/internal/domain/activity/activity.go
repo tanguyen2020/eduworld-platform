@@ -141,6 +141,16 @@ type Config struct {
 	// Raw is the config as stored: the plugins whose content is not question-based (video_lesson, audio_lesson,
 	// simulation) read their own content and interaction from it.
 	Raw json.RawMessage `json:"-"`
+	// Pinned is the external configuration an attempt pinned at start (minigame: the MiniGameConfigVersion snapshot of the
+	// projection ref.minigame_config_versions, F073); nil outside an attempt (CMS save, publish) or for the other types.
+	Pinned *Pinned `json:"-"`
+}
+
+// Pinned is an immutable configuration version owned by another module and pinned by an attempt (ADR-0043): its id and
+// the snapshot published with it (never an answer: a mini-game config holds no question, F073-AC-03).
+type Pinned struct {
+	VersionID uuid.UUID
+	Snapshot  json.RawMessage
 }
 
 // ParseConfig decodes a config already checked against the JSON Schema of its type.
@@ -171,6 +181,9 @@ type Version struct {
 	Config           Config
 	TimeLimitSeconds *int
 	ObjectiveIDs     []uuid.UUID
+	// StudentGrade is the grade of the student the version is played by (minigame: no speed bonus nor wrong penalty for
+	// grades 1–5, F073-AC-09); nil = unknown, which the game-scored plugins treat as grades 1–5.
+	StudentGrade *int
 }
 
 // ItemResult is the final result of one delivered item (ACTIVITY_ENGINE §7.2: the last scored answer, 0 when unanswered).
@@ -244,6 +257,33 @@ type Simulated interface {
 	// Seed is the seed of an attempt: the fixed seed of the version, else random bounded for the client.
 	Seed(v Version, random int64) int64
 	EvaluateRuns(v Version, items []ItemResult, last *RunResult, anyRun bool) (Result, bool)
+}
+
+// GameAnswer is one graded answer of a game-scored attempt as the server measured it (ADR-0016): correctness from the
+// question bank scorer, whether the answer is scored, the server interval from the moment the item was served (the
+// previous answer or the start) to the answer, and the state of the attempt before it. Nothing comes from the client.
+type GameAnswer struct {
+	Correct  bool
+	Scored   bool
+	ServerMS int64
+	Streak   int
+	Score    int
+}
+
+// GamePoints is the result of one answer: the points it added (negative for a wrong penalty, never below a score of
+// 0), the game score and the correct streak after it.
+type GamePoints struct {
+	Points int
+	Score  int
+	Streak int
+}
+
+// GameScored is implemented by the plugins whose attempts carry a game score next to the learning score (minigame,
+// F073, MINIGAME_ENGINE §6): points per answer from server times and the streak, and the completion rule of the
+// pinned configuration. The game score never reaches the learning score, the mastery or the evidence (F073-AC-10).
+type GameScored interface {
+	ScoreAnswer(v Version, in GameAnswer) GamePoints
+	CompletionMet(v Version, items []ItemResult) bool
 }
 
 // ErrNotSupported is returned for a type outside the release or without plugin (ACTIVITY_TYPE_NOT_SUPPORTED).

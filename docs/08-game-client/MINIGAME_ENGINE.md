@@ -1,6 +1,6 @@
 # Mini-game Engine (client Godot)
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Senior Godot Developer + EdTech Specialist · Cập nhật: 2026-11-15
+> Trạng thái: Active (F073 triển khai 2026-11-23) · Phiên bản: 0.2 · Owner: Senior Godot Developer + EdTech Specialist · Cập nhật: 2026-11-23
 > Liên quan: [ADR-0015, ADR-0016](../adr/README.md) · [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [EXERCISE_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [minigame-config.schema.json](../../specs/schemas/minigame-config.schema.json) · [Ví dụ matching Toán lớp 3](../../specs/examples/minigame.math-g3-matching.json)
 
 **Mục đích & phạm vi.** Kiến trúc phía Godot cho renderer `activity_type = minigame`: interface plugin, registry biến thể, vòng đời trên client. Định nghĩa activity, attempt, chấm điểm và evidence thuộc [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md); renderer registry chung của client ở [GODOT_ARCHITECTURE §6.2](GODOT_ARCHITECTURE.md#62-activity-renderers-adr-0048). `MiniGameRegistry` dưới đây là registry con mà renderer `minigame` dùng để chọn scene theo `minigame_type`.
@@ -67,7 +67,7 @@ flowchart TB
   Reg -->|minigame_type| Scene["types/<type>/<Type>.tscn\nextends MiniGameBase"]
   Host --> LS[LearningService]
   LS --> API[ApiClient → /api/v1/learning/activity-attempts, /api/v1/game/minigames]
-  Scene -- response_ready(item_id, response) --> Host
+  Scene -- response_prepared(item_id, response) --> Host
   Host -- present_item / show_feedback / finish --> Scene
   Scene --> QR["QuestionRendererRegistry\n(dùng lại renderer câu hỏi)"]
 ```
@@ -79,8 +79,8 @@ flowchart TB
 class_name MiniGameBase
 extends Control  # hoặc Node3D cho mini-game 3D, cùng hợp đồng
 
-signal ready_to_start
-signal response_ready(item_id: String, response: Dictionary)   # response đúng format QuestionBank
+signal setup_completed
+signal response_prepared(item_id: String, response: Dictionary)   # response đúng format QuestionBank; item_id = position
 signal hint_requested(item_id: String)
 signal quit_requested
 
@@ -110,7 +110,7 @@ Hợp đồng:
 # scripts/learning/minigame_registry.gd
 const TYPES := {
 	"matching":        { "scene": "res://scenes/minigames/types/matching/Matching.tscn",      "question_types": ["matching"] },
-	"timed_challenge": { "scene": "res://scenes/minigames/types/timed/TimedChallenge.tscn", "question_types": ["single_choice", "true_false", "numeric"] },
+	"timed_challenge": { "scene": "res://scenes/minigames/types/timed_challenge/TimedChallenge.tscn", "question_types": ["single_choice", "true_false", "numeric"] },
 	# ...
 }
 ```
@@ -133,25 +133,26 @@ sequenceDiagram
   else Bài nhà trường giao
     H->>API: startActivityAttempt của module learning (context assignment)
   end
-  API-->>H: { attempt_id, items[render payload], deadline_at, server_time }
-  H->>S: setup(config, session) → ready_to_start
+  API-->>H: MiniGameSession { attempt, minigame_type, minigame_config_version_id, config (hiển thị), deadline_at, server_time }
+  H->>API: GET /learning/activity-attempts/{id} (items[render payload], render.render_payload)
+  H->>S: setup(config, session) → setup_completed
   loop mỗi item
     H->>S: present_item(item)
-    S-->>H: response_ready(item_id, response)
+    S-->>H: response_prepared(item_id, response)
     H->>API: POST /learning/activity-attempts/{id}/responses (Idempotency-Key)
     API-->>H: { is_correct, explanation?, game_points, streak } (nếu immediate)
     H->>S: show_feedback(result)
   end
   H->>API: POST /learning/activity-attempts/{id}:submit
-  API-->>H: { learning_score, game_score, completion_met, rewards_pending }
+  API-->>H: Attempt { evaluation: { score (learning score), game_score, completion_met } }
   H->>S: finish(summary)
   H-->>H: teardown, trở về world
 ```
 
 | Tình huống | Xử lý |
 |---|---|
-| Hết giờ (`deadline_at` server) | Server tự đóng attempt (`expired`) và chấm phần đã trả lời; client nhận khi gọi lại hoặc qua notification |
-| Thoát giữa chừng | Attempt `in_progress`, resume theo policy (§4.4 Master Prompt) trong `resume_window` [Confirmed 30 phút]; mini-game timed không resume |
+| Hết giờ (`deadline_at` server) | Câu trả lời đến sau `deadline_at` + `deadline_grace` → `422 ATTEMPT_DEADLINE_PASSED` (status theo catalog ProblemCode); worker vòng đời attempt tự đóng `expired` và chấm phần đã trả lời (có `activity.graded` khối `minigame`); client nhận khi đọc lại attempt |
+| Thoát giữa chừng | Attempt `in_progress`, resume trong `attempt_resume_window` ([ACTIVITY_ENGINE §6.3](../02-learning/ACTIVITY_ENGINE.md#63-resume)); `timed_challenge` và cấu hình `limits.resumable = false` không resume (`config.resumable = false`, hết giờ đóng lượt) |
 | Mất mạng | Hàng đợi answers gửi lại cùng `Idempotency-Key`; đồng hồ hiển thị dựa server time, không "dừng giờ" trên client |
 | Prefetch | `timed_challenge` nhận sẵn batch items (render payload) để không chờ mạng giữa các câu; kết quả chấm vẫn từ server |
 
@@ -162,6 +163,19 @@ sequenceDiagram
 3. `completion_rule` đánh giá trên learning score → báo cho quest (nếu có context quest).
 4. module learning phát `activity.graded` (gồm phần `minigame`: `learning_score`, `game_score`, `completion_met`); module game tiêu thụ, ghi lượt chơi và phát `minigame.completed` đúng một lần → Reward Engine áp `reward_rule_id` với cap/diminishing returns. module learning **không** tiêu thụ `minigame.completed` (evidence học tập đã có từ `activity.*` của chính nó, tránh trùng).
 5. Anti-cheat: thời gian trả lời nhỏ hơn ngưỡng tối thiểu hợp lý theo loại câu (vd. < 300 ms cho câu cần đọc) bị gắn cờ `suspicious_timing` để phân tích, không tự động phạt học sinh [Confirmed] (xem ANTI_CHEAT).
+
+### 6.1. Triển khai (F073)
+
+| Phần | Nơi | Quy tắc |
+|---|---|---|
+| Cấu hình | module `game`: item `minigame_config` trên lõi phát hành F071 (`game.minigame_configs`, `game.minigame_config_versions`) | Publish kiểm: song ngữ (`TRANSLATION_INCOMPLETE`) → JSON Schema (`VALIDATION_FAILED`) → `difficulty` 1–5 (`adaptive` sau Release) → nguồn câu qua facade `validateMinigameQuestionSource` của module learning (`ACTIVITY_CONFIG_INVALID` kèm lý do) |
+| Bảng tương thích §2 | module `learning`, plugin `minigame` (`compat.go`, test đối chiếu từng dòng bảng §2) | Bản duy nhất ở backend; module game không giữ bản sao |
+| Projection | `ref.minigame_config_versions` (learning) từ `content.published` khối `minigame_config` | Bất biến; event lặp không đổi dòng; version chưa tới projection → `createAttempt` `409` → `startMiniGame` `503` + `Retry-After` |
+| Bắt đầu | `startMiniGame` (tự chơi, `free_play`/`quest_step` nhãn ngữ cảnh), `startQuestActivity` (bước quest `minigame`, mode `quest`), `startActivityAttempt` (activity `minigame` bọc cấu hình, bài nhà trường giao) | Ghim version cấu hình theo con trỏ (attempt `minigame_config_version_id`); `assignment` ở `startMiniGame` → `422`; chưa gán tenant/sai khối → `404` |
+| Điểm vui | plugin `minigame` (`MinigameScorer`) | Mỗi câu chấm điểm (scored): đúng → `points_per_correct`; `time_bonus` = `max_bonus` khi khoảng giờ server (câu trước hoặc lúc bắt đầu → lúc nhận) ≤ `full_bonus_within_ms`, rồi giảm tuyến tính về 0 ở mốc `per_item_time_seconds` (hoặc `time_limit_seconds`/`question_count`, hoặc 2 × `full_bonus_within_ms`); `streak_bonus` mỗi `every_n_correct` câu đúng liên tiếp; sai → trừ `wrong_penalty`; `game_score` ≥ 0; `points_only` bỏ mọi thưởng. Khối 1–5 (hoặc chưa biết khối): `time_bonus = 0`, `wrong_penalty = 0`. Không dùng `client_elapsed_ms` hay trường điểm do client gửi |
+| Hoàn thành | plugin `minigame` | `complete_all` = mọi câu đã trả lời; `min_correct_ratio` = đúng/tổng ≥ ngưỡng; `min_learning_score` = điểm học tập ≥ ngưỡng (tuyệt đối). `learning_score`: `sum_question_scores` (Σ điểm câu) hoặc `correct_ratio` (số câu đúng / số câu) |
+| Lượt chơi, tín hiệu thưởng | module `game`: `game.minigame_plays`, consumer `game.minigame_on_activity_graded` | Một `minigame.completed` mỗi lượt; `rewards_eligible` = `completion_met` ∧ lượt trong ngày ICT ≤ `limits.max_plays_per_day`; Reward Engine (F074) áp đúng `reward_rule_id` của cấu hình; `activity.graded` mode `minigame` không tự cộng XP (tránh thưởng hai lần) |
+
 
 ## 7. Thêm một mini-game mới — checklist
 

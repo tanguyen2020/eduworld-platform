@@ -43,6 +43,9 @@ type SchemaConfig struct {
 	LevelSession              string // LevelSession table.
 	LevelVersion              string // LevelVersion table.
 	LoginEvent                string // LoginEvent table.
+	MiniGameConfig            string // MiniGameConfig table.
+	MiniGameConfigVersion     string // MiniGameConfigVersion table.
+	MiniGamePlay              string // MiniGamePlay table.
 	NicknameChange            string // NicknameChange table.
 	NpcDialogue               string // NpcDialogue table.
 	NpcDialogueVersion        string // NpcDialogueVersion table.

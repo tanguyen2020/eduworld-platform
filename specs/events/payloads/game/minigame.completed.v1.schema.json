@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/minigame.completed.v1.schema.json",
+  "title": "Payload minigame.completed v1 (module game, owner F073)",
+  "description": "Lượt chơi mini-game kết thúc và đã chấm ở server (MINIGAME_ENGINE §6), đúng một lần cho mỗi play_id (event activity.graded lặp không phát lại). Điểm học tập và điểm vui do module learning tính; module mini-game không cấp XP/Xu/item: Reward Engine (F074) áp reward_rule_id khi rewards_eligible = true. Consumer: Reward Engine (game.reward_engine_game), analytics. Module learning không tiêu thụ (evidence đã có từ activity.*). Không chứa đáp án hay PII.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "play_id",
+    "student_id",
+    "minigame_config_id",
+    "minigame_config_version_id",
+    "minigame_type",
+    "attempt_id",
+    "context_type",
+    "learning_score",
+    "max_score",
+    "game_score",
+    "completion_met",
+    "rewards_eligible",
+    "plays_today",
+    "completed_at"
+  ],
+  "properties": {
+    "play_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "minigame_config_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "minigame_config_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "minigame_type": {
+      "type": "string",
+      "enum": [
+        "multiple_choice",
+        "true_false",
+        "fill_in_blank",
+        "drag_and_drop",
+        "matching",
+        "ordering",
+        "calculation",
+        "puzzle",
+        "word_game",
+        "science_simulation",
+        "timed_challenge"
+      ]
+    },
+    "attempt_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "context_type": {
+      "type": "string",
+      "enum": [
+        "free_play",
+        "quest_step",
+        "assignment"
+      ]
+    },
+    "context_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "learning_score": {
+      "type": "number",
+      "minimum": 0
+    },
+    "max_score": {
+      "type": "number",
+      "minimum": 0
+    },
+    "game_score": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "correct_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "item_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "completion_met": {
+      "type": "boolean"
+    },
+    "rewards_eligible": {
+      "type": "boolean",
+      "description": "completion_met và số lượt chơi trong ngày (ICT) ≤ limits.max_plays_per_day (F073-AC-19)"
+    },
+    "plays_today": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Số lượt đã kết thúc của học sinh với cấu hình này trong ngày ICT, gồm lượt này"
+    },
+    "reward_rule_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "grade_levels": {
+      "type": "array",
+      "maxItems": 9,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9
+      }
+    },
+    "subject_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "play_id": "0193a5f4-6c1e-7b2a-9d1f-000000073001",
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000073002",
+      "minigame_config_id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e5a01",
+      "minigame_config_version_id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e5a02",
+      "minigame_type": "matching",
+      "attempt_id": "0193a5f4-6c1e-7b2a-9d1f-000000073003",
+      "context_type": "free_play",
+      "context_id": null,
+      "learning_score": 3,
+      "max_score": 3,
+      "game_score": 330,
+      "correct_count": 3,
+      "item_count": 3,
+      "completion_met": true,
+      "rewards_eligible": true,
+      "plays_today": 1,
+      "reward_rule_id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e7c02",
+      "grade_levels": [
+        3
+      ],
+      "subject_id": "01936b2e-0000-7000-8000-00000000a001",
+      "completed_at": "2026-11-23T08:00:00Z"
+    }
+  ]
+}

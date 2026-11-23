@@ -113,7 +113,7 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 
 | Tiêu chí | Test (file) | Kết quả |
 |---|---|---|
-| F074-AC-01 | `TestRewardEngineTriggers` (tests/integration/reward_engine_consumer_test.go) — 6/7 trigger; `minigame.completed` chờ F073 (Câu hỏi mở F074-1) | pass |
+| F074-AC-01 | `TestRewardEngineTriggers` (tests/integration/reward_engine_consumer_test.go) — 6/7 trigger; `minigame.completed`: `TestTriggerMiniGameCompleted` (internal/presentation/consumer, F073 — F074-1 đã đóng) | pass |
 | F074-AC-02 | `TestRewardEngineReplay`; `TestRewardEngineTenantIsolation` (processed_events qua NATS thật) | pass |
 | F074-AC-03 | `TestRewardEngineOneTransaction` (rollback, cache = Σ ledger, outbox), `TestXPReconcile` (cảnh báo, không tự sửa) | pass |
 | F074-AC-04 | `TestRepeatMultipliers` (domain/reward/engine_test.go), `TestRewardEngineRepeatMultipliers` | pass |

@@ -29,6 +29,8 @@ type Start struct {
 	RecommendationID *uuid.UUID
 	IdempotencyKey   string
 	Items            []Item
+	// MinigameConfigVersionID pins the MiniGameConfigVersion of a mini-game attempt (F073): its game score starts at 0.
+	MinigameConfigVersionID *uuid.UUID
 }
 
 // New starts an attempt in_progress (F030-AC-01): deadline_at = start + time limit when the activity is timed;
@@ -38,7 +40,11 @@ func New(s Start) Attempt {
 		ContextID: s.ContextID, ActivityID: s.ActivityID, ActivityType: s.ActivityType, SourceKind: s.SourceKind,
 		SourceVersionID: s.SourceVersionID, Status: StatusInProgress, Seed: s.Seed, StartedAt: s.Now, LastActivityAt: s.Now,
 		Feedback: ResolveFeedback(s.Mode, s.ActivityFeedback), DisplayLanguage: s.DisplayLanguage, RecommendationID: s.RecommendationID,
-		IdempotencyKey: s.IdempotencyKey, Items: s.Items}
+		IdempotencyKey: s.IdempotencyKey, Items: s.Items, MinigameConfigVersionID: s.MinigameConfigVersionID}
+	if s.MinigameConfigVersionID != nil {
+		zero := 0
+		a.GameScore = &zero
+	}
 	if a.DisplayLanguage != "en" {
 		a.DisplayLanguage = "vi"
 	}

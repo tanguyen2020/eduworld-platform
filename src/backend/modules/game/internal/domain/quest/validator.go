@@ -275,6 +275,10 @@ func validateRefs(v Version, cat Catalog) error {
 					return refInvalid("%s: interactable %s is not in area %s", what, id, s.AreaID)
 				}
 			}
+		case StepMinigame:
+			if !uuidRe.MatchString(s.MiniGameConfigID) {
+				return refInvalid("%s: minigame_config_id", what)
+			}
 		case StepActivity:
 			if !uuidRe.MatchString(s.ContentRef.ID) || (s.ContentRef.VersionID != "" && !uuidRe.MatchString(s.ContentRef.VersionID)) {
 				return refInvalid("%s: content_ref", what)

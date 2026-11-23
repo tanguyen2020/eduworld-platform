@@ -95,6 +95,10 @@ type EvaluationView struct {
 	Passed       *bool     `json:"passed,omitempty"`
 	Effective    bool      `json:"effective"`
 	CreatedAt    time.Time `json:"created_at"`
+	// GameScore and CompletionMet are the game result of a mini-game attempt (F073-AC-10): server computed, never the
+	// learning score (score/max_score).
+	GameScore     *int  `json:"game_score,omitempty"`
+	CompletionMet *bool `json:"completion_met,omitempty"`
 }
 
 // AttemptView is Attempt.
@@ -155,6 +159,10 @@ type ResponseResultView struct {
 	HintsUsed   int                 `json:"hints_used"`
 	// NextSegmentID is the segment to play after a branch choice (F065-AC-24).
 	NextSegmentID string `json:"next_segment_id,omitempty"`
+	// GamePoints and Streak are the game points of this answer and the current correct streak of a mini-game attempt
+	// (F073-AC-08), set only when the item feedback may be shown (they would reveal the correctness otherwise).
+	GamePoints *int `json:"game_points,omitempty"`
+	Streak     *int `json:"streak,omitempty"`
 }
 
 // ReviewItemView is one item of AttemptReview.

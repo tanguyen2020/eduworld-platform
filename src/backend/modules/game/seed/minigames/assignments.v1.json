@@ -1,0 +1,31 @@
+{
+  "$comment": "DEV SEED ONLY (F073 T001): tenant codes the seed mini-game configs and their quest are assigned to (ADR-0029). Published with the learning facade only (validateMinigameQuestionSource): see seed/README.md.",
+  "assignments": [
+    {
+      "quest_id": "01936b2e-7c4a-7d10-9a3e-5b1c2d3e5a01",
+      "tenants": [
+        "th-demo-a",
+        "pgd-demo",
+        "common"
+      ]
+    },
+    {
+      "quest_id": "0193a5f4-6c1e-7b2a-9d1f-00000073a002",
+      "tenants": [
+        "th-demo-a",
+        "pgd-demo",
+        "common"
+      ]
+    }
+  ],
+  "quest_assignments": [
+    {
+      "quest_id": "0193a5f4-6c1e-7b2a-9d1f-00000073b101",
+      "tenants": [
+        "th-demo-a",
+        "pgd-demo",
+        "common"
+      ]
+    }
+  ]
+}

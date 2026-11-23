@@ -53,7 +53,8 @@ func moduleFiles(t *testing.T) map[string]*ast.File {
 
 // F020-AC-05 (TC-TEN-017): only the projection consumer writes ref.*. SQL writing ref.* lives in the ref
 // repository alone; the ProjectionWriter port is used only by the command UpsertProjection; that command is
-// called only by the consumer learning.projection_identity (and wired by the module root).
+// called only by the consumer learning.projection_identity (and wired by the module root); the same for the mini-game
+// configuration projection of F073 (MinigameConfigProjector, UpsertMiniGameConfigSnapshot).
 func TestOnlyProjectionConsumerWritesRef(t *testing.T) {
 	files := moduleFiles(t)
 	const repo = "internal/infrastructure/persistence/write/ref_repo.go"
@@ -108,4 +109,8 @@ func TestOnlyProjectionConsumerWritesRef(t *testing.T) {
 		"internal/infrastructure/persistence/write/ref_repo.go")
 	uses("UpsertProjection", "internal/application/command/upsert_projection.go", "internal/presentation/consumer/", "module.go")
 	uses("RefRepo", "internal/infrastructure/persistence/write/ref_repo.go", "module.go")
+	// F073-AC-04: the mini-game configuration projection follows the same rule (consumer learning.minigame_config_projection).
+	uses("MinigameConfigProjector", "internal/application/port/write/", "internal/application/command/minigame_projection.go",
+		"internal/infrastructure/persistence/write/ref_repo.go")
+	uses("UpsertMiniGameConfigSnapshot", "internal/application/command/minigame_projection.go", "internal/presentation/consumer/", "module.go")
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/collection"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/economy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/liveops"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/minigame"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/progression"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/reward"
@@ -36,7 +37,7 @@ const EventContentPublished = "content.published"
 
 // publishOrder publishes areas before their levels and chapters before the dialogues that reference their quests.
 // Quests (F072) come before the dialogues that give them.
-var publishOrder = []string{write.ItemWorldArea, write.ItemLevel, write.ItemStoryChapter, write.ItemQuest, write.ItemNPCDialogue,
+var publishOrder = []string{write.ItemWorldArea, write.ItemLevel, write.ItemStoryChapter, write.ItemMiniGameConfig, write.ItemQuest, write.ItemNPCDialogue,
 	write.ItemProgressionCurve, write.ItemGameItem, write.ItemRewardRule, write.ItemShopItem, write.ItemCollection, write.ItemAchievement,
 	write.ItemEventTemplate, write.ItemSeasonTrack, write.ItemEvent}
 
@@ -87,7 +88,9 @@ type PublishGameContent struct {
 	Economy *EconomyPublishRules
 	// LiveOps are the F077 checks (events, event templates, season tracks) and the run hook of a published event.
 	LiveOps *LiveOpsPublishRules
-	Now     func() time.Time
+	// MiniGames are the F073 checks of a mini-game config (JSON Schema, validateMinigameQuestionSource of module learning).
+	MiniGames *MiniGamePublishRules
+	Now       func() time.Time
 }
 
 type parsedItem struct {
@@ -108,6 +111,7 @@ type parsedItem struct {
 	coll     *collection.Collection
 	ach      *achievement.Definition
 	event    *liveops.Definition
+	minigame *minigame.Config
 	template *liveops.Template
 	track    *season.Track
 }
@@ -137,6 +141,8 @@ func (h PublishGameContent) Publish(ctx context.Context, items []ContentItem, no
 			p, err = parseProgression(it, h.Progression, now)
 		case economyItem(it.Type):
 			p, err = parseEconomy(it, h.Economy)
+		case minigameItem(it.Type):
+			p, err = parseMiniGame(ctx, it, h.MiniGames)
 		case liveOpsItem(it.Type):
 			p, err = parseLiveOps(it, h.LiveOps)
 		default:
@@ -405,6 +411,11 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 			return GameRelease{}, false, err
 		}
 	}
+	if p.minigame != nil {
+		if stored, err = minigameStored(p, vid, head.NextVersionNo); err != nil {
+			return GameRelease{}, false, err
+		}
+	}
 	if liveOpsItem(p.Type) {
 		if stored, err = liveOpsStored(p, vid, head.NextVersionNo); err != nil {
 			return GameRelease{}, false, err
@@ -463,6 +474,11 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 		"snapshot_sha256": snapSHA, "released_at": now}
 	if p.area != nil {
 		payload["world_area"] = runtimeArea(*p.area)
+	}
+	if p.minigame != nil {
+		if payload["minigame_config"], err = minigameBlock(p, vid, head.NextVersionNo, stored); err != nil {
+			return GameRelease{}, false, err
+		}
 	}
 	if err := h.Events.Publish(ctx, write.Event{Type: EventContentPublished, SubjectType: p.Type, SubjectID: p.id, Platform: true, OccurredAt: now,
 		Payload: payload}); err != nil {

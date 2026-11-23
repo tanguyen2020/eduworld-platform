@@ -9,3 +9,7 @@ DEV SEED: `economy/items.v1.json` (10 vật phẩm cosmetic, `tradable` luôn fa
 ## liveops (F077)
 
 DEV SEED: `liveops/events.v1.json` (lễ hội `world_festival` platform khối 3–5, điểm sự kiện, 2 mốc, community goal phạm vi trường — lịch 2027 nên run ở trạng thái `scheduled`; ở local sửa `start_at`/`end_at` cách hiện tại vài phút để xem chuyển trạng thái), `templates.v1.json` (template "Tuần lễ Toán học" cho sự kiện trường, gán `th-demo-a` qua `assignments.v1.json`), `season-tracks.v1.json` (season track 30 cấp × 100 điểm, trần 100 điểm/ngày, của mùa `pre-season` do module competition seed — mở khi nhận `season.started`). Publish qua `PublishGameContent` trong `cmd/seed`.
+
+## minigames (F073)
+
+DEV SEED: `minigames/math.g3.multiplication_card_match.v1.json` (matching Toán lớp 3, bảng nhân 6–9, 3 câu, 180 giây, ví dụ của spec), `math.g3.true_false_race.v1.json` (true_false lớp 3, 5 câu), `quest.math.g3.brown_bear_market.v1.json` (quest mẫu "Phiên chợ của bác Gấu Nâu" có bước `minigame`), `assignments.v1.json` (gán `th-demo-a`, `pgd-demo`, `common`). Cấu hình mini-game không có câu hỏi riêng: nguồn câu (selection rule) phải được module learning kiểm qua `validateMinigameQuestionSource` khi publish, nên `cmd/seed` (không có module learning) **không** publish các file này — chỉ ghi log; publish qua đường có facade learning (Game Operations Console F078). Test `TestMiniGameSeedFiles` publish chúng với facade learning của test.

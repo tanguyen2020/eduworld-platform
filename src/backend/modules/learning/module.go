@@ -102,8 +102,9 @@ const DashboardPoolSize = 10
 // Facade is the part of the learning facade (api.StrictServerInterface, specs/openapi/modules/learning.internal.v1.yaml)
 // implemented in this release: the platform-ops operations of F020, the student lifecycle steps of F016 and the
 // attempt operations of F030 US5 (createAttempt, getAttemptResult; caller module game, wired by F072), the merge
-// step mergeUserData (F030 T056) and the question plans of competition matches (createQuestionPlan, scorePlanAnswer,
-// revealPlanItem; caller module competition, F105).
+// step mergeUserData (F030 T056), the question plans of competition matches (createQuestionPlan, scorePlanAnswer,
+// revealPlanItem; caller module competition, F105) and the mini-game source check validateMinigameQuestionSource (caller
+// module game, F073).
 type Facade interface {
 	ApplyTenantAssignments(ctx context.Context, req api.ApplyTenantAssignmentsRequestObject) (api.ApplyTenantAssignmentsResponseObject, error)
 	RevokeTenantAssignments(ctx context.Context, req api.RevokeTenantAssignmentsRequestObject) (api.RevokeTenantAssignmentsResponseObject, error)
@@ -120,6 +121,7 @@ type Facade interface {
 	CreateQuestionPlan(ctx context.Context, req api.CreateQuestionPlanRequestObject) (api.CreateQuestionPlanResponseObject, error)
 	ScorePlanAnswer(ctx context.Context, req api.ScorePlanAnswerRequestObject) (api.ScorePlanAnswerResponseObject, error)
 	RevealPlanItem(ctx context.Context, req api.RevealPlanItemRequestObject) (api.RevealPlanItemResponseObject, error)
+	ValidateMinigameQuestionSource(ctx context.Context, req api.ValidateMinigameQuestionSourceRequestObject) (api.ValidateMinigameQuestionSourceResponseObject, error)
 }
 
 var _ Facade = facade.Facade{}
@@ -185,6 +187,11 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer(messaging.QuestLearningEventName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.LearningEventOnQuestCompletedOptions(consumer.LearningEventOnQuestCompleted{Recorder: command.QuestLearningEvents{
 			Students: read.SchoolSettings{}, Learning: write.LearningEventWriter{}}}, core.UoW, core.App, js)
+	})
+	// F073-AC-04: the projection of the mini-game configurations published by module game (platform events).
+	r.Consumer(messaging.MinigameConfigProjectionName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.MinigameConfigProjectionOptions(consumer.MinigameConfigProjection{Upsert: command.UpsertMiniGameConfigSnapshot{
+			Store: write.RefRepo{}}}, core.UoW, core.App, js)
 	})
 	r.Consumer(messaging.LessonCompletionName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.LessonCompletionOptions(consumer.LessonCompletion{Lessons: w.lessons}, core.UoW, core.App, js)
@@ -354,7 +361,8 @@ func build(r *module.Registry) (*wiring, error) {
 		Docs: write.DocRepo{}}
 	dcmd := command.Docs{UoW: core.UoW, Store: write.DocRepo{}, Questions: write.QuestionRepo{}, Curriculum: write.CurriculumRepo{},
 		Catalog: write.CatalogRepo{}, Schema: docSchema, Media: write.MediaRepo{}, Read: core.ReadSession, Resources: resources,
-		Events: events, Audit: auditor, Math: math, Activities: activities, ActivitySchema: activitySchema, ActivityEnabled: true}
+		Events: events, Audit: auditor, Math: math, Activities: activities, ActivitySchema: activitySchema, ActivityEnabled: true,
+		Minigames: write.MinigameConfigRepo{}}
 	wf := command.Workflow{UoW: core.UoW, Status: write.WorkflowRepo{}, Reviews: write.WorkflowRepo{}, Questions: write.QuestionRepo{},
 		Docs: write.DocRepo{}, Schema: schema, Media: write.MediaRepo{}, Guard: readiness.Default(), Events: events, Audit: auditor,
 		Metrics: observability.WorkflowCounter{}}
@@ -362,7 +370,7 @@ func build(r *module.Registry) (*wiring, error) {
 	snapshots := cache.SnapshotCache{C: vk}
 	rel := command.Releases{UoW: core.UoW, Workflow: wf, Store: write.ReleaseRepo{}, Schedules: write.ReleaseRepo{}, Events: events,
 		Audit: auditor, Metrics: observability.ReleaseCounter{}, Cache: snapshots, CDN: s3, Signer: signer,
-		Activities: activities, ActivitySchema: activitySchema}
+		Activities: activities, ActivitySchema: activitySchema, Minigames: write.MinigameConfigRepo{}}
 	reader := query.ContentReader{Questions: read.QuestionModel{}, Docs: read.DocModel{}, Cache: snapshots}
 	docQueries := query.Docs{Session: core.ReadSession, Model: read.DocModel{}, Pool: read.Delivery{}, Cursors: cursors}
 	delivery := query.Delivery{Session: core.ReadSession, Reader: read.Delivery{}, Cache: cache.Pool{C: vk}, Registry: registry, Schema: schema,
@@ -371,7 +379,7 @@ func build(r *module.Registry) (*wiring, error) {
 		Docs: write.DocRepo{}, Questions: write.QuestionRepo{}, Delivery: delivery, Students: read.SchoolSettings{}, Registry: activities,
 		Metrics: observability.AttemptCounter{}, Rate: cache.Rate{C: vk, Metrics: observability.RateCounter{}},
 		Progress: write.MediaProgressRepo{}, Media: write.MediaRepo{}, Signer: signer, MediaMetrics: observability.VideoCounter{},
-		Runs: write.SimulationRunRepo{}, SimMetrics: observability.SimulationCounter{}}
+		Runs: write.SimulationRunRepo{}, SimMetrics: observability.SimulationCounter{}, Minigames: write.MinigameConfigRepo{}}
 	lessons := command.Lessons{Store: write.LessonRepo{}, Docs: write.DocRepo{}, Learning: write.LearningEventWriter{}, Events: events,
 		UoW: core.UoW, Metrics: observability.LessonCounter{}}
 	att.Lessons = lessons
@@ -408,7 +416,7 @@ func build(r *module.Registry) (*wiring, error) {
 	asgq := query.SchoolAssignments{Session: core.ReadSession, Model: read.SchoolAssignmentModel{}, Cursors: cursors}
 	attq := query.Attempts{Session: core.ReadSession, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery,
 		Registry: activities, Cursors: cursors, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: signer, Assignments: asgq, Runs: read.SimulationRunModel{},
-		Recommendations: read.SelfStudyModel{}}
+		Recommendations: read.SelfStudyModel{}, Minigames: read.MinigameConfigModel{}, Students: read.SchoolSettings{}}
 
 	h := learninghttp.Handlers{Commands: cur,
 		Queries:          query.Curriculum{Session: core.ReadSession, Model: read.CurriculumModel{}, Settings: read.SchoolSettings{}, Codec: importer.Codec{}, Cursors: cursors},
@@ -473,6 +481,8 @@ func build(r *module.Registry) (*wiring, error) {
 	// F105: question plans of competition matches (createQuestionPlan, scorePlanAnswer, revealPlanItem).
 	f.Plans = command.QuestionPlans{Attempts: att, Plans: write.QuestionPlanRepo{}, Recent: selfRepo, Config: command.DefaultQuestionPlanConfig()}
 	f.Reveals = query.QuestionPlans{Session: core.ReadSession, Model: read.QuestionPlanModel{}, Delivery: delivery}
+	// F073: validateMinigameQuestionSource (caller module game, publish of a mini-game configuration).
+	f.MinigameSources = query.ValidateMinigameQuestionSource{Session: core.ReadSession, Docs: read.DocModel{}, Sources: read.MinigameSourceModel{}}
 	// F044: exports on the dashboard session (replica) in core-api and in the worker, quality jobs and reads.
 	reportCfg := reporting.DefaultConfig()
 	reports := command.Reports{UoW: core.UoW, Jobs: write.ReportRepo{}, Queue: write.ReportRepo{}, Read: core.ReadSession, Scope: read.QualityModel{},

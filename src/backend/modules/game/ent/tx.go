@@ -84,6 +84,12 @@ type Tx struct {
 	LevelVersion *LevelVersionClient
 	// LoginEvent is the client for interacting with the LoginEvent builders.
 	LoginEvent *LoginEventClient
+	// MiniGameConfig is the client for interacting with the MiniGameConfig builders.
+	MiniGameConfig *MiniGameConfigClient
+	// MiniGameConfigVersion is the client for interacting with the MiniGameConfigVersion builders.
+	MiniGameConfigVersion *MiniGameConfigVersionClient
+	// MiniGamePlay is the client for interacting with the MiniGamePlay builders.
+	MiniGamePlay *MiniGamePlayClient
 	// NicknameChange is the client for interacting with the NicknameChange builders.
 	NicknameChange *NicknameChangeClient
 	// NpcDialogue is the client for interacting with the NpcDialogue builders.
@@ -317,6 +323,9 @@ func (tx *Tx) init() {
 	tx.LevelSession = NewLevelSessionClient(tx.config)
 	tx.LevelVersion = NewLevelVersionClient(tx.config)
 	tx.LoginEvent = NewLoginEventClient(tx.config)
+	tx.MiniGameConfig = NewMiniGameConfigClient(tx.config)
+	tx.MiniGameConfigVersion = NewMiniGameConfigVersionClient(tx.config)
+	tx.MiniGamePlay = NewMiniGamePlayClient(tx.config)
 	tx.NicknameChange = NewNicknameChangeClient(tx.config)
 	tx.NpcDialogue = NewNpcDialogueClient(tx.config)
 	tx.NpcDialogueVersion = NewNpcDialogueVersionClient(tx.config)

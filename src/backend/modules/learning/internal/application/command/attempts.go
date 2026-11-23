@@ -92,6 +92,8 @@ type Attempts struct {
 	// Experience resolves the live experiment arms of a student for the adaptive practice difficulty (F035-AC-24); nil =
 	// no experiment.
 	Experience ExperienceResolver
+	// Minigames reads the projection ref.minigame_config_versions (F073): the configuration versions mini-game attempts pin.
+	Minigames write.MinigameConfigs
 }
 
 // LessonPinner opens or reuses the lesson session of a start in the context of a lesson (command.Lessons.Pin).
@@ -223,6 +225,9 @@ func (h Attempts) adHocVersion(a attempt.Attempt) (activity.Plugin, activity.Ver
 
 // versionOf returns the plugin and version of an attempt (the pinned activity version, R31).
 func (h Attempts) versionOf(ctx context.Context, a attempt.Attempt) (activity.Plugin, activity.Version, *ActivitySource, error) {
+	if a.MinigameConfigVersionID != nil || a.SourceKind == attemptview.SourceKindMinigameConfig {
+		return h.minigameVersion(ctx, a)
+	}
 	if a.ActivityID == nil {
 		p, v, err := h.adHocVersion(a)
 		return p, v, nil, err
@@ -477,7 +482,7 @@ func sourceKindOf(a attempt.Attempt) string {
 }
 
 // graded records activity.submitted and activity.graded with the effective evaluation (F030-AC-12).
-func (h Attempts) graded(ctx context.Context, a attempt.Attempt, r activity.Result, evaluationID uuid.UUID) error {
+func (h Attempts) graded(ctx context.Context, a attempt.Attempt, r activity.Result, evaluationID uuid.UUID, mg *minigameOutcome) error {
 	at := *a.GradedAt
 	correct := r.CorrectCount
 	submitted := map[string]any{"attempt_id": a.ID, "activity_id": nullableID(a.ActivityID), "activity_version_id": a.SourceVersionID,
@@ -517,6 +522,10 @@ func (h Attempts) graded(ctx context.Context, a attempt.Attempt, r activity.Resu
 		"content_version_id": a.SourceVersionID, "recommendation_id": nullableID(a.RecommendationID), "first_try_correct_count": correct}
 	if r.Passed != nil {
 		ev["passed"] = *r.Passed
+	}
+	// F073-AC-10, AC-18: the game result for module game; the learning event above and the mastery evidence never carry it.
+	if mg != nil {
+		ev["minigame"] = mg.payload(a)
 	}
 	if h.Metrics != nil {
 		h.Metrics.Submitted(*a.SubmitReason)
@@ -591,6 +600,13 @@ func (h Attempts) view(ctx context.Context, a attempt.Attempt, rendered []questi
 		}
 		var err error
 		if rendered, _, err = h.Delivery.Render(ctx, ids, uint64(a.Seed)); err != nil {
+			return dto.AttemptView{}, err
+		}
+	}
+	// Mini-game attempts (F073): the render carries the pinned configuration and the grade of the student.
+	if a.GameScored() && (src == nil || src.Config.Pinned == nil) {
+		var err error
+		if _, _, src, err = h.versionOf(ctx, a); err != nil {
 			return dto.AttemptView{}, err
 		}
 	}

@@ -47,16 +47,28 @@ type QuestContent interface {
 	Discovered(ctx context.Context, tenant, student uuid.UUID) (map[string]bool, error)
 }
 
-// LearningAttempt is the request of createAttempt (facade learning, mode quest).
+// LearningAttempt is the request of createAttempt (facade learning): mode quest (a quest step, F072) or minigame (a
+// free mini-game play, F073).
 type LearningAttempt struct {
 	StudentID        uuid.UUID
 	ContentID        uuid.UUID
 	ContentVersionID *uuid.UUID
-	QuestProgressID  uuid.UUID
-	QuestVersionID   uuid.UUID
-	StepID           string
-	GameSessionID    *uuid.UUID
+	// ContentType is the ActivityRef content type: "" = activity (F072); minigame_config for a mini-game (F073, the
+	// version is then always pinned by module game).
+	ContentType     string
+	QuestProgressID uuid.UUID
+	QuestVersionID  uuid.UUID
+	StepID          string
+	GameSessionID   *uuid.UUID
+	// MiniGamePlayID is the play of a free mini-game: mode minigame, context minigame_session (nil = mode quest).
+	MiniGamePlayID *uuid.UUID
 }
+
+// Learning content types of createAttempt.
+const (
+	ContentActivity       = "activity"
+	ContentMiniGameConfig = "minigame_config"
+)
 
 // LearningAttemptCreated is AttemptCreated of the facade.
 type LearningAttemptCreated struct {

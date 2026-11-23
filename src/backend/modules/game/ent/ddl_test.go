@@ -35,6 +35,7 @@ var migrations = map[string][]string{
 	"20261230000770_f077_liveops.sql": {"events", "event_versions", "event_templates", "event_template_versions", "event_runs",
 		"event_participation", "event_point_ledger", "community_goals", "community_goal_contributions", "community_goal_progress", "season_tracks",
 		"season_track_versions", "season_point_ledger", "season_track_progress"},
+	"20261230000773_f073_minigame.sql": {"minigame_configs", "minigame_config_versions", "minigame_plays"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -79,6 +80,7 @@ func schemas() map[string]string {
 		"story_progress": c.StoryProgress, "world_unlock_facts": c.WorldUnlockFact,
 		"quest_definitions": c.QuestDefinition, "quest_versions": c.QuestVersion, "quest_progress": c.QuestProgress,
 		"quest_step_attempts": c.QuestStepAttempt, "periodic_quest_grants": c.PeriodicQuestGrant,
+		"minigame_configs": c.MiniGameConfig, "minigame_config_versions": c.MiniGameConfigVersion, "minigame_plays": c.MiniGamePlay,
 		"tenant_resource_assignments": c.TenantResourceAssignment, "xp_ledger": c.XpLedgerEntry, "xp_daily_caps": c.XpDailyCap,
 		"reward_rules": c.RewardRule, "reward_rule_versions": c.RewardRuleVersion, "reward_grants": c.RewardGrant,
 		"progression_curves": c.ProgressionCurve, "progression_curve_versions": c.ProgressionCurveVersion,

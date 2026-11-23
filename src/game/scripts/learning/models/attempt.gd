@@ -39,6 +39,9 @@ var render: ActivityRenderModel = null
 ## Media activities (F065): position to resume at and `ActivityProgressState` (`watched_ranges`, `pending_cue_ids`…).
 var resume_position_ms: int = 0
 var progress: Dictionary = {}
+## `Attempt.evaluation` after submit (score, max_score, passed…; mini-game attempts add `game_score` and
+## `completion_met`, F073). Top-level `game_score` / `completion_met` are kept here too. Display only (ADR-0016).
+var evaluation: Dictionary = {}
 ## Local unix seconds when this attempt was received (server clock offset for the countdown).
 var received_unix: float = 0.0
 
@@ -88,6 +91,11 @@ static func from_dict(data: Dictionary, now_unix: float = 0.0) -> AttemptModel:
 	a.resume_position_ms = maxi(0, int(resume)) if resume is int or resume is float else 0
 	var prog: Variant = data.get("progress")
 	a.progress = prog as Dictionary if prog is Dictionary else {}
+	var ev: Variant = data.get("evaluation")
+	a.evaluation = QuestionRenderModel.strip_answer_keys(ev) as Dictionary if ev is Dictionary else {}
+	for key: String in ["game_score", "completion_met"]:
+		if data.has(key) and not a.evaluation.has(key):
+			a.evaluation[key] = data[key]
 	a.received_unix = now_unix if now_unix > 0.0 else Time.get_unix_time_from_system()
 	return a
 

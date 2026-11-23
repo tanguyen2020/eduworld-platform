@@ -43,12 +43,15 @@ type Source struct {
 	Body    ActivityBody
 	Config  activity.Config
 	Plugin  activity.Plugin
+	// Grade is the grade of the student of an attempt (game-scored plugins: no speed bonus for grades 1–5); nil outside
+	// an attempt or when unknown.
+	Grade *int
 }
 
 // DomainVersion is what the plugin reads of the version.
 func (s Source) DomainVersion() activity.Version {
 	return activity.Version{ActivityID: s.Doc.ID, VersionID: s.Version.ID, VersionNo: s.Version.VersionNo, Type: activity.Type(s.Body.ActivityType),
-		Config: s.Config, TimeLimitSeconds: s.Body.TimeLimitSeconds, ObjectiveIDs: s.Version.ObjectiveIDs}
+		Config: s.Config, TimeLimitSeconds: s.Body.TimeLimitSeconds, ObjectiveIDs: s.Version.ObjectiveIDs, StudentGrade: s.Grade}
 }
 
 // TimeLimit is time_limit_seconds of the activity, or the timer of a timed quiz.

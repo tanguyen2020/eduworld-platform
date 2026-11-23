@@ -1493,7 +1493,14 @@ paths:
       x-service: game
       tags: [game]
       operationId: startMiniGame
-      summary: Bắt đầu mini-game (tạo Attempt mode minigame)
+      summary: Bắt đầu mini-game tự chơi (tạo Attempt mode minigame, ghim version cấu hình)
+      description: |
+        Chỉ học sinh (`game_player`, R23). Cấu hình phải đã publish, được gán cho tenant phiên và có khối của học sinh
+        (khác → `404`). Module game ghim version cấu hình theo con trỏ hiện hành, gọi `createAttempt` của module learning
+        (mode `minigame`, `Idempotency-Key` chuyển tiếp) và ghi lượt chơi. Client lấy câu hỏi (render payload, không
+        đáp án) qua `GET /learning/activity-attempts/{attempt_id}`, trả lời và nộp qua họ API `/learning/activity-attempts`;
+        điểm học tập và điểm vui do server tính (F073). Bước quest `minigame` bắt đầu qua `startQuestActivity`; bài nhà
+        trường giao qua `startActivityAttempt` (`context_type = assignment` ở đây → `422`).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -1508,13 +1515,22 @@ paths:
             schema:
               type: object
               properties:
-                context_type: { type: string, enum: [quest_step, free_play, assignment] }
+                context_type: { type: string, enum: [quest_step, free_play, assignment], default: free_play, description: 'assignment → 422 VALIDATION_FAILED (bài giao chạy qua startActivityAttempt)' }
                 context_id: { $ref: '#/components/schemas/Uuid' }
       responses:
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '503':
+          description: UNAVAILABLE — module learning tạm thời không trả lời hoặc projection cấu hình chưa nhận version vừa publish; thử lại theo Retry-After
+          headers:
+            Retry-After: { $ref: '#/components/headers/RetryAfter' }
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
         '201':
-          description: Mini-game session (Attempt + cấu hình hiển thị)
+          description: Mini-game session (Attempt + cấu hình hiển thị, không có đáp án)
           content:
             application/json:
               schema:
@@ -19792,16 +19808,56 @@ components:
         first_completion_only: { type: boolean }
     MiniGameSession:
       type: object
-      required: [attempt, minigame_type, config]
+      required: [attempt, minigame_type, minigame_config_version_id, config, server_time]
       properties:
         attempt: { $ref: '#/components/schemas/Attempt' }
-        minigame_type:
-          type: string
-          enum: [multiple_choice, true_false, fill_in_blank, drag_drop, matching, ordering, calculation, puzzle, word_game, science_simulation, timed_challenge]
-        config:
+        play_id: { $ref: '#/components/schemas/Uuid' }
+        minigame_type: { $ref: '#/components/schemas/MiniGameType' }
+        minigame_config_version_id: { $ref: '#/components/schemas/Uuid' }
+        deadline_at: { $ref: '#/components/schemas/Timestamp' }
+        server_time: { $ref: '#/components/schemas/Timestamp' }
+        config: { $ref: '#/components/schemas/MiniGameDisplayConfig' }
+    MiniGameType:
+      type: string
+      description: Đồng bộ với specs/schemas/minigame-config.schema.json minigame_type (MINIGAME_ENGINE §2).
+      enum: [multiple_choice, true_false, fill_in_blank, drag_and_drop, matching, ordering, calculation, puzzle, word_game, science_simulation, timed_challenge]
+    MiniGameDisplayConfig:
+      type: object
+      additionalProperties: false
+      description: Phần cấu hình client cần để chơi (F073-AC-07) — không có question_source, đáp án, scoring_rule hay phản hồi theo phương án.
+      required: [name, grade_levels, question_count, feedback_timing, show_explanation, show_correct_answer, scoring, resumable, prefetch_items]
+      properties:
+        name: { $ref: '#/components/schemas/LocalizedName' }
+        instructions: { $ref: '#/components/schemas/LocalizedName' }
+        grade_levels:
+          type: array
+          maxItems: 9
+          items: { type: integer, minimum: 1, maximum: 9 }
+        question_count: { type: integer, minimum: 1, maximum: 50 }
+        time_limit_seconds: { type: integer, minimum: 10, maximum: 3600 }
+        per_item_time_seconds: { type: integer, minimum: 3, maximum: 600 }
+        feedback_timing: { $ref: '#/components/schemas/FeedbackTiming' }
+        feedback_display: { type: string, enum: [end_of_round, end_of_game] }
+        show_explanation: { type: boolean }
+        show_correct_answer: { type: boolean }
+        scoring:
           type: object
-          description: Cấu hình hiển thị (time_limit, scoring display, feedback_timing, feedback_display) — không có đáp án
-          additionalProperties: true
+          additionalProperties: false
+          required: [points_per_correct, time_bonus_enabled, streak_bonus_enabled]
+          properties:
+            points_per_correct: { type: integer, minimum: 0, maximum: 1000 }
+            time_bonus_enabled: { type: boolean, description: Luôn false cho học sinh khối 1–5 }
+            streak_bonus_enabled: { type: boolean }
+        presentation:
+          type: object
+          additionalProperties: false
+          properties:
+            scene_variant: { type: string, maxLength: 64, pattern: '^[a-z_]+\.[a-z0-9_]+$' }
+            theme: { type: string, maxLength: 40 }
+            background_music_id: { type: string, maxLength: 64 }
+            mascot_npc_id: { type: string, maxLength: 64 }
+        resumable: { type: boolean, description: 'false với timed_challenge (thoát = abandoned)' }
+        prefetch_items: { type: boolean, description: 'true với timed_challenge: client nhận sẵn lô câu, không chờ mạng giữa câu' }
     InventoryItem:
       type: object
       required: [item_id, kind, acquired_at]
@@ -24334,6 +24390,8 @@ components:
         feedback: { type: string, maxLength: 4000, description: Nhận xét tự động theo kết quả (không có nhận xét của người chấm) }
         effective: { type: boolean }
         created_at: { $ref: '#/components/schemas/Timestamp' }
+        game_score: { type: integer, minimum: 0, description: 'Mini-game (F073): điểm vui server tính; không ảnh hưởng mastery (score là điểm học tập)' }
+        completion_met: { type: boolean, description: 'Mini-game (F073): completion_rule của cấu hình thỏa' }
     ActivityProgressReport:
       type: object
       required: [client_seq, position_ms]
@@ -24403,6 +24461,8 @@ components:
             - $ref: '#/components/schemas/QuestionResponse'
             - type: 'null'
         next_segment_id: { type: string, maxLength: 64 }
+        game_points: { type: [integer, 'null'], description: 'Mini-game (F073): điểm vui của câu trả lời này do server tính (giờ server, chuỗi đúng); null khi feedback chưa cho hiện' }
+        streak: { type: [integer, 'null'], minimum: 0, description: 'Mini-game (F073): chuỗi câu đúng liên tiếp hiện tại; null khi feedback chưa cho hiện' }
       example:
         accepted: true
         position: 1

@@ -67,6 +67,7 @@ type Quests struct {
 	Audit       write.Auditor
 	Presence    port.PresenceStore    // nil: every report fails its presence check
 	Learning    port.LearningAttempts // nil: startQuestActivity answers 503
+	MiniGames   port.MiniGameContent  // the configs of the minigame steps (F073); nil: a minigame step cannot start
 	Realtime    port.QuestRealtime    // nil: no push
 	Registry    quest.Registry        // nil: quest.DefaultRegistry
 	Metrics     QuestMetrics
@@ -595,15 +596,27 @@ func (h Quests) StartActivity(ctx context.Context, questID uuid.UUID, stepID str
 		if rule.MaxAttemptsPerDay > 0 && n >= rule.MaxAttemptsPerDay {
 			return problem.New(problem.QuestStepAttemptLimit, "hãy quay lại ngày mai").With("max_attempts_per_day", rule.MaxAttemptsPerDay)
 		}
-		content, err := uuid.Parse(s.ContentRef.ID)
-		if err != nil {
-			return problem.New(problem.ItemRefInvalid, "content_ref")
-		}
-		req = port.LearningAttempt{StudentID: student, ContentID: content, QuestProgressID: p.ID, QuestVersionID: p.VersionID, StepID: stepID,
-			GameSessionID: gameSession}
-		if s.ContentRef.VersionID != "" {
-			if vid, err := uuid.Parse(s.ContentRef.VersionID); err == nil {
-				req.ContentVersionID = &vid
+		if s.Type == quest.StepMinigame {
+			// F073-AC-16: the minigame step pins the config version (given or current) and opens a quest attempt through
+			// the plugin minigame of module learning.
+			r, err := h.minigameOf(ctx, s)
+			if err != nil {
+				return err
+			}
+			vid := r.VersionID
+			req = port.LearningAttempt{StudentID: student, ContentID: r.ConfigID, ContentVersionID: &vid, ContentType: port.ContentMiniGameConfig,
+				QuestProgressID: p.ID, QuestVersionID: p.VersionID, StepID: stepID, GameSessionID: gameSession}
+		} else {
+			content, err := uuid.Parse(s.ContentRef.ID)
+			if err != nil {
+				return problem.New(problem.ItemRefInvalid, "content_ref")
+			}
+			req = port.LearningAttempt{StudentID: student, ContentID: content, QuestProgressID: p.ID, QuestVersionID: p.VersionID, StepID: stepID,
+				GameSessionID: gameSession}
+			if s.ContentRef.VersionID != "" {
+				if vid, err := uuid.Parse(s.ContentRef.VersionID); err == nil {
+					req.ContentVersionID = &vid
+				}
 			}
 		}
 		progressID = p.ID
@@ -658,7 +671,9 @@ type GradedAttempt struct {
 	CorrectCount *int
 	ItemCount    *int
 	Passed       *bool
-	OccurredAt   time.Time
+	// CompletionMet is completion_met of the minigame block (F073): a minigame step completes only when it is true.
+	CompletionMet *bool
+	OccurredAt    time.Time
 }
 
 // ApplyActivityResult is the consumer game.quest_on_activity_graded (F072-AC-15, edge cases): an attempt linked to a
@@ -683,6 +698,9 @@ func (h Quests) ApplyActivityResult(ctx context.Context, g GradedAttempt) (err e
 	}
 	s, _ := v.Step(sa.StepID)
 	passed := h.Config.PassRule.Effective(s.PassRule).Passes(quest.Graded{CorrectCount: g.CorrectCount, ItemCount: g.ItemCount, Passed: g.Passed})
+	if s.Type == quest.StepMinigame {
+		passed = g.CompletionMet != nil && *g.CompletionMet // F073-AC-16: the completion rule of the mini-game
+	}
 	at := h.now()
 	sa.Status, sa.CorrectCount, sa.ItemCount, sa.GradedAt = write.AttemptNotPassed, g.CorrectCount, g.ItemCount, &at
 	if passed {
@@ -782,4 +800,26 @@ func (h Quests) ExpireForGrade(ctx context.Context, tenant, student uuid.UUID, g
 		h.after(ctx, func(ctx context.Context) { h.push(ctx, st, push, at) })
 	}
 	return n, nil
+}
+
+// minigameOf returns the config version a minigame step opens: the version number of the step or the current release
+// (422 ITEM_REF_INVALID when it is not published).
+func (h Quests) minigameOf(ctx context.Context, s quest.Step) (*port.MiniGameRow, error) {
+	id, err := uuid.Parse(s.MiniGameConfigID)
+	if err != nil || h.MiniGames == nil {
+		return nil, problem.New(problem.ItemRefInvalid, "minigame_config_id")
+	}
+	var r *port.MiniGameRow
+	if s.MiniGameConfigVersion != nil {
+		r, err = h.MiniGames.MiniGameVersionNo(ctx, id, *s.MiniGameConfigVersion)
+	} else {
+		r, err = h.MiniGames.CurrentMiniGame(ctx, id)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if r == nil {
+		return nil, problem.New(problem.ItemRefInvalid, "the mini-game of the step is not published")
+	}
+	return r, nil
 }

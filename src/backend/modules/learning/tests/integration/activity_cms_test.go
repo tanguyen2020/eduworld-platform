@@ -57,8 +57,9 @@ func TestActivityRegistryAndConfig(t *testing.T) {
 
 	r := must(t, c.do(t, http.MethodGet, "/cms/learning/activity-types", qlcmA, nil, nil), http.StatusOK, "types")
 	types := r.items("data")
-	if len(types) != 5 || types[0]["activity_type"] != "audio_lesson" || types[1]["activity_type"] != "interactive_exercise" ||
-		types[2]["activity_type"] != "quiz" || types[3]["activity_type"] != "simulation" || types[4]["activity_type"] != "video_lesson" {
+	if len(types) != 6 || types[0]["activity_type"] != "audio_lesson" || types[1]["activity_type"] != "interactive_exercise" ||
+		types[2]["activity_type"] != "minigame" || types[3]["activity_type"] != "quiz" || types[4]["activity_type"] != "simulation" ||
+		types[5]["activity_type"] != "video_lesson" {
 		t.Fatalf("types: %s", r.raw)
 	}
 	for _, ty := range types {
@@ -71,9 +72,10 @@ func TestActivityRegistryAndConfig(t *testing.T) {
 		t.Fatalf("student reads the registry: %d", r.status)
 	}
 
-	// AC-20: a type of the release without plugin, and a type outside the release (refused by the contract enum).
+	// AC-20: every type of the release has its plugin since F073 (minigame); a minigame with the config of a quiz breaks the
+	// schema of its type, a type outside the release is refused by the contract enum.
 	if r := c.do(t, http.MethodPost, "/cms/learning/activities", qlcmA, idem(), activityBody(qc, "minigame", quizConfig(q1))); r.status != 422 ||
-		r.str("code") != "ACTIVITY_TYPE_NOT_SUPPORTED" {
+		r.str("code") != "ACTIVITY_CONFIG_INVALID" {
 		t.Fatalf("minigame: %d %s", r.status, r.raw)
 	}
 	if r := c.do(t, http.MethodPost, "/cms/learning/activities", qlcmA, idem(), activityBody(qc, "speaking", quizConfig(q1))); r.status != 422 {

@@ -954,6 +954,36 @@ msgstr "Phiên bản {version}"
 msgid "ui.login.wait_hint"
 msgstr "Nếu nhập sai nhiều lần, hãy đợi vài phút rồi thử lại."
 
+msgid "ui.minigame.completed"
+msgstr "Em đã hoàn thành trò chơi!"
+
+msgid "ui.minigame.continue"
+msgstr "Tiếp tục"
+
+msgid "ui.minigame.done"
+msgstr "Xong"
+
+msgid "ui.minigame.game_score"
+msgstr "Điểm trò chơi: {points}"
+
+msgid "ui.minigame.not_completed"
+msgstr "Chưa hoàn thành, em chơi lại nhé!"
+
+msgid "ui.minigame.points"
+msgstr "⭐ {points}"
+
+msgid "ui.minigame.streak"
+msgstr "🔥 {streak}"
+
+msgid "ui.minigame.submit_state"
+msgstr "Nộp kết quả thí nghiệm"
+
+msgid "ui.minigame.summary_title"
+msgstr "Kết thúc trò chơi"
+
+msgid "ui.minigame.time_up"
+msgstr "Hết giờ rồi!"
+
 msgid "ui.notification.assignment_new"
 msgstr "Em có bài mới: {title}"
 

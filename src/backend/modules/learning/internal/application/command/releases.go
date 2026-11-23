@@ -75,6 +75,9 @@ type Releases struct {
 	// ActivitySchema the JSON Schemas of their config.
 	Activities     *activity.Registry
 	ActivitySchema port.ActivitySchema
+	// Minigames reads the projection ref.minigame_config_versions (publish check of the minigame activities, F073-AC-15);
+	// nil refuses them.
+	Minigames write.MinigameConfigs
 }
 
 func (h Releases) now() time.Time { return now(h.Clock) }
@@ -208,7 +211,7 @@ func (h Releases) ready(ctx context.Context, s Subject) error {
 		return err
 	}
 	if s.Type == contentmodel.TypeActivity {
-		if err := h.activityReady(s); err != nil {
+		if err := h.activityReady(ctx, s); err != nil {
 			return err
 		}
 	}
@@ -679,7 +682,7 @@ func itoa(n int) string { return strconv.Itoa(n) }
 
 // activityReady checks an activity version again at publish (F030-AC-20, AC-21): its type has a plugin of the release and
 // its config matches the JSON Schema and the rules of the plugin.
-func (h Releases) activityReady(s Subject) error {
+func (h Releases) activityReady(ctx context.Context, s Subject) error {
 	var b struct {
 		ActivityType string          `json:"activity_type"`
 		Config       json.RawMessage `json:"config"`
@@ -709,6 +712,10 @@ func (h Releases) activityReady(s Subject) error {
 		if vs := pc.ValidatePublish(cfg); len(vs) > 0 {
 			return configProblem(vs)
 		}
+	}
+	// F073-AC-15: the wrapped mini-game configuration and the question set override, checked again at publish.
+	if _, ok := p.(activity.GameScored); ok {
+		return minigameChecker{Minigames: h.Minigames, Docs: h.Workflow.Docs, Questions: h.Workflow.Questions}.check(ctx, b.Config)
 	}
 	return nil
 }

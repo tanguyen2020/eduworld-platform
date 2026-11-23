@@ -157,6 +157,68 @@
         "maximum": 9
       },
       "description": "Khối lớp của version nội dung (Reward Engine áp xp_below_grade_multiplier, F074-AC-07); vắng/rỗng = không giảm theo khối"
+    },
+    "minigame": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Chỉ khi attempt chạy qua plugin minigame (F073): điểm vui và điều kiện hoàn thành do server tính (MINIGAME_ENGINE §6). Consumer game.minigame_on_activity_graded ghi lượt chơi và phát minigame.completed; mastery/evidence không dùng game_score (F073-AC-10).",
+      "required": [
+        "minigame_config_id",
+        "minigame_config_version_id",
+        "game_score",
+        "completion_met",
+        "context_type",
+        "context_id"
+      ],
+      "properties": {
+        "minigame_config_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "minigame_config_version_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "minigame_type": {
+          "type": "string",
+          "enum": [
+            "multiple_choice",
+            "true_false",
+            "fill_in_blank",
+            "drag_and_drop",
+            "matching",
+            "ordering",
+            "calculation",
+            "puzzle",
+            "word_game",
+            "science_simulation",
+            "timed_challenge"
+          ]
+        },
+        "game_score": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completion_met": {
+          "type": "boolean"
+        },
+        "context_type": {
+          "type": "string",
+          "enum": [
+            "minigame_session",
+            "quest_step",
+            "assignment",
+            "free_play",
+            "lesson",
+            "recommendation"
+          ],
+          "description": "context_type của attempt"
+        },
+        "context_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
     }
   }
 }

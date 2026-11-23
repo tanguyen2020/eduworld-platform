@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/activities/minigame.schema.json",
+  "title": "MinigameActivityVersion",
+  "description": "activity_type = minigame: learning activity bọc một cấu hình mini-game đã publish của module game (minigame-config.schema.json). Câu hỏi lấy từ Question Bank qua question_source của cấu hình mini-game; activity không chứa câu hỏi hay luật chơi riêng. Xem docs/08-game-client/MINIGAME_ENGINE.md.",
+  "type": "object",
+  "allOf": [{ "$ref": "activity-base.schema.json#/$defs/activityCommon" }],
+  "required": ["activity_type", "content"],
+  "properties": {
+    "activity_type": { "const": "minigame" },
+    "content": {
+      "type": "object",
+      "required": ["minigame_config_id"],
+      "properties": {
+        "minigame_config_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+        "minigame_config_version": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "description": "null = version hiện hành khi bắt đầu attempt (ghim theo ADR-0043)."
+        },
+        "question_set_override": {
+          "type": "object",
+          "description": "Thay nguồn câu hỏi của cấu hình mini-game bằng một question set (vd. bài nhà trường giao); luật chơi giữ nguyên.",
+          "required": ["question_set_id"],
+          "properties": {
+            "question_set_id": { "$ref": "activity-base.schema.json#/$defs/uuid" },
+            "question_set_version": { "type": ["integer", "null"], "minimum": 1 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "interaction": {
+      "type": "object",
+      "properties": {
+        "feedback_display": {
+          "type": "string",
+          "enum": ["end_of_round", "end_of_game"],
+          "description": "Chỉ là cách trình bày khi FeedbackTiming = immediate; vắng mặt = theo cấu hình mini-game (ACTIVITY_ENGINE §8.1)."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,214 @@
+{
+  "attempt": {
+    "attempt_id": "0f730000-0000-7000-8000-000000000008",
+    "activity_type": "minigame",
+    "mode": "minigame",
+    "status": "in_progress",
+    "context_type": "free_play",
+    "started_at": "2026-11-20T02:05:00Z",
+    "server_time": "2026-11-20T02:05:00Z",
+    "deadline_at": "2026-11-20T02:08:00Z",
+    "feedback_timing": "immediate",
+    "result_release": "immediate",
+    "display_language": "vi-VN",
+    "items": [
+      {
+        "position": 1,
+        "question_version_id": "0f730000-0000-4000-8000-000000000012",
+        "type": "single_choice",
+        "hint_count": 0,
+        "render_payload": {
+          "stem": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "Bạn Nam có 3 túi, mỗi túi 6 quả cam. Nam có tất cả bao nhiêu quả cam?"
+              }
+            ],
+            "audio_ref": "0f630000-0000-4000-8000-0000000000c1"
+          },
+          "options": [
+            {
+              "id": "o_a",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "9 quả"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "o_b",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "18 quả"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "o_c",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "12 quả"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "o_d",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "3 + 6 quả"
+                  }
+                ]
+              }
+            }
+          ],
+          "shuffle_options": true
+        },
+        "media": []
+      },
+      {
+        "position": 2,
+        "question_version_id": "0f730000-0000-4000-8000-000000000013",
+        "type": "true_false",
+        "hint_count": 0,
+        "render_payload": {
+          "stem": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "6 × 7 = 42. Đúng hay sai?"
+              }
+            ]
+          },
+          "labels": {
+            "true": "Đúng",
+            "false": "Sai"
+          }
+        }
+      },
+      {
+        "position": 3,
+        "question_version_id": "0f730000-0000-4000-8000-000000000014",
+        "type": "numeric",
+        "hint_count": 0,
+        "render_payload": {
+          "stem": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "Tính"
+              },
+              {
+                "type": "math",
+                "math_ref": "math/a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1.svg",
+                "speech_text": "ba phần tư"
+              },
+              {
+                "type": "paragraph",
+                "text": "của 8 quả cam."
+              }
+            ]
+          },
+          "keyboard": "numeric",
+          "unit_label": "quả",
+          "allow_fraction_input": false,
+          "decimal_separator": ","
+        }
+      }
+    ],
+    "saved_responses": [],
+    "render": {
+      "activity_type": "minigame",
+      "title": "Tranh ghép bí ẩn",
+      "render_payload": {
+        "minigame_type": "puzzle",
+        "minigame_config_version_id": "0f730000-0000-4000-8000-0000000c0008",
+        "config": {
+          "name": {
+            "vi": "Tranh ghép bí ẩn",
+            "en": "Mystery picture"
+          },
+          "instructions": {
+            "vi": "Chơi và trả lời từng câu nhé!",
+            "en": "Play and answer each question!"
+          },
+          "grade_levels": [
+            3
+          ],
+          "question_count": 3,
+          "time_limit_seconds": 180,
+          "feedback_timing": "immediate",
+          "show_explanation": true,
+          "show_correct_answer": false,
+          "scoring": {
+            "points_per_correct": 10,
+            "time_bonus_enabled": false,
+            "streak_bonus_enabled": true
+          },
+          "presentation": {
+            "scene_variant": "puzzle.picture",
+            "theme": "forest"
+          },
+          "resumable": true,
+          "prefetch_items": false
+        }
+      },
+      "math_assets": [
+        {
+          "math_id": "m_three_quarters",
+          "svg_url": "https://cdn.example.invalid/math/a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1.svg",
+          "sha256": "a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1",
+          "speech_text": "ba phần tư",
+          "display": "inline"
+        }
+      ],
+      "content_language": "vi",
+      "display_language": "vi-VN",
+      "translation_missing": false
+    }
+  },
+  "minigame_type": "puzzle",
+  "minigame_config_version_id": "0f730000-0000-4000-8000-0000000c0008",
+  "deadline_at": "2026-11-20T02:08:00Z",
+  "server_time": "2026-11-20T02:05:00Z",
+  "config": {
+    "name": {
+      "vi": "Tranh ghép bí ẩn",
+      "en": "Mystery picture"
+    },
+    "instructions": {
+      "vi": "Chơi và trả lời từng câu nhé!",
+      "en": "Play and answer each question!"
+    },
+    "grade_levels": [
+      3
+    ],
+    "question_count": 3,
+    "time_limit_seconds": 180,
+    "feedback_timing": "immediate",
+    "show_explanation": true,
+    "show_correct_answer": false,
+    "scoring": {
+      "points_per_correct": 10,
+      "time_bonus_enabled": false,
+      "streak_bonus_enabled": true
+    },
+    "presentation": {
+      "scene_variant": "puzzle.picture",
+      "theme": "forest"
+    },
+    "resumable": true,
+    "prefetch_items": false
+  }
+}

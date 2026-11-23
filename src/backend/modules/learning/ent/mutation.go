@@ -9326,64 +9326,69 @@ func (m *AssessmentBlueprintVersionMutation) ResetEdge(name string) error {
 // AttemptMutation represents an operation that mutates the Attempt nodes in the graph.
 type AttemptMutation struct {
 	config
-	op                   Op
-	typ                  string
-	id                   *uuid.UUID
-	tenant_id            *uuid.UUID
-	created_at           *time.Time
-	created_by           *uuid.UUID
-	updated_at           *time.Time
-	updated_by           *uuid.UUID
-	deleted_at           *time.Time
-	deleted_by           *uuid.UUID
-	delete_reason        *string
-	version              *int64
-	addversion           *int64
-	school_id            *uuid.UUID
-	student_id           *uuid.UUID
-	mode                 *string
-	context_type         *string
-	context_id           *uuid.UUID
-	activity_id          *uuid.UUID
-	activity_type        *string
-	source_kind          *string
-	source_version_id    *uuid.UUID
-	status               *string
-	seed                 *int64
-	addseed              *int64
-	started_at           *time.Time
-	deadline_at          *time.Time
-	submitted_at         *time.Time
-	graded_at            *time.Time
-	paused_at            *time.Time
-	paused_ms            *int64
-	addpaused_ms         *int64
-	last_activity_at     *time.Time
-	feedback_timing      *string
-	display_language     *string
-	submit_reason        *string
-	score                *float64
-	addscore             *float64
-	max_score            *float64
-	addmax_score         *float64
-	duration_ms          *int64
-	addduration_ms       *int64
-	client_elapsed_ms    *int64
-	addclient_elapsed_ms *int64
-	item_count           *int
-	additem_count        *int
-	objective_ids        *[]uuid.UUID
-	appendobjective_ids  []uuid.UUID
-	recommendation_id    *uuid.UUID
-	idempotency_key      *string
-	exam_paper_id        *uuid.UUID
-	active_device_token  *string
-	client_platform      *string
-	game_session_id      *uuid.UUID
-	clearedFields        map[string]struct{}
-	done                 bool
-	oldValue             func(context.Context) (*Attempt, error)
-	predicates           []predicate.Attempt
+	op                         Op
+	typ                        string
+	id                         *uuid.UUID
+	tenant_id                  *uuid.UUID
+	created_at                 *time.Time
+	created_by                 *uuid.UUID
+	updated_at                 *time.Time
+	updated_by                 *uuid.UUID
+	deleted_at                 *time.Time
+	deleted_by                 *uuid.UUID
+	delete_reason              *string
+	version                    *int64
+	addversion                 *int64
+	school_id                  *uuid.UUID
+	student_id                 *uuid.UUID
+	mode                       *string
+	context_type               *string
+	context_id                 *uuid.UUID
+	activity_id                *uuid.UUID
+	activity_type              *string
+	source_kind                *string
+	source_version_id          *uuid.UUID
+	status                     *string
+	seed                       *int64
+	addseed                    *int64
+	started_at                 *time.Time
+	deadline_at                *time.Time
+	submitted_at               *time.Time
+	graded_at                  *time.Time
+	paused_at                  *time.Time
+	paused_ms                  *int64
+	addpaused_ms               *int64
+	last_activity_at           *time.Time
+	feedback_timing            *string
+	display_language           *string
+	submit_reason              *string
+	score                      *float64
+	addscore                   *float64
+	max_score                  *float64
+	addmax_score               *float64
+	duration_ms                *int64
+	addduration_ms             *int64
+	client_elapsed_ms          *int64
+	addclient_elapsed_ms       *int64
+	item_count                 *int
+	additem_count              *int
+	objective_ids              *[]uuid.UUID
+	appendobjective_ids        []uuid.UUID
+	recommendation_id          *uuid.UUID
+	idempotency_key            *string
+	exam_paper_id              *uuid.UUID
+	active_device_token        *string
+	client_platform            *string
+	game_session_id            *uuid.UUID
+	game_score                 *int
+	addgame_score              *int
+	game_streak                *int
+	addgame_streak             *int
+	minigame_config_version_id *uuid.UUID
+	clearedFields              map[string]struct{}
+	done                       bool
+	oldValue                   func(context.Context) (*Attempt, error)
+	predicates                 []predicate.Attempt
 }
 
 var _ ent.Mutation = (*AttemptMutation)(nil)
@@ -11441,6 +11446,195 @@ func (m *AttemptMutation) ResetGameSessionID() {
 	delete(m.clearedFields, attempt.FieldGameSessionID)
 }
 
+// SetGameScore sets the "game_score" field.
+func (m *AttemptMutation) SetGameScore(i int) {
+	m.game_score = &i
+	m.addgame_score = nil
+}
+
+// GameScore returns the value of the "game_score" field in the mutation.
+func (m *AttemptMutation) GameScore() (r int, exists bool) {
+	v := m.game_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGameScore returns the old "game_score" field's value of the Attempt entity.
+// If the Attempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttemptMutation) OldGameScore(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGameScore is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGameScore requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGameScore: %w", err)
+	}
+	return oldValue.GameScore, nil
+}
+
+// AddGameScore adds i to the "game_score" field.
+func (m *AttemptMutation) AddGameScore(i int) {
+	if m.addgame_score != nil {
+		*m.addgame_score += i
+	} else {
+		m.addgame_score = &i
+	}
+}
+
+// AddedGameScore returns the value that was added to the "game_score" field in this mutation.
+func (m *AttemptMutation) AddedGameScore() (r int, exists bool) {
+	v := m.addgame_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearGameScore clears the value of the "game_score" field.
+func (m *AttemptMutation) ClearGameScore() {
+	m.game_score = nil
+	m.addgame_score = nil
+	m.clearedFields[attempt.FieldGameScore] = struct{}{}
+}
+
+// GameScoreCleared returns if the "game_score" field was cleared in this mutation.
+func (m *AttemptMutation) GameScoreCleared() bool {
+	_, ok := m.clearedFields[attempt.FieldGameScore]
+	return ok
+}
+
+// ResetGameScore resets all changes to the "game_score" field.
+func (m *AttemptMutation) ResetGameScore() {
+	m.game_score = nil
+	m.addgame_score = nil
+	delete(m.clearedFields, attempt.FieldGameScore)
+}
+
+// SetGameStreak sets the "game_streak" field.
+func (m *AttemptMutation) SetGameStreak(i int) {
+	m.game_streak = &i
+	m.addgame_streak = nil
+}
+
+// GameStreak returns the value of the "game_streak" field in the mutation.
+func (m *AttemptMutation) GameStreak() (r int, exists bool) {
+	v := m.game_streak
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGameStreak returns the old "game_streak" field's value of the Attempt entity.
+// If the Attempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttemptMutation) OldGameStreak(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGameStreak is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGameStreak requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGameStreak: %w", err)
+	}
+	return oldValue.GameStreak, nil
+}
+
+// AddGameStreak adds i to the "game_streak" field.
+func (m *AttemptMutation) AddGameStreak(i int) {
+	if m.addgame_streak != nil {
+		*m.addgame_streak += i
+	} else {
+		m.addgame_streak = &i
+	}
+}
+
+// AddedGameStreak returns the value that was added to the "game_streak" field in this mutation.
+func (m *AttemptMutation) AddedGameStreak() (r int, exists bool) {
+	v := m.addgame_streak
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearGameStreak clears the value of the "game_streak" field.
+func (m *AttemptMutation) ClearGameStreak() {
+	m.game_streak = nil
+	m.addgame_streak = nil
+	m.clearedFields[attempt.FieldGameStreak] = struct{}{}
+}
+
+// GameStreakCleared returns if the "game_streak" field was cleared in this mutation.
+func (m *AttemptMutation) GameStreakCleared() bool {
+	_, ok := m.clearedFields[attempt.FieldGameStreak]
+	return ok
+}
+
+// ResetGameStreak resets all changes to the "game_streak" field.
+func (m *AttemptMutation) ResetGameStreak() {
+	m.game_streak = nil
+	m.addgame_streak = nil
+	delete(m.clearedFields, attempt.FieldGameStreak)
+}
+
+// SetMinigameConfigVersionID sets the "minigame_config_version_id" field.
+func (m *AttemptMutation) SetMinigameConfigVersionID(u uuid.UUID) {
+	m.minigame_config_version_id = &u
+}
+
+// MinigameConfigVersionID returns the value of the "minigame_config_version_id" field in the mutation.
+func (m *AttemptMutation) MinigameConfigVersionID() (r uuid.UUID, exists bool) {
+	v := m.minigame_config_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMinigameConfigVersionID returns the old "minigame_config_version_id" field's value of the Attempt entity.
+// If the Attempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AttemptMutation) OldMinigameConfigVersionID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMinigameConfigVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMinigameConfigVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMinigameConfigVersionID: %w", err)
+	}
+	return oldValue.MinigameConfigVersionID, nil
+}
+
+// ClearMinigameConfigVersionID clears the value of the "minigame_config_version_id" field.
+func (m *AttemptMutation) ClearMinigameConfigVersionID() {
+	m.minigame_config_version_id = nil
+	m.clearedFields[attempt.FieldMinigameConfigVersionID] = struct{}{}
+}
+
+// MinigameConfigVersionIDCleared returns if the "minigame_config_version_id" field was cleared in this mutation.
+func (m *AttemptMutation) MinigameConfigVersionIDCleared() bool {
+	_, ok := m.clearedFields[attempt.FieldMinigameConfigVersionID]
+	return ok
+}
+
+// ResetMinigameConfigVersionID resets all changes to the "minigame_config_version_id" field.
+func (m *AttemptMutation) ResetMinigameConfigVersionID() {
+	m.minigame_config_version_id = nil
+	delete(m.clearedFields, attempt.FieldMinigameConfigVersionID)
+}
+
 // Where appends a list predicates to the AttemptMutation builder.
 func (m *AttemptMutation) Where(ps ...predicate.Attempt) {
 	m.predicates = append(m.predicates, ps...)
@@ -11475,7 +11669,7 @@ func (m *AttemptMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AttemptMutation) Fields() []string {
-	fields := make([]string, 0, 42)
+	fields := make([]string, 0, 45)
 	if m.tenant_id != nil {
 		fields = append(fields, attempt.FieldTenantID)
 	}
@@ -11602,6 +11796,15 @@ func (m *AttemptMutation) Fields() []string {
 	if m.game_session_id != nil {
 		fields = append(fields, attempt.FieldGameSessionID)
 	}
+	if m.game_score != nil {
+		fields = append(fields, attempt.FieldGameScore)
+	}
+	if m.game_streak != nil {
+		fields = append(fields, attempt.FieldGameStreak)
+	}
+	if m.minigame_config_version_id != nil {
+		fields = append(fields, attempt.FieldMinigameConfigVersionID)
+	}
 	return fields
 }
 
@@ -11694,6 +11897,12 @@ func (m *AttemptMutation) Field(name string) (ent.Value, bool) {
 		return m.ClientPlatform()
 	case attempt.FieldGameSessionID:
 		return m.GameSessionID()
+	case attempt.FieldGameScore:
+		return m.GameScore()
+	case attempt.FieldGameStreak:
+		return m.GameStreak()
+	case attempt.FieldMinigameConfigVersionID:
+		return m.MinigameConfigVersionID()
 	}
 	return nil, false
 }
@@ -11787,6 +11996,12 @@ func (m *AttemptMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldClientPlatform(ctx)
 	case attempt.FieldGameSessionID:
 		return m.OldGameSessionID(ctx)
+	case attempt.FieldGameScore:
+		return m.OldGameScore(ctx)
+	case attempt.FieldGameStreak:
+		return m.OldGameStreak(ctx)
+	case attempt.FieldMinigameConfigVersionID:
+		return m.OldMinigameConfigVersionID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Attempt field %s", name)
 }
@@ -12090,6 +12305,27 @@ func (m *AttemptMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetGameSessionID(v)
 		return nil
+	case attempt.FieldGameScore:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGameScore(v)
+		return nil
+	case attempt.FieldGameStreak:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGameStreak(v)
+		return nil
+	case attempt.FieldMinigameConfigVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMinigameConfigVersionID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Attempt field %s", name)
 }
@@ -12122,6 +12358,12 @@ func (m *AttemptMutation) AddedFields() []string {
 	if m.additem_count != nil {
 		fields = append(fields, attempt.FieldItemCount)
 	}
+	if m.addgame_score != nil {
+		fields = append(fields, attempt.FieldGameScore)
+	}
+	if m.addgame_streak != nil {
+		fields = append(fields, attempt.FieldGameStreak)
+	}
 	return fields
 }
 
@@ -12146,6 +12388,10 @@ func (m *AttemptMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedClientElapsedMs()
 	case attempt.FieldItemCount:
 		return m.AddedItemCount()
+	case attempt.FieldGameScore:
+		return m.AddedGameScore()
+	case attempt.FieldGameStreak:
+		return m.AddedGameStreak()
 	}
 	return nil, false
 }
@@ -12210,6 +12456,20 @@ func (m *AttemptMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddItemCount(v)
+		return nil
+	case attempt.FieldGameScore:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGameScore(v)
+		return nil
+	case attempt.FieldGameStreak:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGameStreak(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Attempt numeric field %s", name)
@@ -12278,6 +12538,15 @@ func (m *AttemptMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(attempt.FieldGameSessionID) {
 		fields = append(fields, attempt.FieldGameSessionID)
+	}
+	if m.FieldCleared(attempt.FieldGameScore) {
+		fields = append(fields, attempt.FieldGameScore)
+	}
+	if m.FieldCleared(attempt.FieldGameStreak) {
+		fields = append(fields, attempt.FieldGameStreak)
+	}
+	if m.FieldCleared(attempt.FieldMinigameConfigVersionID) {
+		fields = append(fields, attempt.FieldMinigameConfigVersionID)
 	}
 	return fields
 }
@@ -12352,6 +12621,15 @@ func (m *AttemptMutation) ClearField(name string) error {
 		return nil
 	case attempt.FieldGameSessionID:
 		m.ClearGameSessionID()
+		return nil
+	case attempt.FieldGameScore:
+		m.ClearGameScore()
+		return nil
+	case attempt.FieldGameStreak:
+		m.ClearGameStreak()
+		return nil
+	case attempt.FieldMinigameConfigVersionID:
+		m.ClearMinigameConfigVersionID()
 		return nil
 	}
 	return fmt.Errorf("unknown Attempt nullable field %s", name)
@@ -12486,6 +12764,15 @@ func (m *AttemptMutation) ResetField(name string) error {
 		return nil
 	case attempt.FieldGameSessionID:
 		m.ResetGameSessionID()
+		return nil
+	case attempt.FieldGameScore:
+		m.ResetGameScore()
+		return nil
+	case attempt.FieldGameStreak:
+		m.ResetGameStreak()
+		return nil
+	case attempt.FieldMinigameConfigVersionID:
+		m.ResetMinigameConfigVersionID()
 		return nil
 	}
 	return fmt.Errorf("unknown Attempt field %s", name)

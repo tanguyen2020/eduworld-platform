@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/game/content.published.v1.schema.json",
   "title": "Payload content.published v1 (module game, owner F071, ADR-0043)",
-  "description": "Một item nội dung game platform được publish (lõi phát hành F071; F078 thêm workflow duyệt/rollback trên cùng lõi): con trỏ current_version_id đổi sang to_version_id. Envelope tenant_id = null (nội dung platform áp cho mọi tenant). Consumer: manifest builder của module game (dựng lại game.content_manifests của mọi tenant), projection ref.world_areas của module competition (item_type = world_area: phần runtime world_area), AUD. Không chứa đáp án hay PII.",
+  "description": "Một item nội dung game platform được publish (lõi phát hành F071; F078 thêm workflow duyệt/rollback trên cùng lõi): con trỏ current_version_id đổi sang to_version_id. Envelope tenant_id = null (nội dung platform áp cho mọi tenant). Consumer: projection ref.minigame_config_versions của module learning (item_type = minigame_config: khối minigame_config, F073), manifest builder của module game (dựng lại game.content_manifests của mọi tenant), projection ref.world_areas của module competition (item_type = world_area: phần runtime world_area), AUD. Không chứa đáp án hay PII.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -35,13 +35,14 @@
         "achievement",
         "event",
         "event_template",
-        "season_track"
+        "season_track",
+        "minigame_config"
       ]
     },
     "item_id": {
       "type": "string",
       "maxLength": 64,
-      "description": "area_id, chapter_code, dialogue_id, level_id, quest_id (F072), curve_id hoặc reward_rule_id (F074), item_id (mã vật phẩm), shop_item_id, collection_id, achievement_id (F075), event_id, template_id, season_track_id (F077)"
+      "description": "area_id, chapter_code, dialogue_id, level_id, quest_id (F072), curve_id hoặc reward_rule_id (F074), item_id (mã vật phẩm), shop_item_id, collection_id, achievement_id (F075), event_id, template_id, season_track_id (F077), minigame_config_id (F073)"
     },
     "from_version_id": {
       "type": [
@@ -188,6 +189,65 @@
           ]
         }
       }
+    },
+    "minigame_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Chỉ khi item_type = minigame_config (F073): snapshot bất biến của version cấu hình mini-game (minigame-config.schema.json) cho projection ref.minigame_config_versions của module learning. Cấu hình không chứa câu hỏi hay đáp án (câu lấy từ Question Bank qua question_source).",
+      "required": [
+        "minigame_config_id",
+        "version_id",
+        "version",
+        "minigame_type",
+        "grade_levels",
+        "snapshot"
+      ],
+      "properties": {
+        "minigame_config_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "version_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "minigame_type": {
+          "type": "string",
+          "enum": [
+            "multiple_choice",
+            "true_false",
+            "fill_in_blank",
+            "drag_and_drop",
+            "matching",
+            "ordering",
+            "calculation",
+            "puzzle",
+            "word_game",
+            "science_simulation",
+            "timed_challenge"
+          ]
+        },
+        "grade_levels": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          }
+        },
+        "snapshot": {
+          "type": "object",
+          "maxProperties": 40,
+          "description": "Payload version đã publish (minigame-config.schema.json, status = published)"
+        }
+      }
     }
   },
   "examples": [
@@ -235,6 +295,25 @@
         ],
         "requires_unlock": false,
         "status": "active"
+      }
+    }
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "item_type": {
+            "const": "minigame_config"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "minigame_config"
+        ],
+        "properties": {
+          "minigame_config": true
+        }
       }
     }
   ]

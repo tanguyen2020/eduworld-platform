@@ -1,0 +1,148 @@
+{
+  "attempt": {
+    "attempt_id": "0f730000-0000-7000-8000-000000000007",
+    "activity_type": "minigame",
+    "mode": "minigame",
+    "status": "in_progress",
+    "context_type": "free_play",
+    "started_at": "2026-11-20T02:05:00Z",
+    "server_time": "2026-11-20T02:05:00Z",
+    "deadline_at": "2026-11-20T02:08:00Z",
+    "feedback_timing": "immediate",
+    "result_release": "immediate",
+    "display_language": "vi-VN",
+    "items": [
+      {
+        "position": 1,
+        "question_version_id": "0f730000-0000-4000-8000-000000000010",
+        "type": "numeric",
+        "hint_count": 0,
+        "render_payload": {
+          "stem": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "Tính"
+              },
+              {
+                "type": "math",
+                "math_ref": "math/a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1.svg",
+                "speech_text": "ba phần tư"
+              },
+              {
+                "type": "paragraph",
+                "text": "của 8 quả cam."
+              }
+            ]
+          },
+          "keyboard": "numeric",
+          "unit_label": "quả",
+          "allow_fraction_input": false,
+          "decimal_separator": ","
+        }
+      },
+      {
+        "position": 2,
+        "question_version_id": "0f730000-0000-4000-8000-000000000011",
+        "type": "numeric",
+        "hint_count": 0,
+        "render_payload": {
+          "stem": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "7 × 8 = ?"
+              }
+            ]
+          },
+          "keyboard": "numeric",
+          "allow_fraction_input": false,
+          "decimal_separator": ","
+        }
+      }
+    ],
+    "saved_responses": [],
+    "render": {
+      "activity_type": "minigame",
+      "title": "Bàn tính vui",
+      "render_payload": {
+        "minigame_type": "calculation",
+        "minigame_config_version_id": "0f730000-0000-4000-8000-0000000c0007",
+        "config": {
+          "name": {
+            "vi": "Bàn tính vui",
+            "en": "Fun abacus"
+          },
+          "instructions": {
+            "vi": "Chơi và trả lời từng câu nhé!",
+            "en": "Play and answer each question!"
+          },
+          "grade_levels": [
+            3
+          ],
+          "question_count": 2,
+          "time_limit_seconds": 180,
+          "feedback_timing": "immediate",
+          "show_explanation": true,
+          "show_correct_answer": false,
+          "scoring": {
+            "points_per_correct": 10,
+            "time_bonus_enabled": false,
+            "streak_bonus_enabled": true
+          },
+          "presentation": {
+            "scene_variant": "calculation.abacus",
+            "theme": "forest"
+          },
+          "resumable": true,
+          "prefetch_items": false
+        }
+      },
+      "math_assets": [
+        {
+          "math_id": "m_three_quarters",
+          "svg_url": "https://cdn.example.invalid/math/a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1.svg",
+          "sha256": "a5099375262cf82eb71a0aa9ecc4c61135a9e3f7fbbf335f0ee4527fcc2bf5e1",
+          "speech_text": "ba phần tư",
+          "display": "inline"
+        }
+      ],
+      "content_language": "vi",
+      "display_language": "vi-VN",
+      "translation_missing": false
+    }
+  },
+  "minigame_type": "calculation",
+  "minigame_config_version_id": "0f730000-0000-4000-8000-0000000c0007",
+  "deadline_at": "2026-11-20T02:08:00Z",
+  "server_time": "2026-11-20T02:05:00Z",
+  "config": {
+    "name": {
+      "vi": "Bàn tính vui",
+      "en": "Fun abacus"
+    },
+    "instructions": {
+      "vi": "Chơi và trả lời từng câu nhé!",
+      "en": "Play and answer each question!"
+    },
+    "grade_levels": [
+      3
+    ],
+    "question_count": 2,
+    "time_limit_seconds": 180,
+    "feedback_timing": "immediate",
+    "show_explanation": true,
+    "show_correct_answer": false,
+    "scoring": {
+      "points_per_correct": 10,
+      "time_bonus_enabled": false,
+      "streak_bonus_enabled": true
+    },
+    "presentation": {
+      "scene_variant": "calculation.abacus",
+      "theme": "forest"
+    },
+    "resumable": true,
+    "prefetch_items": false
+  }
+}
