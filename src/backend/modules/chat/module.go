@@ -17,6 +17,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/service"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/chatasset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/policy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/cache"
 	chatconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/emoji"
@@ -24,6 +25,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/natsstream"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/persistence"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/policyschema"
 	purgestore "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/purge"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/realtime"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/regression"
@@ -111,6 +113,11 @@ func Register(r *module.Registry) (*Module, error) {
 	observability.RegisterModeration(r.Metrics())
 	observability.RegisterSafety(r.Metrics())
 	observability.RegisterFeatures(r.Metrics())
+	observability.RegisterPersistent(r.Metrics())
+	persistentCfg, err := chatconfig.PersistentFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("chat: %w", err)
+	}
 	recent := cache.Recent{C: vk, Size: chatCfg.RecentBuffer, TTL: chatCfg.RecentTTL}
 	factsCache := cache.Facts{C: vk, StaleTTL: chatCfg.StaleTTL, OnStale: observability.StaleFacts}
 	// NFR-SAFE-001, F115-AC-06, F116: the send path (core-api) and worker-chat refuse to start without a real
@@ -131,7 +138,19 @@ func Register(r *module.Registry) (*Module, error) {
 	facts := service.Facts{Read: core.ReadSession, Reader: persistence.ChatReader{}, Recent: recent,
 		Cache: factsCache,
 		Config: service.FactsConfig{FactsFresh: chatCfg.FactsFresh, PolicyCache: chatCfg.PolicyCache, CurfewFresh: chatCfg.CurfewFresh,
-			PlatformCurfew: chatCfg.PlatformCurfew, CurfewLocation: chatCfg.CurfewLocation}}
+			PlatformCurfew: chatCfg.PlatformCurfew, CurfewLocation: chatCfg.CurfewLocation}, Gens: cache.PolicyGens{C: vk}}
+	// F120: the implicit World/Area channels, the persistent channels (direct, club team), the policy levels and the clubs.
+	rooms := cache.Rooms{C: vk, TTL: cfg.PresenceTTL}
+	implicit := &service.Implicit{Reader: persistence.ChatReader{}, Policies: persistence.Policies{}, Chat: persistence.ChatReader{},
+		Rooms: rooms, Cache: factsCache, Facts: facts}
+	chatPush := realtime.ChatFanout{P: rt.Publisher{C: vk}}
+	persistentCmd := command.Persistent{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: persistence.Channels{},
+		Status: persistence.Channels{}, Social: persistence.Social{}, Directory: persistence.Directory{},
+		Audit: persistence.Auditor{R: core.Recorder}, Facts: facts, Implicit: implicit, Push: chatPush}
+	clubCmd := command.Clubs{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: persistence.Clubs{}, Social: persistence.Social{},
+		Directory: persistence.Directory{}, Channels: persistence.Channels{}, Status: persistence.Channels{}, Names: pipe.Validator,
+		Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder}, Facts: facts, Push: chatPush,
+		Limits: persistentCfg.Clubs}
 	stream := natsstream.StreamOptions{MaxAge: chatCfg.StreamMaxAge, Replicas: chatCfg.StreamReplicas}
 	friends := cache.Friends{C: vk, TTL: cache.FriendsTTL}
 	presence := cache.Presence{C: vk, TTL: cfg.PresenceTTL}
@@ -172,7 +191,8 @@ func Register(r *module.Registry) (*Module, error) {
 		send := command.Send{Facts: facts, Validator: validator, Seq: cache.Seq{C: vk}, Recent: recent, Rate: cache.Rate{C: vk},
 			Stream: natsstream.Publisher{JS: js, Timeout: chatCfg.PublishAckTimeout}, Fanout: fanout,
 			Dedupe: cache.Dedupe{C: vk, TTL: chatCfg.CmidTTL}, Metrics: observability.Chat{}, UoW: core.UoW,
-			Audit: persistence.Auditor{R: core.Recorder}, Config: command.SendConfig{RatePerUser: chatCfg.RatePerUser}}
+			Audit: persistence.Auditor{R: core.Recorder}, Config: command.SendConfig{RatePerUser: chatCfg.RatePerUser},
+			Implicit: implicit, Ensure: persistentCmd.EnsureImplicit, Broadcast: fanout, HoursLoc: chatCfg.CurfewLocation}
 		// F118: message features (edit/recall/forward/reactions/pins/typing/receipts) and the sticker/GIF library.
 		assetsCfg, err := chatconfig.AssetsFrom(r.Config())
 		if err != nil {
@@ -206,6 +226,11 @@ func Register(r *module.Registry) (*Module, error) {
 		reads := query.Chat{Read: core.ReadSession, Reader: persistence.ChatReader{}, Facts: facts, Recent: recent, Fanout: fanout,
 			Config: query.ChatConfig{RecentBuffer: chatCfg.RecentBuffer}}
 		reads.Decor = &featureReads
+		reads.Implicit = implicit
+		policyAdmin := command.PolicyAdmin{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: persistence.Policies{},
+			Schema: policyschema.Validator{}, Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder},
+			Gens: cache.PolicyGens{C: vk}, Curfew: facts.Curfew, PlatformCurfew: policy.Curfew{chatCfg.PlatformCurfew},
+			Rejected: observability.Persistent{}.PolicyRejected}
 		// Sensitive-term catalogue administration (F116 US2): writes stay drafts until a publish passes the regression
 		// suite (embedded placeholder corpus; the operational corpus is a regression.Source outside the repository).
 		corpus, err := regression.LoadEmbedded()
@@ -230,7 +255,13 @@ func Register(r *module.Registry) (*Module, error) {
 				Inspector: storage.Inspector{Storage: objects}, Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder},
 				Metrics: observability.Features{}, Limits: chatasset.Limits{StickerMaxBytes: assetsCfg.StickerMaxBytes, GifMaxBytes: assetsCfg.GifMaxBytes,
 					GifMaxPixels: assetsCfg.GifMaxPixels}},
-				Queries: query.ChatAssets{Read: core.ReadSession, Reader: persistence.Assets{}}}}
+				Queries: query.ChatAssets{Read: core.ReadSession, Reader: persistence.Assets{}}},
+			Policies: &chathttp.PolicyHandlers{Commands: policyAdmin, Queries: query.Policies{Read: core.ReadSession, Reader: persistence.Policies{},
+				Chat: persistence.ChatReader{}}},
+			Persistent: &chathttp.PersistentHandlers{Direct: persistentCmd, Search: query.Search{Read: core.ReadSession, Reader: persistence.Search{},
+				Cursors: cursors}, Kinds: reads.Kinds},
+			Clubs: &chathttp.ClubHandlers{Commands: clubCmd, Queries: query.Clubs{Read: core.ReadSession, Reader: persistence.ClubReads{},
+				Directory: persistence.Directory{}, Cursors: cursors}, WeekLoc: chatCfg.CurfewLocation}}
 		r.HTTP(Name, func(s *httpx.Server) error { return chathttp.Register(s, h) })
 		// Chat commands of the gateway (F115): ew.cmd.chat.message.send, channel.join/leave, history.fetch, channel.sync.
 		if nc := r.NATS(); nc != nil {
@@ -252,7 +283,7 @@ func Register(r *module.Registry) (*Module, error) {
 		// Presence fan-out (F095 US4): core-api, queue group chat.presence_fanout (one replica per signal).
 		if nc := r.NATS(); nc != nil {
 			fanout := command.PresenceFanout{Read: core.ReadSession, Relations: persistence.Reader{}, Store: presence, Cache: friends,
-				Realtime: realtime.Publisher{P: rt.Publisher{C: vk}}, Metrics: observability.Social{}}
+				Realtime: realtime.Publisher{P: rt.Publisher{C: vk}}, Metrics: observability.Social{}, Rooms: rooms}
 			r.Go("chat.presence_fanout", func(ctx context.Context) error { return subscriber.PresenceFanout(ctx, nc, fanout) })
 		}
 	}
@@ -303,6 +334,13 @@ func Register(r *module.Registry) (*Module, error) {
 	if err := registerPurge(r, runsChat, purgeCfg, vk, factsCache); err != nil {
 		return nil, err
 	}
+	// persistent-chat-retention (worker-chat, also worker all; F120 US6): anonymisation of the persistent channels on the
+	// pool of chat_app (UPDATE only, R21) — never chat_purger.
+	retentionName := Name + "." + job.PersistentChatRetention
+	retention := command.PersistentRetention{UoW: core.UoW, Store: persistence.Retention{}, Audit: persistence.Auditor{R: core.Recorder},
+		Lock: cache.JobLock{C: vk}, Metrics: observability.Persistent{}, Config: command.RetentionConfig{Days: persistentCfg.RetentionDays,
+			Batch: persistentCfg.RetentionBatch, EvidenceContext: purgeCfg.EvidenceContext}}
+	r.Background(Name, module.KindJob, retentionName, runsChat, job.Every(retentionName, persistentCfg.RetentionInterval, retention))
 	if runsChat && !r.RunsEvents() && !r.RunsJobs() {
 		// Profile chat: the persister only; the outbox relay of EVT_CHAT runs in worker events.
 		if err := r.Relay(Name); err != nil {
@@ -330,6 +368,18 @@ func Register(r *module.Registry) (*Module, error) {
 		Config: command.GameplayConfig{DefaultRetentionDays: purgeCfg.GameplayRetentionDays}}
 	r.Consumer("chat.gameplay_channels", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.GameplayOptions(consumer.Gameplay{H: gameplay}, core.UoW, core.App, js)
+	})
+	// chat.membership (F120-AC-15): user.blocked / user.unblocked freeze / reopen the direct channel of the pair.
+	r.Consumer(messagingMembership, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.MembershipOptions(consumer.Membership{H: persistentCmd}, core.UoW, core.App, js)
+	})
+	// chat.club_goals_* (F120-AC-21): verified learning/game events count the weekly club goals.
+	goals := consumer.ClubGoals{H: clubCmd, Loc: chatCfg.CurfewLocation}
+	r.Consumer(messagingClubGoalsLearning, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.ClubGoalsLearningOptions(goals, core.UoW, core.App, js)
+	})
+	r.Consumer(messagingClubGoalsGame, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.ClubGoalsGameOptions(goals, core.UoW, core.App, js)
 	})
 	// chat.moderation_cases (F121-AC-03): chat.message_held opens the case of the held message.
 	r.Consumer("chat.moderation_cases", func(js jetstream.JetStream) outbox.ConsumerOptions {
@@ -387,3 +437,10 @@ func registerPurge(r *module.Registry, runsChat bool, cfg chatconfig.Purge, vk v
 	r.Background(Name, module.KindJob, purgeName, true, job.Every(purgeName, cfg.Interval, purge))
 	return nil
 }
+
+// Durable consumer names of F120 (internal/infrastructure/messaging).
+const (
+	messagingMembership        = "chat.membership"
+	messagingClubGoalsLearning = "chat.club_goals_learning"
+	messagingClubGoalsGame     = "chat.club_goals_game"
+)

@@ -1108,6 +1108,7 @@ type ChannelMutation struct {
 	opened_at         *time.Time
 	closed_at         *time.Time
 	purge_after       *time.Time
+	capabilities      *map[string]bool
 	clearedFields     map[string]struct{}
 	done              bool
 	oldValue          func(context.Context) (*Channel, error)
@@ -2142,6 +2143,55 @@ func (m *ChannelMutation) ResetPurgeAfter() {
 	delete(m.clearedFields, channel.FieldPurgeAfter)
 }
 
+// SetCapabilities sets the "capabilities" field.
+func (m *ChannelMutation) SetCapabilities(value map[string]bool) {
+	m.capabilities = &value
+}
+
+// Capabilities returns the value of the "capabilities" field in the mutation.
+func (m *ChannelMutation) Capabilities() (r map[string]bool, exists bool) {
+	v := m.capabilities
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCapabilities returns the old "capabilities" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldCapabilities(ctx context.Context) (v map[string]bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCapabilities is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCapabilities requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCapabilities: %w", err)
+	}
+	return oldValue.Capabilities, nil
+}
+
+// ClearCapabilities clears the value of the "capabilities" field.
+func (m *ChannelMutation) ClearCapabilities() {
+	m.capabilities = nil
+	m.clearedFields[channel.FieldCapabilities] = struct{}{}
+}
+
+// CapabilitiesCleared returns if the "capabilities" field was cleared in this mutation.
+func (m *ChannelMutation) CapabilitiesCleared() bool {
+	_, ok := m.clearedFields[channel.FieldCapabilities]
+	return ok
+}
+
+// ResetCapabilities resets all changes to the "capabilities" field.
+func (m *ChannelMutation) ResetCapabilities() {
+	m.capabilities = nil
+	delete(m.clearedFields, channel.FieldCapabilities)
+}
+
 // Where appends a list predicates to the ChannelMutation builder.
 func (m *ChannelMutation) Where(ps ...predicate.Channel) {
 	m.predicates = append(m.predicates, ps...)
@@ -2176,7 +2226,7 @@ func (m *ChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChannelMutation) Fields() []string {
-	fields := make([]string, 0, 20)
+	fields := make([]string, 0, 21)
 	if m.tenant_id != nil {
 		fields = append(fields, channel.FieldTenantID)
 	}
@@ -2237,6 +2287,9 @@ func (m *ChannelMutation) Fields() []string {
 	if m.purge_after != nil {
 		fields = append(fields, channel.FieldPurgeAfter)
 	}
+	if m.capabilities != nil {
+		fields = append(fields, channel.FieldCapabilities)
+	}
 	return fields
 }
 
@@ -2285,6 +2338,8 @@ func (m *ChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.ClosedAt()
 	case channel.FieldPurgeAfter:
 		return m.PurgeAfter()
+	case channel.FieldCapabilities:
+		return m.Capabilities()
 	}
 	return nil, false
 }
@@ -2334,6 +2389,8 @@ func (m *ChannelMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldClosedAt(ctx)
 	case channel.FieldPurgeAfter:
 		return m.OldPurgeAfter(ctx)
+	case channel.FieldCapabilities:
+		return m.OldCapabilities(ctx)
 	}
 	return nil, fmt.Errorf("unknown Channel field %s", name)
 }
@@ -2483,6 +2540,13 @@ func (m *ChannelMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetPurgeAfter(v)
 		return nil
+	case channel.FieldCapabilities:
+		v, ok := value.(map[string]bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCapabilities(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Channel field %s", name)
 }
@@ -2585,6 +2649,9 @@ func (m *ChannelMutation) ClearedFields() []string {
 	if m.FieldCleared(channel.FieldPurgeAfter) {
 		fields = append(fields, channel.FieldPurgeAfter)
 	}
+	if m.FieldCleared(channel.FieldCapabilities) {
+		fields = append(fields, channel.FieldCapabilities)
+	}
 	return fields
 }
 
@@ -2631,6 +2698,9 @@ func (m *ChannelMutation) ClearField(name string) error {
 		return nil
 	case channel.FieldPurgeAfter:
 		m.ClearPurgeAfter()
+		return nil
+	case channel.FieldCapabilities:
+		m.ClearCapabilities()
 		return nil
 	}
 	return fmt.Errorf("unknown Channel nullable field %s", name)
@@ -2699,6 +2769,9 @@ func (m *ChannelMutation) ResetField(name string) error {
 		return nil
 	case channel.FieldPurgeAfter:
 		m.ResetPurgeAfter()
+		return nil
+	case channel.FieldCapabilities:
+		m.ResetCapabilities()
 		return nil
 	}
 	return fmt.Errorf("unknown Channel field %s", name)
@@ -2783,6 +2856,7 @@ type ChannelMemberMutation struct {
 	addunread_mentions    *int
 	show_read_receipts    *bool
 	notification_level    *string
+	source_event_id       *uuid.UUID
 	clearedFields         map[string]struct{}
 	done                  bool
 	oldValue              func(context.Context) (*ChannelMember, error)
@@ -3833,6 +3907,55 @@ func (m *ChannelMemberMutation) ResetNotificationLevel() {
 	m.notification_level = nil
 }
 
+// SetSourceEventID sets the "source_event_id" field.
+func (m *ChannelMemberMutation) SetSourceEventID(u uuid.UUID) {
+	m.source_event_id = &u
+}
+
+// SourceEventID returns the value of the "source_event_id" field in the mutation.
+func (m *ChannelMemberMutation) SourceEventID() (r uuid.UUID, exists bool) {
+	v := m.source_event_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceEventID returns the old "source_event_id" field's value of the ChannelMember entity.
+// If the ChannelMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMemberMutation) OldSourceEventID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceEventID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceEventID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceEventID: %w", err)
+	}
+	return oldValue.SourceEventID, nil
+}
+
+// ClearSourceEventID clears the value of the "source_event_id" field.
+func (m *ChannelMemberMutation) ClearSourceEventID() {
+	m.source_event_id = nil
+	m.clearedFields[channelmember.FieldSourceEventID] = struct{}{}
+}
+
+// SourceEventIDCleared returns if the "source_event_id" field was cleared in this mutation.
+func (m *ChannelMemberMutation) SourceEventIDCleared() bool {
+	_, ok := m.clearedFields[channelmember.FieldSourceEventID]
+	return ok
+}
+
+// ResetSourceEventID resets all changes to the "source_event_id" field.
+func (m *ChannelMemberMutation) ResetSourceEventID() {
+	m.source_event_id = nil
+	delete(m.clearedFields, channelmember.FieldSourceEventID)
+}
+
 // Where appends a list predicates to the ChannelMemberMutation builder.
 func (m *ChannelMemberMutation) Where(ps ...predicate.ChannelMember) {
 	m.predicates = append(m.predicates, ps...)
@@ -3867,7 +3990,7 @@ func (m *ChannelMemberMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChannelMemberMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 22)
 	if m.tenant_id != nil {
 		fields = append(fields, channelmember.FieldTenantID)
 	}
@@ -3931,6 +4054,9 @@ func (m *ChannelMemberMutation) Fields() []string {
 	if m.notification_level != nil {
 		fields = append(fields, channelmember.FieldNotificationLevel)
 	}
+	if m.source_event_id != nil {
+		fields = append(fields, channelmember.FieldSourceEventID)
+	}
 	return fields
 }
 
@@ -3981,6 +4107,8 @@ func (m *ChannelMemberMutation) Field(name string) (ent.Value, bool) {
 		return m.ShowReadReceipts()
 	case channelmember.FieldNotificationLevel:
 		return m.NotificationLevel()
+	case channelmember.FieldSourceEventID:
+		return m.SourceEventID()
 	}
 	return nil, false
 }
@@ -4032,6 +4160,8 @@ func (m *ChannelMemberMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldShowReadReceipts(ctx)
 	case channelmember.FieldNotificationLevel:
 		return m.OldNotificationLevel(ctx)
+	case channelmember.FieldSourceEventID:
+		return m.OldSourceEventID(ctx)
 	}
 	return nil, fmt.Errorf("unknown ChannelMember field %s", name)
 }
@@ -4188,6 +4318,13 @@ func (m *ChannelMemberMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetNotificationLevel(v)
 		return nil
+	case channelmember.FieldSourceEventID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceEventID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ChannelMember field %s", name)
 }
@@ -4293,6 +4430,9 @@ func (m *ChannelMemberMutation) ClearedFields() []string {
 	if m.FieldCleared(channelmember.FieldMutedUntil) {
 		fields = append(fields, channelmember.FieldMutedUntil)
 	}
+	if m.FieldCleared(channelmember.FieldSourceEventID) {
+		fields = append(fields, channelmember.FieldSourceEventID)
+	}
 	return fields
 }
 
@@ -4330,6 +4470,9 @@ func (m *ChannelMemberMutation) ClearField(name string) error {
 		return nil
 	case channelmember.FieldMutedUntil:
 		m.ClearMutedUntil()
+		return nil
+	case channelmember.FieldSourceEventID:
+		m.ClearSourceEventID()
 		return nil
 	}
 	return fmt.Errorf("unknown ChannelMember nullable field %s", name)
@@ -4401,6 +4544,9 @@ func (m *ChannelMemberMutation) ResetField(name string) error {
 		return nil
 	case channelmember.FieldNotificationLevel:
 		m.ResetNotificationLevel()
+		return nil
+	case channelmember.FieldSourceEventID:
+		m.ResetSourceEventID()
 		return nil
 	}
 	return fmt.Errorf("unknown ChannelMember field %s", name)
@@ -4475,6 +4621,7 @@ type ChatPolicyMutation struct {
 	school_id     *uuid.UUID
 	rules         *jsontext.Value
 	appendrules   jsontext.Value
+	reason        *string
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*ChatPolicy, error)
@@ -5192,6 +5339,55 @@ func (m *ChatPolicyMutation) ResetRules() {
 	m.appendrules = nil
 }
 
+// SetReason sets the "reason" field.
+func (m *ChatPolicyMutation) SetReason(s string) {
+	m.reason = &s
+}
+
+// Reason returns the value of the "reason" field in the mutation.
+func (m *ChatPolicyMutation) Reason() (r string, exists bool) {
+	v := m.reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReason returns the old "reason" field's value of the ChatPolicy entity.
+// If the ChatPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChatPolicyMutation) OldReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReason: %w", err)
+	}
+	return oldValue.Reason, nil
+}
+
+// ClearReason clears the value of the "reason" field.
+func (m *ChatPolicyMutation) ClearReason() {
+	m.reason = nil
+	m.clearedFields[chatpolicy.FieldReason] = struct{}{}
+}
+
+// ReasonCleared returns if the "reason" field was cleared in this mutation.
+func (m *ChatPolicyMutation) ReasonCleared() bool {
+	_, ok := m.clearedFields[chatpolicy.FieldReason]
+	return ok
+}
+
+// ResetReason resets all changes to the "reason" field.
+func (m *ChatPolicyMutation) ResetReason() {
+	m.reason = nil
+	delete(m.clearedFields, chatpolicy.FieldReason)
+}
+
 // Where appends a list predicates to the ChatPolicyMutation builder.
 func (m *ChatPolicyMutation) Where(ps ...predicate.ChatPolicy) {
 	m.predicates = append(m.predicates, ps...)
@@ -5226,7 +5422,7 @@ func (m *ChatPolicyMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChatPolicyMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 14)
 	if m.tenant_id != nil {
 		fields = append(fields, chatpolicy.FieldTenantID)
 	}
@@ -5266,6 +5462,9 @@ func (m *ChatPolicyMutation) Fields() []string {
 	if m.rules != nil {
 		fields = append(fields, chatpolicy.FieldRules)
 	}
+	if m.reason != nil {
+		fields = append(fields, chatpolicy.FieldReason)
+	}
 	return fields
 }
 
@@ -5300,6 +5499,8 @@ func (m *ChatPolicyMutation) Field(name string) (ent.Value, bool) {
 		return m.SchoolID()
 	case chatpolicy.FieldRules:
 		return m.Rules()
+	case chatpolicy.FieldReason:
+		return m.Reason()
 	}
 	return nil, false
 }
@@ -5335,6 +5536,8 @@ func (m *ChatPolicyMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldSchoolID(ctx)
 	case chatpolicy.FieldRules:
 		return m.OldRules(ctx)
+	case chatpolicy.FieldReason:
+		return m.OldReason(ctx)
 	}
 	return nil, fmt.Errorf("unknown ChatPolicy field %s", name)
 }
@@ -5435,6 +5638,13 @@ func (m *ChatPolicyMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRules(v)
 		return nil
+	case chatpolicy.FieldReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReason(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ChatPolicy field %s", name)
 }
@@ -5504,6 +5714,9 @@ func (m *ChatPolicyMutation) ClearedFields() []string {
 	if m.FieldCleared(chatpolicy.FieldSchoolID) {
 		fields = append(fields, chatpolicy.FieldSchoolID)
 	}
+	if m.FieldCleared(chatpolicy.FieldReason) {
+		fields = append(fields, chatpolicy.FieldReason)
+	}
 	return fields
 }
 
@@ -5541,6 +5754,9 @@ func (m *ChatPolicyMutation) ClearField(name string) error {
 		return nil
 	case chatpolicy.FieldSchoolID:
 		m.ClearSchoolID()
+		return nil
+	case chatpolicy.FieldReason:
+		m.ClearReason()
 		return nil
 	}
 	return fmt.Errorf("unknown ChatPolicy nullable field %s", name)
@@ -5588,6 +5804,9 @@ func (m *ChatPolicyMutation) ResetField(name string) error {
 		return nil
 	case chatpolicy.FieldRules:
 		m.ResetRules()
+		return nil
+	case chatpolicy.FieldReason:
+		m.ResetReason()
 		return nil
 	}
 	return fmt.Errorf("unknown ChatPolicy field %s", name)

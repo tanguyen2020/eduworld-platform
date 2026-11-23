@@ -10,10 +10,12 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `specs/openapi/modules/
 |---|---|---|---|---|
 | `listMyChannels` · `listChannelMessages` · `sendChannelMessage` | `GET /api/v1/chat/channels` · `GET/POST …/{channel_id}/messages` | eduworld-api (chat) | học sinh, thành viên channel | Có sẵn |
 | `searchMessages` | `GET /api/v1/chat/search` | eduworld-api (chat) | học sinh, chỉ channel là thành viên | Có sẵn |
-| `getChatPolicy` | `GET /api/v1/tenant/chat-policies/{scope_type}/{scope_id}` | eduworld-api (chat) | `tenant.settings.read` / `school.settings.read` | Cần thêm |
-| `putChatPolicy` | `PUT /api/v1/tenant/chat-policies/{scope_type}/{scope_id}` | eduworld-api (chat) | `tenant.settings.write` (tenant) / `school.settings.write` (school) | Cần thêm |
-| `getEffectiveChatPolicy` | `GET /api/v1/tenant/chat-policies:effective` | eduworld-api (chat) | `school.settings.read` | Cần thêm |
-| `getPlatformChatPolicy` · `putPlatformChatPolicy` | `GET/PUT /api/v1/admin/chat/policies/platform` | eduworld-api (chat, `x-internal`) | `platform.settings.write` | Cần thêm |
+| `getChatPolicy` | `GET /api/v1/tenant/chat-policies/{scope_type}/{scope_id}` | eduworld-api (chat) | `tenant.settings.read` / `school.settings.read` | Đã thêm (2026-11-23) |
+| `putChatPolicy` | `PUT /api/v1/tenant/chat-policies/{scope_type}/{scope_id}` | eduworld-api (chat) | `tenant.settings.write` (tenant) / `school.settings.write` (school) | Đã thêm (2026-11-23) |
+| `getEffectiveChatPolicy` | `GET /api/v1/tenant/chat-policies:effective` | eduworld-api (chat) | `school.settings.read` | Đã thêm (2026-11-23) |
+| `getPlatformChatPolicy` · `putPlatformChatPolicy` | `GET/PUT /api/v1/admin/chat/policies/platform` | eduworld-api (chat, `x-internal`) | `platform.settings.write` | Đã thêm (2026-11-23) |
+| `openDirectChannel` | `POST /api/v1/chat/direct-channels` | eduworld-api (chat) | học sinh, bạn bè không block | Đã thêm (2026-11-23, [Proposed] — Clarifications 2026-11-23) |
+| `getCommonTenantSocialOverride` · `putCommonTenantSocialOverride` | `GET/PUT /api/v1/admin/chat/common-tenant-social` | eduworld-api (chat, `x-internal`) | `platform.settings.write` (System Admin) | Đã thêm (2026-11-23, [Proposed], ADR-0078 / F120-AC-28) |
 | `listClubs` · `createClub` · `getClub` · `updateClub` | `GET/POST /api/v1/social/clubs` · `GET/PATCH …/{club_id}` | eduworld-api (chat) | học sinh (theo policy) / nhân sự trường | Có sẵn (`listClubs` Cần sửa; `ClubCreate` Cần sửa — ADR-0095, WP-C1) |
 | `approveClub` · `leaveClub` · `archiveClub` | `POST /api/v1/social/clubs/{club_id}:approve|:leave|:archive` | eduworld-api (chat) | `social.club.approve` / thành viên / owner | Có sẵn |
 | `listClubMembers` · `updateClubMemberRole` · `removeClubMember` | `GET/PATCH/DELETE /api/v1/social/clubs/{club_id}/members[/{user_id}]` | eduworld-api (chat) | owner/officer/School Admin | Có sẵn |
@@ -32,7 +34,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `specs/openapi/modules/
 | Message | Hướng | Trạng thái |
 |---|---|---|
 | `chat.channel.join` · `chat.channel.leave` · `chat.message.send` · `chat.message.created` · `chat.history.fetch` · `chat.history.loaded` · `chat.unread.updated` | client ↔ server | Có sẵn |
-| `chat.channel.membership_changed` (`channel_id`, `channel_type`, `op` added/removed, `status`) | server → client | Cần thêm |
+| `chat.channel.membership_changed` (`channel_id`, `channel_type`, `op` added/removed/status_changed, `status`) | server → client | Đã thêm (2026-11-23) |
 
 ## 4. Event (NATS)
 
@@ -42,8 +44,8 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `specs/openapi/modules/
 | `user.blocked` · `user.unblocked` | Tiêu thụ (chat/social) | `specs/events/payloads/chat/user.blocked.v1.schema.json` | Cần thêm (owner F095) |
 | `activity.graded` | Tiêu thụ (club goal) | `specs/events/payloads/learning/activity.graded.v1.schema.json` | Có sẵn (Cần sửa: `duration_seconds`, owner F030) |
 | `quest.completed` · `boss.encounter_completed` · `world.discovery_found` | Tiêu thụ (club goal) | `specs/events/payloads/game/*.v1.schema.json` | Cần thêm (owner F072/F103/F071) |
-| `chat_policy.updated` | Phát | `specs/events/payloads/chat/chat_policy.updated.v1.schema.json` | Cần thêm |
-| `club.created` · `club.approved` · `club.archived` · `club.member_joined` · `club.member_left` · `club.goal_completed` | Phát | `specs/events/payloads/chat/club.*.v1.schema.json` | Cần thêm |
+| `chat_policy.updated` | Phát | `specs/events/payloads/chat/chat_policy.updated.v1.schema.json` | Đã thêm (2026-11-23) |
+| `club.created` · `club.approved` · `club.archived` · `club.member_joined` · `club.member_left` · `club.goal_completed` | Phát | `specs/events/payloads/chat/club.*.v1.schema.json` | Đã thêm (2026-11-23) |
 
 ## 5. JSON Schema nội dung
 
@@ -53,7 +55,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `specs/openapi/modules/
 
 ## 6. Delta cần thực hiện
 
-Task Phase 2: T004–T008.
+Task Phase 2: T004–T008 — **đã áp 2026-11-23** (OpenAPI gộp + `split-public.mjs`, AsyncAPI + `gen-routes`, payload schema, danh mục portal `action.school_lms.chat_safety.view|edit`, `action.platform_admin.chat_safety.policy`). `listClubs` thêm `status`, `school_id`; `createClub` thêm `451`; `Channel.status` thêm `read_only`, `frozen` và `capabilities.voice` (luôn false). `user.blocked`/`user.unblocked` (F095) đã có; `school.updated` mang `student_club_creation` dạng boolean (F015, xem Clarifications); `boss.encounter_completed` chưa có schema (F103) — không tiêu thụ.
 
 - **Cần thêm** `getChatPolicy`/`putChatPolicy` (`x-service: chat`, tag `tenant`): path param `scope_type` enum `tenant|school` (không có `class` — ADR-0095), `scope_id` uuid; header `X-Tenant-Id`; GET trả `ChatPolicyDocument` {`policy_id`, `scope_type`, `scope_id`, `version`, `rules` ($ref `chat-policy.schema.json#/properties/rules`), `reason` maxLength 500, `updated_by`, `updated_at`} + `ETag`; PUT body `ChatPolicyPut` {`rules`, `reason` minLength 10 maxLength 500}, `If-Match`; lỗi `422 CHAT_POLICY_RELAX_NOT_ALLOWED`, `422 CHAT_POLICY_ALWAYS_ON`, `422 VALIDATION_FAILED`, `412`, `403`, `404`. `getEffectiveChatPolicy` query `school_id`, `channel_type` (không có `class_id` — ADR-0095) → `EffectiveChatPolicy` {`channel_type`, `enabled`, `allowed_kinds[]`, `max_text_length`, `rate`, `slow_mode_seconds`, `allowed_hours[]`, `features` ($ref `ChatFeatures`), `sources[]` {scope_type, version}} (không có danh mục từ). Platform: `getPlatformChatPolicy`/`putPlatformChatPolicy` `x-internal: true`, security `keycloakAdminBearer`.
 - **Cần sửa** `listClubs` thêm query `status` ($ref `ClubStatus`) và `school_id` cho nhân sự.

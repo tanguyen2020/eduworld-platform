@@ -160,6 +160,11 @@ func NotificationLevel(v string) predicate.ChannelMember {
 	return predicate.ChannelMember(sql.FieldEQ(FieldNotificationLevel, v))
 }
 
+// SourceEventID applies equality check predicate on the "source_event_id" field. It's identical to SourceEventIDEQ.
+func SourceEventID(v uuid.UUID) predicate.ChannelMember {
+	return predicate.ChannelMember(sql.FieldEQ(FieldSourceEventID, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.ChannelMember {
 	return predicate.ChannelMember(sql.FieldEQ(FieldTenantID, v))
@@ -1123,6 +1128,56 @@ func NotificationLevelEqualFold(v string) predicate.ChannelMember {
 // NotificationLevelContainsFold applies the ContainsFold predicate on the "notification_level" field.
 func NotificationLevelContainsFold(v string) predicate.ChannelMember {
 	return predicate.ChannelMember(sql.FieldContainsFold(FieldNotificationLevel, v))
+}
+
+// SourceEventIDEQ applies the EQ predicate on the "source_event_id" field.
+func SourceEventIDEQ(v uuid.UUID) predicate.ChannelMember {
+	return predicate.ChannelMember(sql.FieldEQ(FieldSourceEventID, v))
+}
+
+// SourceEventIDNEQ applies the NEQ predicate on the "source_event_id" field.
+func SourceEventIDNEQ(v uuid.UUID) predicate.ChannelMember {
+	return predicate.ChannelMember(sql.FieldNEQ(FieldSourceEventID, v))
+}
+
+// SourceEventIDIn applies the In predicate on the "source_event_id" field.
+func SourceEventIDIn(vs ...uuid.UUID) predicate.ChannelMember {
+	return predicate.ChannelMember(sql.FieldIn(FieldSourceEventID, vs...))
+}
+
+// SourceEventIDNotIn applies the NotIn predicate on the "source_event_id" field.
+func SourceEventIDNotIn(vs ...uuid.UUID) predicate.ChannelMember {
+	return predicate.ChannelMember(sql.FieldNotIn(FieldSourceEventID, vs...))
+}
+
+// SourceEventIDGT applies the GT predicate on the "source_event_id" field.
+func SourceEventIDGT(v uuid.UUID) predicate.ChannelMember {
+	return predicate.ChannelMember(sql.FieldGT(FieldSourceEventID, v))
+}
+
+// SourceEventIDGTE applies the GTE predicate on the "source_event_id" field.
+func SourceEventIDGTE(v uuid.UUID) predicate.ChannelMember {
+	return predicate.ChannelMember(sql.FieldGTE(FieldSourceEventID, v))
+}
+
+// SourceEventIDLT applies the LT predicate on the "source_event_id" field.
+func SourceEventIDLT(v uuid.UUID) predicate.ChannelMember {
+	return predicate.ChannelMember(sql.FieldLT(FieldSourceEventID, v))
+}
+
+// SourceEventIDLTE applies the LTE predicate on the "source_event_id" field.
+func SourceEventIDLTE(v uuid.UUID) predicate.ChannelMember {
+	return predicate.ChannelMember(sql.FieldLTE(FieldSourceEventID, v))
+}
+
+// SourceEventIDIsNil applies the IsNil predicate on the "source_event_id" field.
+func SourceEventIDIsNil() predicate.ChannelMember {
+	return predicate.ChannelMember(sql.FieldIsNull(FieldSourceEventID))
+}
+
+// SourceEventIDNotNil applies the NotNil predicate on the "source_event_id" field.
+func SourceEventIDNotNil() predicate.ChannelMember {
+	return predicate.ChannelMember(sql.FieldNotNull(FieldSourceEventID))
 }
 
 // And groups predicates with the AND operator between them.

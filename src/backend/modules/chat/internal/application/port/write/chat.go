@@ -87,3 +87,11 @@ type AssetRepository interface {
 	// Published returns the published version of the item (nil: none).
 	Published(ctx context.Context, t chatasset.Type, id uuid.UUID) (*port.AssetVersion, error)
 }
+
+// StatusRepository changes the status of a persistent channel (F120: club read_only, direct frozen/open).
+type StatusRepository interface {
+	// SetStatus sets status to when the live channel is in one of from; changed false otherwise.
+	SetStatus(ctx context.Context, tenant, channel uuid.UUID, from []string, to string) (changed bool, err error)
+	// SetSource records the command or event that changed a membership (channel_members.source_event_id).
+	SetSource(ctx context.Context, tenant, channel, user, source uuid.UUID) error
+}

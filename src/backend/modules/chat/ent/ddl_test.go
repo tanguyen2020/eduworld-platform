@@ -26,6 +26,7 @@ var migrations = map[string][]string{
 		"moderation_switch_changes", "sanctions", "quick_messages"},
 	"20261231000001_f121_moderation_cases.sql": {"reports", "moderation_cases", "moderation_actions", "moderation_evidence",
 		"school_safety_notifications"},
+	"20261231000006_f120_persistent_clubs.sql": {}, // columns added to channels, channel_members, chat_policies only
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -38,6 +39,11 @@ type addition struct {
 var added = map[string][]addition{
 	"20261231000001_f121_moderation_cases.sql": {
 		{"sanctions", []string{"reason_code", "issued_by_kind", "revoked_by", "revoke_reason", "lifted_at"}, []string{"sanctions_expiry_idx"}},
+	},
+	"20261231000006_f120_persistent_clubs.sql": {
+		{"channels", []string{"capabilities"}, nil},
+		{"channel_members", []string{"source_event_id"}, nil},
+		{"chat_policies", []string{"reason"}, nil},
 	},
 }
 

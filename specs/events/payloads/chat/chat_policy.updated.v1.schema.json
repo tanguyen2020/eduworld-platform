@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat_policy.updated.v1.schema.json",
+  "title": "Payload chat_policy.updated v1 (module chat, owner F120)",
+  "description": "Chính sách chat một cấp được lưu version mới (putChatPolicy/putPlatformChatPolicy, F120-AC-06, AC-26). Không chứa rule chi tiết hay nội dung tin. Consumer: chat (vô hiệu cache effective policy chat_policy_cache), RT, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_id",
+    "scope_type",
+    "policy_version",
+    "changed_fields",
+    "actor_id",
+    "occurred_at"
+  ],
+  "properties": {
+    "policy_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "scope_type": {
+      "type": "string",
+      "enum": [
+        "platform",
+        "tenant",
+        "school"
+      ],
+      "description": "Không có class (ADR-0095 §7)"
+    },
+    "scope_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "changed_fields": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "maxLength": 64
+      }
+    },
+    "preset": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "quick_message_emote_only"
+      ]
+    },
+    "actor_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "policy_id": "01936a00-0000-7000-8000-0000000000a1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "scope_type": "school",
+      "scope_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+      "policy_version": 2,
+      "changed_fields": [
+        "rules",
+        "chat_policy_preset"
+      ],
+      "preset": "quick_message_emote_only",
+      "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "occurred_at": "2026-11-23T08:30:12.345Z"
+    }
+  ]
+}

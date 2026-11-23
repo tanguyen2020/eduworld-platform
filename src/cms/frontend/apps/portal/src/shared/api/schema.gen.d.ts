@@ -221,6 +221,32 @@ export interface paths {
         patch: operations["updateProvince"];
         trace?: never;
     };
+    "/admin/chat/common-tenant-social": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trạng thái bật lại DM/World/Area tự do của một tenant `common` (ADR-0078, F120-AC-28)
+         * @description Chỉ role platform có `platform.settings.write`; `X-Tenant-Id` là tenant `common` đích (khác loại → `404`).
+         */
+        get: operations["getCommonTenantSocialOverride"];
+        /**
+         * System Admin bật lại (hoặc tắt lại) DM, World và chat tự do ở Area cho một tenant `common` (F120-AC-28)
+         * @description Mặc định tenant `common` (`common_tenant_social_defaults`): `direct` và `world` tắt, `area` chỉ `quick` + `emoji`.
+         *     Chỉ System Admin (`platform.settings.write`), `reason` bắt buộc, audit; mọi instance áp dụng trong ≤ 60 giây. Role
+         *     tenant không gọi được (`403 PERMISSION_DENIED`). Kết bạn của tenant `common` thuộc cài đặt identity (F095).
+         */
+        put: operations["putCommonTenantSocialOverride"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/chat/moderation-switches": {
         parameters: {
             query?: never;
@@ -292,6 +318,32 @@ export interface paths {
          *     mọi instance áp dụng trong ≤ 60 giây.
          */
         post: operations["approveModerationSwitchChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/chat/policies/platform": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chính sách chat mặc định cấp platform
+         * @description Chỉ gateway nội bộ + role platform có `platform.settings.write` (ADR-0027, ADR-0094). `ETag` = version.
+         */
+        get: operations["getPlatformChatPolicy"];
+        /**
+         * Lưu chính sách chat cấp platform (always-on giữ nguyên, không điều kiện theo khối)
+         * @description Chỉ System Admin (`platform.settings.write`). Cùng kiểm tra schema v5/always-on/không khối như `putChatPolicy`;
+         *     `allowed_hours` của channel bền vững phải nằm ngoài `platform_curfew` (`422 CHAT_POLICY_RELAX_NOT_ALLOWED`). Audit
+         *     before/after, phát `chat_policy.updated`.
+         */
+        put: operations["putPlatformChatPolicy"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2290,6 +2342,29 @@ export interface paths {
         post?: never;
         /** Bỏ ghim tin (soft-delete bản ghi ghim) */
         delete: operations["unpinMessage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/direct-channels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mở (hoặc lấy lại) channel tin nhắn riêng với một bạn bè (F120-AC-14)
+         * @description Channel `direct` của cặp học sinh (thứ tự chuẩn hóa, id xác định) được tạo ở lần mở đầu tiên khi hai người là
+         *     bạn bè và không block nhau; mở lại trả cùng channel (`200`). Không là bạn bè, có block hoặc policy tắt `direct`
+         *     (kể cả tenant `common` chưa được System Admin bật lại — F120-AC-28) → `403 CHAT_NOT_ALLOWED`. Học sinh khác tenant
+         *     hoặc không tồn tại → `404`. Channel bị đóng băng do block vẫn trả về với `status = frozen` (gửi → `CHAT_NOT_ALLOWED`).
+         */
+        post: operations["openDirectChannel"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -8128,6 +8203,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenant/chat-policies:effective": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chính sách chat hiệu lực của một loại channel trong một trường (platform ∩ tenant ∩ school) — F120-AC-10
+         * @description Cần `school.settings.read` trong trường đó. Giống nhau cho mọi học sinh của trường (không theo khối). Không trả danh
+         *     mục từ nhạy cảm. Loại channel bị tắt ở một cấp → `enabled = false`.
+         */
+        get: operations["getEffectiveChatPolicy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenant/chat-policies/{scope_type}/{scope_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chính sách chat của một cấp (tenant hoặc trường) — F120-AC-06
+         * @description `scope_type = tenant` cần `tenant.settings.read` (`scope_id` = tenant của phiên); `scope_type = school` cần
+         *     `school.settings.read` trong trường đó. Chưa có chính sách ở cấp đó → `404`. Trường/tenant khác → `404`. Không có cấp
+         *     `class` (ADR-0095): giá trị khác `tenant`/`school` → `422 VALIDATION_FAILED`. `ETag` = version.
+         */
+        get: operations["getChatPolicy"];
+        /**
+         * Lưu chính sách chat của một cấp (chỉ siết chặt hơn cấp trên) — F120-AC-06…09, AC-26, AC-27
+         * @description `tenant` cần `tenant.settings.write`; `school` cần `school.settings.write` trong trường đó (School Admin trường mình).
+         *     Lần đầu không có bản trước: `If-Match: "0"`. Body được dựng thành tài liệu `chat-policy.schema.json` v5 rồi kiểm:
+         *     rule có điều kiện theo khối (`grade_band`, `grade_level`…) hay trường lạ → `422 VALIDATION_FAILED`; tắt/thu hẹp
+         *     `match`/`team`/`party` → `422 CHAT_POLICY_ALWAYS_ON`; nới lỏng hơn cấp trên (không có `allow_override_relax`) hoặc
+         *     `allowed_hours` vượt ra ngoài khoảng ngoài giờ giới nghiêm hiệu lực → `422 CHAT_POLICY_RELAX_NOT_ALLOWED`.
+         *     `chat_policy_preset` chỉ có ở cấp `school`, áp cho cả trường (không theo khối). Lưu version mới, audit
+         *     before/after, phát `chat_policy.updated`; mọi instance áp dụng trong ≤ 60 giây.
+         */
+        put: operations["putChatPolicy"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenant/chat/categories": {
         parameters: {
             query?: never;
@@ -10217,6 +10345,11 @@ export interface components {
         ChallengeType: "time" | "perfect" | "survival" | "puzzle" | "knowledge" | "boss" | "coop" | "party" | "weekly" | "seasonal" | "tournament";
         Channel: {
             allowed_kinds: components["schemas"]["MessageKind"][];
+            /** @description Không có voice chat (FR-CHAT-007, ADR-0070) — voice luôn false */
+            capabilities?: {
+                /** @enum {boolean} */
+                voice?: false;
+            };
             channel_id: components["schemas"]["Uuid"];
             channel_type: components["schemas"]["ChannelType"];
             features?: components["schemas"]["ChatFeatures"];
@@ -10227,8 +10360,11 @@ export interface components {
             my_read_seq?: number;
             pinned_count?: number;
             purge_after?: components["schemas"]["Timestamp"];
-            /** @enum {string} */
-            status?: "open" | "closed";
+            /**
+             * @description closed: channel gameplay đã đóng; read_only: club bị khóa/lưu trữ; frozen: DM bị đóng băng do block (F120)
+             * @enum {string}
+             */
+            status?: "open" | "closed" | "read_only" | "frozen";
             title?: string;
             unread_count?: number;
             unread_mentions?: number;
@@ -10275,6 +10411,48 @@ export interface components {
             sticker?: boolean;
             typing?: boolean;
         };
+        ChatPolicyDocument: {
+            /** @enum {string} */
+            chat_policy_preset?: "standard" | "quick_message_emote_only";
+            global_rate?: components["schemas"]["ChatPolicyRate"];
+            policy_id: components["schemas"]["Uuid"];
+            reason?: string;
+            rules: components["schemas"]["ChatPolicyRules"];
+            scope_id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            scope_type: "platform" | "tenant" | "school";
+            updated_at?: components["schemas"]["Timestamp"];
+            updated_by?: components["schemas"]["Uuid"];
+            version: number;
+            /** @enum {string} */
+            world_scope?: "school" | "tenant";
+        };
+        ChatPolicyPut: {
+            /**
+             * @description Chỉ ở cấp `school`, áp cho cả trường (ADR-0078, R15); cấp khác → 422 VALIDATION_FAILED
+             * @enum {string}
+             */
+            chat_policy_preset?: "standard" | "quick_message_emote_only";
+            global_rate?: components["schemas"]["ChatPolicyRate"];
+            reason: string;
+            rules: components["schemas"]["ChatPolicyRules"];
+            /**
+             * @description `tenant` chỉ ở cấp tenant của tenant `unit` (ADR-0054); cấp khác → 422 CHAT_POLICY_RELAX_NOT_ALLOWED
+             * @enum {string}
+             */
+            world_scope?: "school" | "tenant";
+        };
+        ChatPolicyRate: {
+            burst?: number;
+            messages_per_minute: number;
+        };
+        /**
+         * @description Rule theo `channel_type` (một phần tử của `rules` trong `specs/schemas/chat-policy.schema.json` v5). Server kiểm từng
+         *     rule theo schema đó (không trường điều kiện theo khối — `grade_band`/`grade_level` → `422 VALIDATION_FAILED`).
+         */
+        ChatPolicyRules: {
+            channel_type: components["schemas"]["ChannelType"];
+        }[];
         ChatRetentionSettings: {
             /** @default true */
             allow_tenant_override: boolean;
@@ -10461,6 +10639,23 @@ export interface components {
         };
         /** @enum {string} */
         CollectionType: "pet" | "knowledge_card" | "cosmetic" | "badge" | "exploration" | "event";
+        CommonTenantSocialOverride: {
+            /** @description false: Area chỉ quick + emoji (mặc định tenant common) */
+            area_free_text_enabled: boolean;
+            direct_enabled: boolean;
+            reason?: string;
+            tenant_id: components["schemas"]["Uuid"];
+            updated_at?: components["schemas"]["Timestamp"];
+            updated_by?: components["schemas"]["Uuid"];
+            version: number;
+            world_enabled: boolean;
+        };
+        CommonTenantSocialOverrideUpdate: {
+            area_free_text_enabled: boolean;
+            direct_enabled: boolean;
+            reason: string;
+            world_enabled: boolean;
+        };
         CommonTenantStudentInput: {
             display_name: string;
             /** @description Mã tham chiếu tùy chọn của System Admin, lưu thành ExternalIdentity (`issuer = platform_common`, `subject` = giá trị này), duy nhất trong các bản ghi chưa xóa (ACCOUNT_PROVISIONING §3.4); không phải khóa SIS, không dùng để đăng nhập; trùng → dòng `failed` `IDENTITY_CONFLICT` */
@@ -11044,6 +11239,28 @@ export interface components {
             tenant_id: components["schemas"]["Uuid"];
             /** @description Mã yêu cầu hỗ trợ/sự cố */
             ticket_ref?: string;
+        };
+        EffectiveChatPolicy: {
+            /** @description Khung giờ của từng cấp có đặt (giao các cấp); rỗng = không giới hạn ngoài giờ giới nghiêm */
+            allowed_hours?: {
+                days: string;
+                from: string;
+                to: string;
+            }[];
+            allowed_kinds: ("text" | "emoji" | "quick" | "sticker" | "gif")[];
+            channel_type: components["schemas"]["ChannelType"];
+            enabled: boolean;
+            features?: components["schemas"]["ChatFeatures"];
+            max_text_length?: number;
+            /** @enum {string} */
+            preset?: "standard" | "quick_message_emote_only";
+            rate?: components["schemas"]["ChatPolicyRate"];
+            slow_mode_seconds?: number;
+            sources: {
+                /** @enum {string} */
+                scope_type: "platform" | "common_tenant_defaults" | "tenant" | "school";
+                version?: number;
+            }[];
         };
         /** @description Role hiệu lực rút gọn của Principal (tóm tắt từ UserRole, ADR-0066) */
         EffectiveRole: {
@@ -16204,6 +16421,10 @@ export interface components {
         ChallengeAttemptIdPath: components["schemas"]["Uuid"];
         ChallengeIdPath: components["schemas"]["Uuid"];
         ChannelId: components["schemas"]["Uuid"];
+        /** @description tenant_id (scope tenant) hoặc school_id (scope school) */
+        ChatPolicyScopeId: components["schemas"]["Uuid"];
+        /** @description Cấp chính sách (không có class — ADR-0095) */
+        ChatPolicyScopeType: "tenant" | "school";
         ClubIdPath: components["schemas"]["Uuid"];
         ConnectionIdPath: components["schemas"]["Uuid"];
         ContentIdPath: components["schemas"]["Uuid"];
@@ -16936,6 +17157,76 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
         };
     };
+    getCommonTenantSocialOverride: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommonTenantSocialOverride"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    putCommonTenantSocialOverride: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommonTenantSocialOverrideUpdate"];
+            };
+        };
+        responses: {
+            /** @description Trạng thái mới */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommonTenantSocialOverride"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     listModerationSwitches: {
         parameters: {
             query?: {
@@ -17087,6 +17378,59 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    getPlatformChatPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatPolicyDocument"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    putPlatformChatPolicy: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatPolicyPut"];
+            };
+        };
+        responses: {
+            /** @description Đã lưu version mới */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatPolicyDocument"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     listSensitiveAllowlist: {
@@ -21850,6 +22194,56 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    openDirectChannel: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    user_id: components["schemas"]["Uuid"];
+                };
+            };
+        };
+        responses: {
+            /** @description Channel đã có */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Channel"];
+                };
+            };
+            /** @description Channel vừa tạo */
+            201: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Channel"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     listGifs: {
@@ -35150,7 +35544,11 @@ export interface operations {
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 limit?: components["parameters"]["Limit"];
+                /** @description Nhân sự trường — club của một trường trong phạm vi grant (bỏ qua với học sinh) */
+                school_id?: components["schemas"]["Uuid"];
                 scope?: "mine" | "discoverable";
+                /** @description Lọc theo trạng thái (nhân sự trường; học sinh chỉ thấy club active của phạm vi mình) */
+                status?: components["schemas"]["ClubStatus"];
             };
             header?: {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
@@ -35226,6 +35624,7 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
+            451: components["responses"]["MessageBlocked"];
         };
     };
     getClub: {
@@ -36500,6 +36899,121 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getEffectiveChatPolicy: {
+        parameters: {
+            query: {
+                channel_type: components["schemas"]["ChannelType"];
+                school_id: components["schemas"]["Uuid"];
+            };
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EffectiveChatPolicy"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getChatPolicy: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                /** @description tenant_id (scope tenant) hoặc school_id (scope school) */
+                scope_id: components["parameters"]["ChatPolicyScopeId"];
+                /** @description Cấp chính sách (không có class — ADR-0095) */
+                scope_type: components["parameters"]["ChatPolicyScopeType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatPolicyDocument"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    putChatPolicy: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                /** @description tenant_id (scope tenant) hoặc school_id (scope school) */
+                scope_id: components["parameters"]["ChatPolicyScopeId"];
+                /** @description Cấp chính sách (không có class — ADR-0095) */
+                scope_type: components["parameters"]["ChatPolicyScopeType"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatPolicyPut"];
+            };
+        };
+        responses: {
+            /** @description Đã lưu version mới */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatPolicyDocument"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     listTenantSensitiveCategories: {

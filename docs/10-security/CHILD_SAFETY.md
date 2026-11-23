@@ -150,6 +150,8 @@ Tenant `common` ([MULTITENANCY §8.3](../06-architecture/MULTITENANCY.md)) gom h
 | Kiểm duyệt | Platform Safety Team (ADR-0072); không có thông báo nhà trường, liên hệ theo [MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-confirmed) |
 | Consent | Platform thu trực tiếp (ADR-0077); pháp lý ngoài version này (ADR-0082) |
 
+Bật lại DM, World và chat tự do ở Area của một tenant `common` (F120-AC-28): `putCommonTenantSocialOverride` (gateway nội bộ, System Admin, `reason` bắt buộc, audit `chat_policy.common_tenant_social_updated`), hiệu lực ngay trên mọi instance; role tenant bị từ chối (`403 PERMISSION_DENIED`). Bật lại kết bạn vẫn qua cài đặt identity (F095). Chi tiết: [CHAT_SYSTEM §3](../03-social-multiplayer/CHAT_SYSTEM.md#3-policy-resolution).
+
 ## 4. Thời gian chơi và sức khỏe (OQ-17)
 
 | Biện pháp | Mặc định [Confirmed] | Ai cấu hình |

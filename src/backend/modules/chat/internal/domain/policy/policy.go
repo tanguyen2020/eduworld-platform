@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"slices"
+	"time"
 )
 
 // Kind is a message kind a policy can allow.
@@ -60,9 +61,11 @@ type Rule struct {
 	Rate            *Rate       `json:"rate,omitempty"`
 	SlowModeSeconds *int        `json:"slow_mode_seconds,omitempty"`
 	Validation      *Validation `json:"validation,omitempty"`
-	// AllowedHours is kept raw: the resolver never applies it (curfew is ADR-0078); ValidateAlwaysOn refuses it on
-	// match/team/party.
+	// AllowedHours is kept raw: Intersect collects the windows of every level for the persistent channels (F120, hours take
+	// the intersection — CHAT_SYSTEM §3); ValidateAlwaysOn refuses it on match/team/party (curfew stays ADR-0078).
 	AllowedHours json.RawMessage `json:"allowed_hours,omitempty"`
+	// AllowOverrideRelax lets the levels below relax this rule (CHAT_SYSTEM §3, F120-AC-07).
+	AllowOverrideRelax *bool `json:"allow_override_relax,omitempty"`
 	// Features is read from the platform level only (CHAT_SYSTEM §7.1, F118).
 	Features *Features `json:"features,omitempty"`
 }
@@ -73,6 +76,10 @@ type Document struct {
 	GlobalRate *Rate  `json:"global_rate,omitempty"`
 	Rules      []Rule `json:"rules"`
 	Preset     string `json:"chat_policy_preset,omitempty"`
+	// WorldScope is world_scope: school (default) or tenant (tenant unit only, ADR-0054; F120-AC-12).
+	WorldScope string `json:"world_scope,omitempty"`
+	Version    int64  `json:"version,omitempty"`
+	Timezone   string `json:"timezone,omitempty"`
 }
 
 // Parse decodes a stored document.
@@ -97,8 +104,20 @@ func (d Document) rule(channelType string) (Rule, bool) {
 // policy (platform → tenant → school, ADR-0095).
 type Levels struct {
 	Platform *Document
-	Tenant   *Document
-	School   *Document
+	// Common is the built-in level of a tenant common (common_tenant_social_defaults, ADR-0078): between platform and
+	// tenant, lifted only by System Admin (F120-AC-28); nil for other tenants.
+	Common *Document
+	Tenant *Document
+	School *Document
+}
+
+// WorldScope returns the effective world_scope: tenant only when the tenant level of a tenant unit asks for it (the
+// platform default is school; a school never widens it).
+func (l Levels) WorldScope(unit bool) string {
+	if unit && l.Tenant != nil && l.Tenant.WorldScope == "tenant" {
+		return "tenant"
+	}
+	return "school"
 }
 
 // Effective is the policy in force for a channel of one school: the same for every member, whatever the grade.
@@ -113,7 +132,13 @@ type Effective struct {
 	Preset          string `json:"preset,omitempty"`
 	// Features are the message features of the channel type (platform level only; always-on ones forced, F118).
 	Features Features `json:"features"`
+	// Hours are the allowed_hours of every level that set some, for the persistent channels (always-on channels have
+	// none, ADR-0020 §6); the send path checks HoursOpen (F120, CHAT_SYSTEM §3.1).
+	Hours [][]TimeWindow `json:"hours,omitempty"`
 }
+
+// OpenAt reports whether the allowed hours of every level let a message through at t (loc = policy timezone).
+func (e Effective) OpenAt(t time.Time, loc *time.Location) bool { return HoursOpen(e.Hours, t, loc) }
 
 // Allows reports a kind allowed by the effective policy.
 func (e Effective) Allows(k Kind) bool { return slices.Contains(e.AllowedKinds, k) }
@@ -153,10 +178,13 @@ func Intersect(channelType string, alwaysOn bool, l Levels) (Effective, error) {
 		e.Features = *base.Features
 	}
 	apply(&e, base, true)
+	if !alwaysOn {
+		e.addHours(base)
+	}
 	if l.Platform.GlobalRate != nil {
 		e.GlobalPerMinute = l.Platform.GlobalRate.MessagesPerMinute
 	}
-	for _, d := range []*Document{l.Tenant, l.School} {
+	for _, d := range []*Document{l.Common, l.Tenant, l.School} {
 		if d == nil {
 			continue
 		}
@@ -174,6 +202,7 @@ func Intersect(channelType string, alwaysOn bool, l Levels) (Effective, error) {
 			if r.AllowedKinds != nil {
 				e.AllowedKinds = intersectKinds(e.AllowedKinds, r.AllowedKinds)
 			}
+			e.addHours(r)
 		}
 		apply(&e, r, false)
 	}
@@ -188,6 +217,16 @@ func Intersect(channelType string, alwaysOn bool, l Levels) (Effective, error) {
 		return Effective{}, ErrDenied
 	}
 	return e, nil
+}
+
+func (e *Effective) addHours(r Rule) {
+	ws, ok, err := ParseHours(r.AllowedHours)
+	switch {
+	case err != nil: // a malformed stored window allows nothing (fail closed)
+		e.Hours = append(e.Hours, []TimeWindow{})
+	case ok:
+		e.Hours = append(e.Hours, ws)
+	}
 }
 
 func apply(e *Effective, r Rule, first bool) {

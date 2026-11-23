@@ -344,7 +344,7 @@ var _ write.Directory = Directory{}
 
 // Tenant implements write.Directory.
 func (Directory) Tenant(ctx context.Context, tenant uuid.UUID) (*social.Tenant, error) {
-	t, err := tx(ctx)
+	t, err := anyTx(ctx) // SELECT only: a write transaction or a read session (F120 club queries)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +364,7 @@ func (Directory) Tenant(ctx context.Context, tenant uuid.UUID) (*social.Tenant, 
 
 // Student implements write.Directory.
 func (Directory) Student(ctx context.Context, tenant, student uuid.UUID) (*social.Student, error) {
-	t, err := tx(ctx)
+	t, err := anyTx(ctx) // SELECT only: a write transaction or a read session (F120 club queries)
 	if err != nil {
 		return nil, err
 	}
@@ -383,7 +383,7 @@ func (Directory) Student(ctx context.Context, tenant, student uuid.UUID) (*socia
 
 // Cards implements write.Directory.
 func (Directory) Cards(ctx context.Context, tenant uuid.UUID, students []uuid.UUID) (map[uuid.UUID]write.Card, error) {
-	t, err := tx(ctx)
+	t, err := anyTx(ctx) // SELECT only: a write transaction or a read session (F120 club queries)
 	if err != nil {
 		return nil, err
 	}

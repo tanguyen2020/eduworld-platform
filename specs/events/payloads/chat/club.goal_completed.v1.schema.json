@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/club.goal_completed.v1.schema.json",
+  "title": "Payload club.goal_completed v1 (module chat, owner F120)",
+  "description": "Mục tiêu tuần của club đạt target từ event học tập/game đã kiểm chứng (F120-AC-21). Không điểm/mastery. Consumer: reward (huy hiệu club), NTF.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "club_id",
+    "tenant_id",
+    "goal_id",
+    "metric",
+    "target",
+    "week_start",
+    "occurred_at"
+  ],
+  "properties": {
+    "club_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "goal_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "metric": {
+      "type": "string",
+      "enum": [
+        "activities_completed",
+        "quests_completed",
+        "minutes_learning",
+        "boss_defeated",
+        "discoveries_found"
+      ]
+    },
+    "target": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000
+    },
+    "week_start": {
+      "type": "string",
+      "format": "date"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "club_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "goal_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000e1",
+      "metric": "activities_completed",
+      "target": 3,
+      "week_start": "2026-11-23",
+      "occurred_at": "2026-11-25T10:00:00.000Z"
+    }
+  ]
+}

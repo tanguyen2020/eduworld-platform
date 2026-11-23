@@ -41,10 +41,13 @@ func (t Type) AlwaysOn() bool { return t == Match || t == Party || t == Team }
 // Implicit reports world/area: membership is implicit (no channel_members, F120).
 func (t Type) Implicit() bool { return t == World || t == Area }
 
-// Status of a channel.
+// Status of a channel: closed ends a gameplay channel (F117); read_only is a locked or archived club, frozen the direct
+// channel of a blocked pair (F120).
 const (
-	StatusOpen   = "open"
-	StatusClosed = "closed"
+	StatusOpen     = "open"
+	StatusClosed   = "closed"
+	StatusReadOnly = "read_only"
+	StatusFrozen   = "frozen"
 )
 
 // Member roles.
@@ -80,7 +83,8 @@ func Gameplay(t Type, scope map[string]string) bool {
 	return t == Match || t == Party || (t == Team && scope["match_id"] != "")
 }
 
-// New builds an open channel. world/area are implicit channels of F120 and refused here.
+// New builds an open channel of a member-based type (match, party, team, direct). world/area are implicit channels: use
+// NewImplicit.
 func New(id, tenant uuid.UUID, school *uuid.UUID, t Type, scope map[string]string, now time.Time) (Channel, error) {
 	switch {
 	case tenant == uuid.Nil:
@@ -88,6 +92,21 @@ func New(id, tenant uuid.UUID, school *uuid.UUID, t Type, scope map[string]strin
 	case !t.Valid() || t.Implicit():
 		return Channel{}, ErrType
 	}
+	return build(id, tenant, school, t, scope, now)
+}
+
+// NewImplicit builds an open world or area channel (F120-AC-12, AC-13): no channel_members, access is checked per message.
+func NewImplicit(id, tenant uuid.UUID, school *uuid.UUID, t Type, scope map[string]string, now time.Time) (Channel, error) {
+	switch {
+	case tenant == uuid.Nil:
+		return Channel{}, ErrNoTenant
+	case !t.Implicit():
+		return Channel{}, ErrType
+	}
+	return build(id, tenant, school, t, scope, now)
+}
+
+func build(id, tenant uuid.UUID, school *uuid.UUID, t Type, scope map[string]string, now time.Time) (Channel, error) {
 	if id == uuid.Nil {
 		return Channel{}, ErrScope
 	}
@@ -100,8 +119,16 @@ func New(id, tenant uuid.UUID, school *uuid.UUID, t Type, scope map[string]strin
 		Status: StatusOpen, OpenedAt: now.UTC()}, nil
 }
 
-// Open reports an open channel (sending into a closed one is CHAT_CHANNEL_CLOSED, F117).
+// Open reports an open channel (sending into a closed or read-only one is CHAT_CHANNEL_CLOSED, F117/F120; into a frozen
+// direct channel CHAT_NOT_ALLOWED).
 func (c Channel) Open() bool { return c.Status == StatusOpen }
+
+// Frozen reports a direct channel frozen by a block (F120-AC-15).
+func (c Channel) Frozen() bool { return c.Status == StatusFrozen }
+
+// Persistent reports a channel kept with its members and history beyond a match: the fixed team channel of a club and
+// direct (F120; retention persistent_chat_retention_days, anonymised, never purged — ADR-0033, R21).
+func (c Channel) Persistent() bool { return !c.IsGameplay && (c.Type == Team || c.Type == Direct) }
 
 // Member is one student in one channel.
 type Member struct {

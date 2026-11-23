@@ -38,6 +38,8 @@ func (Channel) Fields() []ent.Field {
 		field.Time("opened_at"),
 		field.Time("closed_at").Optional().Nillable(),
 		field.Time("purge_after").Optional().Nillable(),
+		// capabilities (F120, FR-CHAT-007): {"voice": false} — the migration CHECK refuses voice true (ADR-0070).
+		field.JSON("capabilities", map[string]bool{}).Optional(),
 	}
 }
 func (Channel) Indexes() []ent.Index {
@@ -71,6 +73,8 @@ func (ChannelMember) Fields() []ent.Field {
 		field.Int("unread_mentions").Default(0),
 		field.Bool("show_read_receipts").Default(true),
 		field.String("notification_level").MaxLen(64).Default("all"),
+		// source_event_id (F120): the command or event that last changed the membership (club join/leave, user.blocked).
+		field.UUID("source_event_id", uuid.UUID{}).Optional().Nillable(),
 	}
 }
 func (ChannelMember) Indexes() []ent.Index {
@@ -98,6 +102,8 @@ func (ChatPolicy) Fields() []ent.Field {
 		field.UUID("scope_id", uuid.UUID{}).Optional().Nillable().Immutable(),
 		field.UUID("school_id", uuid.UUID{}).Optional().Nillable(),
 		field.JSON("rules", json.RawMessage{}),
+		// reason (F120-AC-06): why the level was changed (putChatPolicy, audit before/after).
+		field.String("reason").MaxLen(500).Optional().Nillable(),
 	}
 }
 func (ChatPolicy) Indexes() []ent.Index {

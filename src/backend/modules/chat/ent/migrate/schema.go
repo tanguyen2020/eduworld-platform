@@ -68,6 +68,7 @@ var (
 		{Name: "opened_at", Type: field.TypeTime},
 		{Name: "closed_at", Type: field.TypeTime, Nullable: true},
 		{Name: "purge_after", Type: field.TypeTime, Nullable: true},
+		{Name: "capabilities", Type: field.TypeJSON, Nullable: true},
 	}
 	// ChannelsTable holds the schema information for the "channels" table.
 	ChannelsTable = &schema.Table{
@@ -106,6 +107,7 @@ var (
 		{Name: "unread_mentions", Type: field.TypeInt, Default: 0},
 		{Name: "show_read_receipts", Type: field.TypeBool, Default: true},
 		{Name: "notification_level", Type: field.TypeString, Size: 64, Default: "all"},
+		{Name: "source_event_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// ChannelMembersTable holds the schema information for the "channel_members" table.
 	ChannelMembersTable = &schema.Table{
@@ -144,6 +146,7 @@ var (
 		{Name: "scope_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "rules", Type: field.TypeJSON},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 500},
 	}
 	// ChatPoliciesTable holds the schema information for the "chat_policies" table.
 	ChatPoliciesTable = &schema.Table{

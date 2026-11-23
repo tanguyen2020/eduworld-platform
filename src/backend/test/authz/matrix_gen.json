@@ -1699,6 +1699,18 @@
     ]
   },
   {
+    "operation_id": "getChatPolicy",
+    "module": "chat",
+    "method": "GET",
+    "path": "/tenant/chat-policies/{scope_type}/{scope_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getChatRetentionSettings",
     "module": "identity",
     "method": "GET",
@@ -1836,6 +1848,17 @@
     ]
   },
   {
+    "operation_id": "getCommonTenantSocialOverride",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/chat/common-tenant-social",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getCommunityGoal",
     "module": "game",
     "method": "GET",
@@ -1913,6 +1936,17 @@
     "path": "/cms/learning/curricula/{curriculum_id}/versions/{version}/lo-mappings",
     "tenant_scoped": true,
     "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getEffectiveChatPolicy",
+    "module": "chat",
+    "method": "GET",
+    "path": "/tenant/chat-policies:effective",
+    "tenant_scoped": true,
     "required": [
       "cross_tenant",
       "role_denied"
@@ -2421,6 +2455,15 @@
     "has_id_param": true,
     "required": [
       "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getPlatformChatPolicy",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/chat/policies/platform",
+    "required": [
       "role_denied"
     ]
   },
@@ -4516,6 +4559,17 @@
     ]
   },
   {
+    "operation_id": "openDirectChannel",
+    "module": "chat",
+    "method": "POST",
+    "path": "/chat/direct-channels",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "pauseActivityAttempt",
     "module": "learning",
     "method": "POST",
@@ -4701,10 +4755,33 @@
     ]
   },
   {
+    "operation_id": "putChatPolicy",
+    "module": "chat",
+    "method": "PUT",
+    "path": "/tenant/chat-policies/{scope_type}/{scope_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "putChatRetentionSettings",
     "module": "identity",
     "method": "PUT",
     "path": "/admin/settings/chat-retention",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "putCommonTenantSocialOverride",
+    "module": "chat",
+    "method": "PUT",
+    "path": "/admin/chat/common-tenant-social",
     "tenant_scoped": true,
     "required": [
       "cross_tenant",
@@ -4744,6 +4821,15 @@
     "has_id_param": true,
     "required": [
       "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "putPlatformChatPolicy",
+    "module": "chat",
+    "method": "PUT",
+    "path": "/admin/chat/policies/platform",
+    "required": [
       "role_denied"
     ]
   },

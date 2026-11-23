@@ -49,7 +49,10 @@ func TestOperationsMatchSpec(t *testing.T) {
 			if public != o.Public {
 				t.Errorf("%s: public %v, spec %v", id, o.Public, public)
 			}
-			if (strings.HasPrefix(path, "/social/") || strings.HasPrefix(path, "/chat/")) && !public && o.Guard&httpx.GuardGamePlayer == 0 {
+			// F120: a /social/ route the Admin Portal also calls (x-portal-action: listClubs, getClub, approveClub, archiveClub)
+			// serves staff of the portal; its use case checks the caller (students never reach staff paths and vice versa).
+			_, portal := op.Extensions["x-portal-action"]
+			if (strings.HasPrefix(path, "/social/") || strings.HasPrefix(path, "/chat/")) && !public && o.Guard&httpx.GuardGamePlayer == 0 && !portal {
 				t.Errorf("%s: a player route needs the game_player guard", id)
 			}
 			var params []string
@@ -91,8 +94,9 @@ func TestOperationsMatchSpec(t *testing.T) {
 	}
 	// 14 social operations (F095), 3 chat (F115), listQuickMessages (F116 US4), 21 catalogue operations (F116 US2),
 	// 4 moderation switch operations (F116 US3), 13 Safety Team operations (F121), 10 message feature operations (F118) and
-	// 8 Game Studio sticker/GIF operations (F118: the shared /game-admin/{config_type} ones for sticker-packs/gifs + presign).
-	if len(found) != len(chathttp.Operations) || len(found) != 74 {
+	// 8 Game Studio sticker/GIF operations (F118: the shared /game-admin/{config_type} ones for sticker-packs/gifs + presign),
+	// 7 chat policy, 2 persistent channel/search and 21 club operations (F120).
+	if len(found) != len(chathttp.Operations) || len(found) != 104 {
 		t.Fatalf("chat operations found in the spec: %d of %d: %v", len(found), len(chathttp.Operations), found)
 	}
 	// F116-AC-18: the catalogue and switch administration is internal-gateway only (x-internal, /admin/), except the
@@ -117,7 +121,24 @@ func TestOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	for _, id := range append(append([]string{"listQuickMessages"}, chathttp.PlayerOperations...), chathttp.ChatOperations...) {
+	// F120-AC-11 (TC-TEN-003): the platform chat policy and the common-tenant override are internal-gateway routes only
+	// (x-internal, /admin/), never on the public gateway; the tenant/school levels are portal routes (/tenant/).
+	for path, item := range doc.Paths.Map() {
+		for _, op := range item.Operations() {
+			switch op.OperationID {
+			case "getPlatformChatPolicy", "putPlatformChatPolicy", "getCommonTenantSocialOverride", "putCommonTenantSocialOverride":
+				if internal, _ := op.Extensions["x-internal"].(bool); !internal || !strings.HasPrefix(path, "/admin/chat/") {
+					t.Errorf("%s %s: platform chat policy routes are x-internal under /admin/chat/", op.OperationID, path)
+				}
+			case "getChatPolicy", "putChatPolicy", "getEffectiveChatPolicy":
+				if !strings.HasPrefix(path, "/tenant/chat-policies") {
+					t.Errorf("%s %s: chat policy levels are portal routes", op.OperationID, path)
+				}
+			}
+		}
+	}
+	for _, id := range append(append(append([]string{"listQuickMessages"}, chathttp.PlayerOperations...), chathttp.ChatOperations...),
+		chathttp.PersistentOperations...) {
 		if chathttp.Operations[id].Guard&httpx.GuardGamePlayer == 0 {
 			t.Errorf("%s: player operation without game_player", id)
 		}

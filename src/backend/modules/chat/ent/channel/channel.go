@@ -55,6 +55,8 @@ const (
 	FieldClosedAt = "closed_at"
 	// FieldPurgeAfter holds the string denoting the purge_after field in the database.
 	FieldPurgeAfter = "purge_after"
+	// FieldCapabilities holds the string denoting the capabilities field in the database.
+	FieldCapabilities = "capabilities"
 	// Table holds the table name of the channel in the database.
 	Table = "channels"
 )
@@ -82,6 +84,7 @@ var Columns = []string{
 	FieldOpenedAt,
 	FieldClosedAt,
 	FieldPurgeAfter,
+	FieldCapabilities,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

@@ -167,6 +167,60 @@ paths:
           $ref: '#/components/responses/MessageBlocked'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /chat/direct-channels:
+    post:
+      x-service: chat
+      tags:
+        - chat
+      operationId: openDirectChannel
+      summary: Mở (hoặc lấy lại) channel tin nhắn riêng với một bạn bè (F120-AC-14)
+      description: |
+        Channel `direct` của cặp học sinh (thứ tự chuẩn hóa, id xác định) được tạo ở lần mở đầu tiên khi hai người là
+        bạn bè và không block nhau; mở lại trả cùng channel (`200`). Không là bạn bè, có block hoặc policy tắt `direct`
+        (kể cả tenant `common` chưa được System Admin bật lại — F120-AC-28) → `403 CHAT_NOT_ALLOWED`. Học sinh khác tenant
+        hoặc không tồn tại → `404`. Channel bị đóng băng do block vẫn trả về với `status = frozen` (gửi → `CHAT_NOT_ALLOWED`).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - user_id
+              properties:
+                user_id:
+                  $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Channel đã có
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Channel'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '201':
+          description: Channel vừa tạo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Channel'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /chat/quick-messages:
     get:
       x-service: chat
@@ -1159,6 +1213,16 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/ClubType'
+        - name: status
+          in: query
+          description: Lọc theo trạng thái (nhân sự trường; học sinh chỉ thấy club active của phạm vi mình)
+          schema:
+            $ref: '#/components/schemas/ClubStatus'
+        - name: school_id
+          in: query
+          description: Nhân sự trường — club của một trường trong phạm vi grant (bỏ qua với học sinh)
+          schema:
+            $ref: '#/components/schemas/Uuid'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -1219,6 +1283,8 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '451':
+          $ref: '#/components/responses/MessageBlocked'
   /social/clubs/{club_id}:
     get:
       x-service: chat
@@ -1868,6 +1934,134 @@ paths:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+  /admin/chat/policies/platform:
+    get:
+      x-service: chat
+      tags:
+        - admin
+      operationId: getPlatformChatPolicy
+      x-portal-action: action.platform_admin.chat_safety.policy
+      summary: Chính sách chat mặc định cấp platform
+      description: Chỉ gateway nội bộ + role platform có `platform.settings.write` (ADR-0027, ADR-0094). `ETag` = version.
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatPolicyDocument'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      x-service: chat
+      tags:
+        - admin
+      operationId: putPlatformChatPolicy
+      x-portal-action: action.platform_admin.chat_safety.policy
+      summary: Lưu chính sách chat cấp platform (always-on giữ nguyên, không điều kiện theo khối)
+      description: |
+        Chỉ System Admin (`platform.settings.write`). Cùng kiểm tra schema v5/always-on/không khối như `putChatPolicy`;
+        `allowed_hours` của channel bền vững phải nằm ngoài `platform_curfew` (`422 CHAT_POLICY_RELAX_NOT_ALLOWED`). Audit
+        before/after, phát `chat_policy.updated`.
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatPolicyPut'
+      responses:
+        '200':
+          description: Đã lưu version mới
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatPolicyDocument'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /admin/chat/common-tenant-social:
+    get:
+      x-service: chat
+      tags:
+        - admin
+      operationId: getCommonTenantSocialOverride
+      x-portal-action: action.platform_admin.chat_safety.policy
+      summary: Trạng thái bật lại DM/World/Area tự do của một tenant `common` (ADR-0078, F120-AC-28)
+      description: Chỉ role platform có `platform.settings.write`; `X-Tenant-Id` là tenant `common` đích (khác loại → `404`).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonTenantSocialOverride'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      x-service: chat
+      tags:
+        - admin
+      operationId: putCommonTenantSocialOverride
+      x-portal-action: action.platform_admin.chat_safety.policy
+      summary: System Admin bật lại (hoặc tắt lại) DM, World và chat tự do ở Area cho một tenant `common` (F120-AC-28)
+      description: |
+        Mặc định tenant `common` (`common_tenant_social_defaults`): `direct` và `world` tắt, `area` chỉ `quick` + `emoji`.
+        Chỉ System Admin (`platform.settings.write`), `reason` bắt buộc, audit; mọi instance áp dụng trong ≤ 60 giây. Role
+        tenant không gọi được (`403 PERMISSION_DENIED`). Kết bạn của tenant `common` thuộc cài đặt identity (F095).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommonTenantSocialOverrideUpdate'
+      responses:
+        '200':
+          description: Trạng thái mới
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonTenantSocialOverride'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /admin/chat/sensitive-categories:
     get:
       x-service: chat
@@ -2609,6 +2803,126 @@ paths:
                 $ref: '#/components/schemas/SensitiveCatalogVersion'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /tenant/chat-policies/{scope_type}/{scope_id}:
+    get:
+      x-service: chat
+      tags:
+        - tenant
+      operationId: getChatPolicy
+      x-portal-action: action.school_lms.chat_safety.view
+      summary: Chính sách chat của một cấp (tenant hoặc trường) — F120-AC-06
+      description: |
+        `scope_type = tenant` cần `tenant.settings.read` (`scope_id` = tenant của phiên); `scope_type = school` cần
+        `school.settings.read` trong trường đó. Chưa có chính sách ở cấp đó → `404`. Trường/tenant khác → `404`. Không có cấp
+        `class` (ADR-0095): giá trị khác `tenant`/`school` → `422 VALIDATION_FAILED`. `ETag` = version.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ChatPolicyScopeType'
+        - $ref: '#/components/parameters/ChatPolicyScopeId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatPolicyDocument'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+    put:
+      x-service: chat
+      tags:
+        - tenant
+      operationId: putChatPolicy
+      x-portal-action: action.school_lms.chat_safety.edit
+      summary: Lưu chính sách chat của một cấp (chỉ siết chặt hơn cấp trên) — F120-AC-06…09, AC-26, AC-27
+      description: |
+        `tenant` cần `tenant.settings.write`; `school` cần `school.settings.write` trong trường đó (School Admin trường mình).
+        Lần đầu không có bản trước: `If-Match: "0"`. Body được dựng thành tài liệu `chat-policy.schema.json` v5 rồi kiểm:
+        rule có điều kiện theo khối (`grade_band`, `grade_level`…) hay trường lạ → `422 VALIDATION_FAILED`; tắt/thu hẹp
+        `match`/`team`/`party` → `422 CHAT_POLICY_ALWAYS_ON`; nới lỏng hơn cấp trên (không có `allow_override_relax`) hoặc
+        `allowed_hours` vượt ra ngoài khoảng ngoài giờ giới nghiêm hiệu lực → `422 CHAT_POLICY_RELAX_NOT_ALLOWED`.
+        `chat_policy_preset` chỉ có ở cấp `school`, áp cho cả trường (không theo khối). Lưu version mới, audit
+        before/after, phát `chat_policy.updated`; mọi instance áp dụng trong ≤ 60 giây.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ChatPolicyScopeType'
+        - $ref: '#/components/parameters/ChatPolicyScopeId'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatPolicyPut'
+      responses:
+        '200':
+          description: Đã lưu version mới
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatPolicyDocument'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /tenant/chat-policies:effective:
+    get:
+      x-service: chat
+      tags:
+        - tenant
+      operationId: getEffectiveChatPolicy
+      x-portal-action: action.school_lms.chat_safety.view
+      summary: Chính sách chat hiệu lực của một loại channel trong một trường (platform ∩ tenant ∩ school) — F120-AC-10
+      description: |
+        Cần `school.settings.read` trong trường đó. Giống nhau cho mọi học sinh của trường (không theo khối). Không trả danh
+        mục từ nhạy cảm. Loại channel bị tắt ở một cấp → `enabled = false`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: school_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: channel_type
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChannelType'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EffectiveChatPolicy'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationFailed'
   /tenant/chat/categories:
@@ -4215,6 +4529,23 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
+    ChatPolicyScopeType:
+      name: scope_type
+      in: path
+      required: true
+      description: Cấp chính sách (không có class — ADR-0095)
+      schema:
+        type: string
+        enum:
+          - tenant
+          - school
+    ChatPolicyScopeId:
+      name: scope_id
+      in: path
+      required: true
+      description: tenant_id (scope tenant) hoặc school_id (scope school)
+      schema:
+        $ref: '#/components/schemas/Uuid'
     CaseIdPath:
       name: case_id
       in: path
@@ -4289,6 +4620,17 @@ components:
           enum:
             - open
             - closed
+            - read_only
+            - frozen
+          description: 'closed: channel gameplay đã đóng; read_only: club bị khóa/lưu trữ; frozen: DM bị đóng băng do block (F120)'
+        capabilities:
+          type: object
+          description: Không có voice chat (FR-CHAT-007, ADR-0070) — voice luôn false
+          properties:
+            voice:
+              type: boolean
+              enum:
+                - false
         purge_after:
           $ref: '#/components/schemas/Timestamp'
         muted:
@@ -5214,6 +5556,13 @@ components:
         - subject_club
         - competition_team
         - interest_group
+    ClubStatus:
+      type: string
+      enum:
+        - pending_approval
+        - active
+        - locked
+        - archived
     Club:
       type: object
       required:
@@ -5260,13 +5609,6 @@ components:
           type: integer
         created_at:
           $ref: '#/components/schemas/Timestamp'
-    ClubStatus:
-      type: string
-      enum:
-        - pending_approval
-        - active
-        - locked
-        - archived
     ClubRole:
       type: string
       enum:
@@ -5575,6 +5917,151 @@ components:
           type: string
           minLength: 1
           maxLength: 4000
+    ChatPolicyDocument:
+      type: object
+      required:
+        - policy_id
+        - scope_type
+        - version
+        - rules
+      properties:
+        policy_id:
+          $ref: '#/components/schemas/Uuid'
+        scope_type:
+          type: string
+          enum:
+            - platform
+            - tenant
+            - school
+        scope_id:
+          $ref: '#/components/schemas/Uuid'
+        version:
+          type: integer
+          minimum: 1
+        rules:
+          $ref: '#/components/schemas/ChatPolicyRules'
+        global_rate:
+          $ref: '#/components/schemas/ChatPolicyRate'
+        world_scope:
+          type: string
+          enum:
+            - school
+            - tenant
+        chat_policy_preset:
+          type: string
+          enum:
+            - standard
+            - quick_message_emote_only
+        reason:
+          type: string
+          maxLength: 500
+        updated_by:
+          $ref: '#/components/schemas/Uuid'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+    ChatPolicyRules:
+      type: array
+      minItems: 1
+      maxItems: 6
+      description: |
+        Rule theo `channel_type` (một phần tử của `rules` trong `specs/schemas/chat-policy.schema.json` v5). Server kiểm từng
+        rule theo schema đó (không trường điều kiện theo khối — `grade_band`/`grade_level` → `422 VALIDATION_FAILED`).
+      items:
+        type: object
+        maxProperties: 20
+        required:
+          - channel_type
+        properties:
+          channel_type:
+            $ref: '#/components/schemas/ChannelType'
+    ChatPolicyRate:
+      type: object
+      additionalProperties: false
+      required:
+        - messages_per_minute
+      properties:
+        messages_per_minute:
+          type: integer
+          minimum: 1
+          maximum: 60
+        burst:
+          type: integer
+          minimum: 1
+          maximum: 10
+    ChatPolicyPut:
+      type: object
+      additionalProperties: false
+      required:
+        - rules
+        - reason
+      properties:
+        rules:
+          $ref: '#/components/schemas/ChatPolicyRules'
+        global_rate:
+          $ref: '#/components/schemas/ChatPolicyRate'
+        world_scope:
+          type: string
+          enum:
+            - school
+            - tenant
+          description: '`tenant` chỉ ở cấp tenant của tenant `unit` (ADR-0054); cấp khác → 422 CHAT_POLICY_RELAX_NOT_ALLOWED'
+        chat_policy_preset:
+          type: string
+          enum:
+            - standard
+            - quick_message_emote_only
+          description: Chỉ ở cấp `school`, áp cho cả trường (ADR-0078, R15); cấp khác → 422 VALIDATION_FAILED
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 500
+    CommonTenantSocialOverride:
+      type: object
+      required:
+        - tenant_id
+        - direct_enabled
+        - world_enabled
+        - area_free_text_enabled
+        - version
+      properties:
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
+        direct_enabled:
+          type: boolean
+        world_enabled:
+          type: boolean
+        area_free_text_enabled:
+          type: boolean
+          description: 'false: Area chỉ quick + emoji (mặc định tenant common)'
+        reason:
+          type: string
+          maxLength: 500
+        version:
+          type: integer
+          minimum: 0
+        updated_by:
+          $ref: '#/components/schemas/Uuid'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+    CommonTenantSocialOverrideUpdate:
+      type: object
+      additionalProperties: false
+      required:
+        - direct_enabled
+        - world_enabled
+        - area_free_text_enabled
+        - reason
+      properties:
+        direct_enabled:
+          type: boolean
+        world_enabled:
+          type: boolean
+        area_free_text_enabled:
+          type: boolean
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 500
     SensitiveTermCategory:
       allOf:
         - $ref: '#/components/schemas/SensitiveTermCategoryInput'
@@ -6088,6 +6575,84 @@ components:
             - auto_expire
         changed_at:
           $ref: '#/components/schemas/Timestamp'
+    EffectiveChatPolicy:
+      type: object
+      required:
+        - channel_type
+        - enabled
+        - allowed_kinds
+        - sources
+      properties:
+        channel_type:
+          $ref: '#/components/schemas/ChannelType'
+        enabled:
+          type: boolean
+        allowed_kinds:
+          type: array
+          maxItems: 5
+          items:
+            type: string
+            enum:
+              - text
+              - emoji
+              - quick
+              - sticker
+              - gif
+        max_text_length:
+          type: integer
+          minimum: 0
+        rate:
+          $ref: '#/components/schemas/ChatPolicyRate'
+        slow_mode_seconds:
+          type: integer
+          minimum: 0
+        allowed_hours:
+          type: array
+          maxItems: 14
+          description: Khung giờ của từng cấp có đặt (giao các cấp); rỗng = không giới hạn ngoài giờ giới nghiêm
+          items:
+            type: object
+            required:
+              - days
+              - from
+              - to
+            properties:
+              days:
+                type: string
+                maxLength: 64
+              from:
+                type: string
+                maxLength: 5
+                pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+              to:
+                type: string
+                maxLength: 5
+                pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+        preset:
+          type: string
+          enum:
+            - standard
+            - quick_message_emote_only
+        features:
+          $ref: '#/components/schemas/ChatFeatures'
+        sources:
+          type: array
+          maxItems: 4
+          items:
+            type: object
+            required:
+              - scope_type
+            properties:
+              scope_type:
+                type: string
+                enum:
+                  - platform
+                  - common_tenant_defaults
+                  - tenant
+                  - school
+              version:
+                type: integer
+                minimum: 0
     TenantSensitiveCategory:
       type: object
       required:

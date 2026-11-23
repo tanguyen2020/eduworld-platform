@@ -1,0 +1,894 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/chat-policy.schema.json",
+  "title": "ChatPolicy",
+  "description": "Chính sách chat ở một cấp (platform → tenant → school; cấp school do school_admin đặt — ADR-0072; không còn cấp class — ADR-0095). Một bộ quy tắc cho MỌI khối 1–9: rule không có điều kiện theo grade_band/grade_level (ADR-0020, Accepted). Cấp dưới chỉ được siết chặt hơn cấp trên trừ khi rule cấp trên có allow_override_relax=true. Thiếu rule cho channel_type = deny. Pipeline kiểm tra hợp lệ (validation) bật mặc định; danh mục từ nhạy cảm và công tắc kiểm duyệt theo ADR-0030 (moderation_switches chỉ ở cấp platform/tenant, chỉ System Admin đổi). Channel gameplay match/team/party là always-on (ADR-0020 mục 6): ở mọi cấp phải enabled=true, đủ text/emoji/quick, không có allowed_hours, slow_mode ≤ 10 s; chỉ mute/block cá nhân hoặc sanction mới ngăn một người gửi. Xem docs/03-social-multiplayer/CHAT_SYSTEM.md §3 và MODERATION.md §3, §11, §12.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "scope_type",
+    "rules"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 5,
+      "description": "v5 thêm sticker/gif và features theo ADR-0034 (sửa tại chỗ theo ADR-0095: bỏ scope_type class và channel_type class/study_group — chỉ seed platform từng mang các giá trị này và được thay cùng migration); v4 thêm channel match và ràng buộc always-on (ADR-0020 mục 6); v3 thêm moderation_switches và sensitive_term_policy (ADR-0030)"
+    },
+    "policy_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "scope_type": {
+      "enum": [
+        "platform",
+        "tenant",
+        "school"
+      ]
+    },
+    "scope_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "null khi scope_type=platform"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "timezone": {
+      "type": "string",
+      "maxLength": 64,
+      "default": "Asia/Ho_Chi_Minh"
+    },
+    "global_rate": {
+      "description": "Giới hạn tổng mỗi người trên mọi channel",
+      "$ref": "#/$defs/rate"
+    },
+    "world_scope": {
+      "enum": [
+        "school",
+        "tenant"
+      ],
+      "default": "school",
+      "description": "Phạm vi World chat: cùng trường (mặc định) hoặc toàn tenant (chỉ tenant `unit`/platform đặt được)"
+    },
+    "moderation_switches": {
+      "$ref": "#/$defs/moderation_switches"
+    },
+    "sensitive_term_policy": {
+      "description": "Mặc định cho mọi channel ở cấp này; rule có thể ghi đè (chỉ siết chặt hơn)",
+      "$ref": "#/$defs/sensitive_term_policy"
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/rule"
+      }
+    },
+    "quick_message_set_id": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Bộ Quick Message áp dụng (dùng chung cho mọi lớp) — tham chiếu nội dung CMS"
+    },
+    "chat_policy_preset": {
+      "enum": [
+        "standard",
+        "quick_message_emote_only"
+      ],
+      "default": "standard",
+      "description": "Preset cấp trường (ADR-0078, CHILD_SAFETY §3.5): quick_message_emote_only = mọi channel của trường, kể cả match/team/party, chỉ nhận quick + emoji; áp cho cả trường, không theo khối/lớp (R15). Chỉ có ở scope_type=school; F115 đọc, F120 ghi."
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 2000
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "scope_type": {
+            "const": "school"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "moderation_switches": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scope_type": {
+            "const": "platform"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "scope_id": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "required": [
+          "scope_id"
+        ],
+        "properties": {
+          "scope_id": {
+            "type": "string",
+            "maxLength": 64
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scope_type": {
+            "enum": [
+              "platform",
+              "tenant"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "chat_policy_preset": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scope_type": {
+            "enum": [
+              "platform",
+              "tenant"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "chat_policy_preset": false
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "channel_type": {
+      "enum": [
+        "world",
+        "area",
+        "match",
+        "party",
+        "team",
+        "direct"
+      ]
+    },
+    "message_kind": {
+      "enum": [
+        "text",
+        "emoji",
+        "quick",
+        "sticker",
+        "gif"
+      ]
+    },
+    "decision": {
+      "enum": [
+        "allow",
+        "mask",
+        "block",
+        "hold_for_review",
+        "block_and_alert"
+      ]
+    },
+    "category_code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]{1,40}$"
+    },
+    "moderation_switches": {
+      "type": "object",
+      "description": "Công tắc kiểm duyệt (ADR-0030). enabled_all=false tắt toàn bộ bước nội dung; steps tắt từng bước. Khi tắt vẫn giữ độ dài tối đa, rate limit, quyền channel, sanction, block/mute/report. Có bước nào tắt thì reason bắt buộc.",
+      "required": [
+        "enabled_all",
+        "steps"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "enabled_all": {
+          "type": "boolean",
+          "default": true
+        },
+        "steps": {
+          "type": "object",
+          "required": [
+            "sensitive_terms",
+            "pii",
+            "spam",
+            "bullying",
+            "async_analysis"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "sensitive_terms": {
+              "type": "boolean"
+            },
+            "pii": {
+              "type": "boolean"
+            },
+            "spam": {
+              "type": "boolean"
+            },
+            "bullying": {
+              "type": "boolean"
+            },
+            "async_analysis": {
+              "type": "boolean"
+            }
+          }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 1000
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_by": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "if": {
+        "anyOf": [
+          {
+            "properties": {
+              "enabled_all": {
+                "const": false
+              }
+            }
+          },
+          {
+            "properties": {
+              "steps": {
+                "type": "object",
+                "properties": {
+                  "sensitive_terms": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "steps": {
+                "type": "object",
+                "properties": {
+                  "pii": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "steps": {
+                "type": "object",
+                "properties": {
+                  "spam": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "steps": {
+                "type": "object",
+                "properties": {
+                  "bullying": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "steps": {
+                "type": "object",
+                "properties": {
+                  "async_analysis": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "then": {
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 10
+          }
+        }
+      }
+    },
+    "sensitive_term_policy": {
+      "type": "object",
+      "description": "Cách áp danh mục từ nhạy cảm (ADR-0030). Nội dung danh mục quản lý trong CMS, không nằm trong policy.",
+      "additionalProperties": false,
+      "properties": {
+        "categories": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Category đang áp dụng; bỏ trống = mọi category đang bật của danh mục",
+          "items": {
+            "$ref": "#/$defs/category_code"
+          }
+        },
+        "action_overrides": {
+          "type": "object",
+          "description": "Ghi đè action theo category (chỉ được nặng hơn mặc định của category)",
+          "propertyNames": {
+            "$ref": "#/$defs/category_code"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/decision"
+          }
+        },
+        "tenant_term_set_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Bộ từ bổ sung của tenant"
+        }
+      }
+    },
+    "hhmm": {
+      "type": "string",
+      "maxLength": 32,
+      "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+    },
+    "rate": {
+      "type": "object",
+      "required": [
+        "messages_per_minute"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "messages_per_minute": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "burst": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      }
+    },
+    "time_window": {
+      "type": "object",
+      "required": [
+        "days",
+        "from",
+        "to"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "days": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Khoảng ngày, vd. mon-sun, mon-fri, sat-sun",
+          "pattern": "^(mon|tue|wed|thu|fri|sat|sun)(-(mon|tue|wed|thu|fri|sat|sun))?$"
+        },
+        "from": {
+          "$ref": "#/$defs/hhmm"
+        },
+        "to": {
+          "$ref": "#/$defs/hhmm"
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "description": "Cấu hình pipeline kiểm tra hợp lệ (bắt buộc cho mọi tin): normalize → định dạng/độ dài → profanity → PII → spam/flood → bắt nạt → quyết định.",
+      "required": [
+        "strictness"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "strictness": {
+          "enum": [
+            "standard",
+            "strict",
+            "very_strict"
+          ],
+          "description": "Ngưỡng của classifier và độ rộng blocklist. Cấp dưới chỉ được nâng."
+        },
+        "profanity": {
+          "$ref": "#/$defs/decision",
+          "default": "mask"
+        },
+        "pii": {
+          "$ref": "#/$defs/decision",
+          "default": "block"
+        },
+        "unknown_link": {
+          "$ref": "#/$defs/decision",
+          "default": "block"
+        },
+        "spam": {
+          "$ref": "#/$defs/decision",
+          "default": "block"
+        },
+        "bullying_suspected": {
+          "$ref": "#/$defs/decision",
+          "default": "hold_for_review"
+        },
+        "custom_blocklist_id": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "[Deprecated v3] dùng sensitive_term_policy.tenant_term_set_id"
+        }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "description": "Rule theo channel_type. Không chấp nhận trường grade_band/grade_level (additionalProperties=false + propertyNames).",
+      "required": [
+        "channel_type",
+        "enabled",
+        "allowed_kinds"
+      ],
+      "additionalProperties": false,
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "grade_band",
+            "grade_level",
+            "grade_levels",
+            "grade"
+          ]
+        }
+      },
+      "properties": {
+        "channel_type": {
+          "$ref": "#/$defs/channel_type"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "false = channel tắt cho mọi học sinh trong phạm vi policy. Không áp dụng cho match/team/party (always-on)."
+        },
+        "allowed_kinds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/message_kind"
+          }
+        },
+        "reactions": {
+          "type": "boolean",
+          "default": true
+        },
+        "max_text_length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "rate": {
+          "$ref": "#/$defs/rate"
+        },
+        "slow_mode_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 300,
+          "default": 0
+        },
+        "allowed_hours": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/time_window"
+          }
+        },
+        "validation": {
+          "$ref": "#/$defs/validation"
+        },
+        "sensitive_term_policy": {
+          "$ref": "#/$defs/sensitive_term_policy"
+        },
+        "images": {
+          "enum": [
+            "block"
+          ],
+          "default": "block",
+          "description": "Không gửi ảnh/file trong chat"
+        },
+        "retention_days": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3650
+        },
+        "allow_override_relax": {
+          "type": "boolean",
+          "default": false,
+          "description": "Cho phép cấp dưới nới rule này (chỉ có nghĩa ở platform/tenant)"
+        },
+        "features": {
+          "$ref": "#/$defs/features"
+        }
+      },
+      "allOf": [
+        {
+          "$comment": "ADR-0033: chat gameplay (match/party/team) giữ tối thiểu 3 ngày trước khi purge",
+          "if": {
+            "properties": {
+              "channel_type": {
+                "enum": [
+                  "match",
+                  "party",
+                  "team"
+                ]
+              }
+            },
+            "required": [
+              "channel_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "retention_days": {
+                "type": "integer",
+                "minimum": 3
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "allowed_kinds": {
+                "type": "array",
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "validation": true
+            },
+            "required": [
+              "validation"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "allowed_kinds": {
+                "type": "array",
+                "contains": {
+                  "const": "text"
+                }
+              }
+            },
+            "required": [
+              "allowed_kinds"
+            ]
+          },
+          "then": {
+            "properties": {
+              "max_text_length": true,
+              "rate": true
+            },
+            "required": [
+              "max_text_length",
+              "rate"
+            ]
+          }
+        },
+        {
+          "$comment": "ADR-0020 mục 6: chat gameplay luôn có",
+          "if": {
+            "properties": {
+              "channel_type": {
+                "enum": [
+                  "match",
+                  "team",
+                  "party"
+                ]
+              }
+            },
+            "required": [
+              "channel_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "enabled": {
+                "const": true
+              },
+              "allowed_kinds": {
+                "type": "array",
+                "allOf": [
+                  {
+                    "contains": {
+                      "const": "text"
+                    }
+                  },
+                  {
+                    "contains": {
+                      "const": "emoji"
+                    }
+                  },
+                  {
+                    "contains": {
+                      "const": "quick"
+                    }
+                  }
+                ]
+              },
+              "allowed_hours": false,
+              "slow_mode_seconds": {
+                "type": "integer",
+                "maximum": 10
+              }
+            }
+          }
+        },
+        {
+          "$comment": "ADR-0034: World/Area không có pin, receipts, typing, forward ra ngoài, tìm kiếm",
+          "if": {
+            "properties": {
+              "channel_type": {
+                "enum": [
+                  "world",
+                  "area"
+                ]
+              }
+            },
+            "required": [
+              "channel_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "features": {
+                "type": "object",
+                "properties": {
+                  "pin": {
+                    "const": false
+                  },
+                  "typing": {
+                    "const": false
+                  },
+                  "forward": {
+                    "const": false
+                  },
+                  "receipts": {
+                    "const": "none"
+                  },
+                  "search": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "$comment": "ADR-0020 mục 6 + ADR-0034: channel gameplay luôn có đủ tính năng chat",
+          "if": {
+            "properties": {
+              "channel_type": {
+                "enum": [
+                  "match",
+                  "party",
+                  "team"
+                ]
+              }
+            },
+            "required": [
+              "channel_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "allowed_kinds": {
+                "type": "array",
+                "allOf": [
+                  {
+                    "contains": {
+                      "const": "sticker"
+                    }
+                  },
+                  {
+                    "contains": {
+                      "const": "gif"
+                    }
+                  }
+                ]
+              },
+              "features": {
+                "type": "object",
+                "required": [
+                  "edit",
+                  "recall",
+                  "reply",
+                  "quote",
+                  "sticker",
+                  "gif",
+                  "reaction",
+                  "mention",
+                  "typing",
+                  "receipts"
+                ],
+                "properties": {
+                  "edit": {
+                    "const": true
+                  },
+                  "recall": {
+                    "const": true
+                  },
+                  "reply": {
+                    "const": true
+                  },
+                  "quote": {
+                    "const": true
+                  },
+                  "sticker": {
+                    "const": true
+                  },
+                  "gif": {
+                    "const": true
+                  },
+                  "reaction": {
+                    "const": true
+                  },
+                  "mention": {
+                    "const": true
+                  },
+                  "typing": {
+                    "const": true
+                  },
+                  "receipts": {
+                    "const": "per_member"
+                  }
+                }
+              }
+            },
+            "required": [
+              "features"
+            ]
+          }
+        }
+      ]
+    },
+    "features": {
+      "type": "object",
+      "description": "Tính năng chat theo loại channel (ADR-0034). Chỉ cấp platform được bật; cấp dưới chỉ được tắt (siết chặt), trừ các tính năng bắt buộc của channel gameplay.",
+      "additionalProperties": false,
+      "properties": {
+        "edit": {
+          "type": "boolean"
+        },
+        "recall": {
+          "type": "boolean"
+        },
+        "reply": {
+          "type": "boolean"
+        },
+        "quote": {
+          "type": "boolean"
+        },
+        "forward": {
+          "type": "boolean"
+        },
+        "sticker": {
+          "type": "boolean"
+        },
+        "gif": {
+          "type": "boolean"
+        },
+        "reaction": {
+          "type": "boolean"
+        },
+        "mention": {
+          "type": "boolean"
+        },
+        "pin": {
+          "type": "boolean"
+        },
+        "typing": {
+          "type": "boolean"
+        },
+        "receipts": {
+          "enum": [
+            "none",
+            "count",
+            "per_member"
+          ]
+        },
+        "search": {
+          "type": "boolean"
+        },
+        "edit_window_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60,
+          "default": 15
+        },
+        "recall_window_hours": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 72,
+          "default": 24
+        },
+        "max_pins": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3,
+          "default": 3
+        },
+        "max_mentions": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "default": 5
+        },
+        "max_forward_targets": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "default": 5
+        },
+        "max_reactions_per_user": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3,
+          "default": 3
+        }
+      }
+    }
+  }
+}

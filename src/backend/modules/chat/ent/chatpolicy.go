@@ -45,7 +45,9 @@ type ChatPolicy struct {
 	// SchoolID holds the value of the "school_id" field.
 	SchoolID *uuid.UUID `json:"school_id,omitempty"`
 	// Rules holds the value of the "rules" field.
-	Rules        jsontext.Value `json:"rules,omitempty"`
+	Rules jsontext.Value `json:"rules,omitempty"`
+	// Reason holds the value of the "reason" field.
+	Reason       *string `json:"reason,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -60,7 +62,7 @@ func (*ChatPolicy) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case chatpolicy.FieldVersion:
 			values[i] = new(sql.NullInt64)
-		case chatpolicy.FieldDeleteReason, chatpolicy.FieldScopeType:
+		case chatpolicy.FieldDeleteReason, chatpolicy.FieldScopeType, chatpolicy.FieldReason:
 			values[i] = new(sql.NullString)
 		case chatpolicy.FieldCreatedAt, chatpolicy.FieldUpdatedAt, chatpolicy.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -175,6 +177,13 @@ func (_m *ChatPolicy) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field rules: %w", err)
 				}
 			}
+		case chatpolicy.FieldReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field reason", values[i])
+			} else if value.Valid {
+				_m.Reason = new(string)
+				*_m.Reason = value.String
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -265,6 +274,11 @@ func (_m *ChatPolicy) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("rules=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Rules))
+	builder.WriteString(", ")
+	if v := _m.Reason; v != nil {
+		builder.WriteString("reason=")
+		builder.WriteString(*v)
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

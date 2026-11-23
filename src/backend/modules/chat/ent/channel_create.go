@@ -269,6 +269,12 @@ func (_c *ChannelCreate) SetNillablePurgeAfter(v *time.Time) *ChannelCreate {
 	return _c
 }
 
+// SetCapabilities sets the "capabilities" field.
+func (_c *ChannelCreate) SetCapabilities(v map[string]bool) *ChannelCreate {
+	_c.mutation.SetCapabilities(v)
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *ChannelCreate) SetID(v uuid.UUID) *ChannelCreate {
 	_c.mutation.SetID(v)
@@ -519,6 +525,10 @@ func (_c *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.PurgeAfter(); ok {
 		_spec.SetField(channel.FieldPurgeAfter, field.TypeTime, value)
 		_node.PurgeAfter = &value
+	}
+	if value, ok := _c.mutation.Capabilities(); ok {
+		_spec.SetField(channel.FieldCapabilities, field.TypeJSON, value)
+		_node.Capabilities = value
 	}
 	return _node, _spec
 }

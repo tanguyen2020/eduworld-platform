@@ -24,6 +24,8 @@ type PresenceSignal struct {
 	TenantID uuid.UUID
 	UserID   uuid.UUID
 	Presence social.Presence
+	// RoomID is the hub instance reported by the gateway ("" when none; F120: the Area channel of the student).
+	RoomID string
 }
 
 // PresenceFanout sends presence.friend.updated to the online friends of a student when what they may see changes
@@ -37,6 +39,8 @@ type PresenceFanout struct {
 	Cache     port.FriendCache // nil: no cache
 	Realtime  port.RealtimePublisher
 	Metrics   port.Metrics // nil: no metrics
+	// Rooms keeps the hub instance of the student for its Area channel (F120-AC-13); nil: none.
+	Rooms port.RoomTracker
 }
 
 var errSignal = errors.New("presence: signal without tenant or user")
@@ -45,6 +49,15 @@ var errSignal = errors.New("presence: signal without tenant or user")
 func (h PresenceFanout) Handle(ctx context.Context, s PresenceSignal) (int, error) {
 	if s.TenantID == uuid.Nil || s.UserID == uuid.Nil {
 		return 0, errSignal
+	}
+	if h.Rooms != nil {
+		room := s.RoomID
+		if s.Presence.Status == social.PresenceOffline {
+			room = ""
+		}
+		if err := h.Rooms.SetRoom(ctx, s.TenantID, s.UserID, room); err != nil {
+			slog.WarnContext(ctx, "chat: room of the student not kept", "error", err)
+		}
 	}
 	prev, stored, err := h.Store.Put(ctx, s.UserID, s.Presence)
 	if err != nil || !stored {

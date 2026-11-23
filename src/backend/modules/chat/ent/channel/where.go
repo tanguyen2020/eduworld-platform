@@ -1065,6 +1065,16 @@ func PurgeAfterNotNil() predicate.Channel {
 	return predicate.Channel(sql.FieldNotNull(FieldPurgeAfter))
 }
 
+// CapabilitiesIsNil applies the IsNil predicate on the "capabilities" field.
+func CapabilitiesIsNil() predicate.Channel {
+	return predicate.Channel(sql.FieldIsNull(FieldCapabilities))
+}
+
+// CapabilitiesNotNil applies the NotNil predicate on the "capabilities" field.
+func CapabilitiesNotNil() predicate.Channel {
+	return predicate.Channel(sql.FieldNotNull(FieldCapabilities))
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Channel) predicate.Channel {
 	return predicate.Channel(sql.AndPredicates(predicates...))

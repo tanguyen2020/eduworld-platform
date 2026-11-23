@@ -41,6 +41,8 @@ const (
 	FieldSchoolID = "school_id"
 	// FieldRules holds the string denoting the rules field in the database.
 	FieldRules = "rules"
+	// FieldReason holds the string denoting the reason field in the database.
+	FieldReason = "reason"
 	// Table holds the table name of the chatpolicy in the database.
 	Table = "chat_policies"
 )
@@ -61,6 +63,7 @@ var Columns = []string{
 	FieldScopeID,
 	FieldSchoolID,
 	FieldRules,
+	FieldReason,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -93,6 +96,8 @@ var (
 	DefaultVersion int64
 	// ScopeTypeValidator is a validator for the "scope_type" field. It is called by the builders before save.
 	ScopeTypeValidator func(string) error
+	// ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	ReasonValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -163,4 +168,9 @@ func ByScopeID(opts ...sql.OrderTermOption) OrderOption {
 // BySchoolID orders the results by the school_id field.
 func BySchoolID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSchoolID, opts...).ToFunc()
+}
+
+// ByReason orders the results by the reason field.
+func ByReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReason, opts...).ToFunc()
 }

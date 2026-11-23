@@ -162,3 +162,43 @@ type ChatMetrics interface {
 	SendLatency(d time.Duration)
 	PublishError()
 }
+
+// PolicySchema validates a chat policy document against specs/schemas/chat-policy.schema.json v5 (F120-AC-06): the JSON
+// pointers of the failing values (nil = valid), never the values. err only when the schema itself cannot be loaded.
+type PolicySchema interface {
+	Validate(raw []byte) (bad []string, err error)
+}
+
+// PolicyGenerations versions the cached effective policies (F120-AC-10): a write of a level raises the generation of its
+// tenant (or of the platform) after the commit, and every instance builds new cache keys at once (≤ 60 s, F120-AC-26).
+// A failing read answers 0 (the cache TTL chat_policy_cache still bounds staleness).
+type PolicyGenerations interface {
+	Generation(ctx context.Context, tenant uuid.UUID) (string, error)
+	Bump(ctx context.Context, tenant *uuid.UUID) error
+}
+
+// BroadcastFanout publishes chat.message.created to every connection subscribed to an implicit channel (world, area —
+// F120-AC-12, AC-13): the gateway joined them after the access check of chat.channel.join; there is no member list.
+type BroadcastFanout interface {
+	Broadcast(ctx context.Context, e message.Envelope, sender read.ChatCard) error
+}
+
+// MembershipPush sends chat.channel.membership_changed to one student after a commit (F120: club join/leave, direct
+// opened, read_only/frozen/open). Best effort: listMyChannels is the source of truth.
+type MembershipPush interface {
+	MembershipChanged(ctx context.Context, user uuid.UUID, channel uuid.UUID, channelType, op, status string) error
+}
+
+// RoomTracker keeps the hub instance (room_id) the realtime gateway reported for a connected student (presence signal
+// ew.rt.presence.*, F120-AC-13): the Area channel accepts a message only from the room of its scope. Temporary state
+// (ADR-0004); "" when unknown.
+type RoomTracker interface {
+	SetRoom(ctx context.Context, tenant, user uuid.UUID, room string) error
+	Room(ctx context.Context, tenant, user uuid.UUID) (string, error)
+}
+
+// DisplayTextChecker runs a name or description typed by a student through the moderation pipeline (club name,
+// description, event title — F120-AC-17, MODERATION §1): only a clean result is allowed; an error fails closed.
+type DisplayTextChecker interface {
+	CheckDisplayText(ctx context.Context, tenant uuid.UUID, text string) (allowed bool, err error)
+}

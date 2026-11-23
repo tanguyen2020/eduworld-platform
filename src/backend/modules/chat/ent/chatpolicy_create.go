@@ -188,6 +188,20 @@ func (_c *ChatPolicyCreate) SetRules(v jsontext.Value) *ChatPolicyCreate {
 	return _c
 }
 
+// SetReason sets the "reason" field.
+func (_c *ChatPolicyCreate) SetReason(v string) *ChatPolicyCreate {
+	_c.mutation.SetReason(v)
+	return _c
+}
+
+// SetNillableReason sets the "reason" field if the given value is not nil.
+func (_c *ChatPolicyCreate) SetNillableReason(v *string) *ChatPolicyCreate {
+	if v != nil {
+		_c.SetReason(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *ChatPolicyCreate) SetID(v uuid.UUID) *ChatPolicyCreate {
 	_c.mutation.SetID(v)
@@ -294,6 +308,11 @@ func (_c *ChatPolicyCreate) check() error {
 	if _, ok := _c.mutation.Rules(); !ok {
 		return &ValidationError{Name: "rules", err: errors.New(`ent: missing required field "ChatPolicy.rules"`)}
 	}
+	if v, ok := _c.mutation.Reason(); ok {
+		if err := chatpolicy.ReasonValidator(v); err != nil {
+			return &ValidationError{Name: "reason", err: fmt.Errorf(`ent: validator failed for field "ChatPolicy.reason": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -381,6 +400,10 @@ func (_c *ChatPolicyCreate) createSpec() (*ChatPolicy, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Rules(); ok {
 		_spec.SetField(chatpolicy.FieldRules, field.TypeJSON, value)
 		_node.Rules = value
+	}
+	if value, ok := _c.mutation.Reason(); ok {
+		_spec.SetField(chatpolicy.FieldReason, field.TypeString, value)
+		_node.Reason = &value
 	}
 	return _node, _spec
 }

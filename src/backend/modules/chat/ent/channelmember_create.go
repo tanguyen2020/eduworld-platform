@@ -283,6 +283,20 @@ func (_c *ChannelMemberCreate) SetNillableNotificationLevel(v *string) *ChannelM
 	return _c
 }
 
+// SetSourceEventID sets the "source_event_id" field.
+func (_c *ChannelMemberCreate) SetSourceEventID(v uuid.UUID) *ChannelMemberCreate {
+	_c.mutation.SetSourceEventID(v)
+	return _c
+}
+
+// SetNillableSourceEventID sets the "source_event_id" field if the given value is not nil.
+func (_c *ChannelMemberCreate) SetNillableSourceEventID(v *uuid.UUID) *ChannelMemberCreate {
+	if v != nil {
+		_c.SetSourceEventID(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *ChannelMemberCreate) SetID(v uuid.UUID) *ChannelMemberCreate {
 	_c.mutation.SetID(v)
@@ -561,6 +575,10 @@ func (_c *ChannelMemberCreate) createSpec() (*ChannelMember, *sqlgraph.CreateSpe
 	if value, ok := _c.mutation.NotificationLevel(); ok {
 		_spec.SetField(channelmember.FieldNotificationLevel, field.TypeString, value)
 		_node.NotificationLevel = value
+	}
+	if value, ok := _c.mutation.SourceEventID(); ok {
+		_spec.SetField(channelmember.FieldSourceEventID, field.TypeUUID, value)
+		_node.SourceEventID = &value
 	}
 	return _node, _spec
 }

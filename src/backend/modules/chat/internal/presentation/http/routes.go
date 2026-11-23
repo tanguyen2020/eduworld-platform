@@ -58,6 +58,12 @@ type Handlers struct {
 	Features *FeatureHandlers
 	// Assets serves the Game Studio sticker/GIF administration (F118, core-api; nil: unmounted).
 	Assets *AssetHandlers
+	// Policies serves the chat policy levels (F120 US2, core-api; nil: unmounted).
+	Policies *PolicyHandlers
+	// Persistent serves the persistent channels (direct) and the search of the players (F120 US3, US5; nil: unmounted).
+	Persistent *PersistentHandlers
+	// Clubs serves the clubs (F120 US4; nil: unmounted).
+	Clubs *ClubHandlers
 }
 
 func op(id, method, pattern string, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -137,6 +143,21 @@ func Register(s *httpx.Server, h Handlers) error {
 	}
 	if h.Assets != nil {
 		if err := registerAssets(s, h.Assets); err != nil {
+			return err
+		}
+	}
+	if h.Policies != nil {
+		if err := registerPolicies(s, h.Policies); err != nil {
+			return err
+		}
+	}
+	if h.Persistent != nil {
+		if err := registerPersistent(s, h.Persistent); err != nil {
+			return err
+		}
+	}
+	if h.Clubs != nil {
+		if err := registerClubs(s, h.Clubs); err != nil {
 			return err
 		}
 	}

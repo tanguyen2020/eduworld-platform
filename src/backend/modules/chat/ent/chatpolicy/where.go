@@ -115,6 +115,11 @@ func SchoolID(v uuid.UUID) predicate.ChatPolicy {
 	return predicate.ChatPolicy(sql.FieldEQ(FieldSchoolID, v))
 }
 
+// Reason applies equality check predicate on the "reason" field. It's identical to ReasonEQ.
+func Reason(v string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldEQ(FieldReason, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.ChatPolicy {
 	return predicate.ChatPolicy(sql.FieldEQ(FieldTenantID, v))
@@ -723,6 +728,81 @@ func SchoolIDIsNil() predicate.ChatPolicy {
 // SchoolIDNotNil applies the NotNil predicate on the "school_id" field.
 func SchoolIDNotNil() predicate.ChatPolicy {
 	return predicate.ChatPolicy(sql.FieldNotNull(FieldSchoolID))
+}
+
+// ReasonEQ applies the EQ predicate on the "reason" field.
+func ReasonEQ(v string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldEQ(FieldReason, v))
+}
+
+// ReasonNEQ applies the NEQ predicate on the "reason" field.
+func ReasonNEQ(v string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldNEQ(FieldReason, v))
+}
+
+// ReasonIn applies the In predicate on the "reason" field.
+func ReasonIn(vs ...string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldIn(FieldReason, vs...))
+}
+
+// ReasonNotIn applies the NotIn predicate on the "reason" field.
+func ReasonNotIn(vs ...string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldNotIn(FieldReason, vs...))
+}
+
+// ReasonGT applies the GT predicate on the "reason" field.
+func ReasonGT(v string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldGT(FieldReason, v))
+}
+
+// ReasonGTE applies the GTE predicate on the "reason" field.
+func ReasonGTE(v string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldGTE(FieldReason, v))
+}
+
+// ReasonLT applies the LT predicate on the "reason" field.
+func ReasonLT(v string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldLT(FieldReason, v))
+}
+
+// ReasonLTE applies the LTE predicate on the "reason" field.
+func ReasonLTE(v string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldLTE(FieldReason, v))
+}
+
+// ReasonContains applies the Contains predicate on the "reason" field.
+func ReasonContains(v string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldContains(FieldReason, v))
+}
+
+// ReasonHasPrefix applies the HasPrefix predicate on the "reason" field.
+func ReasonHasPrefix(v string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldHasPrefix(FieldReason, v))
+}
+
+// ReasonHasSuffix applies the HasSuffix predicate on the "reason" field.
+func ReasonHasSuffix(v string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldHasSuffix(FieldReason, v))
+}
+
+// ReasonIsNil applies the IsNil predicate on the "reason" field.
+func ReasonIsNil() predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldIsNull(FieldReason))
+}
+
+// ReasonNotNil applies the NotNil predicate on the "reason" field.
+func ReasonNotNil() predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldNotNull(FieldReason))
+}
+
+// ReasonEqualFold applies the EqualFold predicate on the "reason" field.
+func ReasonEqualFold(v string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldEqualFold(FieldReason, v))
+}
+
+// ReasonContainsFold applies the ContainsFold predicate on the "reason" field.
+func ReasonContainsFold(v string) predicate.ChatPolicy {
+	return predicate.ChatPolicy(sql.FieldContainsFold(FieldReason, v))
 }
 
 // And groups predicates with the AND operator between them.

@@ -60,7 +60,9 @@ type ChannelMember struct {
 	ShowReadReceipts bool `json:"show_read_receipts,omitempty"`
 	// NotificationLevel holds the value of the "notification_level" field.
 	NotificationLevel string `json:"notification_level,omitempty"`
-	selectValues      sql.SelectValues
+	// SourceEventID holds the value of the "source_event_id" field.
+	SourceEventID *uuid.UUID `json:"source_event_id,omitempty"`
+	selectValues  sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -68,7 +70,7 @@ func (*ChannelMember) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case channelmember.FieldCreatedBy, channelmember.FieldUpdatedBy, channelmember.FieldDeletedBy, channelmember.FieldSchoolID:
+		case channelmember.FieldCreatedBy, channelmember.FieldUpdatedBy, channelmember.FieldDeletedBy, channelmember.FieldSchoolID, channelmember.FieldSourceEventID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case channelmember.FieldShowReadReceipts:
 			values[i] = new(sql.NullBool)
@@ -235,6 +237,13 @@ func (_m *ChannelMember) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.NotificationLevel = value.String
 			}
+		case channelmember.FieldSourceEventID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field source_event_id", values[i])
+			} else if value.Valid {
+				_m.SourceEventID = new(uuid.UUID)
+				*_m.SourceEventID = *value.S.(*uuid.UUID)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -349,6 +358,11 @@ func (_m *ChannelMember) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("notification_level=")
 	builder.WriteString(_m.NotificationLevel)
+	builder.WriteString(", ")
+	if v := _m.SourceEventID; v != nil {
+		builder.WriteString("source_event_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

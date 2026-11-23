@@ -216,7 +216,29 @@ func (ChatReader) PolicyLevels(ctx context.Context, tenant uuid.UUID, school *uu
 			l.School = &d
 		}
 	}
-	return l, rows.Err()
+	if err := rows.Err(); err != nil {
+		return policy.Levels{}, err
+	}
+	return withCommon(ctx, tenant, l)
+}
+
+// withCommon adds the built-in level of a tenant common (common_tenant_social_defaults minus the System Admin override,
+// F120-AC-28, ADR-0078).
+func withCommon(ctx context.Context, tenant uuid.UUID, l policy.Levels) (policy.Levels, error) {
+	typ, err := Policies{}.TenantType(ctx, tenant)
+	if err != nil || typ != "common" {
+		return l, err
+	}
+	o, err := Policies{}.CommonOverride(ctx, tenant)
+	if err != nil {
+		return l, err
+	}
+	var ov policy.CommonOverride
+	if o != nil {
+		ov = o.Override
+	}
+	l.Common = policy.CommonDefaults(ov)
+	return l, nil
 }
 
 // CurfewWindows implements read.ChatReader.
@@ -316,7 +338,7 @@ const messagesSQL = `SELECT ` + messageColumns + `
 	FROM chat.{table} m
 	WHERE m.tenant_id = $1 AND m.channel_id = $2 AND m.deleted_at IS NULL AND m.created_at >= $3
 		AND m.moderation_state <> 'removed' AND (m.moderation_state <> 'held' OR m.sender_id = $4)
-		AND ($5::bigint IS NULL OR m.seq < $5) AND ($6::bigint IS NULL OR m.seq > $6)
+		AND ($5::bigint IS NULL OR m.seq < $5) AND ($6::bigint IS NULL OR m.seq > $6){anon}
 	ORDER BY m.seq {dir} LIMIT $7`
 
 // messageColumns are the display columns of a stored message (never the original body: F115-AC-18, R25). A recalled
@@ -373,14 +395,15 @@ func (ChatReader) Messages(ctx context.Context, q read.MessageQuery) ([]read.Sto
 	if err != nil {
 		return nil, err
 	}
-	table, dir := "messages", "DESC"
+	// Anonymised persistent messages are never returned to a user (F120-AC-25); gameplay messages are purged instead.
+	table, dir, anon := "messages", "DESC", " AND m.anonymized_at IS NULL"
 	if q.Gameplay {
-		table = "gameplay_messages"
+		table, anon = "gameplay_messages", ""
 	}
 	if q.After != nil {
 		dir = "ASC"
 	}
-	query := strings.NewReplacer("{table}", table, "{dir}", dir).Replace(messagesSQL)
+	query := strings.NewReplacer("{table}", table, "{dir}", dir, "{anon}", anon).Replace(messagesSQL)
 	rows, err := t.QueryContext(ctx, query, q.Tenant, q.Channel, q.From, q.Reader, q.Before, q.After, q.Limit)
 	if err != nil {
 		return nil, fmt.Errorf("chat: messages: %w", err)
@@ -496,4 +519,75 @@ func (Channels) SetRole(ctx context.Context, tenant, id, user uuid.UUID, role st
 		return false, fmt.Errorf("chat: set role: %w", err)
 	}
 	return n == 1, nil
+}
+
+var _ read.ImplicitReader = ChatReader{}
+
+// StudentSchool implements read.ImplicitReader.
+func (ChatReader) StudentSchool(ctx context.Context, tenant, student uuid.UUID) (*uuid.UUID, error) {
+	t, err := anyTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var school uuid.UUID
+	// tenancyguard:ok projection ref.students of the session tenant, cleaned-up students excluded
+	err = t.QueryRowContext(ctx, `SELECT st.school_id FROM ref.students st WHERE st.tenant_id = $1 AND st.student_id = $2
+		AND st.deleted_at IS NULL AND st.status = 'active'`, tenant, student).Scan(&school)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("chat: student school: %w", err)
+	}
+	return &school, nil
+}
+
+// Card implements read.ImplicitReader.
+func (ChatReader) Card(ctx context.Context, tenant, student uuid.UUID) (*read.ChatCard, error) {
+	t, err := anyTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	c := read.ChatCard{UserID: student}
+	var nick sql.NullString
+	var avatar []byte
+	// tenancyguard:ok projection ref.player_profiles of the session tenant (public card only, R16; no deleted_at)
+	err = t.QueryRowContext(ctx, `SELECT p.nickname, p.level, p.avatar_config FROM ref.player_profiles p
+		WHERE p.tenant_id = $1 AND p.student_id = $2`, tenant, student).Scan(&nick, &c.Level, &avatar)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("chat: card: %w", err)
+	}
+	c.Nickname = nullString(nick)
+	if len(avatar) > 0 && string(avatar) != "null" {
+		c.Avatar = json.RawMessage(avatar)
+	}
+	return &c, nil
+}
+
+var _ write.StatusRepository = Channels{}
+
+// SetStatus implements write.StatusRepository.
+func (Channels) SetStatus(ctx context.Context, tenant, id uuid.UUID, from []string, to string) (bool, error) {
+	// tenancyguard:ok chat.channels of the session tenant, live persistent rows only
+	n, err := exec(ctx, `UPDATE chat.channels SET status = $3, updated_at = now(), version = version + 1
+		WHERE tenant_id = $1 AND channel_id = $2 AND deleted_at IS NULL AND NOT is_gameplay AND status = ANY($4::text[])`,
+		tenant, id, to, from)
+	if err != nil {
+		return false, fmt.Errorf("chat: channel status: %w", err)
+	}
+	return n == 1, nil
+}
+
+// SetSource implements write.StatusRepository.
+func (Channels) SetSource(ctx context.Context, tenant, id, user, source uuid.UUID) error {
+	// tenancyguard:ok chat.channel_members of the session tenant, live rows only
+	_, err := exec(ctx, `UPDATE chat.channel_members SET source_event_id = $4, updated_at = now()
+		WHERE tenant_id = $1 AND channel_id = $2 AND user_id = $3 AND deleted_at IS NULL`, tenant, id, user, source)
+	if err != nil {
+		return fmt.Errorf("chat: member source: %w", err)
+	}
+	return nil
 }

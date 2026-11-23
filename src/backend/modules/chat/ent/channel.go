@@ -58,7 +58,9 @@ type Channel struct {
 	// ClosedAt holds the value of the "closed_at" field.
 	ClosedAt *time.Time `json:"closed_at,omitempty"`
 	// PurgeAfter holds the value of the "purge_after" field.
-	PurgeAfter   *time.Time `json:"purge_after,omitempty"`
+	PurgeAfter *time.Time `json:"purge_after,omitempty"`
+	// Capabilities holds the value of the "capabilities" field.
+	Capabilities map[string]bool `json:"capabilities,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -69,7 +71,7 @@ func (*Channel) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case channel.FieldCreatedBy, channel.FieldUpdatedBy, channel.FieldDeletedBy, channel.FieldSchoolID, channel.FieldPolicyID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case channel.FieldScopeRef:
+		case channel.FieldScopeRef, channel.FieldCapabilities:
 			values[i] = new([]byte)
 		case channel.FieldIsGameplay:
 			values[i] = new(sql.NullBool)
@@ -234,6 +236,14 @@ func (_m *Channel) assignValues(columns []string, values []any) error {
 				_m.PurgeAfter = new(time.Time)
 				*_m.PurgeAfter = value.Time
 			}
+		case channel.FieldCapabilities:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field capabilities", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Capabilities); err != nil {
+					return fmt.Errorf("unmarshal field capabilities: %w", err)
+				}
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -349,6 +359,9 @@ func (_m *Channel) String() string {
 		builder.WriteString("purge_after=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
+	builder.WriteString(", ")
+	builder.WriteString("capabilities=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Capabilities))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -681,8 +681,11 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 | POST | `/chat/messages/{message_id}:forward` | Forward tới ≤ 5 channel (REST fallback) | member | B | P4 |
 | PUT/DELETE | `/chat/channels/{channel_id}/pins/{message_id}` | Ghim / bỏ ghim (REST fallback) | theo §7.8 CHAT_SYSTEM | T | P4 |
 | POST | `/chat/reports` | Báo cáo tin nhắn/người dùng | Mọi role | B | P5 |
-| GET | `/chat/policies/{scope_type}/{scope_id}` | Xem chat policy (`scope_type` platform/tenant/school; channel lớp theo policy cấp trường) | SA, SYS | T | P5 |
-| PUT | `/chat/policies/{scope_type}/{scope_id}` | Cập nhật (chỉ siết chặt hơn cấp trên) — `If-Match` | SA (school), SYS | T | P5 |
+| POST | `/chat/direct-channels` | Mở/lấy channel `direct` với một bạn bè (`openDirectChannel`, F120): `201` tạo, `200` đã có; không bạn bè/block/policy tắt → `403 CHAT_NOT_ALLOWED` | STU | T | P5 |
+| GET/PUT | `/tenant/chat-policies/{scope_type}/{scope_id}` | Chat policy cấp `tenant`/`school` (`getChatPolicy`/`putChatPolicy`, F120): chỉ siết chặt hơn cấp trên, `If-Match` (lần đầu `"0"`), `reason`; `422 CHAT_POLICY_RELAX_NOT_ALLOWED`/`CHAT_POLICY_ALWAYS_ON`/`VALIDATION_FAILED` | TA (`tenant.settings.*`), SA (`school.settings.*`, trường mình) | T | P5 |
+| GET | `/tenant/chat-policies:effective` | Policy hiệu lực của một loại channel trong trường (`?school_id&channel_type`) | SA (`school.settings.read`) | T | P5 |
+| GET/PUT | `/admin/chat/policies/platform` | Chat policy cấp platform (gateway nội bộ) | SYS (`platform.settings.write`) | T | P5 |
+| GET/PUT | `/admin/chat/common-tenant-social` | Bật lại DM/World/Area tự do cho tenant `common` (`X-Tenant-Id`, `reason`, audit; ADR-0078) | SYS | B (PUT) | P5 |
 
 **Kiểm duyệt tập trung — Platform Safety Team (ADR-0072 §4, [MODERATION](../03-social-multiplayer/MODERATION.md)).** Chỉ gateway nội bộ, `azp = eduworld-portal` + role platform `safety_moderator` (không MFA — ADR-0094). Đọc liên tenant **chỉ** trong module moderation qua `tenancy.Bypass(ctx, "moderation_case")` (audit + metric); thao tác ghi gửi `X-Tenant-Id` = tenant của case. Nhà trường không xử lý case, chỉ nhận thông báo tóm tắt (không có chat thô).
 

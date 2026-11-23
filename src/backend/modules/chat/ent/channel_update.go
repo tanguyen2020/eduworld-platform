@@ -305,6 +305,18 @@ func (_u *ChannelUpdate) ClearPurgeAfter() *ChannelUpdate {
 	return _u
 }
 
+// SetCapabilities sets the "capabilities" field.
+func (_u *ChannelUpdate) SetCapabilities(v map[string]bool) *ChannelUpdate {
+	_u.mutation.SetCapabilities(v)
+	return _u
+}
+
+// ClearCapabilities clears the value of the "capabilities" field.
+func (_u *ChannelUpdate) ClearCapabilities() *ChannelUpdate {
+	_u.mutation.ClearCapabilities()
+	return _u
+}
+
 // Mutation returns the ChannelMutation object of the builder.
 func (_u *ChannelUpdate) Mutation() *ChannelMutation {
 	return _u.mutation
@@ -465,6 +477,12 @@ func (_u *ChannelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.PurgeAfterCleared() {
 		_spec.ClearField(channel.FieldPurgeAfter, field.TypeTime)
+	}
+	if value, ok := _u.mutation.Capabilities(); ok {
+		_spec.SetField(channel.FieldCapabilities, field.TypeJSON, value)
+	}
+	if _u.mutation.CapabilitiesCleared() {
+		_spec.ClearField(channel.FieldCapabilities, field.TypeJSON)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Channel
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -763,6 +781,18 @@ func (_u *ChannelUpdateOne) ClearPurgeAfter() *ChannelUpdateOne {
 	return _u
 }
 
+// SetCapabilities sets the "capabilities" field.
+func (_u *ChannelUpdateOne) SetCapabilities(v map[string]bool) *ChannelUpdateOne {
+	_u.mutation.SetCapabilities(v)
+	return _u
+}
+
+// ClearCapabilities clears the value of the "capabilities" field.
+func (_u *ChannelUpdateOne) ClearCapabilities() *ChannelUpdateOne {
+	_u.mutation.ClearCapabilities()
+	return _u
+}
+
 // Mutation returns the ChannelMutation object of the builder.
 func (_u *ChannelUpdateOne) Mutation() *ChannelMutation {
 	return _u.mutation
@@ -953,6 +983,12 @@ func (_u *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err er
 	}
 	if _u.mutation.PurgeAfterCleared() {
 		_spec.ClearField(channel.FieldPurgeAfter, field.TypeTime)
+	}
+	if value, ok := _u.mutation.Capabilities(); ok {
+		_spec.SetField(channel.FieldCapabilities, field.TypeJSON, value)
+	}
+	if _u.mutation.CapabilitiesCleared() {
+		_spec.ClearField(channel.FieldCapabilities, field.TypeJSON)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Channel
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

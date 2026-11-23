@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/club.member_joined.v1.schema.json",
+  "title": "Payload club.member_joined v1 (module chat, owner F120)",
+  "description": "Học sinh vào club (acceptClubJoinRequest, acceptClubInvitation, tạo club) — thành viên channel club cập nhật cùng transaction (F120-AC-20). Consumer: RT, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "club_id",
+    "tenant_id",
+    "user_id",
+    "role",
+    "occurred_at"
+  ],
+  "properties": {
+    "club_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "user_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "owner",
+        "officer",
+        "member"
+      ]
+    },
+    "chat_channel_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "created",
+        "join_request",
+        "invitation",
+        "approval"
+      ]
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "club_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "role": "member",
+      "chat_channel_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000d1",
+      "source": "invitation",
+      "occurred_at": "2026-11-23T09:00:00.000Z"
+    }
+  ]
+}

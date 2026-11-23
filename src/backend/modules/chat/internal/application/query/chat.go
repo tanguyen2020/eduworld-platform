@@ -55,6 +55,9 @@ type Chat struct {
 	Config ChatConfig
 	// Decor decorates the pages (F118: reply excerpts, reactions, pins); nil: none.
 	Decor *Features
+	// Implicit resolves World/Area (F120-AC-12, AC-13); Ensure creates them lazily (command.Persistent.EnsureImplicit,
+	// called by chat.channel.join before the query). nil: no implicit channel.
+	Implicit *service.Implicit
 }
 
 // MessageView is one message of a history with the card of its sender.
@@ -109,6 +112,19 @@ func (q Chat) member(ctx context.Context, v Viewer, id uuid.UUID) (*read.Channel
 	}
 	if facts == nil {
 		return nil, channel.Member{}, notFound()
+	}
+	if facts.Channel.Type.Implicit() { // World/Area: access from the projections, no history window (F120)
+		if q.Implicit == nil {
+			return nil, channel.Member{}, notFound()
+		}
+		ok, school, err := q.Implicit.Access(ctx, v.TenantID, v.UserID, facts.Channel)
+		if err != nil {
+			return nil, channel.Member{}, unavailableProblem()
+		}
+		if !ok {
+			return nil, channel.Member{}, notFound()
+		}
+		return facts, channel.Member{ChannelID: id, UserID: v.UserID, TenantID: v.TenantID, SchoolID: school, Role: channel.RoleMember}, nil
 	}
 	m, ok := facts.Members.Active(v.UserID)
 	if !ok {
@@ -238,12 +254,14 @@ func (q Chat) page(ctx context.Context, v Viewer, facts *read.ChannelFacts, m ch
 	if err != nil {
 		return MessagePage{}, err
 	}
-	err = q.Read.InTenantRead(ctx, s, func(ctx context.Context) error {
-		var err error
-		stored, err = q.Reader.Messages(ctx, read.MessageQuery{Tenant: v.TenantID, Channel: ch.ID, Gameplay: ch.IsGameplay, Reader: v.UserID,
-			From: m.JoinedAt, Before: before, After: after, Limit: limit + 1})
-		return err
-	})
+	if !ch.Type.Implicit() { // World/Area are ephemeral: the recent buffer only (chat.ephemeral_messages is not a history)
+		err = q.Read.InTenantRead(ctx, s, func(ctx context.Context) error {
+			var err error
+			stored, err = q.Reader.Messages(ctx, read.MessageQuery{Tenant: v.TenantID, Channel: ch.ID, Gameplay: ch.IsGameplay, Reader: v.UserID,
+				From: m.JoinedAt, Before: before, After: after, Limit: limit + 1})
+			return err
+		})
+	}
 	if err != nil {
 		slog.WarnContext(ctx, "chat: stored history unavailable, serving the recent buffer", "error", err)
 		stored = nil
@@ -356,6 +374,60 @@ func (q Chat) ListMyChannels(ctx context.Context, v Viewer) (out []ChannelView, 
 		out = append(out, ChannelView{Channel: r.Channel, AllowedKinds: kinds, UnreadCount: max(r.Channel.LastSeq-r.MyReadSeq, 0),
 			MyReadSeq: r.MyReadSeq})
 	}
+	implicit, err := q.implicitChannels(ctx, v)
+	if err != nil {
+		return nil, err
+	}
+	return append(out, implicit...), nil
+}
+
+// implicitChannels are the World channel of the caller and the Area channel of its hub instance (F120-AC-12, AC-13), when
+// the effective policy allows them (a tenant common has no World until System Admin re-enables it, F120-AC-28). Their ids
+// are deterministic: the row is created at the first send or join.
+func (q Chat) implicitChannels(ctx context.Context, v Viewer) ([]ChannelView, error) {
+	if q.Implicit == nil {
+		return nil, nil
+	}
+	var out []ChannelView
+	add := func(ch channel.Channel, school *uuid.UUID) error {
+		eff, err := q.Facts.Effective(ctx, v.TenantID, school, ch)
+		switch {
+		case errors.Is(err, policy.ErrDenied):
+			return nil
+		case err != nil:
+			return unavailableProblem()
+		}
+		if facts, err := q.Facts.Channel(ctx, v.TenantID, ch.ID); err == nil && facts != nil {
+			ch = facts.Channel
+		}
+		out = append(out, ChannelView{Channel: ch, AllowedKinds: eff.AllowedKinds})
+		return nil
+	}
+	world, scope, ok, err := q.Implicit.World(ctx, v.TenantID, v.UserID)
+	if err != nil {
+		return nil, unavailableProblem()
+	}
+	if !ok {
+		return nil, nil
+	}
+	sc, err := q.Implicit.School(ctx, v.TenantID, v.UserID)
+	if err != nil {
+		return nil, unavailableProblem()
+	}
+	if err := add(channel.Channel{ID: world, TenantID: v.TenantID, SchoolID: scope, Type: channel.World,
+		ScopeRef: channel.WorldScope(v.TenantID, scope), Status: channel.StatusOpen}, sc); err != nil {
+		return nil, err
+	}
+	area, room, ok, err := q.Implicit.Area(ctx, v.TenantID, v.UserID)
+	if err != nil {
+		return nil, unavailableProblem()
+	}
+	if ok {
+		if err := add(channel.Channel{ID: area, TenantID: v.TenantID, Type: channel.Area, ScopeRef: channel.AreaScope(room),
+			Status: channel.StatusOpen}, sc); err != nil {
+			return nil, err
+		}
+	}
 	return out, nil
 }
 
@@ -363,4 +435,19 @@ func (q Chat) ListMyChannels(ctx context.Context, v Viewer) (out []ChannelView, 
 func (m MessageView) Extras() port.MessageExtras {
 	return port.MessageExtras{ReplyExcerpt: m.ReplyExcerpt, Reactions: m.Reactions, MyReactions: m.MyReactions, Pinned: m.Pinned,
 		Mentions: m.Mentions}
+}
+
+// Kinds returns the kinds the effective policy allows the viewer in ch (none when denied or unavailable).
+func (q Chat) Kinds(ctx context.Context, v Viewer, ch channel.Channel) []policy.Kind {
+	school := ch.SchoolID
+	if q.Implicit != nil {
+		if s, err := q.Implicit.School(ctx, v.TenantID, v.UserID); err == nil && s != nil {
+			school = s
+		}
+	}
+	eff, err := q.Facts.Effective(ctx, v.TenantID, school, ch)
+	if err != nil {
+		return []policy.Kind{}
+	}
+	return eff.AllowedKinds
 }

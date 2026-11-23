@@ -55,7 +55,7 @@ func TestPolicyIntersect(t *testing.T) {
 	}
 	want := policy.Effective{ChannelType: "direct", AllowedKinds: []policy.Kind{"text", "quick"}, MaxTextLength: 150,
 		Rate: policy.Rate{MessagesPerMinute: 8, Burst: 2}, GlobalPerMinute: 20, SlowModeSeconds: 3, Strictness: "very_strict",
-		Features: platformFeatures}
+		Features: platformFeatures, Hours: [][]policy.TimeWindow{{{Days: "mon-sun", From: "06:30", To: "21:30"}}}} // F120: allowed_hours
 	if !reflect.DeepEqual(e, want) {
 		t.Fatalf("intersection:\n got %+v\nwant %+v", e, want)
 	}

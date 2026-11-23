@@ -316,6 +316,26 @@ func (_u *ChannelMemberUpdate) SetNillableNotificationLevel(v *string) *ChannelM
 	return _u
 }
 
+// SetSourceEventID sets the "source_event_id" field.
+func (_u *ChannelMemberUpdate) SetSourceEventID(v uuid.UUID) *ChannelMemberUpdate {
+	_u.mutation.SetSourceEventID(v)
+	return _u
+}
+
+// SetNillableSourceEventID sets the "source_event_id" field if the given value is not nil.
+func (_u *ChannelMemberUpdate) SetNillableSourceEventID(v *uuid.UUID) *ChannelMemberUpdate {
+	if v != nil {
+		_u.SetSourceEventID(*v)
+	}
+	return _u
+}
+
+// ClearSourceEventID clears the value of the "source_event_id" field.
+func (_u *ChannelMemberUpdate) ClearSourceEventID() *ChannelMemberUpdate {
+	_u.mutation.ClearSourceEventID()
+	return _u
+}
+
 // Mutation returns the ChannelMemberMutation object of the builder.
 func (_u *ChannelMemberUpdate) Mutation() *ChannelMemberMutation {
 	return _u.mutation
@@ -478,6 +498,12 @@ func (_u *ChannelMemberUpdate) sqlSave(ctx context.Context) (_node int, err erro
 	}
 	if value, ok := _u.mutation.NotificationLevel(); ok {
 		_spec.SetField(channelmember.FieldNotificationLevel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SourceEventID(); ok {
+		_spec.SetField(channelmember.FieldSourceEventID, field.TypeUUID, value)
+	}
+	if _u.mutation.SourceEventIDCleared() {
+		_spec.ClearField(channelmember.FieldSourceEventID, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.ChannelMember
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -787,6 +813,26 @@ func (_u *ChannelMemberUpdateOne) SetNillableNotificationLevel(v *string) *Chann
 	return _u
 }
 
+// SetSourceEventID sets the "source_event_id" field.
+func (_u *ChannelMemberUpdateOne) SetSourceEventID(v uuid.UUID) *ChannelMemberUpdateOne {
+	_u.mutation.SetSourceEventID(v)
+	return _u
+}
+
+// SetNillableSourceEventID sets the "source_event_id" field if the given value is not nil.
+func (_u *ChannelMemberUpdateOne) SetNillableSourceEventID(v *uuid.UUID) *ChannelMemberUpdateOne {
+	if v != nil {
+		_u.SetSourceEventID(*v)
+	}
+	return _u
+}
+
+// ClearSourceEventID clears the value of the "source_event_id" field.
+func (_u *ChannelMemberUpdateOne) ClearSourceEventID() *ChannelMemberUpdateOne {
+	_u.mutation.ClearSourceEventID()
+	return _u
+}
+
 // Mutation returns the ChannelMemberMutation object of the builder.
 func (_u *ChannelMemberUpdateOne) Mutation() *ChannelMemberMutation {
 	return _u.mutation
@@ -979,6 +1025,12 @@ func (_u *ChannelMemberUpdateOne) sqlSave(ctx context.Context) (_node *ChannelMe
 	}
 	if value, ok := _u.mutation.NotificationLevel(); ok {
 		_spec.SetField(channelmember.FieldNotificationLevel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SourceEventID(); ok {
+		_spec.SetField(channelmember.FieldSourceEventID, field.TypeUUID, value)
+	}
+	if _u.mutation.SourceEventIDCleared() {
+		_spec.ClearField(channelmember.FieldSourceEventID, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.ChannelMember
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

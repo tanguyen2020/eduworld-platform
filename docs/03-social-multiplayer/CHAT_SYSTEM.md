@@ -74,17 +74,18 @@ flowchart TD
   B --> C[∩ school rule]
   C --> E["∩ sanction của user: mute, restrict..."]
   E --> F["∩ quan hệ: member channel / bạn bè cho direct / cùng trường cho world"]
-  F --> G[Effective policy — cache Valkey chat_policy_cache 5 phút, invalidate qua pub/sub khi policy đổi]
+  F --> G[Effective policy — cache Valkey chat_policy_cache 5 phút, khóa cache chứa thế hệ policy của platform/tenant]
 ```
 
 - Phép `∩` = lấy giá trị chặt hơn: `allowed_kinds` giao nhau, số lượng lấy min, giờ lấy giao, boolean `enabled` lấy AND, `strictness` lấy mức cao hơn.
 - **Ngoại lệ always-on** (`match`, `team`, `party`): `enabled` luôn `true`, `allowed_kinds` luôn gồm `text`, `emoji`, `quick`, `sticker`, `gif`, mọi `features` bắt buộc ở §7.1 luôn `true`, không có `allowed_hours` ở mọi cấp. Cấp dưới chỉ được siết `rate`, `slow_mode_seconds` (tối đa 10 s) và `validation.strictness`. Schema v5 từ chối rule vi phạm (`enabled:false`, thiếu loại tin, có `allowed_hours`, slow mode > 10 s) và API trả `CHAT_POLICY_ALWAYS_ON`.
 - Effective policy giống nhau cho mọi thành viên của cùng channel trong cùng trường/lớp: **không** có quy tắc "grade band thấp nhất" hay ngoại lệ theo khối.
 - Không có rule ở bất kỳ cấp nào = **deny**.
+- Ghi một cấp (F120): `putChatPolicy` (`tenant`: `tenant.settings.write`; `school`: `school.settings.write` trong trường đó), `putPlatformChatPolicy` (System Admin, gateway nội bộ) — kiểm always-on → schema v5 (không điều kiện theo khối) → chỉ siết chặt so với các cấp trên và `allowed_hours` nằm ngoài giờ giới nghiêm hiệu lực; version + `If-Match`, audit before/after, `chat_policy.updated`. Sau commit tăng bộ đếm thế hệ Valkey (`ew:chat:policygen:platform|<tenant>`): mọi instance dùng khóa cache mới ngay. `allowed_hours` của các cấp được giao nhau và kiểm khi gửi ở channel bền vững (`world`, `area`, `direct`); ngoài khung → `CHAT_NOT_ALLOWED` (giờ giới nghiêm kiểm trước → `CURFEW_ACTIVE`).
 - **Công tắc kiểm duyệt** (`moderation_switches`: `enabled_all`, `steps.{sensitive_terms,spam,bullying,async_analysis}`, `expires_at` bắt buộc ≤ 24 giờ) nằm ở cấp platform và tenant, không nằm trong rule channel; chỉ System Admin thay đổi, tắt cần System Admin thứ hai duyệt ([MODERATION](MODERATION.md) §12). Bước PII và phát hiện grooming **luôn chạy**, không có công tắc ([ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md)). `validation.*` và `sensitive_term_policy` chỉ có hiệu lực với các bước đang bật (`validation.pii` luôn hiệu lực).
 - **Giờ giới nghiêm platform** (`platform_curfew`, [CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)) không phải rule channel: module chat từ chối mọi lệnh gửi trong giờ giới nghiêm ở mọi channel, kể cả gameplay (khi đó game session cũng đã kết thúc nên không có trận/party đang chạy). Điều này không làm trái ngoại lệ always-on vì channel vẫn tồn tại và tự tạo khi được chơi [Confirmed — Technical Architect 2026-11-17].
 - **Preset cấp trường** `chat_policy_preset = quick_message_emote_only` ([CHILD_SAFETY §3.5](../10-security/CHILD_SAFETY.md#35-preset-chỉ-quick-message--emote-adr-0078)): `allowed_kinds` của mọi channel trong trường chỉ còn `quick` + `emoji` (emote/reaction). Đây là **ngoại lệ duy nhất** được phép thu hẹp `allowed_kinds` của `match`/`team`/`party`; channel vẫn always-on (`enabled` luôn `true`), preset áp cho cả trường, không theo khối (R15) [Confirmed — Technical Architect 2026-11-17].
-- **Tenant `common`** ([CHILD_SAFETY §3.6](../10-security/CHILD_SAFETY.md#36-tenant-common-adr-0078)): rule mặc định của tenant tắt `world` và `direct`, `area` chỉ `quick` + `emoji`; chỉ System Admin bật lại [Confirmed — Technical Architect 2026-11-17].
+- **Tenant `common`** ([CHILD_SAFETY §3.6](../10-security/CHILD_SAFETY.md#36-tenant-common-adr-0078)): rule mặc định của tenant tắt `world` và `direct`, `area` chỉ `quick` + `emoji`; chỉ System Admin bật lại [Confirmed — Technical Architect 2026-11-17]. Triển khai (F120): một cấp dựng sẵn giữa platform và tenant, gỡ từng phần bằng `putCommonTenantSocialOverride` (bảng `chat.common_tenant_social_overrides`, `reason`, audit).
 
 ### 3.1. Mặc định platform [Confirmed — giá trị số; cấu trúc Confirmed theo ADR-0020]
 
@@ -114,8 +115,9 @@ Một bảng duy nhất theo channel, áp dụng cho mọi học sinh lớp 1–
 |---|---|---|
 | `match` | `participants[]` trong payload `match.started` (module chat không đọc database của module competition) | Consumer `match.started` (tạo channel + thêm mọi participant), `match.completed`/`match.aborted` (đóng channel) |
 | `party`/`team` | Party/team events, đội trong trận | `party.created` (tạo), `party.member_joined/left`, `party.disbanded` (đóng); `match.started` tạo channel `team` cho từng đội |
-| `direct` | 2 người | Block → channel bị "đóng băng" với cả hai |
-| `world`/`area` | Không lưu `channel_members`; quyền kiểm tra động theo room | |
+| `direct` | 2 người (bạn bè, không block) | Mở bằng `openDirectChannel` (id tất định theo cặp, tạo một lần — F120). Consumer `chat.membership`: `user.blocked` → `frozen` (gửi → `CHAT_NOT_ALLOWED`), `user.unblocked` → `open` khi còn là bạn bè; bạn bè trở lại → mở lại khi gọi `openDirectChannel` |
+| `team` cố định (club) | Thành viên club ([SOCIAL_SYSTEM §6](SOCIAL_SYSTEM.md#6-club--guild-nhóm-bền-vững--adr-0050-confirmed)) | Cùng transaction với lệnh club (vào/rời/bị gỡ: `joined_at`/`left_at`); lưu trữ club → `read_only` |
+| `world`/`area` | Không lưu `channel_members`; quyền kiểm tra động: World theo trường (`ref.students`) hoặc tenant (`world_scope = tenant`, chỉ tenant `unit`), Area theo phòng gateway báo trong tín hiệu presence (`room_id`) | Id tất định; `listMyChannels` liệt kê; hàng `chat.channels` tạo lười ở lần join/gửi đầu tiên; lịch sử chỉ từ bộ đệm gần nhất (F120) |
 
 `chat.channel_members(channel_id, user_id, role, joined_at, left_at, muted_until, last_read_seq, notification_level)`.
 
@@ -315,7 +317,7 @@ Thứ tự hiển thị luôn theo `seq`, không theo thứ tự đến.
 
 - `seq` theo channel được cấp bằng Valkey `INCR`, script Lua khởi tạo từ PostgreSQL (ADR-0035, [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md)). PostgreSQL giữ unique `(channel_id, seq)` làm chốt chặn cuối.
 - **Channel gameplay và World/Area: purge vật lý** theo §6.1 (ngoại lệ có kiểm soát của ADR-0028, quy định ở ADR-0033).
-- **Channel bền vững:** retention job **ẩn danh hóa** nội dung quá `retention_days` (ghi đè `body`, `body_display`, revision; giữ metadata) và ẩn khỏi API. Ứng dụng không hard-delete (ADR-0028). Release 1.0 không gỡ partition, không xóa vật lý; partition đã ẩn danh hóa được giữ lại (ADR-0070). Tin liên quan `moderation_case` đang mở được sao vào case trước **[Confirmed]**.
+- **Channel bền vững:** retention job **ẩn danh hóa** nội dung quá `retention_days` (ghi đè `body`, `body_display`, revision; giữ metadata) và ẩn khỏi API. Ứng dụng không hard-delete (ADR-0028). Release 1.0 không gỡ partition, không xóa vật lý; partition đã ẩn danh hóa được giữ lại (ADR-0070). Tin liên quan `moderation_case` đang mở được sao vào case trước **[Confirmed]**. Job `persistent-chat-retention` (F120, worker-chat, role `chat_app`, mỗi giờ): theo tenant, theo lô (`EW_CHAT_PERSISTENT_RETENTION_BATCH`), tin `team` cố định/`direct` quá `coalesce(channels.retention_days, persistent_chat_retention_days)` → sao bằng chứng (report, case, case action ±`evidence_context`) vào `chat.moderation_evidence` → ghi đè `body`, `body_display`, `quote`, revision (`chat.f_revisions_guard` chỉ cho phép đặt NULL) và đặt `anonymized_at`; ghi `chat.persistent_retention_runs` + audit tổng hợp `chat.retention_applied` (số đếm, không nội dung); metric `eduworld_chat_retention_anonymized_total`.
 - **Thu hồi** (người gửi) = `recalled_at`. **Gỡ** (moderator) = `moderation_state = removed` + soft-delete. Cả hai giữ nội dung gốc làm bằng chứng; API người dùng chỉ trả placeholder.
 
 ### 6.1. Purge chat gameplay (ADR-0033)
@@ -454,6 +456,7 @@ Tính năng client: copy **nội dung đang hiển thị** (bản đã che, plac
 - PostgreSQL full-text: cột `search_tsv tsvector GENERATED ALWAYS AS (to_tsvector('simple', unaccent(lower(body_display))))` + GIN index; tìm có dấu hoặc không dấu đều khớp. Trigram (`pg_trgm`) cho truy vấn ngắn ≤ 3 ký tự [Confirmed].
 - Tìm trên **nội dung đã che** (`body_display`), không bao giờ khớp nội dung gốc bị che.
 - Không có ở world/area; dữ liệu gameplay đã purge không còn tìm được (ADR-0033).
+- Phạm vi F120: channel bền vững `team` cố định (club) và `direct`, tin từ `joined_at` của người gọi; bỏ tin `anonymized_at IS NOT NULL`, tin `held`/`removed` và tin của người block/bị block; `q` 2–100 ký tự, tối đa 8 từ ghép tiền tố (`từ:*`), phân trang cursor `(created_at, message_id)`. Trigram cho truy vấn ngắn chưa bật (tiền tố tsquery thay thế) [Proposed].
 - `safety_moderator` dùng công cụ tìm kiếm riêng, chỉ trong phạm vi case ([MODERATION](MODERATION.md) §6.1).
 
 ### 8.5. Quick messages

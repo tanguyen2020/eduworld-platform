@@ -42,6 +42,9 @@ type Facts struct {
 	Cache  port.Cache
 	Recent port.RecentBuffer
 	Config FactsConfig
+	// Gens versions the cached effective policies (F120-AC-10: a policy write invalidates every instance at once); nil: the
+	// cache TTL alone.
+	Gens port.PolicyGenerations
 }
 
 // Cache keys (logical; the Valkey adapter prefixes ew:chat:).
@@ -114,7 +117,13 @@ type effectiveEntry struct {
 // preset of the sender's school; no class level since ADR-0095), cached chat_policy_cache. policy.ErrDenied when no
 // rule allows the channel type (F115-AC-08). The result is the same for every grade (R15).
 func (f Facts) Effective(ctx context.Context, tenant uuid.UUID, school *uuid.UUID, ch channel.Channel) (policy.Effective, error) {
-	raw, err := f.Cache.Get(ctx, policyKey(tenant, school, ch.Type), f.Config.PolicyCache, func(ctx context.Context) ([]byte, error) {
+	key := policyKey(tenant, school, ch.Type)
+	if f.Gens != nil {
+		if g, err := f.Gens.Generation(ctx, tenant); err == nil && g != "" {
+			key += ":g" + g
+		}
+	}
+	raw, err := f.Cache.Get(ctx, key, f.Config.PolicyCache, func(ctx context.Context) ([]byte, error) {
 		var levels policy.Levels
 		err := f.read(ctx, tenant, func(ctx context.Context) error {
 			var err error

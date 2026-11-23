@@ -89,9 +89,15 @@ func TestOnlyPersisterWritesMessages(t *testing.T) {
 	backend := filepath.Join(root, "..", "..")
 	write := regexp.MustCompile(`(?is)(INSERT\s+INTO|UPDATE)\s+chat\.(messages|gameplay_messages)\b`)
 	owner := filepath.Join("internal", "infrastructure", "persistence", "messages.go")
+	// F120-AC-24: persistent-chat-retention only anonymises (UPDATE body/body_display/anonymized_at), never inserts.
+	retention := filepath.Join("internal", "infrastructure", "persistence", "retention.go")
+	insert := regexp.MustCompile(`(?is)INSERT\s+INTO\s+chat\.(messages|gameplay_messages)\b`)
 	found := false
 	for p, src := range goFiles(t, filepath.Join(backend, "modules")) {
 		if !write.MatchString(src) {
+			continue
+		}
+		if strings.HasSuffix(p, retention) && !insert.MatchString(src) {
 			continue
 		}
 		if !strings.HasSuffix(p, owner) {

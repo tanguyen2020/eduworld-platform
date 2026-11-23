@@ -206,6 +206,10 @@ func init() {
 	chatpolicyDescScopeType := chatpolicyFields[0].Descriptor()
 	// chatpolicy.ScopeTypeValidator is a validator for the "scope_type" field. It is called by the builders before save.
 	chatpolicy.ScopeTypeValidator = chatpolicyDescScopeType.Validators[0].(func(string) error)
+	// chatpolicyDescReason is the schema descriptor for reason field.
+	chatpolicyDescReason := chatpolicyFields[4].Descriptor()
+	// chatpolicy.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	chatpolicy.ReasonValidator = chatpolicyDescReason.Validators[0].(func(string) error)
 	// chatpolicyDescID is the schema descriptor for id field.
 	chatpolicyDescID := chatpolicyMixinFields0[0].Descriptor()
 	// chatpolicy.DefaultID holds the default value on creation for the id field.

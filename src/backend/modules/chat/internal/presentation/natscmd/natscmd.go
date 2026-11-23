@@ -36,6 +36,11 @@ type Sender interface {
 	Send(ctx context.Context, s command.Sender, req message.Request) (command.SendResult, error)
 }
 
+// Ensurer creates the implicit World/Area channel of the caller at its first join (command.Send.EnsureChannel, F120).
+type Ensurer interface {
+	EnsureChannel(ctx context.Context, tenant, user, id uuid.UUID) error
+}
+
 // Reader is the read use cases of the WS commands (query.Chat).
 type Reader interface {
 	Join(ctx context.Context, v query.Viewer, id uuid.UUID, since *int64) (int, bool, error)
@@ -114,7 +119,9 @@ func MessageSend(h Sender) rt.CommandHandler {
 
 // ChannelJoin handles ew.cmd.chat.channel.join: membership checked (NOT_FOUND otherwise, F115-AC-10), the gateway
 // subscribes the connection to ew:chat:fanout:<channel_id>; since_seq pushes the missing messages (F115-AC-19).
-func ChannelJoin(h Reader) rt.CommandHandler {
+//
+// F120: a World/Area channel id of the caller that has no row yet is created first (Ensurer, lazy creation).
+func ChannelJoin(h Reader, ensure ...Ensurer) rt.CommandHandler {
 	return func(ctx context.Context, c rt.Caller, payload json.RawMessage) rt.Reply {
 		var p struct {
 			ChannelID uuid.UUID `json:"channel_id"`
@@ -122,6 +129,11 @@ func ChannelJoin(h Reader) rt.CommandHandler {
 		}
 		if err := json.Unmarshal(payload, &p); err != nil || p.ChannelID == uuid.Nil || (p.SinceSeq != nil && *p.SinceSeq < 0) {
 			return invalid()
+		}
+		for _, e := range ensure {
+			if err := e.EnsureChannel(ctx, c.TenantID, c.UserID, p.ChannelID); err != nil {
+				return failure(ctx, err)
+			}
 		}
 		n, more, err := h.Join(ctx, viewer(c), p.ChannelID, p.SinceSeq)
 		if err != nil {
@@ -214,7 +226,11 @@ func Serve(ctx context.Context, nc *nats.Conn, send Sender, read Reader) error {
 		go func() { errs <- rt.ServeCommand(ctx, nc, Module, typ, h, SendTimeout) }()
 	}
 	serve(TypeMessageSend, MessageSend(send))
-	serve(TypeChannelJoin, ChannelJoin(read))
+	var ensure []Ensurer
+	if e, ok := send.(Ensurer); ok {
+		ensure = append(ensure, e)
+	}
+	serve(TypeChannelJoin, ChannelJoin(read, ensure...))
 	serve(TypeChannelLeft, ChannelLeave(read))
 	serve(TypeHistory, HistoryFetch(read))
 	serve(TypeChannelSync, ChannelSync(read))

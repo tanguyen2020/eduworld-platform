@@ -283,13 +283,13 @@ workspaces:
             label_key: portal.action.school_lms.chat_safety.view
             title: Xem nhóm từ hiệu lực của tenant
             required_permissions: [chat.sensitive_terms.read]
-            operation_ids: [listTenantSensitiveCategories]
+            operation_ids: [listTenantSensitiveCategories, getChatPolicy, getEffectiveChatPolicy]
             can_disable: true
           - key: action.school_lms.chat_safety.edit
             label_key: portal.action.school_lms.chat_safety.edit
             title: Sửa chat policy cấp trường
             required_permissions: [school.settings.write, tenant.settings.write]
-            operation_ids: []
+            operation_ids: [putChatPolicy]
             can_disable: true
       - key: menu.school_lms.student_activity
         label_key: portal.menu.school_lms.student_activity
@@ -2033,6 +2033,12 @@ workspaces:
             title: Publish danh mục
             required_permissions: [chat.sensitive_terms.write]
             operation_ids: [publishSensitiveCatalog]
+            can_disable: true
+          - key: action.platform_admin.chat_safety.policy
+            label_key: portal.action.platform_admin.chat_safety.policy
+            title: Chính sách chat platform · bật lại DM/World cho tenant common
+            required_permissions: [platform.settings.write]
+            operation_ids: [getPlatformChatPolicy, putPlatformChatPolicy, getCommonTenantSocialOverride, putCommonTenantSocialOverride]
             can_disable: true
       - key: menu.platform_admin.moderation_switches
         label_key: portal.menu.platform_admin.moderation_switches

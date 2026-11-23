@@ -32,11 +32,12 @@ type Handler interface {
 // Signal decodes one presence signal; ok is false for a payload outside the schema (dropped).
 func Signal(data []byte) (command.PresenceSignal, bool) {
 	var p rt.PresenceChanged
-	if err := json.Unmarshal(data, &p); err != nil || p.V != 1 || !statuses[p.Status] || len(p.Activity) > 64 || len(p.AreaID) > 64 {
+	if err := json.Unmarshal(data, &p); err != nil || p.V != 1 || !statuses[p.Status] || len(p.Activity) > 64 || len(p.AreaID) > 64 ||
+		len(p.RoomID) > 64 {
 		return command.PresenceSignal{}, false
 	}
 	return command.PresenceSignal{TenantID: p.TenantID, UserID: p.UserID, Presence: social.Presence{Status: p.Status,
-		Activity: p.Activity, AreaID: p.AreaID, Hidden: p.Hidden, Ts: p.Ts}}, true
+		Activity: p.Activity, AreaID: p.AreaID, Hidden: p.Hidden, Ts: p.Ts}, RoomID: p.RoomID}, true
 }
 
 // PresenceFanout subscribes ew.rt.presence.* in queue group chat.presence_fanout until ctx ends (F095 T024).

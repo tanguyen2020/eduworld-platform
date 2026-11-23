@@ -14,6 +14,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/service"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/channel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/message"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/policy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
@@ -70,6 +71,12 @@ type Send struct {
 	AssetRate port.ExtraRate     // nil: no sticker/GIF ceiling
 	Index     port.MessageIndex  // nil: none
 	Notify    port.FeatureFanout // nil: no chat.mention.created
+	// F120: the implicit channels (World, Area) — access from the projections, lazy creation at the first send, fan-out
+	// to the subscribers — and the allowed_hours of the persistent channels (policy timezone). nil: no implicit channel.
+	Implicit  *service.Implicit
+	Ensure    func(ctx context.Context, tenant, user, id uuid.UUID) (*read.ChannelFacts, error)
+	Broadcast port.BroadcastFanout
+	HoursLoc  *time.Location
 }
 
 // SendResult is the outcome of a send: the envelope acked by the stream and the card of the sender.
@@ -209,14 +216,29 @@ func (h Send) send(ctx context.Context, s Sender, req message.Request) (SendResu
 		h.rejected(problem.ChatTemporarilyUnavailable)
 		return SendResult{}, temporarily()
 	}
+	if facts == nil && h.Ensure != nil {
+		if facts, err = h.Ensure(ctx, s.TenantID, s.UserID, req.ChannelID); err != nil {
+			h.rejected(problem.ChatTemporarilyUnavailable)
+			return SendResult{}, temporarily()
+		}
+	}
 	if facts == nil {
 		return SendResult{}, h.denied(ctx, s, req.ChannelID)
 	}
-	member, ok := facts.Members.Active(s.UserID)
+	member, ok, err := h.member(ctx, s, facts)
+	if err != nil {
+		h.rejected(problem.ChatTemporarilyUnavailable)
+		return SendResult{}, temporarily()
+	}
 	if !ok {
 		return SendResult{}, h.denied(ctx, s, req.ChannelID)
 	}
 	ch := facts.Channel
+	if ch.Frozen() || (ch.Type == channel.Direct && len(facts.Blocks) > 0) {
+		// A direct channel of a blocked pair (F120-AC-15): frozen by user.blocked, refused at once even before.
+		h.rejected(problem.ChatNotAllowed)
+		return SendResult{}, problem.New(problem.ChatNotAllowed, "")
+	}
 	if !ch.Open() {
 		h.rejected(problem.ChatChannelClosed)
 		return SendResult{}, problem.New(problem.ChatChannelClosed, "")
@@ -243,6 +265,10 @@ func (h Send) send(ctx context.Context, s Sender, req message.Request) (SendResu
 	case err != nil:
 		h.rejected(problem.ChatTemporarilyUnavailable)
 		return SendResult{}, temporarily()
+	}
+	if !eff.OpenAt(now, h.HoursLoc) { // allowed_hours of the persistent channels (F120, CHAT_SYSTEM §3.1)
+		h.rejected(problem.ChatNotAllowed)
+		return SendResult{}, problem.New(problem.ChatNotAllowed, "")
 	}
 	if !eff.Allows(policy.Kind(req.Kind)) {
 		h.rejected(problem.ChatKindNotAllowed)
@@ -355,10 +381,31 @@ func (h Send) send(ctx context.Context, s Sender, req message.Request) (SendResu
 		h.Metrics.Sent(string(ch.Type), string(req.Kind), string(verdict.Decision))
 	}
 	card := facts.Cards[s.UserID]
+	if card.UserID == uuid.Nil && h.Implicit != nil && ch.Type.Implicit() {
+		card = h.Implicit.Card(ctx, s.TenantID, s.UserID)
+	}
 	if card.UserID == uuid.Nil {
 		card = read.ChatCard{UserID: s.UserID, Level: 1}
 	}
 	return h.acked(ctx, s, e, card, false)
+}
+
+// member returns the sender as a member of the channel: an active channel_members row, or — World/Area — the access
+// checked from the projections (school, room of the gateway; F120-AC-12, AC-13), with no history window.
+func (h Send) member(ctx context.Context, s Sender, facts *read.ChannelFacts) (channel.Member, bool, error) {
+	ch := facts.Channel
+	if !ch.Type.Implicit() {
+		m, ok := facts.Members.Active(s.UserID)
+		return m, ok, nil
+	}
+	if h.Implicit == nil {
+		return channel.Member{}, false, nil
+	}
+	ok, school, err := h.Implicit.Access(ctx, s.TenantID, s.UserID, ch)
+	if err != nil || !ok {
+		return channel.Member{}, false, err
+	}
+	return channel.Member{ChannelID: ch.ID, UserID: s.UserID, TenantID: s.TenantID, SchoolID: school, Role: channel.RoleMember}, true, nil
 }
 
 // acked runs everything after the JetStream ack: the record becomes done, "Sent" goes to the sending connection, the
@@ -386,7 +433,13 @@ func (h Send) acked(ctx context.Context, s Sender, e message.Envelope, card read
 	_, deliver, _, _ := e.Moderation.Decision.Outcome()
 	if deliver {
 		facts, err := h.Facts.Channel(bg, s.TenantID, e.ChannelID)
-		if err == nil && facts != nil {
+		if err == nil && facts != nil && facts.Channel.Type.Implicit() {
+			if h.Broadcast != nil { // World/Area: every subscriber that passed the access check of chat.channel.join
+				if err := h.Broadcast.Broadcast(bg, e, card); err != nil {
+					slog.WarnContext(ctx, "chat: fan-out failed", "error", err)
+				}
+			}
+		} else if err == nil && facts != nil {
 			notifyMentions(bg, h.Notify, facts, e, e.Mentions)
 			recipients := make([]uuid.UUID, 0, len(facts.Members))
 			for _, id := range facts.Members.ActiveIDs() {
@@ -463,4 +516,23 @@ func traceID(ctx context.Context) *string {
 	}
 	id := sc.TraceID().String()
 	return &id
+}
+
+// EnsureChannel creates the World/Area channel id of the student when it is its own and has no row yet (chat.channel.join
+// before the first message, F120-AC-12, AC-13); any other id is left to the membership check of the join.
+func (h Send) EnsureChannel(ctx context.Context, tenant, user, id uuid.UUID) error {
+	if h.Ensure == nil {
+		return nil
+	}
+	facts, err := h.Facts.Channel(ctx, tenant, id)
+	if err != nil {
+		return temporarily()
+	}
+	if facts != nil {
+		return nil
+	}
+	if _, err := h.Ensure(ctx, tenant, user, id); err != nil {
+		return temporarily()
+	}
+	return nil
 }

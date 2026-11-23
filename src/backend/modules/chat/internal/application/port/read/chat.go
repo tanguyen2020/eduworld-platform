@@ -122,3 +122,12 @@ type ChatReader interface {
 	// by the caller).
 	Messages(ctx context.Context, q MessageQuery) ([]StoredMessage, error)
 }
+
+// ImplicitReader reads what the implicit channels (world, area — F120-AC-12, AC-13) need: the projected school of a
+// student, the tenant type and the world_scope level, and the public card of a sender (no member rows).
+type ImplicitReader interface {
+	// StudentSchool returns the school of an active projected student of tenant (nil: unknown, cleaned up, not active).
+	StudentSchool(ctx context.Context, tenant, student uuid.UUID) (*uuid.UUID, error)
+	// Card returns the public card of a student (nil when no profile).
+	Card(ctx context.Context, tenant, student uuid.UUID) (*ChatCard, error)
+}

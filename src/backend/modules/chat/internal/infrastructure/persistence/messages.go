@@ -54,6 +54,10 @@ func (Messages) Insert(ctx context.Context, tenant uuid.UUID, es []message.Envel
 	for id, gameplay := range known {
 		chans[id] = gameplay
 	}
+	implicit, err := implicitChannels(ctx, tenant, list)
+	if err != nil {
+		return res, err
+	}
 	// One writer per channel at a time: (channel_id, seq) is unique across partitions only under this lock (the
 	// partitioned unique key also holds created_at), in a fixed order so that two replicas never deadlock.
 	sort.Slice(list, func(i, j int) bool { return list[i].String() < list[j].String() })
@@ -75,6 +79,22 @@ func (Messages) Insert(ctx context.Context, tenant uuid.UUID, es []message.Envel
 		verdict, _ := json.Marshal(map[string]any{"decision": e.Moderation.Decision, "category_codes": e.Moderation.CategoryCodes,
 			"steps_skipped": e.Moderation.StepsSkipped, "catalog_version": e.Moderation.CatalogVersion,
 			"catalog_version_tenant": e.Moderation.CatalogVersionTenant, "params": e.Params})
+		if implicit[e.ChannelID] { // World/Area (F120-AC-12): chat.ephemeral_messages, purged after 24 h by F117
+			r, err := t.ExecContext(ctx, insertEphemeralSQL, e.MessageID, e.ChannelID, e.TenantID, e.SchoolID, e.SenderID,
+				string(e.MsgKind), e.Body(), e.QuickMessageID, string(e.Moderation.State), string(verdict), e.CreatedAt.UTC())
+			if err != nil {
+				return res, fmt.Errorf("chat: persist ephemeral message: %w", err)
+			}
+			if n, _ := r.RowsAffected(); n == 0 {
+				continue // redelivery
+			}
+			if err := insertDecision(ctx, EnvelopeDecision(e)); err != nil {
+				return res, err
+			}
+			res.Inserted = append(res.Inserted, e)
+			lastSeq[e.ChannelID] = max(lastSeq[e.ChannelID], e.Seq)
+			continue
+		}
 		taken, err := seqTaken(ctx, e, chans[e.ChannelID])
 		if err != nil {
 			return res, err
@@ -132,6 +152,36 @@ func (Messages) Insert(ctx context.Context, tenant uuid.UUID, es []message.Envel
 		}
 	}
 	return res, nil
+}
+
+const insertEphemeralSQL = `INSERT INTO chat.ephemeral_messages (message_id, channel_id, tenant_id, school_id, sender_id, kind, body,
+	quick_message_id, moderation_state, filter_verdict, created_at, created_on)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, ($11::timestamptz AT TIME ZONE 'UTC')::date)
+	ON CONFLICT DO NOTHING`
+
+// implicitChannels returns the World/Area channels of tenant among ids (F120: stored in chat.ephemeral_messages).
+func implicitChannels(ctx context.Context, tenant uuid.UUID, ids []uuid.UUID) (map[uuid.UUID]bool, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok chat.channels of the envelope tenant (TenantScope + RLS), live rows only
+	rows, err := t.QueryContext(ctx, `SELECT c.channel_id FROM chat.channels c
+		WHERE c.tenant_id = $1 AND c.channel_id = ANY($2::uuid[]) AND c.deleted_at IS NULL AND c.channel_type IN ('world', 'area')`,
+		tenant, idStrings(ids))
+	if err != nil {
+		return nil, fmt.Errorf("chat: persist implicit channels: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	out := map[uuid.UUID]bool{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("chat: persist implicit channels: %w", err)
+		}
+		out[id] = true
+	}
+	return out, rows.Err()
 }
 
 // knownChannels returns the live channels of tenant among ids with their is_gameplay.

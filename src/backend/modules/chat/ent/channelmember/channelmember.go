@@ -57,6 +57,8 @@ const (
 	FieldShowReadReceipts = "show_read_receipts"
 	// FieldNotificationLevel holds the string denoting the notification_level field in the database.
 	FieldNotificationLevel = "notification_level"
+	// FieldSourceEventID holds the string denoting the source_event_id field in the database.
+	FieldSourceEventID = "source_event_id"
 	// Table holds the table name of the channelmember in the database.
 	Table = "channel_members"
 )
@@ -85,6 +87,7 @@ var Columns = []string{
 	FieldUnreadMentions,
 	FieldShowReadReceipts,
 	FieldNotificationLevel,
+	FieldSourceEventID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -246,4 +249,9 @@ func ByShowReadReceipts(opts ...sql.OrderTermOption) OrderOption {
 // ByNotificationLevel orders the results by the notification_level field.
 func ByNotificationLevel(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldNotificationLevel, opts...).ToFunc()
+}
+
+// BySourceEventID orders the results by the source_event_id field.
+func BySourceEventID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSourceEventID, opts...).ToFunc()
 }

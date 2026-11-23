@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/club.archived.v1.schema.json",
+  "title": "Payload club.archived v1 (module chat, owner F120)",
+  "description": "Club bị lưu trữ (archiveClub, F120-AC-20): channel club chuyển read_only, lịch sử giữ theo retention. Consumer: NTF, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "club_id",
+    "tenant_id",
+    "club_type",
+    "actor_id",
+    "occurred_at"
+  ],
+  "properties": {
+    "club_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "club_type": {
+      "type": "string",
+      "enum": [
+        "school_club",
+        "subject_club",
+        "competition_team",
+        "interest_group"
+      ]
+    },
+    "owner_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "chat_channel_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "actor_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "club_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "club_type": "interest_group",
+      "owner_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+      "chat_channel_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000d1",
+      "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "occurred_at": "2026-12-01T08:00:00.000Z"
+    }
+  ]
+}

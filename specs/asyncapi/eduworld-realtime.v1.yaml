@@ -121,6 +121,7 @@ channels:
       ChatMessageRemoved: { $ref: '#/components/messages/ChatMessageRemoved' }
       ChatReactionUpdated: { $ref: '#/components/messages/ChatReactionUpdated' }
       ChatUnreadUpdated: { $ref: '#/components/messages/ChatUnreadUpdated' }
+      ChatChannelMembershipChanged: { $ref: '#/components/messages/ChatChannelMembershipChanged' }
       ChatHistoryLoaded: { $ref: '#/components/messages/ChatHistoryLoaded' }
       ChatSanctionApplied: { $ref: '#/components/messages/ChatSanctionApplied' }
       ChatMessageEdit: { $ref: '#/components/messages/ChatMessageEdit' }
@@ -289,6 +290,7 @@ operations:
       - $ref: '#/channels/realtime/messages/ChatMessageRemoved'
       - $ref: '#/channels/realtime/messages/ChatReactionUpdated'
       - $ref: '#/channels/realtime/messages/ChatUnreadUpdated'
+      - $ref: '#/channels/realtime/messages/ChatChannelMembershipChanged'
       - $ref: '#/channels/realtime/messages/ChatHistoryLoaded'
       - $ref: '#/channels/realtime/messages/ChatSanctionApplied'
       - $ref: '#/channels/realtime/messages/ChatMessageAcked'
@@ -1398,6 +1400,26 @@ components:
                     type: object
                     description: channel_id → số mention chưa đọc
                     additionalProperties: { type: integer }
+    ChatChannelMembershipChanged:
+      name: chat.channel.membership_changed
+      summary: |
+        Thành viên của một channel bền vững đổi với chính người nhận (F120): vào/rời club (channel team cố định), mở channel
+        direct; hoặc trạng thái channel đổi (club khóa/lưu trữ → read_only, DM bị block → frozen, unblock → open). Module chat
+        đẩy qua ew:rt:user:<user_id> sau khi commit; client tải lại listMyChannels/subscribe lại khi cần. Chỉ id và trạng thái.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: chat.channel.membership_changed }
+              payload:
+                type: object
+                required: [channel_id, channel_type, op, status]
+                properties:
+                  channel_id: { $ref: '#/components/schemas/Uuid' }
+                  channel_type: { $ref: '#/components/schemas/ChatChannelType' }
+                  op: { type: string, enum: [added, removed, status_changed] }
+                  status: { type: string, enum: [open, read_only, frozen, closed] }
     ChatHistoryLoaded:
       name: chat.history.loaded
       summary: |

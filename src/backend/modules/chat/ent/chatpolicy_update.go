@@ -171,6 +171,26 @@ func (_u *ChatPolicyUpdate) AppendRules(v jsontext.Value) *ChatPolicyUpdate {
 	return _u
 }
 
+// SetReason sets the "reason" field.
+func (_u *ChatPolicyUpdate) SetReason(v string) *ChatPolicyUpdate {
+	_u.mutation.SetReason(v)
+	return _u
+}
+
+// SetNillableReason sets the "reason" field if the given value is not nil.
+func (_u *ChatPolicyUpdate) SetNillableReason(v *string) *ChatPolicyUpdate {
+	if v != nil {
+		_u.SetReason(*v)
+	}
+	return _u
+}
+
+// ClearReason clears the value of the "reason" field.
+func (_u *ChatPolicyUpdate) ClearReason() *ChatPolicyUpdate {
+	_u.mutation.ClearReason()
+	return _u
+}
+
 // Mutation returns the ChatPolicyMutation object of the builder.
 func (_u *ChatPolicyUpdate) Mutation() *ChatPolicyMutation {
 	return _u.mutation
@@ -223,6 +243,11 @@ func (_u *ChatPolicyUpdate) check() error {
 	if v, ok := _u.mutation.DeleteReason(); ok {
 		if err := chatpolicy.DeleteReasonValidator(v); err != nil {
 			return &ValidationError{Name: "delete_reason", err: fmt.Errorf(`ent: validator failed for field "ChatPolicy.delete_reason": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Reason(); ok {
+		if err := chatpolicy.ReasonValidator(v); err != nil {
+			return &ValidationError{Name: "reason", err: fmt.Errorf(`ent: validator failed for field "ChatPolicy.reason": %w`, err)}
 		}
 	}
 	return nil
@@ -295,6 +320,12 @@ func (_u *ChatPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, chatpolicy.FieldRules, value)
 		})
+	}
+	if value, ok := _u.mutation.Reason(); ok {
+		_spec.SetField(chatpolicy.FieldReason, field.TypeString, value)
+	}
+	if _u.mutation.ReasonCleared() {
+		_spec.ClearField(chatpolicy.FieldReason, field.TypeString)
 	}
 	_spec.Node.Schema = _u.schemaConfig.ChatPolicy
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -457,6 +488,26 @@ func (_u *ChatPolicyUpdateOne) AppendRules(v jsontext.Value) *ChatPolicyUpdateOn
 	return _u
 }
 
+// SetReason sets the "reason" field.
+func (_u *ChatPolicyUpdateOne) SetReason(v string) *ChatPolicyUpdateOne {
+	_u.mutation.SetReason(v)
+	return _u
+}
+
+// SetNillableReason sets the "reason" field if the given value is not nil.
+func (_u *ChatPolicyUpdateOne) SetNillableReason(v *string) *ChatPolicyUpdateOne {
+	if v != nil {
+		_u.SetReason(*v)
+	}
+	return _u
+}
+
+// ClearReason clears the value of the "reason" field.
+func (_u *ChatPolicyUpdateOne) ClearReason() *ChatPolicyUpdateOne {
+	_u.mutation.ClearReason()
+	return _u
+}
+
 // Mutation returns the ChatPolicyMutation object of the builder.
 func (_u *ChatPolicyUpdateOne) Mutation() *ChatPolicyMutation {
 	return _u.mutation
@@ -522,6 +573,11 @@ func (_u *ChatPolicyUpdateOne) check() error {
 	if v, ok := _u.mutation.DeleteReason(); ok {
 		if err := chatpolicy.DeleteReasonValidator(v); err != nil {
 			return &ValidationError{Name: "delete_reason", err: fmt.Errorf(`ent: validator failed for field "ChatPolicy.delete_reason": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Reason(); ok {
+		if err := chatpolicy.ReasonValidator(v); err != nil {
+			return &ValidationError{Name: "reason", err: fmt.Errorf(`ent: validator failed for field "ChatPolicy.reason": %w`, err)}
 		}
 	}
 	return nil
@@ -611,6 +667,12 @@ func (_u *ChatPolicyUpdateOne) sqlSave(ctx context.Context) (_node *ChatPolicy, 
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, chatpolicy.FieldRules, value)
 		})
+	}
+	if value, ok := _u.mutation.Reason(); ok {
+		_spec.SetField(chatpolicy.FieldReason, field.TypeString, value)
+	}
+	if _u.mutation.ReasonCleared() {
+		_spec.ClearField(chatpolicy.FieldReason, field.TypeString)
 	}
 	_spec.Node.Schema = _u.schemaConfig.ChatPolicy
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

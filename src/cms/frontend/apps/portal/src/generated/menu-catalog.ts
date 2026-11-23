@@ -278,6 +278,7 @@ export type ActionKey =
   | "action.platform_admin.chat_safety.edit"
   | "action.platform_admin.chat_safety.test"
   | "action.platform_admin.chat_safety.publish"
+  | "action.platform_admin.chat_safety.policy"
   | "action.platform_admin.moderation_switches.view"
   | "action.platform_admin.moderation_switches.toggle"
   | "action.platform_admin.system_settings.view"
@@ -1104,6 +1105,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.platform_admin.chat_safety.edit", labelKey: "portal.action.platform_admin.chat_safety.edit", requiredPermissions: ["chat.sensitive_terms.write"] },
           { key: "action.platform_admin.chat_safety.test", labelKey: "portal.action.platform_admin.chat_safety.test", requiredPermissions: ["chat.sensitive_terms.write"] },
           { key: "action.platform_admin.chat_safety.publish", labelKey: "portal.action.platform_admin.chat_safety.publish", requiredPermissions: ["chat.sensitive_terms.write"] },
+          { key: "action.platform_admin.chat_safety.policy", labelKey: "portal.action.platform_admin.chat_safety.policy", requiredPermissions: ["platform.settings.write"] },
         ],
       },
       {

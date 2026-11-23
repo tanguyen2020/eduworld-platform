@@ -39,3 +39,7 @@ func Every(name string, interval time.Duration, r Runner) func(ctx context.Conte
 		}
 	}
 }
+
+// PersistentChatRetention is the job persistent-chat-retention (F120 US6): worker-chat, role chat_app, anonymisation of the
+// persistent channels (club team, direct) — never a DELETE (R21, ADR-0070).
+const PersistentChatRetention = "persistent-chat-retention"
