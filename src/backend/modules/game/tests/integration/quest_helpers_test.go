@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -23,6 +24,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/minigamesql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/questsql"
+	readrepo "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/worldsql"
 	writerepo "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/questschema"
@@ -33,6 +35,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/modcall"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
@@ -161,7 +164,9 @@ func (e *env) questsUC() command.Quests {
 
 // questQueries returns the quest read use cases.
 func (e *env) questQueries() query.Quests {
-	return query.Quests{Read: e.read, Content: questsql.Content{}, World: worldsql.Content{}, Reset: questCfg().Reset, Now: e.clock.Now}
+	codec, _ := page.NewCodec([]byte(strings.Repeat("c", 32)))
+	return query.Quests{Read: e.read, Content: questsql.Content{}, World: worldsql.Content{}, Pages: readrepo.Quests{}, Cursors: codec,
+		Reset: questCfg().Reset, Now: e.clock.Now}
 }
 
 // questProxy calls the current quest use cases of env.

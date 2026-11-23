@@ -2,8 +2,9 @@ package query
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +25,8 @@ import (
 type Quests struct {
 	Read    read.Session
 	Content port.QuestContent
+	// List reads the quest list of a student page by page in SQL (API_DESIGN §5).
+	Pages   read.QuestListReadModel
 	World   port.WorldContent
 	Cursors *page.Codec
 	Reset   quest.Reset
@@ -124,15 +127,20 @@ type entry struct {
 	summary QuestSummary
 }
 
-type questSnapshot struct {
-	entries map[uuid.UUID]*entry
+// questPage is one page of the quests of a student and whether the list goes on after it.
+type questPage struct {
+	entries []*entry
+	last    *read.QuestListRow // the last row read (the keyset of the next page)
+	more    bool
 }
 
-// load computes the quests of the student (F072-AC-01, AC-02, AC-24 and the edge cases): every active progress (on its
-// pinned version, even when the quest was unassigned or the grade changed since) and every assigned quest visible for
-// the current grade, subjects and availability (an auto daily/weekly quest only once granted).
-func (h Quests) load(ctx context.Context, id, tenant uuid.UUID) (*questSnapshot, error) {
-	s := &questSnapshot{entries: map[uuid.UUID]*entry{}}
+// page reads one page of the quests of the student (F072-AC-01, AC-02, AC-24 and the edge cases) in SQL — every active
+// progress (on its pinned version, even when the quest was unassigned or the grade changed since) and every assigned
+// quest visible for the current grade, subjects and availability (an auto daily/weekly quest only once granted),
+// filtered, ordered by (status rank, code, quest_id) and cut by keyset + LIMIT (API_DESIGN §5) — then builds the
+// summaries of that page only with the domain rules (quest.Decide, quest.CanRepeat), which stay the source of truth.
+func (h Quests) page(ctx context.Context, id, tenant uuid.UUID, in read.QuestListQuery) (*questPage, error) {
+	out := &questPage{}
 	now := h.now()
 	err := h.Read.Read(ctx, func(ctx context.Context) error {
 		st, err := h.World.Student(ctx, tenant, id)
@@ -142,72 +150,107 @@ func (h Quests) load(ctx context.Context, id, tenant uuid.UUID) (*questSnapshot,
 		if st == nil || st.Deleted || st.Status != "active" {
 			return nil
 		}
-		hist, err := h.Content.Histories(ctx, tenant, id)
+		disc, err := h.Content.Discovered(ctx, tenant, id)
 		if err != nil {
 			return err
 		}
-		for qid, hs := range hist {
-			if hs.Latest == nil || !hs.Latest.Active() {
-				continue
-			}
-			row, err := h.Content.QuestVersion(ctx, hs.Latest.VersionID)
-			if err != nil {
-				return err
-			}
-			if row == nil {
-				continue
-			}
-			sum := summaryOf(*row)
-			sum.Status = quest.StatusActive
-			v := questrules.ViewOf(hs.Latest, row.Version)
-			sum.Progress = &v
-			s.entries[qid] = &entry{row: *row, summary: sum}
+		q := in
+		q.Tenant, q.Student, q.Grade, q.EnabledSubjects, q.Now = tenant, id, st.Grade, st.EnabledSubjects, now
+		q.DailyKey, q.WeeklyKey = h.Reset.PeriodKey(quest.RecurrenceDaily, now), h.Reset.PeriodKey(quest.RecurrenceWeekly, now)
+		q.Discovered = make([]string, 0, len(disc))
+		for d := range disc {
+			q.Discovered = append(q.Discovered, d)
 		}
-		rows, err := h.Content.AssignedQuests(ctx, tenant, st.Grade)
+		slices.Sort(q.Discovered)
+		q.Limit = in.Limit + 1
+		rows, err := h.Pages.Page(ctx, q)
 		if err != nil {
 			return err
 		}
-		f, err := questrules.Facts(ctx, h.World, h.Content, tenant, id, st, hist)
+		if len(rows) > in.Limit {
+			rows, out.more = rows[:in.Limit], true
+		}
+		if len(rows) == 0 {
+			return nil
+		}
+		out.last = &rows[len(rows)-1]
+		ids := make([]uuid.UUID, len(rows))
+		for i, r := range rows {
+			ids[i] = r.QuestID
+		}
+		hist, err := h.Pages.Histories(ctx, tenant, id, ids, []string{q.DailyKey, q.WeeklyKey})
 		if err != nil {
 			return err
 		}
-		for _, row := range rows {
-			if s.entries[row.QuestID] != nil {
+		var f *quest.Facts
+		for _, r := range rows {
+			hs := hist[r.QuestID]
+			if hs != nil && hs.Latest != nil && hs.Latest.Active() && hs.Latest.VersionID == r.VersionID {
+				sum := summaryOf(r.QuestRow)
+				sum.Status = quest.StatusActive
+				v := questrules.ViewOf(hs.Latest, r.Version)
+				sum.Progress = &v
+				out.entries = append(out.entries, &entry{row: r.QuestRow, summary: sum})
 				continue
 			}
-			v := row.Version
-			d := quest.Decide(v, questrules.Student(st), f, now)
-			if !d.Visible {
-				continue
-			}
-			hs := hist[row.QuestID]
-			sum := summaryOf(row)
-			if hs != nil && hs.Latest != nil {
-				pv := questrules.ViewOf(hs.Latest, v)
-				sum.Progress = &pv
-			}
-			rep, retry := quest.CanRepeat(v, questrules.History(hs, v, h.Reset, now), now)
-			switch {
-			case rep == quest.RepeatAlreadyCompleted:
-				sum.Status, sum.LockedReason = quest.StatusCompleted, "already_completed"
-			case v.AutoGranted() || !v.Acceptable():
-				if hs == nil || hs.Latest == nil {
-					continue // granted or assigned by the server only (auto_daily/auto_weekly; assignment, event: F041/F077)
+			if f == nil {
+				completed, err := h.Pages.CompletedQuests(ctx, tenant, id)
+				if err != nil {
+					return err
 				}
-				sum.Status = hs.Latest.Status
-			case rep == quest.RepeatCooldown:
-				sum.Status, sum.LockedReason, sum.RetryAfter = quest.StatusCompleted, "cooldown", retry
-			default:
-				sum.Status, sum.CanAccept = "available", d.Met
-				if !d.Met {
-					sum.LockedReason, sum.MissingRequirements = "prerequisite_not_met", d.Missing()
+				ff, err := questrules.Facts(ctx, h.World, h.Content, tenant, id, st, completed)
+				if err != nil {
+					return err
+				}
+				f = &ff
+			}
+			sum, ok := h.summarize(r.QuestRow, hs, st, *f, now)
+			if !ok || sum.Status != r.Status {
+				// the SQL form of quest.Decide/CanRepeat and the domain disagree: the domain answers, the page keeps its keyset
+				slog.WarnContext(ctx, "game.query.ListQuests: SQL status differs from the domain rules", "quest_id", r.QuestID,
+					"sql_status", r.Status, "domain_status", sum.Status, "listed", ok)
+				if !ok {
+					continue
 				}
 			}
-			s.entries[row.QuestID] = &entry{row: row, summary: sum}
+			out.entries = append(out.entries, &entry{row: r.QuestRow, summary: sum})
 		}
 		return nil
 	})
-	return s, err
+	return out, err
+}
+
+// summarize is the summary of an assigned quest the student has no active progress on (F072-AC-01, AC-25): visible by
+// quest.Decide, status by quest.CanRepeat and the start trigger; ok is false for a quest the student does not see.
+func (h Quests) summarize(row port.QuestRow, hs *port.QuestHistory, st *port.WorldStudent, f quest.Facts, now time.Time) (QuestSummary, bool) {
+	v := row.Version
+	d := quest.Decide(v, questrules.Student(st), f, now)
+	if !d.Visible {
+		return QuestSummary{}, false
+	}
+	sum := summaryOf(row)
+	if hs != nil && hs.Latest != nil {
+		pv := questrules.ViewOf(hs.Latest, v)
+		sum.Progress = &pv
+	}
+	rep, retry := quest.CanRepeat(v, questrules.History(hs, v, h.Reset, now), now)
+	switch {
+	case rep == quest.RepeatAlreadyCompleted:
+		sum.Status, sum.LockedReason = quest.StatusCompleted, "already_completed"
+	case v.AutoGranted() || !v.Acceptable():
+		if hs == nil || hs.Latest == nil {
+			return QuestSummary{}, false // granted or assigned by the server only (auto_daily/auto_weekly; assignment, event: F041/F077)
+		}
+		sum.Status = hs.Latest.Status
+	case rep == quest.RepeatCooldown:
+		sum.Status, sum.LockedReason, sum.RetryAfter = quest.StatusCompleted, "cooldown", retry
+	default:
+		sum.Status, sum.CanAccept = "available", d.Met
+		if !d.Met {
+			sum.LockedReason, sum.MissingRequirements = "prerequisite_not_met", d.Missing()
+		}
+	}
+	return sum, true
 }
 
 func summaryOf(row port.QuestRow) QuestSummary {
@@ -218,30 +261,11 @@ func summaryOf(row port.QuestRow) QuestSummary {
 		StoryChapterCode: v.StoryChapterCode, StartTrigger: v.StartTrigger.Kind, AvailableUntil: until}
 }
 
-// inArea reports a quest of area: its area, the area of its trigger or of one of its steps.
-func inArea(v quest.Version, area string) bool {
-	if v.AreaID == area || v.StartTrigger.AreaID == area {
-		return true
-	}
-	for _, s := range v.Steps {
-		if s.AreaID == area {
-			return true
-		}
-	}
-	return false
-}
+// cursorKey is the keyset of a row as the opaque cursor stores it: "<status rank>:<code>".
+func cursorKey(r read.QuestListRow) string { return strconv.Itoa(r.Rank) + ":" + r.Version.Code }
 
-var statusRank = map[string]int{quest.StatusActive: 0, "available": 1, quest.StatusCompleted: 2}
-
-func sortKey(s QuestSummary) string {
-	r, ok := statusRank[s.Status]
-	if !ok {
-		r = 3
-	}
-	return fmt.Sprintf("%d:%s", r, s.Code)
-}
-
-// List implements listQuests (F072-AC-01): filters status, quest_type and area_id; keyset pages by (status, code).
+// List implements listQuests (F072-AC-01): filters status, quest_type and area_id; keyset pages by (status rank, code,
+// quest_id) in SQL.
 func (h Quests) List(ctx context.Context, in ListInput) (out QuestPage, err error) {
 	ctx, done := observability.UseCase(ctx, "game.query.ListQuests")
 	defer func() { done(err) }()
@@ -250,55 +274,36 @@ func (h Quests) List(ctx context.Context, in ListInput) (out QuestPage, err erro
 		return out, err
 	}
 	limit := page.Limit(in.Limit)
-	var cur *page.Cursor
+	q := read.QuestListQuery{QuestType: in.QuestType, Status: in.Status, AreaID: in.AreaID, Limit: limit}
 	if h.Cursors != nil {
-		if cur, err = h.Cursors.Decode(in.Cursor); err != nil {
+		cur, err := h.Cursors.Decode(in.Cursor)
+		if err != nil {
 			return out, problem.New(problem.BadRequest, "invalid cursor")
 		}
+		if cur != nil {
+			r, code, ok := strings.Cut(cur.Key, ":")
+			n, err := strconv.Atoi(r)
+			if !ok || err != nil {
+				return out, problem.New(problem.BadRequest, "invalid cursor")
+			}
+			q.After = &read.QuestKey{Rank: n, Code: code, QuestID: cur.ID}
+		}
 	}
-	s, err := h.load(ctx, id, tenant)
+	p, err := h.page(ctx, id, tenant, q)
 	if err != nil {
 		return out, err
 	}
-	var list []QuestSummary
-	for _, e := range s.entries {
-		sum := e.summary
-		switch {
-		case in.Status != "" && sum.Status != in.Status:
-			continue
-		case in.QuestType != "" && sum.QuestType != in.QuestType:
-			continue
-		case in.AreaID != "" && !inArea(e.row.Version, in.AreaID):
-			continue
-		}
-		list = append(list, sum)
+	out = QuestPage{Data: make([]QuestSummary, 0, len(p.entries)), Page: PageInfo{Limit: limit}}
+	for _, e := range p.entries {
+		out.Data = append(out.Data, e.summary)
 	}
-	slices.SortFunc(list, func(a, b QuestSummary) int {
-		if c := strings.Compare(sortKey(a), sortKey(b)); c != 0 {
-			return c
-		}
-		return strings.Compare(a.QuestID.String(), b.QuestID.String())
-	})
-	if cur != nil {
-		i := slices.IndexFunc(list, func(q QuestSummary) bool {
-			k := sortKey(q)
-			return k > cur.Key || (k == cur.Key && q.QuestID.String() > cur.ID.String())
-		})
-		if i < 0 {
-			i = len(list)
-		}
-		list = list[i:]
-	}
-	out = QuestPage{Data: []QuestSummary{}, Page: PageInfo{Limit: limit}}
-	if len(list) > limit {
-		list, out.Page.HasMore = list[:limit], true
+	if p.more {
+		out.Page.HasMore = true
 		if h.Cursors != nil {
-			last := list[len(list)-1]
-			next := h.Cursors.Encode(page.Cursor{Key: sortKey(last), ID: last.QuestID})
+			next := h.Cursors.Encode(page.Cursor{Key: cursorKey(*p.last), ID: p.last.QuestID})
 			out.Page.NextCursor = &next
 		}
 	}
-	out.Data = append(out.Data, list...)
 	return out, nil
 }
 
@@ -312,15 +317,14 @@ func (h Quests) Get(ctx context.Context, questID uuid.UUID) (out QuestDetail, er
 	if err != nil {
 		return out, err
 	}
-	s, err := h.load(ctx, id, tenant)
+	p, err := h.page(ctx, id, tenant, read.QuestListQuery{QuestID: &questID, Limit: 1})
 	if err != nil {
 		return out, err
 	}
-	e := s.entries[questID]
-	if e == nil {
+	if len(p.entries) == 0 {
 		return out, problem.New(problem.NotFound, "quest not found")
 	}
-	return detailOf(e), nil
+	return detailOf(p.entries[0]), nil
 }
 
 func detailOf(e *entry) QuestDetail {

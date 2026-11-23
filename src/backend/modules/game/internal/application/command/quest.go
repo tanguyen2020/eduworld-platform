@@ -211,7 +211,7 @@ func (h Quests) Accept(ctx context.Context, questID uuid.UUID, partyID *uuid.UUI
 		if err != nil {
 			return err
 		}
-		f, err := questrules.Facts(ctx, h.World, h.Content, tenant, student, st, hist)
+		f, err := questrules.Facts(ctx, h.World, h.Content, tenant, student, st, questrules.CompletedOf(hist))
 		if err != nil {
 			return err
 		}

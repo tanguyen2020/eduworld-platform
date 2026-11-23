@@ -243,7 +243,7 @@ func Register(r *module.Registry) (*Module, error) {
 		Profiles:    profiles, ProfileQueries: query.Profile{Read: core.ReadSession, Profiles: read.Profiles{}, Catalog: read.Catalogs{},
 			Options: options, TTL: profileCfg.SuggestionTTL},
 		World: worldUC, WorldQueries: query.World{Read: core.ReadSession, Content: worldsql.Content{}, Manifests: read.Manifests{}},
-		Quests: questUC, QuestQueries: query.Quests{Read: core.ReadSession, Content: questsql.Content{}, World: worldsql.Content{}, Cursors: cursors,
+		Quests: questUC, QuestQueries: query.Quests{Read: core.ReadSession, Content: questsql.Content{}, World: worldsql.Content{}, Pages: read.Quests{}, Cursors: cursors,
 			Reset: questCfg.Reset},
 		ProgressionQueries: query.Progression{Read: core.ReadSession, Curves: progressionsql.Content{}, Data: read.Progression{}, Cursors: cursors,
 			DailyCap: policy.DailyCap},

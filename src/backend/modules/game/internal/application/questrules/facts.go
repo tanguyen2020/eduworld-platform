@@ -14,9 +14,10 @@ import (
 )
 
 // Facts reads the server facts the availability of the quests reads (completed quests, open areas, level,
-// mastery, discoveries) for a student; shared by the use cases and the read model.
+// mastery, discoveries) for a student; shared by the use cases and the read model. completed holds the quests the
+// student completed at least once (CompletedOf of the histories, or the read model).
 func Facts(ctx context.Context, w port.WorldContent, c port.QuestContent, tenant, student uuid.UUID, st *port.WorldStudent,
-	hist map[uuid.UUID]*port.QuestHistory) (quest.Facts, error) {
+	completed map[uuid.UUID]bool) (quest.Facts, error) {
 	f := quest.Facts{CompletedQuests: map[string]bool{}, OpenAreas: map[string]bool{}, Mastery: map[string]string{}}
 	chapters, err := w.CurrentChapters(ctx)
 	if err != nil {
@@ -29,8 +30,8 @@ func Facts(ctx context.Context, w port.WorldContent, c port.QuestContent, tenant
 	for q := range pr.Facts.Quests {
 		f.CompletedQuests[q] = true
 	}
-	for id, hs := range hist {
-		if hs.Completed > 0 {
+	for id, ok := range completed {
+		if ok {
 			f.CompletedQuests[id.String()] = true
 		}
 	}
@@ -52,6 +53,17 @@ func Facts(ctx context.Context, w port.WorldContent, c port.QuestContent, tenant
 		return f, err
 	}
 	return f, nil
+}
+
+// CompletedOf returns the quests of the histories completed at least once.
+func CompletedOf(hist map[uuid.UUID]*port.QuestHistory) map[uuid.UUID]bool {
+	out := make(map[uuid.UUID]bool, len(hist))
+	for id, hs := range hist {
+		if hs.Completed > 0 {
+			out[id] = true
+		}
+	}
+	return out
 }
 
 // Student maps the projected student to the domain.

@@ -223,6 +223,93 @@ func (Content) Histories(ctx context.Context, tenant, student uuid.UUID) (map[uu
 	return out, rows.Err()
 }
 
+// HistoriesOf returns the history of the given quests of a student (the quests of one page of listQuests): the latest
+// progress (by started_at, quest_progress_id), the completions, the last completion and, among periods, the periods
+// with a completion — aggregated in SQL, the progress rows of other quests are never read.
+func HistoriesOf(ctx context.Context, t Querier, tenant, student uuid.UUID, quests []uuid.UUID, periods []string) (map[uuid.UUID]*port.QuestHistory, error) {
+	out := map[uuid.UUID]*port.QuestHistory{}
+	if len(quests) == 0 {
+		return out, nil
+	}
+	if periods == nil {
+		periods = []string{}
+	}
+	if err := latestProgress(ctx, t, tenant, student, quests, out); err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok tenant table game.quest_progress: explicit tenant_id + deleted_at IS NULL (RLS as well)
+	agg, err := t.QueryContext(ctx, `SELECT quest_id, count(*), max(completed_at),
+			COALESCE(jsonb_agg(DISTINCT period_key) FILTER (WHERE period_key = ANY($4::text[])), '[]')
+		FROM game.quest_progress WHERE tenant_id = $1 AND student_id = $2 AND quest_id = ANY($3::uuid[]) AND status = 'completed'
+			AND deleted_at IS NULL GROUP BY quest_id`, tenant, student, quests, periods)
+	if err != nil {
+		return nil, fmt.Errorf("quest completions: %w", err)
+	}
+	defer func() { _ = agg.Close() }()
+	for agg.Next() {
+		var id uuid.UUID
+		var n int
+		var last sql.NullTime
+		var raw []byte
+		var keys []string
+		if err := agg.Scan(&id, &n, &last, &raw); err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal(raw, &keys); err != nil {
+			return nil, fmt.Errorf("quest completion periods: %w", err)
+		}
+		h := out[id]
+		if h == nil {
+			continue
+		}
+		h.Completed, h.LastCompletedAt = n, tp(last)
+		for _, k := range keys {
+			h.CompletedPeriods[k] = true
+		}
+	}
+	return out, agg.Err()
+}
+
+// latestProgress puts the latest progress of each of quests into out (by started_at, quest_progress_id).
+func latestProgress(ctx context.Context, t Querier, tenant, student uuid.UUID, quests []uuid.UUID, out map[uuid.UUID]*port.QuestHistory) error {
+	// tenancyguard:ok tenant table game.quest_progress: explicit tenant_id + deleted_at IS NULL (RLS as well)
+	rows, err := t.QueryContext(ctx, `SELECT DISTINCT ON (quest_id) `+ProgressColumns+` FROM game.quest_progress
+		WHERE tenant_id = $1 AND student_id = $2 AND quest_id = ANY($3::uuid[]) AND deleted_at IS NULL
+		ORDER BY quest_id, started_at DESC, quest_progress_id DESC`, tenant, student, quests)
+	if err != nil {
+		return fmt.Errorf("quest progress: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		p, err := ScanProgress(rows)
+		if err != nil {
+			return err
+		}
+		out[p.QuestID] = &port.QuestHistory{Latest: p, CompletedPeriods: map[string]bool{}}
+	}
+	return rows.Err()
+}
+
+// CompletedQuests returns the ids of the quests a student completed at least once (the completed_quest prerequisites).
+func CompletedQuests(ctx context.Context, t Querier, tenant, student uuid.UUID) (map[uuid.UUID]bool, error) {
+	// tenancyguard:ok tenant table game.quest_progress: explicit tenant_id + deleted_at IS NULL (RLS as well)
+	rows, err := t.QueryContext(ctx, `SELECT DISTINCT quest_id FROM game.quest_progress
+		WHERE tenant_id = $1 AND student_id = $2 AND status = 'completed' AND deleted_at IS NULL`, tenant, student)
+	if err != nil {
+		return nil, fmt.Errorf("completed quests: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	out := map[uuid.UUID]bool{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out[id] = true
+	}
+	return out, rows.Err()
+}
+
 // Discovered implements port.QuestContent.
 func (Content) Discovered(ctx context.Context, tenant, student uuid.UUID) (map[string]bool, error) {
 	t, err := q(ctx)
