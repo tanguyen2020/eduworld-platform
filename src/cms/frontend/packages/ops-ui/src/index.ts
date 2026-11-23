@@ -16,3 +16,11 @@ export { foldVi, nodeText, optionText, viFilterOption } from './select/viSearch'
 
 // Content editing components (F053: editor shell, formulas, bilingual fields, question editor) are exported from
 // `@eduworld/ops-ui/content` so that MathJax / MathLive stay in the Content Studio chunk, out of the portal entry.
+
+// Chat safety pieces of the portal (F122, DESIGN_SYSTEM §4.3): SLA deadline, "always on" lock, term tester.
+export { SlaBadge } from './chat-safety/SlaBadge';
+export type { SlaBadgeProps } from './chat-safety/SlaBadge';
+export { AlwaysOnLock } from './chat-safety/AlwaysOnLock';
+export type { AlwaysOnLockProps } from './chat-safety/AlwaysOnLock';
+export { SensitiveTermTester, highlightParts } from './chat-safety/SensitiveTermTester';
+export type { SensitiveTermMatch, SensitiveTermTestOutcome, SensitiveTermTesterProps } from './chat-safety/SensitiveTermTester';

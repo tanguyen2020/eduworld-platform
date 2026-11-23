@@ -8291,6 +8291,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenant/chat/moderation-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trạng thái kiểm duyệt hiệu lực của tenant cho banner "Đang tắt kiểm duyệt" (F122)
+         * @description Nhân sự tenant đã đăng nhập portal có `tenant.settings.read` hoặc `school.settings.read` trong tenant của phiên (thiếu cả hai →
+         *     `403 PERMISSION_DENIED`). Trả bước kiểm duyệt đang tắt (kết hợp platform và tenant) và thời điểm tự bật lại sớm nhất — **không**
+         *     trả lý do, người thay đổi hay yêu cầu chờ duyệt (ADR-0030, F122-AC-13/14). Vỏ portal (`x-portal-shell`), không bị featuregate chặn;
+         *     portal làm mới ≤ 60 giây.
+         */
+        get: operations["getTenantModerationStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenant/permissions": {
         parameters: {
             query?: never;
@@ -15814,6 +15837,17 @@ export interface components {
         TenantLocalizedText: {
             en?: string;
             vi: string;
+        };
+        /** @description Trạng thái công tắc kiểm duyệt hiệu lực của một tenant cho banner (F122) — không có lý do, người thay đổi (ADR-0030). */
+        TenantModerationStatus: {
+            disabled_steps: components["schemas"]["ModerationStep"][];
+            /** @description false = toàn bộ bước nội dung đang tắt (platform hoặc tenant) */
+            enabled_all: boolean;
+            /** @description Thời điểm tự bật lại sớm nhất của các cấp đang tắt; null khi không có bước nào tắt */
+            expires_at: components["schemas"]["Timestamp"] | null;
+            /** @description Cấp đang tắt (tenant khi tenant tự tắt, platform khi chỉ platform tắt); null khi không có bước nào tắt */
+            source_scope: ("platform" | "tenant") | null;
+            tenant_id: components["schemas"]["Uuid"];
         };
         TenantSensitiveCategory: {
             allow_tenant_toggle: boolean;
@@ -37160,6 +37194,35 @@ export interface operations {
                     };
                 };
             };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    getTenantModerationStatus: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantModerationStatus"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
         };
     };

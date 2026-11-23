@@ -21,9 +21,9 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` (`x-service: chat`). `/admin/*` chỉ
 | `listTenantSensitiveTerms` · `createTenantSensitiveTerm` · `updateTenantSensitiveTerm` · `deleteTenantSensitiveTerm` · `publishTenantSensitiveCatalog` | `/api/v1/admin/chat/tenant-terms[/{term_id}|:publish]` | eduworld-api | `chat.tenant_terms.write` | Có sẵn |
 | `toggleTenantSensitiveCategory` | `POST /api/v1/admin/chat/tenant-categories/{code}:toggle` | eduworld-api | `chat.tenant_category.toggle` | Có sẵn |
 | `listTenantSensitiveCategories` | `GET /api/v1/tenant/chat/categories` | eduworld-api | `chat.sensitive_terms.read` | Có sẵn |
-| `getTenantModerationStatus` | `GET /api/v1/tenant/chat/moderation-status` | eduworld-api | nhân sự tenant đã đăng nhập (`tenant.settings.read` hoặc `school.settings.read`) | Cần thêm |
-| `getChatPolicy` · `putChatPolicy` · `getEffectiveChatPolicy` | `/api/v1/tenant/chat-policies/…` | eduworld-api | `school.settings.read/write` | Cần thêm (owner F120) |
-| `listClubs` · `approveClub` · `archiveClub` · `removeClubMember` | `/api/v1/social/clubs…` | eduworld-api | `social.club.approve` | Có sẵn (`listClubs` Cần sửa ở F120) |
+| `getTenantModerationStatus` | `GET /api/v1/tenant/chat/moderation-status` | eduworld-api | nhân sự tenant đã đăng nhập (`tenant.settings.read` hoặc `school.settings.read`) | Có sẵn (F122 T004/T005, 2026-11-23; `x-portal-shell`) |
+| `getChatPolicy` · `putChatPolicy` · `getEffectiveChatPolicy` | `/api/v1/tenant/chat-policies/…` | eduworld-api | `school.settings.read/write` | Có sẵn (F120) |
+| `listClubs` · `approveClub` · `archiveClub` · `removeClubMember` | `/api/v1/social/clubs…` | eduworld-api | `social.club.approve` | Có sẵn (F120) — `removeClubMember` là route `game_player`, nhân sự không gọi được (câu hỏi mở, spec Clarifications 2026-11-23) |
 | `getMyPermissions` | `GET /api/v1/me/permissions` | eduworld-api | đã đăng nhập | Có sẵn |
 
 ## 2. Internal API
@@ -54,6 +54,6 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` (`x-service: chat`). `/admin/*` chỉ
 
 Task Phase 2: T004.
 
-- **Cần thêm** `getTenantModerationStatus` `GET /tenant/chat/moderation-status` (`x-service: chat`, header `X-Tenant-Id`) → `TenantModerationStatus` {`tenant_id`, `enabled_all` bool, `disabled_steps[]` ($ref `ModerationStep`, maxItems 5), `expires_at` Timestamp nullable, `source_scope` enum `platform|tenant`} — không có `reason`, không có `actor_id`; `403` khi không có quyền tenant. Đề xuất owner module chat (F116) — feature này tạo task contract, hiện thực backend ở F116 hoặc F122 tùy ai làm trước.
+- **Đã thêm (2026-11-23)** `getTenantModerationStatus` — `x-portal-shell: true` thay cho action catalog (banner thuộc vỏ portal); `GET /tenant/chat/moderation-status` (`x-service: chat`, header `X-Tenant-Id`) → `TenantModerationStatus` {`tenant_id`, `enabled_all` bool, `disabled_steps[]` ($ref `ModerationStep`, maxItems 5), `expires_at` Timestamp nullable, `source_scope` enum `platform|tenant`} — không có `reason`, không có `actor_id`; `403` khi không có quyền tenant. Đề xuất owner module chat (F116) — feature này tạo task contract, hiện thực backend ở F116 hoặc F122 tùy ai làm trước.
 - Phụ thuộc delta của F120 (`getChatPolicy`, `putChatPolicy`, `getEffectiveChatPolicy`, `listClubs` lọc `status`/`school_id`) và F121 (`ModerationCaseMessage`, enum sanction/trạng thái case).
 - ADR-0078: UI dùng `approveModerationSwitchChange` và API ghi `chat_policy_preset` (owner F116, F120).

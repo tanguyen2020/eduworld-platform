@@ -2785,6 +2785,17 @@
     ]
   },
   {
+    "operation_id": "getTenantModerationStatus",
+    "module": "chat",
+    "method": "GET",
+    "path": "/tenant/chat/moderation-status",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getTenantReport",
     "module": "learning",
     "method": "GET",

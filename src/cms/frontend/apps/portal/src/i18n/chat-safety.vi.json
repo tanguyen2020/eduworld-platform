@@ -1,0 +1,402 @@
+{
+  "chatSafety": {
+    "common": {
+      "actions": "Thao tác",
+      "allTenants": "Tất cả tenant",
+      "back": "Quay lại",
+      "cancel": "Hủy",
+      "close": "Đóng",
+      "delete": "Xóa",
+      "edit": "Sửa",
+      "empty": "Không có dữ liệu",
+      "largeScreen": "Tác vụ này cần màn hình lớn hơn. Trên điện thoại chỉ xem được.",
+      "loadMore": "Tải thêm",
+      "no": "Không",
+      "yes": "Có",
+      "off": "Tắt",
+      "on": "Bật",
+      "reason": "Lý do",
+      "save": "Lưu",
+      "school": "Trường",
+      "targetTenant": "Tenant đích",
+      "targetTenantRequired": "Chọn tenant đích.",
+      "tenant": "Tenant",
+      "tenantFilter": "Lọc tenant",
+      "uuidInvalid": "Mã không hợp lệ (UUID)."
+    },
+    "severity": {
+      "p1": "Nghiêm trọng (p1)",
+      "p2": "Cao (p2)",
+      "p3": "Thường (p3)"
+    },
+    "caseStatus": {
+      "open": "Mới",
+      "in_review": "Đang xử lý",
+      "escalated": "Đã chuyển cấp",
+      "resolved": "Đã đóng",
+      "reopened": "Mở lại"
+    },
+    "assignee": {
+      "any": "Mọi người",
+      "me": "Của tôi",
+      "unassigned": "Chưa nhận"
+    },
+    "cases": {
+      "assignee": "Người xử lý",
+      "category": "Nhóm vi phạm",
+      "created": "Tạo lúc",
+      "open": "Mở",
+      "queue": "Hàng đợi case",
+      "severity": "Mức",
+      "sla": "Hạn xử lý",
+      "status": "Trạng thái",
+      "unassigned": "Chưa nhận"
+    },
+    "case": {
+      "act": "Xử lý case",
+      "action": "Thao tác",
+      "apply": "Thực hiện",
+      "back": "← Hàng đợi case",
+      "channel": "Loại kênh",
+      "context": "Ngữ cảnh",
+      "directContact": "Case của tenant chung: không gửi thông báo trường — Safety Team liên hệ trực tiếp.",
+      "displayed": "Nội dung đã hiển thị",
+      "duration": "Thời hạn (phút)",
+      "evidence": "Bằng chứng",
+      "history": "Lịch sử thao tác",
+      "inSnapshot": "Trong snapshot",
+      "lockConfirm": "Khóa tài khoản",
+      "lockConfirmText": "Khóa tài khoản chặn học sinh đăng nhập game. Chỉ dùng khi có rủi ro nghiêm trọng; thao tác được ghi audit.",
+      "lockConfirmTitle": "Xác nhận khóa tài khoản",
+      "lockUnderstood": "Tôi đã kiểm tra bằng chứng và hiểu hệ quả",
+      "lockWarning": "Khóa tài khoản cần xác nhận thêm một bước.",
+      "message": "Tin nhắn",
+      "messageRequired": "Chọn tin cần ẩn.",
+      "note": "Ghi chú",
+      "notifySchool": "Gửi thông báo trường",
+      "original": "Nội dung gốc",
+      "recalled": "Đã thu hồi {{at}}",
+      "reloaded": "Case đã được người khác thay đổi — đã tải lại. Kiểm tra rồi thao tác lại.",
+      "reports": "Số báo cáo",
+      "revision": "Bản sửa",
+      "revisionLine": "Bản {{revision}}: {{body}} ({{decision}})",
+      "sanctionType": "Biện pháp",
+      "sanctionTypeRequired": "Chọn biện pháp.",
+      "schoolNotifications": "Thông báo nhà trường",
+      "searchInCase": "Tìm trong case này",
+      "take": "Nhận case",
+      "targetUser": "Học sinh liên quan",
+      "title": "Case …{{id}}"
+    },
+    "action": {
+      "warn": "Cảnh báo",
+      "mute": "Tắt tiếng",
+      "restrict": "Hạn chế",
+      "remove_message": "Ẩn tin",
+      "escalate": "Chuyển trưởng ca",
+      "dismiss": "Không vi phạm",
+      "close": "Đóng case",
+      "reopen": "Mở lại",
+      "created": "Tạo case"
+    },
+    "sanctionType": {
+      "warning": "Cảnh báo",
+      "mute": "Tắt tiếng",
+      "restrict_text": "Chỉ quick message",
+      "restrict_dm": "Chặn nhắn riêng",
+      "restrict_multiplayer": "Chặn chơi nhiều người",
+      "restrict_competition": "Chặn thi đấu",
+      "account_lock": "Khóa tài khoản"
+    },
+    "messageState": {
+      "allowed": "Đã cho phép",
+      "masked": "Đã che",
+      "unchecked": "Chưa kiểm",
+      "held": "Đang giữ",
+      "removed": "Đã ẩn"
+    },
+    "channel": {
+      "world": "World",
+      "area": "Khu vực",
+      "match": "Trận",
+      "party": "Nhóm chơi",
+      "team": "Đội / club",
+      "direct": "Nhắn riêng"
+    },
+    "notifications": {
+      "ackDue": "Hạn xác nhận",
+      "acknowledged": "Đã xác nhận",
+      "badge": "{{count}} thông báo chờ xác nhận",
+      "case": "Case",
+      "detail": "Chi tiết vụ việc",
+      "filter": {
+        "all": "Tất cả",
+        "pending": "Chờ xác nhận",
+        "acknowledged": "Đã xác nhận",
+        "overdue": "Quá hạn"
+      },
+      "grade": "Khối {{grade}}",
+      "incident": "Vụ việc",
+      "incidentTitle": "{{severity}} · {{at}}",
+      "measures": "Biện pháp đã áp dụng",
+      "noChat": "Thông báo không chứa nội dung chat của học sinh.",
+      "notFound": "Không tìm thấy thông báo.",
+      "outcome": "Kết quả liên hệ",
+      "pending": "Chờ xác nhận",
+      "platformTitle": "Thông báo nhà trường",
+      "sentAt": "Gửi lúc",
+      "state": "Trạng thái",
+      "students": "Học sinh",
+      "summary": "Tóm tắt"
+    },
+    "outcome": {
+      "parent_contacted": "Đã liên hệ phụ huynh",
+      "unable_to_contact": "Không liên hệ được",
+      "not_needed": "Không cần liên hệ"
+    },
+    "role": {
+      "affected": "Bị ảnh hưởng",
+      "offender": "Vi phạm"
+    },
+    "ack": {
+      "already": "Thông báo đã được xác nhận. Đã tải lại.",
+      "confirm": "Xác nhận đã liên hệ phụ huynh",
+      "done": "Đã xác nhận.",
+      "note": "Ghi chú liên hệ",
+      "outcome": "Kết quả liên hệ",
+      "outcomeRequired": "Chọn kết quả liên hệ."
+    },
+    "notify": {
+      "noChatContent": "Không chép nội dung chat vào tóm tắt.",
+      "noStudent": "Không có học sinh liên quan thuộc trường này.",
+      "pickSchoolFirst": "Chọn trường trước.",
+      "school": "Trường nhận thông báo",
+      "schoolRequired": "Chọn trường.",
+      "send": "Gửi thông báo",
+      "students": "Học sinh liên quan (tối đa {{max}})",
+      "studentsRequired": "Chọn ít nhất một học sinh.",
+      "summary": "Tóm tắt cho nhà trường",
+      "template": "Vụ việc: … Học sinh liên quan: … Biện pháp đã áp dụng: … Đề nghị nhà trường: liên hệ phụ huynh và hỗ trợ học sinh.",
+      "title": "Gửi thông báo nhà trường"
+    },
+    "sanctions": {
+      "active": "Đang hiệu lực",
+      "activeOnly": "Chỉ đang hiệu lực",
+      "apply": "Áp dụng",
+      "by": {
+        "system": "Hệ thống",
+        "moderator": "Safety Team"
+      },
+      "create": "Áp sanction",
+      "from": "Từ",
+      "issuedBy": "Người áp",
+      "reason": "Lý do nội bộ (không gửi học sinh)",
+      "revoke": "Thu hồi",
+      "revoked": "Đã thu hồi",
+      "state": "Trạng thái",
+      "student": "Mã học sinh",
+      "studentRequired": "Nhập mã học sinh.",
+      "to": "Đến"
+    },
+    "terms": {
+      "add": "Thêm từ",
+      "allCategories": "Mọi nhóm từ",
+      "category": "Nhóm từ",
+      "categoryRequired": "Chọn nhóm từ.",
+      "deleteConfirm": "Xóa từ này? (xóa mềm)",
+      "locale": "Ngôn ngữ",
+      "matchType": "Kiểu khớp",
+      "note": "Ghi chú",
+      "pickTenant": "Chọn tenant đích (theo yêu cầu của tenant) để xem và sửa từ bổ sung.",
+      "re2Warning": "Biểu thức RE2: không dùng backreference hay lookaround; mỗi mẫu có giới hạn thời gian.",
+      "status": "Trạng thái",
+      "tab": "Từ",
+      "term": "Từ / cụm từ",
+      "updated": "Cập nhật",
+      "variants": "Biến thể",
+      "variantsHelp": "Gõ rồi Enter; tối đa {{max}} biến thể.",
+      "variantsMax": "Tối đa {{max}} biến thể."
+    },
+    "matchType": {
+      "word": "Từ",
+      "phrase": "Cụm từ",
+      "pattern": "Mẫu (RE2)"
+    },
+    "termStatus": {
+      "draft": "Bản nháp",
+      "published": "Đã phát hành"
+    },
+    "termSeverity": {
+      "low": "Thấp",
+      "medium": "Trung bình",
+      "high": "Cao",
+      "critical": "Nghiêm trọng"
+    },
+    "decision": {
+      "allow": "Cho phép",
+      "mask": "Che",
+      "block": "Chặn",
+      "hold_for_review": "Giữ chờ duyệt",
+      "block_and_alert": "Chặn và báo động"
+    },
+    "categories": {
+      "allowTenantToggle": "Tenant được bật/tắt",
+      "code": "Mã",
+      "create": "Thêm nhóm từ",
+      "defaultAction": "Xử lý mặc định",
+      "deleteConfirm": "Xóa nhóm từ \"{{name}}\"?",
+      "deleteHelp": "Xóa mềm: nhóm từ khôi phục được từ Thùng rác.",
+      "description": "Mô tả",
+      "disable": "Tắt nhóm từ cho tenant",
+      "edit": "Sửa nhóm từ",
+      "enable": "Bật nhóm từ cho tenant",
+      "enabled": "Bật",
+      "inTenant": "Trong tenant",
+      "locked": "Platform không cho tenant bật/tắt nhóm này",
+      "name": "Tên nhóm từ",
+      "platform": "Platform",
+      "severity": "Mức",
+      "tab": "Nhóm từ",
+      "termCount": "Số từ",
+      "toggle": "Bật/tắt {{name}}"
+    },
+    "allowlist": {
+      "add": "Thêm cụm từ cho phép",
+      "phrase": "Cụm từ",
+      "reason": "Lý do",
+      "tab": "Danh sách cho phép"
+    },
+    "tester": {
+      "title": "Thử chuỗi"
+    },
+    "publish": {
+      "button": "Publish",
+      "requestCodeHelp": "Ghi mã yêu cầu của tenant, ví dụ YC-2026-012.",
+      "requestCodeRequired": "Tóm tắt phải có mã yêu cầu của tenant (YC-…).",
+      "summary": "Tóm tắt thay đổi",
+      "title": "Publish danh mục"
+    },
+    "versions": {
+      "falsePositive": "Tỉ lệ chặn nhầm",
+      "publishedAt": "Publish lúc",
+      "recall": "Recall",
+      "tab": "Phiên bản",
+      "version": "Phiên bản"
+    },
+    "step": {
+      "sensitive_terms": "Danh mục từ nhạy cảm",
+      "spam": "Lọc spam",
+      "bullying": "Phát hiện bắt nạt",
+      "async_analysis": "Phân tích sau",
+      "pii": "Thông tin cá nhân (PII)",
+      "grooming": "Phát hiện dụ dỗ"
+    },
+    "switches": {
+      "actor": "Người đề xuất",
+      "after": "Sau",
+      "all": "Toàn bộ kiểm duyệt",
+      "allOn": "Mọi bước bật",
+      "alwaysOnNote": "Bước PII và phát hiện dụ dỗ luôn chạy, không có công tắc (ADR-0078).",
+      "approve": "Phê duyệt",
+      "approver": "Người duyệt",
+      "before": "Trước",
+      "changedAt": "Thời điểm",
+      "disableTitle": "Tắt {{step}}",
+      "enable": "Bật lại",
+      "enableTitle": "Bật lại {{step}}",
+      "expires": "Tự bật lại sau (tối đa {{max}} giờ)",
+      "expiresRequired": "Chọn thời hạn.",
+      "history": "Lịch sử",
+      "hours": "{{count}} giờ",
+      "level": "Cấp",
+      "lockedByPlatform": "Platform đang tắt",
+      "off": "Bước tắt",
+      "ownRequest": "Yêu cầu của bạn — cần System Admin khác duyệt",
+      "pending": "Chờ phê duyệt",
+      "pendingHelp": "Thay đổi chưa có hiệu lực cho tới khi một System Admin khác phê duyệt (hết hạn sau 24 giờ).",
+      "pendingTitle": "Yêu cầu chờ phê duyệt",
+      "platform": "Platform",
+      "requestDisable": "Gửi yêu cầu tắt",
+      "risk": "Tắt kiểm duyệt có thể để học sinh 6–15 tuổi nhận tin tục tĩu hoặc bắt nạt mà hệ thống không chặn. Chỉ tắt khi cần điều tra và trong thời gian ngắn nhất.",
+      "source": "Nguồn",
+      "state": "Trạng thái",
+      "switchOf": "{{step}} — {{level}}",
+      "system": "Hệ thống",
+      "tab": "Công tắc",
+      "until": "Tự bật lại lúc"
+    },
+    "switchSource": {
+      "manual": "Thủ công",
+      "approved_request": "Đã duyệt",
+      "auto_expire": "Hết hạn tự bật"
+    },
+    "banner": {
+      "title": "Đang tắt kiểm duyệt: {{detail}}",
+      "until": " — đến {{at}}"
+    },
+    "policy": {
+      "alwaysOnReason": "Chat trong trận, đội và nhóm chơi luôn có; chỉ siết tốc độ, slow mode ≤ 10 giây và độ nghiêm.",
+      "cacheNote": "Thay đổi áp dụng cho học sinh trong vòng 60 giây.",
+      "enabledOf": "Bật {{channel}}",
+      "field": {
+        "allowed_hours": "giờ chat",
+        "enabled": "bật/tắt",
+        "slow_mode_seconds": "slow mode",
+        "validation": "độ nghiêm",
+        "allowed_kinds": "loại tin",
+        "rate": "tốc độ",
+        "max_text_length": "độ dài tin"
+      },
+      "from": "Giờ bắt đầu {{channel}}",
+      "hours": "Giờ chat",
+      "hoursCurfew": "Ngoài giờ giới nghiêm của platform",
+      "hoursLimit": "Cấp trên: {{hours}} (chỉ thu hẹp được)",
+      "inherited": "Kế thừa",
+      "noSchoolPolicy": "Trường chưa có chính sách riêng: đang dùng giá trị kế thừa từ tenant/platform.",
+      "offAbove": "Cấp trên đang tắt",
+      "own": "Trường đặt",
+      "preset": "Chế độ chat của trường",
+      "saved": "Đã lưu chính sách chat của trường.",
+      "slowMode": "Slow mode (giây)",
+      "slowModeLimit": "Tối thiểu {{min}}, tối đa {{max}}",
+      "slowModeOf": "Slow mode {{channel}}",
+      "strictness": "Độ nghiêm",
+      "strictnessOf": "Độ nghiêm {{channel}}",
+      "tab": "Chính sách chat",
+      "to": "Giờ kết thúc {{channel}}"
+    },
+    "preset": {
+      "standard": "Chuẩn",
+      "standardHelp": "Theo chính sách từng loại kênh bên dưới.",
+      "quick_message_emote_only": "Chỉ tin nhắn nhanh và biểu tượng cảm xúc",
+      "quick_message_emote_onlyHelp": "Áp cho cả trường: mọi kênh, kể cả trận/đội/nhóm chơi, chỉ còn tin nhắn nhanh và emote."
+    },
+    "strictness": {
+      "standard": "Chuẩn",
+      "strict": "Nghiêm",
+      "very_strict": "Rất nghiêm"
+    },
+    "clubs": {
+      "approve": "Duyệt",
+      "archive": "Lưu trữ",
+      "approveConfirm": "Duyệt club \"{{name}}\"?",
+      "archiveConfirm": "Lưu trữ club \"{{name}}\"? Chat của club chuyển chỉ đọc.",
+      "members": "Thành viên",
+      "name": "Tên club",
+      "status": "Trạng thái",
+      "type": "Loại"
+    },
+    "clubType": {
+      "school_club": "CLB trường",
+      "subject_club": "CLB môn học",
+      "competition_team": "Đội thi đấu",
+      "interest_group": "Nhóm sở thích"
+    },
+    "clubStatus": {
+      "pending_approval": "Chờ duyệt",
+      "active": "Đang hoạt động",
+      "locked": "Đã khóa",
+      "archived": "Đã lưu trữ"
+    }
+  }
+}

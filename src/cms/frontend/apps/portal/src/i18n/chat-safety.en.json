@@ -1,0 +1,402 @@
+{
+  "chatSafety": {
+    "common": {
+      "actions": "Actions",
+      "allTenants": "All tenants",
+      "back": "Back",
+      "cancel": "Cancel",
+      "close": "Close",
+      "delete": "Delete",
+      "edit": "Edit",
+      "empty": "No data",
+      "largeScreen": "This task needs a larger screen. Read only on a phone.",
+      "loadMore": "Load more",
+      "no": "No",
+      "yes": "Yes",
+      "off": "Off",
+      "on": "On",
+      "reason": "Reason",
+      "save": "Save",
+      "school": "School",
+      "targetTenant": "Target tenant",
+      "targetTenantRequired": "Pick the target tenant.",
+      "tenant": "Tenant",
+      "tenantFilter": "Tenant filter",
+      "uuidInvalid": "Invalid id (UUID)."
+    },
+    "severity": {
+      "p1": "Critical (p1)",
+      "p2": "High (p2)",
+      "p3": "Normal (p3)"
+    },
+    "caseStatus": {
+      "open": "Open",
+      "in_review": "In review",
+      "escalated": "Escalated",
+      "resolved": "Resolved",
+      "reopened": "Reopened"
+    },
+    "assignee": {
+      "any": "Anyone",
+      "me": "Mine",
+      "unassigned": "Unassigned"
+    },
+    "cases": {
+      "assignee": "Assignee",
+      "category": "Category",
+      "created": "Created",
+      "open": "Open",
+      "queue": "Case queue",
+      "severity": "Severity",
+      "sla": "SLA deadline",
+      "status": "Status",
+      "unassigned": "Unassigned"
+    },
+    "case": {
+      "act": "Act on the case",
+      "action": "Action",
+      "apply": "Apply",
+      "back": "← Case queue",
+      "channel": "Channel type",
+      "context": "Context",
+      "directContact": "Case of the common tenant: no school notification — the Safety Team contacts directly.",
+      "displayed": "Displayed content",
+      "duration": "Duration (minutes)",
+      "evidence": "Evidence",
+      "history": "Action history",
+      "inSnapshot": "In snapshot",
+      "lockConfirm": "Lock the account",
+      "lockConfirmText": "Locking the account blocks the student from the game. Use it only for a serious risk; the action is audited.",
+      "lockConfirmTitle": "Confirm account lock",
+      "lockUnderstood": "I checked the evidence and understand the consequence",
+      "lockWarning": "Locking the account needs one more confirmation.",
+      "message": "Message",
+      "messageRequired": "Pick the message to remove.",
+      "note": "Note",
+      "notifySchool": "Notify the school",
+      "original": "Original content",
+      "recalled": "Recalled {{at}}",
+      "reloaded": "The case was changed by someone else — reloaded. Check it and act again.",
+      "reports": "Reports",
+      "revision": "Revision",
+      "revisionLine": "Revision {{revision}}: {{body}} ({{decision}})",
+      "sanctionType": "Sanction",
+      "sanctionTypeRequired": "Pick a sanction.",
+      "schoolNotifications": "School notifications",
+      "searchInCase": "Search in this case",
+      "take": "Take the case",
+      "targetUser": "Student concerned",
+      "title": "Case …{{id}}"
+    },
+    "action": {
+      "warn": "Warn",
+      "mute": "Mute",
+      "restrict": "Restrict",
+      "remove_message": "Remove message",
+      "escalate": "Escalate",
+      "dismiss": "Dismiss",
+      "close": "Close",
+      "reopen": "Reopen",
+      "created": "Case created"
+    },
+    "sanctionType": {
+      "warning": "Warning",
+      "mute": "Mute",
+      "restrict_text": "Quick messages only",
+      "restrict_dm": "No direct messages",
+      "restrict_multiplayer": "No multiplayer",
+      "restrict_competition": "No competition",
+      "account_lock": "Account lock"
+    },
+    "messageState": {
+      "allowed": "Allowed",
+      "masked": "Masked",
+      "unchecked": "Unchecked",
+      "held": "Held",
+      "removed": "Removed"
+    },
+    "channel": {
+      "world": "World",
+      "area": "Area",
+      "match": "Match",
+      "party": "Party",
+      "team": "Team / club",
+      "direct": "Direct"
+    },
+    "notifications": {
+      "ackDue": "Acknowledgement due",
+      "acknowledged": "Acknowledged",
+      "badge": "{{count}} notifications to acknowledge",
+      "case": "Case",
+      "detail": "Incident details",
+      "filter": {
+        "all": "All",
+        "pending": "Waiting",
+        "acknowledged": "Acknowledged",
+        "overdue": "Overdue"
+      },
+      "grade": "Grade {{grade}}",
+      "incident": "Incident",
+      "incidentTitle": "{{severity}} · {{at}}",
+      "measures": "Measures taken",
+      "noChat": "Notifications never contain the students' chat content.",
+      "notFound": "Notification not found.",
+      "outcome": "Contact outcome",
+      "pending": "Waiting",
+      "platformTitle": "School notifications",
+      "sentAt": "Sent at",
+      "state": "State",
+      "students": "Students",
+      "summary": "Summary"
+    },
+    "outcome": {
+      "parent_contacted": "Parent contacted",
+      "unable_to_contact": "Unable to contact",
+      "not_needed": "Not needed"
+    },
+    "role": {
+      "affected": "Affected",
+      "offender": "Offender"
+    },
+    "ack": {
+      "already": "The notification was already acknowledged. Reloaded.",
+      "confirm": "Confirm parents were contacted",
+      "done": "Acknowledged.",
+      "note": "Contact note",
+      "outcome": "Contact outcome",
+      "outcomeRequired": "Pick the contact outcome."
+    },
+    "notify": {
+      "noChatContent": "Do not copy chat content into the summary.",
+      "noStudent": "No student of this case belongs to this school.",
+      "pickSchoolFirst": "Pick a school first.",
+      "school": "School to notify",
+      "schoolRequired": "Pick a school.",
+      "send": "Send",
+      "students": "Students concerned (max {{max}})",
+      "studentsRequired": "Pick at least one student.",
+      "summary": "Summary for the school",
+      "template": "Incident: … Students concerned: … Measures taken: … Request to the school: contact the parents and support the students.",
+      "title": "Notify the school"
+    },
+    "sanctions": {
+      "active": "Active",
+      "activeOnly": "Active only",
+      "apply": "Apply",
+      "by": {
+        "system": "System",
+        "moderator": "Safety Team"
+      },
+      "create": "Apply a sanction",
+      "from": "From",
+      "issuedBy": "Issued by",
+      "reason": "Internal reason (never sent to the student)",
+      "revoke": "Revoke",
+      "revoked": "Revoked",
+      "state": "State",
+      "student": "Student id",
+      "studentRequired": "Enter the student id.",
+      "to": "Until"
+    },
+    "terms": {
+      "add": "Add a term",
+      "allCategories": "All categories",
+      "category": "Category",
+      "categoryRequired": "Pick a category.",
+      "deleteConfirm": "Delete this term? (soft delete)",
+      "locale": "Language",
+      "matchType": "Match type",
+      "note": "Note",
+      "pickTenant": "Pick the target tenant (on its request) to see and edit its extra terms.",
+      "re2Warning": "RE2 expression: no backreference or lookaround; each pattern has a time budget.",
+      "status": "Status",
+      "tab": "Terms",
+      "term": "Term",
+      "updated": "Updated",
+      "variants": "Variants",
+      "variantsHelp": "Type then Enter; at most {{max}} variants.",
+      "variantsMax": "At most {{max}} variants."
+    },
+    "matchType": {
+      "word": "Word",
+      "phrase": "Phrase",
+      "pattern": "Pattern (RE2)"
+    },
+    "termStatus": {
+      "draft": "Draft",
+      "published": "Published"
+    },
+    "termSeverity": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "decision": {
+      "allow": "Allow",
+      "mask": "Mask",
+      "block": "Block",
+      "hold_for_review": "Hold for review",
+      "block_and_alert": "Block and alert"
+    },
+    "categories": {
+      "allowTenantToggle": "Tenant may toggle",
+      "code": "Code",
+      "create": "Add a category",
+      "defaultAction": "Default action",
+      "deleteConfirm": "Delete the category \"{{name}}\"?",
+      "deleteHelp": "Soft delete: the category can be restored from the trash.",
+      "description": "Description",
+      "disable": "Turn the category off for the tenant",
+      "edit": "Edit the category",
+      "enable": "Turn the category on for the tenant",
+      "enabled": "Enabled",
+      "inTenant": "In the tenant",
+      "locked": "The platform does not let tenants toggle this category",
+      "name": "Category",
+      "platform": "Platform",
+      "severity": "Severity",
+      "tab": "Categories",
+      "termCount": "Terms",
+      "toggle": "Toggle {{name}}"
+    },
+    "allowlist": {
+      "add": "Add an allowed phrase",
+      "phrase": "Phrase",
+      "reason": "Reason",
+      "tab": "Allowlist"
+    },
+    "tester": {
+      "title": "Test text"
+    },
+    "publish": {
+      "button": "Publish",
+      "requestCodeHelp": "Include the tenant's request code, e.g. YC-2026-012.",
+      "requestCodeRequired": "The summary must contain the tenant's request code (YC-…).",
+      "summary": "Change summary",
+      "title": "Publish the catalogue"
+    },
+    "versions": {
+      "falsePositive": "False positive rate",
+      "publishedAt": "Published at",
+      "recall": "Recall",
+      "tab": "Versions",
+      "version": "Version"
+    },
+    "step": {
+      "sensitive_terms": "Sensitive terms",
+      "spam": "Spam",
+      "bullying": "Bullying",
+      "async_analysis": "Async analysis",
+      "pii": "Personal data (PII)",
+      "grooming": "Grooming"
+    },
+    "switches": {
+      "actor": "Proposer",
+      "after": "After",
+      "all": "All moderation",
+      "allOn": "Every step on",
+      "alwaysOnNote": "PII and grooming detection always run and have no switch (ADR-0078).",
+      "approve": "Approve",
+      "approver": "Approver",
+      "before": "Before",
+      "changedAt": "When",
+      "disableTitle": "Turn off {{step}}",
+      "enable": "Turn back on",
+      "enableTitle": "Turn {{step}} back on",
+      "expires": "Back on after (max {{max}} hours)",
+      "expiresRequired": "Pick a duration.",
+      "history": "History",
+      "hours": "{{count}} h",
+      "level": "Level",
+      "lockedByPlatform": "Off at platform level",
+      "off": "Steps off",
+      "ownRequest": "Your request — another System Admin must approve",
+      "pending": "Waiting for approval",
+      "pendingHelp": "The change is not in force until another System Admin approves it (expires after 24 hours).",
+      "pendingTitle": "Requests waiting for approval",
+      "platform": "Platform",
+      "requestDisable": "Request to turn off",
+      "risk": "Turning moderation off may let students aged 6–15 receive abusive or bullying messages the system no longer blocks. Only for an investigation and for the shortest time.",
+      "source": "Source",
+      "state": "State",
+      "switchOf": "{{step}} — {{level}}",
+      "system": "System",
+      "tab": "Switches",
+      "until": "Back on at"
+    },
+    "switchSource": {
+      "manual": "Manual",
+      "approved_request": "Approved request",
+      "auto_expire": "Expired"
+    },
+    "banner": {
+      "title": "Moderation turned off: {{detail}}",
+      "until": " — until {{at}}"
+    },
+    "policy": {
+      "alwaysOnReason": "Match, team and party chat are always on; only rate, slow mode ≤ 10 s and strictness can be tightened.",
+      "cacheNote": "Changes reach the students within 60 seconds.",
+      "enabledOf": "Enable {{channel}}",
+      "field": {
+        "allowed_hours": "chat hours",
+        "enabled": "on/off",
+        "slow_mode_seconds": "slow mode",
+        "validation": "strictness",
+        "allowed_kinds": "message kinds",
+        "rate": "rate",
+        "max_text_length": "text length"
+      },
+      "from": "{{channel}} start time",
+      "hours": "Chat hours",
+      "hoursCurfew": "Outside the platform curfew",
+      "hoursLimit": "Levels above: {{hours}} (only narrower)",
+      "inherited": "Inherited",
+      "noSchoolPolicy": "The school has no own policy: inherited tenant/platform values apply.",
+      "offAbove": "Off at a level above",
+      "own": "School rule",
+      "preset": "School chat mode",
+      "saved": "School chat policy saved.",
+      "slowMode": "Slow mode (seconds)",
+      "slowModeLimit": "Min {{min}}, max {{max}}",
+      "slowModeOf": "{{channel}} slow mode",
+      "strictness": "Strictness",
+      "strictnessOf": "{{channel}} strictness",
+      "tab": "Chat policy",
+      "to": "{{channel}} end time"
+    },
+    "preset": {
+      "standard": "Standard",
+      "standardHelp": "The per-channel policy below applies.",
+      "quick_message_emote_only": "Quick messages and emotes only",
+      "quick_message_emote_onlyHelp": "Whole school: every channel, match/team/party included, only quick messages and emotes."
+    },
+    "strictness": {
+      "standard": "Standard",
+      "strict": "Strict",
+      "very_strict": "Very strict"
+    },
+    "clubs": {
+      "approve": "Approve",
+      "archive": "Archive",
+      "approveConfirm": "Approve the club \"{{name}}\"?",
+      "archiveConfirm": "Archive the club \"{{name}}\"? Its chat becomes read only.",
+      "members": "Members",
+      "name": "Club",
+      "status": "Status",
+      "type": "Type"
+    },
+    "clubType": {
+      "school_club": "School club",
+      "subject_club": "Subject club",
+      "competition_team": "Competition team",
+      "interest_group": "Interest group"
+    },
+    "clubStatus": {
+      "pending_approval": "Waiting for approval",
+      "active": "Active",
+      "locked": "Locked",
+      "archived": "Archived"
+    }
+  }
+}

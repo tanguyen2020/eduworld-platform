@@ -42,7 +42,8 @@
     "secondaryAction": "Hủy",
     "fieldLabel": "Tên lớp",
     "fieldPlaceholder": "Ví dụ: 3A",
-    "alert": "Đang tắt kiểm duyệt cho tenant thử nghiệm."
+    "alert": "Đang tắt kiểm duyệt cho tenant thử nghiệm.",
+    "alwaysOnReason": "Chat trong trận luôn có (ADR-0020)"
   },
   "group": {
     "subject": "Môn học",
@@ -393,5 +394,31 @@
   "select": {
     "empty": "Không có mục phù hợp",
     "truncated": "Danh sách quá dài, chỉ hiện một phần. Gõ để tìm hoặc lọc hẹp hơn."
+  },
+  "chatSafety": {
+    "alwaysOn": "Luôn bật",
+    "sla": {
+      "due": "Hạn {{at}}",
+      "overdue": "Quá hạn · {{at}}",
+      "done": "Đã xong"
+    },
+    "tester": {
+      "input": "Chuỗi cần thử",
+      "run": "Thử chuỗi",
+      "result": "Kết quả thử chuỗi",
+      "decision": "Quyết định",
+      "highlighted": "Vị trí khớp (trên chuỗi đã nhập)",
+      "masked": "Chuỗi sau khi che",
+      "matches": "Nhóm từ khớp",
+      "noMatch": "Không khớp nhóm từ nào.",
+      "match": "{{category}} · mức {{severity}} · {{action}}"
+    },
+    "decision": {
+      "allow": "Cho phép",
+      "mask": "Che",
+      "block": "Chặn",
+      "hold_for_review": "Giữ chờ duyệt",
+      "block_and_alert": "Chặn và báo động"
+    }
   }
 }

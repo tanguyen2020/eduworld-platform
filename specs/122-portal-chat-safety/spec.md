@@ -1,6 +1,6 @@
 # Feature Specification: F122 — Portal an toàn chat: kiểm duyệt (E), danh mục và công tắc (D), chính sách chat trường (C)
 
-**Feature Branch**: `122-portal-chat-safety` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace E, D, C) · **Mốc**: M5 · **Phụ thuộc**: F051, F120, F121 (và F116 cho API danh mục/công tắc)
+**Feature Branch**: `122-portal-chat-safety` · **Created**: 2026-11-16 · **Status**: In progress · **Module**: `src/cms/frontend/apps/portal` (workspace E, D, C) · **Mốc**: M5 · **Phụ thuộc**: F051, F120, F121 (và F116 cho API danh mục/công tắc)
 **Input**: Giao diện Admin/Ops cho an toàn chat: hàng đợi case liên tenant của Platform Safety Team, thông báo nhà trường, từ bổ sung/nhóm từ của tenant (E); danh mục từ nhạy cảm platform và công tắc kiểm duyệt (D); thông báo vụ việc, chính sách chat trường, nhóm từ chỉ xem, duyệt club (C); banner "Đang tắt kiểm duyệt" mọi workspace. FR nguồn: FR-MOD-003, FR-MOD-004, FR-MOD-009, FR-MOD-011, FR-MOD-017.
 
 ## Clarifications
@@ -32,6 +32,23 @@
 ### Session 2026-11-22 (ADR-0094 — [Confirmed])
 
 - Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F122-AC-25, bảng tham số/Constitution, plan. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
+### Session 2026-11-23 (triển khai F122 — [Proposed], chờ owner chốt)
+
+Quyết định khi triển khai (không mở rộng phạm vi; mỗi mục ghi chỗ spec/contract thiếu hoặc mâu thuẫn):
+
+- Q: `getTenantModerationStatus` (T004/T005) — ai được gọi, trả gì? → A: [Proposed] `GET /tenant/chat/moderation-status` (`x-service: chat`, `TenantIdHeader`), đánh dấu `x-portal-shell: true` (banner thuộc vỏ portal, không gắn action catalog, không bị featuregate chặn); nhân sự tenant có `tenant.settings.read` **hoặc** `school.settings.read` (thiếu cả hai → `403 PERMISSION_DENIED`); `TenantModerationStatus` = `tenant_id`, `enabled_all`, `disabled_steps`, `expires_at` (sớm nhất trong các cấp đang tắt; giá trị đã quá hạn tính là bật, kể cả khi job expirer chưa chạy), `source_scope` (`tenant` thắng khi cả hai cấp cùng tắt) — không lý do, không người thay đổi, không yêu cầu chờ duyệt.
+- Q: Nút "Từ chối" yêu cầu tắt công tắc (F122-AC-27) gọi operation nào? → A: [Proposed] Contract chỉ có `approveModerationSwitchChange`; không có operation từ chối (F116 ghi "operation từ chối … (F122)" nhưng spec/tasks F122 không giao backend). Portal **không** có nút Từ chối; yêu cầu tự hết hạn sau 24 giờ. **Câu hỏi mở** cho owner F116/F122: thêm `rejectModerationSwitchChange`?
+- Q: "Gỡ thành viên" club (F122-AC-23)? → A: [Proposed] `removeClubMember` và `listClubMembers` là route `game_player` (F120 Clarifications 2026-11-23: chỉ `listClubs`, `getClub`, `archiveClub`, `approveClub` nhận nhân sự) — nhân sự không gọi được, portal không có nút gỡ thành viên. **Câu hỏi mở** (owner F120): mở `removeClubMember` cho `social.club.approve` có `x-portal-action`? Club do nhân sự tạo (câu hỏi mở của F120): spec F122 không có tiêu chí → không làm, giữ là câu hỏi mở.
+- Q: F122-AC-09 "Safety Moderator thấy danh mục chỉ đọc" nhưng menu `menu.platform_admin.chat_safety` cần `chat.sensitive_terms.write` (catalog ADR-0090) → Safety Moderator không vào được D. → A: [Proposed] Màn danh mục tự chỉ đọc khi thiếu action `edit`/`test`/`publish` (ActionGate); test AC-09 dùng System Admin với các action đó tắt. **Câu hỏi mở** (owner catalog): thêm `chat.sensitive_terms.read` vào `required_permissions` của menu?
+- Q: Lọc term theo locale/match_type/trạng thái (F122-AC-07)? → A: [Proposed] `listSensitiveTerms` chỉ có `category_id`, `q`, `tenant_ids`; lọc ở trình duyệt trên trang đã tải vi phạm quy tắc phân trang của owner → chỉ lọc theo category (server). **Câu hỏi mở**: thêm tham số lọc vào contract F116.
+- Q: Bộ lọc tenant của module Kiểm duyệt lấy danh sách tenant ở đâu? → A: [Proposed] `listTenants` (mọi trang, `fetchAllPages`) — nhưng identity chỉ cho `platform.tenant.manage`/`platform.cross_tenant.read`; `safety_moderator` không có → danh sách rỗng, cột Tenant hiện mã tenant. **Câu hỏi mở** (owner identity/F121): nguồn tên tenant cho Safety Team (vd. `tenant_name` trong `ModerationCase`).
+- Q: Banner cho Safety Moderator dùng `listModerationSwitches` (catalog: `chat.policy.toggle`)? → A: [Proposed] Portal gọi cho người có `chat.policy.toggle` hoặc `moderation.case.read`; nếu backend từ chối thì không hiện banner (không lỗi). Không lọc tenant → chỉ dòng Platform (contract không trả "số tenant đang tắt" khi không có `tenant_ids`) — edge case "số tenant đang tắt" còn mở.
+- Q: Nhóm từ của tenant cho Safety Team (F122-AC-16) lấy danh sách ở đâu? → A: [Proposed] `listTenantSensitiveCategories` với `X-Tenant-Id` = tenant đích; term tenant cần `category_id` → lấy từ `listSensitiveCategories` (đọc platform).
+- Q: Thông báo trường lọc "khoảng 30 ngày" (F122-AC-18)? → A: [Proposed] `listSchoolSafetyNotifications` không có tham số thời gian → chỉ lọc trạng thái và trường; mới nhất trước, phân trang cursor. Badge menu = số chờ xác nhận ở trang đầu (50, "50+" khi còn).
+- Q: Danh sách học sinh để chọn khi gửi thông báo trường? → A: [Proposed] `subject_user_ids` của case, trường của từng học sinh lấy từ `sender_school_id` của tin trong case; học sinh không xác định được trường không được đề xuất (server kiểm lại).
+- Q: `expires_at` khi tắt công tắc? → A: [Proposed] Chọn thời lượng 1/2/4/8/12/24 giờ (`moderation_switch_max_duration` = 24 giờ, CONFIG_DEFAULTS) → `expires_at` = bây giờ + thời lượng.
+- Q: Lỗi `CHAT_POLICY_RELAX_NOT_ALLOWED` trỏ về control nào? → A: [Proposed] Problem có `channel_type`, `field` (F120); `ApiError` của portal giữ các thành viên mở rộng dạng scalar (`extensions`) để đặt lỗi vào thẻ kênh tương ứng.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

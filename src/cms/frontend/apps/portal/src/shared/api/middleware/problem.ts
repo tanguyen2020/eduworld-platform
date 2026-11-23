@@ -14,6 +14,8 @@ export interface ApiErrorInit {
   retryAfterMs?: number;
   retryable?: boolean;
   operationId?: string;
+  /** Scalar extension members of the Problem (e.g. `channel_type`, `field` of CHAT_POLICY_RELAX_NOT_ALLOWED — F122). */
+  extensions?: Record<string, string | number | boolean>;
 }
 
 export class ApiError extends Error {
@@ -27,6 +29,7 @@ export class ApiError extends Error {
   readonly retryAfterMs?: number;
   readonly retryable: boolean;
   readonly operationId?: string;
+  readonly extensions: Record<string, string | number | boolean>;
 
   constructor(init: ApiErrorInit) {
     super(`${init.status} ${init.code}`);
@@ -41,6 +44,7 @@ export class ApiError extends Error {
     this.retryAfterMs = init.retryAfterMs;
     this.retryable = init.retryable ?? false;
     this.operationId = init.operationId;
+    this.extensions = init.extensions ?? {};
   }
 }
 
@@ -83,9 +87,15 @@ export function toApiError(
       if (field && c) fieldErrors[field] = { code: c, ...(str(e.message) ? { message: str(e.message) } : {}) };
     }
   }
+  const standard = new Set(['type', 'title', 'status', 'detail', 'instance', 'code', 'trace_id', 'retryable', 'errors']);
+  const extensions: Record<string, string | number | boolean> = {};
+  for (const [k, v] of Object.entries(p as Record<string, unknown>)) {
+    if (!standard.has(k) && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean')) extensions[k] = v;
+  }
   return new ApiError({
     status,
     code,
+    extensions,
     i18nKey: i18nKeyFor(code, hasTranslation),
     title: str(p.title),
     detail: str(p.detail),

@@ -268,7 +268,7 @@ func setupChat(t *testing.T, o chatOpts) *chatEnv {
 		e.switchHandlers = &chathttp.SwitchHandlers{Commands: c.switches, Queries: query.Switches{Read: e.read, Reader: persistence.Switches{},
 			Moderation: persistence.ModerationReader{}, Cursors: codec, Now: e.clock.Now}}
 		e.catalogHandlers = &chathttp.CatalogHandlers{Commands: c.catalog, Queries: query.Catalog{Read: e.read, Reader: persistence.Catalog{},
-			Moderation: persistence.ModerationReader{}, Engine: c.pipe.Validator.Engine, Audit: e.rec, Cursors: codec}}
+			Moderation: persistence.ModerationReader{}, Engine: c.pipe.Validator.Engine, Audit: e.rec, Cursors: codec}, Now: e.clock.Now}
 	}
 	if o.hook != nil {
 		o.hook(c)

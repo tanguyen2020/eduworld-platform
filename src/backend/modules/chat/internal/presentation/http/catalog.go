@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -16,6 +17,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/service"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/moderation/catalog"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
@@ -47,6 +49,7 @@ type CatalogQueries interface {
 	ListVersions(ctx context.Context, limit int, cursor string) (query.VersionPage, error)
 	TestTerms(ctx context.Context, in query.TestInput) (query.TestResult, error)
 	ListTenantCategories(ctx context.Context) (query.TenantCategories, error)
+	TenantModerationStatus(ctx context.Context, now time.Time) (query.ModerationStatus, error)
 }
 
 // CatalogHandlers serve the catalogue operations (core-api only). The /admin/ routes are internal-gateway routes:
@@ -55,6 +58,8 @@ type CatalogQueries interface {
 type CatalogHandlers struct {
 	Commands CatalogCommands
 	Queries  CatalogQueries
+	// Now is the clock of getTenantModerationStatus (expires_at of the switches); nil: time.Now.
+	Now func() time.Time
 }
 
 // CatalogOperations are the F116 US2 operations (method, path, X-Tenant-Id mode, Idempotency-Key and success status of
@@ -64,7 +69,7 @@ var CatalogOperations = []string{"listSensitiveCategories", "createSensitiveCate
 	"testSensitiveTerms", "listSensitiveAllowlist", "createSensitiveAllowlistEntry", "deleteSensitiveAllowlistEntry",
 	"publishSensitiveCatalog", "listSensitiveCatalogVersions", "listTenantSensitiveTerms", "createTenantSensitiveTerm",
 	"updateTenantSensitiveTerm", "deleteTenantSensitiveTerm", "publishTenantSensitiveCatalog", "listTenantSensitiveCategories",
-	"toggleTenantSensitiveCategory"}
+	"toggleTenantSensitiveCategory", "getTenantModerationStatus"}
 
 func init() {
 	for _, o := range []httpx.Operation{
@@ -110,6 +115,8 @@ func init() {
 			Tenant: httpx.TenantRequired, SuccessStatus: http.StatusOK},
 		{ID: "toggleTenantSensitiveCategory", Module: "chat", Method: http.MethodPost, Pattern: "/admin/chat/tenant-categories/{code}:toggle",
 			Tenant: httpx.TenantRequired, Idempotency: httpx.IdempotencyRequired, SuccessStatus: http.StatusOK},
+		{ID: "getTenantModerationStatus", Module: "chat", Method: http.MethodGet, Pattern: "/tenant/chat/moderation-status",
+			Tenant: httpx.TenantRequired, SuccessStatus: http.StatusOK},
 	} {
 		Operations[o.ID] = o
 	}
@@ -142,6 +149,7 @@ func registerCatalog(s *httpx.Server, h *CatalogHandlers) error {
 		"publishTenantSensitiveCatalog": h.publish(h.Commands.PublishTenantCatalog),
 		"listTenantSensitiveCategories": h.listTenantCategories,
 		"toggleTenantSensitiveCategory": h.toggle,
+		"getTenantModerationStatus":     h.moderationStatus,
 	}
 	for _, id := range CatalogOperations {
 		if err := s.Handle(Operations[id], routes[id]); err != nil {
@@ -571,4 +579,28 @@ func (h CatalogHandlers) toggle(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, tenantCategoryBody(query.TenantCategoryView{Code: res.Category.Code, Name: res.Category.Name,
 		Description: res.Category.Description, Severity: res.Category.Severity, EnabledPlatform: res.Category.Enabled,
 		EnabledInTenant: res.EnabledInTenant, AllowTenantToggle: res.Category.AllowTenantToggle, TenantTermCount: res.TenantTermCount}))
+}
+
+// moderationStatus serves getTenantModerationStatus (F122 banner): steps off, earliest expiry, source level — never a
+// reason or an actor (ADR-0030).
+func (h CatalogHandlers) moderationStatus(w http.ResponseWriter, r *http.Request) {
+	now := time.Now
+	if h.Now != nil {
+		now = h.Now
+	}
+	res, err := h.Queries.TenantModerationStatus(r.Context(), now())
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	p, _ := authz.PrincipalFrom(r.Context())
+	body := map[string]any{"tenant_id": p.TenantID, "enabled_all": res.EnabledAll, "disabled_steps": res.DisabledSteps,
+		"expires_at": nil, "source_scope": nil}
+	if res.ExpiresAt != nil {
+		body["expires_at"] = res.ExpiresAt.UTC()
+	}
+	if res.SourceScope != "" {
+		body["source_scope"] = res.SourceScope
+	}
+	writeJSON(w, http.StatusOK, body)
 }

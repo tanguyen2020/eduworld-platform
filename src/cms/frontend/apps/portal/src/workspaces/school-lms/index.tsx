@@ -5,6 +5,8 @@
 // F054: trash (Thùng rác of the tenant); F055 (LMS): assignments, game_activities (courses, learning paths, schedules and
 // study groups were removed by ADR-0095);
 // F056 (School Learning Dashboard and reports): school_dashboard, results, reports.
+// F122 (chat safety of the school): safety_notifications, chat_safety (school chat policy, tenant categories), clubs.
+import { lazy } from 'react';
 import { placeholderScreen, WorkspaceRoutes, type MenuScreens } from '../../permissions/RequirePermission';
 import { AuditScreen } from './audit/AuditScreen';
 import { ReportsScreen } from './dashboard/reports/ReportsScreen';
@@ -20,6 +22,11 @@ import { StudentsScreen } from './students/StudentsScreen';
 import { TenantTrashPage } from './trash/TenantTrashPage';
 import { AccessControlScreen } from './users/AccessControlScreen';
 
+// F122 screens load on first use (own chunk): the school workspace chunk does not grow for users who never open them.
+const ChatSafetyScreen = lazy(() => import('./safety/ChatSafetyScreen').then((m) => ({ default: m.ChatSafetyScreen })));
+const ClubsScreen = lazy(() => import('./safety/ClubsScreen').then((m) => ({ default: m.ClubsScreen })));
+const SafetyNotificationsScreen = lazy(() => import('./safety/SafetyNotificationsScreen').then((m) => ({ default: m.SafetyNotificationsScreen })));
+
 export const screens = {
   'menu.school_lms.schools': SchoolsScreen,
   'menu.school_lms.students': StudentsScreen, // "Học sinh theo khối" (ADR-0095; key renamed menu.school_lms.students by WP-I1)
@@ -27,13 +34,13 @@ export const screens = {
   'menu.school_lms.assignments': AssignmentsScreen, // F055 US1, US2, US5
   'menu.school_lms.game_activities': GameActivitiesScreen, // F055-AC-22
   'menu.school_lms.challenges': placeholderScreen,
-  'menu.school_lms.clubs': placeholderScreen,
+  'menu.school_lms.clubs': ClubsScreen, // F122 US9
   'menu.school_lms.school_events': placeholderScreen,
   'menu.school_lms.school_dashboard': SchoolDashboardScreen, // F056 US1, US2, US6
   'menu.school_lms.results': ResultsScreen, // F056 US3
   'menu.school_lms.reports': ReportsScreen, // F056 US4, US5
-  'menu.school_lms.safety_notifications': placeholderScreen,
-  'menu.school_lms.chat_safety': placeholderScreen,
+  'menu.school_lms.safety_notifications': SafetyNotificationsScreen, // F122 US7
+  'menu.school_lms.chat_safety': ChatSafetyScreen, // F122 US6, US8
   'menu.school_lms.student_activity': StudentActivityScreen,
   'menu.school_lms.access_control': AccessControlScreen,
   'menu.school_lms.installers': placeholderScreen,

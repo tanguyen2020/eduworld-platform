@@ -11982,6 +11982,28 @@ paths:
                     items: { $ref: '#/components/schemas/TenantSensitiveCategory' }
                   moderation_switches: { $ref: '#/components/schemas/ModerationSwitchState' }
         '403': { $ref: '#/components/responses/Forbidden' }
+  /tenant/chat/moderation-status:
+    get:
+      x-service: chat
+      x-portal-shell: true
+      tags: [tenant]
+      operationId: getTenantModerationStatus
+      summary: Trạng thái kiểm duyệt hiệu lực của tenant cho banner "Đang tắt kiểm duyệt" (F122)
+      description: |
+        Nhân sự tenant đã đăng nhập portal có `tenant.settings.read` hoặc `school.settings.read` trong tenant của phiên (thiếu cả hai →
+        `403 PERMISSION_DENIED`). Trả bước kiểm duyệt đang tắt (kết hợp platform và tenant) và thời điểm tự bật lại sớm nhất — **không**
+        trả lý do, người thay đổi hay yêu cầu chờ duyệt (ADR-0030, F122-AC-13/14). Vỏ portal (`x-portal-shell`), không bị featuregate chặn;
+        portal làm mới ≤ 60 giây.
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TenantModerationStatus' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /admin/chat/tenant-categories/{code}:toggle:
     post:
       x-service: chat
@@ -18020,6 +18042,27 @@ components:
     SensitiveMatchType:
       type: string
       enum: [word, phrase, contains, pattern]
+    TenantModerationStatus:
+      type: object
+      description: Trạng thái công tắc kiểm duyệt hiệu lực của một tenant cho banner (F122) — không có lý do, người thay đổi (ADR-0030).
+      required: [tenant_id, enabled_all, disabled_steps, expires_at, source_scope]
+      properties:
+        tenant_id: { $ref: '#/components/schemas/Uuid' }
+        enabled_all: { type: boolean, description: 'false = toàn bộ bước nội dung đang tắt (platform hoặc tenant)' }
+        disabled_steps:
+          type: array
+          maxItems: 5
+          items: { $ref: '#/components/schemas/ModerationStep' }
+        expires_at:
+          description: Thời điểm tự bật lại sớm nhất của các cấp đang tắt; null khi không có bước nào tắt
+          oneOf:
+            - { $ref: '#/components/schemas/Timestamp' }
+            - { type: 'null' }
+        source_scope:
+          description: Cấp đang tắt (tenant khi tenant tự tắt, platform khi chỉ platform tắt); null khi không có bước nào tắt
+          oneOf:
+            - { type: string, enum: [platform, tenant] }
+            - { type: 'null' }
     ModerationStep:
       type: string
       description: Bước có công tắc (MODERATION §12.1). `pii` và grooming luôn chạy, không có công tắc (ADR-0078).

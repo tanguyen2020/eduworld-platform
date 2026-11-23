@@ -42,7 +42,8 @@
     "secondaryAction": "Cancel",
     "fieldLabel": "Class name",
     "fieldPlaceholder": "For example: 3A",
-    "alert": "Moderation is turned off for the test tenant."
+    "alert": "Moderation is turned off for the test tenant.",
+    "alwaysOnReason": "In-match chat is always available (ADR-0020)"
   },
   "group": {
     "subject": "Subject",
@@ -393,5 +394,31 @@
   "select": {
     "empty": "No matching items",
     "truncated": "The list is too long; only part of it is shown. Type to search or narrow the filter."
+  },
+  "chatSafety": {
+    "alwaysOn": "Always on",
+    "sla": {
+      "due": "Due {{at}}",
+      "overdue": "Overdue · {{at}}",
+      "done": "Done"
+    },
+    "tester": {
+      "input": "Text to test",
+      "run": "Test text",
+      "result": "Test result",
+      "decision": "Decision",
+      "highlighted": "Matches (on the typed text)",
+      "masked": "Masked text",
+      "matches": "Matched categories",
+      "noMatch": "No category matched.",
+      "match": "{{category}} · {{severity}} severity · {{action}}"
+    },
+    "decision": {
+      "allow": "Allow",
+      "mask": "Mask",
+      "block": "Block",
+      "hold_for_review": "Hold for review",
+      "block_and_alert": "Block and alert"
+    }
   }
 }

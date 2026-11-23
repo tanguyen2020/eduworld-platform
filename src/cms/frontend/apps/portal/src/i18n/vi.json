@@ -218,7 +218,15 @@
     "MAINTENANCE": "Hệ thống đang bảo trì.",
     "USERNAME_TAKEN": "Tên đăng nhập đã thuộc một tài khoản khác.",
     "EMAIL_TAKEN": "Email đã thuộc một tài khoản khác.",
-    "ROLE_NOT_FOUND": "Role không tồn tại hoặc đã bị xóa."
+    "ROLE_NOT_FOUND": "Role không tồn tại hoặc đã bị xóa.",
+    "MODERATION_CASE_CLOSED": "Case đã đóng. Mở lại case trước khi thao tác.",
+    "MODERATION_SWITCH_REASON_REQUIRED": "Cần nhập lý do (ít nhất 10 ký tự).",
+    "MODERATION_SWITCH_SELF_APPROVAL": "Người đề xuất không tự phê duyệt được — cần một System Admin khác.",
+    "MODERATION_SWITCH_EXPIRY_REQUIRED": "Cần chọn thời hạn tự bật lại (tối đa 24 giờ).",
+    "MODERATION_SWITCH_STEP_NOT_ALLOWED": "Bước PII và phát hiện dụ dỗ luôn chạy, không tắt được.",
+    "TENANT_TOGGLE_NOT_ALLOWED": "Platform không cho tenant bật/tắt nhóm từ này.",
+    "CHAT_POLICY_RELAX_NOT_ALLOWED": "Cấp trường chỉ được siết chặt hơn cấp trên.",
+    "CHAT_POLICY_ALWAYS_ON": "Chat trong trận, đội và nhóm chơi luôn bật, không tắt hay giới hạn giờ được."
   },
   "authz": {
     "permissionGroup": "{{group}} ({{total}})",

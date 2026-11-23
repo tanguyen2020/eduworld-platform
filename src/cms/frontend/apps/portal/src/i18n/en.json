@@ -218,7 +218,15 @@
     "MAINTENANCE": "The system is under maintenance.",
     "USERNAME_TAKEN": "The username already belongs to another account.",
     "EMAIL_TAKEN": "The email already belongs to another account.",
-    "ROLE_NOT_FOUND": "The role does not exist or was deleted."
+    "ROLE_NOT_FOUND": "The role does not exist or was deleted.",
+    "MODERATION_CASE_CLOSED": "The case is closed. Reopen it before acting.",
+    "MODERATION_SWITCH_REASON_REQUIRED": "A reason is required (at least 10 characters).",
+    "MODERATION_SWITCH_SELF_APPROVAL": "The proposer cannot approve their own request — another System Admin must.",
+    "MODERATION_SWITCH_EXPIRY_REQUIRED": "Pick when it turns back on (at most 24 hours).",
+    "MODERATION_SWITCH_STEP_NOT_ALLOWED": "PII and grooming detection always run and cannot be turned off.",
+    "TENANT_TOGGLE_NOT_ALLOWED": "The platform does not let tenants toggle this category.",
+    "CHAT_POLICY_RELAX_NOT_ALLOWED": "The school level can only be stricter than the levels above.",
+    "CHAT_POLICY_ALWAYS_ON": "Match, team and party chat are always on; they cannot be turned off or limited in time."
   },
   "authz": {
     "permissionGroup": "{{group}} ({{total}})",

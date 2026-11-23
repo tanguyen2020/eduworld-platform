@@ -1,14 +1,16 @@
 // Workspace platform_admin (D. Platform Administration) — lazy chunk (F050-AC-02, F051-AC-10, F057 T001/T044/T050).
 // Menus, paths and permissions come from the generated catalog (ADR-0090); this file only attaches a screen to each
-// menu key. F057 provides Tenant, Gán/Clone, Danh mục, Cấu hình hệ thống and Thùng rác; the other menus belong to
-// F122/… and keep `placeholderScreen`. F059 attaches Người dùng & phân quyền, Nhật ký, Hoạt động đăng nhập game,
+// menu key. F057 provides Tenant, Gán/Clone, Danh mục, Cấu hình hệ thống and Thùng rác; F122 attaches An toàn chat
+// (danh mục từ nhạy cảm) and Công tắc kiểm duyệt (chat-safety/). F059 attaches Người dùng & phân quyền, Nhật ký, Hoạt động đăng nhập game,
 // Feature flag and Tích hợp. F035 attaches Nghiên cứu hiệu quả and Thử nghiệm A/B (research/). The route of the chunk is reached only when getMyPermissions lists the
 // workspace (WorkspaceGate, F057-AC-18) — a display gate, the backend authorizes every call (AGENTS R20).
 import { useTranslation } from 'react-i18next';
-import { placeholderScreen, WorkspaceRoutes, type MenuScreens } from '../../permissions/RequirePermission';
+import { WorkspaceRoutes, type MenuScreens } from '../../permissions/RequirePermission';
 import { AccessControlPage } from './access-control/AccessControlPage';
 import { AuditLogsPage } from './audit/AuditLogsPage';
 import { CatalogPage } from './catalog/CatalogPage';
+import { CatalogScreen as ChatSafetyCatalogScreen } from './chat-safety/CatalogScreen';
+import { SwitchesScreen } from './chat-safety/SwitchesScreen';
 import { FeatureFlagListPage } from './feature-flags/FeatureFlagListPage';
 import { registerPlatformI18n } from './i18n';
 import { IntegrationsPage } from './integrations/IntegrationsPage';
@@ -27,8 +29,8 @@ export const screens = {
   'menu.platform_admin.access_control': AccessControlPage,
   'menu.platform_admin.tenant_data': TenantDataPage,
   'menu.platform_admin.catalog': CatalogPage,
-  'menu.platform_admin.chat_safety': placeholderScreen,
-  'menu.platform_admin.moderation_switches': placeholderScreen,
+  'menu.platform_admin.chat_safety': ChatSafetyCatalogScreen, // F122 US3
+  'menu.platform_admin.moderation_switches': SwitchesScreen, // F122 US4
   'menu.platform_admin.system_settings': SystemSettingsPage,
   'menu.platform_admin.feature_toggles': FeatureFlagListPage,
   'menu.platform_admin.student_activity': LoginEventsPage,

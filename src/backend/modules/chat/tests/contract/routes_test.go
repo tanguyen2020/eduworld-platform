@@ -95,8 +95,8 @@ func TestOperationsMatchSpec(t *testing.T) {
 	// 14 social operations (F095), 3 chat (F115), listQuickMessages (F116 US4), 21 catalogue operations (F116 US2),
 	// 4 moderation switch operations (F116 US3), 13 Safety Team operations (F121), 10 message feature operations (F118) and
 	// 8 Game Studio sticker/GIF operations (F118: the shared /game-admin/{config_type} ones for sticker-packs/gifs + presign),
-	// 7 chat policy, 2 persistent channel/search and 21 club operations (F120).
-	if len(found) != len(chathttp.Operations) || len(found) != 104 {
+	// 7 chat policy, 2 persistent channel/search and 21 club operations (F120), getTenantModerationStatus (F122 banner).
+	if len(found) != len(chathttp.Operations) || len(found) != 105 {
 		t.Fatalf("chat operations found in the spec: %d of %d: %v", len(found), len(chathttp.Operations), found)
 	}
 	// F116-AC-18: the catalogue and switch administration is internal-gateway only (x-internal, /admin/), except the
@@ -107,13 +107,13 @@ func TestOperationsMatchSpec(t *testing.T) {
 		if o.Guard&httpx.GuardGamePlayer != 0 {
 			t.Errorf("%s: a catalogue operation is never a player route", id)
 		}
-		if id != "listTenantSensitiveCategories" && !strings.HasPrefix(o.Pattern, "/admin/chat/") {
+		if id != "listTenantSensitiveCategories" && id != "getTenantModerationStatus" && !strings.HasPrefix(o.Pattern, "/admin/chat/") {
 			t.Errorf("%s: %s is not under /admin/chat/", id, o.Pattern)
 		}
 	}
 	for path, item := range doc.Paths.Map() {
 		for _, op := range item.Operations() {
-			if !slices.Contains(admin, op.OperationID) || op.OperationID == "listTenantSensitiveCategories" {
+			if !slices.Contains(admin, op.OperationID) || op.OperationID == "listTenantSensitiveCategories" || op.OperationID == "getTenantModerationStatus" {
 				continue
 			}
 			if internal, _ := op.Extensions["x-internal"].(bool); !internal {

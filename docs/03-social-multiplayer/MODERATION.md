@@ -309,10 +309,11 @@ Không bao giờ trả về từ đã khớp, vị trí khớp hay nội dung da
 | Phạm vi | Ai quản lý | Workspace (Admin Portal, ADR-0027) | Quyền |
 |---|---|---|---|
 | Danh mục platform (category, term, allowlist) | System Admin | D. Platform Administration → "An toàn chat → Danh mục từ nhạy cảm" | `chat.sensitive_terms.read`, `chat.sensitive_terms.write` (platform-only) |
-| Mục từ bổ sung của tenant | **Chỉ Platform Safety Team** (`safety_moderator`), theo yêu cầu của Tenant Admin (ADR-0072) | D. Platform Administration → "An toàn chat → Từ bổ sung theo tenant" (chọn tenant đích) | `chat.tenant_terms.write` (platform-only, gán cho `safety_moderator`); role tenant không có quyền đọc/ghi danh mục |
+| Mục từ bổ sung của tenant | **Chỉ Platform Safety Team** (`safety_moderator`), theo yêu cầu của Tenant Admin (ADR-0072) | E. Kiểm duyệt → "Từ bổ sung của tenant" (`menu.live_ops.tenant_terms`, chọn tenant đích — ADMIN_PORTAL §3.9, F122) | `chat.tenant_terms.write` (platform-only, gán cho `safety_moderator`); role tenant không có quyền đọc/ghi danh mục |
 | Bật/tắt category cho tenant | **Chỉ Platform Safety Team** (`safety_moderator`) hoặc System Admin, theo yêu cầu của Tenant Admin, **chỉ khi** category có `allow_tenant_toggle = true` (ADR-0072) | E. Kiểm duyệt → "Nhóm từ của tenant" (chọn tenant đích); Tenant Admin chỉ xem ở C → Cài đặt tenant | `chat.tenant_category.toggle` (platform-only; role tenant không được cấp — AGENTS R20) |
-| Công tắc kiểm duyệt (tổng / từng bước) | Chỉ System Admin | D. Platform Administration → "An toàn chat → Công tắc kiểm duyệt" | `chat.policy.toggle` (platform-only) |
+| Công tắc kiểm duyệt (tổng / từng bước) | Chỉ System Admin | D. Platform Administration → "Công tắc kiểm duyệt" (`menu.platform_admin.moderation_switches`) | `chat.policy.toggle` (platform-only) |
 
+- Thống nhất theo ADMIN_PORTAL §3.9 + ADR-0072 (F122 T048): từ bổ sung và bật/tắt nhóm từ của tenant ở **workspace E** do Safety Team làm theo yêu cầu của tenant; Tenant Admin chỉ **xem** nhóm từ ở C → "Chat policy trường" (tab Nhóm từ).
 - Tenant chỉ **thêm** term (siết chặt) và không sửa/xóa term platform. Danh mục hiệu lực của tenant = term platform đang bật + term của tenant, trừ category đã tắt cho tenant (Safety Team tắt, khi category cho phép).
 - Danh mục platform tự áp dụng cho mọi tenant; không cần gán theo ADR-0029. System Admin có thể **clone** bộ term bổ sung của một tenant sang tenant khác (ADR-0029).
 - Nội dung danh mục là dữ liệu nhạy cảm: chỉ người có `chat.sensitive_terms.read` mới xem được; danh mục **không** gửi xuống client game, không xuất trong log.

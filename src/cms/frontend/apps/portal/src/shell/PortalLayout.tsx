@@ -28,6 +28,8 @@ import { ProblemMessage } from './ProblemMessage';
 import { NoAccessPage, VpnRequiredNotice } from './StatusPages';
 import { TenantFilter, TenantSwitcher } from './TenantControls';
 import { useMediaQuery } from './useMediaQuery';
+import { useModerationDisabledBanner } from './banners/ModerationDisabledBanner';
+import { SafetyNotificationsBadge } from './banners/SafetyNotificationsBadge';
 import './shell.css';
 
 /** ADMIN_PORTAL §1.5 [Proposed]: desktop layout from 1280 px; touch targets ≥ 44 px below it (no admin token yet). */
@@ -204,6 +206,7 @@ function SideMenu({ workspace, onNavigate }: { workspace: WorkspaceDef; onNaviga
           label: (
             <Link to={m.path} onClick={onNavigate}>
               {t(m.labelKey)}
+              {m.key === 'menu.school_lms.safety_notifications' ? <SafetyNotificationsBadge /> : null}
             </Link>
           ),
         }))}
@@ -236,6 +239,8 @@ export function PortalLayout() {
   const workspace = workspaceForPath(location.pathname);
   const current = workspace?.key;
   const { dismissVpn } = session;
+  // F122-AC-13: "Đang tắt kiểm duyệt" banner on every screen while a moderation step is off
+  const moderationBanner = useModerationDisabledBanner();
 
   useEffect(() => setDrawer(false), [location.pathname]);
   // the VPN notice belongs to the internal workspaces only (F051-AC-14)
@@ -294,7 +299,7 @@ export function PortalLayout() {
           </Flex>
         </Flex>
       </Layout.Header>
-      <BannerSlot>{vpn ? <VpnRequiredNotice onClose={dismissVpn} /> : null}</BannerSlot>
+      <BannerSlot>{vpn || moderationBanner ? <>{vpn ? <VpnRequiredNotice onClose={dismissVpn} /> : null}{moderationBanner}</> : null}</BannerSlot>
       <Layout className={SHELL_CLASSES.body} hasSider={desktop && !!workspace}>
         {desktop && workspace ? (
           <Layout.Sider width={token.screenXS / 2} className={SHELL_CLASSES.sider} style={{ paddingBlock: token.paddingXS }} data-testid="portal-sider">
