@@ -69,7 +69,7 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `challenge_fail_cooldown` | 60 (từ mức Hard) | giây | platform (env `EW_GAME_CHALLENGE_FAIL_COOLDOWN` — F076) | [Confirmed] | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
 | `challenge_survival_regen_streak` | 3 (vòng đúng hết liên tiếp hồi 1 sức bền, không vượt sức bền của mức) | vòng | code | [Confirmed] (F076) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §2.1 |
 | `challenge_room_lease` | lease 10 s, gia hạn 3 s, quét room mất owner 2 s, timer 250 ms (room `challenge_solo`, `src/backend/pkg/roomhost`) | — | code | [Confirmed] (F076) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §4 |
-| `challenge_deadline_scan` | 15 (job `challenge-deadline`, dự phòng timer room host) | giây | code | [Proposed] (F076) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §2.3 |
+| `challenge_deadline_scan` | 15 (job `challenge-deadline`, dự phòng timer room host) | giây | code | [Confirmed] (F076, owner "chốt hết" 2026-11-24) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §2.3 |
 | `boss_reconnect_grace` | 120 | giây | platform | [Confirmed] | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
 
 ## 6. Kinh tế, vật phẩm, sưu tầm
