@@ -157,6 +157,16 @@
 - [x] T055 [P] Test F122-AC-29: tắt `menu.live_ops.tenant_terms` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions`; mục được bảo vệ không có công tắc (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/safety/feature-toggle.spec.ts` — vitest (`SchoolSafety.test.tsx`) thay Playwright
 - [x] T056 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F122-AC-29) — file: `src/cms/frontend/apps/portal/src/workspaces/live-ops/moderation/routes.tsx`
 
+## Phase N+1: Việc chốt 2026-11-23 (Clarifications [Confirmed] — orchestrator)
+
+- [ ] T060 `rejectModerationSwitchChange` (module chat: contract, command, audit, event `moderation_switch.change_rejected`, test integration + authz) và nút Từ chối trên portal (F122-AC-27)
+- [ ] T061 Route nhân sự `listSchoolClubMembers` (keyset SQL) + `removeSchoolClubMember` (`social.club.approve`, lý do, audit, gỡ channel `team` cùng transaction) + nút Gỡ thành viên (F122-AC-23)
+- [ ] T062 Menu `menu.platform_admin.chat_safety` nhận `chat.sensitive_terms.read` hoặc `.write` (catalog bump, sync); test AC-09 với Safety Moderator thật
+- [ ] T063 `listSensitiveTerms` thêm `locale`, `match_type`, `status` lọc trong SQL; bật bộ lọc portal (F122-AC-07)
+- [ ] T064 `tenant_name` trong case + `listModerationCaseTenants` (keyset, `moderation.case.read`, `tenancy.Bypass(ctx, "moderation_case")`) cho bộ lọc tenant của Safety Team
+- [ ] T065 `listModerationSwitches` không lọc tenant trả `disabled_tenant_count` (đếm SQL); banner hiện số tenant đang tắt
+- [ ] T066 `listSchoolSafetyNotifications` thêm `created_from` lọc trong SQL; portal mặc định 30 ngày (F122-AC-18)
+
 ## AC → test (bằng chứng, 2026-11-23)
 
 Test vitest whole-portal với backend MOCK (`src/cms/frontend/apps/portal/src/test/chat-safety-mock.ts`, chỉ trong test — R17); backend `getTenantModerationStatus` có test integration PostgreSQL/Valkey/NATS. Đường dẫn test tương đối `src/cms/frontend/apps/portal/src/` trừ khi ghi rõ. Kết quả: 60/60 test F122 PASS (`vitest --maxWorkers=2` 7 file: 55 pass + 5 sửa test và chạy lại riêng: 5 pass; máy dùng chung bị tải cao nên một số test chạy 1–6 phút); `TestTenantModerationStatus` PASS. Test được viết cùng lúc với màn hình (không chạy đỏ trước trên placeholder) — sai lệch so với quy trình test-first, ghi nhận.
