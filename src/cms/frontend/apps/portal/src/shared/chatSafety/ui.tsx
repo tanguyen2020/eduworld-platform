@@ -1,9 +1,8 @@
 // Shared display pieces of the chat-safety screens (F122, workspaces E, D, C): error display by Problem `code` with the
 // trace id (403 → the 403 page with trace id, no MFA step-up — ADR-0094; internal gateway unreachable → "Cần kết nối mạng
-// quản trị (VPN)" — F122-AC-25), tenant names for the Tenant column, reason limits of the operations. No rule here.
+// quản trị (VPN)" — F122-AC-25), the Tenant column (names from the moderation tenants, F122 T064), reason limits of the operations. No rule here.
 import { Result, Tag, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { useTenantOptions } from '../api/hooks/useTenantOptions';
 import { ApiError } from '../api/middleware/problem';
 import { ProblemMessage } from '../../shell/ProblemMessage';
 
@@ -28,6 +27,8 @@ export const LIMITS = {
   toggleReason: { source: 'paths/toggleTenantSensitiveCategory/body/reason', minLength: 10, maxLength: 500 },
   /** maxLength from the schema; ≥ 10 is the server rule MODERATION_SWITCH_REASON_REQUIRED (description of the field). */
   switchReason: { source: 'schemas/ModerationSwitchUpdate/properties/reason', minLength: 10, maxLength: 1000 },
+  rejectReason: { source: 'paths/rejectModerationSwitchChange/body/reason', minLength: 1, maxLength: 500 },
+  clubRemoveReason: { source: 'paths/removeSchoolClubMember/body/reason', minLength: 1, maxLength: 500 },
   policyReason: { source: 'schemas/ChatPolicyPut/properties/reason', minLength: 10, maxLength: 500 },
   userId: { source: 'schemas/Uuid', maxLength: 36 },
 } as const;
@@ -49,12 +50,6 @@ export function SafetyError({ error }: { error: unknown }) {
     );
   }
   return <ProblemMessage error={error} />;
-}
-
-/** Tenant names (System Admin / Safety Team): the whole tenant list (every cursor page, cached) as a lookup map. */
-export function useTenantNames(enabled = true) {
-  const options = useTenantOptions('', enabled);
-  return new Map((options.data ?? []).map((x) => [x.tenant_id, x]));
 }
 
 export function TenantName({ id, names }: { id?: string | null; names: ReadonlyMap<string, { name: string; code: string }> }) {

@@ -16,7 +16,8 @@ afterEach(() => stopPortals());
 
 async function pickTenant(user: { click: (e: Element) => Promise<void> }) {
   await user.click(screen.getByRole('combobox', { name: 'Lọc tenant' }));
-  await user.click((await screen.findAllByTitle('TH Demo A (th-demo-a)')).at(-1)!);
+  // the Safety Moderator picks among the tenants having cases (listModerationCaseTenants, F122 T064)
+  await user.click((await screen.findAllByTitle('TH Demo A')).at(-1)!);
 }
 
 describe('Từ bổ sung của tenant (F122-AC-15)', () => {

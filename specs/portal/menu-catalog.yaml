@@ -11,7 +11,7 @@
 # - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
 # - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
 # - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
-catalog_version: "2026.11.23.1"
+catalog_version: "2026.11.24.1"
 workspaces:
   - key: school_lms
     label_key: portal.workspace.school_lms
@@ -167,15 +167,15 @@ workspaces:
         actions:
           - key: action.school_lms.clubs.view
             label_key: portal.action.school_lms.clubs.view
-            title: Xem club chờ duyệt và đang hoạt động
+            title: Xem club chờ duyệt và đang hoạt động, thành viên club
             required_permissions: [social.club.approve]
-            operation_ids: [listClubs, getClub]
+            operation_ids: [listClubs, getClub, listSchoolClubMembers]
             can_disable: true
           - key: action.school_lms.clubs.approve
             label_key: portal.action.school_lms.clubs.approve
-            title: Duyệt / lưu trữ club
+            title: Duyệt / lưu trữ club, gỡ thành viên
             required_permissions: [social.club.approve]
-            operation_ids: [approveClub, archiveClub]
+            operation_ids: [approveClub, archiveClub, removeSchoolClubMember]
             can_disable: true
       - key: menu.school_lms.school_events
         label_key: portal.menu.school_lms.school_events
@@ -276,13 +276,13 @@ workspaces:
         title: Chat policy trường · Nhóm từ của tenant (chỉ xem)
         path: /school-lms/chat-safety
         order: 170
-        required_permissions: [chat.sensitive_terms.read, school.settings.read]
+        required_permissions: [school.settings.read]
         can_disable: true
         actions:
           - key: action.school_lms.chat_safety.view
             label_key: portal.action.school_lms.chat_safety.view
-            title: Xem nhóm từ hiệu lực của tenant
-            required_permissions: [chat.sensitive_terms.read]
+            title: Xem nhóm từ hiệu lực của tenant, chat policy trường
+            required_permissions: [chat.sensitive_terms.read, school.settings.read]
             operation_ids: [listTenantSensitiveCategories, getChatPolicy, getEffectiveChatPolicy]
             can_disable: true
           - key: action.school_lms.chat_safety.edit
@@ -1778,7 +1778,7 @@ workspaces:
             label_key: portal.action.live_ops.moderation_cases.view
             title: Xem case, bằng chứng, tin nhắn liên quan, thông báo nhà trường
             required_permissions: [moderation.case.read, moderation.case.messages.read]
-            operation_ids: [listModerationCases, getModerationCase, listModerationCaseMessages, listSchoolSafetyNotificationsPlatform]
+            operation_ids: [listModerationCases, listModerationCaseTenants, getModerationCase, listModerationCaseMessages, listSchoolSafetyNotificationsPlatform]
             can_disable: false
           - key: action.live_ops.moderation_cases.act
             label_key: portal.action.live_ops.moderation_cases.act
@@ -1996,16 +1996,16 @@ workspaces:
             can_disable: true
       - key: menu.platform_admin.chat_safety
         label_key: portal.menu.platform_admin.chat_safety
-        title: An toàn chat — Danh mục từ nhạy cảm
+        title: An toàn chat — Danh mục từ nhạy cảm (Safety Team chỉ đọc)
         path: /platform-admin/chat-safety
         order: 60
-        required_permissions: [chat.sensitive_terms.write]
+        required_permissions: [chat.sensitive_terms.write, chat.tenant_terms.write]
         can_disable: true
         actions:
           - key: action.platform_admin.chat_safety.view
             label_key: portal.action.platform_admin.chat_safety.view
-            title: Xem danh mục và lịch sử version
-            required_permissions: [chat.sensitive_terms.write]
+            title: Xem danh mục và lịch sử version (chỉ đọc với chat.sensitive_terms.read)
+            required_permissions: [chat.sensitive_terms.read, chat.sensitive_terms.write]
             operation_ids: [listSensitiveCategories, listSensitiveTerms, listSensitiveAllowlist, listSensitiveCatalogVersions]
             can_disable: true
           - key: action.platform_admin.chat_safety.edit
@@ -2056,9 +2056,9 @@ workspaces:
             can_disable: true
           - key: action.platform_admin.moderation_switches.toggle
             label_key: portal.action.platform_admin.moderation_switches.toggle
-            title: Bật/tắt công tắc kiểm duyệt
+            title: Bật/tắt công tắc kiểm duyệt, phê duyệt/từ chối yêu cầu tắt
             required_permissions: [chat.policy.toggle]
-            operation_ids: [setModerationSwitches, approveModerationSwitchChange]
+            operation_ids: [setModerationSwitches, approveModerationSwitchChange, rejectModerationSwitchChange]
             can_disable: true
       - key: menu.platform_admin.system_settings
         label_key: portal.menu.platform_admin.system_settings

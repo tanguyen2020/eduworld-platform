@@ -2,8 +2,9 @@
 // (≤ 60 s to appear or disappear).
 // - tenant staff (session tenant, tenant.settings.read or school.settings.read): getTenantModerationStatus of THEIR tenant —
 //   steps off and the earliest expiry, never the reason (another tenant's state never reaches them);
-// - platform staff of the moderation (chat.policy.toggle, moderation.case.read): listModerationSwitches for the tenants of
-//   the topbar filter (platform row always).
+// - System Admin (chat.policy.toggle — the only holder module chat answers): listModerationSwitches for the tenants of
+//   the topbar filter (platform row always); without a filter, the NUMBER of tenants with a step off
+//   (disabled_tenant_count, counted by module chat in SQL — F122 T065), never a list of tenants.
 // Also the count of school notifications waiting for an acknowledgement (menu badge, F122-AC-18).
 // Kept in memory only (TanStack Query), never in browser storage.
 import { useQuery } from '@tanstack/react-query';
@@ -28,7 +29,13 @@ export interface DisabledLevel {
   expiresAt?: string | null;
 }
 
-export function useModerationBannerState(): DisabledLevel[] {
+export interface ModerationBannerState {
+  levels: DisabledLevel[];
+  /** Platform staff without a tenant filter: tenants with a step off at the tenant level (0 = none). */
+  disabledTenantCount: number;
+}
+
+export function useModerationBannerState(): ModerationBannerState {
   const { api } = usePortalRuntime();
   const { state } = useSession();
   const { view } = usePermissions();
@@ -37,7 +44,9 @@ export function useModerationBannerState(): DisabledLevel[] {
   const tenantId = state.status === 'ready' && state.scope?.kind === 'tenant' ? state.scope.tenantId : null;
   const platform = state.status === 'ready' && state.scope?.kind === 'platform';
   const tenantReader = !!tenantId && (perms.includes('tenant.settings.read') || perms.includes('school.settings.read'));
-  const platformReader = platform && (perms.includes('chat.policy.toggle') || perms.includes('moderation.case.read'));
+  // listModerationSwitches answers chat.policy.toggle only (System Admin): nobody else calls it, so no refused request every 30 s
+  // (the Safety Moderator would only get 403 and no banner — Clarifications 2026-11-24)
+  const platformReader = platform && perms.includes('chat.policy.toggle');
   const tenantQ = useQuery({
     queryKey: ['chat-safety', 'moderation-status', tenantId],
     enabled: tenantReader,
@@ -51,16 +60,28 @@ export function useModerationBannerState(): DisabledLevel[] {
     enabled: platformReader,
     refetchInterval: MODERATION_STATUS_REFRESH_MS,
     retry: false,
-    queryFn: () => api.call<{ platform: SwitchState; tenants: SwitchState[] }>(api.client.GET('/admin/chat/moderation-switches', { params: { query: ids.length ? { tenant_ids: ids } : {} } })),
+    queryFn: () =>
+      api.call<{ platform: SwitchState; tenants: SwitchState[]; disabled_tenant_count?: number }>(
+        api.client.GET('/admin/chat/moderation-switches', { params: { query: ids.length ? { tenant_ids: ids } : {} } }),
+      ),
   });
-  if (tenantReader && tenantQ.data) {
-    const s = tenantQ.data;
+  return {
+    levels: bannerLevels(tenantReader ? tenantQ.data : undefined, platformReader ? platformQ.data : undefined),
+    disabledTenantCount: platformReader && !ids.length ? (platformQ.data?.disabled_tenant_count ?? 0) : 0,
+  };
+}
+
+/** Steps off of the session tenant (tenant staff) or of the platform + filtered tenants (platform staff). */
+function bannerLevels(tenant: TenantModerationStatus | undefined, platform: { platform: SwitchState; tenants: SwitchState[] } | undefined): DisabledLevel[] {
+  if (tenant) {
     // the server already resolved expiry; a lapsed expires_at hides the banner before the next refresh
-    if (s.expires_at && Date.parse(s.expires_at) <= Date.now()) return [];
-    return s.disabled_steps.length || !s.enabled_all ? [{ tenantId: s.tenant_id, steps: [...s.disabled_steps], allOff: !s.enabled_all, expiresAt: s.expires_at }] : [];
+    if (tenant.expires_at && Date.parse(tenant.expires_at) <= Date.now()) return [];
+    return tenant.disabled_steps.length || !tenant.enabled_all
+      ? [{ tenantId: tenant.tenant_id, steps: [...tenant.disabled_steps], allOff: !tenant.enabled_all, expiresAt: tenant.expires_at }]
+      : [];
   }
-  if (platformReader && platformQ.data) {
-    return [platformQ.data.platform, ...platformQ.data.tenants]
+  if (platform) {
+    return [platform.platform, ...platform.tenants]
       .filter((l) => (l.disabled_steps?.length ?? 0) > 0 || !l.effective.enabled_all)
       .filter((l) => !l.configured?.expires_at || Date.parse(l.configured.expires_at) > Date.now())
       .map((l) => ({ tenantId: l.tenant_id ?? null, tenantName: l.tenant_name, steps: [...(l.disabled_steps ?? [])], allOff: !l.effective.enabled_all, expiresAt: l.configured?.expires_at ?? null }));

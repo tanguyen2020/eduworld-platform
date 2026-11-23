@@ -88,7 +88,9 @@ describe('Nghiên cứu hiệu quả (F035-AC-35)', () => {
     await user.click((await screen.findAllByTitle('TH Demo A (th-demo-a)')).at(-1)!);
     expect(await screen.findByText('HD-2026-01')).toBeInTheDocument();
     expect(new URLSearchParams(backend.calls('GET', '/admin/learning/research-agreements').at(-1)!.search).getAll('tenant_ids')).toEqual([TENANTS.thDemoA.tenant_id]);
-    await user.click(within(screen.getByText('HD-2026-01').closest('tr')!).getByRole('button', { name: 'Thu hồi' }));
+    const revoke = within(screen.getByText('HD-2026-01').closest('tr')!).getByRole('button', { name: 'Thu hồi' });
+    await waitFor(() => expect(revoke.closest('.ant-spin-blur')).toBeNull()); // table idle (no loading overlay)
+    await user.click(revoke);
     const dialog = await screen.findByRole('dialog');
     const reason = within(dialog).getByLabelText('Lý do');
     expect(reason).toHaveAttribute('maxlength', '1000');
@@ -145,7 +147,10 @@ describe('Thử nghiệm A/B (F035-AC-35)', () => {
   it('detail: start shadow, results with a hidden cell, stop with a reason', async () => {
     const { backend, user } = await renderResearch('/platform-admin/learning-experiments');
     await screen.findByRole('heading', { level: 1, name: 'Thử nghiệm A/B' });
-    await user.click(await screen.findByRole('link', { name: 'mastery-we-1-1' }));
+    const link = await screen.findByRole('link', { name: 'mastery-we-1-1' });
+    // the table sits behind its loading overlay (pointer-events: none) while the list refetches; click once it is idle
+    await waitFor(() => expect(link.closest('.ant-spin-blur')).toBeNull());
+    await user.click(link);
     await screen.findByRole('heading', { level: 1, name: 'mastery-we-1-1' });
     const results = await screen.findByRole('region', { name: 'Kết quả theo nhánh' });
     expect(await within(results).findByText('0.71')).toBeInTheDocument();

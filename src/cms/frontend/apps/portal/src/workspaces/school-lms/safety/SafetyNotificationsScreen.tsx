@@ -1,5 +1,6 @@
 // Screen of `menu.school_lms.safety_notifications` (F122 US7; F122-AC-18, AC-19, AC-20; ADMIN_PORTAL §1.5.2): the incident
-// notifications the Platform Safety Team sent to the schools of the tenant — filter by state and school, cursor pages;
+// notifications the Platform Safety Team sent to the schools of the tenant — filter by state, school and period (last 30
+// days by default: created_from, filtered by module chat in SQL — F122 T066; "Mọi thời gian" drops it), cursor pages;
 // detail panel with the students (name and GRADE only — no class, ADR-0095), role, category, severity, measures, summary,
 // time sent and the acknowledgement deadline; there is no chat content area anywhere. "Xác nhận đã liên hệ phụ huynh":
 // contact outcome required, note ≤ 500 with a counter, Idempotency-Key; 409 → "Thông báo đã được xác nhận" and reload.
@@ -25,11 +26,18 @@ const OUTCOMES = ['parent_contacted', 'unable_to_contact', 'not_needed'] as cons
 const formatTime = (ts?: string | null) => (ts ? dayjs(ts).format('DD/MM/YYYY HH:mm') : '');
 
 type StateFilter = 'pending' | 'acknowledged' | 'all';
+type PeriodFilter = 'last30' | 'all';
+
+/** Default period of the list (F122-AC-18: "khoảng 30 ngày"). */
+export const NOTIFICATION_PERIOD_DAYS = 30;
 
 function useNotificationFilters() {
   const [state, setState] = useState<StateFilter>('pending');
   const [schoolId, setSchoolId] = useState<string | undefined>();
-  return { state, setState, schoolId, setSchoolId };
+  const [period, setPeriod] = useState<PeriodFilter>('last30');
+  // fixed when the screen opens, so the query key (and the cursor pages) stay stable
+  const [from] = useState(() => new Date(Date.now() - NOTIFICATION_PERIOD_DAYS * 86_400_000).toISOString());
+  return { state, setState, schoolId, setSchoolId, period, setPeriod, createdFrom: period === 'last30' ? from : undefined };
 }
 
 function AckForm({ n, onDone }: { n: SchoolNotification; onDone: () => void }) {
@@ -127,7 +135,7 @@ function NotificationPage() {
 function NotificationList() {
   const { t } = useTranslation();
   const f = useNotificationFilters();
-  const list = useSchoolNotifications({ acknowledged: f.state === 'all' ? undefined : f.state === 'acknowledged', schoolId: f.schoolId });
+  const list = useSchoolNotifications({ acknowledged: f.state === 'all' ? undefined : f.state === 'acknowledged', schoolId: f.schoolId, createdFrom: f.createdFrom });
   const columns: ColumnType<SchoolNotification>[] = [
     { key: 'title', title: t('chatSafety.notifications.incident'), render: (_, r) => <Link to={r.notification_id}>{t('chatSafety.notifications.incidentTitle', { severity: t(`chatSafety.severity.${r.severity}`), at: formatTime(r.school_notified_at) })}</Link> },
     { key: 'students', title: t('chatSafety.notifications.students'), render: (_, r) => (r.students ?? []).map((s) => `${s.display_name ?? s.student_id}${s.grade_level ? ` (${t('chatSafety.notifications.grade', { grade: s.grade_level })})` : ''}`).join(', ') },
@@ -144,6 +152,15 @@ function NotificationList() {
             value={f.state}
             onChange={f.setState}
             options={(['pending', 'acknowledged', 'all'] as const).map((v) => ({ value: v, label: t(`chatSafety.notifications.filter.${v}`) }))}
+            style={{ minWidth: '10rem' }}
+          />
+        </Form.Item>
+        <Form.Item label={t('chatSafety.notifications.period')}>
+          <SearchSelect
+            aria-label={t('chatSafety.notifications.period')}
+            value={f.period}
+            onChange={f.setPeriod}
+            options={(['last30', 'all'] as const).map((v) => ({ value: v, label: t(`chatSafety.notifications.periodOption.${v}`) }))}
             style={{ minWidth: '10rem' }}
           />
         </Form.Item>

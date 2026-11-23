@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { usePortalRuntime } from '../../../app/runtime';
 import { IF_MATCH_HEADER } from '../../../shared/api/middleware/ifmatch';
 import { TENANT_HEADER } from '../../../shared/api/middleware/tenant';
+import { useAllPages } from '../../../shared/api/fetchAllPages';
 import type { components } from '../../../shared/api/schema.gen';
 import { useCursorPages } from '../../../shared/api/useCursorPages';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
@@ -24,6 +25,7 @@ export type SensitiveTerm = Schemas['SensitiveTerm'];
 export type SensitiveTermInput = Schemas['SensitiveTermInput'];
 export type TenantCategory = Schemas['TenantSensitiveCategory'];
 export type CatalogVersion = Schemas['SensitiveCatalogVersion'];
+export type CaseTenant = Schemas['ModerationCaseTenant'];
 
 interface Page<T> {
   data: T[];
@@ -39,6 +41,20 @@ const caseIfMatch = (version?: number) => (version == null ? {} : { [IF_MATCH_HE
 
 function useApi() {
   return usePortalRuntime().api;
+}
+
+/**
+ * listModerationCaseTenants (F122 T064): the tenants having cases, with their projected name and type — the tenant source
+ * of the moderation module (the Safety Moderator does not hold listTenants, R20). A dropdown: every cursor page
+ * (fetchAllPages), cached; searched in the browser by SearchSelect.
+ */
+export function useCaseTenants(enabled = true) {
+  const api = useApi();
+  return useAllPages<CaseTenant>(
+    ['moderation', 'case-tenants'],
+    (query) => api.call<Page<CaseTenant>>(api.client.GET('/admin/moderation/case-tenants', { params: { query } })),
+    { enabled, staleTime: 60_000 },
+  );
 }
 
 export interface CaseFilters {
@@ -204,13 +220,14 @@ export function useTenantTerms(tenantId: string | undefined) {
 }
 
 /** listTenantSensitiveCategories of the target tenant (X-Tenant-Id): names, state, allow_tenant_toggle — never a term. */
+/** listTenantSensitiveCategories of the target tenant (table): cursor pages, keyset in SQL (owner rule 2026-11-23). */
 export function useTenantCategories(tenantId: string | undefined) {
   const api = useApi();
-  return useQuery({
-    queryKey: ['live-ops', 'tenant-categories', tenantId],
-    enabled: !!tenantId,
-    queryFn: () => api.call<{ data: TenantCategory[] }>(api.client.GET('/tenant/chat/categories', { headers: tenantHeaders(tenantId!) })),
-  });
+  return useCursorPages<TenantCategory>(
+    ['live-ops', 'tenant-categories', tenantId],
+    (cursor) => api.call<Page<TenantCategory>>(api.client.GET('/tenant/chat/categories', { params: { query: pageQuery(cursor) }, headers: tenantHeaders(tenantId!) })),
+    { enabled: !!tenantId },
+  );
 }
 
 export function useTenantTermWrite(tenantId: string | undefined) {
@@ -258,11 +275,12 @@ export function useToggleTenantCategory(tenantId: string | undefined) {
 }
 
 /** listSensitiveCategories (platform catalogue, read): the category ids the tenant terms are written into (F122-AC-15). */
+/** Every platform category (all cursor pages, cached) for the category dropdown of an extra term (fetchAllPages). */
 export function useCatalogCategories(enabled = true) {
   const api = useApi();
-  return useQuery({
-    queryKey: ['live-ops', 'catalog-categories'],
-    enabled,
-    queryFn: () => api.call<{ data: Schemas['SensitiveTermCategory'][] }>(api.client.GET('/admin/chat/sensitive-categories', {})),
-  });
+  return useAllPages<Schemas['SensitiveTermCategory']>(
+    ['live-ops', 'catalog-categories'],
+    (query) => api.call<Page<Schemas['SensitiveTermCategory']>>(api.client.GET('/admin/chat/sensitive-categories', { params: { query } })),
+    { enabled },
+  );
 }

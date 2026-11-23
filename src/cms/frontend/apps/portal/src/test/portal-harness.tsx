@@ -16,7 +16,7 @@ import { TEST_CONFIG } from '../shared/api/test-utils';
 import { TenantContextProvider } from '../shared/auth/TenantContext';
 import { MockPortalBackend } from './mock-backend';
 
-export { ACCOUNTS, fakeJwt, MockPortalBackend, permissionsOf, problem, TENANTS } from './mock-backend';
+export { ACCOUNTS, fakeJwt, MockPortalBackend, permissionsOf, problem, SHELL_PATHS, TENANTS } from './mock-backend';
 export type { MockAccount, RecordedRequest } from './mock-backend';
 
 let viewportWidth = 1440;

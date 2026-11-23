@@ -6,10 +6,13 @@
 // F122-AC-10 platform + filtered tenants, 4 switchable steps, PII/grooming "Luôn bật", step locked by the platform;
 // F122-AC-11 risk confirmation, reason ≥ 10, expires_at required, X-Tenant-Id of the target tenant,
 // MODERATION_SWITCH_REASON_REQUIRED on the reason field; F122-AC-12 history; F122-AC-27 "Chờ phê duyệt", approve by
-// another System Admin, hidden for the proposer, error codes.
+// another System Admin, hidden for the proposer, error codes; Từ chối (rejectModerationSwitchChange: reason ≤ 500,
+// Idempotency-Key, If-Match = version of the request, X-Tenant-Id) — F122 T060.
+// F122 T062: a real Safety Moderator (role permissions, workspaces as identity derives them from the catalog) opens the
+// catalogue read only; F122 T063: term filters locale / match type / status are query parameters (applied in SQL).
 import { cleanup, configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { CS, renderSafety, T_A, T_B } from '../../../../test/chat-safety-mock';
+import { chatSafetyState, CS, renderSafety, T_A, T_B } from '../../../../test/chat-safety-mock';
 import { problem, stopPortals } from '../../../../test/portal-harness';
 import { tenantFilterStore } from '../../../../shell/tenantFilterStore';
 
@@ -131,6 +134,77 @@ describe('Danh mục từ nhạy cảm (F122-AC-07, AC-08)', () => {
   });
 });
 
+describe('Danh mục — bộ lọc và Safety Moderator (F122-AC-07, AC-09; T062, T063)', () => {
+  it('F122-AC-07: term filters locale / match type / status go to the server (no filtering of the loaded page)', async () => {
+    const { backend, user } = await renderSafety('/platform-admin/chat-safety');
+    expect(await screen.findByText('Xúc phạm')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Từ' }));
+    expect(await screen.findByText('zqplaceholder')).toBeInTheDocument();
+    expect(screen.getByText('zqenglish')).toBeInTheDocument();
+    const lastQuery = () => new URLSearchParams(backend.calls('GET', '/admin/chat/sensitive-terms').at(-1)!.search);
+    await pick(user, 'Ngôn ngữ', 'en');
+    await waitFor(() => expect(lastQuery().get('locale')).toBe('en'));
+    await waitFor(() => expect(screen.queryByText('zqplaceholder')).toBeNull());
+    expect(screen.getByText('zqenglish')).toBeInTheDocument();
+    await pick(user, 'Kiểu khớp', 'Cụm từ');
+    await waitFor(() => expect(lastQuery().get('match_type')).toBe('phrase'));
+    await pick(user, 'Trạng thái', 'Bản nháp');
+    await waitFor(() => expect([lastQuery().get('locale'), lastQuery().get('match_type'), lastQuery().get('status')]).toEqual(['en', 'phrase', 'draft']));
+    expect(lastQuery().get('limit')).toBe('50');
+  });
+
+  it('owner rule 2026-11-23: the categories table pages with the cursor; the category dropdowns read every page', async () => {
+    const st = chatSafetyState();
+    for (let i = 0; i < 58; i++) {
+      const n = String(i).padStart(2, '0');
+      st.categories.push({ category_id: `0193a4d2-a100-7000-8000-${String(1000 + i).padStart(12, '0')}`, code: `zq_cat_${n}`, name: `Nhóm ${n}`,
+        severity: 'low', default_action: 'mask', enabled: true, allow_tenant_toggle: false, term_count: 0, updated_at: new Date().toISOString() });
+    }
+    const { backend, user } = await renderSafety('/platform-admin/chat-safety', { state: st });
+    expect(await screen.findByText('Nhóm 00')).toBeInTheDocument();
+    const firstTable = backend.calls('GET', '/admin/chat/sensitive-categories').find((r) => new URLSearchParams(r.search).get('limit') === '50');
+    expect(firstTable).toBeTruthy();
+    expect(screen.queryByText('Nhóm 57')).toBeNull(); // 60 rows, 50 per page
+    await user.click(screen.getByRole('button', { name: 'Tải thêm' }));
+    expect(await screen.findByText('Nhóm 57')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Từ' }));
+    // the list is virtual (only the visible options are in the DOM): search the last category of the second page
+    await user.type(screen.getByRole('combobox', { name: 'Nhóm từ' }), 'Nhóm 57');
+    expect((await screen.findAllByTitle('Nhóm 57')).length).toBeGreaterThan(0);
+    expect(backend.calls('GET', '/admin/chat/sensitive-categories').some((r) => new URLSearchParams(r.search).get('limit') === '100')).toBe(true);
+  });
+
+  it('F122-AC-09 (T062): a real Safety Moderator sees the catalogue read only; switches stay hidden; nothing stored', async () => {
+    const log = vi.spyOn(console, 'log');
+    const { backend, loaders } = await renderSafety('/platform-admin/chat-safety', { account: 'sm.antoan' });
+    expect(await screen.findByText('Xúc phạm')).toBeInTheDocument();
+    expect(loaders.platform_admin).toHaveBeenCalled();
+    const nav = screen.getByRole('navigation', { name: 'Menu điều hướng' });
+    expect(within(nav).getByText('Danh mục từ nhạy cảm')).toBeInTheDocument();
+    for (const m of ['Công tắc kiểm duyệt', 'Tenant', 'Cấu hình hệ thống']) expect(within(nav).queryByText(m)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Thêm nhóm từ' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Sửa' })).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'Từ' }));
+    expect(await screen.findByText('zqplaceholder')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Thêm từ' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Xóa' })).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'Thử chuỗi' }));
+    expect(screen.queryByLabelText('Chuỗi cần thử')).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'Phiên bản' }));
+    expect(screen.queryByRole('button', { name: 'Publish' })).toBeNull();
+    expect(backend.calls('GET', '/admin/chat/sensitive-terms').every((r) => r.headers['x-tenant-id'] === undefined)).toBe(true);
+    for (const m of ['POST', 'PATCH', 'DELETE']) expect(backend.requests.filter((r) => r.method === m && r.path.startsWith('/admin/chat/'))).toHaveLength(0);
+    const stored = JSON.stringify({ ...window.localStorage }) + JSON.stringify({ ...window.sessionStorage });
+    expect(stored).not.toMatch(/zqplaceholder|zqenglish/);
+    expect(JSON.stringify(log.mock.calls)).not.toMatch(/zqplaceholder/);
+  });
+
+  it('F122-AC-24 (T062): the Safety Moderator still gets the 403 page on the switches URL', async () => {
+    await renderSafety('/platform-admin/moderation-switches', { account: 'sm.antoan' });
+    expect(await screen.findByText('Không có quyền truy cập')).toBeInTheDocument();
+  });
+});
+
 describe('Công tắc kiểm duyệt (F122-AC-10, AC-11, AC-12, AC-27)', () => {
   it('tenant rows are cursor pages of the query (owner rule 2026-11-23): page 1, then "Tải thêm" appends page 2 with the cursor', async () => {
     const { state, backend, user } = await renderSafety('/platform-admin/moderation-switches');
@@ -224,6 +298,43 @@ describe('Công tắc kiểm duyệt (F122-AC-10, AC-11, AC-12, AC-27)', () => {
     await waitFor(() => expect(r.backend.calls('POST', `/admin/chat/moderation-switches/requests/${CS.request1}:approve`)).toHaveLength(2));
     const approve = r.backend.calls('POST', `/admin/chat/moderation-switches/requests/${CS.request1}:approve`)[1]!;
     expect(approve.headers['x-tenant-id']).toBe(T_A);
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Yêu cầu chờ phê duyệt' })).toBeNull());
+  });
+
+  it('F122-AC-27 (T060): another System Admin rejects with a reason — If-Match, Idempotency-Key, X-Tenant-Id; the proposer has no Reject; errors by code', async () => {
+    let r = await renderSafety('/platform-admin/moderation-switches'); // sa.admin proposed request1
+    tenantFilterStore.set([T_A]);
+    const own = await screen.findByRole('region', { name: 'Yêu cầu chờ phê duyệt' });
+    expect(within(own).queryByRole('button', { name: 'Từ chối' })).toBeNull();
+    cleanup();
+    stopPortals();
+    tenantFilterStore.reset();
+    r = await renderSafety('/platform-admin/moderation-switches', { account: 'sa.admin2' });
+    tenantFilterStore.set([T_A]);
+    const region = await screen.findByRole('region', { name: 'Yêu cầu chờ phê duyệt' });
+    await r.user.click(within(region).getByRole('button', { name: 'Từ chối' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Từ chối yêu cầu tắt kiểm duyệt' });
+    const reason = within(dialog).getByLabelText('Lý do từ chối');
+    expect(reason).toHaveAttribute('maxlength', '500');
+    // reason required
+    await r.user.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
+    expect(await within(dialog).findByText(/Nhập lý do/)).toBeInTheDocument();
+    expect(r.backend.calls('POST', `/admin/chat/moderation-switches/requests/${CS.request1}:reject`)).toHaveLength(0);
+    // a stale version is shown by code (no automatic retry)
+    r.backend.overrides.unshift((x) => (x.path.endsWith(':reject') ? problem(412, 'VERSION_MISMATCH') : undefined));
+    fireEvent.change(reason, { target: { value: 'Chưa có bằng chứng lọc nhầm' } });
+    await r.user.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
+    expect(await within(dialog).findByText(/Dữ liệu đã được người khác cập nhật/)).toBeInTheDocument();
+    expect(r.backend.calls('POST', `/admin/chat/moderation-switches/requests/${CS.request1}:reject`)).toHaveLength(1);
+    r.backend.overrides.shift();
+    await r.user.click(within(dialog).getByRole('button', { name: 'Từ chối' }));
+    await waitFor(() => expect(r.backend.calls('POST', `/admin/chat/moderation-switches/requests/${CS.request1}:reject`)).toHaveLength(2));
+    const [first, second] = r.backend.calls('POST', `/admin/chat/moderation-switches/requests/${CS.request1}:reject`);
+    expect(second!.headers['if-match']).toBe('W/"1"');
+    expect(second!.headers['x-tenant-id']).toBe(T_A);
+    expect(second!.headers['idempotency-key']).toBeTruthy();
+    expect(second!.headers['idempotency-key']).toBe(first!.headers['idempotency-key']); // same intent retried
+    expect(second!.body).toEqual({ reason: 'Chưa có bằng chứng lọc nhầm' });
     await waitFor(() => expect(screen.queryByRole('region', { name: 'Yêu cầu chờ phê duyệt' })).toBeNull());
   });
 

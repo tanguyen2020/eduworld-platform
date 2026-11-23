@@ -4,6 +4,7 @@
 // (F120) — plugged into MockPortalBackend as overrides. It records requests, keeps a little state and simulates the few
 // answers the screens must handle (412, 409, 403, 422 codes); it enforces NO authorization and is NOT a backend.
 // Catalogue fixtures are placeholders only (`zq…`), never a real sensitive word (AGENTS R15).
+import { WORKSPACE_CATALOG, type WorkspaceKey } from '../generated/menu-catalog';
 import { ACCOUNTS, permissionsOf, problem, TENANTS, type MockAccount, type MockPortalBackend, type RecordedRequest } from './mock-backend';
 import { IDS as LMS_IDS, installSchoolLmsMock } from './school-lms-mock';
 
@@ -27,10 +28,15 @@ export const CS = {
   msg2: '0193a4d2-d000-7000-8000-000000000002',
   notifA: '0193a4d2-e000-7000-8000-000000000001',
   notifAcked: '0193a4d2-e000-7000-8000-000000000002',
+  notifOld: '0193a4d2-e000-7000-8000-000000000003',
   sanction1: '0193a4d2-f000-7000-8000-000000000001',
   catInsult: '0193a4d2-a100-7000-8000-000000000001',
   catPolitics: '0193a4d2-a100-7000-8000-000000000002',
   term1: '0193a4d2-a200-7000-8000-000000000001',
+  term2: '0193a4d2-a200-7000-8000-000000000002',
+  memberOwner: '0193a4d2-4000-7000-8000-0000000000b1',
+  memberBinh: '0193a4d2-4000-7000-8000-0000000000b2',
+  memberChi: '0193a4d2-4000-7000-8000-0000000000b3',
   tenantTerm1: '0193a4d2-a200-7000-8000-000000000099',
   allow1: '0193a4d2-a300-7000-8000-000000000001',
   request1: '0193a4d2-a400-7000-8000-000000000001',
@@ -39,16 +45,26 @@ export const CS = {
   moderator: '0193a4d2-1111-7000-8000-0000000000e1',
 } as const;
 
-const SAFETY_PERMS = [
+/** Permissions of the platform role `safety_moderator` (src/backend/pkg/authz/roles.go, SystemRoles). */
+export const SAFETY_PERMS = [
   'moderation.case.read', 'moderation.case.act', 'moderation.case.messages.read', 'moderation.sanction.read', 'moderation.sanction.write',
   'moderation.school_notification.send', 'chat.sensitive_terms.read', 'chat.tenant_terms.write', 'chat.tenant_category.toggle',
 ];
+
+/**
+ * Workspaces getMyPermissions returns for a permission set — the rule of module identity (portalcatalog.Workspaces): a
+ * workspace is visible when one of its menus' any-of permissions is held. Used so the Safety Moderator principal of the
+ * tests is the real one (role permissions + catalog), not a hand-picked workspace list.
+ */
+export function catalogWorkspaces(perms: readonly string[]): WorkspaceKey[] {
+  return WORKSPACE_CATALOG.filter((w) => w.menus.some((m) => m.requiredPermissions.some((x) => perms.includes(x)))).map((w) => w.key);
+}
 
 /** Platform accounts of the F122 quickstart missing from the shell MOCK. */
 export const SAFETY_ACCOUNTS: Record<string, MockAccount> = {
   'sm.antoan': {
     username: 'sm.antoan', email: 'sm.antoan@eduworld.test', password: ACCOUNTS['sa.admin']!.password, platform: true, sub: CS.moderator,
-    displayName: 'Safety Moderator', tenants: [], perms: { platform: { workspaces: ['live_ops'], permissions: SAFETY_PERMS } },
+    displayName: 'Safety Moderator', tenants: [], perms: { platform: { workspaces: catalogWorkspaces(SAFETY_PERMS), permissions: SAFETY_PERMS } },
   },
   'sa.admin2': {
     ...ACCOUNTS['sa.admin']!, username: 'sa.admin2', email: 'sa.admin2@eduworld.test', sub: '0193a4d2-1111-7000-8000-0000000000e2', displayName: 'System Admin 2',
@@ -66,16 +82,18 @@ const steps = (off: string[] = []) => Object.fromEntries(['sensitive_terms', 'sp
 export function chatSafetyState() {
   return {
     cases: [
-      { case_id: CS.caseA, tenant_id: T_A, status: 'open', severity: 'p1', source: 'report', category_code: 'insult', target_type: 'message', target_id: CS.msg1,
+      { case_id: CS.caseA, tenant_id: T_A, tenant_name: 'TH Demo A', tenant_type: 'school', status: 'open', severity: 'p1', source: 'report', category_code: 'insult', target_type: 'message', target_id: CS.msg1,
         channel_type: 'party', school_ids: [CS.schoolA, CS.schoolOther], report_count: 2, sla_due_at: iso(-1), version: 3, created_at: iso(-5),
         subject_user_ids: [CS.studentA, CS.studentOther], evidence_message_ids: [CS.msg1], actions: [{ action: 'created', actor_kind: 'system', at: iso(-5) }],
         reports: [], evidence: [], school_notifications: [] },
-      { case_id: CS.caseB, tenant_id: T_B, status: 'in_review', severity: 'p2', source: 'filter_alert', category_code: 'spam', target_type: 'user',
+      { case_id: CS.caseB, tenant_id: T_B, tenant_name: 'THCS Demo B', tenant_type: 'school', status: 'in_review', severity: 'p2', source: 'filter_alert', category_code: 'spam', target_type: 'user',
         school_ids: [], report_count: 1, sla_due_at: iso(20), assignee_moderator_id: CS.moderator, version: 1, created_at: iso(-2), subject_user_ids: [], actions: [] },
-      { case_id: CS.caseCommon, tenant_id: T_COMMON, status: 'open', severity: 'p3', source: 'report', category_code: 'insult', target_type: 'user',
+      { case_id: CS.caseCommon, tenant_id: T_COMMON, tenant_name: 'Tenant chung', tenant_type: 'common', status: 'open', severity: 'p3', source: 'report', category_code: 'insult', target_type: 'user',
         school_ids: [], report_count: 1, sla_due_at: iso(40), version: 1, created_at: iso(-1), subject_user_ids: [CS.studentA], actions: [] },
     ] as Record<string, unknown>[],
     casePageSize: 2,
+    /** Page size of listModerationCaseTenants (the dropdown walks every page). */
+    caseTenantPageSize: 2,
     messages: [
       { message_id: CS.msg1, channel_id: CS.msg1, channel_type: 'party', seq: 10, sender_id: CS.studentOther, sender_nickname: 'MeoCon', sender_school_id: CS.schoolOther,
         kind: 'text', body: 'zqgoc ban dau', body_display: 'zq*** ban dau', revision: 2, revisions: [{ revision: 1, body: 'zqgoc lan 1', decision: 'mask', edited_at: iso(-6) }],
@@ -94,10 +112,13 @@ export function chatSafetyState() {
     schoolNotifications: [
       { notification_id: CS.notifA, case_id: CS.caseA, tenant_id: T_A, school_id: CS.schoolA, severity: 'p1', category_code: 'bullying',
         students: [{ student_id: CS.studentA, display_name: 'Nguyễn An', grade_level: 3, role: 'affected' }], measures_taken: 'Đã khóa chat 24 giờ',
-        summary: 'Học sinh bị bạn trêu chọc lặp lại trong trận', school_notified_at: iso(-30), ack_due_at: iso(-6) },
+        summary: 'Học sinh bị bạn trêu chọc lặp lại trong trận', school_notified_at: iso(-30), ack_due_at: iso(-6), created_at: iso(-30) },
       { notification_id: CS.notifAcked, case_id: CS.caseB, tenant_id: T_A, school_id: CS.schoolA, severity: 'p3', category_code: 'spam',
         students: [{ student_id: CS.studentA, display_name: 'Nguyễn An', grade_level: 3, role: 'offender' }], summary: 'Gửi tin lặp nhiều lần',
-        school_notified_at: iso(-60), ack_due_at: iso(-36), school_ack_at: iso(-40), contact_outcome: 'not_needed' },
+        school_notified_at: iso(-60), ack_due_at: iso(-36), school_ack_at: iso(-40), contact_outcome: 'not_needed', created_at: iso(-60) },
+      { notification_id: CS.notifOld, case_id: CS.caseB, tenant_id: T_A, school_id: CS.schoolA, severity: 'p3', category_code: 'spam',
+        students: [{ student_id: CS.studentA, display_name: 'Nguyễn An', grade_level: 3, role: 'offender' }], summary: 'Vụ việc cũ hơn 30 ngày',
+        school_notified_at: iso(-24 * 45), ack_due_at: iso(-24 * 44), created_at: iso(-24 * 45) },
     ] as Record<string, unknown>[],
     categories: [
       { category_id: CS.catInsult, code: 'insult', name: 'Xúc phạm', severity: 'medium', default_action: 'mask', enabled: true, allow_tenant_toggle: false, term_count: 1, updated_at: iso(-100) },
@@ -105,6 +126,7 @@ export function chatSafetyState() {
     ] as Record<string, unknown>[],
     terms: [
       { term_id: CS.term1, category_id: CS.catInsult, term: 'zqplaceholder', match_type: 'word', locale: 'vi', variants: ['zqp1aceholder'], enabled: true, scope: 'platform', status: 'published', updated_at: iso(-100) },
+      { term_id: CS.term2, category_id: CS.catInsult, term: 'zqenglish', match_type: 'phrase', locale: 'en', variants: [], enabled: true, scope: 'platform', status: 'draft', updated_at: iso(-50) },
     ] as Record<string, unknown>[],
     tenantTerms: [
       { term_id: CS.tenantTerm1, category_id: CS.catInsult, term: 'zqtenantonly', match_type: 'word', locale: 'vi', enabled: true, scope: 'tenant', tenant_id: T_A, status: 'draft', updated_at: iso(-10) },
@@ -122,10 +144,12 @@ export function chatSafetyState() {
         [T_A]: { scope: 'tenant', tenant_id: T_A, tenant_name: 'TH Demo A', configured: { enabled_all: true, steps: steps(['spam']), expires_at: iso(2) },
           effective: { enabled_all: true, steps: steps(['spam']) }, disabled_steps: ['spam'], updated_at: iso(-1),
           pending_requests: [{ request_id: CS.request1, scope: 'tenant', tenant_id: T_A, enabled_all: true, steps: steps(['spam', 'bullying']), reason: 'Điều tra lọc nhầm bắt nạt',
-            expires_at: iso(3), status: 'pending_approval', proposed_by: ACCOUNTS['sa.admin']!.sub, created_at: iso(-1), request_expires_at: iso(23) }] },
+            expires_at: iso(3), status: 'pending_approval', proposed_by: ACCOUNTS['sa.admin']!.sub, created_at: iso(-1), request_expires_at: iso(23), version: 1 }] },
         [T_B]: { scope: 'tenant', tenant_id: T_B, tenant_name: 'THCS Demo B', configured: null, effective: { enabled_all: true, steps: steps() }, disabled_steps: [], pending_requests: [] },
       } as Record<string, Record<string, unknown>>,
     },
+    /** Tenants with a step off at the tenant level (listModerationSwitches without tenant_ids, F122 T065). */
+    disabledTenantCount: 1,
     history: [
       { change_id: '0193a4d2-a500-7000-8000-000000000001', scope: 'tenant', tenant_id: T_A, before: steps(), after: steps(['spam']), enabled_all_before: true, enabled_all_after: true,
         reason: 'Sự kiện thi đấu cấp trường', expires_at: iso(2), actor_id: ACCOUNTS['sa.admin']!.sub, approved_by: '0193a4d2-1111-7000-8000-0000000000e2', source: 'approved_request', changed_at: iso(-1) },
@@ -141,8 +165,16 @@ export function chatSafetyState() {
     schoolPolicy: null as Record<string, unknown> | null,
     clubs: [
       { club_id: CS.clubPending, club_type: 'interest_group', name: 'Nhà thám hiểm', status: 'pending_approval', member_count: 3, max_members: 50, school_id: CS.schoolA, version: 1 },
-      { club_id: CS.clubActive, club_type: 'school_club', name: 'CLB Cờ vua', status: 'active', member_count: 12, max_members: 50, school_id: CS.schoolA, version: 2 },
+      { club_id: CS.clubActive, club_type: 'school_club', name: 'CLB Cờ vua', status: 'active', member_count: 3, max_members: 50, school_id: CS.schoolA, version: 2 },
     ] as Record<string, unknown>[],
+    clubMembers: {
+      [CS.clubActive]: [
+        { club_id: CS.clubActive, user_id: CS.memberOwner, nickname: 'CaVang', role: 'owner', joined_at: iso(-300) },
+        { club_id: CS.clubActive, user_id: CS.memberBinh, nickname: 'MeoCon', role: 'member', joined_at: iso(-200) },
+        { club_id: CS.clubActive, user_id: CS.memberChi, nickname: 'ThoNau', role: 'member', joined_at: iso(-100) },
+      ],
+    } as Record<string, Record<string, unknown>[]>,
+    clubMemberPageSize: 2,
   };
 }
 
@@ -183,6 +215,12 @@ export function installChatSafetyMock(backend: MockPortalBackend, state: ChatSaf
     // tenant list of the Safety Team filters: the shell MOCK tenants + a tenant `common`
     if (key === 'GET /admin/tenants') {
       return json(200, { data: [...Object.values(TENANTS), { tenant_id: T_COMMON, code: 'chung', name: 'Tenant chung', tenant_type: 'common', status: 'active' }], page: { has_more: false, next_cursor: null } });
+    }
+    // ---- tenants having cases (F122 T064): source of the moderation tenant filter (keyset pages) ----
+    if (key === 'GET /admin/moderation/case-tenants') {
+      const seen = new Map<string, Record<string, unknown>>();
+      for (const c of state.cases) if (!seen.has(String(c.tenant_id))) seen.set(String(c.tenant_id), { tenant_id: c.tenant_id, tenant_name: c.tenant_name, tenant_type: c.tenant_type });
+      return json(200, paged([...seen.values()], q, state.caseTenantPageSize));
     }
     // ---- moderation cases (F121) ----
     if (key === 'GET /admin/moderation/cases') {
@@ -252,6 +290,8 @@ export function installChatSafetyMock(backend: MockPortalBackend, state: ChatSaf
     }
     if (key === 'GET /tenant/safety/school-notifications') {
       let rows = state.schoolNotifications.filter((n) => n.tenant_id === tenantHeader);
+      const from = q.get('created_from');
+      if (from) rows = rows.filter((n) => String(n.created_at) >= new Date(from).toISOString());
       if (q.get('acknowledged') === 'true') rows = rows.filter((n) => n.school_ack_at);
       if (q.get('acknowledged') === 'false') rows = rows.filter((n) => !n.school_ack_at);
       return json(200, paged(rows, q, 50));
@@ -264,7 +304,8 @@ export function installChatSafetyMock(backend: MockPortalBackend, state: ChatSaf
       return json(200, n);
     }
     // ---- sensitive-term catalogue (F116) ----
-    if (key === 'GET /admin/chat/sensitive-categories') return json(200, { data: state.categories });
+    // cursor pages (keyset (code, category_id) in SQL on the server — owner rule 2026-11-23)
+    if (key === 'GET /admin/chat/sensitive-categories') return json(200, paged(state.categories, q, Number(q.get('limit') ?? 20)));
     if (key === 'POST /admin/chat/sensitive-categories') {
       const c = { category_id: '0193a4d2-a100-7000-8000-0000000000aa', term_count: 0, updated_at: new Date().toISOString(), ...body };
       state.categories.push(c);
@@ -281,7 +322,8 @@ export function installChatSafetyMock(backend: MockPortalBackend, state: ChatSaf
       return json(200, state.categories[i]);
     }
     if (key === 'GET /admin/chat/sensitive-terms') {
-      const rows = state.terms.filter((r) => !q.get('category_id') || r.category_id === q.get('category_id'));
+      // filters applied by the server (SQL) — locale, match_type, status (F122 T063)
+      const rows = state.terms.filter((r) => (['category_id', 'locale', 'match_type', 'status'] as const).every((f) => !q.get(f) || r[f] === q.get(f)));
       return json(200, paged(rows, q, 50));
     }
     if (key === 'POST /admin/chat/sensitive-terms:test') {
@@ -342,7 +384,7 @@ export function installChatSafetyMock(backend: MockPortalBackend, state: ChatSaf
     if (key === 'GET /tenant/chat/categories') {
       const data = state.categories.map((c) => ({ code: c.code, name: c.name, severity: c.severity, enabled_platform: c.enabled, allow_tenant_toggle: c.allow_tenant_toggle,
         enabled_in_tenant: !state.tenantCategoryOff.has(`${tenantHeader}:${String(c.code)}`), tenant_term_count: state.tenantTerms.filter((t) => t.tenant_id === tenantHeader && t.category_id === c.category_id).length }));
-      return json(200, { data, moderation_switches: state.switches.tenants[tenantHeader ?? ''] ?? state.switches.platform });
+      return json(200, { ...paged(data, q, Number(q.get('limit') ?? 20)), moderation_switches: state.switches.tenants[tenantHeader ?? ''] ?? state.switches.platform });
     }
     if ((x = m(/^\/admin\/chat\/tenant-categories\/([^/:]+):toggle$/)) && rec.method === 'POST') {
       const c = state.categories.find((r) => r.code === x![1]);
@@ -355,11 +397,27 @@ export function installChatSafetyMock(backend: MockPortalBackend, state: ChatSaf
     }
     // ---- moderation switches ----
     if (key === 'GET /admin/chat/moderation-switches') {
-      // one cursor page of the tenants of tenant_ids, the platform level on every page (API_DESIGN §5)
-      const tenants = q.getAll('tenant_ids').map((t) => state.switches.tenants[t]).filter(Boolean);
+      // chat.policy.toggle only (System Admin) — the Safety Moderator is refused like by module chat (no banner then)
+      if (!(backend.user?.perms.platform?.permissions ?? []).includes('chat.policy.toggle')) return problem(403, 'PERMISSION_DENIED');
+      // one cursor page of the tenants of tenant_ids, the platform level on every page (API_DESIGN §5); without
+      // tenant_ids the number of tenants off (disabled_tenant_count, F122 T065)
+      const ids = q.getAll('tenant_ids');
+      const tenants = ids.map((t) => state.switches.tenants[t]).filter(Boolean);
       const { data, page } = paged(tenants, q, state.switchPageSize || Number(q.get('limit') ?? 20));
-      return json(200, { platform: state.switches.platform, tenants: data, page });
+      const count = ids.length ? {} : { disabled_tenant_count: state.disabledTenantCount };
+      return json(200, { platform: state.switches.platform, tenants: data, page, ...count });
     }
+    if ((x = m(/^\/admin\/chat\/moderation-switches\/requests\/([^/:]+):reject$/)) && rec.method === 'POST') {
+      for (const level of [state.switches.platform, ...Object.values(state.switches.tenants)]) {
+        const list = level.pending_requests as Record<string, unknown>[];
+        const r = list.find((y) => y.request_id === x![1]);
+        if (!r) continue;
+        if (r.proposed_by === backend.user?.sub) return problem(403, 'MODERATION_SWITCH_SELF_APPROVAL');
+        if (rec.headers['if-match'] !== `W/"${String(r.version)}"`) return problem(412, 'VERSION_MISMATCH');
+        level.pending_requests = list.filter((y) => y !== r);
+        return json(200, { ...r, status: 'rejected', decided_at: new Date().toISOString(), version: Number(r.version) + 1 });
+      }
+      return problem(404, 'NOT_FOUND');    }
     if (key === 'PUT /admin/chat/moderation-switches') {
       if (!body.reason || String(body.reason).length < 10) return problem(422, 'MODERATION_SWITCH_REASON_REQUIRED', { errors: [{ field: 'reason', code: 'MODERATION_SWITCH_REASON_REQUIRED' }] });
       const s = body.steps as Record<string, boolean>;
@@ -403,6 +461,18 @@ export function installChatSafetyMock(backend: MockPortalBackend, state: ChatSaf
       return json(200, state.schoolPolicy, { ETag: `"${String(state.schoolPolicy.version)}"` });
     }
     if (key === 'GET /tenant/chat-policies:effective') return json(200, EFFECTIVE[q.get('channel_type') ?? ''] ?? EFFECTIVE.direct);
+    // ---- club members for staff (F122 T061) ----
+    if ((x = m(/^\/tenant\/social\/clubs\/([^/:]+)\/members$/)) && rec.method === 'GET') {
+      const rows = state.clubMembers[x[1]!];
+      return rows ? json(200, paged(rows, q, state.clubMemberPageSize)) : problem(404, 'NOT_FOUND');
+    }
+    if ((x = m(/^\/tenant\/social\/clubs\/([^/:]+)\/members\/([^/:]+):remove$/)) && rec.method === 'POST') {
+      const rows = state.clubMembers[x[1]!];
+      const i = rows?.findIndex((r) => r.user_id === x![2] && r.role !== 'owner') ?? -1;
+      if (!rows || i < 0) return problem(404, 'NOT_FOUND');
+      rows.splice(i, 1);
+      return new Response(null, { status: 204 });
+    }
     // ---- clubs (F120) ----
     if (key === 'GET /social/clubs') {
       const rows = state.clubs.filter((c) => (!q.get('school_id') || c.school_id === q.get('school_id')) && (!q.get('status') || c.status === q.get('status')));

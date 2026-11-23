@@ -1,8 +1,9 @@
 // Screen of `menu.platform_admin.chat_safety` (F122 US3; F122-AC-07, AC-08, AC-09): the platform sensitive-term catalogue
-// — categories (create/edit; delete = soft delete after confirmation), terms (category filter + search, cursor pages,
+// — categories (create/edit; delete = soft delete after confirmation), terms (category / locale / match type / status
+// filters applied by the server in SQL — F122 T063 — cursor pages,
 // variants ≤ 50, RE2 warning for `pattern`), allowlist, "Thử chuỗi" (testSensitiveTerms, optional tenant) and publish
 // (mandatory change summary) with the version list and its regression figures. Without the edit/test/publish actions the
-// catalogue is read only (ActionGate). On a phone the screen is read only ("cần màn hình lớn hơn", ADMIN_PORTAL §1.5).
+// catalogue is read only (ActionGate) — the Safety Moderator (chat.sensitive_terms.read) opens it read only (T062). On a phone the screen is read only ("cần màn hình lớn hơn", ADMIN_PORTAL §1.5).
 // Terms are never written to logs, telemetry or browser storage (R14, R15).
 import { Alert, Button, Flex, Form, Input, Modal, Switch, Table, Tabs, Tag, Typography, theme } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -15,7 +16,7 @@ import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { useMediaQuery } from '../../../shell/useMediaQuery';
 import { PublishDialog } from '../../../shared/chatSafety/PublishDialog';
 import { formatTime } from '../ui';
-import { useAllowlist, useCatalogWrites, useCategories, useTerms, useTestTerms, useVersions, type Category, type CategoryInput, type Term } from './api';
+import { useAllCategories, useAllowlist, useCatalogWrites, useCategories, useTerms, useTestTerms, useVersions, type Category, type CategoryInput, type Term, type TermFilters } from './api';
 
 const SEVERITIES = ['low', 'medium', 'high', 'critical'] as const;
 const ACTIONS = ['allow', 'mask', 'block', 'hold_for_review', 'block_and_alert'] as const;
@@ -131,7 +132,12 @@ function Categories({ large, writes }: { large: boolean; writes: Writes }) {
       ) : null}
       {list.error ? <SafetyError error={list.error} /> : null}
       {writes.deleteCategory.error ? <ProblemMessage error={writes.deleteCategory.error} /> : null}
-      <Table rowKey="category_id" columns={columns} dataSource={list.data?.data ?? []} loading={list.isFetching} pagination={false} scroll={{ x: true }} />
+      <Table rowKey="category_id" columns={columns} dataSource={list.rows} loading={list.isFetching} pagination={false} scroll={{ x: true }} />
+      {list.hasNextPage ? (
+        <Button onClick={() => list.fetchNextPage()} loading={list.isFetchingNextPage}>
+          {t('chatSafety.common.loadMore')}
+        </Button>
+      ) : null}
       {editing ? <CategoryDialog editing={editing} writes={writes} onClose={() => setEditing(null)} /> : null}
     </Flex>
   );
@@ -150,13 +156,15 @@ interface TermForm {
 function Terms({ large, writes }: { large: boolean; writes: Writes }) {
   const { t } = useTranslation();
   const ops = useTranslation(OPS_UI_NS);
-  const categories = useCategories();
-  const [category, setCategory] = useState<string | undefined>();
-  const list = useTerms(category);
+  const categories = useAllCategories();
+  const [filters, setFilters] = useState<TermFilters>({});
+  const set = (patch: Partial<TermFilters>) => setFilters((f) => ({ ...f, ...patch }));
+  // every filter is a query parameter applied by module chat in SQL (keyset kept, F122 T063)
+  const list = useTerms(filters);
   const [adding, setAdding] = useState(false);
   const [form] = Form.useForm<TermForm>();
   const matchType = Form.useWatch('match_type', form);
-  const names = new Map((categories.data?.data ?? []).map((c) => [c.category_id, c.name]));
+  const names = new Map(categories.items.map((c) => [c.category_id, c.name]));
   const columns: ColumnsType<Term> = [
     { key: 'term', title: t('chatSafety.terms.term'), render: (_, r) => r.term },
     { key: 'category', title: t('chatSafety.terms.category'), render: (_, r) => names.get(r.category_id) ?? '' },
@@ -197,10 +205,37 @@ function Terms({ large, writes }: { large: boolean; writes: Writes }) {
           aria-label={t('chatSafety.terms.category')}
           placeholder={t('chatSafety.terms.allCategories')}
           allowClear
-          value={category}
-          onChange={setCategory}
-          options={(categories.data?.data ?? []).map((c) => ({ value: c.category_id, label: c.name }))}
+          value={filters.categoryId}
+          onChange={(v) => set({ categoryId: v })}
+          options={categories.items.map((c) => ({ value: c.category_id, label: c.name }))}
           style={{ minWidth: '14rem' }}
+        />
+        <SearchSelect
+          aria-label={t('chatSafety.terms.locale')}
+          placeholder={t('chatSafety.terms.allLocales')}
+          allowClear
+          value={filters.locale}
+          onChange={(v) => set({ locale: v })}
+          options={(['vi', 'en'] as const).map((v) => ({ value: v, label: v }))}
+          style={{ minWidth: '8rem' }}
+        />
+        <SearchSelect
+          aria-label={t('chatSafety.terms.matchType')}
+          placeholder={t('chatSafety.terms.allMatchTypes')}
+          allowClear
+          value={filters.matchType}
+          onChange={(v) => set({ matchType: v })}
+          options={MATCH_TYPES.map((v) => ({ value: v, label: t(`chatSafety.matchType.${v}`) }))}
+          style={{ minWidth: '9rem' }}
+        />
+        <SearchSelect
+          aria-label={t('chatSafety.terms.status')}
+          placeholder={t('chatSafety.terms.allStatuses')}
+          allowClear
+          value={filters.status}
+          onChange={(v) => set({ status: v })}
+          options={(['draft', 'published'] as const).map((v) => ({ value: v, label: t(`chatSafety.termStatus.${v}`) }))}
+          style={{ minWidth: '9rem' }}
         />
         {large ? (
           <ActionGate actionKey="action.platform_admin.chat_safety.edit">
@@ -239,7 +274,7 @@ function Terms({ large, writes }: { large: boolean; writes: Writes }) {
           }
         >
           <Form.Item name="category_id" label={t('chatSafety.terms.category')} rules={[{ required: true, message: t('chatSafety.terms.categoryRequired') }]}>
-            <SearchSelect aria-label={t('chatSafety.terms.category')} options={(categories.data?.data ?? []).map((c) => ({ value: c.category_id, label: c.name }))} />
+            <SearchSelect aria-label={t('chatSafety.terms.category')} options={categories.items.map((c) => ({ value: c.category_id, label: c.name }))} />
           </Form.Item>
           <Form.Item name="term" label={t('chatSafety.terms.term')} rules={openapiRules(LIMITS.term, { required: true, t: ops.t })}>
             <Input {...openapiInputProps(LIMITS.term)} autoComplete="off" />

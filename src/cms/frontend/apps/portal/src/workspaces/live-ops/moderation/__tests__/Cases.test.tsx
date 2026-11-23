@@ -6,7 +6,9 @@
 // F122-AC-04 412 → reload message, 409/403 by code with trace id, no automatic retry;
 // F122-AC-05 notify school: school of the case, its students only, summary limits, hidden for tenant `common`;
 // F122-AC-06 platform notifications (overdue / acknowledged filter);
-// F122-AC-24 Safety Moderator: only Kiểm duyệt of E, other workspaces → 403 without loading their chunk;
+// F122-AC-24 Safety Moderator: only Kiểm duyệt of E (+ the read-only catalogue of D, T062), other workspaces → 403 without
+// loading their chunk; F122 T064 tenant filter from listModerationCaseTenants (every page, never listTenants) and the
+// Tenant column from ModerationCase.tenant_name;
 // F122-AC-25 403 PERMISSION_DENIED → 403 page with trace id; internal gateway down → VPN notice;
 // F122-AC-26 maxLength + counters; the same Idempotency-Key on a retry of the same intent.
 import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
@@ -52,7 +54,7 @@ describe('Hàng đợi case (F122-AC-01, AC-06, AC-24)', () => {
   it('filters: module tenant filter (tenant_ids[]), severity, status, assignee, category (maxLength)', async () => {
     const { backend, user } = await renderSafety('/live-ops/moderation-cases', { account: 'sm.antoan' });
     expect(await screen.findByText('TH Demo A')).toBeInTheDocument();
-    await pick(user, 'Lọc tenant', 'TH Demo A (th-demo-a)');
+    await pick(user, 'Lọc tenant', 'TH Demo A');
     await waitFor(() => expect(new URLSearchParams(backend.calls('GET', '/admin/moderation/cases').at(-1)!.search).getAll('tenant_ids')).toEqual([T_A]));
     await pick(user, 'Mức', 'Nghiêm trọng (p1)');
     await pick(user, 'Trạng thái', 'Mới');
@@ -67,10 +69,25 @@ describe('Hàng đợi case (F122-AC-01, AC-06, AC-24)', () => {
     });
   });
 
-  it('F122-AC-24: sm.antoan opening a D or C URL gets the 403 page without the chunk', async () => {
-    const { loaders } = await renderSafety('/platform-admin/chat-safety', { account: 'sm.antoan' });
+  it('F122-AC-24: sm.antoan opening a C URL gets the 403 page without the chunk', async () => {
+    const { loaders } = await renderSafety('/school-lms/clubs', { account: 'sm.antoan' });
     expect(await screen.findByText('Không có quyền truy cập')).toBeInTheDocument();
-    expect(loaders.platform_admin).not.toHaveBeenCalled();
+    expect(loaders.school_lms).not.toHaveBeenCalled();
+  });
+
+  it('F122-AC-01 (T064): the tenant filter lists the tenants having cases (every page of listModerationCaseTenants), never listTenants; Tenant column from tenant_name', async () => {
+    const { backend, user } = await renderSafety('/live-ops/moderation-cases', { account: 'sm.antoan' });
+    expect(await screen.findByText('TH Demo A')).toBeInTheDocument();
+    expect(screen.getByText('THCS Demo B')).toBeInTheDocument();
+    await user.click(screen.getByRole('combobox', { name: 'Lọc tenant' }));
+    // page size 2 → the dropdown walks both pages (cursor) before showing the whole list
+    expect((await screen.findAllByTitle('Tenant chung')).length).toBeGreaterThan(0);
+    const calls = backend.calls('GET', '/admin/moderation/case-tenants');
+    expect(calls.map((c) => new URLSearchParams(c.search).get('cursor'))).toEqual([null, '2']);
+    expect(calls.every((c) => new URLSearchParams(c.search).get('limit') === '100' && c.headers['x-tenant-id'] === undefined)).toBe(true);
+    expect(backend.calls('GET', '/admin/tenants')).toHaveLength(0);
+    await user.click((await screen.findAllByTitle('THCS Demo B')).at(-1)!);
+    await waitFor(() => expect(new URLSearchParams(backend.calls('GET', '/admin/moderation/cases').at(-1)!.search).getAll('tenant_ids')).toEqual([TENANTS.thcsDemoB.tenant_id]));
   });
 
   it('F122-AC-06: school notifications sent by the platform, overdue / acknowledged filters', async () => {

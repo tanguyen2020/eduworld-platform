@@ -8,11 +8,11 @@ import { openapiInputProps, openapiRules, OPS_UI_NS, SearchSelect } from '@eduwo
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActionGate } from '../../../permissions/ActionGate';
-import { LIMITS, SafetyError, TenantName, useTenantNames } from '../../../shared/chatSafety/ui';
+import { LIMITS, SafetyError, TenantName } from '../../../shared/chatSafety/ui';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { ReasonDialog } from '../../../shell/ReasonDialog';
 import { useCreateSanction, useRevokeSanction, useSanctions, type Sanction, type SanctionCreate } from './api';
-import { formatTime, ModerationTenantFilter } from './CasesScreen';
+import { formatTime, ModerationTargetTenant, ModerationTenantFilter, useModerationTenantNames } from './CasesScreen';
 
 const TYPES: SanctionCreate['sanction_type'][] = ['warning', 'mute', 'restrict_text', 'restrict_dm', 'restrict_multiplayer', 'restrict_competition', 'account_lock'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -94,7 +94,7 @@ function CreateSanctionDialog({ onClose }: { onClose: () => void }) {
 
 /** One target tenant (antd Form control): the module tenant filter limited to one value. */
 export function ModerationTenantFilterSingle({ value, onChange }: { value?: string; onChange?: (id: string | undefined) => void }) {
-  return <ModerationTenantFilter value={value ? [value] : []} onChange={(ids) => onChange?.(ids.at(-1))} />;
+  return <ModerationTargetTenant value={value} onChange={onChange} />;
 }
 
 export function SanctionsScreen({ title }: { title: string }) {
@@ -103,7 +103,7 @@ export function SanctionsScreen({ title }: { title: string }) {
   const [userId, setUserId] = useState<string | undefined>();
   const [active, setActive] = useState(true);
   const list = useSanctions({ tenantIds, userId, active: active || undefined });
-  const names = useTenantNames();
+  const names = useModerationTenantNames();
   const revoke = useRevokeSanction();
   const [creating, setCreating] = useState(false);
   const [revoking, setRevoking] = useState<Sanction | null>(null);

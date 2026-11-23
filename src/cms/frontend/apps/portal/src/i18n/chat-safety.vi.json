@@ -22,7 +22,8 @@
       "targetTenantRequired": "Chọn tenant đích.",
       "tenant": "Tenant",
       "tenantFilter": "Lọc tenant",
-      "uuidInvalid": "Mã không hợp lệ (UUID)."
+      "uuidInvalid": "Mã không hợp lệ (UUID).",
+      "reasonRequired": "Nhập lý do."
     },
     "severity": {
       "p1": "Nghiêm trọng (p1)",
@@ -147,7 +148,12 @@
       "sentAt": "Gửi lúc",
       "state": "Trạng thái",
       "students": "Học sinh",
-      "summary": "Tóm tắt"
+      "summary": "Tóm tắt",
+      "period": "Khoảng thời gian",
+      "periodOption": {
+        "last30": "30 ngày gần đây",
+        "all": "Mọi thời gian"
+      }
     },
     "outcome": {
       "parent_contacted": "Đã liên hệ phụ huynh",
@@ -215,7 +221,10 @@
       "updated": "Cập nhật",
       "variants": "Biến thể",
       "variantsHelp": "Gõ rồi Enter; tối đa {{max}} biến thể.",
-      "variantsMax": "Tối đa {{max}} biến thể."
+      "variantsMax": "Tối đa {{max}} biến thể.",
+      "allLocales": "Mọi ngôn ngữ",
+      "allMatchTypes": "Mọi kiểu khớp",
+      "allStatuses": "Mọi trạng thái"
     },
     "matchType": {
       "word": "Từ",
@@ -323,7 +332,10 @@
       "switchOf": "{{step}} — {{level}}",
       "system": "Hệ thống",
       "tab": "Công tắc",
-      "until": "Tự bật lại lúc"
+      "until": "Tự bật lại lúc",
+      "reject": "Từ chối",
+      "rejectTitle": "Từ chối yêu cầu tắt kiểm duyệt",
+      "rejectReason": "Lý do từ chối"
     },
     "switchSource": {
       "manual": "Thủ công",
@@ -332,7 +344,9 @@
     },
     "banner": {
       "title": "Đang tắt kiểm duyệt: {{detail}}",
-      "until": " — đến {{at}}"
+      "until": " — đến {{at}}",
+      "tenantCount": "{{count}} tenant đang tắt ít nhất một bước",
+      "openSwitches": "Xem công tắc kiểm duyệt"
     },
     "policy": {
       "alwaysOnReason": "Chat trong trận, đội và nhóm chơi luôn có; chỉ siết tốc độ, slow mode ≤ 10 giây và độ nghiêm.",
@@ -384,7 +398,13 @@
       "members": "Thành viên",
       "name": "Tên club",
       "status": "Trạng thái",
-      "type": "Loại"
+      "type": "Loại",
+      "membersOf": "Thành viên club \"{{name}}\"",
+      "nickname": "Biệt danh",
+      "role": "Vai trò",
+      "remove": "Gỡ thành viên",
+      "removeTitle": "Gỡ \"{{name}}\" khỏi club",
+      "removeReason": "Lý do gỡ"
     },
     "clubType": {
       "school_club": "CLB trường",
@@ -397,6 +417,11 @@
       "active": "Đang hoạt động",
       "locked": "Đã khóa",
       "archived": "Đã lưu trữ"
+    },
+    "clubRole": {
+      "owner": "Chủ club",
+      "officer": "Cán sự",
+      "member": "Thành viên"
     }
   }
 }

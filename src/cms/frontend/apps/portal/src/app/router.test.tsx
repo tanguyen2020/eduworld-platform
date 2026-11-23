@@ -8,7 +8,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { WORKSPACE_CATALOG } from '../generated/menu-catalog';
 import { WORKSPACE_FOLDERS } from '../permissions/workspaceRegistry';
-import { MockPortalBackend, renderPortal, stopPortals, TENANTS } from '../test/portal-harness';
+import { MockPortalBackend, renderPortal, SHELL_PATHS, stopPortals, TENANTS } from '../test/portal-harness';
 
 afterEach(() => stopPortals());
 
@@ -33,7 +33,8 @@ describe('portal routes', () => {
     const { loaders } = await renderPortal({ url: '/game-ops/quests', backend });
     expect(await screen.findByText('Không có quyền truy cập')).toBeInTheDocument();
     for (const k of ['game_ops', 'live_ops', 'platform_admin'] as const) expect(loaders[k]).not.toHaveBeenCalled();
-    expect(backend.requests.every((r) => r.path.startsWith('/auth/') || r.path.startsWith('/me/'))).toBe(true);
+    // the shell itself (session, permissions, the moderation banner — SHELL_PATHS) is the only caller
+    expect(backend.requests.every((r) => r.path.startsWith('/auth/') || r.path.startsWith('/me/') || SHELL_PATHS.includes(r.path))).toBe(true);
   });
 
   it('unknown path inside the shell → not found', async () => {

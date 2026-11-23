@@ -259,6 +259,8 @@ export interface paths {
          * @description `platform` luôn có (mọi trang); `tenants` là một trang keyset theo `tenant_id` (`limit`/`cursor`) của các tenant của
          *     `tenant_ids` (System Admin, đọc liên tenant có audit) — không có `tenant_ids` thì rỗng; chỉ các tenant của trang được đọc
          *     từ DB (API_DESIGN §5). Mỗi trạng thái kèm các yêu cầu tắt đang `pending_approval` của cấp đó (`pending_requests`).
+         *     Không có `tenant_ids`: trả thêm `disabled_tenant_count` = số tenant đang có ít nhất một giá trị tắt còn hiệu lực ở cấp
+         *     tenant (`expires_at` chưa qua), đếm trong SQL, không liệt kê tenant (banner System Admin, F122 T065).
          */
         get: operations["listModerationSwitches"];
         /**
@@ -319,6 +321,32 @@ export interface paths {
          *     mọi instance áp dụng trong ≤ 60 giây.
          */
         post: operations["approveModerationSwitchChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/chat/moderation-switches/requests/{request_id}:reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Từ chối yêu cầu tắt công tắc kiểm duyệt (System Admin thứ hai)
+         * @description Chỉ System Admin (`chat.policy.toggle`) **khác** người đề xuất (người đề xuất tự từ chối →
+         *     `403 MODERATION_SWITCH_SELF_APPROVAL`, có audit từ chối quyền). `reason` bắt buộc (1–500 ký tự, không chỉ khoảng trắng).
+         *     `If-Match` = `version` của yêu cầu (`W/"<version>"`; thiếu → `428`, lệch → `412 VERSION_MISMATCH`). Yêu cầu của tenant:
+         *     gửi `X-Tenant-Id` = tenant của yêu cầu (không có → chỉ tìm yêu cầu platform); không thấy → `404`. Yêu cầu không còn
+         *     `pending_approval` hoặc đã quá `request_expires_at` → `409 CONFLICT`. Yêu cầu chuyển `rejected` (`decided_at`), giá trị
+         *     hiệu lực không đổi, không ghi `moderation_switch_changes`; audit `chat.moderation_switch_request.rejected` (người đề xuất,
+         *     người từ chối, lý do) và phát `moderation_switch.change_rejected` cùng transaction (F122 T060, ADR-0078).
+         */
+        post: operations["rejectModerationSwitchChange"];
         delete?: never;
         options?: never;
         head?: never;
@@ -430,7 +458,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách category từ nhạy cảm của platform */
+        /**
+         * Danh sách category từ nhạy cảm của platform
+         * @description Một trang keyset `(code, category_id)` trong SQL (`limit`/`cursor`, API_DESIGN §5 — owner 2026-11-23).
+         */
         get: operations["listSensitiveCategories"];
         put?: never;
         /** Tạo category từ nhạy cảm của platform */
@@ -468,7 +499,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách term (platform; term của tenant khi lọc tenant_ids) */
+        /**
+         * Danh sách term (platform; term của tenant khi lọc tenant_ids)
+         * @description Mọi bộ lọc áp trong SQL; phân trang keyset (`created_at`, `term_id`) giữ nguyên (F122 T063).
+         */
         get: operations["listSensitiveTerms"];
         put?: never;
         /** Thêm term vào danh mục platform (trạng thái nháp đến khi publish) */
@@ -1055,6 +1089,30 @@ export interface paths {
         };
         /** Lịch sử đăng nhập game liên tenant (System Admin) */
         get: operations["listLoginEventsCrossTenant"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/moderation/case-tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tenant đang có case kiểm duyệt (nguồn bộ lọc tenant của Platform Safety Team; moderation.case.read)
+         * @description Chỉ gateway nội bộ + role platform (ADR-0027, ADR-0072 §4). Không gửi `X-Tenant-Id`. Liệt kê các tenant có ít nhất một
+         *     case chưa xóa, kèm `tenant_name` chiếu từ dữ liệu tham chiếu `ref.tenants` của module chat (event `tenant.created`/
+         *     `tenant.updated` của identity — không gọi identity đồng bộ). Đọc liên tenant chỉ qua
+         *     `tenancy.Bypass(ctx, "moderation_case")` (audit + metric). Phân trang keyset theo `tenant_id` trong SQL (F122 T064).
+         *     Không thay `listTenants` (Safety Moderator không có quyền đó — R20).
+         */
+        get: operations["listModerationCaseTenants"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8282,7 +8340,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Category platform, trạng thái bật/tắt trong tenant và trạng thái công tắc hiệu lực (cho banner) */
+        /**
+         * Category platform, trạng thái bật/tắt trong tenant và trạng thái công tắc hiệu lực (cho banner)
+         * @description Category là một trang keyset `(code, category_id)` trong SQL (`limit`/`cursor`, API_DESIGN §5 — owner 2026-11-23); `moderation_switches` có ở mọi trang.
+         */
         get: operations["listTenantSensitiveCategories"];
         put?: never;
         post?: never;
@@ -8536,6 +8597,51 @@ export interface paths {
         head?: never;
         /** Cập nhật cài đặt tenant (JSON Merge Patch, If-Match) */
         patch: operations["updateTenantSettings"];
+        trace?: never;
+    };
+    "/tenant/social/clubs/{club_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Thành viên club của trường cho nhân sự (social.club.approve trong phạm vi trường của grant; nickname, vai trò)
+         * @description Route nhân sự (portal). Phạm vi lấy từ UserRole: grant `social.club.approve` cấp trường chỉ thấy club của trường đó;
+         *     cấp tenant thấy mọi trường. Club của trường khác hoặc không tồn tại → `404` (không lộ sự tồn tại). Thành viên đang
+         *     hoạt động, phân trang keyset (`joined_at`, `user_id`) trong SQL. Chỉ nickname (R16), không có nội dung chat (F122 T061).
+         */
+        get: operations["listSchoolClubMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenant/social/clubs/{club_id}/members/{user_id}:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Nhân sự trường gỡ thành viên khỏi club (social.club.approve, lý do bắt buộc)
+         * @description Route nhân sự (portal), phạm vi như `listSchoolClubMembers` (trường khác → `404`). Không gỡ được chủ club (`404`;
+         *     lưu trữ club thay thế). Cùng một transaction: kết thúc membership (`left_reason = removed`), giảm `member_count`, gỡ khỏi
+         *     channel `team` cố định của club, audit `club.member_removed` (kèm lý do, người gỡ) và phát `club.member_left`
+         *     (`reason = removed`) như gỡ thành viên của F120. Gỡ lần hai (cùng Idempotency-Key) trả lại kết quả cũ (F122 T061).
+         */
+        post: operations["removeSchoolClubMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/tenant/student-cleanup/exclusions": {
@@ -13303,6 +13409,13 @@ export interface components {
             /** @enum {string} */
             target_type?: "message" | "user";
             tenant_id: components["schemas"]["Uuid"];
+            /** @description Tên tenant chiếu từ ref.tenants của module chat (tên; chưa có tên thì mã tenant) — không gọi identity đồng bộ (F122 T064) */
+            tenant_name?: string;
+            /**
+             * @description Loại tenant chiếu từ ref.tenants (tenant common → không gửi thông báo trường, Safety Team liên hệ trực tiếp; F122 T064)
+             * @enum {string}
+             */
+            tenant_type?: "school" | "unit" | "common";
             updated_at?: components["schemas"]["Timestamp"];
             /** @description Giá trị If-Match của actOnModerationCase (ETag W/"<version>") */
             version?: number;
@@ -13374,6 +13487,17 @@ export interface components {
          * @enum {string}
          */
         ModerationCaseStatus: "open" | "in_review" | "escalated" | "resolved" | "reopened";
+        /** @description Một tenant có case kiểm duyệt (listModerationCaseTenants, F122 T064) */
+        ModerationCaseTenant: {
+            tenant_id: components["schemas"]["Uuid"];
+            /** @description Tên tenant chiếu từ ref.tenants của module chat (tên; chưa có tên thì mã tenant); vắng mặt khi tenant chưa được chiếu */
+            tenant_name?: string;
+            /**
+             * @description Loại tenant chiếu từ ref.tenants (vắng mặt khi chưa chiếu)
+             * @enum {string}
+             */
+            tenant_type?: "school" | "unit" | "common";
+        };
         /**
          * @description Bước có công tắc (MODERATION §12.1). `pii` và grooming luôn chạy, không có công tắc (ADR-0078).
          * @enum {string}
@@ -13417,6 +13541,8 @@ export interface components {
             status: "pending_approval" | "approved" | "rejected" | "expired";
             steps: components["schemas"]["ModerationSwitchSteps"];
             tenant_id?: components["schemas"]["Uuid"] | null;
+            /** @description Giá trị If-Match của rejectModerationSwitchChange (`W/"<version>"`) */
+            version?: number;
         };
         ModerationSwitchState: {
             /** @description Giá trị đặt ở cấp này (null = kế thừa platform) */
@@ -17319,6 +17445,8 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /** @description Chỉ khi không có `tenant_ids` — số tenant đang tắt ít nhất một bước ở cấp tenant (không liệt kê) */
+                        disabled_tenant_count?: number;
                         page: components["schemas"]["PageInfo"];
                         platform: components["schemas"]["ModerationSwitchState"];
                         tenants: components["schemas"]["ModerationSwitchState"][];
@@ -17449,6 +17577,56 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    rejectModerationSwitchChange: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                request_id: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Lý do từ chối */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Yêu cầu đã bị từ chối (`status = rejected`); trạng thái hiệu lực không đổi */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModerationSwitchRequest"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     getPlatformChatPolicy: {
@@ -17676,7 +17854,11 @@ export interface operations {
     };
     listSensitiveCategories: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -17691,6 +17873,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["SensitiveTermCategory"][];
+                        page: components["schemas"]["PageInfo"];
                     };
                 };
             };
@@ -17811,7 +17994,10 @@ export interface operations {
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 limit?: components["parameters"]["Limit"];
+                locale?: "vi" | "en";
+                match_type?: components["schemas"]["SensitiveMatchType"];
                 q?: string;
+                status?: "draft" | "published";
                 /**
                  * @description Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
                  *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
@@ -19394,6 +19580,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LoginEventPage"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    listModerationCaseTenants: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ModerationCaseTenant"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
                 };
             };
             401: components["responses"]["Unauthenticated"];
@@ -37216,7 +37431,11 @@ export interface operations {
     };
     listTenantSensitiveCategories: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
             header?: {
                 /**
                  * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
@@ -37239,6 +37458,7 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["TenantSensitiveCategory"][];
                         moderation_switches: components["schemas"]["ModerationSwitchState"];
+                        page: components["schemas"]["PageInfo"];
                     };
                 };
             };
@@ -37569,6 +37789,8 @@ export interface operations {
         parameters: {
             query?: {
                 acknowledged?: boolean;
+                /** @description Chỉ thông báo gửi từ thời điểm này trở đi (lọc trong SQL; portal mặc định bây giờ − 30 ngày, F122 T066) */
+                created_from?: string;
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 limit?: components["parameters"]["Limit"];
@@ -37894,6 +38116,91 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    listSchoolClubMembers: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                club_id: components["parameters"]["ClubIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClubMember"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    removeSchoolClubMember: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                club_id: components["parameters"]["ClubIdPath"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Lý do gỡ (audit) */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Đã gỡ */
+            204: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["ValidationFailed"];
         };
     };

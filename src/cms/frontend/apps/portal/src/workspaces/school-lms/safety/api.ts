@@ -18,6 +18,7 @@ export type EffectivePolicy = Schemas['EffectiveChatPolicy'];
 export type ChannelType = Schemas['ChannelType'];
 export type TenantCategory = Schemas['TenantSensitiveCategory'];
 export type Club = Schemas['Club'];
+export type ClubMember = Schemas['ClubMember'];
 
 interface Page<T> {
   data: T[];
@@ -31,10 +32,15 @@ export const POLICY_CHANNELS: ChannelType[] = ['direct', 'world', 'area', 'team'
 /** Always-on gameplay chat (ADR-0020 §6): no on/off, no hours; only rate, slow mode ≤ 10 s, strictness tighten. */
 export const ALWAYS_ON: ChannelType[] = ['match', 'team', 'party'];
 
-export function useSchoolNotifications(f: { acknowledged?: boolean; schoolId?: string }) {
+/** listSchoolSafetyNotifications; `createdFrom` is filtered by module chat in SQL (F122 T066). */
+export function useSchoolNotifications(f: { acknowledged?: boolean; schoolId?: string; createdFrom?: string }) {
   const api = useApi();
   const scope = useSchoolLmsScope();
-  const query = { ...(f.acknowledged != null ? { acknowledged: f.acknowledged } : {}), ...(f.schoolId ? { school_id: f.schoolId } : {}) };
+  const query = {
+    ...(f.acknowledged != null ? { acknowledged: f.acknowledged } : {}),
+    ...(f.schoolId ? { school_id: f.schoolId } : {}),
+    ...(f.createdFrom ? { created_from: f.createdFrom } : {}),
+  };
   return useCursorPages<SchoolNotification>(
     qk('safety-notifications', scope, query),
     (cursor) => api.call<Page<SchoolNotification>>(api.client.GET('/tenant/safety/school-notifications', { params: { query: { ...query, ...pageQuery(cursor) } }, headers: scope.headers })),
@@ -122,14 +128,15 @@ export function usePutSchoolPolicy(schoolId: string | undefined) {
 }
 
 /** listTenantSensitiveCategories (read only for the tenant: names, severity, state — never a term). */
+/** listTenantSensitiveCategories (read only table): cursor pages, keyset in SQL (owner rule 2026-11-23). */
 export function useTenantCategories(enabled: boolean) {
   const api = useApi();
   const scope = useSchoolLmsScope();
-  return useQuery({
-    queryKey: qk('chat-categories', scope),
-    enabled: enabled && scope.ready,
-    queryFn: () => api.call<{ data: TenantCategory[] }>(api.client.GET('/tenant/chat/categories', { headers: scope.headers })),
-  });
+  return useCursorPages<TenantCategory>(
+    qk('chat-categories', scope),
+    (cursor) => api.call<Page<TenantCategory>>(api.client.GET('/tenant/chat/categories', { params: { query: pageQuery(cursor) }, headers: scope.headers })),
+    { enabled: enabled && scope.ready },
+  );
 }
 
 export function useClubs(f: { schoolId?: string; status?: Schemas['ClubStatus'] }) {
@@ -140,6 +147,43 @@ export function useClubs(f: { schoolId?: string; status?: Schemas['ClubStatus'] 
     qk('clubs', scope, query),
     (cursor) => api.call<Page<Club>>(api.client.GET('/social/clubs', { params: { query: { ...query, ...pageQuery(cursor) } }, headers: scope.headers })),
     { enabled: scope.ready && !!f.schoolId },
+  );
+}
+
+/** listSchoolClubMembers (F122 T061): members of a club of the school, cursor pages in SQL ("Tải thêm"). */
+export function useClubMembers(clubId: string | undefined) {
+  const api = useApi();
+  const scope = useSchoolLmsScope();
+  return useCursorPages<ClubMember>(
+    qk('club-members', scope, clubId),
+    (cursor) =>
+      api.call<Page<ClubMember>>(
+        api.client.GET('/tenant/social/clubs/{club_id}/members', { params: { path: { club_id: clubId! }, query: pageQuery(cursor) }, headers: scope.headers }),
+      ),
+    { enabled: scope.ready && !!clubId },
+  );
+}
+
+/** removeSchoolClubMember (F122 T061): reason required, Idempotency-Key per intent; reloads members and clubs. */
+export function useRemoveClubMember() {
+  const api = useApi();
+  const scope = useSchoolLmsScope();
+  const qc = useQueryClient();
+  return useIdempotentMutation(
+    ({ clubId, userId, reason }: { clubId: string; userId: string; reason: string }, intent) =>
+      api.call(
+        api.client.POST('/tenant/social/clubs/{club_id}/members/{user_id}:remove', {
+          params: { path: { club_id: clubId, user_id: userId } },
+          body: { reason },
+          headers: { ...intent, ...scope.headers },
+        }),
+      ),
+    {
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: ['school-lms', 'club-members'] });
+        void qc.invalidateQueries({ queryKey: ['school-lms', 'clubs'] });
+      },
+    },
   );
 }
 

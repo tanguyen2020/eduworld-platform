@@ -2,7 +2,7 @@
 // (ChatPolicyPanel) and "Nhóm từ" of the tenant, read only — name, description, severity, state; no term of the platform
 // catalogue and no write button (the Safety Team changes them on request, ADR-0072). Each tab shows only when the user
 // holds its permission (display only; the backend authorizes every call).
-import { Table, Tabs, Tag } from 'antd';
+import { Button, Table, Tabs, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
 import { usePermissions } from '../../../permissions/usePermissions';
@@ -28,7 +28,12 @@ function CategoriesReadOnly() {
   return (
     <>
       {list.error ? <SafetyError error={list.error} /> : null}
-      <Table rowKey="code" columns={columns} dataSource={list.data?.data ?? []} loading={list.isFetching} pagination={false} scroll={{ x: true }} />
+      <Table rowKey="code" columns={columns} dataSource={list.rows} loading={list.isFetching} pagination={false} scroll={{ x: true }} />
+      {list.hasNextPage ? (
+        <Button onClick={() => list.fetchNextPage()} loading={list.isFetchingNextPage}>
+          {t('chatSafety.common.loadMore')}
+        </Button>
+      ) : null}
     </>
   );
 }

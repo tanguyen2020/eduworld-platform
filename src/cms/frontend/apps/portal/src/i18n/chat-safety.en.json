@@ -22,7 +22,8 @@
       "targetTenantRequired": "Pick the target tenant.",
       "tenant": "Tenant",
       "tenantFilter": "Tenant filter",
-      "uuidInvalid": "Invalid id (UUID)."
+      "uuidInvalid": "Invalid id (UUID).",
+      "reasonRequired": "Enter a reason."
     },
     "severity": {
       "p1": "Critical (p1)",
@@ -147,7 +148,12 @@
       "sentAt": "Sent at",
       "state": "State",
       "students": "Students",
-      "summary": "Summary"
+      "summary": "Summary",
+      "period": "Period",
+      "periodOption": {
+        "last30": "Last 30 days",
+        "all": "All time"
+      }
     },
     "outcome": {
       "parent_contacted": "Parent contacted",
@@ -215,7 +221,10 @@
       "updated": "Updated",
       "variants": "Variants",
       "variantsHelp": "Type then Enter; at most {{max}} variants.",
-      "variantsMax": "At most {{max}} variants."
+      "variantsMax": "At most {{max}} variants.",
+      "allLocales": "All languages",
+      "allMatchTypes": "All match types",
+      "allStatuses": "All statuses"
     },
     "matchType": {
       "word": "Word",
@@ -323,7 +332,10 @@
       "switchOf": "{{step}} — {{level}}",
       "system": "System",
       "tab": "Switches",
-      "until": "Back on at"
+      "until": "Back on at",
+      "reject": "Reject",
+      "rejectTitle": "Reject the request to turn moderation off",
+      "rejectReason": "Reason for rejecting"
     },
     "switchSource": {
       "manual": "Manual",
@@ -332,7 +344,9 @@
     },
     "banner": {
       "title": "Moderation turned off: {{detail}}",
-      "until": " — until {{at}}"
+      "until": " — until {{at}}",
+      "tenantCount": "{{count}} tenant(s) with at least one step off",
+      "openSwitches": "Open the moderation switches"
     },
     "policy": {
       "alwaysOnReason": "Match, team and party chat are always on; only rate, slow mode ≤ 10 s and strictness can be tightened.",
@@ -384,7 +398,13 @@
       "members": "Members",
       "name": "Club",
       "status": "Status",
-      "type": "Type"
+      "type": "Type",
+      "membersOf": "Members of club \"{{name}}\"",
+      "nickname": "Nickname",
+      "role": "Role",
+      "remove": "Remove member",
+      "removeTitle": "Remove \"{{name}}\" from the club",
+      "removeReason": "Reason for removing"
     },
     "clubType": {
       "school_club": "School club",
@@ -397,6 +417,11 @@
       "active": "Active",
       "locked": "Locked",
       "archived": "Archived"
+    },
+    "clubRole": {
+      "owner": "Owner",
+      "officer": "Officer",
+      "member": "Member"
     }
   }
 }

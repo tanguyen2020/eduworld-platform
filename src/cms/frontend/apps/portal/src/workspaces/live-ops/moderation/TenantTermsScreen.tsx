@@ -110,7 +110,7 @@ function Terms({ tenantId }: { tenantId: string }) {
           }
         >
           <Form.Item name="category_id" label={t('chatSafety.terms.category')} rules={[{ required: true, message: t('chatSafety.terms.categoryRequired') }]}>
-            <SearchSelect aria-label={t('chatSafety.terms.category')} options={(categories.data?.data ?? []).map((c) => ({ value: c.category_id, label: c.name }))} />
+            <SearchSelect aria-label={t('chatSafety.terms.category')} options={categories.items.map((c) => ({ value: c.category_id, label: c.name }))} truncated={categories.truncated} />
           </Form.Item>
           <Form.Item name="term" label={t('chatSafety.terms.term')} rules={openapiRules(LIMITS.term, { required: true, t: ops.t })}>
             <Input {...openapiInputProps(LIMITS.term)} autoComplete="off" />
@@ -172,7 +172,12 @@ function Categories({ tenantId, list }: { tenantId: string; list: ReturnType<typ
     <Flex vertical gap="middle">
       {list.error ? <SafetyError error={list.error} /> : null}
       {toggle.error ? <ProblemMessage error={toggle.error} /> : null}
-      <Table rowKey="code" columns={columns} dataSource={list.data?.data ?? []} loading={list.isFetching} pagination={false} scroll={{ x: true }} />
+      <Table rowKey="code" columns={columns} dataSource={list.rows} loading={list.isFetching} pagination={false} scroll={{ x: true }} />
+      {list.hasNextPage ? (
+        <Button onClick={() => list.fetchNextPage()} loading={list.isFetchingNextPage}>
+          {t('chatSafety.common.loadMore')}
+        </Button>
+      ) : null}
       <ReasonDialog
         open={!!target}
         title={target?.enabled ? t('chatSafety.categories.enable') : t('chatSafety.categories.disable')}

@@ -6,7 +6,9 @@
 // F122-AC-17 tenant categories read only (no term, no write button);
 // F122-AC-21/22/28 school chat policy: per channel type, limits from above, "Kế thừa", always-on lock, no class/grade/real
 // name control, preset for the whole school, If-Match + reason, errors on the channel card;
-// F122-AC-23 clubs of the school: approve/archive with confirmation + Idempotency-Key, no chat screen;
+// F122-AC-23 clubs of the school: approve/archive with confirmation + Idempotency-Key, no chat screen; members of a club
+// (listSchoolClubMembers, cursor pages) and "Gỡ thành viên" (removeSchoolClubMember: reason, confirmation, Idempotency-Key) — T061;
+// F122-AC-18 period: the list asks for the last 30 days (created_from, filtered in SQL) by default — T066;
 // F122-AC-29 menu/action turned off → hidden; 403 FEATURE_DISABLED → notice + permissions reloaded.
 import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -27,7 +29,8 @@ describe('Thông báo an toàn của trường (F122-AC-18, AC-19, AC-20)', () =
   it('list of the tenant (pending by default), detail with grade and no chat area, menu badge; acknowledge with outcome + note', async () => {
     const { backend, user, state } = await renderSafety('/school-lms/safety-notifications', { account: 'ad.truong.a' });
     const nav = await screen.findByRole('navigation', { name: 'Menu điều hướng' });
-    expect(await within(nav).findByTestId('safety-notifications-badge')).toHaveTextContent('1');
+    // the badge counts every notification waiting for an acknowledgement, older than 30 days included (Clarifications 2026-11-24)
+    expect(await within(nav).findByTestId('safety-notifications-badge')).toHaveTextContent('2');
     const first = backend.calls('GET', '/tenant/safety/school-notifications').find((r) => new URLSearchParams(r.search).get('limit') !== '50' || true)!;
     expect(first.headers['x-tenant-id']).toBe(T_A);
     expect(await screen.findByText(/Nguyễn An \(Khối 3\)/)).toBeInTheDocument();
@@ -56,6 +59,20 @@ describe('Thông báo an toàn của trường (F122-AC-18, AC-19, AC-20)', () =
     expect(ack.body).toEqual({ contact_outcome: 'parent_contacted', note: 'Đã gọi điện cho mẹ học sinh' });
     expect(state.schoolNotifications[0]!.school_ack_at).toBeTruthy();
     expect(await screen.findByText('Đã xác nhận.')).toBeInTheDocument();
+  });
+
+  it('F122-AC-18 (T066): the list asks the server for the last 30 days (created_from); "Mọi thời gian" drops it', async () => {
+    const { backend, user } = await renderSafety('/school-lms/safety-notifications', { account: 'ad.truong.a' });
+    expect(await screen.findByText(/Nguyễn An \(Khối 3\)/)).toBeInTheDocument();
+    const listCalls = () => backend.calls('GET', '/tenant/safety/school-notifications').filter((r) => new URLSearchParams(r.search).get('limit') !== '50' || new URLSearchParams(r.search).has('created_from'));
+    const from = new URLSearchParams(listCalls().at(-1)!.search).get('created_from');
+    expect(from).toBeTruthy();
+    const days = (Date.now() - Date.parse(from!)) / 86_400_000;
+    expect(days).toBeGreaterThan(29.99);
+    expect(days).toBeLessThan(30.01);
+    expect(screen.queryByText('Vụ việc cũ hơn 30 ngày')).toBeNull();
+    await pick(user, 'Khoảng thời gian', 'Mọi thời gian');
+    await waitFor(() => expect(new URLSearchParams(backend.calls('GET', '/tenant/safety/school-notifications').at(-1)!.search).has('created_from')).toBe(false));
   });
 
   it('409 CONFLICT → "Thông báo đã được xác nhận" and the list is reloaded', async () => {
@@ -183,6 +200,58 @@ describe('Club của trường (F122-AC-23)', () => {
     await user.click(within(await screen.findByRole('dialog', { name: /Lưu trữ club "CLB Cờ vua"/ })).getByRole('button', { name: 'Lưu trữ' }));
     await waitFor(() => expect(backend.calls('POST', `/social/clubs/${CS.clubActive}:archive`)).toHaveLength(1));
     expect(screen.queryByText(/tin nhắn|Xem chat/i)).toBeNull();
+  });
+});
+
+describe('Thành viên club (F122-AC-23, T061)', () => {
+  it('members of a club (cursor pages, nicknames only) and "Gỡ thành viên" with reason, confirmation and Idempotency-Key; never the owner', async () => {
+    const { backend, user, state } = await renderSafety('/school-lms/clubs', { account: 'ad.truong.a' });
+    expect(await screen.findByText('Nhà thám hiểm')).toBeInTheDocument();
+    await pick(user, 'Trạng thái', 'Đang hoạt động');
+    const row = (await screen.findByText('CLB Cờ vua')).closest('tr')!;
+    await user.click(within(row).getByRole('button', { name: 'Thành viên' }));
+    const panel = await screen.findByRole('dialog', { name: /Thành viên club "CLB Cờ vua"/ });
+    expect(await within(panel).findByText('CaVang')).toBeInTheDocument();
+    const members = `/tenant/social/clubs/${CS.clubActive}/members`;
+    expect(backend.calls('GET', members)[0]!.headers['x-tenant-id']).toBe(T_A);
+    // page size 2 → "Tải thêm" brings the third member with the cursor
+    expect(within(panel).queryByText('ThoNau')).toBeNull();
+    await user.click(within(panel).getByRole('button', { name: 'Tải thêm' }));
+    expect(await within(panel).findByText('ThoNau')).toBeInTheDocument();
+    expect(new URLSearchParams(backend.calls('GET', members).at(-1)!.search).get('cursor')).toBe('2');
+    // the owner cannot be removed here
+    const ownerRow = within(panel).getByText('CaVang').closest('tr')!;
+    expect(within(ownerRow).queryByRole('button', { name: 'Gỡ thành viên' })).toBeNull();
+    const binhRow = within(panel).getByText('MeoCon').closest('tr')!;
+    await user.click(within(binhRow).getByRole('button', { name: 'Gỡ thành viên' }));
+    const confirm = await within(panel).findByRole('group', { name: /Gỡ "MeoCon" khỏi club/ });
+    const reason = within(confirm).getByLabelText('Lý do gỡ');
+    expect(reason).toHaveAttribute('maxlength', '500');
+    await user.click(within(confirm).getByRole('button', { name: 'Gỡ thành viên' }));
+    expect(await within(confirm).findByText(/Nhập lý do/)).toBeInTheDocument();
+    const path = `/tenant/social/clubs/${CS.clubActive}/members/${CS.memberBinh}:remove`;
+    expect(backend.calls('POST', path)).toHaveLength(0);
+    fireEvent.change(reason, { target: { value: 'Vi phạm nội quy club nhiều lần' } });
+    await user.click(within(confirm).getByRole('button', { name: 'Gỡ thành viên' }));
+    await waitFor(() => expect(backend.calls('POST', path)).toHaveLength(1));
+    const call = backend.calls('POST', path)[0]!;
+    expect(call.headers['idempotency-key']).toBeTruthy();
+    expect(call.headers['x-tenant-id']).toBe(T_A);
+    expect(call.body).toEqual({ reason: 'Vi phạm nội quy club nhiều lần' });
+    expect(state.clubMembers[CS.clubActive]!.map((m) => m.nickname)).toEqual(['CaVang', 'ThoNau']);
+    await waitFor(() => expect(within(panel).queryByText('MeoCon')).toBeNull());
+    expect(document.body.textContent).not.toMatch(/Nguyễn|tin nhắn|Xem chat/);
+  });
+
+  it('club approve action off → the members are listed but there is no "Gỡ thành viên"', async () => {
+    const { user } = await renderSafety('/school-lms/clubs', { account: 'ad.truong.a', disabledActions: ['action.school_lms.clubs.approve'] });
+    expect(await screen.findByText('Nhà thám hiểm')).toBeInTheDocument();
+    await pick(user, 'Trạng thái', 'Đang hoạt động');
+    const row = (await screen.findByText('CLB Cờ vua')).closest('tr')!;
+    await user.click(within(row).getByRole('button', { name: 'Thành viên' }));
+    const panel = await screen.findByRole('dialog', { name: /Thành viên club "CLB Cờ vua"/ });
+    expect(await within(panel).findByText('MeoCon')).toBeInTheDocument();
+    expect(within(panel).queryByRole('button', { name: 'Gỡ thành viên' })).toBeNull();
   });
 });
 

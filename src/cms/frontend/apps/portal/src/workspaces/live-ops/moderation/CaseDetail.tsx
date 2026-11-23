@@ -12,7 +12,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ActionGate } from '../../../permissions/ActionGate';
 import { useMe } from '../../../shared/api/hooks/useMe';
 import { ApiError } from '../../../shared/api/middleware/problem';
-import { LIMITS, SafetyError, SeverityTag, TenantName, useTenantNames } from '../../../shared/chatSafety/ui';
+import { LIMITS, SafetyError, SeverityTag } from '../../../shared/chatSafety/ui';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { useActOnCase, useAssignCase, useCase, useCaseMessages, type CaseMessage, type ModerationAction, type ModerationCaseDetail } from './api';
 import { formatTime } from './CasesScreen';
@@ -191,20 +191,20 @@ export function CaseDetail() {
   const { caseId = '' } = useParams();
   const q = useCase(caseId);
   const me = useMe();
-  const names = useTenantNames();
   const [notify, setNotify] = useState(false);
   const c = q.data;
   const assign = useAssignCase({ case_id: caseId, tenant_id: c?.tenant_id ?? '' });
   if (q.error) return <SafetyError error={q.error} />;
   if (!c) return <Card loading />;
-  const common = names.get(c.tenant_id)?.tenant_type === 'common';
+  // tenant name and type projected by module chat on the case (F122 T064): a case of the tenant common is never notified
+  const common = c.tenant_type === 'common';
   return (
     <Flex vertical gap="middle">
       <Link to="..">{t('chatSafety.case.back')}</Link>
       <Card size="small" title={t('chatSafety.case.title', { id: c.case_id.slice(-8) })}>
         <Descriptions size="small" column={{ xs: 1, md: 2 }}>
           <Descriptions.Item label={t('chatSafety.common.tenant')}>
-            <TenantName id={c.tenant_id} names={names} />
+            {c.tenant_name ?? <Typography.Text code>{c.tenant_id}</Typography.Text>}
           </Descriptions.Item>
           <Descriptions.Item label={t('chatSafety.cases.severity')}>
             <SeverityTag value={c.severity} />

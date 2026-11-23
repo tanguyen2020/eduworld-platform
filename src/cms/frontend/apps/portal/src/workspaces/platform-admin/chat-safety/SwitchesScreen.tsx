@@ -3,7 +3,8 @@
 // grooming always run ("Luôn bật", no switch); a step turned off by the platform is locked on the tenant rows with a note.
 // Turning anything off opens a confirmation stating the risk for students aged 6–15, with a mandatory reason (≥ 10, counter)
 // and a mandatory `expires_at` within `moderation_switch_max_duration`; the change becomes a request "Chờ phê duyệt" that
-// another System Admin approves (the proposer never sees the Approve button). Errors are shown by `code`;
+// another System Admin approves or rejects with a reason (rejectModerationSwitchChange, F122 T060; the proposer never sees
+// the Approve/Reject buttons). Errors are shown by `code`;
 // `MODERATION_SWITCH_REASON_REQUIRED` marks the reason field. History tab: before/after, reason, expiry, actor, source.
 import { Alert, Button, Flex, Form, Input, Modal, Switch, Table, Tabs, Tag, Typography, theme } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -18,7 +19,7 @@ import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { TenantFilter } from '../../../shell/TenantControls';
 import { useMediaQuery } from '../../../shell/useMediaQuery';
 import { formatTime } from '../ui';
-import { useApproveSwitch, useSetSwitches, useSwitches, useSwitchHistory, type Steps, type SwitchChange, type SwitchRequest, type SwitchState } from './api';
+import { useApproveSwitch, useRejectSwitch, useSetSwitches, useSwitches, useSwitchHistory, type Steps, type SwitchChange, type SwitchRequest, type SwitchState } from './api';
 
 export const STEPS: (keyof Steps)[] = ['sensitive_terms', 'spam', 'bullying', 'async_analysis'];
 /** moderation_switch_max_duration (CONFIG_DEFAULTS, ADR-0078): the server refuses a longer expiry anyway. */
@@ -102,9 +103,37 @@ function SwitchConfirmModal({ change, onClose }: { change: Change; onClose: () =
   );
 }
 
+/** Rejection of a pending request: reason required (1–500, counter), errors by `code`, no automatic retry. */
+function RejectDialog({ request, onClose }: { request: SwitchRequest; onClose: () => void }) {
+  const { t } = useTranslation();
+  const ops = useTranslation(OPS_UI_NS);
+  const [form] = Form.useForm<{ reason: string }>();
+  const reject = useRejectSwitch();
+  const submit = (v: { reason: string }) =>
+    reject.mutate({ request_id: request.request_id, tenant_id: request.tenant_id, version: request.version, reason: v.reason.trim() }, { onSuccess: onClose });
+  return (
+    <Modal open title={t('chatSafety.switches.rejectTitle')} onCancel={onClose} footer={null} destroyOnHidden>
+      <Form form={form} layout="vertical" name="switch_reject" onFinish={submit}>
+        <Form.Item
+          name="reason"
+          label={t('chatSafety.switches.rejectReason')}
+          rules={[{ required: true, whitespace: true, message: t('chatSafety.common.reasonRequired') }, ...openapiRules(LIMITS.rejectReason, { t: ops.t })]}
+        >
+          <Input.TextArea autoSize={{ minRows: 2, maxRows: 6 }} {...openapiInputProps(LIMITS.rejectReason)} />
+        </Form.Item>
+        {reject.error ? <ProblemMessage error={reject.error} /> : null}
+        <Button type="primary" danger htmlType="submit" loading={reject.isPending}>
+          {t('chatSafety.switches.reject')}
+        </Button>
+      </Form>
+    </Modal>
+  );
+}
+
 function PendingRequests({ levels, me }: { levels: SwitchState[]; me?: string }) {
   const { t } = useTranslation();
   const approve = useApproveSwitch();
+  const [rejecting, setRejecting] = useState<SwitchRequest | null>(null);
   const requests = levels.flatMap((l) => (l.pending_requests ?? []).map((r) => ({ ...r, levelName: l.scope === 'platform' ? t('chatSafety.switches.platform') : (l.tenant_name ?? l.tenant_id ?? '') })));
   if (!requests.length) return null;
   const columns: ColumnsType<(typeof requests)[number]> = [
@@ -134,9 +163,14 @@ function PendingRequests({ levels, me }: { levels: SwitchState[]; me?: string })
           <Typography.Text type="secondary">{t('chatSafety.switches.ownRequest')}</Typography.Text>
         ) : (
           <ActionGate actionKey="action.platform_admin.moderation_switches.toggle">
-            <Button size="small" type="primary" loading={approve.isPending} onClick={() => approve.mutate({ request_id: r.request_id, tenant_id: r.tenant_id ?? undefined })}>
-              {t('chatSafety.switches.approve')}
-            </Button>
+            <Flex gap="small" wrap>
+              <Button size="small" type="primary" loading={approve.isPending} onClick={() => approve.mutate({ request_id: r.request_id, tenant_id: r.tenant_id ?? undefined })}>
+                {t('chatSafety.switches.approve')}
+              </Button>
+              <Button size="small" danger onClick={() => setRejecting(r)}>
+                {t('chatSafety.switches.reject')}
+              </Button>
+            </Flex>
           </ActionGate>
         ),
     },
@@ -146,6 +180,7 @@ function PendingRequests({ levels, me }: { levels: SwitchState[]; me?: string })
       <Typography.Title level={2}>{t('chatSafety.switches.pendingTitle')}</Typography.Title>
       {approve.error ? <ProblemMessage error={approve.error} /> : null}
       <Table rowKey="request_id" columns={columns} dataSource={requests} pagination={false} scroll={{ x: true }} />
+      {rejecting ? <RejectDialog request={rejecting} onClose={() => setRejecting(null)} /> : null}
     </section>
   );
 }

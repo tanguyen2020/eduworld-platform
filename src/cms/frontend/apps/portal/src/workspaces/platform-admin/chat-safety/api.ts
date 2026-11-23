@@ -2,10 +2,11 @@
 // (categories, terms, allowlist, test, publish, versions) and the moderation switches (state of the platform and the
 // filtered tenants, change requests, approval by a second System Admin, history). Writes carry Idempotency-Key (one per
 // user intent) or If-Match; a tenant-level switch change carries X-Tenant-Id of that tenant. Rules stay in module chat.
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { usePortalRuntime } from '../../../app/runtime';
 import { TENANT_HEADER } from '../../../shared/api/middleware/tenant';
 import type { components } from '../../../shared/api/schema.gen';
+import { useAllPages } from '../../../shared/api/fetchAllPages';
 import { useCursorPages } from '../../../shared/api/useCursorPages';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
@@ -37,17 +38,38 @@ function useApi() {
 
 const CATALOG = ['platform', 'chat-catalog'] as const;
 
+/** listSensitiveCategories for the categories TABLE: cursor pages ("Tải thêm"), keyset in SQL (owner rule 2026-11-23). */
 export function useCategories() {
   const api = useApi();
-  return useQuery({
-    queryKey: [...CATALOG, 'categories'],
-    queryFn: () => api.call<{ data: Category[] }>(api.client.GET('/admin/chat/sensitive-categories', {})),
-  });
+  return useCursorPages<Category>([...CATALOG, 'categories'], (cursor) =>
+    api.call<Page<Category>>(api.client.GET('/admin/chat/sensitive-categories', { params: { query: pageQuery(cursor) } })),
+  );
 }
 
-export function useTerms(categoryId?: string) {
+/** Every category (all cursor pages, cached) for the category dropdowns and the name lookup (fetchAllPages). */
+export function useAllCategories() {
   const api = useApi();
-  const query = categoryId ? { category_id: categoryId } : {};
+  return useAllPages<Category>([...CATALOG, 'categories', 'all'], (query) =>
+    api.call<Page<Category>>(api.client.GET('/admin/chat/sensitive-categories', { params: { query } })),
+  );
+}
+
+/** Term filters applied by the server in SQL (listSensitiveTerms, F122 T063): never a filter of the loaded page. */
+export interface TermFilters {
+  categoryId?: string;
+  locale?: 'vi' | 'en';
+  matchType?: Schemas['SensitiveMatchType'];
+  status?: 'draft' | 'published';
+}
+
+export function useTerms(f: TermFilters = {}) {
+  const api = useApi();
+  const query = {
+    ...(f.categoryId ? { category_id: f.categoryId } : {}),
+    ...(f.locale ? { locale: f.locale } : {}),
+    ...(f.matchType ? { match_type: f.matchType } : {}),
+    ...(f.status ? { status: f.status } : {}),
+  };
   return useCursorPages<Term>([...CATALOG, 'terms', query], (cursor) =>
     api.call<Page<Term>>(api.client.GET('/admin/chat/sensitive-terms', { params: { query: { ...query, ...pageQuery(cursor) } } })),
   );
@@ -148,6 +170,26 @@ export function useSetSwitches() {
         api.client.PUT('/admin/chat/moderation-switches', { body, headers: { ...intent, ...(body.scope === 'tenant' && body.tenant_id ? { [TENANT_HEADER]: body.tenant_id } : {}) } }),
       ),
     { onSettled: () => qc.invalidateQueries({ queryKey: SWITCHES }) },
+  );
+}
+
+/**
+ * rejectModerationSwitchChange (F122 T060): a second System Admin rejects a pending request with a reason; If-Match =
+ * version of the request, X-Tenant-Id of a tenant request, Idempotency-Key kept for a retry of the same intent.
+ */
+export function useRejectSwitch() {
+  const api = useApi();
+  const qc = useQueryClient();
+  return useIdempotentMutation(
+    (r: Pick<SwitchRequest, 'request_id' | 'tenant_id' | 'version'> & { reason: string }, intent) =>
+      api.call<SwitchRequest>(
+        api.client.POST('/admin/chat/moderation-switches/requests/{request_id}:reject', {
+          params: { path: { request_id: r.request_id } },
+          body: { reason: r.reason },
+          headers: { ...intent, 'If-Match': `W/"${r.version ?? 1}"`, ...(r.tenant_id ? { [TENANT_HEADER]: r.tenant_id } : {}) },
+        }),
+      ),
+    { onSuccess: () => qc.invalidateQueries({ queryKey: SWITCHES }) },
   );
 }
 

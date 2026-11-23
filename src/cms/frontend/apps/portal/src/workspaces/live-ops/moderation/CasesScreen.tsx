@@ -1,5 +1,6 @@
 // Screen of `menu.live_ops.moderation_cases` (F122 US1, US2; F122-AC-01, AC-06, AC-24): the case queue of the Platform
-// Safety Team across tenants — tenant filter of this module only (multi-select, default "all"), severity p1–p3, status,
+// Safety Team across tenants — tenant filter of this module only (multi-select, default "all"; the tenants having cases from
+// listModerationCaseTenants, every page — F122 T064), severity p1–p3, status,
 // assignee (me / unassigned / any), category; Tenant column; SLA deadline from the server (overdue = error token + text).
 // Cursor pages ("Tải thêm"), never the whole list. Second tab: school notifications sent by the platform
 // (acknowledged / overdue filters). `:caseId` opens the case (CaseDetail). No chat search anywhere (F122-AC-02).
@@ -11,15 +12,58 @@ import { useTranslation } from 'react-i18next';
 import { Link, Route, Routes } from 'react-router-dom';
 import { SearchSelect, SlaBadge } from '@eduworld/ops-ui';
 import { clampTenantSearch, useTenantOptions } from '../../../shared/api/hooks/useTenantOptions';
-import { LIMITS, SafetyError, SeverityTag, TenantName, useTenantNames } from '../../../shared/chatSafety/ui';
+import { usePermissions } from '../../../permissions/usePermissions';
+import { LIMITS, SafetyError, SeverityTag, TenantName } from '../../../shared/chatSafety/ui';
 import { tenantLabel } from '../../../shell/TenantControls';
-import { useCases, usePlatformNotifications, type CaseFilters, type ModerationCase, type SchoolNotification } from './api';
+import { useCases, useCaseTenants, usePlatformNotifications, type CaseFilters, type ModerationCase, type SchoolNotification } from './api';
 import { CaseDetail } from './CaseDetail';
+
+const EMPTY_NAMES: ReadonlyMap<string, { name: string; code: string }> = new Map();
 
 export const formatTime = (ts?: string | null): string => (ts ? dayjs(ts).format('DD/MM/YYYY HH:mm') : '');
 
-/** Tenant filter of the moderation module (F122-AC-01): Safety Moderator and System Admin; empty = every tenant. */
+/** Names of the tenants having cases (id → name/type) for the Tenant column of notifications and sanctions. */
+export function useModerationTenantNames(): ReadonlyMap<string, { name: string; code: string; tenant_type?: string }> {
+  const tenants = useCaseTenants();
+  return new Map(tenants.items.map((x) => [x.tenant_id, { name: x.tenant_name ?? x.tenant_id, code: '', tenant_type: x.tenant_type }]));
+}
+
+/**
+ * Tenant filter of the moderation module (F122-AC-01, T064): the tenants having cases (listModerationCaseTenants, every
+ * page, searched in the browser); empty = every tenant. Never listTenants (the Safety Moderator does not hold it, R20).
+ */
 export function ModerationTenantFilter({ value, onChange }: { value: string[]; onChange: (ids: string[]) => void }) {
+  const { t } = useTranslation();
+  const tenants = useCaseTenants();
+  return (
+    <SearchSelect
+      mode="multiple"
+      aria-label={t('chatSafety.common.tenantFilter')}
+      placeholder={t('chatSafety.common.allTenants')}
+      value={value}
+      onChange={onChange}
+      loading={tenants.isFetching}
+      truncated={tenants.truncated}
+      allowClear
+      maxTagCount="responsive"
+      options={tenants.items.map((x) => ({ value: x.tenant_id, label: x.tenant_name ?? x.tenant_id }))}
+      style={{ minWidth: '16rem' }}
+    />
+  );
+}
+
+/**
+ * Target tenant of a write of the Safety Team (sanction, extra terms): System Admin (platform.cross_tenant.read) picks among
+ * every tenant (listTenants); the Safety Moderator among the tenants having cases (F122 Clarifications 2026-11-24).
+ */
+export function ModerationTargetTenant({ value, onChange }: { value?: string; onChange?: (id: string | undefined) => void }) {
+  const { crossTenant } = usePermissions();
+  const ids = value ? [value] : [];
+  const pick = (next: string[]) => onChange?.(next.at(-1));
+  return crossTenant ? <AllTenantsFilter value={ids} onChange={pick} /> : <ModerationTenantFilter value={ids} onChange={pick} />;
+}
+
+function AllTenantsFilter({ value, onChange }: { value: string[]; onChange: (ids: string[]) => void }) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const options = useTenantOptions(search, true);
@@ -47,10 +91,9 @@ function CaseQueue() {
   const { t } = useTranslation();
   const [filters, setFilters] = useState<CaseFilters>({ tenantIds: [], assignee: 'any' });
   const list = useCases(filters);
-  const names = useTenantNames();
   const set = (patch: Partial<CaseFilters>) => setFilters((f) => ({ ...f, ...patch }));
   const columns: ColumnsType<ModerationCase> = [
-    { key: 'tenant', title: t('chatSafety.common.tenant'), render: (_, r) => <TenantName id={r.tenant_id} names={names} /> },
+    { key: 'tenant', title: t('chatSafety.common.tenant'), render: (_, r) => r.tenant_name ?? <TenantName id={r.tenant_id} names={EMPTY_NAMES} /> },
     { key: 'severity', title: t('chatSafety.cases.severity'), render: (_, r) => <SeverityTag value={r.severity} /> },
     { key: 'status', title: t('chatSafety.cases.status'), render: (_, r) => <Tag>{t(`chatSafety.caseStatus.${r.status}`)}</Tag> },
     { key: 'category', title: t('chatSafety.cases.category'), render: (_, r) => r.category_code ?? '' },
@@ -122,7 +165,7 @@ function PlatformNotifications() {
     acknowledged: state === 'acknowledged' ? true : state === 'pending' ? false : undefined,
     overdue: state === 'overdue',
   });
-  const names = useTenantNames();
+  const names = useModerationTenantNames();
   const columns: ColumnsType<SchoolNotification> = [
     { key: 'tenant', title: t('chatSafety.common.tenant'), render: (_, r) => <TenantName id={r.tenant_id} names={names} /> },
     { key: 'severity', title: t('chatSafety.cases.severity'), render: (_, r) => <SeverityTag value={r.severity} /> },

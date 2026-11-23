@@ -6,6 +6,9 @@
 import { WORKSPACE_CATALOG, type WorkspaceKey } from '../generated/menu-catalog';
 import { TEST_CONFIG } from '../shared/api/test-utils';
 
+/** Requests of the portal shell itself on every screen (x-portal-shell / banner, F122): not a screen API. */
+export const SHELL_PATHS: readonly string[] = ['/tenant/chat/moderation-status', '/admin/chat/moderation-switches'];
+
 export const TENANTS = {
   thDemoA: { tenant_id: '0193a4d2-0000-7000-8000-00000000000a', code: 'th-demo-a', name: 'TH Demo A', tenant_type: 'school', status: 'active' },
   pgdDemo: { tenant_id: '0193a4d2-0000-7000-8000-00000000000b', code: 'pgd-demo', name: 'Phòng GD Demo', tenant_type: 'unit', status: 'active' },
@@ -286,6 +289,22 @@ export class MockPortalBackend {
         const a = this.authorized(rec);
         if (a instanceof Response) return a;
         return json(200, { user_id: a.sub, user_type: 'staff', status: 'active', roles: [], display_name: a.displayName });
+      }
+      // Banner "Đang tắt kiểm duyệt" of every screen (F122): every step on by default, so a suite that does not install the
+      // chat-safety MOCK still gets the answers the shell asks for (getTenantModerationStatus, listModerationSwitches).
+      case 'GET /tenant/chat/moderation-status': {
+        const a = this.authorized(rec);
+        if (a instanceof Response) return a;
+        return json(200, { tenant_id: rec.headers['x-tenant-id'] ?? null, enabled_all: true, disabled_steps: [], expires_at: null, source_scope: null });
+      }
+      case 'GET /admin/chat/moderation-switches': {
+        const a = this.authorized(rec);
+        if (a instanceof Response) return a;
+        if (!(a.perms.platform?.permissions ?? []).includes('chat.policy.toggle')) return problem(403, 'PERMISSION_DENIED');
+        const steps = { sensitive_terms: true, spam: true, bullying: true, async_analysis: true };
+        const platform = { scope: 'platform', tenant_id: null, configured: null, effective: { enabled_all: true, steps }, disabled_steps: [], pending_requests: [] };
+        const filtered = new URLSearchParams(rec.search).getAll('tenant_ids').length > 0;
+        return json(200, { platform, tenants: [], page: { has_more: false, next_cursor: null, limit: 20 }, ...(filtered ? {} : { disabled_tenant_count: 0 }) });
       }
       case 'GET /admin/tenants': {
         const a = this.authorized(rec);

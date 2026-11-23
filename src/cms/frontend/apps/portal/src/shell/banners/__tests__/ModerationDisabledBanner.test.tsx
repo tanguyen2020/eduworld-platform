@@ -3,6 +3,8 @@
 // AC-13: tenant staff of the tenant with a step off see the banner on every screen (getTenantModerationStatus), System Admin
 // sees it for the filtered tenants (listModerationSwitches); refreshed ≤ 60 s; gone when switched back on or expired.
 // AC-14: another tenant sees nothing; the banner never shows the reason.
+// F122 T065: System Admin without a tenant filter sees the NUMBER of tenants with a step off (disabled_tenant_count, counted
+// by the server) and a link to the switches — never a list of tenants.
 import { act, configure, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MODERATION_STATUS_REFRESH_MS } from '../../../shared/chatSafety/useModerationStatus';
@@ -63,10 +65,29 @@ describe('Banner "Đang tắt kiểm duyệt" (F122-AC-13, AC-14)', () => {
     expect(screen.queryByTestId('moderation-disabled-banner')).toBeNull();
   });
 
+  it('F122-AC-13 (T065): System Admin without a tenant filter — number of tenants off and a link to the switches, no tenant list', async () => {
+    const st = chatSafetyState();
+    st.disabledTenantCount = 3;
+    const { backend } = await renderSafety('/platform-admin/tenants', { state: st });
+    const banner = await screen.findByTestId('moderation-disabled-banner');
+    expect(banner).toHaveTextContent('Đang tắt kiểm duyệt: 3 tenant đang tắt ít nhất một bước');
+    expect(within(banner).getByRole('link', { name: 'Xem công tắc kiểm duyệt' })).toHaveAttribute('href', '/platform-admin/moderation-switches');
+    expect(new URLSearchParams(backend.calls('GET', '/admin/chat/moderation-switches').at(-1)!.search).getAll('tenant_ids')).toEqual([]);
+    expect(banner).not.toHaveTextContent(/TH Demo A|THCS Demo B/);
+  });
+
+  it('System Admin without a filter and no tenant off: no banner (platform row all on)', async () => {
+    const st = chatSafetyState();
+    st.disabledTenantCount = 0;
+    const { backend } = await renderSafety('/platform-admin/tenants', { state: st });
+    await screen.findByRole('navigation', { name: 'Menu điều hướng' });
+    await waitFor(() => expect(backend.calls('GET', '/admin/chat/moderation-switches').length).toBeGreaterThan(0));
+    expect(screen.queryByTestId('moderation-disabled-banner')).toBeNull();
+  });
+
   it('System Admin: banner for the tenants of the filter (listModerationSwitches), with the tenant name', async () => {
     const { backend } = await renderSafety('/platform-admin/tenants');
     await screen.findByRole('navigation', { name: 'Menu điều hướng' });
-    expect(screen.queryByTestId('moderation-disabled-banner')).toBeNull(); // no filter: platform row only (all on)
     act(() => tenantFilterStore.set([T_A]));
     const banner = await screen.findByTestId('moderation-disabled-banner');
     expect(banner).toHaveTextContent(/TH Demo A: Lọc spam — đến/);
