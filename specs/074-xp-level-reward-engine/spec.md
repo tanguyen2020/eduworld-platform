@@ -21,7 +21,7 @@
 
 - Gộp tài khoản (`mergeUserData` của module game) → **Chốt:** F074 cộng gộp ledger XP/phần thưởng của user nguồn vào user đích bằng bản ghi bù (append-only, không sửa dòng cũ), idempotent theo `merge_id` (IDENTITY_MAPPING §7).
 
-### Session 2026-11-23 (triển khai — quyết định của agent, [Proposed] chờ owner xác nhận)
+### Session 2026-11-23 (triển khai — quyết định của agent; owner chốt theo lệnh "chốt hết" — [Confirmed] 2026-11-23)
 
 - Consumer: **hai** durable — `game.reward_engine` (stream learning: `activity.graded`, `lesson.completed`, `learning_objective.mastered`, DLQ `ew.dlq.game.reward_engine`) và `game.reward_engine_game` (stream game: `quest.completed`, `world.discovery_found`, `world.area_completed`) vì một JetStream consumer chỉ đọc một stream; cùng handler `RewardEngine`.
 - `minigame.completed` chưa có payload schema (owner F073, đang Ready): chưa subscribe; ánh xạ thêm khi F073 định nghĩa payload — **Câu hỏi mở F074-1** (F074-AC-01 phủ 6/7 trigger).
