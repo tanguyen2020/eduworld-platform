@@ -241,8 +241,9 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 		"chat": {"expire-friend-requests", "moderation-switch-expirer", "moderation-sla-escalator", "school-notification-reminder",
 			"sanction-expirer"},
 	}
-	// Jobs of worker-chat (profile chat, also all) on the chat_purger pool, scheduled by the module itself (F117, ADR-0033).
-	chatJobs := map[string][]string{"chat": {"gameplay-chat-purge", "chat-partition-maintainer"}}
+	// Jobs of worker-chat (profile chat, also all): gameplay-chat-purge and chat-partition-maintainer on the chat_purger
+	// pool (F117, ADR-0033), persistent-chat-retention on the chat_app pool (F120 US6, anonymisation only).
+	chatJobs := map[string][]string{"chat": {"gameplay-chat-purge", "chat-partition-maintainer", "persistent-chat-retention"}}
 	for _, profile := range []string{"events", "jobs", "all"} {
 		t.Run(profile, func(t *testing.T) {
 			r := registry(t, "worker", profile)
@@ -303,8 +304,8 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 }
 
 // Profile chat loads module chat only: no identity, learning or game entry point is declared; it runs chat-persister
-// (F115 T003), persister-evt of the message changes (F118) and the jobs of the role chat_purger: gameplay-chat-purge and
-// chat-partition-maintainer (F117, ADR-0033).
+// (F115 T003), persister-evt of the message changes (F118), the jobs of the role chat_purger: gameplay-chat-purge and
+// chat-partition-maintainer (F117, ADR-0033), and persistent-chat-retention (F120 US6, role chat_app).
 func TestWorkerChatProfileLoadsChatOnly(t *testing.T) {
 	r := registry(t, "worker", "chat")
 	if _, err := wiring.Compose(r); err != nil {
@@ -317,13 +318,14 @@ func TestWorkerChatProfileLoadsChatOnly(t *testing.T) {
 		}
 		active++
 		ok := d.Module == "chat" && ((d.Kind == module.KindConsumer && (d.Name == "chat.persister" || d.Name == "chat.persister_evt")) ||
-			(d.Kind == module.KindJob && (d.Name == "chat.gameplay-chat-purge" || d.Name == "chat.chat-partition-maintainer")))
+			(d.Kind == module.KindJob && (d.Name == "chat.gameplay-chat-purge" || d.Name == "chat.chat-partition-maintainer" ||
+				d.Name == "chat.persistent-chat-retention")))
 		if !ok {
 			t.Errorf("profile chat runs %s %s", d.Kind, d.Name)
 		}
 	}
-	if active != 4 || len(r.Workers()) != 4 {
-		t.Errorf("profile chat: %d active declarations, %d workers (want chat.persister, chat.persister_evt + the two purger jobs)", active, len(r.Workers()))
+	if active != 5 || len(r.Workers()) != 5 {
+		t.Errorf("profile chat: %d active declarations, %d workers (want chat.persister, chat.persister_evt, the two purger jobs + persistent-chat-retention)", active, len(r.Workers()))
 	}
 }
 
