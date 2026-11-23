@@ -26,7 +26,7 @@ func Student(ctx context.Context, w port.WorldContent, q port.QuestContent, tena
 	if err != nil {
 		return out, err
 	}
-	f, err := questrules.Facts(ctx, w, q, tenant, student, st, hist)
+	f, err := questrules.Facts(ctx, w, q, tenant, student, st, questrules.CompletedOf(hist))
 	if err != nil {
 		return out, err
 	}
