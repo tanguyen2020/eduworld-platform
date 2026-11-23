@@ -8,7 +8,7 @@
 
 - [x] T001 Route lazy `/live-ops/moderation/*`, `/platform-admin/chat-safety/*`, `/school-lms/safety/*` có `RequirePermission`; menu Safety Moderator chỉ Kiểm duyệt (khóa `menu.live_ops.*`, `menu.platform_admin.chat_safety`, `menu.platform_admin.moderation_switches`, `menu.school_lms.safety_notifications`, `menu.school_lms.chat_safety` từ registry sinh từ catalog, F051) — file: `src/workspaces/live-ops/moderation/routes.tsx`, `src/workspaces/platform-admin/chat-safety/routes.tsx`, `src/workspaces/school-lms/safety/routes.tsx` — làm: màn gắn vào khóa menu của catalog trong `src/workspaces/{live-ops,platform-admin,school-lms}/index.tsx` (route con trong màn: `/live-ops/moderation-cases/:caseId`, `/school-lms/safety-notifications/:notificationId`); không có `routes.tsx` riêng (route sinh từ catalog, ADR-0090)
 - [x] T002 [P] File dịch vi/en (thông điệp theo `code`: `MODERATION_CASE_CLOSED`, `MODERATION_SWITCH_REASON_REQUIRED`, `TENANT_TOGGLE_NOT_ALLOWED`, `CHAT_POLICY_RELAX_NOT_ALLOWED`, `CHAT_POLICY_ALWAYS_ON`, `CONFLICT`, `MFA_REQUIRED`) — file: `src/workspaces/*/{moderation,chat-safety,safety}/i18n/{vi,en}.json` — làm: `src/i18n/chat-safety.{vi,en}.json` (`chatSafety.*`) + mã lỗi trong `error.*` (`MFA_REQUIRED` bỏ theo ADR-0094)
-- [ ] T003 [P] Fixture Playwright: tài khoản `sm.antoan`, `sa.admin`, `ad.truong.a`, `ad.truong.b`, `ad.donvi` — file: `tests/e2e/fixtures/auth.ts` — chưa làm: AC kiểm bằng vitest + harness MOCK; Playwright với backend thật chưa chạy (không động stack của owner) — chưa làm: AC kiểm bằng vitest + harness MOCK; Playwright với backend thật chưa chạy (không động stack của owner)
+- [x] T003 [P] Fixture Playwright: tài khoản `sm.antoan`, `sa.admin`, `ad.truong.a`, `ad.truong.b` — file: `tests/e2e/fixtures/auth.ts` — làm 2026-11-24: dùng `tests/e2e/support/auth.ts` (đăng nhập chỉ mật khẩu, ADR-0094, mọi giá trị từ env) + spec `tests/e2e/chat-safety/chat-safety.spec.ts` (@F122). **Chưa chạy với backend thật**: cần `EW_E2E_PORTAL_URL`, `EW_E2E_PASSWORD` (không có trong phiên; không đọc env/secret) — `playwright test --grep @F122` → 3 skipped
 
 ## Phase 2: Foundational (chặn mọi user story)
 
@@ -75,7 +75,7 @@
 ### Implementation cho User Story 4
 
 - [x] T025 [US4] Hook `switches.ts`; `SwitchesPage`, `SwitchConfirmModal`, `SwitchHistoryPage` — file: `src/workspaces/platform-admin/chat-safety/switches/` — `SwitchesScreen.tsx`
-- [x] T052 [US4] `PendingSwitchRequests`, `ApproveSwitchDialog`; bỏ công tắc `pii` khỏi `SwitchesPage`, `expires_at` bắt buộc — file: `src/cms/frontend/apps/portal/src/workspaces/platform/chat-safety/PendingSwitchRequests.tsx` — trong `SwitchesScreen.tsx`; không có nút Từ chối (không có operation, câu hỏi mở)
+- [x] T052 [US4] `PendingSwitchRequests`, `ApproveSwitchDialog`; bỏ công tắc `pii` khỏi `SwitchesPage`, `expires_at` bắt buộc — file: `src/cms/frontend/apps/portal/src/workspaces/platform/chat-safety/PendingSwitchRequests.tsx` — trong `SwitchesScreen.tsx`; nút Từ chối thêm ở T060 (2026-11-24)
 
 ## Phase 7: User Story 5 — Banner (Priority: P1)
 
@@ -134,7 +134,7 @@
 
 ### Implementation cho User Story 9
 
-- [x] T042 [US9] Hook `clubs.ts`; `ClubsPage` — file: `src/workspaces/school-lms/safety/ClubsPage.tsx` — `ClubsScreen.tsx`; không có gỡ thành viên (route `game_player`, câu hỏi mở)
+- [x] T042 [US9] Hook `clubs.ts`; `ClubsPage` — file: `src/workspaces/school-lms/safety/ClubsPage.tsx` — `ClubsScreen.tsx`; Thành viên + Gỡ thành viên thêm ở T061 (2026-11-24)
 
 ## Phase 12: User Story 10 — Bảo vệ màn an toàn chat (Priority: P1)
 
@@ -150,22 +150,24 @@
 
 ## Phase N: Polish & Cross-Cutting
 
-- [ ] T047 [P] axe + visual regression sáng/tối các màn chính (TC-UI-004, TC-UI-006) — file: `tests/e2e/chat-safety/a11y-visual.spec.ts` — chưa làm — chưa làm
+- [ ] T047 [P] axe + visual regression sáng/tối các màn chính (TC-UI-004, TC-UI-006) — file: `tests/e2e/chat-safety/a11y-visual.spec.ts` — một phần 2026-11-24: smoke a11y (một h1, mọi control có tên) ở sáng + tối trong `tests/e2e/chat-safety/chat-safety.spec.ts`; axe-core đầy đủ và baseline visual chưa có (portal chưa khai báo `axe-playwright`; baseline cần backend thật) — **chưa chạy**
 - [x] T048 [P] Ghi chú thống nhất MODERATION §11.3 theo ADR-0072 (workspace E, Safety Team bật/tắt nhóm từ) — file: `docs/03-social-multiplayer/MODERATION.md`
 - [x] T049 [P] CHANGELOG — file: `CHANGELOG.md`
-- [ ] T050 Chạy [quickstart.md](quickstart.md) với backend thật và ghi bằng chứng — chưa chạy (stack local của owner không được động tới) — chưa chạy (stack local của owner không được động tới)
+- [ ] T050 Chạy [quickstart.md](quickstart.md) với backend thật và ghi bằng chứng — **chưa chạy** (2026-11-24): stack local của owner chạy mã `main` (không có T060–T066), không được khởi động lại; lệnh đọc thử gateway bị chặn quyền trong phiên; không có mật khẩu demo. Quickstart đã cập nhật kịch bản T060–T066
 - [x] T055 [P] Test F122-AC-29: tắt `menu.live_ops.tenant_terms` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions`; mục được bảo vệ không có công tắc (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/safety/feature-toggle.spec.ts` — vitest (`SchoolSafety.test.tsx`) thay Playwright
 - [x] T056 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F122-AC-29) — file: `src/cms/frontend/apps/portal/src/workspaces/live-ops/moderation/routes.tsx`
 
 ## Phase N+1: Việc chốt 2026-11-23 (Clarifications [Confirmed] — orchestrator)
 
-- [ ] T060 `rejectModerationSwitchChange` (module chat: contract, command, audit, event `moderation_switch.change_rejected`, test integration + authz) và nút Từ chối trên portal (F122-AC-27)
-- [ ] T061 Route nhân sự `listSchoolClubMembers` (keyset SQL) + `removeSchoolClubMember` (`social.club.approve`, lý do, audit, gỡ channel `team` cùng transaction) + nút Gỡ thành viên (F122-AC-23)
-- [ ] T062 Menu `menu.platform_admin.chat_safety` nhận `chat.sensitive_terms.read` hoặc `.write` (catalog bump, sync); test AC-09 với Safety Moderator thật
-- [ ] T063 `listSensitiveTerms` thêm `locale`, `match_type`, `status` lọc trong SQL; bật bộ lọc portal (F122-AC-07)
-- [ ] T064 `tenant_name` trong case + `listModerationCaseTenants` (keyset, `moderation.case.read`, `tenancy.Bypass(ctx, "moderation_case")`) cho bộ lọc tenant của Safety Team
-- [ ] T065 `listModerationSwitches` không lọc tenant trả `disabled_tenant_count` (đếm SQL); banner hiện số tenant đang tắt
-- [ ] T066 `listSchoolSafetyNotifications` thêm `created_from` lọc trong SQL; portal mặc định 30 ngày (F122-AC-18)
+- [x] T060 `rejectModerationSwitchChange` (module chat: contract, command, audit, event `moderation_switch.change_rejected`, test integration + authz) và nút Từ chối trên portal (F122-AC-27)
+- [x] T061 Route nhân sự `listSchoolClubMembers` (keyset SQL) + `removeSchoolClubMember` (`social.club.approve`, lý do, audit, gỡ channel `team` cùng transaction) + nút Gỡ thành viên (F122-AC-23)
+- [x] T062 Menu `menu.platform_admin.chat_safety` nhận `chat.sensitive_terms.read` hoặc `.write` (catalog bump, sync); test AC-09 với Safety Moderator thật
+- [x] T063 `listSensitiveTerms` thêm `locale`, `match_type`, `status` lọc trong SQL; bật bộ lọc portal (F122-AC-07)
+- [x] T064 `tenant_name` trong case + `listModerationCaseTenants` (keyset, `moderation.case.read`, `tenancy.Bypass(ctx, "moderation_case")`) cho bộ lọc tenant của Safety Team
+- [x] T065 `listModerationSwitches` không lọc tenant trả `disabled_tenant_count` (đếm SQL); banner hiện số tenant đang tắt
+- [x] T066 `listSchoolSafetyNotifications` thêm `created_from` lọc trong SQL; portal mặc định 30 ngày (F122-AC-18)
+
+Bằng chứng T060–T066 (2026-11-24): integration `src/backend/modules/chat/tests/integration/f122_delta_test.go` — `TestSwitchReject`, `TestSwitchDisabledTenantCount`, `TestSensitiveTermFilters`, `TestModerationCaseTenants`, `TestSchoolNotificationsCreatedFrom`, `TestSchoolClubMembersStaff`, `TestSensitiveCategoryPages` (viết trước, chạy đỏ trước khi hiện thực: 6/6 FAIL trên mã chưa sửa — `TestSensitiveCategoryPages` viết cùng lúc với mã của yêu cầu phân trang owner). Portal: test mới trong `ChatSafety.test.tsx`, `Cases.test.tsx`, `ModerationDisabledBanner.test.tsx`, `SchoolSafety.test.tsx` (đỏ trước: 7 FAIL). Migration `20261231000007_f122_tenant_name.sql`. Thêm (owner 2026-11-23): `listSensitiveCategories`/`listTenantSensitiveCategories` trang keyset `(code, category_id)`.
 
 ## AC → test (bằng chứng, 2026-11-23)
 
@@ -173,33 +175,33 @@ Test vitest whole-portal với backend MOCK (`src/cms/frontend/apps/portal/src/t
 
 | AC | Test | Kết quả |
 |---|---|---|
-| F122-AC-01 | `workspaces/live-ops/moderation/__tests__/Cases.test.tsx` › "sm.antoan: only the Kiểm duyệt menus; queue with Tenant column, SLA overdue and cursor pages", "filters: module tenant filter …"; ops-ui `chatSafety.test.tsx` › SlaBadge | PASS |
+| F122-AC-01 | `workspaces/live-ops/moderation/__tests__/Cases.test.tsx` › "sm.antoan: only the Kiểm duyệt menus; queue with Tenant column, SLA overdue and cursor pages", "filters: module tenant filter …", "F122-AC-01 (T064): the tenant filter lists the tenants having cases …"; ops-ui `chatSafety.test.tsx` › SlaBadge; `src/backend/modules/chat/tests/integration/f122_delta_test.go` › `TestModerationCaseTenants` | PASS |
 | F122-AC-02 | `Cases.test.tsx` › "evidence panel: snapshot, original, revisions, recall; search inside the case only; no free chat search" | PASS |
 | F122-AC-03 | `Cases.test.tsx` › "act: note required, Idempotency-Key + If-Match + X-Tenant-Id of the case; account_lock needs a second confirmation; take the case" | PASS |
 | F122-AC-04 | `Cases.test.tsx` › "F122-AC-04: 412 → reloaded message …; 409/403 by code with trace id; no automatic retry" | PASS |
 | F122-AC-05 | `Cases.test.tsx` › "school of the case, only its students, summary 10–1000 …", "a case of the common tenant has no notify button …" | PASS |
 | F122-AC-06 | `Cases.test.tsx` › "F122-AC-06: school notifications sent by the platform, overdue / acknowledged filters" | PASS |
-| F122-AC-07 | `workspaces/platform-admin/chat-safety/__tests__/ChatSafety.test.tsx` › "categories: create, edit, soft delete …; terms with variants and RE2 warning; allowlist" | PASS |
+| F122-AC-07 | `workspaces/platform-admin/chat-safety/__tests__/ChatSafety.test.tsx` › "categories: create, edit, soft delete …; terms with variants and RE2 warning; allowlist", "F122-AC-07: term filters locale / match type / status go to the server …", "owner rule 2026-11-23: the categories table pages with the cursor …"; `src/backend/modules/chat/tests/integration/f122_delta_test.go` › `TestSensitiveTermFilters`, `TestSensitiveCategoryPages` | PASS |
 | F122-AC-08 | `ChatSafety.test.tsx` › "test text: decision, masked text, categories, highlight …; publish needs a summary; versions with regression"; ops-ui `chatSafety.test.tsx` › SensitiveTermTester, highlightParts | PASS |
-| F122-AC-09 | `ChatSafety.test.tsx` › "F122-AC-09: without the edit/test/publish actions the catalogue is read only; no term in storage or console" (Safety Moderator không vào được menu D — câu hỏi mở) | PASS |
+| F122-AC-09 | `ChatSafety.test.tsx` › "F122-AC-09: without the edit/test/publish actions …", "F122-AC-09 (T062): a real Safety Moderator sees the catalogue read only; switches stay hidden; nothing stored" (principal = quyền role `safety_moderator` + workspaces suy ra từ catalog như identity) | PASS |
 | F122-AC-10 | `ChatSafety.test.tsx` › "platform row + filtered tenants; PII and grooming "Luôn bật"; a step off at platform level is locked …" | PASS |
 | F122-AC-11 | `ChatSafety.test.tsx` › "turning a step off: risk text, reason ≥ 10 …, expiry required, X-Tenant-Id; 422 reason code on the field; then "Chờ phê duyệt"" | PASS |
 | F122-AC-12 | `ChatSafety.test.tsx` › "F122-AC-12: history with before/after, reason, expiry, actor, approver and source" | PASS |
-| F122-AC-13 | `shell/banners/__tests__/ModerationDisabledBanner.test.tsx` › "tenant staff of TH Demo A …", "expired switch …", "System Admin: banner for the tenants of the filter …"; backend `src/backend/modules/chat/tests/integration/moderation_status_test.go` › `TestTenantModerationStatus` | PASS |
+| F122-AC-13 | `shell/banners/__tests__/ModerationDisabledBanner.test.tsx` › "tenant staff of TH Demo A …", "expired switch …", "System Admin: banner for the tenants of the filter …", "F122-AC-13 (T065): System Admin without a tenant filter — number of tenants off …"; `src/backend/modules/chat/tests/integration/f122_delta_test.go` › `TestSwitchDisabledTenantCount`; backend `src/backend/modules/chat/tests/integration/moderation_status_test.go` › `TestTenantModerationStatus` | PASS |
 | F122-AC-14 | `ModerationDisabledBanner.test.tsx` › "F122-AC-14: a staff member of another tenant sees no banner"; `TestTenantModerationStatus` (không lý do, tenant B, cross-tenant 403/404) | PASS |
 | F122-AC-15 | `workspaces/live-ops/moderation/__tests__/TenantTerms.test.tsx` › "target tenant: list, add, delete, test with tenant_id, publish with the request code" | PASS |
 | F122-AC-16 | `TenantTerms.test.tsx` › "toggle only when allow_tenant_toggle …; TENANT_TOGGLE_NOT_ALLOWED by code" | PASS |
 | F122-AC-17 | `workspaces/school-lms/safety/__tests__/SchoolSafety.test.tsx` › "F122-AC-17: tenant categories read only …" | PASS |
-| F122-AC-18 | `SchoolSafety.test.tsx` › "list of the tenant (pending by default), detail with grade and no chat area, menu badge; acknowledge …", "tenant isolation: ad.truong.b …" | PASS |
+| F122-AC-18 | `workspaces/school-lms/safety/__tests__/SchoolSafety.test.tsx` › "list of the tenant (pending by default), detail with grade and no chat area, menu badge; acknowledge …", "F122-AC-18 (T066): the list asks the server for the last 30 days …", "tenant isolation: ad.truong.b …"; `src/backend/modules/chat/tests/integration/f122_delta_test.go` › `TestSchoolNotificationsCreatedFrom` | PASS |
 | F122-AC-19 | `SchoolSafety.test.tsx` › (cùng test trên: outcome bắt buộc, ghi chú ≤ 500, Idempotency-Key) + "409 CONFLICT → "Thông báo đã được xác nhận" …" | PASS |
 | F122-AC-20 | `SchoolSafety.test.tsx` › "F122-AC-20: 390 px → cards and a detail page with the confirm button" | PASS |
 | F122-AC-21 | `SchoolSafety.test.tsx` › "per channel type with limits from above and "Kế thừa"; match/team/party locked; no class/grade/real-name control" | PASS |
 | F122-AC-22 | `SchoolSafety.test.tsx` › "save: If-Match "0", reason required, preset …; RELAX error lands on the channel card", "F122-AC-22: CHAT_POLICY_ALWAYS_ON and VALIDATION_FAILED by code" | PASS |
-| F122-AC-23 | `SchoolSafety.test.tsx` › "clubs of the school waiting for approval; approve / archive …; no chat screen" — **thiếu**: gỡ thành viên (route `game_player`, câu hỏi mở) | PASS (một phần — xem cột Test) |
-| F122-AC-24 | `Cases.test.tsx` › "sm.antoan: only the Kiểm duyệt menus …", "F122-AC-24: sm.antoan opening a D or C URL gets the 403 page without the chunk" | PASS |
+| F122-AC-23 | `SchoolSafety.test.tsx` › "clubs of the school waiting for approval; approve / archive …; no chat screen", "members of a club (cursor pages, nicknames only) and "Gỡ thành viên" …", "club approve action off → … no "Gỡ thành viên""; `src/backend/modules/chat/tests/integration/f122_delta_test.go` › `TestSchoolClubMembersStaff` | PASS |
+| F122-AC-24 | `Cases.test.tsx` › "sm.antoan: only the Kiểm duyệt menus …", "F122-AC-24: sm.antoan opening a C URL gets the 403 page without the chunk"; `ChatSafety.test.tsx` › "F122-AC-24 (T062): the Safety Moderator still gets the 403 page on the switches URL" | PASS |
 | F122-AC-25 | `Cases.test.tsx` › "403 PERMISSION_DENIED → 403 page with the trace id (no MFA step-up); internal gateway down → VPN notice" | PASS |
 | F122-AC-26 | `Cases.test.tsx` › "F122-AC-26: the same intent retried keeps its Idempotency-Key …" + kiểm `maxlength` ở các test trên; `shared/chatSafety/limits.test.ts` (giới hạn = OpenAPI); lint `no-game-imports` | PASS |
-| F122-AC-27 | `ChatSafety.test.tsx` › "F122-AC-27: pending request — no Approve button for the proposer; another System Admin approves; error codes by code", "F122-AC-27: EXPIRY_REQUIRED and STEP_NOT_ALLOWED are shown by code" — **thiếu**: nút Từ chối (không có operation, câu hỏi mở) | PASS (một phần — xem cột Test) |
+| F122-AC-27 | `ChatSafety.test.tsx` › "F122-AC-27: pending request — no Approve button for the proposer …", "F122-AC-27 (T060): another System Admin rejects with a reason …", "F122-AC-27: EXPIRY_REQUIRED and STEP_NOT_ALLOWED are shown by code"; `src/backend/modules/chat/tests/integration/f122_delta_test.go` › `TestSwitchReject` | PASS |
 | F122-AC-28 | `SchoolSafety.test.tsx` › "save: If-Match "0", reason required, preset for the whole school …" | PASS |
 | F122-AC-29 | `SchoolSafety.test.tsx` › "chat-safety menu off → hidden …; club approve action off → no button", "403 FEATURE_DISABLED from a chat-safety API → notice and permissions reloaded"; `ChatSafety.test.tsx` › AC-09 (action tắt) | PASS |
 
@@ -211,8 +213,8 @@ Toàn bộ suite web (128 file) chưa chạy hết: máy dùng chung tải 100% 
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F122-AC-* có test pass (ghi mã test/TC)
-- [ ] `make web-lint`, `make web-test`, Playwright E2E xanh với backend thật; `make test-integration MOD=chat` cho T005
-- [ ] Constitution Check trong plan.md vẫn đạt; MSW chỉ trong test (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F122-AC-* có test pass (ghi mã test/TC) — bảng AC → test ở trên (2026-11-24)
+- [ ] `make web-lint`, `make web-test`, Playwright E2E xanh với backend thật; `make test-integration MOD=chat` cho T005 — lint/typecheck/gen:check xanh, integration chat xanh, vitest 42 file chat-safety/shell/shared/app/permissions/platform-admin xanh; **Playwright với backend thật chưa chạy** (T003/T047/T050)
+- [x] Constitution Check trong plan.md vẫn đạt; MSW chỉ trong test (R17)
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật

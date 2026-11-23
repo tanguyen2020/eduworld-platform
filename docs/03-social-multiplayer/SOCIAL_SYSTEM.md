@@ -106,7 +106,7 @@ Policy trường `student_club_creation` (do `school_admin` đặt, như nhau ch
 | `member` (học sinh) | Tham gia hoạt động, chat club, rời club |
 
 - Tham gia: **yêu cầu tham gia** (owner/officer duyệt) hoặc **lời mời**. Club do nhà trường tạo có thể thêm trực tiếp danh sách học sinh của trường (trong giới hạn thành viên); **không** có tùy chọn "thêm cả lớp" (ADR-0095).
-- `school_admin` quản lý mọi club của trường trong portal: khóa (`locked`), lưu trữ, gỡ thành viên; **không** đọc nội dung chat club (vi phạm chat do Safety Team xử lý, [MODERATION](MODERATION.md)).
+- `school_admin` quản lý mọi club của trường trong portal: khóa (`locked`), lưu trữ, gỡ thành viên (route nhân sự `listSchoolClubMembers`/`removeSchoolClubMember`, `social.club.approve` trong phạm vi trường của grant, lý do bắt buộc, gỡ khỏi channel `team` cùng transaction, không gỡ chủ club — F122 T061); **không** đọc nội dung chat club (vi phạm chat do Safety Team xử lý, [MODERATION](MODERATION.md)).
 - Kích thước tối đa: 50 (cấu hình theo loại, platform-only) **[Confirmed]**.
 - Mỗi học sinh tối đa 5 club **[Confirmed]**.
 - Phạm vi: **một tenant**; mặc định cùng trường, liên trường trong tenant `unit` khi tenant bật `cross_school_social_enabled` (§7, ADR-0054).
