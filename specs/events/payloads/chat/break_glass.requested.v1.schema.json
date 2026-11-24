@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/break_glass.requested.v1.schema.json",
+  "title": "Payload break_glass.requested v1 (module chat, owner F124)",
+  "description": "Một System Admin yêu cầu break-glass (createBreakGlassRequest, MODERATION §6.1, F124-AC-17). Event platform (envelope tenant_id null — người duyệt là System Admin); KHÔNG chứa lý do, phạm vi hay nội dung tin (R14). Consumer: identity (email break_glass_request cho mọi System Admin khác có platform.break_glass.approve), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["grant_id", "tenant_id", "requested_by", "requested_at"],
+  "properties": {
+    "grant_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "requested_by": { "type": "string", "format": "uuid" },
+    "requested_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "grant_id": "0193a6c1-0000-7000-8000-0000000000b1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "requested_by": "0193a5f4-6c1e-7b2a-9d1f-0000000000ab",
+      "requested_at": "2026-11-21T10:00:00.000Z"
+    }
+  ]
+}

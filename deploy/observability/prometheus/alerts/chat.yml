@@ -36,3 +36,14 @@ groups:
         annotations:
           summary: "School safety notifications past ack_due_at without acknowledgement"
           description: "school-notification-reminder reminded the school; follow up per MODERATION §6.4 (listSchoolSafetyNotificationsPlatform?overdue=true)."
+  # Safety Team operations (F124 T037, MODERATION §6.1, §6.3): on-call coverage refreshed every minute by oncall-escalator.
+  - name: chat-safety-operations
+    rules:
+      - alert: ModerationOncallGap
+        expr: min by (oncall_role) (eduworld_moderation_oncall_coverage) == 0
+        for: 5m
+        labels: { severity: critical, module: chat, team: safety }
+        annotations:
+          summary: "No live on-call shift of role {{ $labels.oncall_role }} covers now"
+          description: "p1 cases page the next level with people (MODERATION §6.3). The team lead creates the missing shift (createModerationOncallShift). Runbook: MONITORING §5."
+          runbook_url: "docs/11-operations/MONITORING.md#runbook-moderation-oncall-gap"

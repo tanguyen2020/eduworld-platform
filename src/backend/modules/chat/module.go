@@ -17,11 +17,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/service"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/chatasset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/moderation/breakglass"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/policy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/cache"
 	chatconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/emoji"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/moderation"
+	chatmodules "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/natsstream"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/persistence"
@@ -62,7 +64,21 @@ type Facade interface {
 
 // Module is the registered module; Facade() serves the facade operations of module chat.
 type Module struct {
-	facade Facade
+	facade     Facade
+	principals *chatmodules.LatePrincipals // F124: resolvePrincipal of the identity facade (on-call moderators)
+}
+
+// Imports are the facades of other modules called by module chat: resolvePrincipal of identity (F124-AC-12, the on-call
+// moderator holds moderation.case.act).
+type Imports struct {
+	Identity chatmodules.IdentityPrincipals
+}
+
+// Wire sets the facades of the other modules once they are built (cmd/internal/wiring.Compose).
+func (m *Module) Wire(in Imports) {
+	if m != nil && m.principals != nil {
+		m.principals.Set(in.Identity)
+	}
 }
 
 // Facade returns the in-process facade of module chat (nil in a binary that does not load the moderation pipeline).
@@ -131,7 +147,12 @@ func Register(r *module.Registry) (*Module, error) {
 		return nil, fmt.Errorf("chat: %w", err)
 	}
 	var validator port.ContentValidator = pipe.Validator
-	mod := &Module{facade: chatfacade.Facade{Moderation: pipe.Validator}}
+	mod := &Module{facade: chatfacade.Facade{Moderation: pipe.Validator}, principals: &chatmodules.LatePrincipals{}}
+	opsCfg, err := chatconfig.SafetyOpsFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("chat: %w", err)
+	}
+	observability.RegisterSafetyOps(r.Metrics())
 	if r.ServesHTTP() || runsChat {
 		if err := command.RequireValidator(chatCfg.Env, validator); err != nil {
 			return nil, err
@@ -169,8 +190,15 @@ func Register(r *module.Registry) (*Module, error) {
 	// through tenancy.Bypass(moderation_case) (ADR-0072).
 	safetyCmd := command.Safety{UoW: core.UoW, Store: persistence.Safety{}, Events: persistence.Publisher{W: core.Writer},
 		Audit: persistence.Auditor{R: core.Recorder}, Cache: cache.Sanctions{C: vk}, Push: realtime.ChatFanout{P: rt.Publisher{C: vk}},
-		Recent: recent, Metrics: observability.Safety{}, Lock: cache.JobLock{C: vk}, AfterCommit: entx.AfterCommit}
+		Recent: recent, Metrics: observability.Safety{}, Lock: cache.JobLock{C: vk}, AfterCommit: entx.AfterCommit,
+		// F124: on-call rotation of p1 cases and break-glass of the System Admin.
+		Oncall: persistence.SafetyOps{}, Principals: mod.principals,
+		OncallCfg:     command.OncallConfig{ShiftMax: opsCfg.ShiftMax, Ladder: command.DefaultOncallLadder()},
+		OncallMetrics: observability.SafetyOps{}, Grants: persistence.SafetyOps{},
+		BreakGlassLimits:  breakglass.Limits{MaxDuration: opsCfg.BreakGlassDuration, MaxWindow: opsCfg.BreakGlassWindow},
+		BreakGlassMetrics: observability.SafetyOps{}}
 	safetyReads := query.Safety{Read: core.ReadSession, Reader: persistence.Safety{}, Audit: core.Recorder}
+	opsReads := query.SafetyOps{Read: core.ReadSession, Oncall: persistence.SafetyOps{}, Grants: persistence.SafetyOps{}}
 
 	if r.ServesHTTP() {
 		// The compiled catalogue must be loaded before the instance takes traffic (F116 edge case).
@@ -244,6 +272,7 @@ func Register(r *module.Registry) (*Module, error) {
 			Regression: regression.Suite{Engine: pipe.Validator.Engine, Source: corpus}, Notifier: cache.Notifier{C: vk},
 			OnPublished: observability.CatalogVersion}
 		safetyReads.Cursors = cursors
+		opsReads.Cursors = cursors
 		catalogReads := query.Catalog{Read: core.ReadSession, Reader: persistence.Catalog{}, Moderation: persistence.ModerationReader{},
 			Engine: pipe.Validator.Engine, Audit: core.Recorder, Cursors: cursors}
 		h := chathttp.Handlers{Commands: social, Queries: query.Social{Read: core.ReadSession, Relations: persistence.Reader{},
@@ -251,8 +280,9 @@ func Register(r *module.Registry) (*Module, error) {
 			Quick: query.QuickMessages{Catalog: pipe.Quick}}, Catalog: &chathttp.CatalogHandlers{Commands: catalogAdmin, Queries: catalogReads},
 			Switches: &chathttp.SwitchHandlers{Commands: switchAdmin, Queries: query.Switches{Read: core.ReadSession, Reader: persistence.Switches{},
 				Moderation: persistence.ModerationReader{}, Cursors: cursors}},
-			Safety:   &chathttp.SafetyHandlers{Commands: safetyCmd, Queries: safetyReads},
-			Features: &chathttp.FeatureHandlers{Commands: messaging, Queries: featureReads, AssetURL: assetsCfg.URL, Recorder: send.RecordResult},
+			Safety:    &chathttp.SafetyHandlers{Commands: safetyCmd, Queries: safetyReads},
+			SafetyOps: &chathttp.SafetyOpsHandlers{Commands: safetyCmd, Queries: opsReads},
+			Features:  &chathttp.FeatureHandlers{Commands: messaging, Queries: featureReads, AssetURL: assetsCfg.URL, Recorder: send.RecordResult},
 			Assets: &chathttp.AssetHandlers{Commands: command.ChatAssets{UoW: core.UoW, Repo: persistence.Assets{}, Storage: objects,
 				Inspector: storage.Inspector{Storage: objects}, Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder},
 				Metrics: observability.Features{}, Limits: chatasset.Limits{StickerMaxBytes: assetsCfg.StickerMaxBytes, GifMaxBytes: assetsCfg.GifMaxBytes,
@@ -397,6 +427,9 @@ func Register(r *module.Registry) (*Module, error) {
 		safetyReads.QueueCounts)))
 	r.Job(Name, job.SchoolNotificationReminder, command.SafetyTick, module.JobFunc(job.ReminderJob(safetyCmd)))
 	r.Job(Name, job.SanctionExpirer, command.SafetyTick, module.JobFunc(job.SanctionExpirerJob(safetyCmd)))
+	// Safety Team operations (F124): on-call ladder of open p1 cases + coverage gauge, break-glass expiry.
+	r.Job(Name, job.OncallEscalator, job.SafetyOpsTick, module.JobFunc(job.OncallEscalatorJob(safetyCmd)))
+	r.Job(Name, job.BreakGlassExpirer, job.SafetyOpsTick, module.JobFunc(job.BreakGlassExpirerJob(safetyCmd)))
 	return mod, nil
 }
 

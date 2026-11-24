@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/block"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/breakglassgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channelmember"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/chatpolicy"
@@ -22,6 +23,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationaction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationcase"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationevidence"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationoncallshift"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitch"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchchange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchrequest"
@@ -96,6 +98,7 @@ func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			block.Table:                    block.ValidColumn,
+			breakglassgrant.Table:          breakglassgrant.ValidColumn,
 			channel.Table:                  channel.ValidColumn,
 			channelmember.Table:            channelmember.ValidColumn,
 			chatpolicy.Table:               chatpolicy.ValidColumn,
@@ -105,6 +108,7 @@ func checkColumn(t, c string) error {
 			moderationaction.Table:         moderationaction.ValidColumn,
 			moderationcase.Table:           moderationcase.ValidColumn,
 			moderationevidence.Table:       moderationevidence.ValidColumn,
+			moderationoncallshift.Table:    moderationoncallshift.ValidColumn,
 			moderationswitch.Table:         moderationswitch.ValidColumn,
 			moderationswitchchange.Table:   moderationswitchchange.ValidColumn,
 			moderationswitchrequest.Table:  moderationswitchrequest.ValidColumn,

@@ -30,19 +30,20 @@ type scanner interface{ Scan(...any) error }
 const caseCols = `c.case_id, c.tenant_id, c.status, c.severity, c.source, c.category_code, c.channel_id, c.channel_type, c.target_type,
 	c.target_id, c.school_ids, c.subject_user_ids, c.assignee_moderator_id, c.assigned_via, c.report_count, c.first_response_due_at,
 	c.sla_due_at, c.first_response_at, c.escalated_at, c.hold_sanction_id, c.school_notified_at, c.school_ack_at, c.acknowledged_by,
-	c.contact_outcome, c.contact_path, c.resolved_at, c.source_event_id, c.created_at, c.updated_at, c.version,
+	c.contact_outcome, c.contact_path, c.resolved_at, c.source_event_id, c.created_at, c.updated_at, c.version, c.oncall_page_level, c.last_paged_at,
 	(SELECT coalesce(rt.name, rt.code) FROM ref.tenants rt WHERE rt.tenant_id = c.tenant_id),
 	(SELECT rt.tenant_type FROM ref.tenants rt WHERE rt.tenant_id = c.tenant_id)` // tenant_name, tenant_type (ref.tenants projection, F122 T064)
 
 func scanCase(sc scanner) (*read.CaseRow, error) {
 	var c read.CaseRow
-	var category, channelType, via, outcome, tenantName, tenantType sql.NullString
+	var category, channelType, via, outcome, tenantName, tenantType, level sql.NullString
+	var paged sql.NullTime
 	var channel, assignee, hold, ackBy, event uuid.NullUUID
 	var firstAt, escAt, notified, acked, resolved sql.NullTime
 	var schools, subjects []byte
 	if err := sc.Scan(&c.ID, &c.TenantID, &c.Status, &c.Severity, &c.Source, &category, &channel, &channelType, &c.TargetType, &c.TargetID,
 		&schools, &subjects, &assignee, &via, &c.ReportCount, &c.FirstResponseDue, &c.SLADue, &firstAt, &escAt, &hold, &notified, &acked,
-		&ackBy, &outcome, &c.ContactPath, &resolved, &event, &c.CreatedAt, &c.UpdatedAt, &c.Version, &tenantName, &tenantType); err != nil {
+		&ackBy, &outcome, &c.ContactPath, &resolved, &event, &c.CreatedAt, &c.UpdatedAt, &c.Version, &level, &paged, &tenantName, &tenantType); err != nil {
 		return nil, err
 	}
 	c.Category, c.ChannelID, c.ChannelType, c.Assignee, c.AssignedVia = nullString(category), nullUUID(channel), nullString(channelType),
@@ -50,6 +51,7 @@ func scanCase(sc scanner) (*read.CaseRow, error) {
 	c.FirstResponseAt, c.EscalatedAt, c.HoldSanctionID, c.SchoolNotifiedAt, c.SchoolAckAt = nullTime(firstAt), nullTime(escAt),
 		nullUUID(hold), nullTime(notified), nullTime(acked)
 	c.TenantName, c.TenantType = nullString(tenantName), nullString(tenantType)
+	c.OncallPageLevel, c.LastPagedAt = nullString(level), nullTime(paged)
 	c.AcknowledgedBy, c.ContactOutcome, c.ResolvedAt, c.SourceEventID = nullUUID(ackBy), nullString(outcome), nullTime(resolved), nullUUID(event)
 	c.FirstResponseDue, c.SLADue, c.CreatedAt, c.UpdatedAt = c.FirstResponseDue.UTC(), c.SLADue.UTC(), c.CreatedAt.UTC(), c.UpdatedAt.UTC()
 	if err := json.Unmarshal(schools, &c.SchoolIDs); err != nil {
@@ -332,11 +334,11 @@ func (Safety) Case(ctx context.Context, id uuid.UUID) (*read.CaseRow, error) {
 func (Safety) InsertCase(ctx context.Context, c read.CaseRow) error {
 	_, err := exec(ctx, `INSERT INTO chat.moderation_cases (case_id, tenant_id, created_at, updated_at, version, school_ids, status, severity,
 		source, category_code, channel_id, channel_type, target_type, target_id, subject_user_ids, assignee_moderator_id, assigned_via,
-		report_count, first_response_due_at, sla_due_at, hold_sanction_id, contact_path, source_event_id)
-		VALUES ($1, $2, $3, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb, $15, $16, $17, $18, $19, $20, $21, $22)`,
+		report_count, first_response_due_at, sla_due_at, hold_sanction_id, contact_path, source_event_id, oncall_page_level, last_paged_at)
+		VALUES ($1, $2, $3, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)`,
 		c.ID, c.TenantID, c.CreatedAt, c.Version, jsonIDs(c.SchoolIDs), c.Status, c.Severity, c.Source, c.Category, c.ChannelID, c.ChannelType,
 		c.TargetType, c.TargetID, jsonIDs(c.Subjects), c.Assignee, c.AssignedVia, c.ReportCount, c.FirstResponseDue, c.SLADue, c.HoldSanctionID,
-		c.ContactPath, c.SourceEventID)
+		c.ContactPath, c.SourceEventID, c.OncallPageLevel, c.LastPagedAt)
 	if err != nil {
 		return fmt.Errorf("chat: insert case: %w", err)
 	}
@@ -349,11 +351,11 @@ func (Safety) UpdateCase(ctx context.Context, c read.CaseRow, actor *uuid.UUID) 
 		status = $6, severity = $7, category_code = $8, subject_user_ids = $9::jsonb, assignee_moderator_id = $10, assigned_via = $11,
 		report_count = $12, first_response_due_at = $13, sla_due_at = $14, first_response_at = $15, escalated_at = $16,
 		hold_sanction_id = $17, school_notified_at = $18, school_ack_at = $19, acknowledged_by = $20, contact_outcome = $21,
-		contact_path = $22, resolved_at = $23
+		contact_path = $22, resolved_at = $23, oncall_page_level = $24, last_paged_at = $25
 		WHERE tenant_id = $1 AND case_id = $2 AND version = $4 - 1 AND deleted_at IS NULL`,
 		c.TenantID, c.ID, actor, c.Version, jsonIDs(c.SchoolIDs), c.Status, c.Severity, c.Category, jsonIDs(c.Subjects), c.Assignee,
 		c.AssignedVia, c.ReportCount, c.FirstResponseDue, c.SLADue, c.FirstResponseAt, c.EscalatedAt, c.HoldSanctionID, c.SchoolNotifiedAt,
-		c.SchoolAckAt, c.AcknowledgedBy, c.ContactOutcome, c.ContactPath, c.ResolvedAt)
+		c.SchoolAckAt, c.AcknowledgedBy, c.ContactOutcome, c.ContactPath, c.ResolvedAt, c.OncallPageLevel, c.LastPagedAt)
 	if err != nil {
 		return fmt.Errorf("chat: update case: %w", err)
 	}

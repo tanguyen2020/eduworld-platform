@@ -234,6 +234,9 @@ func (h Safety) CreateReport(ctx context.Context, in ReportInput) (res ReportRes
 				c.FirstResponseDue, c.SLADue = minTime(c.FirstResponseDue, fr), minTime(c.SLADue, due)
 			}
 		}
+		if err := h.rotate(ctx, c, now); err != nil { // F124-AC-13: on-call rotation of a p1 case
+			return err
+		}
 		c.Version++
 		if err := h.Store.UpdateCase(ctx, *c, nil); err != nil {
 			return err
@@ -436,6 +439,15 @@ func (h Safety) OpenCaseFromSignal(ctx context.Context, s Signal) (caseID uuid.U
 			}
 		} else if err := h.Store.InsertCase(ctx, *c); err != nil {
 			return err
+		}
+		// F124-AC-13: on-call rotation of a p1 case (after the row exists: the history references it).
+		if paged, err := h.rotated(ctx, c, now); err != nil {
+			return err
+		} else if paged {
+			c.Version++
+			if err := h.Store.UpdateCase(ctx, *c, nil); err != nil {
+				return err
+			}
 		}
 		if _, err := h.evidence(ctx, c, ids.New(), nil, school, snap); err != nil {
 			return err

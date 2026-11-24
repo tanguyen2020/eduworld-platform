@@ -83,6 +83,10 @@ const (
 	FieldResolvedAt = "resolved_at"
 	// FieldSourceEventID holds the string denoting the source_event_id field in the database.
 	FieldSourceEventID = "source_event_id"
+	// FieldOncallPageLevel holds the string denoting the oncall_page_level field in the database.
+	FieldOncallPageLevel = "oncall_page_level"
+	// FieldLastPagedAt holds the string denoting the last_paged_at field in the database.
+	FieldLastPagedAt = "last_paged_at"
 	// Table holds the table name of the moderationcase in the database.
 	Table = "moderation_cases"
 )
@@ -124,6 +128,8 @@ var Columns = []string{
 	FieldContactPath,
 	FieldResolvedAt,
 	FieldSourceEventID,
+	FieldOncallPageLevel,
+	FieldLastPagedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -178,6 +184,8 @@ var (
 	DefaultContactPath string
 	// ContactPathValidator is a validator for the "contact_path" field. It is called by the builders before save.
 	ContactPathValidator func(string) error
+	// OncallPageLevelValidator is a validator for the "oncall_page_level" field. It is called by the builders before save.
+	OncallPageLevelValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -348,4 +356,14 @@ func ByResolvedAt(opts ...sql.OrderTermOption) OrderOption {
 // BySourceEventID orders the results by the source_event_id field.
 func BySourceEventID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSourceEventID, opts...).ToFunc()
+}
+
+// ByOncallPageLevel orders the results by the oncall_page_level field.
+func ByOncallPageLevel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOncallPageLevel, opts...).ToFunc()
+}
+
+// ByLastPagedAt orders the results by the last_paged_at field.
+func ByLastPagedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastPagedAt, opts...).ToFunc()
 }

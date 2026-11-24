@@ -88,6 +88,10 @@ func Compose(r *module.Registry) (*Composition, error) {
 	if err := idm.Wire(in); err != nil {
 		return nil, err
 	}
+	// The on-call rotation of module chat checks the moderator through resolvePrincipal of identity (F124-AC-12).
+	if f := idm.Facade(); f != nil {
+		cht.Wire(chat.Imports{Identity: f})
+	}
 	return &Composition{Identity: idm, Learning: lrn, Game: gam}, nil
 }
 

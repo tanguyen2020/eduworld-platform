@@ -1,0 +1,21 @@
+# Alertmanager routing (F124 T037): the alerts of the Platform Safety Team (label team=safety: ModerationP1Unclaimed,
+# ModerationSlaBreached, ModerationOncallGap, EmailDeliveryFailing, SchoolSafetyNotificationNoRecipient …) go to the
+# receiver safety-oncall at once, repeated every 15 minutes until resolved (MONITORING §5, CHILD_SAFETY §11). The general
+# routing, the SMS channel and the other receivers belong to F131. The webhook URL is a secret file (ops_alert_safety_*),
+# never committed (AGENTS R4).
+route:
+  receiver: default
+  group_by: [alertname, module]
+  routes:
+    - matchers: ['team="safety"']
+      receiver: safety-oncall
+      group_by: [alertname]
+      group_wait: 0s
+      group_interval: 1m
+      repeat_interval: 15m
+receivers:
+  - name: default
+  - name: safety-oncall
+    webhook_configs:
+      - url_file: /run/secrets/ops_alert_safety_webhook_url
+        send_resolved: true

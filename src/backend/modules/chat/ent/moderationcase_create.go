@@ -425,6 +425,34 @@ func (_c *ModerationCaseCreate) SetNillableSourceEventID(v *uuid.UUID) *Moderati
 	return _c
 }
 
+// SetOncallPageLevel sets the "oncall_page_level" field.
+func (_c *ModerationCaseCreate) SetOncallPageLevel(v string) *ModerationCaseCreate {
+	_c.mutation.SetOncallPageLevel(v)
+	return _c
+}
+
+// SetNillableOncallPageLevel sets the "oncall_page_level" field if the given value is not nil.
+func (_c *ModerationCaseCreate) SetNillableOncallPageLevel(v *string) *ModerationCaseCreate {
+	if v != nil {
+		_c.SetOncallPageLevel(*v)
+	}
+	return _c
+}
+
+// SetLastPagedAt sets the "last_paged_at" field.
+func (_c *ModerationCaseCreate) SetLastPagedAt(v time.Time) *ModerationCaseCreate {
+	_c.mutation.SetLastPagedAt(v)
+	return _c
+}
+
+// SetNillableLastPagedAt sets the "last_paged_at" field if the given value is not nil.
+func (_c *ModerationCaseCreate) SetNillableLastPagedAt(v *time.Time) *ModerationCaseCreate {
+	if v != nil {
+		_c.SetLastPagedAt(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *ModerationCaseCreate) SetID(v uuid.UUID) *ModerationCaseCreate {
 	_c.mutation.SetID(v)
@@ -613,6 +641,11 @@ func (_c *ModerationCaseCreate) check() error {
 			return &ValidationError{Name: "contact_path", err: fmt.Errorf(`ent: validator failed for field "ModerationCase.contact_path": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.OncallPageLevel(); ok {
+		if err := moderationcase.OncallPageLevelValidator(v); err != nil {
+			return &ValidationError{Name: "oncall_page_level", err: fmt.Errorf(`ent: validator failed for field "ModerationCase.oncall_page_level": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -784,6 +817,14 @@ func (_c *ModerationCaseCreate) createSpec() (*ModerationCase, *sqlgraph.CreateS
 	if value, ok := _c.mutation.SourceEventID(); ok {
 		_spec.SetField(moderationcase.FieldSourceEventID, field.TypeUUID, value)
 		_node.SourceEventID = &value
+	}
+	if value, ok := _c.mutation.OncallPageLevel(); ok {
+		_spec.SetField(moderationcase.FieldOncallPageLevel, field.TypeString, value)
+		_node.OncallPageLevel = &value
+	}
+	if value, ok := _c.mutation.LastPagedAt(); ok {
+		_spec.SetField(moderationcase.FieldLastPagedAt, field.TypeTime, value)
+		_node.LastPagedAt = &value
 	}
 	return _node, _spec
 }

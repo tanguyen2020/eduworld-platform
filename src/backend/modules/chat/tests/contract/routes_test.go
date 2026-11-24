@@ -96,8 +96,9 @@ func TestOperationsMatchSpec(t *testing.T) {
 	// 4 moderation switch operations (F116 US3), 13 Safety Team operations (F121), 10 message feature operations (F118) and
 	// 8 Game Studio sticker/GIF operations (F118: the shared /game-admin/{config_type} ones for sticker-packs/gifs + presign),
 	// 7 chat policy, 2 persistent channel/search and 21 club operations (F120), getTenantModerationStatus (F122 banner),
-	// rejectModerationSwitchChange, listModerationCaseTenants, listSchoolClubMembers and removeSchoolClubMember (F122 T060–T064).
-	if len(found) != len(chathttp.Operations) || len(found) != 109 {
+	// rejectModerationSwitchChange, listModerationCaseTenants, listSchoolClubMembers and removeSchoolClubMember (F122 T060–T064),
+	// 9 on-call and break-glass operations (F124).
+	if len(found) != len(chathttp.Operations) || len(found) != 118 {
 		t.Fatalf("chat operations found in the spec: %d of %d: %v", len(found), len(chathttp.Operations), found)
 	}
 	// F116-AC-18: the catalogue and switch administration is internal-gateway only (x-internal, /admin/), except the
@@ -179,13 +180,15 @@ func TestSafetyOperations(t *testing.T) {
 }
 
 // F121-AC-25 (TC-CHAT-009, AC-MOD-007): no operation reads or searches chat messages outside a channel the caller belongs
-// to or the context of a moderation case: every chat operation exposing messages is in this closed list.
+// to or the context of a moderation case — or a break-glass grant (F124, MODERATION §6.1: the only path outside a case):
+// every chat operation exposing messages is in this closed list.
 func TestNoChatBrowsing(t *testing.T) {
 	allowed := map[string]bool{"listChannelMessages": true, "sendChannelMessage": true, "listQuickMessages": true, "pinMessage": true,
 		"unpinMessage": true, "getMessageReceipts": true, "editMessage": true, "recallMessage": true, "forwardMessage": true,
 		"toggleMessageReaction":      true, // F118: a reaction on a message of a channel the caller belongs to
 		"searchMessages":             true, // member channels only (F120): tenant, membership, deleted_at, recalled_at
-		"listModerationCaseMessages": true} // the case only, assignee or team lead, audited (F121)
+		"listModerationCaseMessages": true, // the case only, assignee or team lead, audited (F121)
+		"listBreakGlassMessages":     true} // F124: the requester of an approved, unexpired two-person grant, its scope only, audited
 	doc := spec(t)
 	for path, item := range doc.Paths.Map() {
 		for method, op := range item.Operations() {
@@ -244,4 +247,44 @@ func servedByChat(v any) bool {
 		}
 	}
 	return false
+}
+
+// F124-AC-16, AC-21 (TC-CMS-WS-02): the on-call and break-glass operations are internal-gateway only (x-internal, under
+// /admin/moderation/oncall-shifts or /admin/break-glass/: no route on the public gateway; httpx adds the portal staff and
+// platform role guards), never player routes; break-glass writes name the target tenant (X-Tenant-Id required, R20) and
+// every write takes an Idempotency-Key (R10).
+func TestSafetyOpsOperations(t *testing.T) {
+	doc := spec(t)
+	writes := map[string]bool{"createModerationOncallShift": true, "deleteModerationOncallShift": true, "createBreakGlassRequest": true,
+		"approveBreakGlassRequest": true, "rejectBreakGlassRequest": true, "revokeBreakGlassGrant": true}
+	for _, id := range chathttp.SafetyOpsOperations {
+		o := chathttp.Operations[id]
+		if o.Guard&httpx.GuardGamePlayer != 0 {
+			t.Errorf("%s: never a player route", id)
+		}
+		if !strings.HasPrefix(o.Pattern, "/admin/moderation/oncall-shifts") && !strings.HasPrefix(o.Pattern, "/admin/break-glass/") {
+			t.Errorf("%s: %s outside the internal admin routes", id, o.Pattern)
+		}
+		if writes[id] && o.Idempotency != httpx.IdempotencyRequired {
+			t.Errorf("%s: write without Idempotency-Key", id)
+		}
+		if strings.HasPrefix(o.Pattern, "/admin/break-glass/") && writes[id] && o.Tenant != httpx.TenantRequired {
+			t.Errorf("%s: a break-glass write names its target tenant", id)
+		}
+	}
+	n := 0
+	for path, item := range doc.Paths.Map() {
+		for _, op := range item.Operations() {
+			if !slices.Contains(chathttp.SafetyOpsOperations, op.OperationID) {
+				continue
+			}
+			n++
+			if internal, _ := op.Extensions["x-internal"].(bool); !internal {
+				t.Errorf("%s %s: must be x-internal", op.OperationID, path)
+			}
+		}
+	}
+	if n != len(chathttp.SafetyOpsOperations) {
+		t.Fatalf("F124 operations in the spec: %d", n)
+	}
 }

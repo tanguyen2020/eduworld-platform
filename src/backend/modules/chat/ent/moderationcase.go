@@ -87,7 +87,11 @@ type ModerationCase struct {
 	ResolvedAt *time.Time `json:"resolved_at,omitempty"`
 	// SourceEventID holds the value of the "source_event_id" field.
 	SourceEventID *uuid.UUID `json:"source_event_id,omitempty"`
-	selectValues  sql.SelectValues
+	// OncallPageLevel holds the value of the "oncall_page_level" field.
+	OncallPageLevel *string `json:"oncall_page_level,omitempty"`
+	// LastPagedAt holds the value of the "last_paged_at" field.
+	LastPagedAt  *time.Time `json:"last_paged_at,omitempty"`
+	selectValues sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -101,9 +105,9 @@ func (*ModerationCase) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case moderationcase.FieldVersion, moderationcase.FieldReportCount:
 			values[i] = new(sql.NullInt64)
-		case moderationcase.FieldDeleteReason, moderationcase.FieldStatus, moderationcase.FieldSeverity, moderationcase.FieldSource, moderationcase.FieldCategoryCode, moderationcase.FieldChannelType, moderationcase.FieldTargetType, moderationcase.FieldAssignedVia, moderationcase.FieldContactOutcome, moderationcase.FieldContactPath:
+		case moderationcase.FieldDeleteReason, moderationcase.FieldStatus, moderationcase.FieldSeverity, moderationcase.FieldSource, moderationcase.FieldCategoryCode, moderationcase.FieldChannelType, moderationcase.FieldTargetType, moderationcase.FieldAssignedVia, moderationcase.FieldContactOutcome, moderationcase.FieldContactPath, moderationcase.FieldOncallPageLevel:
 			values[i] = new(sql.NullString)
-		case moderationcase.FieldCreatedAt, moderationcase.FieldUpdatedAt, moderationcase.FieldDeletedAt, moderationcase.FieldFirstResponseDueAt, moderationcase.FieldSLADueAt, moderationcase.FieldFirstResponseAt, moderationcase.FieldEscalatedAt, moderationcase.FieldSchoolNotifiedAt, moderationcase.FieldSchoolAckAt, moderationcase.FieldResolvedAt:
+		case moderationcase.FieldCreatedAt, moderationcase.FieldUpdatedAt, moderationcase.FieldDeletedAt, moderationcase.FieldFirstResponseDueAt, moderationcase.FieldSLADueAt, moderationcase.FieldFirstResponseAt, moderationcase.FieldEscalatedAt, moderationcase.FieldSchoolNotifiedAt, moderationcase.FieldSchoolAckAt, moderationcase.FieldResolvedAt, moderationcase.FieldLastPagedAt:
 			values[i] = new(sql.NullTime)
 		case moderationcase.FieldID, moderationcase.FieldTenantID, moderationcase.FieldTargetID:
 			values[i] = new(uuid.UUID)
@@ -355,6 +359,20 @@ func (_m *ModerationCase) assignValues(columns []string, values []any) error {
 				_m.SourceEventID = new(uuid.UUID)
 				*_m.SourceEventID = *value.S.(*uuid.UUID)
 			}
+		case moderationcase.FieldOncallPageLevel:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field oncall_page_level", values[i])
+			} else if value.Valid {
+				_m.OncallPageLevel = new(string)
+				*_m.OncallPageLevel = value.String
+			}
+		case moderationcase.FieldLastPagedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_paged_at", values[i])
+			} else if value.Valid {
+				_m.LastPagedAt = new(time.Time)
+				*_m.LastPagedAt = value.Time
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -529,6 +547,16 @@ func (_m *ModerationCase) String() string {
 	if v := _m.SourceEventID; v != nil {
 		builder.WriteString("source_event_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.OncallPageLevel; v != nil {
+		builder.WriteString("oncall_page_level=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.LastPagedAt; v != nil {
+		builder.WriteString("last_paged_at=")
+		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteByte(')')
 	return builder.String()

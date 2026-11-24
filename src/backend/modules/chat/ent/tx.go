@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// Block is the client for interacting with the Block builders.
 	Block *BlockClient
+	// BreakGlassGrant is the client for interacting with the BreakGlassGrant builders.
+	BreakGlassGrant *BreakGlassGrantClient
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
 	// ChannelMember is the client for interacting with the ChannelMember builders.
@@ -32,6 +34,8 @@ type Tx struct {
 	ModerationCase *ModerationCaseClient
 	// ModerationEvidence is the client for interacting with the ModerationEvidence builders.
 	ModerationEvidence *ModerationEvidenceClient
+	// ModerationOncallShift is the client for interacting with the ModerationOncallShift builders.
+	ModerationOncallShift *ModerationOncallShiftClient
 	// ModerationSwitch is the client for interacting with the ModerationSwitch builders.
 	ModerationSwitch *ModerationSwitchClient
 	// ModerationSwitchChange is the client for interacting with the ModerationSwitchChange builders.
@@ -190,6 +194,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Block = NewBlockClient(tx.config)
+	tx.BreakGlassGrant = NewBreakGlassGrantClient(tx.config)
 	tx.Channel = NewChannelClient(tx.config)
 	tx.ChannelMember = NewChannelMemberClient(tx.config)
 	tx.ChatPolicy = NewChatPolicyClient(tx.config)
@@ -199,6 +204,7 @@ func (tx *Tx) init() {
 	tx.ModerationAction = NewModerationActionClient(tx.config)
 	tx.ModerationCase = NewModerationCaseClient(tx.config)
 	tx.ModerationEvidence = NewModerationEvidenceClient(tx.config)
+	tx.ModerationOncallShift = NewModerationOncallShiftClient(tx.config)
 	tx.ModerationSwitch = NewModerationSwitchClient(tx.config)
 	tx.ModerationSwitchChange = NewModerationSwitchChangeClient(tx.config)
 	tx.ModerationSwitchRequest = NewModerationSwitchRequestClient(tx.config)

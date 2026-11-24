@@ -189,7 +189,7 @@ func (Safety) OpenCounts(ctx context.Context) ([]read.OpenCount, error) {
 	}
 	// tenancyguard:ok gauge of the queue across tenants under tenancy.Bypass(platform_job): counts only, deleted_at IS NULL
 	rows, err := t.QueryContext(ctx, `SELECT c.severity, c.assignee_moderator_id IS NOT NULL, count(*),
-		min(c.created_at) FILTER (WHERE c.assignee_moderator_id IS NULL AND c.status = 'open')
+		min(c.created_at) FILTER (WHERE c.status = 'open' AND (c.assignee_moderator_id IS NULL OR c.assigned_via = 'rotation'))
 		FROM chat.moderation_cases c WHERE c.deleted_at IS NULL AND c.status <> 'resolved'
 		GROUP BY c.severity, c.assignee_moderator_id IS NOT NULL`)
 	if err != nil {

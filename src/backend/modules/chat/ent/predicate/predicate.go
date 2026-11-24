@@ -9,6 +9,9 @@ import (
 // Block is the predicate function for block builders.
 type Block func(*sql.Selector)
 
+// BreakGlassGrant is the predicate function for breakglassgrant builders.
+type BreakGlassGrant func(*sql.Selector)
+
 // Channel is the predicate function for channel builders.
 type Channel func(*sql.Selector)
 
@@ -35,6 +38,9 @@ type ModerationCase func(*sql.Selector)
 
 // ModerationEvidence is the predicate function for moderationevidence builders.
 type ModerationEvidence func(*sql.Selector)
+
+// ModerationOncallShift is the predicate function for moderationoncallshift builders.
+type ModerationOncallShift func(*sql.Selector)
 
 // ModerationSwitch is the predicate function for moderationswitch builders.
 type ModerationSwitch func(*sql.Selector)

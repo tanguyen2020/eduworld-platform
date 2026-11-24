@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/block"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/breakglassgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channelmember"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/chatpolicy"
@@ -25,6 +26,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationaction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationcase"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationevidence"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationoncallshift"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitch"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchchange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchrequest"
@@ -49,6 +51,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Block is the client for interacting with the Block builders.
 	Block *BlockClient
+	// BreakGlassGrant is the client for interacting with the BreakGlassGrant builders.
+	BreakGlassGrant *BreakGlassGrantClient
 	// Channel is the client for interacting with the Channel builders.
 	Channel *ChannelClient
 	// ChannelMember is the client for interacting with the ChannelMember builders.
@@ -67,6 +71,8 @@ type Client struct {
 	ModerationCase *ModerationCaseClient
 	// ModerationEvidence is the client for interacting with the ModerationEvidence builders.
 	ModerationEvidence *ModerationEvidenceClient
+	// ModerationOncallShift is the client for interacting with the ModerationOncallShift builders.
+	ModerationOncallShift *ModerationOncallShiftClient
 	// ModerationSwitch is the client for interacting with the ModerationSwitch builders.
 	ModerationSwitch *ModerationSwitchClient
 	// ModerationSwitchChange is the client for interacting with the ModerationSwitchChange builders.
@@ -105,6 +111,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Block = NewBlockClient(c.config)
+	c.BreakGlassGrant = NewBreakGlassGrantClient(c.config)
 	c.Channel = NewChannelClient(c.config)
 	c.ChannelMember = NewChannelMemberClient(c.config)
 	c.ChatPolicy = NewChatPolicyClient(c.config)
@@ -114,6 +121,7 @@ func (c *Client) init() {
 	c.ModerationAction = NewModerationActionClient(c.config)
 	c.ModerationCase = NewModerationCaseClient(c.config)
 	c.ModerationEvidence = NewModerationEvidenceClient(c.config)
+	c.ModerationOncallShift = NewModerationOncallShiftClient(c.config)
 	c.ModerationSwitch = NewModerationSwitchClient(c.config)
 	c.ModerationSwitchChange = NewModerationSwitchChangeClient(c.config)
 	c.ModerationSwitchRequest = NewModerationSwitchRequestClient(c.config)
@@ -223,6 +231,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:                      ctx,
 		config:                   cfg,
 		Block:                    NewBlockClient(cfg),
+		BreakGlassGrant:          NewBreakGlassGrantClient(cfg),
 		Channel:                  NewChannelClient(cfg),
 		ChannelMember:            NewChannelMemberClient(cfg),
 		ChatPolicy:               NewChatPolicyClient(cfg),
@@ -232,6 +241,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ModerationAction:         NewModerationActionClient(cfg),
 		ModerationCase:           NewModerationCaseClient(cfg),
 		ModerationEvidence:       NewModerationEvidenceClient(cfg),
+		ModerationOncallShift:    NewModerationOncallShiftClient(cfg),
 		ModerationSwitch:         NewModerationSwitchClient(cfg),
 		ModerationSwitchChange:   NewModerationSwitchChangeClient(cfg),
 		ModerationSwitchRequest:  NewModerationSwitchRequestClient(cfg),
@@ -265,6 +275,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:                      ctx,
 		config:                   cfg,
 		Block:                    NewBlockClient(cfg),
+		BreakGlassGrant:          NewBreakGlassGrantClient(cfg),
 		Channel:                  NewChannelClient(cfg),
 		ChannelMember:            NewChannelMemberClient(cfg),
 		ChatPolicy:               NewChatPolicyClient(cfg),
@@ -274,6 +285,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ModerationAction:         NewModerationActionClient(cfg),
 		ModerationCase:           NewModerationCaseClient(cfg),
 		ModerationEvidence:       NewModerationEvidenceClient(cfg),
+		ModerationOncallShift:    NewModerationOncallShiftClient(cfg),
 		ModerationSwitch:         NewModerationSwitchClient(cfg),
 		ModerationSwitchChange:   NewModerationSwitchChangeClient(cfg),
 		ModerationSwitchRequest:  NewModerationSwitchRequestClient(cfg),
@@ -316,13 +328,13 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Block, c.Channel, c.ChannelMember, c.ChatPolicy, c.FriendCode,
-		c.FriendRequest, c.Friendship, c.ModerationAction, c.ModerationCase,
-		c.ModerationEvidence, c.ModerationSwitch, c.ModerationSwitchChange,
-		c.ModerationSwitchRequest, c.Mute, c.QuickMessage, c.Report, c.Sanction,
-		c.SchoolSafetyNotification, c.SensitiveAllowlistEntry,
-		c.SensitiveCatalogVersion, c.SensitiveTerm, c.SensitiveTermCategory,
-		c.TenantCategorySetting,
+		c.Block, c.BreakGlassGrant, c.Channel, c.ChannelMember, c.ChatPolicy,
+		c.FriendCode, c.FriendRequest, c.Friendship, c.ModerationAction,
+		c.ModerationCase, c.ModerationEvidence, c.ModerationOncallShift,
+		c.ModerationSwitch, c.ModerationSwitchChange, c.ModerationSwitchRequest,
+		c.Mute, c.QuickMessage, c.Report, c.Sanction, c.SchoolSafetyNotification,
+		c.SensitiveAllowlistEntry, c.SensitiveCatalogVersion, c.SensitiveTerm,
+		c.SensitiveTermCategory, c.TenantCategorySetting,
 	} {
 		n.Use(hooks...)
 	}
@@ -332,13 +344,13 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Block, c.Channel, c.ChannelMember, c.ChatPolicy, c.FriendCode,
-		c.FriendRequest, c.Friendship, c.ModerationAction, c.ModerationCase,
-		c.ModerationEvidence, c.ModerationSwitch, c.ModerationSwitchChange,
-		c.ModerationSwitchRequest, c.Mute, c.QuickMessage, c.Report, c.Sanction,
-		c.SchoolSafetyNotification, c.SensitiveAllowlistEntry,
-		c.SensitiveCatalogVersion, c.SensitiveTerm, c.SensitiveTermCategory,
-		c.TenantCategorySetting,
+		c.Block, c.BreakGlassGrant, c.Channel, c.ChannelMember, c.ChatPolicy,
+		c.FriendCode, c.FriendRequest, c.Friendship, c.ModerationAction,
+		c.ModerationCase, c.ModerationEvidence, c.ModerationOncallShift,
+		c.ModerationSwitch, c.ModerationSwitchChange, c.ModerationSwitchRequest,
+		c.Mute, c.QuickMessage, c.Report, c.Sanction, c.SchoolSafetyNotification,
+		c.SensitiveAllowlistEntry, c.SensitiveCatalogVersion, c.SensitiveTerm,
+		c.SensitiveTermCategory, c.TenantCategorySetting,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -349,6 +361,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *BlockMutation:
 		return c.Block.mutate(ctx, m)
+	case *BreakGlassGrantMutation:
+		return c.BreakGlassGrant.mutate(ctx, m)
 	case *ChannelMutation:
 		return c.Channel.mutate(ctx, m)
 	case *ChannelMemberMutation:
@@ -367,6 +381,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ModerationCase.mutate(ctx, m)
 	case *ModerationEvidenceMutation:
 		return c.ModerationEvidence.mutate(ctx, m)
+	case *ModerationOncallShiftMutation:
+		return c.ModerationOncallShift.mutate(ctx, m)
 	case *ModerationSwitchMutation:
 		return c.ModerationSwitch.mutate(ctx, m)
 	case *ModerationSwitchChangeMutation:
@@ -530,6 +546,141 @@ func (c *BlockClient) mutate(ctx context.Context, m *BlockMutation) (Value, erro
 		return (&BlockDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Block mutation op: %q", m.Op())
+	}
+}
+
+// BreakGlassGrantClient is a client for the BreakGlassGrant schema.
+type BreakGlassGrantClient struct {
+	config
+}
+
+// NewBreakGlassGrantClient returns a client for the BreakGlassGrant from the given config.
+func NewBreakGlassGrantClient(c config) *BreakGlassGrantClient {
+	return &BreakGlassGrantClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `breakglassgrant.Hooks(f(g(h())))`.
+func (c *BreakGlassGrantClient) Use(hooks ...Hook) {
+	c.hooks.BreakGlassGrant = append(c.hooks.BreakGlassGrant, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `breakglassgrant.Intercept(f(g(h())))`.
+func (c *BreakGlassGrantClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BreakGlassGrant = append(c.inters.BreakGlassGrant, interceptors...)
+}
+
+// Create returns a builder for creating a BreakGlassGrant entity.
+func (c *BreakGlassGrantClient) Create() *BreakGlassGrantCreate {
+	mutation := newBreakGlassGrantMutation(c.config, OpCreate)
+	return &BreakGlassGrantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BreakGlassGrant entities.
+func (c *BreakGlassGrantClient) CreateBulk(builders ...*BreakGlassGrantCreate) *BreakGlassGrantCreateBulk {
+	return &BreakGlassGrantCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BreakGlassGrantClient) MapCreateBulk(slice any, setFunc func(*BreakGlassGrantCreate, int)) *BreakGlassGrantCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BreakGlassGrantCreateBulk{err: fmt.Errorf("calling to BreakGlassGrantClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BreakGlassGrantCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BreakGlassGrantCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BreakGlassGrant.
+func (c *BreakGlassGrantClient) Update() *BreakGlassGrantUpdate {
+	mutation := newBreakGlassGrantMutation(c.config, OpUpdate)
+	return &BreakGlassGrantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BreakGlassGrantClient) UpdateOne(_m *BreakGlassGrant) *BreakGlassGrantUpdateOne {
+	mutation := newBreakGlassGrantMutation(c.config, OpUpdateOne, withBreakGlassGrant(_m))
+	return &BreakGlassGrantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BreakGlassGrantClient) UpdateOneID(id uuid.UUID) *BreakGlassGrantUpdateOne {
+	mutation := newBreakGlassGrantMutation(c.config, OpUpdateOne, withBreakGlassGrantID(id))
+	return &BreakGlassGrantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BreakGlassGrant.
+func (c *BreakGlassGrantClient) Delete() *BreakGlassGrantDelete {
+	mutation := newBreakGlassGrantMutation(c.config, OpDelete)
+	return &BreakGlassGrantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BreakGlassGrantClient) DeleteOne(_m *BreakGlassGrant) *BreakGlassGrantDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BreakGlassGrantClient) DeleteOneID(id uuid.UUID) *BreakGlassGrantDeleteOne {
+	builder := c.Delete().Where(breakglassgrant.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BreakGlassGrantDeleteOne{builder}
+}
+
+// Query returns a query builder for BreakGlassGrant.
+func (c *BreakGlassGrantClient) Query() *BreakGlassGrantQuery {
+	return &BreakGlassGrantQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBreakGlassGrant},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BreakGlassGrant entity by its id.
+func (c *BreakGlassGrantClient) Get(ctx context.Context, id uuid.UUID) (*BreakGlassGrant, error) {
+	return c.Query().Where(breakglassgrant.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BreakGlassGrantClient) GetX(ctx context.Context, id uuid.UUID) *BreakGlassGrant {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *BreakGlassGrantClient) Hooks() []Hook {
+	hooks := c.hooks.BreakGlassGrant
+	return append(hooks[:len(hooks):len(hooks)], breakglassgrant.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BreakGlassGrantClient) Interceptors() []Interceptor {
+	inters := c.inters.BreakGlassGrant
+	return append(inters[:len(inters):len(inters)], breakglassgrant.Interceptors[:]...)
+}
+
+func (c *BreakGlassGrantClient) mutate(ctx context.Context, m *BreakGlassGrantMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BreakGlassGrantCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BreakGlassGrantUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BreakGlassGrantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BreakGlassGrantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BreakGlassGrant mutation op: %q", m.Op())
 	}
 }
 
@@ -1745,6 +1896,141 @@ func (c *ModerationEvidenceClient) mutate(ctx context.Context, m *ModerationEvid
 		return (&ModerationEvidenceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ModerationEvidence mutation op: %q", m.Op())
+	}
+}
+
+// ModerationOncallShiftClient is a client for the ModerationOncallShift schema.
+type ModerationOncallShiftClient struct {
+	config
+}
+
+// NewModerationOncallShiftClient returns a client for the ModerationOncallShift from the given config.
+func NewModerationOncallShiftClient(c config) *ModerationOncallShiftClient {
+	return &ModerationOncallShiftClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `moderationoncallshift.Hooks(f(g(h())))`.
+func (c *ModerationOncallShiftClient) Use(hooks ...Hook) {
+	c.hooks.ModerationOncallShift = append(c.hooks.ModerationOncallShift, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `moderationoncallshift.Intercept(f(g(h())))`.
+func (c *ModerationOncallShiftClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ModerationOncallShift = append(c.inters.ModerationOncallShift, interceptors...)
+}
+
+// Create returns a builder for creating a ModerationOncallShift entity.
+func (c *ModerationOncallShiftClient) Create() *ModerationOncallShiftCreate {
+	mutation := newModerationOncallShiftMutation(c.config, OpCreate)
+	return &ModerationOncallShiftCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ModerationOncallShift entities.
+func (c *ModerationOncallShiftClient) CreateBulk(builders ...*ModerationOncallShiftCreate) *ModerationOncallShiftCreateBulk {
+	return &ModerationOncallShiftCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ModerationOncallShiftClient) MapCreateBulk(slice any, setFunc func(*ModerationOncallShiftCreate, int)) *ModerationOncallShiftCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ModerationOncallShiftCreateBulk{err: fmt.Errorf("calling to ModerationOncallShiftClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ModerationOncallShiftCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ModerationOncallShiftCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ModerationOncallShift.
+func (c *ModerationOncallShiftClient) Update() *ModerationOncallShiftUpdate {
+	mutation := newModerationOncallShiftMutation(c.config, OpUpdate)
+	return &ModerationOncallShiftUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ModerationOncallShiftClient) UpdateOne(_m *ModerationOncallShift) *ModerationOncallShiftUpdateOne {
+	mutation := newModerationOncallShiftMutation(c.config, OpUpdateOne, withModerationOncallShift(_m))
+	return &ModerationOncallShiftUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ModerationOncallShiftClient) UpdateOneID(id uuid.UUID) *ModerationOncallShiftUpdateOne {
+	mutation := newModerationOncallShiftMutation(c.config, OpUpdateOne, withModerationOncallShiftID(id))
+	return &ModerationOncallShiftUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ModerationOncallShift.
+func (c *ModerationOncallShiftClient) Delete() *ModerationOncallShiftDelete {
+	mutation := newModerationOncallShiftMutation(c.config, OpDelete)
+	return &ModerationOncallShiftDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ModerationOncallShiftClient) DeleteOne(_m *ModerationOncallShift) *ModerationOncallShiftDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ModerationOncallShiftClient) DeleteOneID(id uuid.UUID) *ModerationOncallShiftDeleteOne {
+	builder := c.Delete().Where(moderationoncallshift.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ModerationOncallShiftDeleteOne{builder}
+}
+
+// Query returns a query builder for ModerationOncallShift.
+func (c *ModerationOncallShiftClient) Query() *ModerationOncallShiftQuery {
+	return &ModerationOncallShiftQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeModerationOncallShift},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ModerationOncallShift entity by its id.
+func (c *ModerationOncallShiftClient) Get(ctx context.Context, id uuid.UUID) (*ModerationOncallShift, error) {
+	return c.Query().Where(moderationoncallshift.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ModerationOncallShiftClient) GetX(ctx context.Context, id uuid.UUID) *ModerationOncallShift {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ModerationOncallShiftClient) Hooks() []Hook {
+	hooks := c.hooks.ModerationOncallShift
+	return append(hooks[:len(hooks):len(hooks)], moderationoncallshift.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ModerationOncallShiftClient) Interceptors() []Interceptor {
+	inters := c.inters.ModerationOncallShift
+	return append(inters[:len(inters):len(inters)], moderationoncallshift.Interceptors[:]...)
+}
+
+func (c *ModerationOncallShiftClient) mutate(ctx context.Context, m *ModerationOncallShiftMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ModerationOncallShiftCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ModerationOncallShiftUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ModerationOncallShiftUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ModerationOncallShiftDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ModerationOncallShift mutation op: %q", m.Op())
 	}
 }
 
@@ -3506,20 +3792,22 @@ func (c *TenantCategorySettingClient) mutate(ctx context.Context, m *TenantCateg
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Block, Channel, ChannelMember, ChatPolicy, FriendCode, FriendRequest,
-		Friendship, ModerationAction, ModerationCase, ModerationEvidence,
-		ModerationSwitch, ModerationSwitchChange, ModerationSwitchRequest, Mute,
-		QuickMessage, Report, Sanction, SchoolSafetyNotification,
-		SensitiveAllowlistEntry, SensitiveCatalogVersion, SensitiveTerm,
-		SensitiveTermCategory, TenantCategorySetting []ent.Hook
+		Block, BreakGlassGrant, Channel, ChannelMember, ChatPolicy, FriendCode,
+		FriendRequest, Friendship, ModerationAction, ModerationCase,
+		ModerationEvidence, ModerationOncallShift, ModerationSwitch,
+		ModerationSwitchChange, ModerationSwitchRequest, Mute, QuickMessage, Report,
+		Sanction, SchoolSafetyNotification, SensitiveAllowlistEntry,
+		SensitiveCatalogVersion, SensitiveTerm, SensitiveTermCategory,
+		TenantCategorySetting []ent.Hook
 	}
 	inters struct {
-		Block, Channel, ChannelMember, ChatPolicy, FriendCode, FriendRequest,
-		Friendship, ModerationAction, ModerationCase, ModerationEvidence,
-		ModerationSwitch, ModerationSwitchChange, ModerationSwitchRequest, Mute,
-		QuickMessage, Report, Sanction, SchoolSafetyNotification,
-		SensitiveAllowlistEntry, SensitiveCatalogVersion, SensitiveTerm,
-		SensitiveTermCategory, TenantCategorySetting []ent.Interceptor
+		Block, BreakGlassGrant, Channel, ChannelMember, ChatPolicy, FriendCode,
+		FriendRequest, Friendship, ModerationAction, ModerationCase,
+		ModerationEvidence, ModerationOncallShift, ModerationSwitch,
+		ModerationSwitchChange, ModerationSwitchRequest, Mute, QuickMessage, Report,
+		Sanction, SchoolSafetyNotification, SensitiveAllowlistEntry,
+		SensitiveCatalogVersion, SensitiveTerm, SensitiveTermCategory,
+		TenantCategorySetting []ent.Interceptor
 	}
 )
 
@@ -3527,6 +3815,7 @@ var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
 		Block:                    tableSchemas[1],
+		BreakGlassGrant:          tableSchemas[0],
 		Channel:                  tableSchemas[0],
 		ChannelMember:            tableSchemas[0],
 		ChatPolicy:               tableSchemas[0],
@@ -3536,6 +3825,7 @@ var (
 		ModerationAction:         tableSchemas[0],
 		ModerationCase:           tableSchemas[0],
 		ModerationEvidence:       tableSchemas[0],
+		ModerationOncallShift:    tableSchemas[0],
 		ModerationSwitch:         tableSchemas[0],
 		ModerationSwitchChange:   tableSchemas[0],
 		ModerationSwitchRequest:  tableSchemas[0],

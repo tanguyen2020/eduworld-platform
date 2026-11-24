@@ -326,6 +326,12 @@ func (h Safety) RemindOverdueNotifications(ctx context.Context) (n int, err erro
 					return err
 				}
 			}
+			// F124-AC-08: module identity emails the school again (ids only, no content — R14).
+			if err := h.publish(ctx, EventSchoolReminded, "school_safety_notification", cur.ID, d.TenantID, cur.CaseID.String(), now, map[string]any{
+				"notification_id": cur.ID, "case_id": cur.CaseID, "tenant_id": d.TenantID, "school_id": cur.SchoolID,
+				"reminder_no": cur.ReminderCount, "ack_due_at": cur.AckDueAt.UTC(), "reminded_at": now}); err != nil {
+				return err
+			}
 			n++
 			return h.record(ctx, AuditSchoolReminded, "school_safety_notification", cur.ID, &cur.SchoolID, map[string]any{
 				"case_id": cur.CaseID.String(), "reminder_no": cur.ReminderCount})

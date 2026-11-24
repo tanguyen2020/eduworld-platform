@@ -17,7 +17,7 @@ var (
 		Help: "Moderation cases not resolved, by severity and assignment (refreshed by moderation-sla-escalator)."},
 		[]string{"severity", "assigned"})
 	unclaimedAge = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "eduworld_moderation_case_unclaimed_age_seconds",
-		Help: "Age of the oldest open case without assignee, by severity (alert ModerationP1Unclaimed after p1_unclaimed_alert_minutes)."},
+		Help: "Age of the oldest open (unclaimed) case, by severity (alert ModerationP1Unclaimed after p1_unclaimed_alert_minutes)."},
 		[]string{"severity"})
 	firstResponse = prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "eduworld_moderation_case_first_response_seconds",
 		Help:    "Time from case creation to the first response (assignment) by severity (report_sla).",
@@ -59,15 +59,20 @@ func (Safety) Cases(counts []read.OpenCount, now time.Time) {
 		casesOpen.WithLabelValues(sev, "false").Set(0)
 		unclaimedAge.WithLabelValues(sev).Set(0)
 	}
+	oldest := map[string]float64{}
 	for _, c := range counts {
 		assigned := "false"
 		if c.Assigned {
 			assigned = "true"
 		}
 		casesOpen.WithLabelValues(c.Severity, assigned).Set(float64(c.Count))
+		// Unclaimed = still open (a p1 case assigned by the on-call rotation stays open until claimed, F124).
 		if !c.OldestUnclaimed.IsZero() {
-			unclaimedAge.WithLabelValues(c.Severity).Set(now.Sub(c.OldestUnclaimed).Seconds())
+			oldest[c.Severity] = max(oldest[c.Severity], now.Sub(c.OldestUnclaimed).Seconds())
 		}
+	}
+	for sev, age := range oldest {
+		unclaimedAge.WithLabelValues(sev).Set(age)
 	}
 }
 

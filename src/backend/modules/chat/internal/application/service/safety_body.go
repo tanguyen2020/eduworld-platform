@@ -26,6 +26,8 @@ func CaseBody(c read.CaseRow) map[string]any {
 	setOpt(m, "channel_id", c.ChannelID)
 	setOpt(m, "channel_type", c.ChannelType)
 	setOpt(m, "assignee_moderator_id", c.Assignee)
+	setOpt(m, "assigned_via", c.AssignedVia)
+	setOpt(m, "oncall_page_level", c.OncallPageLevel)
 	setOpt(m, "school_notified_at", c.SchoolNotifiedAt)
 	setOpt(m, "school_ack_at", c.SchoolAckAt)
 	setOpt(m, "contact_outcome", c.ContactOutcome)

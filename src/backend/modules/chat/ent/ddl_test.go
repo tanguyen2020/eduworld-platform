@@ -27,6 +27,7 @@ var migrations = map[string][]string{
 	"20261231000001_f121_moderation_cases.sql": {"reports", "moderation_cases", "moderation_actions", "moderation_evidence",
 		"school_safety_notifications"},
 	"20261231000006_f120_persistent_clubs.sql": {}, // columns added to channels, channel_members, chat_policies only
+	"20261231000008_f124_safety_ops.sql":       {"moderation_oncall_shifts", "break_glass_grants"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -44,6 +45,9 @@ var added = map[string][]addition{
 		{"channels", []string{"capabilities"}, nil},
 		{"channel_members", []string{"source_event_id"}, nil},
 		{"chat_policies", []string{"reason"}, nil},
+	},
+	"20261231000008_f124_safety_ops.sql": {
+		{"moderation_cases", []string{"oncall_page_level", "last_paged_at"}, []string{"moderation_cases_p1_open_idx"}},
 	},
 }
 
@@ -73,7 +77,8 @@ func schemas() map[string]string {
 		"moderation_switch_requests": c.ModerationSwitchRequest, "moderation_switch_changes": c.ModerationSwitchChange,
 		"sanctions": c.Sanction, "quick_messages": c.QuickMessage, "reports": c.Report, "moderation_cases": c.ModerationCase,
 		"moderation_actions": c.ModerationAction, "moderation_evidence": c.ModerationEvidence,
-		"school_safety_notifications": c.SchoolSafetyNotification}
+		"school_safety_notifications": c.SchoolSafetyNotification, "moderation_oncall_shifts": c.ModerationOncallShift,
+		"break_glass_grants": c.BreakGlassGrant}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

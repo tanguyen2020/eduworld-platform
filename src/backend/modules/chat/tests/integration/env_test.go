@@ -96,6 +96,7 @@ type env struct {
 	catalogHandlers            *chathttp.CatalogHandlers    // F116 US2 routes (setupChat with the real pipeline)
 	switchHandlers             *chathttp.SwitchHandlers     // F116 US3 routes (setupChat with the real pipeline)
 	safetyHandlers             *chathttp.SafetyHandlers     // F121 routes (setupSafety)
+	safetyOpsHandlers          *chathttp.SafetyOpsHandlers  // F124 routes (setupSafetyOps)
 	featureHandlers            *chathttp.FeatureHandlers    // F118 routes (setupFeatures)
 	assetHandlers              *chathttp.AssetHandlers      // F118 Game Studio routes
 	policyHandlers             *chathttp.PolicyHandlers     // F120 chat policy routes (setupPersistent)
@@ -182,7 +183,7 @@ func (e *env) server(ctx context.Context) {
 		e.t.Fatal(err)
 	}
 	if err := chathttp.Register(s, chathttp.Handlers{Commands: e.social, Queries: e.queries, Chat: e.chatHandlers,
-		Catalog: e.catalogHandlers, Switches: e.switchHandlers, Safety: e.safetyHandlers, Features: e.featureHandlers, Assets: e.assetHandlers,
+		Catalog: e.catalogHandlers, Switches: e.switchHandlers, Safety: e.safetyHandlers, SafetyOps: e.safetyOpsHandlers, Features: e.featureHandlers, Assets: e.assetHandlers,
 		Policies: e.policyHandlers, Persistent: e.persistentHandlers, Clubs: e.clubHandlers}); err != nil {
 		e.t.Fatal(err)
 	}

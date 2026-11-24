@@ -89,6 +89,8 @@ func (ModerationCase) Fields() []ent.Field {
 		field.String("contact_path").MaxLen(32).Default("school"),
 		field.Time("resolved_at").Optional().Nillable(),
 		field.UUID("source_event_id", uuid.UUID{}).Optional().Nillable().Immutable(),
+		field.String("oncall_page_level").MaxLen(16).Optional().Nillable(), // F124: last on-call level paged
+		field.Time("last_paged_at").Optional().Nillable(),
 	}
 }
 func (ModerationCase) Indexes() []ent.Index {
@@ -98,6 +100,8 @@ func (ModerationCase) Indexes() []ent.Index {
 			Annotations(entsql.IndexWhere("status IN ('open','in_review') AND deleted_at IS NULL")),
 		index.Fields("source_event_id").Unique().StorageKey("moderation_cases_source_event_uq").
 			Annotations(entsql.IndexWhere("source_event_id IS NOT NULL")),
+		index.Fields("severity", "status", "created_at").StorageKey("moderation_cases_p1_open_idx").
+			Annotations(entsql.IndexWhere("status = 'open' AND severity = 'p1' AND deleted_at IS NULL")),
 	}
 }
 

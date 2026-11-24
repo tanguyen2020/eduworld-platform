@@ -8,13 +8,16 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/moderation/breakglass"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/cache"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/persistence"
@@ -38,11 +41,35 @@ type safetyEnv struct {
 	cmd      command.Safety
 	reads    query.Safety
 	consumer consumer.MessageHeld
+	ops      query.SafetyOps // F124
+	dir      *fakeDirectory  // F124: TEST DOUBLE of resolvePrincipal (identity facade)
 }
 
-func setupSafety(t *testing.T) *safetyEnv {
+// fakeDirectory is a TEST DOUBLE of port.PrincipalDirectory (the identity facade resolvePrincipal is covered by the
+// caller-side facade test of internal/infrastructure/modules): the platform principals of the moderators of the test.
+type fakeDirectory struct {
+	mu sync.Mutex
+	m  map[uuid.UUID]authz.PrincipalData
+}
+
+func (f *fakeDirectory) Platform(_ context.Context, user uuid.UUID) (authz.Principal, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	d, ok := f.m[user]
+	if !ok {
+		return authz.Principal{}, port.ErrPrincipalUnknown
+	}
+	d.TenantID = nil
+	return authz.NewPrincipal(d), nil
+}
+
+func setupSafety(t *testing.T) *safetyEnv { t.Helper(); return setupSafetyWith(t, false) }
+
+// setupSafetyWith is setupSafety; ops also wires the F124 on-call rotation and break-glass (identity facade simulated by
+// the TEST DOUBLE directory).
+func setupSafetyWith(t *testing.T, ops bool) *safetyEnv {
 	t.Helper()
-	s := &safetyEnv{}
+	s := &safetyEnv{dir: &fakeDirectory{m: map[uuid.UUID]authz.PrincipalData{}}}
 	s.chatEnv = setupChat(t, chatOpts{real: true, hook: func(c *chatEnv) {
 		codec, err := page.NewCodec([]byte(strings.Repeat("s", 32)))
 		if err != nil {
@@ -52,6 +79,14 @@ func setupSafety(t *testing.T) *safetyEnv {
 			Audit: persistence.Auditor{R: c.rec}, Cache: cache.Sanctions{C: c.vk},
 			Push: chatrealtime.ChatFanout{P: rt.Publisher{C: c.vk}, Now: c.clock.Now}, Recent: cache.Recent{C: c.vk, Size: 200, TTL: 10 * time.Minute},
 			Metrics: observability.Safety{}, AfterCommit: entx.AfterCommit, Now: c.clock.Now}
+		if ops {
+			s.cmd.Oncall, s.cmd.Principals, s.cmd.Grants = persistence.SafetyOps{}, s.dir, persistence.SafetyOps{}
+			s.cmd.OncallCfg = command.OncallConfig{ShiftMax: 168 * time.Hour, Ladder: command.DefaultOncallLadder()}
+			s.cmd.OncallMetrics, s.cmd.BreakGlassMetrics = observability.SafetyOps{}, observability.SafetyOps{}
+			s.cmd.BreakGlassLimits = breakglass.Limits{MaxDuration: 4 * time.Hour, MaxWindow: 30 * 24 * time.Hour}
+			s.ops = query.SafetyOps{Read: c.read, Oncall: persistence.SafetyOps{}, Grants: persistence.SafetyOps{}, Cursors: codec, Now: c.clock.Now}
+			c.safetyOpsHandlers = &chathttp.SafetyOpsHandlers{Commands: s.cmd, Queries: s.ops}
+		}
 		s.reads = query.Safety{Read: c.read, Reader: persistence.Safety{}, Audit: c.rec, Cursors: codec, Now: c.clock.Now}
 		s.consumer = consumer.MessageHeld{H: s.cmd}
 		c.safetyHandlers = &chathttp.SafetyHandlers{Commands: s.cmd, Queries: s.reads}
@@ -78,6 +113,9 @@ func (s *safetyEnv) moderator(role string, lead bool) *moderator {
 	}
 	sub := "kc-mod-" + uuid.NewString()
 	s.res.Set(sub, d)
+	s.dir.mu.Lock()
+	s.dir.m[d.UserID] = d
+	s.dir.mu.Unlock()
 	return &moderator{s: s, data: d, id: d.UserID, token: s.idp.Token(sub, httpxtest.PortalClient, time.Now())}
 }
 

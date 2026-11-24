@@ -215,6 +215,16 @@ func SourceEventID(v uuid.UUID) predicate.ModerationCase {
 	return predicate.ModerationCase(sql.FieldEQ(FieldSourceEventID, v))
 }
 
+// OncallPageLevel applies equality check predicate on the "oncall_page_level" field. It's identical to OncallPageLevelEQ.
+func OncallPageLevel(v string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldEQ(FieldOncallPageLevel, v))
+}
+
+// LastPagedAt applies equality check predicate on the "last_paged_at" field. It's identical to LastPagedAtEQ.
+func LastPagedAt(v time.Time) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldEQ(FieldLastPagedAt, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.ModerationCase {
 	return predicate.ModerationCase(sql.FieldEQ(FieldTenantID, v))
@@ -1933,6 +1943,131 @@ func SourceEventIDIsNil() predicate.ModerationCase {
 // SourceEventIDNotNil applies the NotNil predicate on the "source_event_id" field.
 func SourceEventIDNotNil() predicate.ModerationCase {
 	return predicate.ModerationCase(sql.FieldNotNull(FieldSourceEventID))
+}
+
+// OncallPageLevelEQ applies the EQ predicate on the "oncall_page_level" field.
+func OncallPageLevelEQ(v string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldEQ(FieldOncallPageLevel, v))
+}
+
+// OncallPageLevelNEQ applies the NEQ predicate on the "oncall_page_level" field.
+func OncallPageLevelNEQ(v string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldNEQ(FieldOncallPageLevel, v))
+}
+
+// OncallPageLevelIn applies the In predicate on the "oncall_page_level" field.
+func OncallPageLevelIn(vs ...string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldIn(FieldOncallPageLevel, vs...))
+}
+
+// OncallPageLevelNotIn applies the NotIn predicate on the "oncall_page_level" field.
+func OncallPageLevelNotIn(vs ...string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldNotIn(FieldOncallPageLevel, vs...))
+}
+
+// OncallPageLevelGT applies the GT predicate on the "oncall_page_level" field.
+func OncallPageLevelGT(v string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldGT(FieldOncallPageLevel, v))
+}
+
+// OncallPageLevelGTE applies the GTE predicate on the "oncall_page_level" field.
+func OncallPageLevelGTE(v string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldGTE(FieldOncallPageLevel, v))
+}
+
+// OncallPageLevelLT applies the LT predicate on the "oncall_page_level" field.
+func OncallPageLevelLT(v string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldLT(FieldOncallPageLevel, v))
+}
+
+// OncallPageLevelLTE applies the LTE predicate on the "oncall_page_level" field.
+func OncallPageLevelLTE(v string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldLTE(FieldOncallPageLevel, v))
+}
+
+// OncallPageLevelContains applies the Contains predicate on the "oncall_page_level" field.
+func OncallPageLevelContains(v string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldContains(FieldOncallPageLevel, v))
+}
+
+// OncallPageLevelHasPrefix applies the HasPrefix predicate on the "oncall_page_level" field.
+func OncallPageLevelHasPrefix(v string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldHasPrefix(FieldOncallPageLevel, v))
+}
+
+// OncallPageLevelHasSuffix applies the HasSuffix predicate on the "oncall_page_level" field.
+func OncallPageLevelHasSuffix(v string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldHasSuffix(FieldOncallPageLevel, v))
+}
+
+// OncallPageLevelIsNil applies the IsNil predicate on the "oncall_page_level" field.
+func OncallPageLevelIsNil() predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldIsNull(FieldOncallPageLevel))
+}
+
+// OncallPageLevelNotNil applies the NotNil predicate on the "oncall_page_level" field.
+func OncallPageLevelNotNil() predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldNotNull(FieldOncallPageLevel))
+}
+
+// OncallPageLevelEqualFold applies the EqualFold predicate on the "oncall_page_level" field.
+func OncallPageLevelEqualFold(v string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldEqualFold(FieldOncallPageLevel, v))
+}
+
+// OncallPageLevelContainsFold applies the ContainsFold predicate on the "oncall_page_level" field.
+func OncallPageLevelContainsFold(v string) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldContainsFold(FieldOncallPageLevel, v))
+}
+
+// LastPagedAtEQ applies the EQ predicate on the "last_paged_at" field.
+func LastPagedAtEQ(v time.Time) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldEQ(FieldLastPagedAt, v))
+}
+
+// LastPagedAtNEQ applies the NEQ predicate on the "last_paged_at" field.
+func LastPagedAtNEQ(v time.Time) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldNEQ(FieldLastPagedAt, v))
+}
+
+// LastPagedAtIn applies the In predicate on the "last_paged_at" field.
+func LastPagedAtIn(vs ...time.Time) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldIn(FieldLastPagedAt, vs...))
+}
+
+// LastPagedAtNotIn applies the NotIn predicate on the "last_paged_at" field.
+func LastPagedAtNotIn(vs ...time.Time) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldNotIn(FieldLastPagedAt, vs...))
+}
+
+// LastPagedAtGT applies the GT predicate on the "last_paged_at" field.
+func LastPagedAtGT(v time.Time) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldGT(FieldLastPagedAt, v))
+}
+
+// LastPagedAtGTE applies the GTE predicate on the "last_paged_at" field.
+func LastPagedAtGTE(v time.Time) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldGTE(FieldLastPagedAt, v))
+}
+
+// LastPagedAtLT applies the LT predicate on the "last_paged_at" field.
+func LastPagedAtLT(v time.Time) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldLT(FieldLastPagedAt, v))
+}
+
+// LastPagedAtLTE applies the LTE predicate on the "last_paged_at" field.
+func LastPagedAtLTE(v time.Time) predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldLTE(FieldLastPagedAt, v))
+}
+
+// LastPagedAtIsNil applies the IsNil predicate on the "last_paged_at" field.
+func LastPagedAtIsNil() predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldIsNull(FieldLastPagedAt))
+}
+
+// LastPagedAtNotNil applies the NotNil predicate on the "last_paged_at" field.
+func LastPagedAtNotNil() predicate.ModerationCase {
+	return predicate.ModerationCase(sql.FieldNotNull(FieldLastPagedAt))
 }
 
 // And groups predicates with the AND operator between them.

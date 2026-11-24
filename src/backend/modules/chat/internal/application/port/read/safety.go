@@ -40,6 +40,8 @@ type CaseRow struct {
 	ContactPath      string
 	ResolvedAt       *time.Time
 	SourceEventID    *uuid.UUID
+	OncallPageLevel  *string    // F124: last on-call level paged (primary, secondary, lead, system_admin)
+	LastPagedAt      *time.Time // F124
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	Version          int64

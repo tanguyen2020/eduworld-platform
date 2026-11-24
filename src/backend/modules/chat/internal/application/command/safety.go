@@ -11,6 +11,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/moderation/breakglass"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/moderation/safety"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -82,6 +83,15 @@ type Safety struct {
 	// transaction of a consumer when the use case runs nested in it).
 	AfterCommit write.AfterCommit
 	Now         func() time.Time
+
+	// F124: on-call rotation (nil Oncall: no rotation) and break-glass grants (nil Grants: unmounted).
+	Oncall            write.OncallStore
+	Principals        port.PrincipalDirectory
+	OncallCfg         OncallConfig
+	OncallMetrics     OncallMetrics
+	Grants            write.BreakGlassStore
+	BreakGlassLimits  breakglass.Limits
+	BreakGlassMetrics BreakGlassMetrics
 }
 
 func (h Safety) now() time.Time {

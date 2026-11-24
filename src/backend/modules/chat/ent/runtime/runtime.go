@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/block"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/breakglassgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channelmember"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/chatpolicy"
@@ -16,6 +17,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationaction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationcase"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationevidence"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationoncallshift"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitch"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchchange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchrequest"
@@ -67,6 +69,63 @@ func init() {
 	blockDescID := blockMixinFields0[0].Descriptor()
 	// block.DefaultID holds the default value on creation for the id field.
 	block.DefaultID = blockDescID.Default.(func() uuid.UUID)
+	breakglassgrantMixin := schema.BreakGlassGrant{}.Mixin()
+	breakglassgrantMixinHooks0 := breakglassgrantMixin[0].Hooks()
+	breakglassgrant.Hooks[0] = breakglassgrantMixinHooks0[0]
+	breakglassgrantMixinInters0 := breakglassgrantMixin[0].Interceptors()
+	breakglassgrant.Interceptors[0] = breakglassgrantMixinInters0[0]
+	breakglassgrantMixinFields0 := breakglassgrantMixin[0].Fields()
+	_ = breakglassgrantMixinFields0
+	breakglassgrantFields := schema.BreakGlassGrant{}.Fields()
+	_ = breakglassgrantFields
+	// breakglassgrantDescCreatedAt is the schema descriptor for created_at field.
+	breakglassgrantDescCreatedAt := breakglassgrantMixinFields0[2].Descriptor()
+	// breakglassgrant.DefaultCreatedAt holds the default value on creation for the created_at field.
+	breakglassgrant.DefaultCreatedAt = breakglassgrantDescCreatedAt.Default.(func() time.Time)
+	// breakglassgrantDescUpdatedAt is the schema descriptor for updated_at field.
+	breakglassgrantDescUpdatedAt := breakglassgrantMixinFields0[4].Descriptor()
+	// breakglassgrant.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	breakglassgrant.DefaultUpdatedAt = breakglassgrantDescUpdatedAt.Default.(func() time.Time)
+	// breakglassgrant.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	breakglassgrant.UpdateDefaultUpdatedAt = breakglassgrantDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// breakglassgrantDescDeleteReason is the schema descriptor for delete_reason field.
+	breakglassgrantDescDeleteReason := breakglassgrantMixinFields0[8].Descriptor()
+	// breakglassgrant.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	breakglassgrant.DeleteReasonValidator = breakglassgrantDescDeleteReason.Validators[0].(func(string) error)
+	// breakglassgrantDescVersion is the schema descriptor for version field.
+	breakglassgrantDescVersion := breakglassgrantMixinFields0[9].Descriptor()
+	// breakglassgrant.DefaultVersion holds the default value on creation for the version field.
+	breakglassgrant.DefaultVersion = breakglassgrantDescVersion.Default.(int64)
+	// breakglassgrantDescScopeType is the schema descriptor for scope_type field.
+	breakglassgrantDescScopeType := breakglassgrantFields[0].Descriptor()
+	// breakglassgrant.ScopeTypeValidator is a validator for the "scope_type" field. It is called by the builders before save.
+	breakglassgrant.ScopeTypeValidator = breakglassgrantDescScopeType.Validators[0].(func(string) error)
+	// breakglassgrantDescReason is the schema descriptor for reason field.
+	breakglassgrantDescReason := breakglassgrantFields[5].Descriptor()
+	// breakglassgrant.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	breakglassgrant.ReasonValidator = breakglassgrantDescReason.Validators[0].(func(string) error)
+	// breakglassgrantDescStatus is the schema descriptor for status field.
+	breakglassgrantDescStatus := breakglassgrantFields[6].Descriptor()
+	// breakglassgrant.DefaultStatus holds the default value on creation for the status field.
+	breakglassgrant.DefaultStatus = breakglassgrantDescStatus.Default.(string)
+	// breakglassgrant.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	breakglassgrant.StatusValidator = breakglassgrantDescStatus.Validators[0].(func(string) error)
+	// breakglassgrantDescDecisionNote is the schema descriptor for decision_note field.
+	breakglassgrantDescDecisionNote := breakglassgrantFields[11].Descriptor()
+	// breakglassgrant.DecisionNoteValidator is a validator for the "decision_note" field. It is called by the builders before save.
+	breakglassgrant.DecisionNoteValidator = breakglassgrantDescDecisionNote.Validators[0].(func(string) error)
+	// breakglassgrantDescRevokeReason is the schema descriptor for revoke_reason field.
+	breakglassgrantDescRevokeReason := breakglassgrantFields[15].Descriptor()
+	// breakglassgrant.RevokeReasonValidator is a validator for the "revoke_reason" field. It is called by the builders before save.
+	breakglassgrant.RevokeReasonValidator = breakglassgrantDescRevokeReason.Validators[0].(func(string) error)
+	// breakglassgrantDescMessagesViewedCount is the schema descriptor for messages_viewed_count field.
+	breakglassgrantDescMessagesViewedCount := breakglassgrantFields[16].Descriptor()
+	// breakglassgrant.DefaultMessagesViewedCount holds the default value on creation for the messages_viewed_count field.
+	breakglassgrant.DefaultMessagesViewedCount = breakglassgrantDescMessagesViewedCount.Default.(int)
+	// breakglassgrantDescID is the schema descriptor for id field.
+	breakglassgrantDescID := breakglassgrantMixinFields0[0].Descriptor()
+	// breakglassgrant.DefaultID holds the default value on creation for the id field.
+	breakglassgrant.DefaultID = breakglassgrantDescID.Default.(func() uuid.UUID)
 	channelMixin := schema.Channel{}.Mixin()
 	channelMixinHooks0 := channelMixin[0].Hooks()
 	channel.Hooks[0] = channelMixinHooks0[0]
@@ -423,6 +482,10 @@ func init() {
 	moderationcase.DefaultContactPath = moderationcaseDescContactPath.Default.(string)
 	// moderationcase.ContactPathValidator is a validator for the "contact_path" field. It is called by the builders before save.
 	moderationcase.ContactPathValidator = moderationcaseDescContactPath.Validators[0].(func(string) error)
+	// moderationcaseDescOncallPageLevel is the schema descriptor for oncall_page_level field.
+	moderationcaseDescOncallPageLevel := moderationcaseFields[25].Descriptor()
+	// moderationcase.OncallPageLevelValidator is a validator for the "oncall_page_level" field. It is called by the builders before save.
+	moderationcase.OncallPageLevelValidator = moderationcaseDescOncallPageLevel.Validators[0].(func(string) error)
 	// moderationcaseDescID is the schema descriptor for id field.
 	moderationcaseDescID := moderationcaseMixinFields0[0].Descriptor()
 	// moderationcase.DefaultID holds the default value on creation for the id field.
@@ -448,6 +511,45 @@ func init() {
 	moderationevidenceDescID := moderationevidenceMixinFields0[0].Descriptor()
 	// moderationevidence.DefaultID holds the default value on creation for the id field.
 	moderationevidence.DefaultID = moderationevidenceDescID.Default.(func() uuid.UUID)
+	moderationoncallshiftMixin := schema.ModerationOncallShift{}.Mixin()
+	moderationoncallshiftMixinHooks0 := moderationoncallshiftMixin[0].Hooks()
+	moderationoncallshift.Hooks[0] = moderationoncallshiftMixinHooks0[0]
+	moderationoncallshiftMixinInters0 := moderationoncallshiftMixin[0].Interceptors()
+	moderationoncallshift.Interceptors[0] = moderationoncallshiftMixinInters0[0]
+	moderationoncallshiftMixinFields0 := moderationoncallshiftMixin[0].Fields()
+	_ = moderationoncallshiftMixinFields0
+	moderationoncallshiftFields := schema.ModerationOncallShift{}.Fields()
+	_ = moderationoncallshiftFields
+	// moderationoncallshiftDescCreatedAt is the schema descriptor for created_at field.
+	moderationoncallshiftDescCreatedAt := moderationoncallshiftMixinFields0[1].Descriptor()
+	// moderationoncallshift.DefaultCreatedAt holds the default value on creation for the created_at field.
+	moderationoncallshift.DefaultCreatedAt = moderationoncallshiftDescCreatedAt.Default.(func() time.Time)
+	// moderationoncallshiftDescUpdatedAt is the schema descriptor for updated_at field.
+	moderationoncallshiftDescUpdatedAt := moderationoncallshiftMixinFields0[3].Descriptor()
+	// moderationoncallshift.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	moderationoncallshift.DefaultUpdatedAt = moderationoncallshiftDescUpdatedAt.Default.(func() time.Time)
+	// moderationoncallshift.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	moderationoncallshift.UpdateDefaultUpdatedAt = moderationoncallshiftDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// moderationoncallshiftDescDeleteReason is the schema descriptor for delete_reason field.
+	moderationoncallshiftDescDeleteReason := moderationoncallshiftMixinFields0[7].Descriptor()
+	// moderationoncallshift.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	moderationoncallshift.DeleteReasonValidator = moderationoncallshiftDescDeleteReason.Validators[0].(func(string) error)
+	// moderationoncallshiftDescVersion is the schema descriptor for version field.
+	moderationoncallshiftDescVersion := moderationoncallshiftMixinFields0[8].Descriptor()
+	// moderationoncallshift.DefaultVersion holds the default value on creation for the version field.
+	moderationoncallshift.DefaultVersion = moderationoncallshiftDescVersion.Default.(int64)
+	// moderationoncallshiftDescOncallRole is the schema descriptor for oncall_role field.
+	moderationoncallshiftDescOncallRole := moderationoncallshiftFields[1].Descriptor()
+	// moderationoncallshift.OncallRoleValidator is a validator for the "oncall_role" field. It is called by the builders before save.
+	moderationoncallshift.OncallRoleValidator = moderationoncallshiftDescOncallRole.Validators[0].(func(string) error)
+	// moderationoncallshiftDescNote is the schema descriptor for note field.
+	moderationoncallshiftDescNote := moderationoncallshiftFields[4].Descriptor()
+	// moderationoncallshift.NoteValidator is a validator for the "note" field. It is called by the builders before save.
+	moderationoncallshift.NoteValidator = moderationoncallshiftDescNote.Validators[0].(func(string) error)
+	// moderationoncallshiftDescID is the schema descriptor for id field.
+	moderationoncallshiftDescID := moderationoncallshiftMixinFields0[0].Descriptor()
+	// moderationoncallshift.DefaultID holds the default value on creation for the id field.
+	moderationoncallshift.DefaultID = moderationoncallshiftDescID.Default.(func() uuid.UUID)
 	moderationswitchMixin := schema.ModerationSwitch{}.Mixin()
 	moderationswitchMixinHooks0 := moderationswitchMixin[0].Hooks()
 	moderationswitch.Hooks[0] = moderationswitchMixinHooks0[0]

@@ -45,6 +45,62 @@ var (
 			},
 		},
 	}
+	// BreakGlassGrantsColumns holds the columns for the "break_glass_grants" table.
+	BreakGlassGrantsColumns = []*schema.Column{
+		{Name: "grant_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "scope_type", Type: field.TypeString, Size: 16},
+		{Name: "scope_id", Type: field.TypeUUID},
+		{Name: "window_from", Type: field.TypeTime},
+		{Name: "window_to", Type: field.TypeTime},
+		{Name: "duration_minutes", Type: field.TypeInt},
+		{Name: "reason", Type: field.TypeString, Size: 1000},
+		{Name: "status", Type: field.TypeString, Size: 16, Default: "pending"},
+		{Name: "requested_by", Type: field.TypeUUID},
+		{Name: "requested_at", Type: field.TypeTime},
+		{Name: "decided_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "decided_at", Type: field.TypeTime, Nullable: true},
+		{Name: "decision_note", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "revoked_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "revoke_reason", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "messages_viewed_count", Type: field.TypeInt, Default: 0},
+	}
+	// BreakGlassGrantsTable holds the schema information for the "break_glass_grants" table.
+	BreakGlassGrantsTable = &schema.Table{
+		Name:       "break_glass_grants",
+		Columns:    BreakGlassGrantsColumns,
+		PrimaryKey: []*schema.Column{BreakGlassGrantsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "break_glass_grants_active_idx",
+				Unique:  false,
+				Columns: []*schema.Column{BreakGlassGrantsColumns[16], BreakGlassGrantsColumns[22]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'approved' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "break_glass_grants_tenant_idx",
+				Unique:  false,
+				Columns: []*schema.Column{BreakGlassGrantsColumns[1], BreakGlassGrantsColumns[18]},
+			},
+			{
+				Name:    "break_glass_grants_list_idx",
+				Unique:  false,
+				Columns: []*schema.Column{BreakGlassGrantsColumns[18]},
+			},
+		},
+	}
 	// ChannelsColumns holds the columns for the "channels" table.
 	ChannelsColumns = []*schema.Column{
 		{Name: "channel_id", Type: field.TypeUUID},
@@ -359,6 +415,8 @@ var (
 		{Name: "contact_path", Type: field.TypeString, Size: 32, Default: "school"},
 		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
 		{Name: "source_event_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "oncall_page_level", Type: field.TypeString, Nullable: true, Size: 16},
+		{Name: "last_paged_at", Type: field.TypeTime, Nullable: true},
 	}
 	// ModerationCasesTable holds the schema information for the "moderation_cases" table.
 	ModerationCasesTable = &schema.Table{
@@ -387,6 +445,14 @@ var (
 					Where: "source_event_id IS NOT NULL",
 				},
 			},
+			{
+				Name:    "moderation_cases_p1_open_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ModerationCasesColumns[12], ModerationCasesColumns[11], ModerationCasesColumns[2]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'open' AND severity = 'p1' AND deleted_at IS NULL",
+				},
+			},
 		},
 	}
 	// ModerationEvidenceColumns holds the columns for the "moderation_evidence" table.
@@ -412,6 +478,39 @@ var (
 				Name:    "moderation_evidence_case_idx",
 				Unique:  false,
 				Columns: []*schema.Column{ModerationEvidenceColumns[4], ModerationEvidenceColumns[2]},
+			},
+		},
+	}
+	// ModerationOncallShiftsColumns holds the columns for the "moderation_oncall_shifts" table.
+	ModerationOncallShiftsColumns = []*schema.Column{
+		{Name: "shift_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "moderator_user_id", Type: field.TypeUUID},
+		{Name: "oncall_role", Type: field.TypeString, Size: 16},
+		{Name: "starts_at", Type: field.TypeTime},
+		{Name: "ends_at", Type: field.TypeTime},
+		{Name: "note", Type: field.TypeString, Nullable: true, Size: 500},
+	}
+	// ModerationOncallShiftsTable holds the schema information for the "moderation_oncall_shifts" table.
+	ModerationOncallShiftsTable = &schema.Table{
+		Name:       "moderation_oncall_shifts",
+		Columns:    ModerationOncallShiftsColumns,
+		PrimaryKey: []*schema.Column{ModerationOncallShiftsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "moderation_oncall_shifts_role_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ModerationOncallShiftsColumns[10], ModerationOncallShiftsColumns[11], ModerationOncallShiftsColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
 			},
 		},
 	}
@@ -882,6 +981,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		BlocksTable,
+		BreakGlassGrantsTable,
 		ChannelsTable,
 		ChannelMembersTable,
 		ChatPoliciesTable,
@@ -891,6 +991,7 @@ var (
 		ModerationActionsTable,
 		ModerationCasesTable,
 		ModerationEvidenceTable,
+		ModerationOncallShiftsTable,
 		ModerationSwitchesTable,
 		ModerationSwitchChangesTable,
 		ModerationSwitchRequestsTable,
@@ -910,6 +1011,9 @@ var (
 func init() {
 	BlocksTable.Annotation = &entsql.Annotation{
 		Table: "blocks",
+	}
+	BreakGlassGrantsTable.Annotation = &entsql.Annotation{
+		Table: "break_glass_grants",
 	}
 	ChannelsTable.Annotation = &entsql.Annotation{
 		Table: "channels",
@@ -937,6 +1041,9 @@ func init() {
 	}
 	ModerationEvidenceTable.Annotation = &entsql.Annotation{
 		Table: "moderation_evidence",
+	}
+	ModerationOncallShiftsTable.Annotation = &entsql.Annotation{
+		Table: "moderation_oncall_shifts",
 	}
 	ModerationSwitchesTable.Annotation = &entsql.Annotation{
 		Table: "moderation_switches",

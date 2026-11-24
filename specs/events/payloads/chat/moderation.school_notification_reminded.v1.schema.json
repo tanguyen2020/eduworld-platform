@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/moderation.school_notification_reminded.v1.schema.json",
+  "title": "Payload moderation.school_notification_reminded v1 (module chat, owner F124)",
+  "description": "Job school-notification-reminder (F121-AC-20) nhắc một thông báo vụ việc chưa được trường xác nhận sau ack_due_at (lần nhắc reminder_no). KHÔNG chứa nội dung chat, tên học sinh, category_code hay tóm tắt (R14, F124-AC-09). Consumer: identity (email school_safety_reminder cho school_admin của trường, F124-AC-08), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["notification_id", "case_id", "tenant_id", "school_id", "reminder_no", "ack_due_at", "reminded_at"],
+  "properties": {
+    "notification_id": { "type": "string", "format": "uuid" },
+    "case_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": "string", "format": "uuid" },
+    "reminder_no": { "type": "integer", "minimum": 1, "maximum": 100 },
+    "ack_due_at": { "type": "string", "format": "date-time" },
+    "reminded_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "notification_id": "0193a6c1-0000-7000-8000-000000000007",
+      "case_id": "0193a6c1-0000-7000-8000-000000000005",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000009",
+      "reminder_no": 1,
+      "ack_due_at": "2026-11-22T09:00:00.000Z",
+      "reminded_at": "2026-11-22T09:00:30.000Z"
+    }
+  ]
+}

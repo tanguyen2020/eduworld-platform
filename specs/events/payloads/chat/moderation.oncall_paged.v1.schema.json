@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/moderation.oncall_paged.v1.schema.json",
+  "title": "Payload moderation.oncall_paged v1 (module chat, owner F124)",
+  "description": "Vòng trực Safety Team gọi một mức cho case p1 chưa có người nhận (MODERATION §6.3, F124-AC-13..AC-15): primary khi tạo case, secondary sau p1_unclaimed_alert_minutes, lead sau gấp đôi, system_admin khi quá hạn phản hồi đầu tiên của report_sla. Event platform (envelope tenant_id null — người nhận là nhân sự platform); tenant_id trong payload chỉ để audit. Chỉ mã định danh, không học sinh, không nội dung (R14). Consumer: identity (email moderation_oncall_page — chỉ mức ưu tiên và link case), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["case_id", "tenant_id", "severity", "level", "paged_at"],
+  "properties": {
+    "case_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "severity": { "enum": ["p1"] },
+    "level": { "enum": ["primary", "secondary", "lead", "system_admin"] },
+    "moderator_user_id": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "Người trực của ca primary/secondary hiện hành; null với lead/system_admin (identity tìm người có moderation.case.lead / role system_admin)"
+    },
+    "paged_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "case_id": "0193a6c1-0000-7000-8000-000000000005",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "severity": "p1",
+      "level": "primary",
+      "moderator_user_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000aa",
+      "paged_at": "2026-11-21T23:00:00.000Z"
+    }
+  ]
+}

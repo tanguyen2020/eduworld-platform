@@ -21,6 +21,18 @@ func (f BlockFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BlockMutation", m)
 }
 
+// The BreakGlassGrantFunc type is an adapter to allow the use of ordinary
+// function as BreakGlassGrant mutator.
+type BreakGlassGrantFunc func(context.Context, *ent.BreakGlassGrantMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BreakGlassGrantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BreakGlassGrantMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BreakGlassGrantMutation", m)
+}
+
 // The ChannelFunc type is an adapter to allow the use of ordinary
 // function as Channel mutator.
 type ChannelFunc func(context.Context, *ent.ChannelMutation) (ent.Value, error)
@@ -127,6 +139,18 @@ func (f ModerationEvidenceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModerationEvidenceMutation", m)
+}
+
+// The ModerationOncallShiftFunc type is an adapter to allow the use of ordinary
+// function as ModerationOncallShift mutator.
+type ModerationOncallShiftFunc func(context.Context, *ent.ModerationOncallShiftMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModerationOncallShiftFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModerationOncallShiftMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModerationOncallShiftMutation", m)
 }
 
 // The ModerationSwitchFunc type is an adapter to allow the use of ordinary

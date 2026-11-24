@@ -230,7 +230,8 @@ func TestCoreAPIMountsEveryImplementedOperation(t *testing.T) {
 func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 	jobs := map[string][]string{
 		"identity": {"partition-maintainer", "audit-retention", "student-inactive-cleanup", "saga-retry", "retention-anonymizer",
-			"platform-saga", "org-membership-reconcile", "user-role-expiry", "sis-import-watch", "sis-staging-anonymizer", "sis-scheduler"},
+			"platform-saga", "org-membership-reconcile", "user-role-expiry", "sis-import-watch", "sis-staging-anonymizer", "sis-scheduler",
+			"email-sender"},
 		"learning": {"import-jobs", "content-scheduled-publish", "attempt-lifecycle", "learning-events-partitions", "regrade-runner",
 			"recommendation-nightly", "assignment-scheduler", "exam-window", "exam-autosubmit", "dashboard-day-close", "read-model-refresh",
 			"report-jobs", "item-analysis-nightly", "calibration-weekly", "reference-levels-nightly", "efficacy-wave-monitor", "efficacy-reports", "experiment-guardrail", "experiment-lifecycle"},
@@ -239,7 +240,7 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 		"competition": {"close-idle-hub-instances", "party-invitation-expiry", "party-presence-sweeper", "matchmaker", "matchmaking-ticket-expiry", "duel-expiry",
 			"leaderboard-period-close", "leaderboard-rebuild", "leaderboard-reconcile", "season-scheduler", "rd-inflation"},
 		"chat": {"expire-friend-requests", "moderation-switch-expirer", "moderation-sla-escalator", "school-notification-reminder",
-			"sanction-expirer"},
+			"sanction-expirer", "oncall-escalator", "break-glass-expirer"},
 	}
 	// Jobs of worker-chat (profile chat, also all): gameplay-chat-purge and chat-partition-maintainer on the chat_purger
 	// pool (F117, ADR-0033), persistent-chat-retention on the chat_app pool (F120 US6, anonymisation only).

@@ -513,6 +513,46 @@ func (_u *ModerationCaseUpdate) ClearResolvedAt() *ModerationCaseUpdate {
 	return _u
 }
 
+// SetOncallPageLevel sets the "oncall_page_level" field.
+func (_u *ModerationCaseUpdate) SetOncallPageLevel(v string) *ModerationCaseUpdate {
+	_u.mutation.SetOncallPageLevel(v)
+	return _u
+}
+
+// SetNillableOncallPageLevel sets the "oncall_page_level" field if the given value is not nil.
+func (_u *ModerationCaseUpdate) SetNillableOncallPageLevel(v *string) *ModerationCaseUpdate {
+	if v != nil {
+		_u.SetOncallPageLevel(*v)
+	}
+	return _u
+}
+
+// ClearOncallPageLevel clears the value of the "oncall_page_level" field.
+func (_u *ModerationCaseUpdate) ClearOncallPageLevel() *ModerationCaseUpdate {
+	_u.mutation.ClearOncallPageLevel()
+	return _u
+}
+
+// SetLastPagedAt sets the "last_paged_at" field.
+func (_u *ModerationCaseUpdate) SetLastPagedAt(v time.Time) *ModerationCaseUpdate {
+	_u.mutation.SetLastPagedAt(v)
+	return _u
+}
+
+// SetNillableLastPagedAt sets the "last_paged_at" field if the given value is not nil.
+func (_u *ModerationCaseUpdate) SetNillableLastPagedAt(v *time.Time) *ModerationCaseUpdate {
+	if v != nil {
+		_u.SetLastPagedAt(*v)
+	}
+	return _u
+}
+
+// ClearLastPagedAt clears the value of the "last_paged_at" field.
+func (_u *ModerationCaseUpdate) ClearLastPagedAt() *ModerationCaseUpdate {
+	_u.mutation.ClearLastPagedAt()
+	return _u
+}
+
 // Mutation returns the ModerationCaseMutation object of the builder.
 func (_u *ModerationCaseUpdate) Mutation() *ModerationCaseMutation {
 	return _u.mutation
@@ -600,6 +640,11 @@ func (_u *ModerationCaseUpdate) check() error {
 	if v, ok := _u.mutation.ContactPath(); ok {
 		if err := moderationcase.ContactPathValidator(v); err != nil {
 			return &ValidationError{Name: "contact_path", err: fmt.Errorf(`ent: validator failed for field "ModerationCase.contact_path": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.OncallPageLevel(); ok {
+		if err := moderationcase.OncallPageLevelValidator(v); err != nil {
+			return &ValidationError{Name: "oncall_page_level", err: fmt.Errorf(`ent: validator failed for field "ModerationCase.oncall_page_level": %w`, err)}
 		}
 	}
 	return nil
@@ -770,6 +815,18 @@ func (_u *ModerationCaseUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if _u.mutation.SourceEventIDCleared() {
 		_spec.ClearField(moderationcase.FieldSourceEventID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.OncallPageLevel(); ok {
+		_spec.SetField(moderationcase.FieldOncallPageLevel, field.TypeString, value)
+	}
+	if _u.mutation.OncallPageLevelCleared() {
+		_spec.ClearField(moderationcase.FieldOncallPageLevel, field.TypeString)
+	}
+	if value, ok := _u.mutation.LastPagedAt(); ok {
+		_spec.SetField(moderationcase.FieldLastPagedAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastPagedAtCleared() {
+		_spec.ClearField(moderationcase.FieldLastPagedAt, field.TypeTime)
 	}
 	_spec.Node.Schema = _u.schemaConfig.ModerationCase
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -1275,6 +1332,46 @@ func (_u *ModerationCaseUpdateOne) ClearResolvedAt() *ModerationCaseUpdateOne {
 	return _u
 }
 
+// SetOncallPageLevel sets the "oncall_page_level" field.
+func (_u *ModerationCaseUpdateOne) SetOncallPageLevel(v string) *ModerationCaseUpdateOne {
+	_u.mutation.SetOncallPageLevel(v)
+	return _u
+}
+
+// SetNillableOncallPageLevel sets the "oncall_page_level" field if the given value is not nil.
+func (_u *ModerationCaseUpdateOne) SetNillableOncallPageLevel(v *string) *ModerationCaseUpdateOne {
+	if v != nil {
+		_u.SetOncallPageLevel(*v)
+	}
+	return _u
+}
+
+// ClearOncallPageLevel clears the value of the "oncall_page_level" field.
+func (_u *ModerationCaseUpdateOne) ClearOncallPageLevel() *ModerationCaseUpdateOne {
+	_u.mutation.ClearOncallPageLevel()
+	return _u
+}
+
+// SetLastPagedAt sets the "last_paged_at" field.
+func (_u *ModerationCaseUpdateOne) SetLastPagedAt(v time.Time) *ModerationCaseUpdateOne {
+	_u.mutation.SetLastPagedAt(v)
+	return _u
+}
+
+// SetNillableLastPagedAt sets the "last_paged_at" field if the given value is not nil.
+func (_u *ModerationCaseUpdateOne) SetNillableLastPagedAt(v *time.Time) *ModerationCaseUpdateOne {
+	if v != nil {
+		_u.SetLastPagedAt(*v)
+	}
+	return _u
+}
+
+// ClearLastPagedAt clears the value of the "last_paged_at" field.
+func (_u *ModerationCaseUpdateOne) ClearLastPagedAt() *ModerationCaseUpdateOne {
+	_u.mutation.ClearLastPagedAt()
+	return _u
+}
+
 // Mutation returns the ModerationCaseMutation object of the builder.
 func (_u *ModerationCaseUpdateOne) Mutation() *ModerationCaseMutation {
 	return _u.mutation
@@ -1375,6 +1472,11 @@ func (_u *ModerationCaseUpdateOne) check() error {
 	if v, ok := _u.mutation.ContactPath(); ok {
 		if err := moderationcase.ContactPathValidator(v); err != nil {
 			return &ValidationError{Name: "contact_path", err: fmt.Errorf(`ent: validator failed for field "ModerationCase.contact_path": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.OncallPageLevel(); ok {
+		if err := moderationcase.OncallPageLevelValidator(v); err != nil {
+			return &ValidationError{Name: "oncall_page_level", err: fmt.Errorf(`ent: validator failed for field "ModerationCase.oncall_page_level": %w`, err)}
 		}
 	}
 	return nil
@@ -1562,6 +1664,18 @@ func (_u *ModerationCaseUpdateOne) sqlSave(ctx context.Context) (_node *Moderati
 	}
 	if _u.mutation.SourceEventIDCleared() {
 		_spec.ClearField(moderationcase.FieldSourceEventID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.OncallPageLevel(); ok {
+		_spec.SetField(moderationcase.FieldOncallPageLevel, field.TypeString, value)
+	}
+	if _u.mutation.OncallPageLevelCleared() {
+		_spec.ClearField(moderationcase.FieldOncallPageLevel, field.TypeString)
+	}
+	if value, ok := _u.mutation.LastPagedAt(); ok {
+		_spec.SetField(moderationcase.FieldLastPagedAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastPagedAtCleared() {
+		_spec.ClearField(moderationcase.FieldLastPagedAt, field.TypeTime)
 	}
 	_spec.Node.Schema = _u.schemaConfig.ModerationCase
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

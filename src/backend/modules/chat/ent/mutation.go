@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/block"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/breakglassgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/channelmember"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/chatpolicy"
@@ -23,6 +24,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationaction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationcase"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationevidence"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationoncallshift"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitch"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchchange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchrequest"
@@ -49,6 +51,7 @@ const (
 
 	// Node types.
 	TypeBlock                    = "Block"
+	TypeBreakGlassGrant          = "BreakGlassGrant"
 	TypeChannel                  = "Channel"
 	TypeChannelMember            = "ChannelMember"
 	TypeChatPolicy               = "ChatPolicy"
@@ -58,6 +61,7 @@ const (
 	TypeModerationAction         = "ModerationAction"
 	TypeModerationCase           = "ModerationCase"
 	TypeModerationEvidence       = "ModerationEvidence"
+	TypeModerationOncallShift    = "ModerationOncallShift"
 	TypeModerationSwitch         = "ModerationSwitch"
 	TypeModerationSwitchChange   = "ModerationSwitchChange"
 	TypeModerationSwitchRequest  = "ModerationSwitchRequest"
@@ -1077,6 +1081,2021 @@ func (m *BlockMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *BlockMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Block edge %s", name)
+}
+
+// BreakGlassGrantMutation represents an operation that mutates the BreakGlassGrant nodes in the graph.
+type BreakGlassGrantMutation struct {
+	config
+	op                       Op
+	typ                      string
+	id                       *uuid.UUID
+	tenant_id                *uuid.UUID
+	created_at               *time.Time
+	created_by               *uuid.UUID
+	updated_at               *time.Time
+	updated_by               *uuid.UUID
+	deleted_at               *time.Time
+	deleted_by               *uuid.UUID
+	delete_reason            *string
+	version                  *int64
+	addversion               *int64
+	scope_type               *string
+	scope_id                 *uuid.UUID
+	window_from              *time.Time
+	window_to                *time.Time
+	duration_minutes         *int
+	addduration_minutes      *int
+	reason                   *string
+	status                   *string
+	requested_by             *uuid.UUID
+	requested_at             *time.Time
+	decided_by               *uuid.UUID
+	decided_at               *time.Time
+	decision_note            *string
+	expires_at               *time.Time
+	revoked_by               *uuid.UUID
+	revoked_at               *time.Time
+	revoke_reason            *string
+	messages_viewed_count    *int
+	addmessages_viewed_count *int
+	clearedFields            map[string]struct{}
+	done                     bool
+	oldValue                 func(context.Context) (*BreakGlassGrant, error)
+	predicates               []predicate.BreakGlassGrant
+}
+
+var _ ent.Mutation = (*BreakGlassGrantMutation)(nil)
+
+// breakglassgrantOption allows management of the mutation configuration using functional options.
+type breakglassgrantOption func(*BreakGlassGrantMutation)
+
+// newBreakGlassGrantMutation creates new mutation for the BreakGlassGrant entity.
+func newBreakGlassGrantMutation(c config, op Op, opts ...breakglassgrantOption) *BreakGlassGrantMutation {
+	m := &BreakGlassGrantMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBreakGlassGrant,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBreakGlassGrantID sets the ID field of the mutation.
+func withBreakGlassGrantID(id uuid.UUID) breakglassgrantOption {
+	return func(m *BreakGlassGrantMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BreakGlassGrant
+		)
+		m.oldValue = func(ctx context.Context) (*BreakGlassGrant, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BreakGlassGrant.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBreakGlassGrant sets the old BreakGlassGrant of the mutation.
+func withBreakGlassGrant(node *BreakGlassGrant) breakglassgrantOption {
+	return func(m *BreakGlassGrantMutation) {
+		m.oldValue = func(context.Context) (*BreakGlassGrant, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BreakGlassGrantMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BreakGlassGrantMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of BreakGlassGrant entities.
+func (m *BreakGlassGrantMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BreakGlassGrantMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BreakGlassGrantMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BreakGlassGrant.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *BreakGlassGrantMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *BreakGlassGrantMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *BreakGlassGrantMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BreakGlassGrantMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BreakGlassGrantMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BreakGlassGrantMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *BreakGlassGrantMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *BreakGlassGrantMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *BreakGlassGrantMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[breakglassgrant.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *BreakGlassGrantMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[breakglassgrant.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *BreakGlassGrantMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, breakglassgrant.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BreakGlassGrantMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BreakGlassGrantMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BreakGlassGrantMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *BreakGlassGrantMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *BreakGlassGrantMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *BreakGlassGrantMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[breakglassgrant.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *BreakGlassGrantMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[breakglassgrant.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *BreakGlassGrantMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, breakglassgrant.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *BreakGlassGrantMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *BreakGlassGrantMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *BreakGlassGrantMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[breakglassgrant.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *BreakGlassGrantMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[breakglassgrant.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *BreakGlassGrantMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, breakglassgrant.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *BreakGlassGrantMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *BreakGlassGrantMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *BreakGlassGrantMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[breakglassgrant.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *BreakGlassGrantMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[breakglassgrant.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *BreakGlassGrantMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, breakglassgrant.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *BreakGlassGrantMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *BreakGlassGrantMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *BreakGlassGrantMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[breakglassgrant.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *BreakGlassGrantMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[breakglassgrant.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *BreakGlassGrantMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, breakglassgrant.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *BreakGlassGrantMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *BreakGlassGrantMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *BreakGlassGrantMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *BreakGlassGrantMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *BreakGlassGrantMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetScopeType sets the "scope_type" field.
+func (m *BreakGlassGrantMutation) SetScopeType(s string) {
+	m.scope_type = &s
+}
+
+// ScopeType returns the value of the "scope_type" field in the mutation.
+func (m *BreakGlassGrantMutation) ScopeType() (r string, exists bool) {
+	v := m.scope_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScopeType returns the old "scope_type" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldScopeType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScopeType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScopeType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScopeType: %w", err)
+	}
+	return oldValue.ScopeType, nil
+}
+
+// ResetScopeType resets all changes to the "scope_type" field.
+func (m *BreakGlassGrantMutation) ResetScopeType() {
+	m.scope_type = nil
+}
+
+// SetScopeID sets the "scope_id" field.
+func (m *BreakGlassGrantMutation) SetScopeID(u uuid.UUID) {
+	m.scope_id = &u
+}
+
+// ScopeID returns the value of the "scope_id" field in the mutation.
+func (m *BreakGlassGrantMutation) ScopeID() (r uuid.UUID, exists bool) {
+	v := m.scope_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScopeID returns the old "scope_id" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldScopeID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScopeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScopeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScopeID: %w", err)
+	}
+	return oldValue.ScopeID, nil
+}
+
+// ResetScopeID resets all changes to the "scope_id" field.
+func (m *BreakGlassGrantMutation) ResetScopeID() {
+	m.scope_id = nil
+}
+
+// SetWindowFrom sets the "window_from" field.
+func (m *BreakGlassGrantMutation) SetWindowFrom(t time.Time) {
+	m.window_from = &t
+}
+
+// WindowFrom returns the value of the "window_from" field in the mutation.
+func (m *BreakGlassGrantMutation) WindowFrom() (r time.Time, exists bool) {
+	v := m.window_from
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWindowFrom returns the old "window_from" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldWindowFrom(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWindowFrom is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWindowFrom requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWindowFrom: %w", err)
+	}
+	return oldValue.WindowFrom, nil
+}
+
+// ResetWindowFrom resets all changes to the "window_from" field.
+func (m *BreakGlassGrantMutation) ResetWindowFrom() {
+	m.window_from = nil
+}
+
+// SetWindowTo sets the "window_to" field.
+func (m *BreakGlassGrantMutation) SetWindowTo(t time.Time) {
+	m.window_to = &t
+}
+
+// WindowTo returns the value of the "window_to" field in the mutation.
+func (m *BreakGlassGrantMutation) WindowTo() (r time.Time, exists bool) {
+	v := m.window_to
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWindowTo returns the old "window_to" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldWindowTo(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWindowTo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWindowTo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWindowTo: %w", err)
+	}
+	return oldValue.WindowTo, nil
+}
+
+// ResetWindowTo resets all changes to the "window_to" field.
+func (m *BreakGlassGrantMutation) ResetWindowTo() {
+	m.window_to = nil
+}
+
+// SetDurationMinutes sets the "duration_minutes" field.
+func (m *BreakGlassGrantMutation) SetDurationMinutes(i int) {
+	m.duration_minutes = &i
+	m.addduration_minutes = nil
+}
+
+// DurationMinutes returns the value of the "duration_minutes" field in the mutation.
+func (m *BreakGlassGrantMutation) DurationMinutes() (r int, exists bool) {
+	v := m.duration_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDurationMinutes returns the old "duration_minutes" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldDurationMinutes(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDurationMinutes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDurationMinutes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDurationMinutes: %w", err)
+	}
+	return oldValue.DurationMinutes, nil
+}
+
+// AddDurationMinutes adds i to the "duration_minutes" field.
+func (m *BreakGlassGrantMutation) AddDurationMinutes(i int) {
+	if m.addduration_minutes != nil {
+		*m.addduration_minutes += i
+	} else {
+		m.addduration_minutes = &i
+	}
+}
+
+// AddedDurationMinutes returns the value that was added to the "duration_minutes" field in this mutation.
+func (m *BreakGlassGrantMutation) AddedDurationMinutes() (r int, exists bool) {
+	v := m.addduration_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDurationMinutes resets all changes to the "duration_minutes" field.
+func (m *BreakGlassGrantMutation) ResetDurationMinutes() {
+	m.duration_minutes = nil
+	m.addduration_minutes = nil
+}
+
+// SetReason sets the "reason" field.
+func (m *BreakGlassGrantMutation) SetReason(s string) {
+	m.reason = &s
+}
+
+// Reason returns the value of the "reason" field in the mutation.
+func (m *BreakGlassGrantMutation) Reason() (r string, exists bool) {
+	v := m.reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReason returns the old "reason" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReason: %w", err)
+	}
+	return oldValue.Reason, nil
+}
+
+// ResetReason resets all changes to the "reason" field.
+func (m *BreakGlassGrantMutation) ResetReason() {
+	m.reason = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *BreakGlassGrantMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *BreakGlassGrantMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *BreakGlassGrantMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetRequestedBy sets the "requested_by" field.
+func (m *BreakGlassGrantMutation) SetRequestedBy(u uuid.UUID) {
+	m.requested_by = &u
+}
+
+// RequestedBy returns the value of the "requested_by" field in the mutation.
+func (m *BreakGlassGrantMutation) RequestedBy() (r uuid.UUID, exists bool) {
+	v := m.requested_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestedBy returns the old "requested_by" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldRequestedBy(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestedBy: %w", err)
+	}
+	return oldValue.RequestedBy, nil
+}
+
+// ResetRequestedBy resets all changes to the "requested_by" field.
+func (m *BreakGlassGrantMutation) ResetRequestedBy() {
+	m.requested_by = nil
+}
+
+// SetRequestedAt sets the "requested_at" field.
+func (m *BreakGlassGrantMutation) SetRequestedAt(t time.Time) {
+	m.requested_at = &t
+}
+
+// RequestedAt returns the value of the "requested_at" field in the mutation.
+func (m *BreakGlassGrantMutation) RequestedAt() (r time.Time, exists bool) {
+	v := m.requested_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestedAt returns the old "requested_at" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldRequestedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestedAt: %w", err)
+	}
+	return oldValue.RequestedAt, nil
+}
+
+// ResetRequestedAt resets all changes to the "requested_at" field.
+func (m *BreakGlassGrantMutation) ResetRequestedAt() {
+	m.requested_at = nil
+}
+
+// SetDecidedBy sets the "decided_by" field.
+func (m *BreakGlassGrantMutation) SetDecidedBy(u uuid.UUID) {
+	m.decided_by = &u
+}
+
+// DecidedBy returns the value of the "decided_by" field in the mutation.
+func (m *BreakGlassGrantMutation) DecidedBy() (r uuid.UUID, exists bool) {
+	v := m.decided_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDecidedBy returns the old "decided_by" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldDecidedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDecidedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDecidedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDecidedBy: %w", err)
+	}
+	return oldValue.DecidedBy, nil
+}
+
+// ClearDecidedBy clears the value of the "decided_by" field.
+func (m *BreakGlassGrantMutation) ClearDecidedBy() {
+	m.decided_by = nil
+	m.clearedFields[breakglassgrant.FieldDecidedBy] = struct{}{}
+}
+
+// DecidedByCleared returns if the "decided_by" field was cleared in this mutation.
+func (m *BreakGlassGrantMutation) DecidedByCleared() bool {
+	_, ok := m.clearedFields[breakglassgrant.FieldDecidedBy]
+	return ok
+}
+
+// ResetDecidedBy resets all changes to the "decided_by" field.
+func (m *BreakGlassGrantMutation) ResetDecidedBy() {
+	m.decided_by = nil
+	delete(m.clearedFields, breakglassgrant.FieldDecidedBy)
+}
+
+// SetDecidedAt sets the "decided_at" field.
+func (m *BreakGlassGrantMutation) SetDecidedAt(t time.Time) {
+	m.decided_at = &t
+}
+
+// DecidedAt returns the value of the "decided_at" field in the mutation.
+func (m *BreakGlassGrantMutation) DecidedAt() (r time.Time, exists bool) {
+	v := m.decided_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDecidedAt returns the old "decided_at" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldDecidedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDecidedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDecidedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDecidedAt: %w", err)
+	}
+	return oldValue.DecidedAt, nil
+}
+
+// ClearDecidedAt clears the value of the "decided_at" field.
+func (m *BreakGlassGrantMutation) ClearDecidedAt() {
+	m.decided_at = nil
+	m.clearedFields[breakglassgrant.FieldDecidedAt] = struct{}{}
+}
+
+// DecidedAtCleared returns if the "decided_at" field was cleared in this mutation.
+func (m *BreakGlassGrantMutation) DecidedAtCleared() bool {
+	_, ok := m.clearedFields[breakglassgrant.FieldDecidedAt]
+	return ok
+}
+
+// ResetDecidedAt resets all changes to the "decided_at" field.
+func (m *BreakGlassGrantMutation) ResetDecidedAt() {
+	m.decided_at = nil
+	delete(m.clearedFields, breakglassgrant.FieldDecidedAt)
+}
+
+// SetDecisionNote sets the "decision_note" field.
+func (m *BreakGlassGrantMutation) SetDecisionNote(s string) {
+	m.decision_note = &s
+}
+
+// DecisionNote returns the value of the "decision_note" field in the mutation.
+func (m *BreakGlassGrantMutation) DecisionNote() (r string, exists bool) {
+	v := m.decision_note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDecisionNote returns the old "decision_note" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldDecisionNote(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDecisionNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDecisionNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDecisionNote: %w", err)
+	}
+	return oldValue.DecisionNote, nil
+}
+
+// ClearDecisionNote clears the value of the "decision_note" field.
+func (m *BreakGlassGrantMutation) ClearDecisionNote() {
+	m.decision_note = nil
+	m.clearedFields[breakglassgrant.FieldDecisionNote] = struct{}{}
+}
+
+// DecisionNoteCleared returns if the "decision_note" field was cleared in this mutation.
+func (m *BreakGlassGrantMutation) DecisionNoteCleared() bool {
+	_, ok := m.clearedFields[breakglassgrant.FieldDecisionNote]
+	return ok
+}
+
+// ResetDecisionNote resets all changes to the "decision_note" field.
+func (m *BreakGlassGrantMutation) ResetDecisionNote() {
+	m.decision_note = nil
+	delete(m.clearedFields, breakglassgrant.FieldDecisionNote)
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (m *BreakGlassGrantMutation) SetExpiresAt(t time.Time) {
+	m.expires_at = &t
+}
+
+// ExpiresAt returns the value of the "expires_at" field in the mutation.
+func (m *BreakGlassGrantMutation) ExpiresAt() (r time.Time, exists bool) {
+	v := m.expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiresAt returns the old "expires_at" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldExpiresAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiresAt: %w", err)
+	}
+	return oldValue.ExpiresAt, nil
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (m *BreakGlassGrantMutation) ClearExpiresAt() {
+	m.expires_at = nil
+	m.clearedFields[breakglassgrant.FieldExpiresAt] = struct{}{}
+}
+
+// ExpiresAtCleared returns if the "expires_at" field was cleared in this mutation.
+func (m *BreakGlassGrantMutation) ExpiresAtCleared() bool {
+	_, ok := m.clearedFields[breakglassgrant.FieldExpiresAt]
+	return ok
+}
+
+// ResetExpiresAt resets all changes to the "expires_at" field.
+func (m *BreakGlassGrantMutation) ResetExpiresAt() {
+	m.expires_at = nil
+	delete(m.clearedFields, breakglassgrant.FieldExpiresAt)
+}
+
+// SetRevokedBy sets the "revoked_by" field.
+func (m *BreakGlassGrantMutation) SetRevokedBy(u uuid.UUID) {
+	m.revoked_by = &u
+}
+
+// RevokedBy returns the value of the "revoked_by" field in the mutation.
+func (m *BreakGlassGrantMutation) RevokedBy() (r uuid.UUID, exists bool) {
+	v := m.revoked_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRevokedBy returns the old "revoked_by" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldRevokedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRevokedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRevokedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRevokedBy: %w", err)
+	}
+	return oldValue.RevokedBy, nil
+}
+
+// ClearRevokedBy clears the value of the "revoked_by" field.
+func (m *BreakGlassGrantMutation) ClearRevokedBy() {
+	m.revoked_by = nil
+	m.clearedFields[breakglassgrant.FieldRevokedBy] = struct{}{}
+}
+
+// RevokedByCleared returns if the "revoked_by" field was cleared in this mutation.
+func (m *BreakGlassGrantMutation) RevokedByCleared() bool {
+	_, ok := m.clearedFields[breakglassgrant.FieldRevokedBy]
+	return ok
+}
+
+// ResetRevokedBy resets all changes to the "revoked_by" field.
+func (m *BreakGlassGrantMutation) ResetRevokedBy() {
+	m.revoked_by = nil
+	delete(m.clearedFields, breakglassgrant.FieldRevokedBy)
+}
+
+// SetRevokedAt sets the "revoked_at" field.
+func (m *BreakGlassGrantMutation) SetRevokedAt(t time.Time) {
+	m.revoked_at = &t
+}
+
+// RevokedAt returns the value of the "revoked_at" field in the mutation.
+func (m *BreakGlassGrantMutation) RevokedAt() (r time.Time, exists bool) {
+	v := m.revoked_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRevokedAt returns the old "revoked_at" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldRevokedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRevokedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRevokedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRevokedAt: %w", err)
+	}
+	return oldValue.RevokedAt, nil
+}
+
+// ClearRevokedAt clears the value of the "revoked_at" field.
+func (m *BreakGlassGrantMutation) ClearRevokedAt() {
+	m.revoked_at = nil
+	m.clearedFields[breakglassgrant.FieldRevokedAt] = struct{}{}
+}
+
+// RevokedAtCleared returns if the "revoked_at" field was cleared in this mutation.
+func (m *BreakGlassGrantMutation) RevokedAtCleared() bool {
+	_, ok := m.clearedFields[breakglassgrant.FieldRevokedAt]
+	return ok
+}
+
+// ResetRevokedAt resets all changes to the "revoked_at" field.
+func (m *BreakGlassGrantMutation) ResetRevokedAt() {
+	m.revoked_at = nil
+	delete(m.clearedFields, breakglassgrant.FieldRevokedAt)
+}
+
+// SetRevokeReason sets the "revoke_reason" field.
+func (m *BreakGlassGrantMutation) SetRevokeReason(s string) {
+	m.revoke_reason = &s
+}
+
+// RevokeReason returns the value of the "revoke_reason" field in the mutation.
+func (m *BreakGlassGrantMutation) RevokeReason() (r string, exists bool) {
+	v := m.revoke_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRevokeReason returns the old "revoke_reason" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldRevokeReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRevokeReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRevokeReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRevokeReason: %w", err)
+	}
+	return oldValue.RevokeReason, nil
+}
+
+// ClearRevokeReason clears the value of the "revoke_reason" field.
+func (m *BreakGlassGrantMutation) ClearRevokeReason() {
+	m.revoke_reason = nil
+	m.clearedFields[breakglassgrant.FieldRevokeReason] = struct{}{}
+}
+
+// RevokeReasonCleared returns if the "revoke_reason" field was cleared in this mutation.
+func (m *BreakGlassGrantMutation) RevokeReasonCleared() bool {
+	_, ok := m.clearedFields[breakglassgrant.FieldRevokeReason]
+	return ok
+}
+
+// ResetRevokeReason resets all changes to the "revoke_reason" field.
+func (m *BreakGlassGrantMutation) ResetRevokeReason() {
+	m.revoke_reason = nil
+	delete(m.clearedFields, breakglassgrant.FieldRevokeReason)
+}
+
+// SetMessagesViewedCount sets the "messages_viewed_count" field.
+func (m *BreakGlassGrantMutation) SetMessagesViewedCount(i int) {
+	m.messages_viewed_count = &i
+	m.addmessages_viewed_count = nil
+}
+
+// MessagesViewedCount returns the value of the "messages_viewed_count" field in the mutation.
+func (m *BreakGlassGrantMutation) MessagesViewedCount() (r int, exists bool) {
+	v := m.messages_viewed_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMessagesViewedCount returns the old "messages_viewed_count" field's value of the BreakGlassGrant entity.
+// If the BreakGlassGrant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BreakGlassGrantMutation) OldMessagesViewedCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMessagesViewedCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMessagesViewedCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMessagesViewedCount: %w", err)
+	}
+	return oldValue.MessagesViewedCount, nil
+}
+
+// AddMessagesViewedCount adds i to the "messages_viewed_count" field.
+func (m *BreakGlassGrantMutation) AddMessagesViewedCount(i int) {
+	if m.addmessages_viewed_count != nil {
+		*m.addmessages_viewed_count += i
+	} else {
+		m.addmessages_viewed_count = &i
+	}
+}
+
+// AddedMessagesViewedCount returns the value that was added to the "messages_viewed_count" field in this mutation.
+func (m *BreakGlassGrantMutation) AddedMessagesViewedCount() (r int, exists bool) {
+	v := m.addmessages_viewed_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMessagesViewedCount resets all changes to the "messages_viewed_count" field.
+func (m *BreakGlassGrantMutation) ResetMessagesViewedCount() {
+	m.messages_viewed_count = nil
+	m.addmessages_viewed_count = nil
+}
+
+// Where appends a list predicates to the BreakGlassGrantMutation builder.
+func (m *BreakGlassGrantMutation) Where(ps ...predicate.BreakGlassGrant) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BreakGlassGrantMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BreakGlassGrantMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BreakGlassGrant, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BreakGlassGrantMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BreakGlassGrantMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BreakGlassGrant).
+func (m *BreakGlassGrantMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BreakGlassGrantMutation) Fields() []string {
+	fields := make([]string, 0, 26)
+	if m.tenant_id != nil {
+		fields = append(fields, breakglassgrant.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, breakglassgrant.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, breakglassgrant.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, breakglassgrant.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, breakglassgrant.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, breakglassgrant.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, breakglassgrant.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, breakglassgrant.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, breakglassgrant.FieldVersion)
+	}
+	if m.scope_type != nil {
+		fields = append(fields, breakglassgrant.FieldScopeType)
+	}
+	if m.scope_id != nil {
+		fields = append(fields, breakglassgrant.FieldScopeID)
+	}
+	if m.window_from != nil {
+		fields = append(fields, breakglassgrant.FieldWindowFrom)
+	}
+	if m.window_to != nil {
+		fields = append(fields, breakglassgrant.FieldWindowTo)
+	}
+	if m.duration_minutes != nil {
+		fields = append(fields, breakglassgrant.FieldDurationMinutes)
+	}
+	if m.reason != nil {
+		fields = append(fields, breakglassgrant.FieldReason)
+	}
+	if m.status != nil {
+		fields = append(fields, breakglassgrant.FieldStatus)
+	}
+	if m.requested_by != nil {
+		fields = append(fields, breakglassgrant.FieldRequestedBy)
+	}
+	if m.requested_at != nil {
+		fields = append(fields, breakglassgrant.FieldRequestedAt)
+	}
+	if m.decided_by != nil {
+		fields = append(fields, breakglassgrant.FieldDecidedBy)
+	}
+	if m.decided_at != nil {
+		fields = append(fields, breakglassgrant.FieldDecidedAt)
+	}
+	if m.decision_note != nil {
+		fields = append(fields, breakglassgrant.FieldDecisionNote)
+	}
+	if m.expires_at != nil {
+		fields = append(fields, breakglassgrant.FieldExpiresAt)
+	}
+	if m.revoked_by != nil {
+		fields = append(fields, breakglassgrant.FieldRevokedBy)
+	}
+	if m.revoked_at != nil {
+		fields = append(fields, breakglassgrant.FieldRevokedAt)
+	}
+	if m.revoke_reason != nil {
+		fields = append(fields, breakglassgrant.FieldRevokeReason)
+	}
+	if m.messages_viewed_count != nil {
+		fields = append(fields, breakglassgrant.FieldMessagesViewedCount)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BreakGlassGrantMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case breakglassgrant.FieldTenantID:
+		return m.TenantID()
+	case breakglassgrant.FieldCreatedAt:
+		return m.CreatedAt()
+	case breakglassgrant.FieldCreatedBy:
+		return m.CreatedBy()
+	case breakglassgrant.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case breakglassgrant.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case breakglassgrant.FieldDeletedAt:
+		return m.DeletedAt()
+	case breakglassgrant.FieldDeletedBy:
+		return m.DeletedBy()
+	case breakglassgrant.FieldDeleteReason:
+		return m.DeleteReason()
+	case breakglassgrant.FieldVersion:
+		return m.Version()
+	case breakglassgrant.FieldScopeType:
+		return m.ScopeType()
+	case breakglassgrant.FieldScopeID:
+		return m.ScopeID()
+	case breakglassgrant.FieldWindowFrom:
+		return m.WindowFrom()
+	case breakglassgrant.FieldWindowTo:
+		return m.WindowTo()
+	case breakglassgrant.FieldDurationMinutes:
+		return m.DurationMinutes()
+	case breakglassgrant.FieldReason:
+		return m.Reason()
+	case breakglassgrant.FieldStatus:
+		return m.Status()
+	case breakglassgrant.FieldRequestedBy:
+		return m.RequestedBy()
+	case breakglassgrant.FieldRequestedAt:
+		return m.RequestedAt()
+	case breakglassgrant.FieldDecidedBy:
+		return m.DecidedBy()
+	case breakglassgrant.FieldDecidedAt:
+		return m.DecidedAt()
+	case breakglassgrant.FieldDecisionNote:
+		return m.DecisionNote()
+	case breakglassgrant.FieldExpiresAt:
+		return m.ExpiresAt()
+	case breakglassgrant.FieldRevokedBy:
+		return m.RevokedBy()
+	case breakglassgrant.FieldRevokedAt:
+		return m.RevokedAt()
+	case breakglassgrant.FieldRevokeReason:
+		return m.RevokeReason()
+	case breakglassgrant.FieldMessagesViewedCount:
+		return m.MessagesViewedCount()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BreakGlassGrantMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case breakglassgrant.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case breakglassgrant.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case breakglassgrant.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case breakglassgrant.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case breakglassgrant.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case breakglassgrant.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case breakglassgrant.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case breakglassgrant.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case breakglassgrant.FieldVersion:
+		return m.OldVersion(ctx)
+	case breakglassgrant.FieldScopeType:
+		return m.OldScopeType(ctx)
+	case breakglassgrant.FieldScopeID:
+		return m.OldScopeID(ctx)
+	case breakglassgrant.FieldWindowFrom:
+		return m.OldWindowFrom(ctx)
+	case breakglassgrant.FieldWindowTo:
+		return m.OldWindowTo(ctx)
+	case breakglassgrant.FieldDurationMinutes:
+		return m.OldDurationMinutes(ctx)
+	case breakglassgrant.FieldReason:
+		return m.OldReason(ctx)
+	case breakglassgrant.FieldStatus:
+		return m.OldStatus(ctx)
+	case breakglassgrant.FieldRequestedBy:
+		return m.OldRequestedBy(ctx)
+	case breakglassgrant.FieldRequestedAt:
+		return m.OldRequestedAt(ctx)
+	case breakglassgrant.FieldDecidedBy:
+		return m.OldDecidedBy(ctx)
+	case breakglassgrant.FieldDecidedAt:
+		return m.OldDecidedAt(ctx)
+	case breakglassgrant.FieldDecisionNote:
+		return m.OldDecisionNote(ctx)
+	case breakglassgrant.FieldExpiresAt:
+		return m.OldExpiresAt(ctx)
+	case breakglassgrant.FieldRevokedBy:
+		return m.OldRevokedBy(ctx)
+	case breakglassgrant.FieldRevokedAt:
+		return m.OldRevokedAt(ctx)
+	case breakglassgrant.FieldRevokeReason:
+		return m.OldRevokeReason(ctx)
+	case breakglassgrant.FieldMessagesViewedCount:
+		return m.OldMessagesViewedCount(ctx)
+	}
+	return nil, fmt.Errorf("unknown BreakGlassGrant field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BreakGlassGrantMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case breakglassgrant.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case breakglassgrant.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case breakglassgrant.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case breakglassgrant.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case breakglassgrant.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case breakglassgrant.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case breakglassgrant.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case breakglassgrant.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case breakglassgrant.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case breakglassgrant.FieldScopeType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScopeType(v)
+		return nil
+	case breakglassgrant.FieldScopeID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScopeID(v)
+		return nil
+	case breakglassgrant.FieldWindowFrom:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWindowFrom(v)
+		return nil
+	case breakglassgrant.FieldWindowTo:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWindowTo(v)
+		return nil
+	case breakglassgrant.FieldDurationMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDurationMinutes(v)
+		return nil
+	case breakglassgrant.FieldReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReason(v)
+		return nil
+	case breakglassgrant.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case breakglassgrant.FieldRequestedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestedBy(v)
+		return nil
+	case breakglassgrant.FieldRequestedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestedAt(v)
+		return nil
+	case breakglassgrant.FieldDecidedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDecidedBy(v)
+		return nil
+	case breakglassgrant.FieldDecidedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDecidedAt(v)
+		return nil
+	case breakglassgrant.FieldDecisionNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDecisionNote(v)
+		return nil
+	case breakglassgrant.FieldExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiresAt(v)
+		return nil
+	case breakglassgrant.FieldRevokedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRevokedBy(v)
+		return nil
+	case breakglassgrant.FieldRevokedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRevokedAt(v)
+		return nil
+	case breakglassgrant.FieldRevokeReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRevokeReason(v)
+		return nil
+	case breakglassgrant.FieldMessagesViewedCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMessagesViewedCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BreakGlassGrant field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BreakGlassGrantMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, breakglassgrant.FieldVersion)
+	}
+	if m.addduration_minutes != nil {
+		fields = append(fields, breakglassgrant.FieldDurationMinutes)
+	}
+	if m.addmessages_viewed_count != nil {
+		fields = append(fields, breakglassgrant.FieldMessagesViewedCount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BreakGlassGrantMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case breakglassgrant.FieldVersion:
+		return m.AddedVersion()
+	case breakglassgrant.FieldDurationMinutes:
+		return m.AddedDurationMinutes()
+	case breakglassgrant.FieldMessagesViewedCount:
+		return m.AddedMessagesViewedCount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BreakGlassGrantMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case breakglassgrant.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case breakglassgrant.FieldDurationMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDurationMinutes(v)
+		return nil
+	case breakglassgrant.FieldMessagesViewedCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMessagesViewedCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BreakGlassGrant numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BreakGlassGrantMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(breakglassgrant.FieldCreatedBy) {
+		fields = append(fields, breakglassgrant.FieldCreatedBy)
+	}
+	if m.FieldCleared(breakglassgrant.FieldUpdatedBy) {
+		fields = append(fields, breakglassgrant.FieldUpdatedBy)
+	}
+	if m.FieldCleared(breakglassgrant.FieldDeletedAt) {
+		fields = append(fields, breakglassgrant.FieldDeletedAt)
+	}
+	if m.FieldCleared(breakglassgrant.FieldDeletedBy) {
+		fields = append(fields, breakglassgrant.FieldDeletedBy)
+	}
+	if m.FieldCleared(breakglassgrant.FieldDeleteReason) {
+		fields = append(fields, breakglassgrant.FieldDeleteReason)
+	}
+	if m.FieldCleared(breakglassgrant.FieldDecidedBy) {
+		fields = append(fields, breakglassgrant.FieldDecidedBy)
+	}
+	if m.FieldCleared(breakglassgrant.FieldDecidedAt) {
+		fields = append(fields, breakglassgrant.FieldDecidedAt)
+	}
+	if m.FieldCleared(breakglassgrant.FieldDecisionNote) {
+		fields = append(fields, breakglassgrant.FieldDecisionNote)
+	}
+	if m.FieldCleared(breakglassgrant.FieldExpiresAt) {
+		fields = append(fields, breakglassgrant.FieldExpiresAt)
+	}
+	if m.FieldCleared(breakglassgrant.FieldRevokedBy) {
+		fields = append(fields, breakglassgrant.FieldRevokedBy)
+	}
+	if m.FieldCleared(breakglassgrant.FieldRevokedAt) {
+		fields = append(fields, breakglassgrant.FieldRevokedAt)
+	}
+	if m.FieldCleared(breakglassgrant.FieldRevokeReason) {
+		fields = append(fields, breakglassgrant.FieldRevokeReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BreakGlassGrantMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BreakGlassGrantMutation) ClearField(name string) error {
+	switch name {
+	case breakglassgrant.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case breakglassgrant.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case breakglassgrant.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case breakglassgrant.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case breakglassgrant.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case breakglassgrant.FieldDecidedBy:
+		m.ClearDecidedBy()
+		return nil
+	case breakglassgrant.FieldDecidedAt:
+		m.ClearDecidedAt()
+		return nil
+	case breakglassgrant.FieldDecisionNote:
+		m.ClearDecisionNote()
+		return nil
+	case breakglassgrant.FieldExpiresAt:
+		m.ClearExpiresAt()
+		return nil
+	case breakglassgrant.FieldRevokedBy:
+		m.ClearRevokedBy()
+		return nil
+	case breakglassgrant.FieldRevokedAt:
+		m.ClearRevokedAt()
+		return nil
+	case breakglassgrant.FieldRevokeReason:
+		m.ClearRevokeReason()
+		return nil
+	}
+	return fmt.Errorf("unknown BreakGlassGrant nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BreakGlassGrantMutation) ResetField(name string) error {
+	switch name {
+	case breakglassgrant.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case breakglassgrant.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case breakglassgrant.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case breakglassgrant.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case breakglassgrant.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case breakglassgrant.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case breakglassgrant.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case breakglassgrant.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case breakglassgrant.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case breakglassgrant.FieldScopeType:
+		m.ResetScopeType()
+		return nil
+	case breakglassgrant.FieldScopeID:
+		m.ResetScopeID()
+		return nil
+	case breakglassgrant.FieldWindowFrom:
+		m.ResetWindowFrom()
+		return nil
+	case breakglassgrant.FieldWindowTo:
+		m.ResetWindowTo()
+		return nil
+	case breakglassgrant.FieldDurationMinutes:
+		m.ResetDurationMinutes()
+		return nil
+	case breakglassgrant.FieldReason:
+		m.ResetReason()
+		return nil
+	case breakglassgrant.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case breakglassgrant.FieldRequestedBy:
+		m.ResetRequestedBy()
+		return nil
+	case breakglassgrant.FieldRequestedAt:
+		m.ResetRequestedAt()
+		return nil
+	case breakglassgrant.FieldDecidedBy:
+		m.ResetDecidedBy()
+		return nil
+	case breakglassgrant.FieldDecidedAt:
+		m.ResetDecidedAt()
+		return nil
+	case breakglassgrant.FieldDecisionNote:
+		m.ResetDecisionNote()
+		return nil
+	case breakglassgrant.FieldExpiresAt:
+		m.ResetExpiresAt()
+		return nil
+	case breakglassgrant.FieldRevokedBy:
+		m.ResetRevokedBy()
+		return nil
+	case breakglassgrant.FieldRevokedAt:
+		m.ResetRevokedAt()
+		return nil
+	case breakglassgrant.FieldRevokeReason:
+		m.ResetRevokeReason()
+		return nil
+	case breakglassgrant.FieldMessagesViewedCount:
+		m.ResetMessagesViewedCount()
+		return nil
+	}
+	return fmt.Errorf("unknown BreakGlassGrant field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BreakGlassGrantMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BreakGlassGrantMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BreakGlassGrantMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BreakGlassGrantMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BreakGlassGrantMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BreakGlassGrantMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BreakGlassGrantMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BreakGlassGrant unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BreakGlassGrantMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BreakGlassGrant edge %s", name)
 }
 
 // ChannelMutation represents an operation that mutates the Channel nodes in the graph.
@@ -10127,6 +12146,8 @@ type ModerationCaseMutation struct {
 	contact_path           *string
 	resolved_at            *time.Time
 	source_event_id        *uuid.UUID
+	oncall_page_level      *string
+	last_paged_at          *time.Time
 	clearedFields          map[string]struct{}
 	done                   bool
 	oldValue               func(context.Context) (*ModerationCase, error)
@@ -11778,6 +13799,104 @@ func (m *ModerationCaseMutation) ResetSourceEventID() {
 	delete(m.clearedFields, moderationcase.FieldSourceEventID)
 }
 
+// SetOncallPageLevel sets the "oncall_page_level" field.
+func (m *ModerationCaseMutation) SetOncallPageLevel(s string) {
+	m.oncall_page_level = &s
+}
+
+// OncallPageLevel returns the value of the "oncall_page_level" field in the mutation.
+func (m *ModerationCaseMutation) OncallPageLevel() (r string, exists bool) {
+	v := m.oncall_page_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOncallPageLevel returns the old "oncall_page_level" field's value of the ModerationCase entity.
+// If the ModerationCase object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationCaseMutation) OldOncallPageLevel(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOncallPageLevel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOncallPageLevel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOncallPageLevel: %w", err)
+	}
+	return oldValue.OncallPageLevel, nil
+}
+
+// ClearOncallPageLevel clears the value of the "oncall_page_level" field.
+func (m *ModerationCaseMutation) ClearOncallPageLevel() {
+	m.oncall_page_level = nil
+	m.clearedFields[moderationcase.FieldOncallPageLevel] = struct{}{}
+}
+
+// OncallPageLevelCleared returns if the "oncall_page_level" field was cleared in this mutation.
+func (m *ModerationCaseMutation) OncallPageLevelCleared() bool {
+	_, ok := m.clearedFields[moderationcase.FieldOncallPageLevel]
+	return ok
+}
+
+// ResetOncallPageLevel resets all changes to the "oncall_page_level" field.
+func (m *ModerationCaseMutation) ResetOncallPageLevel() {
+	m.oncall_page_level = nil
+	delete(m.clearedFields, moderationcase.FieldOncallPageLevel)
+}
+
+// SetLastPagedAt sets the "last_paged_at" field.
+func (m *ModerationCaseMutation) SetLastPagedAt(t time.Time) {
+	m.last_paged_at = &t
+}
+
+// LastPagedAt returns the value of the "last_paged_at" field in the mutation.
+func (m *ModerationCaseMutation) LastPagedAt() (r time.Time, exists bool) {
+	v := m.last_paged_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastPagedAt returns the old "last_paged_at" field's value of the ModerationCase entity.
+// If the ModerationCase object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationCaseMutation) OldLastPagedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastPagedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastPagedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastPagedAt: %w", err)
+	}
+	return oldValue.LastPagedAt, nil
+}
+
+// ClearLastPagedAt clears the value of the "last_paged_at" field.
+func (m *ModerationCaseMutation) ClearLastPagedAt() {
+	m.last_paged_at = nil
+	m.clearedFields[moderationcase.FieldLastPagedAt] = struct{}{}
+}
+
+// LastPagedAtCleared returns if the "last_paged_at" field was cleared in this mutation.
+func (m *ModerationCaseMutation) LastPagedAtCleared() bool {
+	_, ok := m.clearedFields[moderationcase.FieldLastPagedAt]
+	return ok
+}
+
+// ResetLastPagedAt resets all changes to the "last_paged_at" field.
+func (m *ModerationCaseMutation) ResetLastPagedAt() {
+	m.last_paged_at = nil
+	delete(m.clearedFields, moderationcase.FieldLastPagedAt)
+}
+
 // Where appends a list predicates to the ModerationCaseMutation builder.
 func (m *ModerationCaseMutation) Where(ps ...predicate.ModerationCase) {
 	m.predicates = append(m.predicates, ps...)
@@ -11812,7 +13931,7 @@ func (m *ModerationCaseMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ModerationCaseMutation) Fields() []string {
-	fields := make([]string, 0, 34)
+	fields := make([]string, 0, 36)
 	if m.tenant_id != nil {
 		fields = append(fields, moderationcase.FieldTenantID)
 	}
@@ -11915,6 +14034,12 @@ func (m *ModerationCaseMutation) Fields() []string {
 	if m.source_event_id != nil {
 		fields = append(fields, moderationcase.FieldSourceEventID)
 	}
+	if m.oncall_page_level != nil {
+		fields = append(fields, moderationcase.FieldOncallPageLevel)
+	}
+	if m.last_paged_at != nil {
+		fields = append(fields, moderationcase.FieldLastPagedAt)
+	}
 	return fields
 }
 
@@ -11991,6 +14116,10 @@ func (m *ModerationCaseMutation) Field(name string) (ent.Value, bool) {
 		return m.ResolvedAt()
 	case moderationcase.FieldSourceEventID:
 		return m.SourceEventID()
+	case moderationcase.FieldOncallPageLevel:
+		return m.OncallPageLevel()
+	case moderationcase.FieldLastPagedAt:
+		return m.LastPagedAt()
 	}
 	return nil, false
 }
@@ -12068,6 +14197,10 @@ func (m *ModerationCaseMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldResolvedAt(ctx)
 	case moderationcase.FieldSourceEventID:
 		return m.OldSourceEventID(ctx)
+	case moderationcase.FieldOncallPageLevel:
+		return m.OldOncallPageLevel(ctx)
+	case moderationcase.FieldLastPagedAt:
+		return m.OldLastPagedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown ModerationCase field %s", name)
 }
@@ -12315,6 +14448,20 @@ func (m *ModerationCaseMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetSourceEventID(v)
 		return nil
+	case moderationcase.FieldOncallPageLevel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOncallPageLevel(v)
+		return nil
+	case moderationcase.FieldLastPagedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastPagedAt(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ModerationCase field %s", name)
 }
@@ -12429,6 +14576,12 @@ func (m *ModerationCaseMutation) ClearedFields() []string {
 	if m.FieldCleared(moderationcase.FieldSourceEventID) {
 		fields = append(fields, moderationcase.FieldSourceEventID)
 	}
+	if m.FieldCleared(moderationcase.FieldOncallPageLevel) {
+		fields = append(fields, moderationcase.FieldOncallPageLevel)
+	}
+	if m.FieldCleared(moderationcase.FieldLastPagedAt) {
+		fields = append(fields, moderationcase.FieldLastPagedAt)
+	}
 	return fields
 }
 
@@ -12499,6 +14652,12 @@ func (m *ModerationCaseMutation) ClearField(name string) error {
 		return nil
 	case moderationcase.FieldSourceEventID:
 		m.ClearSourceEventID()
+		return nil
+	case moderationcase.FieldOncallPageLevel:
+		m.ClearOncallPageLevel()
+		return nil
+	case moderationcase.FieldLastPagedAt:
+		m.ClearLastPagedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown ModerationCase nullable field %s", name)
@@ -12609,6 +14768,12 @@ func (m *ModerationCaseMutation) ResetField(name string) error {
 		return nil
 	case moderationcase.FieldSourceEventID:
 		m.ResetSourceEventID()
+		return nil
+	case moderationcase.FieldOncallPageLevel:
+		m.ResetOncallPageLevel()
+		return nil
+	case moderationcase.FieldLastPagedAt:
+		m.ResetLastPagedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown ModerationCase field %s", name)
@@ -13519,6 +15684,1139 @@ func (m *ModerationEvidenceMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ModerationEvidenceMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown ModerationEvidence edge %s", name)
+}
+
+// ModerationOncallShiftMutation represents an operation that mutates the ModerationOncallShift nodes in the graph.
+type ModerationOncallShiftMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	created_at        *time.Time
+	created_by        *uuid.UUID
+	updated_at        *time.Time
+	updated_by        *uuid.UUID
+	deleted_at        *time.Time
+	deleted_by        *uuid.UUID
+	delete_reason     *string
+	version           *int64
+	addversion        *int64
+	moderator_user_id *uuid.UUID
+	oncall_role       *string
+	starts_at         *time.Time
+	ends_at           *time.Time
+	note              *string
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*ModerationOncallShift, error)
+	predicates        []predicate.ModerationOncallShift
+}
+
+var _ ent.Mutation = (*ModerationOncallShiftMutation)(nil)
+
+// moderationoncallshiftOption allows management of the mutation configuration using functional options.
+type moderationoncallshiftOption func(*ModerationOncallShiftMutation)
+
+// newModerationOncallShiftMutation creates new mutation for the ModerationOncallShift entity.
+func newModerationOncallShiftMutation(c config, op Op, opts ...moderationoncallshiftOption) *ModerationOncallShiftMutation {
+	m := &ModerationOncallShiftMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeModerationOncallShift,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withModerationOncallShiftID sets the ID field of the mutation.
+func withModerationOncallShiftID(id uuid.UUID) moderationoncallshiftOption {
+	return func(m *ModerationOncallShiftMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ModerationOncallShift
+		)
+		m.oldValue = func(ctx context.Context) (*ModerationOncallShift, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ModerationOncallShift.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withModerationOncallShift sets the old ModerationOncallShift of the mutation.
+func withModerationOncallShift(node *ModerationOncallShift) moderationoncallshiftOption {
+	return func(m *ModerationOncallShiftMutation) {
+		m.oldValue = func(context.Context) (*ModerationOncallShift, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ModerationOncallShiftMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ModerationOncallShiftMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ModerationOncallShift entities.
+func (m *ModerationOncallShiftMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ModerationOncallShiftMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ModerationOncallShiftMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ModerationOncallShift.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ModerationOncallShiftMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ModerationOncallShiftMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ModerationOncallShiftMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *ModerationOncallShiftMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *ModerationOncallShiftMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *ModerationOncallShiftMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[moderationoncallshift.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *ModerationOncallShiftMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[moderationoncallshift.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *ModerationOncallShiftMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, moderationoncallshift.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ModerationOncallShiftMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ModerationOncallShiftMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ModerationOncallShiftMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *ModerationOncallShiftMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *ModerationOncallShiftMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *ModerationOncallShiftMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[moderationoncallshift.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *ModerationOncallShiftMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[moderationoncallshift.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *ModerationOncallShiftMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, moderationoncallshift.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ModerationOncallShiftMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ModerationOncallShiftMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ModerationOncallShiftMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[moderationoncallshift.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ModerationOncallShiftMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[moderationoncallshift.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ModerationOncallShiftMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, moderationoncallshift.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *ModerationOncallShiftMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *ModerationOncallShiftMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *ModerationOncallShiftMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[moderationoncallshift.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *ModerationOncallShiftMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[moderationoncallshift.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *ModerationOncallShiftMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, moderationoncallshift.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *ModerationOncallShiftMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *ModerationOncallShiftMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *ModerationOncallShiftMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[moderationoncallshift.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *ModerationOncallShiftMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[moderationoncallshift.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *ModerationOncallShiftMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, moderationoncallshift.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *ModerationOncallShiftMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *ModerationOncallShiftMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *ModerationOncallShiftMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *ModerationOncallShiftMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *ModerationOncallShiftMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetModeratorUserID sets the "moderator_user_id" field.
+func (m *ModerationOncallShiftMutation) SetModeratorUserID(u uuid.UUID) {
+	m.moderator_user_id = &u
+}
+
+// ModeratorUserID returns the value of the "moderator_user_id" field in the mutation.
+func (m *ModerationOncallShiftMutation) ModeratorUserID() (r uuid.UUID, exists bool) {
+	v := m.moderator_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeratorUserID returns the old "moderator_user_id" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldModeratorUserID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeratorUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeratorUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeratorUserID: %w", err)
+	}
+	return oldValue.ModeratorUserID, nil
+}
+
+// ResetModeratorUserID resets all changes to the "moderator_user_id" field.
+func (m *ModerationOncallShiftMutation) ResetModeratorUserID() {
+	m.moderator_user_id = nil
+}
+
+// SetOncallRole sets the "oncall_role" field.
+func (m *ModerationOncallShiftMutation) SetOncallRole(s string) {
+	m.oncall_role = &s
+}
+
+// OncallRole returns the value of the "oncall_role" field in the mutation.
+func (m *ModerationOncallShiftMutation) OncallRole() (r string, exists bool) {
+	v := m.oncall_role
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOncallRole returns the old "oncall_role" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldOncallRole(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOncallRole is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOncallRole requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOncallRole: %w", err)
+	}
+	return oldValue.OncallRole, nil
+}
+
+// ResetOncallRole resets all changes to the "oncall_role" field.
+func (m *ModerationOncallShiftMutation) ResetOncallRole() {
+	m.oncall_role = nil
+}
+
+// SetStartsAt sets the "starts_at" field.
+func (m *ModerationOncallShiftMutation) SetStartsAt(t time.Time) {
+	m.starts_at = &t
+}
+
+// StartsAt returns the value of the "starts_at" field in the mutation.
+func (m *ModerationOncallShiftMutation) StartsAt() (r time.Time, exists bool) {
+	v := m.starts_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartsAt returns the old "starts_at" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldStartsAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartsAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartsAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartsAt: %w", err)
+	}
+	return oldValue.StartsAt, nil
+}
+
+// ResetStartsAt resets all changes to the "starts_at" field.
+func (m *ModerationOncallShiftMutation) ResetStartsAt() {
+	m.starts_at = nil
+}
+
+// SetEndsAt sets the "ends_at" field.
+func (m *ModerationOncallShiftMutation) SetEndsAt(t time.Time) {
+	m.ends_at = &t
+}
+
+// EndsAt returns the value of the "ends_at" field in the mutation.
+func (m *ModerationOncallShiftMutation) EndsAt() (r time.Time, exists bool) {
+	v := m.ends_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndsAt returns the old "ends_at" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldEndsAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndsAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndsAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndsAt: %w", err)
+	}
+	return oldValue.EndsAt, nil
+}
+
+// ResetEndsAt resets all changes to the "ends_at" field.
+func (m *ModerationOncallShiftMutation) ResetEndsAt() {
+	m.ends_at = nil
+}
+
+// SetNote sets the "note" field.
+func (m *ModerationOncallShiftMutation) SetNote(s string) {
+	m.note = &s
+}
+
+// Note returns the value of the "note" field in the mutation.
+func (m *ModerationOncallShiftMutation) Note() (r string, exists bool) {
+	v := m.note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNote returns the old "note" field's value of the ModerationOncallShift entity.
+// If the ModerationOncallShift object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModerationOncallShiftMutation) OldNote(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNote: %w", err)
+	}
+	return oldValue.Note, nil
+}
+
+// ClearNote clears the value of the "note" field.
+func (m *ModerationOncallShiftMutation) ClearNote() {
+	m.note = nil
+	m.clearedFields[moderationoncallshift.FieldNote] = struct{}{}
+}
+
+// NoteCleared returns if the "note" field was cleared in this mutation.
+func (m *ModerationOncallShiftMutation) NoteCleared() bool {
+	_, ok := m.clearedFields[moderationoncallshift.FieldNote]
+	return ok
+}
+
+// ResetNote resets all changes to the "note" field.
+func (m *ModerationOncallShiftMutation) ResetNote() {
+	m.note = nil
+	delete(m.clearedFields, moderationoncallshift.FieldNote)
+}
+
+// Where appends a list predicates to the ModerationOncallShiftMutation builder.
+func (m *ModerationOncallShiftMutation) Where(ps ...predicate.ModerationOncallShift) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ModerationOncallShiftMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ModerationOncallShiftMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ModerationOncallShift, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ModerationOncallShiftMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ModerationOncallShiftMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ModerationOncallShift).
+func (m *ModerationOncallShiftMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ModerationOncallShiftMutation) Fields() []string {
+	fields := make([]string, 0, 13)
+	if m.created_at != nil {
+		fields = append(fields, moderationoncallshift.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, moderationoncallshift.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, moderationoncallshift.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, moderationoncallshift.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, moderationoncallshift.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, moderationoncallshift.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, moderationoncallshift.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, moderationoncallshift.FieldVersion)
+	}
+	if m.moderator_user_id != nil {
+		fields = append(fields, moderationoncallshift.FieldModeratorUserID)
+	}
+	if m.oncall_role != nil {
+		fields = append(fields, moderationoncallshift.FieldOncallRole)
+	}
+	if m.starts_at != nil {
+		fields = append(fields, moderationoncallshift.FieldStartsAt)
+	}
+	if m.ends_at != nil {
+		fields = append(fields, moderationoncallshift.FieldEndsAt)
+	}
+	if m.note != nil {
+		fields = append(fields, moderationoncallshift.FieldNote)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ModerationOncallShiftMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case moderationoncallshift.FieldCreatedAt:
+		return m.CreatedAt()
+	case moderationoncallshift.FieldCreatedBy:
+		return m.CreatedBy()
+	case moderationoncallshift.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case moderationoncallshift.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case moderationoncallshift.FieldDeletedAt:
+		return m.DeletedAt()
+	case moderationoncallshift.FieldDeletedBy:
+		return m.DeletedBy()
+	case moderationoncallshift.FieldDeleteReason:
+		return m.DeleteReason()
+	case moderationoncallshift.FieldVersion:
+		return m.Version()
+	case moderationoncallshift.FieldModeratorUserID:
+		return m.ModeratorUserID()
+	case moderationoncallshift.FieldOncallRole:
+		return m.OncallRole()
+	case moderationoncallshift.FieldStartsAt:
+		return m.StartsAt()
+	case moderationoncallshift.FieldEndsAt:
+		return m.EndsAt()
+	case moderationoncallshift.FieldNote:
+		return m.Note()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ModerationOncallShiftMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case moderationoncallshift.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case moderationoncallshift.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case moderationoncallshift.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case moderationoncallshift.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case moderationoncallshift.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case moderationoncallshift.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case moderationoncallshift.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case moderationoncallshift.FieldVersion:
+		return m.OldVersion(ctx)
+	case moderationoncallshift.FieldModeratorUserID:
+		return m.OldModeratorUserID(ctx)
+	case moderationoncallshift.FieldOncallRole:
+		return m.OldOncallRole(ctx)
+	case moderationoncallshift.FieldStartsAt:
+		return m.OldStartsAt(ctx)
+	case moderationoncallshift.FieldEndsAt:
+		return m.OldEndsAt(ctx)
+	case moderationoncallshift.FieldNote:
+		return m.OldNote(ctx)
+	}
+	return nil, fmt.Errorf("unknown ModerationOncallShift field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModerationOncallShiftMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case moderationoncallshift.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case moderationoncallshift.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case moderationoncallshift.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case moderationoncallshift.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case moderationoncallshift.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case moderationoncallshift.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case moderationoncallshift.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case moderationoncallshift.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case moderationoncallshift.FieldModeratorUserID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeratorUserID(v)
+		return nil
+	case moderationoncallshift.FieldOncallRole:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOncallRole(v)
+		return nil
+	case moderationoncallshift.FieldStartsAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartsAt(v)
+		return nil
+	case moderationoncallshift.FieldEndsAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndsAt(v)
+		return nil
+	case moderationoncallshift.FieldNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNote(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ModerationOncallShift field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ModerationOncallShiftMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, moderationoncallshift.FieldVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ModerationOncallShiftMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case moderationoncallshift.FieldVersion:
+		return m.AddedVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModerationOncallShiftMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case moderationoncallshift.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ModerationOncallShift numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ModerationOncallShiftMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(moderationoncallshift.FieldCreatedBy) {
+		fields = append(fields, moderationoncallshift.FieldCreatedBy)
+	}
+	if m.FieldCleared(moderationoncallshift.FieldUpdatedBy) {
+		fields = append(fields, moderationoncallshift.FieldUpdatedBy)
+	}
+	if m.FieldCleared(moderationoncallshift.FieldDeletedAt) {
+		fields = append(fields, moderationoncallshift.FieldDeletedAt)
+	}
+	if m.FieldCleared(moderationoncallshift.FieldDeletedBy) {
+		fields = append(fields, moderationoncallshift.FieldDeletedBy)
+	}
+	if m.FieldCleared(moderationoncallshift.FieldDeleteReason) {
+		fields = append(fields, moderationoncallshift.FieldDeleteReason)
+	}
+	if m.FieldCleared(moderationoncallshift.FieldNote) {
+		fields = append(fields, moderationoncallshift.FieldNote)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ModerationOncallShiftMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ModerationOncallShiftMutation) ClearField(name string) error {
+	switch name {
+	case moderationoncallshift.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case moderationoncallshift.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case moderationoncallshift.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case moderationoncallshift.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case moderationoncallshift.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case moderationoncallshift.FieldNote:
+		m.ClearNote()
+		return nil
+	}
+	return fmt.Errorf("unknown ModerationOncallShift nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ModerationOncallShiftMutation) ResetField(name string) error {
+	switch name {
+	case moderationoncallshift.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case moderationoncallshift.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case moderationoncallshift.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case moderationoncallshift.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case moderationoncallshift.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case moderationoncallshift.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case moderationoncallshift.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case moderationoncallshift.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case moderationoncallshift.FieldModeratorUserID:
+		m.ResetModeratorUserID()
+		return nil
+	case moderationoncallshift.FieldOncallRole:
+		m.ResetOncallRole()
+		return nil
+	case moderationoncallshift.FieldStartsAt:
+		m.ResetStartsAt()
+		return nil
+	case moderationoncallshift.FieldEndsAt:
+		m.ResetEndsAt()
+		return nil
+	case moderationoncallshift.FieldNote:
+		m.ResetNote()
+		return nil
+	}
+	return fmt.Errorf("unknown ModerationOncallShift field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ModerationOncallShiftMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ModerationOncallShiftMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ModerationOncallShiftMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ModerationOncallShiftMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ModerationOncallShiftMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ModerationOncallShiftMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ModerationOncallShiftMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown ModerationOncallShift unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ModerationOncallShiftMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown ModerationOncallShift edge %s", name)
 }
 
 // ModerationSwitchMutation represents an operation that mutates the ModerationSwitch nodes in the graph.

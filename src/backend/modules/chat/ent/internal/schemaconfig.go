@@ -8,6 +8,7 @@ import "context"
 // that can be passed at runtime.
 type SchemaConfig struct {
 	Block                    string // Block table.
+	BreakGlassGrant          string // BreakGlassGrant table.
 	Channel                  string // Channel table.
 	ChannelMember            string // ChannelMember table.
 	ChatPolicy               string // ChatPolicy table.
@@ -17,6 +18,7 @@ type SchemaConfig struct {
 	ModerationAction         string // ModerationAction table.
 	ModerationCase           string // ModerationCase table.
 	ModerationEvidence       string // ModerationEvidence table.
+	ModerationOncallShift    string // ModerationOncallShift table.
 	ModerationSwitch         string // ModerationSwitch table.
 	ModerationSwitchChange   string // ModerationSwitchChange table.
 	ModerationSwitchRequest  string // ModerationSwitchRequest table.
