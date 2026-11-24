@@ -246,7 +246,7 @@ Sự kiện thế giới là sự kiện live-ops loại `world_festival` (lễ 
 | Mastery visualization | Đất xám → có màu → nở hoa/cây lớn theo `beginning/developing/proficient/mastered` | [Confirmed] |
 | Trợ năng | Không chỉ dùng màu (thêm biểu tượng); chế độ tương phản cao | [Confirmed] |
 | Ngân sách hiệu năng | Theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) (nơi sở hữu, máy tầm trung — ADR-0057); áp dụng trong pipeline dựng ở [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) §6 | — |
-| Nguồn asset | Mua pack có license thương mại + tự làm nhân vật chính; phong cách stylized low-poly (OQ-16) | [Confirmed — owner 2026-11-20] |
+| Nguồn asset | Chỉ license MIT, CC0 hoặc public domain; asset tự làm phát hành MIT; cấm share-alike, non-commercial, GPL, pack trả phí — [ADR-0102](../adr/ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md) (thay phần nguồn asset của OQ-16; phong cách stylized low-poly giữ nguyên). Lượt đầu: Main Hub + nhân vật chibi tự làm bằng code ([F067](../../specs/067-art-pass-hub-chibi/spec.md)) | [Confirmed — owner 2026-11-24] |
 | Design system | Màu, font, UI, toon/outline, ánh sáng, VFX từ game design system ([DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) §5) | [Confirmed — ADR-0047] |
 
 ## 12. Dữ liệu, API, event, lỗi
