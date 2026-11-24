@@ -12,6 +12,8 @@ info:
 tags:
   - name: party-activities
     description: Hoạt động party quest/boss do module competition gọi trong luồng Start Session (F101 research R1; hiện thực ở F103)
+  - name: catalog
+    description: Catalog quest/mini-game đã gán cho tenant (module learning dựng projection catalog nhà trường, F078/F041)
   - name: platform-ops
     description: Interface platform ops chuẩn (module identity điều phối Thùng rác, clone tenant, dọn/khôi phục học sinh, gộp/ẩn danh hóa user)
 
@@ -464,8 +466,71 @@ paths:
         '409': { $ref: 'common/internal-common.v1.yaml#/components/responses/Conflict' }
         '422': { $ref: 'common/internal-common.v1.yaml#/components/responses/ValidationFailed' }
         '503': { $ref: 'common/internal-common.v1.yaml#/components/responses/DependencyUnavailable' }
+  /internal/v1/game/assigned-activities:
+    get:
+      tags: [catalog]
+      operationId: listAssignedGameActivities
+      summary: Quest/mini-game đã publish đang gán cho một tenant, kèm metadata catalog (F078-AC-23)
+      description: |
+        Module learning gọi để dựng lại projection catalog nhà trường (DATABASE_DESIGN §2.17 quy tắc 3, F041 `listGameActivities`).
+        Chỉ trả nội dung platform đã publish (con trỏ hiện hành) và đang có assignment active cho `tenant_id`; nội dung chưa gán
+        cho tenant không bao giờ xuất hiện (R8). Phân trang keyset theo `(content_type, content_id)`. Principal gốc phải là
+        nhân sự platform hoặc phạm vi platform của consumer (không có token tenant).
+      x-allowed-callers: [learning]
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: 'common/internal-common.v1.yaml#/components/parameters/Cursor'
+        - $ref: 'common/internal-common.v1.yaml#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Một trang catalog của tenant
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GameActivityCatalogPage' }
+        '401': { $ref: 'common/internal-common.v1.yaml#/components/responses/Unauthorized' }
+        '403': { $ref: 'common/internal-common.v1.yaml#/components/responses/CallerNotAllowed' }
+        '422': { $ref: 'common/internal-common.v1.yaml#/components/responses/ValidationFailed' }
 components:
   schemas:
+    GameActivityCatalogEntry:
+      type: object
+      description: Khớp GameActivityCatalogItem của learning.v1 (listGameActivities, F041); title song ngữ i18nText (ADR-0056)
+      required: [content_type, content_id, content_version_id, version, title, grade_levels]
+      properties:
+        content_type: { type: string, enum: [quest, minigame_config] }
+        content_id: { type: string, format: uuid }
+        content_version_id: { type: string, format: uuid }
+        version: { type: integer, minimum: 1 }
+        title:
+          type: object
+          required: [vi]
+          properties:
+            vi: { type: string, maxLength: 255 }
+            en: { type: string, maxLength: 255 }
+        grade_levels:
+          type: array
+          maxItems: 9
+          items: { type: integer, minimum: 1, maximum: 9 }
+        subject_id: { type: [string, "null"], format: uuid }
+        objective_ids:
+          type: array
+          maxItems: 50
+          items: { type: string, format: uuid }
+        estimated_minutes: { type: [integer, "null"], minimum: 1, maximum: 600 }
+        thumbnail_url: { type: [string, "null"], format: uri, maxLength: 2048 }
+        published_at: { type: string, format: date-time }
+    GameActivityCatalogPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          maxItems: 500
+          items: { $ref: "#/components/schemas/GameActivityCatalogEntry" }
+        page: { $ref: "common/internal-common.v1.yaml#/components/schemas/PageInfo" }
     PartyActivityType:
       type: string
       description: 'Một enum loại hoạt động party (PARTY_SYSTEM §5); nguồn specs/schemas/common/enums.schema.json. Module game chỉ nhận quest, boss.'

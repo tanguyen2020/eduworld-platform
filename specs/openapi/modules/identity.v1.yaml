@@ -7397,6 +7397,8 @@ components:
         - quest
         - minigame_config
         - item
+        - shop_item
+        - event_template
         - school_settings
         - tenant_settings
         - user

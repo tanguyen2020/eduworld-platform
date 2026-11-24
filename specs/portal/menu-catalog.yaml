@@ -867,7 +867,7 @@ workspaces:
             label_key: portal.action.game_ops.world.edit
             title: Tạo và sửa bản nháp
             required_permissions: [game.world.write]
-            operation_ids: ["createGameConfig[config_type=world-areas]", "updateGameConfigDraft[config_type=world-areas]"]
+            operation_ids: ["createGameConfig[config_type=world-areas]", "createGameConfigVersion[config_type=world-areas]", "updateGameConfigDraft[config_type=world-areas]"]
             can_disable: true
           - key: action.game_ops.world.workflow
             label_key: portal.action.game_ops.world.workflow
@@ -879,12 +879,12 @@ workspaces:
             label_key: portal.action.game_ops.world.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [game.content.publish]
-            operation_ids: ["publishGameConfigVersion[config_type=world-areas]"]
+            operation_ids: ["publishGameConfigVersion[config_type=world-areas]", "cancelScheduledGameConfigPublish[config_type=world-areas]"]
             can_disable: true
           - key: action.game_ops.world.rollback
             label_key: portal.action.game_ops.world.rollback
             title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            required_permissions: [game.content.publish]
             operation_ids: ["rollbackGameConfig[config_type=world-areas]", "unpublishGameConfig[config_type=world-areas]"]
             can_disable: true
       - key: menu.game_ops.npcs
@@ -910,7 +910,7 @@ workspaces:
             label_key: portal.action.game_ops.npcs.edit
             title: Tạo và sửa bản nháp
             required_permissions: [game.npc.write]
-            operation_ids: ["createGameConfig[config_type=npc-dialogues]", "updateGameConfigDraft[config_type=npc-dialogues]"]
+            operation_ids: ["createGameConfig[config_type=npc-dialogues]", "createGameConfigVersion[config_type=npc-dialogues]", "updateGameConfigDraft[config_type=npc-dialogues]"]
             can_disable: true
           - key: action.game_ops.npcs.workflow
             label_key: portal.action.game_ops.npcs.workflow
@@ -922,12 +922,12 @@ workspaces:
             label_key: portal.action.game_ops.npcs.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [game.content.publish]
-            operation_ids: ["publishGameConfigVersion[config_type=npc-dialogues]"]
+            operation_ids: ["publishGameConfigVersion[config_type=npc-dialogues]", "cancelScheduledGameConfigPublish[config_type=npc-dialogues]"]
             can_disable: true
           - key: action.game_ops.npcs.rollback
             label_key: portal.action.game_ops.npcs.rollback
             title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            required_permissions: [game.content.publish]
             operation_ids: ["rollbackGameConfig[config_type=npc-dialogues]", "unpublishGameConfig[config_type=npc-dialogues]"]
             can_disable: true
       - key: menu.game_ops.quests
@@ -960,8 +960,10 @@ workspaces:
             required_permissions: [game.quest.write]
             operation_ids:
               - "createGameConfig[config_type=quests]"
+              - "createGameConfigVersion[config_type=quests]"
               - "updateGameConfigDraft[config_type=quests]"
               - "createGameConfig[config_type=story-chapters]"
+              - "createGameConfigVersion[config_type=story-chapters]"
               - "updateGameConfigDraft[config_type=story-chapters]"
             can_disable: true
           - key: action.game_ops.quests.workflow
@@ -974,12 +976,12 @@ workspaces:
             label_key: portal.action.game_ops.quests.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [game.content.publish]
-            operation_ids: ["publishGameConfigVersion[config_type=quests]", "publishGameConfigVersion[config_type=story-chapters]"]
+            operation_ids: ["publishGameConfigVersion[config_type=quests]", "cancelScheduledGameConfigPublish[config_type=quests]", "publishGameConfigVersion[config_type=story-chapters]", "cancelScheduledGameConfigPublish[config_type=story-chapters]"]
             can_disable: true
           - key: action.game_ops.quests.rollback
             label_key: portal.action.game_ops.quests.rollback
             title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            required_permissions: [game.content.publish]
             operation_ids:
               - "rollbackGameConfig[config_type=quests]"
               - "unpublishGameConfig[config_type=quests]"
@@ -1009,7 +1011,7 @@ workspaces:
             label_key: portal.action.game_ops.minigames.edit
             title: Tạo và sửa bản nháp
             required_permissions: [game.minigame.write]
-            operation_ids: ["createGameConfig[config_type=minigame-configs]", "updateGameConfigDraft[config_type=minigame-configs]"]
+            operation_ids: ["createGameConfig[config_type=minigame-configs]", "createGameConfigVersion[config_type=minigame-configs]", "updateGameConfigDraft[config_type=minigame-configs]"]
             can_disable: true
           - key: action.game_ops.minigames.workflow
             label_key: portal.action.game_ops.minigames.workflow
@@ -1021,12 +1023,12 @@ workspaces:
             label_key: portal.action.game_ops.minigames.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [game.content.publish]
-            operation_ids: ["publishGameConfigVersion[config_type=minigame-configs]"]
+            operation_ids: ["publishGameConfigVersion[config_type=minigame-configs]", "cancelScheduledGameConfigPublish[config_type=minigame-configs]"]
             can_disable: true
           - key: action.game_ops.minigames.rollback
             label_key: portal.action.game_ops.minigames.rollback
             title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            required_permissions: [game.content.publish]
             operation_ids: ["rollbackGameConfig[config_type=minigame-configs]", "unpublishGameConfig[config_type=minigame-configs]"]
             can_disable: true
       - key: menu.game_ops.challenges
@@ -1052,7 +1054,7 @@ workspaces:
             label_key: portal.action.game_ops.challenges.edit
             title: Tạo và sửa bản nháp
             required_permissions: [game.challenge.write]
-            operation_ids: ["createGameConfig[config_type=challenges]", "updateGameConfigDraft[config_type=challenges]"]
+            operation_ids: ["createGameConfig[config_type=challenges]", "createGameConfigVersion[config_type=challenges]", "updateGameConfigDraft[config_type=challenges]"]
             can_disable: true
           - key: action.game_ops.challenges.workflow
             label_key: portal.action.game_ops.challenges.workflow
@@ -1064,12 +1066,12 @@ workspaces:
             label_key: portal.action.game_ops.challenges.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [game.content.publish]
-            operation_ids: ["publishGameConfigVersion[config_type=challenges]"]
+            operation_ids: ["publishGameConfigVersion[config_type=challenges]", "cancelScheduledGameConfigPublish[config_type=challenges]"]
             can_disable: true
           - key: action.game_ops.challenges.rollback
             label_key: portal.action.game_ops.challenges.rollback
             title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            required_permissions: [game.content.publish]
             operation_ids: ["rollbackGameConfig[config_type=challenges]", "unpublishGameConfig[config_type=challenges]"]
             can_disable: true
       - key: menu.game_ops.bosses
@@ -1095,7 +1097,7 @@ workspaces:
             label_key: portal.action.game_ops.bosses.edit
             title: Tạo và sửa bản nháp
             required_permissions: [game.boss.write]
-            operation_ids: ["createGameConfig[config_type=bosses]", "updateGameConfigDraft[config_type=bosses]"]
+            operation_ids: ["createGameConfig[config_type=bosses]", "createGameConfigVersion[config_type=bosses]", "updateGameConfigDraft[config_type=bosses]"]
             can_disable: true
           - key: action.game_ops.bosses.workflow
             label_key: portal.action.game_ops.bosses.workflow
@@ -1107,12 +1109,12 @@ workspaces:
             label_key: portal.action.game_ops.bosses.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [game.content.publish]
-            operation_ids: ["publishGameConfigVersion[config_type=bosses]"]
+            operation_ids: ["publishGameConfigVersion[config_type=bosses]", "cancelScheduledGameConfigPublish[config_type=bosses]"]
             can_disable: true
           - key: action.game_ops.bosses.rollback
             label_key: portal.action.game_ops.bosses.rollback
             title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            required_permissions: [game.content.publish]
             operation_ids: ["rollbackGameConfig[config_type=bosses]", "unpublishGameConfig[config_type=bosses]"]
             can_disable: true
       - key: menu.game_ops.progression
@@ -1145,8 +1147,10 @@ workspaces:
             required_permissions: [game.progression.write]
             operation_ids:
               - "createGameConfig[config_type=progression-levels]"
+              - "createGameConfigVersion[config_type=progression-levels]"
               - "updateGameConfigDraft[config_type=progression-levels]"
               - "createGameConfig[config_type=progression-curves]"
+              - "createGameConfigVersion[config_type=progression-curves]"
               - "updateGameConfigDraft[config_type=progression-curves]"
             can_disable: true
           - key: action.game_ops.progression.workflow
@@ -1159,12 +1163,12 @@ workspaces:
             label_key: portal.action.game_ops.progression.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [game.content.publish]
-            operation_ids: ["publishGameConfigVersion[config_type=progression-levels]", "publishGameConfigVersion[config_type=progression-curves]"]
+            operation_ids: ["publishGameConfigVersion[config_type=progression-levels]", "cancelScheduledGameConfigPublish[config_type=progression-levels]", "publishGameConfigVersion[config_type=progression-curves]", "cancelScheduledGameConfigPublish[config_type=progression-curves]"]
             can_disable: true
           - key: action.game_ops.progression.rollback
             label_key: portal.action.game_ops.progression.rollback
             title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            required_permissions: [game.content.publish]
             operation_ids:
               - "rollbackGameConfig[config_type=progression-levels]"
               - "unpublishGameConfig[config_type=progression-levels]"
@@ -1194,7 +1198,7 @@ workspaces:
             label_key: portal.action.game_ops.achievements.edit
             title: Tạo và sửa bản nháp
             required_permissions: [game.achievement.write]
-            operation_ids: ["createGameConfig[config_type=achievements]", "updateGameConfigDraft[config_type=achievements]"]
+            operation_ids: ["createGameConfig[config_type=achievements]", "createGameConfigVersion[config_type=achievements]", "updateGameConfigDraft[config_type=achievements]"]
             can_disable: true
           - key: action.game_ops.achievements.workflow
             label_key: portal.action.game_ops.achievements.workflow
@@ -1206,12 +1210,12 @@ workspaces:
             label_key: portal.action.game_ops.achievements.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [game.content.publish]
-            operation_ids: ["publishGameConfigVersion[config_type=achievements]"]
+            operation_ids: ["publishGameConfigVersion[config_type=achievements]", "cancelScheduledGameConfigPublish[config_type=achievements]"]
             can_disable: true
           - key: action.game_ops.achievements.rollback
             label_key: portal.action.game_ops.achievements.rollback
             title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            required_permissions: [game.content.publish]
             operation_ids: ["rollbackGameConfig[config_type=achievements]", "unpublishGameConfig[config_type=achievements]"]
             can_disable: true
       - key: menu.game_ops.items
@@ -1244,8 +1248,10 @@ workspaces:
             required_permissions: [game.item.write, game.collection.write]
             operation_ids:
               - "createGameConfig[config_type=items]"
+              - "createGameConfigVersion[config_type=items]"
               - "updateGameConfigDraft[config_type=items]"
               - "createGameConfig[config_type=collections]"
+              - "createGameConfigVersion[config_type=collections]"
               - "updateGameConfigDraft[config_type=collections]"
             can_disable: true
           - key: action.game_ops.items.workflow
@@ -1258,12 +1264,12 @@ workspaces:
             label_key: portal.action.game_ops.items.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [game.content.publish]
-            operation_ids: ["publishGameConfigVersion[config_type=items]", "publishGameConfigVersion[config_type=collections]"]
+            operation_ids: ["publishGameConfigVersion[config_type=items]", "cancelScheduledGameConfigPublish[config_type=items]", "publishGameConfigVersion[config_type=collections]", "cancelScheduledGameConfigPublish[config_type=collections]"]
             can_disable: true
           - key: action.game_ops.items.rollback
             label_key: portal.action.game_ops.items.rollback
             title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            required_permissions: [game.content.publish]
             operation_ids:
               - "rollbackGameConfig[config_type=items]"
               - "unpublishGameConfig[config_type=items]"
@@ -1300,8 +1306,10 @@ workspaces:
             required_permissions: [game.shop.write, game.economy.write]
             operation_ids:
               - "createGameConfig[config_type=shop-items]"
+              - "createGameConfigVersion[config_type=shop-items]"
               - "updateGameConfigDraft[config_type=shop-items]"
               - "createGameConfig[config_type=currencies]"
+              - "createGameConfigVersion[config_type=currencies]"
               - "updateGameConfigDraft[config_type=currencies]"
             can_disable: true
           - key: action.game_ops.shop.workflow
@@ -1314,12 +1322,12 @@ workspaces:
             label_key: portal.action.game_ops.shop.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [game.content.publish]
-            operation_ids: ["publishGameConfigVersion[config_type=shop-items]", "publishGameConfigVersion[config_type=currencies]"]
+            operation_ids: ["publishGameConfigVersion[config_type=shop-items]", "cancelScheduledGameConfigPublish[config_type=shop-items]", "publishGameConfigVersion[config_type=currencies]", "cancelScheduledGameConfigPublish[config_type=currencies]"]
             can_disable: true
           - key: action.game_ops.shop.rollback
             label_key: portal.action.game_ops.shop.rollback
             title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            required_permissions: [game.content.publish]
             operation_ids:
               - "rollbackGameConfig[config_type=shop-items]"
               - "unpublishGameConfig[config_type=shop-items]"
@@ -1355,7 +1363,7 @@ workspaces:
             label_key: portal.action.game_ops.rewards.edit
             title: Tạo và sửa bản nháp
             required_permissions: [game.reward_rule.write]
-            operation_ids: ["createGameConfig[config_type=reward-rules]", "updateGameConfigDraft[config_type=reward-rules]"]
+            operation_ids: ["createGameConfig[config_type=reward-rules]", "createGameConfigVersion[config_type=reward-rules]", "updateGameConfigDraft[config_type=reward-rules]"]
             can_disable: true
           - key: action.game_ops.rewards.workflow
             label_key: portal.action.game_ops.rewards.workflow
@@ -1367,12 +1375,12 @@ workspaces:
             label_key: portal.action.game_ops.rewards.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [game.content.publish]
-            operation_ids: ["publishGameConfigVersion[config_type=reward-rules]"]
+            operation_ids: ["publishGameConfigVersion[config_type=reward-rules]", "cancelScheduledGameConfigPublish[config_type=reward-rules]"]
             can_disable: true
           - key: action.game_ops.rewards.rollback
             label_key: portal.action.game_ops.rewards.rollback
             title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            required_permissions: [game.content.publish]
             operation_ids: ["rollbackGameConfig[config_type=reward-rules]", "unpublishGameConfig[config_type=reward-rules]"]
             can_disable: true
       - key: menu.game_ops.events
@@ -1410,10 +1418,13 @@ workspaces:
             required_permissions: [game.event.write, game.season_track.write]
             operation_ids:
               - "createGameConfig[config_type=events]"
+              - "createGameConfigVersion[config_type=events]"
               - "updateGameConfigDraft[config_type=events]"
               - "createGameConfig[config_type=event-templates]"
+              - "createGameConfigVersion[config_type=event-templates]"
               - "updateGameConfigDraft[config_type=event-templates]"
               - "createGameConfig[config_type=season-tracks]"
+              - "createGameConfigVersion[config_type=season-tracks]"
               - "updateGameConfigDraft[config_type=season-tracks]"
             can_disable: true
           - key: action.game_ops.events.workflow
@@ -1431,13 +1442,16 @@ workspaces:
             required_permissions: [game.content.publish]
             operation_ids:
               - "publishGameConfigVersion[config_type=events]"
+              - "cancelScheduledGameConfigPublish[config_type=events]"
               - "publishGameConfigVersion[config_type=event-templates]"
+              - "cancelScheduledGameConfigPublish[config_type=event-templates]"
               - "publishGameConfigVersion[config_type=season-tracks]"
+              - "cancelScheduledGameConfigPublish[config_type=season-tracks]"
             can_disable: true
           - key: action.game_ops.events.rollback
             label_key: portal.action.game_ops.events.rollback
             title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            required_permissions: [game.content.publish]
             operation_ids:
               - "rollbackGameConfig[config_type=events]"
               - "unpublishGameConfig[config_type=events]"
@@ -1724,7 +1738,7 @@ workspaces:
             label_key: portal.action.game_ops.review.preview
             title: Preview bản nháp trong Godot Web
             required_permissions: [game.content.review, game.quest.write, game.minigame.write, game.npc.write, game.world.write]
-            operation_ids: [createGamePreviewSession]
+            operation_ids: [createGamePreviewSession, getGamePreviewSnapshot]
             can_disable: true
   - key: live_ops
     label_key: portal.workspace.live_ops

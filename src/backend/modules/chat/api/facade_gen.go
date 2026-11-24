@@ -82,6 +82,7 @@ const (
 	Challenge           CommonInternalCommonV1ResourceType = "challenge"
 	ChallengeTemplate   CommonInternalCommonV1ResourceType = "challenge_template"
 	Curriculum          CommonInternalCommonV1ResourceType = "curriculum"
+	EventTemplate       CommonInternalCommonV1ResourceType = "event_template"
 	Item                CommonInternalCommonV1ResourceType = "item"
 	LearningMaterial    CommonInternalCommonV1ResourceType = "learning_material"
 	Lesson              CommonInternalCommonV1ResourceType = "lesson"
@@ -91,6 +92,7 @@ const (
 	Question            CommonInternalCommonV1ResourceType = "question"
 	QuestionSet         CommonInternalCommonV1ResourceType = "question_set"
 	SchoolSettings      CommonInternalCommonV1ResourceType = "school_settings"
+	ShopItem            CommonInternalCommonV1ResourceType = "shop_item"
 	TenantSettings      CommonInternalCommonV1ResourceType = "tenant_settings"
 	TournamentTemplate  CommonInternalCommonV1ResourceType = "tournament_template"
 )
@@ -110,6 +112,8 @@ func (e CommonInternalCommonV1ResourceType) Valid() bool {
 		return true
 	case Curriculum:
 		return true
+	case EventTemplate:
+		return true
 	case Item:
 		return true
 	case LearningMaterial:
@@ -127,6 +131,8 @@ func (e CommonInternalCommonV1ResourceType) Valid() bool {
 	case QuestionSet:
 		return true
 	case SchoolSettings:
+		return true
+	case ShopItem:
 		return true
 	case TenantSettings:
 		return true

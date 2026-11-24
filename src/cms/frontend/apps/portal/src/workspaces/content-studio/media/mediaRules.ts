@@ -4,7 +4,8 @@
 import { MEDIA_RULES } from '../shared/config';
 import type { MediaKind } from './useMediaUpload';
 
-export type UploadKind = Exclude<MediaKind, 'document'>;
+// render_thumbnail/render_turntable are produced by the game renderer (F078), never uploaded.
+export type UploadKind = Exclude<MediaKind, 'document' | 'render_thumbnail' | 'render_turntable'>;
 
 export type MediaCheck = { ok: true; kind: UploadKind } | { ok: false; code: 'MEDIA_TYPE_NOT_ALLOWED' | 'MEDIA_TOO_LARGE'; kind?: UploadKind; maxBytes?: number };
 

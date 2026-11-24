@@ -7,6 +7,7 @@ package api
 var AllowedCallers = map[string][]string{
 	"anonymizeUserData":              {"identity"},
 	"applyTenantAssignments":         {"identity"},
+	"checkPublishedLearningContent":  {"game"},
 	"cleanupStudentData":             {"identity"},
 	"createAttempt":                  {"game"},
 	"createQuestionPlan":             {"competition"},

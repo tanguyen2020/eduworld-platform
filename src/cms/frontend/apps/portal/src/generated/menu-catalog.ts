@@ -711,7 +711,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.game_ops.world.edit", labelKey: "portal.action.game_ops.world.edit", requiredPermissions: ["game.world.write"] },
           { key: "action.game_ops.world.workflow", labelKey: "portal.action.game_ops.world.workflow", requiredPermissions: ["game.world.write", "game.content.review"] },
           { key: "action.game_ops.world.publish", labelKey: "portal.action.game_ops.world.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.world.rollback", labelKey: "portal.action.game_ops.world.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.world.rollback", labelKey: "portal.action.game_ops.world.rollback", requiredPermissions: ["game.content.publish"] },
         ],
       },
       {
@@ -725,7 +725,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.game_ops.npcs.edit", labelKey: "portal.action.game_ops.npcs.edit", requiredPermissions: ["game.npc.write"] },
           { key: "action.game_ops.npcs.workflow", labelKey: "portal.action.game_ops.npcs.workflow", requiredPermissions: ["game.npc.write", "game.content.review"] },
           { key: "action.game_ops.npcs.publish", labelKey: "portal.action.game_ops.npcs.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.npcs.rollback", labelKey: "portal.action.game_ops.npcs.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.npcs.rollback", labelKey: "portal.action.game_ops.npcs.rollback", requiredPermissions: ["game.content.publish"] },
         ],
       },
       {
@@ -739,7 +739,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.game_ops.quests.edit", labelKey: "portal.action.game_ops.quests.edit", requiredPermissions: ["game.quest.write"] },
           { key: "action.game_ops.quests.workflow", labelKey: "portal.action.game_ops.quests.workflow", requiredPermissions: ["game.quest.write", "game.content.review"] },
           { key: "action.game_ops.quests.publish", labelKey: "portal.action.game_ops.quests.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.quests.rollback", labelKey: "portal.action.game_ops.quests.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.quests.rollback", labelKey: "portal.action.game_ops.quests.rollback", requiredPermissions: ["game.content.publish"] },
         ],
       },
       {
@@ -753,7 +753,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.game_ops.minigames.edit", labelKey: "portal.action.game_ops.minigames.edit", requiredPermissions: ["game.minigame.write"] },
           { key: "action.game_ops.minigames.workflow", labelKey: "portal.action.game_ops.minigames.workflow", requiredPermissions: ["game.minigame.write", "game.content.review"] },
           { key: "action.game_ops.minigames.publish", labelKey: "portal.action.game_ops.minigames.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.minigames.rollback", labelKey: "portal.action.game_ops.minigames.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.minigames.rollback", labelKey: "portal.action.game_ops.minigames.rollback", requiredPermissions: ["game.content.publish"] },
         ],
       },
       {
@@ -767,7 +767,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.game_ops.challenges.edit", labelKey: "portal.action.game_ops.challenges.edit", requiredPermissions: ["game.challenge.write"] },
           { key: "action.game_ops.challenges.workflow", labelKey: "portal.action.game_ops.challenges.workflow", requiredPermissions: ["game.challenge.write", "game.content.review"] },
           { key: "action.game_ops.challenges.publish", labelKey: "portal.action.game_ops.challenges.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.challenges.rollback", labelKey: "portal.action.game_ops.challenges.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.challenges.rollback", labelKey: "portal.action.game_ops.challenges.rollback", requiredPermissions: ["game.content.publish"] },
         ],
       },
       {
@@ -781,7 +781,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.game_ops.bosses.edit", labelKey: "portal.action.game_ops.bosses.edit", requiredPermissions: ["game.boss.write"] },
           { key: "action.game_ops.bosses.workflow", labelKey: "portal.action.game_ops.bosses.workflow", requiredPermissions: ["game.boss.write", "game.content.review"] },
           { key: "action.game_ops.bosses.publish", labelKey: "portal.action.game_ops.bosses.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.bosses.rollback", labelKey: "portal.action.game_ops.bosses.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.bosses.rollback", labelKey: "portal.action.game_ops.bosses.rollback", requiredPermissions: ["game.content.publish"] },
         ],
       },
       {
@@ -795,7 +795,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.game_ops.progression.edit", labelKey: "portal.action.game_ops.progression.edit", requiredPermissions: ["game.progression.write"] },
           { key: "action.game_ops.progression.workflow", labelKey: "portal.action.game_ops.progression.workflow", requiredPermissions: ["game.progression.write", "game.content.review"] },
           { key: "action.game_ops.progression.publish", labelKey: "portal.action.game_ops.progression.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.progression.rollback", labelKey: "portal.action.game_ops.progression.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.progression.rollback", labelKey: "portal.action.game_ops.progression.rollback", requiredPermissions: ["game.content.publish"] },
         ],
       },
       {
@@ -809,7 +809,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.game_ops.achievements.edit", labelKey: "portal.action.game_ops.achievements.edit", requiredPermissions: ["game.achievement.write"] },
           { key: "action.game_ops.achievements.workflow", labelKey: "portal.action.game_ops.achievements.workflow", requiredPermissions: ["game.achievement.write", "game.content.review"] },
           { key: "action.game_ops.achievements.publish", labelKey: "portal.action.game_ops.achievements.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.achievements.rollback", labelKey: "portal.action.game_ops.achievements.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.achievements.rollback", labelKey: "portal.action.game_ops.achievements.rollback", requiredPermissions: ["game.content.publish"] },
         ],
       },
       {
@@ -823,7 +823,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.game_ops.items.edit", labelKey: "portal.action.game_ops.items.edit", requiredPermissions: ["game.item.write", "game.collection.write"] },
           { key: "action.game_ops.items.workflow", labelKey: "portal.action.game_ops.items.workflow", requiredPermissions: ["game.item.write", "game.collection.write", "game.content.review"] },
           { key: "action.game_ops.items.publish", labelKey: "portal.action.game_ops.items.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.items.rollback", labelKey: "portal.action.game_ops.items.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.items.rollback", labelKey: "portal.action.game_ops.items.rollback", requiredPermissions: ["game.content.publish"] },
         ],
       },
       {
@@ -837,7 +837,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.game_ops.shop.edit", labelKey: "portal.action.game_ops.shop.edit", requiredPermissions: ["game.shop.write", "game.economy.write"] },
           { key: "action.game_ops.shop.workflow", labelKey: "portal.action.game_ops.shop.workflow", requiredPermissions: ["game.shop.write", "game.economy.write", "game.content.review"] },
           { key: "action.game_ops.shop.publish", labelKey: "portal.action.game_ops.shop.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.shop.rollback", labelKey: "portal.action.game_ops.shop.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.shop.rollback", labelKey: "portal.action.game_ops.shop.rollback", requiredPermissions: ["game.content.publish"] },
           { key: "action.game_ops.shop.adjust", labelKey: "portal.action.game_ops.shop.adjust", requiredPermissions: ["game.economy.adjust"] },
         ],
       },
@@ -852,7 +852,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.game_ops.rewards.edit", labelKey: "portal.action.game_ops.rewards.edit", requiredPermissions: ["game.reward_rule.write"] },
           { key: "action.game_ops.rewards.workflow", labelKey: "portal.action.game_ops.rewards.workflow", requiredPermissions: ["game.reward_rule.write", "game.content.review"] },
           { key: "action.game_ops.rewards.publish", labelKey: "portal.action.game_ops.rewards.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.rewards.rollback", labelKey: "portal.action.game_ops.rewards.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.rewards.rollback", labelKey: "portal.action.game_ops.rewards.rollback", requiredPermissions: ["game.content.publish"] },
         ],
       },
       {
@@ -866,7 +866,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.game_ops.events.edit", labelKey: "portal.action.game_ops.events.edit", requiredPermissions: ["game.event.write", "game.season_track.write"] },
           { key: "action.game_ops.events.workflow", labelKey: "portal.action.game_ops.events.workflow", requiredPermissions: ["game.event.write", "game.season_track.write", "game.content.review"] },
           { key: "action.game_ops.events.publish", labelKey: "portal.action.game_ops.events.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.events.rollback", labelKey: "portal.action.game_ops.events.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.events.rollback", labelKey: "portal.action.game_ops.events.rollback", requiredPermissions: ["game.content.publish"] },
           { key: "action.game_ops.events.operate", labelKey: "portal.action.game_ops.events.operate", requiredPermissions: ["game.event.operate"] },
           { key: "action.game_ops.events.stats", labelKey: "portal.action.game_ops.events.stats", requiredPermissions: ["game.liveops.read"] },
         ],

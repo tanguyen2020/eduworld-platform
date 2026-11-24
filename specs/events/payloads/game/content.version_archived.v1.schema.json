@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/content.version_archived.v1.schema.json",
+  "title": "Payload content.version_archived v1 (module game, owner F078, ADR-0043)",
+  "description": "Version cấu hình game được lưu trữ (không phải con trỏ hiện hành; con trỏ không đổi). Consumer: cache, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "config_type",
+    "item_type",
+    "config_id",
+    "item_id",
+    "config_version_id",
+    "version",
+    "owner_scope",
+    "tenant_id",
+    "author_id",
+    "archived_by"
+  ],
+  "properties": {
+    "config_type": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "quests",
+        "minigame-configs",
+        "npc-dialogues",
+        "world-areas",
+        "story-chapters",
+        "items",
+        "reward-rules",
+        "progression-curves",
+        "challenges",
+        "bosses",
+        "achievements",
+        "collections",
+        "shop-items",
+        "events",
+        "event-templates",
+        "season-tracks"
+      ]
+    },
+    "item_type": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "world_area",
+        "story_chapter",
+        "npc_dialogue",
+        "level",
+        "item",
+        "quest",
+        "progression_curve",
+        "reward_rule",
+        "shop_item",
+        "collection",
+        "achievement",
+        "event",
+        "event_template",
+        "season_track",
+        "minigame_config",
+        "challenge",
+        "boss"
+      ]
+    },
+    "config_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "item_id": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Khóa item của loại (UUID hoặc mã: area_id, chapter_code, item_id)"
+    },
+    "config_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "owner_scope": {
+      "type": "string",
+      "enum": [
+        "platform"
+      ]
+    },
+    "tenant_id": {
+      "type": "null"
+    },
+    "author_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "archived_by": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 2000
+    }
+  },
+  "examples": [
+    {
+      "config_type": "quests",
+      "item_type": "quest",
+      "config_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0001",
+      "item_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0001",
+      "config_version_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0002",
+      "version": 2,
+      "owner_scope": "platform",
+      "tenant_id": null,
+      "author_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0005",
+      "archived_by": "0193a5f4-6c1e-7b2a-9d1f-0000000a0005"
+    }
+  ]
+}

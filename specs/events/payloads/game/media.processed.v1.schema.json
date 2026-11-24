@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/media.processed.v1.schema.json",
+  "title": "Payload media.processed v1 (module game, owner F078, ADR-0044)",
+  "description": "Media nội dung game đã kiểm (sha256, kích thước, magic bytes, quét virus khi bật) và ghi content-addressed media/<sha256>/<file> vào ew-media-public; asset ready. Cũng phát cho ảnh render_thumbnail/render_turntable do renderer sinh. Consumer: NTF, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "asset_id",
+    "tenant_id",
+    "sha256",
+    "bucket",
+    "variants"
+  ],
+  "properties": {
+    "asset_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "null"
+    },
+    "sha256": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "bucket": {
+      "type": "string",
+      "enum": [
+        "ew-media-public"
+      ]
+    },
+    "variants": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variant",
+          "key"
+        ],
+        "properties": {
+          "variant": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "key": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mime_type": {
+            "type": "string",
+            "maxLength": 127
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "asset_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0007",
+      "tenant_id": null,
+      "sha256": "9f2c4b1d8e7a6f5c4b3a29180716f5e4d3c2b1a09f8e7d6c5b4a39281706f5e4",
+      "bucket": "ew-media-public",
+      "variants": [
+        {
+          "variant": "original",
+          "key": "media/9f2c4b1d8e7a6f5c4b3a29180716f5e4d3c2b1a09f8e7d6c5b4a39281706f5e4/original.glb",
+          "bytes": 1048576,
+          "mime_type": "model/gltf-binary"
+        }
+      ]
+    }
+  ]
+}

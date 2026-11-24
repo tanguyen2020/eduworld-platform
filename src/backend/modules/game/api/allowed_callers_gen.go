@@ -10,6 +10,7 @@ var AllowedCallers = map[string][]string{
 	"checkPartyActivityEligibility": {"competition"},
 	"cleanupStudentData":            {"identity"},
 	"executeTenantCloneStep":        {"identity"},
+	"listAssignedGameActivities":    {"learning"},
 	"listPartyActivityCandidates":   {"competition"},
 	"listResourceAssignments":       {"identity"},
 	"listTrash":                     {"identity"},

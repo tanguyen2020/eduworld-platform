@@ -99,6 +99,31 @@ paths:
         "403": { $ref: "common/internal-common.v1.yaml#/components/responses/CallerNotAllowed" }
         "422": { $ref: "common/internal-common.v1.yaml#/components/responses/ValidationFailed" }
 
+  /internal/v1/learning-content:check-published:
+    post:
+      tags: [attempts]
+      operationId: checkPublishedLearningContent
+      summary: Kiểm nội dung học tập platform được cấu hình game tham chiếu đã publish chưa (submit_review của Game Operations Console)
+      description: |
+        Module game gọi **chỉ khi gửi duyệt** một version cấu hình game (F078-AC-07; challenge F076, quest F072, mini-game
+        F073): với mỗi tham chiếu trả `published` = item platform (`owner_scope = platform`, chưa soft-delete) có con trỏ
+        release và — khi có `version` — version đó đã publish. Chỉ đọc, không trả nội dung, đáp án hay luật chấm (R6).
+      x-allowed-callers: [game]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LearningContentCheck" }
+      responses:
+        "200":
+          description: Kết quả theo từng tham chiếu (cùng thứ tự)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LearningContentCheckResult" }
+        "401": { $ref: "common/internal-common.v1.yaml#/components/responses/Unauthorized" }
+        "403": { $ref: "common/internal-common.v1.yaml#/components/responses/CallerNotAllowed" }
+        "422": { $ref: "common/internal-common.v1.yaml#/components/responses/ValidationFailed" }
+
   /internal/v1/question-plans:
     post:
       tags: [question-plans]
@@ -570,6 +595,38 @@ paths:
 
 components:
   schemas:
+    LearningContentRef:
+      type: object
+      additionalProperties: false
+      required: [content_type, content_id]
+      properties:
+        content_type: { type: string, enum: [activity, question_set, lesson] }
+        content_id: { type: string, format: uuid }
+        version: { type: [integer, "null"], minimum: 1 }
+    LearningContentCheck:
+      type: object
+      additionalProperties: false
+      required: [refs]
+      properties:
+        refs:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items: { $ref: "#/components/schemas/LearningContentRef" }
+    LearningContentCheckResult:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          maxItems: 200
+          items:
+            type: object
+            required: [content_type, content_id, published]
+            properties:
+              content_type: { type: string, enum: [activity, question_set, lesson] }
+              content_id: { type: string, format: uuid }
+              published: { type: boolean }
     ActivityRef:
       type: object
       required: [content_type, content_id]

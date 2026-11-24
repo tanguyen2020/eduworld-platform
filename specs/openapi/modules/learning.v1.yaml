@@ -10903,6 +10903,30 @@ components:
           $ref: '#/components/schemas/Uuid'
         released_at:
           $ref: '#/components/schemas/Timestamp'
+        usages:
+          type: array
+          maxItems: 500
+          description: 'Chỉ trong phản hồi unpublishGameConfig: nơi còn tham chiếu nội dung vừa gỡ (nội dung game đã publish, tenant được gán) — lượt đã ghim version giữ nguyên (F078-AC-14)'
+          items:
+            type: object
+            required:
+              - kind
+              - item_type
+              - item_id
+            properties:
+              kind:
+                type: string
+                enum:
+                  - game_content
+                  - tenant_assignment
+              item_type:
+                type: string
+                maxLength: 64
+              item_id:
+                type: string
+                maxLength: 64
+              tenant_id:
+                $ref: '#/components/schemas/Uuid'
     RollbackRequest:
       type: object
       required:
@@ -12798,6 +12822,8 @@ components:
         - model3d
         - document
         - subtitle
+        - render_thumbnail
+        - render_turntable
     MediaPresignResponse:
       type: object
       description: 'Khi cùng phạm vi đã có asset trùng sha256: asset_id = duplicate_of = asset cũ, không có upload_url/expires_at (F027-AC-01)'

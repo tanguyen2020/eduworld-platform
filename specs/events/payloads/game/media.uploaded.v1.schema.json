@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/media.uploaded.v1.schema.json",
+  "title": "Payload media.uploaded v1 (module game, owner F078, ADR-0044)",
+  "description": "Tệp media nội dung game đã tới ew-media-quarantine (kích thước khớp) và vào pipeline của worker module game. Envelope tenant_id = null (media platform). Consumer: AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "asset_id",
+    "tenant_id",
+    "kind",
+    "mime_type",
+    "quarantine_key",
+    "size_bytes",
+    "sha256"
+  ],
+  "properties": {
+    "asset_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "null"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "image",
+        "audio",
+        "model3d"
+      ]
+    },
+    "mime_type": {
+      "type": "string",
+      "maxLength": 127
+    },
+    "quarantine_key": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sha256": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "examples": [
+    {
+      "asset_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0007",
+      "tenant_id": null,
+      "kind": "model3d",
+      "mime_type": "model/gltf-binary",
+      "quarantine_key": "quarantine/0193a5f4-6c1e-7b2a-9d1f-0000000a0007",
+      "size_bytes": 1048576,
+      "sha256": "9f2c4b1d8e7a6f5c4b3a29180716f5e4d3c2b1a09f8e7d6c5b4a39281706f5e4"
+    }
+  ]
+}

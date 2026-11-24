@@ -333,6 +333,17 @@
     ]
   },
   {
+    "operation_id": "cancelScheduledGameConfigPublish",
+    "module": "game",
+    "method": "POST",
+    "path": "/game-admin/{config_type}/{config_id}/releases/{release_id}:cancel",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "cancelScheduledPublication",
     "module": "learning",
     "method": "POST",
@@ -791,6 +802,17 @@
     "module": "game|competition|chat",
     "method": "POST",
     "path": "/game-admin/{config_type}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createGameConfigVersion",
+    "module": "game",
+    "method": "POST",
+    "path": "/game-admin/{config_type}/{config_id}/versions",
     "has_id_param": true,
     "required": [
       "cross_tenant",
@@ -2125,6 +2147,15 @@
     "module": "game",
     "method": "GET",
     "path": "/admin/analytics/game/performance",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGamePreviewSnapshot",
+    "module": "game",
+    "method": "GET",
+    "path": "/game-admin/preview/snapshot",
     "required": [
       "role_denied"
     ]

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/media.rejected.v1.schema.json",
+  "title": "Payload media.rejected v1 (module game, owner F078, ADR-0044)",
+  "description": "Media nội dung game bị từ chối ở pipeline (sai loại, sai sha256/kích thước, virus, không tải lên trong hạn). Consumer: NTF, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "asset_id",
+    "tenant_id",
+    "reason"
+  ],
+  "properties": {
+    "asset_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "null"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "virus",
+        "type_mismatch",
+        "too_large",
+        "checksum_mismatch",
+        "upload_missing",
+        "transcode_failed"
+      ]
+    }
+  },
+  "examples": [
+    {
+      "asset_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0007",
+      "tenant_id": null,
+      "reason": "type_mismatch"
+    }
+  ]
+}

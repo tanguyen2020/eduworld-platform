@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/content.rolled_back.v1.schema.json",
+  "title": "Payload content.rolled_back v1 (module game, owner F078, ADR-0043)",
+  "description": "Con trỏ current_version_id của item game trỏ về một version đã publish khác (không tạo version). Envelope tenant_id = null. Consumer: manifest builder (dựng lại manifest mọi tenant), projection ref.minigame_config_versions của learning (khối minigame_config: con trỏ hiện hành), projection ref.game_activities (khối catalog, F041), projection ref.world_areas của competition (khối world_area), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "item_type",
+    "item_id",
+    "release_id",
+    "owner_scope",
+    "tenant_id",
+    "from_version_id",
+    "to_version_id",
+    "to_version",
+    "reason",
+    "released_by",
+    "released_at"
+  ],
+  "properties": {
+    "item_type": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "world_area",
+        "story_chapter",
+        "npc_dialogue",
+        "level",
+        "item",
+        "quest",
+        "progression_curve",
+        "reward_rule",
+        "shop_item",
+        "collection",
+        "achievement",
+        "event",
+        "event_template",
+        "season_track",
+        "minigame_config",
+        "challenge",
+        "boss"
+      ]
+    },
+    "item_id": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Khóa item của loại (UUID hoặc mã: area_id, chapter_code, item_id)"
+    },
+    "config_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "release_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "owner_scope": {
+      "type": "string",
+      "enum": [
+        "platform"
+      ]
+    },
+    "tenant_id": {
+      "type": "null"
+    },
+    "from_version_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "released_by": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "to_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "to_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "snapshot_sha256": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "minigame_config": {
+      "type": "object",
+      "description": "Như khối minigame_config của content.published (item_type = minigame_config)",
+      "additionalProperties": true
+    },
+    "world_area": {
+      "type": "object",
+      "description": "Như khối world_area của content.published (item_type = world_area)",
+      "additionalProperties": true
+    },
+    "catalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Metadata catalog nhà trường (F078-AC-22): chỉ khi item_type = quest hoặc minigame_config; projection ref.game_activities của module learning (F041)",
+      "required": [
+        "title",
+        "grade_levels"
+      ],
+      "properties": {
+        "title": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "vi"
+          ],
+          "properties": {
+            "vi": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "en": {
+              "type": "string",
+              "maxLength": 255
+            }
+          }
+        },
+        "grade_levels": {
+          "type": "array",
+          "maxItems": 9,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          }
+        },
+        "subject_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "objective_ids": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "estimated_minutes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 600
+        },
+        "thumbnail_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri",
+          "maxLength": 2048
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "item_type": "quest",
+      "item_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0001",
+      "config_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0001",
+      "release_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0004",
+      "owner_scope": "platform",
+      "tenant_id": null,
+      "from_version_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0002",
+      "to_version_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0003",
+      "to_version": 1,
+      "reason": "Bước 3 hiển thị sai",
+      "released_by": "0193a5f4-6c1e-7b2a-9d1f-0000000a0005",
+      "released_at": "2026-11-24T08:00:00Z",
+      "catalog": {
+        "title": {
+          "vi": "Giúp chợ",
+          "en": "Market helper"
+        },
+        "grade_levels": [
+          3
+        ],
+        "subject_id": null,
+        "objective_ids": [],
+        "estimated_minutes": 15,
+        "thumbnail_url": null
+      }
+    }
+  ]
+}

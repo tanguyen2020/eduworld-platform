@@ -20,6 +20,24 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for GameActivityCatalogEntryContentType.
+const (
+	GameActivityCatalogEntryContentTypeMinigameConfig GameActivityCatalogEntryContentType = "minigame_config"
+	GameActivityCatalogEntryContentTypeQuest          GameActivityCatalogEntryContentType = "quest"
+)
+
+// Valid indicates whether the value is a known member of the GameActivityCatalogEntryContentType enum.
+func (e GameActivityCatalogEntryContentType) Valid() bool {
+	switch e {
+	case GameActivityCatalogEntryContentTypeMinigameConfig:
+		return true
+	case GameActivityCatalogEntryContentTypeQuest:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PartyActivityMemberCheckReasonCode.
 const (
 	AreaLocked          PartyActivityMemberCheckReasonCode = "area_locked"
@@ -109,6 +127,7 @@ const (
 	CommonInternalCommonV1ResourceTypeChallenge           CommonInternalCommonV1ResourceType = "challenge"
 	CommonInternalCommonV1ResourceTypeChallengeTemplate   CommonInternalCommonV1ResourceType = "challenge_template"
 	CommonInternalCommonV1ResourceTypeCurriculum          CommonInternalCommonV1ResourceType = "curriculum"
+	CommonInternalCommonV1ResourceTypeEventTemplate       CommonInternalCommonV1ResourceType = "event_template"
 	CommonInternalCommonV1ResourceTypeItem                CommonInternalCommonV1ResourceType = "item"
 	CommonInternalCommonV1ResourceTypeLearningMaterial    CommonInternalCommonV1ResourceType = "learning_material"
 	CommonInternalCommonV1ResourceTypeLesson              CommonInternalCommonV1ResourceType = "lesson"
@@ -118,6 +137,7 @@ const (
 	CommonInternalCommonV1ResourceTypeQuestion            CommonInternalCommonV1ResourceType = "question"
 	CommonInternalCommonV1ResourceTypeQuestionSet         CommonInternalCommonV1ResourceType = "question_set"
 	CommonInternalCommonV1ResourceTypeSchoolSettings      CommonInternalCommonV1ResourceType = "school_settings"
+	CommonInternalCommonV1ResourceTypeShopItem            CommonInternalCommonV1ResourceType = "shop_item"
 	CommonInternalCommonV1ResourceTypeTenantSettings      CommonInternalCommonV1ResourceType = "tenant_settings"
 	CommonInternalCommonV1ResourceTypeTournamentTemplate  CommonInternalCommonV1ResourceType = "tournament_template"
 )
@@ -137,6 +157,8 @@ func (e CommonInternalCommonV1ResourceType) Valid() bool {
 		return true
 	case CommonInternalCommonV1ResourceTypeCurriculum:
 		return true
+	case CommonInternalCommonV1ResourceTypeEventTemplate:
+		return true
 	case CommonInternalCommonV1ResourceTypeItem:
 		return true
 	case CommonInternalCommonV1ResourceTypeLearningMaterial:
@@ -154,6 +176,8 @@ func (e CommonInternalCommonV1ResourceType) Valid() bool {
 	case CommonInternalCommonV1ResourceTypeQuestionSet:
 		return true
 	case CommonInternalCommonV1ResourceTypeSchoolSettings:
+		return true
+	case CommonInternalCommonV1ResourceTypeShopItem:
 		return true
 	case CommonInternalCommonV1ResourceTypeTenantSettings:
 		return true
@@ -324,6 +348,33 @@ func (e CommonInternalCommonV1UserLifecycleResultStatus) Valid() bool {
 	default:
 		return false
 	}
+}
+
+// GameActivityCatalogEntry Khớp GameActivityCatalogItem của learning.v1 (listGameActivities, F041); title song ngữ i18nText (ADR-0056)
+type GameActivityCatalogEntry struct {
+	ContentId        openapi_types.UUID                  `json:"content_id"`
+	ContentType      GameActivityCatalogEntryContentType `json:"content_type"`
+	ContentVersionId openapi_types.UUID                  `json:"content_version_id"`
+	EstimatedMinutes *int                                `json:"estimated_minutes,omitempty"`
+	GradeLevels      []int                               `json:"grade_levels"`
+	ObjectiveIds     *[]openapi_types.UUID               `json:"objective_ids,omitempty"`
+	PublishedAt      *time.Time                          `json:"published_at,omitempty"`
+	SubjectId        *openapi_types.UUID                 `json:"subject_id,omitempty"`
+	ThumbnailUrl     *string                             `json:"thumbnail_url,omitempty"`
+	Title            struct {
+		En *string `json:"en,omitempty"`
+		Vi string  `json:"vi"`
+	} `json:"title"`
+	Version int `json:"version"`
+}
+
+// GameActivityCatalogEntryContentType defines model for GameActivityCatalogEntry.ContentType.
+type GameActivityCatalogEntryContentType string
+
+// GameActivityCatalogPage defines model for GameActivityCatalogPage.
+type GameActivityCatalogPage struct {
+	Data []GameActivityCatalogEntry     `json:"data"`
+	Page CommonInternalCommonV1PageInfo `json:"page"`
 }
 
 // PartyActivityCandidate defines model for PartyActivityCandidate.
@@ -674,6 +725,13 @@ type CommonInternalCommonV1Unauthorized = CommonInternalCommonV1Problem
 // CommonInternalCommonV1ValidationFailed RFC 9457 Problem Details, dùng chung catalog mã lỗi với API public (API_DESIGN §4.1).
 type CommonInternalCommonV1ValidationFailed = CommonInternalCommonV1Problem
 
+// ListAssignedGameActivitiesParams defines parameters for ListAssignedGameActivities.
+type ListAssignedGameActivitiesParams struct {
+	TenantId openapi_types.UUID            `form:"tenant_id" json:"tenant_id"`
+	Cursor   *CommonInternalCommonV1Cursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit    *CommonInternalCommonV1Limit  `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
 // ListResourceAssignmentsParams defines parameters for ListResourceAssignments.
 type ListResourceAssignmentsParams struct {
 	ResourceType CommonInternalCommonV1ResourceType `form:"resource_type" json:"resource_type"`
@@ -726,6 +784,9 @@ type MergeUserDataJSONRequestBody = CommonInternalCommonV1UserMergeRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// ListAssignedGameActivities Quest/mini-game đã publish đang gán cho một tenant, kèm metadata catalog (F078-AC-23)
+	// (GET /internal/v1/game/assigned-activities)
+	ListAssignedGameActivities(w http.ResponseWriter, r *http.Request, params ListAssignedGameActivitiesParams)
 	// ListPartyActivityCandidates Hoạt động quest/boss có thể chơi theo party và điều kiện của từng thành viên
 	// (POST /internal/v1/party-activities/candidates:list)
 	ListPartyActivityCandidates(w http.ResponseWriter, r *http.Request)
@@ -775,6 +836,65 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// ListAssignedGameActivities operation middleware
+func (siw *ServerInterfaceWrapper) ListAssignedGameActivities(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAssignedGameActivitiesParams
+
+	// ------------- Required query parameter "tenant_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "tenant_id", r.URL.Query(), &params.TenantId, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "tenant_id"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tenant_id", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAssignedGameActivities(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // ListPartyActivityCandidates operation middleware
 func (siw *ServerInterfaceWrapper) ListPartyActivityCandidates(w http.ResponseWriter, r *http.Request) {
@@ -1275,6 +1395,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/game/assigned-activities", wrapper.ListAssignedGameActivities)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/party-activities/candidates:list", wrapper.ListPartyActivityCandidates)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/party-activities/eligibility:check", wrapper.CheckPartyActivityEligibility)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/party-activities:start", wrapper.StartPartyActivity)
@@ -1305,6 +1426,76 @@ type CommonInternalCommonV1NotFoundApplicationProblemPlusJSONResponse CommonInte
 type CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse CommonInternalCommonV1Problem
 
 type CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse CommonInternalCommonV1Problem
+
+type ListAssignedGameActivitiesRequestObject struct {
+	Params ListAssignedGameActivitiesParams
+}
+
+type ListAssignedGameActivitiesResponseObject interface {
+	VisitListAssignedGameActivitiesResponse(w http.ResponseWriter) error
+}
+
+type ListAssignedGameActivities200JSONResponse GameActivityCatalogPage
+
+func (response ListAssignedGameActivities200JSONResponse) VisitListAssignedGameActivitiesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAssignedGameActivities401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response ListAssignedGameActivities401ApplicationProblemPlusJSONResponse) VisitListAssignedGameActivitiesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAssignedGameActivities403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response ListAssignedGameActivities403ApplicationProblemPlusJSONResponse) VisitListAssignedGameActivitiesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAssignedGameActivities422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response ListAssignedGameActivities422ApplicationProblemPlusJSONResponse) VisitListAssignedGameActivitiesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
 
 type ListPartyActivityCandidatesRequestObject struct {
 	Body *ListPartyActivityCandidatesJSONRequestBody
@@ -2417,6 +2608,9 @@ func (response MergeUserData409ApplicationProblemPlusJSONResponse) VisitMergeUse
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// ListAssignedGameActivities Quest/mini-game đã publish đang gán cho một tenant, kèm metadata catalog (F078-AC-23)
+	// (GET /internal/v1/game/assigned-activities)
+	ListAssignedGameActivities(ctx context.Context, request ListAssignedGameActivitiesRequestObject) (ListAssignedGameActivitiesResponseObject, error)
 	// ListPartyActivityCandidates Hoạt động quest/boss có thể chơi theo party và điều kiện của từng thành viên
 	// (POST /internal/v1/party-activities/candidates:list)
 	ListPartyActivityCandidates(ctx context.Context, request ListPartyActivityCandidatesRequestObject) (ListPartyActivityCandidatesResponseObject, error)
@@ -2495,6 +2689,32 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// ListAssignedGameActivities operation middleware
+func (sh *strictHandler) ListAssignedGameActivities(w http.ResponseWriter, r *http.Request, params ListAssignedGameActivitiesParams) {
+	var request ListAssignedGameActivitiesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAssignedGameActivities(ctx, request.(ListAssignedGameActivitiesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAssignedGameActivities")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListAssignedGameActivitiesResponseObject); ok {
+		if err := validResponse.VisitListAssignedGameActivitiesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // ListPartyActivityCandidates operation middleware
@@ -2908,6 +3128,7 @@ var ErrNotFaked = errors.New("api: operation not faked")
 
 // Fake implements StrictServerInterface for caller tests: each method calls its <Name>Func.
 type Fake struct {
+	ListAssignedGameActivitiesFunc    func(ctx context.Context, request ListAssignedGameActivitiesRequestObject) (ListAssignedGameActivitiesResponseObject, error)
 	ListPartyActivityCandidatesFunc   func(ctx context.Context, request ListPartyActivityCandidatesRequestObject) (ListPartyActivityCandidatesResponseObject, error)
 	CheckPartyActivityEligibilityFunc func(ctx context.Context, request CheckPartyActivityEligibilityRequestObject) (CheckPartyActivityEligibilityResponseObject, error)
 	StartPartyActivityFunc            func(ctx context.Context, request StartPartyActivityRequestObject) (StartPartyActivityResponseObject, error)
@@ -2924,6 +3145,14 @@ type Fake struct {
 }
 
 var _ StrictServerInterface = (*Fake)(nil)
+
+// ListAssignedGameActivities calls ListAssignedGameActivitiesFunc.
+func (f *Fake) ListAssignedGameActivities(a0 context.Context, a1 ListAssignedGameActivitiesRequestObject) (ListAssignedGameActivitiesResponseObject, error) {
+	if f.ListAssignedGameActivitiesFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ListAssignedGameActivitiesFunc(a0, a1)
+}
 
 // ListPartyActivityCandidates calls ListPartyActivityCandidatesFunc.
 func (f *Fake) ListPartyActivityCandidates(a0 context.Context, a1 ListPartyActivityCandidatesRequestObject) (ListPartyActivityCandidatesResponseObject, error) {

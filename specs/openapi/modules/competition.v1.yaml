@@ -1496,6 +1496,10 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
     post:
       x-service: competition
       tags:
@@ -1569,6 +1573,10 @@ paths:
                 $ref: '#/components/schemas/GameConfigVersion'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationFailed'
   /game-admin/{config_type}/{config_id}/versions/{version}:
@@ -1713,10 +1721,14 @@ paths:
                 $ref: '#/components/schemas/GameConfigVersion'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
         '428':
           $ref: '#/components/responses/PreconditionRequired'
   /game-admin/{config_type}/{config_id}/versions/{version}:transition:
@@ -1810,10 +1822,16 @@ paths:
                 $ref: '#/components/schemas/GameConfigVersion'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/PreconditionFailed'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /game-admin/{config_type}/{config_id}/versions:
     get:
       x-service: competition
@@ -1957,6 +1975,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /game-admin/{config_type}/{config_id}/versions/{version}:publish:
     post:
       x-service: competition
@@ -2043,12 +2063,16 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/PreconditionFailed'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /game-admin/{config_type}/{config_id}:rollback:
     post:
       x-service: competition
@@ -2124,6 +2148,8 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
         '422':
@@ -2203,8 +2229,12 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /game-admin/{config_type}/{config_id}/releases:
     get:
       x-service: competition
@@ -2282,6 +2312,8 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   parameters:
     TenantIdHeader:
@@ -3956,6 +3988,30 @@ components:
           $ref: '#/components/schemas/Timestamp'
         updated_at:
           $ref: '#/components/schemas/Timestamp'
+        based_on_version:
+          type: integer
+          minimum: 1
+          description: Version nguồn khi tạo bằng createGameConfigVersion (F078)
+        review_note:
+          type: string
+          maxLength: 2000
+          description: Ghi chú của lần chuyển trạng thái gần nhất (lý do trả lại)
+        change_note:
+          type: string
+          maxLength: 500
+        is_current:
+          type: boolean
+          description: true nếu là con trỏ release hiện hành
+        thumbnail_url:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: Ảnh render_thumbnail 512×512 khi asset ready; vắng khi chưa có (F078-AC-20)
+        turntable_url:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: Sprite sheet render_turntable 24 khung khi asset ready
     GameConfigType:
       type: string
       description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
@@ -4165,6 +4221,30 @@ components:
           $ref: '#/components/schemas/Uuid'
         released_at:
           $ref: '#/components/schemas/Timestamp'
+        usages:
+          type: array
+          maxItems: 500
+          description: 'Chỉ trong phản hồi unpublishGameConfig: nơi còn tham chiếu nội dung vừa gỡ (nội dung game đã publish, tenant được gán) — lượt đã ghim version giữ nguyên (F078-AC-14)'
+          items:
+            type: object
+            required:
+              - kind
+              - item_type
+              - item_id
+            properties:
+              kind:
+                type: string
+                enum:
+                  - game_content
+                  - tenant_assignment
+              item_type:
+                type: string
+                maxLength: 64
+              item_id:
+                type: string
+                maxLength: 64
+              tenant_id:
+                $ref: '#/components/schemas/Uuid'
     RollbackRequest:
       type: object
       required:

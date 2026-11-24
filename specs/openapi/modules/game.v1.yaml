@@ -1228,6 +1228,10 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
     post:
       x-service: game
       tags:
@@ -1313,6 +1317,10 @@ paths:
                 $ref: '#/components/schemas/GameConfigVersion'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationFailed'
   /game-admin/{config_type}/{config_id}/versions/{version}:
@@ -1481,10 +1489,14 @@ paths:
                 $ref: '#/components/schemas/GameConfigVersion'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
         '428':
           $ref: '#/components/responses/PreconditionRequired'
   /game-admin/{config_type}/{config_id}/versions/{version}:transition:
@@ -1590,10 +1602,16 @@ paths:
                 $ref: '#/components/schemas/GameConfigVersion'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/PreconditionFailed'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /game-admin/{config_type}/{config_id}/versions:
     get:
       x-service: game
@@ -1675,6 +1693,68 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    post:
+      x-service: game
+      tags:
+        - game-admin
+      operationId: createGameConfigVersion
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.edit
+          npc-dialogues: action.game_ops.npcs.edit
+          quests: action.game_ops.quests.edit
+          story-chapters: action.game_ops.quests.edit
+          minigame-configs: action.game_ops.minigames.edit
+          challenges: action.game_ops.challenges.edit
+          bosses: action.game_ops.bosses.edit
+          progression-levels: action.game_ops.progression.edit
+          progression-curves: action.game_ops.progression.edit
+          achievements: action.game_ops.achievements.edit
+          items: action.game_ops.items.edit
+          collections: action.game_ops.items.edit
+          shop-items: action.game_ops.shop.edit
+          currencies: action.game_ops.shop.edit
+          reward-rules: action.game_ops.rewards.edit
+          events: action.game_ops.events.edit
+          event-templates: action.game_ops.events.edit
+          season-tracks: action.game_ops.events.edit
+      summary: Tạo version nháp mới từ một version có sẵn (version đã publish giữ bất biến — ADR-0043, F078-AC-06)
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/GameModuleConfigType'
+        - $ref: '#/components/parameters/GameConfigId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameConfigVersionCreate'
+      responses:
+        '201':
+          description: Version mới ở trạng thái draft (payload sao chép từ based_on_version)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameConfigVersion'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /game-admin/{config_type}/{config_id}/versions/{version}:diff:
     get:
       x-service: game
@@ -1761,6 +1841,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /game-admin/{config_type}/{config_id}/versions/{version}:publish:
     post:
       x-service: game
@@ -1859,12 +1941,16 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/PreconditionFailed'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /game-admin/{config_type}/{config_id}:rollback:
     post:
       x-service: game
@@ -1952,6 +2038,8 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
         '422':
@@ -2043,8 +2131,12 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /game-admin/{config_type}/{config_id}/releases:
     get:
       x-service: game
@@ -2134,6 +2226,76 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /game-admin/{config_type}/{config_id}/releases/{release_id}:cancel:
+    post:
+      x-service: game
+      tags:
+        - game-admin
+      operationId: cancelScheduledGameConfigPublish
+      x-portal-action:
+        param: config_type
+        map:
+          world-areas: action.game_ops.world.publish
+          npc-dialogues: action.game_ops.npcs.publish
+          quests: action.game_ops.quests.publish
+          story-chapters: action.game_ops.quests.publish
+          minigame-configs: action.game_ops.minigames.publish
+          challenges: action.game_ops.challenges.publish
+          bosses: action.game_ops.bosses.publish
+          progression-levels: action.game_ops.progression.publish
+          progression-curves: action.game_ops.progression.publish
+          achievements: action.game_ops.achievements.publish
+          items: action.game_ops.items.publish
+          collections: action.game_ops.items.publish
+          shop-items: action.game_ops.shop.publish
+          currencies: action.game_ops.shop.publish
+          reward-rules: action.game_ops.rewards.publish
+          events: action.game_ops.events.publish
+          event-templates: action.game_ops.events.publish
+          season-tracks: action.game_ops.events.publish
+      summary: Hủy lịch xuất bản hẹn giờ trước giờ chạy (ghi audit — F078-AC-12)
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/GameModuleConfigType'
+        - $ref: '#/components/parameters/GameConfigId'
+        - name: release_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '200':
+          description: Lịch hẹn đã hủy (status cancelled)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentRelease'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /game-admin/translations:export:
     post:
       x-service: game
@@ -2601,8 +2763,93 @@ paths:
                     maxLength: 512
                   expires_at:
                     $ref: '#/components/schemas/Timestamp'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /game-admin/preview/snapshot:
+    get:
+      x-service: game
+      tags:
+        - game-admin
+      operationId: getGamePreviewSnapshot
+      x-portal-action: action.game_ops.review.preview
+      summary: Đọc version được chỉ định của phiên preview (Godot Web trong GamePreviewFrame) bằng preview_token
+      description: |
+        Token (header X-Preview-Token) chỉ đọc đúng config_type/config_id/version đã cấp và chỉ cho người tạo phiên, trong
+        preview_token_ttl (30 phút); token của version/item khác, hết hạn hoặc của người khác → 403 PERMISSION_DENIED. Không
+        tạo game session, attempt, XP hay learning event (ADR-0031, F078-AC-17).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: X-Preview-Token
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 512
+        - name: config_type
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/GameConfigType'
+        - name: config_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: version
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Version được preview (payload theo schema của loại; không có đáp án)
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - config_type
+                  - config_id
+                  - version
+                  - status
+                  - payload
+                  - expires_at
+                properties:
+                  config_type:
+                    $ref: '#/components/schemas/GameConfigType'
+                  config_id:
+                    $ref: '#/components/schemas/Uuid'
+                  version:
+                    type: integer
+                    minimum: 1
+                  status:
+                    $ref: '#/components/schemas/ContentStatus'
+                  title:
+                    type: string
+                    maxLength: 255
+                  payload:
+                    type: object
+                    additionalProperties: true
+                  expires_at:
+                    $ref: '#/components/schemas/Timestamp'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /game/progression:
     get:
       x-service: game
@@ -4753,6 +5000,12 @@ components:
       schema:
         type: string
         maxLength: 512
+    GameModuleConfigType:
+      name: config_type
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/GameModuleConfigType'
     TranslationJobIdPath:
       name: job_id
       in: path
@@ -7910,6 +8163,30 @@ components:
           $ref: '#/components/schemas/Timestamp'
         updated_at:
           $ref: '#/components/schemas/Timestamp'
+        based_on_version:
+          type: integer
+          minimum: 1
+          description: Version nguồn khi tạo bằng createGameConfigVersion (F078)
+        review_note:
+          type: string
+          maxLength: 2000
+          description: Ghi chú của lần chuyển trạng thái gần nhất (lý do trả lại)
+        change_note:
+          type: string
+          maxLength: 500
+        is_current:
+          type: boolean
+          description: true nếu là con trỏ release hiện hành
+        thumbnail_url:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: Ảnh render_thumbnail 512×512 khi asset ready; vắng khi chưa có (F078-AC-20)
+        turntable_url:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: Sprite sheet render_turntable 24 khung khi asset ready
     GameConfigType:
       type: string
       description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
@@ -8025,6 +8302,41 @@ components:
           type: string
           minLength: 1
           maxLength: 1000
+    GameModuleConfigType:
+      type: string
+      description: Loại cấu hình game do module game phục vụ (F078; thi đấu thuộc module competition, sticker/GIF thuộc module chat)
+      enum:
+        - quests
+        - minigame-configs
+        - npc-dialogues
+        - world-areas
+        - story-chapters
+        - items
+        - reward-rules
+        - progression-levels
+        - progression-curves
+        - challenges
+        - bosses
+        - achievements
+        - collections
+        - shop-items
+        - currencies
+        - events
+        - event-templates
+        - season-tracks
+    GameConfigVersionCreate:
+      type: object
+      properties:
+        based_on_version:
+          type: integer
+          minimum: 1
+          description: Version nguồn; vắng = version của con trỏ hiện hành, không có con trỏ thì version mới nhất
+        title:
+          type: string
+          maxLength: 200
+        change_note:
+          type: string
+          maxLength: 500
     ContentVersionDiff:
       type: object
       required:
@@ -8119,6 +8431,30 @@ components:
           $ref: '#/components/schemas/Uuid'
         released_at:
           $ref: '#/components/schemas/Timestamp'
+        usages:
+          type: array
+          maxItems: 500
+          description: 'Chỉ trong phản hồi unpublishGameConfig: nơi còn tham chiếu nội dung vừa gỡ (nội dung game đã publish, tenant được gán) — lượt đã ghim version giữ nguyên (F078-AC-14)'
+          items:
+            type: object
+            required:
+              - kind
+              - item_type
+              - item_id
+            properties:
+              kind:
+                type: string
+                enum:
+                  - game_content
+                  - tenant_assignment
+              item_type:
+                type: string
+                maxLength: 64
+              item_id:
+                type: string
+                maxLength: 64
+              tenant_id:
+                $ref: '#/components/schemas/Uuid'
     RollbackRequest:
       type: object
       required:
@@ -8422,6 +8758,8 @@ components:
         - model3d
         - document
         - subtitle
+        - render_thumbnail
+        - render_turntable
     MediaPresignResponse:
       type: object
       description: 'Khi cùng phạm vi đã có asset trùng sha256: asset_id = duplicate_of = asset cũ, không có upload_url/expires_at (F027-AC-01)'

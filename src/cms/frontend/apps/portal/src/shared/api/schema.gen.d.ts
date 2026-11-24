@@ -4585,6 +4585,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/game-admin/{config_type}/{config_id}/releases/{release_id}:cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hủy lịch xuất bản hẹn giờ trước giờ chạy (ghi audit — F078-AC-12) */
+        post: operations["cancelScheduledGameConfigPublish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/game-admin/{config_type}/{config_id}/versions": {
         parameters: {
             query?: never;
@@ -4595,7 +4612,8 @@ export interface paths {
         /** Lịch sử version của một cấu hình game (ADR-0043) */
         get: operations["listGameConfigVersions"];
         put?: never;
-        post?: never;
+        /** Tạo version nháp mới từ một version có sẵn (version đã publish giữ bất biến — ADR-0043, F078-AC-06) */
+        post: operations["createGameConfigVersion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4750,6 +4768,28 @@ export interface paths {
         put?: never;
         /** Tạo preview token (Godot Web) cho cấu hình game ở trạng thái draft */
         post: operations["createGamePreviewSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game-admin/preview/snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Đọc version được chỉ định của phiên preview (Godot Web trong GamePreviewFrame) bằng preview_token
+         * @description Token (header X-Preview-Token) chỉ đọc đúng config_type/config_id/version đã cấp và chỉ cho người tạo phiên, trong
+         *     preview_token_ttl (30 phút); token của version/item khác, hết hạn hoặc của người khác → 403 PERMISSION_DENIED. Không
+         *     tạo game session, attempt, XP hay learning event (ADR-0031, F078-AC-17).
+         */
+        get: operations["getGamePreviewSnapshot"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4967,7 +5007,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Trạng thái, điểm, sức bền, thời hạn (giờ server) */
+        /**
+         * Trạng thái, điểm, sức bền, thời hạn (giờ server)
+         * @description Trạng thái từ checkpoint PostgreSQL (tiếp tục sau mất kết nối hoặc đổi thiết bị); attempt của học sinh khác → `404`.
+         */
         get: operations["getGameChallengeAttempt"];
         put?: never;
         post?: never;
@@ -4986,7 +5029,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Bỏ challenge (learning attempt đã ghi giữ nguyên) */
+        /**
+         * Bỏ challenge (learning attempt đã ghi giữ nguyên)
+         * @description Attempt đã kết thúc → `422 INVALID_STATE_TRANSITION` (F076-AC-14).
+         */
         post: operations["abandonGameChallengeAttempt"];
         delete?: never;
         options?: never;
@@ -5003,7 +5049,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Lấy hoạt động tiếp theo — module game tạo Attempt học tập (mode challenge) qua module learning */
+        /**
+         * Lấy hoạt động tiếp theo — module game tạo Attempt học tập (mode challenge) qua module learning
+         * @description Module game gọi `createAttempt` (mode `challenge`, context `challenge_attempt`, dải độ khó của mức, khối học sinh) qua facade
+         *     `learning`; payload không có đáp án. Quá `deadline_at` hoặc challenge đã kết thúc → `422 INVALID_STATE_TRANSITION`; nội dung
+         *     tham chiếu chưa publish → `422 ITEM_REF_INVALID`; module learning lỗi/timeout → `503 UNAVAILABLE` có `Retry-After`, challenge
+         *     không đổi; gọi lại cùng `Idempotency-Key` → cùng attempt học tập (F076-AC-08, AC-12, AC-13).
+         */
         post: operations["nextChallengeActivity"];
         delete?: never;
         options?: never;
@@ -5035,7 +5087,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Chi tiết challenge + lượt thử còn lại hôm nay/kỳ */
+        /**
+         * Chi tiết challenge + lượt thử còn lại hôm nay/kỳ
+         * @description Challenge không khả dụng với học sinh (khác khối, chưa mở khóa, ngoài thời gian, chưa gán cho tenant, loại/mode không
+         *     chơi một mình được) → `404 NOT_FOUND`, không tiết lộ sự tồn tại (F076-AC-02).
+         */
         get: operations["getGameChallenge"];
         put?: never;
         post?: never;
@@ -5054,7 +5110,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Bắt đầu challenge → ChallengeAttempt (ghim version) + hoạt động đầu tiên (CHALLENGE_NOT_ELIGIBLE, CHALLENGE_ATTEMPT_LIMIT) */
+        /**
+         * Bắt đầu challenge → ChallengeAttempt (ghim version) (CHALLENGE_NOT_ELIGIBLE, CHALLENGE_ATTEMPT_LIMIT)
+         * @description Module game ghim version hiện hành, đặt `deadline_at` theo giờ server và `lives_left` theo mức khó; hoạt động đầu tiên lấy
+         *     bằng `nextChallengeActivity` (F076 Clarifications 2026-11-24). Sai khối/chưa mở khóa/ngoài thời gian/mức không cho phép với
+         *     khối/gửi `party_id` → `403 CHALLENGE_NOT_ELIGIBLE`; hết lượt ngày/kỳ hoặc đang nghỉ chờ → `409 CHALLENGE_ATTEMPT_LIMIT`
+         *     (`retry_after`); đang có challenge `in_progress` khác → `409 CONFLICT`; thiếu `Idempotency-Key` → `428`.
+         */
         post: operations["startGameChallenge"];
         delete?: never;
         options?: never;
@@ -11018,6 +11080,14 @@ export interface components {
             /** @enum {string} */
             status?: "scheduled" | "applied" | "cancelled" | "failed";
             to_version?: number;
+            /** @description Chỉ trong phản hồi unpublishGameConfig: nơi còn tham chiếu nội dung vừa gỡ (nội dung game đã publish, tenant được gán) — lượt đã ghim version giữ nguyên (F078-AC-14) */
+            usages?: {
+                item_id: string;
+                item_type: string;
+                /** @enum {string} */
+                kind: "game_content" | "tenant_assignment";
+                tenant_id?: components["schemas"]["Uuid"];
+            }[];
         };
         ContentReviewTask: {
             /** @description Miễn trừ audio g1_3 cần reviewer xác nhận (F025-AC-16) */
@@ -12126,19 +12196,42 @@ export interface components {
         GameConfigType: "quests" | "minigame-configs" | "npc-dialogues" | "world-areas" | "story-chapters" | "items" | "reward-rules" | "progression-levels" | "progression-curves" | "challenges" | "bosses" | "achievements" | "collections" | "shop-items" | "currencies" | "matchmaking-configs" | "ranking-rules" | "seasons" | "tournament-templates" | "challenge-templates" | "leaderboard-definitions" | "sticker-packs" | "gifs" | "events" | "event-templates" | "season-tracks";
         GameConfigVersion: {
             author_id?: components["schemas"]["Uuid"];
+            /** @description Version nguồn khi tạo bằng createGameConfigVersion (F078) */
+            based_on_version?: number;
+            change_note?: string;
             config_id: components["schemas"]["Uuid"];
             config_type: components["schemas"]["GameConfigType"];
             config_version_id?: components["schemas"]["Uuid"];
             effective_from?: components["schemas"]["Timestamp"];
+            /** @description true nếu là con trỏ release hiện hành */
+            is_current?: boolean;
             payload: {
                 [key: string]: unknown;
             };
             published_at?: components["schemas"]["Timestamp"];
+            /** @description Ghi chú của lần chuyển trạng thái gần nhất (lý do trả lại) */
+            review_note?: string;
             reviewer_id?: components["schemas"]["Uuid"];
             status: components["schemas"]["ContentStatus"];
+            /**
+             * Format: uri
+             * @description Ảnh render_thumbnail 512×512 khi asset ready; vắng khi chưa có (F078-AC-20)
+             */
+            thumbnail_url?: string;
             title?: string;
+            /**
+             * Format: uri
+             * @description Sprite sheet render_turntable 24 khung khi asset ready
+             */
+            turntable_url?: string;
             updated_at?: components["schemas"]["Timestamp"];
             version: number;
+        };
+        GameConfigVersionCreate: {
+            /** @description Version nguồn; vắng = version của con trỏ hiện hành, không có con trỏ thì version mới nhất */
+            based_on_version?: number;
+            change_note?: string;
+            title?: string;
         };
         GameEventDetail: components["schemas"]["GameEventSummary"] & {
             boss_ids?: components["schemas"]["Uuid"][];
@@ -12234,6 +12327,11 @@ export interface components {
             is_partial: boolean;
             suppression_threshold?: number;
         };
+        /**
+         * @description Loại cấu hình game do module game phục vụ (F078; thi đấu thuộc module competition, sticker/GIF thuộc module chat)
+         * @enum {string}
+         */
+        GameModuleConfigType: "quests" | "minigame-configs" | "npc-dialogues" | "world-areas" | "story-chapters" | "items" | "reward-rules" | "progression-levels" | "progression-curves" | "challenges" | "bosses" | "achievements" | "collections" | "shop-items" | "currencies" | "events" | "event-templates" | "season-tracks";
         /** @description Hồ sơ game của chính học sinh (F070). Không họ tên, username, trường, lớp (R16, ADR-0054). */
         GameProfile: {
             avatar_config?: components["schemas"]["AvatarConfig"] | null;
@@ -13256,7 +13354,7 @@ export interface components {
          * @description subtitle = phụ đề WebVTT (text/vtt) của video_lesson (F058 Clarifications, F027 T040)
          * @enum {string}
          */
-        MediaKind: "image" | "audio" | "video" | "model3d" | "document" | "subtitle";
+        MediaKind: "image" | "audio" | "video" | "model3d" | "document" | "subtitle" | "render_thumbnail" | "render_turntable";
         /** @description alt_text bắt buộc khi kind = image (422 VALIDATION_FAILED); is_exam_material buộc lưu ở ew-media-private (F027) */
         MediaPresignRequest: {
             alt_text?: string;
@@ -14868,7 +14966,7 @@ export interface components {
          * @description Loại tài nguyên dùng cho Thùng rác, gán và clone (ADR-0028, ADR-0029)
          * @enum {string}
          */
-        ResourceType: "curriculum" | "lesson" | "learning_material" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "activity" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "school_settings" | "tenant_settings" | "user" | "student";
+        ResourceType: "curriculum" | "lesson" | "learning_material" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "activity" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "shop_item" | "event_template" | "school_settings" | "tenant_settings" | "user" | "student";
         /** @description Lý do khôi phục bản ghi từ Thùng rác (F045-AC-20) */
         RestoreRequest: {
             reason: string;
@@ -16706,6 +16804,7 @@ export interface components {
         FunnelCodePath: string;
         GameConfigId: components["schemas"]["Uuid"];
         GameConfigType: components["schemas"]["GameConfigType"];
+        GameModuleConfigType: components["schemas"]["GameModuleConfigType"];
         GameSessionId: components["schemas"]["Uuid"];
         GoalIdPath: components["schemas"]["Uuid"];
         GradeLevelQuery: components["schemas"]["GradeLevel"];
@@ -28478,6 +28577,8 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     createGameConfig: {
@@ -28514,6 +28615,8 @@ export interface operations {
                 };
             };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
         };
     };
@@ -28552,6 +28655,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
         };
@@ -28591,7 +28695,9 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     presignChatAssetUpload: {
@@ -28675,6 +28781,49 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    cancelScheduledGameConfigPublish: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                config_id: components["parameters"]["GameConfigId"];
+                config_type: components["parameters"]["GameModuleConfigType"];
+                release_id: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Lịch hẹn đã hủy (status cancelled) */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentRelease"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     listGameConfigVersions: {
@@ -28705,6 +28854,47 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    createGameConfigVersion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                config_id: components["parameters"]["GameConfigId"];
+                config_type: components["parameters"]["GameModuleConfigType"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameConfigVersionCreate"];
+            };
+        };
+        responses: {
+            /** @description Version mới ở trạng thái draft (payload sao chép từ based_on_version) */
+            201: {
+                headers: {
+                    ETag: components["headers"]["ETag"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameConfigVersion"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     getGameConfigVersion: {
@@ -28764,8 +28954,10 @@ export interface operations {
                 };
             };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
         };
     };
@@ -28796,6 +28988,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     publishGameConfigVersion: {
@@ -28845,9 +29038,11 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     transitionGameConfigVersion: {
@@ -28894,8 +29089,11 @@ export interface operations {
                 };
             };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     cancelEventRun: {
@@ -29084,7 +29282,50 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getGamePreviewSnapshot: {
+        parameters: {
+            query: {
+                config_id: components["schemas"]["Uuid"];
+                config_type: components["schemas"]["GameConfigType"];
+                version: number;
+            };
+            header: {
+                "X-Preview-Token": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Version được preview (payload theo schema của loại; không có đáp án) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        config_id: components["schemas"]["Uuid"];
+                        config_type: components["schemas"]["GameConfigType"];
+                        expires_at: components["schemas"]["Timestamp"];
+                        payload: {
+                            [key: string]: unknown;
+                        };
+                        status: components["schemas"]["ContentStatus"];
+                        title?: string;
+                        version: number;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     exportGameTranslations: {
@@ -29539,6 +29780,8 @@ export interface operations {
                     "application/json": components["schemas"]["GameChallengeAttempt"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -29579,8 +29822,12 @@ export interface operations {
                     "application/json": components["schemas"]["GameChallengeAttempt"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     nextChallengeActivity: {
@@ -29620,8 +29867,22 @@ export interface operations {
                     "application/json": components["schemas"]["ChallengeNextActivity"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+            /** @description UNAVAILABLE — module learning tạm thời không trả lời; thử lại theo Retry-After, challenge không đổi */
+            503: {
+                headers: {
+                    "Retry-After": components["headers"]["RetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     listGameChallenges: {
@@ -29663,6 +29924,8 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     getGameChallenge: {
@@ -29695,6 +29958,8 @@ export interface operations {
                     "application/json": components["schemas"]["GameChallengeDetail"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -29742,8 +30007,12 @@ export interface operations {
                     "application/json": components["schemas"]["GameChallengeAttempt"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     getCharacterCatalog: {

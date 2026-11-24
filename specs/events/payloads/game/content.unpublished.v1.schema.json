@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/content.unpublished.v1.schema.json",
+  "title": "Payload content.unpublished v1 (module game, owner F078, ADR-0043)",
+  "description": "Con trỏ của item game bị đặt rỗng (gỡ xuất bản kèm lý do); lượt chơi đã ghim version giữ nguyên. Consumer: manifest builder (gỡ khỏi manifest mọi tenant), projection learning (catalog, mini-game), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "item_type",
+    "item_id",
+    "release_id",
+    "owner_scope",
+    "tenant_id",
+    "from_version_id",
+    "to_version_id",
+    "reason",
+    "released_by",
+    "released_at"
+  ],
+  "properties": {
+    "item_type": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "world_area",
+        "story_chapter",
+        "npc_dialogue",
+        "level",
+        "item",
+        "quest",
+        "progression_curve",
+        "reward_rule",
+        "shop_item",
+        "collection",
+        "achievement",
+        "event",
+        "event_template",
+        "season_track",
+        "minigame_config",
+        "challenge",
+        "boss"
+      ]
+    },
+    "item_id": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Khóa item của loại (UUID hoặc mã: area_id, chapter_code, item_id)"
+    },
+    "config_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "release_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "owner_scope": {
+      "type": "string",
+      "enum": [
+        "platform"
+      ]
+    },
+    "tenant_id": {
+      "type": "null"
+    },
+    "from_version_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "released_by": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "to_version_id": {
+      "type": "null"
+    }
+  },
+  "examples": [
+    {
+      "item_type": "quest",
+      "item_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0001",
+      "config_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0001",
+      "release_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0004",
+      "owner_scope": "platform",
+      "tenant_id": null,
+      "from_version_id": "0193a5f4-6c1e-7b2a-9d1f-0000000a0002",
+      "to_version_id": null,
+      "reason": "Gỡ để sửa lỗi nội dung",
+      "released_by": "0193a5f4-6c1e-7b2a-9d1f-0000000a0005",
+      "released_at": "2026-11-24T08:00:00Z"
+    }
+  ]
+}

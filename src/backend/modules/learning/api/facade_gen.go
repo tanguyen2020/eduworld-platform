@@ -152,6 +152,48 @@ func (e AttemptStatus) Valid() bool {
 	}
 }
 
+// Defines values for LearningContentCheckResultResultsContentType.
+const (
+	LearningContentCheckResultResultsContentTypeActivity    LearningContentCheckResultResultsContentType = "activity"
+	LearningContentCheckResultResultsContentTypeLesson      LearningContentCheckResultResultsContentType = "lesson"
+	LearningContentCheckResultResultsContentTypeQuestionSet LearningContentCheckResultResultsContentType = "question_set"
+)
+
+// Valid indicates whether the value is a known member of the LearningContentCheckResultResultsContentType enum.
+func (e LearningContentCheckResultResultsContentType) Valid() bool {
+	switch e {
+	case LearningContentCheckResultResultsContentTypeActivity:
+		return true
+	case LearningContentCheckResultResultsContentTypeLesson:
+		return true
+	case LearningContentCheckResultResultsContentTypeQuestionSet:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for LearningContentRefContentType.
+const (
+	LearningContentRefContentTypeActivity    LearningContentRefContentType = "activity"
+	LearningContentRefContentTypeLesson      LearningContentRefContentType = "lesson"
+	LearningContentRefContentTypeQuestionSet LearningContentRefContentType = "question_set"
+)
+
+// Valid indicates whether the value is a known member of the LearningContentRefContentType enum.
+func (e LearningContentRefContentType) Valid() bool {
+	switch e {
+	case LearningContentRefContentTypeActivity:
+		return true
+	case LearningContentRefContentTypeLesson:
+		return true
+	case LearningContentRefContentTypeQuestionSet:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for MinigameQuestionSourceCheckQuestionSourceKind.
 const (
 	MinigameQuestionSourceCheckQuestionSourceKindQuestionSet   MinigameQuestionSourceCheckQuestionSourceKind = "question_set"
@@ -319,6 +361,7 @@ const (
 	CommonInternalCommonV1ResourceTypeChallenge           CommonInternalCommonV1ResourceType = "challenge"
 	CommonInternalCommonV1ResourceTypeChallengeTemplate   CommonInternalCommonV1ResourceType = "challenge_template"
 	CommonInternalCommonV1ResourceTypeCurriculum          CommonInternalCommonV1ResourceType = "curriculum"
+	CommonInternalCommonV1ResourceTypeEventTemplate       CommonInternalCommonV1ResourceType = "event_template"
 	CommonInternalCommonV1ResourceTypeItem                CommonInternalCommonV1ResourceType = "item"
 	CommonInternalCommonV1ResourceTypeLearningMaterial    CommonInternalCommonV1ResourceType = "learning_material"
 	CommonInternalCommonV1ResourceTypeLesson              CommonInternalCommonV1ResourceType = "lesson"
@@ -328,6 +371,7 @@ const (
 	CommonInternalCommonV1ResourceTypeQuestion            CommonInternalCommonV1ResourceType = "question"
 	CommonInternalCommonV1ResourceTypeQuestionSet         CommonInternalCommonV1ResourceType = "question_set"
 	CommonInternalCommonV1ResourceTypeSchoolSettings      CommonInternalCommonV1ResourceType = "school_settings"
+	CommonInternalCommonV1ResourceTypeShopItem            CommonInternalCommonV1ResourceType = "shop_item"
 	CommonInternalCommonV1ResourceTypeTenantSettings      CommonInternalCommonV1ResourceType = "tenant_settings"
 	CommonInternalCommonV1ResourceTypeTournamentTemplate  CommonInternalCommonV1ResourceType = "tournament_template"
 )
@@ -347,6 +391,8 @@ func (e CommonInternalCommonV1ResourceType) Valid() bool {
 		return true
 	case CommonInternalCommonV1ResourceTypeCurriculum:
 		return true
+	case CommonInternalCommonV1ResourceTypeEventTemplate:
+		return true
 	case CommonInternalCommonV1ResourceTypeItem:
 		return true
 	case CommonInternalCommonV1ResourceTypeLearningMaterial:
@@ -364,6 +410,8 @@ func (e CommonInternalCommonV1ResourceType) Valid() bool {
 	case CommonInternalCommonV1ResourceTypeQuestionSet:
 		return true
 	case CommonInternalCommonV1ResourceTypeSchoolSettings:
+		return true
+	case CommonInternalCommonV1ResourceTypeShopItem:
 		return true
 	case CommonInternalCommonV1ResourceTypeTenantSettings:
 		return true
@@ -631,6 +679,33 @@ type AttemptStatus string
 
 // ItemId defines model for ItemId.
 type ItemId = string
+
+// LearningContentCheck defines model for LearningContentCheck.
+type LearningContentCheck struct {
+	Refs []LearningContentRef `json:"refs"`
+}
+
+// LearningContentCheckResult defines model for LearningContentCheckResult.
+type LearningContentCheckResult struct {
+	Results []struct {
+		ContentId   openapi_types.UUID                           `json:"content_id"`
+		ContentType LearningContentCheckResultResultsContentType `json:"content_type"`
+		Published   bool                                         `json:"published"`
+	} `json:"results"`
+}
+
+// LearningContentCheckResultResultsContentType defines model for LearningContentCheckResult.Results.ContentType.
+type LearningContentCheckResultResultsContentType string
+
+// LearningContentRef defines model for LearningContentRef.
+type LearningContentRef struct {
+	ContentId   openapi_types.UUID            `json:"content_id"`
+	ContentType LearningContentRefContentType `json:"content_type"`
+	Version     *int                          `json:"version,omitempty"`
+}
+
+// LearningContentRefContentType defines model for LearningContentRef.ContentType.
+type LearningContentRefContentType string
 
 // MinigameQuestionSourceCheck defines model for MinigameQuestionSourceCheck.
 type MinigameQuestionSourceCheck struct {
@@ -1125,6 +1200,9 @@ type RevealPlanItemParams struct {
 // CreateAttemptJSONRequestBody defines body for CreateAttempt for application/json ContentType.
 type CreateAttemptJSONRequestBody = AttemptCreateRequest
 
+// CheckPublishedLearningContentJSONRequestBody defines body for CheckPublishedLearningContent for application/json ContentType.
+type CheckPublishedLearningContentJSONRequestBody = LearningContentCheck
+
 // ValidateMinigameQuestionSourceJSONRequestBody defines body for ValidateMinigameQuestionSource for application/json ContentType.
 type ValidateMinigameQuestionSourceJSONRequestBody = MinigameQuestionSourceCheck
 
@@ -1514,6 +1592,9 @@ type ServerInterface interface {
 	// GetAttemptResult Lấy trạng thái và kết quả đã chấm của attempt (không có đáp án)
 	// (GET /internal/v1/attempts/{attempt_id})
 	GetAttemptResult(w http.ResponseWriter, r *http.Request, attemptId openapi_types.UUID)
+	// CheckPublishedLearningContent Kiểm nội dung học tập platform được cấu hình game tham chiếu đã publish chưa (submit_review của Game Operations Console)
+	// (POST /internal/v1/learning-content:check-published)
+	CheckPublishedLearningContent(w http.ResponseWriter, r *http.Request)
 	// ValidateMinigameQuestionSource Kiểm nguồn câu hỏi của cấu hình mini-game khi publish (loại câu tương thích, đủ câu, question set đã publish)
 	// (POST /internal/v1/minigame-question-sources:validate)
 	ValidateMinigameQuestionSource(w http.ResponseWriter, r *http.Request)
@@ -1598,6 +1679,20 @@ func (siw *ServerInterfaceWrapper) GetAttemptResult(w http.ResponseWriter, r *ht
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAttemptResult(w, r, attemptId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CheckPublishedLearningContent operation middleware
+func (siw *ServerInterfaceWrapper) CheckPublishedLearningContent(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CheckPublishedLearningContent(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2171,6 +2266,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/attempts", wrapper.CreateAttempt)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/attempts/{attempt_id}", wrapper.GetAttemptResult)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/learning-content:check-published", wrapper.CheckPublishedLearningContent)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/minigame-question-sources:validate", wrapper.ValidateMinigameQuestionSource)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:cleanup", wrapper.CleanupStudentData)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:restore", wrapper.RestoreStudentData)
@@ -2371,6 +2467,76 @@ func (response GetAttemptResult404ApplicationProblemPlusJSONResponse) VisitGetAt
 	}
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckPublishedLearningContentRequestObject struct {
+	Body *CheckPublishedLearningContentJSONRequestBody
+}
+
+type CheckPublishedLearningContentResponseObject interface {
+	VisitCheckPublishedLearningContentResponse(w http.ResponseWriter) error
+}
+
+type CheckPublishedLearningContent200JSONResponse LearningContentCheckResult
+
+func (response CheckPublishedLearningContent200JSONResponse) VisitCheckPublishedLearningContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckPublishedLearningContent401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response CheckPublishedLearningContent401ApplicationProblemPlusJSONResponse) VisitCheckPublishedLearningContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckPublishedLearningContent403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response CheckPublishedLearningContent403ApplicationProblemPlusJSONResponse) VisitCheckPublishedLearningContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckPublishedLearningContent422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response CheckPublishedLearningContent422ApplicationProblemPlusJSONResponse) VisitCheckPublishedLearningContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -3533,6 +3699,9 @@ type StrictServerInterface interface {
 	// GetAttemptResult Lấy trạng thái và kết quả đã chấm của attempt (không có đáp án)
 	// (GET /internal/v1/attempts/{attempt_id})
 	GetAttemptResult(ctx context.Context, request GetAttemptResultRequestObject) (GetAttemptResultResponseObject, error)
+	// CheckPublishedLearningContent Kiểm nội dung học tập platform được cấu hình game tham chiếu đã publish chưa (submit_review của Game Operations Console)
+	// (POST /internal/v1/learning-content:check-published)
+	CheckPublishedLearningContent(ctx context.Context, request CheckPublishedLearningContentRequestObject) (CheckPublishedLearningContentResponseObject, error)
 	// ValidateMinigameQuestionSource Kiểm nguồn câu hỏi của cấu hình mini-game khi publish (loại câu tương thích, đủ câu, question set đã publish)
 	// (POST /internal/v1/minigame-question-sources:validate)
 	ValidateMinigameQuestionSource(ctx context.Context, request ValidateMinigameQuestionSourceRequestObject) (ValidateMinigameQuestionSourceResponseObject, error)
@@ -3666,6 +3835,37 @@ func (sh *strictHandler) GetAttemptResult(w http.ResponseWriter, r *http.Request
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetAttemptResultResponseObject); ok {
 		if err := validResponse.VisitGetAttemptResultResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CheckPublishedLearningContent operation middleware
+func (sh *strictHandler) CheckPublishedLearningContent(w http.ResponseWriter, r *http.Request) {
+	var request CheckPublishedLearningContentRequestObject
+
+	var body CheckPublishedLearningContentJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CheckPublishedLearningContent(ctx, request.(CheckPublishedLearningContentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CheckPublishedLearningContent")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CheckPublishedLearningContentResponseObject); ok {
+		if err := validResponse.VisitCheckPublishedLearningContentResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -4116,6 +4316,7 @@ var ErrNotFaked = errors.New("api: operation not faked")
 type Fake struct {
 	CreateAttemptFunc                  func(ctx context.Context, request CreateAttemptRequestObject) (CreateAttemptResponseObject, error)
 	GetAttemptResultFunc               func(ctx context.Context, request GetAttemptResultRequestObject) (GetAttemptResultResponseObject, error)
+	CheckPublishedLearningContentFunc  func(ctx context.Context, request CheckPublishedLearningContentRequestObject) (CheckPublishedLearningContentResponseObject, error)
 	ValidateMinigameQuestionSourceFunc func(ctx context.Context, request ValidateMinigameQuestionSourceRequestObject) (ValidateMinigameQuestionSourceResponseObject, error)
 	CleanupStudentDataFunc             func(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
 	RestoreStudentDataFunc             func(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
@@ -4148,6 +4349,14 @@ func (f *Fake) GetAttemptResult(a0 context.Context, a1 GetAttemptResultRequestOb
 		return nil, ErrNotFaked
 	}
 	return f.GetAttemptResultFunc(a0, a1)
+}
+
+// CheckPublishedLearningContent calls CheckPublishedLearningContentFunc.
+func (f *Fake) CheckPublishedLearningContent(a0 context.Context, a1 CheckPublishedLearningContentRequestObject) (CheckPublishedLearningContentResponseObject, error) {
+	if f.CheckPublishedLearningContentFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.CheckPublishedLearningContentFunc(a0, a1)
 }
 
 // ValidateMinigameQuestionSource calls ValidateMinigameQuestionSourceFunc.
