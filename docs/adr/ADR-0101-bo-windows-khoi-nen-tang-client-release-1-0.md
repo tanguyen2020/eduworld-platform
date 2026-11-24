@@ -19,6 +19,12 @@ Ngày 2026-11-24 owner dự án quyết định: "bỏ hẳn xuất ở windows"
    - Certificate pinning chỉ còn cho Android và iOS; Web dựa vào TLS/HSTS của trình duyệt.
 6. **Giá trị `windows` trong contract** (`X-Client-Platform`, `GameLoginRequest.platform`, `GameSessionCreate.client_platform`, `platform` của `getClientConfig`, lịch sử đăng nhập, event game session) **giữ nguyên** cùng nhóm với `macos`, `linux`: chỉ mô tả hệ điều hành của tiến trình khi dev chạy game từ Godot editor hoặc bản debug; không phải nền tảng phát hành. Lý do: dev chạy client từ editor trên Windows gọi backend thật (ví dụ F062 T018); bỏ giá trị này sẽ làm hỏng vòng phát triển và là breaking change của contract mà không mang lại lợi ích phát hành. Dữ liệu lịch sử có `windows` giữ nguyên, không có migration xóa hay đổi dữ liệu (R12).
 7. **Gói nội dung cài sẵn cho trường** chỉ còn dạng Android (MDM/USB). Bản Web tải nội dung theo vùng từ CDN như mọi trình duyệt.
+8. **Các điểm mở phát sinh, chốt 2026-11-24** (owner "chốt hết", chọn hướng an toàn) [Confirmed]:
+   - Giá trị `windows` giữ trong contract chỉ cho dev chạy từ editor/bản debug (mục 6); bản phát hành không bao giờ gửi `windows`.
+   - Trang tải của F134 cho trường gồm **APK/MDM Android và link mở bản Web** (`play.<domain>`, kiểm tra trình duyệt hỗ trợ WebGL 2); không có bộ cài desktop.
+   - Tablet Android dùng chung: `device.cfg` (`shared_device`, `lan_cache_url`) do **MDM của trường đẩy qua managed configuration**; thiếu `device.cfg` thì mặc định `shared_device = true` (an toàn: refresh token chỉ trong RAM, ADR-0086).
+   - PC phòng máy chạy bản Web: cache LAN của trường (nếu có) là **reverse proxy HTTP trong LAN mà trình duyệt dùng qua cấu hình proxy của trường**, không qua `device.cfg`; cache trình duyệt + Cache Storage theo hash (PERFORMANCE_BUDGET §14) là đường mặc định. F133-AC-22 (40 máy vào Hub ≤ 2 phút), NFR-PERF-019, AC-PERF-012 giữ nguyên ngưỡng và **đo lại trên bản Web ở lab F133**; không đạt thì phải có ADR mới, không hạ ngưỡng ngầm.
+   - AC-PERF-004 giữ ngưỡng (≥ 30 FPS p10 private instance, ≥ 24 FPS p10 Hub ở preset Thấp) và đo trên bản Web ở DEV-PC-MIN trong lab F133.
 
 ## Hệ quả
 
@@ -36,3 +42,4 @@ Ngày 2026-11-24 owner dự án quyết định: "bỏ hẳn xuất ở windows"
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-24 | Tạo ADR (Accepted) theo quyết định của owner: bỏ hẳn bản Windows, client chỉ Web, Android, iOS | Owner dự án |
+| 2026-11-24 | Thêm mục 8: chốt các điểm mở (enum `windows` chỉ dev, trang tải F134 = APK + link Web, `device.cfg` qua MDM với mặc định máy dùng chung, cache LAN cho Web qua proxy trường, giữ ngưỡng hiệu năng và đo lại ở F133) | Owner "chốt hết" |

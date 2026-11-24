@@ -16,7 +16,7 @@
 ### Session 2026-11-24 (ADR-0101 — bỏ bản Windows)
 
 - Q: Owner bỏ hẳn bản Windows — "bộ cài trường" trên trang còn gì? → A: [Confirmed] Chỉ gói APK Android kèm gói vùng theo khối (MDM/USB) — [ADR-0101](../../docs/adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) mục 7; `platform` của chỉ mục/response chỉ còn `android`; hướng dẫn `device.cfg` chỉ áp cho thiết bị Android. PC phòng máy chơi bản Web, không cần cài.
-- Q: Trang nên thêm link tới bản Web cho PC phòng máy, hay bỏ trang khi chỉ còn APK? → A: [TBD] Câu hỏi mở cho owner. Tạm giữ trang chỉ với gói APK Android; không thêm link Web cho tới khi owner chốt (không mở rộng phạm vi, R34).
+- Q: Trang nên thêm link tới bản Web cho PC phòng máy, hay bỏ trang khi chỉ còn APK? → A: [Confirmed] (owner "chốt hết" 2026-11-24, [ADR-0101](../../docs/adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) mục 8) Trang gồm gói APK/MDM Android **và** link mở bản Web (`play.<domain>`) kèm kiểm tra trình duyệt hỗ trợ WebGL 2; không có bộ cài desktop.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
