@@ -1,6 +1,9 @@
 # ADR-0088 — CI/CD bằng GitHub Actions
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-17 · **OQ:** — · **Tài liệu:** [DEPLOYMENT](../11-operations/DEPLOYMENT.md) · [LOCAL_DEVELOPMENT](../11-operations/LOCAL_DEVELOPMENT.md) · [TEST_STRATEGY](../12-project/TEST_STRATEGY.md) · [CODE_PLAN](../12-project/CODE_PLAN_CMS_LMS_FIRST.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (export Windows) · **Ngày:** 2026-11-17 · **OQ:** — · **Tài liệu:** [DEPLOYMENT](../11-operations/DEPLOYMENT.md) · [LOCAL_DEVELOPMENT](../11-operations/LOCAL_DEVELOPMENT.md) · [TEST_STRATEGY](../12-project/TEST_STRATEGY.md) · [CODE_PLAN](../12-project/CODE_PLAN_CMS_LMS_FIRST.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (bỏ Windows, 2026-11-24).** Không còn hiệu lực: export Windows trong `godot.yml` (mục 1) và "giữ đủ 4 nền tảng" ở mục 3. **Còn hiệu lực:** phần còn lại; `godot.yml` export Android/Web trên runner Linux, export và ký iOS trên runner macOS.
 
 ## Bối cảnh
 
@@ -35,3 +38,4 @@ Repository nằm trên GitHub, nhưng nhiều tài liệu và feature spec (F001
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-17 | Tạo ADR (Accepted) | Technical Architect |
+| 2026-11-24 | Superseded một phần bởi ADR-0101 (bỏ export Windows) | Owner dự án |
