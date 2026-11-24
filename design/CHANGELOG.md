@@ -2,6 +2,10 @@
 
 Phiên bản token theo semver (`design/package.json`, DESIGN_SYSTEM §3, §8). Đổi tên hoặc xóa token cần tăng MAJOR; token bị xóa phải mang `$deprecated` ít nhất một phiên bản trước (kiểm bởi `design/checks/semver.mjs`).
 
+## tokens@0.8.0
+
+- 2026-11-24 — Art pass 1 (F067, ADR-0102, DESIGN_SYSTEM §5.3): primitive `palette.art.*` (43 màu mỹ thuật low-poly: cỏ, gạch, ngói, gỗ, lá, nước, lúa, đèn lồng, mặt nhân vật…) và `number.light.{sun,ambient,fog,exposure}`; art3d `art.palette.<tên>` (48 slot cố định qua `$extensions.eduworld.index`, gồm `subject_*` alias màu môn học và `skin_npc`), `light.{sun_energy,ambient_energy,ambient_color,fog_density,exposure}`. Sinh mới `resources/art/generated/mat_toon.tres` (toon + viền) và `mat_toon_no_outline.tres`, `Art3dTokens.ART_PALETTE`, `ART_PALETTE_COLORS`, `MATERIAL_PATHS`, `LIGHT_*`; Environment mọi zone thêm ambient phẳng màu ấm, tonemap linear, `fog_density`. MINOR vì chỉ thêm token.
+
 ## tokens@0.7.0
 
 - 2026-11-22 — Sidebar Admin Portal tông xanh thương hiệu đậm (owner yêu cầu, ADR-0098, DESIGN_SYSTEM §4.1): primitive `ops.palette.navy.{100,150,700,800,850,900}`; mode `ops.mode.sider.{bg,hover-bg,selected-bg,text,selected-text}` (light: nền `#163A7A`, chữ `#DCE6FA`, mục chọn là ô trắng chữ xanh đậm; dark: nền `#0E1C3A`, chữ `#C9D6F2`, mục chọn nền brand primary chữ trắng); semantic `ops.color.sider.{bg,hover-bg,selected-bg,text.default,text.selected}` có cặp tương phản (chữ ≥ 4,5:1, ô chọn ≥ 3:1 so với nền sidebar); component token `antd.components.Layout.siderBg` đổi sang `ops.color.sider.bg` và `antd.components.Menu.dark{ItemBg,SubMenuItemBg,PopupBg,ItemColor,ItemHoverBg,ItemHoverColor,ItemSelectedBg,ItemSelectedColor}` (menu sidebar dùng `theme="dark"`). Thang khoảng cách `ops.size.space.{4,8,12,16,24,32,48}` (sinh `--ew-ops-size-space-*`) cho lớp tiện ích Tailwind (ADR-0098). MINOR vì chỉ thêm token và đổi giá trị.

@@ -6,7 +6,7 @@ import { godotColor } from '../../lib/color.mjs';
 import { byPath, gdConstName, gdFloat, px, seconds } from '../../lib/names.mjs';
 
 /** Top-level groups that belong to 3D art (Art3dTokens) rather than UI (UiTokens). */
-export const ART_GROUPS = ['avatar', 'zone', 'toon', 'outline', 'light', 'env', 'vfx'];
+export const ART_GROUPS = ['art', 'avatar', 'zone', 'toon', 'outline', 'light', 'env', 'vfx'];
 
 export const resPath = (repoRel) => `res://${repoRel.replace(/^src\/game\//, '')}`;
 
@@ -75,7 +75,7 @@ ${dict('THEME_PATHS', DENSITY_BANDS.map((b) => [b, `"${themeDir}/${themeFile(b)}
 `;
 }
 
-export function formatArt3dTokens(map, envZones, vfxKinds, version) {
+export function formatArt3dTokens(map, envZones, vfxKinds, version, slots = [], materials = []) {
   const paths = [...map.keys()].sort(byPath).filter((p) => ['zone', 'toon', 'outline', 'light'].includes(p.split('.')[0]));
   const rarity = [...map.keys()].sort(byPath).filter((p) => p.startsWith('color.rarity.'));
   const avatar = (group) => [...map.keys()].sort(byPath).filter((p) => p.startsWith(`avatar.${group}.`))
@@ -90,7 +90,12 @@ ${dict('RARITY_COLORS', rarity.map((p) => [p.slice('color.rarity.'.length), godo
 ${dict('AVATAR_SKIN_TONES', avatar('skin_tone'))}
 ${dict('AVATAR_HAIR_COLORS', avatar('hair_color'))}
 
+# art palette (F067, ADR-0102): slot order of the toon shader palette; a baked mesh addresses slot i with UV = (i + 0.5, 0.5)
+const ART_PALETTE: Array[String] = [${slots.map((s) => `"${s.name}"`).join(', ')}]
+${dict('ART_PALETTE_COLORS', slots.map((s) => [s.name, godotColor(s.color)]))}
+
 # generated resources
+${dict('MATERIAL_PATHS', materials.map((m) => [m, `"${artDir}/mat_${m}.tres"`]))}
 ${dict('ENVIRONMENT_PATHS', envZones.map((z) => [z, `"${artDir}/env_${z}.tres"`]))}
 ${dict('VFX_GRADIENT_PATHS', vfxKinds.map((k) => [k, `"${artDir}/vfx_${k}_gradient.tres"`]))}
 `;

@@ -2,7 +2,7 @@
 // F071 T027 — greybox zone scenes of the 12 world areas, generated from the world seed of module game
 // (src/backend/modules/game/seed/world/areas.v1.json): the anchors (spawn points, wind gates, NPCs, discoveries,
 // collectibles, boards) carry the ids of the area layout, so the zone lint (tools/zone_lint.gd) and the server agree.
-// PLACEHOLDER art (AGENTS R17, OQ-16: stylized low-poly assets come later): boxes and capsules without materials; the
+// PLACEHOLDER art (AGENTS R17; ADR-0102: first-party MIT art, F067 did main_hub only): boxes without materials; the
 // environment comes from the generated design tokens (resources/art/generated/env_*.tres, R32).
 // main_hub keeps its hand-made F062 scene: only a generated block (anchors of F071) is appended between markers.
 //

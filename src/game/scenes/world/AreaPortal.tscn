@@ -1,14 +1,12 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/area_portal.gd" id="1_script"]
+[ext_resource type="ArrayMesh" path="res://assets/models/prop/prop_wind_gate_default.res" id="2_gate"]
+[ext_resource type="Material" path="res://resources/art/generated/mat_toon.tres" id="3_toon"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_trigger"]
 height = 3.0
 radius = 1.6
-
-[sub_resource type="TorusMesh" id="TorusMesh_gate"]
-inner_radius = 1.1
-outer_radius = 1.4
 
 [node name="AreaPortal" type="Area3D"]
 script = ExtResource("1_script")
@@ -19,6 +17,6 @@ prompt_key = "ui.world.portal.travel"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 shape = SubResource("CylinderShape3D_trigger")
 
-[node name="PlaceholderGate" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 1.5, 0)
-mesh = SubResource("TorusMesh_gate")
+[node name="Gate" type="MeshInstance3D" parent="."]
+material_override = ExtResource("3_toon")
+mesh = ExtResource("2_gate")

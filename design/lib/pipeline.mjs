@@ -9,7 +9,10 @@ import { formatAntdTheme } from '../sd/formats/antd-theme.mjs';
 import { formatCssVars } from '../sd/formats/css-vars.mjs';
 import { formatGodotJson } from '../sd/formats/godot-json.mjs';
 import { formatUiTokens, formatArt3dTokens, themeFile, HIGH_CONTRAST_THEME } from '../sd/formats/gdscript-tokens.mjs';
-import { formatTheme, formatEnvironment, formatGradient, godotFontFiles } from '../sd/formats/godot-tres.mjs';
+import { formatTheme, formatEnvironment, formatGradient, godotFontFiles, artPaletteSlots, formatToonMaterial } from '../sd/formats/godot-tres.mjs';
+
+/** Toon material presets (F067, DESIGN_SYSTEM §5.3): with the outline pass, and without it for small dense decor. */
+export const TOON_MATERIALS = { toon: { outline: true }, toon_no_outline: { outline: false } };
 
 export function tokensVersion(designDir = DESIGN_DIR) {
   return JSON.parse(fs.readFileSync(path.join(designDir, 'package.json'), 'utf8')).version;
@@ -55,7 +58,9 @@ export async function generate({ designDir = DESIGN_DIR, loaded = loadContexts(d
   const kinds = groupsOf(game, 'vfx.', 'gradient');
   for (const z of zones) files.set(`${OUTPUTS.artDir}/env_${z}.tres`, formatEnvironment(game, z, version));
   for (const k of kinds) files.set(`${OUTPUTS.artDir}/vfx_${k}_gradient.tres`, formatGradient(game, k, version));
-  files.set(`${OUTPUTS.artDir}/art3d_tokens.gd`, formatArt3dTokens(game, zones, kinds, version));
+  const slots = artPaletteSlots(game, loaded.contexts.game.tokens);
+  for (const [name, opts] of Object.entries(TOON_MATERIALS)) files.set(`${OUTPUTS.artDir}/mat_${name}.tres`, formatToonMaterial(game, version, { label: name, slots, ...opts }));
+  files.set(`${OUTPUTS.artDir}/art3d_tokens.gd`, formatArt3dTokens(game, zones, kinds, version, slots, Object.keys(TOON_MATERIALS)));
 
   for (const f of Object.values(godotFontFiles())) {
     files.set(f.dest, fs.readFileSync(path.join(designDir, f.src)));

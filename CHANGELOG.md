@@ -8,6 +8,15 @@ Nhóm mục: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`, `
 
 ## [Unreleased]
 
+### Added
+- 2026-11-24 — **F067 Art pass 1: Main Hub low-poly stylized và nhân vật chibi** (`src/game/`, [spec](specs/067-art-pass-hub-chibi/spec.md), [ADR-0102](docs/adr/ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md)): greybox Quảng trường Tia Sáng thay bằng đồ họa tự làm bằng code (MIT) — cây đa Tia Sáng, đình và nhà mái ngói, cổng làng, hồ sen có thuyền thúng, đèn lồng, ruộng bậc thang, hồ, đồi, núi Thử Thách; 11 cổng gió có biểu tượng hình dạng theo vùng đích; bảng tin mái ngói; marker tia sáng. Công thức `tools/art/*_art.gd` bake ra `src/game/assets/models/**` (`make godot-art-bake`, `bake_art.gd --check` trong `make godot-lint`). Shader toon chung + viền inverted hull mềm (`resources/art/shaders/`, MIT), preset `mat_toon*.tres` sinh từ token; mesh chỉ lưu slot của bảng màu `art.palette.*`. Nhân vật chibi (đầu ≈ 1/3, mắt có điểm sáng, miệng cười, má hồng), 6 kiểu tóc, 6 trang phục, 4 phụ kiện, 3 dáng NPC (nón lá, mũ bưu tá, khăn đóng); tùy biến F070 giữ nguyên, màu đồ từ `ItemVisual.tint_token`. Preset Thấp/Trung bình/Cao điều khiển viền toon (12 m / 30 m / luôn bật) và mật độ cỏ/hoa/lúa (25/60/100 %) qua `ZoneArtQuality`; renderer Compatibility (Web) không bật bóng nắng thời gian thực (renderer parity). Lint mới `tools/lint_art.gd` (license theo `src/game/assets/LICENSES.md` + cấm literal màu trong nguồn mỹ thuật 3D). Đình lùi sau hàng cổng gió (trước đây đè cổng đi Đại dương). Benchmark Hub có renderer: Mobile 65 draw call / 123k primitive, Compatibility 73 / 69k.
+
+### Decisions
+- 2026-11-24 — **ADR-0102** nguồn asset đồ họa theo license MIT (hoặc CC0, public domain), asset tự làm phát hành MIT; cấm share-alike, non-commercial, no-derivatives, GPL, pack trả phí; mỗi file asset một dòng trong `src/game/assets/LICENSES.md` — thay phần nguồn asset của OQ-16 (owner "làm theo hướng MIT License").
+
+### Answered
+- 2026-11-24 — OQ-16 (phần nguồn asset) thay bởi ADR-0102; phong cách stylized low-poly giữ nguyên.
+
 ### Security
 - 2026-11-23 — **F120 T061: World/Area lọc block/mute phía server** (module `chat`, CHILD_SAFETY §3.4, Clarifications F120 2026-11-23): fan-out World/Area (sau JetStream ack, R25) gắn `target.exclude_user_ids` = học sinh có block hai chiều với người gửi hoặc đã tắt tiếng người gửi — gateway realtime không giao cho họ (`Target.Accepts` trong `src/backend/pkg/realtime`, dùng chung với `revocation.Decide`); đọc quan hệ lỗi → không phát (fail closed); lịch sử từ bộ đệm (`chat.history.fetch`, `chat.channel.sync`, `listChannelMessages`) bỏ tin của người gửi mà người xem đã block/bị block/tắt tiếng. Quan hệ của học sinh (`ImplicitReader.Relations`, `social.blocks` + `social.mutes`) cache `chat_facts_cache`, xóa ngay sau commit block/unblock/mute/unmute. `RtPubSubEnvelope.target.exclude_user_ids` (≤ 1000). Test integration `TestWorldAreaBlockMuteFiltered` (viết trước, FAIL trước khi sửa).
 

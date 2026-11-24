@@ -1,17 +1,18 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/npc_anchor.gd" id="1_script"]
+[ext_resource type="ArrayMesh" path="res://assets/models/chr/chr_npc_farmer_a.res" id="2_farmer"]
+[ext_resource type="ArrayMesh" path="res://assets/models/chr/chr_npc_postie_a.res" id="3_postie"]
+[ext_resource type="ArrayMesh" path="res://assets/models/chr/chr_npc_scholar_a.res" id="4_scholar"]
+[ext_resource type="Material" path="res://resources/art/generated/mat_toon.tres" id="5_toon"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_talk"]
 height = 2.5
 radius = 2.2
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_npc"]
-radius = 0.4
-height = 1.4
-
 [node name="NPC" type="Area3D"]
 script = ExtResource("1_script")
+body_variants = Array[Mesh]([ExtResource("2_farmer"), ExtResource("3_postie"), ExtResource("4_scholar")])
 kind = "npc"
 prompt_key = "ui.world.npc.talk"
 
@@ -19,6 +20,7 @@ prompt_key = "ui.world.npc.talk"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
 shape = SubResource("CylinderShape3D_talk")
 
-[node name="PlaceholderBody" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
-mesh = SubResource("CapsuleMesh_npc")
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)
+material_override = ExtResource("5_toon")
+mesh = ExtResource("2_farmer")

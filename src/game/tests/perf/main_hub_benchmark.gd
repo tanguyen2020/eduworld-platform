@@ -1,7 +1,7 @@
 extends Node
 ## TEST-ONLY benchmark scene of the Main Hub (F062-AC-19/20, TC-PERF-018, TC-PERF-020; PERFORMANCE_BUDGET §7, §9, §11).
-## - Headless (CI, `tests/perf/test_main_hub_benchmark.gd`): static budget of the greybox — visible triangles, draw-call
-##   proxy (mesh surfaces + 3D labels), dynamic bodies — and HUD cost (Control count, render time per update).
+## - Headless (CI, `tests/perf/test_main_hub_benchmark.gd`): static budget of the hub (F067 art) — visible triangles,
+##   draw-call proxy (mesh surfaces × material passes, MultiMeshes, 3D labels), dynamic bodies — and HUD cost (Control count, render time per update).
 ## - With a renderer (`godot --path src/game res://tests/perf/MainHubBenchmark.tscn -- --seconds=20`): orbits the camera,
 ##   records frame times and the engine's per-frame primitives/draw calls, prints one JSON line and quits (lab devices).
 ## Budgets are CONFIG_DEFAULTS `scene_budget_hub`, `ui_cpu_budget`, `perf_budget_tolerance_ci` (Mobile/Web column).
@@ -67,22 +67,42 @@ func report() -> Dictionary:
 	}
 
 
-## Static budget of a 3D subtree: triangles of visible meshes, draw-call proxy (one per mesh surface or 3D label)
-## and dynamic bodies (characters + rigid bodies).
+## Static budget of a 3D subtree: triangles of visible meshes (MultiMesh: × drawn instances), draw-call proxy (one
+## per mesh surface and material pass — the F067 toon outline is a second pass — or 3D label) and dynamic bodies
+## (characters + rigid bodies).
 static func scene_stats(root: Node) -> Dictionary:
 	var triangles: int = 0
 	var draw_calls: int = 0
 	var dynamic_bodies: int = 0
 	for node: Node in root.find_children("*", "", true, false):
 		if node is MeshInstance3D and (node as MeshInstance3D).mesh != null and (node as MeshInstance3D).is_visible_in_tree():
-			var mesh: Mesh = (node as MeshInstance3D).mesh
-			triangles += mesh.get_faces().size() / 3
-			draw_calls += mesh.get_surface_count()
+			var mi: MeshInstance3D = node as MeshInstance3D
+			triangles += mi.mesh.get_faces().size() / 3
+			for s: int in mi.mesh.get_surface_count():
+				draw_calls += material_passes(mi.material_override if mi.material_override != null else mi.get_active_material(s))
+		elif node is MultiMeshInstance3D and (node as MultiMeshInstance3D).is_visible_in_tree():
+			var mmi: MultiMeshInstance3D = node as MultiMeshInstance3D
+			if mmi.multimesh != null and mmi.multimesh.mesh != null:
+				var count: int = mmi.multimesh.visible_instance_count
+				count = mmi.multimesh.instance_count if count < 0 else count
+				triangles += mmi.multimesh.mesh.get_faces().size() / 3 * count
+				for s: int in mmi.multimesh.mesh.get_surface_count():
+					draw_calls += material_passes(mmi.material_override)
 		elif node is Label3D:
 			draw_calls += 1
 		if node is CharacterBody3D or node is RigidBody3D:
 			dynamic_bodies += 1
 	return {"triangles": triangles, "draw_calls": draw_calls, "dynamic_bodies": dynamic_bodies}
+
+
+## Render passes of a material: itself plus its `next_pass` chain (at least one).
+static func material_passes(material: Material) -> int:
+	var passes: int = 1
+	var next: Material = material.next_pass if material != null else null
+	while next != null:
+		passes += 1
+		next = next.next_pass
+	return passes
 
 
 ## HUD cost: number of Controls and the average time of one full re-render (`_render`) in ms.

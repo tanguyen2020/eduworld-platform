@@ -59,7 +59,7 @@ flowchart LR
 ```
 
 - Lệnh: `make design-tokens` (chạy trong CI ở mọi MR chạm `design/**`). File sinh ra **không sửa tay**; CI chạy lại và báo lỗi nếu khác (`make design-tokens-check`).
-- Godot: Style Dictionary v4 phân giải alias, format riêng trong `design/sd/formats/` **ghi trực tiếp** `Theme` (`eduworld_theme.tres` mật độ `g6_7`, `eduworld_theme_<band>.tres` mỗi grade band, `eduworld_theme_high_contrast.tres`), `Environment` theo zone và `Gradient` VFX dạng text resource (`format=3`, dòng đầu là chú thích `;` GENERATED), cùng `UiTokens` và `Art3dTokens` (`src/game/resources/art/generated/art3d_tokens.gd`); font Be Vietnam Pro/Baloo 2 + OFL được chép vào `src/game/resources/ui/theme/fonts/`. Không cần Godot headless để sinh hay kiểm (F005, thay phương án `build_theme.gd`); JSON trung gian `design/build/godot/tokens.json` cho công cụ F060. Preset `ShaderMaterial` toon sinh khi có shader toon chung (F071) [Confirmed].
+- Godot: Style Dictionary v4 phân giải alias, format riêng trong `design/sd/formats/` **ghi trực tiếp** `Theme` (`eduworld_theme.tres` mật độ `g6_7`, `eduworld_theme_<band>.tres` mỗi grade band, `eduworld_theme_high_contrast.tres`), `Environment` theo zone và `Gradient` VFX dạng text resource (`format=3`, dòng đầu là chú thích `;` GENERATED), cùng `UiTokens` và `Art3dTokens` (`src/game/resources/art/generated/art3d_tokens.gd`); font Be Vietnam Pro/Baloo 2 + OFL được chép vào `src/game/resources/ui/theme/fonts/`. Không cần Godot headless để sinh hay kiểm (F005, thay phương án `build_theme.gd`); JSON trung gian `design/build/godot/tokens.json` cho công cụ F060. Preset `ShaderMaterial` toon `mat_toon.tres` / `mat_toon_no_outline.tres` sinh cùng bảng màu `art.palette.*` (F067) [Confirmed].
 - Kiểm khi build (`design/checks/`): cấu trúc W3C, alias thiếu/vòng lặp, literal ở tầng semantic/component/mode/density/art, màu nghiệp vụ chỉ ở shared + đủ 3 biến thể, tên token game và admin không trùng, tương phản WCAG 2.1 AA mọi cặp `contrastWith` (báo cáo `design/build/reports/contrast.json`), kích thước tối thiểu đọc từ §5.2 và §4.5 của tài liệu này, font OFL + bộ glyph tiếng Việt, semver so với nhánh gốc của PR.
 - Web: xuất object `ThemeConfig` cho `ConfigProvider` của Ant Design và CSS variables `--ew-*` cho component tự viết trong `ops-ui`.
 - Phiên bản token: `design/CHANGELOG.md` + semver (phiên bản đầu `tokens@0.1.0`, mục `## tokens@x.y.z`); thay đổi phá vỡ (đổi tên token) cần MR riêng và cập nhật mọi nơi dùng trong cùng MR.
@@ -193,10 +193,11 @@ Mật độ là tập token ghi đè (`density/*.json`) sinh ra các Theme biế
 
 | Nhóm | Ví dụ token | Sinh ra |
 |---|---|---|
-| Palette vật liệu theo khu vực | `zone.math.primary`, `zone.vietnamese.accent` | Preset `ShaderMaterial` toon |
-| Toon shading | `toon.steps`, `toon.shadow_tint`, `toon.rim_strength` | Uniform của shader toon chung |
-| Outline | `outline.width`, `outline.color` | Uniform outline (inverted hull / post) |
-| Ánh sáng & môi trường | `env.<zone>.sky_top`, `env.<zone>.fog_color`, `light.sun_color` | `Environment` `.tres` theo zone |
+| Palette vật liệu theo khu vực | `zone.math.primary`, `zone.vietnamese.accent` | Màu nhấn theo vùng |
+| Bảng màu mỹ thuật (F067) | `art.palette.<tên>` (alias `palette.art.*`, `color.subject.*`, `palette.avatar.*`), mỗi token có slot cố định `$extensions.eduworld.index` — chỉ thêm cuối, không đánh số lại; tối đa 64 | `Art3dTokens.ART_PALETTE(_COLORS)` + mảng `palette` của preset `mat_toon.tres` / `mat_toon_no_outline.tres`; mesh bake chỉ lưu slot ([WORLD_RENDERING §8.1](../08-game-client/WORLD_RENDERING.md#81-quy-chuẩn)) |
+| Toon shading | `toon.steps` = 3 dải sáng (cạnh dải làm mềm), `toon.shadow_tint` = `#3B3F6B`, `toon.rim_strength` = 0,35; không specular | Uniform của shader toon chung `resources/art/shaders/toon.gdshader` |
+| Outline | `outline.width` = 0,02 m (to dần theo khoảng cách, 0,7–2,2×), `outline.color` = `#1E2A44`; inverted hull, pháp tuyến mượt trong COLOR; tắt dần theo preset (`quality_presets`, [PERFORMANCE_BUDGET §5](../08-game-client/PERFORMANCE_BUDGET.md#5-preset-chất-lượng)) | `next_pass` `resources/art/shaders/toon_outline.gdshader` của preset `mat_toon.tres` |
+| Ánh sáng & môi trường | `env.<zone>.sky_top`, `env.<zone>.fog_color`, `light.sun_color`, `light.sun_energy` = 0,95, `light.ambient_color` (ấm) + `light.ambient_energy` = 0,5, `light.fog_density` = 0,0035, `light.exposure` = 1 | `Environment` `.tres` theo zone (ambient phẳng, tonemap linear); nắng do `ZoneRoot` đặt |
 | VFX | `vfx.correct.gradient`, `vfx.reward.gradient`, `vfx.level_up.gradient` | `Gradient`/`GradientTexture1D` |
 | Độ hiếm | `rarity.common…legendary` (từ shared-tokens) | Màu viền/hào quang item, khung UI |
 | Bảng màu avatar | `avatar.skin_tone.<mã>`, `avatar.hair_color.<mã>` (alias `palette.avatar.*`; khóa = mã `skin_tones`/`hair_colors` của danh mục nhân vật, OQ F070-2) | `Art3dTokens.AVATAR_SKIN_TONES`/`AVATAR_HAIR_COLORS` cho `avatar_builder.gd` và ô màu S02/Tủ đồ |

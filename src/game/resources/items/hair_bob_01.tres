@@ -1,15 +1,10 @@
 [gd_resource type="Resource" script_class="ItemVisual" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/item_visual.gd" id="1_visual"]
-
-[sub_resource type="SphereMesh" id="SphereMesh_part"]
-radius = 0.33
-height = 0.5
+[ext_resource type="ArrayMesh" path="res://assets/models/chr/chr_hair_bob_a.res" id="2_mesh"]
 
 [resource]
 script = ExtResource("1_visual")
 code = "hair_bob_01"
 slot = "hair"
-offset = Vector3(0, -0.08, 0)
-mesh = SubResource("SphereMesh_part")
-placeholder = true
+mesh = ExtResource("2_mesh")

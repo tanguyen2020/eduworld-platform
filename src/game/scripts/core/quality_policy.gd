@@ -18,22 +18,23 @@ const RENDERER_KINDS: Dictionary = {
 }
 ## PERFORMANCE_BUDGET §5 (`quality_presets`): base/dynamic render scale range, FPS cap (mobile·web / PC),
 ## shadows, anti-aliasing (none/fxaa/msaa2), visibility range (m), `mesh_lod_threshold`, characters drawn in full (mobile·web
-## / PC; the rest use LOD/impostor — §5, F092-AC-21).
+## / PC; the rest use LOD/impostor — §5, F092-AC-21), toon outline fade distance (m, 0 = always; "Outline toon") and
+## share of grass / decor instances drawn ("Mật độ cỏ / vật trang trí") — F067, ZoneArtQuality.
 const PRESETS: Dictionary = {
 	"low": {
 		"render_scale": 0.75, "scale_min": 0.6, "scale_max": 0.75, "fps_cap_mobile": 30, "fps_cap_pc": 30,
 		"shadows": false, "aa": "none", "view_distance": 40.0, "lod_threshold": 4.0, "full_characters": 10,
-		"full_characters_pc": 10,
+		"full_characters_pc": 10, "outline_distance": 12.0, "decor_density": 0.25,
 	},
 	"medium": {
 		"render_scale": 0.9, "scale_min": 0.7, "scale_max": 1.0, "fps_cap_mobile": 30, "fps_cap_pc": 60,
 		"shadows": true, "aa": "fxaa", "view_distance": 70.0, "lod_threshold": 2.0, "full_characters": 20,
-		"full_characters_pc": 30,
+		"full_characters_pc": 30, "outline_distance": 30.0, "decor_density": 0.6,
 	},
 	"high": {
 		"render_scale": 1.0, "scale_min": 1.0, "scale_max": 1.0, "fps_cap_mobile": 30, "fps_cap_pc": 60,
 		"shadows": true, "aa": "msaa2", "view_distance": 120.0, "lod_threshold": 1.0, "full_characters": 40,
-		"full_characters_pc": 40,
+		"full_characters_pc": 40, "outline_distance": 0.0, "decor_density": 1.0,
 	},
 }
 ## `battery_target`: 3D renders at 15 FPS while the screen is idle for more than 10 s (§12).
@@ -55,6 +56,13 @@ static func device_info(platform: String) -> Dictionary:
 		"device_model": OS.get_model_name(),
 		"os_version": OS.get_version(),
 	}
+
+
+## Real-time directional shadows with the shared toon shader (F067, renderer parity — PERFORMANCE_BUDGET §4): the
+## Compatibility renderer (Web) draws a shadowed directional light in an extra additive pass that a custom `light()`
+## shader cannot tell apart, so lit faces get the sun twice; it renders the toon look without real-time shadows.
+static func shadows_supported(rendering_method: String) -> bool:
+	return rendering_method != RENDERER_COMPATIBILITY
 
 
 static func is_valid_preset(preset: String) -> bool:

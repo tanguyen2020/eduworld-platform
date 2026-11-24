@@ -4,7 +4,7 @@ extends Node3D
 ## player at the spawn point chosen by the server (fallback: `default_spawn`, F062-AC-01), tracks which Interactable
 ## the player stands in and turns `interacted` into a UI intent (`EventBus.ui_requested`) — no learning logic here
 ## (AGENTS R1, G-4). Entering the zone and closing a panel refresh the school assignments through the service layer
-## (F062-AC-07); the zone registers itself with QualityManager (dynamic resolution, suspend, shadows).
+## (F062-AC-07); the zone registers itself with QualityManager (dynamic resolution, suspend, shadows, art quality — F067).
 
 signal interaction_focus_changed(interactable_id: String, prompt_key: String)
 signal player_spawned(spawn_point_id: String)
@@ -186,7 +186,10 @@ func _on_quality_changed(_preset: String) -> void:
 	var light: DirectionalLight3D = get_node_or_null("Environment/Sun") as DirectionalLight3D
 	if light != null:
 		light.light_color = Art3dTokens.LIGHT_SUN_COLOR
-		light.shadow_enabled = QualityManager.shadows_enabled()
+		light.light_energy = Art3dTokens.LIGHT_SUN_ENERGY
+		light.shadow_enabled = QualityManager.shadows_enabled() \
+				and QualityPolicy.shadows_supported(RenderingServer.get_current_rendering_method())
+	ZoneArtQuality.apply(self, QualityManager.preset)
 
 
 ## F072: puts a QuestMarker3D above every interactable whose id is in ids (targets of the active steps of the tracked

@@ -22,6 +22,10 @@ const UNKNOWN_APPEARANCE_COLOR: Color = Color.WHITE
 ## Same pattern as the contract `CatalogCode`: server data never builds an arbitrary resource path.
 const CODE_PATTERN: String = "^[a-z0-9_]{1,64}$"
 
+## Visuals already loaded on this client (display data only): keeps the baked F067 meshes in memory so a preview
+## redraw (S02, Wardrobe) does not load and decompress them again.
+static var _loaded: Dictionary = {}
+
 @export var code: String = ""
 ## `hair`, `outfit`, `head`, `face`, `back`, `hand`, `emote`, `body_type`, `skin_tone`, `hair_color`.
 @export var slot: String = ""
@@ -29,8 +33,10 @@ const CODE_PATTERN: String = "^[a-z0-9_]{1,64}$"
 @export var scene: PackedScene = null
 @export var mesh: Mesh = null
 @export var material_override: Material = null
-## Albedo of the generated material (placeholder item colour). Skin tone / hair colour come from the tokens.
+## Albedo of the generated material when no `tint_token` is set (legacy). Skin tone / hair colour come from the tokens.
 @export var tint: Color = Color(1, 1, 1, 1)
+## Art palette colour of the item (`Art3dTokens.ART_PALETTE`, F067): the tint drawn on its ALBEDO faces (R32).
+@export var tint_token: String = ""
 ## Position relative to the slot anchor.
 @export var offset: Vector3 = Vector3.ZERO
 ## Body type proportions (body_type codes only).
@@ -40,6 +46,13 @@ const CODE_PATTERN: String = "^[a-z0-9_]{1,64}$"
 @export var emote_clip: Animation = null
 ## True while the visual is a primitive stand-in for the OQ-16 art (AGENTS R17).
 @export var placeholder: bool = false
+
+
+## Colour drawn on the item: its art palette token, else `tint`.
+func display_tint() -> Color:
+	if Art3dTokens.ART_PALETTE_COLORS.has(tint_token):
+		return Art3dTokens.ART_PALETTE_COLORS[tint_token] as Color
+	return tint
 
 
 static func is_valid_code(value: String) -> bool:
@@ -86,6 +99,11 @@ static func _load(dir: String, value: String) -> ItemVisual:
 	if not is_valid_code(value):
 		return null
 	var path: String = "%s/%s.tres" % [dir, value]
+	if _loaded.has(path):
+		return _loaded[path] as ItemVisual
 	if not ResourceLoader.exists(path):
 		return null
-	return ResourceLoader.load(path) as ItemVisual
+	var visual: ItemVisual = ResourceLoader.load(path) as ItemVisual
+	if visual != null:
+		_loaded[path] = visual
+	return visual

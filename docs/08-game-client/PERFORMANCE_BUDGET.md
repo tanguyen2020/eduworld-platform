@@ -63,7 +63,7 @@ Cột Mobile / Web áp dụng cho Android, iOS và Web, gồm PC phòng máy ch�
 | Desktop chạy từ editor/bản debug (Windows, macOS, Linux — không phát hành, ADR-0101) | Mobile; Forward+ ở preset Cao | Compatibility | Chỉ để phát triển: `QualityPolicy` coi mọi nền tảng ngoài Android/iOS/Web là nhánh desktop (giới hạn 60 FPS ở preset Trung bình/Cao); không có ngân sách, thiết bị tham chiếu hay nghiệm thu cho nhánh này |
 
 - Lựa chọn renderer lưu ở `user://settings.cfg`; lần khởi động lỗi do renderer → tự chuyển sang Compatibility ở lần sau và gửi telemetry.
-- Art direction stylized/toon phải đạt **renderer parity** giữa Mobile và Compatibility (shader toon dùng tính năng chung, không phụ thuộc SSAO/SSR/SDFGI); kiểm tra theo [WORLD_RENDERING](WORLD_RENDERING.md) và [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md).
+- Art direction stylized/toon phải đạt **renderer parity** giữa Mobile và Compatibility (shader toon dùng tính năng chung, không phụ thuộc SSAO/SSR/SDFGI); kiểm tra theo [WORLD_RENDERING](WORLD_RENDERING.md) và [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md). Trên Compatibility (Web) mặt trời không có bóng thời gian thực ở mọi preset (F067, [WORLD_RENDERING §7](WORLD_RENDERING.md#7-lighting)).
 
 ## 5. Preset chất lượng
 
@@ -81,7 +81,7 @@ Cột Mobile / Web áp dụng cho Android, iOS và Web, gồm PC phòng máy ch�
 | Hạt (particle) tối đa cùng lúc | 300 | 800 | 2.000 |
 | Độ phân giải video bài học | 480p | 720p | 720p (1080p tùy chọn) |
 | Animation UI / chuyển cảnh | Rút gọn (fade) | Đầy đủ, tắt hiệu ứng nền động | Đầy đủ |
-| Outline toon | Tắt ở vật thể xa | Bật, tắt ở > 30 m | Bật |
+| Outline toon | Tắt dần, hết ở 12 m [Proposed] | Bật, tắt ở > 30 m | Bật |
 | Âm thanh đồng thời | 16 voice | 24 voice | 32 voice |
 
 Học sinh đổi preset và từng thiết lập trong Cài đặt; lựa chọn lưu theo thiết bị (`user://settings.cfg`), không đồng bộ lên server.

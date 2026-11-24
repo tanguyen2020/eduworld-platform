@@ -10,8 +10,10 @@ extends Node3D
 ## - an equipped item without a visual on this client (cosmetic bundle not loaded) → the default item of the same slot
 ##   from the catalog, `visual_fallback_used` is emitted for the background bundle loader (F070-AC-18); unknown
 ##   appearance codes keep the neutral look. Never crashes on bad data.
-## PLACEHOLDER (AGENTS R17): the anchors are plain Node3D on the greybox body; with the OQ-16 rig they become
-## BoneAttachment3D on the shared `kid_base` skeleton and the parts are merged into one skinned mesh (§5.2).
+## Art (F067, ADR-0102): a baked chibi body (head ≈ 1/3, face in the mesh) and baked hair/outfit/accessory meshes
+## drawn with the shared toon preset (`Art3dTokens.MATERIAL_PATHS["toon"]`); skin, hair colour and item tints set its
+## `albedo` per avatar (faces flagged ALBEDO in the bake), everything else comes from the art palette tokens. The
+## anchors are plain Node3D; a skinned `kid_base` rig (BoneAttachment3D, merged mesh, §5.2) is a later art pass.
 
 signal avatar_built(config: AvatarConfigModel)
 signal visual_fallback_used(item_id: String, slot: String)
@@ -23,6 +25,7 @@ const ANCHOR_PATHS: Dictionary = {
 }
 
 @export var body_mesh: MeshInstance3D = null
+## Legacy greybox head (separate skin mesh); the F067 body has the head in `body_mesh`.
 @export var head_mesh: MeshInstance3D = null
 @export var proportions: Node3D = null
 
@@ -32,8 +35,9 @@ var config: AvatarConfigModel = null
 var shown: Dictionary = {}
 ## Equipped item codes that had no visual on this client during the last apply.
 var missing: PackedStringArray = []
-var _skin_material: StandardMaterial3D = StandardMaterial3D.new()
-var _hair_color: Color = Color(1, 1, 1, 1)
+var _skin_material: ShaderMaterial = toon_material()
+var _skin_color: Color = ItemVisual.UNKNOWN_APPEARANCE_COLOR
+var _hair_color: Color = ItemVisual.UNKNOWN_APPEARANCE_COLOR
 
 
 func _ready() -> void:
@@ -68,7 +72,7 @@ func slot_anchor(slot: String) -> Node3D:
 
 
 func skin_color() -> Color:
-	return _skin_material.albedo_color
+	return _skin_color
 
 
 func hair_color() -> Color:
@@ -79,7 +83,8 @@ func _apply_body(c: AvatarConfigModel) -> void:
 	var shape: ItemVisual = ItemVisual.load_appearance(c.body_type)
 	if proportions != null:
 		proportions.scale = shape.body_scale if shape != null else Vector3.ONE
-	_skin_material.albedo_color = ItemVisual.appearance_color(c.skin_tone)
+	_skin_color = ItemVisual.appearance_color(c.skin_tone)
+	_skin_material.set_shader_parameter(&"albedo", _skin_color)
 	_hair_color = ItemVisual.appearance_color(c.hair_color)
 
 
@@ -111,14 +116,20 @@ func _build_part(visual: ItemVisual, slot: String) -> Node3D:
 	part.name = "Part"
 	part.mesh = visual.mesh
 	part.position = visual.offset
-	var material: StandardMaterial3D = null
-	if visual.material_override is StandardMaterial3D:
-		material = (visual.material_override as StandardMaterial3D).duplicate() as StandardMaterial3D
+	var material: ShaderMaterial = null
+	if visual.material_override is ShaderMaterial:
+		material = (visual.material_override as ShaderMaterial).duplicate() as ShaderMaterial
 	else:
-		material = StandardMaterial3D.new()
-	material.albedo_color = _hair_color if slot == "hair" else visual.tint
+		material = toon_material()
+	material.set_shader_parameter(&"albedo", _hair_color if slot == "hair" else visual.display_tint())
 	part.material_override = material
 	return part
+
+
+## A per-avatar copy of the shared toon preset (generated from the tokens); the outline pass stays shared.
+static func toon_material() -> ShaderMaterial:
+	var preset: ShaderMaterial = load(String(Art3dTokens.MATERIAL_PATHS["toon"])) as ShaderMaterial
+	return preset.duplicate() as ShaderMaterial if preset != null else ShaderMaterial.new()
 
 
 func _clear_anchor(slot: String) -> void:

@@ -1,14 +1,11 @@
 [gd_resource type="Resource" script_class="ItemVisual" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/item_visual.gd" id="1_visual"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_part"]
-size = Vector3(0.4, 0.45, 0.2)
+[ext_resource type="ArrayMesh" path="res://assets/models/chr/chr_acc_backpack_owl_a.res" id="2_mesh"]
 
 [resource]
 script = ExtResource("1_visual")
 code = "acc_backpack_owl"
 slot = "back"
-tint = Color(0.4, 0.3, 0.2, 1)
-mesh = SubResource("BoxMesh_part")
-placeholder = true
+tint_token = "wood"
+mesh = ExtResource("2_mesh")

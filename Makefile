@@ -280,20 +280,28 @@ GDLINT   ?= gdlint
 GAME_DIR := src/game
 GODOT_HL  = "$(GODOT)" --headless --path $(GAME_DIR)
 GAME_ENV ?= mock
-.PHONY: godot-import godot-lint godot-test godot-smoke godot-screenshots godot-fixtures godot-export-check godot-export-android
+.PHONY: godot-import godot-lint godot-test godot-smoke godot-screenshots godot-fixtures godot-export-check godot-export-android godot-art-bake godot-art-capture
 godot-import: ## Import the Godot project headless (global class cache, fonts); needed once after checkout
 	$(GODOT_HL) --import
 
-godot-lint: godot-import ## gdlint + typed check + theme override/layer/signal lints + translation keys + pseudo-locale + fixtures + no Admin UI
+godot-lint: godot-import ## gdlint + typed check + theme override/layer/signal/art lints + baked art + translation keys + pseudo-locale + fixtures + no Admin UI
 	cd $(GAME_DIR) && $(GDLINT) scripts scenes tools tests
 	$(GODOT_HL) -s res://tools/check_typed.gd
 	$(GODOT_HL) -s res://tools/lint_theme_overrides.gd
 	$(GODOT_HL) -s res://tools/lint_layers.gd
 	$(GODOT_HL) -s res://tools/lint_signals.gd
+	$(GODOT_HL) -s res://tools/lint_art.gd
+	$(GODOT_HL) -s res://tools/art/bake_art.gd -- --check
 	$(GODOT_HL) -s res://tools/extract_pot.gd -- --check
 	$(GODOT_HL) -s res://tools/pseudo_locale.gd -- --check
 	node $(GAME_DIR)/tools/gen_fixtures.mjs --check
 	bash $(GAME_DIR)/tools/check_no_admin_ui.sh
+
+godot-art-bake: godot-import ## F067: bake the first-party low-poly art (tools/art/*_art.gd) into src/game/assets/models (ADR-0102)
+	$(GODOT_HL) -s res://tools/art/bake_art.gd
+
+godot-art-capture: ## F067: render the Main Hub from fixed camera shots to PNG (needs a renderer; OUT=<dir>)
+	"$(GODOT)" --path $(GAME_DIR) -s res://tools/capture_hub.gd -- --out="$(OUT)"
 
 godot-test: godot-import ## GdUnit4 headless (unit, scene, contract, integration) + artifact scan tests (exports a release PCK)
 	$(GODOT_HL) -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -c -a res://tests -rd res://reports

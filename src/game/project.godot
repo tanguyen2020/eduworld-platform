@@ -137,6 +137,15 @@ camera_zoom_out={
 locale/translations=PackedStringArray("res://locale/vi.po", "res://locale/en.po")
 locale/fallback="vi"
 
+; F067: outline fade distance of the quality preset (QualityPolicy `outline_distance`, PERFORMANCE_BUDGET §5), set by
+; ZoneArtQuality; 0 = outline at every distance.
+[shader_globals]
+
+outline_fade_distance={
+"type": "float",
+"value": 30.0
+}
+
 [rendering]
 
 renderer/rendering_method="mobile"

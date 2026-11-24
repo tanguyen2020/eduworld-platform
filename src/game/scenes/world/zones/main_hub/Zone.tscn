@@ -1,4 +1,7 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=37 format=3]
+
+; Main Hub "Quảng trường Tia Sáng" (F062 layout, F071 anchors, F067 art pass — ADR-0102): stylized low-poly meshes baked
+; by tools/art/bake_art.gd (first-party MIT, assets/LICENSES.md), materials from the generated toon presets (R32).
 
 [ext_resource type="Script" path="res://scripts/world/zone_root.gd" id="1_zone"]
 [ext_resource type="Environment" path="res://resources/art/generated/env_hub.tres" id="2_env"]
@@ -8,32 +11,55 @@
 [ext_resource type="PackedScene" path="res://scenes/world/AreaPortal.tscn" id="6_portal"]
 [ext_resource type="PackedScene" path="res://scenes/npc/NPC.tscn" id="7_npc"]
 [ext_resource type="PackedScene" path="res://scenes/world/WorldAnchor.tscn" id="8_anchor"]
+[ext_resource type="Material" path="res://resources/art/generated/mat_toon.tres" id="9_toon"]
+[ext_resource type="Material" path="res://resources/art/generated/mat_toon_no_outline.tres" id="10_toon_flat"]
+[ext_resource type="ArrayMesh" path="res://assets/models/env/env_hub_terrain_a.res" id="11_terrain"]
+[ext_resource type="ArrayMesh" path="res://assets/models/bld/bld_hub_set_a.res" id="12_buildings"]
+[ext_resource type="ArrayMesh" path="res://assets/models/prop/prop_hub_set_a.res" id="13_props"]
+[ext_resource type="ArrayMesh" path="res://assets/models/veg/veg_banyan_spark_a.res" id="14_banyan"]
+[ext_resource type="ArrayMesh" path="res://assets/models/prop/prop_notice_board_a.res" id="15_board"]
+[ext_resource type="Resource" path="res://assets/models/env/env_hub_scatter_tree_a.res" id="16_trees"]
+[ext_resource type="Resource" path="res://assets/models/env/env_hub_scatter_palm_a.res" id="17_palms"]
+[ext_resource type="Resource" path="res://assets/models/env/env_hub_scatter_bamboo_a.res" id="18_bamboo"]
+[ext_resource type="Resource" path="res://assets/models/env/env_hub_scatter_bush_a.res" id="19_bushes"]
+[ext_resource type="Resource" path="res://assets/models/env/env_hub_scatter_tuft_a.res" id="20_tufts"]
+[ext_resource type="Resource" path="res://assets/models/env/env_hub_scatter_flower_a.res" id="21_flowers"]
+[ext_resource type="Resource" path="res://assets/models/env/env_hub_scatter_rice_a.res" id="22_rice"]
+[ext_resource type="Script" path="res://scripts/world/scatter_instance.gd" id="23_scatter"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
 size = Vector3(60, 1, 60)
 
-[sub_resource type="BoxMesh" id="BoxMesh_ground"]
-size = Vector3(60, 1, 60)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_block"]
-size = Vector3(6, 4, 6)
+size = Vector3(6.8, 4, 6.8)
 
-[sub_resource type="BoxMesh" id="BoxMesh_block"]
-size = Vector3(6, 4, 6)
+[sub_resource type="BoxShape3D" id="BoxShape3D_hall"]
+size = Vector3(13.2, 4, 7.6)
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_fountain"]
 height = 1.0
 radius = 3.0
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_fountain"]
-top_radius = 3.0
-bottom_radius = 3.2
-height = 1.0
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_tree"]
+height = 1.2
+radius = 2.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_house_x"]
+size = Vector3(4.6, 3, 5.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_house_z"]
+size = Vector3(5.6, 3, 4.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_house_wide"]
+size = Vector3(6, 3, 4.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hedge_side"]
+size = Vector3(1, 2, 58)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hedge_end"]
+size = Vector3(57, 2, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_board"]
-size = Vector3(2.4, 2.4, 0.3)
-
-[sub_resource type="BoxMesh" id="BoxMesh_board"]
 size = Vector3(2.4, 2.4, 0.3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_board_area"]
@@ -65,9 +91,9 @@ directional_shadow_max_distance = 25.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_ground")
 
-[node name="Plaza" type="MeshInstance3D" parent="Terrain"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-mesh = SubResource("BoxMesh_ground")
+[node name="Ground" type="MeshInstance3D" parent="Terrain"]
+material_override = ExtResource("9_toon")
+mesh = ExtResource("11_terrain")
 
 [node name="Static" type="StaticBody3D" parent="."]
 
@@ -75,25 +101,17 @@ mesh = SubResource("BoxMesh_ground")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("CylinderShape3D_fountain")
 
-[node name="Fountain" type="MeshInstance3D" parent="Static"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-mesh = SubResource("CylinderMesh_fountain")
+[node name="SparkTreeCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -7.4)
+shape = SubResource("CylinderShape3D_tree")
 
 [node name="HallCollision" type="CollisionShape3D" parent="Static"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -20)
-shape = SubResource("BoxShape3D_block")
-
-[node name="Hall" type="MeshInstance3D" parent="Static"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -20)
-mesh = SubResource("BoxMesh_block")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -26.2)
+shape = SubResource("BoxShape3D_hall")
 
 [node name="LibraryCollision" type="CollisionShape3D" parent="Static"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2, -8)
 shape = SubResource("BoxShape3D_block")
-
-[node name="Library" type="MeshInstance3D" parent="Static"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2, -8)
-mesh = SubResource("BoxMesh_block")
 
 [node name="GateLeftCollision" type="CollisionShape3D" parent="Static"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 2.5, -6)
@@ -102,6 +120,50 @@ shape = SubResource("BoxShape3D_gate")
 [node name="GateRightCollision" type="CollisionShape3D" parent="Static"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 2.5, 2)
 shape = SubResource("BoxShape3D_gate")
+
+[node name="HouseWestCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.5, 1.5, 12.5)
+shape = SubResource("BoxShape3D_house_x")
+
+[node name="HouseEastCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.5, 1.5, 13)
+shape = SubResource("BoxShape3D_house_x")
+
+[node name="HouseSouthWestCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 1.5, 22)
+shape = SubResource("BoxShape3D_house_z")
+
+[node name="HouseSouthEastCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 1.5, 22)
+shape = SubResource("BoxShape3D_house_wide")
+
+[node name="HedgeWestCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 1, -1)
+shape = SubResource("BoxShape3D_hedge_side")
+
+[node name="HedgeEastCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 1, -1)
+shape = SubResource("BoxShape3D_hedge_side")
+
+[node name="HedgeSouthCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 28)
+shape = SubResource("BoxShape3D_hedge_end")
+
+[node name="HedgeNorthCollision" type="CollisionShape3D" parent="Static"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -30.1)
+shape = SubResource("BoxShape3D_hedge_end")
+
+[node name="Buildings" type="MeshInstance3D" parent="Static"]
+material_override = ExtResource("9_toon")
+mesh = ExtResource("12_buildings")
+
+[node name="Props" type="MeshInstance3D" parent="Static"]
+material_override = ExtResource("9_toon")
+mesh = ExtResource("13_props")
+
+[node name="SparkTree" type="MeshInstance3D" parent="Static"]
+material_override = ExtResource("9_toon")
+mesh = ExtResource("14_banyan")
 
 [node name="Navigation" type="NavigationRegion3D" parent="."]
 
@@ -144,11 +206,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -1.2)
 shape = SubResource("BoxShape3D_board")
 
 [node name="Mesh" type="MeshInstance3D" parent="Interactables/SchoolAssignmentsBoard/Board"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -1.2)
-mesh = SubResource("BoxMesh_board")
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -1.2)
+material_override = ExtResource("9_toon")
+mesh = ExtResource("15_board")
 
 [node name="Title" type="Label3D" parent="Interactables/SchoolAssignmentsBoard/Board"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, -1.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.55, -1.2)
 billboard = 1
 text = "ui.hub.board.school_assignments"
 pixel_size = 0.01
@@ -171,11 +234,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -1.2)
 shape = SubResource("BoxShape3D_board")
 
 [node name="Mesh" type="MeshInstance3D" parent="Interactables/ExamBoard/Board"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -1.2)
-mesh = SubResource("BoxMesh_board")
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -1.2)
+material_override = ExtResource("9_toon")
+mesh = ExtResource("15_board")
 
 [node name="Title" type="Label3D" parent="Interactables/ExamBoard/Board"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, -1.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.55, -1.2)
 billboard = 1
 text = "ui.hub.board.exam_sessions"
 pixel_size = 0.01
@@ -185,6 +249,44 @@ pixel_size = 0.01
 [node name="Players" type="Node3D" parent="."]
 
 [node name="Ambient" type="Node3D" parent="."]
+
+[node name="Trees" type="MultiMeshInstance3D" parent="Ambient"]
+material_override = ExtResource("9_toon")
+script = ExtResource("23_scatter")
+scatter = ExtResource("16_trees")
+
+[node name="Palms" type="MultiMeshInstance3D" parent="Ambient"]
+material_override = ExtResource("9_toon")
+script = ExtResource("23_scatter")
+scatter = ExtResource("17_palms")
+
+[node name="Bamboo" type="MultiMeshInstance3D" parent="Ambient"]
+material_override = ExtResource("9_toon")
+script = ExtResource("23_scatter")
+scatter = ExtResource("18_bamboo")
+
+[node name="Bushes" type="MultiMeshInstance3D" parent="Ambient" groups=["decor"]]
+material_override = ExtResource("9_toon")
+script = ExtResource("23_scatter")
+scatter = ExtResource("19_bushes")
+
+[node name="Tufts" type="MultiMeshInstance3D" parent="Ambient" groups=["decor"]]
+cast_shadow = 0
+material_override = ExtResource("10_toon_flat")
+script = ExtResource("23_scatter")
+scatter = ExtResource("20_tufts")
+
+[node name="Flowers" type="MultiMeshInstance3D" parent="Ambient" groups=["decor"]]
+cast_shadow = 0
+material_override = ExtResource("10_toon_flat")
+script = ExtResource("23_scatter")
+scatter = ExtResource("21_flowers")
+
+[node name="Rice" type="MultiMeshInstance3D" parent="Ambient" groups=["decor"]]
+cast_shadow = 0
+material_override = ExtResource("10_toon_flat")
+script = ExtResource("23_scatter")
+scatter = ExtResource("22_rice")
 
 ; BEGIN F071 generated anchors (tools/gen_greybox_zones.mjs)
 

@@ -110,9 +110,9 @@ Mọi con số (ngân sách theo cảnh, asset, ánh sáng, physics, dung lượ
 |---|---|
 | LOD | Godot automatic mesh LOD khi import + `visibility_range_end` cho props nhỏ; nhân vật 3 mức (full / giảm / impostor billboard > 30 m) |
 | Occlusion | `OccluderInstance3D` bake cho tòa nhà, tường; bật occlusion culling ở zone có nhiều khối |
-| Batching | Gộp props tĩnh cùng material; cây/cỏ/đá dùng `MultiMeshInstance3D`; texture atlas theo zone (một material toon + palette texture) |
+| Batching | Gộp props tĩnh cùng material; cây/cỏ/đá dùng `MultiMeshInstance3D`; một material toon cho cả zone, màu là slot của bảng màu token `art.palette.*` (mảng uniform của preset `mat_toon.tres`, không texture) |
 | Texture | Palette texture 256–512px cho low-poly; ETC2/ASTC trên Android, BPTC/S3TC trên PC; mipmaps bật |
-| Shader | Một shader toon chung (unshaded-ish + ramp), tránh shader tùy biến nặng; precompile qua màn hình warm-up |
+| Shader | Một shader toon chung `src/game/resources/art/shaders/toon.gdshader` (dải sáng mềm + rim, không specular) và viền inverted hull `toon_outline.gdshader` làm `next_pass`; preset `resources/art/generated/mat_toon.tres` (có viền) / `mat_toon_no_outline.tres` (cỏ, hoa, lúa) sinh từ token; zone không tự tạo material; precompile qua màn hình warm-up |
 | Hiệu ứng | Particle GPU số lượng thấp; tắt SSAO/SSR/volumetric fog trên Mobile renderer |
 | Giới hạn theo thiết bị | Preset Thấp/Trung bình/Cao, tự phát hiện và độ phân giải động theo [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §5–§6; zone đọc thiết lập từ `QualityManager` (mật độ cỏ, visibility range, outline), không tự đặt giá trị |
 | Streaming vùng | Mỗi vùng là một gói PCK + scene gốc; vào vùng mới thì tải nền gói, giải phóng scene/texture vùng cũ sau khi chuyển xong; giữ tối đa 2 vùng trong RAM |
@@ -124,13 +124,15 @@ Mọi zone phải qua **benchmark scene** tự động trong CI và trên thiế
 
 - **Baked lighting**: `LightmapGI` cho zone tĩnh (độ phân giải texel vừa phải), kết hợp 1 directional light thời gian thực cho bóng nhân vật.
 - Mobile renderer: bóng nhân vật dùng blob shadow (decal) ở preset `low`.
+- Ambient là màu phẳng ấm (`light.ambient_color`, `light.ambient_energy`), tonemap linear, sương `light.fog_density` — cùng kết quả trên Mobile và Compatibility. Trên **Compatibility (Web)** mặt trời không bật bóng thời gian thực (`QualityPolicy.shadows_supported`): renderer này vẽ ánh sáng có bóng thêm một pass cộng mà shader toon `light()` không phân biệt được (F067).
 - Không dùng chu kỳ ngày/đêm động (chi phí hiệu năng trên máy tầm trung, ADR-0057) [Confirmed]; mỗi zone có `Environment` riêng, sinh từ token `env.<zone>.*` trong `design/game-tokens/art3d.json` vào `resources/art/generated/` (ADR-0047); không đặt màu trời/sương/ánh sáng trực tiếp trong scene. Sự kiện mùa (World Event) đổi environment preset qua manifest.
 
 ## 8. Asset pipeline
 
 ```mermaid
 flowchart LR
-  A[Blender .blend] -->|export glTF 2.0 .glb| B["assets/models/<category>/"]
+  A[Blender .blend] -->|export glTF 2.0 .glb| B["src/game/assets/models/<category>/"]
+  P["tools/art/*_art.gd<br/>low-poly tự làm, F067"] -->|make godot-art-bake| B
   B --> C["Godot import preset\n(LOD, collision, material remap)"]
   C --> D[Scene zone / prefab .tscn]
   D --> E[Benchmark + lint asset]
@@ -151,7 +153,8 @@ flowchart LR
 | Ngân sách tam giác/texture/xương | Theo [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §8; CI chặn khi vượt |
 | Texture | Lũy thừa của 2; tên `<asset>_<map>.png` (`_albedo`, `_orm`, `_normal` — hạn chế normal map) |
 | Audio | `.ogg` cho nhạc/ambience, `.wav` ngắn cho SFX; loudness chuẩn hóa −16 LUFS |
-| License | Mỗi asset ngoài có bản ghi license trong `assets/LICENSES.md`; chỉ dùng license thương mại hợp lệ (OQ-16) |
+| License | Mỗi file asset đồ họa có một dòng (glob đường dẫn, URL nguồn, tác giả, license, ngày) trong `src/game/assets/LICENSES.md` (= `res://assets/LICENSES.md`); chỉ MIT, CC0-1.0, public domain (font: OFL-1.1); asset tự làm phát hành MIT ([ADR-0102](../adr/ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md)); `src/game/tools/lint_art.gd` chặn file thiếu dòng hoặc license khác |
+| Asset tự làm bằng code | Công thức low-poly trong `src/game/tools/art/` (`*_art.gd`, builder `lowpoly_mesh.gd`) bake bằng `make godot-art-bake` ra `src/game/assets/models/<category>/<category>_<name>_<variant>.res`; mỗi mặt chỉ lưu **slot** của bảng màu token `art.palette.*` (UV.x = slot + 0,5; UV.y > 1 = `albedo` theo avatar), pháp tuyến mượt cho viền trong COLOR; `bake_art.gd --check` (CI) chặn mesh lệch công thức. Vật thể lặp lưu `ScatterSet` (mesh + transform), vẽ bằng `ScatterInstance` (MultiMesh) |
 
 ### 8.2. Asset bundles (PCK)
 

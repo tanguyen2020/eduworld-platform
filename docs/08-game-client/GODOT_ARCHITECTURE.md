@@ -118,19 +118,21 @@ src/game/
 │   └── notifications/   notification_service.gd
 ├── resources/
 │   ├── ui/theme/     eduworld_theme.tres + biến thể density g1_3/g4_5/g6_7/g8_9 — SINH TỪ design/game-tokens, không sửa tay
-│   ├── art/generated/ preset ShaderMaterial toon/outline, Environment theo zone, Gradient VFX, màu độ hiếm — SINH TỪ design/game-tokens/art3d.json
+│   ├── art/generated/ preset toon mat_toon*.tres (bảng màu art.palette), Environment theo zone, Gradient VFX, Art3dTokens — SINH TỪ design/game-tokens/art3d.json
+│   ├── art/shaders/  toon.gdshader, toon_outline.gdshader (viết tay, MIT — ADR-0102)
 │   ├── characters/   body_types/*.tres, CharacterCatalog.tres
 │   ├── items/        ItemVisual.tres theo item_id (chỉ mô tả hiển thị, không giá trị nghiệp vụ)
 │   ├── animations/   AnimationLibrary *.res
 │   ├── materials/    toon/*.tres
 │   ├── environments/ zone_env/*.tres (WorldEnvironment)
 │   └── audio/        bus_layout.tres
-├── assets/
-│   ├── models/ textures/ audio/ fonts/ icons/
+├── assets/           LICENSES.md (mỗi file asset một dòng, ADR-0102)
+│   ├── models/<category>/ mesh .res tự làm bake từ tools/art (F067) hoặc .glb; textures/ audio/ icons/
 ├── config/env/       local.json, dev.json, staging.json, production.json, mock.json (§4; không secret, không OIDC)
 ├── locale/           messages.pot (sinh), vi.po, en.po (gettext), xx_PS.po (pseudo-locale sinh, chỉ build debug)
 ├── tools/            lint_theme_overrides.gd, lint_layers.gd, lint_signals.gd, check_typed.gd, extract_pot.gd, pseudo_locale.gd,
-│                     screenshot_gallery.gd, gen_fixtures.mjs, scan_artifact.sh, check_no_admin_ui.sh (`make godot-lint`, `make godot-test`)
+│                     screenshot_gallery.gd, gen_fixtures.mjs, scan_artifact.sh, check_no_admin_ui.sh, lint_art.gd, capture_hub.gd,
+│                     art/ (công thức low-poly + bake_art.gd, F067) (`make godot-lint`, `make godot-test`, `make godot-art-bake`)
 └── tests/            unit/, scene/, contract/, integration/, fixtures/ (JSON response mẫu sinh bởi tools/gen_fixtures.mjs)
 ```
 

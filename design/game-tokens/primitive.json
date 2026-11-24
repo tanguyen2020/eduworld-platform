@@ -56,6 +56,52 @@
       "mint": { "$value": "#5CE1A1", "$description": "VFX correct mint." },
       "magenta": { "$value": "#FF5CC8", "$description": "VFX level-up magenta." }
     },
+    "art": {
+      "$description": "Stylized low-poly material palette (F067, ADR-0102, WORLD_DESIGN §11): warm, colourful but not garish; every baked world/character mesh indexes these colours through the generated palette texture.",
+      "grass": { "$value": "#8FCB62", "$description": "Lawn, fresh grass." },
+      "grass-dark": { "$value": "#62A84B", "$description": "Grass shade, hedges." },
+      "path": { "$value": "#EAD7AE", "$description": "Sand / dirt path." },
+      "paving": { "$value": "#EFD3AE", "$description": "Plaza brick paving (terracotta light)." },
+      "paving-dark": { "$value": "#DDAF84", "$description": "Paving pattern ring." },
+      "stone": { "$value": "#C2BCB0", "$description": "Stone rim, steps." },
+      "stone-dark": { "$value": "#948C80", "$description": "Rocks, stone shade." },
+      "wall": { "$value": "#F7EACF", "$description": "Plaster wall (cream)." },
+      "wall-yellow": { "$value": "#F4CB62", "$description": "Yellow ochre wall." },
+      "roof": { "$value": "#D0603F", "$description": "Terracotta roof tile." },
+      "roof-dark": { "$value": "#A5432F", "$description": "Roof ridge / tile shade." },
+      "wood": { "$value": "#B07444", "$description": "Wood columns, boards." },
+      "wood-dark": { "$value": "#77492B", "$description": "Dark wood, beams." },
+      "leaf": { "$value": "#55AD5C", "$description": "Tree canopy." },
+      "leaf-light": { "$value": "#86CB6C", "$description": "Canopy highlight." },
+      "leaf-dark": { "$value": "#357F4C", "$description": "Banyan / dense canopy." },
+      "trunk": { "$value": "#82603F", "$description": "Tree trunk, aerial roots." },
+      "water": { "$value": "#67C6E2", "$description": "Pond / lake water." },
+      "water-deep": { "$value": "#3F9FCB", "$description": "Deep water edge." },
+      "rice-young": { "$value": "#B0DA6E", "$description": "Young rice terrace." },
+      "rice-ripe": { "$value": "#EBD263", "$description": "Ripe rice terrace." },
+      "soil": { "$value": "#A57D55", "$description": "Terrace wall, soil." },
+      "lantern": { "$value": "#E9503F", "$description": "Red lantern." },
+      "lantern-glow": { "$value": "#FFD670", "$description": "Lantern light, spark glow." },
+      "cloth-blue": { "$value": "#5084D6", "$description": "Cloth, NPC shirt (blue)." },
+      "flower-pink": { "$value": "#F59BBB", "$description": "Lotus / flower pink." },
+      "flower-white": { "$value": "#FFF7E8", "$description": "Flower white, paper." },
+      "bamboo": { "$value": "#A2CC52", "$description": "Bamboo stems." },
+      "hill": { "$value": "#79B57E", "$description": "Distant hills." },
+      "hill-far": { "$value": "#A9CFB4", "$description": "Far hills (atmospheric)." },
+      "basket": { "$value": "#B98F55", "$description": "Woven basket boat, nón lá." },
+      "spark": { "$value": "#FFF2A6", "$description": "Spark Tree fruit / wind swirl." },
+      "wind": { "$value": "#CFEFFF", "$description": "Wind gate swirl." },
+      "eye": { "$value": "#26304A", "$description": "Character eyes, brows." },
+      "eye-light": { "$value": "#FFFFFF", "$description": "Eye highlight." },
+      "mouth": { "$value": "#B24A5A", "$description": "Mouth." },
+      "cheek": { "$value": "#F7A9A1", "$description": "Cheek blush." },
+      "shoe": { "$value": "#5F4838", "$description": "Shoes." },
+      "pants": { "$value": "#4F6AA8", "$description": "Default trousers / shorts." },
+      "shirt-white": { "$value": "#FAFAF5", "$description": "White shirt, collar." },
+      "cloth-red": { "$value": "#E06A5A", "$description": "Scarf, cloth accent (red)." },
+      "cloth-green": { "$value": "#5DB37E", "$description": "Cloth accent (green)." },
+      "cloth-violet": { "$value": "#9A78D6", "$description": "Cloth accent (violet)." }
+    },
     "avatar": {
       "$description": "Avatar skin tones and hair colours (CHARACTER_SYSTEM §5.0, F070 T041): art palette of the catalog codes skin_tones/hair_colors, not UI.",
       "tone-01": { "$value": "#FFDEC4", "$description": "Skin tone 1 (lightest)." },
@@ -139,6 +185,12 @@
     },
     "outline": {
       "width": { "$value": 0.02, "$description": "Outline width in world units (inverted hull)." }
+    },
+    "light": {
+      "sun": { "$value": 0.95, "$description": "Sun energy (warm key light, F067)." },
+      "ambient": { "$value": 0.5, "$description": "Sky ambient energy: keeps toon shadow bands readable (F067)." },
+      "fog": { "$value": 0.0035, "$description": "Exponential fog density per metre: soft depth without washing the hub out (F067)." },
+      "exposure": { "$value": 1.0, "$description": "Tonemap exposure (filmic, F067)." }
     }
   }
 }
