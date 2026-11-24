@@ -15,11 +15,12 @@
 - Q: Preset ảnh hưởng gì tới đồ họa? → A: [Proposed — PERFORMANCE_BUDGET §5, CONFIG_DEFAULTS `quality_presets`] Viền toon mờ dần và tắt từ 12 m (Thấp) / 30 m (Trung bình) / không tắt (Cao); mật độ cỏ, hoa, lúa, bụi 25 % / 60 % / 100 %, trong tầm nhìn 40 / 70 / 120 m của preset. Con số 12 m của "Thấp" là đề xuất (bảng chỉ ghi "tắt ở vật thể xa").
 - Q: Hall (đình) của F062 đè lên cổng gió đi Đại dương (z = -20) — giữ vị trí cũ? → A: [Confirmed] Không: đình lùi ra sau hàng cổng gió (tâm z = -26,2, mặt trước z = -22,4) để trigger cổng (bán kính 1,6 m) tới được; mọi spawn point, interactable, portal và id giữ nguyên.
 
-**Câu hỏi mở:**
-- F067-1: CC-BY-4.0 (chỉ yêu cầu ghi công) có được thêm vào danh sách được phép không? Hiện **không** (ADR-0102 mục 2).
-- F067-2: Âm thanh có theo cùng danh sách license không? Hiện [Proposed] có (ADR-0102 mục 5).
-- F067-3: Bóng nhân vật trên Web (Compatibility, không bóng thời gian thực): blob shadow dạng mesh phẳng hay chấp nhận không bóng? Hiện không bóng.
-- F067-4: Cây Tia Sáng lớn lên theo mastery của khối (WORLD_DESIGN §4.1) cần 3–4 cấp mesh và dữ liệu server — thuộc feature nào? Lượt này một cấp (cây đa trưởng thành).
+**Câu hỏi mở — chốt 2026-11-24 (owner "chốt hết", orchestrator quyết theo hướng đúng chữ owner và an toàn) [Confirmed]:**
+- F067-1: CC-BY-4.0 **không** được thêm (owner chọn "hướng MIT"; giữ danh sách ADR-0102 mục 2).
+- F067-2: Âm thanh **theo cùng danh sách license** của ADR-0102 (MIT, CC0, public domain; âm thanh tự làm phát hành MIT).
+- F067-3: Nhân vật trên Web (Compatibility) dùng **blob shadow** (mesh phẳng mờ dưới chân, màu từ token, tắt khi renderer có bóng thời gian thực) — việc của art pass kế tiếp, không để nhân vật "lơ lửng".
+- F067-4: Cây Tia Sáng lớn theo mastery là việc của **art pass 2** (dùng dữ liệu mastery có sẵn qua API game, không thêm logic vào scene — R1), lên kế hoạch cùng art pass các vùng khác.
+- Giá trị màu, độ sáng, sương, tonemap và khoảng cách tắt viền 12 m ở preset Thấp: [Confirmed] làm mặc định Release 1; Game Director chỉnh qua token (`design/game-tokens/`), không sửa scene.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -141,6 +142,6 @@ Nhân vật người chơi và NPC có tỉ lệ chibi (đầu khoảng 1/3 thâ
 
 ## Assumptions
 
-- Màu, độ sáng, sương, tonemap là [Proposed] tới khi Game Director duyệt ảnh (DESIGN_SYSTEM §8).
-- Khoảng cách tắt viền 12 m ở preset Thấp là [Proposed].
-- Bóng nắng thời gian thực tắt trên Compatibility cho tới khi có cách khác (Câu hỏi mở F067-3).
+- Màu, độ sáng, sương, tonemap là mặc định [Confirmed] (owner "chốt hết" 2026-11-24); Game Director chỉnh qua token (DESIGN_SYSTEM §8), không sửa scene.
+- Khoảng cách tắt viền 12 m ở preset Thấp là [Confirmed] (2026-11-24).
+- Bóng nắng thời gian thực tắt trên Compatibility; nhân vật dùng blob shadow ở art pass kế tiếp (F067-3 đã chốt).
