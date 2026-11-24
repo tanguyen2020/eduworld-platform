@@ -26,7 +26,7 @@ EduWorld là thế giới phiêu lưu 3D "Quần đảo Tri Thức" (Godot 4.x) 
 
 | Người dùng | Dùng gì | Làm gì |
 |---|---|---|
-| Học sinh lớp 1–9 | Game client (Windows, Android, iOS, Web) | Chơi, học, làm bài được giao, chơi cùng bạn, thi đấu, chat có kiểm duyệt |
+| Học sinh lớp 1–9 | Game client (Web, Android, iOS) | Chơi, học, làm bài được giao, chơi cùng bạn, thi đấu, chat có kiểm duyệt |
 | Nhà trường: School Admin, Academic Manager, Tenant Admin | Admin Portal — workspace School & LMS | Quản lý lớp/học sinh, giao bài và đề, xem School Learning Dashboard, nhận thông báo an toàn |
 | Đội nội dung (trường hoặc platform) | Admin Portal — Learning Content Studio | Soạn câu hỏi, bài học, activity; duyệt; phát hành theo version |
 | Đội game và live-ops | Admin Portal — Game Operations Console, Game Live Operations | Cấu hình quest, boss, vật phẩm, thi đấu, sự kiện; theo dõi vận hành |
@@ -49,7 +49,7 @@ Không có vai trò giáo viên trong hệ thống ([ADR-0072](docs/adr/ADR-0072
 
 | Thành phần | Công nghệ | Quyết định |
 |---|---|---|
-| Game client | Godot 4.x (3D), GDScript static typing; Windows, Android, iOS, Web | ADR-0013, ADR-0014 |
+| Game client | Godot 4.x (3D), GDScript static typing; Web, Android, iOS (không có bản Windows) | ADR-0013, ADR-0014, ADR-0101 |
 | Backend | Go modular monolith: module `identity`, `learning`, `game`, `competition`, `chat`, `realtime`; 3 binary `core-api`, `realtime`, `worker` | ADR-0074 |
 | Kiến trúc trong module | Clean Architecture + CQRS tách read/write context, không mediator | ADR-0038, ADR-0087 |
 | ORM / migration | ent (code-first, interceptor lọc tenant và soft-delete) + Atlas versioned migrations | ADR-0039, ADR-0089 |
@@ -97,7 +97,7 @@ Admin Portal dùng React + TypeScript + Vite, Ant Design 5 + Ant Design Pro, Tan
 
 ```mermaid
 flowchart LR
-  HS(["Học sinh"]) --> GC["Godot client<br/>Windows · Android · iOS · Web"]
+  HS(["Học sinh"]) --> GC["Godot client<br/>Web · Android · iOS"]
   NT(["Nhà trường"]) --> AP["Admin Portal<br/>5 workspace"]
   OP(["Đội nội dung · game · Safety · System Admin"]) --> AP
   GC --> EW["EduWorld backend"]
@@ -373,7 +373,7 @@ sequenceDiagram
 | Lọc dữ liệu | ent interceptor thêm `tenant_id` và `deleted_at IS NULL` cho mọi truy vấn; PostgreSQL RLS lọc tenant ở tầng DB; truy cập liên tenant chỉ qua `tenancy.Bypass` với danh sách lý do đóng, có audit và metric |
 | Phân quyền | Permission trong code, Role và UserRole trong DB; mỗi use case gọi `authz.Require` tường minh. Role của trường không bao giờ có quyền `game.*`, `platform.*` |
 | Workspace platform | Chỉ qua gateway nội bộ, bắt buộc role platform (không MFA — ADR-0094) |
-| Game | Chỉ học sinh vào game; mỗi học sinh một thiết bị đang chơi; Windows mặc định coi là máy dùng chung |
+| Game | Chỉ học sinh vào game; mỗi học sinh một thiết bị đang chơi; Web (gồm PC phòng máy) không lưu phiên, mở lại phải đăng nhập |
 | Xóa dữ liệu | Chỉ soft-delete; nghĩa vụ xóa = ẩn danh hóa |
 | Chat | Mọi tin qua pipeline kiểm duyệt; bước PII/grooming luôn chạy; tắt bước khác phải có hạn và hai người duyệt |
 | Không tin client | Điểm, thời gian, phần thưởng do server tính; đáp án không xuống client |
@@ -459,7 +459,7 @@ Cài phụ thuộc một lần: `npm ci --prefix scripts`.
 
 ## 10. Lộ trình
 
-Phát hành theo ba giai đoạn **Pilot → Mở rộng → Hoàn thiện (Release 1.0)**, đủ 4 nền tảng từ pilot ([ADR-0073](docs/adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md)). CMS/LMS làm trước gameplay.
+Phát hành theo ba giai đoạn **Pilot → Mở rộng → Hoàn thiện (Release 1.0)**, đủ 3 nền tảng Web, Android, iOS từ pilot ([ADR-0073](docs/adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md), [ADR-0101](docs/adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md)). CMS/LMS làm trước gameplay.
 
 | Mốc | Giai đoạn | Kết quả nghiệm thu |
 |---|---|---|
@@ -468,11 +468,11 @@ Phát hành theo ba giai đoạn **Pilot → Mở rộng → Hoàn thiện (Rele
 | M-C1 Đăng nhập | Pilot | Nhân sự đăng nhập portal, học sinh đăng nhập game và vào Main Hub 3D |
 | M-C2 Content Loop | Pilot | Soạn → duyệt → publish → học sinh làm trong game → server chấm |
 | M-C3 School Loop | Pilot | Nhà trường giao bài/đề, xem kết quả và LO yếu; học sinh nhận gợi ý ôn tập |
-| **M-P1 Pilot Start** | Pilot | Lát cắt gameplay pilot, mặc định an toàn, 4 nền tảng, production quy mô pilot |
+| **M-P1 Pilot Start** | Pilot | Lát cắt gameplay pilot, mặc định an toàn, 3 nền tảng (Web, Android, iOS), production quy mô pilot |
 | **M-P2 Pilot Exit** | Pilot | Báo cáo hiệu quả học tập ≥ 8 tuần đạt cổng ([ADR-0080](docs/adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md)) |
 | M2 – M4b | Mở rộng | Đủ gameplay, Game Ops, party co-op, thi đấu 1v1/Team Battle, ranking |
 | M5 Safe Social | Hoàn thiện | Đủ 8 loại channel + DM, club, season/event, kiểm duyệt đầy đủ |
-| M6 Release 1.0 | Hoàn thiện | Phạm vi đầy đủ trên 4 nền tảng ở 10.000 CCU |
+| M6 Release 1.0 | Hoàn thiện | Phạm vi đầy đủ trên 3 nền tảng (Web, Android, iOS) ở 10.000 CCU |
 
 Pilot dự kiến sẵn sàng khoảng tuần 30–36 tính từ 2026-11-16 [Proposed]. Chi tiết: [ROADMAP](docs/12-project/ROADMAP.md) · [CODE_PLAN](docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md).
 

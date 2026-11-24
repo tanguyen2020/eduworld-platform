@@ -122,12 +122,11 @@ func validate(data: Dictionary) -> Error:
 
 
 ## Platform key used for `eduworld/device/shared_device_default/<key>` (CONFIG_DEFAULTS `shared_device_default`).
+## Operating systems that are not released (Windows, macOS, Linux: editor or debug runs only, ADR-0101) are `other`.
 static func platform_key(os_name: String, is_web: bool) -> String:
 	if is_web:
 		return "web"
 	match os_name:
-		"Windows":
-			return "windows"
 		"Android":
 			return "android"
 		"iOS":
@@ -144,7 +143,7 @@ static func shared_device_default(platform: String) -> bool:
 
 
 ## Reads `device.cfg` ([device] shared_device, lan_cache_url). A missing file or key falls back to the platform
-## default (Windows: shared machine). Web is always treated as shared (MemoryOnly, ADR-0086).
+## default (`other`: shared). Web is always treated as shared (MemoryOnly, ADR-0086).
 func load_device_config(path: String, platform: String) -> void:
 	shared_device = shared_device_default(platform)
 	lan_cache_url = ""

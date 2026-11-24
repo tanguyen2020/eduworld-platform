@@ -58,7 +58,7 @@ Học sinh mở bài video từ bài giao/quest: video Theora phát theo chất 
 
 **Why this priority**: Giá trị trực tiếp cho học sinh; exit M-C3 có định dạng video.
 
-**Independent Test**: `hs.an.3a` mở video có câu chèn 01:30 trong Godot Windows và Android: dừng đúng mốc, chưa trả lời không phát tiếp; bật/tắt phụ đề vi/en; thoát ở 03:12, mở lại → "Xem tiếp từ 03:12?".
+**Independent Test**: `hs.an.3a` mở video có câu chèn 01:30 trong Godot Android và Web (ADR-0101): dừng đúng mốc, chưa trả lời không phát tiếp; bật/tắt phụ đề vi/en; thoát ở 03:12, mở lại → "Xem tiếp từ 03:12?".
 
 **Acceptance Criteria (EARS)**:
 
@@ -142,7 +142,7 @@ Tại điểm rẽ nhánh, video dừng, học sinh chọn hướng; server ghi 
 ### Measurable Outcomes
 
 - **SC-001**: 0 attempt video được tính hoàn thành khi phần đã xem thật < ngưỡng hoàn thành (kiểm bằng heartbeat giả mạo).
-- **SC-002**: 100% câu chèn bắt buộc dừng video đúng mốc (± 1 khung hình phát) trên Windows và Android.
+- **SC-002**: 100% câu chèn bắt buộc dừng video đúng mốc (± 1 khung hình phát) trên Android và Web (ADR-0101).
 - **SC-003**: Học sinh thoát giữa chừng tiếp tục đúng vị trí (± 10 s) khi mở lại trong resume window.
 - **SC-004**: Phát 720p ổn định ≥ 30 FPS trên thiết bị tầm trung tham chiếu.
 

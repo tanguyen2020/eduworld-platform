@@ -14,7 +14,7 @@ Bốn service `RefCounted` (tạo bởi `ServiceLocator` trong `AppState`): `Mat
 | Primary Dependencies | GdUnit4; `ApiClient`, `Clock` (F061); `RealtimeClient` (F092); `QuestionRendererRegistry` (F063); `QualityManager`, `SceneRouter`, `EventBus`, `AppState` (F060/F062); `MatchChatStrip` (F119) |
 | Storage | Không có dữ liệu bền; state trong RAM |
 | Testing | GdUnit4 unit + scene runner; contract test parse fixture sinh từ example OpenAPI/AsyncAPI; integration hai client headless với compose |
-| Target Platform | Windows, Android (Web/iOS theo ADR-0013) |
+| Target Platform | Android (Web/iOS theo ADR-0013; không Windows — ADR-0101) |
 | Project Type | game client |
 | Performance Goals | [PERFORMANCE_BUDGET](../../docs/08-game-client/PERFORMANCE_BUDGET.md); nền đấu trường theo [STUDENT_GAME_UX_SOCIAL §8](../../docs/05-ux/STUDENT_GAME_UX_SOCIAL.md) |
 | Constraints | AGENTS R1, R5, R6, R10, R14, R15, R16, R19, R25, R32 · ADR-0016, ADR-0020, ADR-0047, ADR-0056 |

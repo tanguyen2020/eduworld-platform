@@ -1,6 +1,6 @@
 # Roadmap & Milestones
 
-> Trạng thái: Draft · Phiên bản: 0.7 · Owner: Product Manager + QA Engineer · Cập nhật: 2026-11-17 (ADR-0074: backend modular monolith 3 binary, bỏ phần việc và giả định nhân sự riêng của 6 microservice; viết lại §1–§3 theo ADR-0073 phát hành theo pilot ưu tiên giáo dục và ADR-0080 cổng hiệu quả học tập; 4 nền tảng theo ADR-0013; mặc định an toàn ADR-0078; object storage ADR-0075; CI GitHub Actions)
+> Trạng thái: Draft · Phiên bản: 0.8 · Owner: Product Manager + QA Engineer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (ADR-0074: backend modular monolith 3 binary, bỏ phần việc và giả định nhân sự riêng của 6 microservice; viết lại §1–§3 theo ADR-0073 phát hành theo pilot ưu tiên giáo dục và ADR-0080 cổng hiệu quả học tập; nền tảng theo ADR-0013/ADR-0101; mặc định an toàn ADR-0078; object storage ADR-0075; CI GitHub Actions)
 > Liên quan: [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md) · [ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) · [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN](CODE_PLAN_CMS_LMS_FIRST.md) · [OPEN_QUESTIONS](OPEN_QUESTIONS.md) · [RISKS](RISKS.md) · [TEST_STRATEGY](TEST_STRATEGY.md) · [adr/README](../adr/README.md) · [GAME_DESIGN](../01-game-design/GAME_DESIGN.md) · [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md)
 
 **Mục đích.** Nguồn duy nhất về lộ trình phát triển EduWorld: giai đoạn phát hành, phase, milestone, exit criteria, demo script và báo cáo milestone (hợp nhất ROADMAP + MILESTONES, 2026-11-15).
@@ -10,9 +10,9 @@
 
 - **Phát hành theo pilot ưu tiên giáo dục** [Confirmed — Technical Architect 2026-11-17, [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md)]: thay quyết định "Release 1.0 đủ mọi thứ" trước đây bằng ba giai đoạn **Pilot → Mở rộng → Hoàn thiện** (§2). Không bỏ yêu cầu nào của Master Prompt + Party Addendum, chỉ đổi thứ tự và điểm phát hành; **Release 1.0** = phạm vi đầy đủ, đạt ở cuối giai đoạn Hoàn thiện (M6). Pilot là bản phát hành thật tại trường, có phạm vi rút gọn và exit criteria riêng.
 - **Cổng hiệu quả học tập** [Confirmed — Technical Architect 2026-11-17, [ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md)]: pilot chỉ đạt (M-P2) khi có báo cáo nghiên cứu hiệu quả theo [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) (bài kiểm tra độc lập trước/sau, lớp so sánh, tối thiểu 8 tuần). Chưa qua cổng thì không phát hành chức năng Mở rộng cho trường (vẫn được phát triển song song). Hạ tầng nghiên cứu là feature F035 (viết spec riêng, [CODE_PLAN](CODE_PLAN_CMS_LMS_FIRST.md)).
-- **Bốn nền tảng, làm đầy đủ từ pilot** [Confirmed — Technical Architect 2026-11-17, [ADR-0013](../adr/ADR-0013-nen-tang-client-release-1-0-gom-windows-android-ios-web.md); ADR-0079 Rejected]: Windows, Android, iOS, Web. Windows + Android từ Phase 1; build Web trong CI từ M-C2; pipeline ký iOS + TestFlight trước M-P1; pilot phát hành cả 4.
+- **Ba nền tảng, làm đầy đủ từ pilot** [Confirmed — owner 2026-11-24, [ADR-0013](../adr/ADR-0013-nen-tang-client-release-1-0-gom-windows-android-ios-web.md), [ADR-0101](../adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md); ADR-0079 Rejected]: Web, Android, iOS; không có bản Windows, PC phòng máy chơi bản Web. Android từ Phase 1; build Web trong CI từ M-C2; pipeline ký iOS + TestFlight trước M-P1; pilot phát hành cả 3.
 - **Học sinh tự học, nhà trường quản trị** [Confirmed — ADR-0072]: không có vai trò giáo viên; nhà trường (`school_admin`, `academic_manager`) giao bài và xem kết quả; chỉ hoạt động server tự chấm; kiểm duyệt chat do Platform Safety Team (`safety_moderator`).
-- **Mặc định an toàn cho trẻ nhỏ từ pilot** [Confirmed — Technical Architect 2026-11-17, ADR-0078]: bước PII/grooming luôn chạy, giờ giới nghiêm cấp platform cho game và chat, tenant `common` tắt kết bạn/DM/World chat, preset "chỉ quick message + emote" ([CHILD_SAFETY §3.5–§4.1](../10-security/CHILD_SAFETY.md#35-preset-chỉ-quick-message--emote-adr-0078)); trên Windows game mặc định coi là máy dùng chung, mọi nền tảng có màn "Tiếp tục là <nickname>?" khi tự vào lại (ADR-0086).
+- **Mặc định an toàn cho trẻ nhỏ từ pilot** [Confirmed — Technical Architect 2026-11-17, ADR-0078]: bước PII/grooming luôn chạy, giờ giới nghiêm cấp platform cho game và chat, tenant `common` tắt kết bạn/DM/World chat, preset "chỉ quick message + emote" ([CHILD_SAFETY §3.5–§4.1](../10-security/CHILD_SAFETY.md#35-preset-chỉ-quick-message--emote-adr-0078)); bản Web (gồm PC phòng máy) không lưu phiên, mọi nền tảng có màn "Tiếp tục là <nickname>?" khi tự vào lại (ADR-0086).
 - Không triển khai tất cả chức năng cùng lúc; mỗi mốc có deliverable chạy được và tiêu chí nghiệm thu (§3) [Confirmed — Master Prompt §20]. Không đánh dấu hoàn thành nếu chỉ có giao diện giả lập.
 - **Cổng hiệu năng máy tầm trung** [Confirmed — ADR-0057]: từ M1, mỗi mốc có client phải đạt ngân sách của [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) cho các cảnh có trong mốc, đo trên thiết bị lab hạng Tầm trung; benchmark CI (TC-PERF-018) chặn merge khi vượt.
 - Learning Engine là lõi: mọi gameplay phải dùng Learning Engine thật, không hardcode câu hỏi. CMS/LMS làm trước theo [CODE_PLAN](CODE_PLAN_CMS_LMS_FIRST.md).
@@ -34,7 +34,7 @@
 
 | Giai đoạn | Mục tiêu (tuần từ 2026-11-16) | Phạm vi chính | Cổng ra |
 |---|---|---|---|
-| **Pilot ưu tiên giáo dục** | Sẵn sàng khoảng tuần 30–36 (M-P1); vận hành theo năm học [Confirmed] | Learning Engine 6–8 loại câu hỏi; LMS nhà trường (giao bài, School Learning Dashboard, heatmap LO); Toán + Tiếng Việt lớp 1–5; quest `main`/`learning`/`daily`/`weekly` + boss solo; 4–5 mini-game trong đó ≥ 2 cơ chế "kỹ năng là cách chơi" ([LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md)); XP, level, shop cosmetic; một kiểu co-op phụ thuộc lẫn nhau; chat chỉ quick message + emote; 4 nền tảng; mặc định an toàn ADR-0078; hạ tầng nghiên cứu hiệu quả (F035) | M-P2: báo cáo hiệu quả đạt ngưỡng ([ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md)) |
+| **Pilot ưu tiên giáo dục** | Sẵn sàng khoảng tuần 30–36 (M-P1); vận hành theo năm học [Confirmed] | Learning Engine 6–8 loại câu hỏi; LMS nhà trường (giao bài, School Learning Dashboard, heatmap LO); Toán + Tiếng Việt lớp 1–5; quest `main`/`learning`/`daily`/`weekly` + boss solo; 4–5 mini-game trong đó ≥ 2 cơ chế "kỹ năng là cách chơi" ([LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md)); XP, level, shop cosmetic; một kiểu co-op phụ thuộc lẫn nhau; chat chỉ quick message + emote; 3 nền tảng Web, Android, iOS (ADR-0101); mặc định an toàn ADR-0078; hạ tầng nghiên cứu hiệu quả (F035) | M-P2: báo cáo hiệu quả đạt ngưỡng ([ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md)) |
 | **Mở rộng** | Phát triển song song từ sau M-P1; phát hành cho trường sau M-P2 | Knowledge Battle 1v1 + bot, Team Battle, Glicko-2, leaderboard cấp trường; chat `party`/`match`/`team` có text tự do với kiểm duyệt đầy đủ; party đầy đủ (Addendum); thêm môn/khối; đủ 11 loại câu hỏi, 11 mini-game, 12 loại quest, 8 vùng; challenge engine, Game Operations Console | Exit criteria M2, M3, M4a, M4b |
 | **Hoàn thiện** = Release 1.0 | Sau Mở rộng | Leaderboard Global và đủ 13 bảng, các định dạng giải còn lại, đủ 8 chế độ matchmaking/thi đấu, đủ 8 channel + DM, bạn bè đầy đủ, club, season/event, moderation nâng cao, chứng minh 10.000 CCU, phát hành store đầy đủ | Exit criteria M5, M6 |
 
@@ -58,14 +58,14 @@
 | M1 First Login to World (= M-C0 + M-C1) | Pilot | Backend 3 binary (`core-api`, `realtime`, `worker`) chạy end-to-end; nhân sự đăng nhập portal, học sinh đăng nhập game và vào Main Hub 3D |
 | M-C2 Content Loop | Pilot | Soạn → duyệt → publish → học sinh làm trong game → server chấm |
 | M-C3 School Loop | Pilot | Nhà trường giao bài/đề, học sinh làm trong game, nhà trường thấy kết quả & LO yếu, học sinh nhận gợi ý ôn tập tự động |
-| **M-P1 Pilot Start** | Pilot | Lát cắt gameplay pilot + mặc định an toàn + 4 nền tảng + production quy mô pilot + công cụ nghiên cứu sẵn sàng; trường pilot bắt đầu dùng |
+| **M-P1 Pilot Start** | Pilot | Lát cắt gameplay pilot + mặc định an toàn + 3 nền tảng (Web, Android, iOS) + production quy mô pilot + công cụ nghiên cứu sẵn sàng; trường pilot bắt đầu dùng |
 | **M-P2 Pilot Exit** | Pilot | Báo cáo nghiên cứu hiệu quả ≥ 8 tuần đạt cổng ADR-0080; quyết định phát hành Mở rộng |
 | M2 Core Gameplay đầy đủ | Mở rộng | Đủ 8 vùng, 12 loại quest, 11 mini-game, 11 loại câu hỏi, kinh tế và hub nhiều người |
 | M3 Game Ops | Mở rộng | Challenge engine, Game Operations Console; sự kiện cơ bản |
 | M4a Party Co-op | Mở rộng | Party 4 người cùng làm quest co-op/đánh boss, kết quả học tập riêng, chat party có text |
 | M4b Knowledge Battle | Mở rộng | 1v1 (kể cả với bot) và Team Battle, Glicko-2, leaderboard trường, kết quả & ranking cập nhật đúng một lần, chat trận có ngay |
 | M5 Safe Social | Hoàn thiện | Đủ 8 loại channel + DM, club, season/event, vi phạm được Safety Team xử lý, nhà trường đặt chat policy trong giới hạn platform |
-| M6 **Release 1.0** | Hoàn thiện | Phạm vi đầy đủ trên Windows, Android, iOS, Web ở 10.000 CCU với bằng chứng |
+| M6 **Release 1.0** | Hoàn thiện | Phạm vi đầy đủ trên Web, Android, iOS ở 10.000 CCU với bằng chứng |
 | M7 Post-release Review | sau M6 | Đánh giá 1 học kỳ vận hành, kế hoạch 1.x |
 
 M-C3 thay mốc "M3 School Loop" của bản trước; "M3" nay là Game Ops theo CODE_PLAN.
@@ -131,7 +131,7 @@ gantt
 
 ### 3.2. Phase 1 — Foundation — M1 First Login to World (M-C0 + M-C1)
 
-**Trải nghiệm người chơi khi xong:** Học sinh mở game, đăng nhập bằng username/mật khẩu trường cấp trong form của game (ADR-0068; trên thiết bị cá nhân mở lại khi phiên còn hạn thì hiện "Tiếp tục là <nickname>?" rồi vào game; Windows mặc định là máy dùng chung nên luôn hỏi mật khẩu — ADR-0086, ADR-0078), vào **Main Hub 3D**, đi lại, thấy nickname của mình. Nhân sự nhà trường đăng nhập Admin Portal thấy đúng workspace.
+**Trải nghiệm người chơi khi xong:** Học sinh mở game, đăng nhập bằng username/mật khẩu trường cấp trong form của game (ADR-0068; trên thiết bị cá nhân mở lại khi phiên còn hạn thì hiện "Tiếp tục là <nickname>?" rồi vào game; bản Web và máy dùng chung luôn hỏi mật khẩu — ADR-0086, ADR-0078, ADR-0101), vào **Main Hub 3D**, đi lại, thấy nickname của mình. Nhân sự nhà trường đăng nhập Admin Portal thấy đúng workspace.
 
 **Phạm vi**
 - Monorepo một `go.mod` (`src/backend/modules/`, `src/backend/pkg/`, `src/backend/cmd/`; ADR-0074), **CI GitHub Actions** theo path filter cho `src/backend/modules/`, `src/backend/pkg/`, `src/backend/cmd/`, `src/cms/frontend/`, `src/game/`, `specs/` (specs-lint, lint/test/scan theo ma trận module, `make arch-check` + facade test, build 3 image, deploy dev/staging — ADR-0088, [DEPLOYMENT §10](../11-operations/DEPLOYMENT.md#10-cicd-github-actions)), Docker Compose local ([LOCAL_DEVELOPMENT](../11-operations/LOCAL_DEVELOPMENT.md)), **staging trên Docker Swarm** (stack file `deploy/swarm/staging/`, overlay network, Docker secrets, deploy `docker stack deploy` từ CI; ADR-0024).
@@ -144,7 +144,7 @@ gantt
 - SIS: EduWorld SIS Contract v1 (`specs/sis/`) + conformance test kit + mock server; giai đoạn này chỉ `csv_import` (CODE_PLAN §9), `contract_v1` làm sau M-C3; contract validator, sync + reconciliation cơ bản (ADR-0021).
 - Godot: bootstrap, form đăng nhập S01 gọi `/auth/game/login` (ADR-0068), API client gắn `X-Tenant-Id` (ADR-0065), realtime client, Main Hub greybox, character controller cơ bản, camera.
 - Game session (ADR-0031): chỉ học sinh vào game (`GAME_ACCESS_STUDENT_ONLY`), `game.login_events` + `last_login_at`, một thiết bị/tài khoản (409 + hộp thoại takeover), job `game-session-timeout`.
-- Đăng nhập nền tảng cho 10.000 CCU (ADR-0045): giữ phiên game bằng refresh token (ADR-0086: kho bảo mật OS trên thiết bị cá nhân, chỉ RAM trên Web/máy dùng chung; **Windows mặc định `shared_device = true`** trừ khi bộ cài chọn "máy cá nhân"; màn "Tiếp tục là <nickname>?" khi tự vào lại; rotation + phát hiện dùng lại, gắn `device_id`; `game_session_sso`), Keycloak persistent sessions, JWKS/Principal/tenant cache, rate limit theo tenant/thiết bị + `429 Retry-After`; benchmark băm mật khẩu (TC-PERF-015).
+- Đăng nhập nền tảng cho 10.000 CCU (ADR-0045): giữ phiên game bằng refresh token (ADR-0086: kho bảo mật OS trên thiết bị cá nhân, chỉ RAM trên Web (gồm PC phòng máy)/máy dùng chung; màn "Tiếp tục là <nickname>?" khi tự vào lại; rotation + phát hiện dùng lại, gắn `device_id`; `game_session_sso`), Keycloak persistent sessions, JWKS/Principal/tenant cache, rate limit theo tenant/thiết bị + `429 Retry-After`; benchmark băm mật khẩu (TC-PERF-015).
 - Object storage: local/CI dùng floci + job tạo bucket + CDN giả lập (ADR-0044); staging dùng backend theo [ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md) sau spike (S3 managed tại Việt Nam hoặc Garage/SeaweedFS ≥ 3 node).
 - **Design system (ADR-0047):** `design/{game-tokens,admin-tokens,shared-tokens,icons,fonts}`, pipeline Style Dictionary (`make design-tokens`), Theme Godot + `UiTokens.gd`, theme Ant Design EduWorld + khung `src/cms/frontend/packages/ops-ui` + Storybook, lint hardcode và kiểm tra tương phản trong CI.
 
@@ -152,7 +152,7 @@ gantt
 
 #### Exit criteria và demo (M1)
 
-- [ ] Đăng nhập nền tảng ADR-0045/0068/0086: thiết bị cá nhân mở lại khi phiên còn hạn → màn "Tiếp tục là <nickname>?" rồi vào game (TC-AUTH-082, TC-AUTH-091), "Không phải tôi" đăng xuất và xóa token (TC-AUTH-091); Windows cài mặc định là máy dùng chung, không lưu token (TC-AUTH-090); hết hạn/bị thu hồi hoặc máy dùng chung/Web → nhập mật khẩu (TC-AUTH-083, 084, 087); dùng lại refresh token cũ → thu hồi cả phiên, sai thiết bị → từ chối (TC-AUTH-085, 086); Đăng xuất xóa token (TC-AUTH-088); không access token/mật khẩu trên đĩa (TC-AUTH-046); `/auth/game/login` p95 ≤ 400 ms + `game/sessions` p95 ≤ 150 ms ở tải thử; `429 LOGIN_QUEUE_BUSY` + `Retry-After`; log không chứa mật khẩu; thiếu `X-Tenant-Id` → `400`; benchmark băm mật khẩu ≤ 80 ms (TC-PERF-015). Nhận biết SIS nguồn đúng khi hai SIS trùng mã (TC-AUTH-030).
+- [ ] Đăng nhập nền tảng ADR-0045/0068/0086: thiết bị cá nhân mở lại khi phiên còn hạn → màn "Tiếp tục là <nickname>?" rồi vào game (TC-AUTH-082, TC-AUTH-091), "Không phải tôi" đăng xuất và xóa token (TC-AUTH-091); hết hạn/bị thu hồi hoặc máy dùng chung/Web → nhập mật khẩu (TC-AUTH-083, 084, 087); dùng lại refresh token cũ → thu hồi cả phiên, sai thiết bị → từ chối (TC-AUTH-085, 086); Đăng xuất xóa token (TC-AUTH-088); không access token/mật khẩu trên đĩa (TC-AUTH-046); `/auth/game/login` p95 ≤ 400 ms + `game/sessions` p95 ≤ 150 ms ở tải thử; `429 LOGIN_QUEUE_BUSY` + `Retry-After`; log không chứa mật khẩu; thiếu `X-Tenant-Id` → `400`; benchmark băm mật khẩu ≤ 80 ms (TC-PERF-015). Nhận biết SIS nguồn đúng khi hai SIS trùng mã (TC-AUTH-030).
 - [ ] `docker compose up` + `make seed` dựng local trong ≤ 30 phút trên máy mới (đo bởi 1 developer chưa tham gia).
 - [ ] GitHub Actions chạy theo path filter (ADR-0088): specs-lint (gồm rule `maxLength`), lint/test/scan/migrate-lint theo ma trận module, `make arch-check` + facade test, godot, web; 3 image `core-api`, `realtime`, `worker` được build và deploy tự động lên dev và staging.
 - [ ] Platform kit `src/backend/pkg/` có test: CQRS tách read/write context (linter chặn `query` import `port/write`/`UnitOfWork`/publisher), middleware `src/backend/pkg/httpx`, `authz.Require` tường minh, ent global filter tenant/soft-delete (TC-TEN-021…023), outbox → NATS + consumer idempotent, adapter tích hợp ngoài + circuit breaker, ranh giới module (`arch-check`, `src/backend/pkg/modcall`) (TC-SVC-001…006).
@@ -161,7 +161,7 @@ gantt
 - [ ] TC-AUTH-001…008 pass trên staging; TC-AUTH-011…012 pass (dữ liệu vi phạm EduWorld SIS Contract bị từ chối, conformance test kit chạy với `sis-mock`).
 - [ ] TC-TEN-001 (học sinh trường A không truy cập dữ liệu trường B) pass ở cả tầng ứng dụng và RLS.
 - [ ] Design system (ADR-0047): TC-UI-001…003, TC-UI-005 pass trong CI; Main Hub và màn đăng nhập game chỉ dùng Theme sinh ra.
-- [ ] Godot client Windows + Android: đăng nhập bằng form trong game qua `/auth/game/login`, không có client secret/endpoint Keycloak trong build; log không chứa mật khẩu (TC-AUTH-060).
+- [ ] Godot client Android + Web: đăng nhập bằng form trong game qua `/auth/game/login`, không có client secret/endpoint Keycloak trong build; log không chứa mật khẩu (TC-AUTH-060).
 - [ ] Cổng hiệu năng M1: `QualityManager` hoạt động; benchmark headless CI (TC-PERF-018) chạy cho Main Hub; Main Hub đạt AC-PERF-001/002 trên DEV-AND-MID1 và DEV-PC-MID với 40 avatar giả lập; AC-PERF-008 pass.
 - [ ] Học sinh vào Main Hub, di chuyển nhân vật, thấy nickname; kết nối realtime với ticket, reconnect sau khi rút mạng 10 s.
 - [ ] Health/readiness/liveness cho mọi binary; trace xuyên APISIX → `core-api` (module identity → facade → module game) → PostgreSQL và qua NATS xem được trong Grafana/Tempo.
@@ -169,13 +169,13 @@ gantt
 
 **Demo script**
 1. Import CSV cùng cấu trúc DTO cho 1 trường demo → xem kết quả sync + reconciliation.
-2. Đăng nhập `hs.an.3a` trên Windows (bộ cài mặc định: máy dùng chung) → vào Main Hub; thoát, mở lại → form đăng nhập.
+2. Đăng nhập `hs.an.3a` trên bản Web (PC phòng máy) → vào Main Hub; đóng tab, mở lại → form đăng nhập.
 3. Đăng nhập `hs.an.3a` trên Android → thoát, mở lại → "Tiếp tục là <nickname>?" → Tiếp tục vào hub; lần sau bấm "Không phải tôi" → về form.
 4. Đăng nhập `hs.locked` → bị từ chối với thông báo thân thiện.
 5. Dùng token của học sinh trường A gọi API tài nguyên trường B → 404/403, có audit log; không có route HTTP nội bộ nào trên APISIX; PR thử gọi facade ngoài `x-allowed-callers` bị `make arch-check` chặn.
 6. Chặn kết nối tới database `eduworld_learning` → route learning trả `503`, module game suy giảm có kiểm soát, Main Hub vẫn chạy; mở lại → tự phục hồi.
 7. Đăng nhập `ad.truong.a` (School Admin) vào game → "tài khoản không dùng để vào game"; vào portal → đúng workspace.
-8. `hs.an.3a` đang ở hub trên Windows, đăng nhập lại trên Android → hộp thoại xác nhận → Windows hiện thông báo đã bị đăng xuất.
+8. `hs.an.3a` đang ở hub trên bản Web, đăng nhập lại trên Android → hộp thoại xác nhận → bản Web hiện thông báo đã bị đăng xuất.
 
 ### 3.3. Content Loop và School Loop — M-C2, M-C3
 
@@ -217,19 +217,19 @@ Thứ tự CMS/LMS trước theo [CODE_PLAN §5](CODE_PLAN_CMS_LMS_FIRST.md#5-l�
 
 Phạm vi theo [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md) mục 1; nền tảng theo ADR-0013. Làn Godot/module game chạy song song với M-C2/M-C3; feature cụ thể chọn từ các mốc M2/M3/M4a của [CODE_PLAN §5](CODE_PLAN_CMS_LMS_FIRST.md#5-lộ-trình-theo-mốc-cmslms-trước) theo lát cắt dưới đây.
 
-**Trải nghiệm người chơi khi xong:** Học sinh **tạo avatar**, chơi chương mở đầu, khám phá Main Hub và vùng Toán/Tiếng Việt, nhận quest `main`/`learning`/`daily`/`weekly` từ NPC, giải câu đố bằng mini-game "kỹ năng là cách chơi", đánh **boss solo**, nhận XP, **lên cấp**, mua đồ trang trí; rủ bạn làm một nhiệm vụ co-op mà mỗi người giữ một mảnh dữ kiện; giao tiếp bằng quick message + emote. Học sinh chơi trên Windows, Android, iOS hoặc Web.
+**Trải nghiệm người chơi khi xong:** Học sinh **tạo avatar**, chơi chương mở đầu, khám phá Main Hub và vùng Toán/Tiếng Việt, nhận quest `main`/`learning`/`daily`/`weekly` từ NPC, giải câu đố bằng mini-game "kỹ năng là cách chơi", đánh **boss solo**, nhận XP, **lên cấp**, mua đồ trang trí; rủ bạn làm một nhiệm vụ co-op mà mỗi người giữ một mảnh dữ kiện; giao tiếp bằng quick message + emote. Học sinh chơi trên Web (gồm PC phòng máy), Android hoặc iOS.
 
 **Phạm vi**
 - Gameplay tối thiểu: tạo avatar (preset, emote mặc định), Main Hub + vùng môn Toán và Tiếng Việt, NPC + dialogue data-driven; quest `main`, `learning`, `daily`, `weekly` ([QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md)); **boss solo** ([CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md)); **4–5 mini-game**, trong đó ≥ 2 cơ chế "kỹ năng là cách chơi" ([LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md), [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md)); XP ledger có cap và giảm dần, level, Xu + Shop cosmetic + sổ cái ([PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md), [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md)).
 - **Một kiểu co-op phụ thuộc lẫn nhau**: party nhỏ (tạo/mời bạn cùng lớp/rời), quest co-op với bước `interdependent` (mỗi người một phần dữ kiện), kết quả học tập ghi riêng từng người ([PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md), [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md)).
 - **Chat chỉ quick message + emote**: channel `party` luôn có (ADR-0020 mục 6) với preset `quick_message_emote_only` áp mặc định cho mọi trường pilot; pipeline kiểm tra (PII/grooming luôn chạy) cho tham số quick message; báo cáo người chơi và hàng đợi Safety Team tối thiểu.
 - **Mặc định an toàn ADR-0078**: giờ giới nghiêm platform 21:30–06:30 cho game và chat, trường chỉ siết thêm; tenant `common` tắt kết bạn/DM/World chat; công tắc kiểm duyệt có `expires_at` ≤ 24 giờ + hai người duyệt ([CHILD_SAFETY](../10-security/CHILD_SAFETY.md)).
-- **Bốn nền tảng** (ADR-0013): Windows (bộ cài ký số, mặc định máy dùng chung, tùy chọn "máy cá nhân"), Android, iOS (ký + TestFlight/App Store hoặc MDM trường), Web qua CDN; đăng nhập bằng form trong game và màn "Tiếp tục là <nickname>?" trên mọi nền tảng.
+- **Ba nền tảng** (ADR-0013, ADR-0101): Web qua CDN (PC phòng máy chơi bản này, không lưu phiên), Android, iOS (ký + TestFlight/App Store hoặc MDM trường); không có bản Windows; đăng nhập bằng form trong game và màn "Tiếp tục là <nickname>?" trên mọi nền tảng.
 - **Production quy mô pilot** (NFR-SCAL-001, [DEPLOYMENT §4.1](../11-operations/DEPLOYMENT.md#41-pilot-nfr-scal-001-5-trường--5000-hs--1000-ccu--confirmed)): Docker Swarm production, PostgreSQL HA + PITR, object storage theo [ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md) (spike xong, đã chọn backend), backup/khôi phục diễn tập, giám sát/alert, runbook; pen-test đăng nhập game và refresh token.
 - **Hạ tầng nghiên cứu hiệu quả (F035, ADR-0080)**: bài kiểm tra độc lập trước/sau (đề riêng, không dùng câu luyện tập), gắn lớp so sánh, xuất dữ liệu định danh giả, A/B cấu hình mastery theo [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md); consent và định danh giả theo ADR-0077.
 - Vận hành: UAT với trường pilot, đào tạo `school_admin`/`academic_manager`, tài liệu người dùng; Safety Team có lịch trực cho `p1`.
 
-**Deliverable:** bản pilot trên 4 nền tảng chạy production tại trường pilot, vòng lặp học tập + game tối thiểu hoàn chỉnh, nhà trường giao bài và theo dõi, nghiên cứu hiệu quả sẵn sàng bắt đầu.
+**Deliverable:** bản pilot trên 3 nền tảng (Web, Android, iOS) chạy production tại trường pilot, vòng lặp học tập + game tối thiểu hoàn chỉnh, nhà trường giao bài và theo dõi, nghiên cứu hiệu quả sẵn sàng bắt đầu.
 
 #### Exit criteria và demo (M-P1)
 
@@ -238,7 +238,7 @@ Phạm vi theo [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.
 - [ ] Co-op `interdependent`: hai đến bốn học sinh cùng làm quest co-op, mỗi người thấy phần dữ kiện của mình, kết quả học tập ghi riêng; rớt mạng một người thì nhóm xử lý theo cấu hình (TC-PTY-001, 006, 008, 010).
 - [ ] Chat pilot: channel `party` tự tạo; text tự do bị từ chối, quick message + emote gửi được (TC-CHAT-048); PII/grooming luôn chạy (TC-CHAT-044); report → case trong ≤ 5 s (CS-04).
 - [ ] Mặc định an toàn ADR-0078: giờ giới nghiêm chặn đăng nhập, game session và chat, trường không nới được (TC-AUTH-092, TC-CHAT-046); công tắc kiểm duyệt có thời hạn + hai người duyệt (TC-CHAT-045); tenant `common` không kết bạn/DM/World chat (TC-CHAT-047); gate CS-10, CS-11, CS-12 đạt.
-- [ ] Client chạy trên **Windows, Android, iOS, Web** đạt AC-PERF của các cảnh pilot trên device matrix ([TEST_STRATEGY](TEST_STRATEGY.md) §4.1); Windows cài mặc định là máy dùng chung (TC-AUTH-090); "Tiếp tục là <nickname>?" hoạt động trên cả 4 nền tảng (TC-AUTH-091); luồng quest mẫu chạy trên thiết bị Tối thiểu (TC-PERF-019).
+- [ ] Client chạy trên **Web, Android, iOS** đạt AC-PERF của các cảnh pilot trên device matrix ([TEST_STRATEGY](TEST_STRATEGY.md) §4.1); "Tiếp tục là <nickname>?" hoạt động trên Android, iOS (TC-AUTH-091); bản Web luôn hiện form khi mở lại (TC-AUTH-084); luồng quest mẫu chạy trên thiết bị Tối thiểu (TC-PERF-019).
 - [ ] Production pilot: load test ở mức NFR-SCAL-001 có báo cáo; restore PITR từng database và khôi phục object storage (RB-05) diễn tập thành công; spike object storage ADR-0075 có báo cáo và quyết định; alert chính kích hoạt thử; pen-test đăng nhập game không còn High/Critical.
 - [ ] F035 `Done`: bài kiểm tra trước đã chạy ở lớp pilot và lớp so sánh; ngưỡng đạt theo `pilot_efficacy_threshold` (ADR-0080 mục 2) [Confirmed — owner 2026-11-20]; dữ liệu nghiên cứu định danh giả.
 - [ ] UAT với trường pilot ký nhận; tài liệu người dùng (học sinh, quản trị trường, quản lý chuyên môn, Safety Team) hoàn thành.
@@ -310,20 +310,20 @@ Phát triển song song từ sau M-P1; chỉ phát hành tới trường sau M-P
 
 ### 3.8. Production Readiness đầy đủ — M6 Release 1.0
 
-**Trải nghiệm người chơi khi xong:** Học sinh chơi ổn định trên **Windows, Android, iOS, Web** ở quy mô 10.000 người chơi đồng thời với toàn bộ chức năng.
+**Trải nghiệm người chơi khi xong:** Học sinh chơi ổn định trên **Web, Android, iOS** ở quy mô 10.000 người chơi đồng thời với toàn bộ chức năng.
 
 **Phạm vi**
-- Tối ưu theo nền tảng và theo kỹ thuật bắt buộc của [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §13; phát hành App Store / Google Play / Windows (Store hoặc installer ký số) / Web qua CDN, kênh MDM của trường.
+- Tối ưu theo nền tảng và theo kỹ thuật bắt buộc của [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §13; phát hành App Store / Google Play / Web qua CDN, kênh MDM của trường (không có bản Windows, ADR-0101).
 - Security testing (pen-test, OWASP ASVS L2, lateral movement giữa module/binary, đăng nhập game và refresh token — ADR-0068, ADR-0086), anti-cheat nâng cao, **load test 10.000 CCU** (TC-PERF-002, 014, 016, 017) trên staging tương đương production, scale theo lịch học bằng `ops-scheduler` (ADR-0024).
 - **Chaos/resilience test**: kill replica `core-api`/`realtime`, dừng từng profile worker, NATS, Valkey, một database module, failover cụm PostgreSQL, object storage; xác nhận suy giảm có kiểm soát theo module, circuit breaker tích hợp ngoài, saga hội tụ, projection bắt kịp; diễn tập rollback và khôi phục (BACKUP_RECOVERY §3.5).
 - Mở rộng production Docker Swarm lên topology Release 1.0 ([DEPLOYMENT §4.2](../11-operations/DEPLOYMENT.md)); HA thành phần có trạng thái, diễn tập failover.
 
-**Deliverable:** **Release 1.0** — phạm vi đầy đủ Master Prompt + Party Addendum trên 4 nền tảng, có bằng chứng kiểm thử.
+**Deliverable:** **Release 1.0** — phạm vi đầy đủ Master Prompt + Party Addendum trên 3 nền tảng (Web, Android, iOS), có bằng chứng kiểm thử.
 
 #### Exit criteria và demo (M6)
 
 - [ ] Mọi FR thuộc Master Prompt + Party Addendum trong [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md) có trạng thái Done với test case pass (ma trận truy vết FR → TC đầy đủ).
-- [ ] Client trên **Windows, Android, iOS, Web** đạt toàn bộ AC-PERF-001…011 của [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) trên device matrix ([TEST_STRATEGY](TEST_STRATEGY.md) §4.1).
+- [ ] Client trên **Web, Android, iOS** đạt toàn bộ AC-PERF-001…011 (trừ AC-PERF-002, không làm — ADR-0101) của [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) trên device matrix ([TEST_STRATEGY](TEST_STRATEGY.md) §4.1).
 - [ ] Nội dung đạt khối lượng đã chốt ở OQ-08 cho các môn/khối.
 - [ ] Load test **10.000 CCU** (NFR-SCAL-002 [Confirmed]) và bão đăng nhập theo `login_capacity_target` ([CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md), NFR-SCAL-005) đạt NFR-PERF-001…004, 011…016; TC-PERF-002, 014, 015, 016, 017 có báo cáo trong `perf-reports/`.
 - [ ] Đăng nhập game qua backend đã qua pen-test: rate limit, khóa tạm theo tài khoản, không ghi body đăng nhập, refresh token xoay vòng và phát hiện dùng lại, thu hồi phiên đúng (TC-AUTH-040, 043, 044, 045).
@@ -331,7 +331,7 @@ Phát triển song song từ sau M-P1; chỉ phát hành tới trường sau M-P
 - [ ] Restore test PITR trong 30 ngày gần nhất cho **từng database module**, gồm khôi phục riêng một database và đưa về nhất quán liên module (BACKUP_RECOVERY §3.5); DR drill đạt RTO.
 - [ ] Chaos test (TC-SVC-010…014, 016, 017) pass; facade test và `make arch-check` xanh; không còn operation facade thiếu spec internal hoặc thiếu `maxLength`.
 - [ ] Alert chính kích hoạt thử thành công; trực vận hành có lịch.
-- [ ] Ứng dụng ký số; phát hành App Store, Google Play, Windows, Web qua CDN.
+- [ ] Ứng dụng ký số; phát hành App Store, Google Play, Web qua CDN.
 
 ### 3.9. M7 — Post-release Review
 

@@ -1,7 +1,7 @@
 // F060 T036, F060-AC-19 (GODOT_ARCHITECTURE §11, DEPLOYMENT §10.2, ADR-0088): a PR touching src/game/**, specs/**,
 // design/game-tokens/** or design/shared-tokens/** starts godot.yml, whose jobs run in the order
-// design-tokens-check → lint (gdlint + typed + theme/layer/signal lints) → GdUnit4 → export Windows + Android
-// (with artifact scan) → smoke boot.
+// design-tokens-check → lint (gdlint + typed + theme/layer/signal lints) → GdUnit4 → export Android (with artifact
+// scan) → smoke boot. No Windows build (ADR-0101).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadWorkflows, workflowsTriggered } from './path-filters.mjs';
@@ -50,17 +50,22 @@ test('each stage runs the expected command', () => {
   assert.match(runs('lint'), /gdtoolkit==/);
   assert.match(runs('lint'), /make godot-lint/);
   assert.match(runs('test'), /make godot-test/);
-  assert.match(runs('export'), /make godot-export-windows/);
   assert.match(runs('export'), /make godot-export-android/);
   assert.match(runs('smoke'), /make godot-smoke .*GAME_ENV=mock/);
 });
 
 test('native SecureStorage plugins are built before export (ADR-0086)', () => {
-  assert.ok(needs('export').includes('platform-windows'));
   assert.ok(needs('export').includes('platform-android'));
-  assert.match(String(jobs['platform-windows']['runs-on']), /windows/);
-  assert.match(runs('platform-windows'), /scons platform=windows/);
   assert.match(runs('platform-android'), /gradle .*assemble/);
+});
+
+test('there is no Windows build, plugin or export (ADR-0101)', () => {
+  assert.ok(!('platform-windows' in jobs));
+  for (const [id, job] of Object.entries(jobs)) {
+    assert.doesNotMatch(String(job['runs-on'] ?? ''), /windows/i, id);
+    assert.doesNotMatch(runs(id), /godot-export-windows|scons platform=windows|Windows Desktop|\.exe\b/, id);
+  }
+  assert.ok(!('SCONS_VERSION' in (godot.env ?? {})));
 });
 
 test('Godot comes from the pinned, checksum-verified setup script', () => {

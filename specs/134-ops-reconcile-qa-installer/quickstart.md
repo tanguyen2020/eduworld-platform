@@ -26,8 +26,8 @@
 | 11 | `sa.admin` xem Game Analytics và tổng hợp học tập platform, lọc `tenant_ids=pgd-demo` | Không tính `pgd-demo` (kể cả dữ liệu cũ); `excluded_tenant_ids` có `pgd-demo` | F134-AC-09 |
 | 12 | `ad.donvi` mở báo cáo game tenant; `ad.truong.a` gọi summary của `pgd-demo` | `200` rỗng; `403`/`404` | F134-AC-10 |
 | 13 | Portal D → Tenant → bật/tắt "Tenant QA"; mở dropdown tenant | Hộp xác nhận hệ quả; nhãn "QA" cạnh `pgd-demo` | F134-AC-11 |
-| 14 | Chạy `publish-index.sh` (khối g1_3, g4_5 Windows + Android) | Chỉ mục + `.sig` hợp lệ theo schema | F134-AC-12 |
-| 15 | `ad.truong.a` mở C → "Tải bộ cài" | Thấy 4 bộ cài (2 nền tảng × g1_3/g4_5), SHA-256, nút tải, hướng dẫn `device.cfg` | F134-AC-13, F134-AC-17 |
+| 14 | Chạy `publish-index.sh` (khối g1_3, g4_5, Android — không Windows, ADR-0101) | Chỉ mục + `.sig` hợp lệ theo schema | F134-AC-12 |
+| 15 | `ad.truong.a` mở C → "Tải bộ cài" | Thấy 2 gói APK (Android × g1_3/g4_5), SHA-256, nút tải, hướng dẫn `device.cfg` cho tablet Android | F134-AC-13, F134-AC-17 |
 | 16 | Sửa 1 byte chỉ mục trên floci; tải lại trang | `503 UNAVAILABLE`, không link nào | F134-AC-14 |
 | 17 | `ad.truong.b` gọi với `school_id` TH Demo A; `qlcm.truong.a` gọi | `404`; `403 PERMISSION_DENIED` | F134-AC-15 |
 | 18 | Quét response | Không dữ liệu tenant/secret; chuỗi trong giới hạn schema | F134-AC-16 |

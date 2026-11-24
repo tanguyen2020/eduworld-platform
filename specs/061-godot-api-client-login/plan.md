@@ -14,7 +14,7 @@ Hiện thực tầng mạng REST và luồng vào game của Godot theo GODOT_AR
 | Primary Dependencies | GdUnit4; autoload từ F060 (`Config`, `Log`, `EventBus`, `AppState`, `Settings`, `SceneRouter`) và `SecureStorage`/`SecureStorageFactory` (F060 US5) |
 | Storage | RAM cho access token/bootstrap/session; `SecureStorage` khóa `eduworld.game.session` (`refresh_token`, `tenant_id`, `saved_at`) trên thiết bị cá nhân, `MemoryOnly` trên Web/`shared_device`; `user://device_id`, `user://settings.cfg` (`last_username`); `device.cfg` (`shared_device`) chỉ đọc |
 | Testing | GdUnit4 unit (FakeHttp/FakeClock/FakeSecureStorage), scene test S01, integration headless với backend compose (kể cả mở lại tiến trình để kiểm resume), quét artifact |
-| Target Platform | Windows, Android (M-C1); iOS, Web cùng mã |
+| Target Platform | Android (M-C1); iOS, Web cùng mã (ADR-0101: không Windows; chạy editor trên máy dev Windows vẫn được) |
 | Project Type | game client |
 | Performance Goals | `login_slo`; form hiện ≤ 3 s từ mở app (S01 §13) |
 | Constraints | AGENTS R1, R3, R4, R14, R23, R30, R32; ADR-0014, ADR-0031, ADR-0045, ADR-0063, ADR-0064 (mục 3, 6, 7), ADR-0065, ADR-0068, ADR-0083, ADR-0086 |

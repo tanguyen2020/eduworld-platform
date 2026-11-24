@@ -1,12 +1,13 @@
-# Research: F133 — Build và phát hành client Windows, Android, iOS, Web
+# Research: F133 — Build và phát hành client Web, Android, iOS
 
 **Spec**: [spec.md](spec.md) · **Plan**: [plan.md](plan.md)
 
-## R1. Installer Windows và tự cập nhật
+## R1. Cập nhật client theo nền tảng (installer Windows đã bỏ)
 
-- **Decision**: Inno Setup 6 (cài per-machine vào `Program Files`, hỗ trợ cài im lặng cho phần mềm quản lý phòng máy, ghi `device.cfg` vào `%ProgramData%\EduWorld\` theo tham số dòng lệnh `/SHARED=1 /LANCACHE=<url>`); ký Authenticode cả `.exe` game và installer. Tự cập nhật: `UpdateService` đọc manifest phát hành trên CDN, tải installer mới, kiểm chữ ký manifest + SHA-256 + Authenticode rồi chạy cài im lặng.
-- **Rationale**: Phòng máy cần cài im lặng/MDM; Inno Setup miễn phí, script trong Git.
-- **Alternatives**: MSIX (cần chứng chỉ tin cậy và chính sách sideload ở máy trường); Microsoft Store (ngoài phạm vi Release 1.0).
+- **Decision (2026-11-24, ADR-0101)**: Không có bản Windows nên không có installer, Authenticode hay tự cập nhật. `UpdateService` chỉ: Android/iOS mở trang store (hoặc APK MDM của trường), Web tải lại `index.html` phiên bản mới. Phần dưới giữ để truy vết.
+- ~~**Decision cũ**: Inno Setup 6 (cài per-machine vào `Program Files`, hỗ trợ cài im lặng cho phần mềm quản lý phòng máy, ghi `device.cfg` vào `%ProgramData%\EduWorld\` theo tham số dòng lệnh `/SHARED=1 /LANCACHE=<url>`); ký Authenticode cả `.exe` game và installer. Tự cập nhật: `UpdateService` đọc manifest phát hành trên CDN, tải installer mới, kiểm chữ ký manifest + SHA-256 + Authenticode rồi chạy cài im lặng.~~
+- **Rationale**: Owner bỏ hẳn bản Windows (ADR-0101); PC phòng máy chơi bản Web, không cần cài đặt.
+- **Alternatives**: Giữ installer Windows cho phòng máy (trái quyết định owner); MSIX, Microsoft Store (không làm).
 
 ## R2. Chữ ký manifest phát hành và chỉ mục gói
 

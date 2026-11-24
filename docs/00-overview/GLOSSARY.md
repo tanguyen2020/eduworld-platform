@@ -1,6 +1,6 @@
 # Glossary — Thuật ngữ
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Technical Writer · Cập nhật: 2026-11-21 (ADR-0095: bỏ Class, Enrollment, lớp ảo; thêm Khối, Hồ sơ học sinh hiệu lực, Mục tiêu tập thể của khối; channel còn 6 loại) · 2026-11-17 (ADR-0074: thêm Module, Facade, Binary/profile, `src/backend/pkg/modcall`, Spec internal, Facade test; Microservice, Typed client, Service-to-service token đánh dấu Superseded; tenant QA, bão đăng nhập theo `login_capacity_target`)
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Technical Writer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-21 (ADR-0095: bỏ Class, Enrollment, lớp ảo; thêm Khối, Hồ sơ học sinh hiệu lực, Mục tiêu tập thể của khối; channel còn 6 loại) · 2026-11-17 (ADR-0074: thêm Module, Facade, Binary/profile, `src/backend/pkg/modcall`, Spec internal, Facade test; Microservice, Typed client, Service-to-service token đánh dấu Superseded; tenant QA, bão đăng nhập theo `login_capacity_target`)
 > Liên quan: [DOMAIN_MODEL](../06-architecture/DOMAIN_MODEL.md) · [CONFIG_DEFAULTS](CONFIG_DEFAULTS.md) · [docs/README](../README.md)
 
 Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "Tên trong code" là tên chuẩn cho entity/field/enum. Glossary chỉ định nghĩa; quy tắc và tham số nằm ở tài liệu sở hữu (xem [CONFIG_DEFAULTS](CONFIG_DEFAULTS.md)).
@@ -46,7 +46,7 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Định danh đăng nhập | `username`, `email` | Duy nhất trên SSO (Keycloak) và `identity.users`, không phân biệt hoa thường, nên không trùng trong cùng tenant; một người một tài khoản, nhiều membership (ADR-0067, ADR-0069) |
 | Login ticket | `login_ticket` | Vé ngắn hạn (2 phút, một lần) trả kèm `TENANT_NOT_SELECTED` khi học sinh thuộc nhiều tenant, dùng để chọn tenant mà không nhập lại mật khẩu (ADR-0068) |
 | Phiên game (giữ đăng nhập) | `game_auth_sessions`, `game_session_sso` | Phiên Keycloak của client `eduworld-game-backend` (idle 7 ngày, tối đa 30 ngày) giữ bằng refresh token xoay vòng, gắn `device_id`; còn hạn thì mở game tự vào lại không nhập mật khẩu (`POST /auth/game/token:refresh` `mode=resume`). Khác **game session** (phiên chơi một thiết bị của module game, ADR-0031/ADR-0083) ([ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md)) |
-| Kho bảo mật thiết bị | `SecureStorage` | Kho bảo mật của hệ điều hành nơi game lưu refresh token trên thiết bị cá nhân: Windows DPAPI, Android Keystore, iOS Keychain; Web chỉ giữ trong RAM (ADR-0086) |
+| Kho bảo mật thiết bị | `SecureStorage` | Kho bảo mật của hệ điều hành nơi game lưu refresh token trên thiết bị cá nhân: Android Keystore, iOS Keychain; Web chỉ giữ trong RAM (ADR-0086, ADR-0101) |
 | Máy dùng chung | `shared_device` | Thiết bị cấu hình `device.cfg` `shared_device: true` (phòng tin học): token chỉ trong RAM, không nhớ username, thoát game hoặc 30 phút không hoạt động = đăng xuất, mở lại phải đăng nhập (ADR-0064, ADR-0086) |
 | Role scope kind | `role_scope_kind` | `tenant` (gán trong một tenant) hoặc `platform` (chỉ scope platform, đăng nhập Admin Portal `eduworld-portal`; không MFA — ADR-0094) |
 | System Admin | `system_admin` | Role platform duy nhất xem/ghi dữ liệu liên tenant (dropdown tenant, audit) — ADR-0027 §6 |

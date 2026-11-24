@@ -93,7 +93,7 @@
 
 - [x] T036 [P] Đăng ký `nickname_change_monthly_limit`, `nickname_suggestion_ttl` (CONFIG_DEFAULTS + CHARACTER_SYSTEM §5.3); DATABASE_DESIGN §2.8/§2.8a (nickname unique theo tenant, `game.nickname_changes`, `character_catalog*`, cột mới); EVENT_DESIGN §4.5 (`game_profile.updated`); CHANGELOG — file: `docs/00-overview/CONFIG_DEFAULTS.md`, `docs/07-backend/DATABASE_DESIGN.md`, `docs/07-backend/EVENT_DESIGN.md` — ✅ CONFIG_DEFAULTS đã có 2 tham số (kiểm 2026-11-21); DATABASE_DESIGN §2.8/§2.8a (khóa thay thế, `nickname_changes`, `character_catalog*`, `item_definition_versions`, cột mới); EVENT_DESIGN §4.5 đã có `game_profile.updated`; CHANGELOG (2026-11-21)
 - [x] T037 [P] Metric `eduworld_game_avatar_*`, `eduworld_game_nickname_conflict_total` — file: `src/backend/modules/game/internal/infrastructure/observability/metrics.go` — ✅ `infrastructure/observability/profile_metrics.go` (`eduworld_game_avatar_created_total`, `eduworld_game_avatar_update_rejected_total{reason}`, `eduworld_game_nickname_conflict_total`) (2026-11-21)
-- [x] T038 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — ✅ Kịch bản 1–10 của quickstart chạy tự động bằng integration test (bảng bằng chứng trong tasks); 11–12 bằng GdUnit4 headless. Ảnh S02 trên DEV-PC-MID/DEV-AND-MID1 và trace_id thật chưa có (cần stack compose + thiết bị lab) (2026-11-21)
+- [x] T038 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — ✅ Kịch bản 1–10 của quickstart chạy tự động bằng integration test (bảng bằng chứng trong tasks); 11–12 bằng GdUnit4 headless. Ảnh S02 trên DEV-PC-MID/DEV-AND-MID1 (từ 2026-11-24 DEV-WEB-MID thay DEV-PC-MID — ADR-0101) và trace_id thật chưa có (cần stack compose + thiết bị lab) (2026-11-21)
 
 ## OQ chốt 2026-11-20 (việc bổ sung)
 

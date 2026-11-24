@@ -1,6 +1,6 @@
 # User Personas
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Product Manager + UX/UI Designer · Cập nhật: 2026-11-16 (ADR-0086: không nhập mật khẩu mỗi lần mở game)
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Product Manager + UX/UI Designer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-16 (ADR-0086: không nhập mật khẩu mỗi lần mở game)
 > Liên quan: [PRODUCT_VISION](PRODUCT_VISION.md) · [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md)
 
 Personas dưới đây là **giả thuyết [Confirmed]** dựa trên Master Prompt và hiểu biết chung về trường phổ thông Việt Nam. Cần kiểm chứng bằng phỏng vấn/khảo sát tại trường pilot trong Phase 0–1 (liên quan OQ-04, OQ-07, OQ-09, OQ-17). Tên nhân vật là hư cấu.
@@ -37,7 +37,7 @@ Mã P-05, P-06 (giáo viên chủ nhiệm, giáo viên bộ môn) không còn d�
 | Mục tiêu | Có nhân vật dễ thương, đi khám phá, giúp NPC, nhận quà; hoàn thành nhiệm vụ "Nhà trường giao" |
 | Động lực chơi | Khám phá và câu chuyện cùng Mây; sưu tầm (pet, sticker, vật phẩm); thấy vùng đất đổi màu khi mình học giỏi lên; được khen ngay khi làm đúng. Không cần xếp hạng ([GAME_DESIGN](../01-game-design/GAME_DESIGN.md)) |
 | Pain points | Đọc hướng dẫn dài khó; gõ phím chậm; dễ nản khi sai nhiều; không tự đăng nhập được bằng mật khẩu phức tạp |
-| Thiết bị | Tablet Android dùng chung, máy tính phòng tin học Windows; tai nghe không phải lúc nào cũng có |
+| Thiết bị | Tablet Android dùng chung, máy tính phòng tin học chạy bản Web trong trình duyệt (ADR-0101); tai nghe không phải lúc nào cũng có |
 | Ngữ cảnh | Phiên 15–25 phút ở phòng máy hoặc ở nhà; tự làm theo hướng dẫn lồng tiếng trong game, không có người kèm từng bước |
 | Nhu cầu UX | Icon lớn, ít chữ, chữ ≥ 24 px, đề bài và hướng dẫn quest được lồng tiếng tiếng Việt (phụ đề + icon khi không có tai nghe), nút "Gợi ý" nhiều cấp, thao tác chạm/kéo thả, phản hồi bằng hình ảnh & âm thanh vui, không giới hạn thời gian ở practice, điều hướng tối đa 2 cấp |
 | Nhu cầu an toàn | Chat theo quy tắc chung (ADR-0020), mọi tin được kiểm tra hợp lệ; quick message giúp giao tiếp khi chưa gõ nhanh; không thấy tên thật người khác; leaderboard công khai có thể tắt; nhắc nghỉ |
@@ -53,7 +53,7 @@ Mã P-05, P-06 (giáo viên chủ nhiệm, giáo viên bộ môn) không còn d�
 | Mục tiêu | Lên level, mở khóa trang phục, đứng top bảng xếp hạng lớp, chơi cùng bạn thân |
 | Động lực chơi | Lên level và danh hiệu; bộ sưu tập; daily/weekly quest; party với bạn thân; boss đầu tiên; thi đua nhẹ (top 10 lớp, không thấy số rating) |
 | Pain points | Bài tập lặp lại nhàm; muốn chơi cùng bạn nhưng không biết bạn đang online ở đâu |
-| Thiết bị | Phòng máy Windows, tablet/điện thoại của phụ huynh |
+| Thiết bị | Phòng máy (bản Web trong trình duyệt, ADR-0101), tablet/điện thoại của phụ huynh |
 | Ngữ cảnh | Ở lớp và ở nhà buổi tối 20–40 phút |
 | Nhu cầu UX | Mục tiêu rõ (daily quest), tiến trình trực quan (thanh XP, sao), mini-game đa dạng, party đơn giản bằng lời mời từ danh sách bạn |
 | Nhu cầu an toàn | Chat theo quy tắc chung, mọi tin được kiểm tra hợp lệ; chống farm XP tự nhiên (cap) |

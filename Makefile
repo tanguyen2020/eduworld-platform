@@ -280,7 +280,7 @@ GDLINT   ?= gdlint
 GAME_DIR := src/game
 GODOT_HL  = "$(GODOT)" --headless --path $(GAME_DIR)
 GAME_ENV ?= mock
-.PHONY: godot-import godot-lint godot-test godot-smoke godot-screenshots godot-fixtures godot-export-check godot-export-windows godot-export-android
+.PHONY: godot-import godot-lint godot-test godot-smoke godot-screenshots godot-fixtures godot-export-check godot-export-android
 godot-import: ## Import the Godot project headless (global class cache, fonts); needed once after checkout
 	$(GODOT_HL) --import
 
@@ -330,15 +330,10 @@ godot-fixtures: ## Regenerate contract fixtures, messages.pot and the pseudo-loc
 	$(GODOT_HL) -s res://tools/extract_pot.gd
 	$(GODOT_HL) -s res://tools/pseudo_locale.gd
 
-godot-export-check: godot-import ## Export the release PCK (no export template needed) and scan it for secrets, OIDC keys, mock config
+godot-export-check: godot-import ## Export the release PCK of the Android preset (no export template needed) and scan it for secrets, OIDC keys, mock config
 	mkdir -p $(GAME_DIR)/build/check
-	$(GODOT_HL) --export-pack "Windows Desktop" build/check/EduWorld.pck
+	$(GODOT_HL) --export-pack "Android" build/check/EduWorld.pck
 	bash $(GAME_DIR)/tools/scan_artifact.sh $(GAME_DIR)/build/check
-
-godot-export-windows: godot-import ## Export the Windows release (export templates of the pinned version required) and scan it
-	mkdir -p $(GAME_DIR)/build/windows
-	$(GODOT_HL) --export-release "Windows Desktop" build/windows/EduWorld.exe
-	bash $(GAME_DIR)/tools/scan_artifact.sh $(GAME_DIR)/build/windows
 
 godot-export-android: godot-import ## Export the Android APK, debug-signed (templates, Android SDK, JDK 17 required) and scan it
 	mkdir -p $(GAME_DIR)/build/android

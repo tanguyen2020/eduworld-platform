@@ -16,14 +16,14 @@
 | 1 | Đặt `min_client_version` (client-config local) lớn hơn bản build; mở game | ForceUpdate, không có form | F061-AC-01 |
 | 2 | Đặt lại bình thường; mở game | Form S01 đúng thành phần, không trình duyệt | F061-AC-02 |
 | 3 | Đăng nhập `hs.an.3a` (bắt gói qua proxy local) | Body đúng `GameLoginRequest`; không `Authorization`/`X-Tenant-Id` | F061-AC-03 |
-| 4 | Bắt gói sau bước 3; sau khi vào game, quét `user://`, thư mục app, grep refresh token mẫu | `gameLogin` `200` không có `game_session_id`; ngay sau đó `createGameSession` có `X-Device-Id`, `X-Tenant-Id`, `Idempotency-Key` → `201`; `user://` chỉ có `device_id`, `settings.cfg` (`last_username`) và ciphertext `secure/` (Windows); không có token dạng rõ ở đâu | F061-AC-04 |
+| 4 | Bắt gói sau bước 3; sau khi vào game, quét `user://`, thư mục app, grep refresh token mẫu | `gameLogin` `200` không có `game_session_id`; ngay sau đó `createGameSession` có `X-Device-Id`, `X-Tenant-Id`, `Idempotency-Key` → `201`; `user://` chỉ có `device_id`, `settings.cfg` (`last_username`) và (thiết bị cá nhân Android) ciphertext trong `noBackupFilesDir`; không có token dạng rõ ở đâu | F061-AC-04 |
 | 5 | Sai mật khẩu 3 lần | Thông điệp chung + gợi ý đợi; ô mật khẩu trống | F061-AC-05 |
 | 6 | Giả lập hàng chờ (hạ ngưỡng `login_rate` local) | "Đang vào lớp…", tự vào khi hết hàng chờ; Hủy dừng | F061-AC-06 |
 | 7 | Đăng nhập `ad.truong.a` / `sa.admin` | Màn "không dùng để vào game", không token | F061-AC-07 |
 | 8 | Đăng nhập `hs.nosis` | "chưa được kích hoạt" | F061-AC-08 |
 | 9 | Đăng nhập `hs.locked`; đổi ngôn ngữ EN rồi thử lại | Thông điệp theo `code`, đúng ngôn ngữ | F061-AC-09 |
 | 10 | Dùng mật khẩu mẫu duy nhất, grep log/crash/telemetry | Không xuất hiện | F061-AC-10 |
-| 11 | Quét artifact export Windows/Android | Không secret, không `/protocol/openid-connect/token`, không `oidc_` | F061-AC-11 |
+| 11 | Quét artifact export Android / PCK `make godot-export-check` | Không secret, không `/protocol/openid-connect/token`, không `oidc_` | F061-AC-11 |
 | 12 | Bật nhớ tên, Đăng xuất, mở lại; bật `shared_device`, đăng nhập, đóng cửa sổ, mở lại | Tên điền sẵn ở form; với `shared_device` không có ô nhớ tên, mở lại luôn hiện form, không còn bản ghi phiên | F061-AC-12, F061-AC-26, F061-AC-32 |
 | 13 | Tài khoản 2 tenant đăng nhập → chọn trường | `TenantChoice` sau xác thực; vào game không nhập lại mật khẩu | F061-AC-13 |
 | 14 | Để màn chọn trường quá `game_login_ticket_ttl` rồi chọn | "Phiên chọn trường đã hết", về form | F061-AC-14 |
@@ -41,7 +41,7 @@
 | 25b | Thiết bị cá nhân: đăng nhập, đóng cửa sổ (bắt gói) | Chỉ `endGameSession`, không `gameLogout`; bản ghi `SecureStorage` còn | F061-AC-26 |
 | 26 | Gửi `client_version` cũ trực tiếp tới `gameLogin` (bỏ qua bước 1) | ForceUpdate với `store_url` | F061-AC-27 |
 | 27 | Dừng module game rồi đăng nhập `hs.an.3a` | `gameLogin` `200`; `createGameSession` lỗi sau retry → thông điệp lỗi, `gameLogout` gửi, về form, không vào game | F061-AC-28 |
-| 28 | Sau bước 25b, mở lại game (Windows) | "Đang vào lớp…", `refreshGameToken` `mode: "resume"` có `device_id` + `X-Tenant-Id` đã lưu → `200` có `bootstrap`; bản ghi được ghi đè; `createGameSession` → vào hub, không hiện form (TC-AUTH-082) | F061-AC-29 |
+| 28 | Sau bước 25b, mở lại game (Android/iOS; Windows editor và Web luôn hiện form — ADR-0101) | "Đang vào lớp…", `refreshGameToken` `mode: "resume"` có `device_id` + `X-Tenant-Id` đã lưu → `200` có `bootstrap`; bản ghi được ghi đè; `createGameSession` → vào hub, không hiện form (TC-AUTH-082) | F061-AC-29 |
 | 29 | Realm local: đặt client session idle của `eduworld-game-backend` 2 phút; thoát, chờ 3 phút, mở lại | `401 REFRESH_TOKEN_INVALID` → bản ghi bị xóa; form với "Phiên đăng nhập đã hết, em đăng nhập lại nhé", tên điền sẵn (TC-AUTH-083) | F061-AC-30 |
 | 30 | Chặn mạng (toxiproxy) rồi mở lại game | "Đang kết nối…", tự thử lại; bản ghi còn; nút "Đăng nhập bằng tài khoản khác" về form | F061-AC-31 |
 | 31 | Bản Web: đăng nhập, tải lại tab; quét localStorage | Form hiện lại; không có refresh token (TC-AUTH-084) | F061-AC-32 |
@@ -61,7 +61,7 @@ make test-e2e          # integration headless với backend compose (tests/integ
 
 ## 4. Bằng chứng cần nộp
 
-- Kết quả GdUnit4 (pass/fail), log quét artifact (bước 11), log quét lưu trữ thiết bị (bước 4, 12, 31), bắt gói resume (bước 28–34), `trace_id` đăng nhập thành công, video/ảnh takeover hai thiết bị Windows + Android.
+- Kết quả GdUnit4 (pass/fail), log quét artifact (bước 11), log quét lưu trữ thiết bị (bước 4, 12, 31), bắt gói resume (bước 28–34), `trace_id` đăng nhập thành công, video/ảnh takeover hai thiết bị (Web + Android).
 
 ## Bằng chứng (2026-11-20, local — Windows 11, Godot 4.7.2 stable, GNU make qua WSL)
 
@@ -93,5 +93,5 @@ Tổng GdUnit4: **232 test, 0 lỗi, 0 fail, 0 orphan, 4 skip** (4 test integrat
 
 **Chưa có bằng chứng (ghi rõ):**
 - Kịch bản §2 với backend thật (bước 3–36) và integration `tests/integration/auth/*` (T035, T044, T053): chưa chạy — binary backend chưa nối trong compose (OQ F014-7); test tự skip khi thiếu `EDUWORLD_IT_API_BASE_URL`.
-- Android (bước 25, video takeover Windows + Android): chờ lane thiết bị/emulator F133; adapter DPAPI/Keystore thật chạy ở CI (F060).
+- Android (bước 25, video takeover Windows + Android — từ 2026-11-24 Web + Android, ADR-0101): chờ lane thiết bị/emulator F133; adapter Keystore thật chạy ở CI (F060; DPAPI gỡ theo ADR-0101).
 - `gdlint` chỉ chạy ở CI (`godot.yml`); mã viết theo cấu hình mặc định gdtoolkit (≤ 20 public method, thứ tự khai báo, không gọi method private từ ngoài lớp).

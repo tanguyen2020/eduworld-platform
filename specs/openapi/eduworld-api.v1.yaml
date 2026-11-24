@@ -19915,7 +19915,7 @@ components:
       required: [platform, last_seen_at]
       properties:
         platform: { type: string, enum: [windows, android, ios, web, macos, linux] }
-        device_label: { type: string, maxLength: 64, description: 'Ví dụ "Máy tính Windows", "Điện thoại Android"' }
+        device_label: { type: string, maxLength: 64, description: 'Ví dụ "Điện thoại Android", "Trình duyệt web"' }
         last_seen_at: { $ref: '#/components/schemas/Timestamp' }
     ActiveSessionConflict:
       allOf:
@@ -26918,7 +26918,7 @@ components:
       required: [access_token, refresh_token, token_type, expires_in, refresh_expires_in]
       description: |
         Token Keycloak của học sinh (client `eduworld-game-backend`, `azp = eduworld-game-backend`). Access token chỉ trong RAM.
-        Refresh token (xoay vòng mỗi lần dùng): thiết bị cá nhân lưu trong kho bảo mật OS (Windows DPAPI, Android Keystore, iOS Keychain);
+        Refresh token (xoay vòng mỗi lần dùng): thiết bị cá nhân lưu trong kho bảo mật OS (Android Keystore, iOS Keychain; không có bản Windows — ADR-0101);
         Web và máy `shared_device` chỉ giữ trong RAM (ADR-0086). Không bao giờ lưu mật khẩu, không ghi vào `user://`/localStorage.
       properties:
         access_token: { type: string, maxLength: 8192 }

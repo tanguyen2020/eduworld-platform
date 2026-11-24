@@ -131,13 +131,13 @@
 - [x] T044 [P] Integration end-to-end đăng nhập `hs.an.3a` → mọi request sau có `X-Tenant-Id`; `ad.truong.a` bị chặn (TC-AUTH-001, TC-AUTH-014) — file: `src/game/tests/integration/auth/test_login_flow.gd` — ✅ viết `tests/integration/auth/test_login_flow.gd` (skip khi thiếu backend); **chưa chạy** với backend thật
 - [x] T045 [P] Lint theme override và typed check cho scene mới (TC-UI-003) — kiểm: `make godot-test` — ✅ `make godot-lint` (check_typed 136 file, lint theme 98, lint lớp 42, lint signal 72, khóa dịch, pseudo, fixture, no Admin UI) — gdlint chỉ chạy ở CI
 - [x] T046 [P] Cập nhật CHANGELOG — file: `CHANGELOG.md` — ✅ `CHANGELOG.md`
-- [ ] T047 Chạy [quickstart.md](quickstart.md) trên Windows + Android với backend thật và ghi bằng chứng — **chưa làm**: backend compose chưa nối binary (OQ F014-7) và chưa có thiết bị/emulator Android (lane F133); bằng chứng local thay thế ở quickstart.md mục Bằng chứng
+- [ ] T047 Chạy [quickstart.md](quickstart.md) trên Android + Web (ADR-0101; trước đây Windows + Android) với backend thật và ghi bằng chứng — **chưa làm**: backend compose chưa nối binary (OQ F014-7) và chưa có thiết bị/emulator Android (lane F133); bằng chứng local thay thế ở quickstart.md mục Bằng chứng
 
 ## OQ chốt 2026-11-20 (việc bổ sung)
 
 Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
 
-- [ ] T059 **OQ chốt 2026-11-20** (pinning) `ApiClient`/`HttpRequestPool` dùng `TLSOptions.client(trusted_chain)` với CA bundle từ cấu hình build (release, Windows/Android/iOS); test chứng chỉ ngoài bundle bị từ chối, không fallback — file: `src/game/scripts/networking/api_client.gd`, `src/game/tests/unit/networking/` — kiểm: `make godot-test` — cỡ S
+- [ ] T059 **OQ chốt 2026-11-20** (pinning) `ApiClient`/`HttpRequestPool` dùng `TLSOptions.client(trusted_chain)` với CA bundle từ cấu hình build (release, Android/iOS — ADR-0101); test chứng chỉ ngoài bundle bị từ chối, không fallback — file: `src/game/scripts/networking/api_client.gd`, `src/game/tests/unit/networking/` — kiểm: `make godot-test` — cỡ S
 
 ## Dependencies & Execution Order
 

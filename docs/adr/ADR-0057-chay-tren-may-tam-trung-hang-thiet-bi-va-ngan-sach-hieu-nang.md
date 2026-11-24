@@ -1,6 +1,9 @@
 # ADR-0057 — Chạy được trên máy tầm trung: hạng thiết bị và ngân sách hiệu năng
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-04 · **Tài liệu:** [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (bỏ Windows) · **Ngày:** 2026-11-15 · **OQ:** OQ-04 · **Tài liệu:** [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (bỏ Windows, 2026-11-24).** Không còn hiệu lực: cột hạng thiết bị "PC Windows" như một nền tảng riêng, mục tiêu 60 FPS trên PC, renderer Mobile/Forward+ trên PC và cột ngân sách "PC". PC phòng máy chơi bản Web, dùng ngân sách, preset và mục tiêu khung hình của Web; thông số phần cứng PC chỉ còn mô tả máy chạy trình duyệt ([PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md)). **Còn hiệu lực:** phần còn lại (hạng Android/iOS/Web, preset, độ phân giải động, ngân sách Mobile/Web).
 
 ## Bối cảnh
 
@@ -48,3 +51,4 @@ Stakeholder yêu cầu: game **đặc biệt phải chạy được trên máy t
 |---|---|---|
 | 2026-11-15 | Tạo ADR; thay phần ngân sách hiệu năng của ADR-0013 | Stakeholder |
 | 2026-11-20 | Owner chốt thông số (Accepted toàn bộ) | Owner |
+| 2026-11-24 | Superseded một phần bởi ADR-0101: bỏ hạng/cột PC Windows, PC phòng máy chạy bản Web | Owner dự án |

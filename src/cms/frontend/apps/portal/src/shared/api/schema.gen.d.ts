@@ -13057,7 +13057,7 @@ export interface components {
         };
         /**
          * @description Token Keycloak của học sinh (client `eduworld-game-backend`, `azp = eduworld-game-backend`). Access token chỉ trong RAM.
-         *     Refresh token (xoay vòng mỗi lần dùng): thiết bị cá nhân lưu trong kho bảo mật OS (Windows DPAPI, Android Keystore, iOS Keychain);
+         *     Refresh token (xoay vòng mỗi lần dùng): thiết bị cá nhân lưu trong kho bảo mật OS (Android Keystore, iOS Keychain; không có bản Windows — ADR-0101);
          *     Web và máy `shared_device` chỉ giữ trong RAM (ADR-0086). Không bao giờ lưu mật khẩu, không ghi vào `user://`/localStorage.
          */
         GameTokenSet: {
@@ -14534,7 +14534,7 @@ export interface components {
             order: components["schemas"]["ItemId"][];
         };
         OtherDevice: {
-            /** @description Ví dụ "Máy tính Windows", "Điện thoại Android" */
+            /** @description Ví dụ "Điện thoại Android", "Trình duyệt web" */
             device_label?: string;
             last_seen_at: components["schemas"]["Timestamp"];
             /** @enum {string} */

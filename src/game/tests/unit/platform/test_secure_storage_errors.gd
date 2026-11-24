@@ -67,10 +67,3 @@ func test_unavailable_cipher_never_writes_plaintext() -> void:
 	assert_int(_storage.save("t", SAMPLE.to_utf8_buffer())).is_equal(ERR_UNAVAILABLE)
 	assert_bool(FileAccess.file_exists(_storage.record_path("t"))).is_false()
 
-
-func test_dpapi_without_extension_fails_safely() -> void:
-	if DpapiSecureStorage.native_cipher() != null:
-		return
-	var dpapi: DpapiSecureStorage = DpapiSecureStorage.new(TEST_DIR)
-	assert_int(dpapi.save("t", SAMPLE.to_utf8_buffer())).is_equal(ERR_UNAVAILABLE)
-	assert_int(dpapi.load("t").size()).is_equal(0)
