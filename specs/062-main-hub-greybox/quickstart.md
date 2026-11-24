@@ -123,3 +123,9 @@ Kết luận: đường đăng nhập → phiên game → `listMyAssignments` (F
 - **T033 headless:** bước 1 (boot → version check với backend thật) OK; bước 1 đăng nhập → phiên → `listMyAssignments` đã có ở lượt 06:32; bước 3–7 chờ dữ liệu seed; bước 2, 8, 9, 10, 12 cần giao diện/thiết bị → owner kiểm tay; F062-AC-20/SC-002 → F133.
 
 **Để Done (theo thứ tự):** (1) owner chạy `EW_SEED_PASSWORD=<mật khẩu demo> make seed-content`; (2) chạy lại lệnh T018 ở §6 ngoài 21:30–06:30 (không cần `EDUWORLD_IT_CLIENT_VERSION` nếu dùng `--env=local`; harness vẫn cần biến này vì test nạp profile khác); (3) bước giao diện của §2 do owner kiểm tay.
+
+### 6.2 Lượt 3 (2026-11-24 17:07–17:10 ICT, owner cho chạy seed)
+
+- **Seed:** `EW_ENV=local EW_SEED_PASSWORD=*** … go -C src/backend run ./modules/learning/cmd/seed-content` → `learning content seed done … published_now=0`, `learning assignment seed done tenant=th-demo-a school=DEMOA1 assignments=2 created_now=2 published_now=2`.
+- **T018:** lệnh ở §6 (Godot 4.7.2 console, sau `--import`) → pass 2026-11-24 17:10 ICT với backend thật sau khi nạp seed bài giao (`seed-content`: 2 bài DEMOA1 khối 3): `hs.an.3a` 2 bài (`activity` 1, `question_set` 1, đủ `subject_name`, 2 intent; trace `06eedef3b5aac210ef03da4d3f0bf21e`), `hs.dung.7a` 0 bài (trace `74aa4fe6a5e3f964457c5d5aa76d6aac`) — 1/1 test case, 0 failures. Mỗi học sinh đăng nhập một lần, phiên kết thúc + đăng xuất 204.
+- **Còn lại (không chặn Done):** bước giao diện 2, 8, 9, 10 của §2 do owner kiểm tay trên cửa sổ `--env=local`; F062-AC-20/SC-002 đo thiết bị lab → F133; test timing F070 phụ thuộc tải máy.
