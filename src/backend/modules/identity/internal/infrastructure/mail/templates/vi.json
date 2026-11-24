@@ -1,0 +1,18 @@
+{
+  "school_safety_notification": {
+    "subject": "Có thông báo an toàn mới cần xác nhận",
+    "body": "Trường {{.SchoolName}} có một thông báo an toàn mới từ Đội An toàn EduWorld.\r\nVui lòng đăng nhập Admin Portal, xem và xác nhận trước {{.AckDueAt}}.\r\n\r\n{{.Link}}\r\n"
+  },
+  "school_safety_reminder": {
+    "subject": "Nhắc lại: thông báo an toàn chưa được xác nhận",
+    "body": "Nhắc lại lần {{.ReminderNo}}: trường {{.SchoolName}} còn một thông báo an toàn chưa được xác nhận (hạn {{.AckDueAt}}).\r\nVui lòng đăng nhập Admin Portal để xem và xác nhận.\r\n\r\n{{.Link}}\r\n"
+  },
+  "moderation_oncall_page": {
+    "subject": "[{{.Severity}}] Có vụ việc ưu tiên cao cần nhận",
+    "body": "Có một vụ việc mức ưu tiên {{.Severity}} chưa có người nhận. Vui lòng mở hàng đợi kiểm duyệt và nhận vụ việc.\r\n\r\n{{.Link}}\r\n"
+  },
+  "break_glass_request": {
+    "subject": "Có yêu cầu break-glass cần người thứ hai duyệt",
+    "body": "Một System Admin vừa gửi yêu cầu break-glass. Yêu cầu cần một System Admin khác xem và duyệt hoặc từ chối trong Admin Portal.\r\n\r\n{{.Link}}\r\n"
+  }
+}

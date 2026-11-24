@@ -43,6 +43,60 @@ var (
 			},
 		},
 	}
+	// AccountLocksColumns holds the columns for the "account_locks" table.
+	AccountLocksColumns = []*schema.Column{
+		{Name: "lock_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "source", Type: field.TypeString, Size: 32},
+		{Name: "source_ref_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "case_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "released_at", Type: field.TypeTime, Nullable: true},
+		{Name: "released_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "release_reason", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "source_event_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// AccountLocksTable holds the schema information for the "account_locks" table.
+	AccountLocksTable = &schema.Table{
+		Name:       "account_locks",
+		Columns:    AccountLocksColumns,
+		PrimaryKey: []*schema.Column{AccountLocksColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "account_locks_active_idx",
+				Unique:  false,
+				Columns: []*schema.Column{AccountLocksColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "released_at IS NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "account_locks_source_ref_uq",
+				Unique:  true,
+				Columns: []*schema.Column{AccountLocksColumns[11], AccountLocksColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "source_ref_id IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "account_locks_admin_source_uq",
+				Unique:  true,
+				Columns: []*schema.Column{AccountLocksColumns[10], AccountLocksColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "source_ref_id IS NULL AND released_at IS NULL AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// CountriesColumns holds the columns for the "countries" table.
 	CountriesColumns = []*schema.Column{
 		{Name: "country_code", Type: field.TypeString, Size: 2},
@@ -63,6 +117,50 @@ var (
 		Name:       "countries",
 		Columns:    CountriesColumns,
 		PrimaryKey: []*schema.Column{CountriesColumns[0]},
+	}
+	// EmailDeliveriesColumns holds the columns for the "email_deliveries" table.
+	EmailDeliveriesColumns = []*schema.Column{
+		{Name: "delivery_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "source_event_id", Type: field.TypeUUID},
+		{Name: "template_code", Type: field.TypeString, Size: 64},
+		{Name: "recipient_user_id", Type: field.TypeUUID},
+		{Name: "params", Type: field.TypeJSON},
+		{Name: "locale", Type: field.TypeString, Size: 8, Default: "vi"},
+		{Name: "status", Type: field.TypeString, Size: 16, Default: "pending"},
+		{Name: "attempts", Type: field.TypeInt16, Default: 0},
+		{Name: "next_attempt_at", Type: field.TypeTime, Nullable: true},
+		{Name: "sent_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_error_code", Type: field.TypeString, Nullable: true, Size: 64},
+	}
+	// EmailDeliveriesTable holds the schema information for the "email_deliveries" table.
+	EmailDeliveriesTable = &schema.Table{
+		Name:       "email_deliveries",
+		Columns:    EmailDeliveriesColumns,
+		PrimaryKey: []*schema.Column{EmailDeliveriesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "email_deliveries_once_uq",
+				Unique:  true,
+				Columns: []*schema.Column{EmailDeliveriesColumns[10], EmailDeliveriesColumns[12], EmailDeliveriesColumns[11]},
+			},
+			{
+				Name:    "email_deliveries_due_idx",
+				Unique:  false,
+				Columns: []*schema.Column{EmailDeliveriesColumns[15], EmailDeliveriesColumns[17]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'pending'",
+				},
+			},
+		},
 	}
 	// ExternalIdentitiesColumns holds the columns for the "external_identities" table.
 	ExternalIdentitiesColumns = []*schema.Column{
@@ -1059,7 +1157,9 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AcademicYearsTable,
+		AccountLocksTable,
 		CountriesTable,
+		EmailDeliveriesTable,
 		ExternalIdentitiesTable,
 		GameAuthSessionsTable,
 		LoginEventsTable,
@@ -1092,8 +1192,14 @@ func init() {
 	AcademicYearsTable.Annotation = &entsql.Annotation{
 		Table: "academic_years",
 	}
+	AccountLocksTable.Annotation = &entsql.Annotation{
+		Table: "account_locks",
+	}
 	CountriesTable.Annotation = &entsql.Annotation{
 		Table: "countries",
+	}
+	EmailDeliveriesTable.Annotation = &entsql.Annotation{
+		Table: "email_deliveries",
 	}
 	ExternalIdentitiesTable.Annotation = &entsql.Annotation{
 		Table: "external_identities",

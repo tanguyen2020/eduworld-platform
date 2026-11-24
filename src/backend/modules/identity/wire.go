@@ -30,6 +30,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/portalcatalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/portalmetrics"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/safetymetrics"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/scanner"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/settingscfg"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/sis/contract"
@@ -221,7 +222,8 @@ func build(r *module.Registry, m *Module, in Imports) error {
 	}
 	run := command.SisRun{UoW: core.UoW, Savepoints: core.UoW, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
 		Missing: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
-		Rules: write.SisSyncRepo{}, Events: events, Audit: auditor, Observer: metrics.Runs{}, History: write.LifecycleRepo{}}
+		Rules: write.SisSyncRepo{}, Events: events, Audit: auditor, Observer: metrics.Runs{}, History: write.LifecycleRepo{},
+		Locks: write.AccountLockRepo{}}
 	if k := cfg.String("EW_SIS_ID_HASH_KEY"); k != "" {
 		run.IDHashKey = []byte(k)
 	}
@@ -295,6 +297,18 @@ func build(r *module.Registry, m *Module, in Imports) error {
 	if err != nil {
 		return err
 	}
+	// F124: enforcement of the Safety Team — sanction account_lock (identity.account_locks) and the staff emails.
+	sm, err := safetymetrics.New(reg)
+	if err != nil {
+		return err
+	}
+	links, err := mailLinks(cfg, portalCfg.PortalBaseURL)
+	if err != nil {
+		return err
+	}
+	staffMail := command.StaffMail{UoW: core.UoW, Deliveries: write.EmailDeliveryRepo{}, Directory: write.StaffDirectoryRepo{}, Mailer: mailer,
+		Audit: auditor, Metrics: sm, Links: links, MaxAttempts: cfg.Int("EW_EMAIL_DELIVERY_MAX_ATTEMPTS", command.DefaultEmailMaxAttempts)}
+	sanctionLocks := command.SanctionLocks{Repo: write.LifecycleRepo{}, Locks: write.AccountLockRepo{}, Events: events, Audit: auditor, Metrics: sm}
 	portalAuth := &command.PortalAuth{UoW: core.UoW, Accounts: write.PortalAccountRepo{}, Audit: auditor, IdP: portalTokens, KC: kc,
 		Tickets: cache.SetupTickets{C: vk}, Sessions: cache.PortalSessions{C: vk}, Limiter: cache.RateLimiter{C: vk}, Metrics: pm,
 		Resets: write.PortalResetTokenRepo{}, Mailer: mailer, Cfg: portalCfg}
@@ -329,7 +343,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 		Flags:       command.FeatureFlags{UoW: core.UoW, Repo: write.FeatureFlagRepo{}, Events: events, Audit: auditor, Cache: toggles},
 		FlagList:    query.FeatureFlags{Reader: read.FeatureFlagModel{Session: core.ReadSession}, Cursors: cursors}}
 	lifecycleH := identityhttp.LifecycleHandlers{
-		Lifecycle: command.UserLifecycle{UoW: core.UoW, Repo: write.LifecycleRepo{}, Events: events, Audit: auditor},
+		Lifecycle: command.UserLifecycle{UoW: core.UoW, Repo: write.LifecycleRepo{}, Locks: write.AccountLockRepo{}, Events: events, Audit: auditor},
 		ResetPassword: command.ResetStudentPassword{UoW: core.UoW, Repo: write.LifecycleRepo{}, KC: kc, Sessions: gameAuth, Events: events,
 			Audit: auditor, Issuers: issuers},
 		Cleanup: cleanup}
@@ -401,6 +415,8 @@ func build(r *module.Registry, m *Module, in Imports) error {
 			PlayTime: write.PlayTimeRepo{}, Location: policy.Location()}}.Handle}, // OQ-17
 		consumer.DefaultAssignmentsName: {consumer.DefaultAssignmentsSubjects, consumer.DefaultAssignments{Apply: command.ApplyDefaultAssignments{PlatformAdminDeps: pad}}.Handle},
 		consumer.FeatureToggleCacheName: {[]string{consumer.FeatureToggleCacheSubject}, consumer.FeatureToggleCache{Cache: toggles}.Handle},
+		consumer.SanctionEnforcerName:   {consumer.SanctionEnforcerSubjects, consumer.SanctionEnforcer{Locks: sanctionLocks, Audit: auditor}.Handle},
+		consumer.StaffMailerName:        {consumer.StaffMailerSubjects, consumer.StaffMailer{Mail: staffMail}.Handle},
 	}
 	for name, c := range consumers {
 		c := c
@@ -471,6 +487,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 		Storage: objects, Jobs: queue}.RunOnce)
 	r.Job(Name, "sis-staging-anonymizer", job.SisStagingAnonymizeTick, command.AnonymizeSisStaging{UoW: core.UoW,
 		Staging: write.SisSyncRepo{}}.RunOnce)
+	r.Job(Name, "email-sender", command.EmailSenderInterval, staffMail.SendDue) // F124: staff emails with retries
 	r.Job(Name, "sis-scheduler", job.SisSchedulerInterval, command.ScheduleSisSync{UoW: core.UoW, Repo: write.SisContractRepo{},
 		Jobs: queue}.RunOnce)
 	return nil

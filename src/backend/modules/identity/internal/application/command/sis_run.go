@@ -78,6 +78,9 @@ type SisRun struct {
 	Observer    port.SyncRunObserver      // optional: last success metric
 	IDHashKey   []byte                    // key of the national id hash (EW_SIS_ID_HASH_KEY [Proposed]); empty = no transfer matching
 	History     write.LifecycleRepository // F016 US2: identity.user_status_history of SIS status changes (nil = not recorded)
+	// Locks records the SIS lock source (F124, identity.account_locks): suspended adds a sis lock, active releases it and
+	// leaves the account locked while a lock of another source remains (a sanction of the Safety Team, a school lock).
+	Locks write.AccountLockRepository
 }
 
 // ErrNoLoginUsername: a new student without login.username cannot get an account.
@@ -832,6 +835,27 @@ func (h SisRun) applyStatus(ctx context.Context, st *runState, userID uuid.UUID,
 		return skip(problem.ValidationFailed, "status")
 	}
 	t, uid := st.tenantID, userID.String()
+	if eff.UserStatus != "" && h.Locks != nil {
+		now := time.Now().UTC()
+		switch eff.UserStatus {
+		case "locked":
+			why := "sis:" + recordStatus
+			if _, err := h.Locks.Add(ctx, write.AccountLock{TenantID: &t, UserID: userID, Source: user.LockSIS, Reason: &why, CreatedAt: now}); err != nil {
+				return err
+			}
+		case "active":
+			if _, err := h.Locks.ReleaseSource(ctx, userID, user.LockSIS, nil, "sis:"+recordStatus, nil, now); err != nil {
+				return err
+			}
+			remaining, err := h.Locks.ActiveSources(ctx, userID)
+			if err != nil {
+				return err
+			}
+			if !user.AfterRelease(remaining).Active {
+				eff.UserStatus = "" // still locked by another source (F124-AC-02)
+			}
+		}
+	}
 	if eff.UserStatus != "" {
 		from, changed, err := h.Sync.SetUserStatus(ctx, userID, eff.UserStatus)
 		if err != nil {

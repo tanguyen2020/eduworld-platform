@@ -29,6 +29,7 @@ type UserView struct {
 	DisplayName     string         `json:"display_name,omitempty"`
 	Locale          string         `json:"locale,omitempty"`
 	Source          string         `json:"source"`
+	LockSources     []string       `json:"lock_sources,omitempty"` // F124-AC-06: sources of the active locks (never the case or the reason)
 	LastLoginAt     *time.Time     `json:"last_login_at,omitempty"`
 	TenantIDs       []uuid.UUID    `json:"tenant_ids,omitempty"` // listPlatformUsers with tenant_ids only (F059-1)
 	UserRoles       []UserRoleView `json:"user_roles"`

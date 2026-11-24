@@ -46,7 +46,9 @@ func (m PrincipalModel) TenantUsers(ctx context.Context, f read.TenantUserFilter
 		rows, err := tx.QueryContext(ctx, `SELECT u.user_id, u.user_type, u.primary_tenant_id, u.status, u.username, u.email, coalesce(u.display_name, ''),
 				u.locale, u.last_login_at, u.version,
 				EXISTS (SELECT 1 FROM identity.sis_identity_links l WHERE l.user_id = u.user_id AND l.tenant_id = $1 AND l.status = 'active'
-					AND l.deleted_at IS NULL)
+					AND l.deleted_at IS NULL),
+				coalesce((SELECT string_agg(DISTINCT al.source, ',' ORDER BY al.source) FROM identity.account_locks al
+					WHERE al.user_id = u.user_id AND al.released_at IS NULL AND al.deleted_at IS NULL), '')
 			FROM (SELECT user_id, min(school_id::text)::uuid AS school_id FROM identity.tenant_memberships_v WHERE tenant_id = $1 GROUP BY user_id) m
 			JOIN identity.users u ON u.user_id = m.user_id
 			WHERE `+strings.Join(conds, " AND ")+` ORDER BY u.user_id DESC LIMIT `+arg(f.Limit+1), args...)
@@ -60,8 +62,9 @@ func (m PrincipalModel) TenantUsers(ctx context.Context, f read.TenantUserFilter
 			var email sql.NullString
 			var last sql.NullTime
 			var sis bool
+			var locks string
 			if err := rows.Scan(&v.UserID, &v.UserType, &home, &v.Status, &v.Username, &email, &v.DisplayName, &v.Locale, &last, &v.Version,
-				&sis); err != nil {
+				&sis, &locks); err != nil {
 				return err
 			}
 			v.PrimaryTenantID = nullID(home)
@@ -71,6 +74,9 @@ func (m PrincipalModel) TenantUsers(ctx context.Context, f read.TenantUserFilter
 			if last.Valid {
 				t := last.Time
 				v.LastLoginAt = &t
+			}
+			if locks != "" && v.Status == "locked" {
+				v.LockSources = strings.Split(locks, ",")
 			}
 			v.Source = "manual"
 			if sis {

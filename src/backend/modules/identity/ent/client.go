@@ -16,7 +16,9 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/academicyear"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/accountlock"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/emaildelivery"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/gameauthsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/loginevent"
@@ -53,8 +55,12 @@ type Client struct {
 	Schema *migrate.Schema
 	// AcademicYear is the client for interacting with the AcademicYear builders.
 	AcademicYear *AcademicYearClient
+	// AccountLock is the client for interacting with the AccountLock builders.
+	AccountLock *AccountLockClient
 	// Country is the client for interacting with the Country builders.
 	Country *CountryClient
+	// EmailDelivery is the client for interacting with the EmailDelivery builders.
+	EmailDelivery *EmailDeliveryClient
 	// ExternalIdentity is the client for interacting with the ExternalIdentity builders.
 	ExternalIdentity *ExternalIdentityClient
 	// GameAuthSession is the client for interacting with the GameAuthSession builders.
@@ -117,7 +123,9 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.AcademicYear = NewAcademicYearClient(c.config)
+	c.AccountLock = NewAccountLockClient(c.config)
 	c.Country = NewCountryClient(c.config)
+	c.EmailDelivery = NewEmailDeliveryClient(c.config)
 	c.ExternalIdentity = NewExternalIdentityClient(c.config)
 	c.GameAuthSession = NewGameAuthSessionClient(c.config)
 	c.LoginEvent = NewLoginEventClient(c.config)
@@ -239,7 +247,9 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:                      ctx,
 		config:                   cfg,
 		AcademicYear:             NewAcademicYearClient(cfg),
+		AccountLock:              NewAccountLockClient(cfg),
 		Country:                  NewCountryClient(cfg),
+		EmailDelivery:            NewEmailDeliveryClient(cfg),
 		ExternalIdentity:         NewExternalIdentityClient(cfg),
 		GameAuthSession:          NewGameAuthSessionClient(cfg),
 		LoginEvent:               NewLoginEventClient(cfg),
@@ -285,7 +295,9 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:                      ctx,
 		config:                   cfg,
 		AcademicYear:             NewAcademicYearClient(cfg),
+		AccountLock:              NewAccountLockClient(cfg),
 		Country:                  NewCountryClient(cfg),
+		EmailDelivery:            NewEmailDeliveryClient(cfg),
 		ExternalIdentity:         NewExternalIdentityClient(cfg),
 		GameAuthSession:          NewGameAuthSessionClient(cfg),
 		LoginEvent:               NewLoginEventClient(cfg),
@@ -340,12 +352,13 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.AcademicYear, c.Country, c.ExternalIdentity, c.GameAuthSession, c.LoginEvent,
-		c.Permission, c.PortalPasswordResetToken, c.Province, c.ProvinceSuccession,
-		c.ReconciliationIssue, c.Role, c.RolePermission, c.School, c.SisConnection,
-		c.SisConnectionSchool, c.SisIdentityLink, c.SisImport, c.SisLink,
-		c.StagingRecord, c.Student, c.StudentLoginKey, c.SyncRecordError, c.SyncRun,
-		c.SyncedStudent, c.Tenant, c.User, c.UserRole,
+		c.AcademicYear, c.AccountLock, c.Country, c.EmailDelivery, c.ExternalIdentity,
+		c.GameAuthSession, c.LoginEvent, c.Permission, c.PortalPasswordResetToken,
+		c.Province, c.ProvinceSuccession, c.ReconciliationIssue, c.Role,
+		c.RolePermission, c.School, c.SisConnection, c.SisConnectionSchool,
+		c.SisIdentityLink, c.SisImport, c.SisLink, c.StagingRecord, c.Student,
+		c.StudentLoginKey, c.SyncRecordError, c.SyncRun, c.SyncedStudent, c.Tenant,
+		c.User, c.UserRole,
 	} {
 		n.Use(hooks...)
 	}
@@ -355,12 +368,13 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.AcademicYear, c.Country, c.ExternalIdentity, c.GameAuthSession, c.LoginEvent,
-		c.Permission, c.PortalPasswordResetToken, c.Province, c.ProvinceSuccession,
-		c.ReconciliationIssue, c.Role, c.RolePermission, c.School, c.SisConnection,
-		c.SisConnectionSchool, c.SisIdentityLink, c.SisImport, c.SisLink,
-		c.StagingRecord, c.Student, c.StudentLoginKey, c.SyncRecordError, c.SyncRun,
-		c.SyncedStudent, c.Tenant, c.User, c.UserRole,
+		c.AcademicYear, c.AccountLock, c.Country, c.EmailDelivery, c.ExternalIdentity,
+		c.GameAuthSession, c.LoginEvent, c.Permission, c.PortalPasswordResetToken,
+		c.Province, c.ProvinceSuccession, c.ReconciliationIssue, c.Role,
+		c.RolePermission, c.School, c.SisConnection, c.SisConnectionSchool,
+		c.SisIdentityLink, c.SisImport, c.SisLink, c.StagingRecord, c.Student,
+		c.StudentLoginKey, c.SyncRecordError, c.SyncRun, c.SyncedStudent, c.Tenant,
+		c.User, c.UserRole,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -371,8 +385,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *AcademicYearMutation:
 		return c.AcademicYear.mutate(ctx, m)
+	case *AccountLockMutation:
+		return c.AccountLock.mutate(ctx, m)
 	case *CountryMutation:
 		return c.Country.mutate(ctx, m)
+	case *EmailDeliveryMutation:
+		return c.EmailDelivery.mutate(ctx, m)
 	case *ExternalIdentityMutation:
 		return c.ExternalIdentity.mutate(ctx, m)
 	case *GameAuthSessionMutation:
@@ -563,6 +581,141 @@ func (c *AcademicYearClient) mutate(ctx context.Context, m *AcademicYearMutation
 	}
 }
 
+// AccountLockClient is a client for the AccountLock schema.
+type AccountLockClient struct {
+	config
+}
+
+// NewAccountLockClient returns a client for the AccountLock from the given config.
+func NewAccountLockClient(c config) *AccountLockClient {
+	return &AccountLockClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `accountlock.Hooks(f(g(h())))`.
+func (c *AccountLockClient) Use(hooks ...Hook) {
+	c.hooks.AccountLock = append(c.hooks.AccountLock, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `accountlock.Intercept(f(g(h())))`.
+func (c *AccountLockClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AccountLock = append(c.inters.AccountLock, interceptors...)
+}
+
+// Create returns a builder for creating a AccountLock entity.
+func (c *AccountLockClient) Create() *AccountLockCreate {
+	mutation := newAccountLockMutation(c.config, OpCreate)
+	return &AccountLockCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AccountLock entities.
+func (c *AccountLockClient) CreateBulk(builders ...*AccountLockCreate) *AccountLockCreateBulk {
+	return &AccountLockCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AccountLockClient) MapCreateBulk(slice any, setFunc func(*AccountLockCreate, int)) *AccountLockCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AccountLockCreateBulk{err: fmt.Errorf("calling to AccountLockClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AccountLockCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AccountLockCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AccountLock.
+func (c *AccountLockClient) Update() *AccountLockUpdate {
+	mutation := newAccountLockMutation(c.config, OpUpdate)
+	return &AccountLockUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AccountLockClient) UpdateOne(_m *AccountLock) *AccountLockUpdateOne {
+	mutation := newAccountLockMutation(c.config, OpUpdateOne, withAccountLock(_m))
+	return &AccountLockUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AccountLockClient) UpdateOneID(id uuid.UUID) *AccountLockUpdateOne {
+	mutation := newAccountLockMutation(c.config, OpUpdateOne, withAccountLockID(id))
+	return &AccountLockUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AccountLock.
+func (c *AccountLockClient) Delete() *AccountLockDelete {
+	mutation := newAccountLockMutation(c.config, OpDelete)
+	return &AccountLockDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AccountLockClient) DeleteOne(_m *AccountLock) *AccountLockDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AccountLockClient) DeleteOneID(id uuid.UUID) *AccountLockDeleteOne {
+	builder := c.Delete().Where(accountlock.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AccountLockDeleteOne{builder}
+}
+
+// Query returns a query builder for AccountLock.
+func (c *AccountLockClient) Query() *AccountLockQuery {
+	return &AccountLockQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAccountLock},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AccountLock entity by its id.
+func (c *AccountLockClient) Get(ctx context.Context, id uuid.UUID) (*AccountLock, error) {
+	return c.Query().Where(accountlock.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AccountLockClient) GetX(ctx context.Context, id uuid.UUID) *AccountLock {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *AccountLockClient) Hooks() []Hook {
+	hooks := c.hooks.AccountLock
+	return append(hooks[:len(hooks):len(hooks)], accountlock.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *AccountLockClient) Interceptors() []Interceptor {
+	inters := c.inters.AccountLock
+	return append(inters[:len(inters):len(inters)], accountlock.Interceptors[:]...)
+}
+
+func (c *AccountLockClient) mutate(ctx context.Context, m *AccountLockMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AccountLockCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AccountLockUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AccountLockUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AccountLockDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AccountLock mutation op: %q", m.Op())
+	}
+}
+
 // CountryClient is a client for the Country schema.
 type CountryClient struct {
 	config
@@ -695,6 +848,141 @@ func (c *CountryClient) mutate(ctx context.Context, m *CountryMutation) (Value, 
 		return (&CountryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Country mutation op: %q", m.Op())
+	}
+}
+
+// EmailDeliveryClient is a client for the EmailDelivery schema.
+type EmailDeliveryClient struct {
+	config
+}
+
+// NewEmailDeliveryClient returns a client for the EmailDelivery from the given config.
+func NewEmailDeliveryClient(c config) *EmailDeliveryClient {
+	return &EmailDeliveryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `emaildelivery.Hooks(f(g(h())))`.
+func (c *EmailDeliveryClient) Use(hooks ...Hook) {
+	c.hooks.EmailDelivery = append(c.hooks.EmailDelivery, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `emaildelivery.Intercept(f(g(h())))`.
+func (c *EmailDeliveryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EmailDelivery = append(c.inters.EmailDelivery, interceptors...)
+}
+
+// Create returns a builder for creating a EmailDelivery entity.
+func (c *EmailDeliveryClient) Create() *EmailDeliveryCreate {
+	mutation := newEmailDeliveryMutation(c.config, OpCreate)
+	return &EmailDeliveryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EmailDelivery entities.
+func (c *EmailDeliveryClient) CreateBulk(builders ...*EmailDeliveryCreate) *EmailDeliveryCreateBulk {
+	return &EmailDeliveryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EmailDeliveryClient) MapCreateBulk(slice any, setFunc func(*EmailDeliveryCreate, int)) *EmailDeliveryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EmailDeliveryCreateBulk{err: fmt.Errorf("calling to EmailDeliveryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EmailDeliveryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EmailDeliveryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EmailDelivery.
+func (c *EmailDeliveryClient) Update() *EmailDeliveryUpdate {
+	mutation := newEmailDeliveryMutation(c.config, OpUpdate)
+	return &EmailDeliveryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EmailDeliveryClient) UpdateOne(_m *EmailDelivery) *EmailDeliveryUpdateOne {
+	mutation := newEmailDeliveryMutation(c.config, OpUpdateOne, withEmailDelivery(_m))
+	return &EmailDeliveryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EmailDeliveryClient) UpdateOneID(id uuid.UUID) *EmailDeliveryUpdateOne {
+	mutation := newEmailDeliveryMutation(c.config, OpUpdateOne, withEmailDeliveryID(id))
+	return &EmailDeliveryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EmailDelivery.
+func (c *EmailDeliveryClient) Delete() *EmailDeliveryDelete {
+	mutation := newEmailDeliveryMutation(c.config, OpDelete)
+	return &EmailDeliveryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EmailDeliveryClient) DeleteOne(_m *EmailDelivery) *EmailDeliveryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EmailDeliveryClient) DeleteOneID(id uuid.UUID) *EmailDeliveryDeleteOne {
+	builder := c.Delete().Where(emaildelivery.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EmailDeliveryDeleteOne{builder}
+}
+
+// Query returns a query builder for EmailDelivery.
+func (c *EmailDeliveryClient) Query() *EmailDeliveryQuery {
+	return &EmailDeliveryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEmailDelivery},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EmailDelivery entity by its id.
+func (c *EmailDeliveryClient) Get(ctx context.Context, id uuid.UUID) (*EmailDelivery, error) {
+	return c.Query().Where(emaildelivery.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EmailDeliveryClient) GetX(ctx context.Context, id uuid.UUID) *EmailDelivery {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *EmailDeliveryClient) Hooks() []Hook {
+	hooks := c.hooks.EmailDelivery
+	return append(hooks[:len(hooks):len(hooks)], emaildelivery.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *EmailDeliveryClient) Interceptors() []Interceptor {
+	inters := c.inters.EmailDelivery
+	return append(inters[:len(inters):len(inters)], emaildelivery.Interceptors[:]...)
+}
+
+func (c *EmailDeliveryClient) mutate(ctx context.Context, m *EmailDeliveryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EmailDeliveryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EmailDeliveryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EmailDeliveryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EmailDeliveryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EmailDelivery mutation op: %q", m.Op())
 	}
 }
 
@@ -4074,20 +4362,20 @@ func (c *UserRoleClient) mutate(ctx context.Context, m *UserRoleMutation) (Value
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AcademicYear, Country, ExternalIdentity, GameAuthSession, LoginEvent,
-		Permission, PortalPasswordResetToken, Province, ProvinceSuccession,
-		ReconciliationIssue, Role, RolePermission, School, SisConnection,
-		SisConnectionSchool, SisIdentityLink, SisImport, SisLink, StagingRecord,
-		Student, StudentLoginKey, SyncRecordError, SyncRun, SyncedStudent, Tenant,
-		User, UserRole []ent.Hook
+		AcademicYear, AccountLock, Country, EmailDelivery, ExternalIdentity,
+		GameAuthSession, LoginEvent, Permission, PortalPasswordResetToken, Province,
+		ProvinceSuccession, ReconciliationIssue, Role, RolePermission, School,
+		SisConnection, SisConnectionSchool, SisIdentityLink, SisImport, SisLink,
+		StagingRecord, Student, StudentLoginKey, SyncRecordError, SyncRun,
+		SyncedStudent, Tenant, User, UserRole []ent.Hook
 	}
 	inters struct {
-		AcademicYear, Country, ExternalIdentity, GameAuthSession, LoginEvent,
-		Permission, PortalPasswordResetToken, Province, ProvinceSuccession,
-		ReconciliationIssue, Role, RolePermission, School, SisConnection,
-		SisConnectionSchool, SisIdentityLink, SisImport, SisLink, StagingRecord,
-		Student, StudentLoginKey, SyncRecordError, SyncRun, SyncedStudent, Tenant,
-		User, UserRole []ent.Interceptor
+		AcademicYear, AccountLock, Country, EmailDelivery, ExternalIdentity,
+		GameAuthSession, LoginEvent, Permission, PortalPasswordResetToken, Province,
+		ProvinceSuccession, ReconciliationIssue, Role, RolePermission, School,
+		SisConnection, SisConnectionSchool, SisIdentityLink, SisImport, SisLink,
+		StagingRecord, Student, StudentLoginKey, SyncRecordError, SyncRun,
+		SyncedStudent, Tenant, User, UserRole []ent.Interceptor
 	}
 )
 
@@ -4095,7 +4383,9 @@ var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
 		AcademicYear:             tableSchemas[2],
+		AccountLock:              tableSchemas[1],
 		Country:                  tableSchemas[0],
+		EmailDelivery:            tableSchemas[1],
 		ExternalIdentity:         tableSchemas[1],
 		GameAuthSession:          tableSchemas[1],
 		LoginEvent:               tableSchemas[1],

@@ -1,0 +1,18 @@
+{
+  "school_safety_notification": {
+    "subject": "A new safety notification needs your acknowledgement",
+    "body": "{{.SchoolName}} has a new safety notification from the EduWorld Safety Team.\r\nPlease sign in to the Admin Portal, review and acknowledge it before {{.AckDueAt}}.\r\n\r\n{{.Link}}\r\n"
+  },
+  "school_safety_reminder": {
+    "subject": "Reminder: a safety notification is not acknowledged",
+    "body": "Reminder {{.ReminderNo}}: {{.SchoolName}} has a safety notification that is not acknowledged yet (due {{.AckDueAt}}).\r\nPlease sign in to the Admin Portal to review and acknowledge it.\r\n\r\n{{.Link}}\r\n"
+  },
+  "moderation_oncall_page": {
+    "subject": "[{{.Severity}}] A high-priority case needs to be claimed",
+    "body": "A case of priority {{.Severity}} has no one handling it yet. Please open the moderation queue and claim it.\r\n\r\n{{.Link}}\r\n"
+  },
+  "break_glass_request": {
+    "subject": "A break-glass request needs a second approver",
+    "body": "A System Admin has requested break-glass access. Another System Admin must review it and approve or reject it in the Admin Portal.\r\n\r\n{{.Link}}\r\n"
+  }
+}

@@ -7,7 +7,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/academicyear"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/accountlock"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/emaildelivery"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/gameauthsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/loginevent"
@@ -93,6 +95,49 @@ func init() {
 	academicyearDescID := academicyearMixinFields0[0].Descriptor()
 	// academicyear.DefaultID holds the default value on creation for the id field.
 	academicyear.DefaultID = academicyearDescID.Default.(func() uuid.UUID)
+	accountlockMixin := schema.AccountLock{}.Mixin()
+	accountlockMixinHooks0 := accountlockMixin[0].Hooks()
+	accountlock.Hooks[0] = accountlockMixinHooks0[0]
+	accountlockMixinInters0 := accountlockMixin[0].Interceptors()
+	accountlock.Interceptors[0] = accountlockMixinInters0[0]
+	accountlockMixinFields0 := accountlockMixin[0].Fields()
+	_ = accountlockMixinFields0
+	accountlockFields := schema.AccountLock{}.Fields()
+	_ = accountlockFields
+	// accountlockDescCreatedAt is the schema descriptor for created_at field.
+	accountlockDescCreatedAt := accountlockMixinFields0[2].Descriptor()
+	// accountlock.DefaultCreatedAt holds the default value on creation for the created_at field.
+	accountlock.DefaultCreatedAt = accountlockDescCreatedAt.Default.(func() time.Time)
+	// accountlockDescUpdatedAt is the schema descriptor for updated_at field.
+	accountlockDescUpdatedAt := accountlockMixinFields0[4].Descriptor()
+	// accountlock.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	accountlock.DefaultUpdatedAt = accountlockDescUpdatedAt.Default.(func() time.Time)
+	// accountlock.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	accountlock.UpdateDefaultUpdatedAt = accountlockDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// accountlockDescDeleteReason is the schema descriptor for delete_reason field.
+	accountlockDescDeleteReason := accountlockMixinFields0[8].Descriptor()
+	// accountlock.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	accountlock.DeleteReasonValidator = accountlockDescDeleteReason.Validators[0].(func(string) error)
+	// accountlockDescVersion is the schema descriptor for version field.
+	accountlockDescVersion := accountlockMixinFields0[9].Descriptor()
+	// accountlock.DefaultVersion holds the default value on creation for the version field.
+	accountlock.DefaultVersion = accountlockDescVersion.Default.(int64)
+	// accountlockDescSource is the schema descriptor for source field.
+	accountlockDescSource := accountlockFields[1].Descriptor()
+	// accountlock.SourceValidator is a validator for the "source" field. It is called by the builders before save.
+	accountlock.SourceValidator = accountlockDescSource.Validators[0].(func(string) error)
+	// accountlockDescReason is the schema descriptor for reason field.
+	accountlockDescReason := accountlockFields[4].Descriptor()
+	// accountlock.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	accountlock.ReasonValidator = accountlockDescReason.Validators[0].(func(string) error)
+	// accountlockDescReleaseReason is the schema descriptor for release_reason field.
+	accountlockDescReleaseReason := accountlockFields[7].Descriptor()
+	// accountlock.ReleaseReasonValidator is a validator for the "release_reason" field. It is called by the builders before save.
+	accountlock.ReleaseReasonValidator = accountlockDescReleaseReason.Validators[0].(func(string) error)
+	// accountlockDescID is the schema descriptor for id field.
+	accountlockDescID := accountlockMixinFields0[0].Descriptor()
+	// accountlock.DefaultID holds the default value on creation for the id field.
+	accountlock.DefaultID = accountlockDescID.Default.(func() uuid.UUID)
 	countryMixin := schema.Country{}.Mixin()
 	countryMixinHooks0 := countryMixin[0].Hooks()
 	country.Hooks[0] = countryMixinHooks0[0]
@@ -148,6 +193,61 @@ func init() {
 			return nil
 		}
 	}()
+	emaildeliveryMixin := schema.EmailDelivery{}.Mixin()
+	emaildeliveryMixinHooks0 := emaildeliveryMixin[0].Hooks()
+	emaildelivery.Hooks[0] = emaildeliveryMixinHooks0[0]
+	emaildeliveryMixinInters0 := emaildeliveryMixin[0].Interceptors()
+	emaildelivery.Interceptors[0] = emaildeliveryMixinInters0[0]
+	emaildeliveryMixinFields0 := emaildeliveryMixin[0].Fields()
+	_ = emaildeliveryMixinFields0
+	emaildeliveryFields := schema.EmailDelivery{}.Fields()
+	_ = emaildeliveryFields
+	// emaildeliveryDescCreatedAt is the schema descriptor for created_at field.
+	emaildeliveryDescCreatedAt := emaildeliveryMixinFields0[2].Descriptor()
+	// emaildelivery.DefaultCreatedAt holds the default value on creation for the created_at field.
+	emaildelivery.DefaultCreatedAt = emaildeliveryDescCreatedAt.Default.(func() time.Time)
+	// emaildeliveryDescUpdatedAt is the schema descriptor for updated_at field.
+	emaildeliveryDescUpdatedAt := emaildeliveryMixinFields0[4].Descriptor()
+	// emaildelivery.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	emaildelivery.DefaultUpdatedAt = emaildeliveryDescUpdatedAt.Default.(func() time.Time)
+	// emaildelivery.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	emaildelivery.UpdateDefaultUpdatedAt = emaildeliveryDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// emaildeliveryDescDeleteReason is the schema descriptor for delete_reason field.
+	emaildeliveryDescDeleteReason := emaildeliveryMixinFields0[8].Descriptor()
+	// emaildelivery.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	emaildelivery.DeleteReasonValidator = emaildeliveryDescDeleteReason.Validators[0].(func(string) error)
+	// emaildeliveryDescVersion is the schema descriptor for version field.
+	emaildeliveryDescVersion := emaildeliveryMixinFields0[9].Descriptor()
+	// emaildelivery.DefaultVersion holds the default value on creation for the version field.
+	emaildelivery.DefaultVersion = emaildeliveryDescVersion.Default.(int64)
+	// emaildeliveryDescTemplateCode is the schema descriptor for template_code field.
+	emaildeliveryDescTemplateCode := emaildeliveryFields[1].Descriptor()
+	// emaildelivery.TemplateCodeValidator is a validator for the "template_code" field. It is called by the builders before save.
+	emaildelivery.TemplateCodeValidator = emaildeliveryDescTemplateCode.Validators[0].(func(string) error)
+	// emaildeliveryDescLocale is the schema descriptor for locale field.
+	emaildeliveryDescLocale := emaildeliveryFields[4].Descriptor()
+	// emaildelivery.DefaultLocale holds the default value on creation for the locale field.
+	emaildelivery.DefaultLocale = emaildeliveryDescLocale.Default.(string)
+	// emaildelivery.LocaleValidator is a validator for the "locale" field. It is called by the builders before save.
+	emaildelivery.LocaleValidator = emaildeliveryDescLocale.Validators[0].(func(string) error)
+	// emaildeliveryDescStatus is the schema descriptor for status field.
+	emaildeliveryDescStatus := emaildeliveryFields[5].Descriptor()
+	// emaildelivery.DefaultStatus holds the default value on creation for the status field.
+	emaildelivery.DefaultStatus = emaildeliveryDescStatus.Default.(string)
+	// emaildelivery.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	emaildelivery.StatusValidator = emaildeliveryDescStatus.Validators[0].(func(string) error)
+	// emaildeliveryDescAttempts is the schema descriptor for attempts field.
+	emaildeliveryDescAttempts := emaildeliveryFields[6].Descriptor()
+	// emaildelivery.DefaultAttempts holds the default value on creation for the attempts field.
+	emaildelivery.DefaultAttempts = emaildeliveryDescAttempts.Default.(int16)
+	// emaildeliveryDescLastErrorCode is the schema descriptor for last_error_code field.
+	emaildeliveryDescLastErrorCode := emaildeliveryFields[9].Descriptor()
+	// emaildelivery.LastErrorCodeValidator is a validator for the "last_error_code" field. It is called by the builders before save.
+	emaildelivery.LastErrorCodeValidator = emaildeliveryDescLastErrorCode.Validators[0].(func(string) error)
+	// emaildeliveryDescID is the schema descriptor for id field.
+	emaildeliveryDescID := emaildeliveryMixinFields0[0].Descriptor()
+	// emaildelivery.DefaultID holds the default value on creation for the id field.
+	emaildelivery.DefaultID = emaildeliveryDescID.Default.(func() uuid.UUID)
 	externalidentityMixin := schema.ExternalIdentity{}.Mixin()
 	externalidentityMixinHooks0 := externalidentityMixin[0].Hooks()
 	externalidentity.Hooks[0] = externalidentityMixinHooks0[0]

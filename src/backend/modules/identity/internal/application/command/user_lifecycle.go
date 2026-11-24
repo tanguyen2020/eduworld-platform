@@ -2,11 +2,14 @@ package command
 
 import (
 	"context"
+	"slices"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/user"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
@@ -31,9 +34,13 @@ const (
 // US1, ACCOUNT_PROVISIONING §6): status change, history (reason visible to staff only), audit and
 // user.status_changed + user.access_revoked / user.access_restored in the same transaction. The consumers
 // of those events disable Keycloak, revoke game sessions (F013) and end game sessions (F014).
+// Locks have a source (F124, identity.account_locks): the tenant route locks/unlocks as school_admin, the platform
+// route as platform_admin; an unlock releases the caller's source only and the account stays locked while another lock
+// remains — 409 ACCOUNT_LOCK_HELD_BY_SAFETY when a lock of the Safety Team remains (F124-AC-05), 409 CONFLICT otherwise.
 type UserLifecycle struct {
 	UoW    write.UnitOfWork
 	Repo   write.LifecycleRepository
+	Locks  write.AccountLockRepository
 	Events write.EventPublisher
 	Audit  write.Auditor
 }
@@ -60,6 +67,9 @@ func (h UserLifecycle) Change(ctx context.Context, route, action string, userID 
 	if n := len(strings.TrimSpace(reason)); n < 3 || n > 500 {
 		return problem.Invalid("reason", problem.SubInvalid, "3..500 characters")
 	}
+	if h.Locks == nil {
+		return problem.New(problem.Internal, "account locks are not wired")
+	}
 	p, err := principal(ctx)
 	if err != nil {
 		return err
@@ -83,7 +93,8 @@ func (h UserLifecycle) Change(ctx context.Context, route, action string, userID 
 			return err
 		}
 	}
-	return h.UoW.Do(tenancy.WithScope(ctx, sc), func(ctx context.Context) error {
+	var held error // still locked by another source: committed, then answered 409
+	err = h.UoW.Do(tenancy.WithScope(ctx, sc), func(ctx context.Context) error {
 		target, err := h.Repo.Target(ctx, userID)
 		if err != nil {
 			return err
@@ -110,20 +121,56 @@ func (h UserLifecycle) Change(ctx context.Context, route, action string, userID 
 				return err
 			}
 		}
+		by := p.UserID
+		source := user.SourceOfRoute(route)
+		now := time.Now().UTC()
+		switch action {
+		case LifecycleLock:
+			if target.Status != t.to && !slices.Contains(t.from, target.Status) {
+				return problem.New(problem.Conflict, "the account cannot move from "+target.Status+" to "+t.to)
+			}
+			why := reason
+			added, err := h.Locks.Add(ctx, write.AccountLock{TenantID: tenant, UserID: userID, Source: source, Reason: &why, CreatedBy: &by,
+				CreatedAt: now})
+			if err != nil {
+				return err
+			}
+			if target.Status == t.to { // already locked by another source: one more lock, no status event
+				if !added {
+					return nil
+				}
+				return h.Audit.Record(ctx, audit.Event{Action: t.auditAction, TargetType: "user", TargetID: userID.String(), Result: audit.ResultSuccess,
+					Reason: reason, Metadata: map[string]any{"from": target.Status, "to": t.to, "route": route, "lock_source": source}})
+			}
+		case LifecycleUnlock:
+			if _, err := h.Locks.ReleaseSource(ctx, userID, source, &by, reason, nil, now); err != nil {
+				return err
+			}
+			if target.Status != "locked" {
+				return nil // already active: idempotent, no event
+			}
+			remaining, err := h.Locks.ActiveSources(ctx, userID)
+			if err != nil {
+				return err
+			}
+			if out := user.AfterRelease(remaining); !out.Active {
+				held = problem.New(problem.Conflict, "the account is still locked by another source")
+				if out.HeldBySafety {
+					held = problem.New(problem.AccountLockHeldBySafety, "")
+				}
+				return h.Audit.Record(ctx, audit.Event{Action: "user.lock_released", TargetType: "user", TargetID: userID.String(),
+					Result: audit.ResultSuccess, Reason: reason, Metadata: map[string]any{"route": route, "lock_source": source, "status": "locked"}})
+			}
+		}
 		if target.Status == t.to {
 			return nil // already there: idempotent, no event
 		}
-		allowed := false
-		for _, f := range t.from {
-			allowed = allowed || f == target.Status
-		}
-		if !allowed {
+		if !slices.Contains(t.from, target.Status) {
 			return problem.New(problem.Conflict, "the account cannot move from "+target.Status+" to "+t.to)
 		}
 		if err := h.Repo.SetStatus(ctx, userID, target.Status, t.to); err != nil {
 			return err
 		}
-		by := p.UserID
 		if err := h.Repo.RecordStatusChange(ctx, write.StatusChange{UserID: userID, TenantID: tenant, From: target.Status, To: t.to,
 			Reason: reason, Source: "staff", By: &by}); err != nil {
 			return err
@@ -146,10 +193,14 @@ func (h UserLifecycle) Change(ctx context.Context, route, action string, userID 
 			}
 		}
 		ev := audit.Event{Action: t.auditAction, TargetType: "user", TargetID: userID.String(), Result: audit.ResultSuccess, Reason: reason,
-			Metadata: map[string]any{"from": target.Status, "to": t.to, "route": route}}
+			Metadata: map[string]any{"from": target.Status, "to": t.to, "route": route, "lock_source": source}}
 		if target.StudentSchoolID != nil {
 			ev.SchoolID = target.StudentSchoolID.String()
 		}
 		return h.Audit.Record(ctx, ev)
 	})
+	if err != nil {
+		return err
+	}
+	return held
 }

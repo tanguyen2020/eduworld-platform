@@ -13,7 +13,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/academicyear"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/accountlock"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/emaildelivery"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/gameauthsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/loginevent"
@@ -52,7 +54,9 @@ const (
 
 	// Node types.
 	TypeAcademicYear             = "AcademicYear"
+	TypeAccountLock              = "AccountLock"
 	TypeCountry                  = "Country"
+	TypeEmailDelivery            = "EmailDelivery"
 	TypeExternalIdentity         = "ExternalIdentity"
 	TypeGameAuthSession          = "GameAuthSession"
 	TypeLoginEvent               = "LoginEvent"
@@ -1248,6 +1252,1542 @@ func (m *AcademicYearMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown AcademicYear edge %s", name)
 }
 
+// AccountLockMutation represents an operation that mutates the AccountLock nodes in the graph.
+type AccountLockMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	tenant_id       *uuid.UUID
+	created_at      *time.Time
+	created_by      *uuid.UUID
+	updated_at      *time.Time
+	updated_by      *uuid.UUID
+	deleted_at      *time.Time
+	deleted_by      *uuid.UUID
+	delete_reason   *string
+	version         *int64
+	addversion      *int64
+	user_id         *uuid.UUID
+	source          *string
+	source_ref_id   *uuid.UUID
+	case_id         *uuid.UUID
+	reason          *string
+	released_at     *time.Time
+	released_by     *uuid.UUID
+	release_reason  *string
+	source_event_id *uuid.UUID
+	clearedFields   map[string]struct{}
+	done            bool
+	oldValue        func(context.Context) (*AccountLock, error)
+	predicates      []predicate.AccountLock
+}
+
+var _ ent.Mutation = (*AccountLockMutation)(nil)
+
+// accountlockOption allows management of the mutation configuration using functional options.
+type accountlockOption func(*AccountLockMutation)
+
+// newAccountLockMutation creates new mutation for the AccountLock entity.
+func newAccountLockMutation(c config, op Op, opts ...accountlockOption) *AccountLockMutation {
+	m := &AccountLockMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeAccountLock,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withAccountLockID sets the ID field of the mutation.
+func withAccountLockID(id uuid.UUID) accountlockOption {
+	return func(m *AccountLockMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *AccountLock
+		)
+		m.oldValue = func(ctx context.Context) (*AccountLock, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().AccountLock.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withAccountLock sets the old AccountLock of the mutation.
+func withAccountLock(node *AccountLock) accountlockOption {
+	return func(m *AccountLockMutation) {
+		m.oldValue = func(context.Context) (*AccountLock, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m AccountLockMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m AccountLockMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of AccountLock entities.
+func (m *AccountLockMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *AccountLockMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *AccountLockMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().AccountLock.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *AccountLockMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *AccountLockMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldTenantID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (m *AccountLockMutation) ClearTenantID() {
+	m.tenant_id = nil
+	m.clearedFields[accountlock.FieldTenantID] = struct{}{}
+}
+
+// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
+func (m *AccountLockMutation) TenantIDCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldTenantID]
+	return ok
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *AccountLockMutation) ResetTenantID() {
+	m.tenant_id = nil
+	delete(m.clearedFields, accountlock.FieldTenantID)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *AccountLockMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *AccountLockMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *AccountLockMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *AccountLockMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *AccountLockMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *AccountLockMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[accountlock.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *AccountLockMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *AccountLockMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, accountlock.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *AccountLockMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *AccountLockMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *AccountLockMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *AccountLockMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *AccountLockMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *AccountLockMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[accountlock.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *AccountLockMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *AccountLockMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, accountlock.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *AccountLockMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *AccountLockMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *AccountLockMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[accountlock.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *AccountLockMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *AccountLockMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, accountlock.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *AccountLockMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *AccountLockMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *AccountLockMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[accountlock.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *AccountLockMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *AccountLockMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, accountlock.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *AccountLockMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *AccountLockMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *AccountLockMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[accountlock.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *AccountLockMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *AccountLockMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, accountlock.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *AccountLockMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *AccountLockMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *AccountLockMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *AccountLockMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *AccountLockMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *AccountLockMutation) SetUserID(u uuid.UUID) {
+	m.user_id = &u
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *AccountLockMutation) UserID() (r uuid.UUID, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldUserID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *AccountLockMutation) ResetUserID() {
+	m.user_id = nil
+}
+
+// SetSource sets the "source" field.
+func (m *AccountLockMutation) SetSource(s string) {
+	m.source = &s
+}
+
+// Source returns the value of the "source" field in the mutation.
+func (m *AccountLockMutation) Source() (r string, exists bool) {
+	v := m.source
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSource returns the old "source" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldSource(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSource: %w", err)
+	}
+	return oldValue.Source, nil
+}
+
+// ResetSource resets all changes to the "source" field.
+func (m *AccountLockMutation) ResetSource() {
+	m.source = nil
+}
+
+// SetSourceRefID sets the "source_ref_id" field.
+func (m *AccountLockMutation) SetSourceRefID(u uuid.UUID) {
+	m.source_ref_id = &u
+}
+
+// SourceRefID returns the value of the "source_ref_id" field in the mutation.
+func (m *AccountLockMutation) SourceRefID() (r uuid.UUID, exists bool) {
+	v := m.source_ref_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceRefID returns the old "source_ref_id" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldSourceRefID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceRefID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceRefID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceRefID: %w", err)
+	}
+	return oldValue.SourceRefID, nil
+}
+
+// ClearSourceRefID clears the value of the "source_ref_id" field.
+func (m *AccountLockMutation) ClearSourceRefID() {
+	m.source_ref_id = nil
+	m.clearedFields[accountlock.FieldSourceRefID] = struct{}{}
+}
+
+// SourceRefIDCleared returns if the "source_ref_id" field was cleared in this mutation.
+func (m *AccountLockMutation) SourceRefIDCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldSourceRefID]
+	return ok
+}
+
+// ResetSourceRefID resets all changes to the "source_ref_id" field.
+func (m *AccountLockMutation) ResetSourceRefID() {
+	m.source_ref_id = nil
+	delete(m.clearedFields, accountlock.FieldSourceRefID)
+}
+
+// SetCaseID sets the "case_id" field.
+func (m *AccountLockMutation) SetCaseID(u uuid.UUID) {
+	m.case_id = &u
+}
+
+// CaseID returns the value of the "case_id" field in the mutation.
+func (m *AccountLockMutation) CaseID() (r uuid.UUID, exists bool) {
+	v := m.case_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCaseID returns the old "case_id" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldCaseID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCaseID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCaseID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCaseID: %w", err)
+	}
+	return oldValue.CaseID, nil
+}
+
+// ClearCaseID clears the value of the "case_id" field.
+func (m *AccountLockMutation) ClearCaseID() {
+	m.case_id = nil
+	m.clearedFields[accountlock.FieldCaseID] = struct{}{}
+}
+
+// CaseIDCleared returns if the "case_id" field was cleared in this mutation.
+func (m *AccountLockMutation) CaseIDCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldCaseID]
+	return ok
+}
+
+// ResetCaseID resets all changes to the "case_id" field.
+func (m *AccountLockMutation) ResetCaseID() {
+	m.case_id = nil
+	delete(m.clearedFields, accountlock.FieldCaseID)
+}
+
+// SetReason sets the "reason" field.
+func (m *AccountLockMutation) SetReason(s string) {
+	m.reason = &s
+}
+
+// Reason returns the value of the "reason" field in the mutation.
+func (m *AccountLockMutation) Reason() (r string, exists bool) {
+	v := m.reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReason returns the old "reason" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReason: %w", err)
+	}
+	return oldValue.Reason, nil
+}
+
+// ClearReason clears the value of the "reason" field.
+func (m *AccountLockMutation) ClearReason() {
+	m.reason = nil
+	m.clearedFields[accountlock.FieldReason] = struct{}{}
+}
+
+// ReasonCleared returns if the "reason" field was cleared in this mutation.
+func (m *AccountLockMutation) ReasonCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldReason]
+	return ok
+}
+
+// ResetReason resets all changes to the "reason" field.
+func (m *AccountLockMutation) ResetReason() {
+	m.reason = nil
+	delete(m.clearedFields, accountlock.FieldReason)
+}
+
+// SetReleasedAt sets the "released_at" field.
+func (m *AccountLockMutation) SetReleasedAt(t time.Time) {
+	m.released_at = &t
+}
+
+// ReleasedAt returns the value of the "released_at" field in the mutation.
+func (m *AccountLockMutation) ReleasedAt() (r time.Time, exists bool) {
+	v := m.released_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReleasedAt returns the old "released_at" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldReleasedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReleasedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReleasedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReleasedAt: %w", err)
+	}
+	return oldValue.ReleasedAt, nil
+}
+
+// ClearReleasedAt clears the value of the "released_at" field.
+func (m *AccountLockMutation) ClearReleasedAt() {
+	m.released_at = nil
+	m.clearedFields[accountlock.FieldReleasedAt] = struct{}{}
+}
+
+// ReleasedAtCleared returns if the "released_at" field was cleared in this mutation.
+func (m *AccountLockMutation) ReleasedAtCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldReleasedAt]
+	return ok
+}
+
+// ResetReleasedAt resets all changes to the "released_at" field.
+func (m *AccountLockMutation) ResetReleasedAt() {
+	m.released_at = nil
+	delete(m.clearedFields, accountlock.FieldReleasedAt)
+}
+
+// SetReleasedBy sets the "released_by" field.
+func (m *AccountLockMutation) SetReleasedBy(u uuid.UUID) {
+	m.released_by = &u
+}
+
+// ReleasedBy returns the value of the "released_by" field in the mutation.
+func (m *AccountLockMutation) ReleasedBy() (r uuid.UUID, exists bool) {
+	v := m.released_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReleasedBy returns the old "released_by" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldReleasedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReleasedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReleasedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReleasedBy: %w", err)
+	}
+	return oldValue.ReleasedBy, nil
+}
+
+// ClearReleasedBy clears the value of the "released_by" field.
+func (m *AccountLockMutation) ClearReleasedBy() {
+	m.released_by = nil
+	m.clearedFields[accountlock.FieldReleasedBy] = struct{}{}
+}
+
+// ReleasedByCleared returns if the "released_by" field was cleared in this mutation.
+func (m *AccountLockMutation) ReleasedByCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldReleasedBy]
+	return ok
+}
+
+// ResetReleasedBy resets all changes to the "released_by" field.
+func (m *AccountLockMutation) ResetReleasedBy() {
+	m.released_by = nil
+	delete(m.clearedFields, accountlock.FieldReleasedBy)
+}
+
+// SetReleaseReason sets the "release_reason" field.
+func (m *AccountLockMutation) SetReleaseReason(s string) {
+	m.release_reason = &s
+}
+
+// ReleaseReason returns the value of the "release_reason" field in the mutation.
+func (m *AccountLockMutation) ReleaseReason() (r string, exists bool) {
+	v := m.release_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReleaseReason returns the old "release_reason" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldReleaseReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReleaseReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReleaseReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReleaseReason: %w", err)
+	}
+	return oldValue.ReleaseReason, nil
+}
+
+// ClearReleaseReason clears the value of the "release_reason" field.
+func (m *AccountLockMutation) ClearReleaseReason() {
+	m.release_reason = nil
+	m.clearedFields[accountlock.FieldReleaseReason] = struct{}{}
+}
+
+// ReleaseReasonCleared returns if the "release_reason" field was cleared in this mutation.
+func (m *AccountLockMutation) ReleaseReasonCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldReleaseReason]
+	return ok
+}
+
+// ResetReleaseReason resets all changes to the "release_reason" field.
+func (m *AccountLockMutation) ResetReleaseReason() {
+	m.release_reason = nil
+	delete(m.clearedFields, accountlock.FieldReleaseReason)
+}
+
+// SetSourceEventID sets the "source_event_id" field.
+func (m *AccountLockMutation) SetSourceEventID(u uuid.UUID) {
+	m.source_event_id = &u
+}
+
+// SourceEventID returns the value of the "source_event_id" field in the mutation.
+func (m *AccountLockMutation) SourceEventID() (r uuid.UUID, exists bool) {
+	v := m.source_event_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceEventID returns the old "source_event_id" field's value of the AccountLock entity.
+// If the AccountLock object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountLockMutation) OldSourceEventID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceEventID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceEventID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceEventID: %w", err)
+	}
+	return oldValue.SourceEventID, nil
+}
+
+// ClearSourceEventID clears the value of the "source_event_id" field.
+func (m *AccountLockMutation) ClearSourceEventID() {
+	m.source_event_id = nil
+	m.clearedFields[accountlock.FieldSourceEventID] = struct{}{}
+}
+
+// SourceEventIDCleared returns if the "source_event_id" field was cleared in this mutation.
+func (m *AccountLockMutation) SourceEventIDCleared() bool {
+	_, ok := m.clearedFields[accountlock.FieldSourceEventID]
+	return ok
+}
+
+// ResetSourceEventID resets all changes to the "source_event_id" field.
+func (m *AccountLockMutation) ResetSourceEventID() {
+	m.source_event_id = nil
+	delete(m.clearedFields, accountlock.FieldSourceEventID)
+}
+
+// Where appends a list predicates to the AccountLockMutation builder.
+func (m *AccountLockMutation) Where(ps ...predicate.AccountLock) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the AccountLockMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *AccountLockMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.AccountLock, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *AccountLockMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *AccountLockMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (AccountLock).
+func (m *AccountLockMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *AccountLockMutation) Fields() []string {
+	fields := make([]string, 0, 18)
+	if m.tenant_id != nil {
+		fields = append(fields, accountlock.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, accountlock.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, accountlock.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, accountlock.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, accountlock.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, accountlock.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, accountlock.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, accountlock.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, accountlock.FieldVersion)
+	}
+	if m.user_id != nil {
+		fields = append(fields, accountlock.FieldUserID)
+	}
+	if m.source != nil {
+		fields = append(fields, accountlock.FieldSource)
+	}
+	if m.source_ref_id != nil {
+		fields = append(fields, accountlock.FieldSourceRefID)
+	}
+	if m.case_id != nil {
+		fields = append(fields, accountlock.FieldCaseID)
+	}
+	if m.reason != nil {
+		fields = append(fields, accountlock.FieldReason)
+	}
+	if m.released_at != nil {
+		fields = append(fields, accountlock.FieldReleasedAt)
+	}
+	if m.released_by != nil {
+		fields = append(fields, accountlock.FieldReleasedBy)
+	}
+	if m.release_reason != nil {
+		fields = append(fields, accountlock.FieldReleaseReason)
+	}
+	if m.source_event_id != nil {
+		fields = append(fields, accountlock.FieldSourceEventID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *AccountLockMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case accountlock.FieldTenantID:
+		return m.TenantID()
+	case accountlock.FieldCreatedAt:
+		return m.CreatedAt()
+	case accountlock.FieldCreatedBy:
+		return m.CreatedBy()
+	case accountlock.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case accountlock.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case accountlock.FieldDeletedAt:
+		return m.DeletedAt()
+	case accountlock.FieldDeletedBy:
+		return m.DeletedBy()
+	case accountlock.FieldDeleteReason:
+		return m.DeleteReason()
+	case accountlock.FieldVersion:
+		return m.Version()
+	case accountlock.FieldUserID:
+		return m.UserID()
+	case accountlock.FieldSource:
+		return m.Source()
+	case accountlock.FieldSourceRefID:
+		return m.SourceRefID()
+	case accountlock.FieldCaseID:
+		return m.CaseID()
+	case accountlock.FieldReason:
+		return m.Reason()
+	case accountlock.FieldReleasedAt:
+		return m.ReleasedAt()
+	case accountlock.FieldReleasedBy:
+		return m.ReleasedBy()
+	case accountlock.FieldReleaseReason:
+		return m.ReleaseReason()
+	case accountlock.FieldSourceEventID:
+		return m.SourceEventID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *AccountLockMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case accountlock.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case accountlock.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case accountlock.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case accountlock.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case accountlock.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case accountlock.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case accountlock.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case accountlock.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case accountlock.FieldVersion:
+		return m.OldVersion(ctx)
+	case accountlock.FieldUserID:
+		return m.OldUserID(ctx)
+	case accountlock.FieldSource:
+		return m.OldSource(ctx)
+	case accountlock.FieldSourceRefID:
+		return m.OldSourceRefID(ctx)
+	case accountlock.FieldCaseID:
+		return m.OldCaseID(ctx)
+	case accountlock.FieldReason:
+		return m.OldReason(ctx)
+	case accountlock.FieldReleasedAt:
+		return m.OldReleasedAt(ctx)
+	case accountlock.FieldReleasedBy:
+		return m.OldReleasedBy(ctx)
+	case accountlock.FieldReleaseReason:
+		return m.OldReleaseReason(ctx)
+	case accountlock.FieldSourceEventID:
+		return m.OldSourceEventID(ctx)
+	}
+	return nil, fmt.Errorf("unknown AccountLock field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AccountLockMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case accountlock.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case accountlock.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case accountlock.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case accountlock.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case accountlock.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case accountlock.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case accountlock.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case accountlock.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case accountlock.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case accountlock.FieldUserID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case accountlock.FieldSource:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSource(v)
+		return nil
+	case accountlock.FieldSourceRefID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceRefID(v)
+		return nil
+	case accountlock.FieldCaseID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCaseID(v)
+		return nil
+	case accountlock.FieldReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReason(v)
+		return nil
+	case accountlock.FieldReleasedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReleasedAt(v)
+		return nil
+	case accountlock.FieldReleasedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReleasedBy(v)
+		return nil
+	case accountlock.FieldReleaseReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReleaseReason(v)
+		return nil
+	case accountlock.FieldSourceEventID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceEventID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown AccountLock field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *AccountLockMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, accountlock.FieldVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *AccountLockMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case accountlock.FieldVersion:
+		return m.AddedVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AccountLockMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case accountlock.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown AccountLock numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *AccountLockMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(accountlock.FieldTenantID) {
+		fields = append(fields, accountlock.FieldTenantID)
+	}
+	if m.FieldCleared(accountlock.FieldCreatedBy) {
+		fields = append(fields, accountlock.FieldCreatedBy)
+	}
+	if m.FieldCleared(accountlock.FieldUpdatedBy) {
+		fields = append(fields, accountlock.FieldUpdatedBy)
+	}
+	if m.FieldCleared(accountlock.FieldDeletedAt) {
+		fields = append(fields, accountlock.FieldDeletedAt)
+	}
+	if m.FieldCleared(accountlock.FieldDeletedBy) {
+		fields = append(fields, accountlock.FieldDeletedBy)
+	}
+	if m.FieldCleared(accountlock.FieldDeleteReason) {
+		fields = append(fields, accountlock.FieldDeleteReason)
+	}
+	if m.FieldCleared(accountlock.FieldSourceRefID) {
+		fields = append(fields, accountlock.FieldSourceRefID)
+	}
+	if m.FieldCleared(accountlock.FieldCaseID) {
+		fields = append(fields, accountlock.FieldCaseID)
+	}
+	if m.FieldCleared(accountlock.FieldReason) {
+		fields = append(fields, accountlock.FieldReason)
+	}
+	if m.FieldCleared(accountlock.FieldReleasedAt) {
+		fields = append(fields, accountlock.FieldReleasedAt)
+	}
+	if m.FieldCleared(accountlock.FieldReleasedBy) {
+		fields = append(fields, accountlock.FieldReleasedBy)
+	}
+	if m.FieldCleared(accountlock.FieldReleaseReason) {
+		fields = append(fields, accountlock.FieldReleaseReason)
+	}
+	if m.FieldCleared(accountlock.FieldSourceEventID) {
+		fields = append(fields, accountlock.FieldSourceEventID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *AccountLockMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *AccountLockMutation) ClearField(name string) error {
+	switch name {
+	case accountlock.FieldTenantID:
+		m.ClearTenantID()
+		return nil
+	case accountlock.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case accountlock.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case accountlock.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case accountlock.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case accountlock.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case accountlock.FieldSourceRefID:
+		m.ClearSourceRefID()
+		return nil
+	case accountlock.FieldCaseID:
+		m.ClearCaseID()
+		return nil
+	case accountlock.FieldReason:
+		m.ClearReason()
+		return nil
+	case accountlock.FieldReleasedAt:
+		m.ClearReleasedAt()
+		return nil
+	case accountlock.FieldReleasedBy:
+		m.ClearReleasedBy()
+		return nil
+	case accountlock.FieldReleaseReason:
+		m.ClearReleaseReason()
+		return nil
+	case accountlock.FieldSourceEventID:
+		m.ClearSourceEventID()
+		return nil
+	}
+	return fmt.Errorf("unknown AccountLock nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *AccountLockMutation) ResetField(name string) error {
+	switch name {
+	case accountlock.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case accountlock.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case accountlock.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case accountlock.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case accountlock.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case accountlock.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case accountlock.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case accountlock.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case accountlock.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case accountlock.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case accountlock.FieldSource:
+		m.ResetSource()
+		return nil
+	case accountlock.FieldSourceRefID:
+		m.ResetSourceRefID()
+		return nil
+	case accountlock.FieldCaseID:
+		m.ResetCaseID()
+		return nil
+	case accountlock.FieldReason:
+		m.ResetReason()
+		return nil
+	case accountlock.FieldReleasedAt:
+		m.ResetReleasedAt()
+		return nil
+	case accountlock.FieldReleasedBy:
+		m.ResetReleasedBy()
+		return nil
+	case accountlock.FieldReleaseReason:
+		m.ResetReleaseReason()
+		return nil
+	case accountlock.FieldSourceEventID:
+		m.ResetSourceEventID()
+		return nil
+	}
+	return fmt.Errorf("unknown AccountLock field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *AccountLockMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *AccountLockMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *AccountLockMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *AccountLockMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *AccountLockMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *AccountLockMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *AccountLockMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown AccountLock unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *AccountLockMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown AccountLock edge %s", name)
+}
+
 // CountryMutation represents an operation that mutates the Country nodes in the graph.
 type CountryMutation struct {
 	config
@@ -2252,6 +3792,1553 @@ func (m *CountryMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *CountryMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Country edge %s", name)
+}
+
+// EmailDeliveryMutation represents an operation that mutates the EmailDelivery nodes in the graph.
+type EmailDeliveryMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	tenant_id         *uuid.UUID
+	created_at        *time.Time
+	created_by        *uuid.UUID
+	updated_at        *time.Time
+	updated_by        *uuid.UUID
+	deleted_at        *time.Time
+	deleted_by        *uuid.UUID
+	delete_reason     *string
+	version           *int64
+	addversion        *int64
+	source_event_id   *uuid.UUID
+	template_code     *string
+	recipient_user_id *uuid.UUID
+	params            *map[string]string
+	locale            *string
+	status            *string
+	attempts          *int16
+	addattempts       *int16
+	next_attempt_at   *time.Time
+	sent_at           *time.Time
+	last_error_code   *string
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*EmailDelivery, error)
+	predicates        []predicate.EmailDelivery
+}
+
+var _ ent.Mutation = (*EmailDeliveryMutation)(nil)
+
+// emaildeliveryOption allows management of the mutation configuration using functional options.
+type emaildeliveryOption func(*EmailDeliveryMutation)
+
+// newEmailDeliveryMutation creates new mutation for the EmailDelivery entity.
+func newEmailDeliveryMutation(c config, op Op, opts ...emaildeliveryOption) *EmailDeliveryMutation {
+	m := &EmailDeliveryMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeEmailDelivery,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withEmailDeliveryID sets the ID field of the mutation.
+func withEmailDeliveryID(id uuid.UUID) emaildeliveryOption {
+	return func(m *EmailDeliveryMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *EmailDelivery
+		)
+		m.oldValue = func(ctx context.Context) (*EmailDelivery, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().EmailDelivery.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withEmailDelivery sets the old EmailDelivery of the mutation.
+func withEmailDelivery(node *EmailDelivery) emaildeliveryOption {
+	return func(m *EmailDeliveryMutation) {
+		m.oldValue = func(context.Context) (*EmailDelivery, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m EmailDeliveryMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m EmailDeliveryMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of EmailDelivery entities.
+func (m *EmailDeliveryMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *EmailDeliveryMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *EmailDeliveryMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().EmailDelivery.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *EmailDeliveryMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *EmailDeliveryMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldTenantID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (m *EmailDeliveryMutation) ClearTenantID() {
+	m.tenant_id = nil
+	m.clearedFields[emaildelivery.FieldTenantID] = struct{}{}
+}
+
+// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
+func (m *EmailDeliveryMutation) TenantIDCleared() bool {
+	_, ok := m.clearedFields[emaildelivery.FieldTenantID]
+	return ok
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *EmailDeliveryMutation) ResetTenantID() {
+	m.tenant_id = nil
+	delete(m.clearedFields, emaildelivery.FieldTenantID)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *EmailDeliveryMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *EmailDeliveryMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *EmailDeliveryMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *EmailDeliveryMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *EmailDeliveryMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *EmailDeliveryMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[emaildelivery.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *EmailDeliveryMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[emaildelivery.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *EmailDeliveryMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, emaildelivery.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *EmailDeliveryMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *EmailDeliveryMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *EmailDeliveryMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *EmailDeliveryMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *EmailDeliveryMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *EmailDeliveryMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[emaildelivery.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *EmailDeliveryMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[emaildelivery.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *EmailDeliveryMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, emaildelivery.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *EmailDeliveryMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *EmailDeliveryMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *EmailDeliveryMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[emaildelivery.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *EmailDeliveryMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[emaildelivery.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *EmailDeliveryMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, emaildelivery.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *EmailDeliveryMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *EmailDeliveryMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *EmailDeliveryMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[emaildelivery.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *EmailDeliveryMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[emaildelivery.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *EmailDeliveryMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, emaildelivery.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *EmailDeliveryMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *EmailDeliveryMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *EmailDeliveryMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[emaildelivery.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *EmailDeliveryMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[emaildelivery.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *EmailDeliveryMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, emaildelivery.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *EmailDeliveryMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *EmailDeliveryMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *EmailDeliveryMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *EmailDeliveryMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *EmailDeliveryMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetSourceEventID sets the "source_event_id" field.
+func (m *EmailDeliveryMutation) SetSourceEventID(u uuid.UUID) {
+	m.source_event_id = &u
+}
+
+// SourceEventID returns the value of the "source_event_id" field in the mutation.
+func (m *EmailDeliveryMutation) SourceEventID() (r uuid.UUID, exists bool) {
+	v := m.source_event_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceEventID returns the old "source_event_id" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldSourceEventID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceEventID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceEventID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceEventID: %w", err)
+	}
+	return oldValue.SourceEventID, nil
+}
+
+// ResetSourceEventID resets all changes to the "source_event_id" field.
+func (m *EmailDeliveryMutation) ResetSourceEventID() {
+	m.source_event_id = nil
+}
+
+// SetTemplateCode sets the "template_code" field.
+func (m *EmailDeliveryMutation) SetTemplateCode(s string) {
+	m.template_code = &s
+}
+
+// TemplateCode returns the value of the "template_code" field in the mutation.
+func (m *EmailDeliveryMutation) TemplateCode() (r string, exists bool) {
+	v := m.template_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTemplateCode returns the old "template_code" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldTemplateCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTemplateCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTemplateCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTemplateCode: %w", err)
+	}
+	return oldValue.TemplateCode, nil
+}
+
+// ResetTemplateCode resets all changes to the "template_code" field.
+func (m *EmailDeliveryMutation) ResetTemplateCode() {
+	m.template_code = nil
+}
+
+// SetRecipientUserID sets the "recipient_user_id" field.
+func (m *EmailDeliveryMutation) SetRecipientUserID(u uuid.UUID) {
+	m.recipient_user_id = &u
+}
+
+// RecipientUserID returns the value of the "recipient_user_id" field in the mutation.
+func (m *EmailDeliveryMutation) RecipientUserID() (r uuid.UUID, exists bool) {
+	v := m.recipient_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRecipientUserID returns the old "recipient_user_id" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldRecipientUserID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRecipientUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRecipientUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRecipientUserID: %w", err)
+	}
+	return oldValue.RecipientUserID, nil
+}
+
+// ResetRecipientUserID resets all changes to the "recipient_user_id" field.
+func (m *EmailDeliveryMutation) ResetRecipientUserID() {
+	m.recipient_user_id = nil
+}
+
+// SetParams sets the "params" field.
+func (m *EmailDeliveryMutation) SetParams(value map[string]string) {
+	m.params = &value
+}
+
+// Params returns the value of the "params" field in the mutation.
+func (m *EmailDeliveryMutation) Params() (r map[string]string, exists bool) {
+	v := m.params
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParams returns the old "params" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldParams(ctx context.Context) (v map[string]string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParams is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParams requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParams: %w", err)
+	}
+	return oldValue.Params, nil
+}
+
+// ResetParams resets all changes to the "params" field.
+func (m *EmailDeliveryMutation) ResetParams() {
+	m.params = nil
+}
+
+// SetLocale sets the "locale" field.
+func (m *EmailDeliveryMutation) SetLocale(s string) {
+	m.locale = &s
+}
+
+// Locale returns the value of the "locale" field in the mutation.
+func (m *EmailDeliveryMutation) Locale() (r string, exists bool) {
+	v := m.locale
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLocale returns the old "locale" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldLocale(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLocale is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLocale requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLocale: %w", err)
+	}
+	return oldValue.Locale, nil
+}
+
+// ResetLocale resets all changes to the "locale" field.
+func (m *EmailDeliveryMutation) ResetLocale() {
+	m.locale = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *EmailDeliveryMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *EmailDeliveryMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *EmailDeliveryMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetAttempts sets the "attempts" field.
+func (m *EmailDeliveryMutation) SetAttempts(i int16) {
+	m.attempts = &i
+	m.addattempts = nil
+}
+
+// Attempts returns the value of the "attempts" field in the mutation.
+func (m *EmailDeliveryMutation) Attempts() (r int16, exists bool) {
+	v := m.attempts
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttempts returns the old "attempts" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldAttempts(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttempts is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttempts requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttempts: %w", err)
+	}
+	return oldValue.Attempts, nil
+}
+
+// AddAttempts adds i to the "attempts" field.
+func (m *EmailDeliveryMutation) AddAttempts(i int16) {
+	if m.addattempts != nil {
+		*m.addattempts += i
+	} else {
+		m.addattempts = &i
+	}
+}
+
+// AddedAttempts returns the value that was added to the "attempts" field in this mutation.
+func (m *EmailDeliveryMutation) AddedAttempts() (r int16, exists bool) {
+	v := m.addattempts
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttempts resets all changes to the "attempts" field.
+func (m *EmailDeliveryMutation) ResetAttempts() {
+	m.attempts = nil
+	m.addattempts = nil
+}
+
+// SetNextAttemptAt sets the "next_attempt_at" field.
+func (m *EmailDeliveryMutation) SetNextAttemptAt(t time.Time) {
+	m.next_attempt_at = &t
+}
+
+// NextAttemptAt returns the value of the "next_attempt_at" field in the mutation.
+func (m *EmailDeliveryMutation) NextAttemptAt() (r time.Time, exists bool) {
+	v := m.next_attempt_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNextAttemptAt returns the old "next_attempt_at" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldNextAttemptAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNextAttemptAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNextAttemptAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNextAttemptAt: %w", err)
+	}
+	return oldValue.NextAttemptAt, nil
+}
+
+// ClearNextAttemptAt clears the value of the "next_attempt_at" field.
+func (m *EmailDeliveryMutation) ClearNextAttemptAt() {
+	m.next_attempt_at = nil
+	m.clearedFields[emaildelivery.FieldNextAttemptAt] = struct{}{}
+}
+
+// NextAttemptAtCleared returns if the "next_attempt_at" field was cleared in this mutation.
+func (m *EmailDeliveryMutation) NextAttemptAtCleared() bool {
+	_, ok := m.clearedFields[emaildelivery.FieldNextAttemptAt]
+	return ok
+}
+
+// ResetNextAttemptAt resets all changes to the "next_attempt_at" field.
+func (m *EmailDeliveryMutation) ResetNextAttemptAt() {
+	m.next_attempt_at = nil
+	delete(m.clearedFields, emaildelivery.FieldNextAttemptAt)
+}
+
+// SetSentAt sets the "sent_at" field.
+func (m *EmailDeliveryMutation) SetSentAt(t time.Time) {
+	m.sent_at = &t
+}
+
+// SentAt returns the value of the "sent_at" field in the mutation.
+func (m *EmailDeliveryMutation) SentAt() (r time.Time, exists bool) {
+	v := m.sent_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSentAt returns the old "sent_at" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldSentAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSentAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSentAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSentAt: %w", err)
+	}
+	return oldValue.SentAt, nil
+}
+
+// ClearSentAt clears the value of the "sent_at" field.
+func (m *EmailDeliveryMutation) ClearSentAt() {
+	m.sent_at = nil
+	m.clearedFields[emaildelivery.FieldSentAt] = struct{}{}
+}
+
+// SentAtCleared returns if the "sent_at" field was cleared in this mutation.
+func (m *EmailDeliveryMutation) SentAtCleared() bool {
+	_, ok := m.clearedFields[emaildelivery.FieldSentAt]
+	return ok
+}
+
+// ResetSentAt resets all changes to the "sent_at" field.
+func (m *EmailDeliveryMutation) ResetSentAt() {
+	m.sent_at = nil
+	delete(m.clearedFields, emaildelivery.FieldSentAt)
+}
+
+// SetLastErrorCode sets the "last_error_code" field.
+func (m *EmailDeliveryMutation) SetLastErrorCode(s string) {
+	m.last_error_code = &s
+}
+
+// LastErrorCode returns the value of the "last_error_code" field in the mutation.
+func (m *EmailDeliveryMutation) LastErrorCode() (r string, exists bool) {
+	v := m.last_error_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastErrorCode returns the old "last_error_code" field's value of the EmailDelivery entity.
+// If the EmailDelivery object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailDeliveryMutation) OldLastErrorCode(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastErrorCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastErrorCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastErrorCode: %w", err)
+	}
+	return oldValue.LastErrorCode, nil
+}
+
+// ClearLastErrorCode clears the value of the "last_error_code" field.
+func (m *EmailDeliveryMutation) ClearLastErrorCode() {
+	m.last_error_code = nil
+	m.clearedFields[emaildelivery.FieldLastErrorCode] = struct{}{}
+}
+
+// LastErrorCodeCleared returns if the "last_error_code" field was cleared in this mutation.
+func (m *EmailDeliveryMutation) LastErrorCodeCleared() bool {
+	_, ok := m.clearedFields[emaildelivery.FieldLastErrorCode]
+	return ok
+}
+
+// ResetLastErrorCode resets all changes to the "last_error_code" field.
+func (m *EmailDeliveryMutation) ResetLastErrorCode() {
+	m.last_error_code = nil
+	delete(m.clearedFields, emaildelivery.FieldLastErrorCode)
+}
+
+// Where appends a list predicates to the EmailDeliveryMutation builder.
+func (m *EmailDeliveryMutation) Where(ps ...predicate.EmailDelivery) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the EmailDeliveryMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *EmailDeliveryMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.EmailDelivery, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *EmailDeliveryMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *EmailDeliveryMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (EmailDelivery).
+func (m *EmailDeliveryMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *EmailDeliveryMutation) Fields() []string {
+	fields := make([]string, 0, 19)
+	if m.tenant_id != nil {
+		fields = append(fields, emaildelivery.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, emaildelivery.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, emaildelivery.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, emaildelivery.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, emaildelivery.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, emaildelivery.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, emaildelivery.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, emaildelivery.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, emaildelivery.FieldVersion)
+	}
+	if m.source_event_id != nil {
+		fields = append(fields, emaildelivery.FieldSourceEventID)
+	}
+	if m.template_code != nil {
+		fields = append(fields, emaildelivery.FieldTemplateCode)
+	}
+	if m.recipient_user_id != nil {
+		fields = append(fields, emaildelivery.FieldRecipientUserID)
+	}
+	if m.params != nil {
+		fields = append(fields, emaildelivery.FieldParams)
+	}
+	if m.locale != nil {
+		fields = append(fields, emaildelivery.FieldLocale)
+	}
+	if m.status != nil {
+		fields = append(fields, emaildelivery.FieldStatus)
+	}
+	if m.attempts != nil {
+		fields = append(fields, emaildelivery.FieldAttempts)
+	}
+	if m.next_attempt_at != nil {
+		fields = append(fields, emaildelivery.FieldNextAttemptAt)
+	}
+	if m.sent_at != nil {
+		fields = append(fields, emaildelivery.FieldSentAt)
+	}
+	if m.last_error_code != nil {
+		fields = append(fields, emaildelivery.FieldLastErrorCode)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *EmailDeliveryMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case emaildelivery.FieldTenantID:
+		return m.TenantID()
+	case emaildelivery.FieldCreatedAt:
+		return m.CreatedAt()
+	case emaildelivery.FieldCreatedBy:
+		return m.CreatedBy()
+	case emaildelivery.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case emaildelivery.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case emaildelivery.FieldDeletedAt:
+		return m.DeletedAt()
+	case emaildelivery.FieldDeletedBy:
+		return m.DeletedBy()
+	case emaildelivery.FieldDeleteReason:
+		return m.DeleteReason()
+	case emaildelivery.FieldVersion:
+		return m.Version()
+	case emaildelivery.FieldSourceEventID:
+		return m.SourceEventID()
+	case emaildelivery.FieldTemplateCode:
+		return m.TemplateCode()
+	case emaildelivery.FieldRecipientUserID:
+		return m.RecipientUserID()
+	case emaildelivery.FieldParams:
+		return m.Params()
+	case emaildelivery.FieldLocale:
+		return m.Locale()
+	case emaildelivery.FieldStatus:
+		return m.Status()
+	case emaildelivery.FieldAttempts:
+		return m.Attempts()
+	case emaildelivery.FieldNextAttemptAt:
+		return m.NextAttemptAt()
+	case emaildelivery.FieldSentAt:
+		return m.SentAt()
+	case emaildelivery.FieldLastErrorCode:
+		return m.LastErrorCode()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *EmailDeliveryMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case emaildelivery.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case emaildelivery.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case emaildelivery.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case emaildelivery.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case emaildelivery.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case emaildelivery.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case emaildelivery.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case emaildelivery.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case emaildelivery.FieldVersion:
+		return m.OldVersion(ctx)
+	case emaildelivery.FieldSourceEventID:
+		return m.OldSourceEventID(ctx)
+	case emaildelivery.FieldTemplateCode:
+		return m.OldTemplateCode(ctx)
+	case emaildelivery.FieldRecipientUserID:
+		return m.OldRecipientUserID(ctx)
+	case emaildelivery.FieldParams:
+		return m.OldParams(ctx)
+	case emaildelivery.FieldLocale:
+		return m.OldLocale(ctx)
+	case emaildelivery.FieldStatus:
+		return m.OldStatus(ctx)
+	case emaildelivery.FieldAttempts:
+		return m.OldAttempts(ctx)
+	case emaildelivery.FieldNextAttemptAt:
+		return m.OldNextAttemptAt(ctx)
+	case emaildelivery.FieldSentAt:
+		return m.OldSentAt(ctx)
+	case emaildelivery.FieldLastErrorCode:
+		return m.OldLastErrorCode(ctx)
+	}
+	return nil, fmt.Errorf("unknown EmailDelivery field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *EmailDeliveryMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case emaildelivery.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case emaildelivery.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case emaildelivery.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case emaildelivery.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case emaildelivery.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case emaildelivery.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case emaildelivery.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case emaildelivery.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case emaildelivery.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case emaildelivery.FieldSourceEventID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceEventID(v)
+		return nil
+	case emaildelivery.FieldTemplateCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTemplateCode(v)
+		return nil
+	case emaildelivery.FieldRecipientUserID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRecipientUserID(v)
+		return nil
+	case emaildelivery.FieldParams:
+		v, ok := value.(map[string]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParams(v)
+		return nil
+	case emaildelivery.FieldLocale:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLocale(v)
+		return nil
+	case emaildelivery.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case emaildelivery.FieldAttempts:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttempts(v)
+		return nil
+	case emaildelivery.FieldNextAttemptAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNextAttemptAt(v)
+		return nil
+	case emaildelivery.FieldSentAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSentAt(v)
+		return nil
+	case emaildelivery.FieldLastErrorCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastErrorCode(v)
+		return nil
+	}
+	return fmt.Errorf("unknown EmailDelivery field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *EmailDeliveryMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, emaildelivery.FieldVersion)
+	}
+	if m.addattempts != nil {
+		fields = append(fields, emaildelivery.FieldAttempts)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *EmailDeliveryMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case emaildelivery.FieldVersion:
+		return m.AddedVersion()
+	case emaildelivery.FieldAttempts:
+		return m.AddedAttempts()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *EmailDeliveryMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case emaildelivery.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case emaildelivery.FieldAttempts:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttempts(v)
+		return nil
+	}
+	return fmt.Errorf("unknown EmailDelivery numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *EmailDeliveryMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(emaildelivery.FieldTenantID) {
+		fields = append(fields, emaildelivery.FieldTenantID)
+	}
+	if m.FieldCleared(emaildelivery.FieldCreatedBy) {
+		fields = append(fields, emaildelivery.FieldCreatedBy)
+	}
+	if m.FieldCleared(emaildelivery.FieldUpdatedBy) {
+		fields = append(fields, emaildelivery.FieldUpdatedBy)
+	}
+	if m.FieldCleared(emaildelivery.FieldDeletedAt) {
+		fields = append(fields, emaildelivery.FieldDeletedAt)
+	}
+	if m.FieldCleared(emaildelivery.FieldDeletedBy) {
+		fields = append(fields, emaildelivery.FieldDeletedBy)
+	}
+	if m.FieldCleared(emaildelivery.FieldDeleteReason) {
+		fields = append(fields, emaildelivery.FieldDeleteReason)
+	}
+	if m.FieldCleared(emaildelivery.FieldNextAttemptAt) {
+		fields = append(fields, emaildelivery.FieldNextAttemptAt)
+	}
+	if m.FieldCleared(emaildelivery.FieldSentAt) {
+		fields = append(fields, emaildelivery.FieldSentAt)
+	}
+	if m.FieldCleared(emaildelivery.FieldLastErrorCode) {
+		fields = append(fields, emaildelivery.FieldLastErrorCode)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *EmailDeliveryMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *EmailDeliveryMutation) ClearField(name string) error {
+	switch name {
+	case emaildelivery.FieldTenantID:
+		m.ClearTenantID()
+		return nil
+	case emaildelivery.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case emaildelivery.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case emaildelivery.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case emaildelivery.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case emaildelivery.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case emaildelivery.FieldNextAttemptAt:
+		m.ClearNextAttemptAt()
+		return nil
+	case emaildelivery.FieldSentAt:
+		m.ClearSentAt()
+		return nil
+	case emaildelivery.FieldLastErrorCode:
+		m.ClearLastErrorCode()
+		return nil
+	}
+	return fmt.Errorf("unknown EmailDelivery nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *EmailDeliveryMutation) ResetField(name string) error {
+	switch name {
+	case emaildelivery.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case emaildelivery.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case emaildelivery.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case emaildelivery.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case emaildelivery.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case emaildelivery.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case emaildelivery.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case emaildelivery.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case emaildelivery.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case emaildelivery.FieldSourceEventID:
+		m.ResetSourceEventID()
+		return nil
+	case emaildelivery.FieldTemplateCode:
+		m.ResetTemplateCode()
+		return nil
+	case emaildelivery.FieldRecipientUserID:
+		m.ResetRecipientUserID()
+		return nil
+	case emaildelivery.FieldParams:
+		m.ResetParams()
+		return nil
+	case emaildelivery.FieldLocale:
+		m.ResetLocale()
+		return nil
+	case emaildelivery.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case emaildelivery.FieldAttempts:
+		m.ResetAttempts()
+		return nil
+	case emaildelivery.FieldNextAttemptAt:
+		m.ResetNextAttemptAt()
+		return nil
+	case emaildelivery.FieldSentAt:
+		m.ResetSentAt()
+		return nil
+	case emaildelivery.FieldLastErrorCode:
+		m.ResetLastErrorCode()
+		return nil
+	}
+	return fmt.Errorf("unknown EmailDelivery field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *EmailDeliveryMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *EmailDeliveryMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *EmailDeliveryMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *EmailDeliveryMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *EmailDeliveryMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *EmailDeliveryMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *EmailDeliveryMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown EmailDelivery unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *EmailDeliveryMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown EmailDelivery edge %s", name)
 }
 
 // ExternalIdentityMutation represents an operation that mutates the ExternalIdentity nodes in the graph.

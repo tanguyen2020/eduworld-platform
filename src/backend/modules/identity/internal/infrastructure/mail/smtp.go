@@ -2,8 +2,8 @@
 // (EW_SMTP_*, LOCAL_DEVELOPMENT §4; local runs deliver to mailpit). It sends one plain-text message per
 // call with a timeout, STARTTLS when the server offers it and AUTH PLAIN only over TLS. The shared
 // notification infrastructure (outbox, templates by translation files, retries) is outside F012; this
-// adapter carries only the password reset email, whose content is the reset link and nothing else
-// (ADR-0091 §3). Messages and addresses are never logged.
+// adapter carries the password reset email, whose content is the reset link and nothing else (ADR-0091 §3), and the
+// staff emails of the Safety Team (F124, staff.go: templates from translation files, no student data). Messages and addresses are never logged.
 package mail
 
 import (
@@ -35,6 +35,8 @@ type Config struct {
 	Username string
 	Password string
 	Timeout  time.Duration
+	// Location formats the due instants of the staff emails (EW_PLATFORM_TIMEZONE; nil: UTC+7).
+	Location *time.Location
 }
 
 // ConfigFrom reads EW_SMTP_HOST, EW_SMTP_PORT, EW_SMTP_FROM (required) and EW_SMTP_USERNAME/PASSWORD.
@@ -49,8 +51,12 @@ func ConfigFrom(c *config.Config) (Config, error) {
 	if _, err := mail.ParseAddress(c.String("EW_SMTP_FROM")); err != nil {
 		return Config{}, errors.New("mail: EW_SMTP_FROM must be an email address")
 	}
+	loc, err := time.LoadLocation(c.StringOr("EW_PLATFORM_TIMEZONE", "Asia/Ho_Chi_Minh"))
+	if err != nil {
+		loc = nil // zone database missing: fixed UTC+7
+	}
 	return Config{Host: c.String("EW_SMTP_HOST"), Port: p, From: c.String("EW_SMTP_FROM"), Username: c.String("EW_SMTP_USERNAME"),
-		Password: c.String("EW_SMTP_PASSWORD"), Timeout: c.Duration("EW_EXT_CLIENT_TIMEOUT", 5*time.Second)}, nil
+		Password: c.String("EW_SMTP_PASSWORD"), Timeout: c.Duration("EW_EXT_CLIENT_TIMEOUT", 5*time.Second), Location: loc}, nil
 }
 
 // SMTP implements port.Mailer.

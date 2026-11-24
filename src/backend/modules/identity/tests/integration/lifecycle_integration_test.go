@@ -74,7 +74,7 @@ func lifecycleHandlers(e *env, kc *kcUsers, rec *revokeRecorder, codec *page.Cod
 		panic(err)
 	}
 	return identityhttp.LifecycleHandlers{
-		Lifecycle: command.UserLifecycle{UoW: e.uow, Repo: write.LifecycleRepo{}, Events: e.deps.Events, Audit: e.deps.Audit},
+		Lifecycle: command.UserLifecycle{UoW: e.uow, Repo: write.LifecycleRepo{}, Locks: write.AccountLockRepo{}, Events: e.deps.Events, Audit: e.deps.Audit},
 		ResetPassword: command.ResetStudentPassword{UoW: e.uow, Repo: write.LifecycleRepo{}, KC: kc, Sessions: rec, Events: e.deps.Events,
 			Audit: e.deps.Audit, Issuers: []string{localIssuer}},
 		// The HTTP side of cleanup (preview, exclusions, runs, approve); the run itself is driven by TestStudentCleanup.

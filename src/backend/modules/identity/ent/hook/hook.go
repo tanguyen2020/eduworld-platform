@@ -21,6 +21,18 @@ func (f AcademicYearFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AcademicYearMutation", m)
 }
 
+// The AccountLockFunc type is an adapter to allow the use of ordinary
+// function as AccountLock mutator.
+type AccountLockFunc func(context.Context, *ent.AccountLockMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AccountLockFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AccountLockMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AccountLockMutation", m)
+}
+
 // The CountryFunc type is an adapter to allow the use of ordinary
 // function as Country mutator.
 type CountryFunc func(context.Context, *ent.CountryMutation) (ent.Value, error)
@@ -31,6 +43,18 @@ func (f CountryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CountryMutation", m)
+}
+
+// The EmailDeliveryFunc type is an adapter to allow the use of ordinary
+// function as EmailDelivery mutator.
+type EmailDeliveryFunc func(context.Context, *ent.EmailDeliveryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EmailDeliveryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EmailDeliveryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EmailDeliveryMutation", m)
 }
 
 // The ExternalIdentityFunc type is an adapter to allow the use of ordinary

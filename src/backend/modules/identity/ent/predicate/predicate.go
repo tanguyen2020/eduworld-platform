@@ -9,8 +9,14 @@ import (
 // AcademicYear is the predicate function for academicyear builders.
 type AcademicYear func(*sql.Selector)
 
+// AccountLock is the predicate function for accountlock builders.
+type AccountLock func(*sql.Selector)
+
 // Country is the predicate function for country builders.
 type Country func(*sql.Selector)
+
+// EmailDelivery is the predicate function for emaildelivery builders.
+type EmailDelivery func(*sql.Selector)
 
 // ExternalIdentity is the predicate function for externalidentity builders.
 type ExternalIdentity func(*sql.Selector)

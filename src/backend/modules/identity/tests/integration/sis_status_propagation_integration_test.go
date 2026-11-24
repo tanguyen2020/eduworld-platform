@@ -37,7 +37,8 @@ func TestSisStatusPropagation(t *testing.T) {
 	}
 	run := command.SisRun{UoW: g.uow, Savepoints: g.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
 		Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{},
-		Students: write.StudentRepo{}, Events: g.env.deps.Events, Audit: g.env.deps.Audit, History: write.LifecycleRepo{}}
+		Students: write.StudentRepo{}, Events: g.env.deps.Events, Audit: g.env.deps.Audit, History: write.LifecycleRepo{},
+		Locks: write.AccountLockRepo{}}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	imp := func(s1, s2 string) {
 		t.Helper()
@@ -111,5 +112,22 @@ func TestSisStatusPropagation(t *testing.T) {
 	r := g.login(t, "hs.st.binh", uuid.New())
 	if c := codeOf(r); r.code != 403 || (c != string(problem.NoActiveEnrollment) && c != string(problem.AccountNotProvisioned)) {
 		t.Fatalf("transferred login: %d %v", r.code, r.body)
+	}
+	// F124-AC-02 (SC-002): the SIS lock has its own source; a SIS record back to active releases that source only — a lock of
+	// the Safety Team (sanction account_lock) keeps the account locked.
+	if count(ctx, t, g.platform, `SELECT count(*) FROM identity.account_locks WHERE user_id = $1 AND source = 'sis' AND released_at IS NULL`, an) != 1 {
+		t.Fatal("sis lock source")
+	}
+	if _, err := g.platform.ExecContext(ctx, `INSERT INTO identity.account_locks (lock_id, tenant_id, created_at, updated_at, user_id, source,
+		source_ref_id) VALUES ($1, $2, now(), now(), $3, 'moderation_sanction', $4)`, uuid.New(), ta, an, uuid.New()); err != nil {
+		t.Fatal(err)
+	}
+	imp("active", "active")
+	var st string
+	if err := g.platform.QueryRowContext(ctx, `SELECT status FROM identity.users WHERE user_id = $1`, an).Scan(&st); err != nil || st != "locked" {
+		t.Fatalf("SIS active must not unlock a moderation lock: %s %v", st, err)
+	}
+	if count(ctx, t, g.platform, `SELECT count(*) FROM identity.account_locks WHERE user_id = $1 AND source = 'sis' AND released_at IS NULL`, an) != 0 {
+		t.Fatal("sis lock released")
 	}
 }

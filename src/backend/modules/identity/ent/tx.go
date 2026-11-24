@@ -14,8 +14,12 @@ type Tx struct {
 	config
 	// AcademicYear is the client for interacting with the AcademicYear builders.
 	AcademicYear *AcademicYearClient
+	// AccountLock is the client for interacting with the AccountLock builders.
+	AccountLock *AccountLockClient
 	// Country is the client for interacting with the Country builders.
 	Country *CountryClient
+	// EmailDelivery is the client for interacting with the EmailDelivery builders.
+	EmailDelivery *EmailDeliveryClient
 	// ExternalIdentity is the client for interacting with the ExternalIdentity builders.
 	ExternalIdentity *ExternalIdentityClient
 	// GameAuthSession is the client for interacting with the GameAuthSession builders.
@@ -198,7 +202,9 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.AcademicYear = NewAcademicYearClient(tx.config)
+	tx.AccountLock = NewAccountLockClient(tx.config)
 	tx.Country = NewCountryClient(tx.config)
+	tx.EmailDelivery = NewEmailDeliveryClient(tx.config)
 	tx.ExternalIdentity = NewExternalIdentityClient(tx.config)
 	tx.GameAuthSession = NewGameAuthSessionClient(tx.config)
 	tx.LoginEvent = NewLoginEventClient(tx.config)

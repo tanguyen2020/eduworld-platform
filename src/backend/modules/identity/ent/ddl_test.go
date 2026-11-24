@@ -23,8 +23,9 @@ var migrations = map[string][]string{
 		"province_successions", "schools", "students", "tenants", "users"},
 	"20261120000001_f011_sis.sql": {"reconciliation_issues", "sis_connection_schools", "sis_connections", "sis_identity_links",
 		"sis_imports", "sis_links", "student_login_keys", "sync_runs", "synced_students"},
-	"20261121000001_f012_authz.sql":      {"permissions", "portal_password_reset_tokens", "role_permissions", "roles", "user_roles"},
-	"20261122000001_f013_game_login.sql": {"game_auth_sessions"},
+	"20261121000001_f012_authz.sql":               {"permissions", "portal_password_reset_tokens", "role_permissions", "roles", "user_roles"},
+	"20261122000001_f013_game_login.sql":          {"game_auth_sessions"},
+	"20261202000001_f124_account_locks_email.sql": {"account_locks", "email_deliveries"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier
@@ -77,6 +78,7 @@ func schemas() map[string]string {
 		"reconciliation_issues": c.ReconciliationIssue, "sis_identity_links": c.SisIdentityLink,
 		"permissions": c.Permission, "roles": c.Role, "role_permissions": c.RolePermission, "user_roles": c.UserRole,
 		"portal_password_reset_tokens": c.PortalPasswordResetToken, "login_events": c.LoginEvent, "game_auth_sessions": c.GameAuthSession,
+		"account_locks": c.AccountLock, "email_deliveries": c.EmailDelivery,
 	}
 }
 

@@ -58,7 +58,8 @@ func NewDevSeed(d DevSeedDeps) (devseed.Seeder, error) {
 	}
 	run := command.SisRun{UoW: d.UoW, Savepoints: d.UoW, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
 		Missing: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
-		Rules: write.SisSyncRepo{}, Events: events, Audit: auditor, Observer: metrics.Runs{}, History: write.LifecycleRepo{}, IDHashKey: d.IDHash}
+		Rules: write.SisSyncRepo{}, Events: events, Audit: auditor, Observer: metrics.Runs{}, History: write.LifecycleRepo{}, IDHashKey: d.IDHash,
+		Locks: write.AccountLockRepo{}}
 	resolve := query.ResolvePrincipal{Model: read.PrincipalModel{Session: d.Read}}
 	return devseed.Seeder{
 		Users: kc,
@@ -76,7 +77,7 @@ func NewDevSeed(d DevSeedDeps) (devseed.Seeder, error) {
 		Staff: command.Staff{UoW: d.UoW, Repo: write.StaffRepo{}, Roles: roles, KC: kc, Events: events, Audit: auditor,
 			LocalIssuer: local},
 		Roles:     roles,
-		Lifecycle: command.UserLifecycle{UoW: d.UoW, Repo: write.LifecycleRepo{}, Events: events, Audit: auditor},
+		Lifecycle: command.UserLifecycle{UoW: d.UoW, Repo: write.LifecycleRepo{}, Locks: write.AccountLockRepo{}, Events: events, Audit: auditor},
 		Principal: func(ctx context.Context, userID uuid.UUID, tenantID *uuid.UUID) (authz.Principal, error) {
 			p, err := resolve.Handle(ctx, query.ResolvePrincipalInput{UserID: &userID, TenantID: tenantID})
 			if err != nil {
