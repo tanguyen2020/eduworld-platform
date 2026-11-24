@@ -127,6 +127,10 @@ seed-content: ## DEV published content Toán khối 3 + ADR-0029 assignment of i
 	EW_ENV=local EW_SEED_API_URL=$${EW_SEED_API_URL:-http://localhost:9080/api/v1} EW_SEED_INTERNAL_API_URL=$${EW_SEED_INTERNAL_API_URL:-http://localhost:9180/api/v1} \
 	  $(GO) run ./modules/learning/cmd/seed-content
 
+seed-game-content: ## DEV mini-game configs + their quest (seed/minigames) through the Game Operations Console (F078: create, review, publish, assign to the demo tenants; after make seed-content; EW_SEED_PASSWORD = demo password)
+	EW_ENV=local EW_SEED_API_URL=$${EW_SEED_API_URL:-http://localhost:9080/api/v1} EW_SEED_INTERNAL_API_URL=$${EW_SEED_INTERNAL_API_URL:-http://localhost:9180/api/v1} \
+	  $(GO) run ./modules/game/cmd/seed-content
+
 seed-check: ## Wait until the worker projected every seeded student into ref.students of learning and game (after make up-app)
 	bash scripts/dev/seed-check.sh
 
@@ -302,6 +306,24 @@ godot-smoke: godot-import ## Boot headless with GAME_ENV (default mock) and requ
 
 godot-screenshots: godot-import ## UiGallery 4 densities x vi/en/xx-PS + high contrast vs baselines (needs a renderer; UPDATE=1 rewrites baselines)
 	"$(GODOT)" --path $(GAME_DIR) $(GODOT_RENDER_FLAGS) -s res://tools/screenshot_gallery.gd -- $(if $(UPDATE),--update-baseline)
+
+# F078 US5: manual render of a 3D asset with the script of the game-renderer container (DESIGN_SYSTEM §7). Needs a
+# renderer (not --headless: the dummy renderer writes empty images); on Linux CI wrap with xvfb-run and pass
+# GODOT_RENDER_FLAGS="--rendering-method gl_compatibility --rendering-driver opengl3". Paths are made absolute in the
+# form the Godot binary understands (pwd -W under Git Bash on Windows).
+OUT ?= build/renders
+.PHONY: render-thumbnails
+render-thumbnails: godot-import ## Render thumbnail.png (512x512) + turntable.png (24 frames, 3072x2048): make render-thumbnails INPUT=path/model.glb [OUT=build/renders]
+	@test -n "$(INPUT)" -a -f "$(INPUT)" || { echo "usage: make render-thumbnails INPUT=path/to/model.glb [OUT=build/renders]" >&2; exit 2; }
+	@mkdir -p "$(OUT)"
+	@in="$$(cd "$$(dirname "$(INPUT)")" && { pwd -W 2>/dev/null || pwd; })/$$(basename "$(INPUT)")"; \
+	out="$$(cd "$(OUT)" && { pwd -W 2>/dev/null || pwd; })"; \
+	script=res://tools/thumbnail_renderer/render_thumbnails.gd; \
+	"$(GODOT)" --path $(GAME_DIR) $(GODOT_RENDER_FLAGS) -s $$script -- --input "$$in" --output "$$out" \
+	  --kind render_thumbnail --size 512 --frames 1; \
+	"$(GODOT)" --path $(GAME_DIR) $(GODOT_RENDER_FLAGS) -s $$script -- --input "$$in" --output "$$out" \
+	  --kind render_turntable --size 512 --frames 24; \
+	echo "render-thumbnails: $$out/thumbnail.png $$out/turntable.png"
 
 godot-fixtures: ## Regenerate contract fixtures, messages.pot and the pseudo-locale after a spec or UI string change
 	node $(GAME_DIR)/tools/gen_fixtures.mjs

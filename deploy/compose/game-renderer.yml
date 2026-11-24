@@ -1,0 +1,46 @@
+# game-renderer container (F078 US5, FR-CMS-017, research R2): Godot renders thumbnails/turntables of 3D game assets
+# from the JetStream work queue GAME_RENDER_JOBS. Optional overlay of docker-compose.yml (Godot image is heavy and only
+# the worker of module game enqueues jobs):
+#   docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/game-renderer.yml up -d game-renderer
+# Run it next to `make up-app` (the worker publishes the jobs and records the results). Admin port :9090 inside the
+# container (health /readyz, /metrics), published on host 9210. Local values only, same defaults as
+# docker-compose.app.yml (floci default account, overridable from the shell).
+name: eduworld
+
+services:
+  game-renderer:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/game-renderer.Dockerfile
+      args:
+        VERSION: ${EW_VERSION:-dev}
+        COMMIT: ${EW_COMMIT:-unknown}
+        BUILD_TIME: ${EW_BUILD_TIME:-unknown}
+    image: eduworld/game-renderer:local
+    environment:
+      EW_ENV: local
+      EW_LOG_FORMAT: json
+      EW_ADMIN_ADDR: ":9090"
+      EW_NATS_URL: nats://nats:4222
+      EW_S3_ENDPOINT: http://floci:4566
+      EW_S3_REGION: us-east-1
+      EW_S3_ACCESS_KEY: ${EW_S3_ACCESS_KEY:-test}
+      EW_S3_SECRET_KEY: ${EW_S3_SECRET_KEY:-test}
+      # Godot under Xvfb, Compatibility renderer over OpenGL 3.3 (wrapper baked into the image).
+      EW_RENDERER_GODOT: /usr/local/bin/godot-render
+      EW_RENDERER_PROJECT: /opt/eduworld/game
+      EW_RENDERER_TIMEOUT: ${EW_RENDERER_TIMEOUT:-120s}
+      EW_RENDERER_WORKDIR: /tmp/renderer
+    ports: ["9210:9090"]
+    tmpfs:
+      - /tmp:size=1g,mode=1777
+    depends_on:
+      nats: { condition: service_healthy }
+      floci: { condition: service_healthy }
+      s3-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "/app/game-renderer", "healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
