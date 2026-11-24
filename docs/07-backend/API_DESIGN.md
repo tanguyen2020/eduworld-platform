@@ -826,7 +826,7 @@ Vùng **Learning Management** (ADR-0027): dùng được bởi vận hành tenan
 
 ### 9.13b. Game Studio & cấu hình thi đấu — `/api/v1/game-admin` (INTERNAL, platform-only)
 
-**Module:** `game` / `competition` / `chat` theo `config_type` (cột Module bên dưới).
+**Module:** `game` / `competition` / `chat` theo `config_type` (cột Module bên dưới). Trong `core-api` các operation dùng chung path `/game-admin/{config_type}` được định tuyến theo giá trị `config_type` (`x-service-routing`, `httpx.Server.HandleRouted`: mỗi module giữ chain riêng; giá trị không module nào phục vụ → `404` sau xác thực). Module `game` (F078) phục vụ các loại có module loại đã đăng ký: `quests`, `minigame-configs`, `npc-dialogues`, `world-areas`, `story-chapters`, `items`, `shop-items`, `collections`, `achievements`, `reward-rules`, `progression-curves`, `challenges`, `events`, `event-templates`, `season-tracks`; `progression-levels` (sinh từ đường cong), `bosses`, `currencies` trả `404` cho tới khi có module loại.
 
 **ADR-0027.** Chỉ publish trên **APISIX nội bộ** (VPN); backend chỉ chấp nhận token `azp = eduworld-portal` (`user_type = staff`) và Principal có role platform với permission tương ứng (thiếu role platform → `403 PERMISSION_DENIED`; không MFA — ADR-0094). Role tenant không bao giờ có permission `game.*`/`competition.config.*` nên không thể gọi các endpoint này kể cả khi vào được mạng nội bộ. OpenAPI dùng path tham số `/game-admin/{config_type}` với `config_type` là enum `GameConfigType`; payload của từng loại validate theo JSON Schema trong `specs/schemas/` (nếu có).
 
@@ -868,10 +868,13 @@ Vùng **Learning Management** (ADR-0027): dùng được bởi vận hành tenan
 | POST | `/game-admin/{config_type}/{config_id}/versions/{version}:transition` | `submit_review/approve/reject/publish/archive/rollback` (+ `effective_from` cho cấu hình thi đấu); review cần `game.content.review`, publish cần `game.content.publish` | B | P2 |
 | GET | `/game-admin/{config_type}/{config_id}/versions` (+ `/versions/{version}:diff?with=`) | Lịch sử version, diff (ADR-0043) | T | P2 |
 | POST | `/game-admin/{config_type}/{config_id}/versions/{version}:publish` | Xuất bản ngay/hẹn giờ; cập nhật content manifest các tenant liên quan; cần `game.content.publish` | B | P2 |
-| POST | `/game-admin/{config_type}/{config_id}:rollback` / `:unpublish` | Đổi con trỏ về version cũ / gỡ (lý do bắt buộc; `content.release.rollback`) | B | P2 |
+| POST | `/game-admin/{config_type}/{config_id}/versions` | Version nháp mới sao chép từ `based_on_version` (mặc định version con trỏ); version đã publish giữ bất biến — `createGameConfigVersion` (F078, chỉ module `game`) | B | P2 |
+| POST | `/game-admin/{config_type}/{config_id}:rollback` / `:unpublish` | Đổi con trỏ về version đã publish khác / gỡ (lý do bắt buộc; `game.content.publish` — F078 Clarifications 2026-11-16); unpublish trả `usages[]` (nội dung game còn tham chiếu, tenant đang được gán) | B | P2 |
+| POST | `/game-admin/{config_type}/{config_id}/releases/{release_id}:cancel` | Hủy lịch xuất bản hẹn giờ trước giờ chạy (audit) — `cancelScheduledGameConfigPublish` (F078) | B | P2 |
 | GET | `/game-admin/{config_type}/{config_id}/releases` | Lịch sử release | T | P2 |
 | POST / GET | `/game-media:presign-upload`, `/game-media/{asset_id}` | Upload/xem media nội dung game (module `game`, gateway nội bộ; tách prefix khỏi `/game-admin/{config_type}` để path không mơ hồ) | B / T | P2 |
 | POST | `/game-admin/preview/sessions` | Preview token Godot Web cho draft | B | P3 |
+| GET | `/game-admin/preview/snapshot?config_type=&config_id=&version=` | Godot Web đọc version của phiên preview với header `X-Preview-Token` (chỉ version đó, chỉ người tạo, hạn `preview_token_ttl`; khác → `403`) — `getGamePreviewSnapshot` (F078) | T | P3 |
 | POST | `/game-admin/translations:export` / `:import` | Xuất/nhập file dịch nội dung game (XLIFF/CSV, job `202`); nhập tạo version Draft mới; permission `game.content.translate` (ADR-0056) — `exportGameTranslations`, `importGameTranslations` | B | P3 |
 | GET | `/game-admin/translations/jobs/{job_id}` | Trạng thái job dịch — `getGameTranslationJob` | T | P3 |
 | POST | `/game-admin/events/{event_id}/runs/{run_id}:suspend` / `:resume` / `:cancel` | Dừng khẩn cấp / tiếp tục / hủy sự kiện đang chạy; lý do bắt buộc; audit; permission `game.event.operate` ([EVENT_SEASON_SYSTEM §5](../01-game-design/EVENT_SEASON_SYSTEM.md#5-vòng-đời-sự-kiện)) | B | P3 |

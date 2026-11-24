@@ -657,7 +657,7 @@ Chi tiết nghiệp vụ: [MODERATION §11–§12](../03-social-multiplayer/MODE
 | **Xem version** | Mở nội dung một version ở chế độ **chỉ đọc** (kể cả version cũ đã publish, version archived) | `*.read` |
 | **So sánh** | Chọn 2 version → diff theo field/khối (text, đáp án, media thay đổi, metadata). Reviewer thấy diff mặc định với version đang xuất bản | `*.read`; xem diff `answer_key` cần `*.review` |
 | **Preview trong game** | Nút "Xem trong game" chạy Godot Web export với snapshot của version đã chọn (không tạo game session, không XP) — [§5](#5-preview) | `*.read` |
-| **Rollback** | Trên một version đã publish: "Dùng lại phiên bản này cho học sinh". Bắt buộc lý do (≤ 500 ký tự), xác nhận lần 2, hiển thị ảnh hưởng: học sinh đang chơi/học giữ version hiện tại cho đến khi xong lượt; lượt mới nhận version được chọn | `content.release.rollback` (tenant: Tenant Admin, Academic Manager, reviewer tenant; platform: Content Admin, Live-ops) |
+| **Rollback** | Trên một version đã publish: "Dùng lại phiên bản này cho học sinh". Bắt buộc lý do (≤ 500 ký tự), xác nhận lần 2, hiển thị ảnh hưởng: học sinh đang chơi/học giữ version hiện tại cho đến khi xong lượt; lượt mới nhận version được chọn | Nội dung học tập: `content.release.rollback` (tenant: Tenant Admin, Academic Manager, reviewer tenant; platform: Content Admin). Nội dung game (`/game-admin/*`): `game.content.publish` (Live-ops, Game Designer không có) — cùng quyền với publish, gỡ xuất bản và hủy hẹn giờ (F078 Clarifications 2026-11-16, 2026-11-24); loại `events` (lịch chạy) và `reward-rules` (dòng thời gian hiệu lực) không rollback: sửa bằng version mới |
 | **Gỡ xuất bản** | Con trỏ về rỗng; bắt buộc lý do; cảnh báo các bài giao/quest đang tham chiếu | `*.publish` |
 | **Thư viện media** | Upload (kéo-thả, nhiều file), tiến trình `quarantined → processing → ready/rejected` kèm lý do từ chối (sai loại file, virus, quá dung lượng); xem biến thể; `alt_text` bắt buộc cho ảnh; license; "đang dùng ở version nào"; thay ảnh = upload asset mới rồi chọn trong bản nháp — [CONTENT_MODEL §7](../02-learning/CONTENT_MODEL.md#7-media-asset-pipeline-adr-0044) | `media.upload`, `*.read` |
 
@@ -895,7 +895,7 @@ sequenceDiagram
 
 Preview game chạy trong component `GamePreviewFrame` (iframe riêng chứa Godot Web export, renderer Compatibility/WebGL 2); phần còn lại của màn hình theo Admin/Ops UI (ADR-0047). Danh sách và form hiển thị thumbnail/turntable render sẵn từ asset 3D (DESIGN_SYSTEM §7) để không phải tải bản preview chỉ để nhận diện nội dung.
 
-Preview API: `POST /api/v1/cms/learning/preview/sessions` (nội dung học tập) và `POST /api/v1/game-admin/preview/sessions` (nội dung game) → `preview_token` (hạn `preview_token_ttl` = 30 phút, chỉ đọc draft được chỉ định). Preview **không** tạo learning event, XP hay attempt.
+Preview API: `POST /api/v1/cms/learning/preview/sessions` (nội dung học tập) và `POST /api/v1/game-admin/preview/sessions` (nội dung game) → `preview_token` (hạn `preview_token_ttl` = 30 phút, chỉ đọc draft được chỉ định). Godot Web trong `GamePreviewFrame` đọc version qua `GET /api/v1/game-admin/preview/snapshot` với header `X-Preview-Token` (token chỉ đọc đúng `config_type`/`config_id`/`version` đã cấp, chỉ cho người tạo; khác → `403`; server chỉ lưu SHA-256 của token — F078). Preview **không** tạo learning event, XP hay attempt.
 
 ## 6. Publish & rollback (ADR-0043)
 

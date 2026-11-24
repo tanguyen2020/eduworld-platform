@@ -148,6 +148,16 @@ EW_CDN_BASE_URL=http://localhost:8090
 EW_CDN_SIGNING_KEY=change-me-local        # ký signed URL cho ew-media-private
 EW_MEDIA_SCAN=clamd://localhost:3310      # hoặc disabled
 EW_CONTENT_SNAPSHOT_TTL=168h
+# ---- Game Operations Console (F078; module game đọc chung EW_S3_*, EW_CDN_BASE_URL, EW_MEDIA_SCAN ở trên) ----
+EW_GAME_SCHEDULED_PUBLISH_MIN_LEAD_MINUTES=5   # scheduled_publish_min_lead
+EW_GAME_TEXT_REQUIRED_LANGUAGES=vi,en          # game_text_required_languages
+EW_GAME_ASSETS_PER_VERSION_MAX=50              # assets_per_version_max
+EW_GAME_PREVIEW_TOKEN_TTL_MINUTES=30           # preview_token_ttl
+EW_GAME_RENDER_MAX_ATTEMPTS=5                  # game_render_max_attempts (rồi DLQ)
+EW_GAME_RENDER_BACKOFF_SECONDS=60              # game_render_retry_backoff (lũy thừa 2, tối đa 1 giờ)
+# Container game-renderer (deploy/compose/game-renderer.yml): EW_NATS_URL (hoặc EW_NATS_URLS), EW_S3_*, EW_RENDERER_GODOT
+# (mặc định godot-render = xvfb-run + godot --rendering-driver opengl3), EW_RENDERER_PROJECT, EW_RENDERER_TIMEOUT=120s, EW_RENDERER_WORKDIR;
+# cổng admin 9210 (health/metrics).
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318   # OTLP/HTTP (exporter otlptracehttp, F002)
 OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 OTEL_TRACES_SAMPLER=parentbased_traceidratio
@@ -401,6 +411,7 @@ postman collection run specs/postman/eduworld-api.postman_collection.json \
 | `make migrate-lint MOD=<module>` | `atlas migrate lint` (chặn thao tác phá hủy, string thiếu giới hạn) |
 | `make seed` / `make seed-check` | Nạp dữ liệu giả / kiểm tra projection đã đồng bộ |
 | `EW_SEED_PASSWORD=… make seed-content` | Sau `make up-app` + `make seed-check`: nội dung dev Toán khối 3 đã publish và gán (cùng `GDPT2018_SAMPLE`) cho `th-demo-a`, `pgd-demo` qua API (idempotent) |
+| `EW_SEED_PASSWORD=… make seed-game-content` | Sau `make seed-content`: 2 cấu hình mini-game + quest "Phiên chợ của bác Gấu Nâu" (`modules/game/seed/minigames`) qua Game Operations Console — tạo (`gd.thietke`) → gửi duyệt → duyệt (`cm.duyet`) → publish (`lo.vanhanh`, nguồn câu kiểm bằng `validateMinigameQuestionSource`) → gán `th-demo-a`, `pgd-demo`, `common` (`sa.admin`, `/admin/tenant-assignments`); chạy lại không publish thêm (F078) |
 | `make lint [MOD=<module>]` | gofmt, golangci-lint, go-arch-lint (tầng Clean Architecture), gdlint, eslint, spectral |
 | `make arch-check` | Ranh giới module trên toàn repository: không import `internal/` của module khác, chỉ import `src/backend/modules/<khác>/api` khi có trong `x-allowed-callers`, `src/backend/cmd/` chỉ nối module qua `Register` (ADR-0074 mục 1) |
 | `make test [MOD=<module>]` | Unit test |
@@ -415,7 +426,7 @@ postman collection run specs/postman/eduworld-api.postman_collection.json \
 | `make web-lint` / `make web-test` / `make web-build` | `src/cms/frontend`: ESLint + stylelint + typecheck + `gen:check` / Vitest 1 worker / build portal + kiểm 5 chunk workspace (F050) |
 | `make web-storybook-check` / `make web-visual` | Build Storybook + axe mọi story (lỗi serious/critical fail) / Playwright visual regression 100% và 200% zoom (F050) |
 | `make docs-check` | `npm ci --prefix scripts` rồi chạy `node scripts/docs/check-mermaid.mjs` (cú pháp mọi sơ đồ Mermaid trong `docs/` + README) và `node scripts/docs/check-links.mjs` (link tương đối + anchor kiểu GitHub), `node scripts/docs/build-rtm.mjs --check` (ma trận truy vết khớp nguồn). Exit ≠ 0 khi có lỗi; cùng lệnh với job CI `docs:check`. Sinh lại RTM: `node scripts/docs/build-rtm.mjs` |
-| `make render-thumbnails [ASSET=<path>]` | Godot headless render thumbnail/turntable cho asset 3D, upload lên floci local |
+| `make render-thumbnails INPUT=<model.glb> [OUT=build/renders]` | Godot render `thumbnail.png` 512×512 + `turntable.png` (24 khung, sprite sheet 3072×2048) của một asset 3D (script `src/game/tools/thumbnail_renderer/render_thumbnails.gd`; cần renderer thật — `--headless` cho ảnh rỗng). Trên stack: container `game-renderer` (`docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/game-renderer.yml up game-renderer`) nhận job từ `GAME_RENDER_JOBS` (F078) |
 | `make specs-lint` | Spectral (+ rule `maxLength`), AsyncAPI, ajv JSON Schema, oasdiff, `check-enums`, `check-problem-codes`, `check-portal-catalog` (danh mục menu/action portal ↔ `x-portal-action`, ADR-0090) |
 | `make portal-catalog` | Sinh `src/cms/frontend/apps/portal/src/generated/menu-catalog.ts` (`menuRegistry`/`workspaceRegistry`) từ `specs/portal/menu-catalog.yaml`; `make gen` sinh bảng route → action cho `featuregate` từ `x-portal-action` (ADR-0090) |
 | `make docs-lint` | markdownlint + kiểm tra link |
