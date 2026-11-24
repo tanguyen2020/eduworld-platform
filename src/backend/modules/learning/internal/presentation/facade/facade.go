@@ -41,6 +41,8 @@ type Facade struct {
 	Reveals PlanReveals
 	// MinigameSources serves validateMinigameQuestionSource (caller module game, F073-AC-02).
 	MinigameSources query.ValidateMinigameQuestionSourceHandler
+	// PublishedContent serves checkPublishedLearningContent (caller module game, F078-AC-07).
+	PublishedContent query.CheckPublishedContentHandler
 	// Idempotency stores the results of the writing operations (infra.idempotency_records, idempotency_record_ttl).
 	Idempotency *idempotency.Store
 }

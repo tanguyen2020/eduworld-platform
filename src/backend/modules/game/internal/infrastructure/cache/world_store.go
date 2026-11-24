@@ -118,3 +118,10 @@ func (s GameSnapshotCache) SetCurrent(ctx context.Context, itemType, itemID stri
 	defer cancel()
 	return s.C.Do(ctx, s.C.B().Set().Key("ew:game:current:"+itemType+":"+itemID).Value(versionID.String()).Build()).Error()
 }
+
+// ClearCurrent implements port.SnapshotCache: the pointer of an unpublished item (F078) is removed.
+func (s GameSnapshotCache) ClearCurrent(ctx context.Context, itemType, itemID string) error {
+	ctx, cancel := context.WithTimeout(ctx, worldTimeout)
+	defer cancel()
+	return s.C.Do(ctx, s.C.B().Del().Key("ew:game:current:"+itemType+":"+itemID).Build()).Error()
+}

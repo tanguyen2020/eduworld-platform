@@ -122,6 +122,7 @@ type Facade interface {
 	ScorePlanAnswer(ctx context.Context, req api.ScorePlanAnswerRequestObject) (api.ScorePlanAnswerResponseObject, error)
 	RevealPlanItem(ctx context.Context, req api.RevealPlanItemRequestObject) (api.RevealPlanItemResponseObject, error)
 	ValidateMinigameQuestionSource(ctx context.Context, req api.ValidateMinigameQuestionSourceRequestObject) (api.ValidateMinigameQuestionSourceResponseObject, error)
+	CheckPublishedLearningContent(ctx context.Context, req api.CheckPublishedLearningContentRequestObject) (api.CheckPublishedLearningContentResponseObject, error)
 }
 
 var _ Facade = facade.Facade{}
@@ -483,6 +484,7 @@ func build(r *module.Registry) (*wiring, error) {
 	f.Reveals = query.QuestionPlans{Session: core.ReadSession, Model: read.QuestionPlanModel{}, Delivery: delivery}
 	// F073: validateMinigameQuestionSource (caller module game, publish of a mini-game configuration).
 	f.MinigameSources = query.ValidateMinigameQuestionSource{Session: core.ReadSession, Docs: read.DocModel{}, Sources: read.MinigameSourceModel{}}
+	f.PublishedContent = query.CheckPublishedContent{Session: core.ReadSession, Content: read.PublishedContentModel{}}
 	// F044: exports on the dashboard session (replica) in core-api and in the worker, quality jobs and reads.
 	reportCfg := reporting.DefaultConfig()
 	reports := command.Reports{UoW: core.UoW, Jobs: write.ReportRepo{}, Queue: write.ReportRepo{}, Read: core.ReadSession, Scope: read.QualityModel{},

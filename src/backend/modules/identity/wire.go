@@ -90,6 +90,7 @@ type GameFacade interface {
 	participants.GameFacade
 	AnonymizeUserData(ctx context.Context, req gameapi.AnonymizeUserDataRequestObject) (gameapi.AnonymizeUserDataResponseObject, error)
 	MergeUserData(ctx context.Context, req gameapi.MergeUserDataRequestObject) (gameapi.MergeUserDataResponseObject, error)
+	modules.GameAssignmentOps
 }
 
 // CompetitionFacade is what module identity calls on module competition (x-allowed-callers: identity, F100 T042).
@@ -174,7 +175,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 
 	// Facades of learning and game (sagas F016, platform operations F045); mergeUserData is served by learning
 	// (F030) and game (F070); competition and chat answer 503 UNAVAILABLE (OQ F045-3).
-	gw := modules.Gateway{Learning: in.Learning, LearningMerge: in.Learning, GameMerge: in.Game}
+	gw := modules.Gateway{Learning: in.Learning, LearningMerge: in.Learning, GameMerge: in.Game, GameAssign: in.Game}
 	studentParts := []port.StudentDataParticipant{participants.Game{F: in.Game}, participants.Learning{F: in.Learning}}
 	anonymizers := []port.UserDataAnonymizer{participants.GameAnonymize{F: in.Game}, participants.LearningAnonymize{F: in.Learning}}
 	if in.Competition != nil {

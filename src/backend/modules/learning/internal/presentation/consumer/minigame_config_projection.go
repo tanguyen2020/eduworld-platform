@@ -17,7 +17,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
 )
 
-// MinigameConfigProjection is the consumer learning.minigame_config_projection (F073-AC-04, T016): a content.published of
+// MinigameConfigProjection is the consumer learning.minigame_config_projection (F073-AC-04, T016; F078: rollbacks and
+// unpublish move the release pointer ref.minigame_config_pointers): a content.published or content.rolled_back of
 // module game (platform event, tenant_id null) with item_type minigame_config stores its minigame_config block in the
 // immutable projection ref.minigame_config_versions; other item types are ignored. A replayed event inserts nothing
 // (idempotency per event_id is pkg/outbox.Consumer, per version the insert-only projection, TC-SVC-003); a payload the
@@ -59,6 +60,14 @@ func (c MinigameConfigProjection) Handle(ctx context.Context, e outbox.Envelope)
 	if p.ItemType != minigameItemType {
 		return nil // other game content (world areas, quests, rewards…): not a mini-game configuration
 	}
+	if e.EventType == "content.unpublished" { // F078: the config is withdrawn, its pinned plays keep their version
+		id, err := uuid.Parse(p.ItemID)
+		if err != nil || e.TenantID != nil || p.ReleasedAt.IsZero() {
+			observability.ConsumerRejected().WithLabelValues(messaging.MinigameConfigProjectionName, "invalid_payload").Inc()
+			return outbox.Permanent(invalid(e.EventType, "a platform minigame_config item_id and released_at are required"))
+		}
+		return c.Upsert.MovePointer(ctx, id, nil, p.ReleasedAt.UTC())
+	}
 	if e.TenantID != nil || p.Minigame == nil || p.ReleasedAt.IsZero() || p.Minigame.ConfigID.String() != p.ItemID ||
 		p.Minigame.VersionID != p.ToVersionID || p.Minigame.Version != p.ToVersion {
 		observability.ConsumerRejected().WithLabelValues(messaging.MinigameConfigProjectionName, "invalid_payload").Inc()
@@ -71,5 +80,10 @@ func (c MinigameConfigProjection) Handle(ctx context.Context, e outbox.Envelope)
 		observability.ConsumerRejected().WithLabelValues(messaging.MinigameConfigProjectionName, "invalid_snapshot").Inc()
 		return outbox.Permanent(err)
 	}
-	return err
+	if err != nil {
+		return err
+	}
+	// F078: the release pointer follows publish and rollback (the snapshot of a rolled back version exists already).
+	vid := m.VersionID
+	return c.Upsert.MovePointer(ctx, m.ConfigID, &vid, p.ReleasedAt.UTC())
 }

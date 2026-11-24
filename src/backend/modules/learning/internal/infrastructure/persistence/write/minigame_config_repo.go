@@ -61,9 +61,13 @@ func (MinigameConfigRepo) MinigameConfigVersionNo(ctx context.Context, configID 
 		configID, no)
 }
 
-// CurrentMinigameConfigVersion implements write.MinigameConfigs: the version published last.
+// CurrentMinigameConfigVersion implements write.MinigameConfigs: the version of the release pointer of module game
+// (ref.minigame_config_pointers, F078: follows rollbacks; none when withdrawn), else the version published last (configs
+// released before the pointer projection existed).
 func (MinigameConfigRepo) CurrentMinigameConfigVersion(ctx context.Context, configID uuid.UUID) (*dto.MinigameConfigVersion, error) {
 	// tenancyguard:ok projection of platform content (no tenant_id, no deleted_at: DATABASE_DESIGN §2.17 rule 2)
 	return minigameRow(ctx, `SELECT `+minigameColumns+` FROM ref.minigame_config_versions WHERE minigame_config_id = $1
+		AND (NOT EXISTS (SELECT 1 FROM ref.minigame_config_pointers p WHERE p.minigame_config_id = $1)
+			OR minigame_config_version_id = (SELECT p.minigame_config_version_id FROM ref.minigame_config_pointers p WHERE p.minigame_config_id = $1))
 		ORDER BY published_at DESC, version DESC LIMIT 1`, configID)
 }

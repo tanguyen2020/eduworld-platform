@@ -40,6 +40,9 @@ type AssetHandlers struct {
 	Queries  AssetQueries
 }
 
+// AssetConfigTypes are the values of config_type module chat serves on the shared game-admin routes.
+var AssetConfigTypes = []string{"sticker-packs", "gifs"}
+
 // AssetOperations are the game-admin operations served by module chat.
 var AssetOperations = []string{"listGameConfigs", "createGameConfig", "getGameConfigVersion", "updateGameConfigDraft",
 	"transitionGameConfigVersion", "listGameConfigVersions", "publishGameConfigVersion", "presignChatAssetUpload"}
@@ -75,7 +78,15 @@ func registerAssets(s *httpx.Server, h *AssetHandlers) error {
 		"updateGameConfigDraft": h.update, "transitionGameConfigVersion": h.transition, "listGameConfigVersions": h.versions,
 		"publishGameConfigVersion": h.publish, "presignChatAssetUpload": h.presign}
 	for _, id := range AssetOperations {
-		if err := s.Handle(Operations[id], routes[id]); err != nil {
+		if id == "presignChatAssetUpload" {
+			if err := s.Handle(Operations[id], routes[id]); err != nil {
+				return err
+			}
+			continue
+		}
+		// Shared /game-admin/{config_type} operations: module chat serves its two config types; module game the game
+		// types (F078) on the same route (httpx.HandleRouted, x-service-routing).
+		if err := s.HandleRouted(Operations[id], "config_type", AssetConfigTypes, routes[id]); err != nil {
 			return err
 		}
 	}

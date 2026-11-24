@@ -30,6 +30,8 @@ type Tx struct {
 	CharacterCatalog *CharacterCatalogClient
 	// CharacterCatalogVersion is the client for interacting with the CharacterCatalogVersion builders.
 	CharacterCatalogVersion *CharacterCatalogVersionClient
+	// ClientManifest is the client for interacting with the ClientManifest builders.
+	ClientManifest *ClientManifestClient
 	// Collection is the client for interacting with the Collection builders.
 	Collection *CollectionClient
 	// CollectionItem is the client for interacting with the CollectionItem builders.
@@ -68,6 +70,10 @@ type Tx struct {
 	EventVersion *EventVersionClient
 	// ExplorationProgress is the client for interacting with the ExplorationProgress builders.
 	ExplorationProgress *ExplorationProgressClient
+	// GameConfigItem is the client for interacting with the GameConfigItem builders.
+	GameConfigItem *GameConfigItemClient
+	// GameConfigVersion is the client for interacting with the GameConfigVersion builders.
+	GameConfigVersion *GameConfigVersionClient
 	// GameProfile is the client for interacting with the GameProfile builders.
 	GameProfile *GameProfileClient
 	// GameSession is the client for interacting with the GameSession builders.
@@ -90,6 +96,10 @@ type Tx struct {
 	LevelVersion *LevelVersionClient
 	// LoginEvent is the client for interacting with the LoginEvent builders.
 	LoginEvent *LoginEventClient
+	// MediaAsset is the client for interacting with the MediaAsset builders.
+	MediaAsset *MediaAssetClient
+	// MediaUsage is the client for interacting with the MediaUsage builders.
+	MediaUsage *MediaUsageClient
 	// MiniGameConfig is the client for interacting with the MiniGameConfig builders.
 	MiniGameConfig *MiniGameConfigClient
 	// MiniGameConfigVersion is the client for interacting with the MiniGameConfigVersion builders.
@@ -104,6 +114,8 @@ type Tx struct {
 	NpcDialogueVersion *NpcDialogueVersionClient
 	// PeriodicQuestGrant is the client for interacting with the PeriodicQuestGrant builders.
 	PeriodicQuestGrant *PeriodicQuestGrantClient
+	// PreviewSession is the client for interacting with the PreviewSession builders.
+	PreviewSession *PreviewSessionClient
 	// ProgressionCurve is the client for interacting with the ProgressionCurve builders.
 	ProgressionCurve *ProgressionCurveClient
 	// ProgressionCurveVersion is the client for interacting with the ProgressionCurveVersion builders.
@@ -118,12 +130,16 @@ type Tx struct {
 	QuestStepAttempt *QuestStepAttemptClient
 	// QuestVersion is the client for interacting with the QuestVersion builders.
 	QuestVersion *QuestVersionClient
+	// RenderJob is the client for interacting with the RenderJob builders.
+	RenderJob *RenderJobClient
 	// RewardGrant is the client for interacting with the RewardGrant builders.
 	RewardGrant *RewardGrantClient
 	// RewardRule is the client for interacting with the RewardRule builders.
 	RewardRule *RewardRuleClient
 	// RewardRuleVersion is the client for interacting with the RewardRuleVersion builders.
 	RewardRuleVersion *RewardRuleVersionClient
+	// ScheduledPublication is the client for interacting with the ScheduledPublication builders.
+	ScheduledPublication *ScheduledPublicationClient
 	// SeasonPointEntry is the client for interacting with the SeasonPointEntry builders.
 	SeasonPointEntry *SeasonPointEntryClient
 	// SeasonTrack is the client for interacting with the SeasonTrack builders.
@@ -302,6 +318,7 @@ func (tx *Tx) init() {
 	tx.ChallengeVersion = NewChallengeVersionClient(tx.config)
 	tx.CharacterCatalog = NewCharacterCatalogClient(tx.config)
 	tx.CharacterCatalogVersion = NewCharacterCatalogVersionClient(tx.config)
+	tx.ClientManifest = NewClientManifestClient(tx.config)
 	tx.Collection = NewCollectionClient(tx.config)
 	tx.CollectionItem = NewCollectionItemClient(tx.config)
 	tx.CollectionProgress = NewCollectionProgressClient(tx.config)
@@ -321,6 +338,8 @@ func (tx *Tx) init() {
 	tx.EventTemplateVersion = NewEventTemplateVersionClient(tx.config)
 	tx.EventVersion = NewEventVersionClient(tx.config)
 	tx.ExplorationProgress = NewExplorationProgressClient(tx.config)
+	tx.GameConfigItem = NewGameConfigItemClient(tx.config)
+	tx.GameConfigVersion = NewGameConfigVersionClient(tx.config)
 	tx.GameProfile = NewGameProfileClient(tx.config)
 	tx.GameSession = NewGameSessionClient(tx.config)
 	tx.InventoryItem = NewInventoryItemClient(tx.config)
@@ -332,6 +351,8 @@ func (tx *Tx) init() {
 	tx.LevelSession = NewLevelSessionClient(tx.config)
 	tx.LevelVersion = NewLevelVersionClient(tx.config)
 	tx.LoginEvent = NewLoginEventClient(tx.config)
+	tx.MediaAsset = NewMediaAssetClient(tx.config)
+	tx.MediaUsage = NewMediaUsageClient(tx.config)
 	tx.MiniGameConfig = NewMiniGameConfigClient(tx.config)
 	tx.MiniGameConfigVersion = NewMiniGameConfigVersionClient(tx.config)
 	tx.MiniGamePlay = NewMiniGamePlayClient(tx.config)
@@ -339,6 +360,7 @@ func (tx *Tx) init() {
 	tx.NpcDialogue = NewNpcDialogueClient(tx.config)
 	tx.NpcDialogueVersion = NewNpcDialogueVersionClient(tx.config)
 	tx.PeriodicQuestGrant = NewPeriodicQuestGrantClient(tx.config)
+	tx.PreviewSession = NewPreviewSessionClient(tx.config)
 	tx.ProgressionCurve = NewProgressionCurveClient(tx.config)
 	tx.ProgressionCurveVersion = NewProgressionCurveVersionClient(tx.config)
 	tx.ProgressionLevel = NewProgressionLevelClient(tx.config)
@@ -346,9 +368,11 @@ func (tx *Tx) init() {
 	tx.QuestProgress = NewQuestProgressClient(tx.config)
 	tx.QuestStepAttempt = NewQuestStepAttemptClient(tx.config)
 	tx.QuestVersion = NewQuestVersionClient(tx.config)
+	tx.RenderJob = NewRenderJobClient(tx.config)
 	tx.RewardGrant = NewRewardGrantClient(tx.config)
 	tx.RewardRule = NewRewardRuleClient(tx.config)
 	tx.RewardRuleVersion = NewRewardRuleVersionClient(tx.config)
+	tx.ScheduledPublication = NewScheduledPublicationClient(tx.config)
 	tx.SeasonPointEntry = NewSeasonPointEntryClient(tx.config)
 	tx.SeasonTrack = NewSeasonTrackClient(tx.config)
 	tx.SeasonTrackProgress = NewSeasonTrackProgressClient(tx.config)

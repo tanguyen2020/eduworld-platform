@@ -75,7 +75,14 @@ func GameSubjects(events []string) []string {
 const ManifestGameName = "game.manifest_on_game_content"
 
 // ManifestGameEvents are the release events of game content (owner F071; F078 adds rolled_back/unpublished).
-var ManifestGameEvents = []string{"content.published"}
+var ManifestGameEvents = []string{"content.published", "content.rolled_back", "content.unpublished"}
+
+// RenderThumbnailsName is the durable consumer that creates the render jobs of a published version with a 3D asset (F078
+// US5, FR-CMS-017).
+const RenderThumbnailsName = "game.render_thumbnails"
+
+// RenderThumbnailsEvents are the release events it handles.
+var RenderThumbnailsEvents = []string{"content.published"}
 
 // UnlockOnEventsName is the durable consumer that records the progress facts of a student and evaluates the unlock rules
 // of the areas and the story chapters (F071 T031, T040): one consumer so that a quest completing a chapter and the

@@ -15,6 +15,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalogversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/clientmanifest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collection"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionprogress"
@@ -34,6 +35,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventtemplateversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/explorationprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameconfigitem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameconfigversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameprofile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gamesession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/inventoryitem"
@@ -45,6 +48,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/mediaasset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/mediausage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfig"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfigversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameplay"
@@ -52,6 +57,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/periodicquestgrant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/previewsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurve"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurveversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressionlevel"
@@ -59,9 +65,11 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/queststepattempt"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/renderjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardrule"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardruleversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/scheduledpublication"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/schema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasonpointentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasontrack"
@@ -527,6 +535,45 @@ func init() {
 	charactercatalogversionDescID := charactercatalogversionMixinFields0[0].Descriptor()
 	// charactercatalogversion.DefaultID holds the default value on creation for the id field.
 	charactercatalogversion.DefaultID = charactercatalogversionDescID.Default.(func() uuid.UUID)
+	clientmanifestMixin := schema.ClientManifest{}.Mixin()
+	clientmanifestMixinHooks0 := clientmanifestMixin[0].Hooks()
+	clientmanifest.Hooks[0] = clientmanifestMixinHooks0[0]
+	clientmanifestMixinInters0 := clientmanifestMixin[0].Interceptors()
+	clientmanifest.Interceptors[0] = clientmanifestMixinInters0[0]
+	clientmanifestMixinFields0 := clientmanifestMixin[0].Fields()
+	_ = clientmanifestMixinFields0
+	clientmanifestFields := schema.ClientManifest{}.Fields()
+	_ = clientmanifestFields
+	// clientmanifestDescCreatedAt is the schema descriptor for created_at field.
+	clientmanifestDescCreatedAt := clientmanifestMixinFields0[1].Descriptor()
+	// clientmanifest.DefaultCreatedAt holds the default value on creation for the created_at field.
+	clientmanifest.DefaultCreatedAt = clientmanifestDescCreatedAt.Default.(func() time.Time)
+	// clientmanifestDescUpdatedAt is the schema descriptor for updated_at field.
+	clientmanifestDescUpdatedAt := clientmanifestMixinFields0[3].Descriptor()
+	// clientmanifest.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	clientmanifest.DefaultUpdatedAt = clientmanifestDescUpdatedAt.Default.(func() time.Time)
+	// clientmanifest.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	clientmanifest.UpdateDefaultUpdatedAt = clientmanifestDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// clientmanifestDescDeleteReason is the schema descriptor for delete_reason field.
+	clientmanifestDescDeleteReason := clientmanifestMixinFields0[7].Descriptor()
+	// clientmanifest.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	clientmanifest.DeleteReasonValidator = clientmanifestDescDeleteReason.Validators[0].(func(string) error)
+	// clientmanifestDescVersion is the schema descriptor for version field.
+	clientmanifestDescVersion := clientmanifestMixinFields0[8].Descriptor()
+	// clientmanifest.DefaultVersion holds the default value on creation for the version field.
+	clientmanifest.DefaultVersion = clientmanifestDescVersion.Default.(int64)
+	// clientmanifestDescClientVersion is the schema descriptor for client_version field.
+	clientmanifestDescClientVersion := clientmanifestFields[0].Descriptor()
+	// clientmanifest.ClientVersionValidator is a validator for the "client_version" field. It is called by the builders before save.
+	clientmanifest.ClientVersionValidator = clientmanifestDescClientVersion.Validators[0].(func(string) error)
+	// clientmanifestDescPlatform is the schema descriptor for platform field.
+	clientmanifestDescPlatform := clientmanifestFields[1].Descriptor()
+	// clientmanifest.PlatformValidator is a validator for the "platform" field. It is called by the builders before save.
+	clientmanifest.PlatformValidator = clientmanifestDescPlatform.Validators[0].(func(string) error)
+	// clientmanifestDescID is the schema descriptor for id field.
+	clientmanifestDescID := clientmanifestMixinFields0[0].Descriptor()
+	// clientmanifest.DefaultID holds the default value on creation for the id field.
+	clientmanifest.DefaultID = clientmanifestDescID.Default.(func() uuid.UUID)
 	collectionMixin := schema.Collection{}.Mixin()
 	collectionMixinHooks0 := collectionMixin[0].Hooks()
 	collection.Hooks[0] = collectionMixinHooks0[0]
@@ -1332,6 +1379,104 @@ func init() {
 	explorationprogressDescID := explorationprogressMixinFields0[0].Descriptor()
 	// explorationprogress.DefaultID holds the default value on creation for the id field.
 	explorationprogress.DefaultID = explorationprogressDescID.Default.(func() uuid.UUID)
+	gameconfigitemMixin := schema.GameConfigItem{}.Mixin()
+	gameconfigitemMixinHooks0 := gameconfigitemMixin[0].Hooks()
+	gameconfigitem.Hooks[0] = gameconfigitemMixinHooks0[0]
+	gameconfigitemMixinInters0 := gameconfigitemMixin[0].Interceptors()
+	gameconfigitem.Interceptors[0] = gameconfigitemMixinInters0[0]
+	gameconfigitemMixinFields0 := gameconfigitemMixin[0].Fields()
+	_ = gameconfigitemMixinFields0
+	gameconfigitemFields := schema.GameConfigItem{}.Fields()
+	_ = gameconfigitemFields
+	// gameconfigitemDescCreatedAt is the schema descriptor for created_at field.
+	gameconfigitemDescCreatedAt := gameconfigitemMixinFields0[1].Descriptor()
+	// gameconfigitem.DefaultCreatedAt holds the default value on creation for the created_at field.
+	gameconfigitem.DefaultCreatedAt = gameconfigitemDescCreatedAt.Default.(func() time.Time)
+	// gameconfigitemDescUpdatedAt is the schema descriptor for updated_at field.
+	gameconfigitemDescUpdatedAt := gameconfigitemMixinFields0[3].Descriptor()
+	// gameconfigitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	gameconfigitem.DefaultUpdatedAt = gameconfigitemDescUpdatedAt.Default.(func() time.Time)
+	// gameconfigitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	gameconfigitem.UpdateDefaultUpdatedAt = gameconfigitemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// gameconfigitemDescDeleteReason is the schema descriptor for delete_reason field.
+	gameconfigitemDescDeleteReason := gameconfigitemMixinFields0[7].Descriptor()
+	// gameconfigitem.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	gameconfigitem.DeleteReasonValidator = gameconfigitemDescDeleteReason.Validators[0].(func(string) error)
+	// gameconfigitemDescVersion is the schema descriptor for version field.
+	gameconfigitemDescVersion := gameconfigitemMixinFields0[8].Descriptor()
+	// gameconfigitem.DefaultVersion holds the default value on creation for the version field.
+	gameconfigitem.DefaultVersion = gameconfigitemDescVersion.Default.(int64)
+	// gameconfigitemDescItemType is the schema descriptor for item_type field.
+	gameconfigitemDescItemType := gameconfigitemFields[0].Descriptor()
+	// gameconfigitem.ItemTypeValidator is a validator for the "item_type" field. It is called by the builders before save.
+	gameconfigitem.ItemTypeValidator = gameconfigitemDescItemType.Validators[0].(func(string) error)
+	// gameconfigitemDescItemKey is the schema descriptor for item_key field.
+	gameconfigitemDescItemKey := gameconfigitemFields[1].Descriptor()
+	// gameconfigitem.ItemKeyValidator is a validator for the "item_key" field. It is called by the builders before save.
+	gameconfigitem.ItemKeyValidator = gameconfigitemDescItemKey.Validators[0].(func(string) error)
+	// gameconfigitemDescLatestVersionNo is the schema descriptor for latest_version_no field.
+	gameconfigitemDescLatestVersionNo := gameconfigitemFields[2].Descriptor()
+	// gameconfigitem.DefaultLatestVersionNo holds the default value on creation for the latest_version_no field.
+	gameconfigitem.DefaultLatestVersionNo = gameconfigitemDescLatestVersionNo.Default.(int)
+	// gameconfigitemDescID is the schema descriptor for id field.
+	gameconfigitemDescID := gameconfigitemMixinFields0[0].Descriptor()
+	// gameconfigitem.DefaultID holds the default value on creation for the id field.
+	gameconfigitem.DefaultID = gameconfigitemDescID.Default.(func() uuid.UUID)
+	gameconfigversionMixin := schema.GameConfigVersion{}.Mixin()
+	gameconfigversionMixinHooks0 := gameconfigversionMixin[0].Hooks()
+	gameconfigversion.Hooks[0] = gameconfigversionMixinHooks0[0]
+	gameconfigversionMixinInters0 := gameconfigversionMixin[0].Interceptors()
+	gameconfigversion.Interceptors[0] = gameconfigversionMixinInters0[0]
+	gameconfigversionMixinFields0 := gameconfigversionMixin[0].Fields()
+	_ = gameconfigversionMixinFields0
+	gameconfigversionFields := schema.GameConfigVersion{}.Fields()
+	_ = gameconfigversionFields
+	// gameconfigversionDescCreatedAt is the schema descriptor for created_at field.
+	gameconfigversionDescCreatedAt := gameconfigversionMixinFields0[1].Descriptor()
+	// gameconfigversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	gameconfigversion.DefaultCreatedAt = gameconfigversionDescCreatedAt.Default.(func() time.Time)
+	// gameconfigversionDescUpdatedAt is the schema descriptor for updated_at field.
+	gameconfigversionDescUpdatedAt := gameconfigversionMixinFields0[3].Descriptor()
+	// gameconfigversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	gameconfigversion.DefaultUpdatedAt = gameconfigversionDescUpdatedAt.Default.(func() time.Time)
+	// gameconfigversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	gameconfigversion.UpdateDefaultUpdatedAt = gameconfigversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// gameconfigversionDescDeleteReason is the schema descriptor for delete_reason field.
+	gameconfigversionDescDeleteReason := gameconfigversionMixinFields0[7].Descriptor()
+	// gameconfigversion.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	gameconfigversion.DeleteReasonValidator = gameconfigversionDescDeleteReason.Validators[0].(func(string) error)
+	// gameconfigversionDescVersion is the schema descriptor for version field.
+	gameconfigversionDescVersion := gameconfigversionMixinFields0[8].Descriptor()
+	// gameconfigversion.DefaultVersion holds the default value on creation for the version field.
+	gameconfigversion.DefaultVersion = gameconfigversionDescVersion.Default.(int64)
+	// gameconfigversionDescItemType is the schema descriptor for item_type field.
+	gameconfigversionDescItemType := gameconfigversionFields[1].Descriptor()
+	// gameconfigversion.ItemTypeValidator is a validator for the "item_type" field. It is called by the builders before save.
+	gameconfigversion.ItemTypeValidator = gameconfigversionDescItemType.Validators[0].(func(string) error)
+	// gameconfigversionDescStatus is the schema descriptor for status field.
+	gameconfigversionDescStatus := gameconfigversionFields[3].Descriptor()
+	// gameconfigversion.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	gameconfigversion.StatusValidator = gameconfigversionDescStatus.Validators[0].(func(string) error)
+	// gameconfigversionDescTitle is the schema descriptor for title field.
+	gameconfigversionDescTitle := gameconfigversionFields[4].Descriptor()
+	// gameconfigversion.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	gameconfigversion.TitleValidator = gameconfigversionDescTitle.Validators[0].(func(string) error)
+	// gameconfigversionDescPayloadSha256 is the schema descriptor for payload_sha256 field.
+	gameconfigversionDescPayloadSha256 := gameconfigversionFields[6].Descriptor()
+	// gameconfigversion.PayloadSha256Validator is a validator for the "payload_sha256" field. It is called by the builders before save.
+	gameconfigversion.PayloadSha256Validator = gameconfigversionDescPayloadSha256.Validators[0].(func(string) error)
+	// gameconfigversionDescReviewNote is the schema descriptor for review_note field.
+	gameconfigversionDescReviewNote := gameconfigversionFields[9].Descriptor()
+	// gameconfigversion.ReviewNoteValidator is a validator for the "review_note" field. It is called by the builders before save.
+	gameconfigversion.ReviewNoteValidator = gameconfigversionDescReviewNote.Validators[0].(func(string) error)
+	// gameconfigversionDescChangeNote is the schema descriptor for change_note field.
+	gameconfigversionDescChangeNote := gameconfigversionFields[10].Descriptor()
+	// gameconfigversion.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	gameconfigversion.ChangeNoteValidator = gameconfigversionDescChangeNote.Validators[0].(func(string) error)
+	// gameconfigversionDescID is the schema descriptor for id field.
+	gameconfigversionDescID := gameconfigversionMixinFields0[0].Descriptor()
+	// gameconfigversion.DefaultID holds the default value on creation for the id field.
+	gameconfigversion.DefaultID = gameconfigversionDescID.Default.(func() uuid.UUID)
 	gameprofileMixin := schema.GameProfile{}.Mixin()
 	gameprofileMixinHooks0 := gameprofileMixin[0].Hooks()
 	gameprofile.Hooks[0] = gameprofileMixinHooks0[0]
@@ -1861,6 +2006,116 @@ func init() {
 	logineventDescID := logineventMixinFields0[0].Descriptor()
 	// loginevent.DefaultID holds the default value on creation for the id field.
 	loginevent.DefaultID = logineventDescID.Default.(func() uuid.UUID)
+	mediaassetMixin := schema.MediaAsset{}.Mixin()
+	mediaassetMixinHooks0 := mediaassetMixin[0].Hooks()
+	mediaasset.Hooks[0] = mediaassetMixinHooks0[0]
+	mediaassetMixinInters0 := mediaassetMixin[0].Interceptors()
+	mediaasset.Interceptors[0] = mediaassetMixinInters0[0]
+	mediaassetMixinFields0 := mediaassetMixin[0].Fields()
+	_ = mediaassetMixinFields0
+	mediaassetFields := schema.MediaAsset{}.Fields()
+	_ = mediaassetFields
+	// mediaassetDescCreatedAt is the schema descriptor for created_at field.
+	mediaassetDescCreatedAt := mediaassetMixinFields0[1].Descriptor()
+	// mediaasset.DefaultCreatedAt holds the default value on creation for the created_at field.
+	mediaasset.DefaultCreatedAt = mediaassetDescCreatedAt.Default.(func() time.Time)
+	// mediaassetDescUpdatedAt is the schema descriptor for updated_at field.
+	mediaassetDescUpdatedAt := mediaassetMixinFields0[3].Descriptor()
+	// mediaasset.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	mediaasset.DefaultUpdatedAt = mediaassetDescUpdatedAt.Default.(func() time.Time)
+	// mediaasset.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	mediaasset.UpdateDefaultUpdatedAt = mediaassetDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// mediaassetDescDeleteReason is the schema descriptor for delete_reason field.
+	mediaassetDescDeleteReason := mediaassetMixinFields0[7].Descriptor()
+	// mediaasset.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	mediaasset.DeleteReasonValidator = mediaassetDescDeleteReason.Validators[0].(func(string) error)
+	// mediaassetDescVersion is the schema descriptor for version field.
+	mediaassetDescVersion := mediaassetMixinFields0[8].Descriptor()
+	// mediaasset.DefaultVersion holds the default value on creation for the version field.
+	mediaasset.DefaultVersion = mediaassetDescVersion.Default.(int64)
+	// mediaassetDescKind is the schema descriptor for kind field.
+	mediaassetDescKind := mediaassetFields[0].Descriptor()
+	// mediaasset.KindValidator is a validator for the "kind" field. It is called by the builders before save.
+	mediaasset.KindValidator = mediaassetDescKind.Validators[0].(func(string) error)
+	// mediaassetDescMimeType is the schema descriptor for mime_type field.
+	mediaassetDescMimeType := mediaassetFields[1].Descriptor()
+	// mediaasset.MimeTypeValidator is a validator for the "mime_type" field. It is called by the builders before save.
+	mediaasset.MimeTypeValidator = mediaassetDescMimeType.Validators[0].(func(string) error)
+	// mediaassetDescOriginalFilename is the schema descriptor for original_filename field.
+	mediaassetDescOriginalFilename := mediaassetFields[2].Descriptor()
+	// mediaasset.OriginalFilenameValidator is a validator for the "original_filename" field. It is called by the builders before save.
+	mediaasset.OriginalFilenameValidator = mediaassetDescOriginalFilename.Validators[0].(func(string) error)
+	// mediaassetDescSha256 is the schema descriptor for sha256 field.
+	mediaassetDescSha256 := mediaassetFields[4].Descriptor()
+	// mediaasset.Sha256Validator is a validator for the "sha256" field. It is called by the builders before save.
+	mediaasset.Sha256Validator = mediaassetDescSha256.Validators[0].(func(string) error)
+	// mediaassetDescBucket is the schema descriptor for bucket field.
+	mediaassetDescBucket := mediaassetFields[5].Descriptor()
+	// mediaasset.BucketValidator is a validator for the "bucket" field. It is called by the builders before save.
+	mediaasset.BucketValidator = mediaassetDescBucket.Validators[0].(func(string) error)
+	// mediaassetDescQuarantineKey is the schema descriptor for quarantine_key field.
+	mediaassetDescQuarantineKey := mediaassetFields[6].Descriptor()
+	// mediaasset.QuarantineKeyValidator is a validator for the "quarantine_key" field. It is called by the builders before save.
+	mediaasset.QuarantineKeyValidator = mediaassetDescQuarantineKey.Validators[0].(func(string) error)
+	// mediaassetDescStatus is the schema descriptor for status field.
+	mediaassetDescStatus := mediaassetFields[7].Descriptor()
+	// mediaasset.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	mediaasset.StatusValidator = mediaassetDescStatus.Validators[0].(func(string) error)
+	// mediaassetDescRejectReason is the schema descriptor for reject_reason field.
+	mediaassetDescRejectReason := mediaassetFields[8].Descriptor()
+	// mediaasset.RejectReasonValidator is a validator for the "reject_reason" field. It is called by the builders before save.
+	mediaasset.RejectReasonValidator = mediaassetDescRejectReason.Validators[0].(func(string) error)
+	// mediaassetDescLicense is the schema descriptor for license field.
+	mediaassetDescLicense := mediaassetFields[12].Descriptor()
+	// mediaasset.LicenseValidator is a validator for the "license" field. It is called by the builders before save.
+	mediaasset.LicenseValidator = mediaassetDescLicense.Validators[0].(func(string) error)
+	// mediaassetDescAltText is the schema descriptor for alt_text field.
+	mediaassetDescAltText := mediaassetFields[13].Descriptor()
+	// mediaasset.AltTextValidator is a validator for the "alt_text" field. It is called by the builders before save.
+	mediaasset.AltTextValidator = mediaassetDescAltText.Validators[0].(func(string) error)
+	// mediaassetDescID is the schema descriptor for id field.
+	mediaassetDescID := mediaassetMixinFields0[0].Descriptor()
+	// mediaasset.DefaultID holds the default value on creation for the id field.
+	mediaasset.DefaultID = mediaassetDescID.Default.(func() uuid.UUID)
+	mediausageMixin := schema.MediaUsage{}.Mixin()
+	mediausageMixinHooks0 := mediausageMixin[0].Hooks()
+	mediausage.Hooks[0] = mediausageMixinHooks0[0]
+	mediausageMixinInters0 := mediausageMixin[0].Interceptors()
+	mediausage.Interceptors[0] = mediausageMixinInters0[0]
+	mediausageMixinFields0 := mediausageMixin[0].Fields()
+	_ = mediausageMixinFields0
+	mediausageFields := schema.MediaUsage{}.Fields()
+	_ = mediausageFields
+	// mediausageDescCreatedAt is the schema descriptor for created_at field.
+	mediausageDescCreatedAt := mediausageMixinFields0[1].Descriptor()
+	// mediausage.DefaultCreatedAt holds the default value on creation for the created_at field.
+	mediausage.DefaultCreatedAt = mediausageDescCreatedAt.Default.(func() time.Time)
+	// mediausageDescUpdatedAt is the schema descriptor for updated_at field.
+	mediausageDescUpdatedAt := mediausageMixinFields0[3].Descriptor()
+	// mediausage.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	mediausage.DefaultUpdatedAt = mediausageDescUpdatedAt.Default.(func() time.Time)
+	// mediausage.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	mediausage.UpdateDefaultUpdatedAt = mediausageDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// mediausageDescDeleteReason is the schema descriptor for delete_reason field.
+	mediausageDescDeleteReason := mediausageMixinFields0[7].Descriptor()
+	// mediausage.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	mediausage.DeleteReasonValidator = mediausageDescDeleteReason.Validators[0].(func(string) error)
+	// mediausageDescVersion is the schema descriptor for version field.
+	mediausageDescVersion := mediausageMixinFields0[8].Descriptor()
+	// mediausage.DefaultVersion holds the default value on creation for the version field.
+	mediausage.DefaultVersion = mediausageDescVersion.Default.(int64)
+	// mediausageDescItemType is the schema descriptor for item_type field.
+	mediausageDescItemType := mediausageFields[1].Descriptor()
+	// mediausage.ItemTypeValidator is a validator for the "item_type" field. It is called by the builders before save.
+	mediausage.ItemTypeValidator = mediausageDescItemType.Validators[0].(func(string) error)
+	// mediausageDescUsage is the schema descriptor for usage field.
+	mediausageDescUsage := mediausageFields[4].Descriptor()
+	// mediausage.UsageValidator is a validator for the "usage" field. It is called by the builders before save.
+	mediausage.UsageValidator = mediausageDescUsage.Validators[0].(func(string) error)
+	// mediausageDescID is the schema descriptor for id field.
+	mediausageDescID := mediausageMixinFields0[0].Descriptor()
+	// mediausage.DefaultID holds the default value on creation for the id field.
+	mediausage.DefaultID = mediausageDescID.Default.(func() uuid.UUID)
 	minigameconfigMixin := schema.MiniGameConfig{}.Mixin()
 	minigameconfigMixinHooks0 := minigameconfigMixin[0].Hooks()
 	minigameconfig.Hooks[0] = minigameconfigMixinHooks0[0]
@@ -2186,6 +2441,45 @@ func init() {
 	periodicquestgrantDescID := periodicquestgrantMixinFields0[0].Descriptor()
 	// periodicquestgrant.DefaultID holds the default value on creation for the id field.
 	periodicquestgrant.DefaultID = periodicquestgrantDescID.Default.(func() uuid.UUID)
+	previewsessionMixin := schema.PreviewSession{}.Mixin()
+	previewsessionMixinHooks0 := previewsessionMixin[0].Hooks()
+	previewsession.Hooks[0] = previewsessionMixinHooks0[0]
+	previewsessionMixinInters0 := previewsessionMixin[0].Interceptors()
+	previewsession.Interceptors[0] = previewsessionMixinInters0[0]
+	previewsessionMixinFields0 := previewsessionMixin[0].Fields()
+	_ = previewsessionMixinFields0
+	previewsessionFields := schema.PreviewSession{}.Fields()
+	_ = previewsessionFields
+	// previewsessionDescCreatedAt is the schema descriptor for created_at field.
+	previewsessionDescCreatedAt := previewsessionMixinFields0[1].Descriptor()
+	// previewsession.DefaultCreatedAt holds the default value on creation for the created_at field.
+	previewsession.DefaultCreatedAt = previewsessionDescCreatedAt.Default.(func() time.Time)
+	// previewsessionDescUpdatedAt is the schema descriptor for updated_at field.
+	previewsessionDescUpdatedAt := previewsessionMixinFields0[3].Descriptor()
+	// previewsession.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	previewsession.DefaultUpdatedAt = previewsessionDescUpdatedAt.Default.(func() time.Time)
+	// previewsession.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	previewsession.UpdateDefaultUpdatedAt = previewsessionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// previewsessionDescDeleteReason is the schema descriptor for delete_reason field.
+	previewsessionDescDeleteReason := previewsessionMixinFields0[7].Descriptor()
+	// previewsession.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	previewsession.DeleteReasonValidator = previewsessionDescDeleteReason.Validators[0].(func(string) error)
+	// previewsessionDescVersion is the schema descriptor for version field.
+	previewsessionDescVersion := previewsessionMixinFields0[8].Descriptor()
+	// previewsession.DefaultVersion holds the default value on creation for the version field.
+	previewsession.DefaultVersion = previewsessionDescVersion.Default.(int64)
+	// previewsessionDescTokenHash is the schema descriptor for token_hash field.
+	previewsessionDescTokenHash := previewsessionFields[0].Descriptor()
+	// previewsession.TokenHashValidator is a validator for the "token_hash" field. It is called by the builders before save.
+	previewsession.TokenHashValidator = previewsessionDescTokenHash.Validators[0].(func(string) error)
+	// previewsessionDescConfigType is the schema descriptor for config_type field.
+	previewsessionDescConfigType := previewsessionFields[1].Descriptor()
+	// previewsession.ConfigTypeValidator is a validator for the "config_type" field. It is called by the builders before save.
+	previewsession.ConfigTypeValidator = previewsessionDescConfigType.Validators[0].(func(string) error)
+	// previewsessionDescID is the schema descriptor for id field.
+	previewsessionDescID := previewsessionMixinFields0[0].Descriptor()
+	// previewsession.DefaultID holds the default value on creation for the id field.
+	previewsession.DefaultID = previewsessionDescID.Default.(func() uuid.UUID)
 	progressioncurveMixin := schema.ProgressionCurve{}.Mixin()
 	progressioncurveMixinHooks0 := progressioncurveMixin[0].Hooks()
 	progressioncurve.Hooks[0] = progressioncurveMixinHooks0[0]
@@ -2525,6 +2819,61 @@ func init() {
 	questversionDescID := questversionMixinFields0[0].Descriptor()
 	// questversion.DefaultID holds the default value on creation for the id field.
 	questversion.DefaultID = questversionDescID.Default.(func() uuid.UUID)
+	renderjobMixin := schema.RenderJob{}.Mixin()
+	renderjobMixinHooks0 := renderjobMixin[0].Hooks()
+	renderjob.Hooks[0] = renderjobMixinHooks0[0]
+	renderjobMixinInters0 := renderjobMixin[0].Interceptors()
+	renderjob.Interceptors[0] = renderjobMixinInters0[0]
+	renderjobMixinFields0 := renderjobMixin[0].Fields()
+	_ = renderjobMixinFields0
+	renderjobFields := schema.RenderJob{}.Fields()
+	_ = renderjobFields
+	// renderjobDescCreatedAt is the schema descriptor for created_at field.
+	renderjobDescCreatedAt := renderjobMixinFields0[1].Descriptor()
+	// renderjob.DefaultCreatedAt holds the default value on creation for the created_at field.
+	renderjob.DefaultCreatedAt = renderjobDescCreatedAt.Default.(func() time.Time)
+	// renderjobDescUpdatedAt is the schema descriptor for updated_at field.
+	renderjobDescUpdatedAt := renderjobMixinFields0[3].Descriptor()
+	// renderjob.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	renderjob.DefaultUpdatedAt = renderjobDescUpdatedAt.Default.(func() time.Time)
+	// renderjob.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	renderjob.UpdateDefaultUpdatedAt = renderjobDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// renderjobDescDeleteReason is the schema descriptor for delete_reason field.
+	renderjobDescDeleteReason := renderjobMixinFields0[7].Descriptor()
+	// renderjob.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	renderjob.DeleteReasonValidator = renderjobDescDeleteReason.Validators[0].(func(string) error)
+	// renderjobDescVersion is the schema descriptor for version field.
+	renderjobDescVersion := renderjobMixinFields0[8].Descriptor()
+	// renderjob.DefaultVersion holds the default value on creation for the version field.
+	renderjob.DefaultVersion = renderjobDescVersion.Default.(int64)
+	// renderjobDescConfigType is the schema descriptor for config_type field.
+	renderjobDescConfigType := renderjobFields[0].Descriptor()
+	// renderjob.ConfigTypeValidator is a validator for the "config_type" field. It is called by the builders before save.
+	renderjob.ConfigTypeValidator = renderjobDescConfigType.Validators[0].(func(string) error)
+	// renderjobDescItemType is the schema descriptor for item_type field.
+	renderjobDescItemType := renderjobFields[1].Descriptor()
+	// renderjob.ItemTypeValidator is a validator for the "item_type" field. It is called by the builders before save.
+	renderjob.ItemTypeValidator = renderjobDescItemType.Validators[0].(func(string) error)
+	// renderjobDescKind is the schema descriptor for kind field.
+	renderjobDescKind := renderjobFields[4].Descriptor()
+	// renderjob.KindValidator is a validator for the "kind" field. It is called by the builders before save.
+	renderjob.KindValidator = renderjobDescKind.Validators[0].(func(string) error)
+	// renderjobDescStatus is the schema descriptor for status field.
+	renderjobDescStatus := renderjobFields[5].Descriptor()
+	// renderjob.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	renderjob.StatusValidator = renderjobDescStatus.Validators[0].(func(string) error)
+	// renderjobDescAttempts is the schema descriptor for attempts field.
+	renderjobDescAttempts := renderjobFields[6].Descriptor()
+	// renderjob.DefaultAttempts holds the default value on creation for the attempts field.
+	renderjob.DefaultAttempts = renderjobDescAttempts.Default.(int)
+	// renderjobDescLastError is the schema descriptor for last_error field.
+	renderjobDescLastError := renderjobFields[7].Descriptor()
+	// renderjob.LastErrorValidator is a validator for the "last_error" field. It is called by the builders before save.
+	renderjob.LastErrorValidator = renderjobDescLastError.Validators[0].(func(string) error)
+	// renderjobDescID is the schema descriptor for id field.
+	renderjobDescID := renderjobMixinFields0[0].Descriptor()
+	// renderjob.DefaultID holds the default value on creation for the id field.
+	renderjob.DefaultID = renderjobDescID.Default.(func() uuid.UUID)
 	rewardgrantMixin := schema.RewardGrant{}.Mixin()
 	rewardgrantMixinHooks0 := rewardgrantMixin[0].Hooks()
 	rewardgrant.Hooks[0] = rewardgrantMixinHooks0[0]
@@ -2656,6 +3005,57 @@ func init() {
 	rewardruleversionDescID := rewardruleversionMixinFields0[0].Descriptor()
 	// rewardruleversion.DefaultID holds the default value on creation for the id field.
 	rewardruleversion.DefaultID = rewardruleversionDescID.Default.(func() uuid.UUID)
+	scheduledpublicationMixin := schema.ScheduledPublication{}.Mixin()
+	scheduledpublicationMixinHooks0 := scheduledpublicationMixin[0].Hooks()
+	scheduledpublication.Hooks[0] = scheduledpublicationMixinHooks0[0]
+	scheduledpublicationMixinInters0 := scheduledpublicationMixin[0].Interceptors()
+	scheduledpublication.Interceptors[0] = scheduledpublicationMixinInters0[0]
+	scheduledpublicationMixinFields0 := scheduledpublicationMixin[0].Fields()
+	_ = scheduledpublicationMixinFields0
+	scheduledpublicationFields := schema.ScheduledPublication{}.Fields()
+	_ = scheduledpublicationFields
+	// scheduledpublicationDescCreatedAt is the schema descriptor for created_at field.
+	scheduledpublicationDescCreatedAt := scheduledpublicationMixinFields0[1].Descriptor()
+	// scheduledpublication.DefaultCreatedAt holds the default value on creation for the created_at field.
+	scheduledpublication.DefaultCreatedAt = scheduledpublicationDescCreatedAt.Default.(func() time.Time)
+	// scheduledpublicationDescUpdatedAt is the schema descriptor for updated_at field.
+	scheduledpublicationDescUpdatedAt := scheduledpublicationMixinFields0[3].Descriptor()
+	// scheduledpublication.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	scheduledpublication.DefaultUpdatedAt = scheduledpublicationDescUpdatedAt.Default.(func() time.Time)
+	// scheduledpublication.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	scheduledpublication.UpdateDefaultUpdatedAt = scheduledpublicationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// scheduledpublicationDescDeleteReason is the schema descriptor for delete_reason field.
+	scheduledpublicationDescDeleteReason := scheduledpublicationMixinFields0[7].Descriptor()
+	// scheduledpublication.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	scheduledpublication.DeleteReasonValidator = scheduledpublicationDescDeleteReason.Validators[0].(func(string) error)
+	// scheduledpublicationDescVersion is the schema descriptor for version field.
+	scheduledpublicationDescVersion := scheduledpublicationMixinFields0[8].Descriptor()
+	// scheduledpublication.DefaultVersion holds the default value on creation for the version field.
+	scheduledpublication.DefaultVersion = scheduledpublicationDescVersion.Default.(int64)
+	// scheduledpublicationDescItemType is the schema descriptor for item_type field.
+	scheduledpublicationDescItemType := scheduledpublicationFields[1].Descriptor()
+	// scheduledpublication.ItemTypeValidator is a validator for the "item_type" field. It is called by the builders before save.
+	scheduledpublication.ItemTypeValidator = scheduledpublicationDescItemType.Validators[0].(func(string) error)
+	// scheduledpublicationDescStatus is the schema descriptor for status field.
+	scheduledpublicationDescStatus := scheduledpublicationFields[5].Descriptor()
+	// scheduledpublication.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	scheduledpublication.StatusValidator = scheduledpublicationDescStatus.Validators[0].(func(string) error)
+	// scheduledpublicationDescFailureCode is the schema descriptor for failure_code field.
+	scheduledpublicationDescFailureCode := scheduledpublicationFields[6].Descriptor()
+	// scheduledpublication.FailureCodeValidator is a validator for the "failure_code" field. It is called by the builders before save.
+	scheduledpublication.FailureCodeValidator = scheduledpublicationDescFailureCode.Validators[0].(func(string) error)
+	// scheduledpublicationDescChangeNote is the schema descriptor for change_note field.
+	scheduledpublicationDescChangeNote := scheduledpublicationFields[7].Descriptor()
+	// scheduledpublication.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	scheduledpublication.ChangeNoteValidator = scheduledpublicationDescChangeNote.Validators[0].(func(string) error)
+	// scheduledpublicationDescReason is the schema descriptor for reason field.
+	scheduledpublicationDescReason := scheduledpublicationFields[8].Descriptor()
+	// scheduledpublication.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	scheduledpublication.ReasonValidator = scheduledpublicationDescReason.Validators[0].(func(string) error)
+	// scheduledpublicationDescID is the schema descriptor for id field.
+	scheduledpublicationDescID := scheduledpublicationMixinFields0[0].Descriptor()
+	// scheduledpublication.DefaultID holds the default value on creation for the id field.
+	scheduledpublication.DefaultID = scheduledpublicationDescID.Default.(func() uuid.UUID)
 	seasonpointentryMixin := schema.SeasonPointEntry{}.Mixin()
 	seasonpointentryMixinHooks0 := seasonpointentryMixin[0].Hooks()
 	seasonpointentry.Hooks[0] = seasonpointentryMixinHooks0[0]

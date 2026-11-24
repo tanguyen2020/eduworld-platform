@@ -50,13 +50,15 @@ type ContentItem struct {
 
 // GameRelease is one published item.
 type GameRelease struct {
-	ItemType  string
-	ItemID    string
-	VersionID uuid.UUID
-	VersionNo int
-	ReleaseID uuid.UUID
-	Snapshot  []byte
-	Key       string
+	From           *uuid.UUID
+	SnapshotSHA256 string
+	ItemType       string
+	ItemID         string
+	VersionID      uuid.UUID
+	VersionNo      int
+	ReleaseID      uuid.UUID
+	Snapshot       []byte
+	Key            string
 }
 
 // GameContentResult counts the items published and the items left unchanged (identical to the current version).
@@ -136,24 +138,7 @@ func (h PublishGameContent) Publish(ctx context.Context, items []ContentItem, no
 	}
 	parsed := make([]parsedItem, 0, len(items))
 	for _, it := range items {
-		var p parsedItem
-		var err error
-		switch {
-		case questItem(it.Type):
-			p, err = parseQuest(it, h.Quests)
-		case progressionItem(it.Type):
-			p, err = parseProgression(it, h.Progression, now)
-		case economyItem(it.Type):
-			p, err = parseEconomy(it, h.Economy)
-		case minigameItem(it.Type):
-			p, err = parseMiniGame(ctx, it, h.MiniGames)
-		case liveOpsItem(it.Type):
-			p, err = parseLiveOps(it, h.LiveOps)
-		case challengeItem(it.Type):
-			p, err = parseChallenge(it, h.Challenges)
-		default:
-			p, err = parse(it)
-		}
+		p, err := h.parseItem(ctx, it, now)
 		if err != nil {
 			return res, err
 		}
@@ -172,7 +157,7 @@ func (h PublishGameContent) Publish(ctx context.Context, items []ContentItem, no
 		}
 		res = GameContentResult{}
 		for _, p := range parsed {
-			rel, changed, err := h.publishOne(ctx, p, note, key, by, now)
+			rel, changed, err := h.publishOne(ctx, p, nil, note, key, by, now)
 			if err != nil {
 				return err
 			}
@@ -206,6 +191,25 @@ func (h PublishGameContent) Publish(ctx context.Context, items []ContentItem, no
 		return nil
 	})
 	return res, err
+}
+
+// parseItem checks one payload with the rules of its type (JSON Schema, domain checks of F071–F077).
+func (h PublishGameContent) parseItem(ctx context.Context, it ContentItem, now time.Time) (parsedItem, error) {
+	switch {
+	case questItem(it.Type):
+		return parseQuest(it, h.Quests)
+	case progressionItem(it.Type):
+		return parseProgression(it, h.Progression, now)
+	case economyItem(it.Type):
+		return parseEconomy(it, h.Economy)
+	case minigameItem(it.Type):
+		return parseMiniGame(ctx, it, h.MiniGames)
+	case liveOpsItem(it.Type):
+		return parseLiveOps(it, h.LiveOps)
+	case challengeItem(it.Type):
+		return parseChallenge(it, h.Challenges)
+	}
+	return parse(it)
 }
 
 func parse(it ContentItem) (parsedItem, error) {
@@ -389,7 +393,7 @@ func inBatch(batch []struct {
 	return false
 }
 
-func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, key string, by uuid.UUID, now time.Time) (GameRelease, bool, error) {
+func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, pin *Pin, note, key string, by uuid.UUID, now time.Time) (GameRelease, bool, error) {
 	canonical, err := json.Marshal(p.doc) // map keys sorted: stable hash of the authored content
 	if err != nil {
 		return GameRelease{}, false, err
@@ -400,38 +404,40 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 	if err != nil {
 		return GameRelease{}, false, err
 	}
-	if head.CurrentSHA256 == sha {
+	vid, no := ids.New(), head.NextVersionNo
+	if pin != nil {
+		vid, no = pin.VersionID, pin.VersionNo // F078: the approved version of the console, published even when identical
+	} else if head.CurrentSHA256 == sha {
 		return GameRelease{}, false, nil
 	}
-	vid := ids.New()
 	stored := canonical
 	if p.quest != nil {
-		if stored, err = questStored(p.doc, vid, head.NextVersionNo); err != nil {
+		if stored, err = questStored(p.doc, vid, no); err != nil {
 			return GameRelease{}, false, err
 		}
 	}
 	if p.chal != nil {
-		if stored, err = challengeStored(p.doc, vid, head.NextVersionNo); err != nil {
+		if stored, err = challengeStored(p.doc, vid, no); err != nil {
 			return GameRelease{}, false, err
 		}
 	}
 	if p.curve != nil || p.rule != nil {
-		if stored, err = h.progressionStored(ctx, p, vid, head.NextVersionNo); err != nil {
+		if stored, err = h.progressionStored(ctx, p, vid, no); err != nil {
 			return GameRelease{}, false, err
 		}
 	}
 	if economyItem(p.Type) {
-		if stored, err = economyStored(p, vid, head.NextVersionNo); err != nil {
+		if stored, err = economyStored(p, vid, no); err != nil {
 			return GameRelease{}, false, err
 		}
 	}
 	if p.minigame != nil {
-		if stored, err = minigameStored(p, vid, head.NextVersionNo); err != nil {
+		if stored, err = minigameStored(p, vid, no); err != nil {
 			return GameRelease{}, false, err
 		}
 	}
 	if liveOpsItem(p.Type) {
-		if stored, err = liveOpsStored(p, vid, head.NextVersionNo); err != nil {
+		if stored, err = liveOpsStored(p, vid, no); err != nil {
 			return GameRelease{}, false, err
 		}
 	}
@@ -447,20 +453,20 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 		for k, v := range p.doc {
 			doc[k] = v
 		}
-		doc["dialogue_version_id"], doc["version"], doc["status"] = vid.String(), head.NextVersionNo, "published"
+		doc["dialogue_version_id"], doc["version"], doc["status"] = vid.String(), no, "published"
 		if stored, err = json.Marshal(doc); err != nil {
 			return GameRelease{}, false, err
 		}
 	}
 	snap := sha256.Sum256(stored)
 	snapSHA := hex.EncodeToString(snap[:])
-	snapKey := fmt.Sprintf("ew:game:cv:%s:%s:%d", p.Type, p.id, head.NextVersionNo)
-	if err := h.Store.Publish(ctx, write.ContentVersion{ItemType: p.Type, ItemID: p.id, VersionID: vid, VersionNo: head.NextVersionNo,
+	snapKey := fmt.Sprintf("ew:game:cv:%s:%s:%d", p.Type, p.id, no)
+	if err := h.Store.Publish(ctx, write.ContentVersion{ItemType: p.Type, ItemID: p.id, VersionID: vid, VersionNo: no,
 		Payload: stored, SHA256: sha, Note: note, SnapshotKey: snapKey, SnapshotSHA256: snapSHA, At: now, By: by, Columns: p.columns}); err != nil {
 		return GameRelease{}, false, err
 	}
 	if p.curve != nil {
-		if err := h.insertLevels(ctx, p, vid, head.NextVersionNo); err != nil {
+		if err := h.insertLevels(ctx, p, vid, no); err != nil {
 			return GameRelease{}, false, err
 		}
 	}
@@ -470,11 +476,14 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 		}
 	}
 	if p.event != nil {
-		if err := h.LiveOps.Hook.EventPublished(ctx, *p.event, vid, head.NextVersionNo, now); err != nil {
+		if err := h.LiveOps.Hook.EventPublished(ctx, *p.event, vid, no, now); err != nil {
 			return GameRelease{}, false, err
 		}
 	}
 	rid := ids.New()
+	if pin != nil && pin.ReleaseID != uuid.Nil {
+		rid = pin.ReleaseID // a scheduled publication keeps its id as the release id
+	}
 	idem := key
 	if idem == "" {
 		idem = rid.String()
@@ -484,13 +493,25 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 		return GameRelease{}, false, err
 	}
 	payload := map[string]any{"item_type": p.Type, "item_id": p.id, "from_version_id": head.CurrentVersionID, "to_version_id": vid,
-		"to_version": head.NextVersionNo, "release_id": rid, "owner_scope": "platform", "tenant_id": nil, "scheduled": false, "published_by": by,
+		"to_version": no, "release_id": rid, "owner_scope": "platform", "tenant_id": nil, "scheduled": pin != nil && pin.Scheduled, "published_by": by,
 		"snapshot_sha256": snapSHA, "released_at": now}
+	if pin != nil && pin.ConfigID != uuid.Nil {
+		payload["config_id"] = pin.ConfigID
+	}
+	if c := catalogBlock(p.Type, p.doc); c != nil {
+		if pin != nil && pin.ThumbnailURL != "" {
+			c["thumbnail_url"] = pin.ThumbnailURL
+		}
+		payload["catalog"] = c
+	}
+	if refs := contentRefs(p.doc); len(refs) > 0 {
+		payload["content_refs"] = refs
+	}
 	if p.area != nil {
 		payload["world_area"] = runtimeArea(*p.area)
 	}
 	if p.minigame != nil {
-		if payload["minigame_config"], err = minigameBlock(p, vid, head.NextVersionNo, stored); err != nil {
+		if payload["minigame_config"], err = minigameBlock(p, vid, no, stored); err != nil {
 			return GameRelease{}, false, err
 		}
 	}
@@ -498,8 +519,8 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 		Payload: payload}); err != nil {
 		return GameRelease{}, false, err
 	}
-	return GameRelease{ItemType: p.Type, ItemID: p.id, VersionID: vid, VersionNo: head.NextVersionNo, ReleaseID: rid, Snapshot: stored,
-		Key: snapKey}, true, nil
+	return GameRelease{ItemType: p.Type, ItemID: p.id, VersionID: vid, VersionNo: no, ReleaseID: rid, Snapshot: stored,
+		Key: snapKey, From: head.CurrentVersionID, SnapshotSHA256: snapSHA}, true, nil
 }
 
 // runtimeArea is the part of an area the room host of the hub needs (projection ref.world_areas of module competition).

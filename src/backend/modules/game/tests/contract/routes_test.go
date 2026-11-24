@@ -85,8 +85,32 @@ func TestOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	if len(found) != len(gamehttp.Operations) || len(found) != 71 { // 7 of F014 + createRealtimeTicket (F090) + 7 of F070 + 8 of F071 + 6 of F072 + 1 of F073 + 4 of F074 + 13 of F075 + 6 of F076 + 18 of F077
+	if len(found) != len(gamehttp.Operations) || len(found) != 77 { // 7 of F014 + createRealtimeTicket (F090) + 7 of F070 + 8 of F071 + 6 of F072 + 1 of F073 + 4 of F074 + 13 of F075 + 6 of F076 + 18 of F077 + 6 of F078
 		t.Fatalf("F014/F090 operations found in the spec: %v", found)
+	}
+	// F078: the shared /game-admin/{config_type} operations module game serves (x-service-routing: game for its types).
+	routed := 0
+	for path, item := range doc.Paths.Map() {
+		for method, op := range item.Operations() {
+			o, ok := gamehttp.GameAdminRoutedOperations[op.OperationID]
+			if !ok {
+				continue
+			}
+			routed++
+			r, _ := op.Extensions["x-service-routing"].(map[string]any)
+			m, _ := r["map"].(map[string]any)
+			if method != o.Method || path != o.Pattern || m["quests"] != "game" || o.Guard&httpx.GuardPlatformRole == 0 {
+				t.Errorf("%s: %s %s routing %v", op.OperationID, o.Method, o.Pattern, r)
+			}
+			for _, typ := range gamehttp.GameAdminConfigTypes() {
+				if m[typ] != "game" {
+					t.Errorf("%s: %s not routed to game", op.OperationID, typ)
+				}
+			}
+		}
+	}
+	if routed != len(gamehttp.GameAdminRoutedOperations) {
+		t.Fatalf("routed game-admin operations found: %d of %d", routed, len(gamehttp.GameAdminRoutedOperations))
 	}
 	for _, id := range gamehttp.PlayerOperations {
 		if gamehttp.Operations[id].Guard&httpx.GuardGamePlayer == 0 {

@@ -16,6 +16,7 @@ type SchemaConfig struct {
 	ChallengeVersion          string // ChallengeVersion table.
 	CharacterCatalog          string // CharacterCatalog table.
 	CharacterCatalogVersion   string // CharacterCatalogVersion table.
+	ClientManifest            string // ClientManifest table.
 	Collection                string // Collection table.
 	CollectionItem            string // CollectionItem table.
 	CollectionProgress        string // CollectionProgress table.
@@ -35,6 +36,8 @@ type SchemaConfig struct {
 	EventTemplateVersion      string // EventTemplateVersion table.
 	EventVersion              string // EventVersion table.
 	ExplorationProgress       string // ExplorationProgress table.
+	GameConfigItem            string // GameConfigItem table.
+	GameConfigVersion         string // GameConfigVersion table.
 	GameProfile               string // GameProfile table.
 	GameSession               string // GameSession table.
 	InventoryItem             string // InventoryItem table.
@@ -46,6 +49,8 @@ type SchemaConfig struct {
 	LevelSession              string // LevelSession table.
 	LevelVersion              string // LevelVersion table.
 	LoginEvent                string // LoginEvent table.
+	MediaAsset                string // MediaAsset table.
+	MediaUsage                string // MediaUsage table.
 	MiniGameConfig            string // MiniGameConfig table.
 	MiniGameConfigVersion     string // MiniGameConfigVersion table.
 	MiniGamePlay              string // MiniGamePlay table.
@@ -53,6 +58,7 @@ type SchemaConfig struct {
 	NpcDialogue               string // NpcDialogue table.
 	NpcDialogueVersion        string // NpcDialogueVersion table.
 	PeriodicQuestGrant        string // PeriodicQuestGrant table.
+	PreviewSession            string // PreviewSession table.
 	ProgressionCurve          string // ProgressionCurve table.
 	ProgressionCurveVersion   string // ProgressionCurveVersion table.
 	ProgressionLevel          string // ProgressionLevel table.
@@ -60,9 +66,11 @@ type SchemaConfig struct {
 	QuestProgress             string // QuestProgress table.
 	QuestStepAttempt          string // QuestStepAttempt table.
 	QuestVersion              string // QuestVersion table.
+	RenderJob                 string // RenderJob table.
 	RewardGrant               string // RewardGrant table.
 	RewardRule                string // RewardRule table.
 	RewardRuleVersion         string // RewardRuleVersion table.
+	ScheduledPublication      string // ScheduledPublication table.
 	SeasonPointEntry          string // SeasonPointEntry table.
 	SeasonTrack               string // SeasonTrack table.
 	SeasonTrackProgress       string // SeasonTrackProgress table.

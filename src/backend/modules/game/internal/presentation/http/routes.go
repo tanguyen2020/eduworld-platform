@@ -82,6 +82,8 @@ type Handlers struct {
 	// Challenges and ChallengeQueries are the F076 solo challenge use cases.
 	Challenges       ChallengeCommands
 	ChallengeQueries ChallengeQueries
+	// Admin are the Game Operations Console handlers (F078); nil Commands = not mounted (worker binaries).
+	Admin GameAdminHandlers
 	// IPHasher hashes the client address for game.login_events.ip_hash (nil = no hash). The raw IP stops here.
 	IPHasher port.IPHasher
 }
@@ -212,6 +214,11 @@ func Register(s *httpx.Server, h Handlers) error {
 	}
 	for id, fn := range h.profileRoutes() {
 		routes[id] = fn
+	}
+	if h.Admin.Commands != nil {
+		if err := registerGameAdmin(s, h.Admin); err != nil {
+			return err
+		}
 	}
 	for id, fn := range routes {
 		o, ok := Operations[id]

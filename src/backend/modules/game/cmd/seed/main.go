@@ -257,7 +257,7 @@ func run(ctx context.Context, dir string) error {
 	// source (validateMinigameQuestionSource, F073-AC-02); this binary has no module learning, so it never publishes them
 	// unchecked [Confirmed — Clarifications 2026-11-23 (triển khai)].
 	if mg, err := seedfiles.MiniGames(dir); err == nil && len(mg) > 0 {
-		slog.InfoContext(ctx, "mini-game seed not published by this binary: it needs the learning facade (core-api, Game Operations Console F078)", "items", len(mg))
+		slog.InfoContext(ctx, "mini-game seed not published by this binary (it needs the learning facade): run make seed-game-content (Game Operations Console, F078)", "items", len(mg))
 	}
 	slog.InfoContext(ctx, "game seed done", "catalog_published", res.CatalogPublished, "items_published", res.ItemsPublished,
 		"world_published", wres.Published, "world_unchanged", wres.Unchanged, "quest_assignments", assigned)

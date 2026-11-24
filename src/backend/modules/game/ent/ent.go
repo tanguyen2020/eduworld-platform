@@ -21,6 +21,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalogversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/clientmanifest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collection"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionprogress"
@@ -40,6 +41,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventtemplateversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/explorationprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameconfigitem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameconfigversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameprofile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gamesession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/inventoryitem"
@@ -51,6 +54,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/mediaasset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/mediausage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfig"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfigversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameplay"
@@ -58,6 +63,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/periodicquestgrant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/previewsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurve"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurveversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressionlevel"
@@ -65,9 +71,11 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/queststepattempt"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/renderjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardrule"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardruleversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/scheduledpublication"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasonpointentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasontrack"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasontrackprogress"
@@ -156,6 +164,7 @@ func checkColumn(t, c string) error {
 			challengeversion.Table:          challengeversion.ValidColumn,
 			charactercatalog.Table:          charactercatalog.ValidColumn,
 			charactercatalogversion.Table:   charactercatalogversion.ValidColumn,
+			clientmanifest.Table:            clientmanifest.ValidColumn,
 			collection.Table:                collection.ValidColumn,
 			collectionitem.Table:            collectionitem.ValidColumn,
 			collectionprogress.Table:        collectionprogress.ValidColumn,
@@ -175,6 +184,8 @@ func checkColumn(t, c string) error {
 			eventtemplateversion.Table:      eventtemplateversion.ValidColumn,
 			eventversion.Table:              eventversion.ValidColumn,
 			explorationprogress.Table:       explorationprogress.ValidColumn,
+			gameconfigitem.Table:            gameconfigitem.ValidColumn,
+			gameconfigversion.Table:         gameconfigversion.ValidColumn,
 			gameprofile.Table:               gameprofile.ValidColumn,
 			gamesession.Table:               gamesession.ValidColumn,
 			inventoryitem.Table:             inventoryitem.ValidColumn,
@@ -186,6 +197,8 @@ func checkColumn(t, c string) error {
 			levelsession.Table:              levelsession.ValidColumn,
 			levelversion.Table:              levelversion.ValidColumn,
 			loginevent.Table:                loginevent.ValidColumn,
+			mediaasset.Table:                mediaasset.ValidColumn,
+			mediausage.Table:                mediausage.ValidColumn,
 			minigameconfig.Table:            minigameconfig.ValidColumn,
 			minigameconfigversion.Table:     minigameconfigversion.ValidColumn,
 			minigameplay.Table:              minigameplay.ValidColumn,
@@ -193,6 +206,7 @@ func checkColumn(t, c string) error {
 			npcdialogue.Table:               npcdialogue.ValidColumn,
 			npcdialogueversion.Table:        npcdialogueversion.ValidColumn,
 			periodicquestgrant.Table:        periodicquestgrant.ValidColumn,
+			previewsession.Table:            previewsession.ValidColumn,
 			progressioncurve.Table:          progressioncurve.ValidColumn,
 			progressioncurveversion.Table:   progressioncurveversion.ValidColumn,
 			progressionlevel.Table:          progressionlevel.ValidColumn,
@@ -200,9 +214,11 @@ func checkColumn(t, c string) error {
 			questprogress.Table:             questprogress.ValidColumn,
 			queststepattempt.Table:          queststepattempt.ValidColumn,
 			questversion.Table:              questversion.ValidColumn,
+			renderjob.Table:                 renderjob.ValidColumn,
 			rewardgrant.Table:               rewardgrant.ValidColumn,
 			rewardrule.Table:                rewardrule.ValidColumn,
 			rewardruleversion.Table:         rewardruleversion.ValidColumn,
+			scheduledpublication.Table:      scheduledpublication.ValidColumn,
 			seasonpointentry.Table:          seasonpointentry.ValidColumn,
 			seasontrack.Table:               seasontrack.ValidColumn,
 			seasontrackprogress.Table:       seasontrackprogress.ValidColumn,

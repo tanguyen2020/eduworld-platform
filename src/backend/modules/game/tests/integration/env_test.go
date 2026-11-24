@@ -173,6 +173,10 @@ type env struct {
 	// F076 doubles (R17): challenge.attempt.updated pushes and the room of an attempt (nil = no room host).
 	challengePush *challengePush
 	challengeRoom port.ChallengeRoom
+	// F078 doubles (R17): object storage of game media (nil until a test needs it), render queue, learning content released.
+	storage  *memStorage
+	renders  *memRenders
+	released map[string]bool
 }
 
 func open(t *testing.T, dsn string) *sql.DB {
@@ -289,7 +293,8 @@ func (e *env) server(ctx context.Context, t *testing.T) {
 		World: worldProxy{e}, WorldQueries: e.worldQueries(), Quests: questProxy{e}, QuestQueries: questQueryProxy{e},
 		ProgressionQueries: progressionQueryProxy{e}, EconomyQueries: economyQueryProxy{e}, EconomyCommands: economyCommandProxy{e},
 		LiveOpsQueries: liveQueryProxy{e}, LiveOpsCommands: liveCommandProxy{e}, MiniGames: miniGameProxy{e},
-		Challenges: challengeProxy{e}, ChallengeQueries: challengeQueryProxy{e}}
+		Challenges: challengeProxy{e}, ChallengeQueries: challengeQueryProxy{e},
+		Admin: gamehttp.GameAdminHandlers{Commands: adminProxy{e}, Queries: adminQueryProxy{e}, Media: mediaProxy{e}}}
 	if err := gamehttp.Register(s, h); err != nil {
 		t.Fatal(err)
 	}

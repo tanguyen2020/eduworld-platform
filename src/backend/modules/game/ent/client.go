@@ -24,6 +24,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalogversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/clientmanifest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collection"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionprogress"
@@ -43,6 +44,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventtemplateversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/explorationprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameconfigitem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameconfigversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameprofile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gamesession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/inventoryitem"
@@ -54,6 +57,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/mediaasset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/mediausage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfig"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameconfigversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/minigameplay"
@@ -61,6 +66,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/periodicquestgrant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/previewsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurve"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurveversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressionlevel"
@@ -68,9 +74,11 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/queststepattempt"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/renderjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardrule"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardruleversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/scheduledpublication"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasonpointentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasontrack"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasontrackprogress"
@@ -117,6 +125,8 @@ type Client struct {
 	CharacterCatalog *CharacterCatalogClient
 	// CharacterCatalogVersion is the client for interacting with the CharacterCatalogVersion builders.
 	CharacterCatalogVersion *CharacterCatalogVersionClient
+	// ClientManifest is the client for interacting with the ClientManifest builders.
+	ClientManifest *ClientManifestClient
 	// Collection is the client for interacting with the Collection builders.
 	Collection *CollectionClient
 	// CollectionItem is the client for interacting with the CollectionItem builders.
@@ -155,6 +165,10 @@ type Client struct {
 	EventVersion *EventVersionClient
 	// ExplorationProgress is the client for interacting with the ExplorationProgress builders.
 	ExplorationProgress *ExplorationProgressClient
+	// GameConfigItem is the client for interacting with the GameConfigItem builders.
+	GameConfigItem *GameConfigItemClient
+	// GameConfigVersion is the client for interacting with the GameConfigVersion builders.
+	GameConfigVersion *GameConfigVersionClient
 	// GameProfile is the client for interacting with the GameProfile builders.
 	GameProfile *GameProfileClient
 	// GameSession is the client for interacting with the GameSession builders.
@@ -177,6 +191,10 @@ type Client struct {
 	LevelVersion *LevelVersionClient
 	// LoginEvent is the client for interacting with the LoginEvent builders.
 	LoginEvent *LoginEventClient
+	// MediaAsset is the client for interacting with the MediaAsset builders.
+	MediaAsset *MediaAssetClient
+	// MediaUsage is the client for interacting with the MediaUsage builders.
+	MediaUsage *MediaUsageClient
 	// MiniGameConfig is the client for interacting with the MiniGameConfig builders.
 	MiniGameConfig *MiniGameConfigClient
 	// MiniGameConfigVersion is the client for interacting with the MiniGameConfigVersion builders.
@@ -191,6 +209,8 @@ type Client struct {
 	NpcDialogueVersion *NpcDialogueVersionClient
 	// PeriodicQuestGrant is the client for interacting with the PeriodicQuestGrant builders.
 	PeriodicQuestGrant *PeriodicQuestGrantClient
+	// PreviewSession is the client for interacting with the PreviewSession builders.
+	PreviewSession *PreviewSessionClient
 	// ProgressionCurve is the client for interacting with the ProgressionCurve builders.
 	ProgressionCurve *ProgressionCurveClient
 	// ProgressionCurveVersion is the client for interacting with the ProgressionCurveVersion builders.
@@ -205,12 +225,16 @@ type Client struct {
 	QuestStepAttempt *QuestStepAttemptClient
 	// QuestVersion is the client for interacting with the QuestVersion builders.
 	QuestVersion *QuestVersionClient
+	// RenderJob is the client for interacting with the RenderJob builders.
+	RenderJob *RenderJobClient
 	// RewardGrant is the client for interacting with the RewardGrant builders.
 	RewardGrant *RewardGrantClient
 	// RewardRule is the client for interacting with the RewardRule builders.
 	RewardRule *RewardRuleClient
 	// RewardRuleVersion is the client for interacting with the RewardRuleVersion builders.
 	RewardRuleVersion *RewardRuleVersionClient
+	// ScheduledPublication is the client for interacting with the ScheduledPublication builders.
+	ScheduledPublication *ScheduledPublicationClient
 	// SeasonPointEntry is the client for interacting with the SeasonPointEntry builders.
 	SeasonPointEntry *SeasonPointEntryClient
 	// SeasonTrack is the client for interacting with the SeasonTrack builders.
@@ -269,6 +293,7 @@ func (c *Client) init() {
 	c.ChallengeVersion = NewChallengeVersionClient(c.config)
 	c.CharacterCatalog = NewCharacterCatalogClient(c.config)
 	c.CharacterCatalogVersion = NewCharacterCatalogVersionClient(c.config)
+	c.ClientManifest = NewClientManifestClient(c.config)
 	c.Collection = NewCollectionClient(c.config)
 	c.CollectionItem = NewCollectionItemClient(c.config)
 	c.CollectionProgress = NewCollectionProgressClient(c.config)
@@ -288,6 +313,8 @@ func (c *Client) init() {
 	c.EventTemplateVersion = NewEventTemplateVersionClient(c.config)
 	c.EventVersion = NewEventVersionClient(c.config)
 	c.ExplorationProgress = NewExplorationProgressClient(c.config)
+	c.GameConfigItem = NewGameConfigItemClient(c.config)
+	c.GameConfigVersion = NewGameConfigVersionClient(c.config)
 	c.GameProfile = NewGameProfileClient(c.config)
 	c.GameSession = NewGameSessionClient(c.config)
 	c.InventoryItem = NewInventoryItemClient(c.config)
@@ -299,6 +326,8 @@ func (c *Client) init() {
 	c.LevelSession = NewLevelSessionClient(c.config)
 	c.LevelVersion = NewLevelVersionClient(c.config)
 	c.LoginEvent = NewLoginEventClient(c.config)
+	c.MediaAsset = NewMediaAssetClient(c.config)
+	c.MediaUsage = NewMediaUsageClient(c.config)
 	c.MiniGameConfig = NewMiniGameConfigClient(c.config)
 	c.MiniGameConfigVersion = NewMiniGameConfigVersionClient(c.config)
 	c.MiniGamePlay = NewMiniGamePlayClient(c.config)
@@ -306,6 +335,7 @@ func (c *Client) init() {
 	c.NpcDialogue = NewNpcDialogueClient(c.config)
 	c.NpcDialogueVersion = NewNpcDialogueVersionClient(c.config)
 	c.PeriodicQuestGrant = NewPeriodicQuestGrantClient(c.config)
+	c.PreviewSession = NewPreviewSessionClient(c.config)
 	c.ProgressionCurve = NewProgressionCurveClient(c.config)
 	c.ProgressionCurveVersion = NewProgressionCurveVersionClient(c.config)
 	c.ProgressionLevel = NewProgressionLevelClient(c.config)
@@ -313,9 +343,11 @@ func (c *Client) init() {
 	c.QuestProgress = NewQuestProgressClient(c.config)
 	c.QuestStepAttempt = NewQuestStepAttemptClient(c.config)
 	c.QuestVersion = NewQuestVersionClient(c.config)
+	c.RenderJob = NewRenderJobClient(c.config)
 	c.RewardGrant = NewRewardGrantClient(c.config)
 	c.RewardRule = NewRewardRuleClient(c.config)
 	c.RewardRuleVersion = NewRewardRuleVersionClient(c.config)
+	c.ScheduledPublication = NewScheduledPublicationClient(c.config)
 	c.SeasonPointEntry = NewSeasonPointEntryClient(c.config)
 	c.SeasonTrack = NewSeasonTrackClient(c.config)
 	c.SeasonTrackProgress = NewSeasonTrackProgressClient(c.config)
@@ -439,6 +471,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ChallengeVersion:          NewChallengeVersionClient(cfg),
 		CharacterCatalog:          NewCharacterCatalogClient(cfg),
 		CharacterCatalogVersion:   NewCharacterCatalogVersionClient(cfg),
+		ClientManifest:            NewClientManifestClient(cfg),
 		Collection:                NewCollectionClient(cfg),
 		CollectionItem:            NewCollectionItemClient(cfg),
 		CollectionProgress:        NewCollectionProgressClient(cfg),
@@ -458,6 +491,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		EventTemplateVersion:      NewEventTemplateVersionClient(cfg),
 		EventVersion:              NewEventVersionClient(cfg),
 		ExplorationProgress:       NewExplorationProgressClient(cfg),
+		GameConfigItem:            NewGameConfigItemClient(cfg),
+		GameConfigVersion:         NewGameConfigVersionClient(cfg),
 		GameProfile:               NewGameProfileClient(cfg),
 		GameSession:               NewGameSessionClient(cfg),
 		InventoryItem:             NewInventoryItemClient(cfg),
@@ -469,6 +504,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		LevelSession:              NewLevelSessionClient(cfg),
 		LevelVersion:              NewLevelVersionClient(cfg),
 		LoginEvent:                NewLoginEventClient(cfg),
+		MediaAsset:                NewMediaAssetClient(cfg),
+		MediaUsage:                NewMediaUsageClient(cfg),
 		MiniGameConfig:            NewMiniGameConfigClient(cfg),
 		MiniGameConfigVersion:     NewMiniGameConfigVersionClient(cfg),
 		MiniGamePlay:              NewMiniGamePlayClient(cfg),
@@ -476,6 +513,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		NpcDialogue:               NewNpcDialogueClient(cfg),
 		NpcDialogueVersion:        NewNpcDialogueVersionClient(cfg),
 		PeriodicQuestGrant:        NewPeriodicQuestGrantClient(cfg),
+		PreviewSession:            NewPreviewSessionClient(cfg),
 		ProgressionCurve:          NewProgressionCurveClient(cfg),
 		ProgressionCurveVersion:   NewProgressionCurveVersionClient(cfg),
 		ProgressionLevel:          NewProgressionLevelClient(cfg),
@@ -483,9 +521,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		QuestProgress:             NewQuestProgressClient(cfg),
 		QuestStepAttempt:          NewQuestStepAttemptClient(cfg),
 		QuestVersion:              NewQuestVersionClient(cfg),
+		RenderJob:                 NewRenderJobClient(cfg),
 		RewardGrant:               NewRewardGrantClient(cfg),
 		RewardRule:                NewRewardRuleClient(cfg),
 		RewardRuleVersion:         NewRewardRuleVersionClient(cfg),
+		ScheduledPublication:      NewScheduledPublicationClient(cfg),
 		SeasonPointEntry:          NewSeasonPointEntryClient(cfg),
 		SeasonTrack:               NewSeasonTrackClient(cfg),
 		SeasonTrackProgress:       NewSeasonTrackProgressClient(cfg),
@@ -533,6 +573,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ChallengeVersion:          NewChallengeVersionClient(cfg),
 		CharacterCatalog:          NewCharacterCatalogClient(cfg),
 		CharacterCatalogVersion:   NewCharacterCatalogVersionClient(cfg),
+		ClientManifest:            NewClientManifestClient(cfg),
 		Collection:                NewCollectionClient(cfg),
 		CollectionItem:            NewCollectionItemClient(cfg),
 		CollectionProgress:        NewCollectionProgressClient(cfg),
@@ -552,6 +593,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		EventTemplateVersion:      NewEventTemplateVersionClient(cfg),
 		EventVersion:              NewEventVersionClient(cfg),
 		ExplorationProgress:       NewExplorationProgressClient(cfg),
+		GameConfigItem:            NewGameConfigItemClient(cfg),
+		GameConfigVersion:         NewGameConfigVersionClient(cfg),
 		GameProfile:               NewGameProfileClient(cfg),
 		GameSession:               NewGameSessionClient(cfg),
 		InventoryItem:             NewInventoryItemClient(cfg),
@@ -563,6 +606,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		LevelSession:              NewLevelSessionClient(cfg),
 		LevelVersion:              NewLevelVersionClient(cfg),
 		LoginEvent:                NewLoginEventClient(cfg),
+		MediaAsset:                NewMediaAssetClient(cfg),
+		MediaUsage:                NewMediaUsageClient(cfg),
 		MiniGameConfig:            NewMiniGameConfigClient(cfg),
 		MiniGameConfigVersion:     NewMiniGameConfigVersionClient(cfg),
 		MiniGamePlay:              NewMiniGamePlayClient(cfg),
@@ -570,6 +615,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		NpcDialogue:               NewNpcDialogueClient(cfg),
 		NpcDialogueVersion:        NewNpcDialogueVersionClient(cfg),
 		PeriodicQuestGrant:        NewPeriodicQuestGrantClient(cfg),
+		PreviewSession:            NewPreviewSessionClient(cfg),
 		ProgressionCurve:          NewProgressionCurveClient(cfg),
 		ProgressionCurveVersion:   NewProgressionCurveVersionClient(cfg),
 		ProgressionLevel:          NewProgressionLevelClient(cfg),
@@ -577,9 +623,11 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		QuestProgress:             NewQuestProgressClient(cfg),
 		QuestStepAttempt:          NewQuestStepAttemptClient(cfg),
 		QuestVersion:              NewQuestVersionClient(cfg),
+		RenderJob:                 NewRenderJobClient(cfg),
 		RewardGrant:               NewRewardGrantClient(cfg),
 		RewardRule:                NewRewardRuleClient(cfg),
 		RewardRuleVersion:         NewRewardRuleVersionClient(cfg),
+		ScheduledPublication:      NewScheduledPublicationClient(cfg),
 		SeasonPointEntry:          NewSeasonPointEntryClient(cfg),
 		SeasonTrack:               NewSeasonTrackClient(cfg),
 		SeasonTrackProgress:       NewSeasonTrackProgressClient(cfg),
@@ -630,24 +678,27 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Achievement, c.AchievementProgressEvent, c.AchievementVersion, c.AvatarPreset,
 		c.Challenge, c.ChallengeAttempt, c.ChallengeVersion, c.CharacterCatalog,
-		c.CharacterCatalogVersion, c.Collection, c.CollectionItem,
+		c.CharacterCatalogVersion, c.ClientManifest, c.Collection, c.CollectionItem,
 		c.CollectionProgress, c.CollectionVersion, c.CommunityGoal,
 		c.CommunityGoalContribution, c.CommunityGoalProgress, c.ContentRelease,
 		c.Currency, c.CurrencyLedgerEntry, c.EconomyAdjustment, c.Event,
 		c.EventParticipation, c.EventPointEntry, c.EventRun, c.EventTemplate,
-		c.EventTemplateVersion, c.EventVersion, c.ExplorationProgress, c.GameProfile,
-		c.GameSession, c.InventoryItem, c.ItemDefinition, c.ItemDefinitionVersion,
-		c.ItemLedgerEntry, c.LevelDefinition, c.LevelHistory, c.LevelSession,
-		c.LevelVersion, c.LoginEvent, c.MiniGameConfig, c.MiniGameConfigVersion,
-		c.MiniGamePlay, c.NicknameChange, c.NpcDialogue, c.NpcDialogueVersion,
-		c.PeriodicQuestGrant, c.ProgressionCurve, c.ProgressionCurveVersion,
-		c.ProgressionLevel, c.QuestDefinition, c.QuestProgress, c.QuestStepAttempt,
-		c.QuestVersion, c.RewardGrant, c.RewardRule, c.RewardRuleVersion,
-		c.SeasonPointEntry, c.SeasonTrack, c.SeasonTrackProgress, c.SeasonTrackVersion,
-		c.ShopItem, c.ShopItemVersion, c.ShopPurchase, c.StoryChapter,
-		c.StoryChapterVersion, c.StoryProgress, c.StudentAchievement,
-		c.TenantResourceAssignment, c.Wallet, c.WorldArea, c.WorldAreaUnlock,
-		c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap, c.XpLedgerEntry,
+		c.EventTemplateVersion, c.EventVersion, c.ExplorationProgress,
+		c.GameConfigItem, c.GameConfigVersion, c.GameProfile, c.GameSession,
+		c.InventoryItem, c.ItemDefinition, c.ItemDefinitionVersion, c.ItemLedgerEntry,
+		c.LevelDefinition, c.LevelHistory, c.LevelSession, c.LevelVersion,
+		c.LoginEvent, c.MediaAsset, c.MediaUsage, c.MiniGameConfig,
+		c.MiniGameConfigVersion, c.MiniGamePlay, c.NicknameChange, c.NpcDialogue,
+		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.PreviewSession,
+		c.ProgressionCurve, c.ProgressionCurveVersion, c.ProgressionLevel,
+		c.QuestDefinition, c.QuestProgress, c.QuestStepAttempt, c.QuestVersion,
+		c.RenderJob, c.RewardGrant, c.RewardRule, c.RewardRuleVersion,
+		c.ScheduledPublication, c.SeasonPointEntry, c.SeasonTrack,
+		c.SeasonTrackProgress, c.SeasonTrackVersion, c.ShopItem, c.ShopItemVersion,
+		c.ShopPurchase, c.StoryChapter, c.StoryChapterVersion, c.StoryProgress,
+		c.StudentAchievement, c.TenantResourceAssignment, c.Wallet, c.WorldArea,
+		c.WorldAreaUnlock, c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap,
+		c.XpLedgerEntry,
 	} {
 		n.Use(hooks...)
 	}
@@ -659,24 +710,27 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Achievement, c.AchievementProgressEvent, c.AchievementVersion, c.AvatarPreset,
 		c.Challenge, c.ChallengeAttempt, c.ChallengeVersion, c.CharacterCatalog,
-		c.CharacterCatalogVersion, c.Collection, c.CollectionItem,
+		c.CharacterCatalogVersion, c.ClientManifest, c.Collection, c.CollectionItem,
 		c.CollectionProgress, c.CollectionVersion, c.CommunityGoal,
 		c.CommunityGoalContribution, c.CommunityGoalProgress, c.ContentRelease,
 		c.Currency, c.CurrencyLedgerEntry, c.EconomyAdjustment, c.Event,
 		c.EventParticipation, c.EventPointEntry, c.EventRun, c.EventTemplate,
-		c.EventTemplateVersion, c.EventVersion, c.ExplorationProgress, c.GameProfile,
-		c.GameSession, c.InventoryItem, c.ItemDefinition, c.ItemDefinitionVersion,
-		c.ItemLedgerEntry, c.LevelDefinition, c.LevelHistory, c.LevelSession,
-		c.LevelVersion, c.LoginEvent, c.MiniGameConfig, c.MiniGameConfigVersion,
-		c.MiniGamePlay, c.NicknameChange, c.NpcDialogue, c.NpcDialogueVersion,
-		c.PeriodicQuestGrant, c.ProgressionCurve, c.ProgressionCurveVersion,
-		c.ProgressionLevel, c.QuestDefinition, c.QuestProgress, c.QuestStepAttempt,
-		c.QuestVersion, c.RewardGrant, c.RewardRule, c.RewardRuleVersion,
-		c.SeasonPointEntry, c.SeasonTrack, c.SeasonTrackProgress, c.SeasonTrackVersion,
-		c.ShopItem, c.ShopItemVersion, c.ShopPurchase, c.StoryChapter,
-		c.StoryChapterVersion, c.StoryProgress, c.StudentAchievement,
-		c.TenantResourceAssignment, c.Wallet, c.WorldArea, c.WorldAreaUnlock,
-		c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap, c.XpLedgerEntry,
+		c.EventTemplateVersion, c.EventVersion, c.ExplorationProgress,
+		c.GameConfigItem, c.GameConfigVersion, c.GameProfile, c.GameSession,
+		c.InventoryItem, c.ItemDefinition, c.ItemDefinitionVersion, c.ItemLedgerEntry,
+		c.LevelDefinition, c.LevelHistory, c.LevelSession, c.LevelVersion,
+		c.LoginEvent, c.MediaAsset, c.MediaUsage, c.MiniGameConfig,
+		c.MiniGameConfigVersion, c.MiniGamePlay, c.NicknameChange, c.NpcDialogue,
+		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.PreviewSession,
+		c.ProgressionCurve, c.ProgressionCurveVersion, c.ProgressionLevel,
+		c.QuestDefinition, c.QuestProgress, c.QuestStepAttempt, c.QuestVersion,
+		c.RenderJob, c.RewardGrant, c.RewardRule, c.RewardRuleVersion,
+		c.ScheduledPublication, c.SeasonPointEntry, c.SeasonTrack,
+		c.SeasonTrackProgress, c.SeasonTrackVersion, c.ShopItem, c.ShopItemVersion,
+		c.ShopPurchase, c.StoryChapter, c.StoryChapterVersion, c.StoryProgress,
+		c.StudentAchievement, c.TenantResourceAssignment, c.Wallet, c.WorldArea,
+		c.WorldAreaUnlock, c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap,
+		c.XpLedgerEntry,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -703,6 +757,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.CharacterCatalog.mutate(ctx, m)
 	case *CharacterCatalogVersionMutation:
 		return c.CharacterCatalogVersion.mutate(ctx, m)
+	case *ClientManifestMutation:
+		return c.ClientManifest.mutate(ctx, m)
 	case *CollectionMutation:
 		return c.Collection.mutate(ctx, m)
 	case *CollectionItemMutation:
@@ -741,6 +797,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.EventVersion.mutate(ctx, m)
 	case *ExplorationProgressMutation:
 		return c.ExplorationProgress.mutate(ctx, m)
+	case *GameConfigItemMutation:
+		return c.GameConfigItem.mutate(ctx, m)
+	case *GameConfigVersionMutation:
+		return c.GameConfigVersion.mutate(ctx, m)
 	case *GameProfileMutation:
 		return c.GameProfile.mutate(ctx, m)
 	case *GameSessionMutation:
@@ -763,6 +823,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.LevelVersion.mutate(ctx, m)
 	case *LoginEventMutation:
 		return c.LoginEvent.mutate(ctx, m)
+	case *MediaAssetMutation:
+		return c.MediaAsset.mutate(ctx, m)
+	case *MediaUsageMutation:
+		return c.MediaUsage.mutate(ctx, m)
 	case *MiniGameConfigMutation:
 		return c.MiniGameConfig.mutate(ctx, m)
 	case *MiniGameConfigVersionMutation:
@@ -777,6 +841,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.NpcDialogueVersion.mutate(ctx, m)
 	case *PeriodicQuestGrantMutation:
 		return c.PeriodicQuestGrant.mutate(ctx, m)
+	case *PreviewSessionMutation:
+		return c.PreviewSession.mutate(ctx, m)
 	case *ProgressionCurveMutation:
 		return c.ProgressionCurve.mutate(ctx, m)
 	case *ProgressionCurveVersionMutation:
@@ -791,12 +857,16 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.QuestStepAttempt.mutate(ctx, m)
 	case *QuestVersionMutation:
 		return c.QuestVersion.mutate(ctx, m)
+	case *RenderJobMutation:
+		return c.RenderJob.mutate(ctx, m)
 	case *RewardGrantMutation:
 		return c.RewardGrant.mutate(ctx, m)
 	case *RewardRuleMutation:
 		return c.RewardRule.mutate(ctx, m)
 	case *RewardRuleVersionMutation:
 		return c.RewardRuleVersion.mutate(ctx, m)
+	case *ScheduledPublicationMutation:
+		return c.ScheduledPublication.mutate(ctx, m)
 	case *SeasonPointEntryMutation:
 		return c.SeasonPointEntry.mutate(ctx, m)
 	case *SeasonTrackMutation:
@@ -2052,6 +2122,141 @@ func (c *CharacterCatalogVersionClient) mutate(ctx context.Context, m *Character
 		return (&CharacterCatalogVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown CharacterCatalogVersion mutation op: %q", m.Op())
+	}
+}
+
+// ClientManifestClient is a client for the ClientManifest schema.
+type ClientManifestClient struct {
+	config
+}
+
+// NewClientManifestClient returns a client for the ClientManifest from the given config.
+func NewClientManifestClient(c config) *ClientManifestClient {
+	return &ClientManifestClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `clientmanifest.Hooks(f(g(h())))`.
+func (c *ClientManifestClient) Use(hooks ...Hook) {
+	c.hooks.ClientManifest = append(c.hooks.ClientManifest, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `clientmanifest.Intercept(f(g(h())))`.
+func (c *ClientManifestClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ClientManifest = append(c.inters.ClientManifest, interceptors...)
+}
+
+// Create returns a builder for creating a ClientManifest entity.
+func (c *ClientManifestClient) Create() *ClientManifestCreate {
+	mutation := newClientManifestMutation(c.config, OpCreate)
+	return &ClientManifestCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ClientManifest entities.
+func (c *ClientManifestClient) CreateBulk(builders ...*ClientManifestCreate) *ClientManifestCreateBulk {
+	return &ClientManifestCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ClientManifestClient) MapCreateBulk(slice any, setFunc func(*ClientManifestCreate, int)) *ClientManifestCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ClientManifestCreateBulk{err: fmt.Errorf("calling to ClientManifestClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ClientManifestCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ClientManifestCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ClientManifest.
+func (c *ClientManifestClient) Update() *ClientManifestUpdate {
+	mutation := newClientManifestMutation(c.config, OpUpdate)
+	return &ClientManifestUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ClientManifestClient) UpdateOne(_m *ClientManifest) *ClientManifestUpdateOne {
+	mutation := newClientManifestMutation(c.config, OpUpdateOne, withClientManifest(_m))
+	return &ClientManifestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ClientManifestClient) UpdateOneID(id uuid.UUID) *ClientManifestUpdateOne {
+	mutation := newClientManifestMutation(c.config, OpUpdateOne, withClientManifestID(id))
+	return &ClientManifestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ClientManifest.
+func (c *ClientManifestClient) Delete() *ClientManifestDelete {
+	mutation := newClientManifestMutation(c.config, OpDelete)
+	return &ClientManifestDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ClientManifestClient) DeleteOne(_m *ClientManifest) *ClientManifestDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ClientManifestClient) DeleteOneID(id uuid.UUID) *ClientManifestDeleteOne {
+	builder := c.Delete().Where(clientmanifest.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ClientManifestDeleteOne{builder}
+}
+
+// Query returns a query builder for ClientManifest.
+func (c *ClientManifestClient) Query() *ClientManifestQuery {
+	return &ClientManifestQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeClientManifest},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ClientManifest entity by its id.
+func (c *ClientManifestClient) Get(ctx context.Context, id uuid.UUID) (*ClientManifest, error) {
+	return c.Query().Where(clientmanifest.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ClientManifestClient) GetX(ctx context.Context, id uuid.UUID) *ClientManifest {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ClientManifestClient) Hooks() []Hook {
+	hooks := c.hooks.ClientManifest
+	return append(hooks[:len(hooks):len(hooks)], clientmanifest.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ClientManifestClient) Interceptors() []Interceptor {
+	inters := c.inters.ClientManifest
+	return append(inters[:len(inters):len(inters)], clientmanifest.Interceptors[:]...)
+}
+
+func (c *ClientManifestClient) mutate(ctx context.Context, m *ClientManifestMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ClientManifestCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ClientManifestUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ClientManifestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ClientManifestDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ClientManifest mutation op: %q", m.Op())
 	}
 }
 
@@ -4618,6 +4823,276 @@ func (c *ExplorationProgressClient) mutate(ctx context.Context, m *ExplorationPr
 	}
 }
 
+// GameConfigItemClient is a client for the GameConfigItem schema.
+type GameConfigItemClient struct {
+	config
+}
+
+// NewGameConfigItemClient returns a client for the GameConfigItem from the given config.
+func NewGameConfigItemClient(c config) *GameConfigItemClient {
+	return &GameConfigItemClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `gameconfigitem.Hooks(f(g(h())))`.
+func (c *GameConfigItemClient) Use(hooks ...Hook) {
+	c.hooks.GameConfigItem = append(c.hooks.GameConfigItem, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `gameconfigitem.Intercept(f(g(h())))`.
+func (c *GameConfigItemClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GameConfigItem = append(c.inters.GameConfigItem, interceptors...)
+}
+
+// Create returns a builder for creating a GameConfigItem entity.
+func (c *GameConfigItemClient) Create() *GameConfigItemCreate {
+	mutation := newGameConfigItemMutation(c.config, OpCreate)
+	return &GameConfigItemCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GameConfigItem entities.
+func (c *GameConfigItemClient) CreateBulk(builders ...*GameConfigItemCreate) *GameConfigItemCreateBulk {
+	return &GameConfigItemCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GameConfigItemClient) MapCreateBulk(slice any, setFunc func(*GameConfigItemCreate, int)) *GameConfigItemCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GameConfigItemCreateBulk{err: fmt.Errorf("calling to GameConfigItemClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GameConfigItemCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GameConfigItemCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GameConfigItem.
+func (c *GameConfigItemClient) Update() *GameConfigItemUpdate {
+	mutation := newGameConfigItemMutation(c.config, OpUpdate)
+	return &GameConfigItemUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GameConfigItemClient) UpdateOne(_m *GameConfigItem) *GameConfigItemUpdateOne {
+	mutation := newGameConfigItemMutation(c.config, OpUpdateOne, withGameConfigItem(_m))
+	return &GameConfigItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GameConfigItemClient) UpdateOneID(id uuid.UUID) *GameConfigItemUpdateOne {
+	mutation := newGameConfigItemMutation(c.config, OpUpdateOne, withGameConfigItemID(id))
+	return &GameConfigItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GameConfigItem.
+func (c *GameConfigItemClient) Delete() *GameConfigItemDelete {
+	mutation := newGameConfigItemMutation(c.config, OpDelete)
+	return &GameConfigItemDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GameConfigItemClient) DeleteOne(_m *GameConfigItem) *GameConfigItemDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GameConfigItemClient) DeleteOneID(id uuid.UUID) *GameConfigItemDeleteOne {
+	builder := c.Delete().Where(gameconfigitem.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GameConfigItemDeleteOne{builder}
+}
+
+// Query returns a query builder for GameConfigItem.
+func (c *GameConfigItemClient) Query() *GameConfigItemQuery {
+	return &GameConfigItemQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGameConfigItem},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GameConfigItem entity by its id.
+func (c *GameConfigItemClient) Get(ctx context.Context, id uuid.UUID) (*GameConfigItem, error) {
+	return c.Query().Where(gameconfigitem.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GameConfigItemClient) GetX(ctx context.Context, id uuid.UUID) *GameConfigItem {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *GameConfigItemClient) Hooks() []Hook {
+	hooks := c.hooks.GameConfigItem
+	return append(hooks[:len(hooks):len(hooks)], gameconfigitem.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *GameConfigItemClient) Interceptors() []Interceptor {
+	inters := c.inters.GameConfigItem
+	return append(inters[:len(inters):len(inters)], gameconfigitem.Interceptors[:]...)
+}
+
+func (c *GameConfigItemClient) mutate(ctx context.Context, m *GameConfigItemMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GameConfigItemCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GameConfigItemUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GameConfigItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GameConfigItemDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GameConfigItem mutation op: %q", m.Op())
+	}
+}
+
+// GameConfigVersionClient is a client for the GameConfigVersion schema.
+type GameConfigVersionClient struct {
+	config
+}
+
+// NewGameConfigVersionClient returns a client for the GameConfigVersion from the given config.
+func NewGameConfigVersionClient(c config) *GameConfigVersionClient {
+	return &GameConfigVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `gameconfigversion.Hooks(f(g(h())))`.
+func (c *GameConfigVersionClient) Use(hooks ...Hook) {
+	c.hooks.GameConfigVersion = append(c.hooks.GameConfigVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `gameconfigversion.Intercept(f(g(h())))`.
+func (c *GameConfigVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GameConfigVersion = append(c.inters.GameConfigVersion, interceptors...)
+}
+
+// Create returns a builder for creating a GameConfigVersion entity.
+func (c *GameConfigVersionClient) Create() *GameConfigVersionCreate {
+	mutation := newGameConfigVersionMutation(c.config, OpCreate)
+	return &GameConfigVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GameConfigVersion entities.
+func (c *GameConfigVersionClient) CreateBulk(builders ...*GameConfigVersionCreate) *GameConfigVersionCreateBulk {
+	return &GameConfigVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GameConfigVersionClient) MapCreateBulk(slice any, setFunc func(*GameConfigVersionCreate, int)) *GameConfigVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GameConfigVersionCreateBulk{err: fmt.Errorf("calling to GameConfigVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GameConfigVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GameConfigVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GameConfigVersion.
+func (c *GameConfigVersionClient) Update() *GameConfigVersionUpdate {
+	mutation := newGameConfigVersionMutation(c.config, OpUpdate)
+	return &GameConfigVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GameConfigVersionClient) UpdateOne(_m *GameConfigVersion) *GameConfigVersionUpdateOne {
+	mutation := newGameConfigVersionMutation(c.config, OpUpdateOne, withGameConfigVersion(_m))
+	return &GameConfigVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GameConfigVersionClient) UpdateOneID(id uuid.UUID) *GameConfigVersionUpdateOne {
+	mutation := newGameConfigVersionMutation(c.config, OpUpdateOne, withGameConfigVersionID(id))
+	return &GameConfigVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GameConfigVersion.
+func (c *GameConfigVersionClient) Delete() *GameConfigVersionDelete {
+	mutation := newGameConfigVersionMutation(c.config, OpDelete)
+	return &GameConfigVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GameConfigVersionClient) DeleteOne(_m *GameConfigVersion) *GameConfigVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GameConfigVersionClient) DeleteOneID(id uuid.UUID) *GameConfigVersionDeleteOne {
+	builder := c.Delete().Where(gameconfigversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GameConfigVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for GameConfigVersion.
+func (c *GameConfigVersionClient) Query() *GameConfigVersionQuery {
+	return &GameConfigVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGameConfigVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GameConfigVersion entity by its id.
+func (c *GameConfigVersionClient) Get(ctx context.Context, id uuid.UUID) (*GameConfigVersion, error) {
+	return c.Query().Where(gameconfigversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GameConfigVersionClient) GetX(ctx context.Context, id uuid.UUID) *GameConfigVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *GameConfigVersionClient) Hooks() []Hook {
+	hooks := c.hooks.GameConfigVersion
+	return append(hooks[:len(hooks):len(hooks)], gameconfigversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *GameConfigVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.GameConfigVersion
+	return append(inters[:len(inters):len(inters)], gameconfigversion.Interceptors[:]...)
+}
+
+func (c *GameConfigVersionClient) mutate(ctx context.Context, m *GameConfigVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GameConfigVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GameConfigVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GameConfigVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GameConfigVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GameConfigVersion mutation op: %q", m.Op())
+	}
+}
+
 // GameProfileClient is a client for the GameProfile schema.
 type GameProfileClient struct {
 	config
@@ -6103,6 +6578,276 @@ func (c *LoginEventClient) mutate(ctx context.Context, m *LoginEventMutation) (V
 	}
 }
 
+// MediaAssetClient is a client for the MediaAsset schema.
+type MediaAssetClient struct {
+	config
+}
+
+// NewMediaAssetClient returns a client for the MediaAsset from the given config.
+func NewMediaAssetClient(c config) *MediaAssetClient {
+	return &MediaAssetClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `mediaasset.Hooks(f(g(h())))`.
+func (c *MediaAssetClient) Use(hooks ...Hook) {
+	c.hooks.MediaAsset = append(c.hooks.MediaAsset, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `mediaasset.Intercept(f(g(h())))`.
+func (c *MediaAssetClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MediaAsset = append(c.inters.MediaAsset, interceptors...)
+}
+
+// Create returns a builder for creating a MediaAsset entity.
+func (c *MediaAssetClient) Create() *MediaAssetCreate {
+	mutation := newMediaAssetMutation(c.config, OpCreate)
+	return &MediaAssetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MediaAsset entities.
+func (c *MediaAssetClient) CreateBulk(builders ...*MediaAssetCreate) *MediaAssetCreateBulk {
+	return &MediaAssetCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MediaAssetClient) MapCreateBulk(slice any, setFunc func(*MediaAssetCreate, int)) *MediaAssetCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MediaAssetCreateBulk{err: fmt.Errorf("calling to MediaAssetClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MediaAssetCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MediaAssetCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MediaAsset.
+func (c *MediaAssetClient) Update() *MediaAssetUpdate {
+	mutation := newMediaAssetMutation(c.config, OpUpdate)
+	return &MediaAssetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MediaAssetClient) UpdateOne(_m *MediaAsset) *MediaAssetUpdateOne {
+	mutation := newMediaAssetMutation(c.config, OpUpdateOne, withMediaAsset(_m))
+	return &MediaAssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MediaAssetClient) UpdateOneID(id uuid.UUID) *MediaAssetUpdateOne {
+	mutation := newMediaAssetMutation(c.config, OpUpdateOne, withMediaAssetID(id))
+	return &MediaAssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MediaAsset.
+func (c *MediaAssetClient) Delete() *MediaAssetDelete {
+	mutation := newMediaAssetMutation(c.config, OpDelete)
+	return &MediaAssetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MediaAssetClient) DeleteOne(_m *MediaAsset) *MediaAssetDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MediaAssetClient) DeleteOneID(id uuid.UUID) *MediaAssetDeleteOne {
+	builder := c.Delete().Where(mediaasset.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MediaAssetDeleteOne{builder}
+}
+
+// Query returns a query builder for MediaAsset.
+func (c *MediaAssetClient) Query() *MediaAssetQuery {
+	return &MediaAssetQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMediaAsset},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MediaAsset entity by its id.
+func (c *MediaAssetClient) Get(ctx context.Context, id uuid.UUID) (*MediaAsset, error) {
+	return c.Query().Where(mediaasset.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MediaAssetClient) GetX(ctx context.Context, id uuid.UUID) *MediaAsset {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *MediaAssetClient) Hooks() []Hook {
+	hooks := c.hooks.MediaAsset
+	return append(hooks[:len(hooks):len(hooks)], mediaasset.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *MediaAssetClient) Interceptors() []Interceptor {
+	inters := c.inters.MediaAsset
+	return append(inters[:len(inters):len(inters)], mediaasset.Interceptors[:]...)
+}
+
+func (c *MediaAssetClient) mutate(ctx context.Context, m *MediaAssetMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MediaAssetCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MediaAssetUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MediaAssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MediaAssetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MediaAsset mutation op: %q", m.Op())
+	}
+}
+
+// MediaUsageClient is a client for the MediaUsage schema.
+type MediaUsageClient struct {
+	config
+}
+
+// NewMediaUsageClient returns a client for the MediaUsage from the given config.
+func NewMediaUsageClient(c config) *MediaUsageClient {
+	return &MediaUsageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `mediausage.Hooks(f(g(h())))`.
+func (c *MediaUsageClient) Use(hooks ...Hook) {
+	c.hooks.MediaUsage = append(c.hooks.MediaUsage, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `mediausage.Intercept(f(g(h())))`.
+func (c *MediaUsageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MediaUsage = append(c.inters.MediaUsage, interceptors...)
+}
+
+// Create returns a builder for creating a MediaUsage entity.
+func (c *MediaUsageClient) Create() *MediaUsageCreate {
+	mutation := newMediaUsageMutation(c.config, OpCreate)
+	return &MediaUsageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MediaUsage entities.
+func (c *MediaUsageClient) CreateBulk(builders ...*MediaUsageCreate) *MediaUsageCreateBulk {
+	return &MediaUsageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MediaUsageClient) MapCreateBulk(slice any, setFunc func(*MediaUsageCreate, int)) *MediaUsageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MediaUsageCreateBulk{err: fmt.Errorf("calling to MediaUsageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MediaUsageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MediaUsageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MediaUsage.
+func (c *MediaUsageClient) Update() *MediaUsageUpdate {
+	mutation := newMediaUsageMutation(c.config, OpUpdate)
+	return &MediaUsageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MediaUsageClient) UpdateOne(_m *MediaUsage) *MediaUsageUpdateOne {
+	mutation := newMediaUsageMutation(c.config, OpUpdateOne, withMediaUsage(_m))
+	return &MediaUsageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MediaUsageClient) UpdateOneID(id uuid.UUID) *MediaUsageUpdateOne {
+	mutation := newMediaUsageMutation(c.config, OpUpdateOne, withMediaUsageID(id))
+	return &MediaUsageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MediaUsage.
+func (c *MediaUsageClient) Delete() *MediaUsageDelete {
+	mutation := newMediaUsageMutation(c.config, OpDelete)
+	return &MediaUsageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MediaUsageClient) DeleteOne(_m *MediaUsage) *MediaUsageDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MediaUsageClient) DeleteOneID(id uuid.UUID) *MediaUsageDeleteOne {
+	builder := c.Delete().Where(mediausage.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MediaUsageDeleteOne{builder}
+}
+
+// Query returns a query builder for MediaUsage.
+func (c *MediaUsageClient) Query() *MediaUsageQuery {
+	return &MediaUsageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMediaUsage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MediaUsage entity by its id.
+func (c *MediaUsageClient) Get(ctx context.Context, id uuid.UUID) (*MediaUsage, error) {
+	return c.Query().Where(mediausage.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MediaUsageClient) GetX(ctx context.Context, id uuid.UUID) *MediaUsage {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *MediaUsageClient) Hooks() []Hook {
+	hooks := c.hooks.MediaUsage
+	return append(hooks[:len(hooks):len(hooks)], mediausage.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *MediaUsageClient) Interceptors() []Interceptor {
+	inters := c.inters.MediaUsage
+	return append(inters[:len(inters):len(inters)], mediausage.Interceptors[:]...)
+}
+
+func (c *MediaUsageClient) mutate(ctx context.Context, m *MediaUsageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MediaUsageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MediaUsageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MediaUsageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MediaUsageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MediaUsage mutation op: %q", m.Op())
+	}
+}
+
 // MiniGameConfigClient is a client for the MiniGameConfig schema.
 type MiniGameConfigClient struct {
 	config
@@ -7045,6 +7790,141 @@ func (c *PeriodicQuestGrantClient) mutate(ctx context.Context, m *PeriodicQuestG
 		return (&PeriodicQuestGrantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown PeriodicQuestGrant mutation op: %q", m.Op())
+	}
+}
+
+// PreviewSessionClient is a client for the PreviewSession schema.
+type PreviewSessionClient struct {
+	config
+}
+
+// NewPreviewSessionClient returns a client for the PreviewSession from the given config.
+func NewPreviewSessionClient(c config) *PreviewSessionClient {
+	return &PreviewSessionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `previewsession.Hooks(f(g(h())))`.
+func (c *PreviewSessionClient) Use(hooks ...Hook) {
+	c.hooks.PreviewSession = append(c.hooks.PreviewSession, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `previewsession.Intercept(f(g(h())))`.
+func (c *PreviewSessionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PreviewSession = append(c.inters.PreviewSession, interceptors...)
+}
+
+// Create returns a builder for creating a PreviewSession entity.
+func (c *PreviewSessionClient) Create() *PreviewSessionCreate {
+	mutation := newPreviewSessionMutation(c.config, OpCreate)
+	return &PreviewSessionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PreviewSession entities.
+func (c *PreviewSessionClient) CreateBulk(builders ...*PreviewSessionCreate) *PreviewSessionCreateBulk {
+	return &PreviewSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PreviewSessionClient) MapCreateBulk(slice any, setFunc func(*PreviewSessionCreate, int)) *PreviewSessionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PreviewSessionCreateBulk{err: fmt.Errorf("calling to PreviewSessionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PreviewSessionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PreviewSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PreviewSession.
+func (c *PreviewSessionClient) Update() *PreviewSessionUpdate {
+	mutation := newPreviewSessionMutation(c.config, OpUpdate)
+	return &PreviewSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PreviewSessionClient) UpdateOne(_m *PreviewSession) *PreviewSessionUpdateOne {
+	mutation := newPreviewSessionMutation(c.config, OpUpdateOne, withPreviewSession(_m))
+	return &PreviewSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PreviewSessionClient) UpdateOneID(id uuid.UUID) *PreviewSessionUpdateOne {
+	mutation := newPreviewSessionMutation(c.config, OpUpdateOne, withPreviewSessionID(id))
+	return &PreviewSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PreviewSession.
+func (c *PreviewSessionClient) Delete() *PreviewSessionDelete {
+	mutation := newPreviewSessionMutation(c.config, OpDelete)
+	return &PreviewSessionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PreviewSessionClient) DeleteOne(_m *PreviewSession) *PreviewSessionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PreviewSessionClient) DeleteOneID(id uuid.UUID) *PreviewSessionDeleteOne {
+	builder := c.Delete().Where(previewsession.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PreviewSessionDeleteOne{builder}
+}
+
+// Query returns a query builder for PreviewSession.
+func (c *PreviewSessionClient) Query() *PreviewSessionQuery {
+	return &PreviewSessionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePreviewSession},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PreviewSession entity by its id.
+func (c *PreviewSessionClient) Get(ctx context.Context, id uuid.UUID) (*PreviewSession, error) {
+	return c.Query().Where(previewsession.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PreviewSessionClient) GetX(ctx context.Context, id uuid.UUID) *PreviewSession {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PreviewSessionClient) Hooks() []Hook {
+	hooks := c.hooks.PreviewSession
+	return append(hooks[:len(hooks):len(hooks)], previewsession.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PreviewSessionClient) Interceptors() []Interceptor {
+	inters := c.inters.PreviewSession
+	return append(inters[:len(inters):len(inters)], previewsession.Interceptors[:]...)
+}
+
+func (c *PreviewSessionClient) mutate(ctx context.Context, m *PreviewSessionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PreviewSessionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PreviewSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PreviewSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PreviewSessionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PreviewSession mutation op: %q", m.Op())
 	}
 }
 
@@ -7992,6 +8872,141 @@ func (c *QuestVersionClient) mutate(ctx context.Context, m *QuestVersionMutation
 	}
 }
 
+// RenderJobClient is a client for the RenderJob schema.
+type RenderJobClient struct {
+	config
+}
+
+// NewRenderJobClient returns a client for the RenderJob from the given config.
+func NewRenderJobClient(c config) *RenderJobClient {
+	return &RenderJobClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `renderjob.Hooks(f(g(h())))`.
+func (c *RenderJobClient) Use(hooks ...Hook) {
+	c.hooks.RenderJob = append(c.hooks.RenderJob, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `renderjob.Intercept(f(g(h())))`.
+func (c *RenderJobClient) Intercept(interceptors ...Interceptor) {
+	c.inters.RenderJob = append(c.inters.RenderJob, interceptors...)
+}
+
+// Create returns a builder for creating a RenderJob entity.
+func (c *RenderJobClient) Create() *RenderJobCreate {
+	mutation := newRenderJobMutation(c.config, OpCreate)
+	return &RenderJobCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of RenderJob entities.
+func (c *RenderJobClient) CreateBulk(builders ...*RenderJobCreate) *RenderJobCreateBulk {
+	return &RenderJobCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RenderJobClient) MapCreateBulk(slice any, setFunc func(*RenderJobCreate, int)) *RenderJobCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RenderJobCreateBulk{err: fmt.Errorf("calling to RenderJobClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RenderJobCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RenderJobCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for RenderJob.
+func (c *RenderJobClient) Update() *RenderJobUpdate {
+	mutation := newRenderJobMutation(c.config, OpUpdate)
+	return &RenderJobUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RenderJobClient) UpdateOne(_m *RenderJob) *RenderJobUpdateOne {
+	mutation := newRenderJobMutation(c.config, OpUpdateOne, withRenderJob(_m))
+	return &RenderJobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RenderJobClient) UpdateOneID(id uuid.UUID) *RenderJobUpdateOne {
+	mutation := newRenderJobMutation(c.config, OpUpdateOne, withRenderJobID(id))
+	return &RenderJobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RenderJob.
+func (c *RenderJobClient) Delete() *RenderJobDelete {
+	mutation := newRenderJobMutation(c.config, OpDelete)
+	return &RenderJobDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RenderJobClient) DeleteOne(_m *RenderJob) *RenderJobDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RenderJobClient) DeleteOneID(id uuid.UUID) *RenderJobDeleteOne {
+	builder := c.Delete().Where(renderjob.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RenderJobDeleteOne{builder}
+}
+
+// Query returns a query builder for RenderJob.
+func (c *RenderJobClient) Query() *RenderJobQuery {
+	return &RenderJobQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRenderJob},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a RenderJob entity by its id.
+func (c *RenderJobClient) Get(ctx context.Context, id uuid.UUID) (*RenderJob, error) {
+	return c.Query().Where(renderjob.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RenderJobClient) GetX(ctx context.Context, id uuid.UUID) *RenderJob {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *RenderJobClient) Hooks() []Hook {
+	hooks := c.hooks.RenderJob
+	return append(hooks[:len(hooks):len(hooks)], renderjob.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *RenderJobClient) Interceptors() []Interceptor {
+	inters := c.inters.RenderJob
+	return append(inters[:len(inters):len(inters)], renderjob.Interceptors[:]...)
+}
+
+func (c *RenderJobClient) mutate(ctx context.Context, m *RenderJobMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RenderJobCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RenderJobUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RenderJobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RenderJobDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown RenderJob mutation op: %q", m.Op())
+	}
+}
+
 // RewardGrantClient is a client for the RewardGrant schema.
 type RewardGrantClient struct {
 	config
@@ -8394,6 +9409,141 @@ func (c *RewardRuleVersionClient) mutate(ctx context.Context, m *RewardRuleVersi
 		return (&RewardRuleVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown RewardRuleVersion mutation op: %q", m.Op())
+	}
+}
+
+// ScheduledPublicationClient is a client for the ScheduledPublication schema.
+type ScheduledPublicationClient struct {
+	config
+}
+
+// NewScheduledPublicationClient returns a client for the ScheduledPublication from the given config.
+func NewScheduledPublicationClient(c config) *ScheduledPublicationClient {
+	return &ScheduledPublicationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `scheduledpublication.Hooks(f(g(h())))`.
+func (c *ScheduledPublicationClient) Use(hooks ...Hook) {
+	c.hooks.ScheduledPublication = append(c.hooks.ScheduledPublication, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `scheduledpublication.Intercept(f(g(h())))`.
+func (c *ScheduledPublicationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ScheduledPublication = append(c.inters.ScheduledPublication, interceptors...)
+}
+
+// Create returns a builder for creating a ScheduledPublication entity.
+func (c *ScheduledPublicationClient) Create() *ScheduledPublicationCreate {
+	mutation := newScheduledPublicationMutation(c.config, OpCreate)
+	return &ScheduledPublicationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ScheduledPublication entities.
+func (c *ScheduledPublicationClient) CreateBulk(builders ...*ScheduledPublicationCreate) *ScheduledPublicationCreateBulk {
+	return &ScheduledPublicationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ScheduledPublicationClient) MapCreateBulk(slice any, setFunc func(*ScheduledPublicationCreate, int)) *ScheduledPublicationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ScheduledPublicationCreateBulk{err: fmt.Errorf("calling to ScheduledPublicationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ScheduledPublicationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ScheduledPublicationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ScheduledPublication.
+func (c *ScheduledPublicationClient) Update() *ScheduledPublicationUpdate {
+	mutation := newScheduledPublicationMutation(c.config, OpUpdate)
+	return &ScheduledPublicationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ScheduledPublicationClient) UpdateOne(_m *ScheduledPublication) *ScheduledPublicationUpdateOne {
+	mutation := newScheduledPublicationMutation(c.config, OpUpdateOne, withScheduledPublication(_m))
+	return &ScheduledPublicationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ScheduledPublicationClient) UpdateOneID(id uuid.UUID) *ScheduledPublicationUpdateOne {
+	mutation := newScheduledPublicationMutation(c.config, OpUpdateOne, withScheduledPublicationID(id))
+	return &ScheduledPublicationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ScheduledPublication.
+func (c *ScheduledPublicationClient) Delete() *ScheduledPublicationDelete {
+	mutation := newScheduledPublicationMutation(c.config, OpDelete)
+	return &ScheduledPublicationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ScheduledPublicationClient) DeleteOne(_m *ScheduledPublication) *ScheduledPublicationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ScheduledPublicationClient) DeleteOneID(id uuid.UUID) *ScheduledPublicationDeleteOne {
+	builder := c.Delete().Where(scheduledpublication.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ScheduledPublicationDeleteOne{builder}
+}
+
+// Query returns a query builder for ScheduledPublication.
+func (c *ScheduledPublicationClient) Query() *ScheduledPublicationQuery {
+	return &ScheduledPublicationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeScheduledPublication},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ScheduledPublication entity by its id.
+func (c *ScheduledPublicationClient) Get(ctx context.Context, id uuid.UUID) (*ScheduledPublication, error) {
+	return c.Query().Where(scheduledpublication.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ScheduledPublicationClient) GetX(ctx context.Context, id uuid.UUID) *ScheduledPublication {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ScheduledPublicationClient) Hooks() []Hook {
+	hooks := c.hooks.ScheduledPublication
+	return append(hooks[:len(hooks):len(hooks)], scheduledpublication.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ScheduledPublicationClient) Interceptors() []Interceptor {
+	inters := c.inters.ScheduledPublication
+	return append(inters[:len(inters):len(inters)], scheduledpublication.Interceptors[:]...)
+}
+
+func (c *ScheduledPublicationClient) mutate(ctx context.Context, m *ScheduledPublicationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ScheduledPublicationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ScheduledPublicationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ScheduledPublicationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ScheduledPublicationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ScheduledPublication mutation op: %q", m.Op())
 	}
 }
 
@@ -10967,18 +12117,20 @@ type (
 	hooks struct {
 		Achievement, AchievementProgressEvent, AchievementVersion, AvatarPreset,
 		Challenge, ChallengeAttempt, ChallengeVersion, CharacterCatalog,
-		CharacterCatalogVersion, Collection, CollectionItem, CollectionProgress,
-		CollectionVersion, CommunityGoal, CommunityGoalContribution,
-		CommunityGoalProgress, ContentRelease, Currency, CurrencyLedgerEntry,
-		EconomyAdjustment, Event, EventParticipation, EventPointEntry, EventRun,
-		EventTemplate, EventTemplateVersion, EventVersion, ExplorationProgress,
-		GameProfile, GameSession, InventoryItem, ItemDefinition, ItemDefinitionVersion,
+		CharacterCatalogVersion, ClientManifest, Collection, CollectionItem,
+		CollectionProgress, CollectionVersion, CommunityGoal,
+		CommunityGoalContribution, CommunityGoalProgress, ContentRelease, Currency,
+		CurrencyLedgerEntry, EconomyAdjustment, Event, EventParticipation,
+		EventPointEntry, EventRun, EventTemplate, EventTemplateVersion, EventVersion,
+		ExplorationProgress, GameConfigItem, GameConfigVersion, GameProfile,
+		GameSession, InventoryItem, ItemDefinition, ItemDefinitionVersion,
 		ItemLedgerEntry, LevelDefinition, LevelHistory, LevelSession, LevelVersion,
-		LoginEvent, MiniGameConfig, MiniGameConfigVersion, MiniGamePlay,
-		NicknameChange, NpcDialogue, NpcDialogueVersion, PeriodicQuestGrant,
-		ProgressionCurve, ProgressionCurveVersion, ProgressionLevel, QuestDefinition,
-		QuestProgress, QuestStepAttempt, QuestVersion, RewardGrant, RewardRule,
-		RewardRuleVersion, SeasonPointEntry, SeasonTrack, SeasonTrackProgress,
+		LoginEvent, MediaAsset, MediaUsage, MiniGameConfig, MiniGameConfigVersion,
+		MiniGamePlay, NicknameChange, NpcDialogue, NpcDialogueVersion,
+		PeriodicQuestGrant, PreviewSession, ProgressionCurve, ProgressionCurveVersion,
+		ProgressionLevel, QuestDefinition, QuestProgress, QuestStepAttempt,
+		QuestVersion, RenderJob, RewardGrant, RewardRule, RewardRuleVersion,
+		ScheduledPublication, SeasonPointEntry, SeasonTrack, SeasonTrackProgress,
 		SeasonTrackVersion, ShopItem, ShopItemVersion, ShopPurchase, StoryChapter,
 		StoryChapterVersion, StoryProgress, StudentAchievement,
 		TenantResourceAssignment, Wallet, WorldArea, WorldAreaUnlock, WorldAreaVersion,
@@ -10987,18 +12139,20 @@ type (
 	inters struct {
 		Achievement, AchievementProgressEvent, AchievementVersion, AvatarPreset,
 		Challenge, ChallengeAttempt, ChallengeVersion, CharacterCatalog,
-		CharacterCatalogVersion, Collection, CollectionItem, CollectionProgress,
-		CollectionVersion, CommunityGoal, CommunityGoalContribution,
-		CommunityGoalProgress, ContentRelease, Currency, CurrencyLedgerEntry,
-		EconomyAdjustment, Event, EventParticipation, EventPointEntry, EventRun,
-		EventTemplate, EventTemplateVersion, EventVersion, ExplorationProgress,
-		GameProfile, GameSession, InventoryItem, ItemDefinition, ItemDefinitionVersion,
+		CharacterCatalogVersion, ClientManifest, Collection, CollectionItem,
+		CollectionProgress, CollectionVersion, CommunityGoal,
+		CommunityGoalContribution, CommunityGoalProgress, ContentRelease, Currency,
+		CurrencyLedgerEntry, EconomyAdjustment, Event, EventParticipation,
+		EventPointEntry, EventRun, EventTemplate, EventTemplateVersion, EventVersion,
+		ExplorationProgress, GameConfigItem, GameConfigVersion, GameProfile,
+		GameSession, InventoryItem, ItemDefinition, ItemDefinitionVersion,
 		ItemLedgerEntry, LevelDefinition, LevelHistory, LevelSession, LevelVersion,
-		LoginEvent, MiniGameConfig, MiniGameConfigVersion, MiniGamePlay,
-		NicknameChange, NpcDialogue, NpcDialogueVersion, PeriodicQuestGrant,
-		ProgressionCurve, ProgressionCurveVersion, ProgressionLevel, QuestDefinition,
-		QuestProgress, QuestStepAttempt, QuestVersion, RewardGrant, RewardRule,
-		RewardRuleVersion, SeasonPointEntry, SeasonTrack, SeasonTrackProgress,
+		LoginEvent, MediaAsset, MediaUsage, MiniGameConfig, MiniGameConfigVersion,
+		MiniGamePlay, NicknameChange, NpcDialogue, NpcDialogueVersion,
+		PeriodicQuestGrant, PreviewSession, ProgressionCurve, ProgressionCurveVersion,
+		ProgressionLevel, QuestDefinition, QuestProgress, QuestStepAttempt,
+		QuestVersion, RenderJob, RewardGrant, RewardRule, RewardRuleVersion,
+		ScheduledPublication, SeasonPointEntry, SeasonTrack, SeasonTrackProgress,
 		SeasonTrackVersion, ShopItem, ShopItemVersion, ShopPurchase, StoryChapter,
 		StoryChapterVersion, StoryProgress, StudentAchievement,
 		TenantResourceAssignment, Wallet, WorldArea, WorldAreaUnlock, WorldAreaVersion,
@@ -11018,6 +12172,7 @@ var (
 		ChallengeVersion:          tableSchemas[0],
 		CharacterCatalog:          tableSchemas[0],
 		CharacterCatalogVersion:   tableSchemas[0],
+		ClientManifest:            tableSchemas[0],
 		Collection:                tableSchemas[1],
 		CollectionItem:            tableSchemas[1],
 		CollectionProgress:        tableSchemas[1],
@@ -11037,6 +12192,8 @@ var (
 		EventTemplateVersion:      tableSchemas[0],
 		EventVersion:              tableSchemas[0],
 		ExplorationProgress:       tableSchemas[0],
+		GameConfigItem:            tableSchemas[0],
+		GameConfigVersion:         tableSchemas[0],
 		GameProfile:               tableSchemas[0],
 		GameSession:               tableSchemas[0],
 		InventoryItem:             tableSchemas[0],
@@ -11048,6 +12205,8 @@ var (
 		LevelSession:              tableSchemas[0],
 		LevelVersion:              tableSchemas[0],
 		LoginEvent:                tableSchemas[0],
+		MediaAsset:                tableSchemas[0],
+		MediaUsage:                tableSchemas[0],
 		MiniGameConfig:            tableSchemas[0],
 		MiniGameConfigVersion:     tableSchemas[0],
 		MiniGamePlay:              tableSchemas[0],
@@ -11055,6 +12214,7 @@ var (
 		NpcDialogue:               tableSchemas[0],
 		NpcDialogueVersion:        tableSchemas[0],
 		PeriodicQuestGrant:        tableSchemas[0],
+		PreviewSession:            tableSchemas[0],
 		ProgressionCurve:          tableSchemas[0],
 		ProgressionCurveVersion:   tableSchemas[0],
 		ProgressionLevel:          tableSchemas[0],
@@ -11062,9 +12222,11 @@ var (
 		QuestProgress:             tableSchemas[0],
 		QuestStepAttempt:          tableSchemas[0],
 		QuestVersion:              tableSchemas[0],
+		RenderJob:                 tableSchemas[0],
 		RewardGrant:               tableSchemas[1],
 		RewardRule:                tableSchemas[1],
 		RewardRuleVersion:         tableSchemas[1],
+		ScheduledPublication:      tableSchemas[0],
 		SeasonPointEntry:          tableSchemas[0],
 		SeasonTrack:               tableSchemas[0],
 		SeasonTrackProgress:       tableSchemas[0],

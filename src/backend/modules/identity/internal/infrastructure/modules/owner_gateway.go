@@ -38,6 +38,13 @@ type LearningMergeOps interface {
 	MergeUserData(ctx context.Context, req learningapi.MergeUserDataRequestObject) (learningapi.MergeUserDataResponseObject, error)
 }
 
+// GameAssignmentOps are the tenant assignment operations of module game (F078-AC-21).
+type GameAssignmentOps interface {
+	ApplyTenantAssignments(ctx context.Context, req gameapi.ApplyTenantAssignmentsRequestObject) (gameapi.ApplyTenantAssignmentsResponseObject, error)
+	RevokeTenantAssignments(ctx context.Context, req gameapi.RevokeTenantAssignmentsRequestObject) (gameapi.RevokeTenantAssignmentsResponseObject, error)
+	ListResourceAssignments(ctx context.Context, req gameapi.ListResourceAssignmentsRequestObject) (gameapi.ListResourceAssignmentsResponseObject, error)
+}
+
 // CompetitionMergeOps is mergeUserData of module competition (F100 T042, OQ F016-2, F045-3).
 type CompetitionMergeOps interface {
 	MergeUserData(ctx context.Context, req competitionapi.MergeUserDataRequestObject) (competitionapi.MergeUserDataResponseObject, error)
@@ -55,6 +62,8 @@ type Gateway struct {
 	Learning      LearningPlatformOps
 	LearningMerge LearningMergeOps
 	GameMerge     GameMergeOps
+	// GameAssign are the tenant assignments of the game resources (F078).
+	GameAssign GameAssignmentOps
 	// CompetitionMerge is mergeUserData of module competition (F100 T042).
 	CompetitionMerge CompetitionMergeOps
 	// Deadlines override module_call_deadline per kind (configuration, tests); zero = modcall defaults.
@@ -65,6 +74,20 @@ var _ port.OwnerServiceGateway = Gateway{}
 
 func notWired(module, op string) error {
 	return problem.New(problem.Unavailable, "").Retry().Wrap(fmt.Errorf("module %s does not serve %s in this binary", module, op))
+}
+
+func (g Gateway) gameOp(op string, kind modcall.Kind) modcall.Op {
+	return modcall.Op{Caller: caller, Callee: "game", Operation: op, Kind: kind, Deadline: g.Deadlines[kind],
+		AllowedCallers: gameapi.AllowedCallers[op], ContextRequired: gameapi.ContextRequired[op]}
+}
+
+func gameAssignments(l gameapi.CommonInternalCommonV1TenantAssignmentList) []port.ResourceAssignment {
+	out := make([]port.ResourceAssignment, 0, len(l.Data))
+	for _, a := range l.Data {
+		out = append(out, port.ResourceAssignment{AssignmentID: a.AssignmentId, ResourceType: string(a.ResourceType), ResourceID: a.ResourceId,
+			TenantID: a.TenantId, AssignedBy: a.AssignedBy, AssignedAt: a.AssignedAt, Active: a.Status == "active"})
+	}
+	return out
 }
 
 func (g Gateway) learningOp(op string, kind modcall.Kind) modcall.Op {
@@ -167,6 +190,20 @@ func assignments(list learningapi.CommonInternalCommonV1TenantAssignmentList) []
 
 // ApplyAssignments implements port.OwnerServiceGateway.
 func (g Gateway) ApplyAssignments(ctx context.Context, module, resourceType string, id uuid.UUID, tenants []uuid.UUID) ([]port.ResourceAssignment, error) {
+	if module == "game" && g.GameAssign != nil {
+		res, err := call(ctx, g.gameOp("applyTenantAssignments", modcall.Write), func(ctx context.Context) (gameapi.ApplyTenantAssignmentsResponseObject, error) {
+			return g.GameAssign.ApplyTenantAssignments(ctx, gameapi.ApplyTenantAssignmentsRequestObject{Body: &gameapi.ApplyTenantAssignmentsJSONRequestBody{
+				ResourceType: gameapi.CommonInternalCommonV1ResourceType(resourceType), ResourceId: id, TenantIds: tenants}})
+		})
+		if err != nil {
+			return nil, err
+		}
+		list, ok := res.(gameapi.ApplyTenantAssignments200JSONResponse)
+		if !ok {
+			return nil, unexpected(module, "applyTenantAssignments", res)
+		}
+		return gameAssignments(gameapi.CommonInternalCommonV1TenantAssignmentList(list)), nil
+	}
 	if module != "learning" || g.Learning == nil {
 		return nil, notWired(module, "applyTenantAssignments")
 	}
@@ -186,6 +223,20 @@ func (g Gateway) ApplyAssignments(ctx context.Context, module, resourceType stri
 
 // RevokeAssignments implements port.OwnerServiceGateway.
 func (g Gateway) RevokeAssignments(ctx context.Context, module, resourceType string, id uuid.UUID, tenants []uuid.UUID, reason string) ([]port.ResourceAssignment, error) {
+	if module == "game" && g.GameAssign != nil {
+		res, err := call(ctx, g.gameOp("revokeTenantAssignments", modcall.Write), func(ctx context.Context) (gameapi.RevokeTenantAssignmentsResponseObject, error) {
+			return g.GameAssign.RevokeTenantAssignments(ctx, gameapi.RevokeTenantAssignmentsRequestObject{Body: &gameapi.RevokeTenantAssignmentsJSONRequestBody{
+				ResourceType: gameapi.CommonInternalCommonV1ResourceType(resourceType), ResourceId: id, TenantIds: tenants, Reason: reason}})
+		})
+		if err != nil {
+			return nil, err
+		}
+		list, ok := res.(gameapi.RevokeTenantAssignments200JSONResponse)
+		if !ok {
+			return nil, unexpected(module, "revokeTenantAssignments", res)
+		}
+		return gameAssignments(gameapi.CommonInternalCommonV1TenantAssignmentList(list)), nil
+	}
 	if module != "learning" || g.Learning == nil {
 		return nil, notWired(module, "revokeTenantAssignments")
 	}
@@ -205,6 +256,27 @@ func (g Gateway) RevokeAssignments(ctx context.Context, module, resourceType str
 
 // ListAssignments implements port.OwnerServiceGateway.
 func (g Gateway) ListAssignments(ctx context.Context, module, resourceType string, id uuid.UUID, cursor string, limit int) (port.AssignmentPage, error) {
+	if module == "game" && g.GameAssign != nil {
+		params := gameapi.ListResourceAssignmentsParams{ResourceType: gameapi.CommonInternalCommonV1ResourceType(resourceType), ResourceId: id}
+		if cursor != "" {
+			params.Cursor = &cursor
+		}
+		if limit > 0 {
+			params.Limit = &limit
+		}
+		res, err := call(ctx, g.gameOp("listResourceAssignments", modcall.Read), func(ctx context.Context) (gameapi.ListResourceAssignmentsResponseObject, error) {
+			return g.GameAssign.ListResourceAssignments(ctx, gameapi.ListResourceAssignmentsRequestObject{Params: params})
+		})
+		if err != nil {
+			return port.AssignmentPage{}, err
+		}
+		list, ok := res.(gameapi.ListResourceAssignments200JSONResponse)
+		if !ok {
+			return port.AssignmentPage{}, unexpected(module, "listResourceAssignments", res)
+		}
+		l := gameapi.CommonInternalCommonV1TenantAssignmentList(list)
+		return port.AssignmentPage{Data: gameAssignments(l), HasMore: l.Page.HasMore, NextCursor: l.Page.NextCursor}, nil
+	}
 	if module != "learning" || g.Learning == nil {
 		return port.AssignmentPage{}, notWired(module, "listResourceAssignments")
 	}

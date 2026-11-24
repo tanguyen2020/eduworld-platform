@@ -117,6 +117,18 @@ func (f CharacterCatalogVersionFunc) Mutate(ctx context.Context, m ent.Mutation)
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CharacterCatalogVersionMutation", m)
 }
 
+// The ClientManifestFunc type is an adapter to allow the use of ordinary
+// function as ClientManifest mutator.
+type ClientManifestFunc func(context.Context, *ent.ClientManifestMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ClientManifestFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ClientManifestMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ClientManifestMutation", m)
+}
+
 // The CollectionFunc type is an adapter to allow the use of ordinary
 // function as Collection mutator.
 type CollectionFunc func(context.Context, *ent.CollectionMutation) (ent.Value, error)
@@ -345,6 +357,30 @@ func (f ExplorationProgressFunc) Mutate(ctx context.Context, m ent.Mutation) (en
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ExplorationProgressMutation", m)
 }
 
+// The GameConfigItemFunc type is an adapter to allow the use of ordinary
+// function as GameConfigItem mutator.
+type GameConfigItemFunc func(context.Context, *ent.GameConfigItemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GameConfigItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GameConfigItemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GameConfigItemMutation", m)
+}
+
+// The GameConfigVersionFunc type is an adapter to allow the use of ordinary
+// function as GameConfigVersion mutator.
+type GameConfigVersionFunc func(context.Context, *ent.GameConfigVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GameConfigVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GameConfigVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GameConfigVersionMutation", m)
+}
+
 // The GameProfileFunc type is an adapter to allow the use of ordinary
 // function as GameProfile mutator.
 type GameProfileFunc func(context.Context, *ent.GameProfileMutation) (ent.Value, error)
@@ -477,6 +513,30 @@ func (f LoginEventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LoginEventMutation", m)
 }
 
+// The MediaAssetFunc type is an adapter to allow the use of ordinary
+// function as MediaAsset mutator.
+type MediaAssetFunc func(context.Context, *ent.MediaAssetMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MediaAssetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MediaAssetMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MediaAssetMutation", m)
+}
+
+// The MediaUsageFunc type is an adapter to allow the use of ordinary
+// function as MediaUsage mutator.
+type MediaUsageFunc func(context.Context, *ent.MediaUsageMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MediaUsageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MediaUsageMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MediaUsageMutation", m)
+}
+
 // The MiniGameConfigFunc type is an adapter to allow the use of ordinary
 // function as MiniGameConfig mutator.
 type MiniGameConfigFunc func(context.Context, *ent.MiniGameConfigMutation) (ent.Value, error)
@@ -559,6 +619,18 @@ func (f PeriodicQuestGrantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PeriodicQuestGrantMutation", m)
+}
+
+// The PreviewSessionFunc type is an adapter to allow the use of ordinary
+// function as PreviewSession mutator.
+type PreviewSessionFunc func(context.Context, *ent.PreviewSessionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PreviewSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PreviewSessionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PreviewSessionMutation", m)
 }
 
 // The ProgressionCurveFunc type is an adapter to allow the use of ordinary
@@ -645,6 +717,18 @@ func (f QuestVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestVersionMutation", m)
 }
 
+// The RenderJobFunc type is an adapter to allow the use of ordinary
+// function as RenderJob mutator.
+type RenderJobFunc func(context.Context, *ent.RenderJobMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RenderJobFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RenderJobMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RenderJobMutation", m)
+}
+
 // The RewardGrantFunc type is an adapter to allow the use of ordinary
 // function as RewardGrant mutator.
 type RewardGrantFunc func(context.Context, *ent.RewardGrantMutation) (ent.Value, error)
@@ -679,6 +763,18 @@ func (f RewardRuleVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RewardRuleVersionMutation", m)
+}
+
+// The ScheduledPublicationFunc type is an adapter to allow the use of ordinary
+// function as ScheduledPublication mutator.
+type ScheduledPublicationFunc func(context.Context, *ent.ScheduledPublicationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ScheduledPublicationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ScheduledPublicationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ScheduledPublicationMutation", m)
 }
 
 // The SeasonPointEntryFunc type is an adapter to allow the use of ordinary

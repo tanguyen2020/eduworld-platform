@@ -14,6 +14,8 @@ import (
 // Facade serves the student lifecycle operations of module game (F016).
 type Facade struct {
 	Lifecycle command.StudentLifecycle
+	// GameAdmin serves the tenant assignments (identity) and the school catalog (learning) of F078.
+	GameAdmin
 }
 
 // CleanupStudentData implements gameapi.StrictServerInterface (x-allowed-callers: identity).

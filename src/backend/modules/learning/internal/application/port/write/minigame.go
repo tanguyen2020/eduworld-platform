@@ -2,6 +2,7 @@ package write
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -13,6 +14,8 @@ import (
 // existing version is never changed (applied = false).
 type MinigameConfigProjector interface {
 	InsertMinigameConfigVersion(ctx context.Context, v dto.MinigameConfigVersion) (bool, error)
+	// SetMinigamePointer moves the release pointer of a config (nil = withdrawn) unless a newer event already did (F078).
+	SetMinigamePointer(ctx context.Context, configID uuid.UUID, versionID *uuid.UUID, sourceVersion int64, at time.Time) (bool, error)
 }
 
 // MinigameConfigs reads the projection ref.minigame_config_versions in the transaction of ctx (attempt engine, activity

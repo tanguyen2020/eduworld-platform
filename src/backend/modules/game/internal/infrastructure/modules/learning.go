@@ -19,6 +19,7 @@ type LearningFacade interface {
 	CreateAttempt(ctx context.Context, req learningapi.CreateAttemptRequestObject) (learningapi.CreateAttemptResponseObject, error)
 	GetAttemptResult(ctx context.Context, req learningapi.GetAttemptResultRequestObject) (learningapi.GetAttemptResultResponseObject, error)
 	ValidateMinigameQuestionSource(ctx context.Context, req learningapi.ValidateMinigameQuestionSourceRequestObject) (learningapi.ValidateMinigameQuestionSourceResponseObject, error)
+	CheckPublishedLearningContent(ctx context.Context, req learningapi.CheckPublishedLearningContentRequestObject) (learningapi.CheckPublishedLearningContentResponseObject, error)
 }
 
 // LearningAttempts implements port.LearningAttempts on the learning facade (F072 T001): pkg/modcall gives the span, the

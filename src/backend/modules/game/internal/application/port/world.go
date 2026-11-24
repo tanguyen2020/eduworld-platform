@@ -138,6 +138,8 @@ type WorldRealtime interface {
 type SnapshotCache interface {
 	PutSnapshot(ctx context.Context, key string, payload []byte) error
 	SetCurrent(ctx context.Context, itemType, itemID string, versionID uuid.UUID) error
+	// ClearCurrent removes the pointer of an unpublished item (F078).
+	ClearCurrent(ctx context.Context, itemType, itemID string) error
 }
 
 // HubPosition is where the room host of the hub (F091) last saw a student: area, room and position in metres.

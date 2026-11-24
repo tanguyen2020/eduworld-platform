@@ -121,9 +121,10 @@ func (GameContentRepo) Head(ctx context.Context, itemType, itemID string, parent
 	var current uuid.NullUUID
 	var sha sql.NullString
 	// tenancyguard:ok platform content (G tables, no tenant_id); deleted_at filtered; table names from a closed map
-	err = t.QueryRowContext(ctx, fmt.Sprintf(`SELECT i.latest_version_no + 1, i.current_version_id, v.payload_sha256 FROM %s.%s i
+	err = t.QueryRowContext(ctx, fmt.Sprintf(`SELECT GREATEST(i.latest_version_no, coalesce((SELECT max(c.latest_version_no) FROM game.config_items c
+			WHERE c.item_type = $2 AND c.item_key = i.%s::text AND c.deleted_at IS NULL), 0)) + 1, i.current_version_id, v.payload_sha256 FROM %s.%s i
 		LEFT JOIN %s.%s v ON v.%s = i.current_version_id AND v.deleted_at IS NULL
-		WHERE i.%s::text = $1 AND i.deleted_at IS NULL FOR UPDATE OF i`, ct.sch(), ct.identity, ct.sch(), ct.versions, ct.versionCol, ct.idCol), itemID).
+		WHERE i.%s::text = $1 AND i.deleted_at IS NULL FOR UPDATE OF i`, ct.idCol, ct.sch(), ct.identity, ct.sch(), ct.versions, ct.versionCol, ct.idCol), itemID, itemType).
 		Scan(&h.NextVersionNo, &current, &sha)
 	if err != nil {
 		return h, fmt.Errorf("%s: head: %w", ct.identity, err)
@@ -172,19 +173,14 @@ func (GameContentRepo) Publish(ctx context.Context, v write.ContentVersion) erro
 		vals...); err != nil {
 		return fmt.Errorf("%s: insert: %w", ct.versions, err)
 	}
-	// tenancyguard:ok platform content (G table, no tenant_id); the previous published version is archived, never changed otherwise
-	if _, err := t.ExecContext(ctx, fmt.Sprintf(`UPDATE %s.%s SET status = 'archived', updated_at = $3
-		WHERE %s::text = $1 AND %s <> $2 AND status = 'published' AND deleted_at IS NULL`, ct.sch(), ct.versions, ct.idCol, ct.versionCol),
-		v.ItemID, v.VersionID, v.At); err != nil {
-		return fmt.Errorf("%s: archive: %w", ct.versions, err)
-	}
+	// F078: the previous published version stays published (a rollback target, ADR-0043); only the pointer moves.
 	// tenancyguard:ok platform content (G table, no tenant_id); deleted_at filtered; table names from a closed map
-	if _, err := t.ExecContext(ctx, fmt.Sprintf(`UPDATE %s.%s SET current_version_id = $2, latest_version_no = $3, updated_at = $4,
+	if _, err := t.ExecContext(ctx, fmt.Sprintf(`UPDATE %s.%s SET current_version_id = $2, latest_version_no = GREATEST(latest_version_no, $3), updated_at = $4,
 		updated_by = $5, version = version + 1 WHERE %s::text = $1 AND deleted_at IS NULL`, ct.sch(), ct.identity, ct.idCol),
 		v.ItemID, v.VersionID, v.VersionNo, v.At, v.By); err != nil {
 		return fmt.Errorf("%s: pointer: %w", ct.identity, err)
 	}
-	return nil
+	return consolePublished(ctx, t, v)
 }
 
 // Release implements write.GameContentStore.

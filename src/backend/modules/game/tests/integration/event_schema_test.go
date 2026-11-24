@@ -26,7 +26,10 @@ var gameEventTypes = append(append([]string{}, sessionEventTypes...), "avatar.cr
 	"collection.completed", "achievement.progressed", "achievement.unlocked", "economy.adjusted",
 	"event.scheduled", "event.started", "event.suspended", "event.resumed", "event.ended", "event.cancelled", "event.participation_started",
 	"event.milestone_claimed", "community_goal.milestone_reached", "community_goal.completed", "season_track.tier_reached",
-	"season_track.reward_claimed", "minigame.completed", "challenge.started", "challenge.completed")
+	"season_track.reward_claimed", "minigame.completed", "challenge.started", "challenge.completed",
+	// F078: the console workflow and the game media pipeline.
+	"content.version_submitted", "content.version_approved", "content.version_rejected", "content.version_archived", "content.rolled_back",
+	"content.unpublished", "content.publish_scheduled", "media.uploaded", "media.processed", "media.rejected")
 
 // checkEventSchemas validates every F014 event in the outbox: envelope (specs/events/envelope.schema.json) and payload
 // (specs/events/payloads/game/<type>.v1.schema.json, contract first) — the consumers of identity, learning and the

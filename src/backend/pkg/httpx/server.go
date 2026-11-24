@@ -123,6 +123,7 @@ type Server struct {
 	api      chi.Router
 	log      *slog.Logger
 	ops      map[string]Operation // mounted operations by ID (each at most once)
+	routed   map[string]*routedOp // shared operations dispatched by a path parameter (x-service-routing)
 }
 
 // NewServer builds the server; it registers no route of its own (health endpoints live on the admin port).
@@ -152,7 +153,7 @@ func NewServer(d Deps) (*Server, error) {
 			}
 		}
 	}
-	s := &Server{d: d, verifier: v, log: d.Logger, ops: map[string]Operation{}}
+	s := &Server{d: d, verifier: v, log: d.Logger, ops: map[string]Operation{}, routed: map[string]*routedOp{}}
 	r := chi.NewRouter()
 	for _, m := range d.Middlewares {
 		r.Use(m)
@@ -182,24 +183,36 @@ func (s *Server) Handle(op Operation, h http.Handler) error {
 	if _, dup := s.ops[op.ID]; dup {
 		return fmt.Errorf("httpx: operation %s is already mounted", op.ID)
 	}
+	chain, err := s.chain(op, h)
+	if err != nil {
+		return err
+	}
+	s.api.Method(op.Method, op.Pattern, withOperation(op, chain))
+	s.ops[op.ID] = op
+	return nil
+}
+
+// chain builds the middleware chain of an operation (validation, idempotency, feature gate, guards, principal,
+// tenant, authentication) around h.
+func (s *Server) chain(op Operation, h http.Handler) (http.Handler, error) {
 	if op.Public && effectiveGuard(op) != GuardNone {
-		return fmt.Errorf("httpx: operation %s: a public operation cannot be guarded", op.ID)
+		return nil, fmt.Errorf("httpx: operation %s: a public operation cannot be guarded", op.ID)
 	}
 	chain := h
 	var gate func(http.Handler) http.Handler
 	if s.d.Spec != nil {
 		route, err := specRoute(s.d.Spec, op)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		chain = validate(route, chain)
 		if s.d.FeatureGate != nil {
 			rule, gated, err := s.d.FeatureGate.Bind(route.Operation)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			if gated && op.Public {
-				return fmt.Errorf("httpx: operation %s: a public operation cannot carry x-portal-action", op.ID)
+				return nil, fmt.Errorf("httpx: operation %s: a public operation cannot carry x-portal-action", op.ID)
 			}
 			if gated {
 				gate = s.d.FeatureGate.Middleware(rule, WriteError)
@@ -208,7 +221,7 @@ func (s *Server) Handle(op Operation, h http.Handler) error {
 	}
 	if op.PreValidate != nil {
 		if !op.Public {
-			return fmt.Errorf("httpx: operation %s: PreValidate is for public operations only", op.ID)
+			return nil, fmt.Errorf("httpx: operation %s: PreValidate is for public operations only", op.ID)
 		}
 		chain = op.PreValidate(chain)
 	}
@@ -218,7 +231,7 @@ func (s *Server) Handle(op Operation, h http.Handler) error {
 			store = st
 		}
 		if store == nil || op.Public {
-			return fmt.Errorf("httpx: operation %s is idempotent but the server has no idempotency store (or is public)", op.ID)
+			return nil, fmt.Errorf("httpx: operation %s is idempotent but the server has no idempotency store (or is public)", op.ID)
 		}
 		chain = Idempotency(store, op)(chain)
 	}
@@ -233,9 +246,69 @@ func (s *Server) Handle(op Operation, h http.Handler) error {
 	if !op.Public {
 		chain = s.authenticate(chain)
 	}
-	s.api.Method(op.Method, op.Pattern, withOperation(op, chain))
-	s.ops[op.ID] = op
+	return chain, nil
+}
+
+// routedOp is a shared operation (several modules serve one path, x-service-routing): each module chain serves the
+// values of a path parameter; other values answer 404 NOT_FOUND after authentication.
+type routedOp struct {
+	op     Operation
+	param  string
+	chains map[string]http.Handler
+}
+
+// HandleRouted registers h for the values of a path parameter of a shared operation (e.g. /game-admin/{config_type},
+// served by modules game, competition and chat): the first registration mounts the route, the next ones add their
+// values. Each module keeps its own chain (idempotency store, metric label, caller module); a value nobody serves is
+// 404 NOT_FOUND once the request is authenticated and guarded.
+func (s *Server) HandleRouted(op Operation, param string, values []string, h http.Handler) error {
+	if param == "" || len(values) == 0 {
+		return fmt.Errorf("httpx: routed operation %s needs a parameter and values", op.ID)
+	}
+	r, mounted := s.routed[op.ID]
+	if !mounted {
+		if _, dup := s.ops[op.ID]; dup {
+			return fmt.Errorf("httpx: operation %s is already mounted", op.ID)
+		}
+		if strings.HasPrefix(op.Pattern, "/internal/") || !strings.HasPrefix(op.Pattern, "/") || op.Public {
+			return fmt.Errorf("httpx: routed operation %s needs a guarded public-API pattern", op.ID)
+		}
+		fb, err := s.chain(op, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			WriteError(w, req, problem.New(problem.NotFound, ""))
+		}))
+		if err != nil {
+			return err
+		}
+		r = &routedOp{op: op, param: param, chains: map[string]http.Handler{}}
+		s.api.Method(op.Method, op.Pattern, r.dispatch(withOperation(op, fb)))
+		s.ops[op.ID] = op
+		s.routed[op.ID] = r
+	}
+	if r.param != param || r.op.Method != op.Method || r.op.Pattern != op.Pattern {
+		return fmt.Errorf("httpx: routed operation %s is mounted as %s %s by %s", op.ID, r.op.Method, r.op.Pattern, r.param)
+	}
+	chain, err := s.chain(op, h)
+	if err != nil {
+		return err
+	}
+	for _, v := range values {
+		if _, dup := r.chains[v]; dup {
+			return fmt.Errorf("httpx: routed operation %s: %s=%s is already served", op.ID, param, v)
+		}
+		r.chains[v] = withOperation(op, chain)
+	}
 	return nil
+}
+
+// dispatch serves a routed operation: the chain of the parameter value, else the fallback chain (404 after auth).
+func (r *routedOp) dispatch(fallback http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if c, ok := r.chains[chi.URLParam(req, r.param)]; ok {
+			c.ServeHTTP(w, req)
+			return
+		}
+		fallback.ServeHTTP(w, req)
+	})
 }
 
 // Operations returns the mounted operations sorted by ID (composition-root wiring tests).

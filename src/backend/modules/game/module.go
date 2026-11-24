@@ -5,16 +5,21 @@ package game
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/cache"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/challengeschema"
 	gameconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/economyschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/liveopsschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/messaging"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/minigameschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/challengesql"
@@ -26,10 +31,14 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/worldsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/progressionschema"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/questschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/realtime"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/render"
 	rewardinfra "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/reward"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/room"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/security"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/storage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/consumer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/facade"
 	gamehttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/http"
@@ -39,6 +48,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx"
+	pkgmedia "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/media"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
 	rt "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/realtime"
@@ -59,6 +69,11 @@ type Facade interface {
 	RestoreStudentData(ctx context.Context, req api.RestoreStudentDataRequestObject) (api.RestoreStudentDataResponseObject, error)
 	AnonymizeUserData(ctx context.Context, req api.AnonymizeUserDataRequestObject) (api.AnonymizeUserDataResponseObject, error)
 	MergeUserData(ctx context.Context, req api.MergeUserDataRequestObject) (api.MergeUserDataResponseObject, error)
+	// F078: tenant assignments of game resources (caller identity) and the school catalog (caller learning).
+	ApplyTenantAssignments(ctx context.Context, req api.ApplyTenantAssignmentsRequestObject) (api.ApplyTenantAssignmentsResponseObject, error)
+	RevokeTenantAssignments(ctx context.Context, req api.RevokeTenantAssignmentsRequestObject) (api.RevokeTenantAssignmentsResponseObject, error)
+	ListResourceAssignments(ctx context.Context, req api.ListResourceAssignmentsRequestObject) (api.ListResourceAssignmentsResponseObject, error)
+	ListAssignedGameActivities(ctx context.Context, req api.ListAssignedGameActivitiesRequestObject) (api.ListAssignedGameActivitiesResponseObject, error)
 }
 
 // Imports are the facades module game calls: getHubPosition of module competition (F071 T049, interaction distance of a
@@ -228,8 +243,49 @@ func Register(r *module.Registry) (*Module, error) {
 		Realtime: realtime.ChallengePublisher{C: vk}, Metrics: observability.ChallengeMetrics{}, Config: challengeCfg}
 	challengeRoom := room.Challenges{Registry: rooms, Type: gameconfig.ChallengeRoomType, Expirer: challengeUC}
 	challengeUC.Room = challengeRoom
+	// F078 Game Operations Console: the release core with every type module (the same checks as the seed), the review
+	// workflow, scheduled publications, previews, game media and renders, tenant assignments and the school catalog.
+	adminCfg, err := gameconfig.GameAdminFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
+	observability.RegisterGameAdmin(r.Metrics())
+	kernel := &command.PublishGameContent{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: write.GameContentRepo{}, Content: worldsql.Content{},
+		Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder}, Cache: cache.GameSnapshotCache{C: vk},
+		QuestContent: questsql.Content{}, Quests: &command.QuestPublishRules{Schema: questschema.Validator{},
+			Validator: quest.ValidatorConfig{PassRule: questCfg.PassRule, BlockMaxByBand: questCfg.BlockMax}},
+		Progression: &command.ProgressionPublishRules{CurveSchema: progressionschema.Curve{}, RuleSchema: progressionschema.Rule{},
+			Appliers: rewardinfra.Types(), Levels: write.GameContentRepo{}, Curves: progressionsql.Content{}},
+		Economy: &command.EconomyPublishRules{ItemSchema: economyschema.Item{}, ShopSchema: economyschema.ShopItem{},
+			CollectionSchema: economyschema.Collection{}, AchievementSchema: economyschema.Achievement{}, Appliers: rewardinfra.Types(),
+			Items: economysql.Content{}, CollectionItems: write.GameContentRepo{}},
+		LiveOps: &command.LiveOpsPublishRules{EventSchema: liveopsschema.Event{}, TemplateSchema: liveopsschema.Template{},
+			TrackSchema: liveopsschema.Track{}, Reader: liveopssql.Store{}, Hook: liveOpsUC, Policy: liveCfg.Command.Rules},
+		MiniGames:  &command.MiniGamePublishRules{Schema: minigameschema.Validator{}, Sources: learningLate},
+		Challenges: &command.ChallengePublishRules{Schema: challengeschema.Validator{}, Rules: challengeCfg.Rules, Content: challengesql.Content{}}}
+	adminUC := command.GameAdmin{UoW: core.UoW, Store: write.GameConfigRepo{}, Kernel: kernel, Learning: learningLate,
+		Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder}, Metrics: observability.GameAdminMetrics{}, Policy: adminCfg.Policy}
+	urls := storage.PublicURL{BaseURL: adminCfg.CDNBase}
+	adminQueries := query.GameAdmin{Read: core.ReadSession, Data: read.GameConfigs{}, Cursors: cursors, URLs: urls}
+	mediaUC := command.GameMedia{UoW: core.UoW, Store: write.GameMediaRepo{}, Events: write.Publisher{W: core.Writer},
+		Audit: write.Auditor{R: core.Recorder}, Metrics: observability.GameAdminMetrics{}, RenderBackoff: adminCfg.RenderBackoff,
+		RenderMaxAttempts: adminCfg.RenderMaxAttempts, Batch: gameconfig.GameAdminJobBatch, Queue: render.LazyQueue{Get: r.JetStream}}
+	if adminCfg.S3Endpoint != "" && adminCfg.S3AccessKey != "" {
+		s3, err := storage.New(storage.Config{Endpoint: adminCfg.S3Endpoint, Region: adminCfg.S3Region, AccessKey: adminCfg.S3AccessKey,
+			SecretKey: adminCfg.S3SecretKey, Timeout: adminCfg.S3Timeout}, nil)
+		if err != nil {
+			return nil, fmt.Errorf("game: %w", err)
+		}
+		mediaUC.Storage = s3
+	}
+	if adminCfg.ClamdAddr != "" {
+		mediaUC.Scanner = storage.Scanner{Clamd: pkgmedia.Clamd{Addr: adminCfg.ClamdAddr}}
+	}
+	assignUC := command.GameAssignments{UoW: core.UoW, Store: write.TenantAssignmentRepo{}, Manifests: gameManifest,
+		Audit: write.Auditor{R: core.Recorder}, Cursors: cursors}
 	m := &Module{hub: hub, learning: learningLate, chat: chatLate, facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
-		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC}}}
+		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC},
+		GameAdmin: facade.GameAdmin{Assignments: assignUC, Catalog: adminQueries}}}
 	options := cache.NicknameOptionStore{C: vk}
 	profiles := command.Profiles{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: write.ProfileRepo{}, Catalog: write.CatalogRepo{},
 		Owned: write.OwnershipRepo{}, Presets: write.PresetRepo{}, Directory: write.Directory{}, Schools: write.Directory{},
@@ -251,7 +307,8 @@ func Register(r *module.Registry) (*Module, error) {
 		LiveOpsQueries: query.LiveOps{Read: core.ReadSession, Data: liveopssql.Store{}, Students: worldsql.Content{}, Counter: cache.GoalCounter{C: vk},
 			Cursors: cursors, Policy: liveCfg.Query}, LiveOpsCommands: liveOpsUC, MiniGames: miniGameUC,
 		Challenges: challengeUC, ChallengeQueries: query.Challenges{Read: core.ReadSession, Content: challengesql.Content{}, World: worldsql.Content{},
-			Quests: questsql.Content{}, Cursors: cursors, Rules: challengeCfg.Rules, Reset: challengeCfg.Reset}}
+			Quests: questsql.Content{}, Cursors: cursors, Rules: challengeCfg.Rules, Reset: challengeCfg.Reset},
+		Admin: gamehttp.GameAdminHandlers{Commands: adminUC, Queries: adminQueries, Media: mediaUC}}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
 	}
@@ -351,6 +408,21 @@ func Register(r *module.Registry) (*Module, error) {
 		challengeCfg.JobBatch)))
 	r.Job(Name, job.QuestPeriodExpiry, questCfg.JobInterval, module.JobFunc(job.QuestPeriodExpiryJob(questUC)))
 	r.Job(Name, job.QuestFailureTimer, questCfg.JobInterval, module.JobFunc(job.QuestFailureTimerJob(questUC)))
+	// F078: renders of the published 3D content (work queue GAME_RENDER_JOBS of the game-renderer container) and their
+	// results; scheduled publications, the game media pipeline and the render retries.
+	r.Consumer(messaging.RenderThumbnailsName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.RenderThumbnailsOptions(consumer.RenderThumbnails{Renders: mediaUC}, core.UoW, core.App, js)
+	})
+	r.Background(Name, "consumer", "game.render_results", r.RunsEvents(), func(ctx context.Context) error {
+		js, err := r.JetStream()
+		if err != nil {
+			return err
+		}
+		return render.ConsumeResults(ctx, js, mediaUC.RecordRenderResult, slog.Default())
+	})
+	r.Job(Name, job.ScheduledPublish, gameconfig.ScheduledPublishInterval, module.JobFunc(job.ScheduledPublishJob(adminUC)))
+	r.Job(Name, job.MediaPipeline, gameconfig.MediaPipelineInterval, module.JobFunc(job.MediaPipelineJob(mediaUC)))
+	r.Job(Name, job.RenderRetry, gameconfig.RenderRetryInterval, module.JobFunc(job.RenderRetryJob(mediaUC)))
 	r.Job(Name, job.SessionTimeout, cfg.TimeoutScan, module.JobFunc(job.SessionTimeoutJob(sessions)))
 	r.Job(Name, job.CurfewSessionCloser, job.CurfewCloserInterval, module.JobFunc(job.CurfewSessionCloserJob(sessions)))
 	return m, nil

@@ -149,5 +149,6 @@ const MinigameConfigProjectionName = "learning.minigame_config_projection"
 
 // MinigameConfigProjectionSubjects are the filter subjects of learning.minigame_config_projection.
 func MinigameConfigProjectionSubjects() []string {
-	return []string{natsx.EventSubject("game", "content.published")}
+	return []string{natsx.EventSubject("game", "content.published"), natsx.EventSubject("game", "content.rolled_back"),
+		natsx.EventSubject("game", "content.unpublished")}
 }

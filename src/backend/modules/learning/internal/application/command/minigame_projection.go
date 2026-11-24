@@ -38,6 +38,7 @@ type MiniGameConfigSnapshot struct {
 // UpsertMiniGameConfigSnapshotHandler is the typed interface of the command (ADR-0087).
 type UpsertMiniGameConfigSnapshotHandler interface {
 	Upsert(ctx context.Context, in MiniGameConfigSnapshot) (bool, error)
+	MovePointer(ctx context.Context, configID uuid.UUID, versionID *uuid.UUID, at time.Time) error
 }
 
 // UpsertMiniGameConfigSnapshot keeps the projection ref.minigame_config_versions (F073-AC-04, ADR-0043): each published
@@ -79,4 +80,16 @@ func (h UpsertMiniGameConfigSnapshot) Upsert(ctx context.Context, in MiniGameCon
 	}
 	return h.Store.InsertMinigameConfigVersion(ctx, dto.MinigameConfigVersion{ID: in.VersionID, ConfigID: in.ConfigID, Version: in.Version,
 		Type: in.Type, GradeLevels: sorted, Snapshot: in.Snapshot, PublishedAt: in.PublishedAt.UTC(), SourceVersion: in.SourceVersion})
+}
+
+// MovePointer follows the release pointer of a mini-game config in module game (F078: content.published and
+// content.rolled_back move it to their version, content.unpublished empties it); an older event changes nothing.
+func (h UpsertMiniGameConfigSnapshot) MovePointer(ctx context.Context, configID uuid.UUID, versionID *uuid.UUID, at time.Time) (err error) {
+	ctx, done := observability.UseCase(ctx, "learning.command.MoveMiniGameConfigPointer")
+	defer func() { done(err) }()
+	if configID == uuid.Nil || at.IsZero() {
+		return fmt.Errorf("%w: minigame_config_id and released_at are required", ErrMinigameSnapshot)
+	}
+	_, err = h.Store.SetMinigamePointer(ctx, configID, versionID, at.UnixMicro(), at)
+	return err
 }

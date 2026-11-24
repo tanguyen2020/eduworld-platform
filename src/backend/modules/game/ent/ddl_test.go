@@ -37,6 +37,8 @@ var migrations = map[string][]string{
 		"season_track_versions", "season_point_ledger", "season_track_progress"},
 	"20261230000773_f073_minigame.sql":  {"minigame_configs", "minigame_config_versions", "minigame_plays"},
 	"20261231000760_f076_challenge.sql": {"challenges", "challenge_versions", "challenge_attempts"},
+	"20261231000780_f078_gameadmin.sql": {"config_items", "config_versions", "scheduled_publications", "preview_sessions", "render_jobs",
+		"media_assets", "media_usages", "client_manifests"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -92,7 +94,10 @@ func schemas() map[string]string {
 		"community_goals": c.CommunityGoal, "community_goal_contributions": c.CommunityGoalContribution,
 		"community_goal_progress": c.CommunityGoalProgress, "season_tracks": c.SeasonTrack, "season_track_versions": c.SeasonTrackVersion,
 		"season_point_ledger": c.SeasonPointEntry, "season_track_progress": c.SeasonTrackProgress,
-		"challenges": c.Challenge, "challenge_versions": c.ChallengeVersion, "challenge_attempts": c.ChallengeAttempt}
+		"challenges": c.Challenge, "challenge_versions": c.ChallengeVersion, "challenge_attempts": c.ChallengeAttempt,
+		"config_items": c.GameConfigItem, "config_versions": c.GameConfigVersion, "scheduled_publications": c.ScheduledPublication,
+		"preview_sessions": c.PreviewSession, "render_jobs": c.RenderJob, "media_assets": c.MediaAsset, "media_usages": c.MediaUsage,
+		"client_manifests": c.ClientManifest}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

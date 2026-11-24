@@ -33,6 +33,9 @@ type CharacterCatalog func(*sql.Selector)
 // CharacterCatalogVersion is the predicate function for charactercatalogversion builders.
 type CharacterCatalogVersion func(*sql.Selector)
 
+// ClientManifest is the predicate function for clientmanifest builders.
+type ClientManifest func(*sql.Selector)
+
 // Collection is the predicate function for collection builders.
 type Collection func(*sql.Selector)
 
@@ -90,6 +93,12 @@ type EventVersion func(*sql.Selector)
 // ExplorationProgress is the predicate function for explorationprogress builders.
 type ExplorationProgress func(*sql.Selector)
 
+// GameConfigItem is the predicate function for gameconfigitem builders.
+type GameConfigItem func(*sql.Selector)
+
+// GameConfigVersion is the predicate function for gameconfigversion builders.
+type GameConfigVersion func(*sql.Selector)
+
 // GameProfile is the predicate function for gameprofile builders.
 type GameProfile func(*sql.Selector)
 
@@ -123,6 +132,12 @@ type LevelVersion func(*sql.Selector)
 // LoginEvent is the predicate function for loginevent builders.
 type LoginEvent func(*sql.Selector)
 
+// MediaAsset is the predicate function for mediaasset builders.
+type MediaAsset func(*sql.Selector)
+
+// MediaUsage is the predicate function for mediausage builders.
+type MediaUsage func(*sql.Selector)
+
 // MiniGameConfig is the predicate function for minigameconfig builders.
 type MiniGameConfig func(*sql.Selector)
 
@@ -143,6 +158,9 @@ type NpcDialogueVersion func(*sql.Selector)
 
 // PeriodicQuestGrant is the predicate function for periodicquestgrant builders.
 type PeriodicQuestGrant func(*sql.Selector)
+
+// PreviewSession is the predicate function for previewsession builders.
+type PreviewSession func(*sql.Selector)
 
 // ProgressionCurve is the predicate function for progressioncurve builders.
 type ProgressionCurve func(*sql.Selector)
@@ -165,6 +183,9 @@ type QuestStepAttempt func(*sql.Selector)
 // QuestVersion is the predicate function for questversion builders.
 type QuestVersion func(*sql.Selector)
 
+// RenderJob is the predicate function for renderjob builders.
+type RenderJob func(*sql.Selector)
+
 // RewardGrant is the predicate function for rewardgrant builders.
 type RewardGrant func(*sql.Selector)
 
@@ -173,6 +194,9 @@ type RewardRule func(*sql.Selector)
 
 // RewardRuleVersion is the predicate function for rewardruleversion builders.
 type RewardRuleVersion func(*sql.Selector)
+
+// ScheduledPublication is the predicate function for scheduledpublication builders.
+type ScheduledPublication func(*sql.Selector)
 
 // SeasonPointEntry is the predicate function for seasonpointentry builders.
 type SeasonPointEntry func(*sql.Selector)

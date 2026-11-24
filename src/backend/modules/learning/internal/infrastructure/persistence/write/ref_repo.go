@@ -161,3 +161,14 @@ func (RefRepo) InsertMinigameConfigVersion(ctx context.Context, v dto.MinigameCo
 		ON CONFLICT DO NOTHING`, v.ID, v.ConfigID, v.Version, v.Type, "{"+strings.Join(grades, ",")+"}", string(v.Snapshot),
 		v.PublishedAt.UTC(), v.SourceVersion)
 }
+
+// SetMinigamePointer implements write.MinigameConfigProjector (F078): the current version of a mini-game config follows
+// the release pointer of module game (publish, rollback, unpublish); an older event (source_version) changes nothing.
+func (RefRepo) SetMinigamePointer(ctx context.Context, configID uuid.UUID, versionID *uuid.UUID, sourceVersion int64, at time.Time) (bool, error) {
+	// tenancyguard:ok projection of platform content (no tenant_id, no deleted_at: DATABASE_DESIGN §2.17 rule 2), learning_platform only
+	return exec(ctx, `INSERT INTO ref.minigame_config_pointers (minigame_config_id, minigame_config_version_id, source_version, updated_at)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (minigame_config_id) DO UPDATE SET minigame_config_version_id = EXCLUDED.minigame_config_version_id,
+			source_version = EXCLUDED.source_version, updated_at = EXCLUDED.updated_at
+		WHERE ref.minigame_config_pointers.source_version < EXCLUDED.source_version`, configID, versionID, sourceVersion, at.UTC())
+}

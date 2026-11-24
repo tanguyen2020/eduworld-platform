@@ -346,6 +346,38 @@ var (
 			},
 		},
 	}
+	// ClientManifestsColumns holds the columns for the "client_manifests" table.
+	ClientManifestsColumns = []*schema.Column{
+		{Name: "client_manifest_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "client_version", Type: field.TypeString, Size: 32},
+		{Name: "platform", Type: field.TypeString, Size: 32},
+		{Name: "manifest", Type: field.TypeJSON},
+		{Name: "published_at", Type: field.TypeTime},
+	}
+	// ClientManifestsTable holds the schema information for the "client_manifests" table.
+	ClientManifestsTable = &schema.Table{
+		Name:       "client_manifests",
+		Columns:    ClientManifestsColumns,
+		PrimaryKey: []*schema.Column{ClientManifestsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "client_manifests_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ClientManifestsColumns[9], ClientManifestsColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// CollectionsColumns holds the columns for the "collections" table.
 	CollectionsColumns = []*schema.Column{
 		{Name: "collection_id", Type: field.TypeUUID},
@@ -1014,6 +1046,87 @@ var (
 			},
 		},
 	}
+	// ConfigItemsColumns holds the columns for the "config_items" table.
+	ConfigItemsColumns = []*schema.Column{
+		{Name: "config_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "item_type", Type: field.TypeString, Size: 64},
+		{Name: "item_key", Type: field.TypeString, Size: 64},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// ConfigItemsTable holds the schema information for the "config_items" table.
+	ConfigItemsTable = &schema.Table{
+		Name:       "config_items",
+		Columns:    ConfigItemsColumns,
+		PrimaryKey: []*schema.Column{ConfigItemsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "config_items_key_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ConfigItemsColumns[9], ConfigItemsColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// ConfigVersionsColumns holds the columns for the "config_versions" table.
+	ConfigVersionsColumns = []*schema.Column{
+		{Name: "config_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "config_id", Type: field.TypeUUID},
+		{Name: "item_type", Type: field.TypeString, Size: 64},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "title", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "author_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "reviewer_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "review_note", Type: field.TypeString, Nullable: true, Size: 2000},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "submitted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "reviewed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+	}
+	// ConfigVersionsTable holds the schema information for the "config_versions" table.
+	ConfigVersionsTable = &schema.Table{
+		Name:       "config_versions",
+		Columns:    ConfigVersionsColumns,
+		PrimaryKey: []*schema.Column{ConfigVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "config_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ConfigVersionsColumns[9], ConfigVersionsColumns[11]},
+			},
+			{
+				Name:    "config_versions_list_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigVersionsColumns[10], ConfigVersionsColumns[12], ConfigVersionsColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// GameProfilesColumns holds the columns for the "game_profiles" table.
 	GameProfilesColumns = []*schema.Column{
 		{Name: "game_profile_id", Type: field.TypeUUID},
@@ -1404,6 +1517,100 @@ var (
 		Columns:    LoginEventsColumns,
 		PrimaryKey: []*schema.Column{LoginEventsColumns[0]},
 	}
+	// MediaAssetsColumns holds the columns for the "media_assets" table.
+	MediaAssetsColumns = []*schema.Column{
+		{Name: "asset_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "kind", Type: field.TypeString, Size: 64},
+		{Name: "mime_type", Type: field.TypeString, Size: 127},
+		{Name: "original_filename", Type: field.TypeString, Size: 255},
+		{Name: "size_bytes", Type: field.TypeInt64},
+		{Name: "sha256", Type: field.TypeString, Size: 64},
+		{Name: "bucket", Type: field.TypeString, Size: 64},
+		{Name: "quarantine_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "status", Type: field.TypeString, Size: 16},
+		{Name: "reject_reason", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "variants", Type: field.TypeJSON, Nullable: true},
+		{Name: "width", Type: field.TypeInt, Nullable: true},
+		{Name: "height", Type: field.TypeInt, Nullable: true},
+		{Name: "license", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "alt_text", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "uploaded_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "upload_expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "processed_at", Type: field.TypeTime, Nullable: true},
+	}
+	// MediaAssetsTable holds the schema information for the "media_assets" table.
+	MediaAssetsTable = &schema.Table{
+		Name:       "media_assets",
+		Columns:    MediaAssetsColumns,
+		PrimaryKey: []*schema.Column{MediaAssetsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "media_assets_sha_uq",
+				Unique:  true,
+				Columns: []*schema.Column{MediaAssetsColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "media_assets_pipeline_idx",
+				Unique:  false,
+				Columns: []*schema.Column{MediaAssetsColumns[16], MediaAssetsColumns[1]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status IN ('quarantined', 'processing') AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// MediaUsagesColumns holds the columns for the "media_usages" table.
+	MediaUsagesColumns = []*schema.Column{
+		{Name: "usage_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "asset_id", Type: field.TypeUUID},
+		{Name: "item_type", Type: field.TypeString, Size: 64},
+		{Name: "config_id", Type: field.TypeUUID},
+		{Name: "config_version_id", Type: field.TypeUUID},
+		{Name: "usage", Type: field.TypeString, Size: 64},
+	}
+	// MediaUsagesTable holds the schema information for the "media_usages" table.
+	MediaUsagesTable = &schema.Table{
+		Name:       "media_usages",
+		Columns:    MediaUsagesColumns,
+		PrimaryKey: []*schema.Column{MediaUsagesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "media_usages_uq",
+				Unique:  true,
+				Columns: []*schema.Column{MediaUsagesColumns[9], MediaUsagesColumns[12], MediaUsagesColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "media_usages_version_idx",
+				Unique:  false,
+				Columns: []*schema.Column{MediaUsagesColumns[12], MediaUsagesColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// MinigameConfigsColumns holds the columns for the "minigame_configs" table.
 	MinigameConfigsColumns = []*schema.Column{
 		{Name: "minigame_config_id", Type: field.TypeUUID},
@@ -1656,6 +1863,37 @@ var (
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
+			},
+		},
+	}
+	// PreviewSessionsColumns holds the columns for the "preview_sessions" table.
+	PreviewSessionsColumns = []*schema.Column{
+		{Name: "preview_session_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "token_hash", Type: field.TypeString, Size: 128},
+		{Name: "config_type", Type: field.TypeString, Size: 64},
+		{Name: "config_id", Type: field.TypeUUID},
+		{Name: "config_version_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "expires_at", Type: field.TypeTime},
+	}
+	// PreviewSessionsTable holds the schema information for the "preview_sessions" table.
+	PreviewSessionsTable = &schema.Table{
+		Name:       "preview_sessions",
+		Columns:    PreviewSessionsColumns,
+		PrimaryKey: []*schema.Column{PreviewSessionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "preview_sessions_token_uq",
+				Unique:  true,
+				Columns: []*schema.Column{PreviewSessionsColumns[9]},
 			},
 		},
 	}
@@ -1943,6 +2181,49 @@ var (
 			},
 		},
 	}
+	// RenderJobsColumns holds the columns for the "render_jobs" table.
+	RenderJobsColumns = []*schema.Column{
+		{Name: "render_job_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "config_type", Type: field.TypeString, Size: 64},
+		{Name: "item_type", Type: field.TypeString, Size: 64},
+		{Name: "config_version_id", Type: field.TypeUUID},
+		{Name: "source_asset_id", Type: field.TypeUUID},
+		{Name: "kind", Type: field.TypeString, Size: 64},
+		{Name: "status", Type: field.TypeString, Size: 16},
+		{Name: "attempts", Type: field.TypeInt, Default: 0},
+		{Name: "last_error", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "result_asset_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "next_attempt_at", Type: field.TypeTime, Nullable: true},
+	}
+	// RenderJobsTable holds the schema information for the "render_jobs" table.
+	RenderJobsTable = &schema.Table{
+		Name:       "render_jobs",
+		Columns:    RenderJobsColumns,
+		PrimaryKey: []*schema.Column{RenderJobsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "render_jobs_uq",
+				Unique:  true,
+				Columns: []*schema.Column{RenderJobsColumns[11], RenderJobsColumns[12], RenderJobsColumns[13]},
+			},
+			{
+				Name:    "render_jobs_retry_idx",
+				Unique:  false,
+				Columns: []*schema.Column{RenderJobsColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'failed' AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// RewardGrantsColumns holds the columns for the "reward_grants" table.
 	RewardGrantsColumns = []*schema.Column{
 		{Name: "reward_grant_id", Type: field.TypeUUID},
@@ -2054,6 +2335,54 @@ var (
 				Columns: []*schema.Column{RewardRuleVersionsColumns[21], RewardRuleVersionsColumns[23]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// ScheduledPublicationsColumns holds the columns for the "scheduled_publications" table.
+	ScheduledPublicationsColumns = []*schema.Column{
+		{Name: "schedule_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "config_id", Type: field.TypeUUID},
+		{Name: "item_type", Type: field.TypeString, Size: 64},
+		{Name: "config_version_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "publish_at", Type: field.TypeTime},
+		{Name: "status", Type: field.TypeString, Size: 16},
+		{Name: "failure_code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "requested_by", Type: field.TypeUUID},
+		{Name: "cancelled_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "finished_at", Type: field.TypeTime, Nullable: true},
+	}
+	// ScheduledPublicationsTable holds the schema information for the "scheduled_publications" table.
+	ScheduledPublicationsTable = &schema.Table{
+		Name:       "scheduled_publications",
+		Columns:    ScheduledPublicationsColumns,
+		PrimaryKey: []*schema.Column{ScheduledPublicationsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "scheduled_publications_due_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ScheduledPublicationsColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'scheduled' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "scheduled_publications_one_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ScheduledPublicationsColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'scheduled' AND deleted_at IS NULL",
 				},
 			},
 		},
@@ -2701,6 +3030,7 @@ var (
 		ChallengeVersionsTable,
 		CharacterCatalogsTable,
 		CharacterCatalogVersionsTable,
+		ClientManifestsTable,
 		CollectionsTable,
 		CollectionItemsTable,
 		CollectionProgressTable,
@@ -2720,6 +3050,8 @@ var (
 		EventTemplateVersionsTable,
 		EventVersionsTable,
 		ExplorationProgressTable,
+		ConfigItemsTable,
+		ConfigVersionsTable,
 		GameProfilesTable,
 		GameSessionsTable,
 		InventoryItemsTable,
@@ -2731,6 +3063,8 @@ var (
 		LevelSessionsTable,
 		LevelVersionsTable,
 		LoginEventsTable,
+		MediaAssetsTable,
+		MediaUsagesTable,
 		MinigameConfigsTable,
 		MinigameConfigVersionsTable,
 		MinigamePlaysTable,
@@ -2738,6 +3072,7 @@ var (
 		NpcDialoguesTable,
 		NpcDialogueVersionsTable,
 		PeriodicQuestGrantsTable,
+		PreviewSessionsTable,
 		ProgressionCurvesTable,
 		ProgressionCurveVersionsTable,
 		ProgressionLevelsTable,
@@ -2745,9 +3080,11 @@ var (
 		QuestProgressTable,
 		QuestStepAttemptsTable,
 		QuestVersionsTable,
+		RenderJobsTable,
 		RewardGrantsTable,
 		RewardRulesTable,
 		RewardRuleVersionsTable,
+		ScheduledPublicationsTable,
 		SeasonPointLedgerTable,
 		SeasonTracksTable,
 		SeasonTrackProgressTable,
@@ -2797,6 +3134,9 @@ func init() {
 	}
 	CharacterCatalogVersionsTable.Annotation = &entsql.Annotation{
 		Table: "character_catalog_versions",
+	}
+	ClientManifestsTable.Annotation = &entsql.Annotation{
+		Table: "client_manifests",
 	}
 	CollectionsTable.Annotation = &entsql.Annotation{
 		Table: "collections",
@@ -2855,6 +3195,12 @@ func init() {
 	ExplorationProgressTable.Annotation = &entsql.Annotation{
 		Table: "exploration_progress",
 	}
+	ConfigItemsTable.Annotation = &entsql.Annotation{
+		Table: "config_items",
+	}
+	ConfigVersionsTable.Annotation = &entsql.Annotation{
+		Table: "config_versions",
+	}
 	GameProfilesTable.Annotation = &entsql.Annotation{
 		Table: "game_profiles",
 	}
@@ -2888,6 +3234,12 @@ func init() {
 	LoginEventsTable.Annotation = &entsql.Annotation{
 		Table: "login_events",
 	}
+	MediaAssetsTable.Annotation = &entsql.Annotation{
+		Table: "media_assets",
+	}
+	MediaUsagesTable.Annotation = &entsql.Annotation{
+		Table: "media_usages",
+	}
 	MinigameConfigsTable.Annotation = &entsql.Annotation{
 		Table: "minigame_configs",
 	}
@@ -2908,6 +3260,9 @@ func init() {
 	}
 	PeriodicQuestGrantsTable.Annotation = &entsql.Annotation{
 		Table: "periodic_quest_grants",
+	}
+	PreviewSessionsTable.Annotation = &entsql.Annotation{
+		Table: "preview_sessions",
 	}
 	ProgressionCurvesTable.Annotation = &entsql.Annotation{
 		Table: "progression_curves",
@@ -2930,6 +3285,9 @@ func init() {
 	QuestVersionsTable.Annotation = &entsql.Annotation{
 		Table: "quest_versions",
 	}
+	RenderJobsTable.Annotation = &entsql.Annotation{
+		Table: "render_jobs",
+	}
 	RewardGrantsTable.Annotation = &entsql.Annotation{
 		Table: "reward_grants",
 	}
@@ -2938,6 +3296,9 @@ func init() {
 	}
 	RewardRuleVersionsTable.Annotation = &entsql.Annotation{
 		Table: "reward_rule_versions",
+	}
+	ScheduledPublicationsTable.Annotation = &entsql.Annotation{
+		Table: "scheduled_publications",
 	}
 	SeasonPointLedgerTable.Annotation = &entsql.Annotation{
 		Table: "season_point_ledger",

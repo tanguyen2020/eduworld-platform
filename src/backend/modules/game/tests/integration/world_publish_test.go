@@ -73,6 +73,11 @@ func TestPublishGameContent(t *testing.T) {
 		!strings.Contains(err.Error(), "CONTENT_VERSION_IMMUTABLE") {
 		t.Fatalf("immutable version: %v", err)
 	}
+	// F078: publishing keeps the older version published (rollback target); archive it explicitly first.
+	if _, err := e.platform.ExecContext(ctx, `UPDATE game.world_area_versions SET status = 'archived'
+		WHERE area_id = 'main_hub' AND version_no = 1`); err != nil {
+		t.Fatalf("archive v1: %v", err)
+	}
 	if _, err := e.platform.ExecContext(ctx, `UPDATE game.world_areas SET current_version_id = (SELECT area_version_id FROM game.world_area_versions
 		WHERE area_id = 'main_hub' AND status = 'archived') WHERE area_id = 'main_hub'`); err == nil || !strings.Contains(err.Error(), "CONTENT_POINTER_NOT_PUBLISHED") {
 		t.Fatalf("pointer to an archived version: %v", err)
