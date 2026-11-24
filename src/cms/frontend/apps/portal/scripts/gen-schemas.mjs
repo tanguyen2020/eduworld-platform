@@ -21,6 +21,23 @@ export const SCHEMAS = {
   'specs/schemas/activities/video-lesson.schema.json': 'activities/video-lesson.schema.json',
   'specs/schemas/activities/audio-lesson.schema.json': 'activities/audio-lesson.schema.json',
   'specs/schemas/activities/simulation.schema.json': 'activities/simulation.schema.json',
+  // Game Operations Console (F079-AC-02): payload schema of each game config type — the editor form is built from it.
+  'specs/schemas/quest.schema.json': 'game/quest.schema.json',
+  'specs/schemas/npc-dialogue.schema.json': 'game/npc-dialogue.schema.json',
+  'specs/schemas/world-area.schema.json': 'game/world-area.schema.json',
+  'specs/schemas/story-chapter.schema.json': 'game/story-chapter.schema.json',
+  'specs/schemas/item.schema.json': 'game/item.schema.json',
+  'specs/schemas/shop-item.schema.json': 'game/shop-item.schema.json',
+  'specs/schemas/collection.schema.json': 'game/collection.schema.json',
+  'specs/schemas/reward-rule.schema.json': 'game/reward-rule.schema.json',
+  'specs/schemas/progression-curve.schema.json': 'game/progression-curve.schema.json',
+  'specs/schemas/achievement.schema.json': 'game/achievement.schema.json',
+  'specs/schemas/challenge.schema.json': 'game/challenge.schema.json',
+  'specs/schemas/boss.schema.json': 'game/boss.schema.json',
+  'specs/schemas/minigame-config.schema.json': 'game/minigame-config.schema.json',
+  'specs/schemas/event.schema.json': 'game/event.schema.json',
+  'specs/schemas/event-template.schema.json': 'game/event-template.schema.json',
+  'specs/schemas/season-track.schema.json': 'game/season-track.schema.json',
 };
 
 const norm = (s) => s.replace(/\r\n/g, '\n');
@@ -33,6 +50,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const check = process.argv.includes('--check');
   let drift = 0;
   fs.mkdirSync(path.join(OUT_DIR, 'activities'), { recursive: true });
+  fs.mkdirSync(path.join(OUT_DIR, 'game'), { recursive: true });
   for (const { name, content } of expected()) {
     const out = path.join(OUT_DIR, name);
     const cur = fs.existsSync(out) ? norm(fs.readFileSync(out, 'utf8')) : null;

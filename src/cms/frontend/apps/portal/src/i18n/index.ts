@@ -22,6 +22,8 @@ import schoolLmsVi from './locales/vi/portal.school_lms.json';
 import schoolLmsEn from './locales/en/portal.school_lms.json';
 import chatSafetyVi from './chat-safety.vi.json';
 import chatSafetyEn from './chat-safety.en.json';
+import gameOpsVi from './game-ops.vi.json';
+import gameOpsEn from './game-ops.en.json';
 
 export const LOCALES = ['vi-VN', 'en-US'] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -29,8 +31,8 @@ export const DEFAULT_LOCALE: Locale = 'vi-VN';
 export const PORTAL_NS = 'portal';
 
 export const resources = {
-  'vi-VN': { [PORTAL_NS]: { ...vi, ...contentStudioVi, ...lmsVi, ...dashboardVi, ...chatSafetyVi, error: { ...vi.error, ...contentStudioVi.error }, portal: { ...catalogVi, school_lms: schoolLmsVi } }, [OPS_UI_NS]: opsUiResources.vi },
-  'en-US': { [PORTAL_NS]: { ...en, ...contentStudioEn, ...lmsEn, ...dashboardEn, ...chatSafetyEn, error: { ...en.error, ...contentStudioEn.error }, portal: { ...catalogEn, school_lms: schoolLmsEn } }, [OPS_UI_NS]: opsUiResources.en },
+  'vi-VN': { [PORTAL_NS]: { ...vi, ...contentStudioVi, ...lmsVi, ...dashboardVi, ...chatSafetyVi, ...gameOpsVi, error: { ...vi.error, ...contentStudioVi.error }, portal: { ...catalogVi, school_lms: schoolLmsVi } }, [OPS_UI_NS]: opsUiResources.vi },
+  'en-US': { [PORTAL_NS]: { ...en, ...contentStudioEn, ...lmsEn, ...dashboardEn, ...chatSafetyEn, ...gameOpsEn, error: { ...en.error, ...contentStudioEn.error }, portal: { ...catalogEn, school_lms: schoolLmsEn } }, [OPS_UI_NS]: opsUiResources.en },
 } as const;
 
 export function isLocale(v: unknown): v is Locale {

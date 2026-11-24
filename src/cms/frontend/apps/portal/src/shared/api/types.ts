@@ -25,6 +25,8 @@ export interface RuntimeConfig {
   principalCacheTtlSeconds: number;
   /** CONFIG_DEFAULTS `portal_session_sso` idle (seconds): no interaction for longer ends the session (F051-AC-29). */
   sessionIdleTimeoutSeconds: number;
+  /** Optional (F079-AC-17): URL of the Godot Web preview build embedded by GamePreviewFrame; absent = no preview. */
+  gamePreviewUrl?: string;
 }
 
 export interface FieldError {

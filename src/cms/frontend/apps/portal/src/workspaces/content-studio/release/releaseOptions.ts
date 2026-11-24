@@ -21,48 +21,9 @@ export function isReadOnlyVersion(status: string): boolean {
   return status === 'published' || status === 'archived';
 }
 
-/** Vietnam time (ICT, UTC+7, no daylight saving): scheduled times are shown in ICT and sent in UTC (F054-AC-04). */
-export const ICT_OFFSET_MINUTES = 7 * 60;
-
-export interface WallTime {
-  year: number;
-  /** 1–12 */
-  month: number;
-  day: number;
-  hour: number;
-  minute: number;
-}
-
-/** An ICT wall-clock time → the UTC instant. */
-export function ictToUtc(w: WallTime): Date {
-  return new Date(Date.UTC(w.year, w.month - 1, w.day, w.hour, w.minute) - ICT_OFFSET_MINUTES * 60_000);
-}
-
-/** A UTC instant → its ICT wall-clock time. */
-export function utcToIct(d: Date): WallTime {
-  const x = new Date(d.getTime() + ICT_OFFSET_MINUTES * 60_000);
-  return { year: x.getUTCFullYear(), month: x.getUTCMonth() + 1, day: x.getUTCDate(), hour: x.getUTCHours(), minute: x.getUTCMinutes() };
-}
-
-const pad = (n: number) => String(n).padStart(2, '0');
-
-/** `dd/MM/yyyy HH:mm` in ICT. */
-export function formatIct(iso: string | Date | undefined): string {
-  if (!iso) return '';
-  const d = typeof iso === 'string' ? new Date(iso) : iso;
-  if (Number.isNaN(d.getTime())) return '';
-  const w = utcToIct(d);
-  return `${pad(w.day)}/${pad(w.month)}/${w.year} ${pad(w.hour)}:${pad(w.minute)}`;
-}
-
-/** F054-AC-04: earliest allowed `publish_at` = now + `scheduled_publish_min_lead`. */
-export function earliestPublishAt(now: Date, minLeadMinutes: number): Date {
-  return new Date(now.getTime() + minLeadMinutes * 60_000);
-}
-
-export function isScheduleAllowed(at: Date, now: Date, minLeadMinutes: number): boolean {
-  return at.getTime() >= earliestPublishAt(now, minLeadMinutes).getTime();
-}
+// ICT helpers shared with the Game Operations Console (F079): defined once in shared/release/ict.ts
+export { ICT_OFFSET_MINUTES, ictToUtc, utcToIct, formatIct, earliestPublishAt, isScheduleAllowed } from '../../../shared/release/ict';
+export type { WallTime } from '../../../shared/release/ict';
 
 /** Diff groups shown by VersionDiffView (F054-AC-03). */
 export type DiffGroup = 'text' | 'answer' | 'media' | 'metadata';
@@ -92,9 +53,5 @@ export function groupDiff(changes: readonly DiffChange[], canReview: boolean): R
   return out;
 }
 
-/** Value of a diff side as short display text (JSON for objects, capped). */
-export function diffValueText(v: unknown, max = 400): string {
-  if (v === undefined) return '';
-  const s = typeof v === 'string' ? v : JSON.stringify(v);
-  return s.length > max ? `${s.slice(0, max)}…` : s;
-}
+// shared with the Game Operations Console (F079): defined once in shared/release/DiffTable.tsx
+export { diffValueText } from '../../../shared/release/DiffTable';

@@ -5113,6 +5113,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/game-admin/{config_type}/{config_id}/versions/{version}:simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mô phỏng tiến độ (level theo tuần) trên payload của một version đường cong XP hoặc season track
+         * @description Chỉ đọc (không ghi, không phát event): tính ở server theo GameConfigSimulation (F079-AC-10, AC-15). Quyền đọc của loại
+         *     (`game.progression.write` / `game.season_track.write`, `game.content.review`, `game.content.publish`).
+         *     `minutes_per_day` bắt buộc với `progression-curves`, bỏ qua với `season-tracks`. Payload không đủ để tính → `422 VALIDATION_FAILED`.
+         */
+        get: operations["simulateGameConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/game-admin/{config_type}/{config_id}/versions/{version}:transition": {
         parameters: {
             query?: never;
@@ -5124,6 +5146,27 @@ export interface paths {
         put?: never;
         /** Workflow cấu hình game Draft → Review → Approved → Published → Archived */
         post: operations["transitionGameConfigVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game-admin/client-manifests/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Client manifest hiện hành (area, NPC, scene, interactable) cho bộ chọn tham chiếu của Game Operations Console
+         * @description Giao của bản manifest mới nhất mỗi nền tảng đã đăng ký (`game.client_manifests`) — cùng tập giá trị mà `submit_review`
+         *     kiểm (F078). Quyền: bất kỳ `game.*.write` của console, `game.content.review` hoặc `game.content.publish` (F079-AC-07).
+         */
+        get: operations["getGameClientManifest"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5229,6 +5272,28 @@ export interface paths {
          *     tạo game session, attempt, XP hay learning event (ADR-0031, F078-AC-17).
          */
         get: operations["getGamePreviewSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game-admin/stats/config-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Số cấu hình game theo loại × trạng thái workflow (Game Dashboard workspace A)
+         * @description Đếm trong truy vấn (GROUP BY) theo trạng thái version mới nhất của mỗi cấu hình module game — không có số liệu chơi
+         *     (F080). Quyền: `game.liveops.read`, `game.analytics.read`, bất kỳ `game.*.write` của console, `game.content.review` hoặc
+         *     `game.content.publish` (F079 T045).
+         */
+        get: operations["getGameConfigCounts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -12831,12 +12896,81 @@ export interface components {
             subject_id?: components["schemas"]["Uuid"];
             title: components["schemas"]["LocalizedName"];
         };
+        /**
+         * @description Client manifest hiện hành cho bộ chọn tham chiếu của Game Operations Console (F079-AC-07): giao của bản mới nhất mỗi nền
+         *     tảng đã đăng ký (giá trị dùng được trên mọi nền tảng — cùng quy tắc kiểm khi `submit_review`, F078). `registered = false`
+         *     khi chưa đăng ký bản nào: danh sách rỗng, chỉ kiểm tham chiếu nội dung đã publish.
+         */
+        GameClientManifest: {
+            areas: {
+                area_id: string;
+                name?: components["schemas"]["LocalizedName"];
+            }[];
+            interactables: string[];
+            npcs: {
+                name?: components["schemas"]["LocalizedName"];
+                npc_id: string;
+            }[];
+            platforms: {
+                client_version: string;
+                /** @enum {string} */
+                platform: "windows" | "macos" | "linux" | "android" | "ios" | "web";
+                published_at: components["schemas"]["Timestamp"];
+            }[];
+            registered: boolean;
+            scene_refs: string[];
+        };
+        /** @description Số cấu hình theo loại và trạng thái của version mới nhất mỗi cấu hình (Game Dashboard tối thiểu, F079 T045) */
+        GameConfigCounts: {
+            data: {
+                config_type: components["schemas"]["GameModuleConfigType"];
+                count: number;
+                status: components["schemas"]["ContentStatus"];
+            }[];
+            generated_at: components["schemas"]["Timestamp"];
+        };
         GameConfigInput: {
             /** @description Nội dung cấu hình theo schema của loại (vd. specs/schemas/quest.schema.json, minigame-config.schema.json, reward-rule.schema.json) */
             payload: {
                 [key: string]: unknown;
             };
             title?: string;
+        };
+        /**
+         * @description Mô phỏng tiến độ do server tính trên payload của version (F079-AC-10, AC-15; AGENTS R1 — portal không tự tính).
+         *     `progression-curves`: XP/ngày = min(`minutes_per_day` × `xp_simulation_minute_rate`, `xp_daily_cap`), `level` theo đường
+         *     cong (công thức + `level_overrides`); `thresholds[]` là bảng ngưỡng level (biểu đồ). `season-tracks`: điểm/ngày chơi =
+         *     `points.daily_cap` (người chơi đạt trần ngày), `level` là cấp của track (≤ số cấp), `thresholds[]` là điểm tích lũy theo cấp.
+         */
+        GameConfigSimulation: {
+            assumptions: {
+                /** @description `xp_daily_cap` (đường cong) hoặc `points.daily_cap` (season track) */
+                daily_cap?: number;
+                days_per_week: number;
+                /** @description `xp_simulation_minute_rate` đã dùng (chỉ đường cong) */
+                minute_rate?: number;
+                minutes_per_day?: number;
+                /** @description XP (đường cong) hoặc điểm mùa (season track) mỗi ngày chơi */
+                per_play_day: number;
+                weeks: number;
+            };
+            config_id: components["schemas"]["Uuid"];
+            config_type: components["schemas"]["GameSimulableConfigType"];
+            points: {
+                /** @description Level (đường cong) hoặc cấp track (season track) cuối tuần */
+                level: number;
+                /** @description XP hoặc điểm mùa tích lũy cuối tuần */
+                total: number;
+                week: number;
+            }[];
+            thresholds: {
+                level: number;
+                /** @description XP/điểm cần để từ level này lên level kế (0 ở level cuối) */
+                to_next: number;
+                /** @description XP/điểm tích lũy cần để đạt level này */
+                total: number;
+            }[];
+            version: number;
         };
         /**
          * @description Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
@@ -12847,6 +12981,11 @@ export interface components {
             author_id?: components["schemas"]["Uuid"];
             /** @description Version nguồn khi tạo bằng createGameConfigVersion (F078) */
             based_on_version?: number;
+            /**
+             * @description Chỉ có khi listGameConfigs `events` được gọi với `from`/`to` (Lịch sự kiện, F079-AC-14): cảnh báo lịch do server tính
+             *     giữa các sự kiện trong khoảng (portal không tự suy luận).
+             */
+            calendar_warnings?: components["schemas"]["GameEventCalendarWarning"][];
             change_note?: string;
             config_id: components["schemas"]["Uuid"];
             config_type: components["schemas"]["GameConfigType"];
@@ -12858,6 +12997,13 @@ export interface components {
                 [key: string]: unknown;
             };
             published_at?: components["schemas"]["Timestamp"];
+            /**
+             * @description Trạng thái ảnh render_thumbnail của version (F079-AC-16): `ready` có `thumbnail_url`; `pending` job render đang chờ/đang
+             *     thử lại; `failed` job hết lượt (`dead`, sau `game_render_max_attempts`); `not_applicable` version không có job render
+             *     (chưa publish hoặc không có model 3D).
+             * @enum {string}
+             */
+            render_status?: "pending" | "ready" | "failed" | "not_applicable";
             /** @description Ghi chú của lần chuyển trạng thái gần nhất (lý do trả lại) */
             review_note?: string;
             reviewer_id?: components["schemas"]["Uuid"];
@@ -12881,6 +13027,16 @@ export interface components {
             based_on_version?: number;
             change_note?: string;
             title?: string;
+        };
+        GameEventCalendarWarning: {
+            area_id?: string;
+            /**
+             * @description `decoration_area_overlap` — hai sự kiện có trang trí cùng vùng, giao thời gian (một vùng tối đa một bộ trang trí, ADMIN_PORTAL §3.15)
+             * @enum {string}
+             */
+            code: "decoration_area_overlap";
+            other_config_id: components["schemas"]["Uuid"];
+            other_title?: string;
         };
         GameEventDetail: components["schemas"]["GameEventSummary"] & {
             boss_ids?: components["schemas"]["Uuid"][];
@@ -13031,6 +13187,11 @@ export interface components {
              */
             takeover: boolean;
         };
+        /**
+         * @description Loại cấu hình có mô phỏng tiến độ (simulateGameConfig)
+         * @enum {string}
+         */
+        GameSimulableConfigType: "progression-curves" | "season-tracks";
         GameTenantSelectRequest: {
             device_id: components["schemas"]["Uuid"];
             login_ticket: string;
@@ -17568,6 +17729,7 @@ export interface components {
         GameConfigType: components["schemas"]["GameConfigType"];
         GameModuleConfigType: components["schemas"]["GameModuleConfigType"];
         GameSessionId: components["schemas"]["Uuid"];
+        GameSimulableConfigType: components["schemas"]["GameSimulableConfigType"];
         GoalIdPath: components["schemas"]["Uuid"];
         GradeLevelQuery: components["schemas"]["GradeLevel"];
         GrantIdPath: components["schemas"]["Uuid"];
@@ -30185,8 +30347,16 @@ export interface operations {
             query?: {
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
+                /**
+                 * @description Chỉ `config_type = events` (Lịch sự kiện, F079-AC-14): giữ sự kiện có `payload.schedule` giao khoảng ngày [from, to]
+                 *     theo lịch ICT (gồm cả hai ngày); cần đi cùng `to`, khoảng ≤ 62 ngày. Loại khác hoặc thiếu một đầu → `422 VALIDATION_FAILED`.
+                 *     Khi có khoảng ngày, mỗi phần tử mang `calendar_warnings` do server tính.
+                 */
+                from?: string;
                 limit?: components["parameters"]["Limit"];
                 status?: components["schemas"]["ContentStatus"];
+                /** @description Ngày cuối (ICT, gồm cả ngày này) của khoảng lọc `from` */
+                to?: string;
             };
             header?: never;
             path: {
@@ -30678,6 +30848,38 @@ export interface operations {
             428: components["responses"]["PreconditionRequired"];
         };
     };
+    simulateGameConfig: {
+        parameters: {
+            query: {
+                days_per_week: number;
+                minutes_per_day?: number;
+                weeks: number;
+            };
+            header?: never;
+            path: {
+                config_id: components["parameters"]["GameConfigId"];
+                config_type: components["parameters"]["GameSimulableConfigType"];
+                version: components["parameters"]["Version"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Kết quả mô phỏng */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameConfigSimulation"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     transitionGameConfigVersion: {
         parameters: {
             query?: never;
@@ -30727,6 +30929,28 @@ export interface operations {
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    getGameClientManifest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameClientManifest"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     cancelEventRun: {
@@ -30959,6 +31183,28 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getGameConfigCounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameConfigCounts"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     exportGameTranslations: {

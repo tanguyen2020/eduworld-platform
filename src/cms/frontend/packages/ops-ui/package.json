@@ -9,7 +9,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./content": "./src/content.ts",
-    "./dashboard": "./src/dashboard/index.ts"
+    "./dashboard": "./src/dashboard/index.ts",
+    "./game-console": "./src/game-console.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",

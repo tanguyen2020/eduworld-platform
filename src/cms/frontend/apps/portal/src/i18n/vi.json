@@ -231,5 +231,37 @@
   "authz": {
     "permissionGroup": "{{group}} ({{total}})",
     "noPermission": "Không có permission nào cho phạm vi này."
+  },
+  "release": {
+    "loadMore": "Xem thêm",
+    "diff": {
+      "field": "Trường / khối",
+      "op": "Thay đổi",
+      "ops": {
+        "added": "Thêm",
+        "removed": "Bỏ",
+        "changed": "Sửa"
+      },
+      "before": "Trước (v{{version}})",
+      "after": "Sau (v{{version}})"
+    },
+    "timeline": {
+      "none": "Chưa có lần phát hành nào.",
+      "action": {
+        "publish": "Xuất bản v{{to}}",
+        "rollback": "Rollback v{{from}} → v{{to}}",
+        "unpublish": "Gỡ xuất bản v{{from}}"
+      },
+      "state": {
+        "scheduled": "Đã hẹn giờ",
+        "applied": "Đã áp dụng",
+        "cancelled": "Đã hủy",
+        "failed": "Không áp dụng được"
+      },
+      "by": "Bởi {{user}} lúc {{at}}",
+      "scheduledFor": "Hẹn {{at}}",
+      "reason": "Lý do: {{reason}}",
+      "failed": "Lịch hẹn không áp dụng được ({{code}})."
+    }
   }
 }

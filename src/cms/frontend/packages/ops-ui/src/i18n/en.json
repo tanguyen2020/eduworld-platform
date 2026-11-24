@@ -420,5 +420,39 @@
       "hold_for_review": "Hold for review",
       "block_and_alert": "Block and alert"
     }
+  },
+  "game": {
+    "form": {
+      "add": "Add — {{label}}",
+      "addObject": "Add",
+      "removeObject": "Remove",
+      "notSet": "Not set",
+      "item": "Item {{n}}",
+      "count": "{{count}}/{{max}} items",
+      "moveUp": "Move item {{n}} up",
+      "moveDown": "Move item {{n}} down",
+      "removeItem": "Remove item {{n}}",
+      "jsonHint": "JSON — checked by the server when saved",
+      "jsonInvalid": "Invalid JSON, this change is not saved",
+      "up": "Up",
+      "down": "Down",
+      "remove": "Remove"
+    },
+    "render": {
+      "ready": "Rendered",
+      "pending": "Rendering",
+      "failed": "Render failed",
+      "not_applicable": "No image yet"
+    },
+    "turntable": {
+      "rotate": "Rotate model",
+      "frame": "Frame {{n}}/{{total}}"
+    },
+    "preview": {
+      "frameNotice": "The game look is shown only inside the preview frame below (Godot Web)."
+    },
+    "ref": {
+      "missing": "Value not in the current list: {{values}}"
+    }
   }
 }

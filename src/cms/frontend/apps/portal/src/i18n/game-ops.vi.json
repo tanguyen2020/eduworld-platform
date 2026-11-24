@@ -1,0 +1,313 @@
+{
+  "gameOps": {
+    "common": {
+      "actions": "Thao tác",
+      "back": "Quay lại",
+      "next": "Tiếp",
+      "cancel": "Hủy",
+      "up": "Lên",
+      "down": "Xuống",
+      "remove": "Xóa",
+      "loadMore": "Tải thêm",
+      "untitled": "(chưa đặt tên)",
+      "v": "v{{version}}"
+    },
+    "type": {
+      "quests": "Quest",
+      "minigame-configs": "Mini-game",
+      "npc-dialogues": "Hội thoại NPC",
+      "world-areas": "Vùng thế giới",
+      "story-chapters": "Chương truyện",
+      "items": "Vật phẩm",
+      "reward-rules": "Quy tắc phần thưởng",
+      "progression-levels": "Bảng level",
+      "progression-curves": "Đường cong XP",
+      "challenges": "Thử thách",
+      "bosses": "Boss",
+      "achievements": "Thành tích",
+      "collections": "Bộ sưu tập",
+      "shop-items": "Mặt hàng Shop",
+      "currencies": "Tiền tệ",
+      "events": "Sự kiện",
+      "event-templates": "Template sự kiện",
+      "season-tracks": "Season track"
+    },
+    "status": {
+      "draft": "Bản nháp",
+      "in_review": "Đang duyệt",
+      "approved": "Đã duyệt",
+      "published": "Đã phát hành",
+      "archived": "Đã lưu trữ",
+      "rejected": "Bị từ chối"
+    },
+    "list": {
+      "thumbnail": "Ảnh",
+      "code": "Mã",
+      "title": "Tiêu đề",
+      "status": "Trạng thái",
+      "statusFilter": "Lọc trạng thái",
+      "version": "Phiên bản",
+      "author": "Người soạn",
+      "updatedAt": "Cập nhật (ICT)",
+      "create": "Tạo {{type}}",
+      "notServed": "{{type}}: module game chưa có module loại cấu hình này nên chưa soạn được (backend trả 404 — F078). Màn hình sẽ dùng khi có module loại."
+    },
+    "create": {
+      "title": "Tạo mới — {{type}}",
+      "hint": "Server kiểm tra toàn bộ nội dung khi tạo bản nháp; lỗi hiện ngay dưới trường tương ứng.",
+      "submit": "Tạo bản nháp"
+    },
+    "editor": {
+      "title": "Tiêu đề hiển thị trong Console",
+      "tab": {
+        "content": "Soạn",
+        "versions": "Phiên bản",
+        "releases": "Lịch sử phát hành"
+      },
+      "blocker": "{{field}}: {{message}}",
+      "fieldInvalid": "Giá trị chưa hợp lệ ({{code}}).",
+      "noSchema": "Loại này chưa có JSON Schema trong portal: nhập JSON, server kiểm tra khi lưu.",
+      "rejectTitle": "Trả lại bản nháp (ghi chú bắt buộc)",
+      "render": "Ảnh render 3D của phiên bản này",
+      "thumbnailAlt": "Ảnh {{name}} v{{version}}",
+      "turntableAlt": "Xoay 360° {{name}} v{{version}}",
+      "reviewNote": "Ghi chú khi trả lại: {{note}}",
+      "done": {
+        "submit_review": "Đã gửi duyệt.",
+        "approve": "Đã duyệt.",
+        "reject": "Đã trả lại cho người soạn."
+      }
+    },
+    "versions": {
+      "version": "Phiên bản",
+      "current": "Đang dùng",
+      "currentIs": "Người chơi đang nhận v{{version}}.",
+      "notPublished": "Chưa xuất bản (hoặc đã gỡ).",
+      "changeNote": "Ghi chú thay đổi",
+      "publishedAt": "Xuất bản (ICT)",
+      "scheduledFor": "Hẹn {{at}}",
+      "open": "Mở",
+      "newDraftFrom": "Tạo bản nháp từ v{{version}}",
+      "draftCreated": "Đã tạo bản nháp v{{version}}.",
+      "publish": "Xuất bản",
+      "rollbackTo": "Rollback về v{{version}}",
+      "compare": "So sánh 2 phiên bản",
+      "select": "Chọn v{{version}}",
+      "diffTitle": "So sánh v{{a}} → v{{b}}",
+      "unpublish": "Gỡ xuất bản",
+      "rollbackTitle": "Rollback v{{from}} → v{{to}}",
+      "rollbackImpact": "Lượt chơi đang diễn ra giữ phiên bản đã ghim; lượt mới nhận v{{to}}. Không có gì bị xóa.",
+      "rolledBack": "Đã rollback về v{{version}}.",
+      "unpublishTitle": "Gỡ xuất bản",
+      "unpublishImpact": "Lượt mới không còn nhận nội dung này; lượt đã ghim giữ nguyên. Nội dung không bị xóa.",
+      "unpublished": "Đã gỡ xuất bản."
+    },
+    "releases": {
+      "cancel": "Hủy hẹn giờ",
+      "cancelConfirm": "Hủy lịch xuất bản này?",
+      "cancelled": "Đã hủy hẹn giờ."
+    },
+    "publish": {
+      "title": "Xuất bản v{{version}}",
+      "now": "Xuất bản ngay",
+      "schedule": "Hẹn giờ",
+      "when": "Thời điểm",
+      "whenNow": "Ngay",
+      "whenSchedule": "Hẹn giờ (ICT)",
+      "at": "Thời điểm xuất bản (ICT)",
+      "ictHint": "Giờ Việt Nam (ICT); sớm nhất {{at}}.",
+      "tooEarly": "Chọn thời điểm từ {{at}} (ICT) trở đi.",
+      "changeNote": "Ghi chú thay đổi",
+      "scheduled": "Đã hẹn xuất bản lúc {{at}} (ICT).",
+      "done": "Đã xuất bản v{{version}}.",
+      "curveNotice": "Đường cong mới áp dụng từ thời điểm xuất bản (effective_from): không giảm level của ai, không thu hồi XP đã cấp."
+    },
+    "preview": {
+      "title": "Xem trước (Godot Web)",
+      "open": "Xem trước v{{version}}",
+      "frameTitle": "Preview Godot Web v{{version}}",
+      "notConfigured": "Môi trường này chưa cấu hình bản Godot Web cho preview (gamePreviewUrl)."
+    },
+    "field": {
+      "ictHint": "Giờ Việt Nam (ICT), lưu dưới dạng UTC.",
+      "code": "Mã",
+      "name": "Tên",
+      "title": "Tiêu đề",
+      "description": "Mô tả",
+      "event_kind": "Loại sự kiện",
+      "schedule": "Lịch",
+      "start_at": "Bắt đầu",
+      "end_at": "Kết thúc",
+      "audience": "Đối tượng",
+      "components": "Nội dung",
+      "steps": "Các bước",
+      "area_id": "Vùng",
+      "npc_id": "NPC",
+      "scene_ref": "Scene",
+      "item_id": "Vật phẩm",
+      "price": "Giá",
+      "currency_code": "Tiền tệ trong game",
+      "amount": "Số lượng",
+      "paid_track": "Track trả phí",
+      "tiers": "Các cấp",
+      "tier": "Cấp",
+      "rewards": "Phần thưởng",
+      "allowed_params": "Tham số nhà trường được điền",
+      "max_duration_days": "Số ngày tối đa",
+      "formula": "Công thức",
+      "base": "base",
+      "exponent": "exponent",
+      "linear": "linear",
+      "max_level": "Level tối đa",
+      "level_overrides": "Ghi đè ngưỡng level",
+      "titles": "Danh hiệu",
+      "level_rewards": "Phần thưởng lên cấp",
+      "caps": "Giới hạn (cap)",
+      "xp_per_day": "XP tối đa/ngày",
+      "grade_levels": "Khối",
+      "tenant_ids": "Tenant",
+      "school_ids": "Trường",
+      "subject_ids": "Môn"
+    },
+    "quest": {
+      "steps": "Các bước của quest",
+      "stepsTitle": "Các bước ({{count}}) — kéo thả để đổi thứ tự",
+      "newStepType": "Loại bước mới",
+      "addStep": "Thêm bước",
+      "stepN": "Bước {{n}}",
+      "moveUp": "Đưa bước {{n}} lên",
+      "moveDown": "Đưa bước {{n}} xuống",
+      "removeStep": "Xóa bước {{n}}",
+      "stepErrors": "Có bước chưa hợp lệ — mở bước để xem lỗi.",
+      "type": {
+        "talk_npc": "Nói chuyện NPC",
+        "go_to": "Đi tới",
+        "collect": "Thu thập",
+        "discover": "Khám phá",
+        "activity": "Hoạt động học",
+        "minigame": "Mini-game",
+        "party_activity": "Hoạt động nhóm",
+        "interdependent": "Phối hợp vai",
+        "challenge": "Thử thách",
+        "boss": "Boss"
+      }
+    },
+    "npc": {
+      "graph": "Sơ đồ hội thoại",
+      "start": "Node bắt đầu",
+      "edges": "Liên kết giữa các node",
+      "end": "(kết thúc)",
+      "unreachable": "Node không đi tới được từ node bắt đầu: {{ids}}",
+      "nodes": "Các node ({{count}})",
+      "addNode": "Thêm node",
+      "removeNode": "Xóa node {{id}}"
+    },
+    "sim": {
+      "curveTitle": "Bảng ngưỡng, biểu đồ và mô phỏng (server tính)",
+      "seasonTitle": "Mô phỏng season track (server tính)",
+      "minutes": "Phút chơi/ngày",
+      "days": "Ngày chơi/tuần",
+      "weeks": "Số tuần",
+      "run": "Mô phỏng",
+      "saveFirst": "Lưu bản nháp trước để xem bảng ngưỡng và mô phỏng.",
+      "xp": "XP",
+      "points": "điểm",
+      "week": "Tuần",
+      "level": "Level",
+      "tier": "Cấp",
+      "total": "Tổng {{unit}}",
+      "toNext": "{{unit}} để lên cấp kế",
+      "cumulative": "{{unit}} tích lũy",
+      "assumptions": "Server tính {{perDay}} {{unit}} mỗi ngày chơi, {{days}} ngày/tuần (trần ngày {{cap}}).",
+      "chartLabel": "{{unit}} tích lũy theo level: {{values}}"
+    },
+    "progression": {
+      "sources": "Nguồn XP và cap (quy tắc phần thưởng đã xuất bản)",
+      "editSources": "Sửa trong Phần thưởng",
+      "sourceCode": "Mã",
+      "sourceType": "Nguồn",
+      "capPerDay": "Cap XP/ngày",
+      "capHint": "Tổng XP mỗi ngày còn bị giới hạn bởi xp_daily_cap (cấu hình platform)."
+    },
+    "season": {
+      "tiers": "Bảng cấp × phần thưởng ({{count}} cấp)",
+      "tier": "Cấp",
+      "milestone": "Mốc",
+      "rewards": "Phần thưởng",
+      "pointsSummary": "Điểm mỗi cấp: {{perTier}} · trần điểm/ngày: {{cap}}",
+      "freeOnly": "Season track chỉ có track miễn phí — không có track trả phí (ADR-0049)."
+    },
+    "template": {
+      "allowedParamsHint": "allowed_params: các tham số nhà trường được điền khi dùng template; tham số khác server trả 422. Số ngày tối đa không vượt school_event_max_duration_days."
+    },
+    "event": {
+      "createTitle": "Event Builder — sự kiện mới",
+      "step": {
+        "info": "Thông tin (vi/en)",
+        "audience": "Đối tượng",
+        "content": "Nội dung",
+        "rewards": "Phần thưởng",
+        "schedule": "Lịch (ICT)",
+        "preview": "Xem trước",
+        "submit": "Gửi duyệt",
+        "schedule_publish": "Lên lịch"
+      },
+      "stepsBlocked": "Server báo lỗi ở bước: {{steps}}. Sửa trước khi tiếp tục.",
+      "healthyHint": "Mốc thưởng không nên cần quá 3 phiên chơi/tuần; không đếm ngược gây áp lực (EVENT_SEASON_SYSTEM §9). Đây là lưu ý, không chặn.",
+      "publishedOnly": "Chỉ chọn được nội dung đã xuất bản.",
+      "submitHint": "Gửi bản nháp cho người duyệt khác (người soạn không tự duyệt).",
+      "submit": "Gửi duyệt",
+      "schedulePublish": "Lên lịch xuất bản",
+      "waitReview": "Chờ người duyệt khác duyệt, sau đó lên lịch xuất bản.",
+      "openEditor": "Mở trình soạn của sự kiện"
+    },
+    "calendar": {
+      "tab": "Lịch sự kiện",
+      "view": "Chế độ xem",
+      "month": "Tháng",
+      "week": "Tuần",
+      "prev": "Trước",
+      "next": "Sau",
+      "window": "{{from}} → {{to}}",
+      "ict": "Giờ Việt Nam (ICT)",
+      "warningTag": "Cảnh báo",
+      "warnings": "{{count}} cảnh báo lịch do server trả",
+      "warning": {
+        "decoration_area_overlap": "{{event}} và {{other}} cùng trang trí vùng {{area}} trong cùng thời gian."
+      }
+    },
+    "dashboard": {
+      "type": "Loại cấu hình",
+      "translationsPending": "Số mục cần dịch sẽ có khi F082 bổ sung trạng thái bản dịch (translation_status)."
+    },
+    "review": {
+      "open": "Mở để duyệt"
+    },
+    "media": {
+      "upload": "Tải media nội dung game",
+      "file": "Tệp",
+      "kind": "Loại",
+      "kinds": {
+        "image": "Ảnh",
+        "audio": "Âm thanh",
+        "video": "Video",
+        "model3d": "Mô hình 3D"
+      },
+      "license": "Giấy phép",
+      "altText": "Mô tả ảnh (alt)",
+      "send": "Tải lên",
+      "putFailed": "Tải tệp lên thất bại (HTTP {{status}}).",
+      "lookup": "Tra cứu asset",
+      "assetId": "Mã asset",
+      "find": "Tìm",
+      "status": "Trạng thái",
+      "statuses": {
+        "quarantined": "Đang kiểm tra",
+        "processing": "Đang xử lý",
+        "ready": "Sẵn sàng",
+        "rejected": "Bị từ chối"
+      },
+      "rejectReason": "Lý do từ chối"
+    }
+  }
+}

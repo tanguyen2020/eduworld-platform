@@ -11,6 +11,7 @@ export const TEST_CONFIG: RuntimeConfig = {
   env: 'test',
   principalCacheTtlSeconds: 60,
   sessionIdleTimeoutSeconds: 1800,
+  gamePreviewUrl: 'https://preview.game.test/web/index.html',
 };
 
 export const PUBLIC = TEST_CONFIG.apiBaseUrl;

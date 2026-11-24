@@ -420,5 +420,39 @@
       "hold_for_review": "Giữ chờ duyệt",
       "block_and_alert": "Chặn và báo động"
     }
+  },
+  "game": {
+    "form": {
+      "add": "Thêm — {{label}}",
+      "addObject": "Thêm",
+      "removeObject": "Bỏ",
+      "notSet": "Chưa đặt",
+      "item": "Mục {{n}}",
+      "count": "{{count}}/{{max}} mục",
+      "moveUp": "Lên mục {{n}}",
+      "moveDown": "Xuống mục {{n}}",
+      "removeItem": "Xóa mục {{n}}",
+      "jsonHint": "JSON — server kiểm tra khi lưu",
+      "jsonInvalid": "JSON không hợp lệ, chưa lưu thay đổi này",
+      "up": "Lên",
+      "down": "Xuống",
+      "remove": "Xóa"
+    },
+    "render": {
+      "ready": "Đã render",
+      "pending": "Đang render",
+      "failed": "Render lỗi",
+      "not_applicable": "Chưa có ảnh"
+    },
+    "turntable": {
+      "rotate": "Xoay mô hình",
+      "frame": "Khung {{n}}/{{total}}"
+    },
+    "preview": {
+      "frameNotice": "Giao diện game chỉ hiển thị trong khung preview bên dưới (Godot Web)."
+    },
+    "ref": {
+      "missing": "Giá trị không có trong danh sách hiện hành: {{values}}"
+    }
   }
 }

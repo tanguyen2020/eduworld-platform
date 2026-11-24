@@ -3,5 +3,6 @@
   "apiInternalBaseUrl": "http://localhost:5173/__internal/api/v1",
   "env": "local",
   "principalCacheTtlSeconds": 60,
-  "sessionIdleTimeoutSeconds": 1800
+  "sessionIdleTimeoutSeconds": 1800,
+  "gamePreviewUrl": "http://localhost:8060/preview/index.html"
 }

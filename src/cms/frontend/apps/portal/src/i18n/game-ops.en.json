@@ -1,0 +1,313 @@
+{
+  "gameOps": {
+    "common": {
+      "actions": "Actions",
+      "back": "Back",
+      "next": "Next",
+      "cancel": "Cancel",
+      "up": "Up",
+      "down": "Down",
+      "remove": "Remove",
+      "loadMore": "Load more",
+      "untitled": "(untitled)",
+      "v": "v{{version}}"
+    },
+    "type": {
+      "quests": "Quests",
+      "minigame-configs": "Mini-games",
+      "npc-dialogues": "NPC dialogues",
+      "world-areas": "World areas",
+      "story-chapters": "Story chapters",
+      "items": "Items",
+      "reward-rules": "Reward rules",
+      "progression-levels": "Level table",
+      "progression-curves": "XP curves",
+      "challenges": "Challenges",
+      "bosses": "Bosses",
+      "achievements": "Achievements",
+      "collections": "Collections",
+      "shop-items": "Shop items",
+      "currencies": "Currencies",
+      "events": "Events",
+      "event-templates": "Event templates",
+      "season-tracks": "Season tracks"
+    },
+    "status": {
+      "draft": "Draft",
+      "in_review": "In review",
+      "approved": "Approved",
+      "published": "Published",
+      "archived": "Archived",
+      "rejected": "Rejected"
+    },
+    "list": {
+      "thumbnail": "Image",
+      "code": "Code",
+      "title": "Title",
+      "status": "Status",
+      "statusFilter": "Filter by status",
+      "version": "Version",
+      "author": "Author",
+      "updatedAt": "Updated (ICT)",
+      "create": "New {{type}}",
+      "notServed": "{{type}}: module game has no type module for this config yet, so it cannot be edited (the backend answers 404 — F078). The screen is used once the type module exists."
+    },
+    "create": {
+      "title": "New — {{type}}",
+      "hint": "The server checks the whole content when the draft is created; errors show under their field.",
+      "submit": "Create draft"
+    },
+    "editor": {
+      "title": "Title shown in the Console",
+      "tab": {
+        "content": "Edit",
+        "versions": "Versions",
+        "releases": "Release history"
+      },
+      "blocker": "{{field}}: {{message}}",
+      "fieldInvalid": "Invalid value ({{code}}).",
+      "noSchema": "This type has no JSON Schema in the portal yet: enter JSON, the server checks it when saved.",
+      "rejectTitle": "Return the draft (note required)",
+      "render": "3D render of this version",
+      "thumbnailAlt": "Image of {{name}} v{{version}}",
+      "turntableAlt": "360° view of {{name}} v{{version}}",
+      "reviewNote": "Note of the return: {{note}}",
+      "done": {
+        "submit_review": "Sent for review.",
+        "approve": "Approved.",
+        "reject": "Returned to the author."
+      }
+    },
+    "versions": {
+      "version": "Version",
+      "current": "Current",
+      "currentIs": "Players get v{{version}}.",
+      "notPublished": "Not published (or unpublished).",
+      "changeNote": "Change note",
+      "publishedAt": "Published (ICT)",
+      "scheduledFor": "Scheduled {{at}}",
+      "open": "Open",
+      "newDraftFrom": "New draft from v{{version}}",
+      "draftCreated": "Draft v{{version}} created.",
+      "publish": "Publish",
+      "rollbackTo": "Roll back to v{{version}}",
+      "compare": "Compare 2 versions",
+      "select": "Select v{{version}}",
+      "diffTitle": "Compare v{{a}} → v{{b}}",
+      "unpublish": "Unpublish",
+      "rollbackTitle": "Rollback v{{from}} → v{{to}}",
+      "rollbackImpact": "Sessions in progress keep their pinned version; new ones get v{{to}}. Nothing is deleted.",
+      "rolledBack": "Rolled back to v{{version}}.",
+      "unpublishTitle": "Unpublish",
+      "unpublishImpact": "New sessions no longer get this content; pinned sessions keep it. Nothing is deleted.",
+      "unpublished": "Unpublished."
+    },
+    "releases": {
+      "cancel": "Cancel schedule",
+      "cancelConfirm": "Cancel this scheduled publication?",
+      "cancelled": "Schedule cancelled."
+    },
+    "publish": {
+      "title": "Publish v{{version}}",
+      "now": "Publish now",
+      "schedule": "Schedule",
+      "when": "When",
+      "whenNow": "Now",
+      "whenSchedule": "Scheduled (ICT)",
+      "at": "Publication time (ICT)",
+      "ictHint": "Vietnam time (ICT); earliest {{at}}.",
+      "tooEarly": "Pick a time from {{at}} (ICT) on.",
+      "changeNote": "Change note",
+      "scheduled": "Publication scheduled at {{at}} (ICT).",
+      "done": "v{{version}} published.",
+      "curveNotice": "The new curve applies from the publication time (effective_from): no one loses a level, no granted XP is taken back."
+    },
+    "preview": {
+      "title": "Preview (Godot Web)",
+      "open": "Preview v{{version}}",
+      "frameTitle": "Godot Web preview v{{version}}",
+      "notConfigured": "No Godot Web preview build is configured for this environment (gamePreviewUrl)."
+    },
+    "field": {
+      "ictHint": "Vietnam time (ICT), stored in UTC.",
+      "code": "Code",
+      "name": "Name",
+      "title": "Title",
+      "description": "Description",
+      "event_kind": "Event kind",
+      "schedule": "Schedule",
+      "start_at": "Start",
+      "end_at": "End",
+      "audience": "Audience",
+      "components": "Content",
+      "steps": "Steps",
+      "area_id": "Area",
+      "npc_id": "NPC",
+      "scene_ref": "Scene",
+      "item_id": "Item",
+      "price": "Price",
+      "currency_code": "In-game currency",
+      "amount": "Amount",
+      "paid_track": "Paid track",
+      "tiers": "Tiers",
+      "tier": "Tier",
+      "rewards": "Rewards",
+      "allowed_params": "Parameters schools may fill",
+      "max_duration_days": "Maximum days",
+      "formula": "Formula",
+      "base": "base",
+      "exponent": "exponent",
+      "linear": "linear",
+      "max_level": "Maximum level",
+      "level_overrides": "Level threshold overrides",
+      "titles": "Titles",
+      "level_rewards": "Level-up rewards",
+      "caps": "Caps",
+      "xp_per_day": "Maximum XP per day",
+      "grade_levels": "Grades",
+      "tenant_ids": "Tenants",
+      "school_ids": "Schools",
+      "subject_ids": "Subjects"
+    },
+    "quest": {
+      "steps": "Quest steps",
+      "stepsTitle": "Steps ({{count}}) — drag to reorder",
+      "newStepType": "New step type",
+      "addStep": "Add step",
+      "stepN": "Step {{n}}",
+      "moveUp": "Move step {{n}} up",
+      "moveDown": "Move step {{n}} down",
+      "removeStep": "Remove step {{n}}",
+      "stepErrors": "A step is invalid — open it to see the error.",
+      "type": {
+        "talk_npc": "Talk to NPC",
+        "go_to": "Go to",
+        "collect": "Collect",
+        "discover": "Discover",
+        "activity": "Learning activity",
+        "minigame": "Mini-game",
+        "party_activity": "Party activity",
+        "interdependent": "Interdependent",
+        "challenge": "Challenge",
+        "boss": "Boss"
+      }
+    },
+    "npc": {
+      "graph": "Dialogue graph",
+      "start": "Start node",
+      "edges": "Links between nodes",
+      "end": "(end)",
+      "unreachable": "Nodes not reachable from the start node: {{ids}}",
+      "nodes": "Nodes ({{count}})",
+      "addNode": "Add node",
+      "removeNode": "Remove node {{id}}"
+    },
+    "sim": {
+      "curveTitle": "Thresholds, chart and simulation (computed by the server)",
+      "seasonTitle": "Season track simulation (computed by the server)",
+      "minutes": "Minutes played per day",
+      "days": "Days played per week",
+      "weeks": "Weeks",
+      "run": "Simulate",
+      "saveFirst": "Save the draft first to see the thresholds and the simulation.",
+      "xp": "XP",
+      "points": "points",
+      "week": "Week",
+      "level": "Level",
+      "tier": "Tier",
+      "total": "Total {{unit}}",
+      "toNext": "{{unit}} to next",
+      "cumulative": "Cumulative {{unit}}",
+      "assumptions": "The server counts {{perDay}} {{unit}} per play day, {{days}} days/week (daily cap {{cap}}).",
+      "chartLabel": "Cumulative {{unit}} by level: {{values}}"
+    },
+    "progression": {
+      "sources": "XP sources and caps (published reward rules)",
+      "editSources": "Edit in Rewards",
+      "sourceCode": "Code",
+      "sourceType": "Source",
+      "capPerDay": "XP cap/day",
+      "capHint": "Total XP per day is also capped by xp_daily_cap (platform setting)."
+    },
+    "season": {
+      "tiers": "Tiers × rewards ({{count}} tiers)",
+      "tier": "Tier",
+      "milestone": "Milestone",
+      "rewards": "Rewards",
+      "pointsSummary": "Points per tier: {{perTier}} · daily point cap: {{cap}}",
+      "freeOnly": "The season track has a free track only — no paid track (ADR-0049)."
+    },
+    "template": {
+      "allowedParamsHint": "allowed_params: the parameters schools may fill when they use the template; other parameters get 422. Maximum days never exceed school_event_max_duration_days."
+    },
+    "event": {
+      "createTitle": "Event Builder — new event",
+      "step": {
+        "info": "Information (vi/en)",
+        "audience": "Audience",
+        "content": "Content",
+        "rewards": "Rewards",
+        "schedule": "Schedule (ICT)",
+        "preview": "Preview",
+        "submit": "Submit",
+        "schedule_publish": "Schedule"
+      },
+      "stepsBlocked": "The server reported errors in: {{steps}}. Fix them before going on.",
+      "healthyHint": "A milestone should not need more than 3 play sessions a week; no pressure countdown (EVENT_SEASON_SYSTEM §9). A reminder, not a block.",
+      "publishedOnly": "Only published content can be chosen.",
+      "submitHint": "Send the draft to another reviewer (authors never approve their own work).",
+      "submit": "Submit for review",
+      "schedulePublish": "Schedule the publication",
+      "waitReview": "Waiting for another reviewer; then schedule the publication.",
+      "openEditor": "Open the event editor"
+    },
+    "calendar": {
+      "tab": "Event calendar",
+      "view": "View",
+      "month": "Month",
+      "week": "Week",
+      "prev": "Previous",
+      "next": "Next",
+      "window": "{{from}} → {{to}}",
+      "ict": "Vietnam time (ICT)",
+      "warningTag": "Warning",
+      "warnings": "{{count}} calendar warnings from the server",
+      "warning": {
+        "decoration_area_overlap": "{{event}} and {{other}} decorate area {{area}} at the same time."
+      }
+    },
+    "dashboard": {
+      "type": "Config type",
+      "translationsPending": "The number of items to translate comes with F082 (translation_status)."
+    },
+    "review": {
+      "open": "Open to review"
+    },
+    "media": {
+      "upload": "Upload game content media",
+      "file": "File",
+      "kind": "Kind",
+      "kinds": {
+        "image": "Image",
+        "audio": "Audio",
+        "video": "Video",
+        "model3d": "3D model"
+      },
+      "license": "License",
+      "altText": "Image description (alt)",
+      "send": "Upload",
+      "putFailed": "File upload failed (HTTP {{status}}).",
+      "lookup": "Look up an asset",
+      "assetId": "Asset id",
+      "find": "Find",
+      "status": "Status",
+      "statuses": {
+        "quarantined": "Being checked",
+        "processing": "Processing",
+        "ready": "Ready",
+        "rejected": "Rejected"
+      },
+      "rejectReason": "Reject reason"
+    }
+  }
+}

@@ -1,0 +1,1255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:quest-version:2",
+  "title": "QuestVersion",
+  "description": "Định nghĩa một phiên bản quest (bản authoring/CMS). Bản delivery cho client là tập con không chứa thông tin chấm. Xem docs/01-game-design/QUEST_SYSTEM.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "quest_id",
+    "quest_version_id",
+    "code",
+    "version",
+    "status",
+    "owner_scope",
+    "quest_type",
+    "name",
+    "description",
+    "grade_levels",
+    "subject_id",
+    "objective_ids",
+    "start_trigger",
+    "party_mode",
+    "steps",
+    "completion_rule",
+    "rewards"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2,
+      "description": "v2 (2026-11-15): 12 loại quest theo Master Prompt mới §7; ánh xạ từ v1: educational→learning, cooperative→party, competition→challenge. Thêm narrative, giver_npc_id, area_id, repeatability, failure_conditions, learning_requirements, bước discover/challenge/boss, phần thưởng currency/title/collection_item."
+    },
+    "quest_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "quest_version_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$",
+      "description": "Mã người đọc, vd. math.g3.market_multiplication"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "in_review",
+        "approved",
+        "published",
+        "archived",
+        "rejected"
+      ]
+    },
+    "owner_scope": {
+      "const": "platform",
+      "description": "Cấu hình game chỉ thuộc platform, sửa qua /api/v1/game-admin (ADR-0027); tenant dùng khi được gán (ADR-0029)"
+    },
+    "tenant_id": {
+      "type": "null",
+      "description": "Luôn null: dữ liệu platform"
+    },
+    "curriculum_version_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "quest_type": {
+      "enum": [
+        "main",
+        "side",
+        "daily",
+        "weekly",
+        "learning",
+        "exploration",
+        "social",
+        "party",
+        "challenge",
+        "seasonal",
+        "special_event",
+        "boss"
+      ]
+    },
+    "name": {
+      "$ref": "#/$defs/localized_text"
+    },
+    "description": {
+      "$ref": "#/$defs/localized_text"
+    },
+    "narrative": {
+      "$ref": "#/$defs/localized_text",
+      "description": "Lời dẫn truyện hiển thị trong Quest Journal"
+    },
+    "giver_npc_id": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "NPC giao quest"
+    },
+    "area_id": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Khu vực/zone chính của quest"
+    },
+    "story_chapter_code": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Chương truyện thế giới (main quest)"
+    },
+    "grade_levels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9
+      }
+    },
+    "subject_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "subject_code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]{1,63}$",
+      "description": "Mã môn (danh mục subjects của module learning, vd. math); module game lọc theo môn trường bật (enabled_subject_codes) — bắt buộc khi publish (F072)"
+    },
+    "topic_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/uuid"
+      }
+    },
+    "objective_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/uuid"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "maxLength": 40
+      }
+    },
+    "estimated_minutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 120
+    },
+    "start_trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "npc",
+            "quest_board",
+            "auto_daily",
+            "auto_weekly",
+            "assignment",
+            "event",
+            "chain",
+            "discovery",
+            "level_reached"
+          ]
+        },
+        "npc_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "area_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "event_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "interactable_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "description": "Điểm khám phá mở quest ẩn (kind = discovery, F072): quest hiện khi học sinh đã tìm thấy một trong các điểm này",
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "npc"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "npc_id"
+            ],
+            "properties": {
+              "npc_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "discovery"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "interactable_ids"
+            ],
+            "properties": {
+              "interactable_ids": true
+            }
+          }
+        }
+      ]
+    },
+    "prerequisites": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_level": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "completed_quest_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "unlocked_area_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          }
+        },
+        "required_subject_enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "completed_achievement_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        }
+      }
+    },
+    "learning_requirements": {
+      "type": "array",
+      "description": "Yêu cầu học tập để nhận quest (đọc projection mastery từ module learning). Không dùng để khóa nội dung học tập bắt buộc.",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "objective_id",
+          "min_mastery_level"
+        ],
+        "properties": {
+          "objective_id": {
+            "$ref": "#/$defs/uuid"
+          },
+          "min_mastery_level": {
+            "enum": [
+              "beginning",
+              "developing",
+              "proficient",
+              "mastered"
+            ]
+          }
+        }
+      }
+    },
+    "repeatability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "once",
+            "per_period",
+            "repeatable"
+          ],
+          "description": "once: một lần; per_period: theo availability.recurrence; repeatable: làm lại sau cooldown"
+        },
+        "cooldown_hours": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 720
+        },
+        "max_completions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "repeat_reward_policy": {
+          "enum": [
+            "reward_rule_diminishing",
+            "no_reward"
+          ],
+          "default": "reward_rule_diminishing"
+        }
+      }
+    },
+    "failure_conditions": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "time_limit_exceeded",
+              "availability_ended",
+              "party_disbanded",
+              "challenge_failed",
+              "boss_ended"
+            ]
+          },
+          "step_id": {
+            "$ref": "#/$defs/step_id"
+          },
+          "on_fail": {
+            "enum": [
+              "fail_quest",
+              "reset_step"
+            ],
+            "default": "reset_step"
+          }
+        }
+      }
+    },
+    "availability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "recurrence": {
+          "enum": [
+            "none",
+            "daily",
+            "weekly"
+          ],
+          "default": "none"
+        },
+        "time_limit_minutes": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_completions_per_period": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "party_mode": {
+      "enum": [
+        "solo",
+        "party_optional",
+        "party_required"
+      ]
+    },
+    "party_size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min",
+        "max"
+      ],
+      "properties": {
+        "min": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        }
+      }
+    },
+    "shared_progress_policy": {
+      "enum": [
+        "individual",
+        "shared_steps",
+        "collective_count"
+      ],
+      "default": "individual"
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 30,
+      "items": {
+        "$ref": "#/$defs/step"
+      }
+    },
+    "completion_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "all_required_steps",
+            "any_n_of"
+          ]
+        },
+        "step_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/step_id"
+          }
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "any_n_of"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "step_ids",
+              "n"
+            ],
+            "properties": {
+              "step_ids": true,
+              "n": true
+            }
+          }
+        }
+      ]
+    },
+    "rewards": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/reward"
+      }
+    },
+    "dialogue_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/uuid"
+      },
+      "description": "dialogue_id của NPCDialogue liên quan (để preload)."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "quest_type": {
+            "enum": [
+              "learning",
+              "daily",
+              "weekly",
+              "challenge",
+              "party",
+              "boss"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "objective_ids": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "party_mode": {
+            "enum": [
+              "party_optional",
+              "party_required"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "party_size",
+          "shared_progress_policy"
+        ],
+        "properties": {
+          "party_size": true,
+          "shared_progress_policy": true
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "step_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_]{1,32}$"
+    },
+    "localized_text": {
+      "type": "object",
+      "description": "Văn bản hiển thị song ngữ bắt buộc đủ vi và en (ADR-0056 mục 2).",
+      "required": [
+        "vi",
+        "en"
+      ],
+      "properties": {
+        "vi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      },
+      "additionalProperties": false
+    },
+    "content_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "question_set",
+            "lesson",
+            "assessment",
+            "activity"
+          ],
+          "description": "activity = learning activity đã publish (FR-CNT-013, ADR-0048, createAttempt của F030); F072 chỉ mở bước activity (lesson/question_set/assessment bị validator từ chối cho tới khi createAttempt hỗ trợ)"
+        },
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Bỏ trống = version published mới nhất tại thời điểm publish quest (được khóa khi publish)."
+        },
+        "version_id": {
+          "$ref": "#/$defs/uuid",
+          "description": "content_version_id đã khóa của activity (gửi xuống createAttempt); bỏ trống = version published hiện hành lúc mở attempt (F072)"
+        }
+      }
+    },
+    "clue_content_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "description": "Dữ kiện riêng của một role (learning material/thẻ dữ kiện đã publish); không chứa đáp án (ADR-0016).",
+      "properties": {
+        "kind": {
+          "enum": [
+            "learning_material"
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "pass_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_correct_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "min_questions": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "retry_policy": {
+          "enum": [
+            "new_questions",
+            "same_questions"
+          ],
+          "default": "new_questions"
+        },
+        "max_attempts_per_day": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step_id",
+        "order",
+        "type",
+        "title"
+      ],
+      "properties": {
+        "step_id": {
+          "$ref": "#/$defs/step_id"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "type": {
+          "enum": [
+            "talk_npc",
+            "go_to",
+            "collect",
+            "discover",
+            "activity",
+            "minigame",
+            "party_activity",
+            "interdependent",
+            "challenge",
+            "boss"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/localized_text"
+        },
+        "hint": {
+          "$ref": "#/$defs/localized_text"
+        },
+        "depends_on": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/step_id"
+          }
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false
+        },
+        "assignee": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^(each_member|any_member|role:[a-z][a-z0-9_]{1,31})$",
+          "description": "Chỉ có nghĩa khi quest chơi theo party (QUEST_SYSTEM §3.2): each_member (mặc định cho bước học tập), any_member (một người làm tính cho cả nhóm, chỉ cho bước khung), role:<role> (chỉ người giữ role đó)."
+        },
+        "area_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "npc_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "dialogue_node_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "interactable_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "interactable_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          }
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "content_ref": {
+          "$ref": "#/$defs/content_ref"
+        },
+        "minigame_config_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "minigame_config_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "challenge_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "challenge_min_difficulty": {
+          "enum": [
+            "easy",
+            "normal",
+            "hard",
+            "expert",
+            "legendary"
+          ]
+        },
+        "boss_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "pass_rule": {
+          "$ref": "#/$defs/pass_rule"
+        },
+        "collective_target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "metric",
+            "count",
+            "min_contribution"
+          ],
+          "properties": {
+            "metric": {
+              "enum": [
+                "correct_answers",
+                "completed_items"
+              ]
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "min_contribution": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "description": "Bước interdependent: mỗi role giữ một phần dữ kiện (QUEST_SYSTEM §3.2) [Proposed].",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "title",
+              "clue_content_ref"
+            ],
+            "properties": {
+              "role": {
+                "type": "string",
+                "maxLength": 32,
+                "pattern": "^[a-z][a-z0-9_]{1,31}$"
+              },
+              "title": {
+                "$ref": "#/$defs/localized_text"
+              },
+              "clue_content_ref": {
+                "$ref": "#/$defs/clue_content_ref"
+              },
+              "icon_key": {
+                "type": "string",
+                "maxLength": 64
+              }
+            }
+          }
+        },
+        "role_assignment": {
+          "enum": [
+            "auto",
+            "leader_assigns"
+          ],
+          "default": "auto",
+          "description": "auto: server chia đều theo thứ tự vào phòng; leader_assigns: trưởng nhóm gán."
+        },
+        "allow_multi_role": {
+          "type": "boolean",
+          "default": true,
+          "description": "Một người giữ nhiều role khi số thành viên online ít hơn số role (kể cả chơi solo)."
+        },
+        "share_mode": {
+          "enum": [
+            "clue_card",
+            "clue_card_and_chat"
+          ],
+          "default": "clue_card",
+          "description": "clue_card_and_chat thêm trao đổi qua channel party (cùng ChatPolicy và pipeline kiểm duyệt, ADR-0020)."
+        },
+        "completion": {
+          "enum": [
+            "all_members",
+            "min_members"
+          ],
+          "default": "all_members"
+        },
+        "min_members_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "talk_npc"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "npc_id"
+            ],
+            "properties": {
+              "npc_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "go_to"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "area_id",
+              "interactable_id"
+            ],
+            "properties": {
+              "area_id": true,
+              "interactable_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "collect"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "area_id",
+              "interactable_ids",
+              "count"
+            ],
+            "properties": {
+              "area_id": true,
+              "interactable_ids": true,
+              "count": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "activity"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "content_ref",
+              "pass_rule"
+            ],
+            "properties": {
+              "content_ref": true,
+              "pass_rule": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "minigame"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "minigame_config_id",
+              "pass_rule"
+            ],
+            "properties": {
+              "minigame_config_id": true,
+              "pass_rule": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "discover"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "area_id",
+              "interactable_ids",
+              "count"
+            ],
+            "properties": {
+              "area_id": true,
+              "interactable_ids": true,
+              "count": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "challenge"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "challenge_id"
+            ],
+            "properties": {
+              "challenge_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "boss"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "boss_id"
+            ],
+            "properties": {
+              "boss_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "party_activity"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "collective_target"
+            ],
+            "properties": {
+              "collective_target": true
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "content_ref"
+                ],
+                "properties": {
+                  "content_ref": true
+                }
+              },
+              {
+                "required": [
+                  "minigame_config_id"
+                ],
+                "properties": {
+                  "minigame_config_id": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "interdependent"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "roles",
+              "content_ref",
+              "pass_rule"
+            ],
+            "properties": {
+              "roles": true,
+              "content_ref": true,
+              "pass_rule": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "completion": {
+                "const": "min_members"
+              }
+            },
+            "required": [
+              "completion"
+            ]
+          },
+          "then": {
+            "required": [
+              "min_members_count"
+            ],
+            "properties": {
+              "min_members_count": true
+            }
+          }
+        }
+      ]
+    },
+    "reward": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "xp",
+            "currency",
+            "item",
+            "badge",
+            "title",
+            "collection_item"
+          ]
+        },
+        "currency_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "title_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "collection_item_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "item_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "badge_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "first_completion_only": {
+          "type": "boolean",
+          "default": false
+        },
+        "reward_rule_id": {
+          "$ref": "#/$defs/uuid"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "xp"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "amount"
+            ],
+            "properties": {
+              "amount": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "item"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "item_id"
+            ],
+            "properties": {
+              "item_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "badge"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "badge_id"
+            ],
+            "properties": {
+              "badge_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "currency"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "currency_code",
+              "amount"
+            ],
+            "properties": {
+              "currency_code": true,
+              "amount": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "title"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "title_code"
+            ],
+            "properties": {
+              "title_code": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "collection_item"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "collection_item_id"
+            ],
+            "properties": {
+              "collection_item_id": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

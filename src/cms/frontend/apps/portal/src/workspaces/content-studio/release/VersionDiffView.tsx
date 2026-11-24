@@ -2,13 +2,14 @@
 // block in four groups — text, answers, media, metadata. Answer changes are shown only with
 // `learning_content.review` (the server omits them otherwise; the client drops them too, AGENTS R6). Needs ≥ 1024 px
 // (ADMIN_PORTAL §1.5): smaller screens get "Tác vụ này cần màn hình lớn hơn".
-import { Alert, Collapse, Empty, Skeleton, Table, Tag, Typography } from 'antd';
+import { Alert, Collapse, Empty, Skeleton, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { LargeScreenRequired } from '../../../shell/StatusPages';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { useMediaQuery } from '../../../shell/useMediaQuery';
 import { EDITOR_MIN_WIDTH_QUERY } from '../shared/config';
-import { diffValueText, groupDiff, type DiffChange, type DiffGroup } from './releaseOptions';
+import { DiffTable } from '../../../shared/release/DiffTable';
+import { groupDiff, type DiffGroup } from './releaseOptions';
 import { useDiff, type ItemRef, type VersionDiff } from './useRelease';
 
 const GROUPS: DiffGroup[] = ['text', 'answer', 'media', 'metadata'];
@@ -35,12 +36,6 @@ export function VersionDiffView({ item, version, against, canReview }: VersionDi
 export function DiffGroups({ diff, canReview }: { diff: VersionDiff; canReview: boolean }) {
   const { t } = useTranslation();
   const groups = groupDiff(diff.changes, canReview);
-  const columns = [
-    { key: 'path', title: t('content_studio.diff.field'), render: (_: unknown, c: DiffChange) => <Typography.Text code>{c.path}</Typography.Text> },
-    { key: 'op', title: t('content_studio.diff.op'), render: (_: unknown, c: DiffChange) => <Tag>{t(`content_studio.diff.ops.${c.op}`)}</Tag> },
-    { key: 'before', title: t('content_studio.diff.before', { version: diff.from_version }), render: (_: unknown, c: DiffChange) => <Typography.Text delete={c.op !== 'added'}>{diffValueText(c.before)}</Typography.Text> },
-    { key: 'after', title: t('content_studio.diff.after', { version: diff.to_version }), render: (_: unknown, c: DiffChange) => <Typography.Text mark={c.op !== 'removed'}>{diffValueText(c.after)}</Typography.Text> },
-  ];
   const total = GROUPS.reduce((n, g) => n + groups[g].length, 0);
   const title = t('content_studio.diff.title', { a: diff.from_version, b: diff.to_version });
   return (
@@ -55,7 +50,7 @@ export function DiffGroups({ diff, canReview }: { diff: VersionDiff; canReview: 
           items={GROUPS.filter((g) => g !== 'answer' || canReview).map((g) => ({
             key: g,
             label: t('content_studio.diff.group', { group: t(`content_studio.diff.groups.${g}`), count: groups[g].length }),
-            children: groups[g].length ? <Table size="small" rowKey={(c) => `${c.path}:${c.op}`} columns={columns} dataSource={groups[g]} pagination={false} scroll={{ x: true }} /> : <Typography.Text type="secondary">{t('content_studio.diff.noneInGroup')}</Typography.Text>,
+            children: groups[g].length ? <DiffTable changes={groups[g]} fromVersion={diff.from_version} toVersion={diff.to_version} /> : <Typography.Text type="secondary">{t('content_studio.diff.noneInGroup')}</Typography.Text>,
           }))}
         />
       )}

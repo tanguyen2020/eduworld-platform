@@ -2,11 +2,8 @@
 // "code" (no runtime setting exists for them) or from contract `maxItems` / `maxLength`; named once here.
 import { FIELDS } from './fieldSchemas';
 
-/** CONFIG_DEFAULTS `content_autosave_interval` = 10 s (ADMIN_PORTAL §1.4, scope code). */
-export const CONTENT_AUTOSAVE_INTERVAL_MS = 10_000;
-
-/** Pause in typing that saves earlier than the interval [Proposed]. */
-export const CONTENT_AUTOSAVE_DEBOUNCE_MS = 2_000;
+// shared with the Game Operations Console (F079): defined once in shared/release/config.ts
+export { CONTENT_AUTOSAVE_INTERVAL_MS, CONTENT_AUTOSAVE_DEBOUNCE_MS, EDITOR_MIN_WIDTH_QUERY, SCHEDULED_PUBLISH_MIN_LEAD_MIN } from '../../../shared/release/config';
 
 /**
  * CONFIG_DEFAULTS `assets_per_version_max` = 50 (ADR-0044); the platform setting is not readable by content editors,
@@ -20,17 +17,8 @@ export const MEDIA_POLL_MS = 2_000;
 /** Poll period of a translation export/import job [Proposed]. */
 export const TRANSLATION_JOB_POLL_MS = 2_000;
 
-/** ADMIN_PORTAL §1.5: editors need ≥ 1024 px; below, content is read only. */
-export const EDITOR_MIN_WIDTH_QUERY = '(min-width: 1024px)';
-
 /** Grades whose stem must be spoken (CONTENT_MODEL §8.1, `g1_3`, [Proposed] PED-07 / OQ-23). */
 export const SPOKEN_STEM_GRADES: readonly number[] = [1, 2, 3];
-
-/**
- * CONFIG_DEFAULTS `scheduled_publish_min_lead` = 5 min (CONTENT_MODEL, platform setting not readable by content
- * staff): earliest `publish_at` offered by the scheduler (F054-AC-04); the server checks again.
- */
-export const SCHEDULED_PUBLISH_MIN_LEAD_MIN = 5;
 
 /** CONFIG_DEFAULTS `publish_to_visible_max` ≤ 30 s (ADR-0043): "Đang chuẩn bị cache → Đã xuất bản" notice. */
 export const PUBLISH_TO_VISIBLE_MAX_S = 30;

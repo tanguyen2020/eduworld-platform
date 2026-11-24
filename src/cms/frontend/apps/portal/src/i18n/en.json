@@ -231,5 +231,37 @@
   "authz": {
     "permissionGroup": "{{group}} ({{total}})",
     "noPermission": "No permission for this scope."
+  },
+  "release": {
+    "loadMore": "Load more",
+    "diff": {
+      "field": "Field / block",
+      "op": "Change",
+      "ops": {
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed"
+      },
+      "before": "Before (v{{version}})",
+      "after": "After (v{{version}})"
+    },
+    "timeline": {
+      "none": "No release yet.",
+      "action": {
+        "publish": "Published v{{to}}",
+        "rollback": "Rollback v{{from}} → v{{to}}",
+        "unpublish": "Unpublished v{{from}}"
+      },
+      "state": {
+        "scheduled": "Scheduled",
+        "applied": "Applied",
+        "cancelled": "Cancelled",
+        "failed": "Not applied"
+      },
+      "by": "By {{user}} at {{at}}",
+      "scheduledFor": "Scheduled {{at}}",
+      "reason": "Reason: {{reason}}",
+      "failed": "The scheduled release could not be applied ({{code}})."
+    }
   }
 }

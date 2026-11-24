@@ -18,6 +18,19 @@ const ENV_KEYS: Record<Key, string> = {
   principalCacheTtlSeconds: 'VITE_PRINCIPAL_CACHE_TTL_SECONDS',
   sessionIdleTimeoutSeconds: 'VITE_SESSION_IDLE_TIMEOUT_SECONDS',
 };
+/** Optional keys (F079-AC-17): absent leaves the feature off; present must be a valid URL. */
+const OPTIONAL_URL_KEYS = { gamePreviewUrl: 'VITE_GAME_PREVIEW_URL' } as const;
+
+const optionalUrl = (v: unknown): string | undefined | null => {
+  if (v === undefined || v === null || v === '') return undefined;
+  if (typeof v !== 'string') return null;
+  try {
+    new URL(v);
+    return v.replace(/\/+$/, '');
+  } catch {
+    return null;
+  }
+};
 const URL_KEYS = new Set<Key>(['apiBaseUrl', 'apiInternalBaseUrl']);
 
 export class RuntimeConfigError extends Error {
@@ -48,8 +61,11 @@ export function validateRuntimeConfig(raw: unknown): RuntimeConfig | string[] {
     }
     return false;
   });
+  const preview = optionalUrl(obj.gamePreviewUrl);
+  if (preview === null) bad.push('gamePreviewUrl' as Key);
   if (bad.length) return bad;
   return {
+    ...(preview ? { gamePreviewUrl: preview } : {}),
     apiBaseUrl: String(obj.apiBaseUrl).replace(/\/+$/, ''),
     apiInternalBaseUrl: String(obj.apiInternalBaseUrl).replace(/\/+$/, ''),
     env: String(obj.env),
@@ -63,8 +79,9 @@ type Env = Record<string, string | boolean | undefined>;
 function fromEnv(env: Env): RuntimeConfig | string[] {
   const raw: Record<string, unknown> = {};
   for (const k of KEYS) raw[k] = env[ENV_KEYS[k]];
+  raw.gamePreviewUrl = env[OPTIONAL_URL_KEYS.gamePreviewUrl];
   const r = validateRuntimeConfig(raw);
-  return Array.isArray(r) ? r.map((k) => ENV_KEYS[k as Key]) : r;
+  return Array.isArray(r) ? r.map((k) => (k === 'gamePreviewUrl' ? OPTIONAL_URL_KEYS.gamePreviewUrl : ENV_KEYS[k as Key])) : r;
 }
 
 /**
