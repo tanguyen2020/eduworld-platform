@@ -16,7 +16,7 @@
 ### Session 2026-11-20 (triển khai M-C2, [Confirmed] — Tech Lead xác nhận khi review)
 
 - Q: `TelemetryEvent.type` không có `client_unsupported_assignment_kind`, `renderer_fallback`. Gửi thế nào? → A: [Confirmed] Gửi `type = client_error` với `error_code` = tên sự kiện (`client_unsupported_assignment_kind`, `renderer_fallback`), `scene_code` (`quest_journal`, `boot`); không đổi contract.
-- Q: Ngưỡng chọn preset từ benchmark? → A: [Confirmed] Đo FPS p10 ở preset Trung bình trong ≤ 5 s (bỏ 10 khung đầu): ≥ 1,5 × mục tiêu → Cao (chỉ PC), ≥ 0,9 × mục tiêu (p10 ≥ 27 ở mục tiêu 30, PERFORMANCE_BUDGET §3) → Trung bình, còn lại → Thấp (`QualityPolicy.choose_preset`). Lab thiết bị (SC-004) hiệu chỉnh lại.
+- Q: Ngưỡng chọn preset từ benchmark? → A: [Confirmed] Đo FPS p10 ở preset Trung bình trong ≤ 5 s (bỏ 10 khung đầu): ≥ 1,5 × mục tiêu → Cao (chỉ PC native — từ 2026-11-24 không còn bản PC native, PC phòng máy chạy Web tối đa Trung bình, ADR-0101), ≥ 0,9 × mục tiêu (p10 ≥ 27 ở mục tiêu 30, PERFORMANCE_BUDGET §3) → Trung bình, còn lại → Thấp (`QualityPolicy.choose_preset`). Lab thiết bị (SC-004) hiệu chỉnh lại.
 - Q: Áp renderer cho lần chạy sau thế nào? → A: [Confirmed] `application/config/project_settings_override = user://renderer_override.cfg` do `QualityManager` ghi (chỉ `rendering/renderer/rendering_method`). Phát hiện lỗi: cờ `renderer_boot_pending` trong `settings.cfg` còn bật (lần trước chưa vẽ được khung đầu) hoặc engine đã tự chuyển Compatibility; bỏ qua khi headless, chạy script `-s` hoặc renderer ép bằng dòng lệnh.
 - Q: Spawn point "do server trả" lấy ở đâu khi bootstrap không có trường này? → A: `AreaEnterResult.spawn_point_id` (F092, `enterWorldArea`) ghi vào `AppState.spawn_point_id`; ở M-C2 chưa có lời gọi đó nên dùng `main_hub.default`.
 - Q: Bài `content_kind = assessment` chưa có `exam_session_id` (trước F042)? → A: Vẫn phát `ui_requested("exam_lobby", {exam_session_id: "", assignment_id})`; exam lobby (F064) xử lý. Trước F064, intent nào chưa có màn đăng ký (`UiScreenRegistry`) đều hiện `ui.activity_player.update_required`.
@@ -96,7 +96,7 @@ Lần đầu vào game, `QualityManager` chạy benchmark ngắn và chọn pres
 
 **Why this priority**: "Chạy được trên máy tầm trung" là yêu cầu bắt buộc (ADR-0057); hub là cảnh đo chuẩn.
 
-**Independent Test**: Chạy trên DEV-PC-MID và DEV-AND-MID1: preset tự chọn Trung bình, FPS đạt `target_fps`; benchmark headless CI của `main_hub` không vượt `scene_budget_hub`.
+**Independent Test**: Chạy trên DEV-WEB-MID (PC chạy bản Web — ADR-0101) và DEV-AND-MID1: preset tự chọn Trung bình, FPS đạt `target_fps`; benchmark headless CI của `main_hub` không vượt `scene_budget_hub`.
 
 **Acceptance Criteria (EARS)**:
 
@@ -183,7 +183,7 @@ Sau khoảng thời gian chơi liên tục do trường/platform cấu hình, M�
 ### Measurable Outcomes
 
 - **SC-001**: 100% học sinh demo vào được Hub và tới bảng "Nhà trường giao" trong ≤ 2 thao tác từ HUD (PC và mobile).
-- **SC-002**: Trên DEV-AND-MID1 preset Trung bình, Hub greybox đạt FPS p10 ≥ 27; trên DEV-PC-MID ≥ 50.
+- **SC-002**: Trên DEV-AND-MID1 preset Trung bình, Hub greybox đạt FPS p10 ≥ 27; trên DEV-WEB-MID (PC phòng máy chạy bản Web, mục tiêu Web — ADR-0101) ≥ 27 (trước 2026-11-24: DEV-PC-MID native ≥ 50).
 - **SC-003**: Bài vừa được giao xuất hiện trong tab khi học sinh quay lại Hub, không cần khởi động lại.
 - **SC-004**: Benchmark tự phát hiện chọn đúng preset trên toàn bộ lab thiết bị tham chiếu.
 

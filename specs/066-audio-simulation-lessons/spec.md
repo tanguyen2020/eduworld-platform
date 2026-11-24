@@ -92,7 +92,7 @@ Học sinh mở bài nghe: thấy lượt nghe còn lại, chỉnh tốc độ, 
 
 **Why this priority**: Giá trị trực tiếp cho học sinh; exit M4a có bài nghe/mô phỏng.
 
-**Independent Test**: `hs.an.3a` trên Godot Windows và Web: bài nghe `max_plays = 2` → sau lượt 2 nút phát mờ; mô phỏng đòn bẩy cân bằng → "Đạt mục tiêu!" sau phản hồi server; tắt mạng giữa chừng → run được gửi lại cùng key.
+**Independent Test**: `hs.an.3a` trên Godot Android và Web (ADR-0101): bài nghe `max_plays = 2` → sau lượt 2 nút phát mờ; mô phỏng đòn bẩy cân bằng → "Đạt mục tiêu!" sau phản hồi server; tắt mạng giữa chừng → run được gửi lại cùng key.
 
 **Acceptance Criteria (EARS)**:
 

@@ -1,6 +1,6 @@
 # Chat System
 
-> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Multiplayer Engineer + Identity & Security Engineer · Cập nhật: 2026-11-21 (F115: `chat.sync` → `chat.channel.sync`, facts đường gửi khi PostgreSQL ngừng §5.4); 2026-11-17 (ADR-0078: PII/grooming luôn chạy, giờ giới nghiêm platform, preset quick message + emote, tenant `common`; 2026-11-16: channel `study_group` theo event module learning — ADR-0084)
+> Trạng thái: Draft · Phiên bản: 0.6 · Owner: Multiplayer Engineer + Identity & Security Engineer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-21 (F115: `chat.sync` → `chat.channel.sync`, facts đường gửi khi PostgreSQL ngừng §5.4); 2026-11-17 (ADR-0078: PII/grooming luôn chạy, giờ giới nghiêm platform, preset quick message + emote, tenant `common`; 2026-11-16: channel `study_group` theo event module learning — ADR-0084)
 > Liên quan: [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) · [ADR-0030](../adr/ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md) · [ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) · [ADR-0033](../adr/ADR-0033-purge-nhom-chat-gameplay-ngoai-le-co-kiem-soat-cua-adr-0028.md) · [ADR-0034](../adr/ADR-0034-bo-tinh-nang-chat-day-du.md) · [ADR-0035](../adr/ADR-0035-duong-truyen-chat-nats-jetstream-valkey-pub-sub-luu-postgres.md) · [MODERATION](MODERATION.md) · [SOCIAL_SYSTEM](SOCIAL_SYSTEM.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)
 
 > [!IMPORTANT]
@@ -173,7 +173,7 @@ Quy tắc:
 
 Không bao giờ cho người gửi biết từ nào bị khớp, vị trí khớp hay danh mục cụ thể (ADR-0030). Khi System Admin tắt kiểm duyệt cho tenant, học sinh không thấy khác biệt nào [Confirmed].
 
-**Menu thao tác trên tin** (nhấn giữ trên mobile, chuột phải hoặc nút "⋯" trên desktop); mục hiển thị theo quyền và loại channel (§7.1):
+**Menu thao tác trên tin** (nhấn giữ trên mobile, chuột phải hoặc nút "⋯" trên Web/PC); mục hiển thị theo quyền và loại channel (§7.1):
 
 | Mục | Ai thấy | Trải nghiệm |
 |---|---|---|

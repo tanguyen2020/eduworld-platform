@@ -47,7 +47,7 @@ Lệnh (Windows không có `make`; gọi trực tiếp lệnh của target `godo
 |---|---|
 | GdUnit4 `-a res://tests` (= `make godot-test`) | **313 test: 308 pass, 0 fail, 5 skip** (4 integration F061 + 1 integration F062 tự skip khi thiếu `EDUWORLD_IT_API_BASE_URL`); 81 test mới của F062 |
 | `tools/tests/scan_artifact_test.sh` | 20/20 |
-| `--export-pack "Windows Desktop"` + `scan_artifact.sh` (= `make godot-export-check`) | `scan_artifact: OK (1 artifact(s), 13 patterns)` — không `mock.json`, không `tests/`, không `tools/` |
+| `--export-pack "Windows Desktop"` + `scan_artifact.sh` (= `make godot-export-check`; từ 2026-11-24 preset "Android" — ADR-0101) | `scan_artifact: OK (1 artifact(s), 13 patterns)` — không `mock.json`, không `tests/`, không `tools/` |
 | Boot headless `--env=mock` (= `make godot-smoke`) | `splash_shown` |
 | `check_typed`, `lint_theme_overrides`, `lint_layers`, `lint_signals`, `extract_pot --check`, `pseudo_locale --check`, `gen_fixtures --check`, `check_no_admin_ui` | OK (179 / 136 / 71 / 98 / 120 file; 195 khóa vi/en) |
 | `design`: `pnpm test`, `pnpm check` (= `make design-tokens-check`) | 56/56; `design-tokens-check: OK` (188/188 cặp tương phản AA) |
@@ -77,7 +77,7 @@ Lệnh (Windows không có `make`; gọi trực tiếp lệnh của target `godo
 
 **Chưa có bằng chứng (ghi rõ):**
 - Kịch bản §2 với backend thật (bước 1–12) và `tests/integration/learning/test_my_assignments_isolation.gd` (T018, T033): chờ F041 `Done` (endpoint `listMyAssignments` chưa hiện thực) — F062 giữ `In progress` theo CODE_PLAN §5 (*).
-- F062-AC-20, SC-002, SC-004: đo FPS p10/khởi động lạnh trên DEV-PC-MID, DEV-AND-MID1 và lab thiết bị (chạy `res://tests/perf/MainHubBenchmark.tscn -- --seconds=20` với renderer) — chưa có thiết bị/lane F133.
+- F062-AC-20, SC-002, SC-004: đo FPS p10/khởi động lạnh trên DEV-WEB-MID (PC chạy Web — ADR-0101), DEV-AND-MID1 và lab thiết bị (chạy `res://tests/perf/MainHubBenchmark.tscn -- --seconds=20` với renderer) — chưa có thiết bị/lane F133.
 - F062-AC-16 phần nhiệt Android: logic hạ trần có test, nguồn trạng thái nhiệt (plugin `PowerManager`) chờ F133. F062-AC-17 trên thiết bị: cơ chế ghi `user://renderer_override.cfg` (`application/config/project_settings_override`) có test, chưa thử với driver lỗi thật.
 - `gdlint` chỉ chạy ở CI (`godot.yml`); mã viết theo cấu hình mặc định gdtoolkit.
 
@@ -91,7 +91,7 @@ Lệnh (Windows không có `make`; gọi trực tiếp lệnh của target `godo
 | Suite F062 sửa/thêm: `test_quest_journal_assigned.gd`, `test_assignment_service.gd`, `test_activity_host.gd` | 9/9, 11/11, 11/11 (mới: `test_question_set_opens_the_activity_host_with_the_set_id`, `test_row_shows_the_subject_name_only_when_the_server_sends_it`, `test_model_reads_subject_name_and_ignores_a_malformed_one`) |
 | `check_typed`, `lint_theme_overrides`, `lint_layers`, `lint_signals`, `extract_pot --check`, `pseudo_locale --check` | OK (413 / 376 / 214 / 241 / 334 file; pseudo 1 file) |
 | `node src/game/tools/gen_fixtures.mjs --check`, `check_no_admin_ui.sh` | `gen_fixtures: OK (62 files)`, OK |
-| `scan_artifact_test.sh`, `--export-pack "Windows Desktop"` + `scan_artifact.sh` | 20/20; `scan_artifact: OK (1 artifact(s), 13 patterns)` |
+| `scan_artifact_test.sh`, `--export-pack "Windows Desktop"` + `scan_artifact.sh` (bằng chứng 2026-11-20; nay `make godot-export-check` export preset "Android" — ADR-0101) | 20/20; `scan_artifact: OK (1 artifact(s), 13 patterns)` |
 | `node scripts/specs/check-features.mjs` | 92 feature, 0 lỗi |
 
 Test timing F070: chạy riêng 3 lần đều fail (183 ms > 100 ms) khi máy 100 % CPU. Đã đổi sang best of 3 lượt + dung sai CI 5 % (cách của `minigame_benchmark_test.gd`, không đổi ngưỡng 100 ms): lượt chậm nhất mỗi lượt đo được `[137208, 123551, 101884]` µs (pass) và `[122516, 119652, 113895]` µs (fail) — mọi nút chậm đều (~50 ms/nút, mũi tên tóc/trang phục ~100 ms), tức tải máy kéo dài chứ không phải một lần giật; cần chạy lại khi máy rảnh.

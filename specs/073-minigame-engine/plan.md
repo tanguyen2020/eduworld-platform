@@ -14,7 +14,7 @@ Ba phần. (1) **module game**: item `minigame_config` trên lõi phát hành F0
 | Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/modcall`, nats.go, JSON Schema validator · GdUnit4 |
 | Storage | `eduworld_game`: `game.minigame_configs`, `game.minigame_config_versions`, `game.minigame_plays`; `eduworld_learning`: `ref.minigame_config_versions`, cột `assessment.attempts.game_score` |
 | Testing | go test + testcontainers; facade test game ↔ learning (`createAttempt`, `validateMinigameQuestionSource`), contract test event; test hợp đồng plugin chung (TC-ACT-001); GdUnit4 |
-| Target Platform | Linux container (`core-api` + `worker`; module game, learning) · Windows, Android, iOS, Web |
+| Target Platform | Linux container (`core-api` + `worker`; module game, learning) · Android, iOS, Web (ADR-0101) |
 | Project Type | backend module (2) + game client |
 | Performance Goals | Chấm một câu p95 theo round-trip chấm của GAME_DESIGN §7.1; hiệu ứng ≤ 100 ms sau kết quả; scene trong ngân sách [PERFORMANCE_BUDGET](../../docs/08-game-client/PERFORMANCE_BUDGET.md) |
 | Constraints | AGENTS R1, R2, R5, R6, R8, R13, R19, R26, R29, R31, R32; ADR-0016, ADR-0029, ADR-0040, ADR-0042, ADR-0043, ADR-0047, ADR-0048, ADR-0059 |

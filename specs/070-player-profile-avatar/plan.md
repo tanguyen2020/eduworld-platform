@@ -14,7 +14,7 @@ module game thêm aggregate `GameProfile` (nickname, `AvatarConfig`, `avatar_cre
 | Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/httpx` (`game_player`, `tenant`), `src/backend/pkg/tenancy`, Valkey client · GdUnit4 |
 | Storage | PostgreSQL `eduworld_game` (`game.game_profiles`, `game.avatar_presets`, `game.nickname_changes`, `game.character_catalogs`/`_versions`, `game.item_definitions`/`_versions`, `game.inventory_items`); Valkey `ew:game:nick:opt:<student_id>` (tạm) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); GdUnit4 headless |
-| Target Platform | Linux container (`core-api` + `worker`, module `game`) · Windows, Android, iOS, Web |
+| Target Platform | Linux container (`core-api` + `worker`, module `game`) · Android, iOS, Web (ADR-0101) |
 | Project Type | backend module + game client |
 | Performance Goals | S02 đổi lựa chọn ≤ 100 ms; avatar trong ngân sách nhân vật [PERFORMANCE_BUDGET §5, §8](../../docs/08-game-client/PERFORMANCE_BUDGET.md) |
 | Constraints | AGENTS R1, R2, R8, R13, R16, R19, R21, R23, R26, R28, R32; ADR-0031, ADR-0043, ADR-0047, ADR-0054, ADR-0056 |

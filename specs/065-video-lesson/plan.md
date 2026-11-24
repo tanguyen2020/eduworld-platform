@@ -14,7 +14,7 @@ Backend: thêm plugin `video_lesson` vào Activity Registry của module learnin
 | Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `src/backend/pkg/tenancy`, `src/backend/pkg/problem` / GdUnit4, `VideoStreamPlayer` (Theora) |
 | Storage | PostgreSQL `eduworld_learning` (schema `assessment`); floci S3 cho media (F027) |
 | Testing | go test (unit domain/application), testcontainers (integration, global filter), contract test plugin chung (TC-ACT-001) / GdUnit4 unit + scene + integration headless |
-| Target Platform | Linux container / Windows, Android (Web 480p) |
+| Target Platform | Linux container / Android, Web 480p (không Windows — ADR-0101) |
 | Project Type | backend module + game client |
 | Performance Goals | Heartbeat p95 theo NFR API chung; client 720p@30 tầm trung ([STUDENT_GAME_UX_LEARNING §5.5](../../docs/05-ux/STUDENT_GAME_UX_LEARNING.md)) |
 | Constraints | AGENTS R5, R6, R8, R10, R13, R21, R26–R28, R31 · ADR-0016, ADR-0037–0044, ADR-0074, ADR-0048, ADR-0056, ADR-0057 |

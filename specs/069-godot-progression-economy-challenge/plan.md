@@ -14,7 +14,7 @@ Thêm bốn domain service phía client theo [GODOT_ARCHITECTURE §4, §6](../..
 | Primary Dependencies | GdUnit4; autoload `Config`, `Log`, `EventBus`, `AppState`, `ApiClient`, `RealtimeClient`, `SceneRouter`, `Settings`, `QualityManager`; F063 `ActivityHost`/`LearningService`; F070 `ProfileService`, `InventoryService`, `AvatarPreview3D`, `ItemVisual` |
 | Storage | Không có dữ liệu bền; store trong RAM, không ghi `user://` (ADR-0064) |
 | Testing | GdUnit4 unit (`FakeApiClient`, `FakeRealtimeClient`, `FakeClock`) + scene runner headless; contract fixture từ `specs/`; benchmark `tests/perf`; integration headless với docker compose |
-| Target Platform | Windows 10+, Android 9+, iOS, Web (ADR-0013) |
+| Target Platform | Android 9+, iOS, Web (ADR-0013, ADR-0101) |
 | Project Type | game client |
 | Performance Goals | Panel mở ≤ 200 ms, lưới 500 ô ≥ 30 FPS, HUD ≤ 60 Control ([STUDENT_GAME_UX §6](../../docs/05-ux/STUDENT_GAME_UX.md), [PERFORMANCE_BUDGET](../../docs/08-game-client/PERFORMANCE_BUDGET.md)) |
 | Constraints | AGENTS R1, R2, R5, R16, R17, R19, R32 · ADR-0016, ADR-0047, ADR-0049, ADR-0056, ADR-0057, ADR-0064, ADR-0065 |

@@ -14,7 +14,7 @@ Thêm domain party vào game client theo GODOT_ARCHITECTURE §4, §6: `PartyServ
 | Primary Dependencies | GdUnit4; autoload `Config`, `Log`, `EventBus`, `AppState`, `ApiClient`, `RealtimeClient`, `SceneRouter`, `Settings`, `QualityManager` (F060–F062, F092) |
 | Storage | Không có dữ liệu bền; không ghi party xuống `user://` |
 | Testing | GdUnit4 unit (`FakeApiClient`, `FakeRealtimeClient`) + scene runner headless; integration headless với backend docker compose |
-| Target Platform | Windows 10+, Android 9+ (Release 1.0 cũng iOS, Web — ADR-0013) |
+| Target Platform | Android 9+ (Release 1.0 cũng iOS, Web — ADR-0013; không Windows — ADR-0101) |
 | Project Type | game client |
 | Performance Goals | Lobby ≥ 30 FPS tầm trung, cập nhật ≤ 1 s ([PERFORMANCE_BUDGET](../../docs/08-game-client/PERFORMANCE_BUDGET.md), AC-UX-104 của STUDENT_GAME_UX_SOCIAL §12) |
 | Constraints | AGENTS R1, R2, R3, R16, R17, R32 · ADR-0047, ADR-0056, ADR-0064, ADR-0065 |

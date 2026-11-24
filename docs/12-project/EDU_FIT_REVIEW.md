@@ -1,6 +1,6 @@
 # Review độ phù hợp của bộ docs/specs cho game chuyên giáo dục
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Technical Architect · Cập nhật: 2026-11-17 (§9: ADR-0074 Accepted — K6 đã xử lý; quyết định Technical Architect 2026-11-17 — ADR-0073/0075/0078/0080 Accepted, ADR-0076/0079 Rejected)
+> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Technical Architect · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (§9: ADR-0074 Accepted — K6 đã xử lý; quyết định Technical Architect 2026-11-17 — ADR-0073/0075/0078/0080 Accepted, ADR-0076/0079 Rejected)
 > Liên quan: [DOCUMENTATION_AUDIT](DOCUMENTATION_AUDIT.md) · [RISKS](RISKS.md) · [OPEN_QUESTIONS](OPEN_QUESTIONS.md) · [ROADMAP](ROADMAP.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [adr/README](../adr/README.md)
 
 ## 1. Mục đích và phạm vi
@@ -166,7 +166,7 @@ Số liệu: 364 operation public (identity 79, learning 80, game 87, competitio
 
 ## 9. Trạng thái xử lý
 
-> Cập nhật: 2026-11-15, đợt sửa tài liệu theo ADR-0072; đợt 2 theo ADR-0081 (`user_type`) và ADR-0082 (pháp lý, viết/nói Deferred). Cột "Xử lý" ghi nơi quyết định/thay đổi được sở hữu; "Sửa tài liệu [Confirmed]" nghĩa là đã đưa vào tài liệu sở hữu với nhãn [Confirmed], chờ người duyệt. **Đợt 3 (2026-11-17, Technical Architect):** ADR-0073, ADR-0075, ADR-0078, ADR-0080 Accepted; ADR-0076, ADR-0079 Rejected (giữ 4 nền tảng theo ADR-0013); ADR-0077 hoãn (ADR-0082). CI chuyển sang GitHub Actions (ADR-0088). **Đợt 4 (2026-11-17, Technical Architect):** ADR-0074 Accepted (modular monolith thay ADR-0036), tài liệu vận hành, dữ liệu, định danh, bảo mật và dự án đã viết lại theo ADR-0074.
+> Cập nhật: 2026-11-15, đợt sửa tài liệu theo ADR-0072; đợt 2 theo ADR-0081 (`user_type`) và ADR-0082 (pháp lý, viết/nói Deferred). Cột "Xử lý" ghi nơi quyết định/thay đổi được sở hữu; "Sửa tài liệu [Confirmed]" nghĩa là đã đưa vào tài liệu sở hữu với nhãn [Confirmed], chờ người duyệt. **Đợt 3 (2026-11-17, Technical Architect):** ADR-0073, ADR-0075, ADR-0078, ADR-0080 Accepted; ADR-0076, ADR-0079 Rejected (giữ 4 nền tảng theo ADR-0013); ADR-0077 hoãn (ADR-0082). CI chuyển sang GitHub Actions (ADR-0088). **Đợt 4 (2026-11-17, Technical Architect):** ADR-0074 Accepted (modular monolith thay ADR-0036), tài liệu vận hành, dữ liệu, định danh, bảo mật và dự án đã viết lại theo ADR-0074. **Ghi chú 2026-11-24:** owner bỏ bản Windows ([ADR-0101](../adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md)); client chỉ Web, Android, iOS, PC phòng máy chơi bản Web — các nhận xét "4 nền tảng"/"Windows mặc định máy dùng chung" dưới đây là trạng thái tại thời điểm review.
 
 **Xử lý tổng quát**
 
@@ -220,7 +220,7 @@ Số liệu: 364 operation public (identity 79, learning 80, game 87, competitio
 | SAF-04 | **Đã xử lý** — ADR-0078 Accepted | Tenant `common`: tắt kết bạn, DM, World chat, giờ giới nghiêm bắt buộc, Safety Team kiểm duyệt (CHILD_SAFETY §3.6, MULTITENANCY §8.3, SOCIAL_SYSTEM §7) |
 | SAF-05 | Sửa tài liệu [Confirmed] — CHILD_SAFETY, MODERATION | Bỏ câu điều kiện theo khối; on-call 24/7 cho case p1; RISK-48 |
 | CLS-01 | Không còn áp dụng (ADR-0072) | Không có Class Session do giáo viên điều khiển; "chế độ trong giờ học" thay bằng khung giờ truy cập cấp trường do `school_admin` đặt |
-| CLS-02 | **Không làm QR** (ADR-0076 Rejected 2026-11-17); một phần đã xử lý — [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) | Không có thẻ QR/PIN/mật khẩu hình; thiết bị cá nhân vào lại bằng refresh token qua màn "Tiếp tục là <nickname>?"; Windows mặc định là máy dùng chung nên phòng máy vẫn nhập username/mật khẩu ngắn do trường in phát; rủi ro còn lại ở RISK-10 |
+| CLS-02 | **Không làm QR** (ADR-0076 Rejected 2026-11-17); một phần đã xử lý — [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) | Không có thẻ QR/PIN/mật khẩu hình; thiết bị cá nhân vào lại bằng refresh token qua màn "Tiếp tục là <nickname>?"; PC phòng máy chơi bản Web (không lưu phiên, ADR-0101) nên vẫn nhập username/mật khẩu ngắn do trường in phát; rủi ro còn lại ở RISK-10 |
 | CLS-03 | Sửa tài liệu [Confirmed] — PERFORMANCE_BUDGET | Ngân sách băng thông phòng máy, cache LAN, gói cài sẵn, tải trước ngoài giờ |
 | A11Y-01 | **Đã xử lý** — OQ-23 Answered (owner 2026-11-20): lồng tiếng giọng người bắt buộc cho `g1_3`, không TTS phía server, TTS thiết bị chỉ dự phòng ([CONTENT_MODEL §8.1](../02-learning/CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-confirmed)) | Phần lồng tiếng `g1_3` xử lý cùng PED-07; không phụ thuộc phần deferred (lồng tiếng là audio do người soạn cung cấp, không ghi âm học sinh) |
 | PRV-01 | **Deferred (ADR-0082)** | DPIA và thời hạn thông báo vi phạm theo luật chuyển LEGAL_COMPLIANCE §6–§7; bỏ khỏi exit criteria (ROADMAP, DEPLOYMENT, CHILD_SAFETY CS-07); ghi âm giọng nói thuộc SPEAKING_ASSESSMENT (deferred) |

@@ -46,7 +46,7 @@ Mỗi module có DB (`identity`, `learning`, `game`, `competition`, `chat`) hi�
 ## 6. Delta cần thực hiện
 
 - **Cần thêm** `listOutboxEventIds`, `listProcessedEventIds` vào 5 file `*.internal.v1.yaml` (`limit` maximum 5000, `cursor` maxLength 512, `event_types` mỗi phần tử maxLength 64, `source_module` enum, `from`/`to` `format: date-time`); facade test cho mọi cặp module (bên gọi với fake facade, bên nhận với ví dụ trong spec — `make test-contract`).
-- **Cần thêm** `listSchoolClientInstallers` + schema `SchoolClientInstaller` (`kit_id` maxLength 64, `client_version` maxLength 32, `url` format uri maxLength 2048, `sha256` pattern `^[a-f0-9]{64}$`, `min_os` maxLength 32, `grade_bands` enum `GradeBand`, `platform` enum `windows/android`), lỗi `503 UNAVAILABLE`.
+- **Cần thêm** `listSchoolClientInstallers` + schema `SchoolClientInstaller` (`kit_id` maxLength 64, `client_version` maxLength 32, `url` format uri maxLength 2048, `sha256` pattern `^[a-f0-9]{64}$`, `min_os` maxLength 32, `grade_bands` enum `GradeBand`, `platform` enum `android` — ADR-0101 bỏ `windows`), lỗi `503 UNAVAILABLE`.
 - **Cần sửa** `TenantSummary` (+`is_qa`), `TenantUpdate` của F010 (+`is_qa`), response analytics platform (+`excluded_tenant_ids[]`, `format: uuid`).
 - **Cần thêm** JSON Schema `reconcile-report.schema.json`, `school-kit-index.schema.json`; payload `tenant.updated`.
 - Catalog permission: `school.installer.read` (tenant được phép).

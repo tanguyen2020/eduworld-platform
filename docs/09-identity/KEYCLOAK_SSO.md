@@ -1,6 +1,6 @@
 # Keycloak SSO
 
-> Trạng thái: Draft · Phiên bản: 0.10 · Owner: Identity & Security Engineer · Cập nhật: 2026-11-21 (ADR-0094: bỏ MFA/TOTP cho đăng nhập Admin Portal, mọi role kể cả platform; bỏ mapper AMR/LoA, `MFA_REQUIRED`, đăng ký OTP) · 2026-11-17 (ADR-0091: portal đăng nhập bằng form riêng qua module identity, client `eduworld-portal` confidential + Direct Access Grants, bỏ PKCE/redirect và scope `organization:{alias}` cho portal; ADR-0074: bỏ client `svc-learning`/`svc-game`/`svc-competition`/`svc-chat`/`svc-realtime`, chỉ giữ `svc-identity` cho Keycloak Admin API; ADR-0076 Rejected: bỏ kế hoạch QR/PIN/mật khẩu hình; Windows mặc định máy dùng chung, màn "Tiếp tục là…"; giờ giới nghiêm ADR-0078) · 2026-11-16 (ADR-0083, ADR-0086)
+> Trạng thái: Draft · Phiên bản: 0.11 · Owner: Identity & Security Engineer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-21 (ADR-0094: bỏ MFA/TOTP cho đăng nhập Admin Portal, mọi role kể cả platform; bỏ mapper AMR/LoA, `MFA_REQUIRED`, đăng ký OTP) · 2026-11-17 (ADR-0091: portal đăng nhập bằng form riêng qua module identity, client `eduworld-portal` confidential + Direct Access Grants, bỏ PKCE/redirect và scope `organization:{alias}` cho portal; ADR-0074: bỏ client `svc-learning`/`svc-game`/`svc-competition`/`svc-chat`/`svc-realtime`, chỉ giữ `svc-identity` cho Keycloak Admin API; ADR-0076 Rejected: bỏ kế hoạch QR/PIN/mật khẩu hình; máy dùng chung, màn "Tiếp tục là…"; giờ giới nghiêm ADR-0078) · 2026-11-16 (ADR-0083, ADR-0086)
 > Liên quan: [ADR-0006, ADR-0008, ADR-0009, ADR-0026, ADR-0063…ADR-0068](../adr/README.md) · [ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md) · [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) · [ADR-0091](../adr/ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · [MULTITENANCY §8](../06-architecture/MULTITENANCY.md) · [IDENTITY_MAPPING](IDENTITY_MAPPING.md) · [ACCOUNT_PROVISIONING](ACCOUNT_PROVISIONING.md) · [SIS_INTEGRATION](SIS_INTEGRATION.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · OQ-02, OQ-04
 
 ## 1. Phạm vi
@@ -266,8 +266,8 @@ Tham số `game_session_sso` [Confirmed — Technical Architect 2026-11-16] (ADR
 | Client Session Max | **30 ngày** (ADR-0086) | 10 giờ (`platform_staff`: refresh bị từ chối sau 8 giờ từ lúc nhập mật khẩu, ADR-0094) |
 | Realm SSO Session Idle / Max | 7 ngày / 30 ngày — giá trị lớn nhất của các client vì Keycloak giới hạn phiên client không vượt phiên realm | (như bên trái; portal tự cưỡng chế idle/max — §5.2) |
 | Remember me | Tắt | Tắt |
-| Lưu refresh token trên thiết bị | **Thiết bị cá nhân:** kho bảo mật của hệ điều hành (Windows DPAPI, Android Keystore, iOS Keychain); **Web và máy `shared_device`:** chỉ RAM. Access token luôn chỉ trong RAM; không bao giờ lưu mật khẩu (ADR-0086) | Cookie `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/portal` do module identity đặt, JavaScript không đọc được; access token chỉ trong bộ nhớ SPA (ADR-0091) |
-| Mở lại ứng dụng khi phiên còn hạn | **Thiết bị cá nhân:** `POST /auth/game/token:refresh` `mode = resume`, hiện màn "Tiếp tục là <nickname>?" rồi vào game, không nhập mật khẩu; Web/máy dùng chung (Windows mặc định là máy dùng chung): nhập mật khẩu (ADR-0086, [Confirmed — Technical Architect 2026-11-17]) | Tải lại trang: `POST /auth/portal/token:refresh` (cookie + `X-EW-CSRF`), không nhập lại mật khẩu (§5.2) |
+| Lưu refresh token trên thiết bị | **Thiết bị cá nhân:** kho bảo mật của hệ điều hành (Android Keystore, iOS Keychain); **Web (gồm PC phòng máy, ADR-0101) và máy `shared_device`:** chỉ RAM. Access token luôn chỉ trong RAM; không bao giờ lưu mật khẩu (ADR-0086) | Cookie `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/portal` do module identity đặt, JavaScript không đọc được; access token chỉ trong bộ nhớ SPA (ADR-0091) |
+| Mở lại ứng dụng khi phiên còn hạn | **Thiết bị cá nhân:** `POST /auth/game/token:refresh` `mode = resume`, hiện màn "Tiếp tục là <nickname>?" rồi vào game, không nhập mật khẩu; Web (gồm PC phòng máy)/máy dùng chung: nhập mật khẩu (ADR-0086, ADR-0101, [Confirmed — Technical Architect 2026-11-17]) | Tải lại trang: `POST /auth/portal/token:refresh` (cookie + `X-EW-CSRF`), không nhập lại mật khẩu (§5.2) |
 | Refresh token | Rotation bật (`revokeRefreshToken=true`, reuse = 0) + phát hiện dùng lại + gắn `device_id` (§5.1); làm mới qua `POST /auth/game/token:refresh` (client confidential) | Rotation bật; làm mới qua `POST /auth/portal/token:refresh` (client confidential, ADR-0091); token hết hạn/đã thu hồi/dùng lại → `401 REFRESH_TOKEN_INVALID` |
 | Offline session / `offline_access` | Không | Không |
 | MFA | Không (học sinh) | **Không** với mọi tài khoản, kể cả `platform_staff` (`system_admin`, `safety_moderator`…) — ADR-0094, rủi ro owner chấp nhận |
@@ -278,7 +278,7 @@ Thiết lập ở mức client (`client.session.idle.timeout`, `client.session.m
 
 | Hạng mục | Thiết kế |
 |---|---|
-| Lưu trên client | Sau đăng nhập thành công, game lưu **refresh token** + `tenant_id` của phiên vào kho bảo mật OS (adapter `SecureStorage` theo nền tảng — [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md)); access token chỉ trong RAM; không lưu mật khẩu. Web và máy `shared_device = true` dùng adapter chỉ-RAM: mở lại phải đăng nhập, thoát game = đăng xuất (§9). **Windows mặc định `shared_device = true`** trừ khi bộ cài được chọn "máy cá nhân" (`shared_device_default`, [Confirmed — Technical Architect 2026-11-17]) |
+| Lưu trên client | Sau đăng nhập thành công, game lưu **refresh token** + `tenant_id` của phiên vào kho bảo mật OS (adapter `SecureStorage` theo nền tảng — [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md)); access token chỉ trong RAM; không lưu mật khẩu. Web và máy `shared_device = true` dùng adapter chỉ-RAM: mở lại phải đăng nhập, thoát game = đăng xuất (§9). Không có bản Windows: PC phòng máy chơi bản Web (`shared_device_default`, [Confirmed — Technical Architect 2026-11-17]; ADR-0101) |
 | Mở lại game | Có token → `POST /auth/game/token:refresh` với `{refresh_token, device_id, mode: resume, client_version}` + `X-Tenant-Id` đã lưu → module identity kiểm tra lại tài khoản như bước 2 của `gameLogin` (`user_type`, trạng thái, tenant, enrollment, khung giờ) và trả token mới + `bootstrap` → game ghi đè token mới vào kho bảo mật, hiện màn **"Tiếp tục là <nickname>?"** (S01b, nickname lấy từ `bootstrap`): bấm "Tiếp tục" → gọi `POST /game/sessions` (ADR-0083) và vào game, **không** hiện form; bấm **"Không phải tôi"** → `POST /auth/game/logout` (thu hồi phiên), xóa token khỏi kho bảo mật và RAM, hiện form S01 (`resume_confirm_screen`, mọi nền tảng, [Confirmed — Technical Architect 2026-11-17]). Trong giờ giới nghiêm (`platform_curfew`, [CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)) refresh `mode = resume` bị từ chối với mã lỗi giới nghiêm và **giữ** token để vào lại sau. Thất bại xác định (`401 REFRESH_TOKEN_*`, `403` tài khoản/tenant) → xóa token, hiện form S01. Lỗi mạng/`429`/`503` → giữ token, thử lại |
 | Phiên đăng nhập game (server) | module identity ghi `identity.game_auth_sessions` khi `gameLogin`/`selectGameLoginTenant` thành công: `tenant_id`, `user_id`, `keycloak_sid`, `device_id`, `platform`, SHA-256 của refresh token hiện hành và ≤ 20 hash đã xoay gần nhất, `last_refreshed_at`, `revoked_at`/`revoke_reason`. **Không lưu token thô** |
 | Xoay vòng (rotation) | Mỗi lần refresh thành công Keycloak trả refresh token mới, token cũ vô hiệu (`revokeRefreshToken=true`, reuse 0); module identity cập nhật hash. Client refresh **đơn luồng** (single-flight) và ghi đè token mới vào kho bảo mật ngay |
@@ -287,7 +287,7 @@ Thiết lập ở mức client (`client.session.idle.timeout`, `client.session.m
 | Hết hạn / không nhận ra | Hash không thuộc phiên nào còn hiệu lực, phiên đã thu hồi, hoặc Keycloak trả `invalid_grant` (idle 7 ngày / max 30 ngày) → `401 REFRESH_TOKEN_INVALID` |
 | Thu hồi (đánh dấu `revoked_at` + xóa phiên Keycloak theo `sid`) | Đăng xuất chủ động (`gameLogout`, `logout`); takeover sang thiết bị khác (consume `game_session.replaced`, `takeover`, ADR-0031); đổi/đặt lại mật khẩu (mọi phiên game của user, `password_changed`); khóa tài khoản hoặc xử phạt cấm vào game (`user.status_changed`/`user.access_revoked`, `account_locked`/`sanction`); thu hồi quyền truy cập — rời tenant, chuyển trường sang tenant khác, tenant bị tắt (`user.access_revoked`, `access_revoked`); dọn học sinh (`student.cleaned_up`, `cleanup`, ADR-0085); System Admin thu hồi thủ công (`admin`) |
 
-Rủi ro còn lại: thiết bị cá nhân bị người khác dùng khi phiên còn hạn — giảm bằng màn "Tiếp tục là <nickname>?" mỗi lần tự vào lại, Windows mặc định máy dùng chung, thời hạn idle 7 ngày/tối đa 30 ngày, nút **Đăng xuất** trong game, thu hồi từ xa khi đặt lại mật khẩu ([SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md)).
+Rủi ro còn lại: thiết bị cá nhân bị người khác dùng khi phiên còn hạn — giảm bằng màn "Tiếp tục là <nickname>?" mỗi lần tự vào lại, PC phòng máy chơi bản Web không lưu phiên (ADR-0101), thời hạn idle 7 ngày/tối đa 30 ngày, nút **Đăng xuất** trong game, thu hồi từ xa khi đặt lại mật khẩu ([SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md)).
 
 ### 5.2. Phiên portal (ADR-0086 mục 7, ADR-0091 mục 4)
 
@@ -295,7 +295,7 @@ Portal giữ chính sách phiên hiện hành: idle 30 phút, tối đa 10 giờ
 
 ## 6. Luồng đăng nhập game — form trong Godot qua backend (ADR-0068)
 
-### 6.1. Mọi nền tảng (Windows/macOS/Linux, Android/iOS, Web)
+### 6.1. Mọi nền tảng (Android/iOS, Web; Windows/macOS/Linux chỉ khi chạy từ editor — ADR-0101)
 
 ```mermaid
 sequenceDiagram
@@ -340,8 +340,8 @@ sequenceDiagram
 ```
 
 - Không trình duyệt hệ thống, không Custom Tabs/`ASWebAuthenticationSession`, không WebView, không TCPServer loopback, không PKCE/`prompt=login`/`login_hint` cho game. Web export gọi cùng API bằng `fetch` (CORS chỉ origin `https://play.<domain>`).
-- Access token chỉ trong bộ nhớ tiến trình. Refresh token: thiết bị cá nhân lưu trong kho bảo mật OS (Windows DPAPI, Android Keystore, iOS Keychain); **không bao giờ** lưu vào `user://`, file thường hay localStorage; Web và máy `shared_device` chỉ giữ trong RAM (reload tab Web = đăng nhập lại). App bị hệ điều hành đóng trên thiết bị cá nhân → mở lại theo §5.1, không hỏi mật khẩu khi phiên còn hạn (ADR-0086).
-- Certificate pinning cho tên miền API trên bản desktop/mobile [Confirmed]; Web dựa vào HSTS.
+- Access token chỉ trong bộ nhớ tiến trình. Refresh token: thiết bị cá nhân lưu trong kho bảo mật OS (Android Keystore, iOS Keychain); **không bao giờ** lưu vào `user://`, file thường hay localStorage; Web và máy `shared_device` chỉ giữ trong RAM (reload tab Web = đăng nhập lại). App bị hệ điều hành đóng trên thiết bị cá nhân → mở lại theo §5.1, không hỏi mật khẩu khi phiên còn hạn (ADR-0086).
+- Certificate pinning cho tên miền API trên bản Android/iOS [Confirmed] (không có bản desktop, ADR-0101); Web dựa vào HSTS.
 
 Mở lại game trên thiết bị cá nhân khi còn refresh token (ADR-0086):
 
@@ -432,7 +432,7 @@ Nếu sau này cần authenticator tùy biến cho một phương thức ở b�
 
 ## 9. Máy dùng chung (phòng tin học)
 
-Không dùng Device Authorization Grant (§8.1). **Windows mặc định là máy dùng chung** [Confirmed — Technical Architect 2026-11-17]: bộ cài Windows ghi `shared_device: true` vào `device.cfg` trừ khi người cài chọn "máy cá nhân" (`shared_device_default`, [GODOT_ARCHITECTURE §5.1](../08-game-client/GODOT_ARCHITECTURE.md#51-đăng-nhập-và-xác-định-tenant-adr-0063-adr-0064-adr-0065-adr-0068)). Máy `shared_device: true`: không nhớ username; refresh token **chỉ trong RAM**, không ghi vào kho bảo mật (ADR-0086 mục 2); thoát game hoặc 30 phút không hoạt động (`shared_device_idle_logout`) → logout + revoke; mở lại game phải nhập mật khẩu. Vì không có token nào trên máy, học sinh sau không thể vào tài khoản của học sinh trước.
+Không dùng Device Authorization Grant (§8.1). PC phòng máy chơi bản Web nên không giữ phiên (không có bản Windows, ADR-0101); thiết bị Android/iOS dùng chung cấu hình `shared_device: true` (`shared_device_default`, [GODOT_ARCHITECTURE §5.1](../08-game-client/GODOT_ARCHITECTURE.md#51-đăng-nhập-và-xác-định-tenant-adr-0063-adr-0064-adr-0065-adr-0068)). Máy `shared_device: true` và Web: không nhớ username; refresh token **chỉ trong RAM**, không ghi vào kho bảo mật (ADR-0086 mục 2); thoát game hoặc 30 phút không hoạt động (`shared_device_idle_logout`) → logout + revoke; mở lại game phải nhập mật khẩu. Vì không có token nào trên máy, học sinh sau không thể vào tài khoản của học sinh trước.
 
 ## 10. Bảo vệ brute-force & chính sách mật khẩu
 
@@ -529,7 +529,7 @@ EW_GAME_LOGIN_TICKET_TTL=2m
 | AC-AUTH-157 | Đổi/đặt lại mật khẩu, khóa/xử phạt, thu hồi quyền, dọn học sinh, takeover | Lần refresh/resume kế tiếp từ thiết bị đã lưu token → `401 REFRESH_TOKEN_INVALID` (TC-AUTH-087) |
 | AC-AUTH-158 | Bấm **Đăng xuất** trong game | `:end` → `gameLogout` → token bị xóa khỏi kho bảo mật; mở lại → form; token cũ bị từ chối (TC-AUTH-088) |
 | AC-AUTH-159 | Portal: tải lại trang khi phiên còn hạn / sau 30 phút không hoạt động / quá 10 giờ | Không phải đăng nhập lại (`token:refresh` bằng cookie) / về `/login` của portal / về `/login` của portal (TC-AUTH-089) |
-| AC-AUTH-160 | Cài game Windows bằng bộ cài mặc định rồi đăng nhập | `shared_device: true`; không ghi refresh token vào DPAPI; thoát game → đăng xuất; mở lại → form. Bộ cài chọn "máy cá nhân" → lưu token, mở lại vào được (TC-AUTH-090) |
+| AC-AUTH-160 | ~~Cài game Windows bằng bộ cài mặc định rồi đăng nhập~~ — **không làm** (ADR-0101, 2026-11-24: bỏ bản Windows); mã giữ để truy vết, không tái sử dụng | — |
 | AC-AUTH-161 | Mở game có refresh token hợp lệ (mọi nền tảng) | Hiện "Tiếp tục là <nickname>?" trước `POST /game/sessions`; "Không phải tôi" → `gameLogout`, token bị xóa, form S01; token cũ bị từ chối (TC-AUTH-091) |
 | AC-AUTH-162 | Đăng nhập hoặc resume trong giờ giới nghiêm `platform_curfew` | Bị từ chối với mã lỗi giới nghiêm, thông báo giờ mở lại; resume giữ token để vào lại sau giờ giới nghiêm (TC-AUTH-092) |
 

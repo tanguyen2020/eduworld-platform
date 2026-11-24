@@ -190,7 +190,7 @@ Developer sao lưu/khôi phục database của một module trước thử nghi�
 
 - Platform kit `config`, `observability`, `problem`, `httpx`, `authz`, `tenancy` → F002; `entx` (`UnitOfWork`), `outbox`, `modcall`, `testkit`, graceful shutdown đầy đủ → F003.
 - Realm Keycloak và route APISIX (`/api/v1/*` → `core-api`, `/realtime/v1` → `realtime`) → F004 (F001 chỉ khai báo container `keycloak`, `apisix` trong compose).
-- Lane `design.yml` → F005; `web.yml` → F050; `godot.yml` (export Windows/Android/Web trên runner Linux, iOS trên runner macOS) → F060, ký và phát hành 4 nền tảng → F133. F001 chỉ đặt quy ước runner/environment và kiểm bằng `check-workflows` (F001-AC-25).
+- Lane `design.yml` → F005; `web.yml` → F050; `godot.yml` (export Android/Web trên runner Linux, iOS trên runner macOS; không Windows — ADR-0101) → F060, ký và phát hành 3 nền tảng Web, Android, iOS → F133. F001 chỉ đặt quy ước runner/environment và kiểm bằng `check-workflows` (F001-AC-25).
 - Seed dữ liệu nghiệp vụ của từng module → F010 trở đi; Swarm staging/production, job deploy thật, backup PITR, DR → F130; dashboard/alert → F131.
 - Khung web (`src/cms/frontend/`) → F050; khung Godot (`src/game/`) → F060; design tokens → F005.
 
