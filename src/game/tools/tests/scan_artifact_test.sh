@@ -57,7 +57,7 @@ if [[ -n "${GODOT:-}" ]]; then
   game_arg="$game"
   if [[ "$GODOT" == *.exe ]] && command -v wslpath >/dev/null 2>&1; then game_arg="$(wslpath -w "$game")"; fi
   mkdir -p "$game/build/scan_test"
-  "$GODOT" --headless --path "$game_arg" --export-pack "Windows Desktop" build/scan_test/release.pck >"$work/export.log" 2>&1 || true
+  "$GODOT" --headless --path "$game_arg" --export-pack "Android" build/scan_test/release.pck >"$work/export.log" 2>&1 || true
   mv -f "$game/build/scan_test/release.pck" "$work/release.pck" 2>/dev/null || true
   if [[ -f "$work/release.pck" ]]; then
     expect 0 "release preset PCK is clean" "$work/release.pck"

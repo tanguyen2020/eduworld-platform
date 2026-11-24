@@ -60,7 +60,8 @@ func configure(http: HttpTransport, time_source: ClientClock, token_store: Token
 		rng = RandomNumberGenerator.new()
 
 
-## `X-Client-Platform` / `GameLoginRequest.platform` value of the running OS.
+## `X-Client-Platform` / `GameLoginRequest.platform` value of the running OS. Released builds send android, ios or web;
+## windows, macos and linux only come from editor or debug runs on a developer machine (ADR-0101).
 static func client_platform(os_name: String = OS.get_name(), is_web: bool = OS.has_feature("web")) -> String:
 	if is_web:
 		return "web"
