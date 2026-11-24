@@ -842,7 +842,7 @@ workspaces:
             label_key: portal.action.game_ops.dashboard.view
             title: Xem tổng quan
             required_permissions: [game.liveops.read, game.analytics.read]
-            operation_ids: []
+            operation_ids: [getGameConfigCounts]
             can_disable: true
       - key: menu.game_ops.world
         label_key: portal.menu.game_ops.world
@@ -1140,6 +1140,7 @@ workspaces:
               - "listGameConfigVersions[config_type=progression-curves]"
               - "diffGameConfigVersions[config_type=progression-curves]"
               - "listGameConfigReleases[config_type=progression-curves]"
+              - "simulateGameConfig[config_type=progression-curves]"
             can_disable: true
           - key: action.game_ops.progression.edit
             label_key: portal.action.game_ops.progression.edit
@@ -1411,6 +1412,7 @@ workspaces:
               - "listGameConfigVersions[config_type=season-tracks]"
               - "diffGameConfigVersions[config_type=season-tracks]"
               - "listGameConfigReleases[config_type=season-tracks]"
+              - "simulateGameConfig[config_type=season-tracks]"
             can_disable: true
           - key: action.game_ops.events.edit
             label_key: portal.action.game_ops.events.edit
@@ -1738,7 +1740,7 @@ workspaces:
             label_key: portal.action.game_ops.review.preview
             title: Preview bản nháp trong Godot Web
             required_permissions: [game.content.review, game.quest.write, game.minigame.write, game.npc.write, game.world.write]
-            operation_ids: [createGamePreviewSession, getGamePreviewSnapshot]
+            operation_ids: [createGamePreviewSession, getGamePreviewSnapshot, getGameClientManifest]
             can_disable: true
   - key: live_ops
     label_key: portal.workspace.live_ops

@@ -131,3 +131,18 @@ func RequireAnyRead(ctx context.Context, p authz.Principal) error {
 	}
 	return RequireAnyWrite(ctx, p)
 }
+
+// RequireDashboard authorizes the console dashboard counts (getGameConfigCounts, F079 T045): game.liveops.read,
+// game.analytics.read, any console write permission, review or publish; a denial is audited for game.liveops.read.
+func RequireDashboard(ctx context.Context, p authz.Principal) error {
+	if p.Has(authz.PermGameLiveopsRead) || p.Has(authz.PermGameAnalyticsRead) || p.Has(authz.PermGameContentReview) ||
+		p.Has(authz.PermGameContentPublish) {
+		return nil
+	}
+	for _, perm := range WritePermissions() {
+		if p.Has(perm) {
+			return nil
+		}
+	}
+	return authz.Require(ctx, p, authz.PermGameLiveopsRead, authz.Resource{})
+}

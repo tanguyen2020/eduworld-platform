@@ -136,7 +136,8 @@ func (e *env) adminUC() command.GameAdmin {
 
 func (e *env) adminQueries() query.GameAdmin {
 	codec, _ := page.NewCodec([]byte(strings.Repeat("c", 32)))
-	return query.GameAdmin{Read: e.read, Data: read.GameConfigs{}, Cursors: codec, URLs: cdn{}, Now: e.clock.Now}
+	return query.GameAdmin{Read: e.read, Data: read.GameConfigs{}, Cursors: codec, URLs: cdn{}, Now: e.clock.Now,
+		Simulation: query.SimulationPolicy{MinuteRate: 14, DailyCap: 1000}}
 }
 
 // cdn is the CDN URL builder of the tests.
@@ -195,8 +196,8 @@ func (p adminProxy) CreatePreview(ctx context.Context, t string, id uuid.UUID, n
 
 type adminQueryProxy struct{ e *env }
 
-func (p adminQueryProxy) List(ctx context.Context, t, status, cursor string, limit int) (query.ConfigPage, error) {
-	return p.e.adminQueries().List(ctx, t, status, cursor, limit)
+func (p adminQueryProxy) List(ctx context.Context, t string, in query.ConfigListInput) (query.ConfigPage, error) {
+	return p.e.adminQueries().List(ctx, t, in)
 }
 func (p adminQueryProxy) Get(ctx context.Context, t string, id uuid.UUID, n int) (gameadmin.ConfigVersionView, error) {
 	return p.e.adminQueries().Get(ctx, t, id, n)
@@ -215,6 +216,16 @@ func (p adminQueryProxy) Preview(ctx context.Context, tok, t string, id uuid.UUI
 }
 func (p adminQueryProxy) MediaAsset(ctx context.Context, id uuid.UUID) (query.MediaView, error) {
 	return p.e.adminQueries().MediaAsset(ctx, id)
+}
+
+func (p adminQueryProxy) ClientManifest(ctx context.Context) (query.ClientManifestView, error) {
+	return p.e.adminQueries().ClientManifest(ctx)
+}
+func (p adminQueryProxy) Simulate(ctx context.Context, t string, id uuid.UUID, n int, in query.SimulationInput) (query.SimulationView, error) {
+	return p.e.adminQueries().Simulate(ctx, t, id, n, in)
+}
+func (p adminQueryProxy) ConfigCounts(ctx context.Context) (query.ConfigCountsView, error) {
+	return p.e.adminQueries().ConfigCounts(ctx)
 }
 
 type mediaProxy struct{ e *env }

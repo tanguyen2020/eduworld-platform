@@ -121,6 +121,9 @@ type GameConfigStore interface {
 	MediaStatuses(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]MediaRef, error)
 	// LinkMedia records the content media of a version (media_usages usage content; idempotent).
 	LinkMedia(ctx context.Context, assets []uuid.UUID, itemType string, configID, versionID uuid.UUID, by uuid.UUID, at time.Time) error
+	// RenderState returns whether a ready render_thumbnail asset is linked to the version and the status of its
+	// render_thumbnail job ("" when none) — render_status of the version views (F079-AC-16).
+	RenderState(ctx context.Context, versionID uuid.UUID) (thumbnailReady bool, job string, err error)
 }
 
 // MediaRef is the state of a referenced game media asset.

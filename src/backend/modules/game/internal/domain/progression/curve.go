@@ -97,6 +97,36 @@ func (c Curve) Protected() bool { return c.FloorProtection == nil || *c.FloorPro
 // the next level non-decreasing ("thresholds increase monotonically"), a title from level 1 with unique start levels,
 // and every reward type served by a registered grant applier (hasApplier).
 func (c Curve) Validate(hasApplier func(rewardType string) bool) error {
+	if err := c.validateLevels(); err != nil {
+		return err
+	}
+	if len(c.Titles) == 0 {
+		return invalid("titles", "at least one title")
+	}
+	starts := map[int]bool{}
+	codes := map[string]bool{}
+	for i, t := range c.Titles {
+		switch {
+		case t.FromLevel < 1 || t.FromLevel > c.MaxLevel:
+			return invalid(fmt.Sprintf("titles/%d/from_level", i), "must be 1..max_level")
+		case starts[t.FromLevel]:
+			return invalid(fmt.Sprintf("titles/%d/from_level", i), "duplicate start level")
+		case codes[t.Code] || t.Code == "":
+			return invalid(fmt.Sprintf("titles/%d/code", i), "empty or duplicate title code")
+		case t.Name["vi"] == "" || t.Name["en"] == "":
+			return invalid(fmt.Sprintf("titles/%d/name", i), "vi and en are required")
+		}
+		starts[t.FromLevel], codes[t.Code] = true, true
+	}
+	if !starts[1] {
+		return invalid("titles", "one title must start at level 1")
+	}
+	return c.validateRewards(hasApplier)
+}
+
+// validateLevels checks the level part of a curve (what its level table needs): max_level, the formula, the overrides
+// and XP to the next level non-decreasing.
+func (c Curve) validateLevels() error {
 	if c.MaxLevel < 2 || c.MaxLevel > 200 {
 		return invalid("max_level", "must be 2..200")
 	}
@@ -123,27 +153,11 @@ func (c Curve) Validate(hasApplier func(rewardType string) bool) error {
 		}
 		prev = x
 	}
-	if len(c.Titles) == 0 {
-		return invalid("titles", "at least one title")
-	}
-	starts := map[int]bool{}
-	codes := map[string]bool{}
-	for i, t := range c.Titles {
-		switch {
-		case t.FromLevel < 1 || t.FromLevel > c.MaxLevel:
-			return invalid(fmt.Sprintf("titles/%d/from_level", i), "must be 1..max_level")
-		case starts[t.FromLevel]:
-			return invalid(fmt.Sprintf("titles/%d/from_level", i), "duplicate start level")
-		case codes[t.Code] || t.Code == "":
-			return invalid(fmt.Sprintf("titles/%d/code", i), "empty or duplicate title code")
-		case t.Name["vi"] == "" || t.Name["en"] == "":
-			return invalid(fmt.Sprintf("titles/%d/name", i), "vi and en are required")
-		}
-		starts[t.FromLevel], codes[t.Code] = true, true
-	}
-	if !starts[1] {
-		return invalid("titles", "one title must start at level 1")
-	}
+	return nil
+}
+
+// validateRewards checks the level rewards: inside 2..max_level, unique, a registered grant applier, Xu only.
+func (c Curve) validateRewards(hasApplier func(rewardType string) bool) error {
 	rewarded := map[int]bool{}
 	for i, lr := range c.LevelRewards {
 		switch {

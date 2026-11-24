@@ -33,25 +33,55 @@ const configSelect = `SELECT c.config_id, c.item_type, c.item_key, v.config_vers
 			WHERE u.config_version_id = v.config_version_id AND u.usage = 'render_turntable' AND u.deleted_at IS NULL ORDER BY u.created_at DESC LIMIT 1),
 		(SELECT s.publish_at FROM game.scheduled_publications s WHERE s.config_version_id = v.config_version_id AND s.status = 'scheduled'
 			AND s.deleted_at IS NULL LIMIT 1),
-		(SELECT cv.version_no FROM game.config_versions cv WHERE cv.config_version_id = c.current_version_id AND cv.deleted_at IS NULL)
+		(SELECT cv.version_no FROM game.config_versions cv WHERE cv.config_version_id = c.current_version_id AND cv.deleted_at IS NULL),
+		(SELECT j.status FROM game.render_jobs j WHERE j.config_version_id = v.config_version_id AND j.kind = 'render_thumbnail'
+			AND j.deleted_at IS NULL ORDER BY CASE j.status WHEN 'queued' THEN 0 WHEN 'failed' THEN 0 WHEN 'dead' THEN 1 ELSE 2 END,
+			j.updated_at DESC, j.render_job_id LIMIT 1)
 	FROM game.config_items c
 	JOIN game.config_versions v ON v.config_id = c.config_id AND v.deleted_at IS NULL
 	LEFT JOIN game.config_versions b ON b.config_version_id = v.based_on_version_id AND b.deleted_at IS NULL`
 
 func scanConfig(row interface{ Scan(...any) error }) (read.ConfigRow, error) {
 	var r read.ConfigRow
-	var title, note, change, thumb, turn sql.NullString
+	var title, note, change, thumb, turn, job sql.NullString
 	var payload []byte
 	err := row.Scan(&r.ConfigID, &r.ItemType, &r.ItemKey, &r.VersionID, &r.VersionNo, &r.Status, &title, &payload, &r.AuthorID, &r.ReviewerID,
 		&note, &change, &r.BasedOnNo, &r.PublishedAt, &r.PublishedBy, &r.UpdatedAt, &r.Revision, &r.IsCurrent, &thumb, &turn, &r.ScheduledAt,
-		&r.CurrentVersion)
+		&r.CurrentVersion, &job)
 	if err != nil {
 		return r, err
 	}
 	r.Payload = payload
 	r.Title, r.ReviewNote, r.ChangeNote, r.ThumbnailSHA, r.TurntableSHA = ns(title), ns(note), ns(change), ns(thumb), ns(turn)
+	r.RenderJob = ns(job)
 	return r, nil
 }
+
+// scheduleAt is the instant of payload.schedule.<field> of the version v (event.schema.json date-time, checked by the
+// type schema when the draft is saved); a value that does not look like a date-time is NULL instead of a cast error,
+// and NULL never matches a window.
+func scheduleAt(field string) string {
+	return `CASE WHEN (v.payload #>> '{schedule,` + field + `}') ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}'
+		THEN (v.payload #>> '{schedule,` + field + `}')::timestamptz END`
+}
+
+// decorationAreas is components.decoration.areas of the version v as a JSON array ('[]' when absent or not an array).
+const decorationAreas = `CASE WHEN jsonb_typeof(v.payload #> '{components,decoration,areas}') = 'array'
+	THEN v.payload #> '{components,decoration,areas}' ELSE '[]'::jsonb END`
+
+// listWindow is listGameConfigs_game with a calendar window (F079-AC-14): the newest version of each item (or its newest
+// version of status) first, then the window — schedule [start_at, end_at) intersecting [$5, $6), the half-open form of
+// liveops.CalendarWindow.Overlaps — then the keyset page; the rows are read with configSelect.
+//
+// tenancyguard:ok platform content (G tables, no tenant_id); deleted_at filtered on every table; keyset on config_id
+var listWindow = `WITH newest AS (
+		SELECT DISTINCT ON (c.config_id) c.config_id, v.config_version_id, ` + scheduleAt("start_at") + ` AS s, ` + scheduleAt("end_at") + ` AS e
+		FROM game.config_items c JOIN game.config_versions v ON v.config_id = c.config_id AND v.deleted_at IS NULL
+		WHERE c.item_type = $1 AND c.deleted_at IS NULL AND ($2 = '' OR v.status = $2) AND ($3::uuid IS NULL OR c.config_id > $3)
+		ORDER BY c.config_id, v.version_no DESC),
+	page AS (SELECT config_version_id FROM newest WHERE s < $6 AND e > $5 ORDER BY config_id LIMIT $4)
+	` + configSelect + `
+	WHERE v.config_version_id IN (SELECT config_version_id FROM page) AND c.deleted_at IS NULL ORDER BY c.config_id`
 
 func ns(s sql.NullString) *string {
 	if !s.Valid {
@@ -67,10 +97,15 @@ func (GameConfigs) List(ctx context.Context, f read.ConfigFilter) ([]read.Config
 	if err != nil {
 		return nil, err
 	}
-	// tenancyguard:ok platform content (G tables, no tenant_id); deleted_at filtered on every table; keyset on config_id
-	rows, err := t.QueryContext(ctx, `SELECT DISTINCT ON (c.config_id) `+configSelect[len("SELECT "):]+`
-		WHERE c.item_type = $1 AND c.deleted_at IS NULL AND ($2 = '' OR v.status = $2) AND ($3::uuid IS NULL OR c.config_id > $3)
-		ORDER BY c.config_id, v.version_no DESC LIMIT $4`, f.ItemType, f.Status, f.After, f.Limit)
+	var rows *sql.Rows
+	if f.WindowStart != nil && f.WindowEnd != nil {
+		rows, err = t.QueryContext(ctx, listWindow, f.ItemType, f.Status, f.After, f.Limit, *f.WindowStart, *f.WindowEnd)
+	} else {
+		// tenancyguard:ok platform content (G tables, no tenant_id); deleted_at filtered on every table; keyset on config_id
+		rows, err = t.QueryContext(ctx, `SELECT DISTINCT ON (c.config_id) `+configSelect[len("SELECT "):]+`
+			WHERE c.item_type = $1 AND c.deleted_at IS NULL AND ($2 = '' OR v.status = $2) AND ($3::uuid IS NULL OR c.config_id > $3)
+			ORDER BY c.config_id, v.version_no DESC LIMIT $4`, f.ItemType, f.Status, f.After, f.Limit)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("game configs: %w", err)
 	}
@@ -300,6 +335,157 @@ func (GameConfigs) Assigned(ctx context.Context, tenant uuid.UUID, afterType str
 		}
 		a.Payload, a.ThumbnailSHA = payload, ns(thumb)
 		out = append(out, a)
+	}
+	return out, rows.Err()
+}
+
+// CalendarWarnings implements read.GameConfigReadModel: the listed event versions ($1) against the newest version of
+// every other event of the window [$2, $3) — schedules overlapping (half-open) and components.decoration.areas sharing an
+// area — numbered per listed event and cut at perItem ($4) in the query.
+func (GameConfigs) CalendarWarnings(ctx context.Context, versionIDs []uuid.UUID, start, end time.Time, perItem int) ([]read.CalendarWarningRow, error) {
+	if len(versionIDs) == 0 {
+		return []read.CalendarWarningRow{}, nil
+	}
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, len(versionIDs))
+	for i, id := range versionIDs {
+		ids[i] = id.String()
+	}
+	// tenancyguard:ok platform content (G tables, no tenant_id); deleted_at filtered on every table
+	rows, err := t.QueryContext(ctx, `WITH listed AS (
+			SELECT v.config_id, `+decorationAreas+` AS areas, `+scheduleAt("start_at")+` AS s, `+scheduleAt("end_at")+` AS e
+			FROM game.config_versions v WHERE v.config_version_id = ANY($1::uuid[]) AND v.item_type = 'event' AND v.deleted_at IS NULL),
+		newest AS (
+			SELECT DISTINCT ON (c.config_id) c.config_id, left(coalesce(v.title, v.payload #>> '{name,vi}'), 255) AS title,
+				`+decorationAreas+` AS areas, `+scheduleAt("start_at")+` AS s, `+scheduleAt("end_at")+` AS e
+			FROM game.config_items c JOIN game.config_versions v ON v.config_id = c.config_id AND v.deleted_at IS NULL
+			WHERE c.item_type = 'event' AND c.deleted_at IS NULL
+			ORDER BY c.config_id, v.version_no DESC),
+		win AS (SELECT * FROM newest WHERE s < $3 AND e > $2 AND jsonb_array_length(areas) > 0),
+		pairs AS (
+			SELECT a.config_id AS id, b.config_id AS other_id, b.title AS other_title, ar.area,
+				row_number() OVER (PARTITION BY a.config_id ORDER BY b.config_id, ar.area) AS n
+			FROM listed a
+			JOIN win b ON b.config_id <> a.config_id AND b.s < a.e AND a.s < b.e
+			CROSS JOIN LATERAL (SELECT x FROM jsonb_array_elements_text(a.areas) x
+				INTERSECT SELECT y FROM jsonb_array_elements_text(b.areas) y) ar(area))
+		SELECT id, other_id, other_title, area FROM pairs WHERE n <= $4 ORDER BY id, n`, ids, start, end, perItem)
+	if err != nil {
+		return nil, fmt.Errorf("calendar warnings: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	out := []read.CalendarWarningRow{}
+	for rows.Next() {
+		var r read.CalendarWarningRow
+		var title sql.NullString
+		if err := rows.Scan(&r.ConfigID, &r.OtherID, &title, &r.AreaID); err != nil {
+			return nil, err
+		}
+		r.OtherTitle = ns(title)
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+// ClientManifests implements read.GameConfigReadModel (same rows as write.GameConfigStore.LatestClientManifests).
+func (GameConfigs) ClientManifests(ctx context.Context) ([]read.ClientManifestRow, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok platform data (G table, no tenant_id); deleted_at filtered
+	rows, err := t.QueryContext(ctx, `SELECT DISTINCT ON (platform) platform, client_version, published_at, manifest FROM game.client_manifests
+		WHERE deleted_at IS NULL ORDER BY platform, published_at DESC`)
+	if err != nil {
+		return nil, fmt.Errorf("client manifests: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	out := []read.ClientManifestRow{}
+	for rows.Next() {
+		var r read.ClientManifestRow
+		var b []byte
+		if err := rows.Scan(&r.Platform, &r.ClientVersion, &r.PublishedAt, &b); err != nil {
+			return nil, err
+		}
+		r.Manifest, r.PublishedAt = b, r.PublishedAt.UTC()
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+// AreaNames implements read.GameConfigReadModel: the name of the current release of each world area (item key = area_id).
+func (GameConfigs) AreaNames(ctx context.Context, ids []string) (map[string]map[string]string, error) {
+	// tenancyguard:ok platform content (G tables, no tenant_id); deleted_at filtered on both tables
+	return names(ctx, `SELECT c.item_key, v.payload -> 'name' FROM game.config_items c
+		JOIN game.config_versions v ON v.config_version_id = c.current_version_id AND v.deleted_at IS NULL
+		WHERE c.item_type = 'world_area' AND c.deleted_at IS NULL AND c.item_key = ANY($1::text[]) ORDER BY c.item_key`, ids)
+}
+
+// NPCNames implements read.GameConfigReadModel: npc_name of the current release of a dialogue of each NPC (the first
+// dialogue by config_id when several).
+func (GameConfigs) NPCNames(ctx context.Context, ids []string) (map[string]map[string]string, error) {
+	// tenancyguard:ok platform content (G tables, no tenant_id); deleted_at filtered on both tables
+	return names(ctx, `SELECT DISTINCT ON (v.payload ->> 'npc_id') v.payload ->> 'npc_id', v.payload -> 'npc_name' FROM game.config_items c
+		JOIN game.config_versions v ON v.config_version_id = c.current_version_id AND v.deleted_at IS NULL
+		WHERE c.item_type = 'npc_dialogue' AND c.deleted_at IS NULL AND v.payload ->> 'npc_id' = ANY($1::text[]) AND v.payload ? 'npc_name'
+		ORDER BY v.payload ->> 'npc_id', c.config_id`, ids)
+}
+
+func names(ctx context.Context, q string, ids []string) (map[string]map[string]string, error) {
+	out := map[string]map[string]string{}
+	if len(ids) == 0 {
+		return out, nil
+	}
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := t.QueryContext(ctx, q, ids)
+	if err != nil {
+		return nil, fmt.Errorf("manifest names: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var id string
+		var b []byte
+		if err := rows.Scan(&id, &b); err != nil {
+			return nil, err
+		}
+		var name map[string]string
+		if json.Unmarshal(b, &name) == nil && name != nil {
+			out[id] = name
+		}
+	}
+	return out, rows.Err()
+}
+
+// ConfigCounts implements read.GameConfigReadModel: GROUP BY on the newest version of each item (deleted_at filtered).
+func (GameConfigs) ConfigCounts(ctx context.Context, itemTypes []string) ([]read.ConfigCountRow, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok platform content (G tables, no tenant_id); deleted_at filtered on both tables
+	rows, err := t.QueryContext(ctx, `SELECT x.item_type, x.status, count(*) FROM (
+			SELECT DISTINCT ON (c.config_id) c.item_type, v.status
+			FROM game.config_items c JOIN game.config_versions v ON v.config_id = c.config_id AND v.deleted_at IS NULL
+			WHERE c.deleted_at IS NULL AND c.item_type = ANY($1::text[])
+			ORDER BY c.config_id, v.version_no DESC) x
+		GROUP BY x.item_type, x.status ORDER BY x.item_type, x.status`, itemTypes)
+	if err != nil {
+		return nil, fmt.Errorf("game config counts: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	out := []read.ConfigCountRow{}
+	for rows.Next() {
+		var r read.ConfigCountRow
+		if err := rows.Scan(&r.ItemType, &r.Status, &r.Count); err != nil {
+			return nil, err
+		}
+		out = append(out, r)
 	}
 	return out, rows.Err()
 }

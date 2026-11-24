@@ -4194,6 +4194,21 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/ContentStatus'
+        - name: from
+          in: query
+          description: |
+            Chỉ `config_type = events` (Lịch sự kiện, F079-AC-14): giữ sự kiện có `payload.schedule` giao khoảng ngày [from, to]
+            theo lịch ICT (gồm cả hai ngày); cần đi cùng `to`, khoảng ≤ 62 ngày. Loại khác hoặc thiếu một đầu → `422 VALIDATION_FAILED`.
+            Khi có khoảng ngày, mỗi phần tử mang `calendar_warnings` do server tính.
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Ngày cuối (ICT, gồm cả ngày này) của khoảng lọc `from`
+          schema:
+            type: string
+            format: date
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -8297,6 +8312,25 @@ components:
           format: uri
           maxLength: 2048
           description: Sprite sheet render_turntable 24 khung khi asset ready
+        render_status:
+          type: string
+          enum:
+            - pending
+            - ready
+            - failed
+            - not_applicable
+          description: |
+            Trạng thái ảnh render_thumbnail của version (F079-AC-16): `ready` có `thumbnail_url`; `pending` job render đang chờ/đang
+            thử lại; `failed` job hết lượt (`dead`, sau `game_render_max_attempts`); `not_applicable` version không có job render
+            (chưa publish hoặc không có model 3D).
+        calendar_warnings:
+          type: array
+          maxItems: 20
+          description: |
+            Chỉ có khi listGameConfigs `events` được gọi với `from`/`to` (Lịch sự kiện, F079-AC-14): cảnh báo lịch do server tính
+            giữa các sự kiện trong khoảng (portal không tự suy luận).
+          items:
+            $ref: '#/components/schemas/GameEventCalendarWarning'
     GameConfigType:
       type: string
       description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
@@ -8327,6 +8361,25 @@ components:
         - events
         - event-templates
         - season-tracks
+    GameEventCalendarWarning:
+      type: object
+      required:
+        - code
+        - other_config_id
+      properties:
+        code:
+          type: string
+          enum:
+            - decoration_area_overlap
+          description: '`decoration_area_overlap` — hai sự kiện có trang trí cùng vùng, giao thời gian (một vùng tối đa một bộ trang trí, ADMIN_PORTAL §3.15)'
+        other_config_id:
+          $ref: '#/components/schemas/Uuid'
+        other_title:
+          type: string
+          maxLength: 255
+        area_id:
+          type: string
+          maxLength: 64
     GameConfigInput:
       type: object
       required:

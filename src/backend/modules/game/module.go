@@ -266,7 +266,12 @@ func Register(r *module.Registry) (*Module, error) {
 	adminUC := command.GameAdmin{UoW: core.UoW, Store: write.GameConfigRepo{}, Kernel: kernel, Learning: learningLate,
 		Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder}, Metrics: observability.GameAdminMetrics{}, Policy: adminCfg.Policy}
 	urls := storage.PublicURL{BaseURL: adminCfg.CDNBase}
-	adminQueries := query.GameAdmin{Read: core.ReadSession, Data: read.GameConfigs{}, Cursors: cursors, URLs: urls}
+	simRate, err := gameconfig.XPSimulationRateFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
+	adminQueries := query.GameAdmin{Read: core.ReadSession, Data: read.GameConfigs{}, Cursors: cursors, URLs: urls,
+		Simulation: query.SimulationPolicy{MinuteRate: simRate, DailyCap: policy.DailyCap}}
 	mediaUC := command.GameMedia{UoW: core.UoW, Store: write.GameMediaRepo{}, Events: write.Publisher{W: core.Writer},
 		Audit: write.Auditor{R: core.Recorder}, Metrics: observability.GameAdminMetrics{}, RenderBackoff: adminCfg.RenderBackoff,
 		RenderMaxAttempts: adminCfg.RenderMaxAttempts, Batch: gameconfig.GameAdminJobBatch, Queue: render.LazyQueue{Get: r.JetStream}}

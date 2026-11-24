@@ -129,6 +129,11 @@ type assetInput struct {
 }
 
 func (h AssetHandlers) list(w http.ResponseWriter, r *http.Request) {
+	// from/to (events calendar window) apply to config_type events of module game only (F079-AC-14).
+	if r.URL.Query().Get("from") != "" || r.URL.Query().Get("to") != "" {
+		fail(w, r, problem.Invalid("from", problem.SubInvalid, "from/to filter only config_type events"))
+		return
+	}
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	rows, err := h.Queries.List(r.Context(), configType(r), nil, r.URL.Query().Get("status"), limit)
 	if err != nil {

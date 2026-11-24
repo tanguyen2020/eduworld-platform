@@ -1205,6 +1205,21 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/ContentStatus'
+        - name: from
+          in: query
+          description: |
+            Chỉ `config_type = events` (Lịch sự kiện, F079-AC-14): giữ sự kiện có `payload.schedule` giao khoảng ngày [from, to]
+            theo lịch ICT (gồm cả hai ngày); cần đi cùng `to`, khoảng ≤ 62 ngày. Loại khác hoặc thiếu một đầu → `422 VALIDATION_FAILED`.
+            Khi có khoảng ngày, mỗi phần tử mang `calendar_warnings` do server tính.
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Ngày cuối (ICT, gồm cả ngày này) của khoảng lọc `from`
+          schema:
+            type: string
+            format: date
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -2842,6 +2857,115 @@ paths:
                     additionalProperties: true
                   expires_at:
                     $ref: '#/components/schemas/Timestamp'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /game-admin/client-manifests/current:
+    get:
+      x-service: game
+      tags:
+        - game-admin
+      operationId: getGameClientManifest
+      x-portal-action: action.game_ops.review.preview
+      summary: Client manifest hiện hành (area, NPC, scene, interactable) cho bộ chọn tham chiếu của Game Operations Console
+      description: |
+        Giao của bản manifest mới nhất mỗi nền tảng đã đăng ký (`game.client_manifests`) — cùng tập giá trị mà `submit_review`
+        kiểm (F078). Quyền: bất kỳ `game.*.write` của console, `game.content.review` hoặc `game.content.publish` (F079-AC-07).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameClientManifest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /game-admin/stats/config-counts:
+    get:
+      x-service: game
+      tags:
+        - game-admin
+      operationId: getGameConfigCounts
+      x-portal-action: action.game_ops.dashboard.view
+      summary: Số cấu hình game theo loại × trạng thái workflow (Game Dashboard workspace A)
+      description: |
+        Đếm trong truy vấn (GROUP BY) theo trạng thái version mới nhất của mỗi cấu hình module game — không có số liệu chơi
+        (F080). Quyền: `game.liveops.read`, `game.analytics.read`, bất kỳ `game.*.write` của console, `game.content.review` hoặc
+        `game.content.publish` (F079 T045).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameConfigCounts'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /game-admin/{config_type}/{config_id}/versions/{version}:simulate:
+    get:
+      x-service: game
+      tags:
+        - game-admin
+      operationId: simulateGameConfig
+      x-portal-action:
+        param: config_type
+        map:
+          progression-curves: action.game_ops.progression.view
+          season-tracks: action.game_ops.events.view
+      summary: Mô phỏng tiến độ (level theo tuần) trên payload của một version đường cong XP hoặc season track
+      description: |
+        Chỉ đọc (không ghi, không phát event): tính ở server theo GameConfigSimulation (F079-AC-10, AC-15). Quyền đọc của loại
+        (`game.progression.write` / `game.season_track.write`, `game.content.review`, `game.content.publish`).
+        `minutes_per_day` bắt buộc với `progression-curves`, bỏ qua với `season-tracks`. Payload không đủ để tính → `422 VALIDATION_FAILED`.
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/GameSimulableConfigType'
+        - $ref: '#/components/parameters/GameConfigId'
+        - $ref: '#/components/parameters/Version'
+        - name: minutes_per_day
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 240
+        - name: days_per_week
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 7
+        - name: weeks
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 52
+      responses:
+        '200':
+          description: Kết quả mô phỏng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameConfigSimulation'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
@@ -5030,6 +5154,12 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
+    GameSimulableConfigType:
+      name: config_type
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/GameSimulableConfigType'
     ChallengeIdPath:
       name: challenge_id
       in: path
@@ -8191,6 +8321,25 @@ components:
           format: uri
           maxLength: 2048
           description: Sprite sheet render_turntable 24 khung khi asset ready
+        render_status:
+          type: string
+          enum:
+            - pending
+            - ready
+            - failed
+            - not_applicable
+          description: |
+            Trạng thái ảnh render_thumbnail của version (F079-AC-16): `ready` có `thumbnail_url`; `pending` job render đang chờ/đang
+            thử lại; `failed` job hết lượt (`dead`, sau `game_render_max_attempts`); `not_applicable` version không có job render
+            (chưa publish hoặc không có model 3D).
+        calendar_warnings:
+          type: array
+          maxItems: 20
+          description: |
+            Chỉ có khi listGameConfigs `events` được gọi với `from`/`to` (Lịch sự kiện, F079-AC-14): cảnh báo lịch do server tính
+            giữa các sự kiện trong khoảng (portal không tự suy luận).
+          items:
+            $ref: '#/components/schemas/GameEventCalendarWarning'
     GameConfigType:
       type: string
       description: Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
@@ -8221,6 +8370,25 @@ components:
         - events
         - event-templates
         - season-tracks
+    GameEventCalendarWarning:
+      type: object
+      required:
+        - code
+        - other_config_id
+      properties:
+        code:
+          type: string
+          enum:
+            - decoration_area_overlap
+          description: '`decoration_area_overlap` — hai sự kiện có trang trí cùng vùng, giao thời gian (một vùng tối đa một bộ trang trí, ADMIN_PORTAL §3.15)'
+        other_config_id:
+          $ref: '#/components/schemas/Uuid'
+        other_title:
+          type: string
+          maxLength: 255
+        area_id:
+          type: string
+          maxLength: 64
     GameConfigInput:
       type: object
       required:
@@ -8956,6 +9124,212 @@ components:
           $ref: '#/components/schemas/Timestamp'
         ended_at:
           $ref: '#/components/schemas/Timestamp'
+    GameClientManifest:
+      type: object
+      required:
+        - registered
+        - platforms
+        - areas
+        - npcs
+        - scene_refs
+        - interactables
+      description: |
+        Client manifest hiện hành cho bộ chọn tham chiếu của Game Operations Console (F079-AC-07): giao của bản mới nhất mỗi nền
+        tảng đã đăng ký (giá trị dùng được trên mọi nền tảng — cùng quy tắc kiểm khi `submit_review`, F078). `registered = false`
+        khi chưa đăng ký bản nào: danh sách rỗng, chỉ kiểm tham chiếu nội dung đã publish.
+      properties:
+        registered:
+          type: boolean
+        platforms:
+          type: array
+          maxItems: 6
+          items:
+            type: object
+            required:
+              - platform
+              - client_version
+              - published_at
+            properties:
+              platform:
+                type: string
+                enum:
+                  - windows
+                  - macos
+                  - linux
+                  - android
+                  - ios
+                  - web
+              client_version:
+                type: string
+                maxLength: 32
+              published_at:
+                $ref: '#/components/schemas/Timestamp'
+        areas:
+          type: array
+          maxItems: 1000
+          items:
+            type: object
+            required:
+              - area_id
+            properties:
+              area_id:
+                type: string
+                maxLength: 64
+              name:
+                $ref: '#/components/schemas/LocalizedName'
+        npcs:
+          type: array
+          maxItems: 5000
+          items:
+            type: object
+            required:
+              - npc_id
+            properties:
+              npc_id:
+                type: string
+                maxLength: 64
+              name:
+                $ref: '#/components/schemas/LocalizedName'
+        scene_refs:
+          type: array
+          maxItems: 5000
+          items:
+            type: string
+            maxLength: 128
+        interactables:
+          type: array
+          maxItems: 10000
+          items:
+            type: string
+            maxLength: 64
+    GameConfigCounts:
+      type: object
+      required:
+        - data
+        - generated_at
+      description: Số cấu hình theo loại và trạng thái của version mới nhất mỗi cấu hình (Game Dashboard tối thiểu, F079 T045)
+      properties:
+        generated_at:
+          $ref: '#/components/schemas/Timestamp'
+        data:
+          type: array
+          maxItems: 200
+          items:
+            type: object
+            required:
+              - config_type
+              - status
+              - count
+            properties:
+              config_type:
+                $ref: '#/components/schemas/GameModuleConfigType'
+              status:
+                $ref: '#/components/schemas/ContentStatus'
+              count:
+                type: integer
+                minimum: 0
+    GameSimulableConfigType:
+      type: string
+      description: Loại cấu hình có mô phỏng tiến độ (simulateGameConfig)
+      enum:
+        - progression-curves
+        - season-tracks
+    GameConfigSimulation:
+      type: object
+      required:
+        - config_type
+        - config_id
+        - version
+        - assumptions
+        - points
+        - thresholds
+      description: |
+        Mô phỏng tiến độ do server tính trên payload của version (F079-AC-10, AC-15; AGENTS R1 — portal không tự tính).
+        `progression-curves`: XP/ngày = min(`minutes_per_day` × `xp_simulation_minute_rate`, `xp_daily_cap`), `level` theo đường
+        cong (công thức + `level_overrides`); `thresholds[]` là bảng ngưỡng level (biểu đồ). `season-tracks`: điểm/ngày chơi =
+        `points.daily_cap` (người chơi đạt trần ngày), `level` là cấp của track (≤ số cấp), `thresholds[]` là điểm tích lũy theo cấp.
+      properties:
+        config_type:
+          $ref: '#/components/schemas/GameSimulableConfigType'
+        config_id:
+          $ref: '#/components/schemas/Uuid'
+        version:
+          type: integer
+          minimum: 1
+        assumptions:
+          type: object
+          required:
+            - per_play_day
+            - days_per_week
+            - weeks
+          properties:
+            per_play_day:
+              type: integer
+              minimum: 0
+              description: XP (đường cong) hoặc điểm mùa (season track) mỗi ngày chơi
+            minutes_per_day:
+              type: integer
+              minimum: 1
+              maximum: 240
+            days_per_week:
+              type: integer
+              minimum: 1
+              maximum: 7
+            weeks:
+              type: integer
+              minimum: 1
+              maximum: 52
+            minute_rate:
+              type: integer
+              minimum: 1
+              description: '`xp_simulation_minute_rate` đã dùng (chỉ đường cong)'
+            daily_cap:
+              type: integer
+              minimum: 1
+              description: '`xp_daily_cap` (đường cong) hoặc `points.daily_cap` (season track)'
+        points:
+          type: array
+          maxItems: 52
+          items:
+            type: object
+            required:
+              - week
+              - level
+              - total
+            properties:
+              week:
+                type: integer
+                minimum: 1
+                maximum: 52
+              level:
+                type: integer
+                minimum: 1
+                description: Level (đường cong) hoặc cấp track (season track) cuối tuần
+              total:
+                type: integer
+                minimum: 0
+                description: XP hoặc điểm mùa tích lũy cuối tuần
+        thresholds:
+          type: array
+          maxItems: 200
+          items:
+            type: object
+            required:
+              - level
+              - to_next
+              - total
+            properties:
+              level:
+                type: integer
+                minimum: 1
+              to_next:
+                type: integer
+                minimum: 0
+                description: XP/điểm cần để từ level này lên level kế (0 ở level cuối)
+              total:
+                type: integer
+                minimum: 0
+                description: XP/điểm tích lũy cần để đạt level này
     ProgressionStatus:
       type: object
       required:

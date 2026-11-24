@@ -34,13 +34,16 @@ type GameAdminCommands interface {
 
 // GameAdminQueries are the read use cases of the console (query.GameAdmin).
 type GameAdminQueries interface {
-	List(ctx context.Context, configType, status, cursor string, limit int) (query.ConfigPage, error)
+	List(ctx context.Context, configType string, in query.ConfigListInput) (query.ConfigPage, error)
 	Get(ctx context.Context, configType string, configID uuid.UUID, no int) (gameadmin.ConfigVersionView, error)
 	Versions(ctx context.Context, configType string, configID uuid.UUID, cursor string, limit int) (query.VersionHistory, error)
 	Diff(ctx context.Context, configType string, configID uuid.UUID, no, with int) (query.VersionDiff, error)
 	Releases(ctx context.Context, configType string, configID uuid.UUID, cursor string, limit int) (query.ReleasePage, error)
 	Preview(ctx context.Context, token, configType string, configID uuid.UUID, no int) (query.PreviewSnapshot, error)
 	MediaAsset(ctx context.Context, id uuid.UUID) (query.MediaView, error)
+	ClientManifest(ctx context.Context) (query.ClientManifestView, error)
+	Simulate(ctx context.Context, configType string, configID uuid.UUID, no int, in query.SimulationInput) (query.SimulationView, error)
+	ConfigCounts(ctx context.Context) (query.ConfigCountsView, error)
 }
 
 // GameMediaCommands is presignGameMediaUpload (command.GameMedia).
@@ -94,6 +97,9 @@ func init() {
 		adminOp("getGamePreviewSnapshot", http.MethodGet, "/game-admin/preview/snapshot", httpx.IdempotencyNone, http.StatusOK),
 		adminOp("presignGameMediaUpload", http.MethodPost, "/game-media:presign-upload", httpx.IdempotencyRequired, http.StatusCreated),
 		adminOp("getGameMediaAsset", http.MethodGet, "/game-media/{asset_id}", httpx.IdempotencyNone, http.StatusOK),
+		adminOp("getGameClientManifest", http.MethodGet, "/game-admin/client-manifests/current", httpx.IdempotencyNone, http.StatusOK),
+		adminOp("getGameConfigCounts", http.MethodGet, "/game-admin/stats/config-counts", httpx.IdempotencyNone, http.StatusOK),
+		adminOp("simulateGameConfig", http.MethodGet, verPath+":simulate", httpx.IdempotencyNone, http.StatusOK),
 	} {
 		Operations[o.ID] = o
 	}
@@ -125,7 +131,8 @@ func registerGameAdmin(s *httpx.Server, h GameAdminHandlers) error {
 	}
 	plain := map[string]http.HandlerFunc{"createGameConfigVersion": h.createVersion, "cancelScheduledGameConfigPublish": h.cancel,
 		"createGamePreviewSession": h.createPreview, "getGamePreviewSnapshot": h.preview, "presignGameMediaUpload": h.presign,
-		"getGameMediaAsset": h.mediaAsset}
+		"getGameMediaAsset": h.mediaAsset, "getGameClientManifest": h.clientManifest, "getGameConfigCounts": h.configCounts,
+		"simulateGameConfig": h.simulate}
 	for id, fn := range plain {
 		if err := s.Handle(Operations[id], fn); err != nil {
 			return err
@@ -172,7 +179,9 @@ func writeVersion(w http.ResponseWriter, status int, v gameadmin.ConfigVersionVi
 }
 
 func (h GameAdminHandlers) list(w http.ResponseWriter, r *http.Request) {
-	out, err := h.Queries.List(r.Context(), cfgType(r), r.URL.Query().Get("status"), r.URL.Query().Get("cursor"), limitOf(r))
+	q := r.URL.Query()
+	out, err := h.Queries.List(r.Context(), cfgType(r), query.ConfigListInput{Status: q.Get("status"), From: q.Get("from"), To: q.Get("to"),
+		Cursor: q.Get("cursor"), Limit: limitOf(r)})
 	if err != nil {
 		fail(w, r, err)
 		return
@@ -489,6 +498,73 @@ func (h GameAdminHandlers) mediaAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out, err := h.Queries.MediaAsset(r.Context(), id)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (h GameAdminHandlers) clientManifest(w http.ResponseWriter, r *http.Request) {
+	out, err := h.Queries.ClientManifest(r.Context())
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (h GameAdminHandlers) configCounts(w http.ResponseWriter, r *http.Request) {
+	out, err := h.Queries.ConfigCounts(r.Context())
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// queryInt reads an integer query parameter (nil when absent; 422 naming it when not an integer).
+func queryInt(r *http.Request, name string) (*int, error) {
+	s := r.URL.Query().Get(name)
+	if s == "" {
+		return nil, nil
+	}
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return nil, problem.Invalid(name, problem.SubInvalid, "an integer is required")
+	}
+	return &n, nil
+}
+
+func (h GameAdminHandlers) simulate(w http.ResponseWriter, r *http.Request) {
+	id, n, ok := h.item(w, r, true)
+	if !ok {
+		return
+	}
+	in := query.SimulationInput{}
+	minutes, err := queryInt(r, "minutes_per_day")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	in.MinutesPerDay = minutes
+	for _, p := range []struct {
+		name string
+		dst  *int
+	}{{"days_per_week", &in.DaysPerWeek}, {"weeks", &in.Weeks}} {
+		name, dst := p.name, p.dst
+		v, err := queryInt(r, name)
+		if err != nil {
+			fail(w, r, err)
+			return
+		}
+		if v == nil {
+			fail(w, r, problem.Invalid(name, problem.SubRequired, "required"))
+			return
+		}
+		*dst = *v
+	}
+	out, err := h.Queries.Simulate(r.Context(), cfgType(r), id, n, in)
 	if err != nil {
 		fail(w, r, err)
 		return

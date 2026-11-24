@@ -32,6 +32,9 @@ type ConfigRow struct {
 	TurntableSHA   *string
 	ScheduledAt    *time.Time // publish_at of a pending scheduled publication of this version
 	CurrentVersion *int       // version number of the release pointer of the item
+	// RenderJob is the status of the render_thumbnail job of the version (queued/failed first, then dead, then done; nil
+	// when none) — render_status with ThumbnailSHA (F079-AC-16).
+	RenderJob *string
 }
 
 // ConfigFilter is listGameConfigs_game: one row per item (its newest version, or its newest version of Status),
@@ -41,6 +44,32 @@ type ConfigFilter struct {
 	Status   string
 	After    *uuid.UUID
 	Limit    int // rows to read (limit+1 to detect has_more)
+	// WindowStart/WindowEnd keep the items whose listed version has a payload.schedule [start_at, end_at) intersecting
+	// [WindowStart, WindowEnd) (events calendar, F079-AC-14); nil = no window.
+	WindowStart, WindowEnd *time.Time
+}
+
+// CalendarWarningRow is one decoration_area_overlap of a listed event version with another event of the window.
+type CalendarWarningRow struct {
+	ConfigID   uuid.UUID // the listed event
+	OtherID    uuid.UUID
+	OtherTitle *string
+	AreaID     string
+}
+
+// ClientManifestRow is the newest client manifest of one platform.
+type ClientManifestRow struct {
+	Platform      string
+	ClientVersion string
+	PublishedAt   time.Time
+	Manifest      json.RawMessage
+}
+
+// ConfigCountRow is the number of items of an item type whose newest version has Status.
+type ConfigCountRow struct {
+	ItemType string
+	Status   string
+	Count    int
 }
 
 // ReleaseRow is one entry of the release timeline (content_releases + pending/cancelled/failed schedules).
@@ -118,4 +147,16 @@ type GameConfigReadModel interface {
 	MediaAsset(ctx context.Context, id uuid.UUID) (*MediaAssetRow, error)
 	// Assigned lists the published quest/mini-game configs assigned to tenant, keyset after (item_type, config_id).
 	Assigned(ctx context.Context, tenant uuid.UUID, afterType string, afterID *uuid.UUID, limit int) ([]AssignedActivity, error)
+	// CalendarWarnings lists, for each listed event version, the other events of the window [start, end) (newest version
+	// of each item) whose schedule overlaps it and whose components.decoration.areas share an area — at most perItem per
+	// listed event (F079-AC-14).
+	CalendarWarnings(ctx context.Context, versionIDs []uuid.UUID, start, end time.Time, perItem int) ([]CalendarWarningRow, error)
+	// ClientManifests returns the newest client manifest of each registered platform (the set submit_review checks).
+	ClientManifests(ctx context.Context) ([]ClientManifestRow, error)
+	// AreaNames returns the bilingual name of the published world areas among ids (area_id → {vi, en}).
+	AreaNames(ctx context.Context, ids []string) (map[string]map[string]string, error)
+	// NPCNames returns the bilingual npc_name of the published NPC dialogues among ids (npc_id → {vi, en}).
+	NPCNames(ctx context.Context, ids []string) (map[string]map[string]string, error)
+	// ConfigCounts counts the items of itemTypes by the status of their newest version (GROUP BY in the query).
+	ConfigCounts(ctx context.Context, itemTypes []string) ([]ConfigCountRow, error)
 }

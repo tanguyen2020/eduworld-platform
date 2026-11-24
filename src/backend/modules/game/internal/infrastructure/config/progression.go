@@ -20,9 +20,12 @@ const (
 	DefaultXPRepeatWindowDays  = 7              // xp_repeat_multipliers window (days, per content version)
 	DefaultXPBelowGrade        = 0.25           // xp_below_grade_multiplier
 	DefaultXPBelowGradeGap     = 2              // xp_below_grade_multiplier: content ≥ 2 grades below the student
-	ProgressionJobBatch        = 500
-	CurveRolloutInterval       = time.Minute // curve-rollout scan [Proposed]
-	XPReconcileInterval        = 24 * time.Hour
+	// DefaultXPSimulationPerMinute is xp_simulation_minute_rate (XP per active minute of the progression simulation of the
+	// console, F079-AC-10): PROGRESSION_SYSTEM §4.1 targets 20–30 minutes/day ≈ 300–400 XP/day.
+	DefaultXPSimulationPerMinute = 14
+	ProgressionJobBatch          = 500
+	CurveRolloutInterval         = time.Minute // curve-rollout scan [Proposed]
+	XPReconcileInterval          = 24 * time.Hour
 )
 
 // ProgressionFrom reads the F074 policy (T002): EW_GAME_XP_DAILY_CAP, EW_GAME_XP_REPEAT_MULTIPLIERS (comma list),
@@ -66,4 +69,14 @@ func ParseMultipliers(s string) ([]float64, error) {
 		out = append(out, f)
 	}
 	return out, nil
+}
+
+// XPSimulationRateFrom reads EW_GAME_XP_SIMULATION_PER_MINUTE (xp_simulation_minute_rate, 1..1000, CONFIG_DEFAULTS value
+// when unset) — the XP per active minute simulateGameConfig assumes for a progression curve (F079-AC-10).
+func XPSimulationRateFrom(c *config.Config) (int, error) {
+	rate := c.Int("EW_GAME_XP_SIMULATION_PER_MINUTE", DefaultXPSimulationPerMinute)
+	if rate < 1 || rate > 1000 {
+		return rate, errors.New("game config: EW_GAME_XP_SIMULATION_PER_MINUTE must be 1..1000")
+	}
+	return rate, nil
 }

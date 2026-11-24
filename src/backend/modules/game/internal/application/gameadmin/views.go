@@ -26,8 +26,26 @@ type ConfigVersionView struct {
 	UpdatedAt       time.Time      `json:"updated_at"`
 	ThumbnailURL    *string        `json:"thumbnail_url,omitempty"`
 	TurntableURL    *string        `json:"turntable_url,omitempty"`
-	ETag            string         `json:"-"`
+	// RenderStatus is the state of the render_thumbnail of the version (gameconfig.ThumbnailState, F079-AC-16).
+	RenderStatus string `json:"render_status,omitempty"`
+	// CalendarWarnings is set (possibly empty) only by listGameConfigs events with a from/to window (F079-AC-14).
+	CalendarWarnings *[]CalendarWarning `json:"calendar_warnings,omitempty"`
+	ETag             string             `json:"-"`
 }
+
+// CalendarWarning is GameEventCalendarWarning of the contract.
+type CalendarWarning struct {
+	Code          string    `json:"code"`
+	OtherConfigID uuid.UUID `json:"other_config_id"`
+	OtherTitle    *string   `json:"other_title,omitempty"`
+	AreaID        string    `json:"area_id,omitempty"`
+}
+
+// CalendarWarningAreaOverlap is the code of two events decorating one area at overlapping times (ADMIN_PORTAL §3.15).
+const CalendarWarningAreaOverlap = "decoration_area_overlap"
+
+// CalendarWarningsMax is maxItems of calendar_warnings per event.
+const CalendarWarningsMax = 20
 
 // ReleaseView is ContentRelease of the contract.
 type ReleaseView struct {

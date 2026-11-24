@@ -425,6 +425,9 @@ func (h GameAdmin) UpdateDraft(ctx context.Context, configType string, configID 
 			return err
 		}
 		out = configView(t, next, cur)
+		if err := h.renderStatus(ctx, &out); err != nil {
+			return err
+		}
 		return nil
 	})
 	if err == nil {
@@ -550,6 +553,9 @@ func (h GameAdmin) Transition(ctx context.Context, configType string, configID u
 		}
 		next.Revision, next.UpdatedAt = v.Revision+1, now
 		out = configView(t, next, cur)
+		if err := h.renderStatus(ctx, &out); err != nil {
+			return err
+		}
 		return idempotency.SetResult(ctx, out)
 	})
 	if err == nil {
@@ -1294,5 +1300,16 @@ func configView(t gameconfig.Type, v write.ConfigVersion, current bool) ConfigVe
 	}
 	return ConfigVersionView{ConfigType: t.Name, ConfigID: v.ConfigID, ConfigVersionID: v.ID, Version: v.VersionNo, Status: v.Status, Title: v.Title,
 		Payload: payload, AuthorID: v.AuthorID, ReviewerID: v.ReviewerID, ReviewNote: v.ReviewNote, ChangeNote: v.ChangeNote, IsCurrent: current,
-		PublishedAt: v.PublishedAt, UpdatedAt: v.UpdatedAt.UTC(), ETag: ETagOf(v.Revision)}
+		PublishedAt: v.PublishedAt, UpdatedAt: v.UpdatedAt.UTC(), RenderStatus: gameconfig.ThumbnailNotApplicable, ETag: ETagOf(v.Revision)}
+}
+
+// renderStatus sets render_status of a version view from its render_thumbnail asset and job (F079-AC-16; a new version
+// has none: configView answers not_applicable).
+func (h GameAdmin) renderStatus(ctx context.Context, v *ConfigVersionView) error {
+	ready, job, err := h.Store.RenderState(ctx, v.ConfigVersionID)
+	if err != nil {
+		return err
+	}
+	v.RenderStatus = gameconfig.ThumbnailState(ready, gameconfig.RenderStatus(job))
+	return nil
 }

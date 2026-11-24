@@ -2207,6 +2207,24 @@
     ]
   },
   {
+    "operation_id": "getGameClientManifest",
+    "module": "game",
+    "method": "GET",
+    "path": "/game-admin/client-manifests/current",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGameConfigCounts",
+    "module": "game",
+    "method": "GET",
+    "path": "/game-admin/stats/config-counts",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getGameConfigVersion",
     "module": "game|competition|chat",
     "method": "GET",
@@ -5759,6 +5777,17 @@
     "path": "/auth/portal/setup:password",
     "public": true,
     "required": []
+  },
+  {
+    "operation_id": "simulateGameConfig",
+    "module": "game",
+    "method": "GET",
+    "path": "/game-admin/{config_type}/{config_id}/versions/{version}:simulate",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
   },
   {
     "operation_id": "startActivityAttempt",

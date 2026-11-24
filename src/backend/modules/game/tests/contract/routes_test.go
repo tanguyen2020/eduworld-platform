@@ -85,7 +85,7 @@ func TestOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	if len(found) != len(gamehttp.Operations) || len(found) != 77 { // 7 of F014 + createRealtimeTicket (F090) + 7 of F070 + 8 of F071 + 6 of F072 + 1 of F073 + 4 of F074 + 13 of F075 + 6 of F076 + 18 of F077 + 6 of F078
+	if len(found) != len(gamehttp.Operations) || len(found) != 80 { // 7 of F014 + createRealtimeTicket (F090) + 7 of F070 + 8 of F071 + 6 of F072 + 1 of F073 + 4 of F074 + 13 of F075 + 6 of F076 + 18 of F077 + 6 of F078 + 3 of F079
 		t.Fatalf("F014/F090 operations found in the spec: %v", found)
 	}
 	// F078: the shared /game-admin/{config_type} operations module game serves (x-service-routing: game for its types).

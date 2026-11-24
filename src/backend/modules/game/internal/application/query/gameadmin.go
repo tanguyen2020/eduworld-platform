@@ -3,6 +3,7 @@ package query
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strconv"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/gameadmin"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/gameconfig"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/liveops"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
@@ -31,6 +33,15 @@ type GameAdmin struct {
 	Cursors *page.Codec
 	URLs    MediaURLs
 	Now     func() time.Time
+	// Simulation is the policy of simulateGameConfig (xp_simulation_minute_rate, xp_daily_cap).
+	Simulation SimulationPolicy
+}
+
+// SimulationPolicy are the parameters of the progression simulation (F079-AC-10): MinuteRate is
+// xp_simulation_minute_rate (XP per active minute), DailyCap is xp_daily_cap (PROGRESSION_SYSTEM §3.2, §4.1).
+type SimulationPolicy struct {
+	MinuteRate int
+	DailyCap   int
 }
 
 func (h GameAdmin) now() time.Time {
@@ -61,7 +72,15 @@ func (h GameAdmin) view(t gameconfig.Type, r read.ConfigRow) gameadmin.ConfigVer
 		Title: r.Title, Payload: payload, AuthorID: r.AuthorID, ReviewerID: r.ReviewerID, ReviewNote: r.ReviewNote, ChangeNote: r.ChangeNote,
 		BasedOnVersion: r.BasedOnNo, IsCurrent: r.IsCurrent, PublishedAt: r.PublishedAt, UpdatedAt: r.UpdatedAt.UTC(),
 		ThumbnailURL: h.renderURL(r.ThumbnailSHA, gameconfig.MediaRenderThumbnail), TurntableURL: h.renderURL(r.TurntableSHA, gameconfig.MediaRenderTurntable),
-		ETag: gameadmin.ETagOf(r.Revision)}
+		RenderStatus: gameconfig.ThumbnailState(r.ThumbnailSHA != nil, gameconfig.RenderStatus(deref(r.RenderJob))),
+		ETag:         gameadmin.ETagOf(r.Revision)}
+}
+
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 // reader authorizes a read of configType and opens the read transaction under the PlatformScope.
@@ -86,24 +105,48 @@ type ConfigPage struct {
 	Page page.Info                     `json:"page"`
 }
 
+// ConfigListInput is the query of listGameConfigs_game: From/To (YYYY-MM-DD, ICT) only for events (calendar window).
+type ConfigListInput struct {
+	Status, From, To, Cursor string
+	Limit                    int
+}
+
+// eventsType is the config type of the events calendar window.
+const eventsType = "events"
+
 // List is listGameConfigs_game: one entry per item (its newest version, or its newest version of status), keyset by
-// config_id in the query (LIMIT n+1).
-func (h GameAdmin) List(ctx context.Context, configType, status, cursor string, limit int) (out ConfigPage, err error) {
+// config_id in the query (LIMIT n+1). With from/to (events only, F079-AC-14) the query keeps the items whose listed
+// version schedule intersects the window and each entry carries its calendar_warnings.
+func (h GameAdmin) List(ctx context.Context, configType string, in ConfigListInput) (out ConfigPage, err error) {
 	ctx, done := observability.UseCase(ctx, "game.query.ListGameConfigs")
 	defer func() { done(err) }()
-	if status != "" && !gameconfig.ValidStatus(status) {
+	if in.Status != "" && !gameconfig.ValidStatus(in.Status) {
 		return out, problem.Invalid("status", problem.SubInvalid, "unknown status")
 	}
-	n := page.Limit(limit)
-	cur, err := h.Cursors.Decode(cursor)
+	win, err := liveops.ParseCalendarWindow(in.From, in.To)
+	if err != nil {
+		var fe *liveops.FieldError
+		if errors.As(err, &fe) {
+			return out, problem.Invalid(fe.Field, problem.SubInvalid, fe.Reason)
+		}
+		return out, err
+	}
+	if win != nil && configType != eventsType {
+		return out, problem.Invalid("from", problem.SubInvalid, "from/to filter only config_type events")
+	}
+	n := page.Limit(in.Limit)
+	cur, err := h.Cursors.Decode(in.Cursor)
 	if err != nil {
 		return out, problem.New(problem.BadRequest, "invalid cursor")
 	}
 	err = h.reader(ctx, configType, func(ctx context.Context, t gameconfig.Type) error {
-		f := read.ConfigFilter{ItemType: t.ItemType, Status: status, Limit: n + 1}
+		f := read.ConfigFilter{ItemType: t.ItemType, Status: in.Status, Limit: n + 1}
 		if cur != nil {
 			id := cur.ID
 			f.After = &id
+		}
+		if win != nil {
+			f.WindowStart, f.WindowEnd = &win.Start, &win.End
 		}
 		rows, err := h.Data.List(ctx, f)
 		if err != nil {
@@ -118,9 +161,37 @@ func (h GameAdmin) List(ctx context.Context, configType, status, cursor string, 
 		for _, r := range rows {
 			out.Data = append(out.Data, h.view(t, r))
 		}
+		if win != nil {
+			return h.calendarWarnings(ctx, out.Data, *win)
+		}
 		return nil
 	})
 	return out, err
+}
+
+// calendarWarnings sets calendar_warnings (possibly empty) on each listed event, computed by the read model.
+func (h GameAdmin) calendarWarnings(ctx context.Context, views []gameadmin.ConfigVersionView, win liveops.CalendarWindow) error {
+	ids := make([]uuid.UUID, len(views))
+	for i, v := range views {
+		ids[i] = v.ConfigVersionID
+	}
+	rows, err := h.Data.CalendarWarnings(ctx, ids, win.Start, win.End, gameadmin.CalendarWarningsMax)
+	if err != nil {
+		return err
+	}
+	by := map[uuid.UUID][]gameadmin.CalendarWarning{}
+	for _, r := range rows {
+		by[r.ConfigID] = append(by[r.ConfigID], gameadmin.CalendarWarning{Code: gameadmin.CalendarWarningAreaOverlap, OtherConfigID: r.OtherID,
+			OtherTitle: r.OtherTitle, AreaID: r.AreaID})
+	}
+	for i := range views {
+		ws := by[views[i].ConfigID]
+		if ws == nil {
+			ws = []gameadmin.CalendarWarning{}
+		}
+		views[i].CalendarWarnings = &ws
+	}
+	return nil
 }
 
 // Get is getGameConfigVersion_game.

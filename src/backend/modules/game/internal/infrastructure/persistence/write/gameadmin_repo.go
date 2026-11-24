@@ -532,3 +532,24 @@ func stringsOf(ctx context.Context, t *sql.Tx, query string, args ...any) ([]str
 	}
 	return out, rows.Err()
 }
+
+// RenderState implements write.GameConfigStore (same rules as the read side configSelect).
+func (GameConfigRepo) RenderState(ctx context.Context, versionID uuid.UUID) (bool, string, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return false, "", err
+	}
+	var ready bool
+	var job sql.NullString
+	// tenancyguard:ok platform media (G tables, no tenant_id); deleted_at filtered on every table
+	err = t.QueryRowContext(ctx, `SELECT EXISTS (SELECT 1 FROM game.media_usages u JOIN game.media_assets a ON a.asset_id = u.asset_id
+				AND a.deleted_at IS NULL AND a.status = 'ready'
+			WHERE u.config_version_id = $1 AND u.usage = 'render_thumbnail' AND u.deleted_at IS NULL),
+		(SELECT j.status FROM game.render_jobs j WHERE j.config_version_id = $1 AND j.kind = 'render_thumbnail' AND j.deleted_at IS NULL
+			ORDER BY CASE j.status WHEN 'queued' THEN 0 WHEN 'failed' THEN 0 WHEN 'dead' THEN 1 ELSE 2 END, j.updated_at DESC, j.render_job_id
+			LIMIT 1)`, versionID).Scan(&ready, &job)
+	if err != nil {
+		return false, "", fmt.Errorf("render state: %w", err)
+	}
+	return ready, job.String, nil
+}
