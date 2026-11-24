@@ -16,7 +16,7 @@
 
 ### Session 2026-11-16 (ADR-0086)
 
-- Q: Mở lại game có phải nhập mật khẩu không? → A: Trên thiết bị cá nhân **không**, nếu phiên còn hạn: ADR-0086 thay ADR-0064 mục 1, 2, 4, 5. Sau đăng nhập, refresh token + `tenant_id` được lưu qua `SecureStorage` (F060: Android Keystore; iOS Keychain ở F133; Windows DPAPI gỡ theo ADR-0101). Khởi động: có bản ghi → `refreshGameToken` `mode=resume` + `device_id` → `200` (token mới + `bootstrap`) → `createGameSession` → vào game, không hiện form; thất bại xác định → xóa bản ghi, hiện form. Web và `shared_device = true` dùng `MemoryOnly`, giữ hành vi cũ (luôn hiện form).
+- Q: Mở lại game có phải nhập mật khẩu không? → A: Trên thiết bị cá nhân **không**, nếu phiên còn hạn: ADR-0086 thay ADR-0064 mục 1, 2, 4, 5. Sau đăng nhập, refresh token + `tenant_id` được lưu qua `SecureStorage` (F060: Windows DPAPI, Android Keystore; iOS Keychain ở F133). Khởi động: có bản ghi → `refreshGameToken` `mode=resume` + `device_id` → `200` (token mới + `bootstrap`) → `createGameSession` → vào game, không hiện form; thất bại xác định → xóa bản ghi, hiện form. Web và `shared_device = true` dùng `MemoryOnly`, giữ hành vi cũ (luôn hiện form).
 - Q: Mã lỗi refresh? → A: `401 REFRESH_TOKEN_INVALID` (hết hạn/thu hồi), `401 REFRESH_TOKEN_REUSED` (dùng lại token đã xoay vòng — server thu hồi cả phiên), `401 REFRESH_TOKEN_DEVICE_MISMATCH` (sai thiết bị); thay `401 UNAUTHENTICATED` cũ ở `refreshGameToken` (contract do F013 sở hữu). Lỗi mạng/5xx/`429` khi resume giữ bản ghi và thử lại; `426` → ForceUpdate, giữ bản ghi.
 - Q: Thoát game có đăng xuất không? → A: Thiết bị cá nhân: thoát = `endGameSession` (best effort), **giữ** refresh token; chỉ nút **Đăng xuất** (Cài đặt → Tài khoản) gọi `endGameSession` → `gameLogout` → xóa `SecureStorage`. Máy dùng chung: thoát = Đăng xuất. Tham số `game_mobile_background_relogin` bị bỏ (mobile mở lại dùng token đã lưu).
 - Q: Refresh song song? → A: Single-flight bắt buộc; mọi token mới ghi đè `SecureStorage` ngay — gửi lại token cũ sẽ bị coi là dùng lại và cả phiên bị thu hồi.
@@ -48,13 +48,13 @@
 
 ### Session 2026-11-20 (owner chốt — certificate pinning)
 
-- Certificate pinning (Ràng buộc phi chức năng, GODOT_ARCHITECTURE §14) → **Chốt:** `ApiClient` dùng `TLSOptions.client(trusted_chain)` với CA bundle (CA chính + CA dự phòng) do F133 đóng gói, chỉ ở build release trên Android/iOS (ADR-0101; Web dùng TLS trình duyệt; debug giữ như cũ); chứng chỉ không khớp bundle → lỗi `NETWORK_ERROR` loại TLS, không thử lại không pin. Task bổ sung.
+- Certificate pinning (Ràng buộc phi chức năng, GODOT_ARCHITECTURE §14) → **Chốt:** `ApiClient` dùng `TLSOptions.client(trusted_chain)` với CA bundle (CA chính + CA dự phòng) do F133 đóng gói, chỉ ở build release trên Windows/Android/iOS (Web dùng TLS trình duyệt; debug giữ như cũ); chứng chỉ không khớp bundle → lỗi `NETWORK_ERROR` loại TLS, không thử lại không pin. Task bổ sung.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Đăng nhập bằng form trong game (Priority: P1) 🎯 MVP
 
-`hs.an.3a` mở game trên Android hoặc Web, thấy form trong game, nhập username + mật khẩu, vào thẳng tenant `th-demo-a` (US-AUTH-001, US-AUTH-002).
+`hs.an.3a` mở game trên Windows/Android, thấy form trong game, nhập username + mật khẩu, vào thẳng tenant `th-demo-a` (US-AUTH-001, US-AUTH-002).
 
 **Why this priority**: Cổng vào duy nhất của học sinh; exit M-C1.
 
@@ -245,7 +245,7 @@ Học sinh bấm "Đăng xuất" hoặc đóng cửa sổ; máy phòng tin học
 
 ### Measurable Outcomes
 
-- **SC-001**: Học sinh 1 tenant vào được game sau một lần bấm "Đăng nhập" trên Android và Web trong kịch bản quickstart.
+- **SC-001**: Học sinh 1 tenant vào được game sau một lần bấm "Đăng nhập" trên Windows và Android trong kịch bản quickstart.
 - **SC-002**: Quét `user://`, thư mục ứng dụng, localStorage sau 10 phút chơi: 0 mật khẩu, 0 access token, 0 refresh token dạng rõ; trên thiết bị cá nhân refresh token chỉ có trong `SecureStorage`; máy `shared_device`/Web: 0 refresh token ở mọi nơi sau khi thoát.
 - **SC-006**: Mở lại game trên thiết bị cá nhân khi phiên còn hạn: 100% lượt vào thẳng hub không hiện form trong kịch bản quickstart; phiên hết hạn/bị thu hồi: 100% về form.
 - **SC-003**: Quét log client, crash report, telemetry với mật khẩu mẫu: 0 lần xuất hiện.
@@ -255,7 +255,7 @@ Học sinh bấm "Đăng xuất" hoặc đóng cửa sổ; máy phòng tin học
 ## Ngoài phạm vi
 
 - Backend đăng nhập, ticket, refresh, logout, hàng chờ: F013; game session (`createGameSession`, `409`/takeover, end, heartbeat timeout), login events, client-config: F014.
-- Khung project, autoload stub, theme, i18n, Prism mock, lớp `SecureStorage` + adapter Android/`MemoryOnly`: F060; adapter iOS Keychain và loại file phiên khỏi backup trong build release: F133.
+- Khung project, autoload stub, theme, i18n, Prism mock, lớp `SecureStorage` + adapter Windows/Android/`MemoryOnly`: F060; adapter iOS Keychain và loại file phiên khỏi backup trong build release: F133.
 - Phát hiện dùng lại refresh token, gắn `device_id`, thu hồi phía server: F013.
 - `RealtimeClient`, nhận `session.session.replaced`/close 4409 qua WebSocket: F092 (F061 dùng heartbeat REST).
 - Tạo avatar lần đầu (S02): F070; Main Hub: F062.

@@ -1,8 +1,8 @@
 extends GdUnitTestSuite
 ## F060-AC-25 (ADR-0086, R14, TC-AUTH-084): after save() of a unique sample, the plaintext appears nowhere in
 ## user:// (settings.cfg, device.cfg, secure records) nor in the Log ring buffer.
-## Runs the file-backed adapter with the test cipher everywhere; the Android Keystore run needs a device/emulator
-## (F133). The Windows DPAPI adapter was removed with the Windows build (ADR-0101).
+## Runs the file-backed adapter with the test cipher everywhere, and the real DPAPI adapter when the Windows
+## GDExtension is installed (CI job platform-windows); the Android Keystore run needs a device/emulator.
 
 const FakeCipher := preload("res://tests/fixtures/fake_cipher.gd")
 const SECURE_DIR: String = "user://test_secure_at_rest"
@@ -26,6 +26,17 @@ func test_file_cipher_adapter_keeps_only_ciphertext() -> void:
 	var storage: FileCipherSecureStorage = FileCipherSecureStorage.new(FakeCipher.new(), SECURE_DIR)
 	assert_int(storage.save("eduworld.game.session", sample.to_utf8_buffer())).is_equal(OK)
 	assert_bool(FileAccess.file_exists(storage.record_path("eduworld.game.session"))).is_true()
+	_assert_not_on_disk(sample)
+	assert_str(storage.load("eduworld.game.session").get_string_from_utf8()).is_equal(sample)
+
+
+func test_dpapi_adapter_keeps_only_ciphertext() -> void:
+	if DpapiSecureStorage.native_cipher() == null:
+		# Requires the Windows GDExtension (built in CI job platform-windows); nothing else to check here.
+		return
+	var sample: String = "dpapi-%d-%d" % [Time.get_ticks_usec(), randi()]
+	var storage: DpapiSecureStorage = DpapiSecureStorage.new(SECURE_DIR)
+	assert_int(storage.save("eduworld.game.session", sample.to_utf8_buffer())).is_equal(OK)
 	_assert_not_on_disk(sample)
 	assert_str(storage.load("eduworld.game.session").get_string_from_utf8()).is_equal(sample)
 

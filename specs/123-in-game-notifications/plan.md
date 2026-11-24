@@ -14,7 +14,7 @@ Backend: bounded context `notification` trong module chat. Consumer `chat-notifi
 | Primary Dependencies | chi, ent, Atlas, oapi-codegen (server public), facade `learning` (`src/backend/modules/learning/api`), `src/backend/pkg/modcall`, `src/backend/pkg/outbox` (consumer), `src/backend/pkg/natsx`, `src/backend/pkg/realtime` · GdUnit4, `ApiClient`/`RealtimeClient` (F061, F092) |
 | Storage | PostgreSQL `eduworld_chat` (`social.notifications` mới, `ref.students`); Valkey cache số chưa đọc |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); facade test với learning (fake facade phía chat, ví dụ spec phía learning); GdUnit4 unit/scene; integration headless |
-| Target Platform | Linux container (module `chat` nạp trong `core-api` + profile `worker-chat`); Android/iOS/Web (ADR-0101) |
+| Target Platform | Linux container (module `chat` nạp trong `core-api` + profile `worker-chat`); Windows/Android/iOS/Web |
 | Project Type | backend module + game client |
 | Performance Goals | Thông báo tới client online p95 ≤ 2 s từ lúc event nguồn được phát (SC-001) |
 | Constraints | AGENTS R1, R8, R9, R13, R14, R16, R19, R21, R26, R29, R32 · ADR-0035, ADR-0040, ADR-0074, ADR-0042, ADR-0070 |

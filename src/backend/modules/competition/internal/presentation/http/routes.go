@@ -60,6 +60,9 @@ type Handlers struct {
 	Battles BattleQueries
 	// F106 — tiers, seasons and leaderboards (nil: not mounted).
 	Rankings RankingQueries
+	// F107 — grade challenges, school tournaments, brackets (nil: not mounted).
+	Tournaments       TournamentCommands
+	TournamentQueries TournamentQueries
 }
 
 func op(id, method, pattern string, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -137,7 +140,12 @@ func Register(s *httpx.Server, h Handlers) error {
 		}
 	}
 	if h.Rankings != nil {
-		return registerRanking(s, h.Rankings)
+		if err := registerRanking(s, h.Rankings); err != nil {
+			return err
+		}
+	}
+	if h.Tournaments != nil && h.TournamentQueries != nil {
+		return registerTournaments(s, h.Tournaments, h.TournamentQueries)
 	}
 	return nil
 }

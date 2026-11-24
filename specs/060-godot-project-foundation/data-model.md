@@ -18,5 +18,5 @@ File để tham chiếu khi code:
 | `user://settings.cfg` (`ConfigFile`) | `[ui] locale`, `font_scale` (0/1/2), `high_contrast`, `reduce_motion` | String/int/bool | `locale` ∈ `supported_locales` |
 | | `[audio] music`, `sfx`, `voice` | float 0–1 | |
 | `user://device.cfg` | `shared_device`, `lan_cache_url` | bool / String | Theo tham số `shared_device_idle_logout`, `lan_cache_url`; `shared_device = true` → `SecureStorage` `MemoryOnly` |
-| `SecureStorage` (khóa do F061 đặt, ví dụ `eduworld.game.session`) | giá trị `PackedByteArray` | bytes | Android: AES-GCM với khóa Keystore → `noBackupFilesDir/<key>.bin`; `MemoryOnly`: chỉ RAM. Không bao giờ ghi rõ (ADR-0086) |
+| `SecureStorage` (khóa do F061 đặt, ví dụ `eduworld.game.session`) | giá trị `PackedByteArray` | bytes | Windows: DPAPI CurrentUser → `user://secure/<key>.bin` (ciphertext); Android: AES-GCM với khóa Keystore → `noBackupFilesDir/<key>.bin`; `MemoryOnly`: chỉ RAM. Không bao giờ ghi rõ (ADR-0086) |
 | `res://locale/*.po` | `msgid` = khóa `ui.<screen>.<element>[.<state>]` | gettext | Khóa bất biến |

@@ -1,9 +1,6 @@
 # ADR-0073 — Phát hành theo pilot ưu tiên giáo dục thay cho "Release 1.0 đủ mọi thứ"
 
-> **Trạng thái:** Accepted · Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (bỏ Windows) · **Ngày:** 2026-11-15 · **OQ:** OQ-08 · **Tài liệu:** [ROADMAP](../12-project/ROADMAP.md) · [PRODUCT_VISION](../00-overview/PRODUCT_VISION.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) · [Chỉ mục ADR](README.md)
-
-> [!WARNING]
-> **Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (bỏ Windows, 2026-11-24).** Không còn hiệu lực: Windows trong nền tảng của pilot (mục quyết định). **Còn hiệu lực:** toàn bộ phần còn lại; pilot chạy trên Web, Android, iOS (PC phòng máy dùng bản Web).
+> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-08 · **Tài liệu:** [ROADMAP](../12-project/ROADMAP.md) · [PRODUCT_VISION](../00-overview/PRODUCT_VISION.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -32,4 +29,3 @@ Giữ "Release 1.0 đủ mọi thứ": rủi ro trễ hạn và thiếu bằng c
 |---|---|---|
 | 2026-11-15 | Tạo ADR (Proposed) từ EDU_FIT_REVIEW | Technical Architect |
 | 2026-11-17 | Accepted; nền tảng theo ADR-0013 (Windows, Android, iOS, Web) vì ADR-0079 bị từ chối | Technical Architect |
-| 2026-11-24 | Superseded một phần bởi ADR-0101: pilot chỉ Web, Android, iOS | Owner dự án |

@@ -205,7 +205,7 @@ func (h Matchmaking) finalize(ctx context.Context, p port.Proposal, now time.Tim
 		return err
 	}
 	m := write.NewMatch{ID: p.ID, Mode: p.Mode, Type: p.Type, SubjectID: p.SubjectID, TopicID: p.TopicID, Grade: p.Grade, Ranked: p.Ranked,
-		ScopeKind: p.ScopeKind, TenantIDs: p.TenantIDs, TournamentNodeID: p.TournamentNodeID, RulesetVersionID: p.RulesetVersionID, At: now}
+		ScopeKind: p.ScopeKind, TenantIDs: p.TenantIDs, TournamentNodeID: p.TournamentNodeID, TournamentID: p.TournamentID, RulesetVersionID: p.RulesetVersionID, At: now}
 	for _, s := range p.Students() {
 		r := p.Ratings[s]
 		part := write.MatchParticipant{StudentID: s, TenantID: p.Tenants[s], SchoolID: p.Schools[s], TeamNo: p.TeamOf(s), Rating: &r}

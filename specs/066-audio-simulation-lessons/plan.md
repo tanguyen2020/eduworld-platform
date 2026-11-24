@@ -14,7 +14,7 @@ Backend (module learning): hai plugin mới hiện thực `activity.Plugin` (ACT
 | Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/entx`, `src/backend/pkg/outbox`, `src/backend/pkg/tenancy`, `src/backend/pkg/problem`, `santhosh-tekuri/jsonschema` (validate `parameter_schema`) / GdUnit4, `AudioStreamPlayer`, `ProjectSettings.load_resource_pack` / Ant Design 5 + Pro, `@rjsf/antd` (form từ JSON Schema), TanStack Query, ajv |
 | Storage | PostgreSQL `eduworld_learning` (schema `content`, `assessment`); floci S3 cho media (F027) |
 | Testing | go test (unit domain/checker), testcontainers (integration, global filter), contract test plugin chung (TC-ACT-001), vector chung / GdUnit4 unit + scene + integration headless / Vitest + Testing Library + MSW (nhãn `MOCK`), Playwright |
-| Target Platform | Linux container / Android, Web (Compatibility renderer; không Windows — ADR-0101) / trình duyệt desktop |
+| Target Platform | Linux container / Windows, Android, Web (Compatibility renderer) / trình duyệt desktop |
 | Project Type | backend module + game client + web editor |
 | Performance Goals | Checker p95 và template (FPS, kích thước, thời gian nạp) theo [SIMULATION_ENGINE §6](../../docs/02-learning/SIMULATION_ENGINE.md); [PERFORMANCE_BUDGET §3](../../docs/08-game-client/PERFORMANCE_BUDGET.md) |
 | Constraints | AGENTS R1, R5, R6, R8, R10, R13, R14, R21, R26–R28, R31, R32 · ADR-0016, ADR-0037–0044, ADR-0074, ADR-0048, ADR-0052, ADR-0057, ADR-0059, ADR-0072 |

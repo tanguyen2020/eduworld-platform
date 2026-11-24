@@ -6,6 +6,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// BracketNode is the predicate function for bracketnode builders.
+type BracketNode func(*sql.Selector)
+
+// Challenge is the predicate function for challenge builders.
+type Challenge func(*sql.Selector)
+
 // CompetitionPointEntry is the predicate function for competitionpointentry builders.
 type CompetitionPointEntry func(*sql.Selector)
 
@@ -74,3 +80,21 @@ type SeasonResult func(*sql.Selector)
 
 // SessionMembership is the predicate function for sessionmembership builders.
 type SessionMembership func(*sql.Selector)
+
+// TenantResourceAssignment is the predicate function for tenantresourceassignment builders.
+type TenantResourceAssignment func(*sql.Selector)
+
+// Tournament is the predicate function for tournament builders.
+type Tournament func(*sql.Selector)
+
+// TournamentEntry is the predicate function for tournamententry builders.
+type TournamentEntry func(*sql.Selector)
+
+// TournamentGroup is the predicate function for tournamentgroup builders.
+type TournamentGroup func(*sql.Selector)
+
+// TournamentResult is the predicate function for tournamentresult builders.
+type TournamentResult func(*sql.Selector)
+
+// TournamentReward is the predicate function for tournamentreward builders.
+type TournamentReward func(*sql.Selector)

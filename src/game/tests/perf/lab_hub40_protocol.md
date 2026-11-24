@@ -8,7 +8,7 @@ Phần chạy được trong CI (headless, không renderer) nằm ở `test_hub4
 ## 1. Chuẩn bị
 
 - Backend compose: `make up`, `make seed`, `make up-app` ([LOCAL_DEVELOPMENT](../../../../docs/11-operations/LOCAL_DEVELOPMENT.md)); bot hub `tests/load/hubbot` (F091) cấu hình 39 bot vào `main_hub`, di chuyển ngẫu nhiên, emote 1 lần/30 s.
-- Thiết bị: DEV-AND-MID1, DEV-PC-MID, DEV-WEB-MID ([PERFORMANCE_BUDGET §2](../../../../docs/08-game-client/PERFORMANCE_BUDGET.md)); preset Trung bình; build release Android / Web (`make godot-export-android`, export Web của F133; DEV-PC-MID chạy bản Web — ADR-0101) trỏ `realtime_url` tới compose qua `wss` (chứng chỉ dev trong CA bundle của build lab).
+- Thiết bị: DEV-AND-MID1, DEV-PC-MID, DEV-WEB-MID ([PERFORMANCE_BUDGET §2](../../../../docs/08-game-client/PERFORMANCE_BUDGET.md)); preset Trung bình; build release (`make godot-export-windows` / Android / Web) trỏ `realtime_url` tới compose qua `wss` (chứng chỉ dev trong CA bundle của build lab).
 - Tài khoản: `hs.an.3a` (client thật).
 
 ## 2. Đo

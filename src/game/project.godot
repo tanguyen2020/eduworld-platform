@@ -65,6 +65,7 @@ i18n/pseudo_locale="xx-PS"
 i18n/pseudo_locale_path="res://locale/xx_PS.po"
 ui/pre_bootstrap_density="g1_3"
 device/config_path="user://device.cfg"
+device/shared_device_default/windows=true
 device/shared_device_default/android=false
 device/shared_device_default/ios=false
 device/shared_device_default/web=true

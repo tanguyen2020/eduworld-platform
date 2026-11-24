@@ -5702,7 +5702,7 @@ components:
         device_label:
           type: string
           maxLength: 64
-          description: Ví dụ "Điện thoại Android", "Trình duyệt web"
+          description: Ví dụ "Máy tính Windows", "Điện thoại Android"
         last_seen_at:
           $ref: '#/components/schemas/Timestamp'
     ClientVersionProblem:

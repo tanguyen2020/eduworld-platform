@@ -9,6 +9,142 @@ import (
 )
 
 var (
+	// BracketNodesColumns holds the columns for the "bracket_nodes" table.
+	BracketNodesColumns = []*schema.Column{
+		{Name: "node_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "tournament_id", Type: field.TypeUUID},
+		{Name: "bracket", Type: field.TypeString, Size: 64},
+		{Name: "round", Type: field.TypeInt16},
+		{Name: "position", Type: field.TypeInt16},
+		{Name: "group_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "entry_a_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "entry_b_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "winner_entry_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "is_draw", Type: field.TypeBool, Default: false},
+		{Name: "result", Type: field.TypeJSON, Nullable: true},
+		{Name: "match_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "scheduled_at", Type: field.TypeTime, Nullable: true},
+		{Name: "started_at", Type: field.TypeTime, Nullable: true},
+		{Name: "next_win_node_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "next_win_slot", Type: field.TypeInt16, Nullable: true},
+		{Name: "next_lose_node_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "next_lose_slot", Type: field.TypeInt16, Nullable: true},
+		{Name: "wave", Type: field.TypeInt16, Default: 0},
+		{Name: "attempts", Type: field.TypeInt16, Default: 0},
+		{Name: "reschedule_count", Type: field.TypeInt16, Default: 0},
+		{Name: "notices", Type: field.TypeInt16, Default: 0},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "pending"},
+		{Name: "confirm_after", Type: field.TypeTime, Nullable: true},
+		{Name: "decision_required", Type: field.TypeBool, Default: false},
+		{Name: "override_reason", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "overridden_by", Type: field.TypeUUID, Nullable: true},
+	}
+	// BracketNodesTable holds the schema information for the "bracket_nodes" table.
+	BracketNodesTable = &schema.Table{
+		Name:       "bracket_nodes",
+		Columns:    BracketNodesColumns,
+		PrimaryKey: []*schema.Column{BracketNodesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "bracket_nodes_slot_uq",
+				Unique:  true,
+				Columns: []*schema.Column{BracketNodesColumns[10], BracketNodesColumns[11], BracketNodesColumns[12], BracketNodesColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "bracket_nodes_match_uq",
+				Unique:  true,
+				Columns: []*schema.Column{BracketNodesColumns[20]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "match_id IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "bracket_nodes_due_idx",
+				Unique:  false,
+				Columns: []*schema.Column{BracketNodesColumns[31], BracketNodesColumns[21]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// ChallengesColumns holds the columns for the "challenges" table.
+	ChallengesColumns = []*schema.Column{
+		{Name: "challenge_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "template_config_id", Type: field.TypeUUID},
+		{Name: "template_version_id", Type: field.TypeUUID},
+		{Name: "kind", Type: field.TypeString, Size: 64},
+		{Name: "format", Type: field.TypeString, Size: 64},
+		{Name: "name", Type: field.TypeString, Size: 128},
+		{Name: "grade_level", Type: field.TypeInt16, Nullable: true},
+		{Name: "targets", Type: field.TypeJSON},
+		{Name: "exclude_student_ids", Type: field.TypeJSON},
+		{Name: "participation", Type: field.TypeString, Size: 64, Default: "individual"},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "question_set_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "params", Type: field.TypeJSON},
+		{Name: "starts_at", Type: field.TypeTime},
+		{Name: "ends_at", Type: field.TypeTime},
+		{Name: "join_opens_at", Type: field.TypeTime},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "scheduled"},
+		{Name: "tournament_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "match_ids", Type: field.TypeJSON, Nullable: true},
+		{Name: "cancel_reason", Type: field.TypeString, Nullable: true, Size: 1000},
+	}
+	// ChallengesTable holds the schema information for the "challenges" table.
+	ChallengesTable = &schema.Table{
+		Name:       "challenges",
+		Columns:    ChallengesColumns,
+		PrimaryKey: []*schema.Column{ChallengesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "challenges_school_status_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ChallengesColumns[1], ChallengesColumns[10], ChallengesColumns[26], ChallengesColumns[23]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "challenges_keyset_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ChallengesColumns[1], ChallengesColumns[23], ChallengesColumns[0]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "challenges_due_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ChallengesColumns[26], ChallengesColumns[23]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// CompetitionPointLedgerColumns holds the columns for the "competition_point_ledger" table.
 	CompetitionPointLedgerColumns = []*schema.Column{
 		{Name: "entry_id", Type: field.TypeUUID},
@@ -993,8 +1129,278 @@ var (
 			},
 		},
 	}
+	// TenantResourceAssignmentsColumns holds the columns for the "tenant_resource_assignments" table.
+	TenantResourceAssignmentsColumns = []*schema.Column{
+		{Name: "assignment_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "resource_type", Type: field.TypeString, Size: 64},
+		{Name: "resource_id", Type: field.TypeUUID},
+		{Name: "assigned_by", Type: field.TypeUUID},
+		{Name: "assigned_at", Type: field.TypeTime},
+	}
+	// TenantResourceAssignmentsTable holds the schema information for the "tenant_resource_assignments" table.
+	TenantResourceAssignmentsTable = &schema.Table{
+		Name:       "tenant_resource_assignments",
+		Columns:    TenantResourceAssignmentsColumns,
+		PrimaryKey: []*schema.Column{TenantResourceAssignmentsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tra_active_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TenantResourceAssignmentsColumns[10], TenantResourceAssignmentsColumns[11], TenantResourceAssignmentsColumns[1]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "tra_tenant_idx",
+				Unique:  false,
+				Columns: []*schema.Column{TenantResourceAssignmentsColumns[1], TenantResourceAssignmentsColumns[10], TenantResourceAssignmentsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// TournamentsColumns holds the columns for the "tournaments" table.
+	TournamentsColumns = []*schema.Column{
+		{Name: "tournament_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64},
+		{Name: "owner_id", Type: field.TypeUUID},
+		{Name: "challenge_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "template_config_id", Type: field.TypeUUID},
+		{Name: "rule_version_id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString, Size: 128},
+		{Name: "format", Type: field.TypeString, Size: 64},
+		{Name: "participant_type", Type: field.TypeString, Size: 64, Default: "individual"},
+		{Name: "team_size", Type: field.TypeInt16, Nullable: true},
+		{Name: "mode", Type: field.TypeString, Size: 64},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "topic_ids", Type: field.TypeJSON, Nullable: true},
+		{Name: "grade_levels", Type: field.TypeJSON},
+		{Name: "question_policy", Type: field.TypeJSON, Nullable: true},
+		{Name: "registration_open_at", Type: field.TypeTime},
+		{Name: "registration_close_at", Type: field.TypeTime},
+		{Name: "check_in_opens_at", Type: field.TypeTime},
+		{Name: "starts_at", Type: field.TypeTime},
+		{Name: "max_entries", Type: field.TypeInt16},
+		{Name: "min_entries", Type: field.TypeInt16},
+		{Name: "seeding_policy", Type: field.TypeString, Size: 64},
+		{Name: "seed_value", Type: field.TypeInt64, Nullable: true},
+		{Name: "auto_confirm", Type: field.TypeBool, Default: false},
+		{Name: "reward_rule_refs", Type: field.TypeJSON},
+		{Name: "reward_summary", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "round_gap_s", Type: field.TypeInt, Default: 300},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "draft"},
+		{Name: "cancel_reason", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "rewarded_at", Type: field.TypeTime, Nullable: true},
+	}
+	// TournamentsTable holds the schema information for the "tournaments" table.
+	TournamentsTable = &schema.Table{
+		Name:       "tournaments",
+		Columns:    TournamentsColumns,
+		PrimaryKey: []*schema.Column{TournamentsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tournaments_keyset_idx",
+				Unique:  false,
+				Columns: []*schema.Column{TournamentsColumns[1], TournamentsColumns[28], TournamentsColumns[0]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "tournaments_school_status_idx",
+				Unique:  false,
+				Columns: []*schema.Column{TournamentsColumns[1], TournamentsColumns[10], TournamentsColumns[37]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "tournaments_due_idx",
+				Unique:  false,
+				Columns: []*schema.Column{TournamentsColumns[37], TournamentsColumns[28]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "tournaments_challenge_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TournamentsColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "challenge_id IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// TournamentEntriesColumns holds the columns for the "tournament_entries" table.
+	TournamentEntriesColumns = []*schema.Column{
+		{Name: "entry_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "tournament_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "party_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "member_ids", Type: field.TypeJSON},
+		{Name: "seed", Type: field.TypeInt16, Nullable: true},
+		{Name: "group_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "registered"},
+		{Name: "registered_by", Type: field.TypeUUID},
+		{Name: "checked_in_at", Type: field.TypeTime, Nullable: true},
+	}
+	// TournamentEntriesTable holds the schema information for the "tournament_entries" table.
+	TournamentEntriesTable = &schema.Table{
+		Name:       "tournament_entries",
+		Columns:    TournamentEntriesColumns,
+		PrimaryKey: []*schema.Column{TournamentEntriesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tournament_entries_student_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TournamentEntriesColumns[10], TournamentEntriesColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL AND student_id IS NOT NULL",
+				},
+			},
+			{
+				Name:    "tournament_entries_party_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TournamentEntriesColumns[10], TournamentEntriesColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL AND party_id IS NOT NULL",
+				},
+			},
+			{
+				Name:    "tournament_entries_status_idx",
+				Unique:  false,
+				Columns: []*schema.Column{TournamentEntriesColumns[1], TournamentEntriesColumns[10], TournamentEntriesColumns[17]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// TournamentGroupsColumns holds the columns for the "tournament_groups" table.
+	TournamentGroupsColumns = []*schema.Column{
+		{Name: "group_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "tournament_id", Type: field.TypeUUID},
+		{Name: "code", Type: field.TypeString, Size: 16},
+		{Name: "standings", Type: field.TypeJSON, Nullable: true},
+	}
+	// TournamentGroupsTable holds the schema information for the "tournament_groups" table.
+	TournamentGroupsTable = &schema.Table{
+		Name:       "tournament_groups",
+		Columns:    TournamentGroupsColumns,
+		PrimaryKey: []*schema.Column{TournamentGroupsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tournament_groups_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TournamentGroupsColumns[10], TournamentGroupsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// TournamentResultsColumns holds the columns for the "tournament_results" table.
+	TournamentResultsColumns = []*schema.Column{
+		{Name: "result_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "tournament_id", Type: field.TypeUUID},
+		{Name: "entry_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "final_rank", Type: field.TypeInt16},
+		{Name: "wins", Type: field.TypeInt16},
+		{Name: "losses", Type: field.TypeInt16},
+		{Name: "draws", Type: field.TypeInt16},
+		{Name: "points", Type: field.TypeInt},
+		{Name: "matches_played", Type: field.TypeInt16},
+	}
+	// TournamentResultsTable holds the schema information for the "tournament_results" table.
+	TournamentResultsTable = &schema.Table{
+		Name:       "tournament_results",
+		Columns:    TournamentResultsColumns,
+		PrimaryKey: []*schema.Column{TournamentResultsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tournament_results_entry_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TournamentResultsColumns[4], TournamentResultsColumns[5]},
+			},
+		},
+	}
+	// TournamentRewardsColumns holds the columns for the "tournament_rewards" table.
+	TournamentRewardsColumns = []*schema.Column{
+		{Name: "reward_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "tournament_id", Type: field.TypeUUID},
+		{Name: "entry_id", Type: field.TypeUUID},
+		{Name: "rule_id", Type: field.TypeString, Size: 64},
+		{Name: "student_ids", Type: field.TypeJSON},
+		{Name: "reward_ref", Type: field.TypeJSON},
+		{Name: "points", Type: field.TypeInt, Default: 0},
+		{Name: "granted_at", Type: field.TypeTime},
+	}
+	// TournamentRewardsTable holds the schema information for the "tournament_rewards" table.
+	TournamentRewardsTable = &schema.Table{
+		Name:       "tournament_rewards",
+		Columns:    TournamentRewardsColumns,
+		PrimaryKey: []*schema.Column{TournamentRewardsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tournament_rewards_rule_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TournamentRewardsColumns[4], TournamentRewardsColumns[5], TournamentRewardsColumns[6]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		BracketNodesTable,
+		ChallengesTable,
 		CompetitionPointLedgerTable,
 		CompetitionRestrictionsTable,
 		ContentReleasesTable,
@@ -1018,10 +1424,22 @@ var (
 		SeasonsTable,
 		SeasonResultsTable,
 		SessionMembershipsTable,
+		TenantResourceAssignmentsTable,
+		TournamentsTable,
+		TournamentEntriesTable,
+		TournamentGroupsTable,
+		TournamentResultsTable,
+		TournamentRewardsTable,
 	}
 )
 
 func init() {
+	BracketNodesTable.Annotation = &entsql.Annotation{
+		Table: "bracket_nodes",
+	}
+	ChallengesTable.Annotation = &entsql.Annotation{
+		Table: "challenges",
+	}
 	CompetitionPointLedgerTable.Annotation = &entsql.Annotation{
 		Table: "competition_point_ledger",
 	}
@@ -1090,5 +1508,23 @@ func init() {
 	}
 	SessionMembershipsTable.Annotation = &entsql.Annotation{
 		Table: "session_memberships",
+	}
+	TenantResourceAssignmentsTable.Annotation = &entsql.Annotation{
+		Table: "tenant_resource_assignments",
+	}
+	TournamentsTable.Annotation = &entsql.Annotation{
+		Table: "tournaments",
+	}
+	TournamentEntriesTable.Annotation = &entsql.Annotation{
+		Table: "tournament_entries",
+	}
+	TournamentGroupsTable.Annotation = &entsql.Annotation{
+		Table: "tournament_groups",
+	}
+	TournamentResultsTable.Annotation = &entsql.Annotation{
+		Table: "tournament_results",
+	}
+	TournamentRewardsTable.Annotation = &entsql.Annotation{
+		Table: "tournament_rewards",
 	}
 }

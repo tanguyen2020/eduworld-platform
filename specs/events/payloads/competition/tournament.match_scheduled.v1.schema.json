@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/tournament.match_scheduled.v1.schema.json",
+  "title": "Payload tournament.match_scheduled v1 (module competition, owner F107)",
+  "description": "Thông báo trận giải sắp đấu (COMPETITION_SYSTEM §10.6, F107-AC-15): phát đúng một lần cho mỗi mốc trước giờ đấu (`notice_minutes` 10 và 1) của một nút bracket có đủ hai entry. Chỉ id và thời điểm, không tên thật, không nickname (R16). Consumer: notification, realtime, game.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tournament_id", "node_id", "scheduled_at", "notice_minutes", "entry_ids", "student_ids"],
+  "properties": {
+    "tournament_id": { "type": "string", "format": "uuid" },
+    "node_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": ["string", "null"], "format": "uuid" },
+    "scheduled_at": { "type": "string", "format": "date-time" },
+    "notice_minutes": { "type": "integer", "enum": [10, 1] },
+    "entry_ids": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string", "format": "uuid" } },
+    "student_ids": { "type": "array", "minItems": 2, "maxItems": 16, "items": { "type": "string", "format": "uuid" } }
+  },
+  "examples": [
+    {
+      "tournament_id": "0193a5f4-6c1e-7b2a-9d1f-000000107001",
+      "node_id": "0193a5f4-6c1e-7b2a-9d1f-000000107101",
+      "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000011",
+      "scheduled_at": "2026-12-01T02:00:00Z",
+      "notice_minutes": 10,
+      "entry_ids": ["0193a5f4-6c1e-7b2a-9d1f-000000107201", "0193a5f4-6c1e-7b2a-9d1f-000000107202"],
+      "student_ids": ["0193a5f4-6c1e-7b2a-9d1f-000000000006", "0193a5f4-6c1e-7b2a-9d1f-000000000007"]
+    }
+  ]
+}

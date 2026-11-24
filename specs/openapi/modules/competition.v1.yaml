@@ -34,6 +34,8 @@ tags:
     description: Matchmaking, match, rating, tournament
   - name: leaderboards
     description: Bảng xếp hạng theo scope × period (chỉ nickname/avatar)
+  - name: lms
+    description: Khóa học, lộ trình, giao bài, thử thách từ template platform, catalog hoạt động game đã publish (chỉ đọc), School Learning Dashboard (ADR-0072)
   - name: game-admin
     description: INTERNAL — Game Operations Console & cấu hình thi đấu (Admin Portal workspace A), chỉ role platform qua client eduworld-portal, chỉ gateway nội bộ (ADR-0027; không MFA — ADR-0094)
 paths:
@@ -1234,9 +1236,31 @@ paths:
       operationId: listTournaments
       x-portal-action: action.school_lms.challenges.view
       summary: Giải đấu trong scope
+      description: |
+        F107-AC-25. Học sinh (token game, `game_player`): giải trong phạm vi của em — đối tượng khối ± học sinh của thử thách khối,
+        trường, tenant (ADR-0095); `scope=mine` chỉ giải em có entry; chỉ nickname/avatar (R16). Người tổ chức (portal,
+        `lms.challenge.write`): giải của các trường thuộc scope UserRole. Nhân sự dùng token game → `403 GAME_ACCESS_STUDENT_ONLY`.
+        Trang keyset `(starts_at, tournament_id)` cắt trong SQL (API_DESIGN §5).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
+        - name: scope
+          in: query
+          description: Chỉ học sinh — `available` (mặc định, giải trong phạm vi) hoặc `mine` (giải em đã có entry)
+          schema:
+            type: string
+            enum:
+              - available
+              - mine
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TournamentStatus'
+        - name: school_id
+          in: query
+          description: Chỉ người tổ chức — lọc theo trường trong scope
+          schema:
+            $ref: '#/components/schemas/Uuid'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -1261,6 +1285,436 @@ paths:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /competition/tournaments/{tournament_id}:
+    get:
+      x-service: competition
+      tags:
+        - competition
+      operationId: getTournament
+      x-portal-action: action.school_lms.challenges.view
+      summary: Chi tiết giải (học sinh trong phạm vi / người tổ chức)
+      description: F107-AC-25. Ngoài phạm vi hoặc tenant khác → `404`. Học sinh nhận `my_entry` của chính em.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TournamentId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tournament'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /competition/tournaments/{tournament_id}:publish:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: publishTournament
+      x-portal-action: action.school_lms.challenges.manage
+      summary: Duyệt giải draft → published (người tổ chức)
+      description: F107-AC-07, AC-26. `lms.challenge.write` cho trường sở hữu; trạng thái khác `draft` → `422 INVALID_STATE_TRANSITION`. Audit `tournament.published`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/TournamentId'
+      responses:
+        '200':
+          description: Đã publish
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tournament'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /competition/tournaments/{tournament_id}:cancel:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: cancelTournament
+      x-portal-action: action.school_lms.challenges.manage
+      summary: Hủy giải (draft, published, registration_open, scheduled)
+      description: F107-AC-07. Lý do bắt buộc; trạng thái khác → `422 INVALID_STATE_TRANSITION`. Audit `tournament.cancelled`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/TournamentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelReason'
+      responses:
+        '200':
+          description: Đã hủy
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tournament'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /competition/tournaments/{tournament_id}/entries:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: registerTournamentEntry
+      x-portal-action: action.school_lms.challenges.manage
+      summary: Đăng ký giải (học sinh, leader đội) hoặc đăng ký hộ (người tổ chức)
+      description: |
+        F107-AC-08, AC-09, AC-24. Học sinh (token game): đăng ký chính em (`party_id` khi giải đội — mọi thành viên đủ điều kiện,
+        cùng trường). Ngoài phạm vi → `404`; bị hạn chế thi đấu → `403 POLICY_DENIED`; đủ `max_entries` → `409 CONFLICT`; ngoài
+        cửa sổ đăng ký → `422 INVALID_STATE_TRANSITION`. Người tổ chức (portal): đăng ký hộ `student_ids` hoặc cả đối tượng của
+        thử thách khi `student_ids` rỗng (khối ± học sinh − loại trừ, ADR-0095); học sinh không đủ điều kiện bị bỏ qua.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/TournamentId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TournamentEntryCreate'
+      responses:
+        '201':
+          description: Entry đã đăng ký (học sinh) hoặc các entry đã tạo (người tổ chức)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TournamentEntryResult'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /competition/tournaments/{tournament_id}/entries/{entry_id}:
+    delete:
+      x-service: competition
+      tags:
+        - competition
+      operationId: withdrawTournamentEntry
+      x-portal-action: action.school_lms.challenges.manage
+      summary: Rút entry (soft) trước khi khóa bracket
+      description: F107-AC-09. Chủ entry (học sinh/thành viên đội) hoặc người tổ chức; sau khi khóa bracket → `422 INVALID_STATE_TRANSITION`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TournamentId'
+        - $ref: '#/components/parameters/EntryId'
+      responses:
+        '204':
+          description: Đã rút
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /competition/tournaments/{tournament_id}/entries:confirm:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: confirmTournamentEntries
+      x-portal-action: action.school_lms.challenges.manage
+      summary: Xác nhận danh sách người tham gia (registration_closed → seeding)
+      description: F107-AC-09. Xác nhận mọi entry `registered` còn đủ điều kiện (hoặc `entry_ids`); giải chuyển `seeding`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/TournamentId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TournamentEntriesConfirm'
+      responses:
+        '200':
+          description: Đã xác nhận
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TournamentEntryResult'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /competition/tournaments/{tournament_id}/entries/{entry_id}:check-in:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: checkInTournamentEntry
+      summary: Check-in của chính học sinh trong cửa sổ check-in
+      description: F107-AC-10. Chỉ `game_player`; ngoài cửa sổ (`tournament_timers`) → `422 INVALID_STATE_TRANSITION`; entry của người khác → `404`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TournamentId'
+        - $ref: '#/components/parameters/EntryId'
+      responses:
+        '200':
+          description: Đã check-in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TournamentEntry'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /competition/tournaments/{tournament_id}:generate-bracket:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: generateTournamentBracket
+      x-portal-action: action.school_lms.challenges.manage
+      summary: Sinh bracket và lịch (seeding → scheduled)
+      description: |
+        F107-AC-11…AC-14, AC-22, AC-23. Toàn bộ bảng/nút bracket ghi trong một transaction PostgreSQL; idempotent theo
+        `Idempotency-Key`; gọi lại khi giải đã `scheduled` → `422 INVALID_STATE_TRANSITION`; số entry dưới tối thiểu của format →
+        `422 VALIDATION_FAILED`; `seeding_policy = manual` cần `entry_order`. Audit `tournament.bracket_generated`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/TournamentId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BracketGenerate'
+      responses:
+        '200':
+          description: Bracket đã sinh
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bracket'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /competition/tournaments/{tournament_id}/bracket:
+    get:
+      x-service: competition
+      tags:
+        - competition
+      operationId: getTournamentBracket
+      x-portal-action: action.school_lms.challenges.view
+      summary: Bracket, bảng đấu và lịch của giải
+      description: F107-AC-25. Học sinh trong phạm vi thấy nickname/avatar (không tên thật); người tổ chức thấy thêm `student_id`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TournamentId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bracket'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /competition/tournaments/{tournament_id}/nodes/{node_id}:confirm:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: confirmBracketNode
+      x-portal-action: action.school_lms.challenges.manage
+      summary: Xác nhận sớm kết quả một nút (đóng cửa sổ khiếu nại)
+      description: F107-AC-17. Chỉ nút `awaiting_confirm` có người thắng; khác → `422 INVALID_STATE_TRANSITION`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TournamentId'
+        - $ref: '#/components/parameters/NodeId'
+      responses:
+        '200':
+          description: Đã xác nhận
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BracketNode'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /competition/tournaments/{tournament_id}/nodes/{node_id}:override:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: overrideBracketNode
+      x-portal-action: action.school_lms.challenges.manage
+      summary: Đổi người thắng trong cửa sổ khiếu nại (lý do bắt buộc)
+      description: |
+        F107-AC-18, AC-19. Trong cửa sổ khiếu nại (`tournament_timers`) hoặc nút chờ người tổ chức quyết sau 2 lần lên lịch lại;
+        nút kế đã bắt đầu → `422 INVALID_STATE_TRANSITION`; thiếu lý do → `422 VALIDATION_FAILED`. Audit `tournament.node_overridden`
+        (actor, lý do, trước/sau). Log trận dùng cho khiếu nại không chứa nội dung chat (R15).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/TournamentId'
+        - $ref: '#/components/parameters/NodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BracketNodeOverride'
+      responses:
+        '200':
+          description: Đã đổi người thắng
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BracketNode'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /competition/challenges:
+    get:
+      x-service: competition
+      tags:
+        - competition
+      operationId: listMyChallenges
+      summary: Thử thách khối đang/sắp diễn ra của học sinh
+      description: F107-AC-27. Chỉ `game_player`; chỉ thử thách học sinh thuộc đối tượng (khối ± học sinh − loại trừ, ADR-0095). Trang keyset `(starts_at, challenge_id)`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompetitionChallenge'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /competition/challenges/{challenge_id}:join:
+    post:
+      x-service: competition
+      tags:
+        - competition
+      operationId: joinChallenge
+      summary: Vào phòng Timed Quiz của thử thách khối
+      description: |
+        F107-AC-27. Học sinh thuộc đối tượng trong khung tham gia (từ `starts_at` trừ `join_before_minutes` của template tới `ends_at`)
+        nhận `match_id`/`room_id` của phòng Timed Quiz (F105) và vào phòng bằng `battle.state.request`; ngoài khung →
+        `422 INVALID_STATE_TRANSITION`; không thuộc đối tượng → `404`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ChallengeId'
+      responses:
+        '200':
+          description: Phòng của học sinh
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeJoinResult'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /leaderboards:
     get:
       x-service: competition
@@ -1414,6 +1868,200 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /lms/challenges:
+    get:
+      x-service: competition
+      tags:
+        - lms
+      operationId: listChallenges
+      x-portal-action: action.school_lms.challenges.view
+      summary: Thử thách khối / giải trường trong scope
+      description: |
+        Route ngoại lệ dưới `/lms` → module competition (F107, COMPETITION_SYSTEM §10.2). F107-AC-06: thử thách/giải của các trường
+        thuộc scope UserRole (`lms.challenge.write`), lọc `grade_level`/`status`; trang keyset `(starts_at, challenge_id)` cắt trong SQL.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIds'
+        - name: grade_level
+          in: query
+          description: Khối của thử thách (ADR-0095 — thay class_id)
+          schema:
+            $ref: '#/components/schemas/GradeLevel'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - scheduled
+              - running
+              - completed
+              - cancelled
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Challenge'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+    post:
+      x-service: competition
+      tags:
+        - lms
+      operationId: createChallenge
+      x-portal-action: action.school_lms.challenges.create
+      summary: Tạo thử thách khối / giải trường từ template do platform publish
+      description: |
+        Route ngoại lệ dưới `/lms` → module competition (F107). Tenant chỉ điền tham số template cho phép (`allowed_params`); luật chơi,
+        phần thưởng, cấu hình thi đấu lấy từ version template được ghim (ADR-0027). Template chưa gán → `403 RESOURCE_NOT_ASSIGNED`;
+        tham số ngoài `allowed_params` → `422`; tên chứa từ không phù hợp (kiểm qua facade `screenText` của module chat) → `422`,
+        kiểm không được → `503`. Chỉ `school_admin` (trường mình) và System Admin (tenant đích `tenant_id` bắt buộc) — F107-AC-01…AC-05.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChallengeCreate'
+      responses:
+        '201':
+          description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Challenge'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /lms/challenges/{challenge_id}:
+    get:
+      x-service: competition
+      tags:
+        - lms
+      operationId: getChallenge
+      x-portal-action: action.school_lms.challenges.view
+      summary: Chi tiết thử thách khối / giải trường (trạng thái, đối tượng, số tham gia, kết quả)
+      description: F107-AC-06. Trường ngoài scope hoặc tenant khác → `404`. Kết quả thử thách không thuộc báo cáo kết quả học tập.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ChallengeId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Challenge'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /lms/challenges/{challenge_id}:cancel:
+    post:
+      x-service: competition
+      tags:
+        - lms
+      operationId: cancelChallenge
+      x-portal-action: action.school_lms.challenges.manage
+      summary: Hủy thử thách (soft khi chưa chạy, `cancelled` có lý do khi đang chạy)
+      description: F107-AC-06. Hủy kèm giải của thử thách khi giải còn hủy được; đã hoàn thành → `422 INVALID_STATE_TRANSITION`. Audit `challenge.cancelled`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ChallengeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelReason'
+      responses:
+        '200':
+          description: Đã hủy
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Challenge'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /lms/catalog/challenge-templates:
+    get:
+      x-service: competition
+      tags:
+        - lms
+      operationId: listChallengeTemplates
+      x-portal-action: action.school_lms.challenges.view
+      summary: Template thử thách/giải đấu do platform publish và đã gán cho tenant (chỉ đọc)
+      description: F107-AC-01, AC-02. Chỉ version đang publish của template đã gán cho tenant của phiên; trang keyset `(code, config_id)`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/GradeLevelQuery'
+        - $ref: '#/components/parameters/SubjectIdQuery'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChallengeTemplate'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/ValidationFailed'
   /game-admin/{config_type}:
@@ -2400,6 +3048,30 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
+    TournamentId:
+      name: tournament_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    EntryId:
+      name: entry_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    NodeId:
+      name: node_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    ChallengeId:
+      name: challenge_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
     LeaderboardId:
       name: leaderboard_id
       in: path
@@ -2425,6 +3097,30 @@ components:
       schema:
         type: string
         maxLength: 64
+    TenantIds:
+      name: tenant_ids
+      in: query
+      required: false
+      description: |
+        Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
+        Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
+      style: form
+      explode: true
+      schema:
+        type: array
+        maxItems: 100
+        items:
+          $ref: '#/components/schemas/Uuid'
+    GradeLevelQuery:
+      name: grade_level
+      in: query
+      schema:
+        $ref: '#/components/schemas/GradeLevel'
+    SubjectIdQuery:
+      name: subject_id
+      in: query
+      schema:
+        $ref: '#/components/schemas/Uuid'
     GameConfigId:
       name: config_id
       in: path
@@ -3643,6 +4339,21 @@ components:
             - 'null'
           maxLength: 64
           description: 'Chỉ cho học sinh: tier cao nhất của chính em trong mùa'
+    TournamentStatus:
+      type: string
+      description: Vòng đời giải (COMPETITION_SYSTEM §10.3)
+      enum:
+        - draft
+        - published
+        - registration_open
+        - registration_closed
+        - seeding
+        - scheduled
+        - in_progress
+        - completed
+        - rewarded
+        - archived
+        - cancelled
     Tournament:
       allOf:
         - $ref: '#/components/schemas/TournamentCreate'
@@ -3654,21 +4365,80 @@ components:
             tournament_id:
               $ref: '#/components/schemas/Uuid'
             status:
-              type: string
-              enum:
-                - draft
-                - registration
-                - seeded
-                - running
-                - completed
-                - cancelled
+              $ref: '#/components/schemas/TournamentStatus'
             entry_count:
               type: integer
+              minimum: 0
+            challenge_id:
+              type:
+                - string
+                - 'null'
+              format: uuid
+            school_id:
+              type:
+                - string
+                - 'null'
+              format: uuid
+            participant_type:
+              type: string
+              enum:
+                - individual
+                - team
+            team_size:
+              type:
+                - integer
+                - 'null'
+              minimum: 2
+              maximum: 8
+            mode:
+              type: string
+              enum:
+                - battle_1v1
+                - team_battle
+            grade_levels:
+              type: array
+              maxItems: 9
+              items:
+                $ref: '#/components/schemas/GradeLevel'
+            seeding_policy:
+              type: string
+              enum:
+                - rating
+                - random
+                - manual
+            registration_open_at:
+              type:
+                - string
+                - 'null'
+              format: date-time
+            check_in_opens_at:
+              type:
+                - string
+                - 'null'
+              format: date-time
+            auto_confirm:
+              type: boolean
+            reward_summary:
+              type:
+                - string
+                - 'null'
+              maxLength: 1000
+            cancel_reason:
+              type:
+                - string
+                - 'null'
+              maxLength: 1000
+            my_entry:
+              description: Chỉ học sinh — entry của chính em (null nếu chưa đăng ký)
+              oneOf:
+                - $ref: '#/components/schemas/TournamentEntry'
+                - type: 'null'
     TournamentCreate:
       type: object
       description: |
-        Giải đấu luôn được tạo từ tournament template của platform; tenant tạo qua POST /lms/challenges (ADR-0027).
-        Không có giải cấp lớp (ADR-0095): giải khối của trường = `scope_type = school` + `grade_level`.
+        Giải đấu luôn được tạo từ tournament/challenge template của platform; tenant tạo qua POST /lms/challenges (ADR-0027) —
+        không có `POST /competition/tournaments`. Không có giải cấp lớp (ADR-0095): giải khối của trường = `scope_type = school` +
+        `grade_level`. Format: single_elim, double_elim, round_robin, groups_then_single_elim; giải đội = `participant_type = team`.
       required:
         - template_id
         - name
@@ -3689,18 +4459,19 @@ components:
             - single_elim
             - double_elim
             - round_robin
-            - team
+            - groups_then_single_elim
         scope_type:
           type: string
           enum:
             - school
-            - organization
+            - tenant
+            - platform
         scope_id:
           $ref: '#/components/schemas/Uuid'
         subject_id:
           $ref: '#/components/schemas/Uuid'
         grade_level:
-          description: Khối của giải (giải khối của trường khi `scope_type = school`)
+          description: Khối của giải (giải khối của trường khi `scope_type = school`; giải nhiều khối — khối đầu của `grade_levels`)
           $ref: '#/components/schemas/GradeLevel'
         registration_closes_at:
           $ref: '#/components/schemas/Timestamp'
@@ -3710,6 +4481,387 @@ components:
           type: integer
           minimum: 2
           maximum: 256
+    TournamentEntry:
+      type: object
+      required:
+        - entry_id
+        - tournament_id
+        - status
+        - players
+      properties:
+        entry_id:
+          $ref: '#/components/schemas/Uuid'
+        tournament_id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          type: string
+          enum:
+            - registered
+            - confirmed
+            - checked_in
+            - withdrawn
+            - disqualified
+            - eliminated
+            - champion
+        seed:
+          type:
+            - integer
+            - 'null'
+          minimum: 1
+          maximum: 256
+        group_code:
+          type:
+            - string
+            - 'null'
+          maxLength: 16
+        party_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        players:
+          type: array
+          minItems: 1
+          maxItems: 8
+          items:
+            $ref: '#/components/schemas/TournamentPlayer'
+        checked_in_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        final_rank:
+          type:
+            - integer
+            - 'null'
+          minimum: 1
+    TournamentPlayer:
+      type: object
+      description: Người chơi trong giải — chỉ nickname/avatar với học sinh (R16); `student_id` là định danh, không phải tên thật
+      required:
+        - student_id
+        - nickname
+      properties:
+        student_id:
+          $ref: '#/components/schemas/Uuid'
+        nickname:
+          type:
+            - string
+            - 'null'
+          maxLength: 32
+        avatar_config:
+          $ref: '#/components/schemas/AvatarConfig'
+    CancelReason:
+      type: object
+      additionalProperties: false
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 1000
+    TournamentEntryCreate:
+      type: object
+      additionalProperties: false
+      description: Học sinh gửi rỗng (hoặc `party_id` khi giải đội); người tổ chức gửi `student_ids` hoặc rỗng (= cả đối tượng của thử thách)
+      properties:
+        student_ids:
+          type: array
+          maxItems: 64
+          items:
+            $ref: '#/components/schemas/Uuid'
+        party_id:
+          $ref: '#/components/schemas/Uuid'
+    TournamentEntryResult:
+      type: object
+      required:
+        - entries
+      properties:
+        entries:
+          type: array
+          maxItems: 512
+          items:
+            $ref: '#/components/schemas/TournamentEntry'
+        skipped:
+          type: array
+          maxItems: 512
+          description: Chỉ người tổ chức — học sinh không đủ điều kiện (không có lý do chi tiết về học sinh khác)
+          items:
+            type: object
+            required:
+              - student_id
+              - reason
+            properties:
+              student_id:
+                $ref: '#/components/schemas/Uuid'
+              reason:
+                type: string
+                enum:
+                  - not_eligible
+                  - restricted
+                  - already_registered
+                  - full
+    TournamentEntriesConfirm:
+      type: object
+      additionalProperties: false
+      properties:
+        entry_ids:
+          type: array
+          maxItems: 256
+          items:
+            $ref: '#/components/schemas/Uuid'
+    BracketGenerate:
+      type: object
+      additionalProperties: false
+      properties:
+        entry_order:
+          type: array
+          maxItems: 256
+          description: Bắt buộc khi `seeding_policy = manual` — thứ tự hạt giống (entry_id), đủ mọi entry đã xác nhận
+          items:
+            $ref: '#/components/schemas/Uuid'
+    Bracket:
+      type: object
+      required:
+        - tournament_id
+        - format
+        - status
+        - entries
+        - nodes
+        - groups
+      properties:
+        tournament_id:
+          $ref: '#/components/schemas/Uuid'
+        format:
+          type: string
+          enum:
+            - single_elim
+            - double_elim
+            - round_robin
+            - groups_then_single_elim
+        status:
+          $ref: '#/components/schemas/TournamentStatus'
+        seed_value:
+          type:
+            - integer
+            - 'null'
+          description: Chỉ người tổ chức — seed của seeding random (audit)
+        entries:
+          type: array
+          maxItems: 256
+          items:
+            $ref: '#/components/schemas/TournamentEntry'
+        nodes:
+          type: array
+          maxItems: 1024
+          items:
+            $ref: '#/components/schemas/BracketNode'
+        groups:
+          type: array
+          maxItems: 64
+          items:
+            $ref: '#/components/schemas/TournamentGroup'
+    BracketNode:
+      type: object
+      required:
+        - node_id
+        - bracket
+        - round
+        - position
+        - status
+      properties:
+        node_id:
+          $ref: '#/components/schemas/Uuid'
+        bracket:
+          type: string
+          enum:
+            - winners
+            - losers
+            - grand_final
+            - group
+        round:
+          type: integer
+          minimum: 1
+        position:
+          type: integer
+          minimum: 0
+        group_code:
+          type:
+            - string
+            - 'null'
+          maxLength: 16
+        entry_a_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        entry_b_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        winner_entry_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        is_draw:
+          type: boolean
+        match_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        scheduled_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        next_win_node_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        next_lose_node_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        status:
+          type: string
+          enum:
+            - pending
+            - scheduled
+            - in_match
+            - awaiting_confirm
+            - confirmed
+            - bye
+            - overridden
+            - void
+        confirm_after:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Hết cửa sổ khiếu nại
+        decision_required:
+          type: boolean
+          description: Chờ người tổ chức quyết (sau 2 lần lên lịch lại, F107-AC-19)
+    TournamentGroup:
+      type: object
+      required:
+        - group_code
+        - standings
+      properties:
+        group_code:
+          type: string
+          maxLength: 16
+        standings:
+          type: array
+          maxItems: 64
+          items:
+            type: object
+            required:
+              - entry_id
+              - points
+              - wins
+              - draws
+              - losses
+            properties:
+              entry_id:
+                $ref: '#/components/schemas/Uuid'
+              rank:
+                type: integer
+                minimum: 1
+              points:
+                type: integer
+              wins:
+                type: integer
+                minimum: 0
+              draws:
+                type: integer
+                minimum: 0
+              losses:
+                type: integer
+                minimum: 0
+              correct_diff:
+                type: integer
+    BracketNodeOverride:
+      type: object
+      additionalProperties: false
+      required:
+        - winner_entry_id
+        - reason
+      properties:
+        winner_entry_id:
+          $ref: '#/components/schemas/Uuid'
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 1000
+    CompetitionChallenge:
+      type: object
+      description: Thử thách khối nhìn từ học sinh (không có đối tượng, không có tên học sinh khác)
+      required:
+        - challenge_id
+        - name
+        - kind
+        - starts_at
+        - join_window_opens_at
+        - status
+      properties:
+        challenge_id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 80
+        kind:
+          type: string
+          enum:
+            - grade_challenge
+            - school_tournament
+        format:
+          type: string
+          enum:
+            - timed_quiz
+            - tournament
+        starts_at:
+          $ref: '#/components/schemas/Timestamp'
+        ends_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        join_window_opens_at:
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          type: string
+          enum:
+            - scheduled
+            - running
+            - completed
+            - cancelled
+        tournament_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+    ChallengeJoinResult:
+      type: object
+      required:
+        - challenge_id
+        - match_id
+        - room_id
+      properties:
+        challenge_id:
+          $ref: '#/components/schemas/Uuid'
+        match_id:
+          $ref: '#/components/schemas/Uuid'
+        room_id:
+          $ref: '#/components/schemas/Uuid'
+        starts_at:
+          $ref: '#/components/schemas/Timestamp'
     LeaderboardSummary:
       type: object
       required:
@@ -3948,6 +5100,193 @@ components:
             $ref: '#/components/schemas/LeaderboardEntry'
         grade_goal:
           $ref: '#/components/schemas/GradeGoal'
+    Challenge:
+      allOf:
+        - $ref: '#/components/schemas/ChallengeCreate'
+        - type: object
+          required:
+            - challenge_id
+            - status
+            - created_by
+          properties:
+            challenge_id:
+              $ref: '#/components/schemas/Uuid'
+            tenant_id:
+              $ref: '#/components/schemas/Uuid'
+            status:
+              type: string
+              enum:
+                - scheduled
+                - running
+                - completed
+                - cancelled
+            created_by:
+              $ref: '#/components/schemas/Uuid'
+            tournament_id:
+              description: Có khi template thuộc loại giải đấu
+              oneOf:
+                - $ref: '#/components/schemas/Uuid'
+                - type: 'null'
+            kind:
+              type: string
+              enum:
+                - grade_challenge
+                - school_tournament
+            format:
+              type: string
+              enum:
+                - timed_quiz
+                - tournament
+            template_version_id:
+              $ref: '#/components/schemas/Uuid'
+            match_ids:
+              type: array
+              maxItems: 50
+              description: Phòng Timed Quiz của thử thách (mỗi phòng ≤ 40 học sinh), có khi thử thách đã bắt đầu
+              items:
+                $ref: '#/components/schemas/Uuid'
+            audience_count:
+              type: integer
+              minimum: 0
+              description: Số học sinh hiệu lực của đối tượng (khối ∪ danh sách − loại trừ)
+            participant_count:
+              type: integer
+              minimum: 0
+            cancel_reason:
+              type:
+                - string
+                - 'null'
+              maxLength: 1000
+            created_at:
+              $ref: '#/components/schemas/Timestamp'
+    ChallengeCreate:
+      type: object
+      required:
+        - template_id
+        - name
+        - school_id
+        - targets
+        - starts_at
+      properties:
+        tenant_id:
+          description: Tenant đích — bắt buộc khi người gọi là System Admin; người dùng tenant bỏ trống
+          $ref: '#/components/schemas/Uuid'
+        template_id:
+          description: Template phải được gán cho tenant (nếu không → RESOURCE_NOT_ASSIGNED)
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 80
+        school_id:
+          description: Trường của thử thách (ADR-0095 mục 3); học sinh không thuộc trường này → 422 VALIDATION_FAILED
+          $ref: '#/components/schemas/Uuid'
+        targets:
+          type: array
+          minItems: 1
+          maxItems: 2
+          description: Khối của trường (grade) và/hoặc danh sách học sinh cùng trường (students); exclude_student_ids thắng (ADR-0095 — không còn lớp, nhóm)
+          items:
+            type: object
+            required:
+              - target_type
+            properties:
+              target_type:
+                type: string
+                enum:
+                  - grade
+                  - students
+              grade_level:
+                description: Bắt buộc khi target_type = grade
+                $ref: '#/components/schemas/GradeLevel'
+              student_ids:
+                description: Bắt buộc khi target_type = students
+                type: array
+                maxItems: 500
+                items:
+                  $ref: '#/components/schemas/Uuid'
+        exclude_student_ids:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/Uuid'
+        starts_at:
+          $ref: '#/components/schemas/Timestamp'
+        ends_at:
+          $ref: '#/components/schemas/Timestamp'
+        participation:
+          type: string
+          enum:
+            - individual
+          description: Không còn study_group (nhóm học tập LMS đã bỏ — ADR-0095) [Proposed]
+        question_set_version_id:
+          $ref: '#/components/schemas/Uuid'
+        params:
+          type: object
+          maxProperties: 20
+          description: |
+            Chỉ các khóa nằm trong ChallengeTemplate.allowed_params (vd. `max_entries`, `seeding_policy`, `registration_open_at`,
+            `registration_close_at`, `auto_confirm`, `subject_id`); khóa khác (luật điểm, `reward`, chat…) → 422 nêu tên khóa.
+            Không tham số nào tắt được chat `match`/`team` (R15, ADR-0020). Giá trị chuỗi ≤ 255 ký tự.
+          additionalProperties: true
+    ChallengeTemplate:
+      type: object
+      required:
+        - template_id
+        - version
+        - kind
+        - name
+        - allowed_params
+      properties:
+        template_id:
+          $ref: '#/components/schemas/Uuid'
+        version:
+          type: integer
+        template_version_id:
+          $ref: '#/components/schemas/Uuid'
+        kind:
+          type: string
+          enum:
+            - grade_challenge
+            - school_tournament
+        format:
+          type: string
+          enum:
+            - timed_quiz
+            - tournament
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 1000
+        mode:
+          $ref: '#/components/schemas/MatchMode'
+        tournament_format:
+          type: string
+          enum:
+            - single_elim
+            - double_elim
+            - round_robin
+            - groups_then_single_elim
+        participant_type:
+          type: string
+          enum:
+            - individual
+            - team
+        grade_levels:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeLevel'
+        allowed_params:
+          type: array
+          description: Tham số tenant được phép điền
+          items:
+            type: string
+            maxLength: 64
+        reward_summary:
+          type: string
+          maxLength: 1000
+          description: Mô tả phần thưởng cố định của template (tenant không sửa)
     ContentStatus:
       type: string
       enum:

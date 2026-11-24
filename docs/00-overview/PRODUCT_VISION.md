@@ -1,6 +1,6 @@
 # Product Vision — EduWorld
 
-> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Product Manager + Game Director · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (§8 phát hành theo pilot ưu tiên giáo dục — ADR-0073; KPI hiệu quả học tập là cổng thoát pilot — ADR-0080; mặc định an toàn — ADR-0078)
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Product Manager + Game Director · Cập nhật: 2026-11-17 (§8 phát hành theo pilot ưu tiên giáo dục — ADR-0073; KPI hiệu quả học tập là cổng thoát pilot — ADR-0080; mặc định an toàn — ADR-0078)
 > Liên quan: [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md) · [ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) · [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [GAME_DESIGN](../01-game-design/GAME_DESIGN.md) · [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) · [USER_PERSONAS](USER_PERSONAS.md) · [CONFIG_DEFAULTS](CONFIG_DEFAULTS.md) · [ROADMAP](../12-project/ROADMAP.md) · [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md)
 
 ## 1. Mục đích và phạm vi
@@ -113,7 +113,7 @@ Mục này là **nơi duy nhất định nghĩa KPI sản phẩm và mục tiêu
 | **Mở rộng** | Thi đấu 1v1 + bot, Team Battle, Glicko-2, leaderboard cấp trường, chat party/match có kiểm duyệt, thêm môn/khối | Exit criteria Mở rộng ở ROADMAP |
 | **Hoàn thiện** = phạm vi đầy đủ Release 1.0 | Leaderboard Global, các định dạng giải còn lại, đủ 8 channel + DM, club, season/event, chứng minh 10.000 CCU | Exit criteria M6 ở ROADMAP |
 
-**Nền tảng:** Web, Android, iOS — làm đầy đủ cả 3 từ pilot; không có bản Windows, PC phòng máy chơi bản Web ([ADR-0013](../adr/ADR-0013-nen-tang-client-release-1-0-gom-windows-android-ios-web.md), [ADR-0101](../adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md), [Confirmed — owner 2026-11-24]; ADR-0079 Rejected). Bảng phạm vi chi tiết theo domain là mục 1 của [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md).
+**Nền tảng:** Windows, Android, iOS, Web — làm đầy đủ cả 4 từ pilot ([ADR-0013](../adr/ADR-0013-nen-tang-client-release-1-0-gom-windows-android-ios-web.md), [Confirmed — Technical Architect 2026-11-17]; ADR-0079 Rejected). Bảng phạm vi chi tiết theo domain là mục 1 của [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md).
 
 Không làm trong Release 1.0: voice chat ([ADR-0051](../adr/ADR-0051-pham-vi-voice-chat.md), [ADR-0070](../adr/ADR-0070-release-1-khong-voice-chat-khong-xoa-vat-ly-khong-purge-analytics.md)); vai trò giáo viên và hoạt động chấm tay (tự luận, bài nói, project, rubric) ([ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md)). Chỉ làm khi có quyết định: parent portal (OQ-13), thi chính thức có proctoring (OQ-18), AI hỗ trợ chấm ([ADR-0053](../adr/ADR-0053-cham-diem-co-ho-tro-ai-ai-assisted-grading.md)), full LRS endpoint, push notification ngoài game.
 

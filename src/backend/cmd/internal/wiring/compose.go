@@ -69,6 +69,7 @@ func Compose(r *module.Registry) (*Composition, error) {
 	cin := competition.Imports{}
 	if f := cht.Facade(); f != nil {
 		cin.Chat = f
+		cin.ChatScreen = f // screenText: names of grade challenges and school tournaments (F107)
 	}
 	// The battle engine (F105) asks module learning for the question plans of the matches.
 	if f := lrn.Facade(); f != nil {

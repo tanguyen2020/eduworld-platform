@@ -1,10 +1,10 @@
-# Data Model: F133 — Build và phát hành client Web, Android, iOS
+# Data Model: F133 — Build và phát hành client Windows, Android, iOS, Web
 
 **Spec**: [spec.md](spec.md) · **Plan**: [plan.md](plan.md) · Nguồn sự thật bảng: [DATABASE_DESIGN](../../docs/07-backend/DATABASE_DESIGN.md)
 
 ## 1. Entity
 
-> Bổ sung ADR-0086: bản ghi phiên `eduworld.game.session` do F061 ghi qua `SecureStorage` (F060); F133 chỉ đảm bảo vị trí lưu theo nền tảng trong bản phát hành (không có bản Windows — ADR-0101) — Android: `noBackupFilesDir` (khóa Keystore), loại khỏi backup; iOS: Keychain `ThisDeviceOnly`, không iCloud; Web: chỉ RAM. Không có bảng server.
+> Bổ sung ADR-0086: bản ghi phiên `eduworld.game.session` do F061 ghi qua `SecureStorage` (F060); F133 chỉ đảm bảo vị trí lưu theo nền tảng trong bản phát hành — Windows: `user://secure/` (DPAPI CurrentUser); Android: `noBackupFilesDir` (khóa Keystore), loại khỏi backup; iOS: Keychain `ThisDeviceOnly`, không iCloud; Web: chỉ RAM. Không có bảng server.
 
 Không áp dụng — F133 không tạo/sửa bảng database. Dữ liệu bền vững là file phân phối trên CDN/object storage và file cấu hình trên thiết bị; định dạng dưới đây là hợp đồng giữa CI và client (schema JSON "Cần thêm", xem [contracts](contracts/README.md)).
 
@@ -12,7 +12,7 @@ Không áp dụng — F133 không tạo/sửa bảng database. Dữ liệu bền
 
 | Trường | Kiểu | Ràng buộc |
 |---|---|---|
-| `platform` | enum `android`, `ios`, `web` | Nền tảng phát hành (ADR-0101); không có manifest Windows |
+| `platform` | enum `windows`, `android`, `ios`, `web` | |
 | `channel` | enum `staging`, `production` | |
 | `client_version` | string | SemVer, maxLength 32 |
 | `build` | integer | `github.run_number` của workflow `godot.yml` |
@@ -29,14 +29,14 @@ Không áp dụng — F133 không tạo/sửa bảng database. Dữ liệu bền
 | `client_version` | string | maxLength 32 |
 | `bundles[]` | `{bundle_id (≤128), version (int), url (uri ≤2048), sha256 (hex 64), size_bytes, grade_bands[] (enum g1_3…g8_9)}` | ≤ 500 mục |
 
-### Cấu hình thiết bị — `device.cfg` (ConfigFile Godot; Android managed config/MDM; bản Web không có `device.cfg` — ADR-0101)
+### Cấu hình thiết bị — `device.cfg` (ConfigFile Godot; Windows `%ProgramData%\EduWorld\`, Android managed config/MDM)
 
 | Khóa | Kiểu | Ràng buộc |
 |---|---|---|
 | `shared_device` | bool | mặc định `false` |
 | `lan_cache_url` | string | `http(s)://`, ≤ 2048; sai → bỏ qua (F133-AC-18) |
 | `low_data_mode` | bool | mặc định `false` |
-| `preinstalled_bundles_dir` | string | ≤ 512, do gói APK trường ghi |
+| `preinstalled_bundles_dir` | string | ≤ 512, do bộ cài trường ghi |
 
 ### Cache thiết bị — `user://cache/bundles/<sha256>.pck`, `user://cache/media/<sha256>/…`
 

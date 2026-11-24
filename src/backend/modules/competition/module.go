@@ -50,6 +50,9 @@ type Imports struct {
 	// Learning is the question plans of module learning for the battle engine (F105): nil → every new match aborts
 	// with plan_failure (no question can be served).
 	Learning modules.LearningPlans
+	// ChatScreen is screenText of module chat (F107: names of grade challenges and school tournaments, R15): nil → every
+	// challenge creation answers 503 UNAVAILABLE (never fail-open).
+	ChatScreen modules.ChatScreening
 }
 
 // Facade is the part of the competition facade (api.StrictServerInterface, specs/openapi/modules/competition.internal.v1.yaml)
@@ -63,11 +66,17 @@ type Facade interface {
 	MergeUserData(ctx context.Context, req api.MergeUserDataRequestObject) (api.MergeUserDataResponseObject, error)
 	// GetHubPosition is called by module game (F071 T049) to check the interaction distance of a discovery.
 	GetHubPosition(ctx context.Context, req api.GetHubPositionRequestObject) (api.GetHubPositionResponseObject, error)
+	// ApplyTenantAssignments, RevokeTenantAssignments and ListResourceAssignments assign the tournament and challenge
+	// templates to tenants (saga F045 of module identity, F107-AC-29).
+	ApplyTenantAssignments(ctx context.Context, req api.ApplyTenantAssignmentsRequestObject) (api.ApplyTenantAssignmentsResponseObject, error)
+	RevokeTenantAssignments(ctx context.Context, req api.RevokeTenantAssignmentsRequestObject) (api.RevokeTenantAssignmentsResponseObject, error)
+	ListResourceAssignments(ctx context.Context, req api.ListResourceAssignmentsRequestObject) (api.ListResourceAssignmentsResponseObject, error)
 }
 
 // Module is the registered module.
 type Module struct {
 	moderator *modules.LateModerator
+	screener  *modules.LateScreener
 	game      *modules.LateGame
 	learning  *modules.LateLearning
 	deadlines modules.LearningDeadlines
@@ -81,6 +90,9 @@ func (m *Module) Facade() Facade { return m.facade }
 func (m *Module) Wire(in Imports) {
 	if m.moderator != nil {
 		m.moderator.Set(in.Chat)
+	}
+	if m.screener != nil {
+		m.screener.Set(in.ChatScreen)
 	}
 	if m.game != nil {
 		m.game.Set(in.Game)
@@ -103,7 +115,7 @@ func Register(r *module.Registry) (*Module, error) {
 	}
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(db))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(db, migrations.Latest()))
-	m := &Module{moderator: &modules.LateModerator{}, game: &modules.LateGame{}, learning: &modules.LateLearning{}}
+	m := &Module{moderator: &modules.LateModerator{}, screener: &modules.LateScreener{}, game: &modules.LateGame{}, learning: &modules.LateLearning{}}
 	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() {
 		return m, nil
 	}
@@ -188,12 +200,26 @@ func Register(r *module.Registry) (*Module, error) {
 	battleHost := battlehost.New(battlehost.Config{InstanceID: btCfg.InstanceID, TickHz: btCfg.TickHz, CheckpointEvery: btCfg.Checkpoint,
 		ClientOnly: !r.ServesHTTP()}, r.NATS(), cache.BattleStore{C: vk}, realtime.BattleOutput{P: pub}, battles, nil)
 
+	// F107 — grade challenges, school tournaments and brackets (PostgreSQL), the template assignments of the identity saga.
+	trnCfg, err := hubconfig.TournamentFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("competition: %w", err)
+	}
+	observability.RegisterTournament(r.Metrics())
+	tournaments := command.Tournaments{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: persistence.TournamentStore{},
+		Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder}, Screener: m.screener, Matches: matchmaking,
+		Ratings: persistence.RatingReader{}, Rules: rankRepo, Points: rankRepo, Push: realtime.PartyPublisher{P: pub},
+		Cards: persistence.PartyDirectory{}, Metrics: observability.Tournament{}, Timers: trnCfg.Timers}
+	assignments := command.TemplateAssignments{UoW: core.UoW, Repo: persistence.TournamentStore{}, Audit: persistence.Auditor{R: core.Recorder}}
+	assignList := query.Assignments{Read: core.ReadSession, Reader: persistence.TournamentStore{}}
+
 	if r.ServesHTTP() {
 		h := competitionhttp.Handlers{Commands: parties, Queries: query.Parties{Read: core.ReadSession, Reader: persistence.Parties{},
 			Presence: presence, Lobby: lobbies, LobbyReader: persistence.LobbyRead{}, Game: m.game, PrivateCapacity: lobbyCfg.PrivateCapacity},
 			Matchmaking: matchmaking, MatchmakingQueries: query.Matchmaking{Read: core.ReadSession, Reader: persistence.Matchmaking{}, Store: mmStore},
-			Battles:  query.Battles{Read: core.ReadSession, Reader: persistence.BattleRead{}, Plans: m.learning},
-			Rankings: query.Rankings{Read: core.ReadSession, Reader: persistence.RankingRead{}, Store: boardStore}}
+			Battles:     query.Battles{Read: core.ReadSession, Reader: persistence.BattleRead{}, Plans: m.learning},
+			Rankings:    query.Rankings{Read: core.ReadSession, Reader: persistence.RankingRead{}, Store: boardStore},
+			Tournaments: tournaments, TournamentQueries: query.Tournaments{Read: core.ReadSession, Reader: persistence.TournamentRead{}}}
 		r.HTTP(Name, func(s *httpx.Server) error { return competitionhttp.Register(s, h) })
 	}
 	// Room host, realtime commands (F091 US1, US2) and the party presence store (F100): core-api.
@@ -240,7 +266,8 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("competition.hub_access_revoked", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.HubAccessRevokedOptions(consumer.HubAccessRevoked{Hub: hub}, core.UoW, core.App, js)
 	})
-	m.facade = facade.Facade{Lifecycle: command.PartyLifecycle{Parties: parties}, Hub: &query.HubPosition{Rooms: reg, Positions: reg}}
+	m.facade = facade.Facade{Lifecycle: command.PartyLifecycle{Parties: parties}, Hub: &query.HubPosition{Rooms: reg, Positions: reg},
+		Assign: &assignments, AssignList: &assignList, Idempotency: core.Idempotency}
 	safety := command.PartySafety{Parties: parties, Sanctions: persistence.Sanctions{}}
 	r.Consumer("competition.party_safety_chat", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.PartySafetyChatOptions(consumer.PartySafetyChat{S: safety}, core.UoW, core.App, js)
@@ -286,6 +313,11 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Job(Name, job.LeaderboardReconcile, job.ReconcileInterval, module.JobFunc(job.RankingJob(boards.Reconcile)))
 	r.Job(Name, job.SeasonScheduler, job.SeasonInterval, module.JobFunc(job.RankingJob(seasons.Tick)))
 	r.Job(Name, job.RDInflation, job.RDInflationInterval, module.JobFunc(job.RankingJob(seasons.InflateRD)))
+	// F107 consumer (match.completed / match.aborted of tournament matches) and job.
+	r.Consumer(messaging.TournamentMatchName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.TournamentMatchOptions(consumer.TournamentMatch{H: tournaments}, core.UoW, core.App, js)
+	})
+	r.Job(Name, job.TournamentScheduler, trnCfg.Tick, module.JobFunc(job.TournamentJob(tournaments.Tick)))
 	r.Job(Name, job.PartyPresenceSweeper, job.SweepInterval,
 		module.JobFunc(job.PartyPresenceSweeperJob(command.NewSweeper(parties, job.SweepInterval))))
 	return m, nil

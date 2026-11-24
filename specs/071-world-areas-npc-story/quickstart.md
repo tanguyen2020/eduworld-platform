@@ -24,7 +24,7 @@
 | 9 | Phát `quest.completed` cho mọi main quest chương 1 | Chương 1 `completed`, `story.chapter_completed` một lần, chương 5 mở | F071-AC-21, F071-AC-23 |
 | 10 | Trong `learning_zone.math`: `reportDiscovery` điểm hợp lệ, gọi lại, gọi từ `main_hub` | 200 + % tăng; `409 DISCOVERY_ALREADY_FOUND`; `422 STEP_PRECONDITION_FAILED` | F071-AC-24, F071-AC-25 |
 | 11 | Token `ad.truong.a` gọi `listWorldAreas` | `403 GAME_ACCESS_STUDENT_ONLY` | F071-AC-06 |
-| 12 | Godot DEV-WEB-MID (PC chạy bản Web — ADR-0101): cổng gió Main Hub → Vương quốc Số; mở World Map; tài khoản khối 3 dùng bảng chọn hình | Chuyển vùng trong ngân sách; bản đồ % đúng, vùng khóa có điều kiện; 1 chạm dịch chuyển | F071-AC-12, F071-AC-26, F071-AC-27 |
+| 12 | Godot DEV-PC-MID: cổng gió Main Hub → Vương quốc Số; mở World Map; tài khoản khối 3 dùng bảng chọn hình | Chuyển vùng trong ngân sách; bản đồ % đúng, vùng khóa có điều kiện; 1 chạm dịch chuyển | F071-AC-12, F071-AC-26, F071-AC-27 |
 | 13 | Godot: nói chuyện Ông Số → action `open_minigame` → xong tổng kết | Mở activity, quay về cạnh NPC, không tự nối hoạt động | F071-AC-19, F071-AC-20 |
 | 14 | CI: `make godot-test` (zone lint + benchmark headless) | 0 ID trùng, trong ngân sách cảnh | F071-AC-13 |
 

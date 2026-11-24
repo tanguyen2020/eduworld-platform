@@ -28,6 +28,8 @@ var migrations = map[string][]string{
 	"20261231000003_f105_battle.sql": {"match_results"},
 	"20261231000005_f106_ranking.sql": {"ratings", "rating_changes", "competition_point_ledger", "leaderboard_contributions",
 		"leaderboard_definitions", "leaderboard_snapshots", "seasons", "season_results"},
+	"20261231000006_f107_tournament.sql": {"challenges", "tournaments", "tournament_entries", "tournament_groups", "bracket_nodes",
+		"tournament_results", "tournament_rewards", "tenant_resource_assignments"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -92,7 +94,9 @@ func schemas() map[string]string {
 		"content_releases": c.ContentRelease, "match_results": c.MatchResult, "ratings": c.Rating, "rating_changes": c.RatingChange,
 		"competition_point_ledger": c.CompetitionPointEntry, "leaderboard_contributions": c.LeaderboardContribution,
 		"leaderboard_definitions": c.LeaderboardDefinition, "leaderboard_snapshots": c.LeaderboardSnapshot, "seasons": c.Season,
-		"season_results": c.SeasonResult}
+		"season_results": c.SeasonResult, "challenges": c.Challenge, "tournaments": c.Tournament, "tournament_entries": c.TournamentEntry,
+		"tournament_groups": c.TournamentGroup, "bracket_nodes": c.BracketNode, "tournament_results": c.TournamentResult,
+		"tournament_rewards": c.TournamentReward, "tenant_resource_assignments": c.TenantResourceAssignment}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

@@ -7,29 +7,37 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
-	CompetitionPointEntry   string // CompetitionPointEntry table.
-	CompetitionRestriction  string // CompetitionRestriction table.
-	ContentRelease          string // ContentRelease table.
-	Duel                    string // Duel table.
-	GameConfig              string // GameConfig table.
-	GameConfigVersion       string // GameConfigVersion table.
-	LeaderboardContribution string // LeaderboardContribution table.
-	LeaderboardDefinition   string // LeaderboardDefinition table.
-	LeaderboardSnapshot     string // LeaderboardSnapshot table.
-	Match                   string // Match table.
-	MatchParticipant        string // MatchParticipant table.
-	MatchResult             string // MatchResult table.
-	Party                   string // Party table.
-	PartyActivity           string // PartyActivity table.
-	PartyInvitation         string // PartyInvitation table.
-	PartyMember             string // PartyMember table.
-	PartyPolicy             string // PartyPolicy table.
-	Rating                  string // Rating table.
-	RatingChange            string // RatingChange table.
-	Room                    string // Room table.
-	Season                  string // Season table.
-	SeasonResult            string // SeasonResult table.
-	SessionMembership       string // SessionMembership table.
+	BracketNode              string // BracketNode table.
+	Challenge                string // Challenge table.
+	CompetitionPointEntry    string // CompetitionPointEntry table.
+	CompetitionRestriction   string // CompetitionRestriction table.
+	ContentRelease           string // ContentRelease table.
+	Duel                     string // Duel table.
+	GameConfig               string // GameConfig table.
+	GameConfigVersion        string // GameConfigVersion table.
+	LeaderboardContribution  string // LeaderboardContribution table.
+	LeaderboardDefinition    string // LeaderboardDefinition table.
+	LeaderboardSnapshot      string // LeaderboardSnapshot table.
+	Match                    string // Match table.
+	MatchParticipant         string // MatchParticipant table.
+	MatchResult              string // MatchResult table.
+	Party                    string // Party table.
+	PartyActivity            string // PartyActivity table.
+	PartyInvitation          string // PartyInvitation table.
+	PartyMember              string // PartyMember table.
+	PartyPolicy              string // PartyPolicy table.
+	Rating                   string // Rating table.
+	RatingChange             string // RatingChange table.
+	Room                     string // Room table.
+	Season                   string // Season table.
+	SeasonResult             string // SeasonResult table.
+	SessionMembership        string // SessionMembership table.
+	TenantResourceAssignment string // TenantResourceAssignment table.
+	Tournament               string // Tournament table.
+	TournamentEntry          string // TournamentEntry table.
+	TournamentGroup          string // TournamentGroup table.
+	TournamentResult         string // TournamentResult table.
+	TournamentReward         string // TournamentReward table.
 }
 
 type schemaCtxKey struct{}

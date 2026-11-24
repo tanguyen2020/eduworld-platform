@@ -81,8 +81,8 @@ func TestPartyOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	if len(found) != len(competitionhttp.Operations) || len(found) != 37 {
-		t.Fatalf("F100/F101/F104/F105/F106 operations found in the spec: %v", found)
+	if len(found) != len(competitionhttp.Operations) || len(found) != 56 {
+		t.Fatalf("F100/F101/F104/F105/F106/F107 operations found in the spec: %v", found)
 	}
 	for _, id := range []string{"createParty", "inviteToParty", "acceptPartyInvitation", "joinParty", "transferPartyLeader",
 		"startPartySession", "createMatchmakingTicket", "createDuel", "acceptDuel", "startBotMatch"} {

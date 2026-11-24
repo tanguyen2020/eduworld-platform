@@ -18,7 +18,7 @@
 
 ### Session 2026-11-20 (owner chốt — certificate pinning)
 
-- Certificate pinning cho `wss` → **Chốt:** `RealtimeClient` dùng cùng CA bundle với `ApiClient` (`TLSOptions.client(trusted_chain)`, CA chính + dự phòng do F133 đóng gói) trên Android/iOS ở build release (ADR-0101); Web dùng TLS trình duyệt.
+- Certificate pinning cho `wss` → **Chốt:** `RealtimeClient` dùng cùng CA bundle với `ApiClient` (`TLSOptions.client(trusted_chain)`, CA chính + dự phòng do F133 đóng gói) trên Windows/Android/iOS ở build release; Web dùng TLS trình duyệt.
 
 ### Session 2026-11-21 (quyết định khi triển khai, [Confirmed] chờ owner xác nhận)
 
@@ -88,7 +88,7 @@ Phòng máy của trường dùng PC iGPU và điện thoại 4 GB RAM: hub 40 n
 
 **Why this priority**: NFR-COMP-001 là yêu cầu bắt buộc; NFR-PERF-008.
 
-**Independent Test**: 39 bot + 1 client thật trên DEV-AND-MID1 và DEV-WEB-MID (PC chạy bản Web — ADR-0101), preset Trung bình, 10 phút: đo FPS p10 và băng thông.
+**Independent Test**: 39 bot + 1 client thật trên DEV-AND-MID1 và DEV-PC-MID, preset Trung bình, 10 phút: đo FPS p10 và băng thông.
 
 **Acceptance Criteria (EARS)**:
 

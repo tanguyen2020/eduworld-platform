@@ -1,6 +1,6 @@
 // Package facade implements the in-process facade of module competition (api, generated from
 // specs/openapi/modules/competition.internal.v1.yaml): module identity calls the student lifecycle and user merge
-// operations of its sagas through pkg/modcall, never over HTTP (ADR-0074, AGENTS R29); no route of this package is
+// operations of its sagas and the template assignments (F107) through pkg/modcall, never over HTTP (ADR-0074, AGENTS R29); no route of this package is
 // mounted.
 package facade
 
@@ -10,6 +10,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
@@ -18,6 +19,10 @@ type Facade struct {
 	Lifecycle command.PartyLifecycle
 	// Hub answers getHubPosition (F071 T049); nil in a binary without the room host registry → 503 UNAVAILABLE.
 	Hub *query.HubPosition
+	// Assign and AssignList serve the template assignments of the identity saga (F107-AC-29); nil → 503 UNAVAILABLE.
+	Assign      *command.TemplateAssignments
+	AssignList  *query.Assignments
+	Idempotency *idempotency.Store
 }
 
 // CleanupStudentData implements api.StrictServerInterface (x-allowed-callers: identity).

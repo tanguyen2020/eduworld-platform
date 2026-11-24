@@ -114,7 +114,7 @@ Người tạo: **School Admin** (trường mình) hoặc **Academic Manager** (
 
 ## 7. Thử thách lớp và giải trường
 
-**School Admin** tạo **Class Challenge** hoặc **giải trường** từ **challenge/tournament template** platform đã publish **và được gán cho tenant** (ADR-0029); chưa gán → `403 RESOURCE_NOT_ASSIGNED`. Chỉ điền `allowed_params` (tên, lớp/khối, lịch, cá nhân/nhóm, question set); tham số khác → `422`. Thực thi ở module competition ([COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md)); LMS chỉ là điểm tạo và xem kết quả. Permission `lms.challenge.write` (chỉ role `school_admin`; System Admin trên tenant đích). Kết quả **không** vào báo cáo kết quả học tập.
+**School Admin** tạo **thử thách khối** (`grade_challenge` — thay Class Challenge, ADR-0095) hoặc **giải trường** (`school_tournament`) từ **challenge/tournament template** platform đã publish **và được gán cho tenant** (ADR-0029); chưa gán → `403 RESOURCE_NOT_ASSIGNED`. Đối tượng trong một trường: khối ± danh sách học sinh cùng trường, trừ danh sách loại trừ (loại trừ thắng); ngoài tên, trường, đối tượng, lịch và question set chỉ điền `allowed_params` của template; tham số khác → `422` (hiện thực [F107](../../specs/107-tournament-challenges/spec.md)). Thực thi ở module competition ([COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md)); LMS chỉ là điểm tạo và xem kết quả. Permission `lms.challenge.write` (chỉ role `school_admin`; System Admin trên tenant đích). Kết quả **không** vào báo cáo kết quả học tập.
 
 ## 8. School Learning Dashboard
 

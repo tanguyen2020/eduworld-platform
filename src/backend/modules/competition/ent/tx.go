@@ -12,6 +12,10 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// BracketNode is the client for interacting with the BracketNode builders.
+	BracketNode *BracketNodeClient
+	// Challenge is the client for interacting with the Challenge builders.
+	Challenge *ChallengeClient
 	// CompetitionPointEntry is the client for interacting with the CompetitionPointEntry builders.
 	CompetitionPointEntry *CompetitionPointEntryClient
 	// CompetitionRestriction is the client for interacting with the CompetitionRestriction builders.
@@ -58,6 +62,18 @@ type Tx struct {
 	SeasonResult *SeasonResultClient
 	// SessionMembership is the client for interacting with the SessionMembership builders.
 	SessionMembership *SessionMembershipClient
+	// TenantResourceAssignment is the client for interacting with the TenantResourceAssignment builders.
+	TenantResourceAssignment *TenantResourceAssignmentClient
+	// Tournament is the client for interacting with the Tournament builders.
+	Tournament *TournamentClient
+	// TournamentEntry is the client for interacting with the TournamentEntry builders.
+	TournamentEntry *TournamentEntryClient
+	// TournamentGroup is the client for interacting with the TournamentGroup builders.
+	TournamentGroup *TournamentGroupClient
+	// TournamentResult is the client for interacting with the TournamentResult builders.
+	TournamentResult *TournamentResultClient
+	// TournamentReward is the client for interacting with the TournamentReward builders.
+	TournamentReward *TournamentRewardClient
 
 	// lazily loaded.
 	client     *Client
@@ -189,6 +205,8 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.BracketNode = NewBracketNodeClient(tx.config)
+	tx.Challenge = NewChallengeClient(tx.config)
 	tx.CompetitionPointEntry = NewCompetitionPointEntryClient(tx.config)
 	tx.CompetitionRestriction = NewCompetitionRestrictionClient(tx.config)
 	tx.ContentRelease = NewContentReleaseClient(tx.config)
@@ -212,6 +230,12 @@ func (tx *Tx) init() {
 	tx.Season = NewSeasonClient(tx.config)
 	tx.SeasonResult = NewSeasonResultClient(tx.config)
 	tx.SessionMembership = NewSessionMembershipClient(tx.config)
+	tx.TenantResourceAssignment = NewTenantResourceAssignmentClient(tx.config)
+	tx.Tournament = NewTournamentClient(tx.config)
+	tx.TournamentEntry = NewTournamentEntryClient(tx.config)
+	tx.TournamentGroup = NewTournamentGroupClient(tx.config)
+	tx.TournamentResult = NewTournamentResultClient(tx.config)
+	tx.TournamentReward = NewTournamentRewardClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -221,7 +245,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: CompetitionPointEntry.QueryXXX(), the query will be executed
+// applies a query, for example: BracketNode.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

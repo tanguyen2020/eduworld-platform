@@ -157,10 +157,10 @@ func (Matchmaking) RecentPairs(ctx context.Context, tenant uuid.UUID, ids []uuid
 func (Matchmaking) CreateMatch(ctx context.Context, m write.NewMatch) (bool, error) {
 	// tenancyguard:ok competition.matches is G* (tenant_ids uuid[], no tenant_id): reached through match_participants (DATABASE_DESIGN §4)
 	created, err := exec(ctx, `INSERT INTO competition.matches (match_id, created_at, updated_at, created_by, mode, matchmaking_type, subject_id,
-		topic_id, grade_level, status, ranked, is_bot, scope_kind, tournament_node_id, duel_id, ruleset_version_id, tenant_ids)
-		VALUES ($1, $2, $2, $3, $4, $5, $6, $7, $8, 'lobby', $9, $10, $11, $12, $13, $14, $15::uuid[])
+		topic_id, grade_level, status, ranked, is_bot, scope_kind, tournament_node_id, duel_id, ruleset_version_id, tenant_ids, tournament_id)
+		VALUES ($1, $2, $2, $3, $4, $5, $6, $7, $8, 'lobby', $9, $10, $11, $12, $13, $14, $15::uuid[], $16)
 		ON CONFLICT (match_id) DO NOTHING`, m.ID, m.At, actor(ctx), m.Mode, m.Type, m.SubjectID, m.TopicID, m.Grade, m.Ranked, m.IsBot,
-		m.ScopeKind, m.TournamentNodeID, m.DuelID, m.RulesetVersionID, uuidArray(m.TenantIDs))
+		m.ScopeKind, m.TournamentNodeID, m.DuelID, m.RulesetVersionID, uuidArray(m.TenantIDs), m.TournamentID)
 	if err != nil || !created {
 		return false, err
 	}

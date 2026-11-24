@@ -1,7 +1,7 @@
 # Feature Specification: F134 — Công cụ vận hành bổ sung: lệnh `reconcile-<module>`, loại tenant QA khỏi analytics, trang tải bộ cài cho trường
 
 **Feature Branch**: `134-ops-reconcile-qa-installer` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/backend/pkg/` + mọi module có DB (lệnh đối soát trong binary `worker`) · module `identity` (cờ QA) · module `game` (analytics, API bộ cài) · module `learning` (tổng hợp platform) · `src/cms/frontend/apps/portal` (trang tải bộ cài, cờ QA) · CI `deploy/installer` · **Mốc**: M6 · **Phụ thuộc**: F080, F131, F133 (dùng F010 `updateTenant`, F043/F044 tổng hợp học tập platform)
-**Input**: Ba công cụ vận hành còn thiếu trước phát hành: (1) lệnh `reconcile-<module>` (lệnh con `worker reconcile --module=<module>`, ADR-0074) đối soát event giữa các module sau khi khôi phục riêng một database module ([BACKUP_RECOVERY §3.5, §8](../../docs/11-operations/BACKUP_RECOVERY.md), TC-SVC-014); (2) đánh dấu tenant QA (dùng cho synthetic monitoring của F131 trên production) và loại dữ liệu của nó khỏi Game Analytics và tổng hợp học tập platform ([TEST_STRATEGY §4](../../docs/12-project/TEST_STRATEGY.md)); (3) trang portal cho School Admin tải gói cài trường Android (F133; không còn Windows — ADR-0101) theo khối của trường ([DEPLOYMENT §9](../../docs/11-operations/DEPLOYMENT.md)). FR nguồn: FR-OPS-002, NFR-DEPL-002, FR-ANL-009, FR-ANL-012, FR-OPS-003, NFR-PERF-019, FR-GAME-009.
+**Input**: Ba công cụ vận hành còn thiếu trước phát hành: (1) lệnh `reconcile-<module>` (lệnh con `worker reconcile --module=<module>`, ADR-0074) đối soát event giữa các module sau khi khôi phục riêng một database module ([BACKUP_RECOVERY §3.5, §8](../../docs/11-operations/BACKUP_RECOVERY.md), TC-SVC-014); (2) đánh dấu tenant QA (dùng cho synthetic monitoring của F131 trên production) và loại dữ liệu của nó khỏi Game Analytics và tổng hợp học tập platform ([TEST_STRATEGY §4](../../docs/12-project/TEST_STRATEGY.md)); (3) trang portal cho School Admin tải bộ cài trường Windows/Android (F133) theo khối của trường ([DEPLOYMENT §9](../../docs/11-operations/DEPLOYMENT.md)). FR nguồn: FR-OPS-002, NFR-DEPL-002, FR-ANL-009, FR-ANL-012, FR-OPS-003, NFR-PERF-019, FR-GAME-009.
 
 ## Clarifications
 
@@ -12,11 +12,6 @@
 - Q: Lệnh có tự bù trừ (ví dụ thu hồi XP)? → A: Không. Chỉ đọc và lập danh sách; bù trừ bằng API nghiệp vụ có audit (vd. `createEconomyAdjustment`), không xóa ([BACKUP_RECOVERY §3.5](../../docs/11-operations/BACKUP_RECOVERY.md)).
 - Q: Đánh dấu QA ở cấp tenant hay trường/tài khoản? → A: Cấp tenant (CODE_PLAN: "loại tenant QA"); tenant QA là tenant riêng chỉ có tài khoản test (F131). Chỉ System Admin đặt cờ; tenant `common` không được đánh dấu.
 - Q: Link tải bộ cài có cần ký/hạn? → A: Không. Bộ cài không chứa dữ liệu tenant hay secret (F133-AC-17), phát qua CDN công khai; API chỉ trả danh sách đã kiểm chữ ký chỉ mục, lọc theo khối của trường.
-
-### Session 2026-11-24 (ADR-0101 — bỏ bản Windows)
-
-- Q: Owner bỏ hẳn bản Windows — "bộ cài trường" trên trang còn gì? → A: [Confirmed] Chỉ gói APK Android kèm gói vùng theo khối (MDM/USB) — [ADR-0101](../../docs/adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) mục 7; `platform` của chỉ mục/response chỉ còn `android`; hướng dẫn `device.cfg` chỉ áp cho thiết bị Android. PC phòng máy chơi bản Web, không cần cài.
-- Q: Trang nên thêm link tới bản Web cho PC phòng máy, hay bỏ trang khi chỉ còn APK? → A: [Confirmed] (owner "chốt hết" 2026-11-24, [ADR-0101](../../docs/adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) mục 8) Trang gồm gói APK/MDM Android **và** link mở bản Web (`play.<domain>`) kèm kiểm tra trình duyệt hỗ trợ WebGL 2; không có bộ cài desktop.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -63,7 +58,7 @@ Sau khi khôi phục `eduworld_learning` về T (RB-01), người trực chạy 
 
 ### User Story 3 — Trang tải bộ cài cho trường (Priority: P2)
 
-`ad.truong.a` mở C → "Tải bộ cài": thấy gói APK Android bản production mới nhất cho khối 1–5 của trường, kích thước, SHA-256 để kiểm, nút tải và hướng dẫn cấu hình `device.cfg` cho tablet Android (máy dùng chung, cache LAN). Không có bộ cài Windows (ADR-0101).
+`ad.truong.a` mở C → "Tải bộ cài": thấy bộ cài Windows và APK Android bản production mới nhất cho khối 1–5 của trường, kích thước, SHA-256 để kiểm, nút tải và hướng dẫn cấu hình `device.cfg` (máy dùng chung, cache LAN).
 
 **Why this priority**: [DEPLOYMENT §9](../../docs/11-operations/DEPLOYMENT.md) "tải từ portal (School Admin)"; NFR-PERF-019 phòng máy; F133 để trang này ngoài phạm vi.
 
@@ -73,12 +68,12 @@ Sau khi khôi phục `eduworld_learning` về T (RB-01), người trực chạy 
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F134-AC-12 | KHI phát hành bộ cài trường lên kênh `production`, CI PHẢI sinh chỉ mục `school-kit/<channel>.json` + chữ ký RSA-SHA256 theo `school-kit-index.schema.json` (`kit_id`, `platform` android — ADR-0101 bỏ windows, `client_version`, `grade_bands[]`, `url`, `sha256`, `size_bytes`, `min_os`, `released_at`) và chỉ trỏ tới bộ cài đã ký | NFR-PERF-019 · [DEPLOYMENT §9](../../docs/11-operations/DEPLOYMENT.md) | — |
+| F134-AC-12 | KHI phát hành bộ cài trường lên kênh `production`, CI PHẢI sinh chỉ mục `school-kit/<channel>.json` + chữ ký RSA-SHA256 theo `school-kit-index.schema.json` (`kit_id`, `platform` windows/android, `client_version`, `grade_bands[]`, `url`, `sha256`, `size_bytes`, `min_os`, `released_at`) và chỉ trỏ tới bộ cài đã ký | NFR-PERF-019 · [DEPLOYMENT §9](../../docs/11-operations/DEPLOYMENT.md) | — |
 | F134-AC-13 | KHI người có `school.installer.read` gọi `listSchoolClientInstallers` (`school_id` trong scope), module game PHẢI tải chỉ mục `production`, kiểm chữ ký, lọc bộ cài có `grade_bands` giao với khối của trường (từ lớp đang hoạt động; trường chưa có lớp → mọi bộ cài) và trả bản mới nhất mỗi nền tảng × nhóm khối | NFR-PERF-019 · FR-GAME-009 · [PERFORMANCE_BUDGET §10.1](../../docs/08-game-client/PERFORMANCE_BUDGET.md) | — |
-| F134-AC-14 | NẾU chỉ mục không tải được hoặc sai chữ ký/schema, THÌ module game PHẢI trả `503 UNAVAILABLE`, ghi cảnh báo và PHẢI KHÔNG trả bất kỳ link nào chưa kiểm | NFR-SEC-005 · F133-AC-05 | — |
+| F134-AC-14 | NẾU chỉ mục không tải được hoặc sai chữ ký/schema, THÌ module game PHẢI trả `503 UNAVAILABLE`, ghi cảnh báo và PHẢI KHÔNG trả bất kỳ link nào chưa kiểm | NFR-SEC-005 · F133-AC-10 | — |
 | F134-AC-15 | NẾU School Admin hỏi trường khác (cùng hoặc khác tenant), THÌ module game PHẢI trả `404`; NẾU người gọi thiếu `school.installer.read` (vd. Academic Manager) hoặc là học sinh, THÌ PHẢI trả `403 PERMISSION_DENIED` | AGENTS R7, R8 · NFR-SEC-006 | TC-TEN-003 |
 | F134-AC-16 | Response PHẢI chỉ chứa dữ liệu công khai của bộ cài (không dữ liệu tenant, secret, đường dẫn nội bộ); mọi chuỗi có `maxLength` (`url` ≤ 2048, `sha256` pattern hex 64) | AGENTS R28, R31 · F133-AC-17 | TC-TEN-024 |
-| F134-AC-17 | Portal PHẢI hiển thị trang "Tải bộ cài" ở workspace C (menu chỉ khi có `school.installer.read`): bảng nền tảng, phiên bản, nhóm khối, kích thước, SHA-256 (nút sao chép), nút tải, hướng dẫn `device.cfg` cho thiết bị Android (`shared_device`, `lan_cache_url`) từ file dịch; lỗi `503` hiển thị thông điệp theo `code`; style từ token | NFR-PERF-019 · AGENTS R1, R32 · [ADMIN_PORTAL §10](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-01 |
+| F134-AC-17 | Portal PHẢI hiển thị trang "Tải bộ cài" ở workspace C (menu chỉ khi có `school.installer.read`): bảng nền tảng, phiên bản, nhóm khối, kích thước, SHA-256 (nút sao chép), nút tải, hướng dẫn `device.cfg` (`shared_device`, `lan_cache_url`) từ file dịch; lỗi `503` hiển thị thông điệp theo `code`; style từ token | NFR-PERF-019 · AGENTS R1, R32 · [ADMIN_PORTAL §10](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-01 |
 | F134-AC-18 | KHI menu/action của feature đang tắt cho phạm vi phiên (`disabled_menus`/`disabled_actions` của `getMyPermissions`) — khóa: `action.platform_admin.tenants.view`, `action.live_ops.game_analytics.view`, `action.live_ops.game_analytics.export`, `action.school_lms.reports.view`, `action.platform_admin.reports.view`, `action.platform_admin.reports.export` và `menu.school_lms.installers` (`action.school_lms.installers.view`), Portal PHẢI ẩn menu và ẩn/khóa nút tương ứng; NẾU API trả `403 FEATURE_DISABLED`, Portal PHẢI hiện thông báo tính năng tạm tắt và tải lại quyền | FR-CMS-018 · ADR-0090 | TC-CMS-MENU-02 |
 
 ### Edge Cases
@@ -102,7 +97,7 @@ Sau khi khôi phục `eduworld_learning` về T (RB-01), người trực chạy 
 | FR-ANL-012 | Tổng hợp học tập platform không tính tenant QA | [DASHBOARD_DATA §2](../../docs/07-backend/DASHBOARD_DATA.md) |
 | FR-OPS-003 | Synthetic monitoring (F131) không làm sai chỉ số sản phẩm | [TEST_STRATEGY §4](../../docs/12-project/TEST_STRATEGY.md) |
 | NFR-PERF-019 | Phân phối bộ cài trường kèm gói nội dung theo khối | [PERFORMANCE_BUDGET §10.1](../../docs/08-game-client/PERFORMANCE_BUDGET.md) · [DEPLOYMENT §9](../../docs/11-operations/DEPLOYMENT.md) |
-| FR-GAME-009 | Trường lấy đúng gói APK cho tablet Android của trường (PC phòng máy chơi bản Web — ADR-0101) | [PERFORMANCE_BUDGET](../../docs/08-game-client/PERFORMANCE_BUDGET.md) |
+| FR-GAME-009 | Trường lấy đúng bộ cài cho máy phòng máy | [PERFORMANCE_BUDGET](../../docs/08-game-client/PERFORMANCE_BUDGET.md) |
 | FR-CMS-018 | Menu/action của feature theo danh mục `specs/portal/menu-catalog.yaml`, ẩn khi tắt, xử lý `403 FEATURE_DISABLED` | [ADMIN_PORTAL §2.7](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 
 ### Key Entities
@@ -146,7 +141,7 @@ Sau khi khôi phục `eduworld_learning` về T (RB-01), người trực chạy 
 - Bù trừ dữ liệu lệch: thao tác thủ công qua API nghiệp vụ (vd. `createEconomyAdjustment`, F075).
 - Probe synthetic, seed tenant QA, loại trừ khỏi job dọn học sinh: F131. Build/ký bộ cài, `device.cfg`: F133.
 - Loại tenant QA khỏi dashboard nhà trường của chính tenant đó (chỉ có dữ liệu QA): không cần.
-- Kênh MDM, Microsoft Store: ngoài Release 1.0 (F133 Clarifications). Bộ cài Windows: không làm (ADR-0101).
+- Kênh MDM, Microsoft Store: ngoài Release 1.0 (F133 Clarifications).
 
 ## Assumptions
 

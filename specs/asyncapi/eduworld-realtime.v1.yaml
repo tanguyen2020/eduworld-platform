@@ -170,6 +170,9 @@ channels:
       MatchmakingMatchAssigned: { $ref: '#/components/messages/MatchmakingMatchAssigned' }
       # ---------- ranking (F106) ----------
       CompetitionTierUpdated: { $ref: '#/components/messages/CompetitionTierUpdated' }
+      # ---------- tournament (F107) ----------
+      TournamentMatchScheduled: { $ref: '#/components/messages/TournamentMatchScheduled' }
+      TournamentBracketUpdated: { $ref: '#/components/messages/TournamentBracketUpdated' }
       # ---------- hub ----------
       HubInstanceJoin: { $ref: '#/components/messages/HubInstanceJoin' }
       HubPlayerMove: { $ref: '#/components/messages/HubPlayerMove' }
@@ -360,6 +363,13 @@ operations:
     summary: 'Tier của chính học sinh sau trận ranked (F106-AC-07): không số rating/RD; không có thông báo "bị vượt" (COMPETITION_SYSTEM §9.4).'
     messages:
       - $ref: '#/channels/realtime/messages/CompetitionTierUpdated'
+  sendTournamentEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    summary: 'Trận giải sắp đấu (10 và 1 phút trước giờ) và thay đổi nút bracket của chính học sinh (F107-AC-15, AC-17): chỉ nickname đối thủ (R16).'
+    messages:
+      - $ref: '#/channels/realtime/messages/TournamentMatchScheduled'
+      - $ref: '#/channels/realtime/messages/TournamentBracketUpdated'
   receiveHubCommands:
     action: receive
     x-routing: { module: competition, room_input: [hub.player.move] }
@@ -2112,6 +2122,51 @@ components:
                   provisional: { type: boolean }
                   provisional_games_required: { type: integer, minimum: 1 }
                   games_played: { type: integer, minimum: 0 }
+    TournamentMatchScheduled:
+      name: tournament.match.scheduled
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: tournament.match.scheduled }
+              payload:
+                type: object
+                additionalProperties: false
+                required: [tournament_id, node_id, scheduled_at, notice_minutes]
+                properties:
+                  tournament_id: { $ref: '#/components/schemas/Uuid' }
+                  node_id: { $ref: '#/components/schemas/Uuid' }
+                  scheduled_at: { $ref: '#/components/schemas/EpochMs' }
+                  notice_minutes: { type: integer, enum: [10, 1] }
+                  opponents:
+                    type: array
+                    maxItems: 8
+                    description: 'Đối thủ — chỉ nickname (R16), không tên thật, không trường.'
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required: [user_id]
+                      properties:
+                        user_id: { $ref: '#/components/schemas/Uuid' }
+                        nickname: { type: [string, 'null'], maxLength: 32 }
+    TournamentBracketUpdated:
+      name: tournament.bracket.updated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: tournament.bracket.updated }
+              payload:
+                type: object
+                additionalProperties: false
+                required: [tournament_id, node_id, status]
+                properties:
+                  tournament_id: { $ref: '#/components/schemas/Uuid' }
+                  node_id: { $ref: '#/components/schemas/Uuid' }
+                  status: { type: string, enum: [pending, scheduled, in_match, awaiting_confirm, confirmed, bye, overridden, void] }
+                  winner_entry_id: { type: [string, 'null'], format: uuid }
     MatchmakingProposalCreated:
       name: matchmaking.proposal.created
       payload:

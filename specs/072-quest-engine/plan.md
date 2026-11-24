@@ -14,7 +14,7 @@ Module `quest` của module game: quest là item nội dung có version trên l�
 | Primary Dependencies | chi, ent, Atlas, oapi-codegen (server + client `learning.internal`), `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/modcall`, nats.go, Valkey client, JSON Schema validator · GdUnit4 |
 | Storage | PostgreSQL `eduworld_game` (`game.quest_definitions`, `game.quest_versions`, `game.quest_progress`, `game.quest_step_attempts`, `game.periodic_quest_grants`, `infra.tenant_resource_assignments`); `eduworld_learning` (learning events — F031) |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); facade test với module learning (`createAttempt`); GdUnit4 |
-| Target Platform | Linux container (`core-api` + `worker`) · Android, iOS, Web (ADR-0101) |
+| Target Platform | Linux container (`core-api` + `worker`) · Windows, Android, iOS, Web |
 | Project Type | backend module + game client |
 | Performance Goals | `listQuests` p95 ≤ 300 ms; cập nhật tiến độ sau nộp ≤ 2 s p95; lời gọi `createAttempt` p95 < 50 ms (TC-PERF-013) |
 | Constraints | AGENTS R2, R5, R8, R10, R13, R19, R26, R29, R31; ADR-0016, ADR-0019, ADR-0029, ADR-0040, ADR-0042, ADR-0043, ADR-0048, ADR-0056, ADR-0059 |

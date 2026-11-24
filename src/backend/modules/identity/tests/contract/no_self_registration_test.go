@@ -32,7 +32,9 @@ func TestNoSelfRegistration(t *testing.T) {
 	for path, item := range doc.Paths.Map() {
 		for method, op := range item.Operations() {
 			n++
-			if selfReg.MatchString(path) || selfReg.MatchString(op.OperationID) {
+			// Registering an entry of a tournament (registerTournamentEntry, F107) enrols an existing student, never an account.
+			tournamentEntry := strings.HasPrefix(path, "/competition/tournaments/") && strings.HasSuffix(path, "/entries")
+			if (selfReg.MatchString(path) || selfReg.MatchString(op.OperationID)) && !tournamentEntry {
 				t.Errorf("%s %s (%s): self-registration route", method, path, op.OperationID)
 			}
 			if !createsAccount.MatchString(op.OperationID) {

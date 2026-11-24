@@ -1,6 +1,6 @@
 # System Architecture
 
-> Trạng thái: Draft · Phiên bản: 0.6 · Owner: Solution Architect · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (ADR-0074: modular monolith, 3 binary + profile worker, một cụm PostgreSQL 5 database, facade trong tiến trình) · 2026-11-16 (ADR-0086: giữ phiên game bằng refresh token)
+> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Solution Architect · Cập nhật: 2026-11-17 (ADR-0074: modular monolith, 3 binary + profile worker, một cụm PostgreSQL 5 database, facade trong tiến trình) · 2026-11-16 (ADR-0086: giữ phiên game bằng refresh token)
 > Liên quan: [ADR](../adr/README.md) (ADR-0074, ADR-0037…0042) · [DOMAIN_MODEL](DOMAIN_MODEL.md) · [MULTITENANCY](MULTITENANCY.md) · [REALTIME_ARCHITECTURE](REALTIME_ARCHITECTURE.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [BACKEND_DESIGN](../07-backend/BACKEND_DESIGN.md) · [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md)
 
 > **Thay đổi v0.3:** 6 microservice Go (ADR-0036), database riêng mỗi service (ADR-0037), CQRS + Clean Architecture (ADR-0038), ent + Atlas (ADR-0039), typed REST client (ADR-0040), maxLength bắt buộc (ADR-0041), outbox → NATS JetStream (ADR-0042). v0.4: tài liệu này là **điểm vào duy nhất** của kiến trúc; sơ đồ container và luồng chơi end-to-end chỉ vẽ ở đây, tài liệu khác link về.
@@ -73,7 +73,7 @@ Backend là **modular monolith có ranh giới cưỡng chế** (ADR-0074): mộ
 ```mermaid
 flowchart TB
   subgraph Clients
-    G[Godot Client\nWeb / Android / iOS]
+    G[Godot Client\nWindows / Android / iOS / Web]
     W["Admin Portal (React)<br/>5 workspace · client eduworld-portal"]
   end
 
@@ -131,7 +131,7 @@ flowchart TB
 
 Mỗi binary chỉ mở kết nối tới database của module nó nạp, bằng role của module đó (`<module>_app`, `_platform`, `_relay`…); không module nào đọc database của module khác (quyền `CONNECT` theo module). Gọi giữa module là gọi facade **trong cùng tiến trình** (không có mũi tên mạng giữa module); phản ứng phụ đi qua outbox → NATS. Binary `realtime` không có database và chỉ chạm logic nghiệp vụ qua NATS request/reply tới `core-api`.
 
-Release 1.0 hỗ trợ 3 nền tảng client: Web, Android, iOS (ADR-0013, [ADR-0101](../adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) [Confirmed], OQ-04); không có bản Windows, PC phòng máy chơi bản Web.
+Release 1.0 hỗ trợ 4 nền tảng client: Windows, Android, iOS, Web (ADR-0013 [Confirmed], OQ-04).
 
 ### 3.1. Trách nhiệm từng container
 

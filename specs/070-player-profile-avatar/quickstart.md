@@ -37,4 +37,4 @@ make godot-test
 
 ## 4. Bằng chứng cần nộp
 
-- Kết quả test (pass/fail), trace_id kịch bản 3 và 5, truy vấn `game.nickname_changes`, ảnh S02 trên DEV-WEB-MID (PC chạy bản Web — ADR-0101) và DEV-AND-MID1.
+- Kết quả test (pass/fail), trace_id kịch bản 3 và 5, truy vấn `game.nickname_changes`, ảnh S02 trên DEV-PC-MID và DEV-AND-MID1.

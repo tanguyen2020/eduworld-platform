@@ -14,7 +14,7 @@ Mở rộng tầng xã hội và thêm tầng live-ops của game client theo [G
 | Primary Dependencies | GdUnit4; autoload `ApiClient`, `RealtimeClient`, `SceneRouter`, `AppState`, `EventBus`, `QualityManager`, `ContentCache`; F092 `HubSync`; F071 `SceneRouter.request_area`; F072 `QuestService`/`QuestTracker`; F110 `SocialService`/`FriendsStore`/`FriendsScreen`/`FindFriendsTab`; F119 `ChatDock`; F123 `NotificationService` (deep link `EventBus.ui_requested`); F069 hiển thị phần thưởng |
 | Storage | Không có dữ liệu bền; store trong RAM (ADR-0064) |
 | Testing | GdUnit4 unit (`FakeApiClient`, `FakeRealtimeClient`, `FakeClock`) + scene runner; integration headless 2 client với docker compose; benchmark `tests/perf/EventCenterBenchmark.tscn` |
-| Target Platform | Android 9+, iOS, Web (ADR-0101) |
+| Target Platform | Windows 10+, Android 9+, iOS, Web |
 | Project Type | game client |
 | Performance Goals | ≥ 30 FPS màn phụ trên máy tầm trung ([PERFORMANCE_BUDGET](../../docs/08-game-client/PERFORMANCE_BUDGET.md), NFR-COMP-001); cập nhật sự kiện theo nhịp server |
 | Constraints | AGENTS R1, R5, R15, R16, R17, R19, R23, R25, R32 · ADR-0016, ADR-0020, ADR-0047, ADR-0049, ADR-0050, ADR-0054, ADR-0056, ADR-0057, ADR-0064, ADR-0065, ADR-0084 |

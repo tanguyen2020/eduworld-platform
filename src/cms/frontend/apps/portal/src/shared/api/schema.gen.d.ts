@@ -4109,6 +4109,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/competition/challenges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Thử thách khối đang/sắp diễn ra của học sinh
+         * @description F107-AC-27. Chỉ `game_player`; chỉ thử thách học sinh thuộc đối tượng (khối ± học sinh − loại trừ, ADR-0095). Trang keyset `(starts_at, challenge_id)`.
+         */
+        get: operations["listMyChallenges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/challenges/{challenge_id}:join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vào phòng Timed Quiz của thử thách khối
+         * @description F107-AC-27. Học sinh thuộc đối tượng trong khung tham gia (từ `starts_at` trừ `join_before_minutes` của template tới `ends_at`)
+         *     nhận `match_id`/`room_id` của phòng Timed Quiz (F105) và vào phòng bằng `battle.state.request`; ngoài khung →
+         *     `422 INVALID_STATE_TRANSITION`; không thuộc đối tượng → `404`.
+         */
+        post: operations["joinChallenge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/competition/duels": {
         parameters: {
             query?: never;
@@ -4405,10 +4447,243 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Giải đấu trong scope */
+        /**
+         * Giải đấu trong scope
+         * @description F107-AC-25. Học sinh (token game, `game_player`): giải trong phạm vi của em — đối tượng khối ± học sinh của thử thách khối,
+         *     trường, tenant (ADR-0095); `scope=mine` chỉ giải em có entry; chỉ nickname/avatar (R16). Người tổ chức (portal,
+         *     `lms.challenge.write`): giải của các trường thuộc scope UserRole. Nhân sự dùng token game → `403 GAME_ACCESS_STUDENT_ONLY`.
+         *     Trang keyset `(starts_at, tournament_id)` cắt trong SQL (API_DESIGN §5).
+         */
         get: operations["listTournaments"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/tournaments/{tournament_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chi tiết giải (học sinh trong phạm vi / người tổ chức)
+         * @description F107-AC-25. Ngoài phạm vi hoặc tenant khác → `404`. Học sinh nhận `my_entry` của chính em.
+         */
+        get: operations["getTournament"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/tournaments/{tournament_id}:cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hủy giải (draft, published, registration_open, scheduled)
+         * @description F107-AC-07. Lý do bắt buộc; trạng thái khác → `422 INVALID_STATE_TRANSITION`. Audit `tournament.cancelled`.
+         */
+        post: operations["cancelTournament"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/tournaments/{tournament_id}:generate-bracket": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sinh bracket và lịch (seeding → scheduled)
+         * @description F107-AC-11…AC-14, AC-22, AC-23. Toàn bộ bảng/nút bracket ghi trong một transaction PostgreSQL; idempotent theo
+         *     `Idempotency-Key`; gọi lại khi giải đã `scheduled` → `422 INVALID_STATE_TRANSITION`; số entry dưới tối thiểu của format →
+         *     `422 VALIDATION_FAILED`; `seeding_policy = manual` cần `entry_order`. Audit `tournament.bracket_generated`.
+         */
+        post: operations["generateTournamentBracket"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/tournaments/{tournament_id}:publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Duyệt giải draft → published (người tổ chức)
+         * @description F107-AC-07, AC-26. `lms.challenge.write` cho trường sở hữu; trạng thái khác `draft` → `422 INVALID_STATE_TRANSITION`. Audit `tournament.published`.
+         */
+        post: operations["publishTournament"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/tournaments/{tournament_id}/bracket": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Bracket, bảng đấu và lịch của giải
+         * @description F107-AC-25. Học sinh trong phạm vi thấy nickname/avatar (không tên thật); người tổ chức thấy thêm `student_id`.
+         */
+        get: operations["getTournamentBracket"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/tournaments/{tournament_id}/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Đăng ký giải (học sinh, leader đội) hoặc đăng ký hộ (người tổ chức)
+         * @description F107-AC-08, AC-09, AC-24. Học sinh (token game): đăng ký chính em (`party_id` khi giải đội — mọi thành viên đủ điều kiện,
+         *     cùng trường). Ngoài phạm vi → `404`; bị hạn chế thi đấu → `403 POLICY_DENIED`; đủ `max_entries` → `409 CONFLICT`; ngoài
+         *     cửa sổ đăng ký → `422 INVALID_STATE_TRANSITION`. Người tổ chức (portal): đăng ký hộ `student_ids` hoặc cả đối tượng của
+         *     thử thách khi `student_ids` rỗng (khối ± học sinh − loại trừ, ADR-0095); học sinh không đủ điều kiện bị bỏ qua.
+         */
+        post: operations["registerTournamentEntry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/tournaments/{tournament_id}/entries:confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Xác nhận danh sách người tham gia (registration_closed → seeding)
+         * @description F107-AC-09. Xác nhận mọi entry `registered` còn đủ điều kiện (hoặc `entry_ids`); giải chuyển `seeding`.
+         */
+        post: operations["confirmTournamentEntries"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/tournaments/{tournament_id}/entries/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Rút entry (soft) trước khi khóa bracket
+         * @description F107-AC-09. Chủ entry (học sinh/thành viên đội) hoặc người tổ chức; sau khi khóa bracket → `422 INVALID_STATE_TRANSITION`.
+         */
+        delete: operations["withdrawTournamentEntry"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/tournaments/{tournament_id}/entries/{entry_id}:check-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check-in của chính học sinh trong cửa sổ check-in
+         * @description F107-AC-10. Chỉ `game_player`; ngoài cửa sổ (`tournament_timers`) → `422 INVALID_STATE_TRANSITION`; entry của người khác → `404`.
+         */
+        post: operations["checkInTournamentEntry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/tournaments/{tournament_id}/nodes/{node_id}:confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Xác nhận sớm kết quả một nút (đóng cửa sổ khiếu nại)
+         * @description F107-AC-17. Chỉ nút `awaiting_confirm` có người thắng; khác → `422 INVALID_STATE_TRANSITION`.
+         */
+        post: operations["confirmBracketNode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/tournaments/{tournament_id}/nodes/{node_id}:override": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Đổi người thắng trong cửa sổ khiếu nại (lý do bắt buộc)
+         * @description F107-AC-18, AC-19. Trong cửa sổ khiếu nại (`tournament_timers`) hoặc nút chờ người tổ chức quyết sau 2 lần lên lịch lại;
+         *     nút kế đã bắt đầu → `422 INVALID_STATE_TRANSITION`; thiếu lý do → `422 VALIDATION_FAILED`. Audit `tournament.node_overridden`
+         *     (actor, lý do, trước/sau). Log trận dùng cho khiếu nại không chứa nội dung chat (R15).
+         */
+        post: operations["overrideBracketNode"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6807,7 +7082,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Template thử thách/giải đấu do platform publish (chỉ đọc) */
+        /**
+         * Template thử thách/giải đấu do platform publish và đã gán cho tenant (chỉ đọc)
+         * @description F107-AC-01, AC-02. Chỉ version đang publish của template đã gán cho tenant của phiên; trang keyset `(code, config_id)`.
+         */
         get: operations["listChallengeTemplates"];
         put?: never;
         post?: never;
@@ -6841,15 +7119,61 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Thử thách khối / giải trường trong scope */
+        /**
+         * Thử thách khối / giải trường trong scope
+         * @description Route ngoại lệ dưới `/lms` → module competition (F107, COMPETITION_SYSTEM §10.2). F107-AC-06: thử thách/giải của các trường
+         *     thuộc scope UserRole (`lms.challenge.write`), lọc `grade_level`/`status`; trang keyset `(starts_at, challenge_id)` cắt trong SQL.
+         */
         get: operations["listChallenges"];
         put?: never;
         /**
-         * Tạo thử thách lớp / giải trường từ template do platform publish
-         * @description Tenant chỉ điền tham số template cho phép (`allowed_params`); luật chơi, phần thưởng, cấu hình
-         *     thi đấu lấy từ template (ADR-0027). Tham số ngoài `allowed_params` → 422. Permission `lms.challenge.write`.
+         * Tạo thử thách khối / giải trường từ template do platform publish
+         * @description Route ngoại lệ dưới `/lms` → module competition (F107). Tenant chỉ điền tham số template cho phép (`allowed_params`); luật chơi,
+         *     phần thưởng, cấu hình thi đấu lấy từ version template được ghim (ADR-0027). Template chưa gán → `403 RESOURCE_NOT_ASSIGNED`;
+         *     tham số ngoài `allowed_params` → `422`; tên chứa từ không phù hợp (kiểm qua facade `screenText` của module chat) → `422`,
+         *     kiểm không được → `503`. Chỉ `school_admin` (trường mình) và System Admin (tenant đích `tenant_id` bắt buộc) — F107-AC-01…AC-05.
          */
         post: operations["createChallenge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lms/challenges/{challenge_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chi tiết thử thách khối / giải trường (trạng thái, đối tượng, số tham gia, kết quả)
+         * @description F107-AC-06. Trường ngoài scope hoặc tenant khác → `404`. Kết quả thử thách không thuộc báo cáo kết quả học tập.
+         */
+        get: operations["getChallenge"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lms/challenges/{challenge_id}:cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hủy thử thách (soft khi chưa chạy, `cancelled` có lý do khi đang chạy)
+         * @description F107-AC-06. Hủy kèm giải của thử thách khi giải còn hủy được; đã hoàn thành → `422 INVALID_STATE_TRANSITION`. Audit `challenge.cancelled`.
+         */
+        post: operations["cancelChallenge"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10619,6 +10943,57 @@ export interface components {
             subject_id?: components["schemas"]["Uuid"];
             title: components["schemas"]["LocalizedName"];
         };
+        Bracket: {
+            entries: components["schemas"]["TournamentEntry"][];
+            /** @enum {string} */
+            format: "single_elim" | "double_elim" | "round_robin" | "groups_then_single_elim";
+            groups: components["schemas"]["TournamentGroup"][];
+            nodes: components["schemas"]["BracketNode"][];
+            /** @description Chỉ người tổ chức — seed của seeding random (audit) */
+            seed_value?: number | null;
+            status: components["schemas"]["TournamentStatus"];
+            tournament_id: components["schemas"]["Uuid"];
+        };
+        BracketGenerate: {
+            /** @description Bắt buộc khi `seeding_policy = manual` — thứ tự hạt giống (entry_id), đủ mọi entry đã xác nhận */
+            entry_order?: components["schemas"]["Uuid"][];
+        };
+        BracketNode: {
+            /** @enum {string} */
+            bracket: "winners" | "losers" | "grand_final" | "group";
+            /**
+             * Format: date-time
+             * @description Hết cửa sổ khiếu nại
+             */
+            confirm_after?: string | null;
+            /** @description Chờ người tổ chức quyết (sau 2 lần lên lịch lại, F107-AC-19) */
+            decision_required?: boolean;
+            /** Format: uuid */
+            entry_a_id?: string | null;
+            /** Format: uuid */
+            entry_b_id?: string | null;
+            group_code?: string | null;
+            is_draw?: boolean;
+            /** Format: uuid */
+            match_id?: string | null;
+            /** Format: uuid */
+            next_lose_node_id?: string | null;
+            /** Format: uuid */
+            next_win_node_id?: string | null;
+            node_id: components["schemas"]["Uuid"];
+            position: number;
+            round: number;
+            /** Format: date-time */
+            scheduled_at?: string | null;
+            /** @enum {string} */
+            status: "pending" | "scheduled" | "in_match" | "awaiting_confirm" | "confirmed" | "bye" | "overridden" | "void";
+            /** Format: uuid */
+            winner_entry_id?: string | null;
+        };
+        BracketNodeOverride: {
+            reason: string;
+            winner_entry_id: components["schemas"]["Uuid"];
+        };
         BreakGlassDecision: {
             decision_note?: string;
         };
@@ -10702,6 +11077,9 @@ export interface components {
             /** @enum {string} */
             status: "pending" | "accepted" | "dismissed";
         };
+        CancelReason: {
+            reason: string;
+        };
         /** @description Mã nội dung game (item_id, preset, dáng, màu) — chuỗi, không phải UUID */
         CatalogCode: string;
         /**
@@ -10730,10 +11108,22 @@ export interface components {
             name: components["schemas"]["CatalogName"];
         }[];
         Challenge: components["schemas"]["ChallengeCreate"] & {
+            /** @description Số học sinh hiệu lực của đối tượng (khối ∪ danh sách − loại trừ) */
+            audience_count?: number;
+            cancel_reason?: string | null;
             challenge_id: components["schemas"]["Uuid"];
+            created_at?: components["schemas"]["Timestamp"];
             created_by: components["schemas"]["Uuid"];
             /** @enum {string} */
+            format?: "timed_quiz" | "tournament";
+            /** @enum {string} */
+            kind?: "grade_challenge" | "school_tournament";
+            /** @description Phòng Timed Quiz của thử thách (mỗi phòng ≤ 40 học sinh), có khi thử thách đã bắt đầu */
+            match_ids?: components["schemas"]["Uuid"][];
+            participant_count?: number;
+            /** @enum {string} */
             status: "scheduled" | "running" | "completed" | "cancelled";
+            template_version_id?: components["schemas"]["Uuid"];
             tenant_id?: components["schemas"]["Uuid"];
             /** @description Có khi template thuộc loại giải đấu */
             tournament_id?: components["schemas"]["Uuid"] | null;
@@ -10742,7 +11132,11 @@ export interface components {
             ends_at?: components["schemas"]["Timestamp"];
             exclude_student_ids?: components["schemas"]["Uuid"][];
             name: string;
-            /** @description Chỉ các khóa nằm trong ChallengeTemplate.allowed_params; khóa khác → 422 */
+            /**
+             * @description Chỉ các khóa nằm trong ChallengeTemplate.allowed_params (vd. `max_entries`, `seeding_policy`, `registration_open_at`,
+             *     `registration_close_at`, `auto_confirm`, `subject_id`); khóa khác (luật điểm, `reward`, chat…) → 422 nêu tên khóa.
+             *     Không tham số nào tắt được chat `match`/`team` (R15, ADR-0020). Giá trị chuỗi ≤ 255 ký tự.
+             */
             params?: {
                 [key: string]: unknown;
             };
@@ -10771,6 +11165,12 @@ export interface components {
         };
         /** @enum {string} */
         ChallengeDifficulty: "easy" | "normal" | "hard" | "expert" | "legendary";
+        ChallengeJoinResult: {
+            challenge_id: components["schemas"]["Uuid"];
+            match_id: components["schemas"]["Uuid"];
+            room_id: components["schemas"]["Uuid"];
+            starts_at?: components["schemas"]["Timestamp"];
+        };
         ChallengeNextActivity: {
             attempt?: components["schemas"]["Attempt"];
             challenge_attempt: components["schemas"]["GameChallengeAttempt"];
@@ -10781,16 +11181,21 @@ export interface components {
             /** @description Tham số tenant được phép điền */
             allowed_params: string[];
             description?: string;
+            /** @enum {string} */
+            format?: "timed_quiz" | "tournament";
             grade_levels?: components["schemas"]["GradeLevel"][];
             /** @enum {string} */
             kind: "grade_challenge" | "school_tournament";
             mode?: components["schemas"]["MatchMode"];
             name: string;
+            /** @enum {string} */
+            participant_type?: "individual" | "team";
             /** @description Mô tả phần thưởng cố định của template (tenant không sửa) */
             reward_summary?: string;
             template_id: components["schemas"]["Uuid"];
+            template_version_id?: components["schemas"]["Uuid"];
             /** @enum {string} */
-            tournament_format?: "single_elim" | "double_elim" | "round_robin" | "team";
+            tournament_format?: "single_elim" | "double_elim" | "round_robin" | "groups_then_single_elim";
             version: number;
         };
         /** @enum {string} */
@@ -11185,6 +11590,23 @@ export interface components {
         CompetencyKind: "general_competency" | "subject_competency" | "quality";
         CompetencyPatch: {
             name?: components["schemas"]["LearningName"];
+        };
+        /** @description Thử thách khối nhìn từ học sinh (không có đối tượng, không có tên học sinh khác) */
+        CompetitionChallenge: {
+            challenge_id: components["schemas"]["Uuid"];
+            /** Format: date-time */
+            ends_at?: string | null;
+            /** @enum {string} */
+            format?: "timed_quiz" | "tournament";
+            join_window_opens_at: components["schemas"]["Timestamp"];
+            /** @enum {string} */
+            kind: "grade_challenge" | "school_tournament";
+            name: string;
+            starts_at: components["schemas"]["Timestamp"];
+            /** @enum {string} */
+            status: "scheduled" | "running" | "completed" | "cancelled";
+            /** Format: uuid */
+            tournament_id?: string | null;
         };
         CompetitionMode: {
             matchmaking_types: ("random" | "skill" | "grade" | "subject" | "topic" | "team")[];
@@ -12635,7 +13057,7 @@ export interface components {
         };
         /**
          * @description Token Keycloak của học sinh (client `eduworld-game-backend`, `azp = eduworld-game-backend`). Access token chỉ trong RAM.
-         *     Refresh token (xoay vòng mỗi lần dùng): thiết bị cá nhân lưu trong kho bảo mật OS (Android Keystore, iOS Keychain; không có bản Windows — ADR-0101);
+         *     Refresh token (xoay vòng mỗi lần dùng): thiết bị cá nhân lưu trong kho bảo mật OS (Windows DPAPI, Android Keystore, iOS Keychain);
          *     Web và máy `shared_device` chỉ giữ trong RAM (ADR-0086). Không bao giờ lưu mật khẩu, không ghi vào `user://`/localStorage.
          */
         GameTokenSet: {
@@ -14112,7 +14534,7 @@ export interface components {
             order: components["schemas"]["ItemId"][];
         };
         OtherDevice: {
-            /** @description Ví dụ "Điện thoại Android", "Trình duyệt web" */
+            /** @description Ví dụ "Máy tính Windows", "Điện thoại Android" */
             device_label?: string;
             last_seen_at: components["schemas"]["Timestamp"];
             /** @enum {string} */
@@ -16551,30 +16973,105 @@ export interface components {
             sort_order?: number;
         };
         Tournament: components["schemas"]["TournamentCreate"] & {
+            auto_confirm?: boolean;
+            cancel_reason?: string | null;
+            /** Format: uuid */
+            challenge_id?: string | null;
+            /** Format: date-time */
+            check_in_opens_at?: string | null;
             entry_count?: number;
+            grade_levels?: components["schemas"]["GradeLevel"][];
             /** @enum {string} */
-            status: "draft" | "registration" | "seeded" | "running" | "completed" | "cancelled";
+            mode?: "battle_1v1" | "team_battle";
+            /** @description Chỉ học sinh — entry của chính em (null nếu chưa đăng ký) */
+            my_entry?: components["schemas"]["TournamentEntry"] | null;
+            /** @enum {string} */
+            participant_type?: "individual" | "team";
+            /** Format: date-time */
+            registration_open_at?: string | null;
+            reward_summary?: string | null;
+            /** Format: uuid */
+            school_id?: string | null;
+            /** @enum {string} */
+            seeding_policy?: "rating" | "random" | "manual";
+            status: components["schemas"]["TournamentStatus"];
+            team_size?: number | null;
             tournament_id: components["schemas"]["Uuid"];
         };
         /**
-         * @description Giải đấu luôn được tạo từ tournament template của platform; tenant tạo qua POST /lms/challenges (ADR-0027).
-         *     Không có giải cấp lớp (ADR-0095): giải khối của trường = `scope_type = school` + `grade_level`.
+         * @description Giải đấu luôn được tạo từ tournament/challenge template của platform; tenant tạo qua POST /lms/challenges (ADR-0027) —
+         *     không có `POST /competition/tournaments`. Không có giải cấp lớp (ADR-0095): giải khối của trường = `scope_type = school` +
+         *     `grade_level`. Format: single_elim, double_elim, round_robin, groups_then_single_elim; giải đội = `participant_type = team`.
          */
         TournamentCreate: {
             /** @enum {string} */
-            format: "single_elim" | "double_elim" | "round_robin" | "team";
-            /** @description Khối của giải (giải khối của trường khi `scope_type = school`) */
+            format: "single_elim" | "double_elim" | "round_robin" | "groups_then_single_elim";
+            /** @description Khối của giải (giải khối của trường khi `scope_type = school`; giải nhiều khối — khối đầu của `grade_levels`) */
             grade_level?: components["schemas"]["GradeLevel"];
             max_entries?: number;
             name: string;
             registration_closes_at: components["schemas"]["Timestamp"];
             scope_id: components["schemas"]["Uuid"];
             /** @enum {string} */
-            scope_type: "school" | "organization";
+            scope_type: "school" | "tenant" | "platform";
             starts_at?: components["schemas"]["Timestamp"];
             subject_id: components["schemas"]["Uuid"];
             template_id: components["schemas"]["Uuid"];
         };
+        TournamentEntriesConfirm: {
+            entry_ids?: components["schemas"]["Uuid"][];
+        };
+        TournamentEntry: {
+            /** Format: date-time */
+            checked_in_at?: string | null;
+            entry_id: components["schemas"]["Uuid"];
+            final_rank?: number | null;
+            group_code?: string | null;
+            /** Format: uuid */
+            party_id?: string | null;
+            players: components["schemas"]["TournamentPlayer"][];
+            seed?: number | null;
+            /** @enum {string} */
+            status: "registered" | "confirmed" | "checked_in" | "withdrawn" | "disqualified" | "eliminated" | "champion";
+            tournament_id: components["schemas"]["Uuid"];
+        };
+        /** @description Học sinh gửi rỗng (hoặc `party_id` khi giải đội); người tổ chức gửi `student_ids` hoặc rỗng (= cả đối tượng của thử thách) */
+        TournamentEntryCreate: {
+            party_id?: components["schemas"]["Uuid"];
+            student_ids?: components["schemas"]["Uuid"][];
+        };
+        TournamentEntryResult: {
+            entries: components["schemas"]["TournamentEntry"][];
+            /** @description Chỉ người tổ chức — học sinh không đủ điều kiện (không có lý do chi tiết về học sinh khác) */
+            skipped?: {
+                /** @enum {string} */
+                reason: "not_eligible" | "restricted" | "already_registered" | "full";
+                student_id: components["schemas"]["Uuid"];
+            }[];
+        };
+        TournamentGroup: {
+            group_code: string;
+            standings: {
+                correct_diff?: number;
+                draws: number;
+                entry_id: components["schemas"]["Uuid"];
+                losses: number;
+                points: number;
+                rank?: number;
+                wins: number;
+            }[];
+        };
+        /** @description Người chơi trong giải — chỉ nickname/avatar với học sinh (R16); `student_id` là định danh, không phải tên thật */
+        TournamentPlayer: {
+            avatar_config?: components["schemas"]["AvatarConfig"];
+            nickname: string | null;
+            student_id: components["schemas"]["Uuid"];
+        };
+        /**
+         * @description Vòng đời giải (COMPETITION_SYSTEM §10.3)
+         * @enum {string}
+         */
+        TournamentStatus: "draft" | "published" | "registration_open" | "registration_closed" | "seeding" | "scheduled" | "in_progress" | "completed" | "rewarded" | "archived" | "cancelled";
         TranslationExportRequest: {
             content_ids?: components["schemas"]["Uuid"][];
             /** @description CMS: loại nội dung học tập; Game Studio: config_type của module game */
@@ -17024,6 +17521,7 @@ export interface components {
         BlueprintIdPath: components["schemas"]["Uuid"];
         CaseIdPath: components["schemas"]["Uuid"];
         ChallengeAttemptIdPath: components["schemas"]["Uuid"];
+        ChallengeId: components["schemas"]["Uuid"];
         ChallengeIdPath: components["schemas"]["Uuid"];
         ChannelId: components["schemas"]["Uuid"];
         /** @description tenant_id (scope tenant) hoặc school_id (scope school) */
@@ -17058,6 +17556,7 @@ export interface components {
         DuelIdPath: components["schemas"]["Uuid"];
         EfficacyStudyIdPath: components["schemas"]["Uuid"];
         EncounterIdPath: components["schemas"]["Uuid"];
+        EntryId: components["schemas"]["Uuid"];
         EventIdPath: components["schemas"]["Uuid"];
         EventRunIdPath: components["schemas"]["Uuid"];
         /** @description Token thiết bị đang làm đề do client sinh cho mỗi bản cài (lưu băm ở server, EXAM_ENGINE §12); một attempt đề chỉ có một thiết bị active (F042-AC-14). */
@@ -17099,6 +17598,7 @@ export interface components {
         MatchId: components["schemas"]["Uuid"];
         MessageId: components["schemas"]["Uuid"];
         MilestoneIdPath: string;
+        NodeId: components["schemas"]["Uuid"];
         NotificationIdPath: components["schemas"]["Uuid"];
         ObjectiveIdPath: components["schemas"]["Uuid"];
         PartyId: components["schemas"]["Uuid"];
@@ -17154,6 +17654,7 @@ export interface components {
         TermIdPath: components["schemas"]["Uuid"];
         TicketId: components["schemas"]["Uuid"];
         TopicIdPath: components["schemas"]["Uuid"];
+        TournamentId: components["schemas"]["Uuid"];
         TranslationJobIdPath: components["schemas"]["Uuid"];
         /** @description Lọc theo trạng thái bản dịch của version mới nhất (OQ F054-2, F024 T041) */
         TranslationStatusFilter: components["schemas"]["TranslationStatus"];
@@ -28040,6 +28541,83 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
         };
     };
+    listMyChallenges: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CompetitionChallenge"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    joinChallenge: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                challenge_id: components["parameters"]["ChallengeId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Phòng của học sinh */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChallengeJoinResult"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     createDuel: {
         parameters: {
             query?: never;
@@ -28619,6 +29197,11 @@ export interface operations {
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 limit?: components["parameters"]["Limit"];
+                /** @description Chỉ người tổ chức — lọc theo trường trong scope */
+                school_id?: components["schemas"]["Uuid"];
+                /** @description Chỉ học sinh — `available` (mặc định, giải trong phạm vi) hoặc `mine` (giải em đã có entry) */
+                scope?: "available" | "mine";
+                status?: components["schemas"]["TournamentStatus"];
             };
             header?: {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
@@ -28649,6 +29232,434 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getTournament: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                tournament_id: components["parameters"]["TournamentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tournament"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    cancelTournament: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                tournament_id: components["parameters"]["TournamentId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelReason"];
+            };
+        };
+        responses: {
+            /** @description Đã hủy */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tournament"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    generateTournamentBracket: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                tournament_id: components["parameters"]["TournamentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["BracketGenerate"];
+            };
+        };
+        responses: {
+            /** @description Bracket đã sinh */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bracket"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    publishTournament: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                tournament_id: components["parameters"]["TournamentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã publish */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tournament"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getTournamentBracket: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                tournament_id: components["parameters"]["TournamentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bracket"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    registerTournamentEntry: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                tournament_id: components["parameters"]["TournamentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TournamentEntryCreate"];
+            };
+        };
+        responses: {
+            /** @description Entry đã đăng ký (học sinh) hoặc các entry đã tạo (người tổ chức) */
+            201: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TournamentEntryResult"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    confirmTournamentEntries: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                tournament_id: components["parameters"]["TournamentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TournamentEntriesConfirm"];
+            };
+        };
+        responses: {
+            /** @description Đã xác nhận */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TournamentEntryResult"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    withdrawTournamentEntry: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                entry_id: components["parameters"]["EntryId"];
+                tournament_id: components["parameters"]["TournamentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã rút */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    checkInTournamentEntry: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                entry_id: components["parameters"]["EntryId"];
+                tournament_id: components["parameters"]["TournamentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã check-in */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TournamentEntry"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    confirmBracketNode: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                node_id: components["parameters"]["NodeId"];
+                tournament_id: components["parameters"]["TournamentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã xác nhận */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BracketNode"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    overrideBracketNode: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                node_id: components["parameters"]["NodeId"];
+                tournament_id: components["parameters"]["TournamentId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BracketNodeOverride"];
+            };
+        };
+        responses: {
+            /** @description Đã đổi người thắng */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BracketNode"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     submitExamAttempt: {
@@ -34273,6 +35284,8 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     listGameActivities: {
@@ -34356,6 +35369,8 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     createChallenge: {
@@ -34394,6 +35409,84 @@ export interface operations {
                     "application/json": components["schemas"]["Challenge"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    getChallenge: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                challenge_id: components["parameters"]["ChallengeId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Challenge"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    cancelChallenge: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                challenge_id: components["parameters"]["ChallengeId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelReason"];
+            };
+        };
+        responses: {
+            /** @description Đã hủy */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Challenge"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["ValidationFailed"];

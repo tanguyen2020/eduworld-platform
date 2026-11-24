@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Installs the pinned Godot engine for CI (F060 T042, GODOT_ARCHITECTURE §11, ADR-0088): official GitHub release
 # assets only, verified against SHA-512 values pinned below (taken from the release's SHA512-SUMS.txt).
-# Usage: bash scripts/ci/setup-godot.sh linux [--templates]  (CI runs Godot on Linux only; no Windows job, ADR-0101)
+# Usage: bash scripts/ci/setup-godot.sh <linux|windows> [--templates]
 # Exports GODOT_BIN (and installs export templates with --templates) through $GITHUB_ENV when available.
 set -euo pipefail
 
@@ -15,6 +15,7 @@ fi
 
 declare -A SHA512=(
   ["Godot_v4.7.2-stable_linux.x86_64.zip"]="9aa00f7a605200940bce3027a567b782f49bd8e940dd06ae9e987bd65aee1b1467edd56ed84fcdcbdd44354bf613bdbb4e5d2913e925850368e150c59ed54c65"
+  ["Godot_v4.7.2-stable_win64.exe.zip"]="83decd58fdf67b9d657958a1ae6bf1929c20785315a81effe245874cdc57acb709bf868e00778a96984338c1b29dafdb453c6847747694621c6ecf5da2259993"
   ["Godot_v4.7.2-stable_export_templates.tpz"]="ca4d71c4d7b81dfc15d1a98baa07534aa95b03fdda78a0075b06672e1648d2e5f40980c9adc28d23e1b92e732ee7bf3461997aa804af74ec2fcd7a93ccb84079"
 )
 base="https://github.com/godotengine/godot/releases/download/${version}-stable"
@@ -42,8 +43,15 @@ case "${1:-}" in
     chmod +x "$bin"
     templates_dir="$HOME/.local/share/godot/export_templates/${version}.stable"
     ;;
+  windows)
+    asset="Godot_v${version}-stable_win64.exe.zip"
+    fetch "$asset"
+    unzip -o -q "$dest/$asset" -d "$dest"
+    bin="$dest/Godot_v${version}-stable_win64_console.exe"
+    templates_dir="${APPDATA:-$HOME/AppData/Roaming}/Godot/export_templates/${version}.stable"
+    ;;
   *)
-    echo "usage: setup-godot.sh linux [--templates]" >&2
+    echo "usage: setup-godot.sh <linux|windows> [--templates]" >&2
     exit 2
     ;;
 esac

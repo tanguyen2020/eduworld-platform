@@ -293,7 +293,7 @@ Period key theo `Asia/Ho_Chi_Minh`. Job đóng period (Valkey lock singleton) ch
 
 ### 10.1. Yêu cầu nguồn [Confirmed]
 
-Định dạng: Single Elimination, Double Elimination, Round Robin, Team, School, Grade Tournament (giải khối của trường thay giải lớp — ADR-0095). Chức năng: tạo giải, đăng ký, chia bảng, tạo bracket, lên lịch, xác nhận người tham gia, quản lý trận, xác nhận kết quả, trao thưởng, lưu lịch sử. Bracket là dữ liệu bền vững trong PostgreSQL (ADR-0004).
+Định dạng: Single Elimination, Double Elimination, Round Robin, Team, School, Grade Tournament (giải khối của trường thay giải lớp — ADR-0095). Chức năng: tạo giải, đăng ký, chia bảng, tạo bracket, lên lịch, xác nhận người tham gia, quản lý trận, xác nhận kết quả, trao thưởng, lưu lịch sử. Bracket là dữ liệu bền vững trong PostgreSQL (ADR-0004). Hiện thực: [F107](../../specs/107-tournament-challenges/spec.md) — quyết định triển khai (payload template, no-show qua ready check, bye khi rút, hòa ở knockout, phòng Timed Quiz của thử thách khối, điểm giải) ở [Clarifications 2026-11-24](../../specs/107-tournament-challenges/spec.md#session-2026-11-24-triển-khai--confirmed-owner-chốt-hết).
 
 ### 10.2. Mô hình
 
@@ -416,7 +416,7 @@ Matchmaking configuration, Ranking Rules (tham số Glicko, ngưỡng provisiona
 
 ### 14.1. Dữ liệu (module competition, `eduworld_competition`)
 
-`matches`, `match_participants`, `match_results` (unique `match_id`), `ratings`, `rating_changes` (unique `(match_id, student_id)`), `seasons`, `season_results`, `competition_point_ledger`, `ranking_rule_versions`, `leaderboard_definitions`, `leaderboard_snapshots`, `tournaments`, `tournament_entries`, `tournament_groups`, `bracket_nodes`, `tournament_results`. DDL: [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md). Hiện thực rating, tier, Competition Points, bảng xếp hạng và mùa: [F106](../../specs/106-ranking-leaderboard/spec.md) (quyết định triển khai ở [Clarifications 2026-11-22](../../specs/106-ranking-leaderboard/spec.md#session-2026-11-22-triển-khai--confirmed-owner-chốt-2026-11-20)); Ranking Rules lưu ở `game_config_versions` (`config_type = ranking-rules`), `leaderboard_contributions` giữ điểm nỗ lực/XP/quest/đội theo khối tại thời điểm ghi.
+`matches`, `match_participants`, `match_results` (unique `match_id`), `ratings`, `rating_changes` (unique `(match_id, student_id)`), `seasons`, `season_results`, `competition_point_ledger`, `ranking_rule_versions`, `leaderboard_definitions`, `leaderboard_snapshots`, `challenges`, `tournaments`, `tournament_entries`, `tournament_groups`, `bracket_nodes`, `tournament_results`, `tournament_rewards`; gán template cho tenant ở `infra.tenant_resource_assignments` (`tournament_template`, `challenge_template`). DDL: [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md). Hiện thực rating, tier, Competition Points, bảng xếp hạng và mùa: [F106](../../specs/106-ranking-leaderboard/spec.md) (quyết định triển khai ở [Clarifications 2026-11-22](../../specs/106-ranking-leaderboard/spec.md#session-2026-11-22-triển-khai--confirmed-owner-chốt-2026-11-20)); Ranking Rules lưu ở `game_config_versions` (`config_type = ranking-rules`), `leaderboard_contributions` giữ điểm nỗ lực/XP/quest/đội theo khối tại thời điểm ghi.
 
 ### 14.2. API
 

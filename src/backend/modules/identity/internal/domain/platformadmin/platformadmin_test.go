@@ -16,7 +16,7 @@ import (
 // Routing table: every type has one owner; identity types are not assignable; the clone allowlist never holds
 // student data (F045-AC-15, R22).
 func TestRouting(t *testing.T) {
-	cases := map[string]string{"question": "learning", "question_set": "learning", "quest": "game", "tournament_template": "competition",
+	cases := map[string]string{"question": "learning", "question_set": "learning", "quest": "game", "tournament_template": "competition", "challenge_template": "competition",
 		"tenant_settings": "identity", "user": "identity", "student": "identity"}
 	for rt, want := range cases {
 		if m, err := platformadmin.Owner(rt); err != nil || m != want {

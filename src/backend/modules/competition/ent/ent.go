@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/bracketnode"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/challenge"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionpointentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionrestriction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/contentrelease"
@@ -35,6 +37,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/season"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/seasonresult"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/sessionmembership"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tenantresourceassignment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournament"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamententry"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamentgroup"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamentresult"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamentreward"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -95,29 +103,37 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			competitionpointentry.Table:   competitionpointentry.ValidColumn,
-			competitionrestriction.Table:  competitionrestriction.ValidColumn,
-			contentrelease.Table:          contentrelease.ValidColumn,
-			duel.Table:                    duel.ValidColumn,
-			gameconfig.Table:              gameconfig.ValidColumn,
-			gameconfigversion.Table:       gameconfigversion.ValidColumn,
-			leaderboardcontribution.Table: leaderboardcontribution.ValidColumn,
-			leaderboarddefinition.Table:   leaderboarddefinition.ValidColumn,
-			leaderboardsnapshot.Table:     leaderboardsnapshot.ValidColumn,
-			match.Table:                   match.ValidColumn,
-			matchparticipant.Table:        matchparticipant.ValidColumn,
-			matchresult.Table:             matchresult.ValidColumn,
-			party.Table:                   party.ValidColumn,
-			partyactivity.Table:           partyactivity.ValidColumn,
-			partyinvitation.Table:         partyinvitation.ValidColumn,
-			partymember.Table:             partymember.ValidColumn,
-			partypolicy.Table:             partypolicy.ValidColumn,
-			rating.Table:                  rating.ValidColumn,
-			ratingchange.Table:            ratingchange.ValidColumn,
-			room.Table:                    room.ValidColumn,
-			season.Table:                  season.ValidColumn,
-			seasonresult.Table:            seasonresult.ValidColumn,
-			sessionmembership.Table:       sessionmembership.ValidColumn,
+			bracketnode.Table:              bracketnode.ValidColumn,
+			challenge.Table:                challenge.ValidColumn,
+			competitionpointentry.Table:    competitionpointentry.ValidColumn,
+			competitionrestriction.Table:   competitionrestriction.ValidColumn,
+			contentrelease.Table:           contentrelease.ValidColumn,
+			duel.Table:                     duel.ValidColumn,
+			gameconfig.Table:               gameconfig.ValidColumn,
+			gameconfigversion.Table:        gameconfigversion.ValidColumn,
+			leaderboardcontribution.Table:  leaderboardcontribution.ValidColumn,
+			leaderboarddefinition.Table:    leaderboarddefinition.ValidColumn,
+			leaderboardsnapshot.Table:      leaderboardsnapshot.ValidColumn,
+			match.Table:                    match.ValidColumn,
+			matchparticipant.Table:         matchparticipant.ValidColumn,
+			matchresult.Table:              matchresult.ValidColumn,
+			party.Table:                    party.ValidColumn,
+			partyactivity.Table:            partyactivity.ValidColumn,
+			partyinvitation.Table:          partyinvitation.ValidColumn,
+			partymember.Table:              partymember.ValidColumn,
+			partypolicy.Table:              partypolicy.ValidColumn,
+			rating.Table:                   rating.ValidColumn,
+			ratingchange.Table:             ratingchange.ValidColumn,
+			room.Table:                     room.ValidColumn,
+			season.Table:                   season.ValidColumn,
+			seasonresult.Table:             seasonresult.ValidColumn,
+			sessionmembership.Table:        sessionmembership.ValidColumn,
+			tenantresourceassignment.Table: tenantresourceassignment.ValidColumn,
+			tournament.Table:               tournament.ValidColumn,
+			tournamententry.Table:          tournamententry.ValidColumn,
+			tournamentgroup.Table:          tournamentgroup.ValidColumn,
+			tournamentresult.Table:         tournamentresult.ValidColumn,
+			tournamentreward.Table:         tournamentreward.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

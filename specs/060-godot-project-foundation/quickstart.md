@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F005 (F001 cho compose/CI)
-- Lệnh: `make design-tokens`, `make up` + `docker compose --profile mock up -d api-mock`, `make godot-test`, `make godot-export-check`, `make godot-export-android` (`godot-export-windows` gỡ theo ADR-0101) ([LOCAL_DEVELOPMENT §6.3](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make design-tokens`, `make up` + `docker compose --profile mock up -d api-mock`, `make godot-test`, `make godot-export-windows`, `make godot-export-android` ([LOCAL_DEVELOPMENT §6.3](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo: chưa cần (đăng nhập ở F061). Khi F061 xong: `hs.an.3a` (khối 3 → density `g1_3`), `hs.dung.7a` (khối 7 → `g6_7`).
 
 ## 2. Kịch bản kiểm tra
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 1 | Thêm `var x = 1` (không type) vào script; chạy lint | Fail `untyped_declaration` | F060-AC-01 |
 | 2 | `godot --headless --path src/game res://scenes/bootstrap/Boot.tscn -- --env=local --quit-after 120` | Exit 0; log thứ tự autoload đúng §4 | F060-AC-02 |
-| 3 | Thêm khóa `oidc_issuer` vào `local.json`; export PCK (`make godot-export-check`, preset Android); `src/game/tools/scan_artifact.sh` | Fail | F060-AC-03 |
+| 3 | Thêm khóa `oidc_issuer` vào `local.json`; export Windows; `src/game/tools/scan_artifact.sh` | Fail | F060-AC-03 |
 | 4 | `Log.info("x", {"password": "p", "access_token": "t"})`; đọc ring buffer | Giá trị bị che | F060-AC-04 |
 | 5 | Thêm `HTTPRequest.new()` vào script UI | `lint_layers.gd` fail | F060-AC-05 |
 | 6 | Thêm `signal quest_update` vào `event_bus.gd` | `lint_signals.gd` fail | F060-AC-06 |
@@ -30,15 +30,15 @@
 | 16 | Unit test `LocaleFormat` | Đúng bảng GODOT_ARCHITECTURE §10.1 | F060-AC-16 |
 | 17 | Chạy `UiGallery` locale `xx-PS` | Không chuỗi hardcode, không tràn | F060-AC-17 |
 | 18 | Render chuỗi "Tiếng Việt: ằẳẵặ ỹỷỵ ữựừ" | Không glyph thiếu | F060-AC-18 |
-| 19 | PR sửa `src/game/scripts/core/settings.gd` | Workflow `godot.yml` chạy đúng thứ tự §11, có artifact Android | F060-AC-19 |
+| 19 | PR sửa `src/game/scripts/core/settings.gd` | Workflow `godot.yml` chạy đúng thứ tự §11, có artifact Windows/Android | F060-AC-19 |
 | 20 | Boot `--env=mock` với `api-mock` chạy | Nhãn "MOCK" luôn hiện | F060-AC-20 |
 | 21 | Thêm `mock.json` vào preset release; CI | Fail | F060-AC-21 |
 | 22 | Chạy contract test fixture | Parse không lỗi | F060-AC-22 |
-| 23 | Trên Android: `SecureStorageFactory.create(false)` → `save("t", "abc")` → `load("t")`; trên Windows (editor) | Android: adapter Keystore, trả `abc`; Windows/Web → `MemoryOnly` (ADR-0101) | F060-AC-23 |
+| 23 | Trên Windows và Android: `SecureStorageFactory.create(false)` → `save("t", "abc")` → `load("t")` | Đúng adapter DPAPI/Keystore; trả `abc`; Web → `MemoryOnly` | F060-AC-23 |
 | 24 | Đặt `shared_device = true` trong `device.cfg`; `save` rồi thoát, mở lại, `load`; quét `user://`, kho hệ điều hành | `MemoryOnly`; không còn bản ghi (TC-AUTH-084) | F060-AC-24 |
 | 25 | `save` chuỗi mẫu duy nhất; `grep` chuỗi trong `user://`, `noBackupFilesDir`, ring buffer `Log` | Không tìm thấy dạng rõ | F060-AC-25 |
-| 26 | Ghi đè file `user://secure/t.bin` bằng byte ngẫu nhiên ; `load("t")` | Trả rỗng + mã lỗi, không crash; `erase` xóa được | F060-AC-26 |
-| 27 | Xóa `user://device.cfg` trên máy dev (Windows/macOS/Linux, editor), chạy game và đăng nhập | `shared_device = true`, `MemoryOnly`, không còn bản ghi `user://secure` sau khi thoát (ADR-0101) | F060-AC-27 |
+| 26 | Ghi đè file `user://secure/t.bin` bằng byte ngẫu nhiên / chạy dưới user Windows khác; `load("t")` | Trả rỗng + mã lỗi, không crash; `erase` xóa được | F060-AC-26 |
+| 27 | Xóa `user://device.cfg` trên Windows, chạy game và đăng nhập | `shared_device = true`, không có bản ghi trong DPAPI sau khi thoát | F060-AC-27 |
 
 ## 3. Lệnh test tự động
 
@@ -46,12 +46,12 @@
 make design-tokens-check
 make godot-test          # godot --headless --path src/game -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests
 godot --headless --path src/game -s res://tools/lint_theme_overrides.gd
-make godot-export-check  # export PCK preset "Android" rồi chạy scan_artifact.sh (preset Windows gỡ — ADR-0101)
+bash src/game/tools/scan_artifact.sh build/windows/EduWorld.exe
 ```
 
 ## 4. Bằng chứng cần nộp
 
-- Kết quả GdUnit4 (pass/fail), ảnh `UiGallery` (4 density × vi/en/xx-PS), log `scan_artifact.sh`, ảnh màn có nhãn MOCK, kết quả test `SecureStorage` trên thiết bị/emulator Android.
+- Kết quả GdUnit4 (pass/fail), ảnh `UiGallery` (4 density × vi/en/xx-PS), log `scan_artifact.sh`, ảnh màn có nhãn MOCK, kết quả test `SecureStorage` trên runner Windows và thiết bị/emulator Android.
 
 ## Bằng chứng (2026-11-20, local — Windows 11, Godot 4.7.2 stable, GNU make qua WSL, Node 20.19)
 
@@ -78,7 +78,7 @@ Lệnh gate (nối `&&`): `make godot-lint GDLINT=<bỏ qua>` → `make godot-te
 | F060-AC-18 | `test_font_glyphs.gd` (Be Vietnam Pro Regular/Bold, Baloo 2 Bold) | 2/2 |
 | F060-AC-19 | `scripts/ci/godot-rules.test.mjs`; `check-workflows` 10 workflow 0 lỗi; path filters 22/22; design rules 4/4 | 5/5 |
 | F060-AC-20 | `test_mock_badge.gd`; Prism `api-mock` (docker, `--dynamic=false`) trả `200` cho `GET /game/client-config`, boot `--env=mock` → `splash_shown` (container đã dừng) | 2/2 |
-| F060-AC-21 | `scan_artifact_test.sh` (PCK preset "Windows Desktop" — từ 2026-11-24 preset "Android", ADR-0101 — không có `local.json`, UiGallery, tests, pseudo-locale, gdUnit4; PCK có `mock.json` → fail); `make godot-export-check` | 17/17; OK |
+| F060-AC-21 | `scan_artifact_test.sh` (PCK preset "Windows Desktop" không có `local.json`, UiGallery, tests, pseudo-locale, gdUnit4; PCK có `mock.json` → fail); `make godot-export-check` | 17/17; OK |
 | F060-AC-22 | `test_fixtures_parse.gd` (ClientConfig, Problem, 10 tài liệu `specs/examples`, mã lỗi ∈ `ProblemCode`); `gen_fixtures.mjs --check` | 5/5; OK |
 | F060-AC-23 | `test_secure_storage_factory.gd` (factory theo nền tảng, round-trip MemoryOnly + file cipher) | 7/7 |
 | F060-AC-24 | `test_secure_storage_shared_device.gd` | 3/3 |
@@ -90,7 +90,7 @@ Tổng GdUnit4: **111 test, 0 lỗi, 0 fail, 0 orphan**. `design-tokens-check`: 
 
 **Chưa có bằng chứng local (ghi rõ, [Confirmed]):**
 - `gdlint` (gdtoolkit 4.5.0) chỉ chạy trong CI — cài pip trên máy dev bị từ chối quyền.
-- (2026-11-24: GDExtension DPAPI và job `platform-windows` gỡ theo ADR-0101.) GDExtension DPAPI và AAR Android Keystore chưa được build/chạy local (không có MSVC/scons, JDK/Android SDK); job `platform-windows` chạy bộ test `SecureStorage` với DPAPI thật, test trên emulator Android chờ lane thiết bị F133. Khi chưa có plugin, factory trả `MemoryOnly` (đã test).
-- Export Android đầy đủ cần export template (CI tải + kiểm SHA-512); local chỉ export PCK release (`make godot-export-check`).
+- GDExtension DPAPI và AAR Android Keystore chưa được build/chạy local (không có MSVC/scons, JDK/Android SDK); job `platform-windows` chạy bộ test `SecureStorage` với DPAPI thật, test trên emulator Android chờ lane thiết bị F133. Khi chưa có plugin, factory trả `MemoryOnly` (đã test).
+- Export Windows/Android đầy đủ cần export template (CI tải + kiểm SHA-512); local chỉ export PCK release (`make godot-export-check`).
 - Baseline ảnh Linux (CI, xvfb + Compatibility) sẽ được tạo ở lượt CI đầu, cần người duyệt.
-- Workflow `godot.yml` mới chưa có lượt chạy GitHub Actions tại thời điểm merge — bước export Windows và job `platform-windows` gỡ theo ADR-0101 (2026-11-24).
+- Workflow `godot.yml` mới chưa có lượt chạy GitHub Actions tại thời điểm merge.

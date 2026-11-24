@@ -14,7 +14,7 @@
 | Primary Dependencies | GdUnit4; `ApiClient`, `Clock` (F061); `QualityManager`, `AppState`, `EventBus`, `SceneRouter` (F060/F062) |
 | Storage | Không có dữ liệu nghiệp vụ bền; cache bất biến `user://cache/math/<sha256>.svg`, `user://cache/media/<sha256>/` (ADR-0044, ADR-0055) |
 | Testing | GdUnit4 unit + scene runner; contract test parse fixture sinh từ example OpenAPI; integration headless với compose |
-| Target Platform | Android, Web, iOS (ADR-0013; không Windows — ADR-0101) |
+| Target Platform | Windows, Android (và Web/iOS theo ADR-0013) |
 | Project Type | game client |
 | Performance Goals | [PERFORMANCE_BUDGET §3, §7 (Activity player), §9, §11](../../docs/08-game-client/PERFORMANCE_BUDGET.md); P-1…P-6 [STUDENT_GAME_UX_LEARNING §2.1](../../docs/05-ux/STUDENT_GAME_UX_LEARNING.md) |
 | Constraints | AGENTS R1, R2, R5, R6, R10, R17, R32 · ADR-0016, ADR-0043, ADR-0048, ADR-0055, ADR-0056, ADR-0059 |

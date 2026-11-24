@@ -1,6 +1,6 @@
 # Video Learning
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: EdTech Specialist + Senior Godot Developer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-16
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: EdTech Specialist + Senior Godot Developer · Cập nhật: 2026-11-16
 > Liên quan: [ACTIVITY_ENGINE](ACTIVITY_ENGINE.md) · [CONTENT_MODEL](CONTENT_MODEL.md) · [QUESTION_BANK](QUESTION_BANK.md) · [LEARNING_ANALYTICS](LEARNING_ANALYTICS.md) · [ADR-0044](../adr/ADR-0044-luu-tru-hinh-anh-va-media-object-storage-s3-compatible-cdn.md) · [ADR-0043](../adr/ADR-0043-phat-hanh-noi-dung-draft-publish-con-tro-phien-ban-giu-phien.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · Schema: [`video-lesson.schema.json`](../../specs/schemas/activities/video-lesson.schema.json)
 
 ## 1. Mục đích và phạm vi
@@ -22,7 +22,7 @@
 
 | Nền tảng | Định dạng | Cách phát |
 |---|---|---|
-| Godot (Android, iOS) | **Ogg Theora (.ogv)** + Vorbis, 480p và 720p | `VideoStreamPlayer` (Godot 4 chỉ phát Theora). Chọn độ phân giải theo thiết bị/mạng |
+| Godot (Windows, Android, iOS) | **Ogg Theora (.ogv)** + Vorbis, 480p và 720p | `VideoStreamPlayer` (Godot 4 chỉ phát Theora). Chọn độ phân giải theo thiết bị/mạng |
 | Godot Web export | Ogg Theora 480p | Cùng `VideoStreamPlayer`; preload một phần trước khi phát |
 | CMS / web | HLS (360p, 720p) + MP4 dự phòng | Trình phát web của Admin Portal |
 | Phụ đề | **WebVTT** (`vi`, `en`; thêm ngôn ngữ khác theo cấu hình) | Godot: tự parse VTT và vẽ bằng Label theo Theme game. Web: `<track>` |

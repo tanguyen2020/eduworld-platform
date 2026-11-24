@@ -74,3 +74,12 @@ Tournament theo [COMPETITION_SYSTEM §10.3](../../docs/01-game-design/COMPETITIO
 | `tournament.completed` | Chung kết xác nhận | `.../tournament.completed.v1.schema.json` (Cần thêm) |
 | `tournament.rewarded` | Mỗi thưởng trao | `.../tournament.rewarded.v1.schema.json` (Cần thêm, + catalog EVENT_DESIGN §4.8) — `tournament_id`, `entry_id`, `rule_id`, `student_ids[]`, `reward_ref` |
 | `audit.recorded` | Thao tác người tổ chức, gán template | envelope |
+
+## 5. Ghi chú triển khai (2026-11-24, migration `20261231000006_f107_tournament.sql`)
+
+- `challenges`: thêm `format` (`timed_quiz`/`tournament`), `grade_level` (khối của target `grade`, lọc `listChallenges`), `subject_id`, `join_opens_at`; `exclude_student_ids` là `jsonb` (≤ 500) thay `uuid[]`; `match_id` thành `match_ids jsonb` (một thử thách có thể nhiều phòng Timed Quiz ≤ 40 học sinh).
+- `tournaments`: thêm `template_config_id`, `min_entries`, `round_gap_s`, `reward_summary`, `cancel_reason`, `completed_at`, `rewarded_at`; `topic_ids`/`grade_levels` là `jsonb`; `tenant_ids uuid[]` viết tay (chỉ chuẩn bị giải platform).
+- `tournament_entries`: `team_ref` thay bằng `party_id` + `member_ids jsonb` (luôn có, kể cả entry cá nhân) để kiểm tra "mỗi học sinh một entry" bằng GIN `jsonb_path_ops`; UNIQUE thêm `(tournament_id, party_id)`.
+- `bracket_nodes`: thêm `is_draw`, `result jsonb` (log khiếu nại không chứa chat), `started_at`, `next_win_slot`, `next_lose_slot`, `wave`, `attempts`, `notices`, `confirm_after`, `decision_required`.
+- `tournament_results`/`tournament_rewards`: PK kỹ thuật `result_id`/`reward_id` (ent cần một cột id) + UNIQUE nghiệp vụ `(tournament_id, entry_id)` / `(tournament_id, entry_id, rule_id)`; thêm `matches_played`, `points`.
+- `infra.tenant_resource_assignments` của `eduworld_competition` (DATABASE_DESIGN §3.0): `resource_type` ∈ (`tournament_template`, `challenge_template`), FK `resource_id → game_configs`.

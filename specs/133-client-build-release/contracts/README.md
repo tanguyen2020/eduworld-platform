@@ -1,4 +1,4 @@
-# Contracts: F133 — Build và phát hành client Web, Android, iOS
+# Contracts: F133 — Build và phát hành client Windows, Android, iOS, Web
 
 **Spec**: [../spec.md](../spec.md) · **Plan**: [../plan.md](../plan.md)
 

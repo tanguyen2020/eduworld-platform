@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/tournament.rewarded.v1.schema.json",
+  "title": "Payload tournament.rewarded v1 (module competition, owner F107)",
+  "description": "Một phần thưởng giải đã trao, đúng một lần theo (tournament_id, entry_id, rule_id) — competition.tournament_rewards (F107-AC-20, AC-TRN-008). reward_ref lấy nguyên từ reward_rule_refs của version template đã ghim: cosmetic/badge/title, không ảnh hưởng điểm học tập, không pay-to-win (R19). Consumer: module game (cấp vật phẩm/badge/title theo reward_ref), audit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tournament_id", "entry_id", "rule_id", "student_ids", "reward_ref"],
+  "properties": {
+    "tournament_id": { "type": "string", "format": "uuid" },
+    "entry_id": { "type": "string", "format": "uuid" },
+    "rule_id": { "type": "string", "maxLength": 64 },
+    "final_rank": { "type": ["integer", "null"], "minimum": 1 },
+    "student_ids": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "type": "string", "format": "uuid" } },
+    "reward_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 4,
+      "properties": {
+        "reward_rule_code": { "type": "string", "maxLength": 64 },
+        "item_code": { "type": "string", "maxLength": 64 },
+        "badge_code": { "type": "string", "maxLength": 64 },
+        "title_code": { "type": "string", "maxLength": 64 }
+      }
+    },
+    "points": { "type": "integer", "minimum": 0, "description": "Competition Points source_type = tournament đã ghi cho mỗi học sinh của entry (0 khi luật không có điểm)" }
+  },
+  "examples": [
+    {
+      "tournament_id": "0193a5f4-6c1e-7b2a-9d1f-000000107001",
+      "entry_id": "0193a5f4-6c1e-7b2a-9d1f-000000107201",
+      "rule_id": "champion",
+      "final_rank": 1,
+      "student_ids": ["0193a5f4-6c1e-7b2a-9d1f-000000000006"],
+      "reward_ref": { "badge_code": "badge.tournament_champion", "title_code": "title.math_champion" },
+      "points": 50
+    }
+  ]
+}

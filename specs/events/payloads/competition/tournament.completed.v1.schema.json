@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/tournament.completed.v1.schema.json",
+  "title": "Payload tournament.completed v1 (module competition, owner F107)",
+  "description": "Giải kết thúc đúng một lần khi trận cuối được xác nhận (F107-AC-17): thứ hạng cuối đã ghi bền vững vào competition.tournament_results. Chỉ id và thứ hạng, không tên thật (R16). Trận giải không đổi rating (F107-AC-21). Consumer: notification, game, analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tournament_id", "format", "completed_at", "results"],
+  "properties": {
+    "tournament_id": { "type": "string", "format": "uuid" },
+    "challenge_id": { "type": ["string", "null"], "format": "uuid" },
+    "school_id": { "type": ["string", "null"], "format": "uuid" },
+    "format": { "type": "string", "enum": ["single_elim", "double_elim", "round_robin", "groups_then_single_elim"] },
+    "completed_at": { "type": "string", "format": "date-time" },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["entry_id", "final_rank", "student_ids"],
+        "properties": {
+          "entry_id": { "type": "string", "format": "uuid" },
+          "final_rank": { "type": "integer", "minimum": 1 },
+          "student_ids": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "type": "string", "format": "uuid" } }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "tournament_id": "0193a5f4-6c1e-7b2a-9d1f-000000107001",
+      "challenge_id": "0193a5f4-6c1e-7b2a-9d1f-000000107301",
+      "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000011",
+      "format": "single_elim",
+      "completed_at": "2026-12-01T03:00:00Z",
+      "results": [
+        { "entry_id": "0193a5f4-6c1e-7b2a-9d1f-000000107201", "final_rank": 1, "student_ids": ["0193a5f4-6c1e-7b2a-9d1f-000000000006"] },
+        { "entry_id": "0193a5f4-6c1e-7b2a-9d1f-000000107202", "final_rank": 2, "student_ids": ["0193a5f4-6c1e-7b2a-9d1f-000000000007"] }
+      ]
+    }
+  ]
+}

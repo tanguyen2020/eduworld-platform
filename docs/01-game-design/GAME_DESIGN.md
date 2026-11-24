@@ -1,6 +1,6 @@
 # Game Design Document (GDD) — EduWorld
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Director · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director · Cập nhật: 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [LEARNING_MECHANICS](LEARNING_MECHANICS.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [CHARACTER_SYSTEM](CHARACTER_SYSTEM.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · OQ-14, OQ-17
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Bản sắc sản phẩm · 3. Core fantasy · 4. Design pillars · 5. Động lực người chơi · 6. Học tập lồng trong gameplay · 7. Các tầng loop · 8. Loop theo khối lớp · 9. Loop co-op · 10. Ví dụ phiên chơi · 11. Bản đồ hệ thống game · 12. Nguyên tắc gamification · 13. Chống gây nghiện và dark pattern · 14. Data-driven content · 15. Không thuộc Release 1.0 · 16. Chỉ số thành công · 17. Acceptance criteria
@@ -25,7 +25,7 @@ GDD là **điểm vào** của toàn bộ thiết kế game: bản sắc, fantas
 | Thể loại | Phiêu lưu 3D multiplayer, RPG-lite (phát triển nhân vật, sưu tầm), học tập lồng trong nhiệm vụ, thử thách và thi đấu |
 | Góc nhìn | Third-person, camera follow xoay được; "camera cố định" cho lớp 1–3 [Confirmed] |
 | Phiên chơi mục tiêu | 15–30 phút [Confirmed] |
-| Nền tảng | Web, Android, iOS (ADR-0013, [ADR-0101](../adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md): không có bản Windows, PC phòng máy chơi bản Web) |
+| Nền tảng | Windows, Android, iOS, Web (ADR-0013) |
 | Người chơi trong một khu | ≤ 40 / hub instance (ADR-0012) |
 | Kinh doanh | Không mua bằng tiền thật, không loot box (OQ-14) [Confirmed] |
 

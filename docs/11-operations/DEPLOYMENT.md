@@ -1,6 +1,6 @@
 # Deployment
 
-> Trạng thái: Draft · Phiên bản: 0.6 · Owner: DevOps Engineer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (modular monolith theo ADR-0074: 3 binary `core-api`/`realtime`/`worker` + profile worker, một cụm PostgreSQL, sizing tính lại, CI ma trận theo module theo ADR-0088; object storage staging/production theo ADR-0075 thay ADR-0071; CI/CD GitHub Actions; nền tảng client từ pilot; cổng quản trị `EW_ADMIN_ADDR`, secret đọc replica, SMTP, thư mục vận hành)
+> Trạng thái: Draft · Phiên bản: 0.5 · Owner: DevOps Engineer · Cập nhật: 2026-11-17 (modular monolith theo ADR-0074: 3 binary `core-api`/`realtime`/`worker` + profile worker, một cụm PostgreSQL, sizing tính lại, CI ma trận theo module theo ADR-0088; object storage staging/production theo ADR-0075 thay ADR-0071; CI/CD GitHub Actions; 4 nền tảng client từ pilot; cổng quản trị `EW_ADMIN_ADDR`, secret đọc replica, SMTP, thư mục vận hành)
 > Liên quan: [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md) · [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · [ADR-0088](../adr/ADR-0088-ci-cd-bang-github-actions.md) · [ADR-0009, ADR-0023, ADR-0024, ADR-0037…0042, ADR-0089](../adr/README.md) · [LOCAL_DEVELOPMENT](LOCAL_DEVELOPMENT.md) · [MONITORING](MONITORING.md) · [BACKUP_RECOVERY](BACKUP_RECOVERY.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md)
 
 **Mục đích & phạm vi.** Nguồn duy nhất về môi trường, topology, **sizing**, mạng, CI/CD, release/rollback, migration khi deploy, phân phối secret, health check. Không thuộc phạm vi: compose/Makefile local → [LOCAL_DEVELOPMENT](LOCAL_DEVELOPMENT.md); metric/alert/SLO → [MONITORING](MONITORING.md); backup/khôi phục → [BACKUP_RECOVERY](BACKUP_RECOVERY.md); chính sách secret → [SECURITY_ARCHITECTURE §6](../10-security/SECURITY_ARCHITECTURE.md).
@@ -48,7 +48,7 @@ Image `eduworld/migrate` (Atlas, ADR-0039) chứa thư mục migration của m�
 | Thành phần | Image / artifact | Nguồn | Ghi chú |
 |---|---|---|---|
 | Admin Portal (5 workspace) | `eduworld/web-portal` | `src/cms/frontend/apps/portal` (`vite build`) | Static trên CDN public `portal.<domain>`; mã mỗi workspace là chunk lazy-load (không phải lớp bảo mật). API workspace platform (`/api/v1/game-admin/*`, `/api/v1/admin/*`) chỉ trên APISIX nội bộ/VPN, yêu cầu role platform (ADR-0027 mục 3, 7; không MFA — ADR-0094) |
-| Godot client | Artifact | `src/game/` | 3 nền tảng Web, Android, iOS, phát hành từ pilot; không có bản Windows (ADR-0013, ADR-0073, [ADR-0101](../adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md)) |
+| Godot client | Artifact | `src/game/` | 4 nền tảng Windows, Android, iOS, Web, phát hành từ pilot (ADR-0013, ADR-0073) |
 | Godot content packs | `.pck` / asset bundle | `src/game/` + CMS | Object storage + CDN, manifest phiên bản |
 | Keycloak | `quay.io/keycloak/keycloak:26.x` + theme/provider | `deploy/keycloak/` | Build optimized image |
 | APISIX | `apache/apisix:3.x` | `deploy/apisix/` | Config declarative trong Git |
@@ -389,14 +389,15 @@ Không có prefix `/internal/v1/*`: module gọi nhau trong tiến trình (ADR-0
 
 | Artifact | Kênh phân phối | Ghi chú |
 |---|---|---|
+| Windows build | CDN tải trực tiếp + (tùy chọn) phần mềm quản lý phòng máy của trường | Ký code (Authenticode) [Confirmed] |
 | Android | Google Play (internal → closed → production) và/hoặc APK cho MDM của trường | `.aab` ký bằng upload key trong secret manager |
 | iOS | App Store (TestFlight → production) và/hoặc Apple Business Manager/MDM | Build trên GitHub-hosted macOS runner |
-| Web | CDN static (`play.<domain>`), `.wasm`/`.pck` nén Brotli, cache theo hash; PC phòng máy của trường chơi bản này trong trình duyệt (không có bản Windows, ADR-0101) | Renderer Compatibility, preset tối đa Trung bình, tải đầu theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §11, §14 |
+| Web | CDN static (`play.<domain>`), `.wasm`/`.pck` nén Brotli, cache theo hash | Renderer Compatibility, preset tối đa Trung bình, tải đầu theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §11, §14 |
 | Content pack `.pck` / media | Object storage + CDN, URL theo hash nội dung | Manifest có chữ ký; client kiểm tra hash; mỗi vùng một gói tải theo nhu cầu |
-| Bản Android cho trường kèm gói nội dung cài sẵn [Confirmed] | Tải từ portal (School Admin, trang tải của F134 — chỉ gói APK Android, ADR-0101) hoặc phát qua MDM/USB; gồm PCK các vùng theo khối của trường | Cập nhật delta theo hash; ngân sách và quy tắc ở [PERFORMANCE_BUDGET §10.1](../08-game-client/PERFORMANCE_BUDGET.md#101-ngân-sách-phòng-máy-classroom-budget-confirmed) |
-| Cache LAN tùy chọn của trường [Confirmed] | Reverse proxy HTTP trong LAN trường trỏ về CDN nội dung công khai; client Android đọc `lan_cache_url` trong `device.cfg` (bản Web: không dùng `device.cfg` — cache LAN là reverse proxy trường cấu hình cho trình duyệt (ADR-0101 mục 8) [Confirmed]) | Chỉ PCK/media công khai theo khóa hash; không cache API, câu hỏi đề, answer key, media private; client luôn kiểm tra SHA-256 |
+| Bộ cài cho trường kèm gói nội dung cài sẵn [Confirmed] | Tải từ portal (School Admin) hoặc phát qua MDM/phần mềm quản lý phòng máy; gồm PCK các vùng theo khối của trường | Cập nhật delta theo hash; ngân sách và quy tắc ở [PERFORMANCE_BUDGET §10.1](../08-game-client/PERFORMANCE_BUDGET.md#101-ngân-sách-phòng-máy-classroom-budget-confirmed) |
+| Cache LAN tùy chọn của trường [Confirmed] | Reverse proxy HTTP trong LAN trường trỏ về CDN nội dung công khai; client đọc `lan_cache_url` trong `device.cfg` | Chỉ PCK/media công khai theo khóa hash; không cache API, câu hỏi đề, answer key, media private; client luôn kiểm tra SHA-256 |
 
-**Dung lượng build và gói nội dung (ADR-0057):** giới hạn bản cài Android/iOS, tải đầu Web và kích thước gói mỗi vùng do [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §11 sở hữu. Pipeline build Godot (job `godot:export:*`) đo kích thước artifact và **thất bại khi vượt giới hạn**; báo cáo kích thước đính kèm mỗi release. Nội dung ngoài lõi (vùng, cosmetic, media) không đóng vào bản cài mà phát qua `ew-game-bundles`/`ew-media-public` trên CDN để bản cài nhỏ và cập nhật nội dung không cần phát hành lại app.
+**Dung lượng build và gói nội dung (ADR-0057):** giới hạn bản cài Windows/Android/iOS, tải đầu Web và kích thước gói mỗi vùng do [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §11 sở hữu. Pipeline build Godot (job `godot:export:*`) đo kích thước artifact và **thất bại khi vượt giới hạn**; báo cáo kích thước đính kèm mỗi release. Nội dung ngoài lõi (vùng, cosmetic, media) không đóng vào bản cài mà phát qua `ew-game-bundles`/`ew-media-public` trên CDN để bản cài nhỏ và cập nhật nội dung không cần phát hành lại app.
 | Media học tập, sticker, GIF | Object storage + CDN; signed URL cho media riêng tenant (`ew-media-private`) | ADR-0044 |
 | Snapshot nội dung đã publish + content manifest theo tenant | `ew-media-public` + CDN, đường dẫn có version/hash, `Cache-Control: public, max-age=31536000, immutable`; con trỏ manifest hiện hành qua API (`ETag`) | ADR-0043; **không** chứa câu hỏi đề kiểm tra/answer key |
 
@@ -468,7 +469,7 @@ flowchart LR
 | `go.yml` | `src/backend/**`, `tools/**`, `Makefile`, `specs/openapi/modules/**`, `specs/events/**`, `specs/asyncapi/**`, `deploy/postgres/**` | `changes` (paths-filter + `.github/module-filters.yml` → danh sách module; nhóm `shared` — `src/backend/pkg/**`, `cmd/**`, `go.mod`, `tools/**`, `test/**`, `Makefile`, `deploy/postgres/**`, spec event/AsyncAPI — bật mọi module) → matrix `test (<module>)` (`make gen-check`, `make lint`, `make test`, `make test-integration`, `make migrate-lint` với `MOD=<module>`) → `arch` (`go -C src/backend build ./cmd/...`, `make arch-check`, `test-arch-fixtures.sh`, `make test-contract`, integration test của `cmd/`, `pkg/`) → `db-privileges` (test cô lập database + `make migrate` + `make db-privileges`) |
 | `release.yml` | `push` lên `main` có thay đổi `src/backend/**`, `deploy/docker/**`; tag `backend/vX.Y.Z` | `build-image` (matrix 4 image `core-api`, `realtime`, `worker`, `migrate`: build → Trivy image chặn Critical/High có bản vá → `check-image.sh` → push GHCR tag `git sha` + version, không `latest` → SBOM (Syft) → ký cosign keyless) → `deploy-staging` (khung, chỉ khi `vars.DEPLOY_ENABLED == 'true'`, runner `[self-hosted, deploy]`, environment `staging`, chặn fork); bước deploy thật và `deploy-production` do F130 |
 | `design.yml` | `design/**` | `make design-tokens-check` rồi gọi lại `godot.yml` và `web.yml` (`workflow_call`) (ADR-0047) |
-| `godot.yml` | `src/game/**`, `specs/**`, `design/game-tokens/**`, `design/shared-tokens/**` | lint, GdUnit4 headless, benchmark TC-PERF-018, export 3 target (Android, Web trên Linux; iOS trên macOS runner); không có export Windows (ADR-0101) |
+| `godot.yml` | `src/game/**`, `specs/**`, `design/game-tokens/**`, `design/shared-tokens/**` | lint, GdUnit4 headless, benchmark TC-PERF-018, export 4 target (Windows, Android, Web trên Linux; iOS trên macOS runner) |
 | `web.yml` | `src/cms/frontend/**`, `specs/openapi/**`, `design/admin-tokens/**`, `design/shared-tokens/**` | ESLint + stylelint, test, build portal, Storybook (`src/cms/frontend/packages/ops-ui`), visual regression Playwright |
 | `render-thumbnails.yml` | Asset 3D mới/đổi trong `src/game/assets/models/**` hoặc `workflow_dispatch` từ job publish | Godot headless render thumbnail/turntable → object storage (WORLD_RENDERING §8.3) |
 | `deploy-config.yml` | `deploy/**` | APISIX diff, Keycloak config diff, NATS config, compose validate |
@@ -592,7 +593,7 @@ Một tính năng chạm nhiều module domain được phát hành trong cùng 
 | NATS user creds theo binary (`.creds`), operator/account key | như trên; operator key lưu offline | Chỉ binary tương ứng |
 | Keycloak admin (provisioning), SIS connection credentials | như trên, tham chiếu `sis_connections.secret_ref` | Chỉ Swarm service chạy adapter SIS/provisioning của module identity (`worker-jobs`, `worker-events`; `core-api` cho lookup on-demand) |
 | TLS private keys | LB/cert manager | |
-| Android/Apple signing | Secret manager + CI protected variables | Chỉ job release |
+| Android/Windows/Apple signing | Secret manager + CI protected variables | Chỉ job release |
 | APISIX admin key | Secret manager | Chỉ job `apisix:sync` |
 | SMTP credential (`smtp_password`, biến `EW_SMTP_PASSWORD_FILE`) | Docker secret như DB credential | Swarm service gửi email nghiệp vụ của module identity (`core-api`, `worker-events`) |
 | Khóa giả danh bộ dữ liệu nghiên cứu hiệu quả (`efficacy_pseudonym_key`, biến `EW_EFFICACY_PSEUDONYM_KEY_FILE`, F035) | Docker secret như DB credential; mỗi môi trường một khóa, không xoay giữa chừng một nghiên cứu (mã giả danh phải ổn định trong study) | Chỉ Swarm service chạy report worker của module learning (`worker-jobs`) |

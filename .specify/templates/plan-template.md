@@ -19,7 +19,7 @@ Không định nghĩa lại quy tắc/tham số; link tài liệu sở hữu. Th
 | Primary Dependencies | [chi, ent, oapi-codegen, nats.go… / Ant Design Pro, TanStack Query… / GdUnit4…] |
 | Storage | [PostgreSQL `eduworld_<module>` / Valkey (tạm) / floci S3 / không có] |
 | Testing | [go test + testcontainers / Vitest + Playwright / GdUnit4] |
-| Target Platform | [Linux container / trình duyệt / Web, Android, iOS] |
+| Target Platform | [Linux container / trình duyệt / Windows, Android] |
 | Project Type | [backend module (`src/backend/modules/<module>`, binary `core-api`/`realtime`/`worker` profile …) / web app / game client / platform kit] |
 | Performance Goals | [link NFR/PERFORMANCE_BUDGET] |
 | Constraints | [link AGENTS R…, ADR…] |

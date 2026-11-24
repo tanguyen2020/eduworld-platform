@@ -9,6 +9,30 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent"
 )
 
+// The BracketNodeFunc type is an adapter to allow the use of ordinary
+// function as BracketNode mutator.
+type BracketNodeFunc func(context.Context, *ent.BracketNodeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BracketNodeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BracketNodeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BracketNodeMutation", m)
+}
+
+// The ChallengeFunc type is an adapter to allow the use of ordinary
+// function as Challenge mutator.
+type ChallengeFunc func(context.Context, *ent.ChallengeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChallengeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ChallengeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChallengeMutation", m)
+}
+
 // The CompetitionPointEntryFunc type is an adapter to allow the use of ordinary
 // function as CompetitionPointEntry mutator.
 type CompetitionPointEntryFunc func(context.Context, *ent.CompetitionPointEntryMutation) (ent.Value, error)
@@ -283,6 +307,78 @@ func (f SessionMembershipFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SessionMembershipMutation", m)
+}
+
+// The TenantResourceAssignmentFunc type is an adapter to allow the use of ordinary
+// function as TenantResourceAssignment mutator.
+type TenantResourceAssignmentFunc func(context.Context, *ent.TenantResourceAssignmentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TenantResourceAssignmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TenantResourceAssignmentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TenantResourceAssignmentMutation", m)
+}
+
+// The TournamentFunc type is an adapter to allow the use of ordinary
+// function as Tournament mutator.
+type TournamentFunc func(context.Context, *ent.TournamentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TournamentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TournamentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TournamentMutation", m)
+}
+
+// The TournamentEntryFunc type is an adapter to allow the use of ordinary
+// function as TournamentEntry mutator.
+type TournamentEntryFunc func(context.Context, *ent.TournamentEntryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TournamentEntryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TournamentEntryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TournamentEntryMutation", m)
+}
+
+// The TournamentGroupFunc type is an adapter to allow the use of ordinary
+// function as TournamentGroup mutator.
+type TournamentGroupFunc func(context.Context, *ent.TournamentGroupMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TournamentGroupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TournamentGroupMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TournamentGroupMutation", m)
+}
+
+// The TournamentResultFunc type is an adapter to allow the use of ordinary
+// function as TournamentResult mutator.
+type TournamentResultFunc func(context.Context, *ent.TournamentResultMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TournamentResultFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TournamentResultMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TournamentResultMutation", m)
+}
+
+// The TournamentRewardFunc type is an adapter to allow the use of ordinary
+// function as TournamentReward mutator.
+type TournamentRewardFunc func(context.Context, *ent.TournamentRewardMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TournamentRewardFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TournamentRewardMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TournamentRewardMutation", m)
 }
 
 // Condition is a hook condition function.

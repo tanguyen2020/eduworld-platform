@@ -24,7 +24,7 @@
 | 9 | Chạy test quét scene/dependency | 0 IAP, loot box, nút tặng/trao đổi | F069-AC-13 |
 | 10 | Mở Núi Thử Thách bằng `hs.an.3a` rồi `hs.dung.7a` | Khối 3 chỉ `easy`–`hard`; khối 7 thêm `expert`/`legendary` | F069-AC-14 |
 | 11 | Dùng hết lượt (seed) và mở challenge | "Em đã dùng hết lượt hôm nay…", nút Vào khóa; cooldown có đếm ngược | F069-AC-15, F069-AC-16 |
-| 12 | Vào `hard`, chơi 3 hoạt động; đổi giờ hệ thống của thiết bị +10 phút | Mỗi hoạt động mở `ActivityHost`; đồng hồ vẫn khớp `deadline_at` | F069-AC-17, F069-AC-18 |
+| 12 | Vào `hard`, chơi 3 hoạt động; đổi giờ Windows +10 phút | Mỗi hoạt động mở `ActivityHost`; đồng hồ vẫn khớp `deadline_at` | F069-AC-17, F069-AC-18 |
 | 13 | Tắt game giữa challenge, đăng nhập lại trên thiết bị khác | Tiếp tục đúng điểm/sức bền trước `deadline_at` | F069-AC-20 |
 | 14 | Để hết giờ | Màn kết quả "Em đã hoàn thành {n} hoạt động", không "Thất bại" đỏ | F069-AC-19 |
 | 15 | Mở Thành tựu, Bộ sưu tập; lưu 3 huy hiệu trưng bày | Thành tựu ẩn chỉ "?"; món chưa có xám + "Cách nhận"; không nút "Nhận" | F069-AC-21…F069-AC-24 |

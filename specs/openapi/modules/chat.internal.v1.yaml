@@ -416,11 +416,11 @@ paths:
       operationId: screenText
       summary: Kiểm tra từ nhạy cảm của văn bản nhà trường nhập (tên, mô tả sự kiện trường) qua pipeline của module chat
       description: |
-        Gọi trong tiến trình trước khi lưu văn bản tenant nhập cho sự kiện trường (EVENT_SEASON_SYSTEM §10, F077-AC-23,
+        Gọi trong tiến trình trước khi lưu văn bản tenant nhập cho sự kiện trường (EVENT_SEASON_SYSTEM §10, F077-AC-23) và tên thử thách khối/giải trường (F107,
         AGENTS R15). Cùng chuẩn hóa, danh mục hiệu lực (platform + tenant, cài đặt danh mục, công tắc hiệu lực; PII luôn chạy)
         như tên hiển thị. Chỉ trả `allowed` và **chỉ số** các văn bản vi phạm (`violations[]`): **không** trả từ đã khớp,
         vị trí khớp hay danh mục (R15). Lỗi hoặc hết deadline → bên gọi trả `503 UNAVAILABLE` và không lưu (không fail-open).
-      x-allowed-callers: [game]
+      x-allowed-callers: [game, competition]
       x-context-required: [tenant_scope]
       requestBody:
         required: true

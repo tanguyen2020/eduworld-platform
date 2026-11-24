@@ -3,8 +3,7 @@ extends SecureStorage
 ## File-backed adapter whose bytes are sealed by an OS cipher (ADR-0086): only ciphertext reaches the disk, in
 ## `<dir>/<key>.bin`, written to a temporary file then renamed. The cipher object provides
 ## `is_available() -> bool`, `protect(PackedByteArray) -> PackedByteArray` and `unprotect(PackedByteArray) ->
-## PackedByteArray` (empty result = failure). No released platform uses it since ADR-0101 removed the Windows DPAPI cipher; it stays as
-## the generic file-backed base (tests, shared-device purge of `user://secure`).
+## PackedByteArray` (empty result = failure); the Windows DPAPI GDExtension is one such cipher.
 
 const DEFAULT_DIR: String = "user://secure"
 const FILE_EXTENSION: String = ".bin"

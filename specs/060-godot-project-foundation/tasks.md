@@ -5,8 +5,8 @@
 ## Phase 1: Setup
 
 - [x] T001 `project.godot` (tên, renderer theo `renderer_default`, `untyped_declaration = error`, internationalization locale), `.godot-version`, `.gdlintrc` — file: `src/game/project.godot` — ✅ `project.godot` (Godot 4.7, Mobile, `untyped_declaration=2`, locale), `.godot-version`=4.7, `.gdlintrc`
-- [x] T002 [P] Cài GdUnit4 (ghim commit) và gdtoolkit; target `make godot-test`, `make godot-lint`, `make godot-export-<target>` — file: `src/game/addons/gdUnit4/plugin.cfg` — ✅ GdUnit4 v6.2.3 (release chính thức, tag commit f2e4f86), gdtoolkit 4.5.0 (CI); `make godot-test`, `godot-lint`, `godot-export-windows|android|check` — `godot-export-windows` gỡ theo ADR-0101 (2026-11-24)
-- [x] T003 [P] `export_presets.cfg` Windows + Android (keystore từ secret của GitHub Environment, `exclude_filter` loại `config/env/mock.json`, `tests/*`, `scenes/ui/debug/*`) — file: `src/game/export_presets.cfg` — ✅ `export_presets.cfg` Windows + Android, `exclude_filter` mock/local/dev/staging/tests/tools/debug/xx_PS; keystore qua env `GODOT_ANDROID_KEYSTORE_RELEASE_*` — preset Windows gỡ theo ADR-0101 (2026-11-24), còn preset Android
+- [x] T002 [P] Cài GdUnit4 (ghim commit) và gdtoolkit; target `make godot-test`, `make godot-lint`, `make godot-export-<target>` — file: `src/game/addons/gdUnit4/plugin.cfg` — ✅ GdUnit4 v6.2.3 (release chính thức, tag commit f2e4f86), gdtoolkit 4.5.0 (CI); `make godot-test`, `godot-lint`, `godot-export-windows|android|check`
+- [x] T003 [P] `export_presets.cfg` Windows + Android (keystore từ secret của GitHub Environment, `exclude_filter` loại `config/env/mock.json`, `tests/*`, `scenes/ui/debug/*`) — file: `src/game/export_presets.cfg` — ✅ `export_presets.cfg` Windows + Android, `exclude_filter` mock/local/dev/staging/tests/tools/debug/xx_PS; keystore qua env `GODOT_ANDROID_KEYSTORE_RELEASE_*`
 
 ## Phase 2: Foundational (chặn mọi user story)
 
@@ -104,13 +104,13 @@
 
 - [x] T040 [US4] `MockBadge.tscn` (CanvasLayer trên cùng, chuỗi dịch `ui.debug.mock_badge`) gắn bởi `AppState` khi `is_mock` — file: `src/game/scenes/ui/debug/MockBadge.tscn` — ✅ `scenes/ui/debug/MockBadge.tscn` (CanvasLayer 128) gắn bởi `AppState.start_ui`
 - [x] T041 [US4] Script sinh fixture từ `examples` trong spec gộp và `specs/examples` — file: `src/game/tools/gen_fixtures.mjs` — ✅ `tools/gen_fixtures.mjs` (+ `--check` trong `make godot-lint`)
-- [x] T042 [US4] Workflow `godot.yml` (job tuần tự, action ghim SHA): design-tokens-check → gdlint + typed + lint theme/lớp/signal + check khóa dịch → GdUnit4 → export Windows/Android → scan artifact → smoke boot (`--env=mock`) — file: `.github/workflows/godot.yml` — ✅ `.github/workflows/godot.yml` (action ghim SHA, Godot qua `scripts/ci/setup-godot.sh` kiểm SHA-512); chưa có lượt chạy GitHub Actions tại thời điểm merge — bước export Windows và job `platform-windows` gỡ theo ADR-0101 (2026-11-24)
+- [x] T042 [US4] Workflow `godot.yml` (job tuần tự, action ghim SHA): design-tokens-check → gdlint + typed + lint theme/lớp/signal + check khóa dịch → GdUnit4 → export Windows/Android → scan artifact → smoke boot (`--env=mock`) — file: `.github/workflows/godot.yml` — ✅ `.github/workflows/godot.yml` (action ghim SHA, Godot qua `scripts/ci/setup-godot.sh` kiểm SHA-512); chưa có lượt chạy GitHub Actions tại thời điểm merge
 
 **Checkpoint**: User Story 4 chạy và kiểm độc lập được.
 
 ## Phase 7: User Story 5 — Kho bảo mật theo nền tảng để giữ phiên game (Priority: P1)
 
-**Goal**: Interface `SecureStorage`, factory, adapter Android Keystore, `MemoryOnly` (ADR-0086); adapter Windows DPAPI gỡ theo ADR-0101 (2026-11-24).
+**Goal**: Interface `SecureStorage`, factory, adapter Windows DPAPI, Android Keystore, `MemoryOnly` (ADR-0086).
 
 **Independent Test**: Như spec.md User Story 5.
 
@@ -118,16 +118,16 @@
 
 - [x] T046 [P] [US5] Test F060-AC-23: factory chọn đúng adapter theo `OS.get_name()`/`OS.has_feature("web")`; round-trip `save`/`load`/`erase` với mọi adapter (TC-AUTH-082 phần lưu trữ) — file: `src/game/tests/unit/platform/test_secure_storage_factory.gd` — phải FAIL trước khi code — ✅ `test_secure_storage_factory.gd` 7/7
 - [x] T047 [P] [US5] Test F060-AC-24: `shared_device = true` → `MemoryOnly`; sau khi tạo lại tiến trình không còn bản ghi (TC-AUTH-084) — file: `src/game/tests/unit/platform/test_secure_storage_shared_device.gd` — ✅ `test_secure_storage_shared_device.gd` 3/3
-- [x] T048 [P] [US5] Test F060-AC-25: quét `user://`, `noBackupFilesDir`, ring buffer `Log` sau khi `save` chuỗi mẫu → không có dạng rõ (chạy trên runner Windows và emulator Android) — file: `src/game/tests/integration/platform/test_secure_storage_at_rest.gd` — ✅ `test_secure_storage_at_rest.gd` 2/2 (cipher test; DPAPI thật chạy ở job `platform-windows`; emulator Android chờ F133) — phần DPAPI/runner Windows gỡ theo ADR-0101 (2026-11-24)
-- [x] T049 [P] [US5] Test F060-AC-26: bản ghi hỏng / user Windows khác / khóa Keystore bị xóa → `load` rỗng + mã lỗi, `erase` xóa; `save` lỗi → log `secure_storage_write_failed` không kèm giá trị — file: `src/game/tests/unit/platform/test_secure_storage_errors.gd` — ✅ `test_secure_storage_errors.gd` 5/5 — ca "user Windows khác"/DPAPI gỡ theo ADR-0101 (2026-11-24)
-- [x] T054 [P] [US5] Unit test F060-AC-27: Windows thiếu `device.cfg`/thiếu khóa → `shared_device = true` + `MemoryOnly`; `shared_device = false` → DPAPI; Android thiếu khóa → `false` — file: `src/game/tests/unit/test_device_config_defaults.gd` — phải FAIL trước khi code — ✅ `tests/unit/test_device_config_defaults.gd` 6/6 — ca Windows/DPAPI đổi thành nền tảng `other` → `MemoryOnly` theo ADR-0101 (2026-11-24)
+- [x] T048 [P] [US5] Test F060-AC-25: quét `user://`, `noBackupFilesDir`, ring buffer `Log` sau khi `save` chuỗi mẫu → không có dạng rõ (chạy trên runner Windows và emulator Android) — file: `src/game/tests/integration/platform/test_secure_storage_at_rest.gd` — ✅ `test_secure_storage_at_rest.gd` 2/2 (cipher test; DPAPI thật chạy ở job `platform-windows`; emulator Android chờ F133)
+- [x] T049 [P] [US5] Test F060-AC-26: bản ghi hỏng / user Windows khác / khóa Keystore bị xóa → `load` rỗng + mã lỗi, `erase` xóa; `save` lỗi → log `secure_storage_write_failed` không kèm giá trị — file: `src/game/tests/unit/platform/test_secure_storage_errors.gd` — ✅ `test_secure_storage_errors.gd` 5/5
+- [x] T054 [P] [US5] Unit test F060-AC-27: Windows thiếu `device.cfg`/thiếu khóa → `shared_device = true` + `MemoryOnly`; `shared_device = false` → DPAPI; Android thiếu khóa → `false` — file: `src/game/tests/unit/test_device_config_defaults.gd` — phải FAIL trước khi code — ✅ `tests/unit/test_device_config_defaults.gd` 6/6
 
 ### Implementation cho User Story 5
 
 - [x] T050 [US5] Interface `secure_storage.gd`, `memory_only_secure_storage.gd`, `secure_storage_factory.gd` (đọc `Config.shared_device`) — file: `src/game/scripts/platform/secure_storage.gd` — ✅ `scripts/platform/{secure_storage,secure_storage_factory}.gd`, `adapters/{memory_only,file_cipher}_secure_storage.gd`
-- [x] T051 [P] [US5] GDExtension Windows: `CryptProtectData`/`CryptUnprotectData` scope CurrentUser, ghi tạm + đổi tên nguyên tử vào `user://secure/` — file: `src/game/addons/eduworld_platform/windows/dpapi_secure_storage.cpp` — ✅ `addons/eduworld_platform/windows/` (godot-cpp `godot-4.5-stable`, build ở CI; chưa build/chạy local — không có toolchain C++) — gỡ theo ADR-0101 (2026-11-24)
+- [x] T051 [P] [US5] GDExtension Windows: `CryptProtectData`/`CryptUnprotectData` scope CurrentUser, ghi tạm + đổi tên nguyên tử vào `user://secure/` — file: `src/game/addons/eduworld_platform/windows/dpapi_secure_storage.cpp` — ✅ `addons/eduworld_platform/windows/` (godot-cpp `godot-4.5-stable`, build ở CI; chưa build/chạy local — không có toolchain C++)
 - [x] T052 [P] [US5] Android plugin (Kotlin): khóa AES-GCM 256 trong Android Keystore alias `eduworld.session`, ciphertext trong `noBackupFilesDir` — file: `src/game/addons/eduworld_platform/android/src/main/kotlin/vn/eduworld/platform/KeystoreSecureStorage.kt` — ✅ `addons/eduworld_platform/android/` (Kotlin, AES-GCM 256, `noBackupFilesDir`; build ở CI; chưa build local — không có JDK/SDK)
-- [x] T053 [US5] Adapter GDScript gọi plugin (`dpapi_secure_storage.gd`, `android_keystore_secure_storage.gd`); thêm plugin vào preset export Windows/Android; `FakeSecureStorage` cho test F061 — file: `src/game/scripts/platform/adapters/dpapi_secure_storage.gd` — ✅ `adapters/{dpapi,android_keystore}_secure_storage.gd`, export plugin `addons/eduworld_platform/export_plugin.gd`, `tests/fixtures/fake_secure_storage.gd` — `dpapi_secure_storage.gd` và preset Windows gỡ theo ADR-0101 (2026-11-24)
+- [x] T053 [US5] Adapter GDScript gọi plugin (`dpapi_secure_storage.gd`, `android_keystore_secure_storage.gd`); thêm plugin vào preset export Windows/Android; `FakeSecureStorage` cho test F061 — file: `src/game/scripts/platform/adapters/dpapi_secure_storage.gd` — ✅ `adapters/{dpapi,android_keystore}_secure_storage.gd`, export plugin `addons/eduworld_platform/export_plugin.gd`, `tests/fixtures/fake_secure_storage.gd`
 - [x] T055 [US5] Mặc định `shared_device` theo nền tảng trong `Config` (đọc `shared_device_default`) — file: `src/game/scripts/core/config.gd` — ✅ `config.gd` `load_device_config` + project setting `eduworld/device/shared_device_default/<platform>`
 
 **Checkpoint**: User Story 5 chạy và kiểm độc lập được; F061 dùng được `SecureStorage`.
@@ -146,7 +146,7 @@
 
 ## Definition of Done
 
-- [x] Mọi tiêu chí F060-AC-* có test pass (ghi mã test/TC) — xem quickstart.md mục Bằng chứng; phần native Keystore chạy ở CI/F133 (DPAPI gỡ theo ADR-0101)
+- [x] Mọi tiêu chí F060-AC-* có test pass (ghi mã test/TC) — xem quickstart.md mục Bằng chứng; phần native DPAPI/Keystore chạy ở CI/F133
 - [x] `make godot-lint` (trừ gdlint: chỉ CI), `make godot-test` (111/111 + 17/17), `make godot-export-check`, `make godot-smoke`, `make design-tokens-check` xanh (không có thay đổi Go)
 - [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
 - [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi (CONFIG_DEFAULTS không đổi giá trị)

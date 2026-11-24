@@ -14,7 +14,7 @@ Dựng zone `main_hub` dạng greybox (khối CSG/mesh đơn giản, đúng cây
 | Primary Dependencies | GdUnit4; autoload khung của F060 (`Config`, `Log`, `EventBus`, `AppState`, `SceneRouter`, `Settings`); `ApiClient`, `AuthService`, `Clock` của F061 |
 | Storage | Không có dữ liệu nghiệp vụ bền; `user://settings.cfg` (preset, renderer, render scale) |
 | Testing | GdUnit4 unit + scene runner headless; benchmark headless `RenderingServer`; thiết bị lab |
-| Target Platform | Android 9+ (Release 1.0 cũng Web/iOS — ADR-0013; không Windows — ADR-0101) |
+| Target Platform | Windows 10+, Android 9+ (Release 1.0 cũng Web/iOS — ADR-0013) |
 | Project Type | game client |
 | Performance Goals | [PERFORMANCE_BUDGET §3, §5–§7, §9, §11](../../docs/08-game-client/PERFORMANCE_BUDGET.md) · NFR-COMP-001 · NFR-PERF-005 |
 | Constraints | AGENTS R1, R2, R3, R17, R32 · ADR-0047, ADR-0056, ADR-0057, ADR-0065 |

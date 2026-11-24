@@ -115,3 +115,10 @@ const LeaderboardXPName = "competition.leaderboard_xp"
 
 // LeaderboardXPEvents are the game events it handles (owner F074).
 var LeaderboardXPEvents = []string{"xp.awarded"}
+
+// TournamentMatchName moves the brackets on with the results of the tournament matches (F107-AC-17, AC-19):
+// match.completed (owner F105) advances the winner idempotently by match id, match.aborted reschedules the node.
+const TournamentMatchName = "competition.tournament_match"
+
+// TournamentMatchEvents are the competition events it handles.
+var TournamentMatchEvents = []string{"match.completed", "match.aborted"}

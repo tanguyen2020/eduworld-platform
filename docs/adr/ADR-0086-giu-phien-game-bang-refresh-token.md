@@ -1,9 +1,6 @@
 # ADR-0086 — Giữ phiên game bằng refresh token: còn hạn thì không phải đăng nhập lại
 
-> **Trạng thái:** Accepted · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (DPAPI) · **Ngày:** 2026-11-16 · **OQ:** — · **Thay một phần:** ADR-0064 (mục 1, 2, 4, 5) · **Bổ sung:** ADR-0068, ADR-0083 · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
-
-> [!WARNING]
-> **Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (bỏ Windows, 2026-11-24).** Không còn hiệu lực: "Windows DPAPI (theo user)" ở mục 1 và ghi chú "Windows mặc định `shared_device = true`" bên dưới (không còn bản Windows). **Còn hiệu lực:** toàn bộ quyết định còn lại; kho bảo mật là Android Keystore, iOS Keychain; Web chỉ giữ refresh token trong RAM.
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-16 · **OQ:** — · **Thay một phần:** ADR-0064 (mục 1, 2, 4, 5) · **Bổ sung:** ADR-0068, ADR-0083 · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
 
 > [!NOTE]
 > Bổ sung bởi ADR-0078 mục 5: Windows mặc định `shared_device = true`; mọi nền tảng hiện màn "Tiếp tục là <nickname>?" khi tự vào lại bằng refresh token, nút "Không phải tôi" đăng xuất và xóa token.
@@ -45,4 +42,3 @@
 | 2026-11-16 | Tạo ADR | Technical Architect |
 | 2026-11-17 | Ghi chú bổ sung từ ADR-0078 mục 5 (không đổi ý nghĩa quyết định) | Technical Architect |
 | 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |
-| 2026-11-24 | Superseded một phần bởi ADR-0101 (bỏ Windows DPAPI ở mục 1) | Owner dự án |

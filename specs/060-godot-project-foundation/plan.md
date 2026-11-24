@@ -4,17 +4,17 @@
 
 ## Summary
 
-Tạo `src/game/` theo GODOT_ARCHITECTURE §3 với `project.godot` ghim phiên bản, typed GDScript bắt buộc, autoload nền (`Config`, `Log`, `EventBus`, `AppState`, `SceneRouter`, `AudioDirector`, `Settings`) theo thứ tự §4, `ThemeService` áp Theme/density sinh bởi F005, i18n gettext vi/en + `L10n` + `LocaleFormat` + pseudo-locale, `UiGallery` debug, các lint (theme override, lớp, signal, khóa dịch), GdUnit4 và pipeline CI headless (export Android, smoke boot; không Windows — ADR-0101). Thêm Prism mock profile `mock` và cơ chế nhãn MOCK, chặn mock trong bản phát hành. Thêm lớp `SecureStorage` (interface, factory, adapter Android Keystore, `MemoryOnly`; adapter Windows DPAPI gỡ theo ADR-0101) trong plugin `addons/eduworld_platform` để F061 giữ phiên game theo ADR-0086.
+Tạo `src/game/` theo GODOT_ARCHITECTURE §3 với `project.godot` ghim phiên bản, typed GDScript bắt buộc, autoload nền (`Config`, `Log`, `EventBus`, `AppState`, `SceneRouter`, `AudioDirector`, `Settings`) theo thứ tự §4, `ThemeService` áp Theme/density sinh bởi F005, i18n gettext vi/en + `L10n` + `LocaleFormat` + pseudo-locale, `UiGallery` debug, các lint (theme override, lớp, signal, khóa dịch), GdUnit4 và pipeline CI headless (export Windows/Android, smoke boot). Thêm Prism mock profile `mock` và cơ chế nhãn MOCK, chặn mock trong bản phát hành. Thêm lớp `SecureStorage` (interface, factory, adapter Windows DPAPI, Android Keystore, `MemoryOnly`) trong plugin `addons/eduworld_platform` để F061 giữ phiên game theo ADR-0086.
 
 ## Technical Context
 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | GDScript (Godot 4.x, ghim minor trong `src/game/.godot-version`) |
-| Primary Dependencies | GdUnit4, gdtoolkit (`gdlint`, `gdformat`), Prism (`stoplight/prism:4`, xem LOCAL_DEVELOPMENT §3.1) cho mock; Android plugin Kotlin (`KeyStore` + `Cipher` AES/GCM) cho `SecureStorage` |
-| Storage | `user://settings.cfg`, `user://device.cfg`, `user://device_id` (UUID thiết bị — tạo ở F061); không token trong các file này; bí mật phiên chỉ qua `SecureStorage` (Android Keystore → file ciphertext riêng của app; `MemoryOnly`) — ADR-0086 |
+| Primary Dependencies | GdUnit4, gdtoolkit (`gdlint`, `gdformat`), Prism (`stoplight/prism:4`, xem LOCAL_DEVELOPMENT §3.1) cho mock; GDExtension C++ (Windows DPAPI `Crypt32`) và Android plugin Kotlin (`KeyStore` + `Cipher` AES/GCM) cho `SecureStorage` |
+| Storage | `user://settings.cfg`, `user://device.cfg`, `user://device_id` (UUID thiết bị — tạo ở F061); không token trong các file này; bí mật phiên chỉ qua `SecureStorage` (DPAPI → `user://secure/session.bin` ciphertext; Android Keystore → file ciphertext riêng của app; `MemoryOnly`) — ADR-0086 |
 | Testing | GdUnit4 headless (unit + scene runner), chụp ảnh `UiGallery` so baseline, script quét artifact |
-| Target Platform | Android 9+ arm64 (export từ F060); iOS/Web ở F133; không Windows (ADR-0101) |
+| Target Platform | Windows 10+ x86_64, Android 9+ arm64 (export từ F060); iOS/Web ở F133 |
 | Project Type | Game client |
 | Performance Goals | UI theo [PERFORMANCE_BUDGET §9](../../docs/08-game-client/PERFORMANCE_BUDGET.md) (`ui_cpu_budget`); khung không thêm tải nền đáng kể |
 | Constraints | AGENTS R1, R2, R3, R4, R14, R17, R32 · ADR-0014, ADR-0047, ADR-0056, ADR-0068, ADR-0086 |
@@ -64,8 +64,8 @@ src/game/
 ├── scripts/core/{config.gd,logger.gd,event_bus.gd,app_state.gd,scene_router.gd,settings.gd,audio_director.gd,
 │                 theme_service.gd,l10n.gd,locale_format.gd,result.gd,ui_tokens.gd(sinh F005)}
 ├── scripts/platform/{secure_storage.gd,secure_storage_factory.gd,
-│                     adapters/{file_cipher,android_keystore,memory_only}_secure_storage.gd}   # iOS Keychain: F133
-├── addons/eduworld_platform/{android/ (plugin Keystore), plugin.cfg}   # windows/ (GDExtension DPAPI) gỡ theo ADR-0101
+│                     adapters/{dpapi,android_keystore,memory_only}_secure_storage.gd}   # iOS Keychain: F133
+├── addons/eduworld_platform/{windows/ (GDExtension DPAPI), android/ (plugin Keystore), plugin.cfg}
 ├── resources/ui/theme/eduworld_theme*.tres (sinh F005)   resources/audio/bus_layout.tres
 ├── locale/{messages.pot,vi.po,en.po,xx_PS.po(sinh)}
 └── tests/{unit/core/,unit/theme/,scene/,contract/,fixtures/}
@@ -100,7 +100,7 @@ deploy/compose/docker-compose.yml  # profile mock: service api-mock (Prism) cổ
 
 **ThemeService**: nạp `eduworld_theme_<band>.tres`, đặt `get_tree().root.theme`; nghe `grade_band_changed`, `Settings.font_scale_changed`, `Settings.high_contrast_changed`.
 
-**SecureStorage** ([GODOT_ARCHITECTURE §5.2](../../docs/08-game-client/GODOT_ARCHITECTURE.md#52-lưu-phiên-bằng-securestorage-adr-0086)): interface `is_available() -> bool`, `save(key: String, data: PackedByteArray) -> Error`, `load(key: String) -> PackedByteArray`, `erase(key: String) -> Error`. `SecureStorageFactory.create(shared_device: bool) -> SecureStorage`: `shared_device` hoặc `OS.has_feature("web")` → `MemoryOnlySecureStorage`; `Android` → `AndroidKeystoreSecureStorage` (plugin Kotlin: khóa alias `eduworld.session`, AES/GCM/NoPadding 256, IV ngẫu nhiên, ciphertext trong `context.noBackupFilesDir`); nền tảng khác (kể cả Windows/macOS/Linux, ADR-0101) → `MemoryOnly` (iOS ở F133). Adapter không log giá trị.
+**SecureStorage** ([GODOT_ARCHITECTURE §5.2](../../docs/08-game-client/GODOT_ARCHITECTURE.md#52-lưu-phiên-bằng-securestorage-adr-0086)): interface `is_available() -> bool`, `save(key: String, data: PackedByteArray) -> Error`, `load(key: String) -> PackedByteArray`, `erase(key: String) -> Error`. `SecureStorageFactory.create(shared_device: bool) -> SecureStorage`: `shared_device` hoặc `OS.has_feature("web")` → `MemoryOnlySecureStorage`; `Windows` → `DpapiSecureStorage` (GDExtension gọi `CryptProtectData`/`CryptUnprotectData` không cờ `CRYPTPROTECT_LOCAL_MACHINE`, ghi tạm + đổi tên nguyên tử); `Android` → `AndroidKeystoreSecureStorage` (plugin Kotlin: khóa alias `eduworld.session`, AES/GCM/NoPadding 256, IV ngẫu nhiên, ciphertext trong `context.noBackupFilesDir`); nền tảng khác → `MemoryOnly` (iOS ở F133). Adapter không log giá trị.
 
 **L10n/LocaleFormat**: `L10n.pick(text: Dictionary) -> String` (fallback theo CONTENT_MODEL §8), `L10n.error_text(code: String) -> String` (`ui.error.<CODE>` hoặc `ui.error.generic`); `LocaleFormat.number/date/time/duration(value, locale)`.
 

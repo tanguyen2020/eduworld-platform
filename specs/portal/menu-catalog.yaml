@@ -133,7 +133,7 @@ workspaces:
             can_disable: true
       - key: menu.school_lms.challenges
         label_key: portal.menu.school_lms.challenges
-        title: Thử thách lớp / giải trường
+        title: Thử thách khối / giải trường
         path: /school-lms/challenges
         order: 100
         required_permissions: [lms.challenge.write]
@@ -143,7 +143,7 @@ workspaces:
             label_key: portal.action.school_lms.challenges.view
             title: Xem thử thách và template
             required_permissions: [lms.challenge.write]
-            operation_ids: [listChallenges, listChallengeTemplates, listTournaments]
+            operation_ids: [listChallenges, listChallengeTemplates, getChallenge, listTournaments, getTournament, getTournamentBracket]
             can_disable: true
           - key: action.school_lms.challenges.create
             label_key: portal.action.school_lms.challenges.create
@@ -153,9 +153,9 @@ workspaces:
             can_disable: true
           - key: action.school_lms.challenges.manage
             label_key: portal.action.school_lms.challenges.manage
-            title: Mở đăng ký / hủy thử thách, giải trường
+            title: Duyệt, đăng ký hộ, xác nhận, tạo bracket, xác nhận/đổi kết quả, hủy thử thách và giải trường
             required_permissions: [lms.challenge.write]
-            operation_ids: []
+            operation_ids: [cancelChallenge, publishTournament, cancelTournament, registerTournamentEntry, withdrawTournamentEntry, confirmTournamentEntries, generateTournamentBracket, confirmBracketNode, overrideBracketNode]
             can_disable: true
       - key: menu.school_lms.clubs
         label_key: portal.menu.school_lms.clubs

@@ -1,7 +1,7 @@
 class_name SessionStore
 extends RefCounted
 ## The stored game session `eduworld.game.session` = JSON `{refresh_token, tenant_id, saved_at}` kept through
-## `SecureStorage` (F060; Android Keystore on a personal device, MemoryOnly on Web and `shared_device`) —
+## `SecureStorage` (F060; DPAPI / Android Keystore on a personal device, MemoryOnly on Web and `shared_device`) —
 ## ADR-0086, GODOT_ARCHITECTURE §5.2. Never holds the access token, the password or the bootstrap.
 ## A write failure is logged (`secure_storage_write_failed`, no value) and the session continues in RAM; an
 ## unreadable or malformed record is erased (F060-AC-26).

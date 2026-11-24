@@ -20,7 +20,7 @@ var last_error: Error = OK
 var last_error_code: String = CODE_OK
 
 
-## Name of the adapter for logs and tests (`memory_only`, `file_cipher`, `android_keystore`).
+## Name of the adapter for logs and tests (`memory_only`, `dpapi`, `android_keystore`).
 func adapter_name() -> String:
 	return "abstract"
 

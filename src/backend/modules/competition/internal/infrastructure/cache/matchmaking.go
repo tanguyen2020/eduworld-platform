@@ -370,6 +370,7 @@ type proposalDoc struct {
 	Ranked           bool                    `json:"ranked"`
 	RulesetVersionID uuid.UUID               `json:"ruleset_version_id"`
 	TournamentNodeID *uuid.UUID              `json:"tournament_node_id,omitempty"`
+	TournamentID     *uuid.UUID              `json:"tournament_id,omitempty"`
 	Direct           bool                    `json:"direct,omitempty"`
 	Schools          map[uuid.UUID]uuid.UUID `json:"schools"`
 	Tenants          map[uuid.UUID]uuid.UUID `json:"tenants"`
@@ -400,7 +401,7 @@ return 1`)
 func (s MatchmakingStore) Propose(ctx context.Context, p port.Proposal) (bool, error) {
 	doc := proposalDoc{ID: p.ID, Queue: p.Queue, Tickets: p.Tickets, Teams: p.Teams, Deadline: p.Deadline.UnixMilli(), TenantIDs: p.TenantIDs,
 		Mode: p.Mode, Type: p.Type, ScopeKind: p.ScopeKind, SubjectID: p.SubjectID, TopicID: p.TopicID, Grade: p.Grade, Ranked: p.Ranked,
-		RulesetVersionID: p.RulesetVersionID, TournamentNodeID: p.TournamentNodeID, Direct: p.Direct, Schools: p.Schools, Tenants: p.Tenants,
+		RulesetVersionID: p.RulesetVersionID, TournamentNodeID: p.TournamentNodeID, TournamentID: p.TournamentID, Direct: p.Direct, Schools: p.Schools, Tenants: p.Tenants,
 		Parties: p.Parties, Ratings: p.Ratings, CreatedAt: p.CreatedAt.UnixMilli()}
 	b, err := json.Marshal(doc)
 	if err != nil {
@@ -442,7 +443,7 @@ func (s MatchmakingStore) Proposal(ctx context.Context, id uuid.UUID) (*port.Pro
 	p := &port.Proposal{Proposal: mm.Proposal{ID: d.ID, Queue: d.Queue, Tickets: d.Tickets, Teams: d.Teams, Accepted: map[uuid.UUID]bool{},
 		Deadline: time.UnixMilli(d.Deadline).UTC(), Status: h["status"]}, TenantIDs: d.TenantIDs, Mode: d.Mode, Type: d.Type,
 		ScopeKind: d.ScopeKind, SubjectID: d.SubjectID, TopicID: d.TopicID, Grade: d.Grade, Ranked: d.Ranked, RulesetVersionID: d.RulesetVersionID,
-		TournamentNodeID: d.TournamentNodeID, Direct: d.Direct, Schools: d.Schools, Tenants: d.Tenants, Parties: d.Parties, Ratings: d.Ratings,
+		TournamentNodeID: d.TournamentNodeID, TournamentID: d.TournamentID, Direct: d.Direct, Schools: d.Schools, Tenants: d.Tenants, Parties: d.Parties, Ratings: d.Ratings,
 		CreatedAt: time.UnixMilli(d.CreatedAt).UTC()}
 	for k := range h {
 		if strings.HasPrefix(k, "acc:") {

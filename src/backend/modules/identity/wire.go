@@ -99,6 +99,7 @@ type CompetitionFacade interface {
 	participants.CompetitionFacade
 	participants.CompetitionAnonymizer
 	modules.CompetitionMergeOps
+	modules.CompetitionAssignmentOps
 }
 
 // Imports are the facades of the other modules called by the sagas and platform operations of identity.
@@ -175,12 +176,12 @@ func build(r *module.Registry, m *Module, in Imports) error {
 			Memberships: query.CheckMemberships{Model: principals}}}
 
 	// Facades of learning and game (sagas F016, platform operations F045); mergeUserData is served by learning
-	// (F030) and game (F070); competition and chat answer 503 UNAVAILABLE (OQ F045-3).
+	// (F030) and game (F070); competition serves its template assignments (F107); chat answers 503 UNAVAILABLE (OQ F045-3).
 	gw := modules.Gateway{Learning: in.Learning, LearningMerge: in.Learning, GameMerge: in.Game, GameAssign: in.Game}
 	studentParts := []port.StudentDataParticipant{participants.Game{F: in.Game}, participants.Learning{F: in.Learning}}
 	anonymizers := []port.UserDataAnonymizer{participants.GameAnonymize{F: in.Game}, participants.LearningAnonymize{F: in.Learning}}
 	if in.Competition != nil {
-		gw.CompetitionMerge = in.Competition
+		gw.CompetitionMerge, gw.CompetitionAssign = in.Competition, in.Competition
 		studentParts = append(studentParts, participants.Competition{F: in.Competition})
 		anonymizers = append(anonymizers, participants.CompetitionAnonymize{F: in.Competition})
 	}

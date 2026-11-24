@@ -46,7 +46,7 @@ Không tạo bảng mới cho đối soát: báo cáo là file JSON (schema ở 
 |---|---|---|
 | `channel` | enum `staging/production` | |
 | `generated_at` | date-time | |
-| `kits[]` | `{kit_id (≤64, pattern [a-z0-9-]), platform (enum android — ADR-0101), client_version (SemVer ≤32), grade_bands[] (enum g1_3/g4_5/g6_7/g8_9), url (uri https ≤2048), sha256 (hex 64), size_bytes (int ≥0), min_os (≤32), released_at (date-time)}` | ≤ 50 mục |
+| `kits[]` | `{kit_id (≤64, pattern [a-z0-9-]), platform (enum windows/android), client_version (SemVer ≤32), grade_bands[] (enum g1_3/g4_5/g6_7/g8_9), url (uri https ≤2048), sha256 (hex 64), size_bytes (int ≥0), min_os (≤32), released_at (date-time)}` | ≤ 50 mục |
 
 Chữ ký RSA-SHA256 bằng cùng khóa phát hành của F133 (manifest phát hành); module game kiểm bằng khóa công khai cấu hình.
 

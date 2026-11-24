@@ -70,6 +70,7 @@ type Proposal struct {
 	Ranked           bool
 	RulesetVersionID uuid.UUID
 	TournamentNodeID *uuid.UUID
+	TournamentID     *uuid.UUID              // F107: the tournament of a direct proposal
 	Direct           bool                    // CreateDirectProposal (no queue, no ticket to requeue)
 	Schools          map[uuid.UUID]uuid.UUID // student → school
 	Tenants          map[uuid.UUID]uuid.UUID // student → tenant

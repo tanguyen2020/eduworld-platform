@@ -15,6 +15,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/bracketnode"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/challenge"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionpointentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionrestriction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/contentrelease"
@@ -38,6 +40,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/season"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/seasonresult"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/sessionmembership"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tenantresourceassignment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournament"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamententry"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamentgroup"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamentresult"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamentreward"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/internal"
 )
@@ -47,6 +55,10 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// BracketNode is the client for interacting with the BracketNode builders.
+	BracketNode *BracketNodeClient
+	// Challenge is the client for interacting with the Challenge builders.
+	Challenge *ChallengeClient
 	// CompetitionPointEntry is the client for interacting with the CompetitionPointEntry builders.
 	CompetitionPointEntry *CompetitionPointEntryClient
 	// CompetitionRestriction is the client for interacting with the CompetitionRestriction builders.
@@ -93,6 +105,18 @@ type Client struct {
 	SeasonResult *SeasonResultClient
 	// SessionMembership is the client for interacting with the SessionMembership builders.
 	SessionMembership *SessionMembershipClient
+	// TenantResourceAssignment is the client for interacting with the TenantResourceAssignment builders.
+	TenantResourceAssignment *TenantResourceAssignmentClient
+	// Tournament is the client for interacting with the Tournament builders.
+	Tournament *TournamentClient
+	// TournamentEntry is the client for interacting with the TournamentEntry builders.
+	TournamentEntry *TournamentEntryClient
+	// TournamentGroup is the client for interacting with the TournamentGroup builders.
+	TournamentGroup *TournamentGroupClient
+	// TournamentResult is the client for interacting with the TournamentResult builders.
+	TournamentResult *TournamentResultClient
+	// TournamentReward is the client for interacting with the TournamentReward builders.
+	TournamentReward *TournamentRewardClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -104,6 +128,8 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.BracketNode = NewBracketNodeClient(c.config)
+	c.Challenge = NewChallengeClient(c.config)
 	c.CompetitionPointEntry = NewCompetitionPointEntryClient(c.config)
 	c.CompetitionRestriction = NewCompetitionRestrictionClient(c.config)
 	c.ContentRelease = NewContentReleaseClient(c.config)
@@ -127,6 +153,12 @@ func (c *Client) init() {
 	c.Season = NewSeasonClient(c.config)
 	c.SeasonResult = NewSeasonResultClient(c.config)
 	c.SessionMembership = NewSessionMembershipClient(c.config)
+	c.TenantResourceAssignment = NewTenantResourceAssignmentClient(c.config)
+	c.Tournament = NewTournamentClient(c.config)
+	c.TournamentEntry = NewTournamentEntryClient(c.config)
+	c.TournamentGroup = NewTournamentGroupClient(c.config)
+	c.TournamentResult = NewTournamentResultClient(c.config)
+	c.TournamentReward = NewTournamentRewardClient(c.config)
 }
 
 type (
@@ -220,31 +252,39 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                     ctx,
-		config:                  cfg,
-		CompetitionPointEntry:   NewCompetitionPointEntryClient(cfg),
-		CompetitionRestriction:  NewCompetitionRestrictionClient(cfg),
-		ContentRelease:          NewContentReleaseClient(cfg),
-		Duel:                    NewDuelClient(cfg),
-		GameConfig:              NewGameConfigClient(cfg),
-		GameConfigVersion:       NewGameConfigVersionClient(cfg),
-		LeaderboardContribution: NewLeaderboardContributionClient(cfg),
-		LeaderboardDefinition:   NewLeaderboardDefinitionClient(cfg),
-		LeaderboardSnapshot:     NewLeaderboardSnapshotClient(cfg),
-		Match:                   NewMatchClient(cfg),
-		MatchParticipant:        NewMatchParticipantClient(cfg),
-		MatchResult:             NewMatchResultClient(cfg),
-		Party:                   NewPartyClient(cfg),
-		PartyActivity:           NewPartyActivityClient(cfg),
-		PartyInvitation:         NewPartyInvitationClient(cfg),
-		PartyMember:             NewPartyMemberClient(cfg),
-		PartyPolicy:             NewPartyPolicyClient(cfg),
-		Rating:                  NewRatingClient(cfg),
-		RatingChange:            NewRatingChangeClient(cfg),
-		Room:                    NewRoomClient(cfg),
-		Season:                  NewSeasonClient(cfg),
-		SeasonResult:            NewSeasonResultClient(cfg),
-		SessionMembership:       NewSessionMembershipClient(cfg),
+		ctx:                      ctx,
+		config:                   cfg,
+		BracketNode:              NewBracketNodeClient(cfg),
+		Challenge:                NewChallengeClient(cfg),
+		CompetitionPointEntry:    NewCompetitionPointEntryClient(cfg),
+		CompetitionRestriction:   NewCompetitionRestrictionClient(cfg),
+		ContentRelease:           NewContentReleaseClient(cfg),
+		Duel:                     NewDuelClient(cfg),
+		GameConfig:               NewGameConfigClient(cfg),
+		GameConfigVersion:        NewGameConfigVersionClient(cfg),
+		LeaderboardContribution:  NewLeaderboardContributionClient(cfg),
+		LeaderboardDefinition:    NewLeaderboardDefinitionClient(cfg),
+		LeaderboardSnapshot:      NewLeaderboardSnapshotClient(cfg),
+		Match:                    NewMatchClient(cfg),
+		MatchParticipant:         NewMatchParticipantClient(cfg),
+		MatchResult:              NewMatchResultClient(cfg),
+		Party:                    NewPartyClient(cfg),
+		PartyActivity:            NewPartyActivityClient(cfg),
+		PartyInvitation:          NewPartyInvitationClient(cfg),
+		PartyMember:              NewPartyMemberClient(cfg),
+		PartyPolicy:              NewPartyPolicyClient(cfg),
+		Rating:                   NewRatingClient(cfg),
+		RatingChange:             NewRatingChangeClient(cfg),
+		Room:                     NewRoomClient(cfg),
+		Season:                   NewSeasonClient(cfg),
+		SeasonResult:             NewSeasonResultClient(cfg),
+		SessionMembership:        NewSessionMembershipClient(cfg),
+		TenantResourceAssignment: NewTenantResourceAssignmentClient(cfg),
+		Tournament:               NewTournamentClient(cfg),
+		TournamentEntry:          NewTournamentEntryClient(cfg),
+		TournamentGroup:          NewTournamentGroupClient(cfg),
+		TournamentResult:         NewTournamentResultClient(cfg),
+		TournamentReward:         NewTournamentRewardClient(cfg),
 	}, nil
 }
 
@@ -262,38 +302,46 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                     ctx,
-		config:                  cfg,
-		CompetitionPointEntry:   NewCompetitionPointEntryClient(cfg),
-		CompetitionRestriction:  NewCompetitionRestrictionClient(cfg),
-		ContentRelease:          NewContentReleaseClient(cfg),
-		Duel:                    NewDuelClient(cfg),
-		GameConfig:              NewGameConfigClient(cfg),
-		GameConfigVersion:       NewGameConfigVersionClient(cfg),
-		LeaderboardContribution: NewLeaderboardContributionClient(cfg),
-		LeaderboardDefinition:   NewLeaderboardDefinitionClient(cfg),
-		LeaderboardSnapshot:     NewLeaderboardSnapshotClient(cfg),
-		Match:                   NewMatchClient(cfg),
-		MatchParticipant:        NewMatchParticipantClient(cfg),
-		MatchResult:             NewMatchResultClient(cfg),
-		Party:                   NewPartyClient(cfg),
-		PartyActivity:           NewPartyActivityClient(cfg),
-		PartyInvitation:         NewPartyInvitationClient(cfg),
-		PartyMember:             NewPartyMemberClient(cfg),
-		PartyPolicy:             NewPartyPolicyClient(cfg),
-		Rating:                  NewRatingClient(cfg),
-		RatingChange:            NewRatingChangeClient(cfg),
-		Room:                    NewRoomClient(cfg),
-		Season:                  NewSeasonClient(cfg),
-		SeasonResult:            NewSeasonResultClient(cfg),
-		SessionMembership:       NewSessionMembershipClient(cfg),
+		ctx:                      ctx,
+		config:                   cfg,
+		BracketNode:              NewBracketNodeClient(cfg),
+		Challenge:                NewChallengeClient(cfg),
+		CompetitionPointEntry:    NewCompetitionPointEntryClient(cfg),
+		CompetitionRestriction:   NewCompetitionRestrictionClient(cfg),
+		ContentRelease:           NewContentReleaseClient(cfg),
+		Duel:                     NewDuelClient(cfg),
+		GameConfig:               NewGameConfigClient(cfg),
+		GameConfigVersion:        NewGameConfigVersionClient(cfg),
+		LeaderboardContribution:  NewLeaderboardContributionClient(cfg),
+		LeaderboardDefinition:    NewLeaderboardDefinitionClient(cfg),
+		LeaderboardSnapshot:      NewLeaderboardSnapshotClient(cfg),
+		Match:                    NewMatchClient(cfg),
+		MatchParticipant:         NewMatchParticipantClient(cfg),
+		MatchResult:              NewMatchResultClient(cfg),
+		Party:                    NewPartyClient(cfg),
+		PartyActivity:            NewPartyActivityClient(cfg),
+		PartyInvitation:          NewPartyInvitationClient(cfg),
+		PartyMember:              NewPartyMemberClient(cfg),
+		PartyPolicy:              NewPartyPolicyClient(cfg),
+		Rating:                   NewRatingClient(cfg),
+		RatingChange:             NewRatingChangeClient(cfg),
+		Room:                     NewRoomClient(cfg),
+		Season:                   NewSeasonClient(cfg),
+		SeasonResult:             NewSeasonResultClient(cfg),
+		SessionMembership:        NewSessionMembershipClient(cfg),
+		TenantResourceAssignment: NewTenantResourceAssignmentClient(cfg),
+		Tournament:               NewTournamentClient(cfg),
+		TournamentEntry:          NewTournamentEntryClient(cfg),
+		TournamentGroup:          NewTournamentGroupClient(cfg),
+		TournamentResult:         NewTournamentResultClient(cfg),
+		TournamentReward:         NewTournamentRewardClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		CompetitionPointEntry.
+//		BracketNode.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -316,12 +364,14 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.CompetitionPointEntry, c.CompetitionRestriction, c.ContentRelease, c.Duel,
-		c.GameConfig, c.GameConfigVersion, c.LeaderboardContribution,
-		c.LeaderboardDefinition, c.LeaderboardSnapshot, c.Match, c.MatchParticipant,
-		c.MatchResult, c.Party, c.PartyActivity, c.PartyInvitation, c.PartyMember,
-		c.PartyPolicy, c.Rating, c.RatingChange, c.Room, c.Season, c.SeasonResult,
-		c.SessionMembership,
+		c.BracketNode, c.Challenge, c.CompetitionPointEntry, c.CompetitionRestriction,
+		c.ContentRelease, c.Duel, c.GameConfig, c.GameConfigVersion,
+		c.LeaderboardContribution, c.LeaderboardDefinition, c.LeaderboardSnapshot,
+		c.Match, c.MatchParticipant, c.MatchResult, c.Party, c.PartyActivity,
+		c.PartyInvitation, c.PartyMember, c.PartyPolicy, c.Rating, c.RatingChange,
+		c.Room, c.Season, c.SeasonResult, c.SessionMembership,
+		c.TenantResourceAssignment, c.Tournament, c.TournamentEntry, c.TournamentGroup,
+		c.TournamentResult, c.TournamentReward,
 	} {
 		n.Use(hooks...)
 	}
@@ -331,12 +381,14 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.CompetitionPointEntry, c.CompetitionRestriction, c.ContentRelease, c.Duel,
-		c.GameConfig, c.GameConfigVersion, c.LeaderboardContribution,
-		c.LeaderboardDefinition, c.LeaderboardSnapshot, c.Match, c.MatchParticipant,
-		c.MatchResult, c.Party, c.PartyActivity, c.PartyInvitation, c.PartyMember,
-		c.PartyPolicy, c.Rating, c.RatingChange, c.Room, c.Season, c.SeasonResult,
-		c.SessionMembership,
+		c.BracketNode, c.Challenge, c.CompetitionPointEntry, c.CompetitionRestriction,
+		c.ContentRelease, c.Duel, c.GameConfig, c.GameConfigVersion,
+		c.LeaderboardContribution, c.LeaderboardDefinition, c.LeaderboardSnapshot,
+		c.Match, c.MatchParticipant, c.MatchResult, c.Party, c.PartyActivity,
+		c.PartyInvitation, c.PartyMember, c.PartyPolicy, c.Rating, c.RatingChange,
+		c.Room, c.Season, c.SeasonResult, c.SessionMembership,
+		c.TenantResourceAssignment, c.Tournament, c.TournamentEntry, c.TournamentGroup,
+		c.TournamentResult, c.TournamentReward,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -345,6 +397,10 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *BracketNodeMutation:
+		return c.BracketNode.mutate(ctx, m)
+	case *ChallengeMutation:
+		return c.Challenge.mutate(ctx, m)
 	case *CompetitionPointEntryMutation:
 		return c.CompetitionPointEntry.mutate(ctx, m)
 	case *CompetitionRestrictionMutation:
@@ -391,8 +447,290 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.SeasonResult.mutate(ctx, m)
 	case *SessionMembershipMutation:
 		return c.SessionMembership.mutate(ctx, m)
+	case *TenantResourceAssignmentMutation:
+		return c.TenantResourceAssignment.mutate(ctx, m)
+	case *TournamentMutation:
+		return c.Tournament.mutate(ctx, m)
+	case *TournamentEntryMutation:
+		return c.TournamentEntry.mutate(ctx, m)
+	case *TournamentGroupMutation:
+		return c.TournamentGroup.mutate(ctx, m)
+	case *TournamentResultMutation:
+		return c.TournamentResult.mutate(ctx, m)
+	case *TournamentRewardMutation:
+		return c.TournamentReward.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// BracketNodeClient is a client for the BracketNode schema.
+type BracketNodeClient struct {
+	config
+}
+
+// NewBracketNodeClient returns a client for the BracketNode from the given config.
+func NewBracketNodeClient(c config) *BracketNodeClient {
+	return &BracketNodeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `bracketnode.Hooks(f(g(h())))`.
+func (c *BracketNodeClient) Use(hooks ...Hook) {
+	c.hooks.BracketNode = append(c.hooks.BracketNode, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `bracketnode.Intercept(f(g(h())))`.
+func (c *BracketNodeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BracketNode = append(c.inters.BracketNode, interceptors...)
+}
+
+// Create returns a builder for creating a BracketNode entity.
+func (c *BracketNodeClient) Create() *BracketNodeCreate {
+	mutation := newBracketNodeMutation(c.config, OpCreate)
+	return &BracketNodeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BracketNode entities.
+func (c *BracketNodeClient) CreateBulk(builders ...*BracketNodeCreate) *BracketNodeCreateBulk {
+	return &BracketNodeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BracketNodeClient) MapCreateBulk(slice any, setFunc func(*BracketNodeCreate, int)) *BracketNodeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BracketNodeCreateBulk{err: fmt.Errorf("calling to BracketNodeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BracketNodeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BracketNodeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BracketNode.
+func (c *BracketNodeClient) Update() *BracketNodeUpdate {
+	mutation := newBracketNodeMutation(c.config, OpUpdate)
+	return &BracketNodeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BracketNodeClient) UpdateOne(_m *BracketNode) *BracketNodeUpdateOne {
+	mutation := newBracketNodeMutation(c.config, OpUpdateOne, withBracketNode(_m))
+	return &BracketNodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BracketNodeClient) UpdateOneID(id uuid.UUID) *BracketNodeUpdateOne {
+	mutation := newBracketNodeMutation(c.config, OpUpdateOne, withBracketNodeID(id))
+	return &BracketNodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BracketNode.
+func (c *BracketNodeClient) Delete() *BracketNodeDelete {
+	mutation := newBracketNodeMutation(c.config, OpDelete)
+	return &BracketNodeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BracketNodeClient) DeleteOne(_m *BracketNode) *BracketNodeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BracketNodeClient) DeleteOneID(id uuid.UUID) *BracketNodeDeleteOne {
+	builder := c.Delete().Where(bracketnode.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BracketNodeDeleteOne{builder}
+}
+
+// Query returns a query builder for BracketNode.
+func (c *BracketNodeClient) Query() *BracketNodeQuery {
+	return &BracketNodeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBracketNode},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BracketNode entity by its id.
+func (c *BracketNodeClient) Get(ctx context.Context, id uuid.UUID) (*BracketNode, error) {
+	return c.Query().Where(bracketnode.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BracketNodeClient) GetX(ctx context.Context, id uuid.UUID) *BracketNode {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *BracketNodeClient) Hooks() []Hook {
+	hooks := c.hooks.BracketNode
+	return append(hooks[:len(hooks):len(hooks)], bracketnode.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BracketNodeClient) Interceptors() []Interceptor {
+	inters := c.inters.BracketNode
+	return append(inters[:len(inters):len(inters)], bracketnode.Interceptors[:]...)
+}
+
+func (c *BracketNodeClient) mutate(ctx context.Context, m *BracketNodeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BracketNodeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BracketNodeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BracketNodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BracketNodeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BracketNode mutation op: %q", m.Op())
+	}
+}
+
+// ChallengeClient is a client for the Challenge schema.
+type ChallengeClient struct {
+	config
+}
+
+// NewChallengeClient returns a client for the Challenge from the given config.
+func NewChallengeClient(c config) *ChallengeClient {
+	return &ChallengeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `challenge.Hooks(f(g(h())))`.
+func (c *ChallengeClient) Use(hooks ...Hook) {
+	c.hooks.Challenge = append(c.hooks.Challenge, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `challenge.Intercept(f(g(h())))`.
+func (c *ChallengeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Challenge = append(c.inters.Challenge, interceptors...)
+}
+
+// Create returns a builder for creating a Challenge entity.
+func (c *ChallengeClient) Create() *ChallengeCreate {
+	mutation := newChallengeMutation(c.config, OpCreate)
+	return &ChallengeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Challenge entities.
+func (c *ChallengeClient) CreateBulk(builders ...*ChallengeCreate) *ChallengeCreateBulk {
+	return &ChallengeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ChallengeClient) MapCreateBulk(slice any, setFunc func(*ChallengeCreate, int)) *ChallengeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ChallengeCreateBulk{err: fmt.Errorf("calling to ChallengeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ChallengeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ChallengeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Challenge.
+func (c *ChallengeClient) Update() *ChallengeUpdate {
+	mutation := newChallengeMutation(c.config, OpUpdate)
+	return &ChallengeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ChallengeClient) UpdateOne(_m *Challenge) *ChallengeUpdateOne {
+	mutation := newChallengeMutation(c.config, OpUpdateOne, withChallenge(_m))
+	return &ChallengeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ChallengeClient) UpdateOneID(id uuid.UUID) *ChallengeUpdateOne {
+	mutation := newChallengeMutation(c.config, OpUpdateOne, withChallengeID(id))
+	return &ChallengeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Challenge.
+func (c *ChallengeClient) Delete() *ChallengeDelete {
+	mutation := newChallengeMutation(c.config, OpDelete)
+	return &ChallengeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ChallengeClient) DeleteOne(_m *Challenge) *ChallengeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ChallengeClient) DeleteOneID(id uuid.UUID) *ChallengeDeleteOne {
+	builder := c.Delete().Where(challenge.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ChallengeDeleteOne{builder}
+}
+
+// Query returns a query builder for Challenge.
+func (c *ChallengeClient) Query() *ChallengeQuery {
+	return &ChallengeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeChallenge},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Challenge entity by its id.
+func (c *ChallengeClient) Get(ctx context.Context, id uuid.UUID) (*Challenge, error) {
+	return c.Query().Where(challenge.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ChallengeClient) GetX(ctx context.Context, id uuid.UUID) *Challenge {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ChallengeClient) Hooks() []Hook {
+	hooks := c.hooks.Challenge
+	return append(hooks[:len(hooks):len(hooks)], challenge.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ChallengeClient) Interceptors() []Interceptor {
+	inters := c.inters.Challenge
+	return append(inters[:len(inters):len(inters)], challenge.Interceptors[:]...)
+}
+
+func (c *ChallengeClient) mutate(ctx context.Context, m *ChallengeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ChallengeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ChallengeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ChallengeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ChallengeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Challenge mutation op: %q", m.Op())
 	}
 }
 
@@ -3500,52 +3838,874 @@ func (c *SessionMembershipClient) mutate(ctx context.Context, m *SessionMembersh
 	}
 }
 
+// TenantResourceAssignmentClient is a client for the TenantResourceAssignment schema.
+type TenantResourceAssignmentClient struct {
+	config
+}
+
+// NewTenantResourceAssignmentClient returns a client for the TenantResourceAssignment from the given config.
+func NewTenantResourceAssignmentClient(c config) *TenantResourceAssignmentClient {
+	return &TenantResourceAssignmentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tenantresourceassignment.Hooks(f(g(h())))`.
+func (c *TenantResourceAssignmentClient) Use(hooks ...Hook) {
+	c.hooks.TenantResourceAssignment = append(c.hooks.TenantResourceAssignment, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tenantresourceassignment.Intercept(f(g(h())))`.
+func (c *TenantResourceAssignmentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TenantResourceAssignment = append(c.inters.TenantResourceAssignment, interceptors...)
+}
+
+// Create returns a builder for creating a TenantResourceAssignment entity.
+func (c *TenantResourceAssignmentClient) Create() *TenantResourceAssignmentCreate {
+	mutation := newTenantResourceAssignmentMutation(c.config, OpCreate)
+	return &TenantResourceAssignmentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TenantResourceAssignment entities.
+func (c *TenantResourceAssignmentClient) CreateBulk(builders ...*TenantResourceAssignmentCreate) *TenantResourceAssignmentCreateBulk {
+	return &TenantResourceAssignmentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TenantResourceAssignmentClient) MapCreateBulk(slice any, setFunc func(*TenantResourceAssignmentCreate, int)) *TenantResourceAssignmentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TenantResourceAssignmentCreateBulk{err: fmt.Errorf("calling to TenantResourceAssignmentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TenantResourceAssignmentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TenantResourceAssignmentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TenantResourceAssignment.
+func (c *TenantResourceAssignmentClient) Update() *TenantResourceAssignmentUpdate {
+	mutation := newTenantResourceAssignmentMutation(c.config, OpUpdate)
+	return &TenantResourceAssignmentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TenantResourceAssignmentClient) UpdateOne(_m *TenantResourceAssignment) *TenantResourceAssignmentUpdateOne {
+	mutation := newTenantResourceAssignmentMutation(c.config, OpUpdateOne, withTenantResourceAssignment(_m))
+	return &TenantResourceAssignmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TenantResourceAssignmentClient) UpdateOneID(id uuid.UUID) *TenantResourceAssignmentUpdateOne {
+	mutation := newTenantResourceAssignmentMutation(c.config, OpUpdateOne, withTenantResourceAssignmentID(id))
+	return &TenantResourceAssignmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TenantResourceAssignment.
+func (c *TenantResourceAssignmentClient) Delete() *TenantResourceAssignmentDelete {
+	mutation := newTenantResourceAssignmentMutation(c.config, OpDelete)
+	return &TenantResourceAssignmentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TenantResourceAssignmentClient) DeleteOne(_m *TenantResourceAssignment) *TenantResourceAssignmentDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TenantResourceAssignmentClient) DeleteOneID(id uuid.UUID) *TenantResourceAssignmentDeleteOne {
+	builder := c.Delete().Where(tenantresourceassignment.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TenantResourceAssignmentDeleteOne{builder}
+}
+
+// Query returns a query builder for TenantResourceAssignment.
+func (c *TenantResourceAssignmentClient) Query() *TenantResourceAssignmentQuery {
+	return &TenantResourceAssignmentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTenantResourceAssignment},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TenantResourceAssignment entity by its id.
+func (c *TenantResourceAssignmentClient) Get(ctx context.Context, id uuid.UUID) (*TenantResourceAssignment, error) {
+	return c.Query().Where(tenantresourceassignment.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TenantResourceAssignmentClient) GetX(ctx context.Context, id uuid.UUID) *TenantResourceAssignment {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TenantResourceAssignmentClient) Hooks() []Hook {
+	hooks := c.hooks.TenantResourceAssignment
+	return append(hooks[:len(hooks):len(hooks)], tenantresourceassignment.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TenantResourceAssignmentClient) Interceptors() []Interceptor {
+	inters := c.inters.TenantResourceAssignment
+	return append(inters[:len(inters):len(inters)], tenantresourceassignment.Interceptors[:]...)
+}
+
+func (c *TenantResourceAssignmentClient) mutate(ctx context.Context, m *TenantResourceAssignmentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TenantResourceAssignmentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TenantResourceAssignmentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TenantResourceAssignmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TenantResourceAssignmentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TenantResourceAssignment mutation op: %q", m.Op())
+	}
+}
+
+// TournamentClient is a client for the Tournament schema.
+type TournamentClient struct {
+	config
+}
+
+// NewTournamentClient returns a client for the Tournament from the given config.
+func NewTournamentClient(c config) *TournamentClient {
+	return &TournamentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tournament.Hooks(f(g(h())))`.
+func (c *TournamentClient) Use(hooks ...Hook) {
+	c.hooks.Tournament = append(c.hooks.Tournament, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tournament.Intercept(f(g(h())))`.
+func (c *TournamentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Tournament = append(c.inters.Tournament, interceptors...)
+}
+
+// Create returns a builder for creating a Tournament entity.
+func (c *TournamentClient) Create() *TournamentCreate {
+	mutation := newTournamentMutation(c.config, OpCreate)
+	return &TournamentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Tournament entities.
+func (c *TournamentClient) CreateBulk(builders ...*TournamentCreate) *TournamentCreateBulk {
+	return &TournamentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TournamentClient) MapCreateBulk(slice any, setFunc func(*TournamentCreate, int)) *TournamentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TournamentCreateBulk{err: fmt.Errorf("calling to TournamentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TournamentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TournamentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Tournament.
+func (c *TournamentClient) Update() *TournamentUpdate {
+	mutation := newTournamentMutation(c.config, OpUpdate)
+	return &TournamentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TournamentClient) UpdateOne(_m *Tournament) *TournamentUpdateOne {
+	mutation := newTournamentMutation(c.config, OpUpdateOne, withTournament(_m))
+	return &TournamentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TournamentClient) UpdateOneID(id uuid.UUID) *TournamentUpdateOne {
+	mutation := newTournamentMutation(c.config, OpUpdateOne, withTournamentID(id))
+	return &TournamentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Tournament.
+func (c *TournamentClient) Delete() *TournamentDelete {
+	mutation := newTournamentMutation(c.config, OpDelete)
+	return &TournamentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TournamentClient) DeleteOne(_m *Tournament) *TournamentDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TournamentClient) DeleteOneID(id uuid.UUID) *TournamentDeleteOne {
+	builder := c.Delete().Where(tournament.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TournamentDeleteOne{builder}
+}
+
+// Query returns a query builder for Tournament.
+func (c *TournamentClient) Query() *TournamentQuery {
+	return &TournamentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTournament},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Tournament entity by its id.
+func (c *TournamentClient) Get(ctx context.Context, id uuid.UUID) (*Tournament, error) {
+	return c.Query().Where(tournament.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TournamentClient) GetX(ctx context.Context, id uuid.UUID) *Tournament {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TournamentClient) Hooks() []Hook {
+	hooks := c.hooks.Tournament
+	return append(hooks[:len(hooks):len(hooks)], tournament.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TournamentClient) Interceptors() []Interceptor {
+	inters := c.inters.Tournament
+	return append(inters[:len(inters):len(inters)], tournament.Interceptors[:]...)
+}
+
+func (c *TournamentClient) mutate(ctx context.Context, m *TournamentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TournamentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TournamentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TournamentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TournamentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Tournament mutation op: %q", m.Op())
+	}
+}
+
+// TournamentEntryClient is a client for the TournamentEntry schema.
+type TournamentEntryClient struct {
+	config
+}
+
+// NewTournamentEntryClient returns a client for the TournamentEntry from the given config.
+func NewTournamentEntryClient(c config) *TournamentEntryClient {
+	return &TournamentEntryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tournamententry.Hooks(f(g(h())))`.
+func (c *TournamentEntryClient) Use(hooks ...Hook) {
+	c.hooks.TournamentEntry = append(c.hooks.TournamentEntry, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tournamententry.Intercept(f(g(h())))`.
+func (c *TournamentEntryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TournamentEntry = append(c.inters.TournamentEntry, interceptors...)
+}
+
+// Create returns a builder for creating a TournamentEntry entity.
+func (c *TournamentEntryClient) Create() *TournamentEntryCreate {
+	mutation := newTournamentEntryMutation(c.config, OpCreate)
+	return &TournamentEntryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TournamentEntry entities.
+func (c *TournamentEntryClient) CreateBulk(builders ...*TournamentEntryCreate) *TournamentEntryCreateBulk {
+	return &TournamentEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TournamentEntryClient) MapCreateBulk(slice any, setFunc func(*TournamentEntryCreate, int)) *TournamentEntryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TournamentEntryCreateBulk{err: fmt.Errorf("calling to TournamentEntryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TournamentEntryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TournamentEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TournamentEntry.
+func (c *TournamentEntryClient) Update() *TournamentEntryUpdate {
+	mutation := newTournamentEntryMutation(c.config, OpUpdate)
+	return &TournamentEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TournamentEntryClient) UpdateOne(_m *TournamentEntry) *TournamentEntryUpdateOne {
+	mutation := newTournamentEntryMutation(c.config, OpUpdateOne, withTournamentEntry(_m))
+	return &TournamentEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TournamentEntryClient) UpdateOneID(id uuid.UUID) *TournamentEntryUpdateOne {
+	mutation := newTournamentEntryMutation(c.config, OpUpdateOne, withTournamentEntryID(id))
+	return &TournamentEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TournamentEntry.
+func (c *TournamentEntryClient) Delete() *TournamentEntryDelete {
+	mutation := newTournamentEntryMutation(c.config, OpDelete)
+	return &TournamentEntryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TournamentEntryClient) DeleteOne(_m *TournamentEntry) *TournamentEntryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TournamentEntryClient) DeleteOneID(id uuid.UUID) *TournamentEntryDeleteOne {
+	builder := c.Delete().Where(tournamententry.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TournamentEntryDeleteOne{builder}
+}
+
+// Query returns a query builder for TournamentEntry.
+func (c *TournamentEntryClient) Query() *TournamentEntryQuery {
+	return &TournamentEntryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTournamentEntry},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TournamentEntry entity by its id.
+func (c *TournamentEntryClient) Get(ctx context.Context, id uuid.UUID) (*TournamentEntry, error) {
+	return c.Query().Where(tournamententry.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TournamentEntryClient) GetX(ctx context.Context, id uuid.UUID) *TournamentEntry {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TournamentEntryClient) Hooks() []Hook {
+	hooks := c.hooks.TournamentEntry
+	return append(hooks[:len(hooks):len(hooks)], tournamententry.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TournamentEntryClient) Interceptors() []Interceptor {
+	inters := c.inters.TournamentEntry
+	return append(inters[:len(inters):len(inters)], tournamententry.Interceptors[:]...)
+}
+
+func (c *TournamentEntryClient) mutate(ctx context.Context, m *TournamentEntryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TournamentEntryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TournamentEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TournamentEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TournamentEntryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TournamentEntry mutation op: %q", m.Op())
+	}
+}
+
+// TournamentGroupClient is a client for the TournamentGroup schema.
+type TournamentGroupClient struct {
+	config
+}
+
+// NewTournamentGroupClient returns a client for the TournamentGroup from the given config.
+func NewTournamentGroupClient(c config) *TournamentGroupClient {
+	return &TournamentGroupClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tournamentgroup.Hooks(f(g(h())))`.
+func (c *TournamentGroupClient) Use(hooks ...Hook) {
+	c.hooks.TournamentGroup = append(c.hooks.TournamentGroup, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tournamentgroup.Intercept(f(g(h())))`.
+func (c *TournamentGroupClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TournamentGroup = append(c.inters.TournamentGroup, interceptors...)
+}
+
+// Create returns a builder for creating a TournamentGroup entity.
+func (c *TournamentGroupClient) Create() *TournamentGroupCreate {
+	mutation := newTournamentGroupMutation(c.config, OpCreate)
+	return &TournamentGroupCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TournamentGroup entities.
+func (c *TournamentGroupClient) CreateBulk(builders ...*TournamentGroupCreate) *TournamentGroupCreateBulk {
+	return &TournamentGroupCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TournamentGroupClient) MapCreateBulk(slice any, setFunc func(*TournamentGroupCreate, int)) *TournamentGroupCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TournamentGroupCreateBulk{err: fmt.Errorf("calling to TournamentGroupClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TournamentGroupCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TournamentGroupCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TournamentGroup.
+func (c *TournamentGroupClient) Update() *TournamentGroupUpdate {
+	mutation := newTournamentGroupMutation(c.config, OpUpdate)
+	return &TournamentGroupUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TournamentGroupClient) UpdateOne(_m *TournamentGroup) *TournamentGroupUpdateOne {
+	mutation := newTournamentGroupMutation(c.config, OpUpdateOne, withTournamentGroup(_m))
+	return &TournamentGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TournamentGroupClient) UpdateOneID(id uuid.UUID) *TournamentGroupUpdateOne {
+	mutation := newTournamentGroupMutation(c.config, OpUpdateOne, withTournamentGroupID(id))
+	return &TournamentGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TournamentGroup.
+func (c *TournamentGroupClient) Delete() *TournamentGroupDelete {
+	mutation := newTournamentGroupMutation(c.config, OpDelete)
+	return &TournamentGroupDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TournamentGroupClient) DeleteOne(_m *TournamentGroup) *TournamentGroupDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TournamentGroupClient) DeleteOneID(id uuid.UUID) *TournamentGroupDeleteOne {
+	builder := c.Delete().Where(tournamentgroup.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TournamentGroupDeleteOne{builder}
+}
+
+// Query returns a query builder for TournamentGroup.
+func (c *TournamentGroupClient) Query() *TournamentGroupQuery {
+	return &TournamentGroupQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTournamentGroup},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TournamentGroup entity by its id.
+func (c *TournamentGroupClient) Get(ctx context.Context, id uuid.UUID) (*TournamentGroup, error) {
+	return c.Query().Where(tournamentgroup.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TournamentGroupClient) GetX(ctx context.Context, id uuid.UUID) *TournamentGroup {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TournamentGroupClient) Hooks() []Hook {
+	hooks := c.hooks.TournamentGroup
+	return append(hooks[:len(hooks):len(hooks)], tournamentgroup.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TournamentGroupClient) Interceptors() []Interceptor {
+	inters := c.inters.TournamentGroup
+	return append(inters[:len(inters):len(inters)], tournamentgroup.Interceptors[:]...)
+}
+
+func (c *TournamentGroupClient) mutate(ctx context.Context, m *TournamentGroupMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TournamentGroupCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TournamentGroupUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TournamentGroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TournamentGroupDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TournamentGroup mutation op: %q", m.Op())
+	}
+}
+
+// TournamentResultClient is a client for the TournamentResult schema.
+type TournamentResultClient struct {
+	config
+}
+
+// NewTournamentResultClient returns a client for the TournamentResult from the given config.
+func NewTournamentResultClient(c config) *TournamentResultClient {
+	return &TournamentResultClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tournamentresult.Hooks(f(g(h())))`.
+func (c *TournamentResultClient) Use(hooks ...Hook) {
+	c.hooks.TournamentResult = append(c.hooks.TournamentResult, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tournamentresult.Intercept(f(g(h())))`.
+func (c *TournamentResultClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TournamentResult = append(c.inters.TournamentResult, interceptors...)
+}
+
+// Create returns a builder for creating a TournamentResult entity.
+func (c *TournamentResultClient) Create() *TournamentResultCreate {
+	mutation := newTournamentResultMutation(c.config, OpCreate)
+	return &TournamentResultCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TournamentResult entities.
+func (c *TournamentResultClient) CreateBulk(builders ...*TournamentResultCreate) *TournamentResultCreateBulk {
+	return &TournamentResultCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TournamentResultClient) MapCreateBulk(slice any, setFunc func(*TournamentResultCreate, int)) *TournamentResultCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TournamentResultCreateBulk{err: fmt.Errorf("calling to TournamentResultClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TournamentResultCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TournamentResultCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TournamentResult.
+func (c *TournamentResultClient) Update() *TournamentResultUpdate {
+	mutation := newTournamentResultMutation(c.config, OpUpdate)
+	return &TournamentResultUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TournamentResultClient) UpdateOne(_m *TournamentResult) *TournamentResultUpdateOne {
+	mutation := newTournamentResultMutation(c.config, OpUpdateOne, withTournamentResult(_m))
+	return &TournamentResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TournamentResultClient) UpdateOneID(id uuid.UUID) *TournamentResultUpdateOne {
+	mutation := newTournamentResultMutation(c.config, OpUpdateOne, withTournamentResultID(id))
+	return &TournamentResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TournamentResult.
+func (c *TournamentResultClient) Delete() *TournamentResultDelete {
+	mutation := newTournamentResultMutation(c.config, OpDelete)
+	return &TournamentResultDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TournamentResultClient) DeleteOne(_m *TournamentResult) *TournamentResultDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TournamentResultClient) DeleteOneID(id uuid.UUID) *TournamentResultDeleteOne {
+	builder := c.Delete().Where(tournamentresult.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TournamentResultDeleteOne{builder}
+}
+
+// Query returns a query builder for TournamentResult.
+func (c *TournamentResultClient) Query() *TournamentResultQuery {
+	return &TournamentResultQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTournamentResult},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TournamentResult entity by its id.
+func (c *TournamentResultClient) Get(ctx context.Context, id uuid.UUID) (*TournamentResult, error) {
+	return c.Query().Where(tournamentresult.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TournamentResultClient) GetX(ctx context.Context, id uuid.UUID) *TournamentResult {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TournamentResultClient) Hooks() []Hook {
+	hooks := c.hooks.TournamentResult
+	return append(hooks[:len(hooks):len(hooks)], tournamentresult.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TournamentResultClient) Interceptors() []Interceptor {
+	inters := c.inters.TournamentResult
+	return append(inters[:len(inters):len(inters)], tournamentresult.Interceptors[:]...)
+}
+
+func (c *TournamentResultClient) mutate(ctx context.Context, m *TournamentResultMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TournamentResultCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TournamentResultUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TournamentResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TournamentResultDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TournamentResult mutation op: %q", m.Op())
+	}
+}
+
+// TournamentRewardClient is a client for the TournamentReward schema.
+type TournamentRewardClient struct {
+	config
+}
+
+// NewTournamentRewardClient returns a client for the TournamentReward from the given config.
+func NewTournamentRewardClient(c config) *TournamentRewardClient {
+	return &TournamentRewardClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tournamentreward.Hooks(f(g(h())))`.
+func (c *TournamentRewardClient) Use(hooks ...Hook) {
+	c.hooks.TournamentReward = append(c.hooks.TournamentReward, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tournamentreward.Intercept(f(g(h())))`.
+func (c *TournamentRewardClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TournamentReward = append(c.inters.TournamentReward, interceptors...)
+}
+
+// Create returns a builder for creating a TournamentReward entity.
+func (c *TournamentRewardClient) Create() *TournamentRewardCreate {
+	mutation := newTournamentRewardMutation(c.config, OpCreate)
+	return &TournamentRewardCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TournamentReward entities.
+func (c *TournamentRewardClient) CreateBulk(builders ...*TournamentRewardCreate) *TournamentRewardCreateBulk {
+	return &TournamentRewardCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TournamentRewardClient) MapCreateBulk(slice any, setFunc func(*TournamentRewardCreate, int)) *TournamentRewardCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TournamentRewardCreateBulk{err: fmt.Errorf("calling to TournamentRewardClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TournamentRewardCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TournamentRewardCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TournamentReward.
+func (c *TournamentRewardClient) Update() *TournamentRewardUpdate {
+	mutation := newTournamentRewardMutation(c.config, OpUpdate)
+	return &TournamentRewardUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TournamentRewardClient) UpdateOne(_m *TournamentReward) *TournamentRewardUpdateOne {
+	mutation := newTournamentRewardMutation(c.config, OpUpdateOne, withTournamentReward(_m))
+	return &TournamentRewardUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TournamentRewardClient) UpdateOneID(id uuid.UUID) *TournamentRewardUpdateOne {
+	mutation := newTournamentRewardMutation(c.config, OpUpdateOne, withTournamentRewardID(id))
+	return &TournamentRewardUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TournamentReward.
+func (c *TournamentRewardClient) Delete() *TournamentRewardDelete {
+	mutation := newTournamentRewardMutation(c.config, OpDelete)
+	return &TournamentRewardDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TournamentRewardClient) DeleteOne(_m *TournamentReward) *TournamentRewardDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TournamentRewardClient) DeleteOneID(id uuid.UUID) *TournamentRewardDeleteOne {
+	builder := c.Delete().Where(tournamentreward.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TournamentRewardDeleteOne{builder}
+}
+
+// Query returns a query builder for TournamentReward.
+func (c *TournamentRewardClient) Query() *TournamentRewardQuery {
+	return &TournamentRewardQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTournamentReward},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TournamentReward entity by its id.
+func (c *TournamentRewardClient) Get(ctx context.Context, id uuid.UUID) (*TournamentReward, error) {
+	return c.Query().Where(tournamentreward.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TournamentRewardClient) GetX(ctx context.Context, id uuid.UUID) *TournamentReward {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TournamentRewardClient) Hooks() []Hook {
+	hooks := c.hooks.TournamentReward
+	return append(hooks[:len(hooks):len(hooks)], tournamentreward.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TournamentRewardClient) Interceptors() []Interceptor {
+	inters := c.inters.TournamentReward
+	return append(inters[:len(inters):len(inters)], tournamentreward.Interceptors[:]...)
+}
+
+func (c *TournamentRewardClient) mutate(ctx context.Context, m *TournamentRewardMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TournamentRewardCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TournamentRewardUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TournamentRewardUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TournamentRewardDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TournamentReward mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		CompetitionPointEntry, CompetitionRestriction, ContentRelease, Duel, GameConfig,
-		GameConfigVersion, LeaderboardContribution, LeaderboardDefinition,
-		LeaderboardSnapshot, Match, MatchParticipant, MatchResult, Party,
-		PartyActivity, PartyInvitation, PartyMember, PartyPolicy, Rating, RatingChange,
-		Room, Season, SeasonResult, SessionMembership []ent.Hook
+		BracketNode, Challenge, CompetitionPointEntry, CompetitionRestriction,
+		ContentRelease, Duel, GameConfig, GameConfigVersion, LeaderboardContribution,
+		LeaderboardDefinition, LeaderboardSnapshot, Match, MatchParticipant,
+		MatchResult, Party, PartyActivity, PartyInvitation, PartyMember, PartyPolicy,
+		Rating, RatingChange, Room, Season, SeasonResult, SessionMembership,
+		TenantResourceAssignment, Tournament, TournamentEntry, TournamentGroup,
+		TournamentResult, TournamentReward []ent.Hook
 	}
 	inters struct {
-		CompetitionPointEntry, CompetitionRestriction, ContentRelease, Duel, GameConfig,
-		GameConfigVersion, LeaderboardContribution, LeaderboardDefinition,
-		LeaderboardSnapshot, Match, MatchParticipant, MatchResult, Party,
-		PartyActivity, PartyInvitation, PartyMember, PartyPolicy, Rating, RatingChange,
-		Room, Season, SeasonResult, SessionMembership []ent.Interceptor
+		BracketNode, Challenge, CompetitionPointEntry, CompetitionRestriction,
+		ContentRelease, Duel, GameConfig, GameConfigVersion, LeaderboardContribution,
+		LeaderboardDefinition, LeaderboardSnapshot, Match, MatchParticipant,
+		MatchResult, Party, PartyActivity, PartyInvitation, PartyMember, PartyPolicy,
+		Rating, RatingChange, Room, Season, SeasonResult, SessionMembership,
+		TenantResourceAssignment, Tournament, TournamentEntry, TournamentGroup,
+		TournamentResult, TournamentReward []ent.Interceptor
 	}
 )
 
 var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
-		CompetitionPointEntry:   tableSchemas[0],
-		CompetitionRestriction:  tableSchemas[0],
-		ContentRelease:          tableSchemas[0],
-		Duel:                    tableSchemas[0],
-		GameConfig:              tableSchemas[0],
-		GameConfigVersion:       tableSchemas[0],
-		LeaderboardContribution: tableSchemas[0],
-		LeaderboardDefinition:   tableSchemas[0],
-		LeaderboardSnapshot:     tableSchemas[0],
-		Match:                   tableSchemas[0],
-		MatchParticipant:        tableSchemas[0],
-		MatchResult:             tableSchemas[0],
-		Party:                   tableSchemas[1],
-		PartyActivity:           tableSchemas[1],
-		PartyInvitation:         tableSchemas[1],
-		PartyMember:             tableSchemas[1],
-		PartyPolicy:             tableSchemas[1],
-		Rating:                  tableSchemas[0],
-		RatingChange:            tableSchemas[0],
-		Room:                    tableSchemas[1],
-		Season:                  tableSchemas[0],
-		SeasonResult:            tableSchemas[0],
-		SessionMembership:       tableSchemas[1],
+		BracketNode:              tableSchemas[0],
+		Challenge:                tableSchemas[0],
+		CompetitionPointEntry:    tableSchemas[0],
+		CompetitionRestriction:   tableSchemas[0],
+		ContentRelease:           tableSchemas[0],
+		Duel:                     tableSchemas[0],
+		GameConfig:               tableSchemas[0],
+		GameConfigVersion:        tableSchemas[0],
+		LeaderboardContribution:  tableSchemas[0],
+		LeaderboardDefinition:    tableSchemas[0],
+		LeaderboardSnapshot:      tableSchemas[0],
+		Match:                    tableSchemas[0],
+		MatchParticipant:         tableSchemas[0],
+		MatchResult:              tableSchemas[0],
+		Party:                    tableSchemas[2],
+		PartyActivity:            tableSchemas[2],
+		PartyInvitation:          tableSchemas[2],
+		PartyMember:              tableSchemas[2],
+		PartyPolicy:              tableSchemas[2],
+		Rating:                   tableSchemas[0],
+		RatingChange:             tableSchemas[0],
+		Room:                     tableSchemas[2],
+		Season:                   tableSchemas[0],
+		SeasonResult:             tableSchemas[0],
+		SessionMembership:        tableSchemas[2],
+		TenantResourceAssignment: tableSchemas[1],
+		Tournament:               tableSchemas[0],
+		TournamentEntry:          tableSchemas[0],
+		TournamentGroup:          tableSchemas[0],
+		TournamentResult:         tableSchemas[0],
+		TournamentReward:         tableSchemas[0],
 	}
-	tableSchemas = [...]string{"competition", "multiplayer"}
+	tableSchemas = [...]string{"competition", "infra", "multiplayer"}
 )
 
 // SchemaConfig represents alternative schema names for all tables

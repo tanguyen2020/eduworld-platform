@@ -50,6 +50,14 @@ type CompetitionMergeOps interface {
 	MergeUserData(ctx context.Context, req competitionapi.MergeUserDataRequestObject) (competitionapi.MergeUserDataResponseObject, error)
 }
 
+// CompetitionAssignmentOps are the template assignments of module competition (tournament_template, challenge_template —
+// F107-AC-29).
+type CompetitionAssignmentOps interface {
+	ApplyTenantAssignments(ctx context.Context, req competitionapi.ApplyTenantAssignmentsRequestObject) (competitionapi.ApplyTenantAssignmentsResponseObject, error)
+	RevokeTenantAssignments(ctx context.Context, req competitionapi.RevokeTenantAssignmentsRequestObject) (competitionapi.RevokeTenantAssignmentsResponseObject, error)
+	ListResourceAssignments(ctx context.Context, req competitionapi.ListResourceAssignmentsRequestObject) (competitionapi.ListResourceAssignmentsResponseObject, error)
+}
+
 // GameMergeOps is mergeUserData of module game (F070 T039, OQ F016-2, F045-3).
 type GameMergeOps interface {
 	MergeUserData(ctx context.Context, req gameapi.MergeUserDataRequestObject) (gameapi.MergeUserDataResponseObject, error)
@@ -57,7 +65,8 @@ type GameMergeOps interface {
 
 // Gateway implements port.OwnerServiceGateway. A nil facade means the module is not wired in this binary:
 // every call to it is 503 UNAVAILABLE, never a silent success (F045-AC-25). Module learning has every adapter; module game
-// and competition serve mergeUserData only (F070, F100); chat implements no platform-ops facade yet (OQ F045-3).
+// serves mergeUserData (F070) and its assignments (F078); competition serves mergeUserData (F100) and the template assignments
+// (F107); chat implements no platform-ops facade yet (OQ F045-3).
 type Gateway struct {
 	Learning      LearningPlatformOps
 	LearningMerge LearningMergeOps
@@ -66,6 +75,8 @@ type Gateway struct {
 	GameAssign GameAssignmentOps
 	// CompetitionMerge is mergeUserData of module competition (F100 T042).
 	CompetitionMerge CompetitionMergeOps
+	// CompetitionAssign assigns the tournament and challenge templates of module competition (F107).
+	CompetitionAssign CompetitionAssignmentOps
 	// Deadlines override module_call_deadline per kind (configuration, tests); zero = modcall defaults.
 	Deadlines map[modcall.Kind]time.Duration
 }
@@ -188,6 +199,84 @@ func assignments(list learningapi.CommonInternalCommonV1TenantAssignmentList) []
 	return out
 }
 
+func (g Gateway) competitionOp(op string, kind modcall.Kind) modcall.Op {
+	return modcall.Op{Caller: caller, Callee: "competition", Operation: op, Kind: kind, Deadline: g.Deadlines[kind],
+		AllowedCallers: competitionapi.AllowedCallers[op], ContextRequired: competitionapi.ContextRequired[op]}
+}
+
+func competitionAssignments(list competitionapi.CommonInternalCommonV1TenantAssignmentList) []port.ResourceAssignment {
+	out := make([]port.ResourceAssignment, 0, len(list.Data))
+	for _, a := range list.Data {
+		out = append(out, port.ResourceAssignment{AssignmentID: a.AssignmentId, ResourceType: string(a.ResourceType), ResourceID: a.ResourceId,
+			TenantID: a.TenantId, AssignedBy: a.AssignedBy, AssignedAt: a.AssignedAt, Active: a.Status == "active"})
+	}
+	return out
+}
+
+// competitionApply assigns a template of module competition (F107-AC-29).
+func (g Gateway) competitionApply(ctx context.Context, resourceType string, id uuid.UUID, tenants []uuid.UUID) ([]port.ResourceAssignment, error) {
+	if g.CompetitionAssign == nil {
+		return nil, notWired("competition", "applyTenantAssignments")
+	}
+	res, err := call(ctx, g.competitionOp("applyTenantAssignments", modcall.Write), func(ctx context.Context) (competitionapi.ApplyTenantAssignmentsResponseObject, error) {
+		return g.CompetitionAssign.ApplyTenantAssignments(ctx, competitionapi.ApplyTenantAssignmentsRequestObject{Body: &competitionapi.ApplyTenantAssignmentsJSONRequestBody{
+			ResourceType: competitionapi.CommonInternalCommonV1ResourceType(resourceType), ResourceId: id, TenantIds: tenants}})
+	})
+	if err != nil {
+		return nil, err
+	}
+	list, ok := res.(competitionapi.ApplyTenantAssignments200JSONResponse)
+	if !ok {
+		return nil, unexpected("competition", "applyTenantAssignments", res)
+	}
+	return competitionAssignments(competitionapi.CommonInternalCommonV1TenantAssignmentList(list)), nil
+}
+
+// competitionRevoke unassigns a template of module competition (F107-AC-29).
+func (g Gateway) competitionRevoke(ctx context.Context, resourceType string, id uuid.UUID, tenants []uuid.UUID, reason string) ([]port.ResourceAssignment, error) {
+	if g.CompetitionAssign == nil {
+		return nil, notWired("competition", "revokeTenantAssignments")
+	}
+	res, err := call(ctx, g.competitionOp("revokeTenantAssignments", modcall.Write), func(ctx context.Context) (competitionapi.RevokeTenantAssignmentsResponseObject, error) {
+		return g.CompetitionAssign.RevokeTenantAssignments(ctx, competitionapi.RevokeTenantAssignmentsRequestObject{Body: &competitionapi.RevokeTenantAssignmentsJSONRequestBody{
+			ResourceType: competitionapi.CommonInternalCommonV1ResourceType(resourceType), ResourceId: id, TenantIds: tenants, Reason: reason}})
+	})
+	if err != nil {
+		return nil, err
+	}
+	list, ok := res.(competitionapi.RevokeTenantAssignments200JSONResponse)
+	if !ok {
+		return nil, unexpected("competition", "revokeTenantAssignments", res)
+	}
+	return competitionAssignments(competitionapi.CommonInternalCommonV1TenantAssignmentList(list)), nil
+}
+
+// competitionList lists the assignments of a template of module competition (F107-AC-29).
+func (g Gateway) competitionList(ctx context.Context, resourceType string, id uuid.UUID, cursor string, limit int) (port.AssignmentPage, error) {
+	if g.CompetitionAssign == nil {
+		return port.AssignmentPage{}, notWired("competition", "listResourceAssignments")
+	}
+	params := competitionapi.ListResourceAssignmentsParams{ResourceType: competitionapi.CommonInternalCommonV1ResourceType(resourceType), ResourceId: id}
+	if cursor != "" {
+		params.Cursor = &cursor
+	}
+	if limit > 0 {
+		params.Limit = &limit
+	}
+	res, err := call(ctx, g.competitionOp("listResourceAssignments", modcall.Read), func(ctx context.Context) (competitionapi.ListResourceAssignmentsResponseObject, error) {
+		return g.CompetitionAssign.ListResourceAssignments(ctx, competitionapi.ListResourceAssignmentsRequestObject{Params: params})
+	})
+	if err != nil {
+		return port.AssignmentPage{}, err
+	}
+	list, ok := res.(competitionapi.ListResourceAssignments200JSONResponse)
+	if !ok {
+		return port.AssignmentPage{}, unexpected("competition", "listResourceAssignments", res)
+	}
+	l := competitionapi.CommonInternalCommonV1TenantAssignmentList(list)
+	return port.AssignmentPage{Data: competitionAssignments(l), HasMore: l.Page.HasMore, NextCursor: l.Page.NextCursor}, nil
+}
+
 // ApplyAssignments implements port.OwnerServiceGateway.
 func (g Gateway) ApplyAssignments(ctx context.Context, module, resourceType string, id uuid.UUID, tenants []uuid.UUID) ([]port.ResourceAssignment, error) {
 	if module == "game" && g.GameAssign != nil {
@@ -203,6 +292,9 @@ func (g Gateway) ApplyAssignments(ctx context.Context, module, resourceType stri
 			return nil, unexpected(module, "applyTenantAssignments", res)
 		}
 		return gameAssignments(gameapi.CommonInternalCommonV1TenantAssignmentList(list)), nil
+	}
+	if module == "competition" {
+		return g.competitionApply(ctx, resourceType, id, tenants)
 	}
 	if module != "learning" || g.Learning == nil {
 		return nil, notWired(module, "applyTenantAssignments")
@@ -236,6 +328,9 @@ func (g Gateway) RevokeAssignments(ctx context.Context, module, resourceType str
 			return nil, unexpected(module, "revokeTenantAssignments", res)
 		}
 		return gameAssignments(gameapi.CommonInternalCommonV1TenantAssignmentList(list)), nil
+	}
+	if module == "competition" {
+		return g.competitionRevoke(ctx, resourceType, id, tenants, reason)
 	}
 	if module != "learning" || g.Learning == nil {
 		return nil, notWired(module, "revokeTenantAssignments")
@@ -276,6 +371,9 @@ func (g Gateway) ListAssignments(ctx context.Context, module, resourceType strin
 		}
 		l := gameapi.CommonInternalCommonV1TenantAssignmentList(list)
 		return port.AssignmentPage{Data: gameAssignments(l), HasMore: l.Page.HasMore, NextCursor: l.Page.NextCursor}, nil
+	}
+	if module == "competition" {
+		return g.competitionList(ctx, resourceType, id, cursor, limit)
 	}
 	if module != "learning" || g.Learning == nil {
 		return port.AssignmentPage{}, notWired(module, "listResourceAssignments")

@@ -14,7 +14,7 @@ Dựng tầng chat của game client theo GODOT_ARCHITECTURE §6.1: `ChatService
 | Primary Dependencies | `ApiClient`, `RealtimeClient` (F061, F092), `EventBus`, `ServiceLocator`, `UiTokens`, gettext `TranslationServer`, GdUnit4 |
 | Storage | Không có (RAM); cache asset sticker/GIF trong `user://cache/chat_assets/` theo version |
 | Testing | GdUnit4 headless (unit `ChatStore`/`ChatService` với `FakeApiClient`/`FakeRealtimeClient`, scene runner), visual pseudo-locale, profiler thiết bị lab |
-| Target Platform | Android, iOS, Web (ADR-0101) |
+| Target Platform | Windows, Android, iOS, Web |
 | Project Type | game client |
 | Performance Goals | [PERFORMANCE_BUDGET](../../docs/08-game-client/PERFORMANCE_BUDGET.md); TC-PERF-009, TC-PERF-019 |
 | Constraints | AGENTS R1, R2, R3, R15, R17, R25, R32; ADR-0020, ADR-0034, ADR-0047, ADR-0056 |

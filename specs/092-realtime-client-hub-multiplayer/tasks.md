@@ -56,7 +56,7 @@
 ### Tests cho User Story 3
 
 - [x] T024 [P] [US3] Benchmark headless F092-AC-21: 40 RemotePlayer giả lập, kiểm số nhân vật đầy đủ theo `quality_presets`, LOD animation > 30 m, frame time CPU trong ngân sách (TC-PERF-018) — file: `src/game/tests/perf/test_hub40_headless.gd` — phải FAIL trước khi code — ✅ `tests/perf/test_hub40_headless.gd` (4 test: số nhân vật đầy đủ 10/20/30/40 theo preset, LOD > 30 m, script median ≈ 1,1 ms ≤ 6 ms, băng thông lên ≈ 1,9 KB/s ≤ 3 KB/s, pool tái dùng) (2026-11-21)
-- [ ] T025 [US3] Lab F092-AC-20, F092-AC-22, F092-AC-23: 39 bot + client thật trên DEV-AND-MID1/DEV-WEB-MID 10 phút (không còn DEV-PC-MID native — ADR-0101); soak 60 phút (TC-PERF-009, TC-PERF-023, TC-PERF-021) — file: `src/game/tests/perf/lab_hub40_protocol.md` (quy trình đo + bảng kết quả) — ⏳ quy trình và bảng kết quả đã viết; chưa đo (cần thiết bị lab + bot hub)
+- [ ] T025 [US3] Lab F092-AC-20, F092-AC-22, F092-AC-23: 39 bot + client thật trên DEV-AND-MID1/DEV-PC-MID/DEV-WEB-MID 10 phút; soak 60 phút (TC-PERF-009, TC-PERF-023, TC-PERF-021) — file: `src/game/tests/perf/lab_hub40_protocol.md` (quy trình đo + bảng kết quả) — ⏳ quy trình và bảng kết quả đã viết; chưa đo (cần thiết bị lab + bot hub)
 
 ### Implementation cho User Story 3
 

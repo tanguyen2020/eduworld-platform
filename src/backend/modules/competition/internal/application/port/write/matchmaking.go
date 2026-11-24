@@ -34,6 +34,7 @@ type NewMatch struct {
 	ScopeKind        string
 	TenantIDs        []uuid.UUID
 	TournamentNodeID *uuid.UUID
+	TournamentID     *uuid.UUID
 	DuelID           *uuid.UUID
 	RulesetVersionID uuid.UUID
 	Participants     []MatchParticipant

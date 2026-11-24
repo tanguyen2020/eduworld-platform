@@ -1707,3 +1707,27 @@ exceptions:
     operation: PATCH
     path: /lms/school-events/{event_id}
     text: added the new required 'header' request parameter 'Idempotency-Key'
+  - adr: ADR-0074
+    reason: 'F107: thử thách khối/giải trường thuộc module competition (route ngoại lệ dưới /lms, COMPETITION_SYSTEM §10.2) — operation chuyển x-service learning → competition, path không đổi trong spec gộp'
+    file:
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /lms/catalog/challenge-templates
+    text: api path removed without deprecation
+  - adr: ADR-0074
+    reason: 'F107: thử thách khối/giải trường thuộc module competition (route ngoại lệ dưới /lms, COMPETITION_SYSTEM §10.2) — operation chuyển x-service learning → competition, path không đổi trong spec gộp'
+    file:
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /lms/challenges
+    text: api path removed without deprecation
+  - adr: ADR-0074
+    reason: 'F107: thử thách khối/giải trường thuộc module competition (route ngoại lệ dưới /lms, COMPETITION_SYSTEM §10.2) — operation chuyển x-service learning → competition, path không đổi trong spec gộp'
+    file:
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: POST
+    path: /lms/challenges
+    text: api path removed without deprecation

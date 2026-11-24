@@ -1,6 +1,6 @@
 # UX màn hình học sinh trong game — quy ước chung và chỉ mục
 
-> Trạng thái: Draft · Phiên bản: 1.1 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 1.0 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-15
 > Liên quan: [DESIGN_SYSTEM](DESIGN_SYSTEM.md) · [ADR-0056 song ngữ](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057 máy tầm trung](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md)
 
 ## 1. Mục đích và phạm vi
@@ -19,7 +19,7 @@ Ngoài phạm vi: Admin Portal (xem [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORT
 
 | Nền tảng | Kích thước tham chiếu | Nhập liệu | Ghi chú | Nhãn |
 |---|---|---|---|---|
-| **Web/PC** (trình duyệt PC, gồm PC phòng máy — không có bản Windows, ADR-0101) | Cửa sổ tối thiểu 1280×720; tham chiếu 1920×1080 | Chuột + bàn phím; có phím tắt | Cửa sổ thay đổi kích thước được; UI co giãn theo `stretch_mode = canvas_items`, `aspect = expand` | [Confirmed] |
+| **Web/PC** (Windows app và trình duyệt PC) | Cửa sổ tối thiểu 1280×720; tham chiếu 1920×1080 | Chuột + bàn phím; có phím tắt | Cửa sổ thay đổi kích thước được; UI co giãn theo `stretch_mode = canvas_items`, `aspect = expand` | [Confirmed] |
 | **Mobile — điện thoại** | Ngang, ≥ 6"; tham chiếu 2400×1080 (20:9) | Cảm ứng đa điểm | Tôn trọng safe area (notch, thanh điều hướng); khóa hướng **ngang** | [Confirmed] |
 | **Mobile — tablet** | Ngang; tham chiếu 2160×1620 (4:3) | Cảm ứng; bàn phím ngoài nếu có | Dùng bố cục mobile với lề rộng hơn; panel có thể hiển thị hai cột | [Confirmed] |
 | Trình duyệt trên điện thoại | — | — | **Không hỗ trợ** trong Release 1.0; trang báo "Hãy tải ứng dụng EduWorld" | [Confirmed] |

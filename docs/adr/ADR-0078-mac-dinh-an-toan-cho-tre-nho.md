@@ -1,9 +1,6 @@
 # ADR-0078 — Mặc định an toàn cho trẻ nhỏ: bước PII/grooming luôn chạy, giờ giới nghiêm platform, siết tenant `common`
 
-> **Trạng thái:** Accepted · một phần supersedes ADR-0030 · Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (mục 5, phần Windows) · **Ngày:** 2026-11-15 · **OQ:** OQ-17 · **Nếu Accepted sẽ thay một phần:** ADR-0030 (công tắc tắt được bước PII) · **Tài liệu:** [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) · [Chỉ mục ADR](README.md)
-
-> [!WARNING]
-> **Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (bỏ Windows, 2026-11-24).** Không còn hiệu lực: câu "trên Windows, game client mặc định coi là máy dùng chung … trừ khi bộ cài được chọn máy cá nhân" ở mục 5 (không còn bản Windows hay bộ cài; PC phòng máy chơi bản Web, chỉ giữ refresh token trong RAM). **Còn hiệu lực:** phần còn lại, gồm màn "Tiếp tục là <nickname>?" với nút "Không phải tôi" trên mọi nền tảng tự vào lại bằng refresh token.
+> **Trạng thái:** Accepted · một phần supersedes ADR-0030 · **Ngày:** 2026-11-15 · **OQ:** OQ-17 · **Nếu Accepted sẽ thay một phần:** ADR-0030 (công tắc tắt được bước PII) · **Tài liệu:** [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) · [Chỉ mục ADR](README.md)
 
 ## Bối cảnh
 
@@ -29,4 +26,3 @@ ADR-0020 áp một bộ quy tắc chat cho mọi lớp; ADR-0030 cho phép Syste
 | 2026-11-15 | Tạo ADR (Proposed) từ EDU_FIT_REVIEW | Technical Architect |
 | 2026-11-17 | Accepted; bổ sung mục 5 (Windows mặc định máy dùng chung, màn Tiếp tục là…) | Technical Architect |
 | 2026-11-17 | Làm rõ phạm vi preset: áp cả channel luôn có, chỉ thu hẹp loại tin, không tắt channel | Technical Architect |
-| 2026-11-24 | Superseded một phần bởi ADR-0101 (mục 5, phần Windows mặc định máy dùng chung) | Owner dự án |

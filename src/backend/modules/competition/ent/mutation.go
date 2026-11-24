@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/bracketnode"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/challenge"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionpointentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionrestriction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/contentrelease"
@@ -36,6 +38,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/season"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/seasonresult"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/sessionmembership"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tenantresourceassignment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournament"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamententry"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamentgroup"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamentresult"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamentreward"
 )
 
 const (
@@ -47,30 +55,5047 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeCompetitionPointEntry   = "CompetitionPointEntry"
-	TypeCompetitionRestriction  = "CompetitionRestriction"
-	TypeContentRelease          = "ContentRelease"
-	TypeDuel                    = "Duel"
-	TypeGameConfig              = "GameConfig"
-	TypeGameConfigVersion       = "GameConfigVersion"
-	TypeLeaderboardContribution = "LeaderboardContribution"
-	TypeLeaderboardDefinition   = "LeaderboardDefinition"
-	TypeLeaderboardSnapshot     = "LeaderboardSnapshot"
-	TypeMatch                   = "Match"
-	TypeMatchParticipant        = "MatchParticipant"
-	TypeMatchResult             = "MatchResult"
-	TypeParty                   = "Party"
-	TypePartyActivity           = "PartyActivity"
-	TypePartyInvitation         = "PartyInvitation"
-	TypePartyMember             = "PartyMember"
-	TypePartyPolicy             = "PartyPolicy"
-	TypeRating                  = "Rating"
-	TypeRatingChange            = "RatingChange"
-	TypeRoom                    = "Room"
-	TypeSeason                  = "Season"
-	TypeSeasonResult            = "SeasonResult"
-	TypeSessionMembership       = "SessionMembership"
+	TypeBracketNode              = "BracketNode"
+	TypeChallenge                = "Challenge"
+	TypeCompetitionPointEntry    = "CompetitionPointEntry"
+	TypeCompetitionRestriction   = "CompetitionRestriction"
+	TypeContentRelease           = "ContentRelease"
+	TypeDuel                     = "Duel"
+	TypeGameConfig               = "GameConfig"
+	TypeGameConfigVersion        = "GameConfigVersion"
+	TypeLeaderboardContribution  = "LeaderboardContribution"
+	TypeLeaderboardDefinition    = "LeaderboardDefinition"
+	TypeLeaderboardSnapshot      = "LeaderboardSnapshot"
+	TypeMatch                    = "Match"
+	TypeMatchParticipant         = "MatchParticipant"
+	TypeMatchResult              = "MatchResult"
+	TypeParty                    = "Party"
+	TypePartyActivity            = "PartyActivity"
+	TypePartyInvitation          = "PartyInvitation"
+	TypePartyMember              = "PartyMember"
+	TypePartyPolicy              = "PartyPolicy"
+	TypeRating                   = "Rating"
+	TypeRatingChange             = "RatingChange"
+	TypeRoom                     = "Room"
+	TypeSeason                   = "Season"
+	TypeSeasonResult             = "SeasonResult"
+	TypeSessionMembership        = "SessionMembership"
+	TypeTenantResourceAssignment = "TenantResourceAssignment"
+	TypeTournament               = "Tournament"
+	TypeTournamentEntry          = "TournamentEntry"
+	TypeTournamentGroup          = "TournamentGroup"
+	TypeTournamentResult         = "TournamentResult"
+	TypeTournamentReward         = "TournamentReward"
 )
+
+// BracketNodeMutation represents an operation that mutates the BracketNode nodes in the graph.
+type BracketNodeMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *uuid.UUID
+	tenant_id           *uuid.UUID
+	created_at          *time.Time
+	created_by          *uuid.UUID
+	updated_at          *time.Time
+	updated_by          *uuid.UUID
+	deleted_at          *time.Time
+	deleted_by          *uuid.UUID
+	delete_reason       *string
+	version             *int64
+	addversion          *int64
+	tournament_id       *uuid.UUID
+	bracket             *string
+	round               *int16
+	addround            *int16
+	position            *int16
+	addposition         *int16
+	group_id            *uuid.UUID
+	entry_a_id          *uuid.UUID
+	entry_b_id          *uuid.UUID
+	winner_entry_id     *uuid.UUID
+	is_draw             *bool
+	result              *map[string]interface{}
+	match_id            *uuid.UUID
+	scheduled_at        *time.Time
+	started_at          *time.Time
+	next_win_node_id    *uuid.UUID
+	next_win_slot       *int16
+	addnext_win_slot    *int16
+	next_lose_node_id   *uuid.UUID
+	next_lose_slot      *int16
+	addnext_lose_slot   *int16
+	wave                *int16
+	addwave             *int16
+	attempts            *int16
+	addattempts         *int16
+	reschedule_count    *int16
+	addreschedule_count *int16
+	notices             *int16
+	addnotices          *int16
+	status              *string
+	confirm_after       *time.Time
+	decision_required   *bool
+	override_reason     *string
+	overridden_by       *uuid.UUID
+	clearedFields       map[string]struct{}
+	done                bool
+	oldValue            func(context.Context) (*BracketNode, error)
+	predicates          []predicate.BracketNode
+}
+
+var _ ent.Mutation = (*BracketNodeMutation)(nil)
+
+// bracketnodeOption allows management of the mutation configuration using functional options.
+type bracketnodeOption func(*BracketNodeMutation)
+
+// newBracketNodeMutation creates new mutation for the BracketNode entity.
+func newBracketNodeMutation(c config, op Op, opts ...bracketnodeOption) *BracketNodeMutation {
+	m := &BracketNodeMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBracketNode,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBracketNodeID sets the ID field of the mutation.
+func withBracketNodeID(id uuid.UUID) bracketnodeOption {
+	return func(m *BracketNodeMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BracketNode
+		)
+		m.oldValue = func(ctx context.Context) (*BracketNode, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BracketNode.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBracketNode sets the old BracketNode of the mutation.
+func withBracketNode(node *BracketNode) bracketnodeOption {
+	return func(m *BracketNodeMutation) {
+		m.oldValue = func(context.Context) (*BracketNode, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BracketNodeMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BracketNodeMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of BracketNode entities.
+func (m *BracketNodeMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BracketNodeMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BracketNodeMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BracketNode.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *BracketNodeMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *BracketNodeMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *BracketNodeMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BracketNodeMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BracketNodeMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BracketNodeMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *BracketNodeMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *BracketNodeMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *BracketNodeMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[bracketnode.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *BracketNodeMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *BracketNodeMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, bracketnode.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BracketNodeMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BracketNodeMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BracketNodeMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *BracketNodeMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *BracketNodeMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *BracketNodeMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[bracketnode.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *BracketNodeMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *BracketNodeMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, bracketnode.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *BracketNodeMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *BracketNodeMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *BracketNodeMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[bracketnode.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *BracketNodeMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *BracketNodeMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, bracketnode.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *BracketNodeMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *BracketNodeMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *BracketNodeMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[bracketnode.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *BracketNodeMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *BracketNodeMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, bracketnode.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *BracketNodeMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *BracketNodeMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *BracketNodeMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[bracketnode.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *BracketNodeMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *BracketNodeMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, bracketnode.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *BracketNodeMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *BracketNodeMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *BracketNodeMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *BracketNodeMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *BracketNodeMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetTournamentID sets the "tournament_id" field.
+func (m *BracketNodeMutation) SetTournamentID(u uuid.UUID) {
+	m.tournament_id = &u
+}
+
+// TournamentID returns the value of the "tournament_id" field in the mutation.
+func (m *BracketNodeMutation) TournamentID() (r uuid.UUID, exists bool) {
+	v := m.tournament_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTournamentID returns the old "tournament_id" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldTournamentID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTournamentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTournamentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTournamentID: %w", err)
+	}
+	return oldValue.TournamentID, nil
+}
+
+// ResetTournamentID resets all changes to the "tournament_id" field.
+func (m *BracketNodeMutation) ResetTournamentID() {
+	m.tournament_id = nil
+}
+
+// SetBracket sets the "bracket" field.
+func (m *BracketNodeMutation) SetBracket(s string) {
+	m.bracket = &s
+}
+
+// Bracket returns the value of the "bracket" field in the mutation.
+func (m *BracketNodeMutation) Bracket() (r string, exists bool) {
+	v := m.bracket
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBracket returns the old "bracket" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldBracket(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBracket is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBracket requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBracket: %w", err)
+	}
+	return oldValue.Bracket, nil
+}
+
+// ResetBracket resets all changes to the "bracket" field.
+func (m *BracketNodeMutation) ResetBracket() {
+	m.bracket = nil
+}
+
+// SetRound sets the "round" field.
+func (m *BracketNodeMutation) SetRound(i int16) {
+	m.round = &i
+	m.addround = nil
+}
+
+// Round returns the value of the "round" field in the mutation.
+func (m *BracketNodeMutation) Round() (r int16, exists bool) {
+	v := m.round
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRound returns the old "round" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldRound(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRound is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRound requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRound: %w", err)
+	}
+	return oldValue.Round, nil
+}
+
+// AddRound adds i to the "round" field.
+func (m *BracketNodeMutation) AddRound(i int16) {
+	if m.addround != nil {
+		*m.addround += i
+	} else {
+		m.addround = &i
+	}
+}
+
+// AddedRound returns the value that was added to the "round" field in this mutation.
+func (m *BracketNodeMutation) AddedRound() (r int16, exists bool) {
+	v := m.addround
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRound resets all changes to the "round" field.
+func (m *BracketNodeMutation) ResetRound() {
+	m.round = nil
+	m.addround = nil
+}
+
+// SetPosition sets the "position" field.
+func (m *BracketNodeMutation) SetPosition(i int16) {
+	m.position = &i
+	m.addposition = nil
+}
+
+// Position returns the value of the "position" field in the mutation.
+func (m *BracketNodeMutation) Position() (r int16, exists bool) {
+	v := m.position
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPosition returns the old "position" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldPosition(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPosition is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPosition requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPosition: %w", err)
+	}
+	return oldValue.Position, nil
+}
+
+// AddPosition adds i to the "position" field.
+func (m *BracketNodeMutation) AddPosition(i int16) {
+	if m.addposition != nil {
+		*m.addposition += i
+	} else {
+		m.addposition = &i
+	}
+}
+
+// AddedPosition returns the value that was added to the "position" field in this mutation.
+func (m *BracketNodeMutation) AddedPosition() (r int16, exists bool) {
+	v := m.addposition
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPosition resets all changes to the "position" field.
+func (m *BracketNodeMutation) ResetPosition() {
+	m.position = nil
+	m.addposition = nil
+}
+
+// SetGroupID sets the "group_id" field.
+func (m *BracketNodeMutation) SetGroupID(u uuid.UUID) {
+	m.group_id = &u
+}
+
+// GroupID returns the value of the "group_id" field in the mutation.
+func (m *BracketNodeMutation) GroupID() (r uuid.UUID, exists bool) {
+	v := m.group_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroupID returns the old "group_id" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldGroupID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
+	}
+	return oldValue.GroupID, nil
+}
+
+// ClearGroupID clears the value of the "group_id" field.
+func (m *BracketNodeMutation) ClearGroupID() {
+	m.group_id = nil
+	m.clearedFields[bracketnode.FieldGroupID] = struct{}{}
+}
+
+// GroupIDCleared returns if the "group_id" field was cleared in this mutation.
+func (m *BracketNodeMutation) GroupIDCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldGroupID]
+	return ok
+}
+
+// ResetGroupID resets all changes to the "group_id" field.
+func (m *BracketNodeMutation) ResetGroupID() {
+	m.group_id = nil
+	delete(m.clearedFields, bracketnode.FieldGroupID)
+}
+
+// SetEntryAID sets the "entry_a_id" field.
+func (m *BracketNodeMutation) SetEntryAID(u uuid.UUID) {
+	m.entry_a_id = &u
+}
+
+// EntryAID returns the value of the "entry_a_id" field in the mutation.
+func (m *BracketNodeMutation) EntryAID() (r uuid.UUID, exists bool) {
+	v := m.entry_a_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEntryAID returns the old "entry_a_id" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldEntryAID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEntryAID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEntryAID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEntryAID: %w", err)
+	}
+	return oldValue.EntryAID, nil
+}
+
+// ClearEntryAID clears the value of the "entry_a_id" field.
+func (m *BracketNodeMutation) ClearEntryAID() {
+	m.entry_a_id = nil
+	m.clearedFields[bracketnode.FieldEntryAID] = struct{}{}
+}
+
+// EntryAIDCleared returns if the "entry_a_id" field was cleared in this mutation.
+func (m *BracketNodeMutation) EntryAIDCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldEntryAID]
+	return ok
+}
+
+// ResetEntryAID resets all changes to the "entry_a_id" field.
+func (m *BracketNodeMutation) ResetEntryAID() {
+	m.entry_a_id = nil
+	delete(m.clearedFields, bracketnode.FieldEntryAID)
+}
+
+// SetEntryBID sets the "entry_b_id" field.
+func (m *BracketNodeMutation) SetEntryBID(u uuid.UUID) {
+	m.entry_b_id = &u
+}
+
+// EntryBID returns the value of the "entry_b_id" field in the mutation.
+func (m *BracketNodeMutation) EntryBID() (r uuid.UUID, exists bool) {
+	v := m.entry_b_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEntryBID returns the old "entry_b_id" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldEntryBID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEntryBID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEntryBID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEntryBID: %w", err)
+	}
+	return oldValue.EntryBID, nil
+}
+
+// ClearEntryBID clears the value of the "entry_b_id" field.
+func (m *BracketNodeMutation) ClearEntryBID() {
+	m.entry_b_id = nil
+	m.clearedFields[bracketnode.FieldEntryBID] = struct{}{}
+}
+
+// EntryBIDCleared returns if the "entry_b_id" field was cleared in this mutation.
+func (m *BracketNodeMutation) EntryBIDCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldEntryBID]
+	return ok
+}
+
+// ResetEntryBID resets all changes to the "entry_b_id" field.
+func (m *BracketNodeMutation) ResetEntryBID() {
+	m.entry_b_id = nil
+	delete(m.clearedFields, bracketnode.FieldEntryBID)
+}
+
+// SetWinnerEntryID sets the "winner_entry_id" field.
+func (m *BracketNodeMutation) SetWinnerEntryID(u uuid.UUID) {
+	m.winner_entry_id = &u
+}
+
+// WinnerEntryID returns the value of the "winner_entry_id" field in the mutation.
+func (m *BracketNodeMutation) WinnerEntryID() (r uuid.UUID, exists bool) {
+	v := m.winner_entry_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWinnerEntryID returns the old "winner_entry_id" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldWinnerEntryID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWinnerEntryID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWinnerEntryID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWinnerEntryID: %w", err)
+	}
+	return oldValue.WinnerEntryID, nil
+}
+
+// ClearWinnerEntryID clears the value of the "winner_entry_id" field.
+func (m *BracketNodeMutation) ClearWinnerEntryID() {
+	m.winner_entry_id = nil
+	m.clearedFields[bracketnode.FieldWinnerEntryID] = struct{}{}
+}
+
+// WinnerEntryIDCleared returns if the "winner_entry_id" field was cleared in this mutation.
+func (m *BracketNodeMutation) WinnerEntryIDCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldWinnerEntryID]
+	return ok
+}
+
+// ResetWinnerEntryID resets all changes to the "winner_entry_id" field.
+func (m *BracketNodeMutation) ResetWinnerEntryID() {
+	m.winner_entry_id = nil
+	delete(m.clearedFields, bracketnode.FieldWinnerEntryID)
+}
+
+// SetIsDraw sets the "is_draw" field.
+func (m *BracketNodeMutation) SetIsDraw(b bool) {
+	m.is_draw = &b
+}
+
+// IsDraw returns the value of the "is_draw" field in the mutation.
+func (m *BracketNodeMutation) IsDraw() (r bool, exists bool) {
+	v := m.is_draw
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsDraw returns the old "is_draw" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldIsDraw(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsDraw is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsDraw requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsDraw: %w", err)
+	}
+	return oldValue.IsDraw, nil
+}
+
+// ResetIsDraw resets all changes to the "is_draw" field.
+func (m *BracketNodeMutation) ResetIsDraw() {
+	m.is_draw = nil
+}
+
+// SetResult sets the "result" field.
+func (m *BracketNodeMutation) SetResult(value map[string]interface{}) {
+	m.result = &value
+}
+
+// Result returns the value of the "result" field in the mutation.
+func (m *BracketNodeMutation) Result() (r map[string]interface{}, exists bool) {
+	v := m.result
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResult returns the old "result" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldResult(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResult is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResult requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResult: %w", err)
+	}
+	return oldValue.Result, nil
+}
+
+// ClearResult clears the value of the "result" field.
+func (m *BracketNodeMutation) ClearResult() {
+	m.result = nil
+	m.clearedFields[bracketnode.FieldResult] = struct{}{}
+}
+
+// ResultCleared returns if the "result" field was cleared in this mutation.
+func (m *BracketNodeMutation) ResultCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldResult]
+	return ok
+}
+
+// ResetResult resets all changes to the "result" field.
+func (m *BracketNodeMutation) ResetResult() {
+	m.result = nil
+	delete(m.clearedFields, bracketnode.FieldResult)
+}
+
+// SetMatchID sets the "match_id" field.
+func (m *BracketNodeMutation) SetMatchID(u uuid.UUID) {
+	m.match_id = &u
+}
+
+// MatchID returns the value of the "match_id" field in the mutation.
+func (m *BracketNodeMutation) MatchID() (r uuid.UUID, exists bool) {
+	v := m.match_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMatchID returns the old "match_id" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldMatchID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMatchID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMatchID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMatchID: %w", err)
+	}
+	return oldValue.MatchID, nil
+}
+
+// ClearMatchID clears the value of the "match_id" field.
+func (m *BracketNodeMutation) ClearMatchID() {
+	m.match_id = nil
+	m.clearedFields[bracketnode.FieldMatchID] = struct{}{}
+}
+
+// MatchIDCleared returns if the "match_id" field was cleared in this mutation.
+func (m *BracketNodeMutation) MatchIDCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldMatchID]
+	return ok
+}
+
+// ResetMatchID resets all changes to the "match_id" field.
+func (m *BracketNodeMutation) ResetMatchID() {
+	m.match_id = nil
+	delete(m.clearedFields, bracketnode.FieldMatchID)
+}
+
+// SetScheduledAt sets the "scheduled_at" field.
+func (m *BracketNodeMutation) SetScheduledAt(t time.Time) {
+	m.scheduled_at = &t
+}
+
+// ScheduledAt returns the value of the "scheduled_at" field in the mutation.
+func (m *BracketNodeMutation) ScheduledAt() (r time.Time, exists bool) {
+	v := m.scheduled_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScheduledAt returns the old "scheduled_at" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldScheduledAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScheduledAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScheduledAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScheduledAt: %w", err)
+	}
+	return oldValue.ScheduledAt, nil
+}
+
+// ClearScheduledAt clears the value of the "scheduled_at" field.
+func (m *BracketNodeMutation) ClearScheduledAt() {
+	m.scheduled_at = nil
+	m.clearedFields[bracketnode.FieldScheduledAt] = struct{}{}
+}
+
+// ScheduledAtCleared returns if the "scheduled_at" field was cleared in this mutation.
+func (m *BracketNodeMutation) ScheduledAtCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldScheduledAt]
+	return ok
+}
+
+// ResetScheduledAt resets all changes to the "scheduled_at" field.
+func (m *BracketNodeMutation) ResetScheduledAt() {
+	m.scheduled_at = nil
+	delete(m.clearedFields, bracketnode.FieldScheduledAt)
+}
+
+// SetStartedAt sets the "started_at" field.
+func (m *BracketNodeMutation) SetStartedAt(t time.Time) {
+	m.started_at = &t
+}
+
+// StartedAt returns the value of the "started_at" field in the mutation.
+func (m *BracketNodeMutation) StartedAt() (r time.Time, exists bool) {
+	v := m.started_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartedAt returns the old "started_at" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldStartedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartedAt: %w", err)
+	}
+	return oldValue.StartedAt, nil
+}
+
+// ClearStartedAt clears the value of the "started_at" field.
+func (m *BracketNodeMutation) ClearStartedAt() {
+	m.started_at = nil
+	m.clearedFields[bracketnode.FieldStartedAt] = struct{}{}
+}
+
+// StartedAtCleared returns if the "started_at" field was cleared in this mutation.
+func (m *BracketNodeMutation) StartedAtCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldStartedAt]
+	return ok
+}
+
+// ResetStartedAt resets all changes to the "started_at" field.
+func (m *BracketNodeMutation) ResetStartedAt() {
+	m.started_at = nil
+	delete(m.clearedFields, bracketnode.FieldStartedAt)
+}
+
+// SetNextWinNodeID sets the "next_win_node_id" field.
+func (m *BracketNodeMutation) SetNextWinNodeID(u uuid.UUID) {
+	m.next_win_node_id = &u
+}
+
+// NextWinNodeID returns the value of the "next_win_node_id" field in the mutation.
+func (m *BracketNodeMutation) NextWinNodeID() (r uuid.UUID, exists bool) {
+	v := m.next_win_node_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNextWinNodeID returns the old "next_win_node_id" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldNextWinNodeID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNextWinNodeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNextWinNodeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNextWinNodeID: %w", err)
+	}
+	return oldValue.NextWinNodeID, nil
+}
+
+// ClearNextWinNodeID clears the value of the "next_win_node_id" field.
+func (m *BracketNodeMutation) ClearNextWinNodeID() {
+	m.next_win_node_id = nil
+	m.clearedFields[bracketnode.FieldNextWinNodeID] = struct{}{}
+}
+
+// NextWinNodeIDCleared returns if the "next_win_node_id" field was cleared in this mutation.
+func (m *BracketNodeMutation) NextWinNodeIDCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldNextWinNodeID]
+	return ok
+}
+
+// ResetNextWinNodeID resets all changes to the "next_win_node_id" field.
+func (m *BracketNodeMutation) ResetNextWinNodeID() {
+	m.next_win_node_id = nil
+	delete(m.clearedFields, bracketnode.FieldNextWinNodeID)
+}
+
+// SetNextWinSlot sets the "next_win_slot" field.
+func (m *BracketNodeMutation) SetNextWinSlot(i int16) {
+	m.next_win_slot = &i
+	m.addnext_win_slot = nil
+}
+
+// NextWinSlot returns the value of the "next_win_slot" field in the mutation.
+func (m *BracketNodeMutation) NextWinSlot() (r int16, exists bool) {
+	v := m.next_win_slot
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNextWinSlot returns the old "next_win_slot" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldNextWinSlot(ctx context.Context) (v *int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNextWinSlot is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNextWinSlot requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNextWinSlot: %w", err)
+	}
+	return oldValue.NextWinSlot, nil
+}
+
+// AddNextWinSlot adds i to the "next_win_slot" field.
+func (m *BracketNodeMutation) AddNextWinSlot(i int16) {
+	if m.addnext_win_slot != nil {
+		*m.addnext_win_slot += i
+	} else {
+		m.addnext_win_slot = &i
+	}
+}
+
+// AddedNextWinSlot returns the value that was added to the "next_win_slot" field in this mutation.
+func (m *BracketNodeMutation) AddedNextWinSlot() (r int16, exists bool) {
+	v := m.addnext_win_slot
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearNextWinSlot clears the value of the "next_win_slot" field.
+func (m *BracketNodeMutation) ClearNextWinSlot() {
+	m.next_win_slot = nil
+	m.addnext_win_slot = nil
+	m.clearedFields[bracketnode.FieldNextWinSlot] = struct{}{}
+}
+
+// NextWinSlotCleared returns if the "next_win_slot" field was cleared in this mutation.
+func (m *BracketNodeMutation) NextWinSlotCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldNextWinSlot]
+	return ok
+}
+
+// ResetNextWinSlot resets all changes to the "next_win_slot" field.
+func (m *BracketNodeMutation) ResetNextWinSlot() {
+	m.next_win_slot = nil
+	m.addnext_win_slot = nil
+	delete(m.clearedFields, bracketnode.FieldNextWinSlot)
+}
+
+// SetNextLoseNodeID sets the "next_lose_node_id" field.
+func (m *BracketNodeMutation) SetNextLoseNodeID(u uuid.UUID) {
+	m.next_lose_node_id = &u
+}
+
+// NextLoseNodeID returns the value of the "next_lose_node_id" field in the mutation.
+func (m *BracketNodeMutation) NextLoseNodeID() (r uuid.UUID, exists bool) {
+	v := m.next_lose_node_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNextLoseNodeID returns the old "next_lose_node_id" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldNextLoseNodeID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNextLoseNodeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNextLoseNodeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNextLoseNodeID: %w", err)
+	}
+	return oldValue.NextLoseNodeID, nil
+}
+
+// ClearNextLoseNodeID clears the value of the "next_lose_node_id" field.
+func (m *BracketNodeMutation) ClearNextLoseNodeID() {
+	m.next_lose_node_id = nil
+	m.clearedFields[bracketnode.FieldNextLoseNodeID] = struct{}{}
+}
+
+// NextLoseNodeIDCleared returns if the "next_lose_node_id" field was cleared in this mutation.
+func (m *BracketNodeMutation) NextLoseNodeIDCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldNextLoseNodeID]
+	return ok
+}
+
+// ResetNextLoseNodeID resets all changes to the "next_lose_node_id" field.
+func (m *BracketNodeMutation) ResetNextLoseNodeID() {
+	m.next_lose_node_id = nil
+	delete(m.clearedFields, bracketnode.FieldNextLoseNodeID)
+}
+
+// SetNextLoseSlot sets the "next_lose_slot" field.
+func (m *BracketNodeMutation) SetNextLoseSlot(i int16) {
+	m.next_lose_slot = &i
+	m.addnext_lose_slot = nil
+}
+
+// NextLoseSlot returns the value of the "next_lose_slot" field in the mutation.
+func (m *BracketNodeMutation) NextLoseSlot() (r int16, exists bool) {
+	v := m.next_lose_slot
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNextLoseSlot returns the old "next_lose_slot" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldNextLoseSlot(ctx context.Context) (v *int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNextLoseSlot is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNextLoseSlot requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNextLoseSlot: %w", err)
+	}
+	return oldValue.NextLoseSlot, nil
+}
+
+// AddNextLoseSlot adds i to the "next_lose_slot" field.
+func (m *BracketNodeMutation) AddNextLoseSlot(i int16) {
+	if m.addnext_lose_slot != nil {
+		*m.addnext_lose_slot += i
+	} else {
+		m.addnext_lose_slot = &i
+	}
+}
+
+// AddedNextLoseSlot returns the value that was added to the "next_lose_slot" field in this mutation.
+func (m *BracketNodeMutation) AddedNextLoseSlot() (r int16, exists bool) {
+	v := m.addnext_lose_slot
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearNextLoseSlot clears the value of the "next_lose_slot" field.
+func (m *BracketNodeMutation) ClearNextLoseSlot() {
+	m.next_lose_slot = nil
+	m.addnext_lose_slot = nil
+	m.clearedFields[bracketnode.FieldNextLoseSlot] = struct{}{}
+}
+
+// NextLoseSlotCleared returns if the "next_lose_slot" field was cleared in this mutation.
+func (m *BracketNodeMutation) NextLoseSlotCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldNextLoseSlot]
+	return ok
+}
+
+// ResetNextLoseSlot resets all changes to the "next_lose_slot" field.
+func (m *BracketNodeMutation) ResetNextLoseSlot() {
+	m.next_lose_slot = nil
+	m.addnext_lose_slot = nil
+	delete(m.clearedFields, bracketnode.FieldNextLoseSlot)
+}
+
+// SetWave sets the "wave" field.
+func (m *BracketNodeMutation) SetWave(i int16) {
+	m.wave = &i
+	m.addwave = nil
+}
+
+// Wave returns the value of the "wave" field in the mutation.
+func (m *BracketNodeMutation) Wave() (r int16, exists bool) {
+	v := m.wave
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWave returns the old "wave" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldWave(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWave is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWave requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWave: %w", err)
+	}
+	return oldValue.Wave, nil
+}
+
+// AddWave adds i to the "wave" field.
+func (m *BracketNodeMutation) AddWave(i int16) {
+	if m.addwave != nil {
+		*m.addwave += i
+	} else {
+		m.addwave = &i
+	}
+}
+
+// AddedWave returns the value that was added to the "wave" field in this mutation.
+func (m *BracketNodeMutation) AddedWave() (r int16, exists bool) {
+	v := m.addwave
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetWave resets all changes to the "wave" field.
+func (m *BracketNodeMutation) ResetWave() {
+	m.wave = nil
+	m.addwave = nil
+}
+
+// SetAttempts sets the "attempts" field.
+func (m *BracketNodeMutation) SetAttempts(i int16) {
+	m.attempts = &i
+	m.addattempts = nil
+}
+
+// Attempts returns the value of the "attempts" field in the mutation.
+func (m *BracketNodeMutation) Attempts() (r int16, exists bool) {
+	v := m.attempts
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttempts returns the old "attempts" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldAttempts(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttempts is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttempts requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttempts: %w", err)
+	}
+	return oldValue.Attempts, nil
+}
+
+// AddAttempts adds i to the "attempts" field.
+func (m *BracketNodeMutation) AddAttempts(i int16) {
+	if m.addattempts != nil {
+		*m.addattempts += i
+	} else {
+		m.addattempts = &i
+	}
+}
+
+// AddedAttempts returns the value that was added to the "attempts" field in this mutation.
+func (m *BracketNodeMutation) AddedAttempts() (r int16, exists bool) {
+	v := m.addattempts
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttempts resets all changes to the "attempts" field.
+func (m *BracketNodeMutation) ResetAttempts() {
+	m.attempts = nil
+	m.addattempts = nil
+}
+
+// SetRescheduleCount sets the "reschedule_count" field.
+func (m *BracketNodeMutation) SetRescheduleCount(i int16) {
+	m.reschedule_count = &i
+	m.addreschedule_count = nil
+}
+
+// RescheduleCount returns the value of the "reschedule_count" field in the mutation.
+func (m *BracketNodeMutation) RescheduleCount() (r int16, exists bool) {
+	v := m.reschedule_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRescheduleCount returns the old "reschedule_count" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldRescheduleCount(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRescheduleCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRescheduleCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRescheduleCount: %w", err)
+	}
+	return oldValue.RescheduleCount, nil
+}
+
+// AddRescheduleCount adds i to the "reschedule_count" field.
+func (m *BracketNodeMutation) AddRescheduleCount(i int16) {
+	if m.addreschedule_count != nil {
+		*m.addreschedule_count += i
+	} else {
+		m.addreschedule_count = &i
+	}
+}
+
+// AddedRescheduleCount returns the value that was added to the "reschedule_count" field in this mutation.
+func (m *BracketNodeMutation) AddedRescheduleCount() (r int16, exists bool) {
+	v := m.addreschedule_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRescheduleCount resets all changes to the "reschedule_count" field.
+func (m *BracketNodeMutation) ResetRescheduleCount() {
+	m.reschedule_count = nil
+	m.addreschedule_count = nil
+}
+
+// SetNotices sets the "notices" field.
+func (m *BracketNodeMutation) SetNotices(i int16) {
+	m.notices = &i
+	m.addnotices = nil
+}
+
+// Notices returns the value of the "notices" field in the mutation.
+func (m *BracketNodeMutation) Notices() (r int16, exists bool) {
+	v := m.notices
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNotices returns the old "notices" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldNotices(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNotices is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNotices requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNotices: %w", err)
+	}
+	return oldValue.Notices, nil
+}
+
+// AddNotices adds i to the "notices" field.
+func (m *BracketNodeMutation) AddNotices(i int16) {
+	if m.addnotices != nil {
+		*m.addnotices += i
+	} else {
+		m.addnotices = &i
+	}
+}
+
+// AddedNotices returns the value that was added to the "notices" field in this mutation.
+func (m *BracketNodeMutation) AddedNotices() (r int16, exists bool) {
+	v := m.addnotices
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetNotices resets all changes to the "notices" field.
+func (m *BracketNodeMutation) ResetNotices() {
+	m.notices = nil
+	m.addnotices = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *BracketNodeMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *BracketNodeMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *BracketNodeMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetConfirmAfter sets the "confirm_after" field.
+func (m *BracketNodeMutation) SetConfirmAfter(t time.Time) {
+	m.confirm_after = &t
+}
+
+// ConfirmAfter returns the value of the "confirm_after" field in the mutation.
+func (m *BracketNodeMutation) ConfirmAfter() (r time.Time, exists bool) {
+	v := m.confirm_after
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfirmAfter returns the old "confirm_after" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldConfirmAfter(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfirmAfter is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfirmAfter requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfirmAfter: %w", err)
+	}
+	return oldValue.ConfirmAfter, nil
+}
+
+// ClearConfirmAfter clears the value of the "confirm_after" field.
+func (m *BracketNodeMutation) ClearConfirmAfter() {
+	m.confirm_after = nil
+	m.clearedFields[bracketnode.FieldConfirmAfter] = struct{}{}
+}
+
+// ConfirmAfterCleared returns if the "confirm_after" field was cleared in this mutation.
+func (m *BracketNodeMutation) ConfirmAfterCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldConfirmAfter]
+	return ok
+}
+
+// ResetConfirmAfter resets all changes to the "confirm_after" field.
+func (m *BracketNodeMutation) ResetConfirmAfter() {
+	m.confirm_after = nil
+	delete(m.clearedFields, bracketnode.FieldConfirmAfter)
+}
+
+// SetDecisionRequired sets the "decision_required" field.
+func (m *BracketNodeMutation) SetDecisionRequired(b bool) {
+	m.decision_required = &b
+}
+
+// DecisionRequired returns the value of the "decision_required" field in the mutation.
+func (m *BracketNodeMutation) DecisionRequired() (r bool, exists bool) {
+	v := m.decision_required
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDecisionRequired returns the old "decision_required" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldDecisionRequired(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDecisionRequired is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDecisionRequired requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDecisionRequired: %w", err)
+	}
+	return oldValue.DecisionRequired, nil
+}
+
+// ResetDecisionRequired resets all changes to the "decision_required" field.
+func (m *BracketNodeMutation) ResetDecisionRequired() {
+	m.decision_required = nil
+}
+
+// SetOverrideReason sets the "override_reason" field.
+func (m *BracketNodeMutation) SetOverrideReason(s string) {
+	m.override_reason = &s
+}
+
+// OverrideReason returns the value of the "override_reason" field in the mutation.
+func (m *BracketNodeMutation) OverrideReason() (r string, exists bool) {
+	v := m.override_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOverrideReason returns the old "override_reason" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldOverrideReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOverrideReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOverrideReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOverrideReason: %w", err)
+	}
+	return oldValue.OverrideReason, nil
+}
+
+// ClearOverrideReason clears the value of the "override_reason" field.
+func (m *BracketNodeMutation) ClearOverrideReason() {
+	m.override_reason = nil
+	m.clearedFields[bracketnode.FieldOverrideReason] = struct{}{}
+}
+
+// OverrideReasonCleared returns if the "override_reason" field was cleared in this mutation.
+func (m *BracketNodeMutation) OverrideReasonCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldOverrideReason]
+	return ok
+}
+
+// ResetOverrideReason resets all changes to the "override_reason" field.
+func (m *BracketNodeMutation) ResetOverrideReason() {
+	m.override_reason = nil
+	delete(m.clearedFields, bracketnode.FieldOverrideReason)
+}
+
+// SetOverriddenBy sets the "overridden_by" field.
+func (m *BracketNodeMutation) SetOverriddenBy(u uuid.UUID) {
+	m.overridden_by = &u
+}
+
+// OverriddenBy returns the value of the "overridden_by" field in the mutation.
+func (m *BracketNodeMutation) OverriddenBy() (r uuid.UUID, exists bool) {
+	v := m.overridden_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOverriddenBy returns the old "overridden_by" field's value of the BracketNode entity.
+// If the BracketNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BracketNodeMutation) OldOverriddenBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOverriddenBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOverriddenBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOverriddenBy: %w", err)
+	}
+	return oldValue.OverriddenBy, nil
+}
+
+// ClearOverriddenBy clears the value of the "overridden_by" field.
+func (m *BracketNodeMutation) ClearOverriddenBy() {
+	m.overridden_by = nil
+	m.clearedFields[bracketnode.FieldOverriddenBy] = struct{}{}
+}
+
+// OverriddenByCleared returns if the "overridden_by" field was cleared in this mutation.
+func (m *BracketNodeMutation) OverriddenByCleared() bool {
+	_, ok := m.clearedFields[bracketnode.FieldOverriddenBy]
+	return ok
+}
+
+// ResetOverriddenBy resets all changes to the "overridden_by" field.
+func (m *BracketNodeMutation) ResetOverriddenBy() {
+	m.overridden_by = nil
+	delete(m.clearedFields, bracketnode.FieldOverriddenBy)
+}
+
+// Where appends a list predicates to the BracketNodeMutation builder.
+func (m *BracketNodeMutation) Where(ps ...predicate.BracketNode) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BracketNodeMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BracketNodeMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BracketNode, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BracketNodeMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BracketNodeMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BracketNode).
+func (m *BracketNodeMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BracketNodeMutation) Fields() []string {
+	fields := make([]string, 0, 35)
+	if m.tenant_id != nil {
+		fields = append(fields, bracketnode.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, bracketnode.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, bracketnode.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, bracketnode.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, bracketnode.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, bracketnode.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, bracketnode.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, bracketnode.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, bracketnode.FieldVersion)
+	}
+	if m.tournament_id != nil {
+		fields = append(fields, bracketnode.FieldTournamentID)
+	}
+	if m.bracket != nil {
+		fields = append(fields, bracketnode.FieldBracket)
+	}
+	if m.round != nil {
+		fields = append(fields, bracketnode.FieldRound)
+	}
+	if m.position != nil {
+		fields = append(fields, bracketnode.FieldPosition)
+	}
+	if m.group_id != nil {
+		fields = append(fields, bracketnode.FieldGroupID)
+	}
+	if m.entry_a_id != nil {
+		fields = append(fields, bracketnode.FieldEntryAID)
+	}
+	if m.entry_b_id != nil {
+		fields = append(fields, bracketnode.FieldEntryBID)
+	}
+	if m.winner_entry_id != nil {
+		fields = append(fields, bracketnode.FieldWinnerEntryID)
+	}
+	if m.is_draw != nil {
+		fields = append(fields, bracketnode.FieldIsDraw)
+	}
+	if m.result != nil {
+		fields = append(fields, bracketnode.FieldResult)
+	}
+	if m.match_id != nil {
+		fields = append(fields, bracketnode.FieldMatchID)
+	}
+	if m.scheduled_at != nil {
+		fields = append(fields, bracketnode.FieldScheduledAt)
+	}
+	if m.started_at != nil {
+		fields = append(fields, bracketnode.FieldStartedAt)
+	}
+	if m.next_win_node_id != nil {
+		fields = append(fields, bracketnode.FieldNextWinNodeID)
+	}
+	if m.next_win_slot != nil {
+		fields = append(fields, bracketnode.FieldNextWinSlot)
+	}
+	if m.next_lose_node_id != nil {
+		fields = append(fields, bracketnode.FieldNextLoseNodeID)
+	}
+	if m.next_lose_slot != nil {
+		fields = append(fields, bracketnode.FieldNextLoseSlot)
+	}
+	if m.wave != nil {
+		fields = append(fields, bracketnode.FieldWave)
+	}
+	if m.attempts != nil {
+		fields = append(fields, bracketnode.FieldAttempts)
+	}
+	if m.reschedule_count != nil {
+		fields = append(fields, bracketnode.FieldRescheduleCount)
+	}
+	if m.notices != nil {
+		fields = append(fields, bracketnode.FieldNotices)
+	}
+	if m.status != nil {
+		fields = append(fields, bracketnode.FieldStatus)
+	}
+	if m.confirm_after != nil {
+		fields = append(fields, bracketnode.FieldConfirmAfter)
+	}
+	if m.decision_required != nil {
+		fields = append(fields, bracketnode.FieldDecisionRequired)
+	}
+	if m.override_reason != nil {
+		fields = append(fields, bracketnode.FieldOverrideReason)
+	}
+	if m.overridden_by != nil {
+		fields = append(fields, bracketnode.FieldOverriddenBy)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BracketNodeMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case bracketnode.FieldTenantID:
+		return m.TenantID()
+	case bracketnode.FieldCreatedAt:
+		return m.CreatedAt()
+	case bracketnode.FieldCreatedBy:
+		return m.CreatedBy()
+	case bracketnode.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case bracketnode.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case bracketnode.FieldDeletedAt:
+		return m.DeletedAt()
+	case bracketnode.FieldDeletedBy:
+		return m.DeletedBy()
+	case bracketnode.FieldDeleteReason:
+		return m.DeleteReason()
+	case bracketnode.FieldVersion:
+		return m.Version()
+	case bracketnode.FieldTournamentID:
+		return m.TournamentID()
+	case bracketnode.FieldBracket:
+		return m.Bracket()
+	case bracketnode.FieldRound:
+		return m.Round()
+	case bracketnode.FieldPosition:
+		return m.Position()
+	case bracketnode.FieldGroupID:
+		return m.GroupID()
+	case bracketnode.FieldEntryAID:
+		return m.EntryAID()
+	case bracketnode.FieldEntryBID:
+		return m.EntryBID()
+	case bracketnode.FieldWinnerEntryID:
+		return m.WinnerEntryID()
+	case bracketnode.FieldIsDraw:
+		return m.IsDraw()
+	case bracketnode.FieldResult:
+		return m.Result()
+	case bracketnode.FieldMatchID:
+		return m.MatchID()
+	case bracketnode.FieldScheduledAt:
+		return m.ScheduledAt()
+	case bracketnode.FieldStartedAt:
+		return m.StartedAt()
+	case bracketnode.FieldNextWinNodeID:
+		return m.NextWinNodeID()
+	case bracketnode.FieldNextWinSlot:
+		return m.NextWinSlot()
+	case bracketnode.FieldNextLoseNodeID:
+		return m.NextLoseNodeID()
+	case bracketnode.FieldNextLoseSlot:
+		return m.NextLoseSlot()
+	case bracketnode.FieldWave:
+		return m.Wave()
+	case bracketnode.FieldAttempts:
+		return m.Attempts()
+	case bracketnode.FieldRescheduleCount:
+		return m.RescheduleCount()
+	case bracketnode.FieldNotices:
+		return m.Notices()
+	case bracketnode.FieldStatus:
+		return m.Status()
+	case bracketnode.FieldConfirmAfter:
+		return m.ConfirmAfter()
+	case bracketnode.FieldDecisionRequired:
+		return m.DecisionRequired()
+	case bracketnode.FieldOverrideReason:
+		return m.OverrideReason()
+	case bracketnode.FieldOverriddenBy:
+		return m.OverriddenBy()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BracketNodeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case bracketnode.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case bracketnode.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case bracketnode.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case bracketnode.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case bracketnode.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case bracketnode.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case bracketnode.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case bracketnode.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case bracketnode.FieldVersion:
+		return m.OldVersion(ctx)
+	case bracketnode.FieldTournamentID:
+		return m.OldTournamentID(ctx)
+	case bracketnode.FieldBracket:
+		return m.OldBracket(ctx)
+	case bracketnode.FieldRound:
+		return m.OldRound(ctx)
+	case bracketnode.FieldPosition:
+		return m.OldPosition(ctx)
+	case bracketnode.FieldGroupID:
+		return m.OldGroupID(ctx)
+	case bracketnode.FieldEntryAID:
+		return m.OldEntryAID(ctx)
+	case bracketnode.FieldEntryBID:
+		return m.OldEntryBID(ctx)
+	case bracketnode.FieldWinnerEntryID:
+		return m.OldWinnerEntryID(ctx)
+	case bracketnode.FieldIsDraw:
+		return m.OldIsDraw(ctx)
+	case bracketnode.FieldResult:
+		return m.OldResult(ctx)
+	case bracketnode.FieldMatchID:
+		return m.OldMatchID(ctx)
+	case bracketnode.FieldScheduledAt:
+		return m.OldScheduledAt(ctx)
+	case bracketnode.FieldStartedAt:
+		return m.OldStartedAt(ctx)
+	case bracketnode.FieldNextWinNodeID:
+		return m.OldNextWinNodeID(ctx)
+	case bracketnode.FieldNextWinSlot:
+		return m.OldNextWinSlot(ctx)
+	case bracketnode.FieldNextLoseNodeID:
+		return m.OldNextLoseNodeID(ctx)
+	case bracketnode.FieldNextLoseSlot:
+		return m.OldNextLoseSlot(ctx)
+	case bracketnode.FieldWave:
+		return m.OldWave(ctx)
+	case bracketnode.FieldAttempts:
+		return m.OldAttempts(ctx)
+	case bracketnode.FieldRescheduleCount:
+		return m.OldRescheduleCount(ctx)
+	case bracketnode.FieldNotices:
+		return m.OldNotices(ctx)
+	case bracketnode.FieldStatus:
+		return m.OldStatus(ctx)
+	case bracketnode.FieldConfirmAfter:
+		return m.OldConfirmAfter(ctx)
+	case bracketnode.FieldDecisionRequired:
+		return m.OldDecisionRequired(ctx)
+	case bracketnode.FieldOverrideReason:
+		return m.OldOverrideReason(ctx)
+	case bracketnode.FieldOverriddenBy:
+		return m.OldOverriddenBy(ctx)
+	}
+	return nil, fmt.Errorf("unknown BracketNode field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BracketNodeMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case bracketnode.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case bracketnode.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case bracketnode.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case bracketnode.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case bracketnode.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case bracketnode.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case bracketnode.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case bracketnode.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case bracketnode.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case bracketnode.FieldTournamentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTournamentID(v)
+		return nil
+	case bracketnode.FieldBracket:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBracket(v)
+		return nil
+	case bracketnode.FieldRound:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRound(v)
+		return nil
+	case bracketnode.FieldPosition:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPosition(v)
+		return nil
+	case bracketnode.FieldGroupID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroupID(v)
+		return nil
+	case bracketnode.FieldEntryAID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEntryAID(v)
+		return nil
+	case bracketnode.FieldEntryBID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEntryBID(v)
+		return nil
+	case bracketnode.FieldWinnerEntryID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWinnerEntryID(v)
+		return nil
+	case bracketnode.FieldIsDraw:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsDraw(v)
+		return nil
+	case bracketnode.FieldResult:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResult(v)
+		return nil
+	case bracketnode.FieldMatchID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMatchID(v)
+		return nil
+	case bracketnode.FieldScheduledAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScheduledAt(v)
+		return nil
+	case bracketnode.FieldStartedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartedAt(v)
+		return nil
+	case bracketnode.FieldNextWinNodeID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNextWinNodeID(v)
+		return nil
+	case bracketnode.FieldNextWinSlot:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNextWinSlot(v)
+		return nil
+	case bracketnode.FieldNextLoseNodeID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNextLoseNodeID(v)
+		return nil
+	case bracketnode.FieldNextLoseSlot:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNextLoseSlot(v)
+		return nil
+	case bracketnode.FieldWave:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWave(v)
+		return nil
+	case bracketnode.FieldAttempts:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttempts(v)
+		return nil
+	case bracketnode.FieldRescheduleCount:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRescheduleCount(v)
+		return nil
+	case bracketnode.FieldNotices:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNotices(v)
+		return nil
+	case bracketnode.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case bracketnode.FieldConfirmAfter:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfirmAfter(v)
+		return nil
+	case bracketnode.FieldDecisionRequired:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDecisionRequired(v)
+		return nil
+	case bracketnode.FieldOverrideReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOverrideReason(v)
+		return nil
+	case bracketnode.FieldOverriddenBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOverriddenBy(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BracketNode field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BracketNodeMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, bracketnode.FieldVersion)
+	}
+	if m.addround != nil {
+		fields = append(fields, bracketnode.FieldRound)
+	}
+	if m.addposition != nil {
+		fields = append(fields, bracketnode.FieldPosition)
+	}
+	if m.addnext_win_slot != nil {
+		fields = append(fields, bracketnode.FieldNextWinSlot)
+	}
+	if m.addnext_lose_slot != nil {
+		fields = append(fields, bracketnode.FieldNextLoseSlot)
+	}
+	if m.addwave != nil {
+		fields = append(fields, bracketnode.FieldWave)
+	}
+	if m.addattempts != nil {
+		fields = append(fields, bracketnode.FieldAttempts)
+	}
+	if m.addreschedule_count != nil {
+		fields = append(fields, bracketnode.FieldRescheduleCount)
+	}
+	if m.addnotices != nil {
+		fields = append(fields, bracketnode.FieldNotices)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BracketNodeMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case bracketnode.FieldVersion:
+		return m.AddedVersion()
+	case bracketnode.FieldRound:
+		return m.AddedRound()
+	case bracketnode.FieldPosition:
+		return m.AddedPosition()
+	case bracketnode.FieldNextWinSlot:
+		return m.AddedNextWinSlot()
+	case bracketnode.FieldNextLoseSlot:
+		return m.AddedNextLoseSlot()
+	case bracketnode.FieldWave:
+		return m.AddedWave()
+	case bracketnode.FieldAttempts:
+		return m.AddedAttempts()
+	case bracketnode.FieldRescheduleCount:
+		return m.AddedRescheduleCount()
+	case bracketnode.FieldNotices:
+		return m.AddedNotices()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BracketNodeMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case bracketnode.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case bracketnode.FieldRound:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRound(v)
+		return nil
+	case bracketnode.FieldPosition:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPosition(v)
+		return nil
+	case bracketnode.FieldNextWinSlot:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddNextWinSlot(v)
+		return nil
+	case bracketnode.FieldNextLoseSlot:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddNextLoseSlot(v)
+		return nil
+	case bracketnode.FieldWave:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddWave(v)
+		return nil
+	case bracketnode.FieldAttempts:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttempts(v)
+		return nil
+	case bracketnode.FieldRescheduleCount:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRescheduleCount(v)
+		return nil
+	case bracketnode.FieldNotices:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddNotices(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BracketNode numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BracketNodeMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(bracketnode.FieldCreatedBy) {
+		fields = append(fields, bracketnode.FieldCreatedBy)
+	}
+	if m.FieldCleared(bracketnode.FieldUpdatedBy) {
+		fields = append(fields, bracketnode.FieldUpdatedBy)
+	}
+	if m.FieldCleared(bracketnode.FieldDeletedAt) {
+		fields = append(fields, bracketnode.FieldDeletedAt)
+	}
+	if m.FieldCleared(bracketnode.FieldDeletedBy) {
+		fields = append(fields, bracketnode.FieldDeletedBy)
+	}
+	if m.FieldCleared(bracketnode.FieldDeleteReason) {
+		fields = append(fields, bracketnode.FieldDeleteReason)
+	}
+	if m.FieldCleared(bracketnode.FieldGroupID) {
+		fields = append(fields, bracketnode.FieldGroupID)
+	}
+	if m.FieldCleared(bracketnode.FieldEntryAID) {
+		fields = append(fields, bracketnode.FieldEntryAID)
+	}
+	if m.FieldCleared(bracketnode.FieldEntryBID) {
+		fields = append(fields, bracketnode.FieldEntryBID)
+	}
+	if m.FieldCleared(bracketnode.FieldWinnerEntryID) {
+		fields = append(fields, bracketnode.FieldWinnerEntryID)
+	}
+	if m.FieldCleared(bracketnode.FieldResult) {
+		fields = append(fields, bracketnode.FieldResult)
+	}
+	if m.FieldCleared(bracketnode.FieldMatchID) {
+		fields = append(fields, bracketnode.FieldMatchID)
+	}
+	if m.FieldCleared(bracketnode.FieldScheduledAt) {
+		fields = append(fields, bracketnode.FieldScheduledAt)
+	}
+	if m.FieldCleared(bracketnode.FieldStartedAt) {
+		fields = append(fields, bracketnode.FieldStartedAt)
+	}
+	if m.FieldCleared(bracketnode.FieldNextWinNodeID) {
+		fields = append(fields, bracketnode.FieldNextWinNodeID)
+	}
+	if m.FieldCleared(bracketnode.FieldNextWinSlot) {
+		fields = append(fields, bracketnode.FieldNextWinSlot)
+	}
+	if m.FieldCleared(bracketnode.FieldNextLoseNodeID) {
+		fields = append(fields, bracketnode.FieldNextLoseNodeID)
+	}
+	if m.FieldCleared(bracketnode.FieldNextLoseSlot) {
+		fields = append(fields, bracketnode.FieldNextLoseSlot)
+	}
+	if m.FieldCleared(bracketnode.FieldConfirmAfter) {
+		fields = append(fields, bracketnode.FieldConfirmAfter)
+	}
+	if m.FieldCleared(bracketnode.FieldOverrideReason) {
+		fields = append(fields, bracketnode.FieldOverrideReason)
+	}
+	if m.FieldCleared(bracketnode.FieldOverriddenBy) {
+		fields = append(fields, bracketnode.FieldOverriddenBy)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BracketNodeMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BracketNodeMutation) ClearField(name string) error {
+	switch name {
+	case bracketnode.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case bracketnode.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case bracketnode.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case bracketnode.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case bracketnode.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case bracketnode.FieldGroupID:
+		m.ClearGroupID()
+		return nil
+	case bracketnode.FieldEntryAID:
+		m.ClearEntryAID()
+		return nil
+	case bracketnode.FieldEntryBID:
+		m.ClearEntryBID()
+		return nil
+	case bracketnode.FieldWinnerEntryID:
+		m.ClearWinnerEntryID()
+		return nil
+	case bracketnode.FieldResult:
+		m.ClearResult()
+		return nil
+	case bracketnode.FieldMatchID:
+		m.ClearMatchID()
+		return nil
+	case bracketnode.FieldScheduledAt:
+		m.ClearScheduledAt()
+		return nil
+	case bracketnode.FieldStartedAt:
+		m.ClearStartedAt()
+		return nil
+	case bracketnode.FieldNextWinNodeID:
+		m.ClearNextWinNodeID()
+		return nil
+	case bracketnode.FieldNextWinSlot:
+		m.ClearNextWinSlot()
+		return nil
+	case bracketnode.FieldNextLoseNodeID:
+		m.ClearNextLoseNodeID()
+		return nil
+	case bracketnode.FieldNextLoseSlot:
+		m.ClearNextLoseSlot()
+		return nil
+	case bracketnode.FieldConfirmAfter:
+		m.ClearConfirmAfter()
+		return nil
+	case bracketnode.FieldOverrideReason:
+		m.ClearOverrideReason()
+		return nil
+	case bracketnode.FieldOverriddenBy:
+		m.ClearOverriddenBy()
+		return nil
+	}
+	return fmt.Errorf("unknown BracketNode nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BracketNodeMutation) ResetField(name string) error {
+	switch name {
+	case bracketnode.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case bracketnode.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case bracketnode.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case bracketnode.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case bracketnode.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case bracketnode.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case bracketnode.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case bracketnode.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case bracketnode.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case bracketnode.FieldTournamentID:
+		m.ResetTournamentID()
+		return nil
+	case bracketnode.FieldBracket:
+		m.ResetBracket()
+		return nil
+	case bracketnode.FieldRound:
+		m.ResetRound()
+		return nil
+	case bracketnode.FieldPosition:
+		m.ResetPosition()
+		return nil
+	case bracketnode.FieldGroupID:
+		m.ResetGroupID()
+		return nil
+	case bracketnode.FieldEntryAID:
+		m.ResetEntryAID()
+		return nil
+	case bracketnode.FieldEntryBID:
+		m.ResetEntryBID()
+		return nil
+	case bracketnode.FieldWinnerEntryID:
+		m.ResetWinnerEntryID()
+		return nil
+	case bracketnode.FieldIsDraw:
+		m.ResetIsDraw()
+		return nil
+	case bracketnode.FieldResult:
+		m.ResetResult()
+		return nil
+	case bracketnode.FieldMatchID:
+		m.ResetMatchID()
+		return nil
+	case bracketnode.FieldScheduledAt:
+		m.ResetScheduledAt()
+		return nil
+	case bracketnode.FieldStartedAt:
+		m.ResetStartedAt()
+		return nil
+	case bracketnode.FieldNextWinNodeID:
+		m.ResetNextWinNodeID()
+		return nil
+	case bracketnode.FieldNextWinSlot:
+		m.ResetNextWinSlot()
+		return nil
+	case bracketnode.FieldNextLoseNodeID:
+		m.ResetNextLoseNodeID()
+		return nil
+	case bracketnode.FieldNextLoseSlot:
+		m.ResetNextLoseSlot()
+		return nil
+	case bracketnode.FieldWave:
+		m.ResetWave()
+		return nil
+	case bracketnode.FieldAttempts:
+		m.ResetAttempts()
+		return nil
+	case bracketnode.FieldRescheduleCount:
+		m.ResetRescheduleCount()
+		return nil
+	case bracketnode.FieldNotices:
+		m.ResetNotices()
+		return nil
+	case bracketnode.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case bracketnode.FieldConfirmAfter:
+		m.ResetConfirmAfter()
+		return nil
+	case bracketnode.FieldDecisionRequired:
+		m.ResetDecisionRequired()
+		return nil
+	case bracketnode.FieldOverrideReason:
+		m.ResetOverrideReason()
+		return nil
+	case bracketnode.FieldOverriddenBy:
+		m.ResetOverriddenBy()
+		return nil
+	}
+	return fmt.Errorf("unknown BracketNode field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BracketNodeMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BracketNodeMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BracketNodeMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BracketNodeMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BracketNodeMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BracketNodeMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BracketNodeMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BracketNode unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BracketNodeMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BracketNode edge %s", name)
+}
+
+// ChallengeMutation represents an operation that mutates the Challenge nodes in the graph.
+type ChallengeMutation struct {
+	config
+	op                        Op
+	typ                       string
+	id                        *uuid.UUID
+	tenant_id                 *uuid.UUID
+	created_at                *time.Time
+	created_by                *uuid.UUID
+	updated_at                *time.Time
+	updated_by                *uuid.UUID
+	deleted_at                *time.Time
+	deleted_by                *uuid.UUID
+	delete_reason             *string
+	version                   *int64
+	addversion                *int64
+	school_id                 *uuid.UUID
+	template_config_id        *uuid.UUID
+	template_version_id       *uuid.UUID
+	kind                      *string
+	format                    *string
+	name                      *string
+	grade_level               *int16
+	addgrade_level            *int16
+	targets                   *[]map[string]interface{}
+	appendtargets             []map[string]interface{}
+	exclude_student_ids       *[]uuid.UUID
+	appendexclude_student_ids []uuid.UUID
+	participation             *string
+	subject_id                *uuid.UUID
+	question_set_version_id   *uuid.UUID
+	params                    *map[string]interface{}
+	starts_at                 *time.Time
+	ends_at                   *time.Time
+	join_opens_at             *time.Time
+	status                    *string
+	tournament_id             *uuid.UUID
+	match_ids                 *[]uuid.UUID
+	appendmatch_ids           []uuid.UUID
+	cancel_reason             *string
+	clearedFields             map[string]struct{}
+	done                      bool
+	oldValue                  func(context.Context) (*Challenge, error)
+	predicates                []predicate.Challenge
+}
+
+var _ ent.Mutation = (*ChallengeMutation)(nil)
+
+// challengeOption allows management of the mutation configuration using functional options.
+type challengeOption func(*ChallengeMutation)
+
+// newChallengeMutation creates new mutation for the Challenge entity.
+func newChallengeMutation(c config, op Op, opts ...challengeOption) *ChallengeMutation {
+	m := &ChallengeMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeChallenge,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withChallengeID sets the ID field of the mutation.
+func withChallengeID(id uuid.UUID) challengeOption {
+	return func(m *ChallengeMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Challenge
+		)
+		m.oldValue = func(ctx context.Context) (*Challenge, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Challenge.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withChallenge sets the old Challenge of the mutation.
+func withChallenge(node *Challenge) challengeOption {
+	return func(m *ChallengeMutation) {
+		m.oldValue = func(context.Context) (*Challenge, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ChallengeMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ChallengeMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Challenge entities.
+func (m *ChallengeMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ChallengeMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ChallengeMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Challenge.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *ChallengeMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *ChallengeMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *ChallengeMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ChallengeMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ChallengeMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ChallengeMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *ChallengeMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *ChallengeMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *ChallengeMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[challenge.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *ChallengeMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[challenge.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *ChallengeMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, challenge.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ChallengeMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ChallengeMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ChallengeMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *ChallengeMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *ChallengeMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *ChallengeMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[challenge.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *ChallengeMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[challenge.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *ChallengeMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, challenge.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ChallengeMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ChallengeMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ChallengeMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[challenge.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ChallengeMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[challenge.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ChallengeMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, challenge.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *ChallengeMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *ChallengeMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *ChallengeMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[challenge.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *ChallengeMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[challenge.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *ChallengeMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, challenge.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *ChallengeMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *ChallengeMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *ChallengeMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[challenge.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *ChallengeMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[challenge.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *ChallengeMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, challenge.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *ChallengeMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *ChallengeMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *ChallengeMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *ChallengeMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *ChallengeMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetSchoolID sets the "school_id" field.
+func (m *ChallengeMutation) SetSchoolID(u uuid.UUID) {
+	m.school_id = &u
+}
+
+// SchoolID returns the value of the "school_id" field in the mutation.
+func (m *ChallengeMutation) SchoolID() (r uuid.UUID, exists bool) {
+	v := m.school_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchoolID returns the old "school_id" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldSchoolID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchoolID: %w", err)
+	}
+	return oldValue.SchoolID, nil
+}
+
+// ResetSchoolID resets all changes to the "school_id" field.
+func (m *ChallengeMutation) ResetSchoolID() {
+	m.school_id = nil
+}
+
+// SetTemplateConfigID sets the "template_config_id" field.
+func (m *ChallengeMutation) SetTemplateConfigID(u uuid.UUID) {
+	m.template_config_id = &u
+}
+
+// TemplateConfigID returns the value of the "template_config_id" field in the mutation.
+func (m *ChallengeMutation) TemplateConfigID() (r uuid.UUID, exists bool) {
+	v := m.template_config_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTemplateConfigID returns the old "template_config_id" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldTemplateConfigID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTemplateConfigID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTemplateConfigID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTemplateConfigID: %w", err)
+	}
+	return oldValue.TemplateConfigID, nil
+}
+
+// ResetTemplateConfigID resets all changes to the "template_config_id" field.
+func (m *ChallengeMutation) ResetTemplateConfigID() {
+	m.template_config_id = nil
+}
+
+// SetTemplateVersionID sets the "template_version_id" field.
+func (m *ChallengeMutation) SetTemplateVersionID(u uuid.UUID) {
+	m.template_version_id = &u
+}
+
+// TemplateVersionID returns the value of the "template_version_id" field in the mutation.
+func (m *ChallengeMutation) TemplateVersionID() (r uuid.UUID, exists bool) {
+	v := m.template_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTemplateVersionID returns the old "template_version_id" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldTemplateVersionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTemplateVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTemplateVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTemplateVersionID: %w", err)
+	}
+	return oldValue.TemplateVersionID, nil
+}
+
+// ResetTemplateVersionID resets all changes to the "template_version_id" field.
+func (m *ChallengeMutation) ResetTemplateVersionID() {
+	m.template_version_id = nil
+}
+
+// SetKind sets the "kind" field.
+func (m *ChallengeMutation) SetKind(s string) {
+	m.kind = &s
+}
+
+// Kind returns the value of the "kind" field in the mutation.
+func (m *ChallengeMutation) Kind() (r string, exists bool) {
+	v := m.kind
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKind returns the old "kind" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldKind(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKind is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKind requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKind: %w", err)
+	}
+	return oldValue.Kind, nil
+}
+
+// ResetKind resets all changes to the "kind" field.
+func (m *ChallengeMutation) ResetKind() {
+	m.kind = nil
+}
+
+// SetFormat sets the "format" field.
+func (m *ChallengeMutation) SetFormat(s string) {
+	m.format = &s
+}
+
+// Format returns the value of the "format" field in the mutation.
+func (m *ChallengeMutation) Format() (r string, exists bool) {
+	v := m.format
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFormat returns the old "format" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldFormat(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFormat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFormat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFormat: %w", err)
+	}
+	return oldValue.Format, nil
+}
+
+// ResetFormat resets all changes to the "format" field.
+func (m *ChallengeMutation) ResetFormat() {
+	m.format = nil
+}
+
+// SetName sets the "name" field.
+func (m *ChallengeMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ChallengeMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ChallengeMutation) ResetName() {
+	m.name = nil
+}
+
+// SetGradeLevel sets the "grade_level" field.
+func (m *ChallengeMutation) SetGradeLevel(i int16) {
+	m.grade_level = &i
+	m.addgrade_level = nil
+}
+
+// GradeLevel returns the value of the "grade_level" field in the mutation.
+func (m *ChallengeMutation) GradeLevel() (r int16, exists bool) {
+	v := m.grade_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGradeLevel returns the old "grade_level" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldGradeLevel(ctx context.Context) (v *int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGradeLevel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGradeLevel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGradeLevel: %w", err)
+	}
+	return oldValue.GradeLevel, nil
+}
+
+// AddGradeLevel adds i to the "grade_level" field.
+func (m *ChallengeMutation) AddGradeLevel(i int16) {
+	if m.addgrade_level != nil {
+		*m.addgrade_level += i
+	} else {
+		m.addgrade_level = &i
+	}
+}
+
+// AddedGradeLevel returns the value that was added to the "grade_level" field in this mutation.
+func (m *ChallengeMutation) AddedGradeLevel() (r int16, exists bool) {
+	v := m.addgrade_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearGradeLevel clears the value of the "grade_level" field.
+func (m *ChallengeMutation) ClearGradeLevel() {
+	m.grade_level = nil
+	m.addgrade_level = nil
+	m.clearedFields[challenge.FieldGradeLevel] = struct{}{}
+}
+
+// GradeLevelCleared returns if the "grade_level" field was cleared in this mutation.
+func (m *ChallengeMutation) GradeLevelCleared() bool {
+	_, ok := m.clearedFields[challenge.FieldGradeLevel]
+	return ok
+}
+
+// ResetGradeLevel resets all changes to the "grade_level" field.
+func (m *ChallengeMutation) ResetGradeLevel() {
+	m.grade_level = nil
+	m.addgrade_level = nil
+	delete(m.clearedFields, challenge.FieldGradeLevel)
+}
+
+// SetTargets sets the "targets" field.
+func (m *ChallengeMutation) SetTargets(value []map[string]interface{}) {
+	m.targets = &value
+	m.appendtargets = nil
+}
+
+// Targets returns the value of the "targets" field in the mutation.
+func (m *ChallengeMutation) Targets() (r []map[string]interface{}, exists bool) {
+	v := m.targets
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargets returns the old "targets" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldTargets(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargets is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargets requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargets: %w", err)
+	}
+	return oldValue.Targets, nil
+}
+
+// AppendTargets adds value to the "targets" field.
+func (m *ChallengeMutation) AppendTargets(value []map[string]interface{}) {
+	m.appendtargets = append(m.appendtargets, value...)
+}
+
+// AppendedTargets returns the list of values that were appended to the "targets" field in this mutation.
+func (m *ChallengeMutation) AppendedTargets() ([]map[string]interface{}, bool) {
+	if len(m.appendtargets) == 0 {
+		return nil, false
+	}
+	return m.appendtargets, true
+}
+
+// ResetTargets resets all changes to the "targets" field.
+func (m *ChallengeMutation) ResetTargets() {
+	m.targets = nil
+	m.appendtargets = nil
+}
+
+// SetExcludeStudentIds sets the "exclude_student_ids" field.
+func (m *ChallengeMutation) SetExcludeStudentIds(u []uuid.UUID) {
+	m.exclude_student_ids = &u
+	m.appendexclude_student_ids = nil
+}
+
+// ExcludeStudentIds returns the value of the "exclude_student_ids" field in the mutation.
+func (m *ChallengeMutation) ExcludeStudentIds() (r []uuid.UUID, exists bool) {
+	v := m.exclude_student_ids
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExcludeStudentIds returns the old "exclude_student_ids" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldExcludeStudentIds(ctx context.Context) (v []uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExcludeStudentIds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExcludeStudentIds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExcludeStudentIds: %w", err)
+	}
+	return oldValue.ExcludeStudentIds, nil
+}
+
+// AppendExcludeStudentIds adds u to the "exclude_student_ids" field.
+func (m *ChallengeMutation) AppendExcludeStudentIds(u []uuid.UUID) {
+	m.appendexclude_student_ids = append(m.appendexclude_student_ids, u...)
+}
+
+// AppendedExcludeStudentIds returns the list of values that were appended to the "exclude_student_ids" field in this mutation.
+func (m *ChallengeMutation) AppendedExcludeStudentIds() ([]uuid.UUID, bool) {
+	if len(m.appendexclude_student_ids) == 0 {
+		return nil, false
+	}
+	return m.appendexclude_student_ids, true
+}
+
+// ResetExcludeStudentIds resets all changes to the "exclude_student_ids" field.
+func (m *ChallengeMutation) ResetExcludeStudentIds() {
+	m.exclude_student_ids = nil
+	m.appendexclude_student_ids = nil
+}
+
+// SetParticipation sets the "participation" field.
+func (m *ChallengeMutation) SetParticipation(s string) {
+	m.participation = &s
+}
+
+// Participation returns the value of the "participation" field in the mutation.
+func (m *ChallengeMutation) Participation() (r string, exists bool) {
+	v := m.participation
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParticipation returns the old "participation" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldParticipation(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParticipation is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParticipation requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParticipation: %w", err)
+	}
+	return oldValue.Participation, nil
+}
+
+// ResetParticipation resets all changes to the "participation" field.
+func (m *ChallengeMutation) ResetParticipation() {
+	m.participation = nil
+}
+
+// SetSubjectID sets the "subject_id" field.
+func (m *ChallengeMutation) SetSubjectID(u uuid.UUID) {
+	m.subject_id = &u
+}
+
+// SubjectID returns the value of the "subject_id" field in the mutation.
+func (m *ChallengeMutation) SubjectID() (r uuid.UUID, exists bool) {
+	v := m.subject_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubjectID returns the old "subject_id" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldSubjectID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubjectID: %w", err)
+	}
+	return oldValue.SubjectID, nil
+}
+
+// ResetSubjectID resets all changes to the "subject_id" field.
+func (m *ChallengeMutation) ResetSubjectID() {
+	m.subject_id = nil
+}
+
+// SetQuestionSetVersionID sets the "question_set_version_id" field.
+func (m *ChallengeMutation) SetQuestionSetVersionID(u uuid.UUID) {
+	m.question_set_version_id = &u
+}
+
+// QuestionSetVersionID returns the value of the "question_set_version_id" field in the mutation.
+func (m *ChallengeMutation) QuestionSetVersionID() (r uuid.UUID, exists bool) {
+	v := m.question_set_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestionSetVersionID returns the old "question_set_version_id" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldQuestionSetVersionID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestionSetVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestionSetVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestionSetVersionID: %w", err)
+	}
+	return oldValue.QuestionSetVersionID, nil
+}
+
+// ClearQuestionSetVersionID clears the value of the "question_set_version_id" field.
+func (m *ChallengeMutation) ClearQuestionSetVersionID() {
+	m.question_set_version_id = nil
+	m.clearedFields[challenge.FieldQuestionSetVersionID] = struct{}{}
+}
+
+// QuestionSetVersionIDCleared returns if the "question_set_version_id" field was cleared in this mutation.
+func (m *ChallengeMutation) QuestionSetVersionIDCleared() bool {
+	_, ok := m.clearedFields[challenge.FieldQuestionSetVersionID]
+	return ok
+}
+
+// ResetQuestionSetVersionID resets all changes to the "question_set_version_id" field.
+func (m *ChallengeMutation) ResetQuestionSetVersionID() {
+	m.question_set_version_id = nil
+	delete(m.clearedFields, challenge.FieldQuestionSetVersionID)
+}
+
+// SetParams sets the "params" field.
+func (m *ChallengeMutation) SetParams(value map[string]interface{}) {
+	m.params = &value
+}
+
+// Params returns the value of the "params" field in the mutation.
+func (m *ChallengeMutation) Params() (r map[string]interface{}, exists bool) {
+	v := m.params
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParams returns the old "params" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldParams(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParams is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParams requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParams: %w", err)
+	}
+	return oldValue.Params, nil
+}
+
+// ResetParams resets all changes to the "params" field.
+func (m *ChallengeMutation) ResetParams() {
+	m.params = nil
+}
+
+// SetStartsAt sets the "starts_at" field.
+func (m *ChallengeMutation) SetStartsAt(t time.Time) {
+	m.starts_at = &t
+}
+
+// StartsAt returns the value of the "starts_at" field in the mutation.
+func (m *ChallengeMutation) StartsAt() (r time.Time, exists bool) {
+	v := m.starts_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartsAt returns the old "starts_at" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldStartsAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartsAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartsAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartsAt: %w", err)
+	}
+	return oldValue.StartsAt, nil
+}
+
+// ResetStartsAt resets all changes to the "starts_at" field.
+func (m *ChallengeMutation) ResetStartsAt() {
+	m.starts_at = nil
+}
+
+// SetEndsAt sets the "ends_at" field.
+func (m *ChallengeMutation) SetEndsAt(t time.Time) {
+	m.ends_at = &t
+}
+
+// EndsAt returns the value of the "ends_at" field in the mutation.
+func (m *ChallengeMutation) EndsAt() (r time.Time, exists bool) {
+	v := m.ends_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndsAt returns the old "ends_at" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldEndsAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndsAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndsAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndsAt: %w", err)
+	}
+	return oldValue.EndsAt, nil
+}
+
+// ResetEndsAt resets all changes to the "ends_at" field.
+func (m *ChallengeMutation) ResetEndsAt() {
+	m.ends_at = nil
+}
+
+// SetJoinOpensAt sets the "join_opens_at" field.
+func (m *ChallengeMutation) SetJoinOpensAt(t time.Time) {
+	m.join_opens_at = &t
+}
+
+// JoinOpensAt returns the value of the "join_opens_at" field in the mutation.
+func (m *ChallengeMutation) JoinOpensAt() (r time.Time, exists bool) {
+	v := m.join_opens_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJoinOpensAt returns the old "join_opens_at" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldJoinOpensAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJoinOpensAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJoinOpensAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJoinOpensAt: %w", err)
+	}
+	return oldValue.JoinOpensAt, nil
+}
+
+// ResetJoinOpensAt resets all changes to the "join_opens_at" field.
+func (m *ChallengeMutation) ResetJoinOpensAt() {
+	m.join_opens_at = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *ChallengeMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ChallengeMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ChallengeMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetTournamentID sets the "tournament_id" field.
+func (m *ChallengeMutation) SetTournamentID(u uuid.UUID) {
+	m.tournament_id = &u
+}
+
+// TournamentID returns the value of the "tournament_id" field in the mutation.
+func (m *ChallengeMutation) TournamentID() (r uuid.UUID, exists bool) {
+	v := m.tournament_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTournamentID returns the old "tournament_id" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldTournamentID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTournamentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTournamentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTournamentID: %w", err)
+	}
+	return oldValue.TournamentID, nil
+}
+
+// ClearTournamentID clears the value of the "tournament_id" field.
+func (m *ChallengeMutation) ClearTournamentID() {
+	m.tournament_id = nil
+	m.clearedFields[challenge.FieldTournamentID] = struct{}{}
+}
+
+// TournamentIDCleared returns if the "tournament_id" field was cleared in this mutation.
+func (m *ChallengeMutation) TournamentIDCleared() bool {
+	_, ok := m.clearedFields[challenge.FieldTournamentID]
+	return ok
+}
+
+// ResetTournamentID resets all changes to the "tournament_id" field.
+func (m *ChallengeMutation) ResetTournamentID() {
+	m.tournament_id = nil
+	delete(m.clearedFields, challenge.FieldTournamentID)
+}
+
+// SetMatchIds sets the "match_ids" field.
+func (m *ChallengeMutation) SetMatchIds(u []uuid.UUID) {
+	m.match_ids = &u
+	m.appendmatch_ids = nil
+}
+
+// MatchIds returns the value of the "match_ids" field in the mutation.
+func (m *ChallengeMutation) MatchIds() (r []uuid.UUID, exists bool) {
+	v := m.match_ids
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMatchIds returns the old "match_ids" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldMatchIds(ctx context.Context) (v []uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMatchIds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMatchIds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMatchIds: %w", err)
+	}
+	return oldValue.MatchIds, nil
+}
+
+// AppendMatchIds adds u to the "match_ids" field.
+func (m *ChallengeMutation) AppendMatchIds(u []uuid.UUID) {
+	m.appendmatch_ids = append(m.appendmatch_ids, u...)
+}
+
+// AppendedMatchIds returns the list of values that were appended to the "match_ids" field in this mutation.
+func (m *ChallengeMutation) AppendedMatchIds() ([]uuid.UUID, bool) {
+	if len(m.appendmatch_ids) == 0 {
+		return nil, false
+	}
+	return m.appendmatch_ids, true
+}
+
+// ClearMatchIds clears the value of the "match_ids" field.
+func (m *ChallengeMutation) ClearMatchIds() {
+	m.match_ids = nil
+	m.appendmatch_ids = nil
+	m.clearedFields[challenge.FieldMatchIds] = struct{}{}
+}
+
+// MatchIdsCleared returns if the "match_ids" field was cleared in this mutation.
+func (m *ChallengeMutation) MatchIdsCleared() bool {
+	_, ok := m.clearedFields[challenge.FieldMatchIds]
+	return ok
+}
+
+// ResetMatchIds resets all changes to the "match_ids" field.
+func (m *ChallengeMutation) ResetMatchIds() {
+	m.match_ids = nil
+	m.appendmatch_ids = nil
+	delete(m.clearedFields, challenge.FieldMatchIds)
+}
+
+// SetCancelReason sets the "cancel_reason" field.
+func (m *ChallengeMutation) SetCancelReason(s string) {
+	m.cancel_reason = &s
+}
+
+// CancelReason returns the value of the "cancel_reason" field in the mutation.
+func (m *ChallengeMutation) CancelReason() (r string, exists bool) {
+	v := m.cancel_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCancelReason returns the old "cancel_reason" field's value of the Challenge entity.
+// If the Challenge object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChallengeMutation) OldCancelReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCancelReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCancelReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCancelReason: %w", err)
+	}
+	return oldValue.CancelReason, nil
+}
+
+// ClearCancelReason clears the value of the "cancel_reason" field.
+func (m *ChallengeMutation) ClearCancelReason() {
+	m.cancel_reason = nil
+	m.clearedFields[challenge.FieldCancelReason] = struct{}{}
+}
+
+// CancelReasonCleared returns if the "cancel_reason" field was cleared in this mutation.
+func (m *ChallengeMutation) CancelReasonCleared() bool {
+	_, ok := m.clearedFields[challenge.FieldCancelReason]
+	return ok
+}
+
+// ResetCancelReason resets all changes to the "cancel_reason" field.
+func (m *ChallengeMutation) ResetCancelReason() {
+	m.cancel_reason = nil
+	delete(m.clearedFields, challenge.FieldCancelReason)
+}
+
+// Where appends a list predicates to the ChallengeMutation builder.
+func (m *ChallengeMutation) Where(ps ...predicate.Challenge) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ChallengeMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ChallengeMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Challenge, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ChallengeMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ChallengeMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Challenge).
+func (m *ChallengeMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ChallengeMutation) Fields() []string {
+	fields := make([]string, 0, 29)
+	if m.tenant_id != nil {
+		fields = append(fields, challenge.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, challenge.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, challenge.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, challenge.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, challenge.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, challenge.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, challenge.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, challenge.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, challenge.FieldVersion)
+	}
+	if m.school_id != nil {
+		fields = append(fields, challenge.FieldSchoolID)
+	}
+	if m.template_config_id != nil {
+		fields = append(fields, challenge.FieldTemplateConfigID)
+	}
+	if m.template_version_id != nil {
+		fields = append(fields, challenge.FieldTemplateVersionID)
+	}
+	if m.kind != nil {
+		fields = append(fields, challenge.FieldKind)
+	}
+	if m.format != nil {
+		fields = append(fields, challenge.FieldFormat)
+	}
+	if m.name != nil {
+		fields = append(fields, challenge.FieldName)
+	}
+	if m.grade_level != nil {
+		fields = append(fields, challenge.FieldGradeLevel)
+	}
+	if m.targets != nil {
+		fields = append(fields, challenge.FieldTargets)
+	}
+	if m.exclude_student_ids != nil {
+		fields = append(fields, challenge.FieldExcludeStudentIds)
+	}
+	if m.participation != nil {
+		fields = append(fields, challenge.FieldParticipation)
+	}
+	if m.subject_id != nil {
+		fields = append(fields, challenge.FieldSubjectID)
+	}
+	if m.question_set_version_id != nil {
+		fields = append(fields, challenge.FieldQuestionSetVersionID)
+	}
+	if m.params != nil {
+		fields = append(fields, challenge.FieldParams)
+	}
+	if m.starts_at != nil {
+		fields = append(fields, challenge.FieldStartsAt)
+	}
+	if m.ends_at != nil {
+		fields = append(fields, challenge.FieldEndsAt)
+	}
+	if m.join_opens_at != nil {
+		fields = append(fields, challenge.FieldJoinOpensAt)
+	}
+	if m.status != nil {
+		fields = append(fields, challenge.FieldStatus)
+	}
+	if m.tournament_id != nil {
+		fields = append(fields, challenge.FieldTournamentID)
+	}
+	if m.match_ids != nil {
+		fields = append(fields, challenge.FieldMatchIds)
+	}
+	if m.cancel_reason != nil {
+		fields = append(fields, challenge.FieldCancelReason)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ChallengeMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case challenge.FieldTenantID:
+		return m.TenantID()
+	case challenge.FieldCreatedAt:
+		return m.CreatedAt()
+	case challenge.FieldCreatedBy:
+		return m.CreatedBy()
+	case challenge.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case challenge.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case challenge.FieldDeletedAt:
+		return m.DeletedAt()
+	case challenge.FieldDeletedBy:
+		return m.DeletedBy()
+	case challenge.FieldDeleteReason:
+		return m.DeleteReason()
+	case challenge.FieldVersion:
+		return m.Version()
+	case challenge.FieldSchoolID:
+		return m.SchoolID()
+	case challenge.FieldTemplateConfigID:
+		return m.TemplateConfigID()
+	case challenge.FieldTemplateVersionID:
+		return m.TemplateVersionID()
+	case challenge.FieldKind:
+		return m.Kind()
+	case challenge.FieldFormat:
+		return m.Format()
+	case challenge.FieldName:
+		return m.Name()
+	case challenge.FieldGradeLevel:
+		return m.GradeLevel()
+	case challenge.FieldTargets:
+		return m.Targets()
+	case challenge.FieldExcludeStudentIds:
+		return m.ExcludeStudentIds()
+	case challenge.FieldParticipation:
+		return m.Participation()
+	case challenge.FieldSubjectID:
+		return m.SubjectID()
+	case challenge.FieldQuestionSetVersionID:
+		return m.QuestionSetVersionID()
+	case challenge.FieldParams:
+		return m.Params()
+	case challenge.FieldStartsAt:
+		return m.StartsAt()
+	case challenge.FieldEndsAt:
+		return m.EndsAt()
+	case challenge.FieldJoinOpensAt:
+		return m.JoinOpensAt()
+	case challenge.FieldStatus:
+		return m.Status()
+	case challenge.FieldTournamentID:
+		return m.TournamentID()
+	case challenge.FieldMatchIds:
+		return m.MatchIds()
+	case challenge.FieldCancelReason:
+		return m.CancelReason()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ChallengeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case challenge.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case challenge.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case challenge.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case challenge.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case challenge.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case challenge.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case challenge.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case challenge.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case challenge.FieldVersion:
+		return m.OldVersion(ctx)
+	case challenge.FieldSchoolID:
+		return m.OldSchoolID(ctx)
+	case challenge.FieldTemplateConfigID:
+		return m.OldTemplateConfigID(ctx)
+	case challenge.FieldTemplateVersionID:
+		return m.OldTemplateVersionID(ctx)
+	case challenge.FieldKind:
+		return m.OldKind(ctx)
+	case challenge.FieldFormat:
+		return m.OldFormat(ctx)
+	case challenge.FieldName:
+		return m.OldName(ctx)
+	case challenge.FieldGradeLevel:
+		return m.OldGradeLevel(ctx)
+	case challenge.FieldTargets:
+		return m.OldTargets(ctx)
+	case challenge.FieldExcludeStudentIds:
+		return m.OldExcludeStudentIds(ctx)
+	case challenge.FieldParticipation:
+		return m.OldParticipation(ctx)
+	case challenge.FieldSubjectID:
+		return m.OldSubjectID(ctx)
+	case challenge.FieldQuestionSetVersionID:
+		return m.OldQuestionSetVersionID(ctx)
+	case challenge.FieldParams:
+		return m.OldParams(ctx)
+	case challenge.FieldStartsAt:
+		return m.OldStartsAt(ctx)
+	case challenge.FieldEndsAt:
+		return m.OldEndsAt(ctx)
+	case challenge.FieldJoinOpensAt:
+		return m.OldJoinOpensAt(ctx)
+	case challenge.FieldStatus:
+		return m.OldStatus(ctx)
+	case challenge.FieldTournamentID:
+		return m.OldTournamentID(ctx)
+	case challenge.FieldMatchIds:
+		return m.OldMatchIds(ctx)
+	case challenge.FieldCancelReason:
+		return m.OldCancelReason(ctx)
+	}
+	return nil, fmt.Errorf("unknown Challenge field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ChallengeMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case challenge.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case challenge.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case challenge.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case challenge.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case challenge.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case challenge.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case challenge.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case challenge.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case challenge.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case challenge.FieldSchoolID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchoolID(v)
+		return nil
+	case challenge.FieldTemplateConfigID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTemplateConfigID(v)
+		return nil
+	case challenge.FieldTemplateVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTemplateVersionID(v)
+		return nil
+	case challenge.FieldKind:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKind(v)
+		return nil
+	case challenge.FieldFormat:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFormat(v)
+		return nil
+	case challenge.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case challenge.FieldGradeLevel:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGradeLevel(v)
+		return nil
+	case challenge.FieldTargets:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargets(v)
+		return nil
+	case challenge.FieldExcludeStudentIds:
+		v, ok := value.([]uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExcludeStudentIds(v)
+		return nil
+	case challenge.FieldParticipation:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParticipation(v)
+		return nil
+	case challenge.FieldSubjectID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubjectID(v)
+		return nil
+	case challenge.FieldQuestionSetVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestionSetVersionID(v)
+		return nil
+	case challenge.FieldParams:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParams(v)
+		return nil
+	case challenge.FieldStartsAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartsAt(v)
+		return nil
+	case challenge.FieldEndsAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndsAt(v)
+		return nil
+	case challenge.FieldJoinOpensAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJoinOpensAt(v)
+		return nil
+	case challenge.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case challenge.FieldTournamentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTournamentID(v)
+		return nil
+	case challenge.FieldMatchIds:
+		v, ok := value.([]uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMatchIds(v)
+		return nil
+	case challenge.FieldCancelReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCancelReason(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Challenge field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ChallengeMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, challenge.FieldVersion)
+	}
+	if m.addgrade_level != nil {
+		fields = append(fields, challenge.FieldGradeLevel)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ChallengeMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case challenge.FieldVersion:
+		return m.AddedVersion()
+	case challenge.FieldGradeLevel:
+		return m.AddedGradeLevel()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ChallengeMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case challenge.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case challenge.FieldGradeLevel:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGradeLevel(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Challenge numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ChallengeMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(challenge.FieldCreatedBy) {
+		fields = append(fields, challenge.FieldCreatedBy)
+	}
+	if m.FieldCleared(challenge.FieldUpdatedBy) {
+		fields = append(fields, challenge.FieldUpdatedBy)
+	}
+	if m.FieldCleared(challenge.FieldDeletedAt) {
+		fields = append(fields, challenge.FieldDeletedAt)
+	}
+	if m.FieldCleared(challenge.FieldDeletedBy) {
+		fields = append(fields, challenge.FieldDeletedBy)
+	}
+	if m.FieldCleared(challenge.FieldDeleteReason) {
+		fields = append(fields, challenge.FieldDeleteReason)
+	}
+	if m.FieldCleared(challenge.FieldGradeLevel) {
+		fields = append(fields, challenge.FieldGradeLevel)
+	}
+	if m.FieldCleared(challenge.FieldQuestionSetVersionID) {
+		fields = append(fields, challenge.FieldQuestionSetVersionID)
+	}
+	if m.FieldCleared(challenge.FieldTournamentID) {
+		fields = append(fields, challenge.FieldTournamentID)
+	}
+	if m.FieldCleared(challenge.FieldMatchIds) {
+		fields = append(fields, challenge.FieldMatchIds)
+	}
+	if m.FieldCleared(challenge.FieldCancelReason) {
+		fields = append(fields, challenge.FieldCancelReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ChallengeMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ChallengeMutation) ClearField(name string) error {
+	switch name {
+	case challenge.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case challenge.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case challenge.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case challenge.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case challenge.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case challenge.FieldGradeLevel:
+		m.ClearGradeLevel()
+		return nil
+	case challenge.FieldQuestionSetVersionID:
+		m.ClearQuestionSetVersionID()
+		return nil
+	case challenge.FieldTournamentID:
+		m.ClearTournamentID()
+		return nil
+	case challenge.FieldMatchIds:
+		m.ClearMatchIds()
+		return nil
+	case challenge.FieldCancelReason:
+		m.ClearCancelReason()
+		return nil
+	}
+	return fmt.Errorf("unknown Challenge nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ChallengeMutation) ResetField(name string) error {
+	switch name {
+	case challenge.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case challenge.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case challenge.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case challenge.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case challenge.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case challenge.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case challenge.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case challenge.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case challenge.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case challenge.FieldSchoolID:
+		m.ResetSchoolID()
+		return nil
+	case challenge.FieldTemplateConfigID:
+		m.ResetTemplateConfigID()
+		return nil
+	case challenge.FieldTemplateVersionID:
+		m.ResetTemplateVersionID()
+		return nil
+	case challenge.FieldKind:
+		m.ResetKind()
+		return nil
+	case challenge.FieldFormat:
+		m.ResetFormat()
+		return nil
+	case challenge.FieldName:
+		m.ResetName()
+		return nil
+	case challenge.FieldGradeLevel:
+		m.ResetGradeLevel()
+		return nil
+	case challenge.FieldTargets:
+		m.ResetTargets()
+		return nil
+	case challenge.FieldExcludeStudentIds:
+		m.ResetExcludeStudentIds()
+		return nil
+	case challenge.FieldParticipation:
+		m.ResetParticipation()
+		return nil
+	case challenge.FieldSubjectID:
+		m.ResetSubjectID()
+		return nil
+	case challenge.FieldQuestionSetVersionID:
+		m.ResetQuestionSetVersionID()
+		return nil
+	case challenge.FieldParams:
+		m.ResetParams()
+		return nil
+	case challenge.FieldStartsAt:
+		m.ResetStartsAt()
+		return nil
+	case challenge.FieldEndsAt:
+		m.ResetEndsAt()
+		return nil
+	case challenge.FieldJoinOpensAt:
+		m.ResetJoinOpensAt()
+		return nil
+	case challenge.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case challenge.FieldTournamentID:
+		m.ResetTournamentID()
+		return nil
+	case challenge.FieldMatchIds:
+		m.ResetMatchIds()
+		return nil
+	case challenge.FieldCancelReason:
+		m.ResetCancelReason()
+		return nil
+	}
+	return fmt.Errorf("unknown Challenge field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ChallengeMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ChallengeMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ChallengeMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ChallengeMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ChallengeMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ChallengeMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ChallengeMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Challenge unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ChallengeMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Challenge edge %s", name)
+}
 
 // CompetitionPointEntryMutation represents an operation that mutates the CompetitionPointEntry nodes in the graph.
 type CompetitionPointEntryMutation struct {
@@ -33563,4 +38588,8816 @@ func (m *SessionMembershipMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *SessionMembershipMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown SessionMembership edge %s", name)
+}
+
+// TenantResourceAssignmentMutation represents an operation that mutates the TenantResourceAssignment nodes in the graph.
+type TenantResourceAssignmentMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	tenant_id     *uuid.UUID
+	created_at    *time.Time
+	created_by    *uuid.UUID
+	updated_at    *time.Time
+	updated_by    *uuid.UUID
+	deleted_at    *time.Time
+	deleted_by    *uuid.UUID
+	delete_reason *string
+	version       *int64
+	addversion    *int64
+	resource_type *string
+	resource_id   *uuid.UUID
+	assigned_by   *uuid.UUID
+	assigned_at   *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*TenantResourceAssignment, error)
+	predicates    []predicate.TenantResourceAssignment
+}
+
+var _ ent.Mutation = (*TenantResourceAssignmentMutation)(nil)
+
+// tenantresourceassignmentOption allows management of the mutation configuration using functional options.
+type tenantresourceassignmentOption func(*TenantResourceAssignmentMutation)
+
+// newTenantResourceAssignmentMutation creates new mutation for the TenantResourceAssignment entity.
+func newTenantResourceAssignmentMutation(c config, op Op, opts ...tenantresourceassignmentOption) *TenantResourceAssignmentMutation {
+	m := &TenantResourceAssignmentMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTenantResourceAssignment,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTenantResourceAssignmentID sets the ID field of the mutation.
+func withTenantResourceAssignmentID(id uuid.UUID) tenantresourceassignmentOption {
+	return func(m *TenantResourceAssignmentMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *TenantResourceAssignment
+		)
+		m.oldValue = func(ctx context.Context) (*TenantResourceAssignment, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().TenantResourceAssignment.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTenantResourceAssignment sets the old TenantResourceAssignment of the mutation.
+func withTenantResourceAssignment(node *TenantResourceAssignment) tenantresourceassignmentOption {
+	return func(m *TenantResourceAssignmentMutation) {
+		m.oldValue = func(context.Context) (*TenantResourceAssignment, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TenantResourceAssignmentMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TenantResourceAssignmentMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of TenantResourceAssignment entities.
+func (m *TenantResourceAssignmentMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TenantResourceAssignmentMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TenantResourceAssignmentMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().TenantResourceAssignment.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *TenantResourceAssignmentMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *TenantResourceAssignmentMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *TenantResourceAssignmentMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *TenantResourceAssignmentMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *TenantResourceAssignmentMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *TenantResourceAssignmentMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *TenantResourceAssignmentMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *TenantResourceAssignmentMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *TenantResourceAssignmentMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[tenantresourceassignment.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *TenantResourceAssignmentMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[tenantresourceassignment.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *TenantResourceAssignmentMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, tenantresourceassignment.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *TenantResourceAssignmentMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *TenantResourceAssignmentMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *TenantResourceAssignmentMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *TenantResourceAssignmentMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *TenantResourceAssignmentMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *TenantResourceAssignmentMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[tenantresourceassignment.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *TenantResourceAssignmentMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[tenantresourceassignment.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *TenantResourceAssignmentMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, tenantresourceassignment.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *TenantResourceAssignmentMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *TenantResourceAssignmentMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *TenantResourceAssignmentMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[tenantresourceassignment.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *TenantResourceAssignmentMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[tenantresourceassignment.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *TenantResourceAssignmentMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, tenantresourceassignment.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *TenantResourceAssignmentMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *TenantResourceAssignmentMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *TenantResourceAssignmentMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[tenantresourceassignment.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *TenantResourceAssignmentMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[tenantresourceassignment.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *TenantResourceAssignmentMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, tenantresourceassignment.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *TenantResourceAssignmentMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *TenantResourceAssignmentMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *TenantResourceAssignmentMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[tenantresourceassignment.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *TenantResourceAssignmentMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[tenantresourceassignment.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *TenantResourceAssignmentMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, tenantresourceassignment.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *TenantResourceAssignmentMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *TenantResourceAssignmentMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *TenantResourceAssignmentMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *TenantResourceAssignmentMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *TenantResourceAssignmentMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetResourceType sets the "resource_type" field.
+func (m *TenantResourceAssignmentMutation) SetResourceType(s string) {
+	m.resource_type = &s
+}
+
+// ResourceType returns the value of the "resource_type" field in the mutation.
+func (m *TenantResourceAssignmentMutation) ResourceType() (r string, exists bool) {
+	v := m.resource_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResourceType returns the old "resource_type" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldResourceType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResourceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResourceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResourceType: %w", err)
+	}
+	return oldValue.ResourceType, nil
+}
+
+// ResetResourceType resets all changes to the "resource_type" field.
+func (m *TenantResourceAssignmentMutation) ResetResourceType() {
+	m.resource_type = nil
+}
+
+// SetResourceID sets the "resource_id" field.
+func (m *TenantResourceAssignmentMutation) SetResourceID(u uuid.UUID) {
+	m.resource_id = &u
+}
+
+// ResourceID returns the value of the "resource_id" field in the mutation.
+func (m *TenantResourceAssignmentMutation) ResourceID() (r uuid.UUID, exists bool) {
+	v := m.resource_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResourceID returns the old "resource_id" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldResourceID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResourceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResourceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResourceID: %w", err)
+	}
+	return oldValue.ResourceID, nil
+}
+
+// ResetResourceID resets all changes to the "resource_id" field.
+func (m *TenantResourceAssignmentMutation) ResetResourceID() {
+	m.resource_id = nil
+}
+
+// SetAssignedBy sets the "assigned_by" field.
+func (m *TenantResourceAssignmentMutation) SetAssignedBy(u uuid.UUID) {
+	m.assigned_by = &u
+}
+
+// AssignedBy returns the value of the "assigned_by" field in the mutation.
+func (m *TenantResourceAssignmentMutation) AssignedBy() (r uuid.UUID, exists bool) {
+	v := m.assigned_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAssignedBy returns the old "assigned_by" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldAssignedBy(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAssignedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAssignedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAssignedBy: %w", err)
+	}
+	return oldValue.AssignedBy, nil
+}
+
+// ResetAssignedBy resets all changes to the "assigned_by" field.
+func (m *TenantResourceAssignmentMutation) ResetAssignedBy() {
+	m.assigned_by = nil
+}
+
+// SetAssignedAt sets the "assigned_at" field.
+func (m *TenantResourceAssignmentMutation) SetAssignedAt(t time.Time) {
+	m.assigned_at = &t
+}
+
+// AssignedAt returns the value of the "assigned_at" field in the mutation.
+func (m *TenantResourceAssignmentMutation) AssignedAt() (r time.Time, exists bool) {
+	v := m.assigned_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAssignedAt returns the old "assigned_at" field's value of the TenantResourceAssignment entity.
+// If the TenantResourceAssignment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TenantResourceAssignmentMutation) OldAssignedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAssignedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAssignedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAssignedAt: %w", err)
+	}
+	return oldValue.AssignedAt, nil
+}
+
+// ResetAssignedAt resets all changes to the "assigned_at" field.
+func (m *TenantResourceAssignmentMutation) ResetAssignedAt() {
+	m.assigned_at = nil
+}
+
+// Where appends a list predicates to the TenantResourceAssignmentMutation builder.
+func (m *TenantResourceAssignmentMutation) Where(ps ...predicate.TenantResourceAssignment) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TenantResourceAssignmentMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TenantResourceAssignmentMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.TenantResourceAssignment, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TenantResourceAssignmentMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TenantResourceAssignmentMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (TenantResourceAssignment).
+func (m *TenantResourceAssignmentMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TenantResourceAssignmentMutation) Fields() []string {
+	fields := make([]string, 0, 13)
+	if m.tenant_id != nil {
+		fields = append(fields, tenantresourceassignment.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, tenantresourceassignment.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, tenantresourceassignment.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, tenantresourceassignment.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, tenantresourceassignment.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, tenantresourceassignment.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, tenantresourceassignment.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, tenantresourceassignment.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, tenantresourceassignment.FieldVersion)
+	}
+	if m.resource_type != nil {
+		fields = append(fields, tenantresourceassignment.FieldResourceType)
+	}
+	if m.resource_id != nil {
+		fields = append(fields, tenantresourceassignment.FieldResourceID)
+	}
+	if m.assigned_by != nil {
+		fields = append(fields, tenantresourceassignment.FieldAssignedBy)
+	}
+	if m.assigned_at != nil {
+		fields = append(fields, tenantresourceassignment.FieldAssignedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TenantResourceAssignmentMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case tenantresourceassignment.FieldTenantID:
+		return m.TenantID()
+	case tenantresourceassignment.FieldCreatedAt:
+		return m.CreatedAt()
+	case tenantresourceassignment.FieldCreatedBy:
+		return m.CreatedBy()
+	case tenantresourceassignment.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case tenantresourceassignment.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case tenantresourceassignment.FieldDeletedAt:
+		return m.DeletedAt()
+	case tenantresourceassignment.FieldDeletedBy:
+		return m.DeletedBy()
+	case tenantresourceassignment.FieldDeleteReason:
+		return m.DeleteReason()
+	case tenantresourceassignment.FieldVersion:
+		return m.Version()
+	case tenantresourceassignment.FieldResourceType:
+		return m.ResourceType()
+	case tenantresourceassignment.FieldResourceID:
+		return m.ResourceID()
+	case tenantresourceassignment.FieldAssignedBy:
+		return m.AssignedBy()
+	case tenantresourceassignment.FieldAssignedAt:
+		return m.AssignedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TenantResourceAssignmentMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case tenantresourceassignment.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case tenantresourceassignment.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case tenantresourceassignment.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case tenantresourceassignment.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case tenantresourceassignment.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case tenantresourceassignment.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case tenantresourceassignment.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case tenantresourceassignment.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case tenantresourceassignment.FieldVersion:
+		return m.OldVersion(ctx)
+	case tenantresourceassignment.FieldResourceType:
+		return m.OldResourceType(ctx)
+	case tenantresourceassignment.FieldResourceID:
+		return m.OldResourceID(ctx)
+	case tenantresourceassignment.FieldAssignedBy:
+		return m.OldAssignedBy(ctx)
+	case tenantresourceassignment.FieldAssignedAt:
+		return m.OldAssignedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown TenantResourceAssignment field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TenantResourceAssignmentMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case tenantresourceassignment.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case tenantresourceassignment.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case tenantresourceassignment.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case tenantresourceassignment.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case tenantresourceassignment.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case tenantresourceassignment.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case tenantresourceassignment.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case tenantresourceassignment.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case tenantresourceassignment.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case tenantresourceassignment.FieldResourceType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResourceType(v)
+		return nil
+	case tenantresourceassignment.FieldResourceID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResourceID(v)
+		return nil
+	case tenantresourceassignment.FieldAssignedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAssignedBy(v)
+		return nil
+	case tenantresourceassignment.FieldAssignedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAssignedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TenantResourceAssignment field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TenantResourceAssignmentMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, tenantresourceassignment.FieldVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TenantResourceAssignmentMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case tenantresourceassignment.FieldVersion:
+		return m.AddedVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TenantResourceAssignmentMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case tenantresourceassignment.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TenantResourceAssignment numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TenantResourceAssignmentMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(tenantresourceassignment.FieldCreatedBy) {
+		fields = append(fields, tenantresourceassignment.FieldCreatedBy)
+	}
+	if m.FieldCleared(tenantresourceassignment.FieldUpdatedBy) {
+		fields = append(fields, tenantresourceassignment.FieldUpdatedBy)
+	}
+	if m.FieldCleared(tenantresourceassignment.FieldDeletedAt) {
+		fields = append(fields, tenantresourceassignment.FieldDeletedAt)
+	}
+	if m.FieldCleared(tenantresourceassignment.FieldDeletedBy) {
+		fields = append(fields, tenantresourceassignment.FieldDeletedBy)
+	}
+	if m.FieldCleared(tenantresourceassignment.FieldDeleteReason) {
+		fields = append(fields, tenantresourceassignment.FieldDeleteReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TenantResourceAssignmentMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TenantResourceAssignmentMutation) ClearField(name string) error {
+	switch name {
+	case tenantresourceassignment.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case tenantresourceassignment.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case tenantresourceassignment.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case tenantresourceassignment.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case tenantresourceassignment.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	}
+	return fmt.Errorf("unknown TenantResourceAssignment nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TenantResourceAssignmentMutation) ResetField(name string) error {
+	switch name {
+	case tenantresourceassignment.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case tenantresourceassignment.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case tenantresourceassignment.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case tenantresourceassignment.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case tenantresourceassignment.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case tenantresourceassignment.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case tenantresourceassignment.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case tenantresourceassignment.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case tenantresourceassignment.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case tenantresourceassignment.FieldResourceType:
+		m.ResetResourceType()
+		return nil
+	case tenantresourceassignment.FieldResourceID:
+		m.ResetResourceID()
+		return nil
+	case tenantresourceassignment.FieldAssignedBy:
+		m.ResetAssignedBy()
+		return nil
+	case tenantresourceassignment.FieldAssignedAt:
+		m.ResetAssignedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown TenantResourceAssignment field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TenantResourceAssignmentMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TenantResourceAssignmentMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TenantResourceAssignmentMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TenantResourceAssignmentMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TenantResourceAssignmentMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TenantResourceAssignmentMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TenantResourceAssignmentMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown TenantResourceAssignment unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TenantResourceAssignmentMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown TenantResourceAssignment edge %s", name)
+}
+
+// TournamentMutation represents an operation that mutates the Tournament nodes in the graph.
+type TournamentMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *uuid.UUID
+	tenant_id              *uuid.UUID
+	created_at             *time.Time
+	created_by             *uuid.UUID
+	updated_at             *time.Time
+	updated_by             *uuid.UUID
+	deleted_at             *time.Time
+	deleted_by             *uuid.UUID
+	delete_reason          *string
+	version                *int64
+	addversion             *int64
+	school_id              *uuid.UUID
+	owner_scope            *string
+	owner_id               *uuid.UUID
+	challenge_id           *uuid.UUID
+	template_config_id     *uuid.UUID
+	rule_version_id        *uuid.UUID
+	name                   *string
+	format                 *string
+	participant_type       *string
+	team_size              *int16
+	addteam_size           *int16
+	mode                   *string
+	subject_id             *uuid.UUID
+	topic_ids              *[]uuid.UUID
+	appendtopic_ids        []uuid.UUID
+	grade_levels           *[]int
+	appendgrade_levels     []int
+	question_policy        *map[string]interface{}
+	registration_open_at   *time.Time
+	registration_close_at  *time.Time
+	check_in_opens_at      *time.Time
+	starts_at              *time.Time
+	max_entries            *int16
+	addmax_entries         *int16
+	min_entries            *int16
+	addmin_entries         *int16
+	seeding_policy         *string
+	seed_value             *int64
+	addseed_value          *int64
+	auto_confirm           *bool
+	reward_rule_refs       *[]map[string]interface{}
+	appendreward_rule_refs []map[string]interface{}
+	reward_summary         *string
+	round_gap_s            *int
+	addround_gap_s         *int
+	status                 *string
+	cancel_reason          *string
+	completed_at           *time.Time
+	rewarded_at            *time.Time
+	clearedFields          map[string]struct{}
+	done                   bool
+	oldValue               func(context.Context) (*Tournament, error)
+	predicates             []predicate.Tournament
+}
+
+var _ ent.Mutation = (*TournamentMutation)(nil)
+
+// tournamentOption allows management of the mutation configuration using functional options.
+type tournamentOption func(*TournamentMutation)
+
+// newTournamentMutation creates new mutation for the Tournament entity.
+func newTournamentMutation(c config, op Op, opts ...tournamentOption) *TournamentMutation {
+	m := &TournamentMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTournament,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTournamentID sets the ID field of the mutation.
+func withTournamentID(id uuid.UUID) tournamentOption {
+	return func(m *TournamentMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Tournament
+		)
+		m.oldValue = func(ctx context.Context) (*Tournament, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Tournament.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTournament sets the old Tournament of the mutation.
+func withTournament(node *Tournament) tournamentOption {
+	return func(m *TournamentMutation) {
+		m.oldValue = func(context.Context) (*Tournament, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TournamentMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TournamentMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Tournament entities.
+func (m *TournamentMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TournamentMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TournamentMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Tournament.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *TournamentMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *TournamentMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *TournamentMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *TournamentMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *TournamentMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *TournamentMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *TournamentMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *TournamentMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *TournamentMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[tournament.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *TournamentMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *TournamentMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, tournament.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *TournamentMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *TournamentMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *TournamentMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *TournamentMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *TournamentMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *TournamentMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[tournament.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *TournamentMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *TournamentMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, tournament.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *TournamentMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *TournamentMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *TournamentMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[tournament.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *TournamentMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *TournamentMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, tournament.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *TournamentMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *TournamentMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *TournamentMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[tournament.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *TournamentMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *TournamentMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, tournament.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *TournamentMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *TournamentMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *TournamentMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[tournament.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *TournamentMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *TournamentMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, tournament.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *TournamentMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *TournamentMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *TournamentMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *TournamentMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *TournamentMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetSchoolID sets the "school_id" field.
+func (m *TournamentMutation) SetSchoolID(u uuid.UUID) {
+	m.school_id = &u
+}
+
+// SchoolID returns the value of the "school_id" field in the mutation.
+func (m *TournamentMutation) SchoolID() (r uuid.UUID, exists bool) {
+	v := m.school_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchoolID returns the old "school_id" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldSchoolID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchoolID: %w", err)
+	}
+	return oldValue.SchoolID, nil
+}
+
+// ClearSchoolID clears the value of the "school_id" field.
+func (m *TournamentMutation) ClearSchoolID() {
+	m.school_id = nil
+	m.clearedFields[tournament.FieldSchoolID] = struct{}{}
+}
+
+// SchoolIDCleared returns if the "school_id" field was cleared in this mutation.
+func (m *TournamentMutation) SchoolIDCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldSchoolID]
+	return ok
+}
+
+// ResetSchoolID resets all changes to the "school_id" field.
+func (m *TournamentMutation) ResetSchoolID() {
+	m.school_id = nil
+	delete(m.clearedFields, tournament.FieldSchoolID)
+}
+
+// SetOwnerScope sets the "owner_scope" field.
+func (m *TournamentMutation) SetOwnerScope(s string) {
+	m.owner_scope = &s
+}
+
+// OwnerScope returns the value of the "owner_scope" field in the mutation.
+func (m *TournamentMutation) OwnerScope() (r string, exists bool) {
+	v := m.owner_scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerScope returns the old "owner_scope" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldOwnerScope(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerScope: %w", err)
+	}
+	return oldValue.OwnerScope, nil
+}
+
+// ResetOwnerScope resets all changes to the "owner_scope" field.
+func (m *TournamentMutation) ResetOwnerScope() {
+	m.owner_scope = nil
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (m *TournamentMutation) SetOwnerID(u uuid.UUID) {
+	m.owner_id = &u
+}
+
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *TournamentMutation) OwnerID() (r uuid.UUID, exists bool) {
+	v := m.owner_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerID returns the old "owner_id" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldOwnerID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
+	}
+	return oldValue.OwnerID, nil
+}
+
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *TournamentMutation) ResetOwnerID() {
+	m.owner_id = nil
+}
+
+// SetChallengeID sets the "challenge_id" field.
+func (m *TournamentMutation) SetChallengeID(u uuid.UUID) {
+	m.challenge_id = &u
+}
+
+// ChallengeID returns the value of the "challenge_id" field in the mutation.
+func (m *TournamentMutation) ChallengeID() (r uuid.UUID, exists bool) {
+	v := m.challenge_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChallengeID returns the old "challenge_id" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldChallengeID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChallengeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChallengeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChallengeID: %w", err)
+	}
+	return oldValue.ChallengeID, nil
+}
+
+// ClearChallengeID clears the value of the "challenge_id" field.
+func (m *TournamentMutation) ClearChallengeID() {
+	m.challenge_id = nil
+	m.clearedFields[tournament.FieldChallengeID] = struct{}{}
+}
+
+// ChallengeIDCleared returns if the "challenge_id" field was cleared in this mutation.
+func (m *TournamentMutation) ChallengeIDCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldChallengeID]
+	return ok
+}
+
+// ResetChallengeID resets all changes to the "challenge_id" field.
+func (m *TournamentMutation) ResetChallengeID() {
+	m.challenge_id = nil
+	delete(m.clearedFields, tournament.FieldChallengeID)
+}
+
+// SetTemplateConfigID sets the "template_config_id" field.
+func (m *TournamentMutation) SetTemplateConfigID(u uuid.UUID) {
+	m.template_config_id = &u
+}
+
+// TemplateConfigID returns the value of the "template_config_id" field in the mutation.
+func (m *TournamentMutation) TemplateConfigID() (r uuid.UUID, exists bool) {
+	v := m.template_config_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTemplateConfigID returns the old "template_config_id" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldTemplateConfigID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTemplateConfigID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTemplateConfigID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTemplateConfigID: %w", err)
+	}
+	return oldValue.TemplateConfigID, nil
+}
+
+// ResetTemplateConfigID resets all changes to the "template_config_id" field.
+func (m *TournamentMutation) ResetTemplateConfigID() {
+	m.template_config_id = nil
+}
+
+// SetRuleVersionID sets the "rule_version_id" field.
+func (m *TournamentMutation) SetRuleVersionID(u uuid.UUID) {
+	m.rule_version_id = &u
+}
+
+// RuleVersionID returns the value of the "rule_version_id" field in the mutation.
+func (m *TournamentMutation) RuleVersionID() (r uuid.UUID, exists bool) {
+	v := m.rule_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRuleVersionID returns the old "rule_version_id" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldRuleVersionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRuleVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRuleVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRuleVersionID: %w", err)
+	}
+	return oldValue.RuleVersionID, nil
+}
+
+// ResetRuleVersionID resets all changes to the "rule_version_id" field.
+func (m *TournamentMutation) ResetRuleVersionID() {
+	m.rule_version_id = nil
+}
+
+// SetName sets the "name" field.
+func (m *TournamentMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *TournamentMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *TournamentMutation) ResetName() {
+	m.name = nil
+}
+
+// SetFormat sets the "format" field.
+func (m *TournamentMutation) SetFormat(s string) {
+	m.format = &s
+}
+
+// Format returns the value of the "format" field in the mutation.
+func (m *TournamentMutation) Format() (r string, exists bool) {
+	v := m.format
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFormat returns the old "format" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldFormat(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFormat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFormat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFormat: %w", err)
+	}
+	return oldValue.Format, nil
+}
+
+// ResetFormat resets all changes to the "format" field.
+func (m *TournamentMutation) ResetFormat() {
+	m.format = nil
+}
+
+// SetParticipantType sets the "participant_type" field.
+func (m *TournamentMutation) SetParticipantType(s string) {
+	m.participant_type = &s
+}
+
+// ParticipantType returns the value of the "participant_type" field in the mutation.
+func (m *TournamentMutation) ParticipantType() (r string, exists bool) {
+	v := m.participant_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParticipantType returns the old "participant_type" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldParticipantType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParticipantType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParticipantType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParticipantType: %w", err)
+	}
+	return oldValue.ParticipantType, nil
+}
+
+// ResetParticipantType resets all changes to the "participant_type" field.
+func (m *TournamentMutation) ResetParticipantType() {
+	m.participant_type = nil
+}
+
+// SetTeamSize sets the "team_size" field.
+func (m *TournamentMutation) SetTeamSize(i int16) {
+	m.team_size = &i
+	m.addteam_size = nil
+}
+
+// TeamSize returns the value of the "team_size" field in the mutation.
+func (m *TournamentMutation) TeamSize() (r int16, exists bool) {
+	v := m.team_size
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTeamSize returns the old "team_size" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldTeamSize(ctx context.Context) (v *int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTeamSize is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTeamSize requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTeamSize: %w", err)
+	}
+	return oldValue.TeamSize, nil
+}
+
+// AddTeamSize adds i to the "team_size" field.
+func (m *TournamentMutation) AddTeamSize(i int16) {
+	if m.addteam_size != nil {
+		*m.addteam_size += i
+	} else {
+		m.addteam_size = &i
+	}
+}
+
+// AddedTeamSize returns the value that was added to the "team_size" field in this mutation.
+func (m *TournamentMutation) AddedTeamSize() (r int16, exists bool) {
+	v := m.addteam_size
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTeamSize clears the value of the "team_size" field.
+func (m *TournamentMutation) ClearTeamSize() {
+	m.team_size = nil
+	m.addteam_size = nil
+	m.clearedFields[tournament.FieldTeamSize] = struct{}{}
+}
+
+// TeamSizeCleared returns if the "team_size" field was cleared in this mutation.
+func (m *TournamentMutation) TeamSizeCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldTeamSize]
+	return ok
+}
+
+// ResetTeamSize resets all changes to the "team_size" field.
+func (m *TournamentMutation) ResetTeamSize() {
+	m.team_size = nil
+	m.addteam_size = nil
+	delete(m.clearedFields, tournament.FieldTeamSize)
+}
+
+// SetMode sets the "mode" field.
+func (m *TournamentMutation) SetMode(s string) {
+	m.mode = &s
+}
+
+// Mode returns the value of the "mode" field in the mutation.
+func (m *TournamentMutation) Mode() (r string, exists bool) {
+	v := m.mode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMode returns the old "mode" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldMode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMode: %w", err)
+	}
+	return oldValue.Mode, nil
+}
+
+// ResetMode resets all changes to the "mode" field.
+func (m *TournamentMutation) ResetMode() {
+	m.mode = nil
+}
+
+// SetSubjectID sets the "subject_id" field.
+func (m *TournamentMutation) SetSubjectID(u uuid.UUID) {
+	m.subject_id = &u
+}
+
+// SubjectID returns the value of the "subject_id" field in the mutation.
+func (m *TournamentMutation) SubjectID() (r uuid.UUID, exists bool) {
+	v := m.subject_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubjectID returns the old "subject_id" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldSubjectID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubjectID: %w", err)
+	}
+	return oldValue.SubjectID, nil
+}
+
+// ResetSubjectID resets all changes to the "subject_id" field.
+func (m *TournamentMutation) ResetSubjectID() {
+	m.subject_id = nil
+}
+
+// SetTopicIds sets the "topic_ids" field.
+func (m *TournamentMutation) SetTopicIds(u []uuid.UUID) {
+	m.topic_ids = &u
+	m.appendtopic_ids = nil
+}
+
+// TopicIds returns the value of the "topic_ids" field in the mutation.
+func (m *TournamentMutation) TopicIds() (r []uuid.UUID, exists bool) {
+	v := m.topic_ids
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTopicIds returns the old "topic_ids" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldTopicIds(ctx context.Context) (v []uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTopicIds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTopicIds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTopicIds: %w", err)
+	}
+	return oldValue.TopicIds, nil
+}
+
+// AppendTopicIds adds u to the "topic_ids" field.
+func (m *TournamentMutation) AppendTopicIds(u []uuid.UUID) {
+	m.appendtopic_ids = append(m.appendtopic_ids, u...)
+}
+
+// AppendedTopicIds returns the list of values that were appended to the "topic_ids" field in this mutation.
+func (m *TournamentMutation) AppendedTopicIds() ([]uuid.UUID, bool) {
+	if len(m.appendtopic_ids) == 0 {
+		return nil, false
+	}
+	return m.appendtopic_ids, true
+}
+
+// ClearTopicIds clears the value of the "topic_ids" field.
+func (m *TournamentMutation) ClearTopicIds() {
+	m.topic_ids = nil
+	m.appendtopic_ids = nil
+	m.clearedFields[tournament.FieldTopicIds] = struct{}{}
+}
+
+// TopicIdsCleared returns if the "topic_ids" field was cleared in this mutation.
+func (m *TournamentMutation) TopicIdsCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldTopicIds]
+	return ok
+}
+
+// ResetTopicIds resets all changes to the "topic_ids" field.
+func (m *TournamentMutation) ResetTopicIds() {
+	m.topic_ids = nil
+	m.appendtopic_ids = nil
+	delete(m.clearedFields, tournament.FieldTopicIds)
+}
+
+// SetGradeLevels sets the "grade_levels" field.
+func (m *TournamentMutation) SetGradeLevels(i []int) {
+	m.grade_levels = &i
+	m.appendgrade_levels = nil
+}
+
+// GradeLevels returns the value of the "grade_levels" field in the mutation.
+func (m *TournamentMutation) GradeLevels() (r []int, exists bool) {
+	v := m.grade_levels
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGradeLevels returns the old "grade_levels" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldGradeLevels(ctx context.Context) (v []int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGradeLevels is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGradeLevels requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGradeLevels: %w", err)
+	}
+	return oldValue.GradeLevels, nil
+}
+
+// AppendGradeLevels adds i to the "grade_levels" field.
+func (m *TournamentMutation) AppendGradeLevels(i []int) {
+	m.appendgrade_levels = append(m.appendgrade_levels, i...)
+}
+
+// AppendedGradeLevels returns the list of values that were appended to the "grade_levels" field in this mutation.
+func (m *TournamentMutation) AppendedGradeLevels() ([]int, bool) {
+	if len(m.appendgrade_levels) == 0 {
+		return nil, false
+	}
+	return m.appendgrade_levels, true
+}
+
+// ResetGradeLevels resets all changes to the "grade_levels" field.
+func (m *TournamentMutation) ResetGradeLevels() {
+	m.grade_levels = nil
+	m.appendgrade_levels = nil
+}
+
+// SetQuestionPolicy sets the "question_policy" field.
+func (m *TournamentMutation) SetQuestionPolicy(value map[string]interface{}) {
+	m.question_policy = &value
+}
+
+// QuestionPolicy returns the value of the "question_policy" field in the mutation.
+func (m *TournamentMutation) QuestionPolicy() (r map[string]interface{}, exists bool) {
+	v := m.question_policy
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestionPolicy returns the old "question_policy" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldQuestionPolicy(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestionPolicy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestionPolicy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestionPolicy: %w", err)
+	}
+	return oldValue.QuestionPolicy, nil
+}
+
+// ClearQuestionPolicy clears the value of the "question_policy" field.
+func (m *TournamentMutation) ClearQuestionPolicy() {
+	m.question_policy = nil
+	m.clearedFields[tournament.FieldQuestionPolicy] = struct{}{}
+}
+
+// QuestionPolicyCleared returns if the "question_policy" field was cleared in this mutation.
+func (m *TournamentMutation) QuestionPolicyCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldQuestionPolicy]
+	return ok
+}
+
+// ResetQuestionPolicy resets all changes to the "question_policy" field.
+func (m *TournamentMutation) ResetQuestionPolicy() {
+	m.question_policy = nil
+	delete(m.clearedFields, tournament.FieldQuestionPolicy)
+}
+
+// SetRegistrationOpenAt sets the "registration_open_at" field.
+func (m *TournamentMutation) SetRegistrationOpenAt(t time.Time) {
+	m.registration_open_at = &t
+}
+
+// RegistrationOpenAt returns the value of the "registration_open_at" field in the mutation.
+func (m *TournamentMutation) RegistrationOpenAt() (r time.Time, exists bool) {
+	v := m.registration_open_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRegistrationOpenAt returns the old "registration_open_at" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldRegistrationOpenAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRegistrationOpenAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRegistrationOpenAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRegistrationOpenAt: %w", err)
+	}
+	return oldValue.RegistrationOpenAt, nil
+}
+
+// ResetRegistrationOpenAt resets all changes to the "registration_open_at" field.
+func (m *TournamentMutation) ResetRegistrationOpenAt() {
+	m.registration_open_at = nil
+}
+
+// SetRegistrationCloseAt sets the "registration_close_at" field.
+func (m *TournamentMutation) SetRegistrationCloseAt(t time.Time) {
+	m.registration_close_at = &t
+}
+
+// RegistrationCloseAt returns the value of the "registration_close_at" field in the mutation.
+func (m *TournamentMutation) RegistrationCloseAt() (r time.Time, exists bool) {
+	v := m.registration_close_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRegistrationCloseAt returns the old "registration_close_at" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldRegistrationCloseAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRegistrationCloseAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRegistrationCloseAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRegistrationCloseAt: %w", err)
+	}
+	return oldValue.RegistrationCloseAt, nil
+}
+
+// ResetRegistrationCloseAt resets all changes to the "registration_close_at" field.
+func (m *TournamentMutation) ResetRegistrationCloseAt() {
+	m.registration_close_at = nil
+}
+
+// SetCheckInOpensAt sets the "check_in_opens_at" field.
+func (m *TournamentMutation) SetCheckInOpensAt(t time.Time) {
+	m.check_in_opens_at = &t
+}
+
+// CheckInOpensAt returns the value of the "check_in_opens_at" field in the mutation.
+func (m *TournamentMutation) CheckInOpensAt() (r time.Time, exists bool) {
+	v := m.check_in_opens_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCheckInOpensAt returns the old "check_in_opens_at" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldCheckInOpensAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCheckInOpensAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCheckInOpensAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCheckInOpensAt: %w", err)
+	}
+	return oldValue.CheckInOpensAt, nil
+}
+
+// ResetCheckInOpensAt resets all changes to the "check_in_opens_at" field.
+func (m *TournamentMutation) ResetCheckInOpensAt() {
+	m.check_in_opens_at = nil
+}
+
+// SetStartsAt sets the "starts_at" field.
+func (m *TournamentMutation) SetStartsAt(t time.Time) {
+	m.starts_at = &t
+}
+
+// StartsAt returns the value of the "starts_at" field in the mutation.
+func (m *TournamentMutation) StartsAt() (r time.Time, exists bool) {
+	v := m.starts_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartsAt returns the old "starts_at" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldStartsAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartsAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartsAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartsAt: %w", err)
+	}
+	return oldValue.StartsAt, nil
+}
+
+// ResetStartsAt resets all changes to the "starts_at" field.
+func (m *TournamentMutation) ResetStartsAt() {
+	m.starts_at = nil
+}
+
+// SetMaxEntries sets the "max_entries" field.
+func (m *TournamentMutation) SetMaxEntries(i int16) {
+	m.max_entries = &i
+	m.addmax_entries = nil
+}
+
+// MaxEntries returns the value of the "max_entries" field in the mutation.
+func (m *TournamentMutation) MaxEntries() (r int16, exists bool) {
+	v := m.max_entries
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMaxEntries returns the old "max_entries" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldMaxEntries(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMaxEntries is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMaxEntries requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMaxEntries: %w", err)
+	}
+	return oldValue.MaxEntries, nil
+}
+
+// AddMaxEntries adds i to the "max_entries" field.
+func (m *TournamentMutation) AddMaxEntries(i int16) {
+	if m.addmax_entries != nil {
+		*m.addmax_entries += i
+	} else {
+		m.addmax_entries = &i
+	}
+}
+
+// AddedMaxEntries returns the value that was added to the "max_entries" field in this mutation.
+func (m *TournamentMutation) AddedMaxEntries() (r int16, exists bool) {
+	v := m.addmax_entries
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMaxEntries resets all changes to the "max_entries" field.
+func (m *TournamentMutation) ResetMaxEntries() {
+	m.max_entries = nil
+	m.addmax_entries = nil
+}
+
+// SetMinEntries sets the "min_entries" field.
+func (m *TournamentMutation) SetMinEntries(i int16) {
+	m.min_entries = &i
+	m.addmin_entries = nil
+}
+
+// MinEntries returns the value of the "min_entries" field in the mutation.
+func (m *TournamentMutation) MinEntries() (r int16, exists bool) {
+	v := m.min_entries
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMinEntries returns the old "min_entries" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldMinEntries(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMinEntries is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMinEntries requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMinEntries: %w", err)
+	}
+	return oldValue.MinEntries, nil
+}
+
+// AddMinEntries adds i to the "min_entries" field.
+func (m *TournamentMutation) AddMinEntries(i int16) {
+	if m.addmin_entries != nil {
+		*m.addmin_entries += i
+	} else {
+		m.addmin_entries = &i
+	}
+}
+
+// AddedMinEntries returns the value that was added to the "min_entries" field in this mutation.
+func (m *TournamentMutation) AddedMinEntries() (r int16, exists bool) {
+	v := m.addmin_entries
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMinEntries resets all changes to the "min_entries" field.
+func (m *TournamentMutation) ResetMinEntries() {
+	m.min_entries = nil
+	m.addmin_entries = nil
+}
+
+// SetSeedingPolicy sets the "seeding_policy" field.
+func (m *TournamentMutation) SetSeedingPolicy(s string) {
+	m.seeding_policy = &s
+}
+
+// SeedingPolicy returns the value of the "seeding_policy" field in the mutation.
+func (m *TournamentMutation) SeedingPolicy() (r string, exists bool) {
+	v := m.seeding_policy
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSeedingPolicy returns the old "seeding_policy" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldSeedingPolicy(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSeedingPolicy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSeedingPolicy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSeedingPolicy: %w", err)
+	}
+	return oldValue.SeedingPolicy, nil
+}
+
+// ResetSeedingPolicy resets all changes to the "seeding_policy" field.
+func (m *TournamentMutation) ResetSeedingPolicy() {
+	m.seeding_policy = nil
+}
+
+// SetSeedValue sets the "seed_value" field.
+func (m *TournamentMutation) SetSeedValue(i int64) {
+	m.seed_value = &i
+	m.addseed_value = nil
+}
+
+// SeedValue returns the value of the "seed_value" field in the mutation.
+func (m *TournamentMutation) SeedValue() (r int64, exists bool) {
+	v := m.seed_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSeedValue returns the old "seed_value" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldSeedValue(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSeedValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSeedValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSeedValue: %w", err)
+	}
+	return oldValue.SeedValue, nil
+}
+
+// AddSeedValue adds i to the "seed_value" field.
+func (m *TournamentMutation) AddSeedValue(i int64) {
+	if m.addseed_value != nil {
+		*m.addseed_value += i
+	} else {
+		m.addseed_value = &i
+	}
+}
+
+// AddedSeedValue returns the value that was added to the "seed_value" field in this mutation.
+func (m *TournamentMutation) AddedSeedValue() (r int64, exists bool) {
+	v := m.addseed_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSeedValue clears the value of the "seed_value" field.
+func (m *TournamentMutation) ClearSeedValue() {
+	m.seed_value = nil
+	m.addseed_value = nil
+	m.clearedFields[tournament.FieldSeedValue] = struct{}{}
+}
+
+// SeedValueCleared returns if the "seed_value" field was cleared in this mutation.
+func (m *TournamentMutation) SeedValueCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldSeedValue]
+	return ok
+}
+
+// ResetSeedValue resets all changes to the "seed_value" field.
+func (m *TournamentMutation) ResetSeedValue() {
+	m.seed_value = nil
+	m.addseed_value = nil
+	delete(m.clearedFields, tournament.FieldSeedValue)
+}
+
+// SetAutoConfirm sets the "auto_confirm" field.
+func (m *TournamentMutation) SetAutoConfirm(b bool) {
+	m.auto_confirm = &b
+}
+
+// AutoConfirm returns the value of the "auto_confirm" field in the mutation.
+func (m *TournamentMutation) AutoConfirm() (r bool, exists bool) {
+	v := m.auto_confirm
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAutoConfirm returns the old "auto_confirm" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldAutoConfirm(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAutoConfirm is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAutoConfirm requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAutoConfirm: %w", err)
+	}
+	return oldValue.AutoConfirm, nil
+}
+
+// ResetAutoConfirm resets all changes to the "auto_confirm" field.
+func (m *TournamentMutation) ResetAutoConfirm() {
+	m.auto_confirm = nil
+}
+
+// SetRewardRuleRefs sets the "reward_rule_refs" field.
+func (m *TournamentMutation) SetRewardRuleRefs(value []map[string]interface{}) {
+	m.reward_rule_refs = &value
+	m.appendreward_rule_refs = nil
+}
+
+// RewardRuleRefs returns the value of the "reward_rule_refs" field in the mutation.
+func (m *TournamentMutation) RewardRuleRefs() (r []map[string]interface{}, exists bool) {
+	v := m.reward_rule_refs
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRewardRuleRefs returns the old "reward_rule_refs" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldRewardRuleRefs(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRewardRuleRefs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRewardRuleRefs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRewardRuleRefs: %w", err)
+	}
+	return oldValue.RewardRuleRefs, nil
+}
+
+// AppendRewardRuleRefs adds value to the "reward_rule_refs" field.
+func (m *TournamentMutation) AppendRewardRuleRefs(value []map[string]interface{}) {
+	m.appendreward_rule_refs = append(m.appendreward_rule_refs, value...)
+}
+
+// AppendedRewardRuleRefs returns the list of values that were appended to the "reward_rule_refs" field in this mutation.
+func (m *TournamentMutation) AppendedRewardRuleRefs() ([]map[string]interface{}, bool) {
+	if len(m.appendreward_rule_refs) == 0 {
+		return nil, false
+	}
+	return m.appendreward_rule_refs, true
+}
+
+// ResetRewardRuleRefs resets all changes to the "reward_rule_refs" field.
+func (m *TournamentMutation) ResetRewardRuleRefs() {
+	m.reward_rule_refs = nil
+	m.appendreward_rule_refs = nil
+}
+
+// SetRewardSummary sets the "reward_summary" field.
+func (m *TournamentMutation) SetRewardSummary(s string) {
+	m.reward_summary = &s
+}
+
+// RewardSummary returns the value of the "reward_summary" field in the mutation.
+func (m *TournamentMutation) RewardSummary() (r string, exists bool) {
+	v := m.reward_summary
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRewardSummary returns the old "reward_summary" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldRewardSummary(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRewardSummary is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRewardSummary requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRewardSummary: %w", err)
+	}
+	return oldValue.RewardSummary, nil
+}
+
+// ClearRewardSummary clears the value of the "reward_summary" field.
+func (m *TournamentMutation) ClearRewardSummary() {
+	m.reward_summary = nil
+	m.clearedFields[tournament.FieldRewardSummary] = struct{}{}
+}
+
+// RewardSummaryCleared returns if the "reward_summary" field was cleared in this mutation.
+func (m *TournamentMutation) RewardSummaryCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldRewardSummary]
+	return ok
+}
+
+// ResetRewardSummary resets all changes to the "reward_summary" field.
+func (m *TournamentMutation) ResetRewardSummary() {
+	m.reward_summary = nil
+	delete(m.clearedFields, tournament.FieldRewardSummary)
+}
+
+// SetRoundGapS sets the "round_gap_s" field.
+func (m *TournamentMutation) SetRoundGapS(i int) {
+	m.round_gap_s = &i
+	m.addround_gap_s = nil
+}
+
+// RoundGapS returns the value of the "round_gap_s" field in the mutation.
+func (m *TournamentMutation) RoundGapS() (r int, exists bool) {
+	v := m.round_gap_s
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRoundGapS returns the old "round_gap_s" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldRoundGapS(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRoundGapS is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRoundGapS requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRoundGapS: %w", err)
+	}
+	return oldValue.RoundGapS, nil
+}
+
+// AddRoundGapS adds i to the "round_gap_s" field.
+func (m *TournamentMutation) AddRoundGapS(i int) {
+	if m.addround_gap_s != nil {
+		*m.addround_gap_s += i
+	} else {
+		m.addround_gap_s = &i
+	}
+}
+
+// AddedRoundGapS returns the value that was added to the "round_gap_s" field in this mutation.
+func (m *TournamentMutation) AddedRoundGapS() (r int, exists bool) {
+	v := m.addround_gap_s
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRoundGapS resets all changes to the "round_gap_s" field.
+func (m *TournamentMutation) ResetRoundGapS() {
+	m.round_gap_s = nil
+	m.addround_gap_s = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *TournamentMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *TournamentMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *TournamentMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetCancelReason sets the "cancel_reason" field.
+func (m *TournamentMutation) SetCancelReason(s string) {
+	m.cancel_reason = &s
+}
+
+// CancelReason returns the value of the "cancel_reason" field in the mutation.
+func (m *TournamentMutation) CancelReason() (r string, exists bool) {
+	v := m.cancel_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCancelReason returns the old "cancel_reason" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldCancelReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCancelReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCancelReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCancelReason: %w", err)
+	}
+	return oldValue.CancelReason, nil
+}
+
+// ClearCancelReason clears the value of the "cancel_reason" field.
+func (m *TournamentMutation) ClearCancelReason() {
+	m.cancel_reason = nil
+	m.clearedFields[tournament.FieldCancelReason] = struct{}{}
+}
+
+// CancelReasonCleared returns if the "cancel_reason" field was cleared in this mutation.
+func (m *TournamentMutation) CancelReasonCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldCancelReason]
+	return ok
+}
+
+// ResetCancelReason resets all changes to the "cancel_reason" field.
+func (m *TournamentMutation) ResetCancelReason() {
+	m.cancel_reason = nil
+	delete(m.clearedFields, tournament.FieldCancelReason)
+}
+
+// SetCompletedAt sets the "completed_at" field.
+func (m *TournamentMutation) SetCompletedAt(t time.Time) {
+	m.completed_at = &t
+}
+
+// CompletedAt returns the value of the "completed_at" field in the mutation.
+func (m *TournamentMutation) CompletedAt() (r time.Time, exists bool) {
+	v := m.completed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCompletedAt returns the old "completed_at" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldCompletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCompletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCompletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCompletedAt: %w", err)
+	}
+	return oldValue.CompletedAt, nil
+}
+
+// ClearCompletedAt clears the value of the "completed_at" field.
+func (m *TournamentMutation) ClearCompletedAt() {
+	m.completed_at = nil
+	m.clearedFields[tournament.FieldCompletedAt] = struct{}{}
+}
+
+// CompletedAtCleared returns if the "completed_at" field was cleared in this mutation.
+func (m *TournamentMutation) CompletedAtCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldCompletedAt]
+	return ok
+}
+
+// ResetCompletedAt resets all changes to the "completed_at" field.
+func (m *TournamentMutation) ResetCompletedAt() {
+	m.completed_at = nil
+	delete(m.clearedFields, tournament.FieldCompletedAt)
+}
+
+// SetRewardedAt sets the "rewarded_at" field.
+func (m *TournamentMutation) SetRewardedAt(t time.Time) {
+	m.rewarded_at = &t
+}
+
+// RewardedAt returns the value of the "rewarded_at" field in the mutation.
+func (m *TournamentMutation) RewardedAt() (r time.Time, exists bool) {
+	v := m.rewarded_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRewardedAt returns the old "rewarded_at" field's value of the Tournament entity.
+// If the Tournament object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentMutation) OldRewardedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRewardedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRewardedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRewardedAt: %w", err)
+	}
+	return oldValue.RewardedAt, nil
+}
+
+// ClearRewardedAt clears the value of the "rewarded_at" field.
+func (m *TournamentMutation) ClearRewardedAt() {
+	m.rewarded_at = nil
+	m.clearedFields[tournament.FieldRewardedAt] = struct{}{}
+}
+
+// RewardedAtCleared returns if the "rewarded_at" field was cleared in this mutation.
+func (m *TournamentMutation) RewardedAtCleared() bool {
+	_, ok := m.clearedFields[tournament.FieldRewardedAt]
+	return ok
+}
+
+// ResetRewardedAt resets all changes to the "rewarded_at" field.
+func (m *TournamentMutation) ResetRewardedAt() {
+	m.rewarded_at = nil
+	delete(m.clearedFields, tournament.FieldRewardedAt)
+}
+
+// Where appends a list predicates to the TournamentMutation builder.
+func (m *TournamentMutation) Where(ps ...predicate.Tournament) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TournamentMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TournamentMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Tournament, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TournamentMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TournamentMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Tournament).
+func (m *TournamentMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TournamentMutation) Fields() []string {
+	fields := make([]string, 0, 40)
+	if m.tenant_id != nil {
+		fields = append(fields, tournament.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, tournament.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, tournament.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, tournament.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, tournament.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, tournament.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, tournament.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, tournament.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, tournament.FieldVersion)
+	}
+	if m.school_id != nil {
+		fields = append(fields, tournament.FieldSchoolID)
+	}
+	if m.owner_scope != nil {
+		fields = append(fields, tournament.FieldOwnerScope)
+	}
+	if m.owner_id != nil {
+		fields = append(fields, tournament.FieldOwnerID)
+	}
+	if m.challenge_id != nil {
+		fields = append(fields, tournament.FieldChallengeID)
+	}
+	if m.template_config_id != nil {
+		fields = append(fields, tournament.FieldTemplateConfigID)
+	}
+	if m.rule_version_id != nil {
+		fields = append(fields, tournament.FieldRuleVersionID)
+	}
+	if m.name != nil {
+		fields = append(fields, tournament.FieldName)
+	}
+	if m.format != nil {
+		fields = append(fields, tournament.FieldFormat)
+	}
+	if m.participant_type != nil {
+		fields = append(fields, tournament.FieldParticipantType)
+	}
+	if m.team_size != nil {
+		fields = append(fields, tournament.FieldTeamSize)
+	}
+	if m.mode != nil {
+		fields = append(fields, tournament.FieldMode)
+	}
+	if m.subject_id != nil {
+		fields = append(fields, tournament.FieldSubjectID)
+	}
+	if m.topic_ids != nil {
+		fields = append(fields, tournament.FieldTopicIds)
+	}
+	if m.grade_levels != nil {
+		fields = append(fields, tournament.FieldGradeLevels)
+	}
+	if m.question_policy != nil {
+		fields = append(fields, tournament.FieldQuestionPolicy)
+	}
+	if m.registration_open_at != nil {
+		fields = append(fields, tournament.FieldRegistrationOpenAt)
+	}
+	if m.registration_close_at != nil {
+		fields = append(fields, tournament.FieldRegistrationCloseAt)
+	}
+	if m.check_in_opens_at != nil {
+		fields = append(fields, tournament.FieldCheckInOpensAt)
+	}
+	if m.starts_at != nil {
+		fields = append(fields, tournament.FieldStartsAt)
+	}
+	if m.max_entries != nil {
+		fields = append(fields, tournament.FieldMaxEntries)
+	}
+	if m.min_entries != nil {
+		fields = append(fields, tournament.FieldMinEntries)
+	}
+	if m.seeding_policy != nil {
+		fields = append(fields, tournament.FieldSeedingPolicy)
+	}
+	if m.seed_value != nil {
+		fields = append(fields, tournament.FieldSeedValue)
+	}
+	if m.auto_confirm != nil {
+		fields = append(fields, tournament.FieldAutoConfirm)
+	}
+	if m.reward_rule_refs != nil {
+		fields = append(fields, tournament.FieldRewardRuleRefs)
+	}
+	if m.reward_summary != nil {
+		fields = append(fields, tournament.FieldRewardSummary)
+	}
+	if m.round_gap_s != nil {
+		fields = append(fields, tournament.FieldRoundGapS)
+	}
+	if m.status != nil {
+		fields = append(fields, tournament.FieldStatus)
+	}
+	if m.cancel_reason != nil {
+		fields = append(fields, tournament.FieldCancelReason)
+	}
+	if m.completed_at != nil {
+		fields = append(fields, tournament.FieldCompletedAt)
+	}
+	if m.rewarded_at != nil {
+		fields = append(fields, tournament.FieldRewardedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TournamentMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case tournament.FieldTenantID:
+		return m.TenantID()
+	case tournament.FieldCreatedAt:
+		return m.CreatedAt()
+	case tournament.FieldCreatedBy:
+		return m.CreatedBy()
+	case tournament.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case tournament.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case tournament.FieldDeletedAt:
+		return m.DeletedAt()
+	case tournament.FieldDeletedBy:
+		return m.DeletedBy()
+	case tournament.FieldDeleteReason:
+		return m.DeleteReason()
+	case tournament.FieldVersion:
+		return m.Version()
+	case tournament.FieldSchoolID:
+		return m.SchoolID()
+	case tournament.FieldOwnerScope:
+		return m.OwnerScope()
+	case tournament.FieldOwnerID:
+		return m.OwnerID()
+	case tournament.FieldChallengeID:
+		return m.ChallengeID()
+	case tournament.FieldTemplateConfigID:
+		return m.TemplateConfigID()
+	case tournament.FieldRuleVersionID:
+		return m.RuleVersionID()
+	case tournament.FieldName:
+		return m.Name()
+	case tournament.FieldFormat:
+		return m.Format()
+	case tournament.FieldParticipantType:
+		return m.ParticipantType()
+	case tournament.FieldTeamSize:
+		return m.TeamSize()
+	case tournament.FieldMode:
+		return m.Mode()
+	case tournament.FieldSubjectID:
+		return m.SubjectID()
+	case tournament.FieldTopicIds:
+		return m.TopicIds()
+	case tournament.FieldGradeLevels:
+		return m.GradeLevels()
+	case tournament.FieldQuestionPolicy:
+		return m.QuestionPolicy()
+	case tournament.FieldRegistrationOpenAt:
+		return m.RegistrationOpenAt()
+	case tournament.FieldRegistrationCloseAt:
+		return m.RegistrationCloseAt()
+	case tournament.FieldCheckInOpensAt:
+		return m.CheckInOpensAt()
+	case tournament.FieldStartsAt:
+		return m.StartsAt()
+	case tournament.FieldMaxEntries:
+		return m.MaxEntries()
+	case tournament.FieldMinEntries:
+		return m.MinEntries()
+	case tournament.FieldSeedingPolicy:
+		return m.SeedingPolicy()
+	case tournament.FieldSeedValue:
+		return m.SeedValue()
+	case tournament.FieldAutoConfirm:
+		return m.AutoConfirm()
+	case tournament.FieldRewardRuleRefs:
+		return m.RewardRuleRefs()
+	case tournament.FieldRewardSummary:
+		return m.RewardSummary()
+	case tournament.FieldRoundGapS:
+		return m.RoundGapS()
+	case tournament.FieldStatus:
+		return m.Status()
+	case tournament.FieldCancelReason:
+		return m.CancelReason()
+	case tournament.FieldCompletedAt:
+		return m.CompletedAt()
+	case tournament.FieldRewardedAt:
+		return m.RewardedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TournamentMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case tournament.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case tournament.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case tournament.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case tournament.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case tournament.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case tournament.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case tournament.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case tournament.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case tournament.FieldVersion:
+		return m.OldVersion(ctx)
+	case tournament.FieldSchoolID:
+		return m.OldSchoolID(ctx)
+	case tournament.FieldOwnerScope:
+		return m.OldOwnerScope(ctx)
+	case tournament.FieldOwnerID:
+		return m.OldOwnerID(ctx)
+	case tournament.FieldChallengeID:
+		return m.OldChallengeID(ctx)
+	case tournament.FieldTemplateConfigID:
+		return m.OldTemplateConfigID(ctx)
+	case tournament.FieldRuleVersionID:
+		return m.OldRuleVersionID(ctx)
+	case tournament.FieldName:
+		return m.OldName(ctx)
+	case tournament.FieldFormat:
+		return m.OldFormat(ctx)
+	case tournament.FieldParticipantType:
+		return m.OldParticipantType(ctx)
+	case tournament.FieldTeamSize:
+		return m.OldTeamSize(ctx)
+	case tournament.FieldMode:
+		return m.OldMode(ctx)
+	case tournament.FieldSubjectID:
+		return m.OldSubjectID(ctx)
+	case tournament.FieldTopicIds:
+		return m.OldTopicIds(ctx)
+	case tournament.FieldGradeLevels:
+		return m.OldGradeLevels(ctx)
+	case tournament.FieldQuestionPolicy:
+		return m.OldQuestionPolicy(ctx)
+	case tournament.FieldRegistrationOpenAt:
+		return m.OldRegistrationOpenAt(ctx)
+	case tournament.FieldRegistrationCloseAt:
+		return m.OldRegistrationCloseAt(ctx)
+	case tournament.FieldCheckInOpensAt:
+		return m.OldCheckInOpensAt(ctx)
+	case tournament.FieldStartsAt:
+		return m.OldStartsAt(ctx)
+	case tournament.FieldMaxEntries:
+		return m.OldMaxEntries(ctx)
+	case tournament.FieldMinEntries:
+		return m.OldMinEntries(ctx)
+	case tournament.FieldSeedingPolicy:
+		return m.OldSeedingPolicy(ctx)
+	case tournament.FieldSeedValue:
+		return m.OldSeedValue(ctx)
+	case tournament.FieldAutoConfirm:
+		return m.OldAutoConfirm(ctx)
+	case tournament.FieldRewardRuleRefs:
+		return m.OldRewardRuleRefs(ctx)
+	case tournament.FieldRewardSummary:
+		return m.OldRewardSummary(ctx)
+	case tournament.FieldRoundGapS:
+		return m.OldRoundGapS(ctx)
+	case tournament.FieldStatus:
+		return m.OldStatus(ctx)
+	case tournament.FieldCancelReason:
+		return m.OldCancelReason(ctx)
+	case tournament.FieldCompletedAt:
+		return m.OldCompletedAt(ctx)
+	case tournament.FieldRewardedAt:
+		return m.OldRewardedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Tournament field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TournamentMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case tournament.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case tournament.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case tournament.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case tournament.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case tournament.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case tournament.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case tournament.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case tournament.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case tournament.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case tournament.FieldSchoolID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchoolID(v)
+		return nil
+	case tournament.FieldOwnerScope:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerScope(v)
+		return nil
+	case tournament.FieldOwnerID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerID(v)
+		return nil
+	case tournament.FieldChallengeID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChallengeID(v)
+		return nil
+	case tournament.FieldTemplateConfigID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTemplateConfigID(v)
+		return nil
+	case tournament.FieldRuleVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRuleVersionID(v)
+		return nil
+	case tournament.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case tournament.FieldFormat:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFormat(v)
+		return nil
+	case tournament.FieldParticipantType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParticipantType(v)
+		return nil
+	case tournament.FieldTeamSize:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTeamSize(v)
+		return nil
+	case tournament.FieldMode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMode(v)
+		return nil
+	case tournament.FieldSubjectID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubjectID(v)
+		return nil
+	case tournament.FieldTopicIds:
+		v, ok := value.([]uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTopicIds(v)
+		return nil
+	case tournament.FieldGradeLevels:
+		v, ok := value.([]int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGradeLevels(v)
+		return nil
+	case tournament.FieldQuestionPolicy:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestionPolicy(v)
+		return nil
+	case tournament.FieldRegistrationOpenAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRegistrationOpenAt(v)
+		return nil
+	case tournament.FieldRegistrationCloseAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRegistrationCloseAt(v)
+		return nil
+	case tournament.FieldCheckInOpensAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCheckInOpensAt(v)
+		return nil
+	case tournament.FieldStartsAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartsAt(v)
+		return nil
+	case tournament.FieldMaxEntries:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMaxEntries(v)
+		return nil
+	case tournament.FieldMinEntries:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMinEntries(v)
+		return nil
+	case tournament.FieldSeedingPolicy:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSeedingPolicy(v)
+		return nil
+	case tournament.FieldSeedValue:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSeedValue(v)
+		return nil
+	case tournament.FieldAutoConfirm:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAutoConfirm(v)
+		return nil
+	case tournament.FieldRewardRuleRefs:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRewardRuleRefs(v)
+		return nil
+	case tournament.FieldRewardSummary:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRewardSummary(v)
+		return nil
+	case tournament.FieldRoundGapS:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRoundGapS(v)
+		return nil
+	case tournament.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case tournament.FieldCancelReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCancelReason(v)
+		return nil
+	case tournament.FieldCompletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCompletedAt(v)
+		return nil
+	case tournament.FieldRewardedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRewardedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Tournament field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TournamentMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, tournament.FieldVersion)
+	}
+	if m.addteam_size != nil {
+		fields = append(fields, tournament.FieldTeamSize)
+	}
+	if m.addmax_entries != nil {
+		fields = append(fields, tournament.FieldMaxEntries)
+	}
+	if m.addmin_entries != nil {
+		fields = append(fields, tournament.FieldMinEntries)
+	}
+	if m.addseed_value != nil {
+		fields = append(fields, tournament.FieldSeedValue)
+	}
+	if m.addround_gap_s != nil {
+		fields = append(fields, tournament.FieldRoundGapS)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TournamentMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case tournament.FieldVersion:
+		return m.AddedVersion()
+	case tournament.FieldTeamSize:
+		return m.AddedTeamSize()
+	case tournament.FieldMaxEntries:
+		return m.AddedMaxEntries()
+	case tournament.FieldMinEntries:
+		return m.AddedMinEntries()
+	case tournament.FieldSeedValue:
+		return m.AddedSeedValue()
+	case tournament.FieldRoundGapS:
+		return m.AddedRoundGapS()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TournamentMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case tournament.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case tournament.FieldTeamSize:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTeamSize(v)
+		return nil
+	case tournament.FieldMaxEntries:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMaxEntries(v)
+		return nil
+	case tournament.FieldMinEntries:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMinEntries(v)
+		return nil
+	case tournament.FieldSeedValue:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSeedValue(v)
+		return nil
+	case tournament.FieldRoundGapS:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRoundGapS(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Tournament numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TournamentMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(tournament.FieldCreatedBy) {
+		fields = append(fields, tournament.FieldCreatedBy)
+	}
+	if m.FieldCleared(tournament.FieldUpdatedBy) {
+		fields = append(fields, tournament.FieldUpdatedBy)
+	}
+	if m.FieldCleared(tournament.FieldDeletedAt) {
+		fields = append(fields, tournament.FieldDeletedAt)
+	}
+	if m.FieldCleared(tournament.FieldDeletedBy) {
+		fields = append(fields, tournament.FieldDeletedBy)
+	}
+	if m.FieldCleared(tournament.FieldDeleteReason) {
+		fields = append(fields, tournament.FieldDeleteReason)
+	}
+	if m.FieldCleared(tournament.FieldSchoolID) {
+		fields = append(fields, tournament.FieldSchoolID)
+	}
+	if m.FieldCleared(tournament.FieldChallengeID) {
+		fields = append(fields, tournament.FieldChallengeID)
+	}
+	if m.FieldCleared(tournament.FieldTeamSize) {
+		fields = append(fields, tournament.FieldTeamSize)
+	}
+	if m.FieldCleared(tournament.FieldTopicIds) {
+		fields = append(fields, tournament.FieldTopicIds)
+	}
+	if m.FieldCleared(tournament.FieldQuestionPolicy) {
+		fields = append(fields, tournament.FieldQuestionPolicy)
+	}
+	if m.FieldCleared(tournament.FieldSeedValue) {
+		fields = append(fields, tournament.FieldSeedValue)
+	}
+	if m.FieldCleared(tournament.FieldRewardSummary) {
+		fields = append(fields, tournament.FieldRewardSummary)
+	}
+	if m.FieldCleared(tournament.FieldCancelReason) {
+		fields = append(fields, tournament.FieldCancelReason)
+	}
+	if m.FieldCleared(tournament.FieldCompletedAt) {
+		fields = append(fields, tournament.FieldCompletedAt)
+	}
+	if m.FieldCleared(tournament.FieldRewardedAt) {
+		fields = append(fields, tournament.FieldRewardedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TournamentMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TournamentMutation) ClearField(name string) error {
+	switch name {
+	case tournament.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case tournament.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case tournament.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case tournament.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case tournament.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case tournament.FieldSchoolID:
+		m.ClearSchoolID()
+		return nil
+	case tournament.FieldChallengeID:
+		m.ClearChallengeID()
+		return nil
+	case tournament.FieldTeamSize:
+		m.ClearTeamSize()
+		return nil
+	case tournament.FieldTopicIds:
+		m.ClearTopicIds()
+		return nil
+	case tournament.FieldQuestionPolicy:
+		m.ClearQuestionPolicy()
+		return nil
+	case tournament.FieldSeedValue:
+		m.ClearSeedValue()
+		return nil
+	case tournament.FieldRewardSummary:
+		m.ClearRewardSummary()
+		return nil
+	case tournament.FieldCancelReason:
+		m.ClearCancelReason()
+		return nil
+	case tournament.FieldCompletedAt:
+		m.ClearCompletedAt()
+		return nil
+	case tournament.FieldRewardedAt:
+		m.ClearRewardedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Tournament nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TournamentMutation) ResetField(name string) error {
+	switch name {
+	case tournament.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case tournament.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case tournament.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case tournament.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case tournament.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case tournament.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case tournament.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case tournament.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case tournament.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case tournament.FieldSchoolID:
+		m.ResetSchoolID()
+		return nil
+	case tournament.FieldOwnerScope:
+		m.ResetOwnerScope()
+		return nil
+	case tournament.FieldOwnerID:
+		m.ResetOwnerID()
+		return nil
+	case tournament.FieldChallengeID:
+		m.ResetChallengeID()
+		return nil
+	case tournament.FieldTemplateConfigID:
+		m.ResetTemplateConfigID()
+		return nil
+	case tournament.FieldRuleVersionID:
+		m.ResetRuleVersionID()
+		return nil
+	case tournament.FieldName:
+		m.ResetName()
+		return nil
+	case tournament.FieldFormat:
+		m.ResetFormat()
+		return nil
+	case tournament.FieldParticipantType:
+		m.ResetParticipantType()
+		return nil
+	case tournament.FieldTeamSize:
+		m.ResetTeamSize()
+		return nil
+	case tournament.FieldMode:
+		m.ResetMode()
+		return nil
+	case tournament.FieldSubjectID:
+		m.ResetSubjectID()
+		return nil
+	case tournament.FieldTopicIds:
+		m.ResetTopicIds()
+		return nil
+	case tournament.FieldGradeLevels:
+		m.ResetGradeLevels()
+		return nil
+	case tournament.FieldQuestionPolicy:
+		m.ResetQuestionPolicy()
+		return nil
+	case tournament.FieldRegistrationOpenAt:
+		m.ResetRegistrationOpenAt()
+		return nil
+	case tournament.FieldRegistrationCloseAt:
+		m.ResetRegistrationCloseAt()
+		return nil
+	case tournament.FieldCheckInOpensAt:
+		m.ResetCheckInOpensAt()
+		return nil
+	case tournament.FieldStartsAt:
+		m.ResetStartsAt()
+		return nil
+	case tournament.FieldMaxEntries:
+		m.ResetMaxEntries()
+		return nil
+	case tournament.FieldMinEntries:
+		m.ResetMinEntries()
+		return nil
+	case tournament.FieldSeedingPolicy:
+		m.ResetSeedingPolicy()
+		return nil
+	case tournament.FieldSeedValue:
+		m.ResetSeedValue()
+		return nil
+	case tournament.FieldAutoConfirm:
+		m.ResetAutoConfirm()
+		return nil
+	case tournament.FieldRewardRuleRefs:
+		m.ResetRewardRuleRefs()
+		return nil
+	case tournament.FieldRewardSummary:
+		m.ResetRewardSummary()
+		return nil
+	case tournament.FieldRoundGapS:
+		m.ResetRoundGapS()
+		return nil
+	case tournament.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case tournament.FieldCancelReason:
+		m.ResetCancelReason()
+		return nil
+	case tournament.FieldCompletedAt:
+		m.ResetCompletedAt()
+		return nil
+	case tournament.FieldRewardedAt:
+		m.ResetRewardedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Tournament field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TournamentMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TournamentMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TournamentMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TournamentMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TournamentMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TournamentMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TournamentMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Tournament unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TournamentMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Tournament edge %s", name)
+}
+
+// TournamentEntryMutation represents an operation that mutates the TournamentEntry nodes in the graph.
+type TournamentEntryMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *uuid.UUID
+	tenant_id        *uuid.UUID
+	created_at       *time.Time
+	created_by       *uuid.UUID
+	updated_at       *time.Time
+	updated_by       *uuid.UUID
+	deleted_at       *time.Time
+	deleted_by       *uuid.UUID
+	delete_reason    *string
+	version          *int64
+	addversion       *int64
+	tournament_id    *uuid.UUID
+	school_id        *uuid.UUID
+	student_id       *uuid.UUID
+	party_id         *uuid.UUID
+	member_ids       *[]uuid.UUID
+	appendmember_ids []uuid.UUID
+	seed             *int16
+	addseed          *int16
+	group_id         *uuid.UUID
+	status           *string
+	registered_by    *uuid.UUID
+	checked_in_at    *time.Time
+	clearedFields    map[string]struct{}
+	done             bool
+	oldValue         func(context.Context) (*TournamentEntry, error)
+	predicates       []predicate.TournamentEntry
+}
+
+var _ ent.Mutation = (*TournamentEntryMutation)(nil)
+
+// tournamententryOption allows management of the mutation configuration using functional options.
+type tournamententryOption func(*TournamentEntryMutation)
+
+// newTournamentEntryMutation creates new mutation for the TournamentEntry entity.
+func newTournamentEntryMutation(c config, op Op, opts ...tournamententryOption) *TournamentEntryMutation {
+	m := &TournamentEntryMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTournamentEntry,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTournamentEntryID sets the ID field of the mutation.
+func withTournamentEntryID(id uuid.UUID) tournamententryOption {
+	return func(m *TournamentEntryMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *TournamentEntry
+		)
+		m.oldValue = func(ctx context.Context) (*TournamentEntry, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().TournamentEntry.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTournamentEntry sets the old TournamentEntry of the mutation.
+func withTournamentEntry(node *TournamentEntry) tournamententryOption {
+	return func(m *TournamentEntryMutation) {
+		m.oldValue = func(context.Context) (*TournamentEntry, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TournamentEntryMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TournamentEntryMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of TournamentEntry entities.
+func (m *TournamentEntryMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TournamentEntryMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TournamentEntryMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().TournamentEntry.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *TournamentEntryMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *TournamentEntryMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *TournamentEntryMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *TournamentEntryMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *TournamentEntryMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *TournamentEntryMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *TournamentEntryMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *TournamentEntryMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *TournamentEntryMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[tournamententry.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *TournamentEntryMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[tournamententry.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *TournamentEntryMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, tournamententry.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *TournamentEntryMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *TournamentEntryMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *TournamentEntryMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *TournamentEntryMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *TournamentEntryMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *TournamentEntryMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[tournamententry.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *TournamentEntryMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[tournamententry.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *TournamentEntryMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, tournamententry.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *TournamentEntryMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *TournamentEntryMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *TournamentEntryMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[tournamententry.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *TournamentEntryMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[tournamententry.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *TournamentEntryMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, tournamententry.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *TournamentEntryMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *TournamentEntryMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *TournamentEntryMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[tournamententry.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *TournamentEntryMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[tournamententry.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *TournamentEntryMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, tournamententry.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *TournamentEntryMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *TournamentEntryMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *TournamentEntryMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[tournamententry.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *TournamentEntryMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[tournamententry.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *TournamentEntryMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, tournamententry.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *TournamentEntryMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *TournamentEntryMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *TournamentEntryMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *TournamentEntryMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *TournamentEntryMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetTournamentID sets the "tournament_id" field.
+func (m *TournamentEntryMutation) SetTournamentID(u uuid.UUID) {
+	m.tournament_id = &u
+}
+
+// TournamentID returns the value of the "tournament_id" field in the mutation.
+func (m *TournamentEntryMutation) TournamentID() (r uuid.UUID, exists bool) {
+	v := m.tournament_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTournamentID returns the old "tournament_id" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldTournamentID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTournamentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTournamentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTournamentID: %w", err)
+	}
+	return oldValue.TournamentID, nil
+}
+
+// ResetTournamentID resets all changes to the "tournament_id" field.
+func (m *TournamentEntryMutation) ResetTournamentID() {
+	m.tournament_id = nil
+}
+
+// SetSchoolID sets the "school_id" field.
+func (m *TournamentEntryMutation) SetSchoolID(u uuid.UUID) {
+	m.school_id = &u
+}
+
+// SchoolID returns the value of the "school_id" field in the mutation.
+func (m *TournamentEntryMutation) SchoolID() (r uuid.UUID, exists bool) {
+	v := m.school_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchoolID returns the old "school_id" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldSchoolID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchoolID: %w", err)
+	}
+	return oldValue.SchoolID, nil
+}
+
+// ResetSchoolID resets all changes to the "school_id" field.
+func (m *TournamentEntryMutation) ResetSchoolID() {
+	m.school_id = nil
+}
+
+// SetStudentID sets the "student_id" field.
+func (m *TournamentEntryMutation) SetStudentID(u uuid.UUID) {
+	m.student_id = &u
+}
+
+// StudentID returns the value of the "student_id" field in the mutation.
+func (m *TournamentEntryMutation) StudentID() (r uuid.UUID, exists bool) {
+	v := m.student_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStudentID returns the old "student_id" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldStudentID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStudentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStudentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStudentID: %w", err)
+	}
+	return oldValue.StudentID, nil
+}
+
+// ClearStudentID clears the value of the "student_id" field.
+func (m *TournamentEntryMutation) ClearStudentID() {
+	m.student_id = nil
+	m.clearedFields[tournamententry.FieldStudentID] = struct{}{}
+}
+
+// StudentIDCleared returns if the "student_id" field was cleared in this mutation.
+func (m *TournamentEntryMutation) StudentIDCleared() bool {
+	_, ok := m.clearedFields[tournamententry.FieldStudentID]
+	return ok
+}
+
+// ResetStudentID resets all changes to the "student_id" field.
+func (m *TournamentEntryMutation) ResetStudentID() {
+	m.student_id = nil
+	delete(m.clearedFields, tournamententry.FieldStudentID)
+}
+
+// SetPartyID sets the "party_id" field.
+func (m *TournamentEntryMutation) SetPartyID(u uuid.UUID) {
+	m.party_id = &u
+}
+
+// PartyID returns the value of the "party_id" field in the mutation.
+func (m *TournamentEntryMutation) PartyID() (r uuid.UUID, exists bool) {
+	v := m.party_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPartyID returns the old "party_id" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldPartyID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPartyID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPartyID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPartyID: %w", err)
+	}
+	return oldValue.PartyID, nil
+}
+
+// ClearPartyID clears the value of the "party_id" field.
+func (m *TournamentEntryMutation) ClearPartyID() {
+	m.party_id = nil
+	m.clearedFields[tournamententry.FieldPartyID] = struct{}{}
+}
+
+// PartyIDCleared returns if the "party_id" field was cleared in this mutation.
+func (m *TournamentEntryMutation) PartyIDCleared() bool {
+	_, ok := m.clearedFields[tournamententry.FieldPartyID]
+	return ok
+}
+
+// ResetPartyID resets all changes to the "party_id" field.
+func (m *TournamentEntryMutation) ResetPartyID() {
+	m.party_id = nil
+	delete(m.clearedFields, tournamententry.FieldPartyID)
+}
+
+// SetMemberIds sets the "member_ids" field.
+func (m *TournamentEntryMutation) SetMemberIds(u []uuid.UUID) {
+	m.member_ids = &u
+	m.appendmember_ids = nil
+}
+
+// MemberIds returns the value of the "member_ids" field in the mutation.
+func (m *TournamentEntryMutation) MemberIds() (r []uuid.UUID, exists bool) {
+	v := m.member_ids
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMemberIds returns the old "member_ids" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldMemberIds(ctx context.Context) (v []uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMemberIds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMemberIds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMemberIds: %w", err)
+	}
+	return oldValue.MemberIds, nil
+}
+
+// AppendMemberIds adds u to the "member_ids" field.
+func (m *TournamentEntryMutation) AppendMemberIds(u []uuid.UUID) {
+	m.appendmember_ids = append(m.appendmember_ids, u...)
+}
+
+// AppendedMemberIds returns the list of values that were appended to the "member_ids" field in this mutation.
+func (m *TournamentEntryMutation) AppendedMemberIds() ([]uuid.UUID, bool) {
+	if len(m.appendmember_ids) == 0 {
+		return nil, false
+	}
+	return m.appendmember_ids, true
+}
+
+// ResetMemberIds resets all changes to the "member_ids" field.
+func (m *TournamentEntryMutation) ResetMemberIds() {
+	m.member_ids = nil
+	m.appendmember_ids = nil
+}
+
+// SetSeed sets the "seed" field.
+func (m *TournamentEntryMutation) SetSeed(i int16) {
+	m.seed = &i
+	m.addseed = nil
+}
+
+// Seed returns the value of the "seed" field in the mutation.
+func (m *TournamentEntryMutation) Seed() (r int16, exists bool) {
+	v := m.seed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSeed returns the old "seed" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldSeed(ctx context.Context) (v *int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSeed is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSeed requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSeed: %w", err)
+	}
+	return oldValue.Seed, nil
+}
+
+// AddSeed adds i to the "seed" field.
+func (m *TournamentEntryMutation) AddSeed(i int16) {
+	if m.addseed != nil {
+		*m.addseed += i
+	} else {
+		m.addseed = &i
+	}
+}
+
+// AddedSeed returns the value that was added to the "seed" field in this mutation.
+func (m *TournamentEntryMutation) AddedSeed() (r int16, exists bool) {
+	v := m.addseed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSeed clears the value of the "seed" field.
+func (m *TournamentEntryMutation) ClearSeed() {
+	m.seed = nil
+	m.addseed = nil
+	m.clearedFields[tournamententry.FieldSeed] = struct{}{}
+}
+
+// SeedCleared returns if the "seed" field was cleared in this mutation.
+func (m *TournamentEntryMutation) SeedCleared() bool {
+	_, ok := m.clearedFields[tournamententry.FieldSeed]
+	return ok
+}
+
+// ResetSeed resets all changes to the "seed" field.
+func (m *TournamentEntryMutation) ResetSeed() {
+	m.seed = nil
+	m.addseed = nil
+	delete(m.clearedFields, tournamententry.FieldSeed)
+}
+
+// SetGroupID sets the "group_id" field.
+func (m *TournamentEntryMutation) SetGroupID(u uuid.UUID) {
+	m.group_id = &u
+}
+
+// GroupID returns the value of the "group_id" field in the mutation.
+func (m *TournamentEntryMutation) GroupID() (r uuid.UUID, exists bool) {
+	v := m.group_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroupID returns the old "group_id" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldGroupID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
+	}
+	return oldValue.GroupID, nil
+}
+
+// ClearGroupID clears the value of the "group_id" field.
+func (m *TournamentEntryMutation) ClearGroupID() {
+	m.group_id = nil
+	m.clearedFields[tournamententry.FieldGroupID] = struct{}{}
+}
+
+// GroupIDCleared returns if the "group_id" field was cleared in this mutation.
+func (m *TournamentEntryMutation) GroupIDCleared() bool {
+	_, ok := m.clearedFields[tournamententry.FieldGroupID]
+	return ok
+}
+
+// ResetGroupID resets all changes to the "group_id" field.
+func (m *TournamentEntryMutation) ResetGroupID() {
+	m.group_id = nil
+	delete(m.clearedFields, tournamententry.FieldGroupID)
+}
+
+// SetStatus sets the "status" field.
+func (m *TournamentEntryMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *TournamentEntryMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *TournamentEntryMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetRegisteredBy sets the "registered_by" field.
+func (m *TournamentEntryMutation) SetRegisteredBy(u uuid.UUID) {
+	m.registered_by = &u
+}
+
+// RegisteredBy returns the value of the "registered_by" field in the mutation.
+func (m *TournamentEntryMutation) RegisteredBy() (r uuid.UUID, exists bool) {
+	v := m.registered_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRegisteredBy returns the old "registered_by" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldRegisteredBy(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRegisteredBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRegisteredBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRegisteredBy: %w", err)
+	}
+	return oldValue.RegisteredBy, nil
+}
+
+// ResetRegisteredBy resets all changes to the "registered_by" field.
+func (m *TournamentEntryMutation) ResetRegisteredBy() {
+	m.registered_by = nil
+}
+
+// SetCheckedInAt sets the "checked_in_at" field.
+func (m *TournamentEntryMutation) SetCheckedInAt(t time.Time) {
+	m.checked_in_at = &t
+}
+
+// CheckedInAt returns the value of the "checked_in_at" field in the mutation.
+func (m *TournamentEntryMutation) CheckedInAt() (r time.Time, exists bool) {
+	v := m.checked_in_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCheckedInAt returns the old "checked_in_at" field's value of the TournamentEntry entity.
+// If the TournamentEntry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentEntryMutation) OldCheckedInAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCheckedInAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCheckedInAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCheckedInAt: %w", err)
+	}
+	return oldValue.CheckedInAt, nil
+}
+
+// ClearCheckedInAt clears the value of the "checked_in_at" field.
+func (m *TournamentEntryMutation) ClearCheckedInAt() {
+	m.checked_in_at = nil
+	m.clearedFields[tournamententry.FieldCheckedInAt] = struct{}{}
+}
+
+// CheckedInAtCleared returns if the "checked_in_at" field was cleared in this mutation.
+func (m *TournamentEntryMutation) CheckedInAtCleared() bool {
+	_, ok := m.clearedFields[tournamententry.FieldCheckedInAt]
+	return ok
+}
+
+// ResetCheckedInAt resets all changes to the "checked_in_at" field.
+func (m *TournamentEntryMutation) ResetCheckedInAt() {
+	m.checked_in_at = nil
+	delete(m.clearedFields, tournamententry.FieldCheckedInAt)
+}
+
+// Where appends a list predicates to the TournamentEntryMutation builder.
+func (m *TournamentEntryMutation) Where(ps ...predicate.TournamentEntry) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TournamentEntryMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TournamentEntryMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.TournamentEntry, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TournamentEntryMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TournamentEntryMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (TournamentEntry).
+func (m *TournamentEntryMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TournamentEntryMutation) Fields() []string {
+	fields := make([]string, 0, 19)
+	if m.tenant_id != nil {
+		fields = append(fields, tournamententry.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, tournamententry.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, tournamententry.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, tournamententry.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, tournamententry.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, tournamententry.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, tournamententry.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, tournamententry.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, tournamententry.FieldVersion)
+	}
+	if m.tournament_id != nil {
+		fields = append(fields, tournamententry.FieldTournamentID)
+	}
+	if m.school_id != nil {
+		fields = append(fields, tournamententry.FieldSchoolID)
+	}
+	if m.student_id != nil {
+		fields = append(fields, tournamententry.FieldStudentID)
+	}
+	if m.party_id != nil {
+		fields = append(fields, tournamententry.FieldPartyID)
+	}
+	if m.member_ids != nil {
+		fields = append(fields, tournamententry.FieldMemberIds)
+	}
+	if m.seed != nil {
+		fields = append(fields, tournamententry.FieldSeed)
+	}
+	if m.group_id != nil {
+		fields = append(fields, tournamententry.FieldGroupID)
+	}
+	if m.status != nil {
+		fields = append(fields, tournamententry.FieldStatus)
+	}
+	if m.registered_by != nil {
+		fields = append(fields, tournamententry.FieldRegisteredBy)
+	}
+	if m.checked_in_at != nil {
+		fields = append(fields, tournamententry.FieldCheckedInAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TournamentEntryMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case tournamententry.FieldTenantID:
+		return m.TenantID()
+	case tournamententry.FieldCreatedAt:
+		return m.CreatedAt()
+	case tournamententry.FieldCreatedBy:
+		return m.CreatedBy()
+	case tournamententry.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case tournamententry.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case tournamententry.FieldDeletedAt:
+		return m.DeletedAt()
+	case tournamententry.FieldDeletedBy:
+		return m.DeletedBy()
+	case tournamententry.FieldDeleteReason:
+		return m.DeleteReason()
+	case tournamententry.FieldVersion:
+		return m.Version()
+	case tournamententry.FieldTournamentID:
+		return m.TournamentID()
+	case tournamententry.FieldSchoolID:
+		return m.SchoolID()
+	case tournamententry.FieldStudentID:
+		return m.StudentID()
+	case tournamententry.FieldPartyID:
+		return m.PartyID()
+	case tournamententry.FieldMemberIds:
+		return m.MemberIds()
+	case tournamententry.FieldSeed:
+		return m.Seed()
+	case tournamententry.FieldGroupID:
+		return m.GroupID()
+	case tournamententry.FieldStatus:
+		return m.Status()
+	case tournamententry.FieldRegisteredBy:
+		return m.RegisteredBy()
+	case tournamententry.FieldCheckedInAt:
+		return m.CheckedInAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TournamentEntryMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case tournamententry.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case tournamententry.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case tournamententry.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case tournamententry.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case tournamententry.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case tournamententry.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case tournamententry.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case tournamententry.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case tournamententry.FieldVersion:
+		return m.OldVersion(ctx)
+	case tournamententry.FieldTournamentID:
+		return m.OldTournamentID(ctx)
+	case tournamententry.FieldSchoolID:
+		return m.OldSchoolID(ctx)
+	case tournamententry.FieldStudentID:
+		return m.OldStudentID(ctx)
+	case tournamententry.FieldPartyID:
+		return m.OldPartyID(ctx)
+	case tournamententry.FieldMemberIds:
+		return m.OldMemberIds(ctx)
+	case tournamententry.FieldSeed:
+		return m.OldSeed(ctx)
+	case tournamententry.FieldGroupID:
+		return m.OldGroupID(ctx)
+	case tournamententry.FieldStatus:
+		return m.OldStatus(ctx)
+	case tournamententry.FieldRegisteredBy:
+		return m.OldRegisteredBy(ctx)
+	case tournamententry.FieldCheckedInAt:
+		return m.OldCheckedInAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown TournamentEntry field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TournamentEntryMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case tournamententry.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case tournamententry.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case tournamententry.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case tournamententry.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case tournamententry.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case tournamententry.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case tournamententry.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case tournamententry.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case tournamententry.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case tournamententry.FieldTournamentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTournamentID(v)
+		return nil
+	case tournamententry.FieldSchoolID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchoolID(v)
+		return nil
+	case tournamententry.FieldStudentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStudentID(v)
+		return nil
+	case tournamententry.FieldPartyID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPartyID(v)
+		return nil
+	case tournamententry.FieldMemberIds:
+		v, ok := value.([]uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMemberIds(v)
+		return nil
+	case tournamententry.FieldSeed:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSeed(v)
+		return nil
+	case tournamententry.FieldGroupID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroupID(v)
+		return nil
+	case tournamententry.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case tournamententry.FieldRegisteredBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRegisteredBy(v)
+		return nil
+	case tournamententry.FieldCheckedInAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCheckedInAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentEntry field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TournamentEntryMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, tournamententry.FieldVersion)
+	}
+	if m.addseed != nil {
+		fields = append(fields, tournamententry.FieldSeed)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TournamentEntryMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case tournamententry.FieldVersion:
+		return m.AddedVersion()
+	case tournamententry.FieldSeed:
+		return m.AddedSeed()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TournamentEntryMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case tournamententry.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case tournamententry.FieldSeed:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSeed(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentEntry numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TournamentEntryMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(tournamententry.FieldCreatedBy) {
+		fields = append(fields, tournamententry.FieldCreatedBy)
+	}
+	if m.FieldCleared(tournamententry.FieldUpdatedBy) {
+		fields = append(fields, tournamententry.FieldUpdatedBy)
+	}
+	if m.FieldCleared(tournamententry.FieldDeletedAt) {
+		fields = append(fields, tournamententry.FieldDeletedAt)
+	}
+	if m.FieldCleared(tournamententry.FieldDeletedBy) {
+		fields = append(fields, tournamententry.FieldDeletedBy)
+	}
+	if m.FieldCleared(tournamententry.FieldDeleteReason) {
+		fields = append(fields, tournamententry.FieldDeleteReason)
+	}
+	if m.FieldCleared(tournamententry.FieldStudentID) {
+		fields = append(fields, tournamententry.FieldStudentID)
+	}
+	if m.FieldCleared(tournamententry.FieldPartyID) {
+		fields = append(fields, tournamententry.FieldPartyID)
+	}
+	if m.FieldCleared(tournamententry.FieldSeed) {
+		fields = append(fields, tournamententry.FieldSeed)
+	}
+	if m.FieldCleared(tournamententry.FieldGroupID) {
+		fields = append(fields, tournamententry.FieldGroupID)
+	}
+	if m.FieldCleared(tournamententry.FieldCheckedInAt) {
+		fields = append(fields, tournamententry.FieldCheckedInAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TournamentEntryMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TournamentEntryMutation) ClearField(name string) error {
+	switch name {
+	case tournamententry.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case tournamententry.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case tournamententry.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case tournamententry.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case tournamententry.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case tournamententry.FieldStudentID:
+		m.ClearStudentID()
+		return nil
+	case tournamententry.FieldPartyID:
+		m.ClearPartyID()
+		return nil
+	case tournamententry.FieldSeed:
+		m.ClearSeed()
+		return nil
+	case tournamententry.FieldGroupID:
+		m.ClearGroupID()
+		return nil
+	case tournamententry.FieldCheckedInAt:
+		m.ClearCheckedInAt()
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentEntry nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TournamentEntryMutation) ResetField(name string) error {
+	switch name {
+	case tournamententry.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case tournamententry.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case tournamententry.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case tournamententry.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case tournamententry.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case tournamententry.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case tournamententry.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case tournamententry.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case tournamententry.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case tournamententry.FieldTournamentID:
+		m.ResetTournamentID()
+		return nil
+	case tournamententry.FieldSchoolID:
+		m.ResetSchoolID()
+		return nil
+	case tournamententry.FieldStudentID:
+		m.ResetStudentID()
+		return nil
+	case tournamententry.FieldPartyID:
+		m.ResetPartyID()
+		return nil
+	case tournamententry.FieldMemberIds:
+		m.ResetMemberIds()
+		return nil
+	case tournamententry.FieldSeed:
+		m.ResetSeed()
+		return nil
+	case tournamententry.FieldGroupID:
+		m.ResetGroupID()
+		return nil
+	case tournamententry.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case tournamententry.FieldRegisteredBy:
+		m.ResetRegisteredBy()
+		return nil
+	case tournamententry.FieldCheckedInAt:
+		m.ResetCheckedInAt()
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentEntry field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TournamentEntryMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TournamentEntryMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TournamentEntryMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TournamentEntryMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TournamentEntryMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TournamentEntryMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TournamentEntryMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown TournamentEntry unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TournamentEntryMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown TournamentEntry edge %s", name)
+}
+
+// TournamentGroupMutation represents an operation that mutates the TournamentGroup nodes in the graph.
+type TournamentGroupMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	tenant_id       *uuid.UUID
+	created_at      *time.Time
+	created_by      *uuid.UUID
+	updated_at      *time.Time
+	updated_by      *uuid.UUID
+	deleted_at      *time.Time
+	deleted_by      *uuid.UUID
+	delete_reason   *string
+	version         *int64
+	addversion      *int64
+	tournament_id   *uuid.UUID
+	code            *string
+	standings       *[]map[string]interface{}
+	appendstandings []map[string]interface{}
+	clearedFields   map[string]struct{}
+	done            bool
+	oldValue        func(context.Context) (*TournamentGroup, error)
+	predicates      []predicate.TournamentGroup
+}
+
+var _ ent.Mutation = (*TournamentGroupMutation)(nil)
+
+// tournamentgroupOption allows management of the mutation configuration using functional options.
+type tournamentgroupOption func(*TournamentGroupMutation)
+
+// newTournamentGroupMutation creates new mutation for the TournamentGroup entity.
+func newTournamentGroupMutation(c config, op Op, opts ...tournamentgroupOption) *TournamentGroupMutation {
+	m := &TournamentGroupMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTournamentGroup,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTournamentGroupID sets the ID field of the mutation.
+func withTournamentGroupID(id uuid.UUID) tournamentgroupOption {
+	return func(m *TournamentGroupMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *TournamentGroup
+		)
+		m.oldValue = func(ctx context.Context) (*TournamentGroup, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().TournamentGroup.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTournamentGroup sets the old TournamentGroup of the mutation.
+func withTournamentGroup(node *TournamentGroup) tournamentgroupOption {
+	return func(m *TournamentGroupMutation) {
+		m.oldValue = func(context.Context) (*TournamentGroup, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TournamentGroupMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TournamentGroupMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of TournamentGroup entities.
+func (m *TournamentGroupMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TournamentGroupMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TournamentGroupMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().TournamentGroup.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *TournamentGroupMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *TournamentGroupMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the TournamentGroup entity.
+// If the TournamentGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentGroupMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *TournamentGroupMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *TournamentGroupMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *TournamentGroupMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the TournamentGroup entity.
+// If the TournamentGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentGroupMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *TournamentGroupMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *TournamentGroupMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *TournamentGroupMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the TournamentGroup entity.
+// If the TournamentGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentGroupMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *TournamentGroupMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[tournamentgroup.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *TournamentGroupMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[tournamentgroup.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *TournamentGroupMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, tournamentgroup.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *TournamentGroupMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *TournamentGroupMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the TournamentGroup entity.
+// If the TournamentGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentGroupMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *TournamentGroupMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *TournamentGroupMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *TournamentGroupMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the TournamentGroup entity.
+// If the TournamentGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentGroupMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *TournamentGroupMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[tournamentgroup.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *TournamentGroupMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[tournamentgroup.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *TournamentGroupMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, tournamentgroup.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *TournamentGroupMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *TournamentGroupMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the TournamentGroup entity.
+// If the TournamentGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentGroupMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *TournamentGroupMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[tournamentgroup.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *TournamentGroupMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[tournamentgroup.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *TournamentGroupMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, tournamentgroup.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *TournamentGroupMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *TournamentGroupMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the TournamentGroup entity.
+// If the TournamentGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentGroupMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *TournamentGroupMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[tournamentgroup.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *TournamentGroupMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[tournamentgroup.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *TournamentGroupMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, tournamentgroup.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *TournamentGroupMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *TournamentGroupMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the TournamentGroup entity.
+// If the TournamentGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentGroupMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *TournamentGroupMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[tournamentgroup.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *TournamentGroupMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[tournamentgroup.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *TournamentGroupMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, tournamentgroup.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *TournamentGroupMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *TournamentGroupMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the TournamentGroup entity.
+// If the TournamentGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentGroupMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *TournamentGroupMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *TournamentGroupMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *TournamentGroupMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetTournamentID sets the "tournament_id" field.
+func (m *TournamentGroupMutation) SetTournamentID(u uuid.UUID) {
+	m.tournament_id = &u
+}
+
+// TournamentID returns the value of the "tournament_id" field in the mutation.
+func (m *TournamentGroupMutation) TournamentID() (r uuid.UUID, exists bool) {
+	v := m.tournament_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTournamentID returns the old "tournament_id" field's value of the TournamentGroup entity.
+// If the TournamentGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentGroupMutation) OldTournamentID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTournamentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTournamentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTournamentID: %w", err)
+	}
+	return oldValue.TournamentID, nil
+}
+
+// ResetTournamentID resets all changes to the "tournament_id" field.
+func (m *TournamentGroupMutation) ResetTournamentID() {
+	m.tournament_id = nil
+}
+
+// SetCode sets the "code" field.
+func (m *TournamentGroupMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *TournamentGroupMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the TournamentGroup entity.
+// If the TournamentGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentGroupMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *TournamentGroupMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetStandings sets the "standings" field.
+func (m *TournamentGroupMutation) SetStandings(value []map[string]interface{}) {
+	m.standings = &value
+	m.appendstandings = nil
+}
+
+// Standings returns the value of the "standings" field in the mutation.
+func (m *TournamentGroupMutation) Standings() (r []map[string]interface{}, exists bool) {
+	v := m.standings
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStandings returns the old "standings" field's value of the TournamentGroup entity.
+// If the TournamentGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentGroupMutation) OldStandings(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStandings is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStandings requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStandings: %w", err)
+	}
+	return oldValue.Standings, nil
+}
+
+// AppendStandings adds value to the "standings" field.
+func (m *TournamentGroupMutation) AppendStandings(value []map[string]interface{}) {
+	m.appendstandings = append(m.appendstandings, value...)
+}
+
+// AppendedStandings returns the list of values that were appended to the "standings" field in this mutation.
+func (m *TournamentGroupMutation) AppendedStandings() ([]map[string]interface{}, bool) {
+	if len(m.appendstandings) == 0 {
+		return nil, false
+	}
+	return m.appendstandings, true
+}
+
+// ClearStandings clears the value of the "standings" field.
+func (m *TournamentGroupMutation) ClearStandings() {
+	m.standings = nil
+	m.appendstandings = nil
+	m.clearedFields[tournamentgroup.FieldStandings] = struct{}{}
+}
+
+// StandingsCleared returns if the "standings" field was cleared in this mutation.
+func (m *TournamentGroupMutation) StandingsCleared() bool {
+	_, ok := m.clearedFields[tournamentgroup.FieldStandings]
+	return ok
+}
+
+// ResetStandings resets all changes to the "standings" field.
+func (m *TournamentGroupMutation) ResetStandings() {
+	m.standings = nil
+	m.appendstandings = nil
+	delete(m.clearedFields, tournamentgroup.FieldStandings)
+}
+
+// Where appends a list predicates to the TournamentGroupMutation builder.
+func (m *TournamentGroupMutation) Where(ps ...predicate.TournamentGroup) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TournamentGroupMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TournamentGroupMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.TournamentGroup, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TournamentGroupMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TournamentGroupMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (TournamentGroup).
+func (m *TournamentGroupMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TournamentGroupMutation) Fields() []string {
+	fields := make([]string, 0, 12)
+	if m.tenant_id != nil {
+		fields = append(fields, tournamentgroup.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, tournamentgroup.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, tournamentgroup.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, tournamentgroup.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, tournamentgroup.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, tournamentgroup.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, tournamentgroup.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, tournamentgroup.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, tournamentgroup.FieldVersion)
+	}
+	if m.tournament_id != nil {
+		fields = append(fields, tournamentgroup.FieldTournamentID)
+	}
+	if m.code != nil {
+		fields = append(fields, tournamentgroup.FieldCode)
+	}
+	if m.standings != nil {
+		fields = append(fields, tournamentgroup.FieldStandings)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TournamentGroupMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case tournamentgroup.FieldTenantID:
+		return m.TenantID()
+	case tournamentgroup.FieldCreatedAt:
+		return m.CreatedAt()
+	case tournamentgroup.FieldCreatedBy:
+		return m.CreatedBy()
+	case tournamentgroup.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case tournamentgroup.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case tournamentgroup.FieldDeletedAt:
+		return m.DeletedAt()
+	case tournamentgroup.FieldDeletedBy:
+		return m.DeletedBy()
+	case tournamentgroup.FieldDeleteReason:
+		return m.DeleteReason()
+	case tournamentgroup.FieldVersion:
+		return m.Version()
+	case tournamentgroup.FieldTournamentID:
+		return m.TournamentID()
+	case tournamentgroup.FieldCode:
+		return m.Code()
+	case tournamentgroup.FieldStandings:
+		return m.Standings()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TournamentGroupMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case tournamentgroup.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case tournamentgroup.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case tournamentgroup.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case tournamentgroup.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case tournamentgroup.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case tournamentgroup.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case tournamentgroup.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case tournamentgroup.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case tournamentgroup.FieldVersion:
+		return m.OldVersion(ctx)
+	case tournamentgroup.FieldTournamentID:
+		return m.OldTournamentID(ctx)
+	case tournamentgroup.FieldCode:
+		return m.OldCode(ctx)
+	case tournamentgroup.FieldStandings:
+		return m.OldStandings(ctx)
+	}
+	return nil, fmt.Errorf("unknown TournamentGroup field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TournamentGroupMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case tournamentgroup.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case tournamentgroup.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case tournamentgroup.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case tournamentgroup.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case tournamentgroup.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case tournamentgroup.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case tournamentgroup.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case tournamentgroup.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case tournamentgroup.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case tournamentgroup.FieldTournamentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTournamentID(v)
+		return nil
+	case tournamentgroup.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case tournamentgroup.FieldStandings:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStandings(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentGroup field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TournamentGroupMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, tournamentgroup.FieldVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TournamentGroupMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case tournamentgroup.FieldVersion:
+		return m.AddedVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TournamentGroupMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case tournamentgroup.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentGroup numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TournamentGroupMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(tournamentgroup.FieldCreatedBy) {
+		fields = append(fields, tournamentgroup.FieldCreatedBy)
+	}
+	if m.FieldCleared(tournamentgroup.FieldUpdatedBy) {
+		fields = append(fields, tournamentgroup.FieldUpdatedBy)
+	}
+	if m.FieldCleared(tournamentgroup.FieldDeletedAt) {
+		fields = append(fields, tournamentgroup.FieldDeletedAt)
+	}
+	if m.FieldCleared(tournamentgroup.FieldDeletedBy) {
+		fields = append(fields, tournamentgroup.FieldDeletedBy)
+	}
+	if m.FieldCleared(tournamentgroup.FieldDeleteReason) {
+		fields = append(fields, tournamentgroup.FieldDeleteReason)
+	}
+	if m.FieldCleared(tournamentgroup.FieldStandings) {
+		fields = append(fields, tournamentgroup.FieldStandings)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TournamentGroupMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TournamentGroupMutation) ClearField(name string) error {
+	switch name {
+	case tournamentgroup.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case tournamentgroup.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case tournamentgroup.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case tournamentgroup.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case tournamentgroup.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case tournamentgroup.FieldStandings:
+		m.ClearStandings()
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentGroup nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TournamentGroupMutation) ResetField(name string) error {
+	switch name {
+	case tournamentgroup.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case tournamentgroup.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case tournamentgroup.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case tournamentgroup.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case tournamentgroup.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case tournamentgroup.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case tournamentgroup.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case tournamentgroup.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case tournamentgroup.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case tournamentgroup.FieldTournamentID:
+		m.ResetTournamentID()
+		return nil
+	case tournamentgroup.FieldCode:
+		m.ResetCode()
+		return nil
+	case tournamentgroup.FieldStandings:
+		m.ResetStandings()
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentGroup field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TournamentGroupMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TournamentGroupMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TournamentGroupMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TournamentGroupMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TournamentGroupMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TournamentGroupMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TournamentGroupMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown TournamentGroup unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TournamentGroupMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown TournamentGroup edge %s", name)
+}
+
+// TournamentResultMutation represents an operation that mutates the TournamentResult nodes in the graph.
+type TournamentResultMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	tenant_id         *uuid.UUID
+	created_at        *time.Time
+	created_by        *uuid.UUID
+	tournament_id     *uuid.UUID
+	entry_id          *uuid.UUID
+	school_id         *uuid.UUID
+	final_rank        *int16
+	addfinal_rank     *int16
+	wins              *int16
+	addwins           *int16
+	losses            *int16
+	addlosses         *int16
+	draws             *int16
+	adddraws          *int16
+	points            *int
+	addpoints         *int
+	matches_played    *int16
+	addmatches_played *int16
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*TournamentResult, error)
+	predicates        []predicate.TournamentResult
+}
+
+var _ ent.Mutation = (*TournamentResultMutation)(nil)
+
+// tournamentresultOption allows management of the mutation configuration using functional options.
+type tournamentresultOption func(*TournamentResultMutation)
+
+// newTournamentResultMutation creates new mutation for the TournamentResult entity.
+func newTournamentResultMutation(c config, op Op, opts ...tournamentresultOption) *TournamentResultMutation {
+	m := &TournamentResultMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTournamentResult,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTournamentResultID sets the ID field of the mutation.
+func withTournamentResultID(id uuid.UUID) tournamentresultOption {
+	return func(m *TournamentResultMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *TournamentResult
+		)
+		m.oldValue = func(ctx context.Context) (*TournamentResult, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().TournamentResult.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTournamentResult sets the old TournamentResult of the mutation.
+func withTournamentResult(node *TournamentResult) tournamentresultOption {
+	return func(m *TournamentResultMutation) {
+		m.oldValue = func(context.Context) (*TournamentResult, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TournamentResultMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TournamentResultMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of TournamentResult entities.
+func (m *TournamentResultMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TournamentResultMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TournamentResultMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().TournamentResult.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *TournamentResultMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *TournamentResultMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the TournamentResult entity.
+// If the TournamentResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentResultMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *TournamentResultMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *TournamentResultMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *TournamentResultMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the TournamentResult entity.
+// If the TournamentResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentResultMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *TournamentResultMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *TournamentResultMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *TournamentResultMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the TournamentResult entity.
+// If the TournamentResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentResultMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *TournamentResultMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[tournamentresult.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *TournamentResultMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[tournamentresult.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *TournamentResultMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, tournamentresult.FieldCreatedBy)
+}
+
+// SetTournamentID sets the "tournament_id" field.
+func (m *TournamentResultMutation) SetTournamentID(u uuid.UUID) {
+	m.tournament_id = &u
+}
+
+// TournamentID returns the value of the "tournament_id" field in the mutation.
+func (m *TournamentResultMutation) TournamentID() (r uuid.UUID, exists bool) {
+	v := m.tournament_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTournamentID returns the old "tournament_id" field's value of the TournamentResult entity.
+// If the TournamentResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentResultMutation) OldTournamentID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTournamentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTournamentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTournamentID: %w", err)
+	}
+	return oldValue.TournamentID, nil
+}
+
+// ResetTournamentID resets all changes to the "tournament_id" field.
+func (m *TournamentResultMutation) ResetTournamentID() {
+	m.tournament_id = nil
+}
+
+// SetEntryID sets the "entry_id" field.
+func (m *TournamentResultMutation) SetEntryID(u uuid.UUID) {
+	m.entry_id = &u
+}
+
+// EntryID returns the value of the "entry_id" field in the mutation.
+func (m *TournamentResultMutation) EntryID() (r uuid.UUID, exists bool) {
+	v := m.entry_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEntryID returns the old "entry_id" field's value of the TournamentResult entity.
+// If the TournamentResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentResultMutation) OldEntryID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEntryID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEntryID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEntryID: %w", err)
+	}
+	return oldValue.EntryID, nil
+}
+
+// ResetEntryID resets all changes to the "entry_id" field.
+func (m *TournamentResultMutation) ResetEntryID() {
+	m.entry_id = nil
+}
+
+// SetSchoolID sets the "school_id" field.
+func (m *TournamentResultMutation) SetSchoolID(u uuid.UUID) {
+	m.school_id = &u
+}
+
+// SchoolID returns the value of the "school_id" field in the mutation.
+func (m *TournamentResultMutation) SchoolID() (r uuid.UUID, exists bool) {
+	v := m.school_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchoolID returns the old "school_id" field's value of the TournamentResult entity.
+// If the TournamentResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentResultMutation) OldSchoolID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchoolID: %w", err)
+	}
+	return oldValue.SchoolID, nil
+}
+
+// ResetSchoolID resets all changes to the "school_id" field.
+func (m *TournamentResultMutation) ResetSchoolID() {
+	m.school_id = nil
+}
+
+// SetFinalRank sets the "final_rank" field.
+func (m *TournamentResultMutation) SetFinalRank(i int16) {
+	m.final_rank = &i
+	m.addfinal_rank = nil
+}
+
+// FinalRank returns the value of the "final_rank" field in the mutation.
+func (m *TournamentResultMutation) FinalRank() (r int16, exists bool) {
+	v := m.final_rank
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFinalRank returns the old "final_rank" field's value of the TournamentResult entity.
+// If the TournamentResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentResultMutation) OldFinalRank(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFinalRank is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFinalRank requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFinalRank: %w", err)
+	}
+	return oldValue.FinalRank, nil
+}
+
+// AddFinalRank adds i to the "final_rank" field.
+func (m *TournamentResultMutation) AddFinalRank(i int16) {
+	if m.addfinal_rank != nil {
+		*m.addfinal_rank += i
+	} else {
+		m.addfinal_rank = &i
+	}
+}
+
+// AddedFinalRank returns the value that was added to the "final_rank" field in this mutation.
+func (m *TournamentResultMutation) AddedFinalRank() (r int16, exists bool) {
+	v := m.addfinal_rank
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetFinalRank resets all changes to the "final_rank" field.
+func (m *TournamentResultMutation) ResetFinalRank() {
+	m.final_rank = nil
+	m.addfinal_rank = nil
+}
+
+// SetWins sets the "wins" field.
+func (m *TournamentResultMutation) SetWins(i int16) {
+	m.wins = &i
+	m.addwins = nil
+}
+
+// Wins returns the value of the "wins" field in the mutation.
+func (m *TournamentResultMutation) Wins() (r int16, exists bool) {
+	v := m.wins
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWins returns the old "wins" field's value of the TournamentResult entity.
+// If the TournamentResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentResultMutation) OldWins(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWins is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWins requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWins: %w", err)
+	}
+	return oldValue.Wins, nil
+}
+
+// AddWins adds i to the "wins" field.
+func (m *TournamentResultMutation) AddWins(i int16) {
+	if m.addwins != nil {
+		*m.addwins += i
+	} else {
+		m.addwins = &i
+	}
+}
+
+// AddedWins returns the value that was added to the "wins" field in this mutation.
+func (m *TournamentResultMutation) AddedWins() (r int16, exists bool) {
+	v := m.addwins
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetWins resets all changes to the "wins" field.
+func (m *TournamentResultMutation) ResetWins() {
+	m.wins = nil
+	m.addwins = nil
+}
+
+// SetLosses sets the "losses" field.
+func (m *TournamentResultMutation) SetLosses(i int16) {
+	m.losses = &i
+	m.addlosses = nil
+}
+
+// Losses returns the value of the "losses" field in the mutation.
+func (m *TournamentResultMutation) Losses() (r int16, exists bool) {
+	v := m.losses
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLosses returns the old "losses" field's value of the TournamentResult entity.
+// If the TournamentResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentResultMutation) OldLosses(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLosses is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLosses requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLosses: %w", err)
+	}
+	return oldValue.Losses, nil
+}
+
+// AddLosses adds i to the "losses" field.
+func (m *TournamentResultMutation) AddLosses(i int16) {
+	if m.addlosses != nil {
+		*m.addlosses += i
+	} else {
+		m.addlosses = &i
+	}
+}
+
+// AddedLosses returns the value that was added to the "losses" field in this mutation.
+func (m *TournamentResultMutation) AddedLosses() (r int16, exists bool) {
+	v := m.addlosses
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLosses resets all changes to the "losses" field.
+func (m *TournamentResultMutation) ResetLosses() {
+	m.losses = nil
+	m.addlosses = nil
+}
+
+// SetDraws sets the "draws" field.
+func (m *TournamentResultMutation) SetDraws(i int16) {
+	m.draws = &i
+	m.adddraws = nil
+}
+
+// Draws returns the value of the "draws" field in the mutation.
+func (m *TournamentResultMutation) Draws() (r int16, exists bool) {
+	v := m.draws
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDraws returns the old "draws" field's value of the TournamentResult entity.
+// If the TournamentResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentResultMutation) OldDraws(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDraws is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDraws requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDraws: %w", err)
+	}
+	return oldValue.Draws, nil
+}
+
+// AddDraws adds i to the "draws" field.
+func (m *TournamentResultMutation) AddDraws(i int16) {
+	if m.adddraws != nil {
+		*m.adddraws += i
+	} else {
+		m.adddraws = &i
+	}
+}
+
+// AddedDraws returns the value that was added to the "draws" field in this mutation.
+func (m *TournamentResultMutation) AddedDraws() (r int16, exists bool) {
+	v := m.adddraws
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDraws resets all changes to the "draws" field.
+func (m *TournamentResultMutation) ResetDraws() {
+	m.draws = nil
+	m.adddraws = nil
+}
+
+// SetPoints sets the "points" field.
+func (m *TournamentResultMutation) SetPoints(i int) {
+	m.points = &i
+	m.addpoints = nil
+}
+
+// Points returns the value of the "points" field in the mutation.
+func (m *TournamentResultMutation) Points() (r int, exists bool) {
+	v := m.points
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPoints returns the old "points" field's value of the TournamentResult entity.
+// If the TournamentResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentResultMutation) OldPoints(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPoints is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPoints requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPoints: %w", err)
+	}
+	return oldValue.Points, nil
+}
+
+// AddPoints adds i to the "points" field.
+func (m *TournamentResultMutation) AddPoints(i int) {
+	if m.addpoints != nil {
+		*m.addpoints += i
+	} else {
+		m.addpoints = &i
+	}
+}
+
+// AddedPoints returns the value that was added to the "points" field in this mutation.
+func (m *TournamentResultMutation) AddedPoints() (r int, exists bool) {
+	v := m.addpoints
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPoints resets all changes to the "points" field.
+func (m *TournamentResultMutation) ResetPoints() {
+	m.points = nil
+	m.addpoints = nil
+}
+
+// SetMatchesPlayed sets the "matches_played" field.
+func (m *TournamentResultMutation) SetMatchesPlayed(i int16) {
+	m.matches_played = &i
+	m.addmatches_played = nil
+}
+
+// MatchesPlayed returns the value of the "matches_played" field in the mutation.
+func (m *TournamentResultMutation) MatchesPlayed() (r int16, exists bool) {
+	v := m.matches_played
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMatchesPlayed returns the old "matches_played" field's value of the TournamentResult entity.
+// If the TournamentResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentResultMutation) OldMatchesPlayed(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMatchesPlayed is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMatchesPlayed requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMatchesPlayed: %w", err)
+	}
+	return oldValue.MatchesPlayed, nil
+}
+
+// AddMatchesPlayed adds i to the "matches_played" field.
+func (m *TournamentResultMutation) AddMatchesPlayed(i int16) {
+	if m.addmatches_played != nil {
+		*m.addmatches_played += i
+	} else {
+		m.addmatches_played = &i
+	}
+}
+
+// AddedMatchesPlayed returns the value that was added to the "matches_played" field in this mutation.
+func (m *TournamentResultMutation) AddedMatchesPlayed() (r int16, exists bool) {
+	v := m.addmatches_played
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMatchesPlayed resets all changes to the "matches_played" field.
+func (m *TournamentResultMutation) ResetMatchesPlayed() {
+	m.matches_played = nil
+	m.addmatches_played = nil
+}
+
+// Where appends a list predicates to the TournamentResultMutation builder.
+func (m *TournamentResultMutation) Where(ps ...predicate.TournamentResult) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TournamentResultMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TournamentResultMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.TournamentResult, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TournamentResultMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TournamentResultMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (TournamentResult).
+func (m *TournamentResultMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TournamentResultMutation) Fields() []string {
+	fields := make([]string, 0, 12)
+	if m.tenant_id != nil {
+		fields = append(fields, tournamentresult.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, tournamentresult.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, tournamentresult.FieldCreatedBy)
+	}
+	if m.tournament_id != nil {
+		fields = append(fields, tournamentresult.FieldTournamentID)
+	}
+	if m.entry_id != nil {
+		fields = append(fields, tournamentresult.FieldEntryID)
+	}
+	if m.school_id != nil {
+		fields = append(fields, tournamentresult.FieldSchoolID)
+	}
+	if m.final_rank != nil {
+		fields = append(fields, tournamentresult.FieldFinalRank)
+	}
+	if m.wins != nil {
+		fields = append(fields, tournamentresult.FieldWins)
+	}
+	if m.losses != nil {
+		fields = append(fields, tournamentresult.FieldLosses)
+	}
+	if m.draws != nil {
+		fields = append(fields, tournamentresult.FieldDraws)
+	}
+	if m.points != nil {
+		fields = append(fields, tournamentresult.FieldPoints)
+	}
+	if m.matches_played != nil {
+		fields = append(fields, tournamentresult.FieldMatchesPlayed)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TournamentResultMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case tournamentresult.FieldTenantID:
+		return m.TenantID()
+	case tournamentresult.FieldCreatedAt:
+		return m.CreatedAt()
+	case tournamentresult.FieldCreatedBy:
+		return m.CreatedBy()
+	case tournamentresult.FieldTournamentID:
+		return m.TournamentID()
+	case tournamentresult.FieldEntryID:
+		return m.EntryID()
+	case tournamentresult.FieldSchoolID:
+		return m.SchoolID()
+	case tournamentresult.FieldFinalRank:
+		return m.FinalRank()
+	case tournamentresult.FieldWins:
+		return m.Wins()
+	case tournamentresult.FieldLosses:
+		return m.Losses()
+	case tournamentresult.FieldDraws:
+		return m.Draws()
+	case tournamentresult.FieldPoints:
+		return m.Points()
+	case tournamentresult.FieldMatchesPlayed:
+		return m.MatchesPlayed()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TournamentResultMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case tournamentresult.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case tournamentresult.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case tournamentresult.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case tournamentresult.FieldTournamentID:
+		return m.OldTournamentID(ctx)
+	case tournamentresult.FieldEntryID:
+		return m.OldEntryID(ctx)
+	case tournamentresult.FieldSchoolID:
+		return m.OldSchoolID(ctx)
+	case tournamentresult.FieldFinalRank:
+		return m.OldFinalRank(ctx)
+	case tournamentresult.FieldWins:
+		return m.OldWins(ctx)
+	case tournamentresult.FieldLosses:
+		return m.OldLosses(ctx)
+	case tournamentresult.FieldDraws:
+		return m.OldDraws(ctx)
+	case tournamentresult.FieldPoints:
+		return m.OldPoints(ctx)
+	case tournamentresult.FieldMatchesPlayed:
+		return m.OldMatchesPlayed(ctx)
+	}
+	return nil, fmt.Errorf("unknown TournamentResult field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TournamentResultMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case tournamentresult.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case tournamentresult.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case tournamentresult.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case tournamentresult.FieldTournamentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTournamentID(v)
+		return nil
+	case tournamentresult.FieldEntryID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEntryID(v)
+		return nil
+	case tournamentresult.FieldSchoolID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchoolID(v)
+		return nil
+	case tournamentresult.FieldFinalRank:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFinalRank(v)
+		return nil
+	case tournamentresult.FieldWins:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWins(v)
+		return nil
+	case tournamentresult.FieldLosses:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLosses(v)
+		return nil
+	case tournamentresult.FieldDraws:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDraws(v)
+		return nil
+	case tournamentresult.FieldPoints:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPoints(v)
+		return nil
+	case tournamentresult.FieldMatchesPlayed:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMatchesPlayed(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentResult field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TournamentResultMutation) AddedFields() []string {
+	var fields []string
+	if m.addfinal_rank != nil {
+		fields = append(fields, tournamentresult.FieldFinalRank)
+	}
+	if m.addwins != nil {
+		fields = append(fields, tournamentresult.FieldWins)
+	}
+	if m.addlosses != nil {
+		fields = append(fields, tournamentresult.FieldLosses)
+	}
+	if m.adddraws != nil {
+		fields = append(fields, tournamentresult.FieldDraws)
+	}
+	if m.addpoints != nil {
+		fields = append(fields, tournamentresult.FieldPoints)
+	}
+	if m.addmatches_played != nil {
+		fields = append(fields, tournamentresult.FieldMatchesPlayed)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TournamentResultMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case tournamentresult.FieldFinalRank:
+		return m.AddedFinalRank()
+	case tournamentresult.FieldWins:
+		return m.AddedWins()
+	case tournamentresult.FieldLosses:
+		return m.AddedLosses()
+	case tournamentresult.FieldDraws:
+		return m.AddedDraws()
+	case tournamentresult.FieldPoints:
+		return m.AddedPoints()
+	case tournamentresult.FieldMatchesPlayed:
+		return m.AddedMatchesPlayed()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TournamentResultMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case tournamentresult.FieldFinalRank:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddFinalRank(v)
+		return nil
+	case tournamentresult.FieldWins:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddWins(v)
+		return nil
+	case tournamentresult.FieldLosses:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLosses(v)
+		return nil
+	case tournamentresult.FieldDraws:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDraws(v)
+		return nil
+	case tournamentresult.FieldPoints:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPoints(v)
+		return nil
+	case tournamentresult.FieldMatchesPlayed:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMatchesPlayed(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentResult numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TournamentResultMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(tournamentresult.FieldCreatedBy) {
+		fields = append(fields, tournamentresult.FieldCreatedBy)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TournamentResultMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TournamentResultMutation) ClearField(name string) error {
+	switch name {
+	case tournamentresult.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentResult nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TournamentResultMutation) ResetField(name string) error {
+	switch name {
+	case tournamentresult.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case tournamentresult.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case tournamentresult.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case tournamentresult.FieldTournamentID:
+		m.ResetTournamentID()
+		return nil
+	case tournamentresult.FieldEntryID:
+		m.ResetEntryID()
+		return nil
+	case tournamentresult.FieldSchoolID:
+		m.ResetSchoolID()
+		return nil
+	case tournamentresult.FieldFinalRank:
+		m.ResetFinalRank()
+		return nil
+	case tournamentresult.FieldWins:
+		m.ResetWins()
+		return nil
+	case tournamentresult.FieldLosses:
+		m.ResetLosses()
+		return nil
+	case tournamentresult.FieldDraws:
+		m.ResetDraws()
+		return nil
+	case tournamentresult.FieldPoints:
+		m.ResetPoints()
+		return nil
+	case tournamentresult.FieldMatchesPlayed:
+		m.ResetMatchesPlayed()
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentResult field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TournamentResultMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TournamentResultMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TournamentResultMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TournamentResultMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TournamentResultMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TournamentResultMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TournamentResultMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown TournamentResult unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TournamentResultMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown TournamentResult edge %s", name)
+}
+
+// TournamentRewardMutation represents an operation that mutates the TournamentReward nodes in the graph.
+type TournamentRewardMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	tenant_id         *uuid.UUID
+	created_at        *time.Time
+	created_by        *uuid.UUID
+	tournament_id     *uuid.UUID
+	entry_id          *uuid.UUID
+	rule_id           *string
+	student_ids       *[]uuid.UUID
+	appendstudent_ids []uuid.UUID
+	reward_ref        *map[string]interface{}
+	points            *int
+	addpoints         *int
+	granted_at        *time.Time
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*TournamentReward, error)
+	predicates        []predicate.TournamentReward
+}
+
+var _ ent.Mutation = (*TournamentRewardMutation)(nil)
+
+// tournamentrewardOption allows management of the mutation configuration using functional options.
+type tournamentrewardOption func(*TournamentRewardMutation)
+
+// newTournamentRewardMutation creates new mutation for the TournamentReward entity.
+func newTournamentRewardMutation(c config, op Op, opts ...tournamentrewardOption) *TournamentRewardMutation {
+	m := &TournamentRewardMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTournamentReward,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTournamentRewardID sets the ID field of the mutation.
+func withTournamentRewardID(id uuid.UUID) tournamentrewardOption {
+	return func(m *TournamentRewardMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *TournamentReward
+		)
+		m.oldValue = func(ctx context.Context) (*TournamentReward, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().TournamentReward.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTournamentReward sets the old TournamentReward of the mutation.
+func withTournamentReward(node *TournamentReward) tournamentrewardOption {
+	return func(m *TournamentRewardMutation) {
+		m.oldValue = func(context.Context) (*TournamentReward, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TournamentRewardMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TournamentRewardMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of TournamentReward entities.
+func (m *TournamentRewardMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TournamentRewardMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TournamentRewardMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().TournamentReward.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *TournamentRewardMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *TournamentRewardMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the TournamentReward entity.
+// If the TournamentReward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentRewardMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *TournamentRewardMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *TournamentRewardMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *TournamentRewardMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the TournamentReward entity.
+// If the TournamentReward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentRewardMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *TournamentRewardMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *TournamentRewardMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *TournamentRewardMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the TournamentReward entity.
+// If the TournamentReward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentRewardMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *TournamentRewardMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[tournamentreward.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *TournamentRewardMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[tournamentreward.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *TournamentRewardMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, tournamentreward.FieldCreatedBy)
+}
+
+// SetTournamentID sets the "tournament_id" field.
+func (m *TournamentRewardMutation) SetTournamentID(u uuid.UUID) {
+	m.tournament_id = &u
+}
+
+// TournamentID returns the value of the "tournament_id" field in the mutation.
+func (m *TournamentRewardMutation) TournamentID() (r uuid.UUID, exists bool) {
+	v := m.tournament_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTournamentID returns the old "tournament_id" field's value of the TournamentReward entity.
+// If the TournamentReward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentRewardMutation) OldTournamentID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTournamentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTournamentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTournamentID: %w", err)
+	}
+	return oldValue.TournamentID, nil
+}
+
+// ResetTournamentID resets all changes to the "tournament_id" field.
+func (m *TournamentRewardMutation) ResetTournamentID() {
+	m.tournament_id = nil
+}
+
+// SetEntryID sets the "entry_id" field.
+func (m *TournamentRewardMutation) SetEntryID(u uuid.UUID) {
+	m.entry_id = &u
+}
+
+// EntryID returns the value of the "entry_id" field in the mutation.
+func (m *TournamentRewardMutation) EntryID() (r uuid.UUID, exists bool) {
+	v := m.entry_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEntryID returns the old "entry_id" field's value of the TournamentReward entity.
+// If the TournamentReward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentRewardMutation) OldEntryID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEntryID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEntryID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEntryID: %w", err)
+	}
+	return oldValue.EntryID, nil
+}
+
+// ResetEntryID resets all changes to the "entry_id" field.
+func (m *TournamentRewardMutation) ResetEntryID() {
+	m.entry_id = nil
+}
+
+// SetRuleID sets the "rule_id" field.
+func (m *TournamentRewardMutation) SetRuleID(s string) {
+	m.rule_id = &s
+}
+
+// RuleID returns the value of the "rule_id" field in the mutation.
+func (m *TournamentRewardMutation) RuleID() (r string, exists bool) {
+	v := m.rule_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRuleID returns the old "rule_id" field's value of the TournamentReward entity.
+// If the TournamentReward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentRewardMutation) OldRuleID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRuleID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRuleID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRuleID: %w", err)
+	}
+	return oldValue.RuleID, nil
+}
+
+// ResetRuleID resets all changes to the "rule_id" field.
+func (m *TournamentRewardMutation) ResetRuleID() {
+	m.rule_id = nil
+}
+
+// SetStudentIds sets the "student_ids" field.
+func (m *TournamentRewardMutation) SetStudentIds(u []uuid.UUID) {
+	m.student_ids = &u
+	m.appendstudent_ids = nil
+}
+
+// StudentIds returns the value of the "student_ids" field in the mutation.
+func (m *TournamentRewardMutation) StudentIds() (r []uuid.UUID, exists bool) {
+	v := m.student_ids
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStudentIds returns the old "student_ids" field's value of the TournamentReward entity.
+// If the TournamentReward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentRewardMutation) OldStudentIds(ctx context.Context) (v []uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStudentIds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStudentIds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStudentIds: %w", err)
+	}
+	return oldValue.StudentIds, nil
+}
+
+// AppendStudentIds adds u to the "student_ids" field.
+func (m *TournamentRewardMutation) AppendStudentIds(u []uuid.UUID) {
+	m.appendstudent_ids = append(m.appendstudent_ids, u...)
+}
+
+// AppendedStudentIds returns the list of values that were appended to the "student_ids" field in this mutation.
+func (m *TournamentRewardMutation) AppendedStudentIds() ([]uuid.UUID, bool) {
+	if len(m.appendstudent_ids) == 0 {
+		return nil, false
+	}
+	return m.appendstudent_ids, true
+}
+
+// ResetStudentIds resets all changes to the "student_ids" field.
+func (m *TournamentRewardMutation) ResetStudentIds() {
+	m.student_ids = nil
+	m.appendstudent_ids = nil
+}
+
+// SetRewardRef sets the "reward_ref" field.
+func (m *TournamentRewardMutation) SetRewardRef(value map[string]interface{}) {
+	m.reward_ref = &value
+}
+
+// RewardRef returns the value of the "reward_ref" field in the mutation.
+func (m *TournamentRewardMutation) RewardRef() (r map[string]interface{}, exists bool) {
+	v := m.reward_ref
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRewardRef returns the old "reward_ref" field's value of the TournamentReward entity.
+// If the TournamentReward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentRewardMutation) OldRewardRef(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRewardRef is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRewardRef requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRewardRef: %w", err)
+	}
+	return oldValue.RewardRef, nil
+}
+
+// ResetRewardRef resets all changes to the "reward_ref" field.
+func (m *TournamentRewardMutation) ResetRewardRef() {
+	m.reward_ref = nil
+}
+
+// SetPoints sets the "points" field.
+func (m *TournamentRewardMutation) SetPoints(i int) {
+	m.points = &i
+	m.addpoints = nil
+}
+
+// Points returns the value of the "points" field in the mutation.
+func (m *TournamentRewardMutation) Points() (r int, exists bool) {
+	v := m.points
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPoints returns the old "points" field's value of the TournamentReward entity.
+// If the TournamentReward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentRewardMutation) OldPoints(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPoints is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPoints requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPoints: %w", err)
+	}
+	return oldValue.Points, nil
+}
+
+// AddPoints adds i to the "points" field.
+func (m *TournamentRewardMutation) AddPoints(i int) {
+	if m.addpoints != nil {
+		*m.addpoints += i
+	} else {
+		m.addpoints = &i
+	}
+}
+
+// AddedPoints returns the value that was added to the "points" field in this mutation.
+func (m *TournamentRewardMutation) AddedPoints() (r int, exists bool) {
+	v := m.addpoints
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPoints resets all changes to the "points" field.
+func (m *TournamentRewardMutation) ResetPoints() {
+	m.points = nil
+	m.addpoints = nil
+}
+
+// SetGrantedAt sets the "granted_at" field.
+func (m *TournamentRewardMutation) SetGrantedAt(t time.Time) {
+	m.granted_at = &t
+}
+
+// GrantedAt returns the value of the "granted_at" field in the mutation.
+func (m *TournamentRewardMutation) GrantedAt() (r time.Time, exists bool) {
+	v := m.granted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGrantedAt returns the old "granted_at" field's value of the TournamentReward entity.
+// If the TournamentReward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TournamentRewardMutation) OldGrantedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGrantedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGrantedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGrantedAt: %w", err)
+	}
+	return oldValue.GrantedAt, nil
+}
+
+// ResetGrantedAt resets all changes to the "granted_at" field.
+func (m *TournamentRewardMutation) ResetGrantedAt() {
+	m.granted_at = nil
+}
+
+// Where appends a list predicates to the TournamentRewardMutation builder.
+func (m *TournamentRewardMutation) Where(ps ...predicate.TournamentReward) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TournamentRewardMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TournamentRewardMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.TournamentReward, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TournamentRewardMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TournamentRewardMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (TournamentReward).
+func (m *TournamentRewardMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TournamentRewardMutation) Fields() []string {
+	fields := make([]string, 0, 10)
+	if m.tenant_id != nil {
+		fields = append(fields, tournamentreward.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, tournamentreward.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, tournamentreward.FieldCreatedBy)
+	}
+	if m.tournament_id != nil {
+		fields = append(fields, tournamentreward.FieldTournamentID)
+	}
+	if m.entry_id != nil {
+		fields = append(fields, tournamentreward.FieldEntryID)
+	}
+	if m.rule_id != nil {
+		fields = append(fields, tournamentreward.FieldRuleID)
+	}
+	if m.student_ids != nil {
+		fields = append(fields, tournamentreward.FieldStudentIds)
+	}
+	if m.reward_ref != nil {
+		fields = append(fields, tournamentreward.FieldRewardRef)
+	}
+	if m.points != nil {
+		fields = append(fields, tournamentreward.FieldPoints)
+	}
+	if m.granted_at != nil {
+		fields = append(fields, tournamentreward.FieldGrantedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TournamentRewardMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case tournamentreward.FieldTenantID:
+		return m.TenantID()
+	case tournamentreward.FieldCreatedAt:
+		return m.CreatedAt()
+	case tournamentreward.FieldCreatedBy:
+		return m.CreatedBy()
+	case tournamentreward.FieldTournamentID:
+		return m.TournamentID()
+	case tournamentreward.FieldEntryID:
+		return m.EntryID()
+	case tournamentreward.FieldRuleID:
+		return m.RuleID()
+	case tournamentreward.FieldStudentIds:
+		return m.StudentIds()
+	case tournamentreward.FieldRewardRef:
+		return m.RewardRef()
+	case tournamentreward.FieldPoints:
+		return m.Points()
+	case tournamentreward.FieldGrantedAt:
+		return m.GrantedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TournamentRewardMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case tournamentreward.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case tournamentreward.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case tournamentreward.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case tournamentreward.FieldTournamentID:
+		return m.OldTournamentID(ctx)
+	case tournamentreward.FieldEntryID:
+		return m.OldEntryID(ctx)
+	case tournamentreward.FieldRuleID:
+		return m.OldRuleID(ctx)
+	case tournamentreward.FieldStudentIds:
+		return m.OldStudentIds(ctx)
+	case tournamentreward.FieldRewardRef:
+		return m.OldRewardRef(ctx)
+	case tournamentreward.FieldPoints:
+		return m.OldPoints(ctx)
+	case tournamentreward.FieldGrantedAt:
+		return m.OldGrantedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown TournamentReward field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TournamentRewardMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case tournamentreward.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case tournamentreward.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case tournamentreward.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case tournamentreward.FieldTournamentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTournamentID(v)
+		return nil
+	case tournamentreward.FieldEntryID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEntryID(v)
+		return nil
+	case tournamentreward.FieldRuleID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRuleID(v)
+		return nil
+	case tournamentreward.FieldStudentIds:
+		v, ok := value.([]uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStudentIds(v)
+		return nil
+	case tournamentreward.FieldRewardRef:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRewardRef(v)
+		return nil
+	case tournamentreward.FieldPoints:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPoints(v)
+		return nil
+	case tournamentreward.FieldGrantedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGrantedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentReward field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TournamentRewardMutation) AddedFields() []string {
+	var fields []string
+	if m.addpoints != nil {
+		fields = append(fields, tournamentreward.FieldPoints)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TournamentRewardMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case tournamentreward.FieldPoints:
+		return m.AddedPoints()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TournamentRewardMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case tournamentreward.FieldPoints:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPoints(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentReward numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TournamentRewardMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(tournamentreward.FieldCreatedBy) {
+		fields = append(fields, tournamentreward.FieldCreatedBy)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TournamentRewardMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TournamentRewardMutation) ClearField(name string) error {
+	switch name {
+	case tournamentreward.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentReward nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TournamentRewardMutation) ResetField(name string) error {
+	switch name {
+	case tournamentreward.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case tournamentreward.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case tournamentreward.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case tournamentreward.FieldTournamentID:
+		m.ResetTournamentID()
+		return nil
+	case tournamentreward.FieldEntryID:
+		m.ResetEntryID()
+		return nil
+	case tournamentreward.FieldRuleID:
+		m.ResetRuleID()
+		return nil
+	case tournamentreward.FieldStudentIds:
+		m.ResetStudentIds()
+		return nil
+	case tournamentreward.FieldRewardRef:
+		m.ResetRewardRef()
+		return nil
+	case tournamentreward.FieldPoints:
+		m.ResetPoints()
+		return nil
+	case tournamentreward.FieldGrantedAt:
+		m.ResetGrantedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown TournamentReward field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TournamentRewardMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TournamentRewardMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TournamentRewardMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TournamentRewardMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TournamentRewardMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TournamentRewardMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TournamentRewardMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown TournamentReward unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TournamentRewardMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown TournamentReward edge %s", name)
 }

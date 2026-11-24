@@ -14,7 +14,7 @@ module game thêm (1) **lõi nội dung game có version** dùng chung cho F071�
 | Primary Dependencies | chi, ent, Atlas, oapi-codegen, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/outbox`, `src/backend/pkg/idempotency`, `src/backend/pkg/httpx`, `src/backend/pkg/tenancy`, nats.go, Valkey client, S3 client (floci) · GdUnit4 |
 | Storage | PostgreSQL `eduworld_game` (bảng ở [data-model.md](data-model.md)); Valkey snapshot + presence (tạm); floci bucket snapshot/bundle |
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey, floci); GdUnit4 headless; benchmark zone headless (TC-PERF-018) |
-| Target Platform | Linux container (`core-api` + `worker`) · Android, iOS, Web (ADR-0101) |
+| Target Platform | Linux container (`core-api` + `worker`) · Windows, Android, iOS, Web |
 | Project Type | backend module + game client |
 | Performance Goals | `area_transition_max`; zone theo [PERFORMANCE_BUDGET §11](../../docs/08-game-client/PERFORMANCE_BUDGET.md); `listWorldAreas`/`getWorldExploration` p95 theo `api_rate_default` tải chuẩn |
 | Constraints | AGENTS R2, R5, R8, R13, R21, R23, R26, R27, R29, R31, R32; ADR-0012, ADR-0016, ADR-0043, ADR-0047, ADR-0054, ADR-0056, ADR-0057 |

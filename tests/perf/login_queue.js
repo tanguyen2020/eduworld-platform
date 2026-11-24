@@ -43,7 +43,7 @@ export const options = {
 
 export default function () {
   const u = users[(__VU * 7919 + __ITER) % users.length];
-  const body = JSON.stringify({ username: u.username, password: u.password, device_id: uuidv4(), client_version: VERSION, platform: 'web' });
+  const body = JSON.stringify({ username: u.username, password: u.password, device_id: uuidv4(), client_version: VERSION, platform: 'windows' });
   const params = { headers: { 'Content-Type': 'application/json' }, tags: { name: 'gameLogin' } };
   const start = Date.now();
   for (let attempt = 0; attempt < 10; attempt++) {

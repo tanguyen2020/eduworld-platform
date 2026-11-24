@@ -104,3 +104,12 @@ type Runner func(ctx context.Context) (int, error)
 
 // RankingJob returns one run of an F106 job.
 func RankingJob(run Runner) func(ctx context.Context) (int, error) { return run }
+
+// TournamentScheduler is the job tournament-scheduler (F107 T028, COMPETITION_SYSTEM §10.3–§10.8): registration windows,
+// check-in, match notices, direct proposals at the match time, no-shows, complaint windows, completion and rewards, and
+// the rooms of the timed-quiz challenges; concurrent replicas serialize on the row lock of each tournament (FOR UPDATE)
+// and derive the same proposal ids; every EW_TOURNAMENT_TICK (15 s).
+const TournamentScheduler = "tournament-scheduler"
+
+// TournamentJob returns one run of the job.
+func TournamentJob(run Runner) func(ctx context.Context) (int, error) { return run }

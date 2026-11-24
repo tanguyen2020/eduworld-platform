@@ -5007,7 +5007,7 @@ components:
         - refresh_expires_in
       description: |
         Token Keycloak của học sinh (client `eduworld-game-backend`, `azp = eduworld-game-backend`). Access token chỉ trong RAM.
-        Refresh token (xoay vòng mỗi lần dùng): thiết bị cá nhân lưu trong kho bảo mật OS (Android Keystore, iOS Keychain; không có bản Windows — ADR-0101);
+        Refresh token (xoay vòng mỗi lần dùng): thiết bị cá nhân lưu trong kho bảo mật OS (Windows DPAPI, Android Keystore, iOS Keychain);
         Web và máy `shared_device` chỉ giữ trong RAM (ADR-0086). Không bao giờ lưu mật khẩu, không ghi vào `user://`/localStorage.
       properties:
         access_token:

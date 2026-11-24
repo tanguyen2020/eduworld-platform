@@ -14,7 +14,7 @@
 | Primary Dependencies | GdUnit4; `ApiClient`, `Clock` (F061); `AssignmentService`, `QualityManager`, HUD (F062); `QuestionRendererRegistry`, `PendingWrites` (F063) |
 | Storage | Không có — đề và câu trả lời chỉ trong RAM |
 | Testing | GdUnit4 unit (đồng hồ giả, `FakeApiClient`), scene runner, integration headless với compose (toxiproxy cho mất mạng) |
-| Target Platform | Android, Web, iOS (ADR-0013; không Windows — ADR-0101) |
+| Target Platform | Windows, Android (và Web/iOS theo ADR-0013) |
 | Project Type | game client |
 | Performance Goals | P-6 [STUDENT_GAME_UX_LEARNING §2.1](../../docs/05-ux/STUDENT_GAME_UX_LEARNING.md); [PERFORMANCE_BUDGET §7 (Activity player), §9](../../docs/08-game-client/PERFORMANCE_BUDGET.md) |
 | Constraints | AGENTS R5, R6, R10, R16, R17 · ADR-0016, ADR-0031, ADR-0043, ADR-0065 |

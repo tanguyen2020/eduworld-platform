@@ -14,7 +14,7 @@ Thêm ba domain phía client theo [GODOT_ARCHITECTURE §4, §6](../../docs/08-ga
 | Primary Dependencies | GdUnit4; autoload `ApiClient`, `RealtimeClient`, `SceneRouter`, `AppState`, `EventBus`, `QualityManager`, `ContentCache`; F063 `QuestionRendererRegistry`, `ActivityHost`; F072 `QuestService`/`QuestTracker`; F102 `PartyService`/`PartyStore`; F092 hub player registry; F069 `LevelUpQueue`; F119 `ChatDock`, `ReportDialog` (tùy chọn) |
 | Storage | Không có dữ liệu bền; store trong RAM (ADR-0064) |
 | Testing | GdUnit4 unit (`FakeApiClient`, `FakeRealtimeClient`, `FakeClock`) + scene runner; integration headless 2 client với docker compose; benchmark `tests/perf/BossArenaBenchmark.tscn` |
-| Target Platform | Android 9+, iOS, Web (ADR-0013, ADR-0101) |
+| Target Platform | Windows 10+, Android 9+, iOS, Web (ADR-0013) |
 | Project Type | game client |
 | Performance Goals | Boss co-op ≥ 30 FPS p10 tầm trung, ngân sách cảnh boss ([PERFORMANCE_BUDGET §7](../../docs/08-game-client/PERFORMANCE_BUDGET.md)), cập nhật ≤ 1 s |
 | Constraints | AGENTS R1, R5, R6, R16, R17, R19, R25, R32 · ADR-0016, ADR-0020, ADR-0031, ADR-0047, ADR-0054, ADR-0056, ADR-0057, ADR-0064, ADR-0065 |

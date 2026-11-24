@@ -310,6 +310,18 @@
     ]
   },
   {
+    "operation_id": "cancelChallenge",
+    "module": "competition",
+    "method": "POST",
+    "path": "/lms/challenges/{challenge_id}:cancel",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "cancelEventRun",
     "module": "game",
     "method": "POST",
@@ -392,6 +404,30 @@
     ]
   },
   {
+    "operation_id": "cancelTournament",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/tournaments/{tournament_id}:cancel",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "checkInTournamentEntry",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/tournaments/{tournament_id}/entries/{entry_id}:check-in",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "checkSisConnectionHealth",
     "module": "identity",
     "method": "POST",
@@ -463,6 +499,30 @@
     ]
   },
   {
+    "operation_id": "confirmBracketNode",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/tournaments/{tournament_id}/nodes/{node_id}:confirm",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "confirmTournamentEntries",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/tournaments/{tournament_id}/entries:confirm",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "createAdminTenantSchool",
     "module": "identity",
     "method": "POST",
@@ -519,7 +579,7 @@
   },
   {
     "operation_id": "createChallenge",
-    "module": "learning",
+    "module": "competition",
     "method": "POST",
     "path": "/lms/challenges",
     "tenant_scoped": true,
@@ -1693,6 +1753,18 @@
     ]
   },
   {
+    "operation_id": "generateTournamentBracket",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/tournaments/{tournament_id}:generate-bracket",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getActivityAttempt",
     "module": "learning",
     "method": "GET",
@@ -1745,6 +1817,18 @@
     "module": "game",
     "method": "GET",
     "path": "/game/boss-encounters/{encounter_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getChallenge",
+    "module": "competition",
+    "method": "GET",
+    "path": "/lms/challenges/{challenge_id}",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -2917,6 +3001,30 @@
     ]
   },
   {
+    "operation_id": "getTournament",
+    "module": "competition",
+    "method": "GET",
+    "path": "/competition/tournaments/{tournament_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getTournamentBracket",
+    "module": "competition",
+    "method": "GET",
+    "path": "/competition/tournaments/{tournament_id}/bracket",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getUserMerge",
     "module": "identity",
     "method": "GET",
@@ -3054,6 +3162,18 @@
     "module": "competition",
     "method": "POST",
     "path": "/multiplayer/parties/{party_id}/invitations",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "joinChallenge",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/challenges/{challenge_id}:join",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -3284,7 +3404,7 @@
   },
   {
     "operation_id": "listChallengeTemplates",
-    "module": "learning",
+    "module": "competition",
     "method": "GET",
     "path": "/lms/catalog/challenge-templates",
     "tenant_scoped": true,
@@ -3295,7 +3415,7 @@
   },
   {
     "operation_id": "listChallenges",
-    "module": "learning",
+    "module": "competition",
     "method": "GET",
     "path": "/lms/challenges",
     "tenant_scoped": true,
@@ -3937,6 +4057,17 @@
     "module": "learning",
     "method": "GET",
     "path": "/learning/my-assignments",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listMyChallenges",
+    "module": "competition",
+    "method": "GET",
+    "path": "/competition/challenges",
     "tenant_scoped": true,
     "required": [
       "cross_tenant",
@@ -4714,6 +4845,18 @@
     ]
   },
   {
+    "operation_id": "overrideBracketNode",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/tournaments/{tournament_id}/nodes/{node_id}:override",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "pauseActivityAttempt",
     "module": "learning",
     "method": "POST",
@@ -4881,6 +5024,18 @@
     "method": "POST",
     "path": "/admin/chat/tenant-terms:publish",
     "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "publishTournament",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/tournaments/{tournament_id}:publish",
+    "tenant_scoped": true,
+    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"
@@ -5060,6 +5215,18 @@
     "path": "/auth/portal/token:refresh",
     "public": true,
     "required": []
+  },
+  {
+    "operation_id": "registerTournamentEntry",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/tournaments/{tournament_id}/entries",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
   },
   {
     "operation_id": "rejectBreakGlassRequest",
@@ -6434,6 +6601,18 @@
     "module": "learning",
     "method": "POST",
     "path": "/admin/learning/efficacy-studies/{study_id}:withdraw",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "withdrawTournamentEntry",
+    "module": "competition",
+    "method": "DELETE",
+    "path": "/competition/tournaments/{tournament_id}/entries/{entry_id}",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [

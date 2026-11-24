@@ -1,6 +1,6 @@
 # Godot Client Architecture
 
-> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Senior Godot Developer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (máy dùng chung, màn "Tiếp tục là…" khi Resume, giờ giới nghiêm ADR-0078, CI GitHub Actions, nền tảng từ pilot theo ADR-0013/ADR-0073) · 2026-11-16 (ADR-0083: tạo game session sau đăng nhập; gỡ dấu vết OIDC game theo ADR-0068; ADR-0086: lưu refresh token bằng SecureStorage, tự vào lại khi phiên còn hạn)
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Senior Godot Developer · Cập nhật: 2026-11-17 (Windows mặc định máy dùng chung, màn "Tiếp tục là…" khi Resume, giờ giới nghiêm ADR-0078, CI GitHub Actions, 4 nền tảng từ pilot theo ADR-0013/ADR-0073) · 2026-11-16 (ADR-0083: tạo game session sau đăng nhập; gỡ dấu vết OIDC game theo ADR-0068; ADR-0086: lưu refresh token bằng SecureStorage, tự vào lại khi phiên còn hạn)
 > Liên quan: [ADR-0007, ADR-0011, ADR-0013, ADR-0014, ADR-0016](../adr/README.md) · [ADR-0068](../adr/ADR-0068-dang-nhap-game-bang-form-trong-game-qua-backend.md) · [ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md) · [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) · [GAME_NETWORKING](GAME_NETWORKING.md) · [WORLD_RENDERING](WORLD_RENDERING.md) · [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) · [MINIGAME_ENGINE](MINIGAME_ENGINE.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md)
 
 **Mục đích & phạm vi.** Điểm vào kiến trúc client Godot: cấu trúc dự án, autoload, vòng đời ứng dụng, tách UI/gameplay/service, renderer hoạt động học tập, nạp nội dung theo manifest, xử lý lỗi, build/export, kiểm thử. Mạng ở GAME_NETWORKING; thế giới 3D ở WORLD_RENDERING; mini-game ở MINIGAME_ENGINE.
@@ -58,7 +58,7 @@ src/game/
 ├── export_presets.cfg              # không chứa keystore password (inject từ CI)
 ├── addons/
 │   ├── gdUnit4/                    # test framework
-│   └── eduworld_platform/          # plugin native: SecureStorage theo nền tảng (Android Keystore, iOS Keychain — ADR-0086, ADR-0101), certificate pinning, thông tin thiết bị; không còn deep link/Custom Tabs cho đăng nhập (ADR-0068)
+│   └── eduworld_platform/          # plugin native: SecureStorage theo nền tảng (Windows DPAPI, Android Keystore, iOS Keychain — ADR-0086), certificate pinning, thông tin thiết bị; không còn deep link/Custom Tabs cho đăng nhập (ADR-0068)
 ├── scenes/
 │   ├── bootstrap/   Boot.tscn, Splash.tscn, VersionCheck.tscn
 │   ├── auth/        Login.tscn, LoginWaiting.tscn, TenantChoice.tscn, AccountNotProvisioned.tscn
@@ -99,7 +99,7 @@ src/game/
 │   ├── authentication/  auth_service.gd, game_session_service.gd (game session, takeover, heartbeat — ADR-0083), login_form.gd,
 │   │                    token_store.gd, session_store.gd (SecureStorage `eduworld.game.session`), password_buffer.gd
 │   ├── services/        curfew_watcher.gd (cảnh báo giờ giới nghiêm từ bootstrap, ADR-0078)
-│   ├── platform/        secure_storage.gd (interface), secure_storage_factory.gd, adapters/{file_cipher,android_keystore,ios_keychain,memory_only}_secure_storage.gd (ADR-0086; không có adapter DPAPI — ADR-0101)
+│   ├── platform/        secure_storage.gd (interface), secure_storage_factory.gd, adapters/{file_cipher,dpapi,android_keystore,ios_keychain,memory_only}_secure_storage.gd (ADR-0086)
 │   ├── player/          player_controller.gd, camera_rig.gd, avatar_builder.gd, anim_driver.gd
 │   ├── world/           zone_loader.gd, spawn_point.gd, interactable.gd, area_portal.gd, remote_player_sync.gd
 │   ├── learning/        learning_service.gd, question_renderer_registry.gd, activity_renderer_registry.gd,
@@ -160,7 +160,7 @@ Service theo domain (`QuestService`, `LearningService`, `PartyService`, `ChatSer
 
 ## 5. Vòng đời ứng dụng
 
-Học sinh đăng nhập **username + password**, **không chọn trường** (ADR-0063). Trên thiết bị cá nhân, refresh token được lưu trong kho bảo mật của hệ điều hành; **mở lại game khi phiên còn hạn thì hiện màn "Tiếp tục là <nickname>?" rồi vào game, không hiện form** (trạng thái `Resume` → `ResumeConfirm`, [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md), thay ADR-0064 mục 1, 2, 4, 5); Web (gồm PC phòng máy — không có bản Windows, [ADR-0101](../adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md)) và máy dùng chung (`shared_device`) vẫn phải đăng nhập mỗi lần mở [Confirmed — Technical Architect 2026-11-17]. Backend xác định tenant sau khi xác thực; bước chọn tenant chỉ xuất hiện **sau** đăng nhập khi người dùng thuộc nhiều tenant. Đăng nhập (module identity) và tạo game session (module game) là **hai lời gọi riêng** ([ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md)): `/auth/game/login` không tạo game session, không trả `game_session_id`; client gọi `POST /game/sessions` ngay sau khi có token.
+Học sinh đăng nhập **username + password**, **không chọn trường** (ADR-0063). Trên thiết bị cá nhân, refresh token được lưu trong kho bảo mật của hệ điều hành; **mở lại game khi phiên còn hạn thì hiện màn "Tiếp tục là <nickname>?" rồi vào game, không hiện form** (trạng thái `Resume` → `ResumeConfirm`, [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md), thay ADR-0064 mục 1, 2, 4, 5); Web và máy dùng chung (`shared_device`; **Windows mặc định là máy dùng chung**) vẫn phải đăng nhập mỗi lần mở [Confirmed — Technical Architect 2026-11-17]. Backend xác định tenant sau khi xác thực; bước chọn tenant chỉ xuất hiện **sau** đăng nhập khi người dùng thuộc nhiều tenant. Đăng nhập (module identity) và tạo game session (module game) là **hai lời gọi riêng** ([ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md)): `/auth/game/login` không tạo game session, không trả `game_session_id`; client gọi `POST /game/sessions` ngay sau khi có token.
 
 ```mermaid
 stateDiagram-v2
@@ -226,7 +226,7 @@ Trong cùng lời gọi đăng nhập, module identity xác định tenant theo 
 
 Quy tắc token và phiên (ADR-0064 mục 3, 6, 7 còn hiệu lực; ADR-0086):
 
-- **Máy dùng chung** (`shared_device_default`, [Confirmed — Technical Architect 2026-11-17], ADR-0078, ADR-0086, [ADR-0101](../adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md)): Android/iOS mặc định `false` (thiết bị cá nhân); `device.cfg` (đọc bởi `Config`) nếu có `shared_device: true` thì ghi đè, MDM của trường có thể đặt `true`. Web luôn `MemoryOnly` (PC phòng máy chơi bản Web nên mỗi lần mở phải đăng nhập). Hệ điều hành không phát hành (Windows, macOS, Linux khi chạy từ editor/bản debug) mặc định `true`. Không có bộ cài Windows (ADR-0101).
+- **Máy dùng chung mặc định trên Windows** (`shared_device_default`, [Confirmed — Technical Architect 2026-11-17], ADR-0078, ADR-0086): bộ cài Windows (installer ký số) có lựa chọn "Máy dùng chung (phòng máy, máy gia đình nhiều người)" — **mặc định** — và "Máy cá nhân"; bộ cài ghi `shared_device: true|false` vào `device.cfg` (thư mục cài đặt, quyền ghi chỉ cho admin, đọc bởi `Config`). Thiếu `device.cfg` trên Windows → coi là `true`. Android/iOS mặc định `false` (thiết bị cá nhân); MDM của trường có thể đặt `true`. Web luôn `MemoryOnly`.
 - Khởi động game: có refresh token trong `SecureStorage` → `Resume` (§5.2) → `ResumeConfirm`; không có (lần đầu, đã đăng xuất, phiên hết, Web, `shared_device`) → `Login` với ô mật khẩu trống.
 - Access token **chỉ trong RAM** của `AuthService`. Refresh token: RAM + `SecureStorage` trên thiết bị cá nhân; chỉ RAM trên Web và `shared_device`. Không ghi token vào `user://` dạng rõ, file cấu hình, localStorage, log, telemetry hay crash report. Trong lúc game mở, refresh token gia hạn access token (5 phút) và reconnect, không hỏi mật khẩu.
 - Mật khẩu chỉ nằm trong `LineEdit` và body request; xóa ô và biến ngay sau khi nhận phản hồi; không bao giờ lưu mật khẩu; không log, không telemetry, không crash report chứa body đăng nhập (ADR-0068). Certificate pinning cho tên miền API [Confirmed].
@@ -240,9 +240,10 @@ Quy tắc token và phiên (ADR-0064 mục 3, 6, 7 còn hiệu lực; ADR-0086):
 
 | Nền tảng | Adapter | Cơ chế |
 |---|---|---|
+| Windows | `DpapiSecureStorage` | `CryptProtectData` scope CurrentUser (không `LOCAL_MACHINE`), ciphertext ghi `user://secure/session.bin`; user Windows khác không giải mã được; không cần quyền admin |
 | Android | `AndroidKeystoreSecureStorage` | Khóa AES-GCM 256 sinh trong Android Keystore (không xuất được), ciphertext trong bộ nhớ riêng của app; file loại khỏi Auto Backup (`dataExtractionRules`/`allowBackup=false`, F133) |
 | iOS | `IosKeychainSecureStorage` | Keychain `kSecClassGenericPassword`, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, không đồng bộ iCloud |
-| Web, `shared_device: true`, hệ điều hành không phát hành (Windows/macOS/Linux khi chạy từ editor/bản debug — ADR-0101), kho lỗi/không khả dụng | `MemoryOnlySecureStorage` | Chỉ RAM; mở lại game phải đăng nhập |
+| Web, `shared_device: true` (mặc định trên Windows nếu bộ cài không chọn "máy cá nhân"), nền tảng khác (macOS/Linux — không phát hành trong Release 1.0), kho lỗi/không khả dụng | `MemoryOnlySecureStorage` | Chỉ RAM; mở lại game phải đăng nhập |
 
 - Bản ghi khóa `eduworld.game.session` (JSON mã hóa bởi kho): `refresh_token`, `tenant_id`, `saved_at`. **Không** lưu access token, mật khẩu, bootstrap. `device_id` vẫn ở `user://device_id` (không phải credential).
 - Ghi sau mỗi lần nhận token mới (login, tenant:select, refresh `resume`/`renew`) — ghi đè nguyên tử (ghi file tạm rồi đổi tên với adapter dùng file). Ghi thất bại → log `secure_storage_write_failed` (không kèm token), tiếp tục với RAM; lần mở sau phải đăng nhập.
@@ -272,7 +273,7 @@ Quy tắc review code:
 | `ChatService` (autoload service) | Gửi lệnh WS (`chat.message.send/edit/recall/forward`, `chat.reaction.toggle`, `chat.pin.add/remove`, `chat.typing.start/stop`, `chat.receipt.delivered/read`, `chat.channel.sync`), REST fallback, xử lý `system.command.failed` theo mã lỗi | Không chứa logic kiểm duyệt; mọi quyết định ở server |
 | `ChatStore` (`RefCounted`, test được) | Danh sách tin theo `channel_id` sắp theo `seq`; trạng thái tin của mình: *pending* (đồng hồ) → *sent* (`chat.message.acked`) → *delivered/read* (`chat.receipt.updated`); **phát hiện seq gap** (seq nhận > last_seq + 1) → gọi `chat.channel.sync`, nếu > 200 tin → REST lịch sử; unread + mention count | Gap do tin bị lỗi gửi được đánh dấu "đã kiểm tra" sau một lần sync để không lặp vô hạn |
 | `MessageList` / `MessageBubble` | Render text, emoji, sticker, GIF (AnimatedTexture từ cache), quick message, khung reply/quote (bản đã che), nhãn "Đã chuyển tiếp", "đã chỉnh sửa", placeholder thu hồi, reaction | Virtualized list (chỉ instance bubble trong viewport) để giữ FPS |
-| `MessageActionMenu` | Long-press (mobile) / chuột phải hoặc nút ⋯ (Web/PC): Trả lời, Trích dẫn, Chuyển tiếp, Sao chép, Ghim, Sửa, Thu hồi, Thả cảm xúc, Báo cáo — hiển thị theo `Channel.features` và quyền | Sao chép dùng `DisplayServer.clipboard_set(text_hien_thi)` (bản đã che) |
+| `MessageActionMenu` | Long-press (mobile) / chuột phải hoặc nút ⋯ (desktop): Trả lời, Trích dẫn, Chuyển tiếp, Sao chép, Ghim, Sửa, Thu hồi, Thả cảm xúc, Báo cáo — hiển thị theo `Channel.features` và quyền | Sao chép dùng `DisplayServer.clipboard_set(text_hien_thi)` (bản đã che) |
 | `Composer` | Ô nhập + nút emoji/sticker/GIF + quick message; gửi `chat.typing.start` khi gõ (throttle 3 s), `stop` khi gửi/xóa; giữ `client_message_id` để gửi lại khi mất mạng | Giới hạn độ dài theo policy |
 | `EmojiStickerGifPicker` | 3 tab; sticker theo pack (`GET /chat/stickers`, pack khóa có ổ khóa); GIF theo tag (`GET /chat/gifs?tag=`) | Asset tải từ CDN EduWorld, cache theo version |
 | `MentionAutocomplete` | Gõ `@` → gợi ý nickname thành viên channel; trả `mentions[]` (user_id) | Không hiển thị username đăng nhập |
@@ -361,7 +362,7 @@ Client tải **content manifest** của tenant `GET /api/v1/game/content-manifes
   ],
   "bundles": [
     { "bundle_id": "zone.learning_zone_math", "version": 7, "url": "https://cdn.../bundles/zone.learning_zone_math/7/<sha256>.pck",
-      "sha256": "…", "size_bytes": 18452211, "platforms": ["android","ios","web"], "requires_client": ">=0.4.0" }
+      "sha256": "…", "size_bytes": 18452211, "platforms": ["windows","android","ios","web"], "requires_client": ">=0.4.0" }
   ],
   "areas": [ { "area_id": "learning_zone.math", "scene_ref": "res://zones/learning_zone_math/Zone.tscn", "bundle_id": "zone.learning_zone_math" } ]
 }
@@ -477,10 +478,9 @@ Theo [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md). Quy tắc ngôn ng�
 
 ## 11. Build & export pipeline
 
-Release 1.0 chỉ export **Web, Android, iOS** ([ADR-0101](../adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md), [Confirmed — owner 2026-11-24]): không có export preset, bộ cài, ký Authenticode, auto-update hay adapter DPAPI cho Windows; PC phòng máy chơi bản Web.
-
 | Nền tảng | Trạng thái | Template | Ghi chú |
 |---|---|---|---|
+| Windows 10+ x86_64 | Pilot trở đi, phát triển từ Phase 1 (ADR-0013 [Confirmed — Technical Architect 2026-11-17]) | Mobile renderer mặc định, tự chuyển Compatibility; Forward+ chỉ preset Cao ([PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §4) | Ký code (Authenticode) trước pilot; installer có bước chọn **Máy dùng chung (mặc định) / Máy cá nhân** ghi `device.cfg` + auto-update qua manifest; adapter DPAPI (CurrentUser) đóng gói trong plugin, không cần quyền admin (ADR-0086) |
 | Android 9+ arm64-v8a | Pilot trở đi, phát triển từ Phase 1 (ADR-0013) | Mobile renderer (Vulkan), dự phòng Compatibility; ETC2/ASTC | Keystore ký app inject từ CI secret; plugin `AndroidKeystoreSecureStorage` (ADR-0086, không cần permission runtime); file phiên loại khỏi Auto Backup (`dataExtractionRules`/`allowBackup=false`); không có intent filter/deep link đăng nhập (đăng nhập bằng form trong game, ADR-0068); AAB cho store, APK cho MDM trường |
 | Web | Pilot trở đi (ADR-0013, ADR-0079 Rejected); build CI từ Phase 2, phát hành cùng pilot | Compatibility renderer, single-threaded export, preset tối đa Trung bình | Kích thước tải đầu và bộ nhớ theo [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §11, §14; zone tải lười; đăng nhập bằng form trong game qua `fetch` (không redirect OIDC, ADR-0068); refresh token chỉ trong RAM (`MemoryOnly`, ADR-0086) — tải lại tab phải đăng nhập lại; hosting qua CDN |
 | iOS 15+ arm64 | Pilot trở đi (ADR-0013, ADR-0079 Rejected); pipeline ký + TestFlight trước pilot | Mobile renderer, ASTC | Đăng nhập bằng form trong game (ADR-0068, không `ASWebAuthenticationSession`); refresh token trong Keychain `AfterFirstUnlockThisDeviceOnly`, không iCloud Keychain sharing, không cần entitlement thêm (ADR-0086); ký + TestFlight từ CI (runner macOS); phát hành App Store |
@@ -492,7 +492,7 @@ flowchart LR
   T[make design-tokens-check\nTheme/UiTokens/art generated khớp nguồn] --> A
   A["lint: gdlint + typed check + lint_theme_overrides"] --> B[GdUnit4 headless]
   B --> C[import assets --headless]
-  C --> D["export Android · Web · iOS"]
+  C --> D[export Windows / Android]
   D --> E[build PCK zone bundles + manifest + sha256]
   E --> F[upload artifact / CDN staging]
   F --> G["smoke test: boot → login mock → hub"]
@@ -501,7 +501,7 @@ flowchart LR
 - Chạy Godot headless trong container có phiên bản Godot + export templates khóa cứng.
 - `client_version` = SemVer, nhúng vào `Config` lúc build; build number = `github.run_number`.
 - `export_presets.cfg` không chứa mật khẩu; CI ghi đè qua biến môi trường.
-- Mỗi target export kiểm tra có adapter `SecureStorage` đúng nền tảng (Android/iOS native; Web `MemoryOnly`) — thiếu thì build fail (F133, ADR-0086).
+- Mỗi target export kiểm tra có adapter `SecureStorage` đúng nền tảng (Windows/Android/iOS native; Web `MemoryOnly`) — thiếu thì build fail (F133, ADR-0086).
 
 ## 12. Testing
 
@@ -715,7 +715,7 @@ Ghi chú: game không xác thực chữ ký token; **xác thực có thẩm quy�
 
 ## 14. Quyết định chi tiết đã chốt (owner 2026-11-20)
 
-- Certificate pinning trong Godot (Android/iOS — không có bản desktop, ADR-0101) cho tên miền API và realtime [Confirmed, ADR-0068]: dùng `TLSOptions.client(trusted_chain)` với `trusted_chain` chỉ gồm CA phát hành chứng chỉ của tên miền API (CA chính + một CA dự phòng), đóng gói trong build; xoay chứng chỉ lá không cần cập nhật client; đổi CA phải phát hành build mới chứa CA mới trước khi đổi và nâng `min_client_version`. Web không pin (HSTS, `certificate_pinning`) [Confirmed — owner 2026-11-20].
+- Certificate pinning trong Godot (desktop/mobile) cho tên miền API và realtime [Confirmed, ADR-0068]: dùng `TLSOptions.client(trusted_chain)` với `trusted_chain` chỉ gồm CA phát hành chứng chỉ của tên miền API (CA chính + một CA dự phòng), đóng gói trong build; xoay chứng chỉ lá không cần cập nhật client; đổi CA phải phát hành build mới chứa CA mới trước khi đổi và nâng `min_client_version`. Web không pin (HSTS, `certificate_pinning`) [Confirmed — owner 2026-11-20].
 - Danh sách GPU/SoC cần ép Compatibility hoặc preset Thấp nằm trong `client-config.device_profiles` (dữ liệu cấu hình, không build lại client); khảo sát thiết bị trường pilot (OQ-04) và benchmark Phase 1 chỉ cập nhật danh sách [Confirmed — owner 2026-11-20].
 - Device Authorization Grant cho máy dùng chung: ngoài Release 1.0 (ADR-0063).
-- `SecureStorage` cho Windows/macOS/Linux: không làm (Release 1.0 không phát hành các nền tảng này, F133, ADR-0101); Web chỉ giữ refresh token trong RAM (ADR-0086 mục 1) [Confirmed].
+- `SecureStorage` cho macOS/Linux: không làm (Release 1.0 không phát hành hai nền tảng này, F133); Web chỉ giữ refresh token trong RAM (ADR-0086 mục 1) [Confirmed].

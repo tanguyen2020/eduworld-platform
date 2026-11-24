@@ -14,7 +14,7 @@ Hiện thực autoload `RealtimeClient` (#7, [GODOT_ARCHITECTURE §4](../../docs
 | Primary Dependencies | GdUnit4; autoload F060 (`Config`, `Log`, `EventBus`, `AppState`, `SceneRouter`, `Settings`), F061 (`ApiClient`, `AuthService`, `Clock`, `GameSessionService`), F062 (`main_hub`, `PlayerController`, `QualityManager`), F070 (`AvatarBuilder`) |
 | Storage | Không lưu dữ liệu nghiệp vụ; `resume_token` chỉ trong RAM |
 | Testing | GdUnit4 unit (`FakeWebSocketPeer`, `FakeApiClient`), scene test, integration headless 2 client + backend compose, toxiproxy; lab thiết bị |
-| Target Platform | Android, iOS, Web (ADR-0013, ADR-0101) |
+| Target Platform | Windows, Android, iOS, Web (ADR-0013) |
 | Project Type | game client |
 | Performance Goals | AC-PERF-001/002/003/006/009 ([PERFORMANCE_BUDGET §16](../../docs/08-game-client/PERFORMANCE_BUDGET.md)); `ui_cpu_budget` |
 | Constraints | AGENTS R1, R14, R16, R17, R32 · ADR-0008, ADR-0011, ADR-0031, ADR-0047, ADR-0057, ADR-0064 |

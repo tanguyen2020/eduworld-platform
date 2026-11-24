@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/bracketnode"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/challenge"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionpointentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionrestriction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/contentrelease"
@@ -30,12 +32,146 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/season"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/seasonresult"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/sessionmembership"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tenantresourceassignment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournament"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamententry"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamentgroup"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamentresult"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/tournamentreward"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	bracketnodeMixin := schema.BracketNode{}.Mixin()
+	bracketnodeMixinHooks0 := bracketnodeMixin[0].Hooks()
+	bracketnode.Hooks[0] = bracketnodeMixinHooks0[0]
+	bracketnodeMixinInters0 := bracketnodeMixin[0].Interceptors()
+	bracketnode.Interceptors[0] = bracketnodeMixinInters0[0]
+	bracketnodeMixinFields0 := bracketnodeMixin[0].Fields()
+	_ = bracketnodeMixinFields0
+	bracketnodeFields := schema.BracketNode{}.Fields()
+	_ = bracketnodeFields
+	// bracketnodeDescCreatedAt is the schema descriptor for created_at field.
+	bracketnodeDescCreatedAt := bracketnodeMixinFields0[2].Descriptor()
+	// bracketnode.DefaultCreatedAt holds the default value on creation for the created_at field.
+	bracketnode.DefaultCreatedAt = bracketnodeDescCreatedAt.Default.(func() time.Time)
+	// bracketnodeDescUpdatedAt is the schema descriptor for updated_at field.
+	bracketnodeDescUpdatedAt := bracketnodeMixinFields0[4].Descriptor()
+	// bracketnode.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	bracketnode.DefaultUpdatedAt = bracketnodeDescUpdatedAt.Default.(func() time.Time)
+	// bracketnode.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	bracketnode.UpdateDefaultUpdatedAt = bracketnodeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// bracketnodeDescDeleteReason is the schema descriptor for delete_reason field.
+	bracketnodeDescDeleteReason := bracketnodeMixinFields0[8].Descriptor()
+	// bracketnode.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	bracketnode.DeleteReasonValidator = bracketnodeDescDeleteReason.Validators[0].(func(string) error)
+	// bracketnodeDescVersion is the schema descriptor for version field.
+	bracketnodeDescVersion := bracketnodeMixinFields0[9].Descriptor()
+	// bracketnode.DefaultVersion holds the default value on creation for the version field.
+	bracketnode.DefaultVersion = bracketnodeDescVersion.Default.(int64)
+	// bracketnodeDescBracket is the schema descriptor for bracket field.
+	bracketnodeDescBracket := bracketnodeFields[1].Descriptor()
+	// bracketnode.BracketValidator is a validator for the "bracket" field. It is called by the builders before save.
+	bracketnode.BracketValidator = bracketnodeDescBracket.Validators[0].(func(string) error)
+	// bracketnodeDescIsDraw is the schema descriptor for is_draw field.
+	bracketnodeDescIsDraw := bracketnodeFields[8].Descriptor()
+	// bracketnode.DefaultIsDraw holds the default value on creation for the is_draw field.
+	bracketnode.DefaultIsDraw = bracketnodeDescIsDraw.Default.(bool)
+	// bracketnodeDescWave is the schema descriptor for wave field.
+	bracketnodeDescWave := bracketnodeFields[17].Descriptor()
+	// bracketnode.DefaultWave holds the default value on creation for the wave field.
+	bracketnode.DefaultWave = bracketnodeDescWave.Default.(int16)
+	// bracketnodeDescAttempts is the schema descriptor for attempts field.
+	bracketnodeDescAttempts := bracketnodeFields[18].Descriptor()
+	// bracketnode.DefaultAttempts holds the default value on creation for the attempts field.
+	bracketnode.DefaultAttempts = bracketnodeDescAttempts.Default.(int16)
+	// bracketnodeDescRescheduleCount is the schema descriptor for reschedule_count field.
+	bracketnodeDescRescheduleCount := bracketnodeFields[19].Descriptor()
+	// bracketnode.DefaultRescheduleCount holds the default value on creation for the reschedule_count field.
+	bracketnode.DefaultRescheduleCount = bracketnodeDescRescheduleCount.Default.(int16)
+	// bracketnodeDescNotices is the schema descriptor for notices field.
+	bracketnodeDescNotices := bracketnodeFields[20].Descriptor()
+	// bracketnode.DefaultNotices holds the default value on creation for the notices field.
+	bracketnode.DefaultNotices = bracketnodeDescNotices.Default.(int16)
+	// bracketnodeDescStatus is the schema descriptor for status field.
+	bracketnodeDescStatus := bracketnodeFields[21].Descriptor()
+	// bracketnode.DefaultStatus holds the default value on creation for the status field.
+	bracketnode.DefaultStatus = bracketnodeDescStatus.Default.(string)
+	// bracketnode.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	bracketnode.StatusValidator = bracketnodeDescStatus.Validators[0].(func(string) error)
+	// bracketnodeDescDecisionRequired is the schema descriptor for decision_required field.
+	bracketnodeDescDecisionRequired := bracketnodeFields[23].Descriptor()
+	// bracketnode.DefaultDecisionRequired holds the default value on creation for the decision_required field.
+	bracketnode.DefaultDecisionRequired = bracketnodeDescDecisionRequired.Default.(bool)
+	// bracketnodeDescOverrideReason is the schema descriptor for override_reason field.
+	bracketnodeDescOverrideReason := bracketnodeFields[24].Descriptor()
+	// bracketnode.OverrideReasonValidator is a validator for the "override_reason" field. It is called by the builders before save.
+	bracketnode.OverrideReasonValidator = bracketnodeDescOverrideReason.Validators[0].(func(string) error)
+	// bracketnodeDescID is the schema descriptor for id field.
+	bracketnodeDescID := bracketnodeMixinFields0[0].Descriptor()
+	// bracketnode.DefaultID holds the default value on creation for the id field.
+	bracketnode.DefaultID = bracketnodeDescID.Default.(func() uuid.UUID)
+	challengeMixin := schema.Challenge{}.Mixin()
+	challengeMixinHooks0 := challengeMixin[0].Hooks()
+	challenge.Hooks[0] = challengeMixinHooks0[0]
+	challengeMixinInters0 := challengeMixin[0].Interceptors()
+	challenge.Interceptors[0] = challengeMixinInters0[0]
+	challengeMixinFields0 := challengeMixin[0].Fields()
+	_ = challengeMixinFields0
+	challengeFields := schema.Challenge{}.Fields()
+	_ = challengeFields
+	// challengeDescCreatedAt is the schema descriptor for created_at field.
+	challengeDescCreatedAt := challengeMixinFields0[2].Descriptor()
+	// challenge.DefaultCreatedAt holds the default value on creation for the created_at field.
+	challenge.DefaultCreatedAt = challengeDescCreatedAt.Default.(func() time.Time)
+	// challengeDescUpdatedAt is the schema descriptor for updated_at field.
+	challengeDescUpdatedAt := challengeMixinFields0[4].Descriptor()
+	// challenge.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	challenge.DefaultUpdatedAt = challengeDescUpdatedAt.Default.(func() time.Time)
+	// challenge.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	challenge.UpdateDefaultUpdatedAt = challengeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// challengeDescDeleteReason is the schema descriptor for delete_reason field.
+	challengeDescDeleteReason := challengeMixinFields0[8].Descriptor()
+	// challenge.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	challenge.DeleteReasonValidator = challengeDescDeleteReason.Validators[0].(func(string) error)
+	// challengeDescVersion is the schema descriptor for version field.
+	challengeDescVersion := challengeMixinFields0[9].Descriptor()
+	// challenge.DefaultVersion holds the default value on creation for the version field.
+	challenge.DefaultVersion = challengeDescVersion.Default.(int64)
+	// challengeDescKind is the schema descriptor for kind field.
+	challengeDescKind := challengeFields[3].Descriptor()
+	// challenge.KindValidator is a validator for the "kind" field. It is called by the builders before save.
+	challenge.KindValidator = challengeDescKind.Validators[0].(func(string) error)
+	// challengeDescFormat is the schema descriptor for format field.
+	challengeDescFormat := challengeFields[4].Descriptor()
+	// challenge.FormatValidator is a validator for the "format" field. It is called by the builders before save.
+	challenge.FormatValidator = challengeDescFormat.Validators[0].(func(string) error)
+	// challengeDescName is the schema descriptor for name field.
+	challengeDescName := challengeFields[5].Descriptor()
+	// challenge.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	challenge.NameValidator = challengeDescName.Validators[0].(func(string) error)
+	// challengeDescParticipation is the schema descriptor for participation field.
+	challengeDescParticipation := challengeFields[9].Descriptor()
+	// challenge.DefaultParticipation holds the default value on creation for the participation field.
+	challenge.DefaultParticipation = challengeDescParticipation.Default.(string)
+	// challenge.ParticipationValidator is a validator for the "participation" field. It is called by the builders before save.
+	challenge.ParticipationValidator = challengeDescParticipation.Validators[0].(func(string) error)
+	// challengeDescStatus is the schema descriptor for status field.
+	challengeDescStatus := challengeFields[16].Descriptor()
+	// challenge.DefaultStatus holds the default value on creation for the status field.
+	challenge.DefaultStatus = challengeDescStatus.Default.(string)
+	// challenge.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	challenge.StatusValidator = challengeDescStatus.Validators[0].(func(string) error)
+	// challengeDescCancelReason is the schema descriptor for cancel_reason field.
+	challengeDescCancelReason := challengeFields[19].Descriptor()
+	// challenge.CancelReasonValidator is a validator for the "cancel_reason" field. It is called by the builders before save.
+	challenge.CancelReasonValidator = challengeDescCancelReason.Validators[0].(func(string) error)
+	// challengeDescID is the schema descriptor for id field.
+	challengeDescID := challengeMixinFields0[0].Descriptor()
+	// challenge.DefaultID holds the default value on creation for the id field.
+	challenge.DefaultID = challengeDescID.Default.(func() uuid.UUID)
 	competitionpointentryMixin := schema.CompetitionPointEntry{}.Mixin()
 	competitionpointentryMixinHooks0 := competitionpointentryMixin[0].Hooks()
 	competitionpointentry.Hooks[0] = competitionpointentryMixinHooks0[0]
@@ -1011,6 +1147,242 @@ func init() {
 	sessionmembershipDescID := sessionmembershipMixinFields0[0].Descriptor()
 	// sessionmembership.DefaultID holds the default value on creation for the id field.
 	sessionmembership.DefaultID = sessionmembershipDescID.Default.(func() uuid.UUID)
+	tenantresourceassignmentMixin := schema.TenantResourceAssignment{}.Mixin()
+	tenantresourceassignmentMixinHooks0 := tenantresourceassignmentMixin[0].Hooks()
+	tenantresourceassignment.Hooks[0] = tenantresourceassignmentMixinHooks0[0]
+	tenantresourceassignmentMixinInters0 := tenantresourceassignmentMixin[0].Interceptors()
+	tenantresourceassignment.Interceptors[0] = tenantresourceassignmentMixinInters0[0]
+	tenantresourceassignmentMixinFields0 := tenantresourceassignmentMixin[0].Fields()
+	_ = tenantresourceassignmentMixinFields0
+	tenantresourceassignmentFields := schema.TenantResourceAssignment{}.Fields()
+	_ = tenantresourceassignmentFields
+	// tenantresourceassignmentDescCreatedAt is the schema descriptor for created_at field.
+	tenantresourceassignmentDescCreatedAt := tenantresourceassignmentMixinFields0[2].Descriptor()
+	// tenantresourceassignment.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tenantresourceassignment.DefaultCreatedAt = tenantresourceassignmentDescCreatedAt.Default.(func() time.Time)
+	// tenantresourceassignmentDescUpdatedAt is the schema descriptor for updated_at field.
+	tenantresourceassignmentDescUpdatedAt := tenantresourceassignmentMixinFields0[4].Descriptor()
+	// tenantresourceassignment.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	tenantresourceassignment.DefaultUpdatedAt = tenantresourceassignmentDescUpdatedAt.Default.(func() time.Time)
+	// tenantresourceassignment.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	tenantresourceassignment.UpdateDefaultUpdatedAt = tenantresourceassignmentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// tenantresourceassignmentDescDeleteReason is the schema descriptor for delete_reason field.
+	tenantresourceassignmentDescDeleteReason := tenantresourceassignmentMixinFields0[8].Descriptor()
+	// tenantresourceassignment.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	tenantresourceassignment.DeleteReasonValidator = tenantresourceassignmentDescDeleteReason.Validators[0].(func(string) error)
+	// tenantresourceassignmentDescVersion is the schema descriptor for version field.
+	tenantresourceassignmentDescVersion := tenantresourceassignmentMixinFields0[9].Descriptor()
+	// tenantresourceassignment.DefaultVersion holds the default value on creation for the version field.
+	tenantresourceassignment.DefaultVersion = tenantresourceassignmentDescVersion.Default.(int64)
+	// tenantresourceassignmentDescResourceType is the schema descriptor for resource_type field.
+	tenantresourceassignmentDescResourceType := tenantresourceassignmentFields[0].Descriptor()
+	// tenantresourceassignment.ResourceTypeValidator is a validator for the "resource_type" field. It is called by the builders before save.
+	tenantresourceassignment.ResourceTypeValidator = tenantresourceassignmentDescResourceType.Validators[0].(func(string) error)
+	// tenantresourceassignmentDescAssignedAt is the schema descriptor for assigned_at field.
+	tenantresourceassignmentDescAssignedAt := tenantresourceassignmentFields[3].Descriptor()
+	// tenantresourceassignment.DefaultAssignedAt holds the default value on creation for the assigned_at field.
+	tenantresourceassignment.DefaultAssignedAt = tenantresourceassignmentDescAssignedAt.Default.(func() time.Time)
+	// tenantresourceassignmentDescID is the schema descriptor for id field.
+	tenantresourceassignmentDescID := tenantresourceassignmentMixinFields0[0].Descriptor()
+	// tenantresourceassignment.DefaultID holds the default value on creation for the id field.
+	tenantresourceassignment.DefaultID = tenantresourceassignmentDescID.Default.(func() uuid.UUID)
+	tournamentMixin := schema.Tournament{}.Mixin()
+	tournamentMixinHooks0 := tournamentMixin[0].Hooks()
+	tournament.Hooks[0] = tournamentMixinHooks0[0]
+	tournamentMixinInters0 := tournamentMixin[0].Interceptors()
+	tournament.Interceptors[0] = tournamentMixinInters0[0]
+	tournamentMixinFields0 := tournamentMixin[0].Fields()
+	_ = tournamentMixinFields0
+	tournamentFields := schema.Tournament{}.Fields()
+	_ = tournamentFields
+	// tournamentDescCreatedAt is the schema descriptor for created_at field.
+	tournamentDescCreatedAt := tournamentMixinFields0[2].Descriptor()
+	// tournament.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tournament.DefaultCreatedAt = tournamentDescCreatedAt.Default.(func() time.Time)
+	// tournamentDescUpdatedAt is the schema descriptor for updated_at field.
+	tournamentDescUpdatedAt := tournamentMixinFields0[4].Descriptor()
+	// tournament.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	tournament.DefaultUpdatedAt = tournamentDescUpdatedAt.Default.(func() time.Time)
+	// tournament.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	tournament.UpdateDefaultUpdatedAt = tournamentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// tournamentDescDeleteReason is the schema descriptor for delete_reason field.
+	tournamentDescDeleteReason := tournamentMixinFields0[8].Descriptor()
+	// tournament.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	tournament.DeleteReasonValidator = tournamentDescDeleteReason.Validators[0].(func(string) error)
+	// tournamentDescVersion is the schema descriptor for version field.
+	tournamentDescVersion := tournamentMixinFields0[9].Descriptor()
+	// tournament.DefaultVersion holds the default value on creation for the version field.
+	tournament.DefaultVersion = tournamentDescVersion.Default.(int64)
+	// tournamentDescOwnerScope is the schema descriptor for owner_scope field.
+	tournamentDescOwnerScope := tournamentFields[1].Descriptor()
+	// tournament.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	tournament.OwnerScopeValidator = tournamentDescOwnerScope.Validators[0].(func(string) error)
+	// tournamentDescName is the schema descriptor for name field.
+	tournamentDescName := tournamentFields[6].Descriptor()
+	// tournament.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	tournament.NameValidator = tournamentDescName.Validators[0].(func(string) error)
+	// tournamentDescFormat is the schema descriptor for format field.
+	tournamentDescFormat := tournamentFields[7].Descriptor()
+	// tournament.FormatValidator is a validator for the "format" field. It is called by the builders before save.
+	tournament.FormatValidator = tournamentDescFormat.Validators[0].(func(string) error)
+	// tournamentDescParticipantType is the schema descriptor for participant_type field.
+	tournamentDescParticipantType := tournamentFields[8].Descriptor()
+	// tournament.DefaultParticipantType holds the default value on creation for the participant_type field.
+	tournament.DefaultParticipantType = tournamentDescParticipantType.Default.(string)
+	// tournament.ParticipantTypeValidator is a validator for the "participant_type" field. It is called by the builders before save.
+	tournament.ParticipantTypeValidator = tournamentDescParticipantType.Validators[0].(func(string) error)
+	// tournamentDescMode is the schema descriptor for mode field.
+	tournamentDescMode := tournamentFields[10].Descriptor()
+	// tournament.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
+	tournament.ModeValidator = tournamentDescMode.Validators[0].(func(string) error)
+	// tournamentDescSeedingPolicy is the schema descriptor for seeding_policy field.
+	tournamentDescSeedingPolicy := tournamentFields[21].Descriptor()
+	// tournament.SeedingPolicyValidator is a validator for the "seeding_policy" field. It is called by the builders before save.
+	tournament.SeedingPolicyValidator = tournamentDescSeedingPolicy.Validators[0].(func(string) error)
+	// tournamentDescAutoConfirm is the schema descriptor for auto_confirm field.
+	tournamentDescAutoConfirm := tournamentFields[23].Descriptor()
+	// tournament.DefaultAutoConfirm holds the default value on creation for the auto_confirm field.
+	tournament.DefaultAutoConfirm = tournamentDescAutoConfirm.Default.(bool)
+	// tournamentDescRewardSummary is the schema descriptor for reward_summary field.
+	tournamentDescRewardSummary := tournamentFields[25].Descriptor()
+	// tournament.RewardSummaryValidator is a validator for the "reward_summary" field. It is called by the builders before save.
+	tournament.RewardSummaryValidator = tournamentDescRewardSummary.Validators[0].(func(string) error)
+	// tournamentDescRoundGapS is the schema descriptor for round_gap_s field.
+	tournamentDescRoundGapS := tournamentFields[26].Descriptor()
+	// tournament.DefaultRoundGapS holds the default value on creation for the round_gap_s field.
+	tournament.DefaultRoundGapS = tournamentDescRoundGapS.Default.(int)
+	// tournamentDescStatus is the schema descriptor for status field.
+	tournamentDescStatus := tournamentFields[27].Descriptor()
+	// tournament.DefaultStatus holds the default value on creation for the status field.
+	tournament.DefaultStatus = tournamentDescStatus.Default.(string)
+	// tournament.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	tournament.StatusValidator = tournamentDescStatus.Validators[0].(func(string) error)
+	// tournamentDescCancelReason is the schema descriptor for cancel_reason field.
+	tournamentDescCancelReason := tournamentFields[28].Descriptor()
+	// tournament.CancelReasonValidator is a validator for the "cancel_reason" field. It is called by the builders before save.
+	tournament.CancelReasonValidator = tournamentDescCancelReason.Validators[0].(func(string) error)
+	// tournamentDescID is the schema descriptor for id field.
+	tournamentDescID := tournamentMixinFields0[0].Descriptor()
+	// tournament.DefaultID holds the default value on creation for the id field.
+	tournament.DefaultID = tournamentDescID.Default.(func() uuid.UUID)
+	tournamententryMixin := schema.TournamentEntry{}.Mixin()
+	tournamententryMixinHooks0 := tournamententryMixin[0].Hooks()
+	tournamententry.Hooks[0] = tournamententryMixinHooks0[0]
+	tournamententryMixinInters0 := tournamententryMixin[0].Interceptors()
+	tournamententry.Interceptors[0] = tournamententryMixinInters0[0]
+	tournamententryMixinFields0 := tournamententryMixin[0].Fields()
+	_ = tournamententryMixinFields0
+	tournamententryFields := schema.TournamentEntry{}.Fields()
+	_ = tournamententryFields
+	// tournamententryDescCreatedAt is the schema descriptor for created_at field.
+	tournamententryDescCreatedAt := tournamententryMixinFields0[2].Descriptor()
+	// tournamententry.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tournamententry.DefaultCreatedAt = tournamententryDescCreatedAt.Default.(func() time.Time)
+	// tournamententryDescUpdatedAt is the schema descriptor for updated_at field.
+	tournamententryDescUpdatedAt := tournamententryMixinFields0[4].Descriptor()
+	// tournamententry.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	tournamententry.DefaultUpdatedAt = tournamententryDescUpdatedAt.Default.(func() time.Time)
+	// tournamententry.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	tournamententry.UpdateDefaultUpdatedAt = tournamententryDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// tournamententryDescDeleteReason is the schema descriptor for delete_reason field.
+	tournamententryDescDeleteReason := tournamententryMixinFields0[8].Descriptor()
+	// tournamententry.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	tournamententry.DeleteReasonValidator = tournamententryDescDeleteReason.Validators[0].(func(string) error)
+	// tournamententryDescVersion is the schema descriptor for version field.
+	tournamententryDescVersion := tournamententryMixinFields0[9].Descriptor()
+	// tournamententry.DefaultVersion holds the default value on creation for the version field.
+	tournamententry.DefaultVersion = tournamententryDescVersion.Default.(int64)
+	// tournamententryDescStatus is the schema descriptor for status field.
+	tournamententryDescStatus := tournamententryFields[7].Descriptor()
+	// tournamententry.DefaultStatus holds the default value on creation for the status field.
+	tournamententry.DefaultStatus = tournamententryDescStatus.Default.(string)
+	// tournamententry.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	tournamententry.StatusValidator = tournamententryDescStatus.Validators[0].(func(string) error)
+	// tournamententryDescID is the schema descriptor for id field.
+	tournamententryDescID := tournamententryMixinFields0[0].Descriptor()
+	// tournamententry.DefaultID holds the default value on creation for the id field.
+	tournamententry.DefaultID = tournamententryDescID.Default.(func() uuid.UUID)
+	tournamentgroupMixin := schema.TournamentGroup{}.Mixin()
+	tournamentgroupMixinHooks0 := tournamentgroupMixin[0].Hooks()
+	tournamentgroup.Hooks[0] = tournamentgroupMixinHooks0[0]
+	tournamentgroupMixinInters0 := tournamentgroupMixin[0].Interceptors()
+	tournamentgroup.Interceptors[0] = tournamentgroupMixinInters0[0]
+	tournamentgroupMixinFields0 := tournamentgroupMixin[0].Fields()
+	_ = tournamentgroupMixinFields0
+	tournamentgroupFields := schema.TournamentGroup{}.Fields()
+	_ = tournamentgroupFields
+	// tournamentgroupDescCreatedAt is the schema descriptor for created_at field.
+	tournamentgroupDescCreatedAt := tournamentgroupMixinFields0[2].Descriptor()
+	// tournamentgroup.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tournamentgroup.DefaultCreatedAt = tournamentgroupDescCreatedAt.Default.(func() time.Time)
+	// tournamentgroupDescUpdatedAt is the schema descriptor for updated_at field.
+	tournamentgroupDescUpdatedAt := tournamentgroupMixinFields0[4].Descriptor()
+	// tournamentgroup.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	tournamentgroup.DefaultUpdatedAt = tournamentgroupDescUpdatedAt.Default.(func() time.Time)
+	// tournamentgroup.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	tournamentgroup.UpdateDefaultUpdatedAt = tournamentgroupDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// tournamentgroupDescDeleteReason is the schema descriptor for delete_reason field.
+	tournamentgroupDescDeleteReason := tournamentgroupMixinFields0[8].Descriptor()
+	// tournamentgroup.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	tournamentgroup.DeleteReasonValidator = tournamentgroupDescDeleteReason.Validators[0].(func(string) error)
+	// tournamentgroupDescVersion is the schema descriptor for version field.
+	tournamentgroupDescVersion := tournamentgroupMixinFields0[9].Descriptor()
+	// tournamentgroup.DefaultVersion holds the default value on creation for the version field.
+	tournamentgroup.DefaultVersion = tournamentgroupDescVersion.Default.(int64)
+	// tournamentgroupDescCode is the schema descriptor for code field.
+	tournamentgroupDescCode := tournamentgroupFields[1].Descriptor()
+	// tournamentgroup.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	tournamentgroup.CodeValidator = tournamentgroupDescCode.Validators[0].(func(string) error)
+	// tournamentgroupDescID is the schema descriptor for id field.
+	tournamentgroupDescID := tournamentgroupMixinFields0[0].Descriptor()
+	// tournamentgroup.DefaultID holds the default value on creation for the id field.
+	tournamentgroup.DefaultID = tournamentgroupDescID.Default.(func() uuid.UUID)
+	tournamentresultMixin := schema.TournamentResult{}.Mixin()
+	tournamentresultMixinHooks0 := tournamentresultMixin[0].Hooks()
+	tournamentresult.Hooks[0] = tournamentresultMixinHooks0[0]
+	tournamentresultMixinInters0 := tournamentresultMixin[0].Interceptors()
+	tournamentresult.Interceptors[0] = tournamentresultMixinInters0[0]
+	tournamentresultMixinFields0 := tournamentresultMixin[0].Fields()
+	_ = tournamentresultMixinFields0
+	tournamentresultFields := schema.TournamentResult{}.Fields()
+	_ = tournamentresultFields
+	// tournamentresultDescCreatedAt is the schema descriptor for created_at field.
+	tournamentresultDescCreatedAt := tournamentresultMixinFields0[2].Descriptor()
+	// tournamentresult.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tournamentresult.DefaultCreatedAt = tournamentresultDescCreatedAt.Default.(func() time.Time)
+	// tournamentresultDescID is the schema descriptor for id field.
+	tournamentresultDescID := tournamentresultMixinFields0[0].Descriptor()
+	// tournamentresult.DefaultID holds the default value on creation for the id field.
+	tournamentresult.DefaultID = tournamentresultDescID.Default.(func() uuid.UUID)
+	tournamentrewardMixin := schema.TournamentReward{}.Mixin()
+	tournamentrewardMixinHooks0 := tournamentrewardMixin[0].Hooks()
+	tournamentreward.Hooks[0] = tournamentrewardMixinHooks0[0]
+	tournamentrewardMixinInters0 := tournamentrewardMixin[0].Interceptors()
+	tournamentreward.Interceptors[0] = tournamentrewardMixinInters0[0]
+	tournamentrewardMixinFields0 := tournamentrewardMixin[0].Fields()
+	_ = tournamentrewardMixinFields0
+	tournamentrewardFields := schema.TournamentReward{}.Fields()
+	_ = tournamentrewardFields
+	// tournamentrewardDescCreatedAt is the schema descriptor for created_at field.
+	tournamentrewardDescCreatedAt := tournamentrewardMixinFields0[2].Descriptor()
+	// tournamentreward.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tournamentreward.DefaultCreatedAt = tournamentrewardDescCreatedAt.Default.(func() time.Time)
+	// tournamentrewardDescRuleID is the schema descriptor for rule_id field.
+	tournamentrewardDescRuleID := tournamentrewardFields[2].Descriptor()
+	// tournamentreward.RuleIDValidator is a validator for the "rule_id" field. It is called by the builders before save.
+	tournamentreward.RuleIDValidator = tournamentrewardDescRuleID.Validators[0].(func(string) error)
+	// tournamentrewardDescPoints is the schema descriptor for points field.
+	tournamentrewardDescPoints := tournamentrewardFields[5].Descriptor()
+	// tournamentreward.DefaultPoints holds the default value on creation for the points field.
+	tournamentreward.DefaultPoints = tournamentrewardDescPoints.Default.(int)
+	// tournamentrewardDescGrantedAt is the schema descriptor for granted_at field.
+	tournamentrewardDescGrantedAt := tournamentrewardFields[6].Descriptor()
+	// tournamentreward.DefaultGrantedAt holds the default value on creation for the granted_at field.
+	tournamentreward.DefaultGrantedAt = tournamentrewardDescGrantedAt.Default.(func() time.Time)
+	// tournamentrewardDescID is the schema descriptor for id field.
+	tournamentrewardDescID := tournamentrewardMixinFields0[0].Descriptor()
+	// tournamentreward.DefaultID holds the default value on creation for the id field.
+	tournamentreward.DefaultID = tournamentrewardDescID.Default.(func() uuid.UUID)
 }
 
 const (

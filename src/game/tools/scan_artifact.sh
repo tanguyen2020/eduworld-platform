@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Scans exported game artifacts (.pck, .apk, .aab, .zip, or a folder of them; no Windows .exe since ADR-0101) for content that must never ship
+# Scans exported game artifacts (.pck, .exe, .apk, .aab, or a folder of them) for content that must never ship
 # (F060-AC-03 TC-AUTH-010, F060-AC-21, AGENTS R3/R4/R17, ADR-0068):
 #   - client secrets / OIDC configuration keys or a Keycloak token endpoint URL;
 #   - an OAuth callback (redirect URI / AppAuth intent filter) — the game logs in through its own form (F061-AC-11);
@@ -31,7 +31,7 @@ fi
 files=()
 for arg in "$@"; do
   if [[ -d "$arg" ]]; then
-    while IFS= read -r -d '' f; do files+=("$f"); done < <(find "$arg" -type f \( -name '*.pck' -o -name '*.apk' -o -name '*.aab' -o -name '*.zip' \) -print0)
+    while IFS= read -r -d '' f; do files+=("$f"); done < <(find "$arg" -type f \( -name '*.pck' -o -name '*.exe' -o -name '*.apk' -o -name '*.aab' -o -name '*.zip' \) -print0)
   elif [[ -f "$arg" ]]; then
     files+=("$arg")
   else

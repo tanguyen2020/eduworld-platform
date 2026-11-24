@@ -14,19 +14,19 @@
 
 ### Session 2026-11-16 (ADR-0086)
 
-- Q: ADR-0086 cho game lưu refresh token trong kho bảo mật của hệ điều hành trên thiết bị cá nhân — lớp lưu trữ thuộc feature nào? → A: Interface `SecureStorage` + `SecureStorageFactory` + adapter ~~Windows DPAPI~~ (gỡ theo ADR-0101, 2026-11-24), Android Keystore, `MemoryOnly` thuộc F060 (khung nền tảng, export Android có ở F060); adapter iOS Keychain thuộc F133 cùng pipeline iOS (macOS/Linux không phát hành trong Release 1.0 → `MemoryOnly`); dùng `SecureStorage` để tự vào lại, đăng xuất, máy dùng chung thuộc F061. Thay ràng buộc "không token trên đĩa" (ADR-0064) bằng: không mật khẩu, không access token trên đĩa; refresh token chỉ qua `SecureStorage` ([GODOT_ARCHITECTURE §5.2](../../docs/08-game-client/GODOT_ARCHITECTURE.md#52-lưu-phiên-bằng-securestorage-adr-0086)).
+- Q: ADR-0086 cho game lưu refresh token trong kho bảo mật của hệ điều hành trên thiết bị cá nhân — lớp lưu trữ thuộc feature nào? → A: Interface `SecureStorage` + `SecureStorageFactory` + adapter Windows DPAPI, Android Keystore, `MemoryOnly` thuộc F060 (khung nền tảng, export Windows/Android có ở F060); adapter iOS Keychain thuộc F133 cùng pipeline iOS (macOS/Linux không phát hành trong Release 1.0 → `MemoryOnly`); dùng `SecureStorage` để tự vào lại, đăng xuất, máy dùng chung thuộc F061. Thay ràng buộc "không token trên đĩa" (ADR-0064) bằng: không mật khẩu, không access token trên đĩa; refresh token chỉ qua `SecureStorage` ([GODOT_ARCHITECTURE §5.2](../../docs/08-game-client/GODOT_ARCHITECTURE.md#52-lưu-phiên-bằng-securestorage-adr-0086)).
 - Q: `device.cfg` `shared_device = true` ảnh hưởng thế nào tới F060? → A: `SecureStorageFactory` trả `MemoryOnly` (chỉ RAM) cho `shared_device = true` và Web; F060 chỉ đọc khóa, hành vi đăng xuất ở F061.
 
 ### Session 2026-11-17
 
-- Q: Windows mặc định máy dùng chung khi thiếu `device.cfg` (ADR-0078) chưa có tiêu chí — owner nào? → A: (Từ 2026-11-24, ADR-0101: Windows không phát hành, thuộc nhóm hệ điều hành `other` — xem F060-AC-27.) Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md).
+- Q: Windows mặc định máy dùng chung khi thiếu `device.cfg` (ADR-0078) chưa có tiêu chí — owner nào? → A: Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md).
 
 ### Session 2026-11-19 (triển khai — Câu hỏi mở, dùng mặc định [Confirmed])
 
 - Q: `login_path` trong data-model là `/api/v1/auth/game/login` trong khi `api_base_url` đã gồm `/api/v1` (LOCAL_DEVELOPMENT §4)? → A: [Confirmed] `login_path = /auth/game/login`, **tương đối với `api_base_url`**; F061 ghép hai giá trị.
 - Q: Ba mức cỡ chữ (F060-AC-09) không có token riêng? → A: [Confirmed] hệ số 1,0 / 1,175 / 1,35 lấy từ `UiTokens.NUMBER_RATIO_100` và `NUMBER_RATIO_135` (mức giữa là trung bình), áp lên bản sao của Theme sinh lúc chạy; xác nhận với UX ở S01 (F061).
 - Q: `device.cfg` ở `user://` (spec) hay thư mục cài đặt (GODOT_ARCHITECTURE §5.1)? → A: [Confirmed] đường dẫn là project setting `eduworld/device/config_path` (mặc định `user://device.cfg` theo spec); bộ cài F133 có thể trỏ sang thư mục cài đặt chỉ admin ghi. Mặc định `shared_device_default` theo nền tảng nằm ở project setting `eduworld/device/shared_device_default/<platform>`.
-- Q: Máy dev không có toolchain C++/Android — adapter native kiểm ở đâu? → A: [Confirmed] ~~GDExtension DPAPI (godot-cpp tag `godot-4.5-stable`) và~~ AAR Keystore build trong `godot.yml` (~~job `platform-windows` chạy bộ test `SecureStorage` với DPAPI thật trên runner Windows;~~ job `platform-android`) — phần DPAPI/runner Windows gỡ theo ADR-0101 (2026-11-24). Checkout không có DLL/AAR → `is_available() = false`, factory trả `MemoryOnly` (không có đường lưu dạng rõ). Phần lưu file (ghi tạm + đổi tên, bản ghi hỏng, log không kèm giá trị) test bằng cipher giả `tests/fixtures/fake_cipher.gd`. Test trên emulator Android (phần Android của F060-AC-23/25/26) chờ lane thiết bị của F133.
+- Q: Máy dev không có toolchain C++/Android — adapter native kiểm ở đâu? → A: [Confirmed] GDExtension DPAPI (godot-cpp tag `godot-4.5-stable`) và AAR Keystore build trong `godot.yml` (job `platform-windows` chạy bộ test `SecureStorage` với DPAPI thật trên runner Windows; job `platform-android`). Checkout không có DLL/AAR → `is_available() = false`, factory trả `MemoryOnly` (không có đường lưu dạng rõ). Phần lưu file (ghi tạm + đổi tên, bản ghi hỏng, log không kèm giá trị) test bằng cipher giả `tests/fixtures/fake_cipher.gd`. Test trên emulator Android (phần Android của F060-AC-23/25/26) chờ lane thiết bị của F133.
 - Q: Baseline ảnh `UiGallery` khác nhau giữa GPU/OS? → A: [Confirmed] baseline theo nền tảng `tests/scene/baselines/<os>/`; nền tảng chưa có baseline thì `tools/screenshot_gallery.gd` ghi ảnh ứng viên, báo "baseline missing" và CI tải artifact để duyệt (như F050).
 - Q: Domain dev/staging/production chưa chốt (OQ-10)? → A: [Confirmed] `config/env/{dev,staging,production}.json` dùng placeholder `*.eduworld.example` như `servers` của OpenAPI; thay khi OQ-10 có câu trả lời. Prism phục vụ path không có tiền tố `/api/v1` nên `mock.json` dùng `http://localhost:4011`.
 - Q: Ký bản Android trong CI PR? → A: [Confirmed] `godot.yml` export Android **debug-signed** (không cần secret); ký release bằng keystore từ GitHub Environment thuộc `release.yml`/F133.
@@ -34,10 +34,6 @@
 ### Session 2026-11-20 (owner chốt)
 
 - Mọi mục "Câu hỏi mở, dùng mặc định [Confirmed]" của Session 2026-11-19 → owner chốt 2026-11-20. Domain dev/staging/production (OQ-10) → giữ placeholder tới khi môi trường có tên miền (cấu hình, không phải câu hỏi mở). Emulator Android → F133.
-
-### Session 2026-11-24 (ADR-0101 — bỏ bản Windows)
-
-- Q: Owner bỏ hẳn bản Windows — F060 đổi gì? → A: [Confirmed] Theo [ADR-0101](../../docs/adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md): gỡ preset export "Windows Desktop" (còn preset "Android"; preset Web/iOS ở F133 T002), GDExtension DPAPI `addons/eduworld_platform/windows/`, `DpapiSecureStorage` và nhánh Windows của `SecureStorageFactory`, job CI `platform-windows`, target `make godot-export-windows`, khóa `device/shared_device_default/windows`. Windows (chỉ khi chạy từ editor/bản debug của dev) xếp cùng macOS/Linux vào khóa nền tảng `other`: mặc định máy dùng chung, `SecureStorage` = `MemoryOnly`. `make godot-export-check` và `scan_artifact_test.sh` export PCK bằng preset "Android". `FileCipherSecureStorage` giữ làm lớp nền lưu file (test, dọn bản ghi khi máy dùng chung). F060-AC-19, 23, 26, 27 viết lại bỏ phần Windows.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -106,7 +102,7 @@ Học sinh chọn tiếng Việt hoặc tiếng Anh, đổi ngay khi đang chơi
 
 ### User Story 4 — CI headless và mock API có nhãn (Priority: P2)
 
-Godot dev có pipeline tự động (lint, test, export Android, smoke) và làm được màn hình trên mock sinh từ spec khi backend chưa sẵn sàng, mà không lọt mock vào bản phát hành.
+Godot dev có pipeline tự động (lint, test, export Windows/Android, smoke) và làm được màn hình trên mock sinh từ spec khi backend chưa sẵn sàng, mà không lọt mock vào bản phát hành.
 
 **Why this priority**: CODE_PLAN §2 cho phép game client chạy trên Prism mock có nhãn (R17); F061 cần ngay.
 
@@ -116,7 +112,7 @@ Godot dev có pipeline tự động (lint, test, export Android, smoke) và làm
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F060-AC-19 | KHI PR thay đổi `src/game/**`, `specs/**`, `design/game-tokens/**` hoặc `design/shared-tokens/**`, workflow `.github/workflows/godot.yml` (GitHub Actions, runner Linux) PHẢI chạy theo thứ tự: `design-tokens-check` → gdlint + typed check + lint override theme + lint lớp → GdUnit4 headless → export Android (không export Windows — ADR-0101) → smoke boot | [GODOT_ARCHITECTURE §11](../../docs/08-game-client/GODOT_ARCHITECTURE.md) · DEPLOYMENT §10.2 · ADR-0088 · ADR-0101 | — |
+| F060-AC-19 | KHI PR thay đổi `src/game/**`, `specs/**`, `design/game-tokens/**` hoặc `design/shared-tokens/**`, workflow `.github/workflows/godot.yml` (GitHub Actions, runner Linux) PHẢI chạy theo thứ tự: `design-tokens-check` → gdlint + typed check + lint override theme + lint lớp → GdUnit4 headless → export Windows và Android → smoke boot | [GODOT_ARCHITECTURE §11](../../docs/08-game-client/GODOT_ARCHITECTURE.md) · DEPLOYMENT §10.2 · ADR-0088 | — |
 | F060-AC-20 | Compose profile `mock` PHẢI chạy Prism từ `specs/openapi/eduworld-api.v1.yaml`; cấu hình `res://config/env/mock.json` PHẢI có `is_mock: true` và game PHẢI hiển thị nhãn "MOCK" cố định trên mọi màn khi dùng cấu hình này | AGENTS R17 · CODE_PLAN §2 | — |
 | F060-AC-21 | NẾU preset export phát hành chứa `mock.json`, cờ `is_mock` hoặc URL mock, THÌ CI PHẢI fail | AGENTS R17 · CODE_PLAN §2 | — |
 | F060-AC-22 | Test contract PHẢI parse mọi response mẫu từ `specs/openapi` và `specs/examples` mà client sẽ dùng thành model GDScript không lỗi | GODOT_ARCHITECTURE §12 · NFR-MAINT-002 | — |
@@ -129,17 +125,17 @@ Học sinh dùng máy cá nhân không phải nhập mật khẩu mỗi lần m�
 
 **Why this priority**: ADR-0086; F061 (tự vào lại, đăng xuất) cần lớp lưu trữ này.
 
-**Independent Test**: Unit test từng adapter (cipher giả cho lớp lưu file) và trên thiết bị/emulator Android: `save` → `load` trả đúng, file trên đĩa chỉ là ciphertext; `shared_device = true` → `MemoryOnly`; bản ghi hỏng → `load` rỗng, không crash.
+**Independent Test**: Unit test từng adapter trên runner Windows và thiết bị/emulator Android: `save` → `load` trả đúng, file trên đĩa chỉ là ciphertext; `shared_device = true` → `MemoryOnly`; bản ghi hỏng → `load` rỗng, không crash.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F060-AC-23 | `SecureStorageFactory.create()` PHẢI trả adapter theo nền tảng: Android → Android Keystore (khóa AES-GCM không xuất được, ciphertext trong bộ nhớ riêng của app), Web hoặc nền tảng chưa có adapter (kể cả Windows/macOS/Linux — không phát hành, ADR-0101) → `MemoryOnly`; mọi adapter PHẢI hiện thực cùng interface `is_available`/`save`/`load`/`erase` | ADR-0086 · ADR-0101 · [GODOT_ARCHITECTURE §5.2](../../docs/08-game-client/GODOT_ARCHITECTURE.md#52-lưu-phiên-bằng-securestorage-adr-0086) | TC-AUTH-082 |
+| F060-AC-23 | `SecureStorageFactory.create()` PHẢI trả adapter theo nền tảng: Windows → DPAPI (`CryptProtectData`, scope CurrentUser), Android → Android Keystore (khóa AES-GCM không xuất được, ciphertext trong bộ nhớ riêng của app), Web hoặc nền tảng chưa có adapter → `MemoryOnly`; mọi adapter PHẢI hiện thực cùng interface `is_available`/`save`/`load`/`erase` | ADR-0086 · [GODOT_ARCHITECTURE §5.2](../../docs/08-game-client/GODOT_ARCHITECTURE.md#52-lưu-phiên-bằng-securestorage-adr-0086) | TC-AUTH-082 |
 | F060-AC-24 | KHI `user://device.cfg` có `shared_device = true`, `SecureStorageFactory` PHẢI trả `MemoryOnly`, và sau khi tiến trình thoát PHẢI KHÔNG còn bản ghi nào trong kho bảo mật, `user://` hay localStorage | ADR-0086 | TC-AUTH-084 |
 | F060-AC-25 | Adapter native PHẢI chỉ ghi ciphertext xuống đĩa; giá trị rõ PHẢI KHÔNG xuất hiện trong `user://`, `settings.cfg`, `device.cfg` hay ring buffer `Log` | ADR-0086 · AGENTS R14 | TC-AUTH-084 |
-| F060-AC-26 | NẾU bản ghi không giải mã được (file hỏng, khóa Keystore bị xóa), THÌ `load` PHẢI trả rỗng kèm mã lỗi mà không crash, và `erase` PHẢI xóa bản ghi; NẾU `save` thất bại, THÌ adapter PHẢI trả lỗi và ghi `secure_storage_write_failed` vào `Log` (không kèm giá trị) | ADR-0086 | — |
-| F060-AC-27 | Ở NƠI game chạy trên hệ điều hành không phát hành (Windows, macOS, Linux — chỉ editor/bản debug của dev, khóa nền tảng `other`, ADR-0101) và `user://device.cfg` không có khóa `shared_device` (thiếu file hoặc thiếu khóa), `Config` PHẢI coi `shared_device = true` theo `shared_device_default` (nên `SecureStorageFactory` trả `MemoryOnly`); Android, iOS mặc định `false`; Web luôn `MemoryOnly` | ADR-0078 · ADR-0086 · ADR-0101 | — |
+| F060-AC-26 | NẾU bản ghi không giải mã được (file hỏng, khóa Keystore bị xóa, user Windows khác), THÌ `load` PHẢI trả rỗng kèm mã lỗi mà không crash, và `erase` PHẢI xóa bản ghi; NẾU `save` thất bại, THÌ adapter PHẢI trả lỗi và ghi `secure_storage_write_failed` vào `Log` (không kèm giá trị) | ADR-0086 | — |
+| F060-AC-27 | Ở NƠI game chạy trên Windows và `user://device.cfg` không có khóa `shared_device` (thiếu file hoặc thiếu khóa), `Config` PHẢI coi `shared_device = true` theo `shared_device_default` (nên `SecureStorageFactory` trả `MemoryOnly`); Android, iOS mặc định `false`; Web luôn `MemoryOnly` | AC-AUTH-030 · ADR-0078 · ADR-0086 | TC-AUTH-090 |
 
 ### Edge Cases
 
@@ -147,7 +143,7 @@ Học sinh dùng máy cá nhân không phải nhập mật khẩu mỗi lần m�
 - NẾU Theme sinh không tồn tại (chưa chạy `make design-tokens`), THÌ CI fail ở bước `design-tokens-check` (F060-AC-19).
 - NẾU đổi ngôn ngữ khi một hội thoại/câu hỏi đang hiển thị, THÌ nội dung đó giữ ngôn ngữ cũ tới mục tiếp theo (áp dụng khi F063 có; khung chỉ phát `locale_changed`) (F060-AC-14).
 - Authorization, tenant isolation, idempotency, Problem Details từ server: thuộc `ApiClient`/`AuthService` (F061); khung chỉ có ánh xạ khóa `ui.error.<CODE>` (F060-AC-12).
-- NẾU người dùng sao chép dữ liệu app sang thiết bị khác, THÌ bản ghi `SecureStorage` không giải mã được → `load` rỗng (F060-AC-26), F061 hiện form đăng nhập.
+- NẾU người dùng sao chép thư mục `user://` sang máy hoặc tài khoản Windows khác, THÌ bản ghi `SecureStorage` không giải mã được → `load` rỗng (F060-AC-26), F061 hiện form đăng nhập.
 
 ## Requirements *(bắt buộc)*
 
@@ -196,7 +192,7 @@ Học sinh dùng máy cá nhân không phải nhập mật khẩu mỗi lần m�
 - **SC-003**: 0 override màu/font trong `.tscn` ngoài allowlist; 0 script UI gọi mạng.
 - **SC-004**: 0 artifact phát hành chứa secret, khóa OIDC hay cấu hình mock.
 - **SC-005**: Cỡ chữ cơ sở màn trước đăng nhập đạt mức NFR-A11Y-001.
-- **SC-006**: 0 giá trị bí mật dạng rõ trên đĩa sau bộ test `SecureStorage` (lớp lưu file với cipher giả, Android); 0 bản ghi trên máy `shared_device`.
+- **SC-006**: 0 giá trị bí mật dạng rõ trên đĩa sau bộ test `SecureStorage` (Windows, Android); 0 bản ghi trên máy `shared_device`.
 
 ## Ngoài phạm vi
 

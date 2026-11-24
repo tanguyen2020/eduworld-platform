@@ -1,6 +1,6 @@
 # Local Development
 
-> Trạng thái: Draft · Phiên bản: 0.6 · Owner: DevOps Engineer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (ADR-0092: mã nguồn trong `src/`, lệnh Go `go -C src/backend`; floci local chỉ nhận credential `test`/`test`, `sis-mock` ghim prism 4, Atlas chạy bằng image ghim, `make tools` cài vào `./bin`) · 2026-11-17 (modular monolith theo ADR-0074: compose 3 binary, `make dev`, biến DB theo module, bỏ URL/token gọi giữa service; floci chỉ local/CI — ADR-0075; CI GitHub Actions; bảng biến môi trường duy nhất, cổng internal/admin, tài khoản demo bổ sung, tenant QA)
+> Trạng thái: Draft · Phiên bản: 0.5 · Owner: DevOps Engineer · Cập nhật: 2026-11-17 (ADR-0092: mã nguồn trong `src/`, lệnh Go `go -C src/backend`; floci local chỉ nhận credential `test`/`test`, `sis-mock` ghim prism 4, Atlas chạy bằng image ghim, `make tools` cài vào `./bin`) · 2026-11-17 (modular monolith theo ADR-0074: compose 3 binary, `make dev`, biến DB theo module, bỏ URL/token gọi giữa service; floci chỉ local/CI — ADR-0075; CI GitHub Actions; bảng biến môi trường duy nhất, cổng internal/admin, tài khoản demo bổ sung, tenant QA)
 > Liên quan: [DEPLOYMENT](DEPLOYMENT.md) · [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · [ADR-0088](../adr/ADR-0088-ci-cd-bang-github-actions.md) · [ADR-0024, ADR-0037…0042, ADR-0089](../adr/README.md) · [CONTRIBUTING](../../CONTRIBUTING.md) · [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md)
 
 **Mục đích & phạm vi.** Nguồn duy nhất về môi trường local: Docker Compose, biến môi trường local, seed, Makefile, troubleshooting. Topology/sizing môi trường thật → [DEPLOYMENT](DEPLOYMENT.md).
@@ -372,8 +372,8 @@ Kiểm tra: `curl http://localhost:9100/readyz` (trạng thái từng module tro
 1. Mở `src/game/project.godot` bằng Godot 4.x đúng phiên bản ghim (`src/game/.godot-version`); lần đầu chạy `make godot-import`. Mọi target Godot đọc binary từ biến `GODOT` (mặc định `godot`), ví dụ `make godot-test GODOT="/c/.../Godot_v4.7.2-stable_win64_console.exe"`.
 2. Chọn profile môi trường `local` (`-- --env=local`; chỉ build debug đọc `--env`). Chưa có backend: `make up-mock` (Prism profile `mock`, cổng 4011) rồi chạy với `-- --env=mock` — mọi màn có nhãn "MOCK" (R17).
 3. Chạy `res://scenes/bootstrap/Boot.tscn` (scene chính) → Splash; từ F061: form đăng nhập trong game (S01) → nhập `hs.an.3a` + mật khẩu seed (game gọi `/api/v1/auth/game/login`, ADR-0068). `res://scenes/ui/debug/UiGallery.tscn` (chỉ build debug) xem component ở 4 density, vi/en/`xx-PS`, tương phản cao.
-4. Kiểm tra: `make godot-lint` (gdtoolkit `gdlint`, typed check, lint theme/lớp/signal, khóa dịch, fixture, không Admin UI), `make godot-test` (GdUnit4 headless + quét artifact), `make godot-smoke`, `make godot-screenshots` (cần renderer), `make godot-export-check` (PCK phát hành theo preset "Android", không cần export template). Đổi chuỗi UI hoặc spec: `make godot-fixtures`.
-5. `SecureStorage` (ADR-0086): adapter Android Keystore cần plugin native build bởi CI (`godot.yml` job `platform-android`); checkout chưa build plugin, chạy từ editor trên máy dev (Windows/macOS/Linux — không phải nền tảng phát hành, ADR-0101) hoặc bản Web thì game dùng `MemoryOnly` (phải đăng nhập lại mỗi lần mở).
+4. Kiểm tra: `make godot-lint` (gdtoolkit `gdlint`, typed check, lint theme/lớp/signal, khóa dịch, fixture, không Admin UI), `make godot-test` (GdUnit4 headless + quét artifact), `make godot-smoke`, `make godot-screenshots` (cần renderer), `make godot-export-check` (PCK phát hành không cần export template). Đổi chuỗi UI hoặc spec: `make godot-fixtures`.
+5. `SecureStorage` (ADR-0086): adapter DPAPI/Keystore cần plugin native build bởi CI (`godot.yml` job `platform-windows`, `platform-android`); checkout chưa build plugin thì game dùng `MemoryOnly` (phải đăng nhập lại mỗi lần mở).
 
 ### 6.4. Web CMS/LMS
 ```bash
@@ -420,7 +420,7 @@ postman collection run specs/postman/eduworld-api.postman_collection.json \
 | `make test-contract` | Facade test: module đích hiện thực đúng interface sinh từ spec internal (lỗi ánh xạ sang `problem`, `maxLength`, ngữ cảnh `src/backend/pkg/modcall`), kèm test của mọi module trong `x-allowed-callers` dùng facade đó; chạy trong tiến trình, không HTTP |
 | `make test-e2e` | E2E toàn hệ thống trên compose |
 | `make api-test` | Postman CLI collection môi trường local |
-| `make godot-lint` / `make godot-test` / `make godot-smoke` / `make godot-screenshots` / `make godot-export-check` / `make godot-export-android` (biến `GODOT=<binary>`; không có target Windows — ADR-0101) | Godot headless: lint, GdUnit4, smoke boot, ảnh UiGallery so baseline, export + quét artifact (F060) |
+| `make godot-lint` / `make godot-test` / `make godot-smoke` / `make godot-screenshots` / `make godot-export-check` / `make godot-export-<windows\|android>` (biến `GODOT=<binary>`) | Godot headless: lint, GdUnit4, smoke boot, ảnh UiGallery so baseline, export + quét artifact (F060) |
 | `make up-mock` | Prism MOCK API cho game (profile `mock`, cổng 4011) |
 | `make design-tokens` / `make design-tokens-check` | Style Dictionary sinh Theme Godot, `UiTokens.gd`, resource 3D, theme Ant Design + CSS variables từ `design/`; bản `-check` báo lỗi nếu file sinh lệch nguồn (ADR-0047) |
 | `make storybook` | Chạy Storybook của `src/cms/frontend/packages/ops-ui` |
