@@ -50,6 +50,20 @@
 
 - Certificate pinning (Ràng buộc phi chức năng, GODOT_ARCHITECTURE §14) → **Chốt:** `ApiClient` dùng `TLSOptions.client(trusted_chain)` với CA bundle (CA chính + CA dự phòng) do F133 đóng gói, chỉ ở build release trên Android/iOS (ADR-0101; Web dùng TLS trình duyệt; debug giữ như cũ); chứng chỉ không khớp bundle → lỗi `NETWORK_ERROR` loại TLS, không thử lại không pin. Task bổ sung.
 
+### Session 2026-11-24 (giao diện S01)
+
+Owner báo "giao diện đăng nhập của game bị vỡ và không phù hợp cho học sinh" (ảnh 1280×720 và bản Web): nút ngôn ngữ và nút hiện/ẩn bị kéo thành thanh dọc rỗng, ô mật khẩu cao bất thường, thẻ tràn khỏi đáy màn hình, không có logo/nhân vật. Nguyên nhân: `autowrap` trên các `Button` nằm trong `HBoxContainer` (chiều rộng tối thiểu 0 → chữ xuống dòng từng ký tự → nút cao vọt kéo cả hàng), không phải cài đặt stretch (`canvas_items` + `expand` giữ nguyên; bản Web `canvas_resize_policy=2` cho cùng kích thước logic). Sửa chỉ phần UI; quy tắc đăng nhập ở backend không đổi. Các điểm S01 còn thiếu/mâu thuẫn được chốt theo mặc định an toàn, thân thiện với học sinh:
+
+- Q: Trước khi đăng nhập dùng cỡ chữ/nút của khối nào? → A: [Confirmed] `g1_3` cho mọi học sinh (`eduworld/ui/pre_bootstrap_density`, khối chưa biết): chữ 24 px, mọi điều khiển chạm ≥ 64 px. Ô nhập cao bằng chiều cao tối thiểu của khối (Theme sinh từ token, padding tính theo chiều cao dòng thật của font).
+- Q: S01 §10 cho lớp 1–3 "hiện mật khẩu mặc định" và "nút loa đọc hướng dẫn", nhưng trước đăng nhập chưa biết khối? → A: [Confirmed] Mật khẩu mặc định ẩn (an toàn trên máy dùng chung), nút con mắt hiện/ẩn luôn có; hướng dẫn "Em nhập tên đăng nhập và mật khẩu nhà trường đưa nhé." hiện bằng chữ trong bong bóng của Mây (`ui.login.mascot_greeting`); nút loa chờ có tệp lồng tiếng (không thuộc lần sửa này).
+- Q: Wireframe đặt logo trong thẻ, tiêu đề "Đăng nhập EduWorld" thì sao? → A: [Confirmed] Bố cục ba cột: logo (Tia Sáng + wordmark) và Mây ở cột trái, thẻ ở giữa, ngôn ngữ ở góc phải; thẻ không có tiêu đề riêng để form đầy đủ kể cả lỗi dài nhất vừa 1280×720 không cuộn; `ui.login.title` thành lời chào của Mây ("Chào em!" / "Hi there!").
+- Q: Chọn ngôn ngữ dạng gì? → A: [Confirmed] Hai chip `VI` | `EN` cạnh icon quả địa cầu như wireframe `[VI|EN]`; chip đang chọn có nền nhấn + dấu ✓ (không chỉ màu); tên đầy đủ là tooltip và nhãn trình đọc màn hình.
+- Q: Cửa sổ dọc (Web trên điện thoại dựng đứng)? → A: [Confirmed] Không thiết kế bố cục dọc (STUDENT_GAME_UX: chỉ ngang); bố cục ba cột vẫn nguyên vẹn, không tràn nhờ stretch `expand` (chiều rộng logic ≥ 1280 px). Không đổi cài đặt stretch của dự án.
+- Q: Khi chữ quá dài (pseudo-locale, phóng chữ) không đủ chỗ? → A: [Confirmed] Thẻ cuộn dọc trong `ScrollContainer`, Mây được ẩn để cột trái không bị cắt; chip ngôn ngữ cắt bằng dấu "…" kèm tooltip.
+- Ngoài phạm vi lần sửa này (giữ hành vi hiện có, ghi lại để làm sau): nút "Hủy" sau 10 s khi đang đăng nhập (S01 §8); restyle các màn auth khác (TenantChoice, hộp takeover…) theo cùng nền trời/Mây.
+
+Bằng chứng trước/sau trong `screenshots/` (`login-before-*.png`, `login-after-*.png`), ví dụ [trước](screenshots/login-before-1280x720-vi.png) / [sau](screenshots/login-after-1280x720-vi.png); harness `src/game/tests/visual/login_screens.gd`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Đăng nhập bằng form trong game (Priority: P1) 🎯 MVP
