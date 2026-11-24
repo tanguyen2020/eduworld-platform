@@ -798,7 +798,7 @@ msgid "ui.login.forgot_password_hint"
 msgstr "[!! Föŕğöţ ýöüŕ þáššŵöŕđ? Çöñţáçţ ýöüŕ šçĥööĺ ţö ŕëšëţ ïţ ~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.login.hide_password"
-msgstr "[!! Ĥïđë ~~ !!]"
+msgstr "[!! Ĥïđë þáššŵöŕđ ~~~~~~ !!]"
 
 msgid "ui.login.invalid_credentials"
 msgstr "[!! Üšëŕñáɱë öŕ þáššŵöŕđ ïš ñöţ çöŕŕëçţ ~~~~~~~~~~~~~~ !!]"
@@ -806,14 +806,26 @@ msgstr "[!! Üšëŕñáɱë öŕ þáššŵöŕđ ïš ñöţ çöŕŕëçţ ~~
 msgid "ui.login.language_en"
 msgstr "[!! Ẹñğĺïšĥ ~~~ !!]"
 
+msgid "ui.login.language_en_short"
+msgstr "[!! ẸÑ ~ !!]"
+
+msgid "ui.login.language_label"
+msgstr "[!! Ĺáñğüáğë ~~~~ !!]"
+
 msgid "ui.login.language_vi"
 msgstr "[!! Ţïếñğ Vïệţ ~~~~ !!]"
+
+msgid "ui.login.language_vi_short"
+msgstr "[!! VÏ ~ !!]"
 
 msgid "ui.login.maintenance"
 msgstr "[!! ẸđüŴöŕĺđ ïš üñđëŕ ɱáïñţëñáñçë ~~~~~~~~~~~~ !!]"
 
 msgid "ui.login.maintenance_retry"
 msgstr "[!! Ţĥë ğáɱë ŵïĺĺ çĥëçķ áğáïñ ïñ á ɱöɱëñţ. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.mascot_greeting"
+msgstr "[!! Ţýþë ţĥë üšëŕñáɱë áñđ þáššŵöŕđ ýöüŕ šçĥööĺ ğávë ýöü. ~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.login.not_provisioned"
 msgstr "[!! Ýöüŕ áççöüñţ ïš ñöţ áçţïváţëđ ïñ ẸđüŴöŕĺđ ýëţ. Pĺëášë ášķ ýöüŕ šçĥööĺ ţö çĥëçķ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
@@ -894,7 +906,7 @@ msgid "ui.login.session_expired"
 msgstr "[!! Ýöüŕ šëššïöñ ĥáš ëñđëđ. Pĺëášë šïğñ ïñ áğáïñ. ~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.login.show_password"
-msgstr "[!! Šĥöŵ ~~ !!]"
+msgstr "[!! Šĥöŵ þáššŵöŕđ ~~~~~~ !!]"
 
 msgid "ui.login.signing_in"
 msgstr "[!! Šïğñïñğ ïñ… ~~~~~ !!]"
@@ -930,7 +942,7 @@ msgid "ui.login.ticket_expired"
 msgstr "[!! Ţĥë šçĥööĺ çĥöïçë ĥáš ëxþïŕëđ. Pĺëášë šïğñ ïñ áğáïñ. ~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.login.title"
-msgstr "[!! Šïğñ ïñ ţö ẸđüŴöŕĺđ ~~~~~~~~ !!]"
+msgstr "[!! Ĥï ţĥëŕë! ~~~~ !!]"
 
 msgid "ui.login.update_body"
 msgstr "[!! Pĺëášë üþđáţë ẸđüŴöŕĺđ ţö vëŕšïöñ {version} öŕ ĺáţëŕ ţö çöñţïñüë. ~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
@@ -952,6 +964,9 @@ msgstr "[!! Vëŕšïöñ {version} ~~~~~~~ !!]"
 
 msgid "ui.login.wait_hint"
 msgstr "[!! Ïƒ ýöü ğöţ ïţ ŵŕöñğ šëvëŕáĺ ţïɱëš, ŵáïţ á ƒëŵ ɱïñüţëš áñđ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.login.wordmark"
+msgstr "[!! ẸđüŴöŕĺđ ~~~~ !!]"
 
 msgid "ui.minigame.completed"
 msgstr "[!! Ýöü çöɱþĺëţëđ ţĥë ğáɱë! ~~~~~~~~~~ !!]"

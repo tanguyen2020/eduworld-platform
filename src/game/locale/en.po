@@ -799,7 +799,7 @@ msgid "ui.login.forgot_password_hint"
 msgstr "Forgot your password? Contact your school to reset it"
 
 msgid "ui.login.hide_password"
-msgstr "Hide"
+msgstr "Hide password"
 
 msgid "ui.login.invalid_credentials"
 msgstr "Username or password is not correct"
@@ -807,14 +807,26 @@ msgstr "Username or password is not correct"
 msgid "ui.login.language_en"
 msgstr "English"
 
+msgid "ui.login.language_en_short"
+msgstr "EN"
+
+msgid "ui.login.language_label"
+msgstr "Language"
+
 msgid "ui.login.language_vi"
 msgstr "Tiếng Việt"
+
+msgid "ui.login.language_vi_short"
+msgstr "VI"
 
 msgid "ui.login.maintenance"
 msgstr "EduWorld is under maintenance"
 
 msgid "ui.login.maintenance_retry"
 msgstr "The game will check again in a moment."
+
+msgid "ui.login.mascot_greeting"
+msgstr "Type the username and password your school gave you."
 
 msgid "ui.login.not_provisioned"
 msgstr "Your account is not activated in EduWorld yet. Please ask your school to check."
@@ -895,7 +907,7 @@ msgid "ui.login.session_expired"
 msgstr "Your session has ended. Please sign in again."
 
 msgid "ui.login.show_password"
-msgstr "Show"
+msgstr "Show password"
 
 msgid "ui.login.signing_in"
 msgstr "Signing in…"
@@ -931,7 +943,7 @@ msgid "ui.login.ticket_expired"
 msgstr "The school choice has expired. Please sign in again."
 
 msgid "ui.login.title"
-msgstr "Sign in to EduWorld"
+msgstr "Hi there!"
 
 msgid "ui.login.update_body"
 msgstr "Please update EduWorld to version {version} or later to continue."
@@ -953,6 +965,9 @@ msgstr "Version {version}"
 
 msgid "ui.login.wait_hint"
 msgstr "If you got it wrong several times, wait a few minutes and try again."
+
+msgid "ui.login.wordmark"
+msgstr "EduWorld"
 
 msgid "ui.minigame.completed"
 msgstr "You completed the game!"

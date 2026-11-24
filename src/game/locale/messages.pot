@@ -804,13 +804,25 @@ msgstr ""
 msgid "ui.login.language_en"
 msgstr ""
 
+msgid "ui.login.language_en_short"
+msgstr ""
+
+msgid "ui.login.language_label"
+msgstr ""
+
 msgid "ui.login.language_vi"
+msgstr ""
+
+msgid "ui.login.language_vi_short"
 msgstr ""
 
 msgid "ui.login.maintenance"
 msgstr ""
 
 msgid "ui.login.maintenance_retry"
+msgstr ""
+
+msgid "ui.login.mascot_greeting"
 msgstr ""
 
 msgid "ui.login.not_provisioned"
@@ -949,6 +961,9 @@ msgid "ui.login.version"
 msgstr ""
 
 msgid "ui.login.wait_hint"
+msgstr ""
+
+msgid "ui.login.wordmark"
 msgstr ""
 
 msgid "ui.minigame.completed"

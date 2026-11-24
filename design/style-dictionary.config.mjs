@@ -59,10 +59,14 @@ export const OUTPUTS = {
   godotFontsDir: 'src/game/resources/ui/theme/fonts',
   uiTokens: 'src/game/scripts/core/ui_tokens.gd',
   artDir: 'src/game/resources/art/generated',
+  godotIconsDir: 'src/game/resources/ui/icons',
 };
 
+/** SVG sources of the game icons (DESIGN_SYSTEM §2), relative to design/. */
+export const GAME_ICONS_DIR = 'icons/game';
+
 /** Directories fully owned by the pipeline: files there that the pipeline does not produce are stale. */
-export const OWNED_DIRS = [OUTPUTS.godotThemeDir, OUTPUTS.godotFontsDir, OUTPUTS.artDir];
+export const OWNED_DIRS = [OUTPUTS.godotThemeDir, OUTPUTS.godotFontsDir, OUTPUTS.artDir, OUTPUTS.godotIconsDir];
 
 /** Intermediate files and reports (gitignored). */
 export const BUILD_DIR = 'build';

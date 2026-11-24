@@ -2,14 +2,14 @@
 // memory. build.mjs writes them; checks/generated.mjs compares them with the committed files.
 import fs from 'node:fs';
 import path from 'node:path';
-import { BUILD_DIR, CONTEXTS, DENSITY_BANDS, BASE_DENSITY, OUTPUTS, BUSINESS_COLOR_PREFIXES } from '../style-dictionary.config.mjs';
+import { BUILD_DIR, CONTEXTS, DENSITY_BANDS, BASE_DENSITY, OUTPUTS, BUSINESS_COLOR_PREFIXES, GAME_ICONS_DIR } from '../style-dictionary.config.mjs';
 import { DESIGN_DIR, loadContexts } from './tokens.mjs';
 import { resolveWithStyleDictionary } from '../sd/transforms.mjs';
 import { formatAntdTheme } from '../sd/formats/antd-theme.mjs';
 import { formatCssVars } from '../sd/formats/css-vars.mjs';
 import { formatGodotJson } from '../sd/formats/godot-json.mjs';
 import { formatUiTokens, formatArt3dTokens, themeFile, HIGH_CONTRAST_THEME } from '../sd/formats/gdscript-tokens.mjs';
-import { formatTheme, formatEnvironment, formatGradient, godotFontFiles, artPaletteSlots, formatToonMaterial } from '../sd/formats/godot-tres.mjs';
+import { formatTheme, formatEnvironment, formatGradient, formatIcon, godotFontFiles, artPaletteSlots, formatToonMaterial } from '../sd/formats/godot-tres.mjs';
 
 /** Toon material presets (F067, DESIGN_SYSTEM §5.3): with the outline pass, and without it for small dense decor. */
 export const TOON_MATERIALS = { toon: { outline: true }, toon_no_outline: { outline: false } };
@@ -67,6 +67,12 @@ export async function generate({ designDir = DESIGN_DIR, loaded = loadContexts(d
     const license = path.join(path.dirname(f.src), 'LICENSE');
     const family = path.basename(path.dirname(f.src));
     files.set(`${OUTPUTS.godotFontsDir}/${family}-OFL.txt`, fs.readFileSync(path.join(designDir, license)));
+  }
+
+  const iconsDir = path.join(designDir, GAME_ICONS_DIR);
+  for (const file of fs.readdirSync(iconsDir).filter((f) => f.endsWith('.svg')).sort()) {
+    const name = file.slice(0, -'.svg'.length);
+    files.set(`${OUTPUTS.godotIconsDir}/${file}`, formatIcon(game, name, fs.readFileSync(path.join(iconsDir, file), 'utf8'), version));
   }
 
   const intermediate = new Map([[`${BUILD_DIR}/godot/tokens.json`, formatGodotJson({ game, 'game-high-contrast': hc }, version)]]);

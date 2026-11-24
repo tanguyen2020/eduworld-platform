@@ -1,6 +1,15 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scenes/auth/login.gd" id="1_login"]
+[ext_resource type="Script" path="res://scenes/ui/components/sky_backdrop.gd" id="2_backdrop"]
+[ext_resource type="Script" path="res://scenes/ui/components/spark_mark.gd" id="3_spark"]
+[ext_resource type="Script" path="res://scenes/ui/components/cloudy_mascot.gd" id="4_mascot"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/globe.svg" id="5_globe"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/info.svg" id="6_info"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/eye.svg" id="7_eye"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/alert.svg" id="8_alert"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/help.svg" id="9_help"]
+[ext_resource type="Script" path="res://scenes/ui/components/busy_spinner.gd" id="10_spinner"]
 
 [node name="Login" type="Control"]
 layout_mode = 3
@@ -11,87 +20,175 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_login")
 
-[node name="Background" type="Panel" parent="."]
+[node name="Backdrop" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_backdrop")
 
-[node name="Scroll" type="ScrollContainer" parent="."]
+[node name="Safe" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-horizontal_scroll_mode = 0
+theme_type_variation = &"ScreenMargin"
 
-[node name="Center" type="CenterContainer" parent="Scroll"]
+[node name="Columns" type="HBoxContainer" parent="Safe"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="BrandColumn" type="VBoxContainer" parent="Safe/Columns"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="Logo" type="HBoxContainer" parent="Safe/Columns/BrandColumn"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="Spark" type="Control" parent="Safe/Columns/BrandColumn/Logo"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("3_spark")
+
+[node name="Wordmark" type="Label" parent="Safe/Columns/BrandColumn/Logo"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"LogoLabel"
+text = "ui.login.wordmark"
+vertical_alignment = 1
+text_overrun_behavior = 3
+tooltip_text = "ui.login.wordmark"
+
+[node name="TopSpace" type="Control" parent="Safe/Columns/BrandColumn"]
+layout_mode = 2
 size_flags_vertical = 3
+mouse_filter = 2
 
-[node name="Card" type="PanelContainer" parent="Scroll/Center"]
-custom_minimum_size = Vector2(480, 0)
+[node name="Guide" type="VBoxContainer" parent="Safe/Columns/BrandColumn"]
+unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"FieldBox"
 
-[node name="Box" type="VBoxContainer" parent="Scroll/Center/Card"]
+[node name="Bubble" type="PanelContainer" parent="Safe/Columns/BrandColumn/Guide"]
 layout_mode = 2
+theme_type_variation = &"SpeechBubble"
 
-[node name="TopBar" type="HBoxContainer" parent="Scroll/Center/Card/Box"]
+[node name="BubbleText" type="VBoxContainer" parent="Safe/Columns/BrandColumn/Guide/Bubble"]
 layout_mode = 2
+theme_type_variation = &"FieldBox"
 
-[node name="Title" type="Label" parent="Scroll/Center/Card/Box/TopBar"]
+[node name="Title" type="Label" parent="Safe/Columns/BrandColumn/Guide/Bubble/BubbleText"]
 layout_mode = 2
-size_flags_horizontal = 3
 theme_type_variation = &"HeadingLabel"
 text = "ui.login.title"
 autowrap_mode = 3
 
-[node name="LangVi" type="Button" parent="Scroll/Center/Card/Box/TopBar"]
-unique_name_in_owner = true
+[node name="Greeting" type="Label" parent="Safe/Columns/BrandColumn/Guide/Bubble/BubbleText"]
 layout_mode = 2
-theme_type_variation = &"SecondaryButton"
-text = "ui.login.language_vi"
+theme_type_variation = &"SpeechBubbleLabel"
+text = "ui.login.mascot_greeting"
 autowrap_mode = 3
 
-[node name="LangEn" type="Button" parent="Scroll/Center/Card/Box/TopBar"]
+[node name="Mascot" type="Control" parent="Safe/Columns/BrandColumn/Guide"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"SecondaryButton"
-text = "ui.login.language_en"
+size_flags_horizontal = 4
+mouse_filter = 2
+script = ExtResource("4_mascot")
+
+[node name="BottomSpace" type="Control" parent="Safe/Columns/BrandColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Version" type="Label" parent="Safe/Columns/BrandColumn"]
+unique_name_in_owner = true
+layout_mode = 2
 autowrap_mode = 3
 
-[node name="Banner" type="Label" parent="Scroll/Center/Card/Box"]
+[node name="Scroll" type="ScrollContainer" parent="Safe/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Center" type="CenterContainer" parent="Safe/Columns/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Card" type="PanelContainer" parent="Safe/Columns/Scroll/Center"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FormCard"
+
+[node name="Box" type="VBoxContainer" parent="Safe/Columns/Scroll/Center/Card"]
+layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="BannerBox" type="PanelContainer" parent="Safe/Columns/Scroll/Center/Card/Box"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_type_variation = &"MutedLabel"
-autowrap_mode = 3
+theme_type_variation = &"InfoBannerPanel"
 
-[node name="UsernameLabel" type="Label" parent="Scroll/Center/Card/Box"]
+[node name="Row" type="HBoxContainer" parent="Safe/Columns/Scroll/Center/Card/Box/BannerBox"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="Icon" type="TextureRect" parent="Safe/Columns/Scroll/Center/Card/Box/BannerBox/Row"]
+layout_mode = 2
+size_flags_vertical = 0
+texture = ExtResource("6_info")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Banner" type="Label" parent="Safe/Columns/Scroll/Center/Card/Box/BannerBox/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InfoBannerLabel"
+autowrap_mode = 3
+accessibility_live = 1
+
+[node name="UsernameField" type="VBoxContainer" parent="Safe/Columns/Scroll/Center/Card/Box"]
+layout_mode = 2
+theme_type_variation = &"FieldBox"
+
+[node name="UsernameLabel" type="Label" parent="Safe/Columns/Scroll/Center/Card/Box/UsernameField"]
 layout_mode = 2
 text = "ui.login.username_label"
 autowrap_mode = 3
 
-[node name="Username" type="LineEdit" parent="Scroll/Center/Card/Box"]
+[node name="Username" type="LineEdit" parent="Safe/Columns/Scroll/Center/Card/Box/UsernameField"]
 unique_name_in_owner = true
 layout_mode = 2
 max_length = 128
 context_menu_enabled = false
 clear_button_enabled = true
+accessibility_labeled_by_nodes = Array[NodePath]([NodePath("../UsernameLabel")])
 
-[node name="PasswordLabel" type="Label" parent="Scroll/Center/Card/Box"]
+[node name="PasswordField" type="VBoxContainer" parent="Safe/Columns/Scroll/Center/Card/Box"]
+layout_mode = 2
+theme_type_variation = &"FieldBox"
+
+[node name="PasswordLabel" type="Label" parent="Safe/Columns/Scroll/Center/Card/Box/PasswordField"]
 layout_mode = 2
 text = "ui.login.password_label"
 autowrap_mode = 3
 
-[node name="PasswordRow" type="HBoxContainer" parent="Scroll/Center/Card/Box"]
+[node name="PasswordRow" type="HBoxContainer" parent="Safe/Columns/Scroll/Center/Card/Box/PasswordField"]
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 
-[node name="Password" type="LineEdit" parent="Scroll/Center/Card/Box/PasswordRow"]
+[node name="Password" type="LineEdit" parent="Safe/Columns/Scroll/Center/Card/Box/PasswordField/PasswordRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -100,53 +197,117 @@ context_menu_enabled = false
 shortcut_keys_enabled = false
 virtual_keyboard_type = 6
 secret = true
+accessibility_labeled_by_nodes = Array[NodePath]([NodePath("../../PasswordLabel")])
 
-[node name="ShowPassword" type="Button" parent="Scroll/Center/Card/Box/PasswordRow"]
+[node name="ShowPassword" type="Button" parent="Safe/Columns/Scroll/Center/Card/Box/PasswordField/PasswordRow"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"SecondaryButton"
+theme_type_variation = &"IconButton"
 toggle_mode = true
-text = "ui.login.show_password"
-autowrap_mode = 3
+icon = ExtResource("7_eye")
+icon_alignment = 1
 
-[node name="Error" type="Label" parent="Scroll/Center/Card/Box"]
+[node name="ErrorBox" type="PanelContainer" parent="Safe/Columns/Scroll/Center/Card/Box"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-autowrap_mode = 3
+theme_type_variation = &"InlineErrorPanel"
 
-[node name="SignIn" type="Button" parent="Scroll/Center/Card/Box"]
+[node name="Row" type="HBoxContainer" parent="Safe/Columns/Scroll/Center/Card/Box/ErrorBox"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="Icon" type="TextureRect" parent="Safe/Columns/Scroll/Center/Card/Box/ErrorBox/Row"]
+layout_mode = 2
+size_flags_vertical = 0
+texture = ExtResource("8_alert")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Error" type="Label" parent="Safe/Columns/Scroll/Center/Card/Box/ErrorBox/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InlineErrorLabel"
+autowrap_mode = 3
+accessibility_live = 2
+
+[node name="SignIn" type="Button" parent="Safe/Columns/Scroll/Center/Card/Box"]
 unique_name_in_owner = true
 layout_mode = 2
 disabled = true
 text = "ui.login.button_sign_in"
 autowrap_mode = 3
 
-[node name="Remember" type="CheckBox" parent="Scroll/Center/Card/Box"]
+[node name="Spinner" type="Control" parent="Safe/Columns/Scroll/Center/Card/Box/SignIn"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("10_spinner")
+
+[node name="Remember" type="CheckBox" parent="Safe/Columns/Scroll/Center/Card/Box"]
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
 text = "ui.login.remember_username"
 autowrap_mode = 3
 
-[node name="Forgot" type="Button" parent="Scroll/Center/Card/Box"]
+[node name="Forgot" type="Button" parent="Safe/Columns/Scroll/Center/Card/Box"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"HintButton"
+theme_type_variation = &"TextButton"
 text = "ui.login.forgot_password_hint"
+icon = ExtResource("9_help")
+alignment = 0
 autowrap_mode = 3
 
-[node name="ForgotHint" type="Label" parent="Scroll/Center/Card/Box"]
+[node name="ForgotBox" type="PanelContainer" parent="Safe/Columns/Scroll/Center/Card/Box"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_type_variation = &"MutedLabel"
-text = "ui.login.forgot_password_dialog"
-autowrap_mode = 3
+theme_type_variation = &"InfoBannerPanel"
 
-[node name="Version" type="Label" parent="Scroll/Center/Card/Box"]
+[node name="ForgotHint" type="Label" parent="Safe/Columns/Scroll/Center/Card/Box/ForgotBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"MutedLabel"
-horizontal_alignment = 2
+theme_type_variation = &"InfoBannerLabel"
+text = "ui.login.forgot_password_dialog"
 autowrap_mode = 3
+accessibility_live = 1
+
+[node name="LangColumn" type="VBoxContainer" parent="Safe/Columns"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="LangBar" type="HBoxContainer" parent="Safe/Columns/LangColumn"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+alignment = 2
+
+[node name="LangIcon" type="TextureRect" parent="Safe/Columns/LangColumn/LangBar"]
+unique_name_in_owner = true
+layout_mode = 2
+texture = ExtResource("5_globe")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LangVi" type="Button" parent="Safe/Columns/LangColumn/LangBar"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ChoiceChip"
+toggle_mode = true
+text = "ui.login.language_vi_short"
+text_overrun_behavior = 3
+
+[node name="LangEn" type="Button" parent="Safe/Columns/LangColumn/LangBar"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ChoiceChip"
+toggle_mode = true
+text = "ui.login.language_en_short"
+text_overrun_behavior = 3

@@ -24,10 +24,23 @@
       "800": { "$value": "#0B3FB8", "$description": "High contrast primary." }
     },
     "green": {
+      "300": { "$value": "#9BD77A", "$description": "Near hill on the sky backdrop (S01 login)." },
+      "400": { "$value": "#6DBE5A", "$description": "Floating island grass on the sky backdrop." },
       "700": { "$value": "#1B7F45", "$description": "Correct feedback background." }
     },
     "red": {
+      "50": { "$value": "#FDECEC", "$description": "Soft error background (InlineError panel)." },
       "700": { "$value": "#C62828", "$description": "Incorrect feedback background." }
+    },
+    "pink": {
+      "200": { "$value": "#FFB8C9", "$description": "Cheeks of the guide Mây (Cloudy)." }
+    },
+    "sand": {
+      "200": { "$value": "#F4D9A6", "$description": "Floating island rock, lit side." },
+      "400": { "$value": "#D9A866", "$description": "Floating island rock, shade side." }
+    },
+    "shadow": {
+      "soft": { "$value": "#1E2A4429", "$description": "Soft drop shadow under cards (ink 900 at 16% alpha)." }
     },
     "amber": {
       "400": { "$value": "#FFD43B", "$description": "XP badge, reward accent." },
@@ -130,7 +143,8 @@
       "24": { "$value": "24px", "$description": "Font 24." },
       "28": { "$value": "28px", "$description": "Font 28." },
       "32": { "$value": "32px", "$description": "Font 32." },
-      "36": { "$value": "36px", "$description": "Font 36." }
+      "36": { "$value": "36px", "$description": "Font 36." },
+      "48": { "$value": "48px", "$description": "Font 48 (logo wordmark)." }
     },
     "space": {
       "4": { "$value": "4px", "$description": "Spacing 4." },
@@ -156,7 +170,17 @@
     "border": {
       "2": { "$value": "2px", "$description": "Border 2." },
       "3": { "$value": "3px", "$description": "Border 3." },
-      "4": { "$value": "4px", "$description": "Border 4 (focus, high contrast)." }
+      "4": { "$value": "4px", "$description": "Border 4 (focus, high contrast)." },
+      "8": { "$value": "8px", "$description": "Border 8 (sticker outline of the logo wordmark)." }
+    },
+    "icon": {
+      "32": { "$value": "32px", "$description": "Icon 32 (button icons)." },
+      "40": { "$value": "40px", "$description": "Icon 40 (checkbox box)." }
+    },
+    "layout": {
+      "200": { "$value": "200px", "$description": "Layout 200 (mascot illustration)." },
+      "280": { "$value": "280px", "$description": "Layout 280 (side column beside a centred form)." },
+      "660": { "$value": "660px", "$description": "Layout 660 (form card width: the S01 hint fits one line)." }
     }
   },
   "font": {

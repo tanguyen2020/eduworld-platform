@@ -22,8 +22,14 @@
           "$type": "color",
           "$value": "{color.text.primary}",
           "$description": "Secondary button label.",
-          "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.button.secondary.bg", "level": "normal" }] } }
-        }
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "component.button.secondary.bg", "level": "normal" },
+            { "token": "component.button.secondary.bg_hover", "level": "normal" },
+            { "token": "component.button.secondary.bg_pressed", "level": "normal" }
+          ] } }
+        },
+        "bg_hover": { "$type": "color", "$value": "{palette.sky.100}", "$description": "Outlined button (IconButton, ChoiceChip, TextButton) background on hover." },
+        "bg_pressed": { "$type": "color", "$value": "{palette.sky.200}", "$description": "Outlined button background while pressed / toggled on." }
       },
       "border_width": { "$type": "dimension", "$value": "{size.border.3}", "$description": "Button border width." }
     },
@@ -87,6 +93,124 @@
         "$description": "HUD text.",
         "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.hud.bg", "level": "normal" }] } }
       }
+    },
+    "icon": {
+      "size": { "$type": "dimension", "$value": "{size.icon.32}", "$description": "Button icon size (icon_max_width of IconButton, ChoiceChip, TextButton; icons beside messages)." },
+      "checkbox_size": { "$type": "dimension", "$value": "{size.icon.40}", "$description": "CheckBox box size (drawn by the generated checkbox icons)." },
+      "primary": {
+        "$type": "color",
+        "$value": "{color.accent.primary}",
+        "$description": "Icon colour on light surfaces (globe, eye, help, info, checkbox).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "color.surface.panel", "level": "graphic" },
+          { "token": "color.surface.panel_alt", "level": "graphic" },
+          { "token": "component.button.secondary.bg_hover", "level": "graphic" },
+          { "token": "component.button.secondary.bg_pressed", "level": "graphic" }
+        ] } }
+      },
+      "on_accent": { "$type": "color", "$value": "{color.text.on_accent}", "$description": "Icon colour on the accent fill (check mark of a selected chip / checked box)." },
+      "alert": {
+        "$type": "color",
+        "$value": "{color.feedback.incorrect}",
+        "$description": "Alert icon beside an InlineError message (the icon, not only the colour, tells it is an error).",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.inline_error.bg", "level": "graphic" }] } }
+      }
+    },
+    "chip": {
+      "selected_bg": { "$type": "color", "$value": "{color.accent.primary}", "$description": "ChoiceChip background when selected (plus a check icon)." },
+      "selected_text": {
+        "$type": "color",
+        "$value": "{color.text.on_accent}",
+        "$description": "ChoiceChip label when selected.",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.chip.selected_bg", "level": "normal" }] } }
+      }
+    },
+    "text_button": {
+      "text": {
+        "$type": "color",
+        "$value": "{color.accent.primary}",
+        "$description": "TextButton (flat, link-like action with an icon) label.",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "color.surface.panel", "level": "normal" },
+          { "token": "component.button.secondary.bg_hover", "level": "normal" },
+          { "token": "component.button.secondary.bg_pressed", "level": "normal" }
+        ] } }
+      }
+    },
+    "inline_error": {
+      "bg": { "$type": "color", "$value": "{palette.red.50}", "$description": "InlineError panel background." },
+      "border": { "$type": "color", "$value": "{color.feedback.incorrect}", "$description": "InlineError panel border." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "InlineError message text.",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.inline_error.bg", "level": "normal" }] } }
+      }
+    },
+    "info_banner": {
+      "bg": { "$type": "color", "$value": "{palette.sky.100}", "$description": "InfoBanner panel background (session expired…)." },
+      "border": { "$type": "color", "$value": "{color.accent.primary}", "$description": "InfoBanner panel border." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "InfoBanner text.",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.info_banner.bg", "level": "normal" }] } }
+      }
+    },
+    "form_card": {
+      "bg": { "$type": "color", "$value": "{color.surface.panel}", "$description": "Form card (LoginCard) background." },
+      "border": { "$type": "color", "$value": "{palette.white}", "$description": "Form card soft border." },
+      "shadow": { "$type": "color", "$value": "{palette.shadow.soft}", "$description": "Form card drop shadow." },
+      "shadow_size": { "$type": "dimension", "$value": "{size.space.16}", "$description": "Form card drop shadow blur size." },
+      "padding": { "$type": "dimension", "$value": "{size.space.20}", "$description": "Form card inner padding." },
+      "width": { "$type": "dimension", "$value": "{size.layout.660}", "$description": "Form card width (S01 login card)." },
+      "side_width": { "$type": "dimension", "$value": "{size.layout.280}", "$description": "Width of each side column beside the card (logo + mascot left, language right) so the card stays centred." }
+    },
+    "speech_bubble": {
+      "bg": { "$type": "color", "$value": "{palette.white}", "$description": "Speech bubble of the guide Mây (NpcHint)." },
+      "border": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Speech bubble border." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Speech bubble text.",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.speech_bubble.bg", "level": "normal" }] } }
+      }
+    },
+    "logo": {
+      "text": {
+        "$type": "color",
+        "$value": "{color.brand.primary}",
+        "$description": "EduWorld wordmark (LogoLabel), drawn with a white sticker outline.",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.logo.outline", "level": "large" }] } }
+      },
+      "outline": { "$type": "color", "$value": "{palette.white}", "$description": "Sticker outline around the wordmark (readable on any backdrop)." },
+      "outline_width": { "$type": "dimension", "$value": "{size.border.8}", "$description": "Wordmark outline width." },
+      "font_size": { "$type": "dimension", "$value": "{size.font.48}", "$description": "Wordmark font size (same for every grade band)." },
+      "spark": { "$type": "color", "$value": "{palette.zone.gold}", "$description": "Knowledge Spark (Tia Sáng) mark beside the wordmark." },
+      "spark_core": { "$type": "color", "$value": "{palette.white}", "$description": "Spark highlight." },
+      "spark_outline": { "$type": "color", "$value": "{palette.ink.900}", "$description": "Spark outline." }
+    },
+    "backdrop": {
+      "sky_top": { "$type": "color", "$value": "{palette.zone.sky-day}", "$description": "Sky backdrop gradient, top." },
+      "sky_bottom": { "$type": "color", "$value": "{palette.zone.fog-warm}", "$description": "Sky backdrop gradient, horizon (warm)." },
+      "sun": { "$type": "color", "$value": "{palette.amber.200}", "$description": "Sun disc." },
+      "sun_glow": { "$type": "color", "$value": "{palette.zone.sun}", "$description": "Sun halo." },
+      "cloud": { "$type": "color", "$value": "{palette.white}", "$description": "Soft clouds." },
+      "hill_far": { "$type": "color", "$value": "{palette.zone.ground-horizon}", "$description": "Far hills." },
+      "hill_near": { "$type": "color", "$value": "{palette.green.300}", "$description": "Near hills." },
+      "island_grass": { "$type": "color", "$value": "{palette.green.400}", "$description": "Floating island grass." },
+      "island_rock": { "$type": "color", "$value": "{palette.sand.400}", "$description": "Floating island rock (shade)." },
+      "island_rock_light": { "$type": "color", "$value": "{palette.sand.200}", "$description": "Floating island rock (lit)." },
+      "spark": { "$type": "color", "$value": "{palette.zone.gold}", "$description": "Knowledge Sparks floating in the sky." }
+    },
+    "mascot": {
+      "body": { "$type": "color", "$value": "{palette.white}", "$description": "Mây (Cloudy) body." },
+      "shade": { "$type": "color", "$value": "{palette.sky.100}", "$description": "Mây underside shade." },
+      "outline": { "$type": "color", "$value": "{palette.ink.900}", "$description": "Mây outline." },
+      "eye": { "$type": "color", "$value": "{palette.ink.900}", "$description": "Mây eyes and smile." },
+      "cheek": { "$type": "color", "$value": "{palette.pink.200}", "$description": "Mây cheeks." },
+      "size": { "$type": "dimension", "$value": "{size.layout.200}", "$description": "Mây illustration size." },
+      "outline_width": { "$type": "dimension", "$value": "{size.border.4}", "$description": "Mây outline width." }
     },
     "focus_ring": {
       "color": { "$type": "color", "$value": "{color.focus}", "$description": "Focus ring color." },

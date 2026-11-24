@@ -799,7 +799,7 @@ msgid "ui.login.forgot_password_hint"
 msgstr "Quên mật khẩu? Liên hệ nhà trường để đặt lại"
 
 msgid "ui.login.hide_password"
-msgstr "Ẩn"
+msgstr "Ẩn mật khẩu"
 
 msgid "ui.login.invalid_credentials"
 msgstr "Tên đăng nhập hoặc mật khẩu chưa đúng"
@@ -807,14 +807,26 @@ msgstr "Tên đăng nhập hoặc mật khẩu chưa đúng"
 msgid "ui.login.language_en"
 msgstr "English"
 
+msgid "ui.login.language_en_short"
+msgstr "EN"
+
+msgid "ui.login.language_label"
+msgstr "Ngôn ngữ"
+
 msgid "ui.login.language_vi"
 msgstr "Tiếng Việt"
+
+msgid "ui.login.language_vi_short"
+msgstr "VI"
 
 msgid "ui.login.maintenance"
 msgstr "EduWorld đang bảo trì"
 
 msgid "ui.login.maintenance_retry"
 msgstr "Trò chơi sẽ tự kiểm tra lại sau ít phút."
+
+msgid "ui.login.mascot_greeting"
+msgstr "Em nhập tên đăng nhập và mật khẩu nhà trường đưa nhé."
 
 msgid "ui.login.not_provisioned"
 msgstr "Tài khoản của em chưa được kích hoạt trong EduWorld. Em hãy báo nhà trường kiểm tra nhé."
@@ -895,7 +907,7 @@ msgid "ui.login.session_expired"
 msgstr "Phiên đăng nhập đã hết, em đăng nhập lại nhé."
 
 msgid "ui.login.show_password"
-msgstr "Hiện"
+msgstr "Hiện mật khẩu"
 
 msgid "ui.login.signing_in"
 msgstr "Đang vào…"
@@ -931,7 +943,7 @@ msgid "ui.login.ticket_expired"
 msgstr "Phiên chọn trường đã hết, em đăng nhập lại nhé."
 
 msgid "ui.login.title"
-msgstr "Đăng nhập EduWorld"
+msgstr "Chào em!"
 
 msgid "ui.login.update_body"
 msgstr "Em cần cập nhật EduWorld lên phiên bản {version} hoặc mới hơn để tiếp tục."
@@ -953,6 +965,9 @@ msgstr "Phiên bản {version}"
 
 msgid "ui.login.wait_hint"
 msgstr "Nếu nhập sai nhiều lần, hãy đợi vài phút rồi thử lại."
+
+msgid "ui.login.wordmark"
+msgstr "EduWorld"
 
 msgid "ui.minigame.completed"
 msgstr "Em đã hoàn thành trò chơi!"
