@@ -11,7 +11,7 @@ Xây chunk workspace `game-ops` (F051) gọi API `/api/v1/game-admin/*` qua gate
 | Mục | Giá trị |
 |---|---|
 | Language/Version | TypeScript strict (React 18, Vite) |
-| Primary Dependencies | Ant Design 5 + Pro (ProTable, ProForm, StepsForm, Calendar), TanStack Query, openapi-fetch (F050), `@rjsf/antd` hoặc form sinh từ JSON Schema [Confirmed], React Flow (graph quest/NPC) [Confirmed], chart theo DESIGN_SYSTEM §4.4, i18next |
+| Primary Dependencies | Ant Design 5 + Pro (ProTable, ProForm, StepsForm, Calendar), TanStack Query, openapi-fetch (F050), form sinh từ JSON Schema = `SchemaForm` của ops-ui, graph NPC và danh sách bước quest kéo-thả viết trong portal — không thêm `@rjsf`/React Flow (Clarifications 2026-11-24), chart theo DESIGN_SYSTEM §4.4, i18next |
 | Storage | Không (RAM; autosave lên server) |
 | Testing | Vitest + Testing Library + MSW (test-only, nhãn `MOCK`), Playwright E2E với backend compose (gateway nội bộ local), axe, visual regression |
 | Target Platform | Desktop ≥ 1280 px cho builder; tablet/điện thoại chỉ xem |
@@ -122,7 +122,7 @@ Menu và nút của feature lấy từ [`specs/portal/menu-catalog.yaml`](../por
 
 Khoảng trống catalog/contract (không sửa trong feature này; báo owner `specs/portal/menu-catalog.yaml` + OpenAPI):
 
-- `getGameClientManifest`, `getGameConfigSchema` (Cần thêm) → cần `x-portal-action` (đề xuất `action.game_ops.review.view` hoặc `x-portal-shell`)
+- Đã xử lý (2026-11-24): `getGameClientManifest` → `action.game_ops.review.preview`; `simulateGameConfig` → `action.game_ops.progression.view` / `action.game_ops.events.view` (theo `config_type`); `getGameConfigCounts` → `action.game_ops.dashboard.view`; `getGameConfigSchema` không thêm.
 
 ## Complexity Tracking
 

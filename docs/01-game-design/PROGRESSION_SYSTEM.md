@@ -1,6 +1,6 @@
 # Progression System — XP, Level, phần thưởng lên cấp
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Director + Game Systems Designer · Cập nhật: 2026-11-23 (F074: ngày cap theo lịch ICT, đếm giảm dần, `curve-rollout`, `progression-levels`, `reward.granted`) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Director + Game Systems Designer · Cập nhật: 2026-11-24 (F079: mô phỏng tiến độ ở server, `xp_simulation_minute_rate`) · 2026-11-23 (F074: ngày cap theo lịch ICT, đếm giảm dần, `curve-rollout`, `progression-levels`, `reward.granted`) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [GAME_DESIGN](GAME_DESIGN.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [ADR-0018, ADR-0043, ADR-0049](../adr/README.md)
 
 ## 1. Mục đích và phạm vi
@@ -105,6 +105,8 @@ Mặc định [Confirmed]: `base = 100`, `exponent = 1.35`, `linear = 20`, `max_
 | 30 → 31 | 10.465 | 140.204 |
 
 Mục tiêu cân bằng [Confirmed]: học sinh chơi đều 20–30 phút/ngày (khoảng 300–400 XP/ngày, dưới cap 1.000) lên level 10 sau khoảng 4 tuần và level 20 sau khoảng một học kỳ; level 30+ dành cho người chơi lâu năm. Không cần chơi dài để theo kịp. Số liệu phải được hiệu chỉnh bằng dữ liệu pilot.
+
+**Mô phỏng tiến độ (Game Operations Console, F079)** [Confirmed — F079 2026-11-24]: `simulateGameConfig` tính ở server trên payload của một version đường cong: XP mỗi ngày chơi = min(phút/ngày × `xp_simulation_minute_rate`, `xp_daily_cap`), XP tích lũy cuối tuần w = XP/ngày × số ngày chơi/tuần × w, level = level cao nhất có ngưỡng tích lũy ≤ tổng (≤ `max_level`, công thức + `level_overrides`); kèm bảng ngưỡng level (biểu đồ của màn Level & XP). `xp_simulation_minute_rate` = 14 XP/phút suy từ mục tiêu cân bằng trên (25 phút ≈ 350 XP) — chỉ dùng cho mô phỏng, không ảnh hưởng XP thật.
 
 ### 4.2. Đổi đường cong khi đang vận hành
 

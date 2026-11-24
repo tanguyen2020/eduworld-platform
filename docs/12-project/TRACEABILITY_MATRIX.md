@@ -42,11 +42,11 @@
 | `CHL` Challenge & Boss | module game | 3 | 3 | 0 | 17 | 0 | CHL (8) | 0 | 0 | 0 / 8 |
 | `ECO` Kinh tế, vật phẩm, sưu tầm | module game | 5 | 5 | 0 | 13 | 0 | ECO (8) | 0 | 0 | 0 / 8 |
 | `EVT` Event & Season (live-ops) | module game | 8 | 8 | 0 | 18 | 0 | EVT (12) | 0 | 0 | 0 / 12 |
-| `CMS` CMS | module learning · module game (game-admin) | 18 | 17 | 1 | 129 | 0 | CMS (4) | 2 | 5 | 0 / 0 |
+| `CMS` CMS | module learning · module game (game-admin) | 18 | 17 | 1 | 132 | 0 | CMS (4) | 2 | 5 | 0 / 0 |
 | `LMS` LMS | module learning | 10 | 10 | 1 | 33 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 21 | 588 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 21 | 591 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -650,24 +650,24 @@ AC: AC-CMS-001, AC-CMS-002, AC-CMS-003, AC-CMS-004, AC-CMS-005 · US: US-CMS-001
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-CMS-001 | Vai trò tenant: tenant_admin, school_admin, academic_manager, tenant_content_editor, tenant_content_reviewe… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-002 | Curriculum Management (chương trình, khối, môn, chủ đề, LO) | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-003 | Content Management: lesson, material, media, question bank, question set, assessment, exercise, learning ac… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-004 | Game Content: quest, mini-game config, game level, NPC dialogue, reward config, world event, game activity… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-005 | Competition Management: matchmaking config, ranking rules, tournament/challenge template, season, competiti… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-006 | Workflow, versioning, preview (Godot Web export nhúng cho nội dung game), publishing, rollback theo chính s… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-007 | CMS không làm thay đổi lịch sử bài đã hoàn thành | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-008 | Nội dung phạm vi tenant do tenant_content_editor soạn, tenant_content_reviewer duyệt (OQ-07 đã trả lời bằng… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-009 | Một Admin Portal React (TypeScript) src/cms/frontend/apps/portal với 5 workspace (School & Learning Managem… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-016 | Dashboard live-ops trong CMS/Admin: CCU, trận đang chạy, hàng chờ ghép trận, đăng nhập/hàng chờ đăng nhập,… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-017 | Thumbnail/turntable render tự động từ asset 3D của game cho mọi version publish, hiển thị trong CMS như dữ… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-018 | Danh mục menu/action của Admin Portal và bật/tắt trong DB (ADR-0090): danh mục workspace → menu → action là… | P1 | _suy luận:_ [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-010 | Vận hành của mỗi tenant đăng nhập Admin Portal (workspace School & Learning Management, Learning Content St… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-011 | Vận hành tenant không thấy và không thao tác được menu/cấu hình game; các lớp chặn: gateway nội bộ, azp + r… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
+| FR-CMS-001 | Vai trò tenant: tenant_admin, school_admin, academic_manager, tenant_content_editor, tenant_content_reviewe… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-002 | Curriculum Management (chương trình, khối, môn, chủ đề, LO) | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-003 | Content Management: lesson, material, media, question bank, question set, assessment, exercise, learning ac… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-004 | Game Content: quest, mini-game config, game level, NPC dialogue, reward config, world event, game activity… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-005 | Competition Management: matchmaking config, ranking rules, tournament/challenge template, season, competiti… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-006 | Workflow, versioning, preview (Godot Web export nhúng cho nội dung game), publishing, rollback theo chính s… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-007 | CMS không làm thay đổi lịch sử bài đã hoàn thành | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-008 | Nội dung phạm vi tenant do tenant_content_editor soạn, tenant_content_reviewer duyệt (OQ-07 đã trả lời bằng… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-009 | Một Admin Portal React (TypeScript) src/cms/frontend/apps/portal với 5 workspace (School & Learning Managem… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-016 | Dashboard live-ops trong CMS/Admin: CCU, trận đang chạy, hàng chờ ghép trận, đăng nhập/hàng chờ đăng nhập,… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-017 | Thumbnail/turntable render tự động từ asset 3D của game cho mọi version publish, hiển thị trong CMS như dữ… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-018 | Danh mục menu/action của Admin Portal và bật/tắt trong DB (ADR-0090): danh mục workspace → menu → action là… | P1 | _suy luận:_ [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-010 | Vận hành của mỗi tenant đăng nhập Admin Portal (workspace School & Learning Management, Learning Content St… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-011 | Vận hành tenant không thấy và không thao tác được menu/cấu hình game; các lớp chặn: gateway nội bộ, azp + r… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
 | FR-CMS-012 | Menu dựng từ GET /api/v1/me/permissions; permission catalog trong code, role tenant không có game.*/competi… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `getMyPermissions` | _suy luận:_ TC-CMS |
-| FR-CMS-013 | System Admin là người duy nhất xem dữ liệu liên tenant: dropdown tìm kiếm tenant (mặc định "Tất cả", chọn n… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-014 | Xóa = soft-delete; dữ liệu đã xóa không hiển thị; Thùng rác cho System Admin (Tenant Admin nếu được cấp) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
-| FR-CMS-015 | System Admin gán dữ liệu platform cho tenant (chỉ đọc với tenant) và clone dữ liệu cấu hình/nội dung giữa t… | P2 (gán) – P3 (clone) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 129 op | _suy luận:_ TC-CMS |
+| FR-CMS-013 | System Admin là người duy nhất xem dữ liệu liên tenant: dropdown tìm kiếm tenant (mặc định "Tất cả", chọn n… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-014 | Xóa = soft-delete; dữ liệu đã xóa không hiển thị; Thùng rác cho System Admin (Tenant Admin nếu được cấp) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
+| FR-CMS-015 | System Admin gán dữ liệu platform cho tenant (chỉ đọc với tenant) và clone dữ liệu cấu hình/nội dung giữa t… | P2 (gán) – P3 (clone) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 132 op | _suy luận:_ TC-CMS |
 
 ### 3.31. `LMS` LMS
 

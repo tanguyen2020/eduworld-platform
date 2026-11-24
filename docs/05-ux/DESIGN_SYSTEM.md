@@ -1,6 +1,6 @@
 # Design System — Game (Godot 3D) và Admin/Ops (CMS/LMS)
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-24 (`tokens@0.9.0`: biến thể Theme dùng chung cho form học sinh, icon game SVG, vòng focus ngoài control, ô nhập cao theo khối — sửa màn S01) · 2026-11-19 (F005: pipeline token chạy được, `tokens@0.1.0`)
+> Trạng thái: Draft · Phiên bản: 0.1 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-24 (F079: entry `@eduworld/ops-ui/game-console` — `SchemaForm`, `ThumbnailImage`, `TurntableViewer`, `GamePreviewFrame`, `ManifestRefPicker`; màu loại sự kiện từ token theme Admin) · 2026-11-24 (`tokens@0.9.0`: biến thể Theme dùng chung cho form học sinh, icon game SVG, vòng focus ngoài control, ô nhập cao theo khối — sửa màn S01) · 2026-11-19 (F005: pipeline token chạy được, `tokens@0.1.0`)
 > Liên quan: [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [ADR-0022](../adr/ADR-0022-cms-lms-web-la-react-typescript-spa.md) · [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [SCHOOL_LMS §8](../04-admin-portal/SCHOOL_LMS.md#8-school-learning-dashboard)
 
 ## 1. Tổng quan
@@ -269,6 +269,7 @@ Mỗi màu nghiệp vụ có biến thể cho nền sáng/tối của CMS và bi
 - Kết quả lưu object storage (ADR-0044) theo `media/<sha256>/...`, đăng ký `media_assets` với `kind = render_thumbnail|render_turntable` và gắn vào version tương ứng (ADR-0043).
 - CMS hiển thị thumbnail trong danh sách, form chọn item/phần thưởng, thư viện; đây là **dữ liệu nhận diện nội dung**, không phải phong cách UI của CMS.
 - **Preview tương tác**: khung `GamePreviewFrame` (trong `ops-ui`) nhúng Godot Web export (renderer Compatibility/WebGL 2) ở iframe riêng; chỉ bên trong khung mang giao diện game.
+- **Thành phần ops-ui (F079)** — entry riêng `@eduworld/ops-ui/game-console` (không kéo MathJax/MathLive vào chunk workspace A), mỗi thành phần có story Light/Dark/Compact: `ThumbnailImage` (ảnh 512×512 của đúng version khi `render_status = ready`; `pending`/`failed`/chưa có → khung giữ chỗ viền nét đứt + Tag trạng thái, kích thước theo `controlHeightLG`), `TurntableViewer` (sprite sheet 24 khung 6×4, xoay bằng Slider dùng được bàn phím), `GamePreviewFrame` (iframe `sandbox="allow-scripts allow-same-origin"`, nhận snapshot bằng `postMessage` tới đúng origin — không token trong URL), `ManifestRefPicker` (`SearchSelect` không có chế độ nhập tự do; giá trị không còn trong danh sách bị đánh dấu), `SchemaForm` (form sinh từ JSON Schema: bộ đếm `maxLength`, `const` ẩn, song ngữ vi/en có trạng thái dịch, mảng thêm/xóa/đổi chỗ, lỗi server theo đường dẫn field). Lịch sự kiện tô màu theo loại bằng token theme Admin (`colorPrimary`, `colorInfo`, `colorSuccess`, `colorWarning`, `colorError`…) — không có nhóm màu nghiệp vụ "loại sự kiện" trong `shared-tokens`.
 
 ## 8. Quản trị thay đổi (governance)
 
