@@ -242,6 +242,10 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `filter_quality_gate` | recall ≥ 95%; false positive ≤ 3% | — | release gate | [Confirmed] | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
 | `school_notification_ack_sla_hours` | 24 (p1, tự hại) · 72 (khác) | giờ | platform | [Confirmed — Technical Architect 2026-11-15] | [MODERATION](../03-social-multiplayer/MODERATION.md) §6.4 |
 | `p1_unclaimed_alert_minutes` | 15 (cảnh báo on-call khi case p1 chưa có người nhận) | phút | platform | [Confirmed — Technical Architect 2026-11-15] | [MODERATION](../03-social-multiplayer/MODERATION.md) §6.3 |
+| `oncall_shift_max_hours` | 168 (độ dài tối đa một ca trực Safety Team; env `EW_ONCALL_SHIFT_MAX_HOURS`) | giờ | platform | [Confirmed — F124 2026-11-16] | [MODERATION](../03-social-multiplayer/MODERATION.md) §6.3 |
+| `break_glass_max_duration_hours` | 4 (thời hạn tối đa của quyền break-glass sau khi duyệt; env `EW_BREAK_GLASS_MAX_DURATION_HOURS`, chỉ được siết) | giờ | platform | [Confirmed — F124 2026-11-16] | [MODERATION](../03-social-multiplayer/MODERATION.md) §6.1 |
+| `break_glass_max_window_days` | 30 (khoảng thời gian tin tối đa một yêu cầu break-glass được đọc; env `EW_BREAK_GLASS_MAX_WINDOW_DAYS`, chỉ được siết) | ngày | platform | [Confirmed — F124 2026-11-16] | [MODERATION](../03-social-multiplayer/MODERATION.md) §6.1 |
+| `email_delivery_max_attempts` | 8 lần gửi email nhân sự (thông báo vụ việc, nhắc lại, gọi trực, break-glass), backoff lũy thừa 1, 2, 4… phút tới 1 giờ; hết lượt → `failed` + alert `EmailDeliveryFailing` (env `EW_EMAIL_DELIVERY_MAX_ATTEMPTS`) | lần | platform | [Confirmed — F124 2026-11-16] | [MODERATION](../03-social-multiplayer/MODERATION.md) §6.4 |
 
 ## 13. Học tập
 

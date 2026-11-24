@@ -302,6 +302,10 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 | 503 | `CHAT_TEMPORARILY_UNAVAILABLE` | NATS JetStream hoặc cấp `seq` không sẵn sàng; client thử lại (ADR-0035) — có `Retry-After` |
 | 403 | `CHAT_FEATURE_DISABLED` | Tính năng (pin/typing/receipts/forward/search…) không bật cho loại channel này (§7.1 CHAT_SYSTEM) |
 | 409 | `MODERATION_CASE_CLOSED` | Xử lý (trừ `reopen`), gán hoặc áp sanction gắn case đã `resolved` ([MODERATION §6.2](../03-social-multiplayer/MODERATION.md)) |
+| 409 | `ACCOUNT_LOCK_HELD_BY_SAFETY` | `unlockTenantUser`/`unlockUser` khi tài khoản còn khóa nguồn `moderation_sanction` (sanction `account_lock` của Safety Team): khóa nguồn của người gọi vẫn được gỡ, tài khoản giữ `locked` (F124-AC-05, [ACCOUNT_PROVISIONING §6](../09-identity/ACCOUNT_PROVISIONING.md)) |
+| 409 | `ONCALL_SHIFT_OVERLAP` | Tạo ca trực chồng lấn ca còn hiệu lực cùng `oncall_role` ([MODERATION §6.3](../03-social-multiplayer/MODERATION.md), F124-AC-12) |
+| 409 | `BREAK_GLASS_NOT_PENDING` | Duyệt/từ chối yêu cầu break-glass không còn `pending`, hoặc thu hồi grant đã kết thúc ([MODERATION §6.1](../03-social-multiplayer/MODERATION.md), F124-AC-18) |
+| 403 | `BREAK_GLASS_NOT_ACTIVE` | Đọc tin break-glass khi grant chưa duyệt, hết hạn, bị thu hồi hoặc người gọi không phải người yêu cầu (F124-AC-19) |
 | 422 | `CHAT_ASSET_NOT_AVAILABLE` | `sticker_id`/`gif_id` không tồn tại, chưa publish, chưa gán cho tenant, hoặc sticker pack chưa mở khóa |
 
 **Dashboard & báo cáo** ([DASHBOARD_DATA](DASHBOARD_DATA.md), ADR-0062)
@@ -700,6 +704,11 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 | GET / POST | `/admin/moderation/sanctions` | Danh sách / áp sanction — `listSanctions`, `createSanction` | SM · `moderation.sanction.*` | T / B | P5 |
 | POST | `/admin/moderation/sanctions/{sanction_id}:revoke` | Gỡ sanction trước hạn (lý do) — `revokeSanction` | SM | B | P5 |
 | GET | `/admin/safety/school-notifications?tenant_ids=&acknowledged=&overdue=` | Thông báo đã gửi + trạng thái xác nhận/quá hạn SLA — `listSchoolSafetyNotificationsPlatform` | SM | T | P5 |
+| GET / POST | `/admin/moderation/oncall-shifts?from=&to=&oncall_role=` | Lịch trực Safety Team (keyset) / tạo ca (`Idempotency-Key`, chồng lấn → `409 ONCALL_SHIFT_OVERLAP`) — `listModerationOncallShifts`, `createModerationOncallShift` (F124) | SM · `moderation.case.read` / trưởng ca · `moderation.case.lead` | T / B | P5 |
+| DELETE | `/admin/moderation/oncall-shifts/{shift_id}` | Xóa ca (soft-delete, audit) — `deleteModerationOncallShift` (F124) | Trưởng ca | B | P5 |
+| GET / POST | `/admin/break-glass/grants?status=&tenant_ids=` | Hậu kiểm yêu cầu break-glass / yêu cầu mới (`X-Tenant-Id` đích, lý do 20–1000, ≤ 4 giờ, khoảng tin ≤ 30 ngày) — `listBreakGlassGrants`, `createBreakGlassRequest` (F124) | SYS · `platform.break_glass.approve` (mọi yêu cầu) / `.request` (của mình) | T / B | P5 |
+| POST | `/admin/break-glass/grants/{grant_id}:approve` · `:reject` · `:revoke` | Duyệt/từ chối (System Admin **khác** người yêu cầu, `If-Match`; `409 BREAK_GLASS_NOT_PENDING`) / thu hồi ngay — `approveBreakGlassRequest`, `rejectBreakGlassRequest`, `revokeBreakGlassGrant` (F124) | SYS · `platform.break_glass.approve` (revoke: `.request` hoặc `.approve`) | B | P5 |
+| GET | `/admin/break-glass/grants/{grant_id}/messages` | Tin trong phạm vi grant còn hạn, chỉ người yêu cầu (`tenancy.Bypass(ctx, "break_glass")`, audit mỗi lượt; khác → `403 BREAK_GLASS_NOT_ACTIVE`) — `listBreakGlassMessages` (F124) | SYS (người yêu cầu) | T | P5 |
 | GET | `/tenant/safety/school-notifications` | Thông báo vụ việc liên quan học sinh của trường (tóm tắt) — `listSchoolSafetyNotifications` | SA (school), TA · `moderation.school_notification.read` | T | P5 |
 | POST | `/tenant/safety/school-notifications/{notification_id}:acknowledge` | Xác nhận đã liên hệ phụ huynh (`school_ack_at`, `contact_outcome`) — `acknowledgeSchoolSafetyNotification` | SA, TA · `moderation.school_notification.acknowledge` | B | P5 |
 

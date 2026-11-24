@@ -136,6 +136,123 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/break-glass/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Yêu cầu/quyền break-glass để hậu kiểm (platform.break_glass.approve — mọi yêu cầu; .request — của mình)
+         * @description Chỉ gateway nội bộ + role platform. Không gửi `X-Tenant-Id`; đọc liên tenant qua `tenancy.Bypass(ctx, "break_glass")`
+         *     (audit `cross_tenant.accessed` + metric `eduworld_tenant_filter_bypass_total{reason="break_glass"}`). Người chỉ có
+         *     `platform.break_glass.request` thấy yêu cầu của chính mình. Có số tin đã xem để hậu kiểm (F124-AC-20). Phân trang keyset
+         *     theo (`requested_at`, `grant_id`) giảm dần trong SQL.
+         */
+        get: operations["listBreakGlassGrants"];
+        put?: never;
+        /**
+         * Yêu cầu break-glass đọc tin nhắn ngoài case (System Admin · platform.break_glass.request)
+         * @description Đường duy nhất đọc chat ngoài case (MODERATION §6.1, CHILD_SAFETY §7). `X-Tenant-Id` = tenant đích (R20). Lưu yêu cầu
+         *     `pending`, audit `break_glass.requested`, phát `break_glass.requested` để module identity email các System Admin khác có
+         *     `platform.break_glass.approve` (không có lý do trong email). `safety_moderator`, role tenant → `403 PERMISSION_DENIED`
+         *     (không MFA — ADR-0094); `duration_minutes` > `break_glass_max_duration_hours`×60 hoặc khoảng tin > `break_glass_max_window_days`
+         *     → `422 VALIDATION_FAILED` (F124-AC-17, AC-21).
+         */
+        post: operations["createBreakGlassRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/break-glass/grants/{grant_id}:approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Duyệt yêu cầu break-glass (System Admin khác người yêu cầu · platform.break_glass.approve)
+         * @description Hai người: người yêu cầu tự duyệt → `403 PERMISSION_DENIED`; yêu cầu không còn `pending` → `409 BREAK_GLASS_NOT_PENDING`.
+         *     Đặt `expires_at = now + duration_minutes`, audit `break_glass.approved` (F124-AC-18). `X-Tenant-Id` = tenant của yêu cầu.
+         */
+        post: operations["approveBreakGlassRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/break-glass/grants/{grant_id}:reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Từ chối yêu cầu break-glass (System Admin khác người yêu cầu · platform.break_glass.approve)
+         * @description Như `approveBreakGlassRequest`; chuyển `rejected`, audit `break_glass.rejected` (F124-AC-18).
+         */
+        post: operations["rejectBreakGlassRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/break-glass/grants/{grant_id}:revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Thu hồi quyền break-glass ngay (platform.break_glass.request hoặc .approve)
+         * @description Kết thúc grant `pending`/`approved` ngay (`revoked`), audit `break_glass.revoked` (F124-AC-20); grant đã kết thúc →
+         *     `409 BREAK_GLASS_NOT_PENDING`. `X-Tenant-Id` = tenant của grant.
+         */
+        post: operations["revokeBreakGlassGrant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/break-glass/grants/{grant_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Đọc tin trong phạm vi grant break-glass đã duyệt, còn hạn (chỉ người yêu cầu)
+         * @description Chỉ người yêu cầu của grant `approved` chưa hết hạn; chỉ tin của channel (`scope_type = channel`) hoặc tin do người dùng gửi
+         *     (`scope_type = user`) trong tenant đích và khoảng `[window_from, window_to)`. Đọc qua `tenancy.Bypass(ctx, "break_glass")`,
+         *     audit `break_glass.messages_viewed` mỗi lượt (không chép nội dung), metric `reason="break_glass"`. Grant không hiệu lực, người
+         *     khác, ngoài phạm vi → `403 BREAK_GLASS_NOT_ACTIVE` (F124-AC-19). Tin gameplay đã purge (ADR-0033) không được khôi phục
+         *     (F124-AC-22). Phân trang keyset theo (`created_at`, `message_id`) trong SQL.
+         */
+        get: operations["listBreakGlassMessages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/catalog/countries": {
         parameters: {
             query?: never;
@@ -1222,6 +1339,55 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/moderation/oncall-shifts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lịch trực Safety Team (ca chính/dự phòng) — moderation.case.read
+         * @description Chỉ gateway nội bộ + role platform (ADR-0027, ADR-0072). Bảng platform không theo tenant (`chat.moderation_oncall_shifts`),
+         *     không chứa dữ liệu học sinh. Lọc ca giao với khoảng `[from, to)` và theo `oncall_role`; phân trang keyset theo
+         *     (`starts_at`, `shift_id`) trong SQL (F124-AC-16).
+         */
+        get: operations["listModerationOncallShifts"];
+        put?: never;
+        /**
+         * Tạo ca trực (trưởng ca · moderation.case.lead)
+         * @description Người trực phải là nhân sự platform có `moderation.case.act` (kiểm qua facade identity `resolvePrincipal`); ca chồng lấn
+         *     cùng `oncall_role` → `409 ONCALL_SHIFT_OVERLAP`; độ dài ca ≤ `oncall_shift_max_hours`. Audit
+         *     `moderation.oncall_shift.created` (F124-AC-12). Không gửi `X-Tenant-Id` (dữ liệu platform).
+         */
+        post: operations["createModerationOncallShift"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/moderation/oncall-shifts/{shift_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Xóa ca trực (soft-delete, audit) — moderation.case.lead
+         * @description Soft-delete (R21) + audit `moderation.oncall_shift.deleted`. Case p1 đang gán `rotation` cho ca bị xóa vẫn `open` và được
+         *     job `oncall-escalator` gọi tiếp mức kế tiếp (F124 Edge Cases).
+         */
+        delete: operations["deleteModerationOncallShift"];
         options?: never;
         head?: never;
         patch?: never;
@@ -10453,6 +10619,67 @@ export interface components {
             subject_id?: components["schemas"]["Uuid"];
             title: components["schemas"]["LocalizedName"];
         };
+        BreakGlassDecision: {
+            decision_note?: string;
+        };
+        /** @description Yêu cầu/quyền break-glass của System Admin (MODERATION §6.1, F124) — không có nội dung tin */
+        BreakGlassGrant: {
+            decided_at?: components["schemas"]["Timestamp"];
+            decided_by?: components["schemas"]["Uuid"];
+            decision_note?: string;
+            duration_minutes: number;
+            expires_at?: components["schemas"]["Timestamp"];
+            grant_id: components["schemas"]["Uuid"];
+            messages_viewed_count: number;
+            reason: string;
+            requested_at: components["schemas"]["Timestamp"];
+            requested_by: components["schemas"]["Uuid"];
+            revoke_reason?: string;
+            revoked_at?: components["schemas"]["Timestamp"];
+            revoked_by?: components["schemas"]["Uuid"];
+            scope_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            scope_type: "channel" | "user";
+            status: components["schemas"]["BreakGlassStatus"];
+            tenant_id: components["schemas"]["Uuid"];
+            /** @description Giá trị If-Match của approve/reject (ETag W/"<version>") */
+            version: number;
+            window_from: components["schemas"]["Timestamp"];
+            window_to: components["schemas"]["Timestamp"];
+        };
+        /** @description Một tin trong phạm vi grant break-glass (nội dung gốc; chỉ người yêu cầu của grant hiệu lực, mỗi lượt có audit) */
+        BreakGlassMessage: {
+            body?: string;
+            body_display?: string;
+            channel_id: components["schemas"]["Uuid"];
+            created_at: components["schemas"]["Timestamp"];
+            /** @enum {string} */
+            kind: "text" | "emoji" | "quick" | "sticker" | "gif" | "system";
+            message_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            moderation_state: "allowed" | "masked" | "unchecked" | "held" | "removed";
+            quick_message_id?: string;
+            recalled_at?: components["schemas"]["Timestamp"];
+            revision?: number;
+            sender_id: components["schemas"]["Uuid"];
+            sender_school_id?: components["schemas"]["Uuid"];
+            seq?: number;
+        };
+        BreakGlassRequestCreate: {
+            /** @description Thời hạn quyền sau khi duyệt; trần `break_glass_max_duration_hours` × 60 (mặc định 4 giờ) */
+            duration_minutes: number;
+            reason: string;
+            scope_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            scope_type: "channel" | "user";
+            window_from: components["schemas"]["Timestamp"];
+            window_to: components["schemas"]["Timestamp"];
+        };
+        BreakGlassRevoke: {
+            reason: string;
+        };
+        /** @enum {string} */
+        BreakGlassStatus: "pending" | "approved" | "rejected" | "expired" | "revoked";
         CalibrationProposal: {
             based_on_version_id: components["schemas"]["Uuid"];
             created_at: components["schemas"]["Timestamp"];
@@ -13532,6 +13759,11 @@ export interface components {
             target_user_id?: components["schemas"]["Uuid"];
         };
         ModerationCase: {
+            /**
+             * @description manual = nhận/gán tay; rotation = gán tự động theo vòng trực khi case p1 được tạo (case vẫn open tới khi người trực nhận — F124-AC-13)
+             * @enum {string}
+             */
+            assigned_via?: "manual" | "rotation";
             assignee_moderator_id?: components["schemas"]["Uuid"];
             case_id: components["schemas"]["Uuid"];
             category_code?: string;
@@ -13543,6 +13775,11 @@ export interface components {
             contact_path?: "school" | "platform_direct";
             created_at: components["schemas"]["Timestamp"];
             first_response_due_at?: components["schemas"]["Timestamp"];
+            /**
+             * @description Mức trực đã gọi gần nhất của case p1 chưa nhận (job oncall-escalator, F124-AC-14)
+             * @enum {string}
+             */
+            oncall_page_level?: "primary" | "secondary" | "lead" | "system_admin";
             report_count?: number;
             resolved_at?: components["schemas"]["Timestamp"];
             school_ack_at?: components["schemas"]["Timestamp"];
@@ -13845,6 +14082,30 @@ export interface components {
         /** @description numeric — chuỗi học sinh nhập (dấu thập phân theo decimal_separator; `a/b` khi allow_fraction_input) */
         NumericResponse: {
             value: string;
+        };
+        /**
+         * @description Vai trò ca trực Safety Team (MODERATION §6.3)
+         * @enum {string}
+         */
+        OncallRole: "primary" | "secondary";
+        /** @description Một ca trực Safety Team (`chat.moderation_oncall_shifts`, dữ liệu platform — F124) */
+        OncallShift: {
+            created_at: components["schemas"]["Timestamp"];
+            created_by?: components["schemas"]["Uuid"];
+            ends_at: components["schemas"]["Timestamp"];
+            moderator_user_id: components["schemas"]["Uuid"];
+            note?: string;
+            oncall_role: components["schemas"]["OncallRole"];
+            shift_id: components["schemas"]["Uuid"];
+            starts_at: components["schemas"]["Timestamp"];
+            version: number;
+        };
+        OncallShiftCreate: {
+            ends_at: components["schemas"]["Timestamp"];
+            moderator_user_id: components["schemas"]["Uuid"];
+            note?: string;
+            oncall_role: components["schemas"]["OncallRole"];
+            starts_at: components["schemas"]["Timestamp"];
         };
         /** @description ordering — thứ tự item id */
         OrderingResponse: {
@@ -14349,7 +14610,7 @@ export interface components {
          * @description Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
          * @enum {string}
          */
-        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "QUEST_PREREQUISITE_NOT_MET" | "QUEST_ACTIVE_LIMIT" | "QUEST_STEP_ATTEMPT_LIMIT" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_REACTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
+        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "QUEST_PREREQUISITE_NOT_MET" | "QUEST_ACTIVE_LIMIT" | "QUEST_STEP_ATTEMPT_LIMIT" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_REACTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ACCOUNT_LOCK_HELD_BY_SAFETY" | "ONCALL_SHIFT_OVERLAP" | "BREAK_GLASS_NOT_PENDING" | "BREAK_GLASS_NOT_ACTIVE" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
         ProgressionLevel: {
             level: number;
             rewards?: components["schemas"]["RewardGrantSummary"][];
@@ -16395,6 +16656,8 @@ export interface components {
             email?: string | null;
             last_login_at?: components["schemas"]["Timestamp"] | null;
             locale?: components["schemas"]["Locale"];
+            /** @description Nguồn khóa còn hiệu lực khi `status = locked` (F124-AC-06, ACCOUNT_PROVISIONING §6): nhân sự thấy nguồn, không thấy mã case hay lý do nội bộ */
+            lock_sources?: ("school_admin" | "platform_admin" | "sis" | "moderation_sanction")[];
             /** @description Tenant gốc; null = nhân sự platform (chỉ nhận role platform), có giá trị = học sinh hoặc nhân sự trường (chỉ nhận role tenant) — ADR-0081 */
             primary_tenant_id?: components["schemas"]["Uuid"] | null;
             /** @enum {string} */
@@ -16585,7 +16848,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED, CHAT_CHANNEL_CLOSED) */
+        /** @description Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED, CHAT_CHANNEL_CLOSED, ACCOUNT_LOCK_HELD_BY_SAFETY, ONCALL_SHIFT_OVERLAP, BREAK_GLASS_NOT_PENDING) */
         Conflict: {
             headers: {
                 [name: string]: unknown;
@@ -16613,7 +16876,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED */
+        /** @description PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED, BREAK_GLASS_NOT_ACTIVE */
         Forbidden: {
             headers: {
                 [name: string]: unknown;
@@ -16808,6 +17071,7 @@ export interface components {
         GameSessionId: components["schemas"]["Uuid"];
         GoalIdPath: components["schemas"]["Uuid"];
         GradeLevelQuery: components["schemas"]["GradeLevel"];
+        GrantIdPath: components["schemas"]["Uuid"];
         /**
          * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
          *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
@@ -16863,6 +17127,7 @@ export interface components {
         SchoolId: components["schemas"]["Uuid"];
         SeasonTierPath: number;
         SectionIdPath: components["schemas"]["Uuid"];
+        ShiftIdPath: components["schemas"]["Uuid"];
         StepId: string;
         StudentId: components["schemas"]["Uuid"];
         SubjectIdPath: components["schemas"]["Uuid"];
@@ -17294,6 +17559,254 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             422: components["responses"]["ValidationFailed"];
+        };
+    };
+    listBreakGlassGrants: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+                status?: components["schemas"]["BreakGlassStatus"];
+                /**
+                 * @description Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
+                 *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
+                 */
+                tenant_ids?: components["parameters"]["TenantIds"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BreakGlassGrant"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    createBreakGlassRequest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BreakGlassRequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Đã tạo yêu cầu (pending) */
+            201: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BreakGlassGrant"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    approveBreakGlassRequest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                grant_id: components["parameters"]["GrantIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BreakGlassDecision"];
+            };
+        };
+        responses: {
+            /** @description Đã duyệt */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BreakGlassGrant"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    rejectBreakGlassRequest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                "If-Match"?: components["parameters"]["IfMatch"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                grant_id: components["parameters"]["GrantIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BreakGlassDecision"];
+            };
+        };
+        responses: {
+            /** @description Đã từ chối */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BreakGlassGrant"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    revokeBreakGlassGrant: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                grant_id: components["parameters"]["GrantIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BreakGlassRevoke"];
+            };
+        };
+        responses: {
+            /** @description Đã thu hồi */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BreakGlassGrant"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    listBreakGlassMessages: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                grant_id: components["parameters"]["GrantIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BreakGlassMessage"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     createCountry: {
@@ -20002,6 +20515,106 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    listModerationOncallShifts: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                from?: components["schemas"]["Timestamp"];
+                limit?: components["parameters"]["Limit"];
+                oncall_role?: components["schemas"]["OncallRole"];
+                to?: components["schemas"]["Timestamp"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OncallShift"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    createModerationOncallShift: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OncallShiftCreate"];
+            };
+        };
+        responses: {
+            /** @description Đã tạo */
+            201: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OncallShift"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    deleteModerationOncallShift: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                shift_id: components["parameters"]["ShiftIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã xóa */
+            204: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     listSanctions: {
         parameters: {
             query?: {
@@ -21777,6 +22390,15 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            /** @description ACCOUNT_LOCK_HELD_BY_SAFETY — tài khoản còn khóa nguồn kiểm duyệt (sanction `account_lock` của Safety Team); khóa nguồn của người gọi (nếu có) vẫn được gỡ, tài khoản giữ `locked` (F124-AC-05). CONFLICT — còn khóa của nguồn khác (trường/platform/SIS) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             422: components["responses"]["ValidationFailed"];
         };
     };
@@ -39138,6 +39760,15 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            /** @description ACCOUNT_LOCK_HELD_BY_SAFETY — tài khoản còn khóa nguồn kiểm duyệt (sanction `account_lock` của Safety Team); khóa nguồn của người gọi (nếu có) vẫn được gỡ, tài khoản giữ `locked` (F124-AC-05). CONFLICT — còn khóa của nguồn khác (trường/platform/SIS) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             422: components["responses"]["ValidationFailed"];
         };
     };

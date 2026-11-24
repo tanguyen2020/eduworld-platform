@@ -252,6 +252,8 @@ export type ActionKey =
   | "action.live_ops.moderation_cases.view"
   | "action.live_ops.moderation_cases.act"
   | "action.live_ops.moderation_cases.notify_school"
+  | "action.live_ops.moderation_cases.oncall_view"
+  | "action.live_ops.moderation_cases.oncall_manage"
   | "action.live_ops.sanctions.view"
   | "action.live_ops.sanctions.write"
   | "action.live_ops.tenant_terms.view"
@@ -301,7 +303,9 @@ export type ActionKey =
   | "action.platform_admin.integrations.view"
   | "action.platform_admin.trash.view"
   | "action.platform_admin.trash.restore"
-  | "action.platform_admin.audit_logs.view";
+  | "action.platform_admin.audit_logs.view"
+  | "action.platform_admin.audit_logs.break_glass_request"
+  | "action.platform_admin.audit_logs.break_glass_approve";
 
 export interface ActionDef {
   readonly key: ActionKey;
@@ -990,6 +994,8 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
           { key: "action.live_ops.moderation_cases.view", labelKey: "portal.action.live_ops.moderation_cases.view", requiredPermissions: ["moderation.case.read", "moderation.case.messages.read"] },
           { key: "action.live_ops.moderation_cases.act", labelKey: "portal.action.live_ops.moderation_cases.act", requiredPermissions: ["moderation.case.act"] },
           { key: "action.live_ops.moderation_cases.notify_school", labelKey: "portal.action.live_ops.moderation_cases.notify_school", requiredPermissions: ["moderation.school_notification.send"] },
+          { key: "action.live_ops.moderation_cases.oncall_view", labelKey: "portal.action.live_ops.moderation_cases.oncall_view", requiredPermissions: ["moderation.case.read"] },
+          { key: "action.live_ops.moderation_cases.oncall_manage", labelKey: "portal.action.live_ops.moderation_cases.oncall_manage", requiredPermissions: ["moderation.case.lead"] },
         ],
       },
       {
@@ -1219,6 +1225,8 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
         requiredPermissions: ["platform.audit.read"],
         actions: [
           { key: "action.platform_admin.audit_logs.view", labelKey: "portal.action.platform_admin.audit_logs.view", requiredPermissions: ["platform.audit.read"] },
+          { key: "action.platform_admin.audit_logs.break_glass_request", labelKey: "portal.action.platform_admin.audit_logs.break_glass_request", requiredPermissions: ["platform.break_glass.request"] },
+          { key: "action.platform_admin.audit_logs.break_glass_approve", labelKey: "portal.action.platform_admin.audit_logs.break_glass_approve", requiredPermissions: ["platform.break_glass.approve"] },
         ],
       },
     ],

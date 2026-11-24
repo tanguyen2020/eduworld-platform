@@ -4481,6 +4481,12 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: ACCOUNT_LOCK_HELD_BY_SAFETY — tài khoản còn khóa nguồn kiểm duyệt (sanction `account_lock` của Safety Team); khóa nguồn của người gọi (nếu có) vẫn được gỡ, tài khoản giữ `locked` (F124-AC-05). CONFLICT — còn khóa của nguồn khác (trường/platform/SIS)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '422':
           $ref: '#/components/responses/ValidationFailed'
   /admin/users/{user_id}:deactivate:
@@ -4599,6 +4605,12 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: ACCOUNT_LOCK_HELD_BY_SAFETY — tài khoản còn khóa nguồn kiểm duyệt (sanction `account_lock` của Safety Team); khóa nguồn của người gọi (nếu có) vẫn được gỡ, tài khoản giữ `locked` (F124-AC-05). CONFLICT — còn khóa của nguồn khác (trường/platform/SIS)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '422':
           $ref: '#/components/responses/ValidationFailed'
   /admin/sis/connections/{connection_id}/schools:
@@ -5655,6 +5667,10 @@ components:
         - DASHBOARD_QUERY_TIMEOUT
         - EXPORT_LIMIT_REACHED
         - MODERATION_CASE_CLOSED
+        - ACCOUNT_LOCK_HELD_BY_SAFETY
+        - ONCALL_SHIFT_OVERLAP
+        - BREAK_GLASS_NOT_PENDING
+        - BREAK_GLASS_NOT_ACTIVE
         - ROLE_NOT_FOUND
         - FEATURE_DISABLED
         - FEATURE_NOT_DISABLEABLE
@@ -7630,6 +7646,18 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Timestamp'
             - type: 'null'
+        lock_sources:
+          type: array
+          maxItems: 4
+          uniqueItems: true
+          description: 'Nguồn khóa còn hiệu lực khi `status = locked` (F124-AC-06, ACCOUNT_PROVISIONING §6): nhân sự thấy nguồn, không thấy mã case hay lý do nội bộ'
+          items:
+            type: string
+            enum:
+              - school_admin
+              - platform_admin
+              - sis
+              - moderation_sanction
         tenant_ids:
           type: array
           maxItems: 50
@@ -9029,7 +9057,7 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
     Forbidden:
-      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
+      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED, BREAK_GLASS_NOT_ACTIVE
       content:
         application/problem+json:
           schema:
@@ -9059,7 +9087,7 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
     Conflict:
-      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED, CHAT_CHANNEL_CLOSED)
+      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED, CHAT_CHANNEL_CLOSED, ACCOUNT_LOCK_HELD_BY_SAFETY, ONCALL_SHIFT_OVERLAP, BREAK_GLASS_NOT_PENDING)
       content:
         application/problem+json:
           schema:

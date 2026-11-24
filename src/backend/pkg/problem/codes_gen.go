@@ -7,6 +7,7 @@ const (
 	AccessOutsideAllowedHours        Code = "ACCESS_OUTSIDE_ALLOWED_HOURS"
 	AccountDeactivated               Code = "ACCOUNT_DEACTIVATED"
 	AccountLocked                    Code = "ACCOUNT_LOCKED"
+	AccountLockHeldBySafety          Code = "ACCOUNT_LOCK_HELD_BY_SAFETY"
 	AccountNotProvisioned            Code = "ACCOUNT_NOT_PROVISIONED"
 	AccountSetupRequired             Code = "ACCOUNT_SETUP_REQUIRED"
 	ActiveSessionOnOtherDevice       Code = "ACTIVE_SESSION_ON_OTHER_DEVICE"
@@ -27,6 +28,8 @@ const (
 	BadRequest                       Code = "BAD_REQUEST"
 	BossEncounterFull                Code = "BOSS_ENCOUNTER_FULL"
 	BossPhaseClosed                  Code = "BOSS_PHASE_CLOSED"
+	BreakGlassNotActive              Code = "BREAK_GLASS_NOT_ACTIVE"
+	BreakGlassNotPending             Code = "BREAK_GLASS_NOT_PENDING"
 	CallerNotAllowed                 Code = "CALLER_NOT_ALLOWED"
 	ChallengeAttemptLimit            Code = "CHALLENGE_ATTEMPT_LIMIT"
 	ChallengeNotEligible             Code = "CHALLENGE_NOT_ELIGIBLE"
@@ -118,6 +121,7 @@ const (
 	NicknameUnavailable              Code = "NICKNAME_UNAVAILABLE"
 	NotFound                         Code = "NOT_FOUND"
 	NoActiveEnrollment               Code = "NO_ACTIVE_ENROLLMENT"
+	OncallShiftOverlap               Code = "ONCALL_SHIFT_OVERLAP"
 	PartyActivityNotEligible         Code = "PARTY_ACTIVITY_NOT_ELIGIBLE"
 	PartyAlreadyInParty              Code = "PARTY_ALREADY_IN_PARTY"
 	PartyFull                        Code = "PARTY_FULL"
@@ -186,6 +190,7 @@ var statusByCode = map[Code]int{
 	AccessOutsideAllowedHours:        403,
 	AccountDeactivated:               403,
 	AccountLocked:                    403,
+	AccountLockHeldBySafety:          409,
 	AccountNotProvisioned:            403,
 	AccountSetupRequired:             403,
 	ActiveSessionOnOtherDevice:       409,
@@ -206,6 +211,8 @@ var statusByCode = map[Code]int{
 	BadRequest:                       400,
 	BossEncounterFull:                409,
 	BossPhaseClosed:                  409,
+	BreakGlassNotActive:              403,
+	BreakGlassNotPending:             409,
 	CallerNotAllowed:                 403,
 	ChallengeAttemptLimit:            409,
 	ChallengeNotEligible:             403,
@@ -297,6 +304,7 @@ var statusByCode = map[Code]int{
 	NicknameUnavailable:              409,
 	NotFound:                         404,
 	NoActiveEnrollment:               403,
+	OncallShiftOverlap:               409,
 	PartyActivityNotEligible:         409,
 	PartyAlreadyInParty:              409,
 	PartyFull:                        409,
@@ -365,6 +373,7 @@ var allCodes = []Code{
 	AccessOutsideAllowedHours,
 	AccountDeactivated,
 	AccountLocked,
+	AccountLockHeldBySafety,
 	AccountNotProvisioned,
 	AccountSetupRequired,
 	ActiveSessionOnOtherDevice,
@@ -385,6 +394,8 @@ var allCodes = []Code{
 	BadRequest,
 	BossEncounterFull,
 	BossPhaseClosed,
+	BreakGlassNotActive,
+	BreakGlassNotPending,
 	CallerNotAllowed,
 	ChallengeAttemptLimit,
 	ChallengeNotEligible,
@@ -476,6 +487,7 @@ var allCodes = []Code{
 	NicknameUnavailable,
 	NotFound,
 	NoActiveEnrollment,
+	OncallShiftOverlap,
 	PartyActivityNotEligible,
 	PartyAlreadyInParty,
 	PartyFull,

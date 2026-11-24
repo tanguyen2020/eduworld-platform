@@ -150,7 +150,9 @@ Metric bổ sung:
 | `eduworld_client_fps` (histogram từ telemetry, `platform`, `device_tier`) | Hiệu năng client (NFR-PERF-004) |
 | `eduworld_client_crashes_total` (`platform`, `client_version`) | Ổn định client |
 | `eduworld_chat_policy_disabled` (`tenant`, `step`) — gauge 1 khi bước kiểm duyệt đang tắt | Theo dõi tenant đang tắt kiểm duyệt |
-| `eduworld_moderation_cases_open` (`severity`, `assigned`), `eduworld_moderation_case_unclaimed_age_seconds` (`severity`), `eduworld_moderation_case_first_response_seconds` (`severity`), `eduworld_chat_reports_total` (`reason`), `eduworld_moderation_school_notifications_overdue` — F121, không nhãn người dùng/case | Hàng đợi Safety Team, alert `ModerationP1Unclaimed` |
+| `eduworld_moderation_cases_open` (`severity`, `assigned`), `eduworld_moderation_case_unclaimed_age_seconds` (`severity`), `eduworld_moderation_case_first_response_seconds` (`severity`), `eduworld_chat_reports_total` (`reason`), `eduworld_moderation_school_notifications_overdue` — F121, không nhãn người dùng/case | Hàng đợi Safety Team, alert `ModerationP1Unclaimed` ("chưa nhận" = case còn `open`, kể cả case đã gán `rotation` — F124) |
+| `eduworld_moderation_oncall_pages_total` (`level`), `eduworld_moderation_oncall_coverage` (`oncall_role`: 1 = có ca hiện hành), `eduworld_break_glass_grants_total` (`status`) — F124, module chat, không nhãn người dùng/case/tenant | Vòng trực p1 (alert `ModerationOncallGap`), hậu kiểm break-glass; lượt đọc break-glass đếm ở `eduworld_tenant_filter_bypass_total{reason="break_glass"}` |
+| `eduworld_account_locks_total` (`source`, `action`), `eduworld_email_deliveries_total` (`template`, `status`: `sent`/`failed`/`skipped`/`retry`), `eduworld_school_safety_notification_no_recipient_total` (`template`) — F124, module identity, không địa chỉ email | Khóa theo sanction, email nhân sự (alert `EmailDeliveryFailing`, `SchoolSafetyNotificationNoRecipient`) |
 | `eduworld_chat_unchecked_messages_total` (`tenant`) | Số tin gửi khi kiểm duyệt tắt |
 | `eduworld_chat_sensitive_matches_total` (`category`, `action`), `eduworld_chat_sensitive_catalog_version` (`scope`), `eduworld_chat_sensitive_reload_seconds` | Danh mục từ nhạy cảm: khớp theo nhóm (không nội dung), version đang chạy trên node, thời gian reload |
 | `eduworld_dashboard_query_duration_seconds` (histogram, `module`, `query_id`, `grain`, `cache`), `eduworld_dashboard_cache_requests_total` (`result`), `eduworld_dashboard_rejected_total` (`reason`: range/busy/timeout) | Dashboard ([DASHBOARD_DATA §13](../07-backend/DASHBOARD_DATA.md#13-quan-sát-và-cảnh-báo), ADR-0062) |
@@ -247,6 +249,11 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 | `ChatModerationBacklog` | Case `high` chờ > 30 phút | Critical | Báo ca trực Platform Safety Team (ADR-0072); case p1 (grooming, tự hại) theo on-call 24/7 [Confirmed] |
 | `ModerationP1Unclaimed` | `max(eduworld_moderation_case_unclaimed_age_seconds{severity="p1"}) > 900` (case p1 chưa gán quá `p1_unclaimed_alert_minutes`, F121) | Critical | Ca trực Safety Team nhận case p1 cũ nhất ngay; xem [Runbook case p1](#runbook-moderation-p1-unclaimed) |
 | `ModerationSlaBreached` | Case p1 chưa gán quá 1 giờ (`report_sla`, job `moderation-sla-escalator` đã leo thang) | Critical | Trưởng ca nhận case; ghi biên bản |
+| `ModerationOncallGap` | `min by (oncall_role) (eduworld_moderation_oncall_coverage) == 0` trong 5 phút (không có ca trực hiện hành của vai trò, F124) | Critical | Trưởng ca tạo ca thiếu; xem [Runbook vòng trực](#runbook-moderation-oncall-gap) |
+| `EmailDeliveryFailing` | `increase(eduworld_email_deliveries_total{status="failed"}[15m]) > 0` (email nhân sự hết `email_delivery_max_attempts`, F124) | Critical | Kiểm SMTP; xem [Runbook email](#runbook-email-delivery-failing) |
+| `SchoolSafetyNotificationNoRecipient` | `increase(eduworld_school_safety_notification_no_recipient_total[1h]) > 0` (trường không có School Admin/Tenant Admin nhận email, F124) | Warning | Gán School Admin; Safety Team liên hệ trường trực tiếp |
+
+Alert có nhãn `team: safety` (`ModerationP1Unclaimed`, `ModerationSlaBreached`, `ModerationSchoolNotificationsOverdue`, `ModerationOncallGap`, `EmailDeliveryFailing`, `SchoolSafetyNotificationNoRecipient`) định tuyến tới receiver `safety-oncall` của Alertmanager (`deploy/observability/alertmanager/alertmanager.yml`: gửi ngay, nhắc lại mỗi 15 phút; URL webhook là secret `ops_alert_safety_*`) — F124; định tuyến chung và kênh SMS: F131.
 | `ModerationSchoolNotificationsOverdue` | `eduworld_moderation_school_notifications_overdue > 0` trong 1 giờ | Warning | Theo dõi trường chưa xác nhận ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md)) |
 | `ChatPIISpike` | Tỷ lệ PII blocked > 5× baseline 15 phút | Warning | Kiểm tra sự cố/chiến dịch spam |
 | `ChatModerationDisabled` | `eduworld_chat_policy_disabled == 1` cho bất kỳ tenant/bước nào | Warning (ngay khi tắt) | Xác nhận với System Admin đã tắt, kiểm tra lý do và `expires_at` (ADR-0030) |
@@ -276,6 +283,19 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 2. Người trực nhận case cũ nhất (`assignModerationCase`); case p1 đã có hạn chế tạm thời người bị báo cáo (`case_hold`, F121-AC-04).
 3. Case tự hại có `support_guide = child_protection_111`: làm theo [CHILD_SAFETY §8–§9](../10-security/CHILD_SAFETY.md); gửi thông báo trường (`notifySchoolForCase`).
 4. Quá 1 giờ: `moderation-sla-escalator` đã chuyển `escalated` — trưởng ca nhận; ghi biên bản vào `docs/11-operations/alert-drills/`.
+5. Vòng trực (F124): case p1 mới đã gán `rotation` cho ca `primary` và email người trực; job `oncall-escalator` gọi tiếp `secondary` (15 phút), trưởng ca (30 phút), System Admin (1 giờ) — kiểm `oncall_page_level` trên case.
+
+### Runbook moderation-oncall-gap
+
+1. `listModerationOncallShifts?from=<now>&to=<now+1d>` — tìm vai trò không có ca hiện hành (gauge `eduworld_moderation_oncall_coverage{oncall_role}` = 0).
+2. Trưởng ca tạo ca bù (`createModerationOncallShift`, người trực có `moderation.case.act`); trong lúc thiếu, case p1 gọi thẳng mức kế tiếp (trưởng ca).
+3. Ghi biên bản thiếu ca vào `docs/11-operations/alert-drills/`.
+
+### Runbook email-delivery-failing
+
+1. Kiểm relay SMTP (`EW_SMTP_HOST`/`EW_SMTP_PORT`, mailpit ở local) và `identity.email_deliveries` (`status = failed`, `last_error_code` chỉ là mã SMTP — không có địa chỉ).
+2. Thông báo vụ việc vẫn hiển thị trong portal của trường; với case p1, Safety Team liên hệ trực tiếp đầu mối an toàn của trường ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md)).
+3. Sửa relay rồi theo dõi lượt gửi mới (`eduworld_email_deliveries_total{status="sent"}`); lượt `failed` không tự gửi lại.
 
 Alert định nghĩa trong `deploy/observability/prometheus/rules/*.yaml`, mỗi alert có `runbook_url` trỏ tới runbook trong `docs/11-operations/runbooks/`; biên bản diễn tập alert lưu ở `docs/11-operations/alert-drills/` ([DEPLOYMENT §15](DEPLOYMENT.md)). Prometheus scrape mỗi task qua cổng quản trị `EW_ADMIN_ADDR` (`tasks.<swarm-service>:9090`, [DEPLOYMENT §14](DEPLOYMENT.md)). Probe synthetic chạy bằng tài khoản `hs.qa.probe` trong tenant QA (`is_qa = true`); số liệu của tenant QA bị loại khỏi analytics và dashboard ([GAME_ANALYTICS](GAME_ANALYTICS.md), [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md)).
 

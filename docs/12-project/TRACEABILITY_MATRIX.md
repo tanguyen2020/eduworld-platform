@@ -35,7 +35,7 @@
 | `TRN` Tournament | module competition | 3 | 3 | 0 | 1 | 0 | CMP (10) | 1 | 0 | 0 / 8 |
 | `SOC` Social | module chat | 4 | 4 | 0 | 35 | 0 | SOC (9) | 1 | 0 | 0 / 11 |
 | `CHAT` Chat | module chat | 17 | 17 | 0 | 17 | 0 | CHAT (48) | 2 | 15 | 0 / 0 |
-| `MOD` Moderation & Child Safety | module chat | 18 | 18 | 0 | 38 | 0 | CHAT (48) | 4 | 6 | 0 / 25 |
+| `MOD` Moderation & Child Safety | module chat | 18 | 18 | 0 | 41 | 0 | CHAT (48) | 4 | 6 | 0 / 25 |
 | `NTF` Notification | module chat | 3 | 3 | 1 | 1 | 0 | SOC (9) | 0 | 0 | 0 / 0 |
 | `GAM` XP, level, tiến trình | module game | 11 | 11 | 0 | 5 | 0 | GAM (12) | 1 | 4 | 0 / 10 |
 | `RWD` Phần thưởng | module game | 3 | 3 | 0 | 12 | 0 | GAM (12), ECO (8) | 0 | 0 | 0 / 0 |
@@ -46,7 +46,7 @@
 | `LMS` LMS | module learning | 10 | 10 | 1 | 31 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 21 | 564 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 21 | 573 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -538,24 +538,24 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 25 AC, 0 US — [MODERATION](../03
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-MOD-001 | Content/profanity filtering, anti-spam, anti-bullying, PII detection | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-002 | Report message, report user, block, mute | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-003 | Moderation queue tập trung ở Platform Safety Team (role safety_moderator); mọi case gắn tenant/trường; audi… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [EDU_FIT_REVIEW](EDU_FIT_REVIEW.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-004 | Chat policy theo platform → tenant → school (bỏ cấp class — ADR-0095; không theo grade — thay mục "Age/Grad… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-005 | Không ai có quyền đọc toàn bộ chat của mọi trường; truy cập chat đều audit | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-006 | Sanction: warn, mute có thời hạn, restrict (chỉ quick message), escalate | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-007 | Removed (ADR-0072) — điều khiển channel lớp của giáo viên; channel lớp chịu chat policy cấp trường do schoo… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-008 | Không giám sát chat vượt quá mục đích an toàn cần thiết | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-009 | Danh mục từ nhạy cảm quản lý trong CMS: category (severity, action mặc định), term (match type, biến thể tự… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-010 | Action theo mức: mask / block / hold_for_review / block_and_alert; phản hồi không lộ từ đã khớp | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-011 | Công tắc kiểm duyệt bật/tắt toàn bộ hoặc từng bước (sensitive_terms, spam, bullying, async_analysis) theo p… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-012 | Khi tắt vẫn giữ PII, grooming, độ dài tối đa, rate limit, quyền channel, sanction, block/mute/report, moder… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-013 | Từ bổ sung cấp tenant (chỉ siết chặt) và bật/tắt category cấp tenant (chỉ category có allow_tenant_toggle)… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [SPEC_RECONCILIATION_BACKLOG](SPEC_RECONCILIATION_BACKLOG.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-014 | Mọi lần tắt bắt buộc có expires_at ≤ 24 giờ (moderation_switch_max_duration), tự bật lại khi hết hạn (ADR-0… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-015 | Publish danh mục chạy test hồi quy (recall ≥ 95%, false positive ≤ 3%) và reload không downtime ≤ 60 s | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-016 | safety_moderator đọc liên tenant chỉ trong module moderation (case, bằng chứng, tin nhắn liên quan case) qu… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-017 | Thông báo nhà trường về vụ việc nghiêm trọng liên quan học sinh của trường: tóm tắt, không chứa nội dung ch… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
-| FR-MOD-018 | Safety Team trực 24/7 (on-call) cho case mức p1 (grooming, tự hại) (MODERATION, CHILD_SAFETY) | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 38 op | _suy luận:_ TC-CHAT |
+| FR-MOD-001 | Content/profanity filtering, anti-spam, anti-bullying, PII detection | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-002 | Report message, report user, block, mute | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-003 | Moderation queue tập trung ở Platform Safety Team (role safety_moderator); mọi case gắn tenant/trường; audi… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [EDU_FIT_REVIEW](EDU_FIT_REVIEW.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-004 | Chat policy theo platform → tenant → school (bỏ cấp class — ADR-0095; không theo grade — thay mục "Age/Grad… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-005 | Không ai có quyền đọc toàn bộ chat của mọi trường; truy cập chat đều audit | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-006 | Sanction: warn, mute có thời hạn, restrict (chỉ quick message), escalate | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-007 | Removed (ADR-0072) — điều khiển channel lớp của giáo viên; channel lớp chịu chat policy cấp trường do schoo… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-008 | Không giám sát chat vượt quá mục đích an toàn cần thiết | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-009 | Danh mục từ nhạy cảm quản lý trong CMS: category (severity, action mặc định), term (match type, biến thể tự… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-010 | Action theo mức: mask / block / hold_for_review / block_and_alert; phản hồi không lộ từ đã khớp | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-011 | Công tắc kiểm duyệt bật/tắt toàn bộ hoặc từng bước (sensitive_terms, spam, bullying, async_analysis) theo p… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-012 | Khi tắt vẫn giữ PII, grooming, độ dài tối đa, rate limit, quyền channel, sanction, block/mute/report, moder… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-013 | Từ bổ sung cấp tenant (chỉ siết chặt) và bật/tắt category cấp tenant (chỉ category có allow_tenant_toggle)… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [SPEC_RECONCILIATION_BACKLOG](SPEC_RECONCILIATION_BACKLOG.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-014 | Mọi lần tắt bắt buộc có expires_at ≤ 24 giờ (moderation_switch_max_duration), tự bật lại khi hết hạn (ADR-0… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-015 | Publish danh mục chạy test hồi quy (recall ≥ 95%, false positive ≤ 3%) và reload không downtime ≤ 60 s | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-016 | safety_moderator đọc liên tenant chỉ trong module moderation (case, bằng chứng, tin nhắn liên quan case) qu… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-017 | Thông báo nhà trường về vụ việc nghiêm trọng liên quan học sinh của trường: tóm tắt, không chứa nội dung ch… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
+| FR-MOD-018 | Safety Team trực 24/7 (on-call) cho case mức p1 (grooming, tự hại) (MODERATION, CHILD_SAFETY) | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 41 op | _suy luận:_ TC-CHAT |
 
 ### 3.24. `NTF` Notification
 

@@ -3642,6 +3642,378 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /admin/moderation/oncall-shifts:
+    get:
+      x-service: chat
+      tags:
+        - moderation
+      operationId: listModerationOncallShifts
+      x-internal: true
+      x-portal-action: action.live_ops.moderation_cases.oncall_view
+      summary: Lịch trực Safety Team (ca chính/dự phòng) — moderation.case.read
+      description: |
+        Chỉ gateway nội bộ + role platform (ADR-0027, ADR-0072). Bảng platform không theo tenant (`chat.moderation_oncall_shifts`),
+        không chứa dữ liệu học sinh. Lọc ca giao với khoảng `[from, to)` và theo `oncall_role`; phân trang keyset theo
+        (`starts_at`, `shift_id`) trong SQL (F124-AC-16).
+      parameters:
+        - name: from
+          in: query
+          schema:
+            $ref: '#/components/schemas/Timestamp'
+        - name: to
+          in: query
+          schema:
+            $ref: '#/components/schemas/Timestamp'
+        - name: oncall_role
+          in: query
+          schema:
+            $ref: '#/components/schemas/OncallRole'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OncallShift'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+    post:
+      x-service: chat
+      tags:
+        - moderation
+      operationId: createModerationOncallShift
+      x-internal: true
+      x-portal-action: action.live_ops.moderation_cases.oncall_manage
+      summary: Tạo ca trực (trưởng ca · moderation.case.lead)
+      description: |
+        Người trực phải là nhân sự platform có `moderation.case.act` (kiểm qua facade identity `resolvePrincipal`); ca chồng lấn
+        cùng `oncall_role` → `409 ONCALL_SHIFT_OVERLAP`; độ dài ca ≤ `oncall_shift_max_hours`. Audit
+        `moderation.oncall_shift.created` (F124-AC-12). Không gửi `X-Tenant-Id` (dữ liệu platform).
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OncallShiftCreate'
+      responses:
+        '201':
+          description: Đã tạo
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OncallShift'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /admin/moderation/oncall-shifts/{shift_id}:
+    delete:
+      x-service: chat
+      tags:
+        - moderation
+      operationId: deleteModerationOncallShift
+      x-internal: true
+      x-portal-action: action.live_ops.moderation_cases.oncall_manage
+      summary: Xóa ca trực (soft-delete, audit) — moderation.case.lead
+      description: |
+        Soft-delete (R21) + audit `moderation.oncall_shift.deleted`. Case p1 đang gán `rotation` cho ca bị xóa vẫn `open` và được
+        job `oncall-escalator` gọi tiếp mức kế tiếp (F124 Edge Cases).
+      parameters:
+        - $ref: '#/components/parameters/ShiftIdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '204':
+          description: Đã xóa
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /admin/break-glass/grants:
+    get:
+      x-service: chat
+      tags:
+        - moderation
+      operationId: listBreakGlassGrants
+      x-internal: true
+      x-portal-action: action.platform_admin.audit_logs.break_glass_approve
+      summary: Yêu cầu/quyền break-glass để hậu kiểm (platform.break_glass.approve — mọi yêu cầu; .request — của mình)
+      description: |
+        Chỉ gateway nội bộ + role platform. Không gửi `X-Tenant-Id`; đọc liên tenant qua `tenancy.Bypass(ctx, "break_glass")`
+        (audit `cross_tenant.accessed` + metric `eduworld_tenant_filter_bypass_total{reason="break_glass"}`). Người chỉ có
+        `platform.break_glass.request` thấy yêu cầu của chính mình. Có số tin đã xem để hậu kiểm (F124-AC-20). Phân trang keyset
+        theo (`requested_at`, `grant_id`) giảm dần trong SQL.
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/BreakGlassStatus'
+        - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BreakGlassGrant'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+    post:
+      x-service: chat
+      tags:
+        - moderation
+      operationId: createBreakGlassRequest
+      x-internal: true
+      x-portal-action: action.platform_admin.audit_logs.break_glass_request
+      summary: Yêu cầu break-glass đọc tin nhắn ngoài case (System Admin · platform.break_glass.request)
+      description: |
+        Đường duy nhất đọc chat ngoài case (MODERATION §6.1, CHILD_SAFETY §7). `X-Tenant-Id` = tenant đích (R20). Lưu yêu cầu
+        `pending`, audit `break_glass.requested`, phát `break_glass.requested` để module identity email các System Admin khác có
+        `platform.break_glass.approve` (không có lý do trong email). `safety_moderator`, role tenant → `403 PERMISSION_DENIED`
+        (không MFA — ADR-0094); `duration_minutes` > `break_glass_max_duration_hours`×60 hoặc khoảng tin > `break_glass_max_window_days`
+        → `422 VALIDATION_FAILED` (F124-AC-17, AC-21).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreakGlassRequestCreate'
+      responses:
+        '201':
+          description: Đã tạo yêu cầu (pending)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreakGlassGrant'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /admin/break-glass/grants/{grant_id}:approve:
+    post:
+      x-service: chat
+      tags:
+        - moderation
+      operationId: approveBreakGlassRequest
+      x-internal: true
+      x-portal-action: action.platform_admin.audit_logs.break_glass_approve
+      summary: Duyệt yêu cầu break-glass (System Admin khác người yêu cầu · platform.break_glass.approve)
+      description: |
+        Hai người: người yêu cầu tự duyệt → `403 PERMISSION_DENIED`; yêu cầu không còn `pending` → `409 BREAK_GLASS_NOT_PENDING`.
+        Đặt `expires_at = now + duration_minutes`, audit `break_glass.approved` (F124-AC-18). `X-Tenant-Id` = tenant của yêu cầu.
+      parameters:
+        - $ref: '#/components/parameters/GrantIdPath'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreakGlassDecision'
+      responses:
+        '200':
+          description: Đã duyệt
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreakGlassGrant'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /admin/break-glass/grants/{grant_id}:reject:
+    post:
+      x-service: chat
+      tags:
+        - moderation
+      operationId: rejectBreakGlassRequest
+      x-internal: true
+      x-portal-action: action.platform_admin.audit_logs.break_glass_approve
+      summary: Từ chối yêu cầu break-glass (System Admin khác người yêu cầu · platform.break_glass.approve)
+      description: Như `approveBreakGlassRequest`; chuyển `rejected`, audit `break_glass.rejected` (F124-AC-18).
+      parameters:
+        - $ref: '#/components/parameters/GrantIdPath'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreakGlassDecision'
+      responses:
+        '200':
+          description: Đã từ chối
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreakGlassGrant'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /admin/break-glass/grants/{grant_id}:revoke:
+    post:
+      x-service: chat
+      tags:
+        - moderation
+      operationId: revokeBreakGlassGrant
+      x-internal: true
+      x-portal-action: action.platform_admin.audit_logs.break_glass_approve
+      summary: Thu hồi quyền break-glass ngay (platform.break_glass.request hoặc .approve)
+      description: |
+        Kết thúc grant `pending`/`approved` ngay (`revoked`), audit `break_glass.revoked` (F124-AC-20); grant đã kết thúc →
+        `409 BREAK_GLASS_NOT_PENDING`. `X-Tenant-Id` = tenant của grant.
+      parameters:
+        - $ref: '#/components/parameters/GrantIdPath'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreakGlassRevoke'
+      responses:
+        '200':
+          description: Đã thu hồi
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreakGlassGrant'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /admin/break-glass/grants/{grant_id}/messages:
+    get:
+      x-service: chat
+      tags:
+        - moderation
+      operationId: listBreakGlassMessages
+      x-internal: true
+      x-portal-action: action.platform_admin.audit_logs.break_glass_request
+      summary: Đọc tin trong phạm vi grant break-glass đã duyệt, còn hạn (chỉ người yêu cầu)
+      description: |
+        Chỉ người yêu cầu của grant `approved` chưa hết hạn; chỉ tin của channel (`scope_type = channel`) hoặc tin do người dùng gửi
+        (`scope_type = user`) trong tenant đích và khoảng `[window_from, window_to)`. Đọc qua `tenancy.Bypass(ctx, "break_glass")`,
+        audit `break_glass.messages_viewed` mỗi lượt (không chép nội dung), metric `reason="break_glass"`. Grant không hiệu lực, người
+        khác, ngoài phạm vi → `403 BREAK_GLASS_NOT_ACTIVE` (F124-AC-19). Tin gameplay đã purge (ADR-0033) không được khôi phục
+        (F124-AC-22). Phân trang keyset theo (`created_at`, `message_id`) trong SQL.
+      parameters:
+        - $ref: '#/components/parameters/GrantIdPath'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BreakGlassMessage'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /admin/safety/school-notifications:
     get:
       x-service: chat
@@ -4863,6 +5235,18 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
+    ShiftIdPath:
+      name: shift_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    GrantIdPath:
+      name: grant_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
     NotificationIdPath:
       name: notification_id
       in: path
@@ -5223,6 +5607,10 @@ components:
         - DASHBOARD_QUERY_TIMEOUT
         - EXPORT_LIMIT_REACHED
         - MODERATION_CASE_CLOSED
+        - ACCOUNT_LOCK_HELD_BY_SAFETY
+        - ONCALL_SHIFT_OVERLAP
+        - BREAK_GLASS_NOT_PENDING
+        - BREAK_GLASS_NOT_ACTIVE
         - ROLE_NOT_FOUND
         - FEATURE_DISABLED
         - FEATURE_NOT_DISABLEABLE
@@ -7094,6 +7482,20 @@ components:
             $ref: '#/components/schemas/Uuid'
         assignee_moderator_id:
           $ref: '#/components/schemas/Uuid'
+        assigned_via:
+          type: string
+          enum:
+            - manual
+            - rotation
+          description: manual = nhận/gán tay; rotation = gán tự động theo vòng trực khi case p1 được tạo (case vẫn open tới khi người trực nhận — F124-AC-13)
+        oncall_page_level:
+          type: string
+          enum:
+            - primary
+            - secondary
+            - lead
+            - system_admin
+          description: Mức trực đã gọi gần nhất của case p1 chưa nhận (job oncall-escalator, F124-AC-14)
         report_count:
           type: integer
           minimum: 0
@@ -7575,6 +7977,243 @@ components:
           type: string
           minLength: 1
           maxLength: 500
+    OncallRole:
+      type: string
+      description: Vai trò ca trực Safety Team (MODERATION §6.3)
+      enum:
+        - primary
+        - secondary
+    OncallShift:
+      type: object
+      description: Một ca trực Safety Team (`chat.moderation_oncall_shifts`, dữ liệu platform — F124)
+      required:
+        - shift_id
+        - moderator_user_id
+        - oncall_role
+        - starts_at
+        - ends_at
+        - created_at
+        - version
+      properties:
+        shift_id:
+          $ref: '#/components/schemas/Uuid'
+        moderator_user_id:
+          $ref: '#/components/schemas/Uuid'
+        oncall_role:
+          $ref: '#/components/schemas/OncallRole'
+        starts_at:
+          $ref: '#/components/schemas/Timestamp'
+        ends_at:
+          $ref: '#/components/schemas/Timestamp'
+        note:
+          type: string
+          maxLength: 500
+        created_by:
+          $ref: '#/components/schemas/Uuid'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        version:
+          type: integer
+          minimum: 1
+    OncallShiftCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - moderator_user_id
+        - oncall_role
+        - starts_at
+        - ends_at
+      properties:
+        moderator_user_id:
+          $ref: '#/components/schemas/Uuid'
+        oncall_role:
+          $ref: '#/components/schemas/OncallRole'
+        starts_at:
+          $ref: '#/components/schemas/Timestamp'
+        ends_at:
+          $ref: '#/components/schemas/Timestamp'
+        note:
+          type: string
+          maxLength: 500
+    BreakGlassStatus:
+      type: string
+      enum:
+        - pending
+        - approved
+        - rejected
+        - expired
+        - revoked
+    BreakGlassGrant:
+      type: object
+      description: Yêu cầu/quyền break-glass của System Admin (MODERATION §6.1, F124) — không có nội dung tin
+      required:
+        - grant_id
+        - tenant_id
+        - scope_type
+        - scope_id
+        - window_from
+        - window_to
+        - duration_minutes
+        - reason
+        - status
+        - requested_by
+        - requested_at
+        - messages_viewed_count
+        - version
+      properties:
+        grant_id:
+          $ref: '#/components/schemas/Uuid'
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
+        scope_type:
+          type: string
+          enum:
+            - channel
+            - user
+        scope_id:
+          $ref: '#/components/schemas/Uuid'
+        window_from:
+          $ref: '#/components/schemas/Timestamp'
+        window_to:
+          $ref: '#/components/schemas/Timestamp'
+        duration_minutes:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          maxLength: 1000
+        status:
+          $ref: '#/components/schemas/BreakGlassStatus'
+        requested_by:
+          $ref: '#/components/schemas/Uuid'
+        requested_at:
+          $ref: '#/components/schemas/Timestamp'
+        decided_by:
+          $ref: '#/components/schemas/Uuid'
+        decided_at:
+          $ref: '#/components/schemas/Timestamp'
+        decision_note:
+          type: string
+          maxLength: 1000
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        revoked_by:
+          $ref: '#/components/schemas/Uuid'
+        revoked_at:
+          $ref: '#/components/schemas/Timestamp'
+        revoke_reason:
+          type: string
+          maxLength: 1000
+        messages_viewed_count:
+          type: integer
+          minimum: 0
+        version:
+          type: integer
+          minimum: 1
+          description: Giá trị If-Match của approve/reject (ETag W/"<version>")
+    BreakGlassRequestCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - scope_type
+        - scope_id
+        - window_from
+        - window_to
+        - duration_minutes
+        - reason
+      properties:
+        scope_type:
+          type: string
+          enum:
+            - channel
+            - user
+        scope_id:
+          $ref: '#/components/schemas/Uuid'
+        window_from:
+          $ref: '#/components/schemas/Timestamp'
+        window_to:
+          $ref: '#/components/schemas/Timestamp'
+        duration_minutes:
+          type: integer
+          minimum: 1
+          maximum: 240
+          description: Thời hạn quyền sau khi duyệt; trần `break_glass_max_duration_hours` × 60 (mặc định 4 giờ)
+        reason:
+          type: string
+          minLength: 20
+          maxLength: 1000
+    BreakGlassDecision:
+      type: object
+      additionalProperties: false
+      properties:
+        decision_note:
+          type: string
+          maxLength: 1000
+    BreakGlassRevoke:
+      type: object
+      additionalProperties: false
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 1000
+    BreakGlassMessage:
+      type: object
+      description: Một tin trong phạm vi grant break-glass (nội dung gốc; chỉ người yêu cầu của grant hiệu lực, mỗi lượt có audit)
+      required:
+        - message_id
+        - channel_id
+        - sender_id
+        - kind
+        - moderation_state
+        - created_at
+      properties:
+        message_id:
+          $ref: '#/components/schemas/Uuid'
+        channel_id:
+          $ref: '#/components/schemas/Uuid'
+        seq:
+          type: integer
+          minimum: 1
+        sender_id:
+          $ref: '#/components/schemas/Uuid'
+        sender_school_id:
+          $ref: '#/components/schemas/Uuid'
+        kind:
+          type: string
+          enum:
+            - text
+            - emoji
+            - quick
+            - sticker
+            - gif
+            - system
+        body:
+          type: string
+          maxLength: 1000
+        body_display:
+          type: string
+          maxLength: 1000
+        quick_message_id:
+          type: string
+          maxLength: 64
+        revision:
+          type: integer
+          minimum: 1
+        moderation_state:
+          type: string
+          enum:
+            - allowed
+            - masked
+            - unchecked
+            - held
+            - removed
+        recalled_at:
+          $ref: '#/components/schemas/Timestamp'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
     SchoolSafetyNotificationAck:
       type: object
       required:
@@ -7944,7 +8583,7 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
     Forbidden:
-      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
+      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED, BREAK_GLASS_NOT_ACTIVE
       content:
         application/problem+json:
           schema:
@@ -7956,7 +8595,7 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
     Conflict:
-      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED, CHAT_CHANNEL_CLOSED)
+      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED, CHAT_CHANNEL_CLOSED, ACCOUNT_LOCK_HELD_BY_SAFETY, ONCALL_SHIFT_OVERLAP, BREAK_GLASS_NOT_PENDING)
       content:
         application/problem+json:
           schema:

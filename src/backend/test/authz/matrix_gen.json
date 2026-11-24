@@ -167,6 +167,18 @@
     ]
   },
   {
+    "operation_id": "approveBreakGlassRequest",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/break-glass/grants/{grant_id}:approve",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "approveClub",
     "module": "chat",
     "method": "POST",
@@ -489,6 +501,17 @@
     "path": "/game/bosses/{boss_id}/encounters",
     "tenant_scoped": true,
     "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createBreakGlassRequest",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/break-glass/grants",
+    "tenant_scoped": true,
     "required": [
       "cross_tenant",
       "role_denied"
@@ -878,6 +901,15 @@
     "tenant_scoped": true,
     "required": [
       "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "createModerationOncallShift",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/moderation/oncall-shifts",
+    "required": [
       "role_denied"
     ]
   },
@@ -1345,6 +1377,17 @@
     "method": "DELETE",
     "path": "/cms/learning/curricula/{curriculum_id}",
     "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "deleteModerationOncallShift",
+    "module": "chat",
+    "method": "DELETE",
+    "path": "/admin/moderation/oncall-shifts/{shift_id}",
     "has_id_param": true,
     "required": [
       "cross_tenant",
@@ -3198,6 +3241,26 @@
     ]
   },
   {
+    "operation_id": "listBreakGlassGrants",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/break-glass/grants",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listBreakGlassMessages",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/break-glass/grants/{grant_id}/messages",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listCalibrationProposals",
     "module": "learning",
     "method": "GET",
@@ -3816,6 +3879,15 @@
     "module": "chat",
     "method": "GET",
     "path": "/admin/moderation/cases",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listModerationOncallShifts",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/moderation/oncall-shifts",
     "required": [
       "role_denied"
     ]
@@ -4990,6 +5062,18 @@
     "required": []
   },
   {
+    "operation_id": "rejectBreakGlassRequest",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/break-glass/grants/{grant_id}:reject",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "rejectClubJoinRequest",
     "module": "chat",
     "method": "POST",
@@ -5278,6 +5362,18 @@
     "method": "POST",
     "path": "/auth/sessions:revoke-all",
     "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "revokeBreakGlassGrant",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/break-glass/grants/{grant_id}:revoke",
+    "tenant_scoped": true,
+    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"

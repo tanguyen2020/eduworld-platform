@@ -1806,6 +1806,18 @@ workspaces:
             required_permissions: [moderation.school_notification.send]
             operation_ids: [notifySchoolForCase]
             can_disable: false
+          - key: action.live_ops.moderation_cases.oncall_view
+            label_key: portal.action.live_ops.moderation_cases.oncall_view
+            title: Xem lịch trực Safety Team (F124)
+            required_permissions: [moderation.case.read]
+            operation_ids: [listModerationOncallShifts]
+            can_disable: false
+          - key: action.live_ops.moderation_cases.oncall_manage
+            label_key: portal.action.live_ops.moderation_cases.oncall_manage
+            title: Tạo/xóa ca trực (trưởng ca, F124)
+            required_permissions: [moderation.case.lead]
+            operation_ids: [createModerationOncallShift, deleteModerationOncallShift]
+            can_disable: false
       - key: menu.live_ops.sanctions
         label_key: portal.menu.live_ops.sanctions
         title: Kiểm duyệt — sanction
@@ -2272,4 +2284,16 @@ workspaces:
             title: Xem nhật ký mọi tenant
             required_permissions: [platform.audit.read]
             operation_ids: [listPlatformAuditLogs]
+            can_disable: false
+          - key: action.platform_admin.audit_logs.break_glass_request
+            label_key: portal.action.platform_admin.audit_logs.break_glass_request
+            title: Yêu cầu break-glass và đọc tin trong phạm vi đã duyệt (F124)
+            required_permissions: [platform.break_glass.request]
+            operation_ids: [createBreakGlassRequest, listBreakGlassMessages]
+            can_disable: false
+          - key: action.platform_admin.audit_logs.break_glass_approve
+            label_key: portal.action.platform_admin.audit_logs.break_glass_approve
+            title: Duyệt/từ chối/thu hồi break-glass và hậu kiểm (người thứ hai, F124)
+            required_permissions: [platform.break_glass.approve]
+            operation_ids: [listBreakGlassGrants, approveBreakGlassRequest, rejectBreakGlassRequest, revokeBreakGlassGrant]
             can_disable: false
