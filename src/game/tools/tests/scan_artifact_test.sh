@@ -51,6 +51,14 @@ if [[ -f "$work/mock.apk" ]]; then
   expect 1 "mock config inside an APK is found" "$work/mock.apk"
 fi
 expect 2 "missing artifact is an error" "$work/nope.pck"
+# F133: a Web export folder is scanned with its page (index.html), not only the pack.
+mkdir -p "$work/web_clean" "$work/web_leak"
+cp "$work/clean.pck" "$work/web_clean/index.pck"
+printf '<html><script>const GODOT_CONFIG = {"executable":"index"};</script></html>' >"$work/web_clean/index.html"
+cp "$work/clean.pck" "$work/web_leak/index.pck"
+printf '<html><script>location.href="https://auth.example/protocol/openid-connect/token?redirect_uri=x"</script></html>' >"$work/web_leak/index.html"
+expect 0 "clean Web export folder passes (F133)" "$work/web_clean"
+expect 1 "OAuth redirect in the Web page is found (F133)" "$work/web_leak"
 
 if [[ -n "${GODOT:-}" ]]; then
   # A Windows Godot started from WSL needs a Windows path; the export path is relative to the project folder.

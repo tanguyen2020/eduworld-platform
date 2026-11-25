@@ -7,6 +7,7 @@ import { DESIGN_DIR, loadContexts } from './tokens.mjs';
 import { resolveWithStyleDictionary } from '../sd/transforms.mjs';
 import { formatAntdTheme } from '../sd/formats/antd-theme.mjs';
 import { formatCssVars } from '../sd/formats/css-vars.mjs';
+import { formatGameShellCss } from '../sd/formats/game-shell-css.mjs';
 import { formatGodotJson } from '../sd/formats/godot-json.mjs';
 import { formatUiTokens, formatArt3dTokens, themeFile, HIGH_CONTRAST_THEME } from '../sd/formats/gdscript-tokens.mjs';
 import { formatTheme, formatEnvironment, formatGradient, formatIcon, godotFontFiles, artPaletteSlots, formatToonMaterial } from '../sd/formats/godot-tres.mjs';
@@ -53,6 +54,7 @@ export async function generate({ designDir = DESIGN_DIR, loaded = loadContexts(d
   for (const band of DENSITY_BANDS) files.set(`${OUTPUTS.godotThemeDir}/${themeFile(band)}`, formatTheme(game, band, version, `density ${band}`));
   files.set(`${OUTPUTS.godotThemeDir}/${HIGH_CONTRAST_THEME}`, formatTheme(hc, BASE_DENSITY, version, `high contrast, density ${BASE_DENSITY}`));
   files.set(OUTPUTS.uiTokens, formatUiTokens(game, variants, version));
+  files.set(OUTPUTS.gameShellCss, formatGameShellCss(game, BASE_DENSITY, version));
 
   const zones = groupsOf(game, 'env.', 'fog_color');
   const kinds = groupsOf(game, 'vfx.', 'gradient');

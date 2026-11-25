@@ -73,3 +73,12 @@ test('Godot comes from the pinned, checksum-verified setup script', () => {
     assert.match(runs(id), /scripts\/ci\/setup-godot\.sh/, id);
   }
 });
+
+test('F133 T002/T028: the export job also exports the Web build, checks it and runs the shell tests', () => {
+  assert.match(runs('export'), /make godot-export-web/);
+  assert.match(runs('export'), /node --test src\/game\/web\/tests\//);
+  const upload = jobs.export.steps.find((s) => String(s.uses ?? '').startsWith('actions/upload-artifact'));
+  assert.match(String(upload.with.path), /src\/game\/build\/web\//);
+  // iOS needs the macOS runner (T019): no iOS export on the Linux runners.
+  assert.doesNotMatch(runs('export'), /godot-export-ios/);
+});

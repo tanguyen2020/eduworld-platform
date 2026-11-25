@@ -1,8 +1,10 @@
 # Godot lane (F060 T042, F060-AC-19, GODOT_ARCHITECTURE §11, DEPLOYMENT §10.2, ADR-0088, ADR-0101).
 # Order: design-tokens-check → lint (gdlint, typed, theme overrides, layers, signals, translation keys, fixtures,
 # no Admin UI) → GdUnit4 headless → native SecureStorage plugin (Android Keystore AAR) → export Android with artifact
-# scan → smoke boot (--env=mock) + UiGallery screenshots. No Windows build (ADR-0101); the Web and iOS exports come
-# with F133. Also called by design.yml (workflow_call) when tokens change.
+# scan → export Web (F133 T002/T028: Compatibility, single-threaded, EduWorld shell) with check, scan and shell tests →
+# smoke boot (--env=mock) + UiGallery screenshots. No Windows build (ADR-0101). The iOS Xcode project, IPA, signing
+# and store/CDN publishing need the macOS runner and F130 (F133 T001, T011, T019). Also called by design.yml
+# (workflow_call) when tokens change.
 name: godot
 
 on:
@@ -112,6 +114,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
       - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
@@ -130,11 +135,18 @@ jobs:
             "$ANDROID_HOME" "$JAVA_HOME" >"$HOME/.config/godot/editor_settings-4.7.tres"
       - name: Export Android (debug-signed in CI; release signing belongs to release.yml) + scan
         run: make godot-export-android GODOT="$GODOT_BIN"
+      - name: Export Web (Compatibility, single-threaded, EduWorld shell) + check + scan
+        run: make godot-export-web GODOT="$GODOT_BIN"
+      - name: Web shell tests (jsdom; the Chromium/WebKit part skips without Playwright browsers)
+        run: |
+          npm ci --prefix scripts
+          node --test src/game/web/tests/
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: godot-builds
           path: |
             src/game/build/android/*.apk
+            src/game/build/web/
           if-no-files-found: error
 
   smoke:

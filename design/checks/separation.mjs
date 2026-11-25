@@ -24,7 +24,8 @@ export function checkSeparationSources(byFile) {
 }
 
 export const isWebOutput = (rel) => rel === OUTPUTS.antdTheme || rel === OUTPUTS.tokensCss;
-export const isGodotOutput = (rel) => rel === OUTPUTS.uiTokens || OWNED_DIRS.some((d) => rel.startsWith(`${d}/`));
+// The Web shell of the game (F133) is a game output: game tokens only, written as CSS variables.
+export const isGodotOutput = (rel) => rel === OUTPUTS.uiTokens || rel === OUTPUTS.gameShellCss || OWNED_DIRS.some((d) => rel.startsWith(`${d}/`));
 
 const ADMIN_UI_MARKERS = [/\bantd\b/i, /ConfigProvider/, /ops-ui/, /admin-tokens/];
 const GAME_MARKERS = [/game-tokens/];
@@ -37,6 +38,7 @@ export function checkSeparationOutputs(files, byFile) {
   const gameCss = gameOnly.map((p) => [p, `${cssVarName(p)}:`]);
   const gameTs = gameOnly.map((p) => [p, `"${p}"`]);
   const adminGd = adminOnly.map((p) => [p, new RegExp(`\\b${gdConstName(p)}\\b`)]);
+  const adminCss = adminOnly.map((p) => [p, `${cssVarName(p)}:`]);
   for (const [rel, content] of files) {
     if (Buffer.isBuffer(content)) continue;
     if (isWebOutput(rel)) {
@@ -45,6 +47,7 @@ export function checkSeparationOutputs(files, byFile) {
     } else if (isGodotOutput(rel)) {
       for (const re of ADMIN_UI_MARKERS) if (re.test(content)) errors.push({ rule: 'separation', file: rel, path: '', message: `Godot output contains Admin UI marker ${re}` });
       for (const [p, re] of adminGd) if (re.test(content)) errors.push({ rule: 'separation', file: rel, path: p, message: 'Godot output contains an admin-tokens token' });
+      if (rel === OUTPUTS.gameShellCss) for (const [p, needle] of adminCss) if (content.includes(needle)) errors.push({ rule: 'separation', file: rel, path: p, message: 'game Web shell contains an admin-tokens token' });
     }
   }
   return errors;

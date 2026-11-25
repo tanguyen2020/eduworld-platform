@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<!--
+  EduWorld Web shell (F133 T028, F133-AC-16, PERFORMANCE_BUDGET §14, ADR-0101): custom HTML shell of the Web export
+  preset (export_presets.cfg → html/custom_html_shell). Before any engine byte is downloaded it checks the browser:
+  - no WebGL 2 (or no WebAssembly/fetch/secure context) → friendly notice page, the engine is never loaded;
+  - Chrome and Edge are the supported browsers; any other browser with WebGL 2 is NOT blocked, it gets a dismissible
+    "not officially supported" banner (owner 2026-11-20, OQ-04);
+  - wasm heap policy of §14: reserve 512 MiB at the first heap growth, never grow beyond 1 GiB;
+  - the engine and the main pack download right away, but the engine starts (and creates its AudioContext) only
+    after the first user interaction ("Chơi" button), so audio never starts before a gesture (browser autoplay policy).
+  No storage API is used here (no localStorage, sessionStorage, IndexedDB or cookie: the Web build keeps the refresh
+  token in RAM only, ADR-0086). Colors, fonts and sizes come from shell_tokens.css, generated from design/game-tokens
+  (make design-tokens, AGENTS R32) and copied next to index.html by make godot-export-web.
+  The exporter replaces the GODOT_URL, GODOT_CONFIG, ... placeholders (dollar sign + name). Tests: src/game/web/tests/.
+-->
+<html lang="vi">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>$GODOT_PROJECT_NAME</title>
+		<link rel="stylesheet" href="shell_tokens.css">
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+body {
+	background-color: var(--ew-color-surface-hud);
+	color: var(--ew-color-text-primary);
+	font-family: var(--ew-font-family-body);
+	font-size: var(--ew-density-font-base);
+	overflow: hidden;
+	touch-action: none;
+}
+
+#canvas {
+	display: block;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+#ew-shell {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--ew-size-space-16);
+	background-color: var(--ew-color-surface-hud);
+}
+
+#ew-shell[hidden], #ew-banner[hidden], #ew-progress[hidden], #ew-play[hidden] {
+	display: none;
+}
+
+.ew-panel {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--ew-size-space-16);
+	max-width: var(--ew-size-layout-660);
+	padding: var(--ew-size-space-24);
+	border-radius: var(--ew-size-radius-16);
+	background-color: var(--ew-color-surface-panel);
+	text-align: center;
+}
+
+.ew-panel h1 {
+	margin: 0;
+	font-family: var(--ew-font-family-heading);
+	font-size: var(--ew-density-font-heading);
+}
+
+.ew-panel p {
+	margin: 0;
+	color: var(--ew-color-text-secondary);
+}
+
+#ew-shell[data-state="unsupported"] .ew-panel, #ew-shell[data-state="error"] .ew-panel {
+	border: var(--ew-size-border-3) solid var(--ew-color-feedback-incorrect);
+}
+
+#ew-progress {
+	width: 100%;
+	accent-color: var(--ew-color-accent-primary);
+}
+
+#ew-play {
+	min-height: var(--ew-density-button-min-height);
+	padding: 0 var(--ew-size-space-32);
+	border: 0;
+	border-radius: var(--ew-size-radius-12);
+	background-color: var(--ew-color-accent-primary);
+	color: var(--ew-color-text-on-accent);
+	font-family: var(--ew-font-family-heading);
+	font-size: var(--ew-density-font-heading);
+	cursor: pointer;
+}
+
+#ew-play:active {
+	background-color: var(--ew-color-accent-primary-pressed);
+}
+
+#ew-play:focus-visible, #ew-banner button:focus-visible {
+	outline: var(--ew-size-border-3) solid var(--ew-color-focus);
+	outline-offset: var(--ew-size-border-2);
+}
+
+#ew-banner {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--ew-size-space-12);
+	padding: var(--ew-size-space-8) var(--ew-size-space-16);
+	background-color: var(--ew-color-surface-card);
+	color: var(--ew-color-text-primary);
+	font-size: var(--ew-density-font-small);
+	z-index: 2;
+}
+
+#ew-banner button {
+	min-height: var(--ew-density-button-min-height);
+	padding: 0 var(--ew-size-space-16);
+	border: var(--ew-size-border-2) solid var(--ew-color-text-secondary);
+	border-radius: var(--ew-size-radius-8);
+	background-color: var(--ew-color-surface-panel);
+	color: var(--ew-color-text-primary);
+	font-family: var(--ew-font-family-body);
+	font-size: var(--ew-density-font-small);
+	cursor: pointer;
+}
+		</style>
+		$GODOT_HEAD_INCLUDE
+	</head>
+	<body>
+		<canvas id="canvas" tabindex="-1"></canvas>
+
+		<noscript>EduWorld cần bật JavaScript. EduWorld needs JavaScript.</noscript>
+
+		<div id="ew-banner" role="note" hidden>
+			<span id="ew-banner-text"></span>
+			<button id="ew-banner-close" type="button"></button>
+		</div>
+
+		<div id="ew-shell" data-state="checking">
+			<div class="ew-panel">
+				<h1 id="ew-title"></h1>
+				<p id="ew-message" role="status" aria-live="polite"></p>
+				<progress id="ew-progress" hidden></progress>
+				<button id="ew-play" type="button" hidden></button>
+			</div>
+		</div>
+
+		<script>
+const GODOT_URL = '$GODOT_URL';
+const GODOT_CONFIG = $GODOT_CONFIG;
+const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+
+(function (global) {
+	'use strict';
+
+	// Shell strings (the engine and its translation files are not loaded yet): Vietnamese by default, English
+	// when the browser prefers it (same locales as the game, F060).
+	const STRINGS = {
+		vi: {
+			title: 'EduWorld',
+			checking: 'Đang kiểm tra trình duyệt…',
+			loading: 'Đang tải trò chơi…',
+			ready: 'Đã sẵn sàng. Nhấn "Chơi" để bắt đầu.',
+			play: 'Chơi',
+			starting: 'Đang khởi động…',
+			no_webgl2: 'Trình duyệt hoặc máy này chưa hỗ trợ WebGL 2 nên chưa chơi được EduWorld. Hãy mở EduWorld bằng Chrome hoặc Edge bản mới và bật "Tăng tốc phần cứng" trong cài đặt trình duyệt, hoặc nhờ thầy cô kiểm tra máy.',
+			no_runtime: 'Trình duyệt này đã cũ hoặc trang không được mở qua HTTPS nên chưa chơi được EduWorld. Hãy mở EduWorld bằng Chrome hoặc Edge bản mới.',
+			unofficial: 'EduWorld chỉ hỗ trợ chính thức Chrome và Edge. Trình duyệt này vẫn chơi được nhưng có thể gặp lỗi.',
+			dismiss: 'Đã hiểu',
+			error: 'Không khởi động được trò chơi. Hãy tải lại trang; nếu vẫn lỗi, hãy đóng bớt thẻ khác hoặc dùng Chrome, Edge bản mới.',
+		},
+		en: {
+			title: 'EduWorld',
+			checking: 'Checking your browser…',
+			loading: 'Loading the game…',
+			ready: 'Ready. Press "Play" to start.',
+			play: 'Play',
+			starting: 'Starting…',
+			no_webgl2: 'This browser or device does not support WebGL 2, so EduWorld cannot run. Open EduWorld in a recent Chrome or Edge and turn on hardware acceleration in the browser settings, or ask your teacher to check the device.',
+			no_runtime: 'This browser is too old or the page is not served over HTTPS, so EduWorld cannot run. Open EduWorld in a recent Chrome or Edge.',
+			unofficial: 'EduWorld officially supports Chrome and Edge only. This browser can still play but may show errors.',
+			dismiss: 'Got it',
+			error: 'The game could not start. Reload the page; if it still fails, close other tabs or use a recent Chrome or Edge.',
+		},
+	};
+
+	// PERFORMANCE_BUDGET §14: wasm heap starts at 512 MiB and never exceeds 1 GiB.
+	const HEAP_POLICY = { initialMiB: 512, maxMiB: 1024 };
+	const MIB = 1048576;
+	const WASM_PAGE = 65536;
+
+	function pickLocale(languages) {
+		for (const lang of languages || []) {
+			const l = String(lang).toLowerCase();
+			if (l.startsWith('vi')) {
+				return 'vi';
+			}
+			if (l.startsWith('en')) {
+				return 'en';
+			}
+		}
+		return 'vi';
+	}
+
+	// 'supported' for Chrome and Edge (NFR-COMP-004), 'unofficial' for every other browser (never blocked).
+	function browserSupport(nav) {
+		const brands = ((nav.userAgentData && nav.userAgentData.brands) || []).map((b) => String(b.brand));
+		if (brands.length > 0) {
+			return brands.some((b) => b === 'Google Chrome' || b === 'Microsoft Edge') ? 'supported' : 'unofficial';
+		}
+		const ua = String(nav.userAgent || '');
+		// iOS browsers (CriOS, EdgiOS) are WebKit, Firefox is Gecko, other Chromium browsers add their own token.
+		if (/CriOS|EdgiOS|FxiOS|Firefox\/|OPR\/|SamsungBrowser\/|YaBrowser\/|UCBrowser\//.test(ua)) {
+			return 'unofficial';
+		}
+		if (/Edg(A)?\/\d+/.test(ua) || /Chrome\/\d+/.test(ua)) {
+			return 'supported';
+		}
+		return 'unofficial';
+	}
+
+	function hasWebGL2(doc) {
+		try {
+			return !!doc.createElement('canvas').getContext('webgl2');
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function hasRuntime(win) {
+		return typeof win.WebAssembly === 'object' && typeof win.fetch === 'function' && win.isSecureContext !== false;
+	}
+
+	// Wraps WebAssembly.Memory.prototype.grow (the only wasm memory of the page is the engine's): the first growth
+	// reserves the initial heap at once (fallback to the exact request when the device cannot), and any growth past
+	// the maximum throws RangeError, which the engine's allocator treats as out of memory.
+	function installHeapPolicy(wasm, policy) {
+		const proto = wasm.Memory.prototype;
+		if (proto.grow.eduworldHeapPolicy) {
+			return proto.grow.eduworldHeapPolicy;
+		}
+		const original = proto.grow;
+		const maxPages = Math.floor((policy.maxMiB * MIB) / WASM_PAGE);
+		const initialPages = Math.floor((policy.initialMiB * MIB) / WASM_PAGE);
+		const grow = function (delta) {
+			const current = this.buffer.byteLength / WASM_PAGE;
+			const wanted = current + Number(delta);
+			if (wanted > maxPages) {
+				throw new RangeError('EduWorld heap budget exceeded (' + policy.maxMiB + ' MiB)');
+			}
+			const target = Math.min(maxPages, Math.max(wanted, initialPages));
+			if (target > wanted) {
+				try {
+					return original.call(this, target - current);
+				} catch (e) {
+					// The device cannot reserve the initial heap: grow only as requested.
+				}
+			}
+			return original.call(this, delta);
+		};
+		grow.eduworldHeapPolicy = { maxPages: maxPages, initialPages: initialPages };
+		proto.grow = grow;
+		return grow.eduworldHeapPolicy;
+	}
+
+	function loadScript(doc, src) {
+		return new Promise((resolve, reject) => {
+			const s = doc.createElement('script');
+			s.src = src;
+			s.onload = () => resolve();
+			s.onerror = () => reject(new Error('engine script failed to load'));
+			doc.body.appendChild(s);
+		});
+	}
+
+	function run(win, deps) {
+		const doc = win.document;
+		const d = Object.assign({ loadScript: (src) => loadScript(doc, src) }, deps || {});
+		const t = STRINGS[pickLocale(win.navigator.languages || [win.navigator.language])];
+		const shell = doc.getElementById('ew-shell');
+		const message = doc.getElementById('ew-message');
+		const progress = doc.getElementById('ew-progress');
+		const play = doc.getElementById('ew-play');
+		doc.documentElement.lang = t === STRINGS.en ? 'en' : 'vi';
+		doc.getElementById('ew-title').textContent = t.title;
+		play.textContent = t.play;
+
+		function state(name, text) {
+			shell.dataset.state = name;
+			message.textContent = text;
+			progress.hidden = name !== 'loading';
+			play.hidden = name !== 'ready';
+		}
+
+		function fail(err) {
+			if (win.console) {
+				win.console.error(err);
+			}
+			shell.hidden = false;
+			state('error', t.error);
+		}
+
+		state('checking', t.checking);
+		if (!hasWebGL2(doc)) {
+			state('unsupported', t.no_webgl2);
+			shell.dataset.reason = 'webgl2';
+			return Promise.resolve('unsupported');
+		}
+		if (!hasRuntime(win)) {
+			state('unsupported', t.no_runtime);
+			shell.dataset.reason = 'runtime';
+			return Promise.resolve('unsupported');
+		}
+		if (browserSupport(win.navigator) !== 'supported') {
+			const banner = doc.getElementById('ew-banner');
+			doc.getElementById('ew-banner-text').textContent = t.unofficial;
+			const close = doc.getElementById('ew-banner-close');
+			close.textContent = t.dismiss;
+			close.addEventListener('click', () => {
+				banner.hidden = true;
+			});
+			banner.hidden = false;
+		}
+		installHeapPolicy(win.WebAssembly, HEAP_POLICY);
+		state('loading', t.loading);
+
+		return d.loadScript(GODOT_URL).then(() => {
+			const config = Object.assign({}, GODOT_CONFIG, {
+				onProgress: (current, total) => {
+					if (current > 0 && total > 0) {
+						progress.value = current;
+						progress.max = total;
+					} else {
+						progress.removeAttribute('value');
+						progress.removeAttribute('max');
+					}
+				},
+				onExit: (code) => {
+					if (code !== 0) {
+						fail(new Error('engine exited with code ' + code));
+					}
+				},
+			});
+			const engine = new win.Engine(config);
+			const exe = config.executable;
+			const pack = config.mainPack || exe + '.pck';
+			// Download the engine and the main pack now; start only after the first interaction.
+			return Promise.all([engine.init(exe), engine.preloadFile(pack, pack)]).then(() => {
+				state('ready', t.ready);
+				play.focus();
+				return new Promise((resolve) => {
+					play.addEventListener('click', function onPlay() {
+						play.removeEventListener('click', onPlay);
+						state('starting', t.starting);
+						const args = ['--main-pack', pack].concat(config.args || []);
+						engine.start({ args: args }).then(() => {
+							shell.hidden = true;
+							doc.getElementById('canvas').focus();
+							resolve('started');
+						}, (err) => {
+							fail(err);
+							resolve('error');
+						});
+					});
+				});
+			});
+		}).catch((err) => {
+			fail(err);
+			return 'error';
+		});
+	}
+
+	global.EduWorldShell = {
+		STRINGS: STRINGS,
+		HEAP_POLICY: HEAP_POLICY,
+		pickLocale: pickLocale,
+		browserSupport: browserSupport,
+		hasWebGL2: hasWebGL2,
+		installHeapPolicy: installHeapPolicy,
+		run: run,
+		threads: GODOT_THREADS_ENABLED,
+	};
+	if (!global.EW_SHELL_MANUAL_START) {
+		global.EduWorldShell.done = run(global);
+	}
+}(window));
+		</script>
+	</body>
+</html>

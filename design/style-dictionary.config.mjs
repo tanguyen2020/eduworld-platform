@@ -58,6 +58,7 @@ export const OUTPUTS = {
   godotThemeDir: 'src/game/resources/ui/theme',
   godotFontsDir: 'src/game/resources/ui/theme/fonts',
   uiTokens: 'src/game/scripts/core/ui_tokens.gd',
+  gameShellCss: 'src/game/web/shell_tokens.css',
   artDir: 'src/game/resources/art/generated',
   godotIconsDir: 'src/game/resources/ui/icons',
 };

@@ -2,6 +2,10 @@
 # F060-AC-11 (AGENTS R32, ADR-0047, TC-UI-010): the game project carries nothing of the Admin/Ops web UI —
 # no Ant Design / ops-ui library, no admin token or web theme file, no reference to src/cms/frontend or
 # design/admin-tokens, no web stylesheet or React component.
+# One stylesheet is allowed: web/shell_tokens.css, the --ew-* variables of the Web export's HTML shell, generated from
+# design/game-tokens only (F133 T028; design/checks/separation.mjs forbids admin tokens in it). build/ (export
+# output, gitignored) is skipped; web/tests/ only locates Playwright in the web workspace and asserts that no admin
+# token reaches the shell.
 # Usage: bash src/game/tools/check_no_admin_ui.sh [root=src/game]   → exit 1 on any finding.
 set -euo pipefail
 
@@ -16,14 +20,18 @@ done < <(find "$root" \( -path "$root/.godot" -o -path "$root/addons/gdUnit4" -o
 
 # 2) Web front-end files have no place in the Godot project (the GdUnit4 HTML report template is test tooling).
 while IFS= read -r -d '' p; do
+  [[ "$p" == "$root/web/shell_tokens.css" ]] && continue
   report "web front-end file: ${p#"$root"/}"
-done < <(find "$root" \( -path "$root/.godot" -o -path "$root/addons/gdUnit4" -o -path "$root/reports" \) -prune -o -type f \( -name '*.css' -o -name '*.scss' -o -name '*.tsx' -o -name '*.jsx' -o -name 'package.json' \) -print0)
+done < <(find "$root" \( -path "$root/.godot" -o -path "$root/addons/gdUnit4" -o -path "$root/reports" -o -path "$root/build" \) -prune -o -type f \( -name '*.css' -o -name '*.scss' -o -name '*.tsx' -o -name '*.jsx' -o -name 'package.json' \) -print0)
 
 # 3) References to the web portal or the admin token set from game files.
 tmp="$(mktemp)"
-if grep -R -n -I -E --exclude-dir=.godot --exclude-dir=gdUnit4 --exclude-dir=reports --exclude='check_no_admin_ui*' \
+if grep -R -n -I -E --exclude-dir=.godot --exclude-dir=gdUnit4 --exclude-dir=reports --exclude-dir=build --exclude='check_no_admin_ui*' \
   -e 'src/cms/frontend' -e 'design/admin-tokens' -e '@ant-design' -e 'antd' -e 'ops-ui' "$root" >"$tmp" 2>/dev/null; then
-  while IFS= read -r line; do report "reference: ${line#"$root"/}"; done <"$tmp"
+  while IFS= read -r line; do
+    [[ "$line" == "$root/web/tests/"* ]] && continue
+    report "reference: ${line#"$root"/}"
+  done <"$tmp"
 fi
 rm -f "$tmp"
 
