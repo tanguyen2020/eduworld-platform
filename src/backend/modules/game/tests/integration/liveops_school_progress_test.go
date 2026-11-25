@@ -205,6 +205,7 @@ func TestSchoolEventsCrossTenant(t *testing.T) {
 	ctx := context.Background()
 	e := setupEconomy(ctx, t)
 	quest := uuid.NewSHA1(templateID, []byte("quest"))
+	e.publishWorld(ctx, t)
 	e.publishQuests(ctx, t, []command.ContentItem{learningQuest(quest.String(), "quest.f081_option", nil)})
 	e.publishEvent(ctx, t, templateItem(t))
 	e.assignTemplate(ctx, t, "t-a", "t-b")
