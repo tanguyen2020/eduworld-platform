@@ -94,3 +94,37 @@ test('the committed standalone files are up to date', () => {
     assert.equal(cur, render(src, env, gw), `standalone/${gw}/apisix.yaml is stale (run make apisix-render)`);
   }
 });
+
+test('F133 (Web build on play.<domain>): game routes allow the play origin; portal cookie routes do not', () => {
+  for (const [envFile, play, portalOrigin] of [
+    ['local.env', 'http://localhost:8060', 'http://localhost:5173'],
+    ['staging.env.example', 'https://play.staging.eduworld.example', 'https://portal.staging.eduworld.example'],
+  ]) {
+    const d = doc(envFile, 'public');
+    const origins = (id) => byId(d, id).plugins.cors.allow_origins.split(',');
+    for (const id of ['auth-game-login', 'auth-game-token', 'auth-game-logout', 'game-client-config', 'player', 'realtime']) {
+      assert.deepEqual(origins(`public-${id}`), [portalOrigin, play], `${envFile} ${id}`);
+    }
+    for (const id of ['auth-portal', 'auth-session', 'tenant-optional', 'portal-tenant']) {
+      assert.deepEqual(origins(`public-${id}`), [portalOrigin], `${envFile} ${id} must not accept the play origin`);
+    }
+    for (const r of d.routes) {
+      assert.ok(!r.plugins.cors.allow_origins.includes('*'), `${r.id}: no wildcard origin`);
+      assert.equal(r.plugins.cors.allow_credential, true, `${r.id}: credential rule unchanged`);
+      // The game client sends these on every call (F061-AC-16): the preflight must allow them.
+      for (const h of ['X-Client-Version', 'X-Client-Platform', 'X-Device-Id', 'X-Tenant-Id', 'Idempotency-Key', 'traceparent']) {
+        assert.ok(r.plugins.cors.allow_headers.split(',').includes(h), `${r.id} lacks ${h}`);
+      }
+    }
+  }
+});
+
+test('F133: an origin list with a wildcard, a path or an unknown cors value is refused', () => {
+  const env = loadEnv('local.env');
+  const src = loadRoutes(env);
+  assert.throws(() => render(src, { ...env, EW_CORS_GAME_ORIGINS: '*' }, 'public'), /not an origin/);
+  assert.throws(() => render(src, { ...env, EW_CORS_GAME_ORIGINS: 'https://play.example/v1' }, 'public'), /not an origin/);
+  assert.throws(() => render(src, { ...env, EW_CORS_GAME_ORIGINS: '' }, 'public'), /EW_CORS_GAME_ORIGINS is empty/);
+  const bad = { ...src, routes: [{ ...src.routes[0], cors: 'any' }] };
+  assert.throws(() => render(bad, env, 'public'), /cors must be "game"/);
+});

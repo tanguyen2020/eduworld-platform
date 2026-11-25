@@ -5,7 +5,8 @@
 #   bash deploy/apisix/scripts/validate-standalone.sh
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Docker bind mounts need a Windows path under Git Bash (pwd -W); Linux CI falls back to pwd.
+ROOT="$(cd "$(dirname "$0")/.." && { pwd -W 2>/dev/null || pwd; })"
 IMAGE="${APISIX_IMAGE:-apache/apisix:3.13.0-debian}"
 fail=0
 
@@ -53,6 +54,23 @@ done
 expect_route public 19080 GET /api/v1/game/client-config "public client config"
 expect public 19080 GET /api/v1/game/profile "= 400" "missing X-Tenant-Id → 400 TENANT_HEADER_REQUIRED"
 expect public 19080 POST /api/v1/auth/game/login "!= 404" "login route"
+# F133: CORS preflight of the Web build (play origin of routes/env/local.env EW_CORS_GAME_ORIGINS) is answered on
+# the game routes with the game headers, and never on the portal cookie route.
+acao() { # port path origin [host] → Access-Control-Allow-Origin of a preflight
+  curl -s -o /dev/null -D - -X OPTIONS "http://127.0.0.1:$1$2" -H "Origin: $3" ${4:+-H "Host: $4"} \
+    -H 'Access-Control-Request-Method: POST' \
+    -H 'Access-Control-Request-Headers: content-type,x-client-version,x-client-platform,x-device-id' \
+    | tr -d '\r' | sed -n 's/^[Aa]ccess-[Cc]ontrol-[Aa]llow-[Oo]rigin: //p' || true
+}
+cors_expect() { # description got want
+  if [ "$2" = "$3" ]; then echo "ok cors $1 -> '${2}'"; else echo "::error::cors $1 -> '${2}', want '${3}'"; fail=1; fi
+}
+play="$(sed -n 's/^EW_CORS_GAME_ORIGINS=//p' "$ROOT/routes/env/local.env" | cut -d, -f1)"
+cors_expect "game login from the Web build" "$(acao 19080 /api/v1/auth/game/login "$play")" "$play"
+cors_expect "client-config from the Web build" "$(acao 19080 /api/v1/game/client-config "$play")" "$play"
+cors_expect "player route from the Web build" "$(acao 19080 /api/v1/learning/my-assignments "$play")" "$play"
+cors_expect "portal login from the Web build" "$(acao 19080 /api/v1/auth/portal/login "$play" localhost)" ""
+cors_expect "game login from an unknown origin" "$(acao 19080 /api/v1/auth/game/login https://evil.example)" ""
 # Internal: platform prefixes present, player routes absent.
 expect_route internal 19180 GET /api/v1/admin/tenants "admin on the internal gateway"
 expect_no_route internal 19180 GET /api/v1/game/profile "player route on the internal gateway"

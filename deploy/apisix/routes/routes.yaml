@@ -7,7 +7,9 @@
 # default EW_ADMIN_CIDRS) · upstream core-api|realtime · modules (x-service of the
 # operations served) · auth oidc|none|ticket · tenant_header required|optional|none · login (plugin
 # ew-login-key profile) · rate (plugin ew-api-rate profile, api_rate_default per user; required with
-# auth oidc) · body_max (bytes) · sensitive (never log/trace the body) · priority.
+# auth oidc) · body_max (bytes) · sensitive (never log/trace the body) · priority · cors game (route
+# of the game client: CORS also allows the Web play origin(s) EW_CORS_GAME_ORIGINS, F133 — never on the
+# portal cookie routes).
 
 upstreams:
   core-api: ${EW_UPSTREAM_CORE_API}
@@ -30,6 +32,7 @@ rate_profiles:
 routes:
   - id: auth-game-login
     gateway: public
+    cors: game
     uris: [/api/v1/auth/game/login, /api/v1/auth/game/tenant:select]
     methods: [POST]
     upstream: core-api
@@ -43,6 +46,7 @@ routes:
 
   - id: auth-game-token
     gateway: public
+    cors: game
     uris: [/api/v1/auth/game/token:refresh]
     methods: [POST]
     upstream: core-api
@@ -57,6 +61,7 @@ routes:
   # Logout uses the global bearer security of the spec (401 when the access token is invalid).
   - id: auth-game-logout
     gateway: public
+    cors: game
     uris: [/api/v1/auth/game/logout]
     methods: [POST]
     upstream: core-api
@@ -105,6 +110,7 @@ routes:
 
   - id: game-client-config
     gateway: public
+    cors: game
     uris: [/api/v1/game/client-config]
     methods: [GET]
     upstream: core-api
@@ -127,6 +133,7 @@ routes:
 
   - id: player
     gateway: public
+    cors: game
     uris: [/api/v1/auth/*, /api/v1/me/*, /api/v1/students/*, /api/v1/learning/*, /api/v1/exams/*, /api/v1/game/*,
            /api/v1/multiplayer/*, /api/v1/competition/*, /api/v1/leaderboards/*, /api/v1/chat/*, /api/v1/social/*,
            /api/v1/notifications, /api/v1/notifications/*]
@@ -167,6 +174,7 @@ routes:
 
   - id: realtime
     gateway: public
+    cors: game
     uris: [/realtime/v1]
     upstream: realtime
     modules: [realtime]

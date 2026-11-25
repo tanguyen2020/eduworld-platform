@@ -4,7 +4,36 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { yaml, ROOT, loadEnv, loadRoutes, isMain } from './lib.mjs';
 
-const CORS_HEADERS = 'Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent';
+// X-Client-Version and X-Client-Platform are sent by the game client on every call (F061-AC-16); a Web build on
+// another origin (play.<domain>, F133) needs them in the preflight answer.
+const CORS_HEADERS = 'Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent,X-Client-Version,X-Client-Platform';
+
+// An allowlisted origin is scheme://host[:port] only: no wildcard, no path, no credentials (CORS stays an
+// allowlist, SECURITY_ARCHITECTURE §5).
+const ORIGIN = /^https?:\/\/[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*(:\d{1,5})?$/;
+
+function originList(env, name) {
+  const list = String(env[name] ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+  for (const o of list) {
+    if (!ORIGIN.test(o)) throw new Error(`${name}: "${o}" is not an origin (scheme://host[:port], no wildcard)`);
+  }
+  return list;
+}
+
+// corsOrigins: the portal origin(s) on every public route; routes marked `cors: game` (the game client's
+// routes, F133) also accept the Web play origin(s) of EW_CORS_GAME_ORIGINS. Cookie routes (/auth/portal/*) never
+// get the play origin.
+export function corsOrigins(env, r) {
+  if (r.cors !== undefined && r.cors !== 'game') throw new Error(`route ${r.id}: cors must be "game" or absent`);
+  const list = originList(env, 'EW_CORS_ALLOWED_ORIGINS');
+  if (list.length === 0) throw new Error('EW_CORS_ALLOWED_ORIGINS is empty');
+  if (r.cors === 'game') {
+    const game = originList(env, 'EW_CORS_GAME_ORIGINS');
+    if (game.length === 0) throw new Error(`route ${r.id}: EW_CORS_GAME_ORIGINS is empty`);
+    list.push(...game);
+  }
+  return [...new Set(list)].join(',');
+}
 
 function upstream(id, hostport) {
   const [host, port] = hostport.split(':');
@@ -22,7 +51,7 @@ export function render(src, env, gateway) {
       opentelemetry: { sampler: { name: 'always_on' } },
     };
     if (gateway === 'public') {
-      plugins.cors = { allow_origins: env.EW_CORS_ALLOWED_ORIGINS, allow_methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+      plugins.cors = { allow_origins: corsOrigins(env, r), allow_methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
         allow_headers: CORS_HEADERS, expose_headers: 'X-Request-Id,Idempotent-Replayed,Retry-After,RateLimit-Limit,RateLimit-Remaining,RateLimit-Reset,ETag',
         allow_credential: true, max_age: 600 };
     }

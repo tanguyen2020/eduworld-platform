@@ -16,9 +16,10 @@ routes:
         sampler:
           name: always_on
       cors:
-        allow_origins: http://localhost:5173
+        allow_origins: http://localhost:5173,http://localhost:8060
         allow_methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
-        allow_headers: Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent
+        allow_headers: >-
+          Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent,X-Client-Version,X-Client-Platform
         expose_headers: X-Request-Id,Idempotent-Replayed,Retry-After,RateLimit-Limit,RateLimit-Remaining,RateLimit-Reset,ETag
         allow_credential: true
         max_age: 600
@@ -50,9 +51,10 @@ routes:
         sampler:
           name: always_on
       cors:
-        allow_origins: http://localhost:5173
+        allow_origins: http://localhost:5173,http://localhost:8060
         allow_methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
-        allow_headers: Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent
+        allow_headers: >-
+          Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent,X-Client-Version,X-Client-Platform
         expose_headers: X-Request-Id,Idempotent-Replayed,Retry-After,RateLimit-Limit,RateLimit-Remaining,RateLimit-Reset,ETag
         allow_credential: true
         max_age: 600
@@ -84,9 +86,10 @@ routes:
         sampler:
           name: always_on
       cors:
-        allow_origins: http://localhost:5173
+        allow_origins: http://localhost:5173,http://localhost:8060
         allow_methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
-        allow_headers: Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent
+        allow_headers: >-
+          Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent,X-Client-Version,X-Client-Platform
         expose_headers: X-Request-Id,Idempotent-Replayed,Retry-After,RateLimit-Limit,RateLimit-Remaining,RateLimit-Reset,ETag
         allow_credential: true
         max_age: 600
@@ -139,7 +142,8 @@ routes:
       cors:
         allow_origins: http://localhost:5173
         allow_methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
-        allow_headers: Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent
+        allow_headers: >-
+          Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent,X-Client-Version,X-Client-Platform
         expose_headers: X-Request-Id,Idempotent-Replayed,Retry-After,RateLimit-Limit,RateLimit-Remaining,RateLimit-Reset,ETag
         allow_credential: true
         max_age: 600
@@ -174,7 +178,8 @@ routes:
       cors:
         allow_origins: http://localhost:5173
         allow_methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
-        allow_headers: Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent
+        allow_headers: >-
+          Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent,X-Client-Version,X-Client-Platform
         expose_headers: X-Request-Id,Idempotent-Replayed,Retry-After,RateLimit-Limit,RateLimit-Remaining,RateLimit-Reset,ETag
         allow_credential: true
         max_age: 600
@@ -228,7 +233,8 @@ routes:
       cors:
         allow_origins: http://localhost:5173
         allow_methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
-        allow_headers: Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent
+        allow_headers: >-
+          Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent,X-Client-Version,X-Client-Platform
         expose_headers: X-Request-Id,Idempotent-Replayed,Retry-After,RateLimit-Limit,RateLimit-Remaining,RateLimit-Reset,ETag
         allow_credential: true
         max_age: 600
@@ -277,9 +283,10 @@ routes:
         sampler:
           name: always_on
       cors:
-        allow_origins: http://localhost:5173
+        allow_origins: http://localhost:5173,http://localhost:8060
         allow_methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
-        allow_headers: Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent
+        allow_headers: >-
+          Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent,X-Client-Version,X-Client-Platform
         expose_headers: X-Request-Id,Idempotent-Replayed,Retry-After,RateLimit-Limit,RateLimit-Remaining,RateLimit-Reset,ETag
         allow_credential: true
         max_age: 600
@@ -307,7 +314,8 @@ routes:
       cors:
         allow_origins: http://localhost:5173
         allow_methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
-        allow_headers: Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent
+        allow_headers: >-
+          Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent,X-Client-Version,X-Client-Platform
         expose_headers: X-Request-Id,Idempotent-Replayed,Retry-After,RateLimit-Limit,RateLimit-Remaining,RateLimit-Reset,ETag
         allow_credential: true
         max_age: 600
@@ -368,9 +376,10 @@ routes:
         sampler:
           name: always_on
       cors:
-        allow_origins: http://localhost:5173
+        allow_origins: http://localhost:5173,http://localhost:8060
         allow_methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
-        allow_headers: Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent
+        allow_headers: >-
+          Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent,X-Client-Version,X-Client-Platform
         expose_headers: X-Request-Id,Idempotent-Replayed,Retry-After,RateLimit-Limit,RateLimit-Remaining,RateLimit-Reset,ETag
         allow_credential: true
         max_age: 600
@@ -419,9 +428,10 @@ routes:
         sampler:
           name: always_on
       cors:
-        allow_origins: http://localhost:5173
+        allow_origins: http://localhost:5173,http://localhost:8060
         allow_methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
-        allow_headers: Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent
+        allow_headers: >-
+          Authorization,Content-Type,X-Tenant-Id,Idempotency-Key,If-Match,X-Request-Id,X-Device-Id,X-EW-CSRF,traceparent,X-Client-Version,X-Client-Platform
         expose_headers: X-Request-Id,Idempotent-Replayed,Retry-After,RateLimit-Limit,RateLimit-Remaining,RateLimit-Reset,ETag
         allow_credential: true
         max_age: 600
