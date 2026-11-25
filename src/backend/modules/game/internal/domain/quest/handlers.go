@@ -53,10 +53,10 @@ func (r Registry) Register(hs ...StepHandler) {
 	}
 }
 
-// DefaultRegistry is the registry of F072 with the minigame step of F073.
+// DefaultRegistry is the registry of F072 with the minigame step of F073 and the interdependent and boss steps of F103.
 func DefaultRegistry() Registry {
 	r := Registry{}
-	r.Register(talkNPC{}, goTo{}, collect{}, discover{}, activity{}, MiniGameStep{})
+	r.Register(talkNPC{}, goTo{}, collect{}, discover{}, activity{}, MiniGameStep{}, InterdependentStep{}, BossStep{})
 	return r
 }
 

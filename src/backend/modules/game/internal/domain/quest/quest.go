@@ -157,6 +157,49 @@ type Step struct {
 	// MiniGameConfigID and MiniGameConfigVersion are the mini-game of a minigame step (F073; no version = current).
 	MiniGameConfigID      string `json:"minigame_config_id,omitempty"`
 	MiniGameConfigVersion *int   `json:"minigame_config_version,omitempty"`
+	// F103 party fields (QUEST_SYSTEM §3.2, §6): assignee of the step in a party, boss of a boss step, collective target
+	// of a learning step, roles and rules of an interdependent step.
+	Assignee         string            `json:"assignee,omitempty"`
+	BossID           string            `json:"boss_id,omitempty"`
+	CollectiveTarget *CollectiveTarget `json:"collective_target,omitempty"`
+	Roles            []Role            `json:"roles,omitempty"`
+	RoleAssignment   string            `json:"role_assignment,omitempty"`
+	AllowMultiRole   *bool             `json:"allow_multi_role,omitempty"`
+	ShareMode        string            `json:"share_mode,omitempty"`
+	Completion       string            `json:"completion,omitempty"`
+	MinMembersCount  int               `json:"min_members_count,omitempty"`
+}
+
+// CollectiveTarget is collective_target of a step (QUEST_SYSTEM §6, policy collective_count).
+type CollectiveTarget struct {
+	Metric          string `json:"metric"` // correct_answers, completed_items
+	Count           int    `json:"count"`
+	MinContribution int    `json:"min_contribution"`
+}
+
+// ClueRef is clue_content_ref of a role: a published learning material (no answer, ADR-0016).
+type ClueRef struct {
+	Kind    string `json:"kind"`
+	ID      string `json:"id"`
+	Version *int   `json:"version,omitempty"`
+}
+
+// Role is one role of an interdependent step.
+type Role struct {
+	Role    string  `json:"role"`
+	Title   Text    `json:"title"`
+	Clue    ClueRef `json:"clue_content_ref"`
+	IconKey string  `json:"icon_key,omitempty"`
+}
+
+// Role returns a role of the step.
+func (s Step) Role(name string) (Role, bool) {
+	for _, r := range s.Roles {
+		if r.Role == name {
+			return r, true
+		}
+	}
+	return Role{}, false
 }
 
 // Targets are the interactables a step points the player at (go_to, collect, discover).
@@ -228,6 +271,12 @@ type Availability struct {
 	TimeLimitMinutes *int       `json:"time_limit_minutes,omitempty"`
 }
 
+// PartySize is party_size of a party quest.
+type PartySize struct {
+	Min int `json:"min"`
+	Max int `json:"max"`
+}
+
 // CompletionRule is completion_rule.
 type CompletionRule struct {
 	Type    string   `json:"type"`
@@ -264,6 +313,8 @@ type Version struct {
 	FailureConditions    []FailureCondition    `json:"failure_conditions,omitempty"`
 	Availability         *Availability         `json:"availability,omitempty"`
 	PartyMode            string                `json:"party_mode"`
+	PartySize            *PartySize            `json:"party_size,omitempty"`
+	SharedProgressPolicy string                `json:"shared_progress_policy,omitempty"`
 	Steps                []Step                `json:"steps"`
 	CompletionRule       CompletionRule        `json:"completion_rule"`
 	Rewards              []Reward              `json:"rewards"`
@@ -416,6 +467,9 @@ func (v Version) Texts(fn func(pointer string, t Text)) {
 		fn(fmt.Sprintf("/steps/%d/title", i), s.Title)
 		if s.Hint != nil {
 			fn(fmt.Sprintf("/steps/%d/hint", i), *s.Hint)
+		}
+		for j, r := range s.Roles {
+			fn(fmt.Sprintf("/steps/%d/roles/%d/title", i, j), r.Title)
 		}
 	}
 }

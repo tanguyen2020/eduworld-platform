@@ -95,7 +95,7 @@ func TestLearningCreateAttemptFacade(t *testing.T) {
 		t.Fatalf("AttemptCreateRequest of the internal spec: %v\n%s", err, b)
 	}
 	if got.Mode != learningapi.AttemptModeQuest || got.Activity.ContentType != learningapi.ActivityRefContentTypeActivity || got.Activity.ContentId != content ||
-		got.Context.ContextType != learningapi.QuestStep || got.Context.ContextId != progress || *got.Context.StepId != "solve" ||
+		got.Context.ContextType != learningapi.AttemptCreateRequestContextContextTypeQuestStep || got.Context.ContextId != progress || *got.Context.StepId != "solve" ||
 		*got.Context.QuestVersionId != version || *got.Context.GameSessionId != session {
 		t.Fatalf("request: %s", b)
 	}
@@ -174,7 +174,7 @@ func TestLearningCreateChallengeAttemptFacade(t *testing.T) {
 	if err := reqSchema.VisitJSON(doc); err != nil {
 		t.Fatalf("AttemptCreateRequest of the internal spec: %v\n%s", err, b)
 	}
-	if got.Mode != learningapi.AttemptModeChallenge || got.Context.ContextType != learningapi.ChallengeAttempt || got.Context.ContextId != challengeAttempt ||
+	if got.Mode != learningapi.AttemptModeChallenge || got.Context.ContextType != learningapi.AttemptCreateRequestContextContextTypeChallengeAttempt || got.Context.ContextId != challengeAttempt ||
 		*got.Activity.DifficultyMin != 3 || *got.Activity.DifficultyMax != 4 || *got.Activity.GradeLevel != 3 || *got.Activity.QuestionCount != 1 ||
 		*got.Activity.TimeLimitSeconds != 37 || (*got.Activity.ObjectiveIds)[0] != objective || got.Activity.ContentId != activity {
 		t.Fatalf("request: %s", b)

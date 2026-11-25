@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/common/enums.schema.json",
+  "title": "EduWorld — enum dùng chung",
+  "description": "Nguồn duy nhất cho các enum nội dung học tập (EDU_FIT_REVIEW SPC-02, SPC-03; ADR-0072). JSON Schema khác $ref tới $defs ở đây; OpenAPI/AsyncAPI khai báo inline với giá trị và thứ tự y hệt (kiểm tra bằng scripts/specs/check-enums.mjs).",
+  "$defs": {
+    "PresenceStatus": {
+      "type": "string",
+      "description": "Enum presence duy nhất của hệ thống (MULTIPLAYER_GAMEPLAY §5, F091): realtime (AsyncAPI), PlayerCard và REST; người bật ẩn trạng thái hiển thị offline với người không được thấy.",
+      "enum": ["offline", "online", "in_activity", "in_match", "away"]
+    },
+    "PartyActivityType": {
+      "type": "string",
+      "description": "Một enum loại hoạt động party (PARTY_SYSTEM §5, F101 research R4): REST PartyActivityType, AsyncAPI ActivityRef.kind (party), internal module game và CHECK multiplayer.party_activities.activity_type. Release M4a chỉ bật explore, quest, boss.",
+      "enum": ["explore", "quest", "boss", "learning_challenge", "coop_challenge", "team_battle"]
+    },
+    "QuestionType": {
+      "type": "string",
+      "description": "Loại câu hỏi (QUESTION_BANK).",
+      "enum": ["single_choice", "multiple_choice", "true_false", "fill_in_blank", "short_answer", "numeric", "matching", "ordering", "drag_drop", "image_based", "interactive"]
+    },
+    "ActivityType": {
+      "type": "string",
+      "description": "Loại learning activity trong version này (ACTIVITY_ENGINE, ADR-0072, ADR-0082).",
+      "enum": ["quiz", "interactive_exercise", "minigame", "video_lesson", "audio_lesson", "simulation"]
+    },
+    "FeedbackTiming": {
+      "type": "string",
+      "description": "Khi nào hiện đúng/sai và giải thích từng câu: immediate (ngay sau mỗi câu), after_submit (sau khi nộp), after_close (sau khi bài giao/đề đóng), never.",
+      "enum": ["immediate", "after_submit", "after_close", "never"]
+    },
+    "ResultRelease": {
+      "type": "string",
+      "description": "Khi nào công bố kết quả/đáp án của bài giao hoặc đề: immediate, after_close, manual (school_admin/academic_manager công bố).",
+      "enum": ["immediate", "after_close", "manual"]
+    },
+    "AttemptMode": {
+      "type": "string",
+      "description": "Ngữ cảnh của attempt (ACTIVITY_ENGINE §9).",
+      "enum": ["practice", "assignment", "quest", "minigame", "challenge", "exam", "competition", "retry_wrong", "diagnostic"]
+    },
+    "AttemptStatus": {
+      "type": "string",
+      "description": "Trạng thái attempt; mọi hoạt động trong Release do server tự chấm (ADR-0072).",
+      "enum": ["in_progress", "submitted", "graded", "expired", "abandoned"]
+    },
+    "LearningContentType": {
+      "type": "string",
+      "description": "Loại nội dung học tập có version/publish (ADR-0043).",
+      "enum": ["question", "question_set", "assessment_blueprint", "lesson", "learning_material", "activity"]
+    }
+  }
+}

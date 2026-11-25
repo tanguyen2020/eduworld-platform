@@ -82,6 +82,11 @@ type Handlers struct {
 	// Challenges and ChallengeQueries are the F076 solo challenge use cases.
 	Challenges       ChallengeCommands
 	ChallengeQueries ChallengeQueries
+	// Bosses, BossQueries, CoopQuests and CoopQuestQueries are the F103 boss and co-op quest use cases.
+	Bosses           BossCommands
+	BossQueries      BossQueries
+	CoopQuests       CoopQuestCommands
+	CoopQuestQueries CoopQuestQueries
 	// Admin are the Game Operations Console handlers (F078); nil Commands = not mounted (worker binaries).
 	Admin GameAdminHandlers
 	// IPHasher hashes the client address for game.login_events.ip_hash (nil = no hash). The raw IP stops here.
@@ -178,8 +183,9 @@ var PlayerOperations = []string{"createGameSession", "endGameSession", "heartbea
 func Register(s *httpx.Server, h Handlers) error {
 	if h.Sessions == nil || h.ClientConfig == nil || h.Manifest == nil || h.LoginEvents == nil || h.Tickets == nil ||
 		h.Profiles == nil || h.ProfileQueries == nil || h.World == nil || h.WorldQueries == nil || h.Quests == nil || h.QuestQueries == nil || h.ProgressionQueries == nil || h.EconomyQueries == nil || h.EconomyCommands == nil ||
-		h.LiveOpsQueries == nil || h.LiveOpsCommands == nil || h.MiniGames == nil || h.Challenges == nil || h.ChallengeQueries == nil {
-		return errors.New("game: every F014/F090/F070/F071/F072/F073/F074/F075/F076/F077 handler is required")
+		h.LiveOpsQueries == nil || h.LiveOpsCommands == nil || h.MiniGames == nil || h.Challenges == nil || h.ChallengeQueries == nil ||
+		h.Bosses == nil || h.BossQueries == nil || h.CoopQuests == nil || h.CoopQuestQueries == nil {
+		return errors.New("game: every F014/F090/F070/F071/F072/F073/F074/F075/F076/F077/F103 handler is required")
 	}
 	routes := map[string]http.HandlerFunc{
 		"createGameSession":            h.createGameSession,
@@ -210,6 +216,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		routes[id] = fn
 	}
 	for id, fn := range h.challengeRoutes() {
+		routes[id] = fn
+	}
+	for id, fn := range h.bossRoutes() {
 		routes[id] = fn
 	}
 	for id, fn := range h.profileRoutes() {

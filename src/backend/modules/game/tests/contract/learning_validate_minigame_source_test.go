@@ -139,7 +139,7 @@ func TestLearningCreateMinigameAttemptFacade(t *testing.T) {
 	}
 	if got.Mode != learningapi.AttemptModeMinigame || got.Activity.ContentType != learningapi.ActivityRefContentTypeMinigameConfig ||
 		got.Activity.ContentId != config || got.Activity.ContentVersionId == nil || *got.Activity.ContentVersionId != version ||
-		got.Context.ContextType != learningapi.MinigameSession || got.Context.ContextId != play || got.Context.StepId != nil {
+		got.Context.ContextType != learningapi.AttemptCreateRequestContextContextTypeMinigameSession || got.Context.ContextId != play || got.Context.StepId != nil {
 		t.Fatalf("request: %s", b)
 	}
 	fake.CreateAttemptFunc = func(context.Context, learningapi.CreateAttemptRequestObject) (learningapi.CreateAttemptResponseObject, error) {

@@ -177,6 +177,10 @@ type env struct {
 	storage  *memStorage
 	renders  *memRenders
 	released map[string]bool
+	// F103 doubles (R17): boss and co-op quest messages, online members, the plans/scores of module learning.
+	bossPush  *bossPush
+	online    *memOnline
+	bossLearn *bossLearning
 }
 
 func open(t *testing.T, dsn string) *sql.DB {
@@ -205,7 +209,7 @@ func setup(ctx context.Context, t *testing.T, o envOpts) *env {
 		tenantA: uuid.New(), tenantB: uuid.New(), schoolA: uuid.New(), schoolA2: uuid.New(), schoolB: uuid.New(),
 		clock: &clock{now: time.Date(2026, 11, 19, 3, 0, 0, 0, time.UTC)}, pushes: &pushes{},
 		presence: &memPresence{m: map[uuid.UUID]port.Presence{}}, rate: &memRate{n: map[string]int{}}, worldPush: &memWorldPush{}, learning: newFakeLearning(), questPush: &questPush{},
-		challengePush: &challengePush{}}
+		challengePush: &challengePush{}, bossPush: &bossPush{}, online: &memOnline{off: map[uuid.UUID]bool{}}}
 	var err error
 	if e.writer, err = outbox.NewWriter("game", "core", nil); err != nil {
 		t.Fatal(err)
@@ -294,6 +298,7 @@ func (e *env) server(ctx context.Context, t *testing.T) {
 		ProgressionQueries: progressionQueryProxy{e}, EconomyQueries: economyQueryProxy{e}, EconomyCommands: economyCommandProxy{e},
 		LiveOpsQueries: liveQueryProxy{e}, LiveOpsCommands: liveCommandProxy{e}, MiniGames: miniGameProxy{e},
 		Challenges: challengeProxy{e}, ChallengeQueries: challengeQueryProxy{e},
+		Bosses: bossProxy{e}, BossQueries: bossQueryProxy{e}, CoopQuests: coopProxy{e}, CoopQuestQueries: coopQueryProxy{e},
 		Admin: gamehttp.GameAdminHandlers{Commands: adminProxy{e}, Queries: adminQueryProxy{e}, Media: mediaProxy{e}}}
 	if err := gamehttp.Register(s, h); err != nil {
 		t.Fatal(err)

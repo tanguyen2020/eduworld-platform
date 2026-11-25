@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/bossschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/cache"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/challengeschema"
 	gameconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/config"
@@ -22,10 +24,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/minigameschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/bosssql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/challengesql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/economysql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/liveopssql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/minigamesql"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/partyquestsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/progressionsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/questsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/read"
@@ -74,6 +78,10 @@ type Facade interface {
 	RevokeTenantAssignments(ctx context.Context, req api.RevokeTenantAssignmentsRequestObject) (api.RevokeTenantAssignmentsResponseObject, error)
 	ListResourceAssignments(ctx context.Context, req api.ListResourceAssignmentsRequestObject) (api.ListResourceAssignmentsResponseObject, error)
 	ListAssignedGameActivities(ctx context.Context, req api.ListAssignedGameActivitiesRequestObject) (api.ListAssignedGameActivitiesResponseObject, error)
+	// F103: the party activities of the Party Lobby (caller competition).
+	ListPartyActivityCandidates(ctx context.Context, req api.ListPartyActivityCandidatesRequestObject) (api.ListPartyActivityCandidatesResponseObject, error)
+	CheckPartyActivityEligibility(ctx context.Context, req api.CheckPartyActivityEligibilityRequestObject) (api.CheckPartyActivityEligibilityResponseObject, error)
+	StartPartyActivity(ctx context.Context, req api.StartPartyActivityRequestObject) (api.StartPartyActivityResponseObject, error)
 }
 
 // Imports are the facades module game calls: getHubPosition of module competition (F071 T049, interaction distance of a
@@ -243,6 +251,35 @@ func Register(r *module.Registry) (*Module, error) {
 		Realtime: realtime.ChallengePublisher{C: vk}, Metrics: observability.ChallengeMetrics{}, Config: challengeCfg}
 	challengeRoom := room.Challenges{Registry: rooms, Type: gameconfig.ChallengeRoomType, Expirer: challengeUC}
 	challengeUC.Room = challengeRoom
+	// F103 boss battles and co-op quests: one room per live encounter / shared quest session on the same room host
+	// (deadlines, reconnect grace), question plans and grading by module learning (createQuestionPlan, scorePlanAnswer),
+	// clue cards from module learning behind the Valkey cache.
+	bossCfg, err := gameconfig.BossFrom(r.Config(), challengeCfg, cfg.UseCase.HeartbeatTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
+	coopCfg, err := gameconfig.PartyQuestFrom(r.Config(), cfg.UseCase.HeartbeatTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
+	observability.RegisterBoss(r.Metrics())
+	bossLearning := modules.LateBossLearning{L: learningLate}
+	bossPush := realtime.BossPublisher{C: vk}
+	clues := cache.ClueCache{C: vk, Source: bossLearning}
+	bossUC := command.Bosses{UoW: core.UoW, AfterCommit: entx.AfterCommit, Content: bosssql.Content{}, World: worldsql.Content{},
+		Quests: questsql.Content{}, Store: bosssql.Store{}, Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder},
+		Learning: bossLearning, Realtime: bossPush, Presence: bosssql.Presence{}, Names: bosssql.Reads{}, Metrics: observability.BossMetrics{},
+		Config: bossCfg}
+	bossRoom := room.Rooms{Registry: rooms, Type: gameconfig.BossRoomType}
+	bossUC.Room = bossRoom
+	bossRoom.Use = bossUC
+	coopUC := command.PartyQuests{UoW: core.UoW, AfterCommit: entx.AfterCommit, Content: questsql.Content{}, Party: questsql.Content{},
+		World: worldsql.Content{}, Store: partyquestsql.Store{}, Quests: questUC, Events: write.Publisher{W: core.Writer},
+		Audit: write.Auditor{R: core.Recorder}, Messages: bossPush, Renders: clues, Presence: bosssql.Presence{}, Names: bosssql.Reads{},
+		Metrics: observability.BossMetrics{}, Config: coopCfg}
+	coopRoom := room.Rooms{Registry: rooms, Type: gameconfig.PartyQuestRoomType}
+	coopUC.Room = coopRoom
+	coopRoom.Use = coopUC
 	// F078 Game Operations Console: the release core with every type module (the same checks as the seed), the review
 	// workflow, scheduled publications, previews, game media and renders, tenant assignments and the school catalog.
 	adminCfg, err := gameconfig.GameAdminFrom(r.Config())
@@ -262,7 +299,8 @@ func Register(r *module.Registry) (*Module, error) {
 		LiveOps: &command.LiveOpsPublishRules{EventSchema: liveopsschema.Event{}, TemplateSchema: liveopsschema.Template{},
 			TrackSchema: liveopsschema.Track{}, Reader: liveopssql.Store{}, Hook: liveOpsUC, Policy: liveCfg.Command.Rules},
 		MiniGames:  &command.MiniGamePublishRules{Schema: minigameschema.Validator{}, Sources: learningLate},
-		Challenges: &command.ChallengePublishRules{Schema: challengeschema.Validator{}, Rules: challengeCfg.Rules, Content: challengesql.Content{}}}
+		Challenges: &command.ChallengePublishRules{Schema: challengeschema.Validator{}, Rules: challengeCfg.Rules, Content: challengesql.Content{}},
+		Bosses:     &command.BossPublishRules{Schema: bossschema.Validator{}, Content: bosssql.Content{}}}
 	adminUC := command.GameAdmin{UoW: core.UoW, Store: write.GameConfigRepo{}, Kernel: kernel, Learning: learningLate,
 		Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder}, Metrics: observability.GameAdminMetrics{}, Policy: adminCfg.Policy}
 	urls := storage.PublicURL{BaseURL: adminCfg.CDNBase}
@@ -290,7 +328,10 @@ func Register(r *module.Registry) (*Module, error) {
 		Audit: write.Auditor{R: core.Recorder}, Cursors: cursors}
 	m := &Module{hub: hub, learning: learningLate, chat: chatLate, facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
 		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC},
-		GameAdmin: facade.GameAdmin{Assignments: assignUC, Catalog: adminQueries}}}
+		GameAdmin: facade.GameAdmin{Assignments: assignUC, Catalog: adminQueries},
+		PartyActivities: facade.PartyActivities{Queries: query.PartyActivities{Read: core.ReadSession, Bosses: bosssql.Content{},
+			BossReads: bosssql.Reads{}, Party: questsql.Content{}, Quests: questsql.Content{}, World: worldsql.Content{},
+			AttemptsPerDay: bossCfg.AttemptsPerDay, Reset: bossCfg.Reset}, Bosses: bossUC, Quests: coopUC}}}
 	options := cache.NicknameOptionStore{C: vk}
 	profiles := command.Profiles{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: write.ProfileRepo{}, Catalog: write.CatalogRepo{},
 		Owned: write.OwnershipRepo{}, Presets: write.PresetRepo{}, Directory: write.Directory{}, Schools: write.Directory{},
@@ -313,6 +354,10 @@ func Register(r *module.Registry) (*Module, error) {
 			Cursors: cursors, Policy: liveCfg.Query}, LiveOpsCommands: liveOpsUC, MiniGames: miniGameUC,
 		Challenges: challengeUC, ChallengeQueries: query.Challenges{Read: core.ReadSession, Content: challengesql.Content{}, World: worldsql.Content{},
 			Quests: questsql.Content{}, Cursors: cursors, Rules: challengeCfg.Rules, Reset: challengeCfg.Reset},
+		Bosses: bossUC, BossQueries: query.Bosses{Read: core.ReadSession, Content: bosssql.Content{}, Reads: bosssql.Reads{}, World: worldsql.Content{},
+			Cursors: cursors},
+		CoopQuests: coopUC, CoopQuestQueries: query.QuestClues{Read: core.ReadSession, Reads: partyquestsql.Reads{}, Content: questsql.Content{},
+			Renders: clues, Names: bosssql.Reads{}},
 		Admin: gamehttp.GameAdminHandlers{Commands: adminUC, Queries: adminQueries, Media: mediaUC}}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
@@ -322,6 +367,13 @@ func Register(r *module.Registry) (*Module, error) {
 	if nc := r.NATS(); nc != nil && r.ServesHTTP() {
 		r.Go("game.cmd.session_heartbeat", func(ctx context.Context) error {
 			return rt.ServeCommand(ctx, nc, rt.SessionHeartbeatModule, rt.SessionHeartbeatType, natscmd.SessionHeartbeat(sessions), 0)
+		})
+		// F103: boss.encounter.ready and boss.answer.submit (the answer waits for the grading of module learning).
+		r.Go("game.cmd.boss_ready", func(ctx context.Context) error {
+			return rt.ServeCommand(ctx, nc, natscmd.Module, natscmd.TypeBossReady, natscmd.BossReady(bossUC), 0)
+		})
+		r.Go("game.cmd.boss_answer", func(ctx context.Context) error {
+			return rt.ServeCommand(ctx, nc, natscmd.Module, natscmd.TypeBossAnswer, natscmd.BossAnswer(bossUC), 5*time.Second)
 		})
 	}
 
@@ -398,8 +450,25 @@ func Register(r *module.Registry) (*Module, error) {
 		return consumer.ChallengeProgressOptions(consumer.ChallengeProgress{Challenges: challengeUC}, core.UoW, core.App, js)
 	})
 	// The room host of the challenge rooms (pkg/roomhost): worker events, several instances share the rooms by lease.
-	host := roomhost.NewHost(roomCfg, rooms, challengeRoom, nil, roomhost.PromMetrics{})
+	host := roomhost.NewHost(roomCfg, rooms, room.Checkpoints{gameconfig.ChallengeRoomType: challengeRoom, gameconfig.BossRoomType: bossRoom,
+		gameconfig.PartyQuestRoomType: coopRoom}, nil, roomhost.PromMetrics{})
 	host.Handle(gameconfig.ChallengeRoomType, challengeRoom)
+	host.Handle(gameconfig.BossRoomType, bossRoom)
+	host.Handle(gameconfig.PartyQuestRoomType, coopRoom)
+	// F103 consumers: party membership (competition stream), shared steps and boss steps (game stream), collective and
+	// interdependent steps (learning stream).
+	r.Consumer(messaging.BossPartyMembershipName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.PartyMembershipOptions(consumer.PartyMembership{Bosses: bossUC, Quests: coopUC}, core.UoW, core.App, js)
+	})
+	r.Consumer(messaging.PartyQuestStepName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.PartyQuestOnStepOptions(consumer.PartyQuestOnStep{Quests: coopUC}, core.UoW, core.App, js)
+	})
+	r.Consumer(messaging.PartyQuestGradedName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.PartyQuestOnGradedOptions(consumer.PartyQuestOnGraded{Quests: coopUC}, core.UoW, core.App, js)
+	})
+	r.Consumer(messaging.QuestBossName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.QuestOnBossOptions(consumer.QuestOnBoss{Quests: questUC}, core.UoW, core.App, js)
+	})
 	r.Background(Name, "roomhost", "game.challenge_room_host", r.RunsEvents(), host.Run)
 	r.Consumer("game.season_projection", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.SeasonProjectionOptions(consumer.SeasonProjection{Seasons: liveOpsUC}, core.UoW, core.App, js)

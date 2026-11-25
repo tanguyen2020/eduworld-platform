@@ -49,22 +49,22 @@ func (e ActivityRefContentType) Valid() bool {
 
 // Defines values for AttemptCreateRequestContextContextType.
 const (
-	BossEncounter    AttemptCreateRequestContextContextType = "boss_encounter"
-	ChallengeAttempt AttemptCreateRequestContextContextType = "challenge_attempt"
-	MinigameSession  AttemptCreateRequestContextContextType = "minigame_session"
-	QuestStep        AttemptCreateRequestContextContextType = "quest_step"
+	AttemptCreateRequestContextContextTypeBossEncounter    AttemptCreateRequestContextContextType = "boss_encounter"
+	AttemptCreateRequestContextContextTypeChallengeAttempt AttemptCreateRequestContextContextType = "challenge_attempt"
+	AttemptCreateRequestContextContextTypeMinigameSession  AttemptCreateRequestContextContextType = "minigame_session"
+	AttemptCreateRequestContextContextTypeQuestStep        AttemptCreateRequestContextContextType = "quest_step"
 )
 
 // Valid indicates whether the value is a known member of the AttemptCreateRequestContextContextType enum.
 func (e AttemptCreateRequestContextContextType) Valid() bool {
 	switch e {
-	case BossEncounter:
+	case AttemptCreateRequestContextContextTypeBossEncounter:
 		return true
-	case ChallengeAttempt:
+	case AttemptCreateRequestContextContextTypeChallengeAttempt:
 		return true
-	case MinigameSession:
+	case AttemptCreateRequestContextContextTypeMinigameSession:
 		return true
-	case QuestStep:
+	case AttemptCreateRequestContextContextTypeQuestStep:
 		return true
 	default:
 		return false
@@ -281,9 +281,46 @@ func (e MinigameType) Valid() bool {
 	}
 }
 
+// Defines values for QuestionPlanRequestAttemptMode.
+const (
+	QuestionPlanRequestAttemptModeChallenge   QuestionPlanRequestAttemptMode = "challenge"
+	QuestionPlanRequestAttemptModeCompetition QuestionPlanRequestAttemptMode = "competition"
+)
+
+// Valid indicates whether the value is a known member of the QuestionPlanRequestAttemptMode enum.
+func (e QuestionPlanRequestAttemptMode) Valid() bool {
+	switch e {
+	case QuestionPlanRequestAttemptModeChallenge:
+		return true
+	case QuestionPlanRequestAttemptModeCompetition:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for QuestionPlanRequestContextType.
+const (
+	QuestionPlanRequestContextTypeBossEncounter QuestionPlanRequestContextType = "boss_encounter"
+	QuestionPlanRequestContextTypeMatch         QuestionPlanRequestContextType = "match"
+)
+
+// Valid indicates whether the value is a known member of the QuestionPlanRequestContextType enum.
+func (e QuestionPlanRequestContextType) Valid() bool {
+	switch e {
+	case QuestionPlanRequestContextTypeBossEncounter:
+		return true
+	case QuestionPlanRequestContextTypeMatch:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for QuestionPlanRequestMode.
 const (
 	Battle1v1     QuestionPlanRequestMode = "battle_1v1"
+	Boss          QuestionPlanRequestMode = "boss"
 	CoopChallenge QuestionPlanRequestMode = "coop_challenge"
 	TeamBattle    QuestionPlanRequestMode = "team_battle"
 	TimedQuiz     QuestionPlanRequestMode = "timed_quiz"
@@ -294,6 +331,8 @@ const (
 func (e QuestionPlanRequestMode) Valid() bool {
 	switch e {
 	case Battle1v1:
+		return true
+	case Boss:
 		return true
 	case CoopChallenge:
 		return true
@@ -707,6 +746,28 @@ type LearningContentRef struct {
 // LearningContentRefContentType defines model for LearningContentRef.ContentType.
 type LearningContentRefContentType string
 
+// LearningMaterialRenderRequest Examples: {"refs":[{"id":"0193a5f4-6c1e-7b2a-9d1f-0000000f1031","version":1}]}
+type LearningMaterialRenderRequest struct {
+	Refs []struct {
+		Id      openapi_types.UUID `json:"id"`
+		Version *int               `json:"version,omitempty"`
+	} `json:"refs"`
+}
+
+// LearningMaterialRenders defines model for LearningMaterialRenders.
+type LearningMaterialRenders struct {
+	Data []struct {
+		// Blocks Block hiển thị của material (text, image, table…), không có block câu hỏi
+		Blocks []map[string]interface{} `json:"blocks"`
+		Id     openapi_types.UUID       `json:"id"`
+		Title  *struct {
+			En *string `json:"en,omitempty"`
+			Vi *string `json:"vi,omitempty"`
+		} `json:"title,omitempty"`
+		Version int `json:"version"`
+	} `json:"data"`
+}
+
 // MinigameQuestionSourceCheck defines model for MinigameQuestionSourceCheck.
 type MinigameQuestionSourceCheck struct {
 	// MinigameType Đồng bộ với specs/schemas/minigame-config.schema.json minigame_type.
@@ -760,8 +821,11 @@ type PlanAnswerScore struct {
 	IsCorrect       bool                `json:"is_correct"`
 
 	// Late true nếu nhận sau hạn câu hỏi (không tính điểm)
-	Late          *bool              `json:"late,omitempty"`
-	PlanId        openapi_types.UUID `json:"plan_id"`
+	Late   *bool              `json:"late,omitempty"`
+	PlanId openapi_types.UUID `json:"plan_id"`
+
+	// RapidGuess Trả lời nhanh hơn ngưỡng rapid_guess_min_response_ms (không bao giờ với mode competition)
+	RapidGuess    *bool              `json:"rapid_guess,omitempty"`
 	ScoreFraction float32            `json:"score_fraction"`
 	StudentId     openapi_types.UUID `json:"student_id"`
 }
@@ -826,13 +890,29 @@ type QuestionPlan struct {
 
 // QuestionPlanRequest defines model for QuestionPlanRequest.
 type QuestionPlanRequest struct {
-	ChallengeTemplateId *openapi_types.UUID `json:"challenge_template_id,omitempty"`
-	DifficultyMax       *int                `json:"difficulty_max,omitempty"`
-	DifficultyMin       *int                `json:"difficulty_min,omitempty"`
-	GradeLevel          int                 `json:"grade_level"`
-	MatchId             openapi_types.UUID  `json:"match_id"`
+	// ActivityRef Activity đã publish làm nguồn câu (boss requirement, F103); có activity_ref thì không cần subject_id
+	ActivityRef *struct {
+		ContentId openapi_types.UUID `json:"content_id"`
 
-	// Mode Trận bot luyện tập dùng mode của trận (battle_1v1); bot không phải participant.
+		// Version Bỏ trống = version published hiện hành
+		Version *int `json:"version,omitempty"`
+	} `json:"activity_ref,omitempty"`
+
+	// AttemptMode Mode của attempt mỗi participant; boss dùng challenge
+	AttemptMode         *QuestionPlanRequestAttemptMode `json:"attempt_mode,omitempty"`
+	ChallengeTemplateId *openapi_types.UUID             `json:"challenge_template_id,omitempty"`
+
+	// ContextId encounter_id khi context_type = boss_encounter (bắt buộc khi đó)
+	ContextId *openapi_types.UUID `json:"context_id,omitempty"`
+
+	// ContextType Context của attempt học tập (F103: boss_encounter)
+	ContextType   *QuestionPlanRequestContextType `json:"context_type,omitempty"`
+	DifficultyMax *int                            `json:"difficulty_max,omitempty"`
+	DifficultyMin *int                            `json:"difficulty_min,omitempty"`
+	GradeLevel    int                             `json:"grade_level"`
+	MatchId       openapi_types.UUID              `json:"match_id"`
+
+	// Mode Trận bot luyện tập dùng mode của trận (battle_1v1); bot không phải participant. boss = lượt phase boss của module game (F103).
 	Mode          QuestionPlanRequestMode `json:"mode"`
 	Participants  []openapi_types.UUID    `json:"participants"`
 	QuestionCount int                     `json:"question_count"`
@@ -844,7 +924,13 @@ type QuestionPlanRequest struct {
 	TopicIds               *[]openapi_types.UUID `json:"topic_ids,omitempty"`
 }
 
-// QuestionPlanRequestMode Trận bot luyện tập dùng mode của trận (battle_1v1); bot không phải participant.
+// QuestionPlanRequestAttemptMode Mode của attempt mỗi participant; boss dùng challenge
+type QuestionPlanRequestAttemptMode string
+
+// QuestionPlanRequestContextType Context của attempt học tập (F103: boss_encounter)
+type QuestionPlanRequestContextType string
+
+// QuestionPlanRequestMode Trận bot luyện tập dùng mode của trận (battle_1v1); bot không phải participant. boss = lượt phase boss của module game (F103).
 type QuestionPlanRequestMode string
 
 // QuestionResponse Câu trả lời thô theo loại câu hỏi — shape y hệt specs/schemas/question.schema.json#/$defs/response và
@@ -1202,6 +1288,9 @@ type CreateAttemptJSONRequestBody = AttemptCreateRequest
 
 // CheckPublishedLearningContentJSONRequestBody defines body for CheckPublishedLearningContent for application/json ContentType.
 type CheckPublishedLearningContentJSONRequestBody = LearningContentCheck
+
+// GetLearningMaterialRendersJSONRequestBody defines body for GetLearningMaterialRenders for application/json ContentType.
+type GetLearningMaterialRendersJSONRequestBody = LearningMaterialRenderRequest
 
 // ValidateMinigameQuestionSourceJSONRequestBody defines body for ValidateMinigameQuestionSource for application/json ContentType.
 type ValidateMinigameQuestionSourceJSONRequestBody = MinigameQuestionSourceCheck
@@ -1595,6 +1684,9 @@ type ServerInterface interface {
 	// CheckPublishedLearningContent Kiểm nội dung học tập platform được cấu hình game tham chiếu đã publish chưa (submit_review của Game Operations Console)
 	// (POST /internal/v1/learning-content:check-published)
 	CheckPublishedLearningContent(w http.ResponseWriter, r *http.Request)
+	// GetLearningMaterialRenders Bản render của các learning material đã publish (thẻ dữ kiện của bước interdependent, F103)
+	// (POST /internal/v1/learning-materials/renders:batch)
+	GetLearningMaterialRenders(w http.ResponseWriter, r *http.Request)
 	// ValidateMinigameQuestionSource Kiểm nguồn câu hỏi của cấu hình mini-game khi publish (loại câu tương thích, đủ câu, question set đã publish)
 	// (POST /internal/v1/minigame-question-sources:validate)
 	ValidateMinigameQuestionSource(w http.ResponseWriter, r *http.Request)
@@ -1628,10 +1720,10 @@ type ServerInterface interface {
 	// MergeUserData Chuyển dữ liệu của một user sang user đích khi gộp tài khoản trùng (module identity điều phối)
 	// (POST /internal/v1/platform/users/{user_id}:merge-into)
 	MergeUserData(w http.ResponseWriter, r *http.Request, userId CommonInternalCommonV1UserIdPath)
-	// CreateQuestionPlan Tạo bộ câu hỏi cho một trận thi đấu (chỉ render payload, không đáp án)
+	// CreateQuestionPlan Tạo bộ câu hỏi cho một trận thi đấu hoặc một lượt phase boss (chỉ render payload, không đáp án)
 	// (POST /internal/v1/question-plans)
 	CreateQuestionPlan(w http.ResponseWriter, r *http.Request)
-	// ScorePlanAnswer Chấm một câu trả lời trong trận (server-authoritative) và ghi bằng chứng học tập
+	// ScorePlanAnswer Chấm một câu trả lời trong trận hoặc boss (server-authoritative) và ghi bằng chứng học tập
 	// (POST /internal/v1/question-plans/{plan_id}/answers:score)
 	ScorePlanAnswer(w http.ResponseWriter, r *http.Request, planId openapi_types.UUID)
 	// RevealPlanItem Đáp án đúng và giải thích của một câu đã đóng trong trận (F105)
@@ -1693,6 +1785,20 @@ func (siw *ServerInterfaceWrapper) CheckPublishedLearningContent(w http.Response
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CheckPublishedLearningContent(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetLearningMaterialRenders operation middleware
+func (siw *ServerInterfaceWrapper) GetLearningMaterialRenders(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetLearningMaterialRenders(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2267,6 +2373,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/attempts", wrapper.CreateAttempt)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/attempts/{attempt_id}", wrapper.GetAttemptResult)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/learning-content:check-published", wrapper.CheckPublishedLearningContent)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/learning-materials/renders:batch", wrapper.GetLearningMaterialRenders)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/minigame-question-sources:validate", wrapper.ValidateMinigameQuestionSource)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:cleanup", wrapper.CleanupStudentData)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:restore", wrapper.RestoreStudentData)
@@ -2530,6 +2637,92 @@ type CheckPublishedLearningContent422ApplicationProblemPlusJSONResponse struct {
 }
 
 func (response CheckPublishedLearningContent422ApplicationProblemPlusJSONResponse) VisitCheckPublishedLearningContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLearningMaterialRendersRequestObject struct {
+	Body *GetLearningMaterialRendersJSONRequestBody
+}
+
+type GetLearningMaterialRendersResponseObject interface {
+	VisitGetLearningMaterialRendersResponse(w http.ResponseWriter) error
+}
+
+type GetLearningMaterialRenders200JSONResponse LearningMaterialRenders
+
+func (response GetLearningMaterialRenders200JSONResponse) VisitGetLearningMaterialRendersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLearningMaterialRenders401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response GetLearningMaterialRenders401ApplicationProblemPlusJSONResponse) VisitGetLearningMaterialRendersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLearningMaterialRenders403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response GetLearningMaterialRenders403ApplicationProblemPlusJSONResponse) VisitGetLearningMaterialRendersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLearningMaterialRenders404ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetLearningMaterialRenders404ApplicationProblemPlusJSONResponse) VisitGetLearningMaterialRendersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLearningMaterialRenders422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response GetLearningMaterialRenders422ApplicationProblemPlusJSONResponse) VisitGetLearningMaterialRendersResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -3702,6 +3895,9 @@ type StrictServerInterface interface {
 	// CheckPublishedLearningContent Kiểm nội dung học tập platform được cấu hình game tham chiếu đã publish chưa (submit_review của Game Operations Console)
 	// (POST /internal/v1/learning-content:check-published)
 	CheckPublishedLearningContent(ctx context.Context, request CheckPublishedLearningContentRequestObject) (CheckPublishedLearningContentResponseObject, error)
+	// GetLearningMaterialRenders Bản render của các learning material đã publish (thẻ dữ kiện của bước interdependent, F103)
+	// (POST /internal/v1/learning-materials/renders:batch)
+	GetLearningMaterialRenders(ctx context.Context, request GetLearningMaterialRendersRequestObject) (GetLearningMaterialRendersResponseObject, error)
 	// ValidateMinigameQuestionSource Kiểm nguồn câu hỏi của cấu hình mini-game khi publish (loại câu tương thích, đủ câu, question set đã publish)
 	// (POST /internal/v1/minigame-question-sources:validate)
 	ValidateMinigameQuestionSource(ctx context.Context, request ValidateMinigameQuestionSourceRequestObject) (ValidateMinigameQuestionSourceResponseObject, error)
@@ -3735,10 +3931,10 @@ type StrictServerInterface interface {
 	// MergeUserData Chuyển dữ liệu của một user sang user đích khi gộp tài khoản trùng (module identity điều phối)
 	// (POST /internal/v1/platform/users/{user_id}:merge-into)
 	MergeUserData(ctx context.Context, request MergeUserDataRequestObject) (MergeUserDataResponseObject, error)
-	// CreateQuestionPlan Tạo bộ câu hỏi cho một trận thi đấu (chỉ render payload, không đáp án)
+	// CreateQuestionPlan Tạo bộ câu hỏi cho một trận thi đấu hoặc một lượt phase boss (chỉ render payload, không đáp án)
 	// (POST /internal/v1/question-plans)
 	CreateQuestionPlan(ctx context.Context, request CreateQuestionPlanRequestObject) (CreateQuestionPlanResponseObject, error)
-	// ScorePlanAnswer Chấm một câu trả lời trong trận (server-authoritative) và ghi bằng chứng học tập
+	// ScorePlanAnswer Chấm một câu trả lời trong trận hoặc boss (server-authoritative) và ghi bằng chứng học tập
 	// (POST /internal/v1/question-plans/{plan_id}/answers:score)
 	ScorePlanAnswer(ctx context.Context, request ScorePlanAnswerRequestObject) (ScorePlanAnswerResponseObject, error)
 	// RevealPlanItem Đáp án đúng và giải thích của một câu đã đóng trong trận (F105)
@@ -3866,6 +4062,37 @@ func (sh *strictHandler) CheckPublishedLearningContent(w http.ResponseWriter, r 
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CheckPublishedLearningContentResponseObject); ok {
 		if err := validResponse.VisitCheckPublishedLearningContentResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetLearningMaterialRenders operation middleware
+func (sh *strictHandler) GetLearningMaterialRenders(w http.ResponseWriter, r *http.Request) {
+	var request GetLearningMaterialRendersRequestObject
+
+	var body GetLearningMaterialRendersJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetLearningMaterialRenders(ctx, request.(GetLearningMaterialRendersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetLearningMaterialRenders")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetLearningMaterialRendersResponseObject); ok {
+		if err := validResponse.VisitGetLearningMaterialRendersResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -4317,6 +4544,7 @@ type Fake struct {
 	CreateAttemptFunc                  func(ctx context.Context, request CreateAttemptRequestObject) (CreateAttemptResponseObject, error)
 	GetAttemptResultFunc               func(ctx context.Context, request GetAttemptResultRequestObject) (GetAttemptResultResponseObject, error)
 	CheckPublishedLearningContentFunc  func(ctx context.Context, request CheckPublishedLearningContentRequestObject) (CheckPublishedLearningContentResponseObject, error)
+	GetLearningMaterialRendersFunc     func(ctx context.Context, request GetLearningMaterialRendersRequestObject) (GetLearningMaterialRendersResponseObject, error)
 	ValidateMinigameQuestionSourceFunc func(ctx context.Context, request ValidateMinigameQuestionSourceRequestObject) (ValidateMinigameQuestionSourceResponseObject, error)
 	CleanupStudentDataFunc             func(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
 	RestoreStudentDataFunc             func(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
@@ -4357,6 +4585,14 @@ func (f *Fake) CheckPublishedLearningContent(a0 context.Context, a1 CheckPublish
 		return nil, ErrNotFaked
 	}
 	return f.CheckPublishedLearningContentFunc(a0, a1)
+}
+
+// GetLearningMaterialRenders calls GetLearningMaterialRendersFunc.
+func (f *Fake) GetLearningMaterialRenders(a0 context.Context, a1 GetLearningMaterialRendersRequestObject) (GetLearningMaterialRendersResponseObject, error) {
+	if f.GetLearningMaterialRendersFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.GetLearningMaterialRendersFunc(a0, a1)
 }
 
 // ValidateMinigameQuestionSource calls ValidateMinigameQuestionSourceFunc.

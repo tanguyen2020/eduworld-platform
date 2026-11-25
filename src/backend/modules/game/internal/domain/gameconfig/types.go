@@ -39,7 +39,7 @@ type Type struct {
 }
 
 // types are the config types with a registered type module (F071–F077, F076 challenges). progression-levels (derived from
-// a curve), bosses and currencies have none yet: ErrUnknownType.
+// a curve) and currencies have none yet: ErrUnknownType.
 var types = []Type{
 	{Name: "quests", ItemType: "quest", IDField: "quest_id", UUIDKey: true, VersionIDField: "quest_version_id", Versioned: true, Has3D: true,
 		Catalog: true, Rollback: true, Unpublish: true, Assignable: "quest"},
@@ -63,6 +63,9 @@ var types = []Type{
 	// F076: challenges on the release core (resource_type challenge of the assignments).
 	{Name: "challenges", ItemType: "challenge", IDField: "challenge_id", UUIDKey: true, VersionIDField: "challenge_version_id", Versioned: true,
 		Has3D: true, Rollback: true, Unpublish: true, Assignable: "challenge"},
+	// F103: bosses on the release core (resource_type boss of the assignments).
+	{Name: "bosses", ItemType: "boss", IDField: "boss_id", UUIDKey: true, VersionIDField: "boss_version_id", Versioned: true,
+		Rollback: true, Unpublish: true, Assignable: "boss"},
 	{Name: "events", ItemType: "event", IDField: "event_id", UUIDKey: true, VersionIDField: "event_version_id", Versioned: true},
 	{Name: "event-templates", ItemType: "event_template", IDField: "template_id", UUIDKey: true, VersionIDField: "template_version_id",
 		Versioned: true, Rollback: true, Unpublish: true, Assignable: "event_template"},

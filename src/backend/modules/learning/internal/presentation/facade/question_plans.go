@@ -48,10 +48,25 @@ func (f Facade) CreateQuestionPlan(ctx context.Context, req learningapi.CreateQu
 	b := *req.Body
 	in := command.CreatePlanInput{MatchID: b.MatchId, Mode: string(b.Mode), GradeLevel: b.GradeLevel, QuestionCount: b.QuestionCount,
 		Participants: b.Participants, TimePerQuestionS: 20}
-	if b.SubjectId == nil {
+	if b.ContextType != nil {
+		in.ContextType = string(*b.ContextType)
+	}
+	if b.ContextId != nil {
+		in.ContextID = *b.ContextId
+	}
+	if b.AttemptMode != nil {
+		in.AttemptMode = string(*b.AttemptMode)
+	}
+	if b.ActivityRef != nil {
+		id := b.ActivityRef.ContentId
+		in.ActivityID, in.ActivityVersion = &id, b.ActivityRef.Version
+	}
+	switch {
+	case b.SubjectId != nil:
+		in.SubjectID = *b.SubjectId
+	case in.ActivityID == nil:
 		return nil, problem.Invalid("/subject_id", problem.SubRequired, "module competition sends the subject id of the match")
 	}
-	in.SubjectID = *b.SubjectId
 	if b.TopicIds != nil {
 		in.TopicIDs = *b.TopicIds
 	}
@@ -105,9 +120,9 @@ func (f Facade) ScorePlanAnswer(ctx context.Context, req learningapi.ScorePlanAn
 	if err != nil {
 		return nil, err
 	}
-	late := s.Late
+	late, rapid := s.Late, s.RapidGuess
 	out := learningapi.ScorePlanAnswer200JSONResponse{PlanId: s.PlanID, Index: s.Index, StudentId: s.StudentID, IsCorrect: s.IsCorrect,
-		ScoreFraction: float32(s.ScoreFraction), Late: &late}
+		ScoreFraction: float32(s.ScoreFraction), Late: &late, RapidGuess: &rapid}
 	if s.AttemptAnswerID != uuid.Nil {
 		id := s.AttemptAnswerID
 		out.AttemptAnswerId = &id

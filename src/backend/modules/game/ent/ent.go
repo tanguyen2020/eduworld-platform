@@ -16,6 +16,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementprogressevent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/avatarpreset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossanswerresult"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossdefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossencounter"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossencountercontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossencountermember"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossphaseplan"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challenge"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeattempt"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeversion"
@@ -62,6 +69,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/partyquestcontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/partyquestsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/periodicquestgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/previewsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurve"
@@ -159,6 +168,13 @@ func checkColumn(t, c string) error {
 			achievementprogressevent.Table:  achievementprogressevent.ValidColumn,
 			achievementversion.Table:        achievementversion.ValidColumn,
 			avatarpreset.Table:              avatarpreset.ValidColumn,
+			bossanswerresult.Table:          bossanswerresult.ValidColumn,
+			bossdefinition.Table:            bossdefinition.ValidColumn,
+			bossencounter.Table:             bossencounter.ValidColumn,
+			bossencountercontribution.Table: bossencountercontribution.ValidColumn,
+			bossencountermember.Table:       bossencountermember.ValidColumn,
+			bossphaseplan.Table:             bossphaseplan.ValidColumn,
+			bossversion.Table:               bossversion.ValidColumn,
 			challenge.Table:                 challenge.ValidColumn,
 			challengeattempt.Table:          challengeattempt.ValidColumn,
 			challengeversion.Table:          challengeversion.ValidColumn,
@@ -205,6 +221,8 @@ func checkColumn(t, c string) error {
 			nicknamechange.Table:            nicknamechange.ValidColumn,
 			npcdialogue.Table:               npcdialogue.ValidColumn,
 			npcdialogueversion.Table:        npcdialogueversion.ValidColumn,
+			partyquestcontribution.Table:    partyquestcontribution.ValidColumn,
+			partyquestsession.Table:         partyquestsession.ValidColumn,
 			periodicquestgrant.Table:        periodicquestgrant.ValidColumn,
 			previewsession.Table:            previewsession.ValidColumn,
 			progressioncurve.Table:          progressioncurve.ValidColumn,

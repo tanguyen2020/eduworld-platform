@@ -57,6 +57,90 @@ func (f AvatarPresetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AvatarPresetMutation", m)
 }
 
+// The BossAnswerResultFunc type is an adapter to allow the use of ordinary
+// function as BossAnswerResult mutator.
+type BossAnswerResultFunc func(context.Context, *ent.BossAnswerResultMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BossAnswerResultFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BossAnswerResultMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BossAnswerResultMutation", m)
+}
+
+// The BossDefinitionFunc type is an adapter to allow the use of ordinary
+// function as BossDefinition mutator.
+type BossDefinitionFunc func(context.Context, *ent.BossDefinitionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BossDefinitionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BossDefinitionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BossDefinitionMutation", m)
+}
+
+// The BossEncounterFunc type is an adapter to allow the use of ordinary
+// function as BossEncounter mutator.
+type BossEncounterFunc func(context.Context, *ent.BossEncounterMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BossEncounterFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BossEncounterMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BossEncounterMutation", m)
+}
+
+// The BossEncounterContributionFunc type is an adapter to allow the use of ordinary
+// function as BossEncounterContribution mutator.
+type BossEncounterContributionFunc func(context.Context, *ent.BossEncounterContributionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BossEncounterContributionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BossEncounterContributionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BossEncounterContributionMutation", m)
+}
+
+// The BossEncounterMemberFunc type is an adapter to allow the use of ordinary
+// function as BossEncounterMember mutator.
+type BossEncounterMemberFunc func(context.Context, *ent.BossEncounterMemberMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BossEncounterMemberFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BossEncounterMemberMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BossEncounterMemberMutation", m)
+}
+
+// The BossPhasePlanFunc type is an adapter to allow the use of ordinary
+// function as BossPhasePlan mutator.
+type BossPhasePlanFunc func(context.Context, *ent.BossPhasePlanMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BossPhasePlanFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BossPhasePlanMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BossPhasePlanMutation", m)
+}
+
+// The BossVersionFunc type is an adapter to allow the use of ordinary
+// function as BossVersion mutator.
+type BossVersionFunc func(context.Context, *ent.BossVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BossVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BossVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BossVersionMutation", m)
+}
+
 // The ChallengeFunc type is an adapter to allow the use of ordinary
 // function as Challenge mutator.
 type ChallengeFunc func(context.Context, *ent.ChallengeMutation) (ent.Value, error)
@@ -607,6 +691,30 @@ func (f NpcDialogueVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NpcDialogueVersionMutation", m)
+}
+
+// The PartyQuestContributionFunc type is an adapter to allow the use of ordinary
+// function as PartyQuestContribution mutator.
+type PartyQuestContributionFunc func(context.Context, *ent.PartyQuestContributionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PartyQuestContributionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PartyQuestContributionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PartyQuestContributionMutation", m)
+}
+
+// The PartyQuestSessionFunc type is an adapter to allow the use of ordinary
+// function as PartyQuestSession mutator.
+type PartyQuestSessionFunc func(context.Context, *ent.PartyQuestSessionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PartyQuestSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PartyQuestSessionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PartyQuestSessionMutation", m)
 }
 
 // The PeriodicQuestGrantFunc type is an adapter to allow the use of ordinary

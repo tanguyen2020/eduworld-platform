@@ -55,10 +55,10 @@ describe('Danh sách cấu hình (F079-AC-01, AC-16)', () => {
     expect(within(nav).queryByText('Dịch nội dung game')).toBeNull();
   });
 
-  it('a type without type module says so and calls no API (bosses)', async () => {
-    const { backend } = await renderGameOps('/game-ops/bosses');
+  it('a type without type module says so and calls no API (currencies)', async () => {
+    const { backend } = await renderGameOps('/game-ops/shop/currencies');
     expect(await screen.findByTestId('type-not-served')).toBeInTheDocument();
-    expect(backend.calls('GET', '/game-admin/bosses')).toHaveLength(0);
+    expect(backend.calls('GET', '/game-admin/currencies')).toHaveLength(0);
   });
 });
 

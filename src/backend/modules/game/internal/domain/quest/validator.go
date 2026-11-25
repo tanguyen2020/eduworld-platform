@@ -131,6 +131,9 @@ func validateStructure(v Version, cfg ValidatorConfig) error {
 			return invalid("failure_conditions: unknown step %s", f.StepID)
 		}
 	}
+	if err := validateParty(v, reg); err != nil {
+		return err
+	}
 	return learningBlocks(v, cfg, reg)
 }
 
@@ -279,7 +282,7 @@ func validateRefs(v Version, cat Catalog) error {
 			if !uuidRe.MatchString(s.MiniGameConfigID) {
 				return refInvalid("%s: minigame_config_id", what)
 			}
-		case StepActivity:
+		case StepActivity, StepInterdep:
 			if !uuidRe.MatchString(s.ContentRef.ID) || (s.ContentRef.VersionID != "" && !uuidRe.MatchString(s.ContentRef.VersionID)) {
 				return refInvalid("%s: content_ref", what)
 			}

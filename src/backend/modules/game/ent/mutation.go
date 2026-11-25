@@ -16,6 +16,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementprogressevent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/avatarpreset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossanswerresult"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossdefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossencounter"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossencountercontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossencountermember"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossphaseplan"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challenge"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeattempt"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeversion"
@@ -62,6 +69,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/partyquestcontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/partyquestsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/periodicquestgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/predicate"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/previewsession"
@@ -111,6 +120,13 @@ const (
 	TypeAchievementProgressEvent  = "AchievementProgressEvent"
 	TypeAchievementVersion        = "AchievementVersion"
 	TypeAvatarPreset              = "AvatarPreset"
+	TypeBossAnswerResult          = "BossAnswerResult"
+	TypeBossDefinition            = "BossDefinition"
+	TypeBossEncounter             = "BossEncounter"
+	TypeBossEncounterContribution = "BossEncounterContribution"
+	TypeBossEncounterMember       = "BossEncounterMember"
+	TypeBossPhasePlan             = "BossPhasePlan"
+	TypeBossVersion               = "BossVersion"
 	TypeChallenge                 = "Challenge"
 	TypeChallengeAttempt          = "ChallengeAttempt"
 	TypeChallengeVersion          = "ChallengeVersion"
@@ -157,6 +173,8 @@ const (
 	TypeNicknameChange            = "NicknameChange"
 	TypeNpcDialogue               = "NpcDialogue"
 	TypeNpcDialogueVersion        = "NpcDialogueVersion"
+	TypePartyQuestContribution    = "PartyQuestContribution"
+	TypePartyQuestSession         = "PartyQuestSession"
 	TypePeriodicQuestGrant        = "PeriodicQuestGrant"
 	TypePreviewSession            = "PreviewSession"
 	TypeProgressionCurve          = "ProgressionCurve"
@@ -4928,6 +4946,11331 @@ func (m *AvatarPresetMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *AvatarPresetMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown AvatarPreset edge %s", name)
+}
+
+// BossAnswerResultMutation represents an operation that mutates the BossAnswerResult nodes in the graph.
+type BossAnswerResultMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	tenant_id      *uuid.UUID
+	created_at     *time.Time
+	created_by     *uuid.UUID
+	encounter_id   *uuid.UUID
+	student_id     *uuid.UUID
+	plan_id        *uuid.UUID
+	item_index     *int
+	additem_index  *int
+	phase_id       *string
+	retry_no       *int
+	addretry_no    *int
+	requirement_id *string
+	is_correct     *bool
+	counted        *bool
+	rapid_guess    *bool
+	received_at    *time.Time
+	clearedFields  map[string]struct{}
+	done           bool
+	oldValue       func(context.Context) (*BossAnswerResult, error)
+	predicates     []predicate.BossAnswerResult
+}
+
+var _ ent.Mutation = (*BossAnswerResultMutation)(nil)
+
+// bossanswerresultOption allows management of the mutation configuration using functional options.
+type bossanswerresultOption func(*BossAnswerResultMutation)
+
+// newBossAnswerResultMutation creates new mutation for the BossAnswerResult entity.
+func newBossAnswerResultMutation(c config, op Op, opts ...bossanswerresultOption) *BossAnswerResultMutation {
+	m := &BossAnswerResultMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBossAnswerResult,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBossAnswerResultID sets the ID field of the mutation.
+func withBossAnswerResultID(id uuid.UUID) bossanswerresultOption {
+	return func(m *BossAnswerResultMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BossAnswerResult
+		)
+		m.oldValue = func(ctx context.Context) (*BossAnswerResult, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BossAnswerResult.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBossAnswerResult sets the old BossAnswerResult of the mutation.
+func withBossAnswerResult(node *BossAnswerResult) bossanswerresultOption {
+	return func(m *BossAnswerResultMutation) {
+		m.oldValue = func(context.Context) (*BossAnswerResult, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BossAnswerResultMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BossAnswerResultMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of BossAnswerResult entities.
+func (m *BossAnswerResultMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BossAnswerResultMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BossAnswerResultMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BossAnswerResult.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *BossAnswerResultMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *BossAnswerResultMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *BossAnswerResultMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BossAnswerResultMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BossAnswerResultMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BossAnswerResultMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *BossAnswerResultMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *BossAnswerResultMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *BossAnswerResultMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[bossanswerresult.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *BossAnswerResultMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[bossanswerresult.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *BossAnswerResultMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, bossanswerresult.FieldCreatedBy)
+}
+
+// SetEncounterID sets the "encounter_id" field.
+func (m *BossAnswerResultMutation) SetEncounterID(u uuid.UUID) {
+	m.encounter_id = &u
+}
+
+// EncounterID returns the value of the "encounter_id" field in the mutation.
+func (m *BossAnswerResultMutation) EncounterID() (r uuid.UUID, exists bool) {
+	v := m.encounter_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEncounterID returns the old "encounter_id" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldEncounterID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEncounterID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEncounterID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEncounterID: %w", err)
+	}
+	return oldValue.EncounterID, nil
+}
+
+// ResetEncounterID resets all changes to the "encounter_id" field.
+func (m *BossAnswerResultMutation) ResetEncounterID() {
+	m.encounter_id = nil
+}
+
+// SetStudentID sets the "student_id" field.
+func (m *BossAnswerResultMutation) SetStudentID(u uuid.UUID) {
+	m.student_id = &u
+}
+
+// StudentID returns the value of the "student_id" field in the mutation.
+func (m *BossAnswerResultMutation) StudentID() (r uuid.UUID, exists bool) {
+	v := m.student_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStudentID returns the old "student_id" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldStudentID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStudentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStudentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStudentID: %w", err)
+	}
+	return oldValue.StudentID, nil
+}
+
+// ResetStudentID resets all changes to the "student_id" field.
+func (m *BossAnswerResultMutation) ResetStudentID() {
+	m.student_id = nil
+}
+
+// SetPlanID sets the "plan_id" field.
+func (m *BossAnswerResultMutation) SetPlanID(u uuid.UUID) {
+	m.plan_id = &u
+}
+
+// PlanID returns the value of the "plan_id" field in the mutation.
+func (m *BossAnswerResultMutation) PlanID() (r uuid.UUID, exists bool) {
+	v := m.plan_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlanID returns the old "plan_id" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldPlanID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlanID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlanID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlanID: %w", err)
+	}
+	return oldValue.PlanID, nil
+}
+
+// ResetPlanID resets all changes to the "plan_id" field.
+func (m *BossAnswerResultMutation) ResetPlanID() {
+	m.plan_id = nil
+}
+
+// SetItemIndex sets the "item_index" field.
+func (m *BossAnswerResultMutation) SetItemIndex(i int) {
+	m.item_index = &i
+	m.additem_index = nil
+}
+
+// ItemIndex returns the value of the "item_index" field in the mutation.
+func (m *BossAnswerResultMutation) ItemIndex() (r int, exists bool) {
+	v := m.item_index
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldItemIndex returns the old "item_index" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldItemIndex(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldItemIndex is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldItemIndex requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldItemIndex: %w", err)
+	}
+	return oldValue.ItemIndex, nil
+}
+
+// AddItemIndex adds i to the "item_index" field.
+func (m *BossAnswerResultMutation) AddItemIndex(i int) {
+	if m.additem_index != nil {
+		*m.additem_index += i
+	} else {
+		m.additem_index = &i
+	}
+}
+
+// AddedItemIndex returns the value that was added to the "item_index" field in this mutation.
+func (m *BossAnswerResultMutation) AddedItemIndex() (r int, exists bool) {
+	v := m.additem_index
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetItemIndex resets all changes to the "item_index" field.
+func (m *BossAnswerResultMutation) ResetItemIndex() {
+	m.item_index = nil
+	m.additem_index = nil
+}
+
+// SetPhaseID sets the "phase_id" field.
+func (m *BossAnswerResultMutation) SetPhaseID(s string) {
+	m.phase_id = &s
+}
+
+// PhaseID returns the value of the "phase_id" field in the mutation.
+func (m *BossAnswerResultMutation) PhaseID() (r string, exists bool) {
+	v := m.phase_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPhaseID returns the old "phase_id" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldPhaseID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPhaseID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPhaseID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPhaseID: %w", err)
+	}
+	return oldValue.PhaseID, nil
+}
+
+// ResetPhaseID resets all changes to the "phase_id" field.
+func (m *BossAnswerResultMutation) ResetPhaseID() {
+	m.phase_id = nil
+}
+
+// SetRetryNo sets the "retry_no" field.
+func (m *BossAnswerResultMutation) SetRetryNo(i int) {
+	m.retry_no = &i
+	m.addretry_no = nil
+}
+
+// RetryNo returns the value of the "retry_no" field in the mutation.
+func (m *BossAnswerResultMutation) RetryNo() (r int, exists bool) {
+	v := m.retry_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRetryNo returns the old "retry_no" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldRetryNo(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRetryNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRetryNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRetryNo: %w", err)
+	}
+	return oldValue.RetryNo, nil
+}
+
+// AddRetryNo adds i to the "retry_no" field.
+func (m *BossAnswerResultMutation) AddRetryNo(i int) {
+	if m.addretry_no != nil {
+		*m.addretry_no += i
+	} else {
+		m.addretry_no = &i
+	}
+}
+
+// AddedRetryNo returns the value that was added to the "retry_no" field in this mutation.
+func (m *BossAnswerResultMutation) AddedRetryNo() (r int, exists bool) {
+	v := m.addretry_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRetryNo resets all changes to the "retry_no" field.
+func (m *BossAnswerResultMutation) ResetRetryNo() {
+	m.retry_no = nil
+	m.addretry_no = nil
+}
+
+// SetRequirementID sets the "requirement_id" field.
+func (m *BossAnswerResultMutation) SetRequirementID(s string) {
+	m.requirement_id = &s
+}
+
+// RequirementID returns the value of the "requirement_id" field in the mutation.
+func (m *BossAnswerResultMutation) RequirementID() (r string, exists bool) {
+	v := m.requirement_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequirementID returns the old "requirement_id" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldRequirementID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequirementID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequirementID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequirementID: %w", err)
+	}
+	return oldValue.RequirementID, nil
+}
+
+// ResetRequirementID resets all changes to the "requirement_id" field.
+func (m *BossAnswerResultMutation) ResetRequirementID() {
+	m.requirement_id = nil
+}
+
+// SetIsCorrect sets the "is_correct" field.
+func (m *BossAnswerResultMutation) SetIsCorrect(b bool) {
+	m.is_correct = &b
+}
+
+// IsCorrect returns the value of the "is_correct" field in the mutation.
+func (m *BossAnswerResultMutation) IsCorrect() (r bool, exists bool) {
+	v := m.is_correct
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsCorrect returns the old "is_correct" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldIsCorrect(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsCorrect is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsCorrect requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsCorrect: %w", err)
+	}
+	return oldValue.IsCorrect, nil
+}
+
+// ResetIsCorrect resets all changes to the "is_correct" field.
+func (m *BossAnswerResultMutation) ResetIsCorrect() {
+	m.is_correct = nil
+}
+
+// SetCounted sets the "counted" field.
+func (m *BossAnswerResultMutation) SetCounted(b bool) {
+	m.counted = &b
+}
+
+// Counted returns the value of the "counted" field in the mutation.
+func (m *BossAnswerResultMutation) Counted() (r bool, exists bool) {
+	v := m.counted
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCounted returns the old "counted" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldCounted(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCounted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCounted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCounted: %w", err)
+	}
+	return oldValue.Counted, nil
+}
+
+// ResetCounted resets all changes to the "counted" field.
+func (m *BossAnswerResultMutation) ResetCounted() {
+	m.counted = nil
+}
+
+// SetRapidGuess sets the "rapid_guess" field.
+func (m *BossAnswerResultMutation) SetRapidGuess(b bool) {
+	m.rapid_guess = &b
+}
+
+// RapidGuess returns the value of the "rapid_guess" field in the mutation.
+func (m *BossAnswerResultMutation) RapidGuess() (r bool, exists bool) {
+	v := m.rapid_guess
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRapidGuess returns the old "rapid_guess" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldRapidGuess(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRapidGuess is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRapidGuess requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRapidGuess: %w", err)
+	}
+	return oldValue.RapidGuess, nil
+}
+
+// ResetRapidGuess resets all changes to the "rapid_guess" field.
+func (m *BossAnswerResultMutation) ResetRapidGuess() {
+	m.rapid_guess = nil
+}
+
+// SetReceivedAt sets the "received_at" field.
+func (m *BossAnswerResultMutation) SetReceivedAt(t time.Time) {
+	m.received_at = &t
+}
+
+// ReceivedAt returns the value of the "received_at" field in the mutation.
+func (m *BossAnswerResultMutation) ReceivedAt() (r time.Time, exists bool) {
+	v := m.received_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReceivedAt returns the old "received_at" field's value of the BossAnswerResult entity.
+// If the BossAnswerResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossAnswerResultMutation) OldReceivedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReceivedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReceivedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReceivedAt: %w", err)
+	}
+	return oldValue.ReceivedAt, nil
+}
+
+// ResetReceivedAt resets all changes to the "received_at" field.
+func (m *BossAnswerResultMutation) ResetReceivedAt() {
+	m.received_at = nil
+}
+
+// Where appends a list predicates to the BossAnswerResultMutation builder.
+func (m *BossAnswerResultMutation) Where(ps ...predicate.BossAnswerResult) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BossAnswerResultMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BossAnswerResultMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BossAnswerResult, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BossAnswerResultMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BossAnswerResultMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BossAnswerResult).
+func (m *BossAnswerResultMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BossAnswerResultMutation) Fields() []string {
+	fields := make([]string, 0, 14)
+	if m.tenant_id != nil {
+		fields = append(fields, bossanswerresult.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, bossanswerresult.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, bossanswerresult.FieldCreatedBy)
+	}
+	if m.encounter_id != nil {
+		fields = append(fields, bossanswerresult.FieldEncounterID)
+	}
+	if m.student_id != nil {
+		fields = append(fields, bossanswerresult.FieldStudentID)
+	}
+	if m.plan_id != nil {
+		fields = append(fields, bossanswerresult.FieldPlanID)
+	}
+	if m.item_index != nil {
+		fields = append(fields, bossanswerresult.FieldItemIndex)
+	}
+	if m.phase_id != nil {
+		fields = append(fields, bossanswerresult.FieldPhaseID)
+	}
+	if m.retry_no != nil {
+		fields = append(fields, bossanswerresult.FieldRetryNo)
+	}
+	if m.requirement_id != nil {
+		fields = append(fields, bossanswerresult.FieldRequirementID)
+	}
+	if m.is_correct != nil {
+		fields = append(fields, bossanswerresult.FieldIsCorrect)
+	}
+	if m.counted != nil {
+		fields = append(fields, bossanswerresult.FieldCounted)
+	}
+	if m.rapid_guess != nil {
+		fields = append(fields, bossanswerresult.FieldRapidGuess)
+	}
+	if m.received_at != nil {
+		fields = append(fields, bossanswerresult.FieldReceivedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BossAnswerResultMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case bossanswerresult.FieldTenantID:
+		return m.TenantID()
+	case bossanswerresult.FieldCreatedAt:
+		return m.CreatedAt()
+	case bossanswerresult.FieldCreatedBy:
+		return m.CreatedBy()
+	case bossanswerresult.FieldEncounterID:
+		return m.EncounterID()
+	case bossanswerresult.FieldStudentID:
+		return m.StudentID()
+	case bossanswerresult.FieldPlanID:
+		return m.PlanID()
+	case bossanswerresult.FieldItemIndex:
+		return m.ItemIndex()
+	case bossanswerresult.FieldPhaseID:
+		return m.PhaseID()
+	case bossanswerresult.FieldRetryNo:
+		return m.RetryNo()
+	case bossanswerresult.FieldRequirementID:
+		return m.RequirementID()
+	case bossanswerresult.FieldIsCorrect:
+		return m.IsCorrect()
+	case bossanswerresult.FieldCounted:
+		return m.Counted()
+	case bossanswerresult.FieldRapidGuess:
+		return m.RapidGuess()
+	case bossanswerresult.FieldReceivedAt:
+		return m.ReceivedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BossAnswerResultMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case bossanswerresult.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case bossanswerresult.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case bossanswerresult.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case bossanswerresult.FieldEncounterID:
+		return m.OldEncounterID(ctx)
+	case bossanswerresult.FieldStudentID:
+		return m.OldStudentID(ctx)
+	case bossanswerresult.FieldPlanID:
+		return m.OldPlanID(ctx)
+	case bossanswerresult.FieldItemIndex:
+		return m.OldItemIndex(ctx)
+	case bossanswerresult.FieldPhaseID:
+		return m.OldPhaseID(ctx)
+	case bossanswerresult.FieldRetryNo:
+		return m.OldRetryNo(ctx)
+	case bossanswerresult.FieldRequirementID:
+		return m.OldRequirementID(ctx)
+	case bossanswerresult.FieldIsCorrect:
+		return m.OldIsCorrect(ctx)
+	case bossanswerresult.FieldCounted:
+		return m.OldCounted(ctx)
+	case bossanswerresult.FieldRapidGuess:
+		return m.OldRapidGuess(ctx)
+	case bossanswerresult.FieldReceivedAt:
+		return m.OldReceivedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown BossAnswerResult field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossAnswerResultMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case bossanswerresult.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case bossanswerresult.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case bossanswerresult.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case bossanswerresult.FieldEncounterID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEncounterID(v)
+		return nil
+	case bossanswerresult.FieldStudentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStudentID(v)
+		return nil
+	case bossanswerresult.FieldPlanID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlanID(v)
+		return nil
+	case bossanswerresult.FieldItemIndex:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetItemIndex(v)
+		return nil
+	case bossanswerresult.FieldPhaseID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPhaseID(v)
+		return nil
+	case bossanswerresult.FieldRetryNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRetryNo(v)
+		return nil
+	case bossanswerresult.FieldRequirementID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequirementID(v)
+		return nil
+	case bossanswerresult.FieldIsCorrect:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsCorrect(v)
+		return nil
+	case bossanswerresult.FieldCounted:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCounted(v)
+		return nil
+	case bossanswerresult.FieldRapidGuess:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRapidGuess(v)
+		return nil
+	case bossanswerresult.FieldReceivedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReceivedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossAnswerResult field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BossAnswerResultMutation) AddedFields() []string {
+	var fields []string
+	if m.additem_index != nil {
+		fields = append(fields, bossanswerresult.FieldItemIndex)
+	}
+	if m.addretry_no != nil {
+		fields = append(fields, bossanswerresult.FieldRetryNo)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BossAnswerResultMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case bossanswerresult.FieldItemIndex:
+		return m.AddedItemIndex()
+	case bossanswerresult.FieldRetryNo:
+		return m.AddedRetryNo()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossAnswerResultMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case bossanswerresult.FieldItemIndex:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddItemIndex(v)
+		return nil
+	case bossanswerresult.FieldRetryNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRetryNo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossAnswerResult numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BossAnswerResultMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(bossanswerresult.FieldCreatedBy) {
+		fields = append(fields, bossanswerresult.FieldCreatedBy)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BossAnswerResultMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BossAnswerResultMutation) ClearField(name string) error {
+	switch name {
+	case bossanswerresult.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown BossAnswerResult nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BossAnswerResultMutation) ResetField(name string) error {
+	switch name {
+	case bossanswerresult.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case bossanswerresult.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case bossanswerresult.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case bossanswerresult.FieldEncounterID:
+		m.ResetEncounterID()
+		return nil
+	case bossanswerresult.FieldStudentID:
+		m.ResetStudentID()
+		return nil
+	case bossanswerresult.FieldPlanID:
+		m.ResetPlanID()
+		return nil
+	case bossanswerresult.FieldItemIndex:
+		m.ResetItemIndex()
+		return nil
+	case bossanswerresult.FieldPhaseID:
+		m.ResetPhaseID()
+		return nil
+	case bossanswerresult.FieldRetryNo:
+		m.ResetRetryNo()
+		return nil
+	case bossanswerresult.FieldRequirementID:
+		m.ResetRequirementID()
+		return nil
+	case bossanswerresult.FieldIsCorrect:
+		m.ResetIsCorrect()
+		return nil
+	case bossanswerresult.FieldCounted:
+		m.ResetCounted()
+		return nil
+	case bossanswerresult.FieldRapidGuess:
+		m.ResetRapidGuess()
+		return nil
+	case bossanswerresult.FieldReceivedAt:
+		m.ResetReceivedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown BossAnswerResult field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BossAnswerResultMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BossAnswerResultMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BossAnswerResultMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BossAnswerResultMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BossAnswerResultMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BossAnswerResultMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BossAnswerResultMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BossAnswerResult unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BossAnswerResultMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BossAnswerResult edge %s", name)
+}
+
+// BossDefinitionMutation represents an operation that mutates the BossDefinition nodes in the graph.
+type BossDefinitionMutation struct {
+	config
+	op                   Op
+	typ                  string
+	id                   *uuid.UUID
+	created_at           *time.Time
+	created_by           *uuid.UUID
+	updated_at           *time.Time
+	updated_by           *uuid.UUID
+	deleted_at           *time.Time
+	deleted_by           *uuid.UUID
+	delete_reason        *string
+	version              *int64
+	addversion           *int64
+	code                 *string
+	owner_scope          *string
+	current_version_id   *uuid.UUID
+	latest_version_no    *int
+	addlatest_version_no *int
+	clearedFields        map[string]struct{}
+	done                 bool
+	oldValue             func(context.Context) (*BossDefinition, error)
+	predicates           []predicate.BossDefinition
+}
+
+var _ ent.Mutation = (*BossDefinitionMutation)(nil)
+
+// bossdefinitionOption allows management of the mutation configuration using functional options.
+type bossdefinitionOption func(*BossDefinitionMutation)
+
+// newBossDefinitionMutation creates new mutation for the BossDefinition entity.
+func newBossDefinitionMutation(c config, op Op, opts ...bossdefinitionOption) *BossDefinitionMutation {
+	m := &BossDefinitionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBossDefinition,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBossDefinitionID sets the ID field of the mutation.
+func withBossDefinitionID(id uuid.UUID) bossdefinitionOption {
+	return func(m *BossDefinitionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BossDefinition
+		)
+		m.oldValue = func(ctx context.Context) (*BossDefinition, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BossDefinition.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBossDefinition sets the old BossDefinition of the mutation.
+func withBossDefinition(node *BossDefinition) bossdefinitionOption {
+	return func(m *BossDefinitionMutation) {
+		m.oldValue = func(context.Context) (*BossDefinition, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BossDefinitionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BossDefinitionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of BossDefinition entities.
+func (m *BossDefinitionMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BossDefinitionMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BossDefinitionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BossDefinition.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BossDefinitionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BossDefinitionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BossDefinition entity.
+// If the BossDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossDefinitionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BossDefinitionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *BossDefinitionMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *BossDefinitionMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the BossDefinition entity.
+// If the BossDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossDefinitionMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *BossDefinitionMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[bossdefinition.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *BossDefinitionMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[bossdefinition.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *BossDefinitionMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, bossdefinition.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BossDefinitionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BossDefinitionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the BossDefinition entity.
+// If the BossDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossDefinitionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BossDefinitionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *BossDefinitionMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *BossDefinitionMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the BossDefinition entity.
+// If the BossDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossDefinitionMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *BossDefinitionMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[bossdefinition.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *BossDefinitionMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[bossdefinition.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *BossDefinitionMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, bossdefinition.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *BossDefinitionMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *BossDefinitionMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the BossDefinition entity.
+// If the BossDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossDefinitionMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *BossDefinitionMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[bossdefinition.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *BossDefinitionMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[bossdefinition.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *BossDefinitionMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, bossdefinition.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *BossDefinitionMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *BossDefinitionMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the BossDefinition entity.
+// If the BossDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossDefinitionMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *BossDefinitionMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[bossdefinition.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *BossDefinitionMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[bossdefinition.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *BossDefinitionMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, bossdefinition.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *BossDefinitionMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *BossDefinitionMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the BossDefinition entity.
+// If the BossDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossDefinitionMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *BossDefinitionMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[bossdefinition.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *BossDefinitionMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[bossdefinition.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *BossDefinitionMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, bossdefinition.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *BossDefinitionMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *BossDefinitionMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the BossDefinition entity.
+// If the BossDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossDefinitionMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *BossDefinitionMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *BossDefinitionMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *BossDefinitionMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetCode sets the "code" field.
+func (m *BossDefinitionMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *BossDefinitionMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the BossDefinition entity.
+// If the BossDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossDefinitionMutation) OldCode(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ClearCode clears the value of the "code" field.
+func (m *BossDefinitionMutation) ClearCode() {
+	m.code = nil
+	m.clearedFields[bossdefinition.FieldCode] = struct{}{}
+}
+
+// CodeCleared returns if the "code" field was cleared in this mutation.
+func (m *BossDefinitionMutation) CodeCleared() bool {
+	_, ok := m.clearedFields[bossdefinition.FieldCode]
+	return ok
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *BossDefinitionMutation) ResetCode() {
+	m.code = nil
+	delete(m.clearedFields, bossdefinition.FieldCode)
+}
+
+// SetOwnerScope sets the "owner_scope" field.
+func (m *BossDefinitionMutation) SetOwnerScope(s string) {
+	m.owner_scope = &s
+}
+
+// OwnerScope returns the value of the "owner_scope" field in the mutation.
+func (m *BossDefinitionMutation) OwnerScope() (r string, exists bool) {
+	v := m.owner_scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerScope returns the old "owner_scope" field's value of the BossDefinition entity.
+// If the BossDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossDefinitionMutation) OldOwnerScope(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerScope: %w", err)
+	}
+	return oldValue.OwnerScope, nil
+}
+
+// ResetOwnerScope resets all changes to the "owner_scope" field.
+func (m *BossDefinitionMutation) ResetOwnerScope() {
+	m.owner_scope = nil
+}
+
+// SetCurrentVersionID sets the "current_version_id" field.
+func (m *BossDefinitionMutation) SetCurrentVersionID(u uuid.UUID) {
+	m.current_version_id = &u
+}
+
+// CurrentVersionID returns the value of the "current_version_id" field in the mutation.
+func (m *BossDefinitionMutation) CurrentVersionID() (r uuid.UUID, exists bool) {
+	v := m.current_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrentVersionID returns the old "current_version_id" field's value of the BossDefinition entity.
+// If the BossDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossDefinitionMutation) OldCurrentVersionID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrentVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrentVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrentVersionID: %w", err)
+	}
+	return oldValue.CurrentVersionID, nil
+}
+
+// ClearCurrentVersionID clears the value of the "current_version_id" field.
+func (m *BossDefinitionMutation) ClearCurrentVersionID() {
+	m.current_version_id = nil
+	m.clearedFields[bossdefinition.FieldCurrentVersionID] = struct{}{}
+}
+
+// CurrentVersionIDCleared returns if the "current_version_id" field was cleared in this mutation.
+func (m *BossDefinitionMutation) CurrentVersionIDCleared() bool {
+	_, ok := m.clearedFields[bossdefinition.FieldCurrentVersionID]
+	return ok
+}
+
+// ResetCurrentVersionID resets all changes to the "current_version_id" field.
+func (m *BossDefinitionMutation) ResetCurrentVersionID() {
+	m.current_version_id = nil
+	delete(m.clearedFields, bossdefinition.FieldCurrentVersionID)
+}
+
+// SetLatestVersionNo sets the "latest_version_no" field.
+func (m *BossDefinitionMutation) SetLatestVersionNo(i int) {
+	m.latest_version_no = &i
+	m.addlatest_version_no = nil
+}
+
+// LatestVersionNo returns the value of the "latest_version_no" field in the mutation.
+func (m *BossDefinitionMutation) LatestVersionNo() (r int, exists bool) {
+	v := m.latest_version_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatestVersionNo returns the old "latest_version_no" field's value of the BossDefinition entity.
+// If the BossDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossDefinitionMutation) OldLatestVersionNo(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatestVersionNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatestVersionNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatestVersionNo: %w", err)
+	}
+	return oldValue.LatestVersionNo, nil
+}
+
+// AddLatestVersionNo adds i to the "latest_version_no" field.
+func (m *BossDefinitionMutation) AddLatestVersionNo(i int) {
+	if m.addlatest_version_no != nil {
+		*m.addlatest_version_no += i
+	} else {
+		m.addlatest_version_no = &i
+	}
+}
+
+// AddedLatestVersionNo returns the value that was added to the "latest_version_no" field in this mutation.
+func (m *BossDefinitionMutation) AddedLatestVersionNo() (r int, exists bool) {
+	v := m.addlatest_version_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLatestVersionNo resets all changes to the "latest_version_no" field.
+func (m *BossDefinitionMutation) ResetLatestVersionNo() {
+	m.latest_version_no = nil
+	m.addlatest_version_no = nil
+}
+
+// Where appends a list predicates to the BossDefinitionMutation builder.
+func (m *BossDefinitionMutation) Where(ps ...predicate.BossDefinition) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BossDefinitionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BossDefinitionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BossDefinition, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BossDefinitionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BossDefinitionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BossDefinition).
+func (m *BossDefinitionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BossDefinitionMutation) Fields() []string {
+	fields := make([]string, 0, 12)
+	if m.created_at != nil {
+		fields = append(fields, bossdefinition.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, bossdefinition.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, bossdefinition.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, bossdefinition.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, bossdefinition.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, bossdefinition.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, bossdefinition.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, bossdefinition.FieldVersion)
+	}
+	if m.code != nil {
+		fields = append(fields, bossdefinition.FieldCode)
+	}
+	if m.owner_scope != nil {
+		fields = append(fields, bossdefinition.FieldOwnerScope)
+	}
+	if m.current_version_id != nil {
+		fields = append(fields, bossdefinition.FieldCurrentVersionID)
+	}
+	if m.latest_version_no != nil {
+		fields = append(fields, bossdefinition.FieldLatestVersionNo)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BossDefinitionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case bossdefinition.FieldCreatedAt:
+		return m.CreatedAt()
+	case bossdefinition.FieldCreatedBy:
+		return m.CreatedBy()
+	case bossdefinition.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case bossdefinition.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case bossdefinition.FieldDeletedAt:
+		return m.DeletedAt()
+	case bossdefinition.FieldDeletedBy:
+		return m.DeletedBy()
+	case bossdefinition.FieldDeleteReason:
+		return m.DeleteReason()
+	case bossdefinition.FieldVersion:
+		return m.Version()
+	case bossdefinition.FieldCode:
+		return m.Code()
+	case bossdefinition.FieldOwnerScope:
+		return m.OwnerScope()
+	case bossdefinition.FieldCurrentVersionID:
+		return m.CurrentVersionID()
+	case bossdefinition.FieldLatestVersionNo:
+		return m.LatestVersionNo()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BossDefinitionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case bossdefinition.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case bossdefinition.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case bossdefinition.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case bossdefinition.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case bossdefinition.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case bossdefinition.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case bossdefinition.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case bossdefinition.FieldVersion:
+		return m.OldVersion(ctx)
+	case bossdefinition.FieldCode:
+		return m.OldCode(ctx)
+	case bossdefinition.FieldOwnerScope:
+		return m.OldOwnerScope(ctx)
+	case bossdefinition.FieldCurrentVersionID:
+		return m.OldCurrentVersionID(ctx)
+	case bossdefinition.FieldLatestVersionNo:
+		return m.OldLatestVersionNo(ctx)
+	}
+	return nil, fmt.Errorf("unknown BossDefinition field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossDefinitionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case bossdefinition.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case bossdefinition.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case bossdefinition.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case bossdefinition.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case bossdefinition.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case bossdefinition.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case bossdefinition.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case bossdefinition.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case bossdefinition.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case bossdefinition.FieldOwnerScope:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerScope(v)
+		return nil
+	case bossdefinition.FieldCurrentVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrentVersionID(v)
+		return nil
+	case bossdefinition.FieldLatestVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatestVersionNo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossDefinition field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BossDefinitionMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, bossdefinition.FieldVersion)
+	}
+	if m.addlatest_version_no != nil {
+		fields = append(fields, bossdefinition.FieldLatestVersionNo)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BossDefinitionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case bossdefinition.FieldVersion:
+		return m.AddedVersion()
+	case bossdefinition.FieldLatestVersionNo:
+		return m.AddedLatestVersionNo()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossDefinitionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case bossdefinition.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case bossdefinition.FieldLatestVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLatestVersionNo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossDefinition numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BossDefinitionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(bossdefinition.FieldCreatedBy) {
+		fields = append(fields, bossdefinition.FieldCreatedBy)
+	}
+	if m.FieldCleared(bossdefinition.FieldUpdatedBy) {
+		fields = append(fields, bossdefinition.FieldUpdatedBy)
+	}
+	if m.FieldCleared(bossdefinition.FieldDeletedAt) {
+		fields = append(fields, bossdefinition.FieldDeletedAt)
+	}
+	if m.FieldCleared(bossdefinition.FieldDeletedBy) {
+		fields = append(fields, bossdefinition.FieldDeletedBy)
+	}
+	if m.FieldCleared(bossdefinition.FieldDeleteReason) {
+		fields = append(fields, bossdefinition.FieldDeleteReason)
+	}
+	if m.FieldCleared(bossdefinition.FieldCode) {
+		fields = append(fields, bossdefinition.FieldCode)
+	}
+	if m.FieldCleared(bossdefinition.FieldCurrentVersionID) {
+		fields = append(fields, bossdefinition.FieldCurrentVersionID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BossDefinitionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BossDefinitionMutation) ClearField(name string) error {
+	switch name {
+	case bossdefinition.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case bossdefinition.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case bossdefinition.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case bossdefinition.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case bossdefinition.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case bossdefinition.FieldCode:
+		m.ClearCode()
+		return nil
+	case bossdefinition.FieldCurrentVersionID:
+		m.ClearCurrentVersionID()
+		return nil
+	}
+	return fmt.Errorf("unknown BossDefinition nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BossDefinitionMutation) ResetField(name string) error {
+	switch name {
+	case bossdefinition.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case bossdefinition.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case bossdefinition.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case bossdefinition.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case bossdefinition.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case bossdefinition.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case bossdefinition.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case bossdefinition.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case bossdefinition.FieldCode:
+		m.ResetCode()
+		return nil
+	case bossdefinition.FieldOwnerScope:
+		m.ResetOwnerScope()
+		return nil
+	case bossdefinition.FieldCurrentVersionID:
+		m.ResetCurrentVersionID()
+		return nil
+	case bossdefinition.FieldLatestVersionNo:
+		m.ResetLatestVersionNo()
+		return nil
+	}
+	return fmt.Errorf("unknown BossDefinition field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BossDefinitionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BossDefinitionMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BossDefinitionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BossDefinitionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BossDefinitionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BossDefinitionMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BossDefinitionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BossDefinition unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BossDefinitionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BossDefinition edge %s", name)
+}
+
+// BossEncounterMutation represents an operation that mutates the BossEncounter nodes in the graph.
+type BossEncounterMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *uuid.UUID
+	tenant_id           *uuid.UUID
+	created_at          *time.Time
+	created_by          *uuid.UUID
+	updated_at          *time.Time
+	updated_by          *uuid.UUID
+	deleted_at          *time.Time
+	deleted_by          *uuid.UUID
+	delete_reason       *string
+	version             *int64
+	addversion          *int64
+	school_id           *uuid.UUID
+	boss_id             *uuid.UUID
+	boss_version_id     *uuid.UUID
+	mode                *string
+	party_id            *uuid.UUID
+	party_activity_id   *uuid.UUID
+	leader_id           *uuid.UUID
+	status              *string
+	phase_index         *int
+	addphase_index      *int
+	current_phase       *string
+	phase_retries       *int
+	addphase_retries    *int
+	plan_failures       *int
+	addplan_failures    *int
+	phases_cleared      *int
+	addphases_cleared   *int
+	energy_remaining    *float64
+	addenergy_remaining *float64
+	state_version       *int64
+	addstate_version    *int64
+	ready_deadline_at   *time.Time
+	deadline_at         *time.Time
+	phase_deadline_at   *time.Time
+	outcome             *string
+	end_reason          *string
+	period_key          *string
+	started_at          *time.Time
+	ended_at            *time.Time
+	clearedFields       map[string]struct{}
+	done                bool
+	oldValue            func(context.Context) (*BossEncounter, error)
+	predicates          []predicate.BossEncounter
+}
+
+var _ ent.Mutation = (*BossEncounterMutation)(nil)
+
+// bossencounterOption allows management of the mutation configuration using functional options.
+type bossencounterOption func(*BossEncounterMutation)
+
+// newBossEncounterMutation creates new mutation for the BossEncounter entity.
+func newBossEncounterMutation(c config, op Op, opts ...bossencounterOption) *BossEncounterMutation {
+	m := &BossEncounterMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBossEncounter,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBossEncounterID sets the ID field of the mutation.
+func withBossEncounterID(id uuid.UUID) bossencounterOption {
+	return func(m *BossEncounterMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BossEncounter
+		)
+		m.oldValue = func(ctx context.Context) (*BossEncounter, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BossEncounter.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBossEncounter sets the old BossEncounter of the mutation.
+func withBossEncounter(node *BossEncounter) bossencounterOption {
+	return func(m *BossEncounterMutation) {
+		m.oldValue = func(context.Context) (*BossEncounter, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BossEncounterMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BossEncounterMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of BossEncounter entities.
+func (m *BossEncounterMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BossEncounterMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BossEncounterMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BossEncounter.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *BossEncounterMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *BossEncounterMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *BossEncounterMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BossEncounterMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BossEncounterMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BossEncounterMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *BossEncounterMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *BossEncounterMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *BossEncounterMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[bossencounter.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *BossEncounterMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *BossEncounterMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, bossencounter.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BossEncounterMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BossEncounterMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BossEncounterMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *BossEncounterMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *BossEncounterMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *BossEncounterMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[bossencounter.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *BossEncounterMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *BossEncounterMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, bossencounter.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *BossEncounterMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *BossEncounterMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *BossEncounterMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[bossencounter.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *BossEncounterMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *BossEncounterMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, bossencounter.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *BossEncounterMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *BossEncounterMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *BossEncounterMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[bossencounter.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *BossEncounterMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *BossEncounterMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, bossencounter.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *BossEncounterMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *BossEncounterMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *BossEncounterMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[bossencounter.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *BossEncounterMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *BossEncounterMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, bossencounter.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *BossEncounterMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *BossEncounterMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *BossEncounterMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *BossEncounterMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *BossEncounterMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetSchoolID sets the "school_id" field.
+func (m *BossEncounterMutation) SetSchoolID(u uuid.UUID) {
+	m.school_id = &u
+}
+
+// SchoolID returns the value of the "school_id" field in the mutation.
+func (m *BossEncounterMutation) SchoolID() (r uuid.UUID, exists bool) {
+	v := m.school_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchoolID returns the old "school_id" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldSchoolID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchoolID: %w", err)
+	}
+	return oldValue.SchoolID, nil
+}
+
+// ResetSchoolID resets all changes to the "school_id" field.
+func (m *BossEncounterMutation) ResetSchoolID() {
+	m.school_id = nil
+}
+
+// SetBossID sets the "boss_id" field.
+func (m *BossEncounterMutation) SetBossID(u uuid.UUID) {
+	m.boss_id = &u
+}
+
+// BossID returns the value of the "boss_id" field in the mutation.
+func (m *BossEncounterMutation) BossID() (r uuid.UUID, exists bool) {
+	v := m.boss_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBossID returns the old "boss_id" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldBossID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBossID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBossID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBossID: %w", err)
+	}
+	return oldValue.BossID, nil
+}
+
+// ResetBossID resets all changes to the "boss_id" field.
+func (m *BossEncounterMutation) ResetBossID() {
+	m.boss_id = nil
+}
+
+// SetBossVersionID sets the "boss_version_id" field.
+func (m *BossEncounterMutation) SetBossVersionID(u uuid.UUID) {
+	m.boss_version_id = &u
+}
+
+// BossVersionID returns the value of the "boss_version_id" field in the mutation.
+func (m *BossEncounterMutation) BossVersionID() (r uuid.UUID, exists bool) {
+	v := m.boss_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBossVersionID returns the old "boss_version_id" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldBossVersionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBossVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBossVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBossVersionID: %w", err)
+	}
+	return oldValue.BossVersionID, nil
+}
+
+// ResetBossVersionID resets all changes to the "boss_version_id" field.
+func (m *BossEncounterMutation) ResetBossVersionID() {
+	m.boss_version_id = nil
+}
+
+// SetMode sets the "mode" field.
+func (m *BossEncounterMutation) SetMode(s string) {
+	m.mode = &s
+}
+
+// Mode returns the value of the "mode" field in the mutation.
+func (m *BossEncounterMutation) Mode() (r string, exists bool) {
+	v := m.mode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMode returns the old "mode" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldMode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMode: %w", err)
+	}
+	return oldValue.Mode, nil
+}
+
+// ResetMode resets all changes to the "mode" field.
+func (m *BossEncounterMutation) ResetMode() {
+	m.mode = nil
+}
+
+// SetPartyID sets the "party_id" field.
+func (m *BossEncounterMutation) SetPartyID(u uuid.UUID) {
+	m.party_id = &u
+}
+
+// PartyID returns the value of the "party_id" field in the mutation.
+func (m *BossEncounterMutation) PartyID() (r uuid.UUID, exists bool) {
+	v := m.party_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPartyID returns the old "party_id" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldPartyID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPartyID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPartyID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPartyID: %w", err)
+	}
+	return oldValue.PartyID, nil
+}
+
+// ClearPartyID clears the value of the "party_id" field.
+func (m *BossEncounterMutation) ClearPartyID() {
+	m.party_id = nil
+	m.clearedFields[bossencounter.FieldPartyID] = struct{}{}
+}
+
+// PartyIDCleared returns if the "party_id" field was cleared in this mutation.
+func (m *BossEncounterMutation) PartyIDCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldPartyID]
+	return ok
+}
+
+// ResetPartyID resets all changes to the "party_id" field.
+func (m *BossEncounterMutation) ResetPartyID() {
+	m.party_id = nil
+	delete(m.clearedFields, bossencounter.FieldPartyID)
+}
+
+// SetPartyActivityID sets the "party_activity_id" field.
+func (m *BossEncounterMutation) SetPartyActivityID(u uuid.UUID) {
+	m.party_activity_id = &u
+}
+
+// PartyActivityID returns the value of the "party_activity_id" field in the mutation.
+func (m *BossEncounterMutation) PartyActivityID() (r uuid.UUID, exists bool) {
+	v := m.party_activity_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPartyActivityID returns the old "party_activity_id" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldPartyActivityID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPartyActivityID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPartyActivityID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPartyActivityID: %w", err)
+	}
+	return oldValue.PartyActivityID, nil
+}
+
+// ClearPartyActivityID clears the value of the "party_activity_id" field.
+func (m *BossEncounterMutation) ClearPartyActivityID() {
+	m.party_activity_id = nil
+	m.clearedFields[bossencounter.FieldPartyActivityID] = struct{}{}
+}
+
+// PartyActivityIDCleared returns if the "party_activity_id" field was cleared in this mutation.
+func (m *BossEncounterMutation) PartyActivityIDCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldPartyActivityID]
+	return ok
+}
+
+// ResetPartyActivityID resets all changes to the "party_activity_id" field.
+func (m *BossEncounterMutation) ResetPartyActivityID() {
+	m.party_activity_id = nil
+	delete(m.clearedFields, bossencounter.FieldPartyActivityID)
+}
+
+// SetLeaderID sets the "leader_id" field.
+func (m *BossEncounterMutation) SetLeaderID(u uuid.UUID) {
+	m.leader_id = &u
+}
+
+// LeaderID returns the value of the "leader_id" field in the mutation.
+func (m *BossEncounterMutation) LeaderID() (r uuid.UUID, exists bool) {
+	v := m.leader_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeaderID returns the old "leader_id" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldLeaderID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeaderID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeaderID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeaderID: %w", err)
+	}
+	return oldValue.LeaderID, nil
+}
+
+// ClearLeaderID clears the value of the "leader_id" field.
+func (m *BossEncounterMutation) ClearLeaderID() {
+	m.leader_id = nil
+	m.clearedFields[bossencounter.FieldLeaderID] = struct{}{}
+}
+
+// LeaderIDCleared returns if the "leader_id" field was cleared in this mutation.
+func (m *BossEncounterMutation) LeaderIDCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldLeaderID]
+	return ok
+}
+
+// ResetLeaderID resets all changes to the "leader_id" field.
+func (m *BossEncounterMutation) ResetLeaderID() {
+	m.leader_id = nil
+	delete(m.clearedFields, bossencounter.FieldLeaderID)
+}
+
+// SetStatus sets the "status" field.
+func (m *BossEncounterMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *BossEncounterMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *BossEncounterMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetPhaseIndex sets the "phase_index" field.
+func (m *BossEncounterMutation) SetPhaseIndex(i int) {
+	m.phase_index = &i
+	m.addphase_index = nil
+}
+
+// PhaseIndex returns the value of the "phase_index" field in the mutation.
+func (m *BossEncounterMutation) PhaseIndex() (r int, exists bool) {
+	v := m.phase_index
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPhaseIndex returns the old "phase_index" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldPhaseIndex(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPhaseIndex is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPhaseIndex requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPhaseIndex: %w", err)
+	}
+	return oldValue.PhaseIndex, nil
+}
+
+// AddPhaseIndex adds i to the "phase_index" field.
+func (m *BossEncounterMutation) AddPhaseIndex(i int) {
+	if m.addphase_index != nil {
+		*m.addphase_index += i
+	} else {
+		m.addphase_index = &i
+	}
+}
+
+// AddedPhaseIndex returns the value that was added to the "phase_index" field in this mutation.
+func (m *BossEncounterMutation) AddedPhaseIndex() (r int, exists bool) {
+	v := m.addphase_index
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPhaseIndex resets all changes to the "phase_index" field.
+func (m *BossEncounterMutation) ResetPhaseIndex() {
+	m.phase_index = nil
+	m.addphase_index = nil
+}
+
+// SetCurrentPhase sets the "current_phase" field.
+func (m *BossEncounterMutation) SetCurrentPhase(s string) {
+	m.current_phase = &s
+}
+
+// CurrentPhase returns the value of the "current_phase" field in the mutation.
+func (m *BossEncounterMutation) CurrentPhase() (r string, exists bool) {
+	v := m.current_phase
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrentPhase returns the old "current_phase" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldCurrentPhase(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrentPhase is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrentPhase requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrentPhase: %w", err)
+	}
+	return oldValue.CurrentPhase, nil
+}
+
+// ClearCurrentPhase clears the value of the "current_phase" field.
+func (m *BossEncounterMutation) ClearCurrentPhase() {
+	m.current_phase = nil
+	m.clearedFields[bossencounter.FieldCurrentPhase] = struct{}{}
+}
+
+// CurrentPhaseCleared returns if the "current_phase" field was cleared in this mutation.
+func (m *BossEncounterMutation) CurrentPhaseCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldCurrentPhase]
+	return ok
+}
+
+// ResetCurrentPhase resets all changes to the "current_phase" field.
+func (m *BossEncounterMutation) ResetCurrentPhase() {
+	m.current_phase = nil
+	delete(m.clearedFields, bossencounter.FieldCurrentPhase)
+}
+
+// SetPhaseRetries sets the "phase_retries" field.
+func (m *BossEncounterMutation) SetPhaseRetries(i int) {
+	m.phase_retries = &i
+	m.addphase_retries = nil
+}
+
+// PhaseRetries returns the value of the "phase_retries" field in the mutation.
+func (m *BossEncounterMutation) PhaseRetries() (r int, exists bool) {
+	v := m.phase_retries
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPhaseRetries returns the old "phase_retries" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldPhaseRetries(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPhaseRetries is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPhaseRetries requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPhaseRetries: %w", err)
+	}
+	return oldValue.PhaseRetries, nil
+}
+
+// AddPhaseRetries adds i to the "phase_retries" field.
+func (m *BossEncounterMutation) AddPhaseRetries(i int) {
+	if m.addphase_retries != nil {
+		*m.addphase_retries += i
+	} else {
+		m.addphase_retries = &i
+	}
+}
+
+// AddedPhaseRetries returns the value that was added to the "phase_retries" field in this mutation.
+func (m *BossEncounterMutation) AddedPhaseRetries() (r int, exists bool) {
+	v := m.addphase_retries
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPhaseRetries resets all changes to the "phase_retries" field.
+func (m *BossEncounterMutation) ResetPhaseRetries() {
+	m.phase_retries = nil
+	m.addphase_retries = nil
+}
+
+// SetPlanFailures sets the "plan_failures" field.
+func (m *BossEncounterMutation) SetPlanFailures(i int) {
+	m.plan_failures = &i
+	m.addplan_failures = nil
+}
+
+// PlanFailures returns the value of the "plan_failures" field in the mutation.
+func (m *BossEncounterMutation) PlanFailures() (r int, exists bool) {
+	v := m.plan_failures
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlanFailures returns the old "plan_failures" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldPlanFailures(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlanFailures is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlanFailures requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlanFailures: %w", err)
+	}
+	return oldValue.PlanFailures, nil
+}
+
+// AddPlanFailures adds i to the "plan_failures" field.
+func (m *BossEncounterMutation) AddPlanFailures(i int) {
+	if m.addplan_failures != nil {
+		*m.addplan_failures += i
+	} else {
+		m.addplan_failures = &i
+	}
+}
+
+// AddedPlanFailures returns the value that was added to the "plan_failures" field in this mutation.
+func (m *BossEncounterMutation) AddedPlanFailures() (r int, exists bool) {
+	v := m.addplan_failures
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPlanFailures resets all changes to the "plan_failures" field.
+func (m *BossEncounterMutation) ResetPlanFailures() {
+	m.plan_failures = nil
+	m.addplan_failures = nil
+}
+
+// SetPhasesCleared sets the "phases_cleared" field.
+func (m *BossEncounterMutation) SetPhasesCleared(i int) {
+	m.phases_cleared = &i
+	m.addphases_cleared = nil
+}
+
+// PhasesCleared returns the value of the "phases_cleared" field in the mutation.
+func (m *BossEncounterMutation) PhasesCleared() (r int, exists bool) {
+	v := m.phases_cleared
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPhasesCleared returns the old "phases_cleared" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldPhasesCleared(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPhasesCleared is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPhasesCleared requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPhasesCleared: %w", err)
+	}
+	return oldValue.PhasesCleared, nil
+}
+
+// AddPhasesCleared adds i to the "phases_cleared" field.
+func (m *BossEncounterMutation) AddPhasesCleared(i int) {
+	if m.addphases_cleared != nil {
+		*m.addphases_cleared += i
+	} else {
+		m.addphases_cleared = &i
+	}
+}
+
+// AddedPhasesCleared returns the value that was added to the "phases_cleared" field in this mutation.
+func (m *BossEncounterMutation) AddedPhasesCleared() (r int, exists bool) {
+	v := m.addphases_cleared
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPhasesCleared resets all changes to the "phases_cleared" field.
+func (m *BossEncounterMutation) ResetPhasesCleared() {
+	m.phases_cleared = nil
+	m.addphases_cleared = nil
+}
+
+// SetEnergyRemaining sets the "energy_remaining" field.
+func (m *BossEncounterMutation) SetEnergyRemaining(f float64) {
+	m.energy_remaining = &f
+	m.addenergy_remaining = nil
+}
+
+// EnergyRemaining returns the value of the "energy_remaining" field in the mutation.
+func (m *BossEncounterMutation) EnergyRemaining() (r float64, exists bool) {
+	v := m.energy_remaining
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnergyRemaining returns the old "energy_remaining" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldEnergyRemaining(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnergyRemaining is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnergyRemaining requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnergyRemaining: %w", err)
+	}
+	return oldValue.EnergyRemaining, nil
+}
+
+// AddEnergyRemaining adds f to the "energy_remaining" field.
+func (m *BossEncounterMutation) AddEnergyRemaining(f float64) {
+	if m.addenergy_remaining != nil {
+		*m.addenergy_remaining += f
+	} else {
+		m.addenergy_remaining = &f
+	}
+}
+
+// AddedEnergyRemaining returns the value that was added to the "energy_remaining" field in this mutation.
+func (m *BossEncounterMutation) AddedEnergyRemaining() (r float64, exists bool) {
+	v := m.addenergy_remaining
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetEnergyRemaining resets all changes to the "energy_remaining" field.
+func (m *BossEncounterMutation) ResetEnergyRemaining() {
+	m.energy_remaining = nil
+	m.addenergy_remaining = nil
+}
+
+// SetStateVersion sets the "state_version" field.
+func (m *BossEncounterMutation) SetStateVersion(i int64) {
+	m.state_version = &i
+	m.addstate_version = nil
+}
+
+// StateVersion returns the value of the "state_version" field in the mutation.
+func (m *BossEncounterMutation) StateVersion() (r int64, exists bool) {
+	v := m.state_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStateVersion returns the old "state_version" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldStateVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStateVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStateVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStateVersion: %w", err)
+	}
+	return oldValue.StateVersion, nil
+}
+
+// AddStateVersion adds i to the "state_version" field.
+func (m *BossEncounterMutation) AddStateVersion(i int64) {
+	if m.addstate_version != nil {
+		*m.addstate_version += i
+	} else {
+		m.addstate_version = &i
+	}
+}
+
+// AddedStateVersion returns the value that was added to the "state_version" field in this mutation.
+func (m *BossEncounterMutation) AddedStateVersion() (r int64, exists bool) {
+	v := m.addstate_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetStateVersion resets all changes to the "state_version" field.
+func (m *BossEncounterMutation) ResetStateVersion() {
+	m.state_version = nil
+	m.addstate_version = nil
+}
+
+// SetReadyDeadlineAt sets the "ready_deadline_at" field.
+func (m *BossEncounterMutation) SetReadyDeadlineAt(t time.Time) {
+	m.ready_deadline_at = &t
+}
+
+// ReadyDeadlineAt returns the value of the "ready_deadline_at" field in the mutation.
+func (m *BossEncounterMutation) ReadyDeadlineAt() (r time.Time, exists bool) {
+	v := m.ready_deadline_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReadyDeadlineAt returns the old "ready_deadline_at" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldReadyDeadlineAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReadyDeadlineAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReadyDeadlineAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReadyDeadlineAt: %w", err)
+	}
+	return oldValue.ReadyDeadlineAt, nil
+}
+
+// ResetReadyDeadlineAt resets all changes to the "ready_deadline_at" field.
+func (m *BossEncounterMutation) ResetReadyDeadlineAt() {
+	m.ready_deadline_at = nil
+}
+
+// SetDeadlineAt sets the "deadline_at" field.
+func (m *BossEncounterMutation) SetDeadlineAt(t time.Time) {
+	m.deadline_at = &t
+}
+
+// DeadlineAt returns the value of the "deadline_at" field in the mutation.
+func (m *BossEncounterMutation) DeadlineAt() (r time.Time, exists bool) {
+	v := m.deadline_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeadlineAt returns the old "deadline_at" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldDeadlineAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeadlineAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeadlineAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeadlineAt: %w", err)
+	}
+	return oldValue.DeadlineAt, nil
+}
+
+// ClearDeadlineAt clears the value of the "deadline_at" field.
+func (m *BossEncounterMutation) ClearDeadlineAt() {
+	m.deadline_at = nil
+	m.clearedFields[bossencounter.FieldDeadlineAt] = struct{}{}
+}
+
+// DeadlineAtCleared returns if the "deadline_at" field was cleared in this mutation.
+func (m *BossEncounterMutation) DeadlineAtCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldDeadlineAt]
+	return ok
+}
+
+// ResetDeadlineAt resets all changes to the "deadline_at" field.
+func (m *BossEncounterMutation) ResetDeadlineAt() {
+	m.deadline_at = nil
+	delete(m.clearedFields, bossencounter.FieldDeadlineAt)
+}
+
+// SetPhaseDeadlineAt sets the "phase_deadline_at" field.
+func (m *BossEncounterMutation) SetPhaseDeadlineAt(t time.Time) {
+	m.phase_deadline_at = &t
+}
+
+// PhaseDeadlineAt returns the value of the "phase_deadline_at" field in the mutation.
+func (m *BossEncounterMutation) PhaseDeadlineAt() (r time.Time, exists bool) {
+	v := m.phase_deadline_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPhaseDeadlineAt returns the old "phase_deadline_at" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldPhaseDeadlineAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPhaseDeadlineAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPhaseDeadlineAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPhaseDeadlineAt: %w", err)
+	}
+	return oldValue.PhaseDeadlineAt, nil
+}
+
+// ClearPhaseDeadlineAt clears the value of the "phase_deadline_at" field.
+func (m *BossEncounterMutation) ClearPhaseDeadlineAt() {
+	m.phase_deadline_at = nil
+	m.clearedFields[bossencounter.FieldPhaseDeadlineAt] = struct{}{}
+}
+
+// PhaseDeadlineAtCleared returns if the "phase_deadline_at" field was cleared in this mutation.
+func (m *BossEncounterMutation) PhaseDeadlineAtCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldPhaseDeadlineAt]
+	return ok
+}
+
+// ResetPhaseDeadlineAt resets all changes to the "phase_deadline_at" field.
+func (m *BossEncounterMutation) ResetPhaseDeadlineAt() {
+	m.phase_deadline_at = nil
+	delete(m.clearedFields, bossencounter.FieldPhaseDeadlineAt)
+}
+
+// SetOutcome sets the "outcome" field.
+func (m *BossEncounterMutation) SetOutcome(s string) {
+	m.outcome = &s
+}
+
+// Outcome returns the value of the "outcome" field in the mutation.
+func (m *BossEncounterMutation) Outcome() (r string, exists bool) {
+	v := m.outcome
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutcome returns the old "outcome" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldOutcome(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutcome is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutcome requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutcome: %w", err)
+	}
+	return oldValue.Outcome, nil
+}
+
+// ClearOutcome clears the value of the "outcome" field.
+func (m *BossEncounterMutation) ClearOutcome() {
+	m.outcome = nil
+	m.clearedFields[bossencounter.FieldOutcome] = struct{}{}
+}
+
+// OutcomeCleared returns if the "outcome" field was cleared in this mutation.
+func (m *BossEncounterMutation) OutcomeCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldOutcome]
+	return ok
+}
+
+// ResetOutcome resets all changes to the "outcome" field.
+func (m *BossEncounterMutation) ResetOutcome() {
+	m.outcome = nil
+	delete(m.clearedFields, bossencounter.FieldOutcome)
+}
+
+// SetEndReason sets the "end_reason" field.
+func (m *BossEncounterMutation) SetEndReason(s string) {
+	m.end_reason = &s
+}
+
+// EndReason returns the value of the "end_reason" field in the mutation.
+func (m *BossEncounterMutation) EndReason() (r string, exists bool) {
+	v := m.end_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndReason returns the old "end_reason" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldEndReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndReason: %w", err)
+	}
+	return oldValue.EndReason, nil
+}
+
+// ClearEndReason clears the value of the "end_reason" field.
+func (m *BossEncounterMutation) ClearEndReason() {
+	m.end_reason = nil
+	m.clearedFields[bossencounter.FieldEndReason] = struct{}{}
+}
+
+// EndReasonCleared returns if the "end_reason" field was cleared in this mutation.
+func (m *BossEncounterMutation) EndReasonCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldEndReason]
+	return ok
+}
+
+// ResetEndReason resets all changes to the "end_reason" field.
+func (m *BossEncounterMutation) ResetEndReason() {
+	m.end_reason = nil
+	delete(m.clearedFields, bossencounter.FieldEndReason)
+}
+
+// SetPeriodKey sets the "period_key" field.
+func (m *BossEncounterMutation) SetPeriodKey(s string) {
+	m.period_key = &s
+}
+
+// PeriodKey returns the value of the "period_key" field in the mutation.
+func (m *BossEncounterMutation) PeriodKey() (r string, exists bool) {
+	v := m.period_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPeriodKey returns the old "period_key" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldPeriodKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPeriodKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPeriodKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPeriodKey: %w", err)
+	}
+	return oldValue.PeriodKey, nil
+}
+
+// ResetPeriodKey resets all changes to the "period_key" field.
+func (m *BossEncounterMutation) ResetPeriodKey() {
+	m.period_key = nil
+}
+
+// SetStartedAt sets the "started_at" field.
+func (m *BossEncounterMutation) SetStartedAt(t time.Time) {
+	m.started_at = &t
+}
+
+// StartedAt returns the value of the "started_at" field in the mutation.
+func (m *BossEncounterMutation) StartedAt() (r time.Time, exists bool) {
+	v := m.started_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartedAt returns the old "started_at" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldStartedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartedAt: %w", err)
+	}
+	return oldValue.StartedAt, nil
+}
+
+// ClearStartedAt clears the value of the "started_at" field.
+func (m *BossEncounterMutation) ClearStartedAt() {
+	m.started_at = nil
+	m.clearedFields[bossencounter.FieldStartedAt] = struct{}{}
+}
+
+// StartedAtCleared returns if the "started_at" field was cleared in this mutation.
+func (m *BossEncounterMutation) StartedAtCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldStartedAt]
+	return ok
+}
+
+// ResetStartedAt resets all changes to the "started_at" field.
+func (m *BossEncounterMutation) ResetStartedAt() {
+	m.started_at = nil
+	delete(m.clearedFields, bossencounter.FieldStartedAt)
+}
+
+// SetEndedAt sets the "ended_at" field.
+func (m *BossEncounterMutation) SetEndedAt(t time.Time) {
+	m.ended_at = &t
+}
+
+// EndedAt returns the value of the "ended_at" field in the mutation.
+func (m *BossEncounterMutation) EndedAt() (r time.Time, exists bool) {
+	v := m.ended_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndedAt returns the old "ended_at" field's value of the BossEncounter entity.
+// If the BossEncounter object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMutation) OldEndedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndedAt: %w", err)
+	}
+	return oldValue.EndedAt, nil
+}
+
+// ClearEndedAt clears the value of the "ended_at" field.
+func (m *BossEncounterMutation) ClearEndedAt() {
+	m.ended_at = nil
+	m.clearedFields[bossencounter.FieldEndedAt] = struct{}{}
+}
+
+// EndedAtCleared returns if the "ended_at" field was cleared in this mutation.
+func (m *BossEncounterMutation) EndedAtCleared() bool {
+	_, ok := m.clearedFields[bossencounter.FieldEndedAt]
+	return ok
+}
+
+// ResetEndedAt resets all changes to the "ended_at" field.
+func (m *BossEncounterMutation) ResetEndedAt() {
+	m.ended_at = nil
+	delete(m.clearedFields, bossencounter.FieldEndedAt)
+}
+
+// Where appends a list predicates to the BossEncounterMutation builder.
+func (m *BossEncounterMutation) Where(ps ...predicate.BossEncounter) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BossEncounterMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BossEncounterMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BossEncounter, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BossEncounterMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BossEncounterMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BossEncounter).
+func (m *BossEncounterMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BossEncounterMutation) Fields() []string {
+	fields := make([]string, 0, 32)
+	if m.tenant_id != nil {
+		fields = append(fields, bossencounter.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, bossencounter.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, bossencounter.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, bossencounter.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, bossencounter.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, bossencounter.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, bossencounter.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, bossencounter.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, bossencounter.FieldVersion)
+	}
+	if m.school_id != nil {
+		fields = append(fields, bossencounter.FieldSchoolID)
+	}
+	if m.boss_id != nil {
+		fields = append(fields, bossencounter.FieldBossID)
+	}
+	if m.boss_version_id != nil {
+		fields = append(fields, bossencounter.FieldBossVersionID)
+	}
+	if m.mode != nil {
+		fields = append(fields, bossencounter.FieldMode)
+	}
+	if m.party_id != nil {
+		fields = append(fields, bossencounter.FieldPartyID)
+	}
+	if m.party_activity_id != nil {
+		fields = append(fields, bossencounter.FieldPartyActivityID)
+	}
+	if m.leader_id != nil {
+		fields = append(fields, bossencounter.FieldLeaderID)
+	}
+	if m.status != nil {
+		fields = append(fields, bossencounter.FieldStatus)
+	}
+	if m.phase_index != nil {
+		fields = append(fields, bossencounter.FieldPhaseIndex)
+	}
+	if m.current_phase != nil {
+		fields = append(fields, bossencounter.FieldCurrentPhase)
+	}
+	if m.phase_retries != nil {
+		fields = append(fields, bossencounter.FieldPhaseRetries)
+	}
+	if m.plan_failures != nil {
+		fields = append(fields, bossencounter.FieldPlanFailures)
+	}
+	if m.phases_cleared != nil {
+		fields = append(fields, bossencounter.FieldPhasesCleared)
+	}
+	if m.energy_remaining != nil {
+		fields = append(fields, bossencounter.FieldEnergyRemaining)
+	}
+	if m.state_version != nil {
+		fields = append(fields, bossencounter.FieldStateVersion)
+	}
+	if m.ready_deadline_at != nil {
+		fields = append(fields, bossencounter.FieldReadyDeadlineAt)
+	}
+	if m.deadline_at != nil {
+		fields = append(fields, bossencounter.FieldDeadlineAt)
+	}
+	if m.phase_deadline_at != nil {
+		fields = append(fields, bossencounter.FieldPhaseDeadlineAt)
+	}
+	if m.outcome != nil {
+		fields = append(fields, bossencounter.FieldOutcome)
+	}
+	if m.end_reason != nil {
+		fields = append(fields, bossencounter.FieldEndReason)
+	}
+	if m.period_key != nil {
+		fields = append(fields, bossencounter.FieldPeriodKey)
+	}
+	if m.started_at != nil {
+		fields = append(fields, bossencounter.FieldStartedAt)
+	}
+	if m.ended_at != nil {
+		fields = append(fields, bossencounter.FieldEndedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BossEncounterMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case bossencounter.FieldTenantID:
+		return m.TenantID()
+	case bossencounter.FieldCreatedAt:
+		return m.CreatedAt()
+	case bossencounter.FieldCreatedBy:
+		return m.CreatedBy()
+	case bossencounter.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case bossencounter.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case bossencounter.FieldDeletedAt:
+		return m.DeletedAt()
+	case bossencounter.FieldDeletedBy:
+		return m.DeletedBy()
+	case bossencounter.FieldDeleteReason:
+		return m.DeleteReason()
+	case bossencounter.FieldVersion:
+		return m.Version()
+	case bossencounter.FieldSchoolID:
+		return m.SchoolID()
+	case bossencounter.FieldBossID:
+		return m.BossID()
+	case bossencounter.FieldBossVersionID:
+		return m.BossVersionID()
+	case bossencounter.FieldMode:
+		return m.Mode()
+	case bossencounter.FieldPartyID:
+		return m.PartyID()
+	case bossencounter.FieldPartyActivityID:
+		return m.PartyActivityID()
+	case bossencounter.FieldLeaderID:
+		return m.LeaderID()
+	case bossencounter.FieldStatus:
+		return m.Status()
+	case bossencounter.FieldPhaseIndex:
+		return m.PhaseIndex()
+	case bossencounter.FieldCurrentPhase:
+		return m.CurrentPhase()
+	case bossencounter.FieldPhaseRetries:
+		return m.PhaseRetries()
+	case bossencounter.FieldPlanFailures:
+		return m.PlanFailures()
+	case bossencounter.FieldPhasesCleared:
+		return m.PhasesCleared()
+	case bossencounter.FieldEnergyRemaining:
+		return m.EnergyRemaining()
+	case bossencounter.FieldStateVersion:
+		return m.StateVersion()
+	case bossencounter.FieldReadyDeadlineAt:
+		return m.ReadyDeadlineAt()
+	case bossencounter.FieldDeadlineAt:
+		return m.DeadlineAt()
+	case bossencounter.FieldPhaseDeadlineAt:
+		return m.PhaseDeadlineAt()
+	case bossencounter.FieldOutcome:
+		return m.Outcome()
+	case bossencounter.FieldEndReason:
+		return m.EndReason()
+	case bossencounter.FieldPeriodKey:
+		return m.PeriodKey()
+	case bossencounter.FieldStartedAt:
+		return m.StartedAt()
+	case bossencounter.FieldEndedAt:
+		return m.EndedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BossEncounterMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case bossencounter.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case bossencounter.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case bossencounter.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case bossencounter.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case bossencounter.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case bossencounter.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case bossencounter.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case bossencounter.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case bossencounter.FieldVersion:
+		return m.OldVersion(ctx)
+	case bossencounter.FieldSchoolID:
+		return m.OldSchoolID(ctx)
+	case bossencounter.FieldBossID:
+		return m.OldBossID(ctx)
+	case bossencounter.FieldBossVersionID:
+		return m.OldBossVersionID(ctx)
+	case bossencounter.FieldMode:
+		return m.OldMode(ctx)
+	case bossencounter.FieldPartyID:
+		return m.OldPartyID(ctx)
+	case bossencounter.FieldPartyActivityID:
+		return m.OldPartyActivityID(ctx)
+	case bossencounter.FieldLeaderID:
+		return m.OldLeaderID(ctx)
+	case bossencounter.FieldStatus:
+		return m.OldStatus(ctx)
+	case bossencounter.FieldPhaseIndex:
+		return m.OldPhaseIndex(ctx)
+	case bossencounter.FieldCurrentPhase:
+		return m.OldCurrentPhase(ctx)
+	case bossencounter.FieldPhaseRetries:
+		return m.OldPhaseRetries(ctx)
+	case bossencounter.FieldPlanFailures:
+		return m.OldPlanFailures(ctx)
+	case bossencounter.FieldPhasesCleared:
+		return m.OldPhasesCleared(ctx)
+	case bossencounter.FieldEnergyRemaining:
+		return m.OldEnergyRemaining(ctx)
+	case bossencounter.FieldStateVersion:
+		return m.OldStateVersion(ctx)
+	case bossencounter.FieldReadyDeadlineAt:
+		return m.OldReadyDeadlineAt(ctx)
+	case bossencounter.FieldDeadlineAt:
+		return m.OldDeadlineAt(ctx)
+	case bossencounter.FieldPhaseDeadlineAt:
+		return m.OldPhaseDeadlineAt(ctx)
+	case bossencounter.FieldOutcome:
+		return m.OldOutcome(ctx)
+	case bossencounter.FieldEndReason:
+		return m.OldEndReason(ctx)
+	case bossencounter.FieldPeriodKey:
+		return m.OldPeriodKey(ctx)
+	case bossencounter.FieldStartedAt:
+		return m.OldStartedAt(ctx)
+	case bossencounter.FieldEndedAt:
+		return m.OldEndedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown BossEncounter field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossEncounterMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case bossencounter.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case bossencounter.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case bossencounter.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case bossencounter.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case bossencounter.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case bossencounter.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case bossencounter.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case bossencounter.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case bossencounter.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case bossencounter.FieldSchoolID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchoolID(v)
+		return nil
+	case bossencounter.FieldBossID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBossID(v)
+		return nil
+	case bossencounter.FieldBossVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBossVersionID(v)
+		return nil
+	case bossencounter.FieldMode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMode(v)
+		return nil
+	case bossencounter.FieldPartyID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPartyID(v)
+		return nil
+	case bossencounter.FieldPartyActivityID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPartyActivityID(v)
+		return nil
+	case bossencounter.FieldLeaderID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeaderID(v)
+		return nil
+	case bossencounter.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case bossencounter.FieldPhaseIndex:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPhaseIndex(v)
+		return nil
+	case bossencounter.FieldCurrentPhase:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrentPhase(v)
+		return nil
+	case bossencounter.FieldPhaseRetries:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPhaseRetries(v)
+		return nil
+	case bossencounter.FieldPlanFailures:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlanFailures(v)
+		return nil
+	case bossencounter.FieldPhasesCleared:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPhasesCleared(v)
+		return nil
+	case bossencounter.FieldEnergyRemaining:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnergyRemaining(v)
+		return nil
+	case bossencounter.FieldStateVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStateVersion(v)
+		return nil
+	case bossencounter.FieldReadyDeadlineAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReadyDeadlineAt(v)
+		return nil
+	case bossencounter.FieldDeadlineAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeadlineAt(v)
+		return nil
+	case bossencounter.FieldPhaseDeadlineAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPhaseDeadlineAt(v)
+		return nil
+	case bossencounter.FieldOutcome:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutcome(v)
+		return nil
+	case bossencounter.FieldEndReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndReason(v)
+		return nil
+	case bossencounter.FieldPeriodKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPeriodKey(v)
+		return nil
+	case bossencounter.FieldStartedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartedAt(v)
+		return nil
+	case bossencounter.FieldEndedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossEncounter field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BossEncounterMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, bossencounter.FieldVersion)
+	}
+	if m.addphase_index != nil {
+		fields = append(fields, bossencounter.FieldPhaseIndex)
+	}
+	if m.addphase_retries != nil {
+		fields = append(fields, bossencounter.FieldPhaseRetries)
+	}
+	if m.addplan_failures != nil {
+		fields = append(fields, bossencounter.FieldPlanFailures)
+	}
+	if m.addphases_cleared != nil {
+		fields = append(fields, bossencounter.FieldPhasesCleared)
+	}
+	if m.addenergy_remaining != nil {
+		fields = append(fields, bossencounter.FieldEnergyRemaining)
+	}
+	if m.addstate_version != nil {
+		fields = append(fields, bossencounter.FieldStateVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BossEncounterMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case bossencounter.FieldVersion:
+		return m.AddedVersion()
+	case bossencounter.FieldPhaseIndex:
+		return m.AddedPhaseIndex()
+	case bossencounter.FieldPhaseRetries:
+		return m.AddedPhaseRetries()
+	case bossencounter.FieldPlanFailures:
+		return m.AddedPlanFailures()
+	case bossencounter.FieldPhasesCleared:
+		return m.AddedPhasesCleared()
+	case bossencounter.FieldEnergyRemaining:
+		return m.AddedEnergyRemaining()
+	case bossencounter.FieldStateVersion:
+		return m.AddedStateVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossEncounterMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case bossencounter.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case bossencounter.FieldPhaseIndex:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPhaseIndex(v)
+		return nil
+	case bossencounter.FieldPhaseRetries:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPhaseRetries(v)
+		return nil
+	case bossencounter.FieldPlanFailures:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPlanFailures(v)
+		return nil
+	case bossencounter.FieldPhasesCleared:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPhasesCleared(v)
+		return nil
+	case bossencounter.FieldEnergyRemaining:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddEnergyRemaining(v)
+		return nil
+	case bossencounter.FieldStateVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddStateVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossEncounter numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BossEncounterMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(bossencounter.FieldCreatedBy) {
+		fields = append(fields, bossencounter.FieldCreatedBy)
+	}
+	if m.FieldCleared(bossencounter.FieldUpdatedBy) {
+		fields = append(fields, bossencounter.FieldUpdatedBy)
+	}
+	if m.FieldCleared(bossencounter.FieldDeletedAt) {
+		fields = append(fields, bossencounter.FieldDeletedAt)
+	}
+	if m.FieldCleared(bossencounter.FieldDeletedBy) {
+		fields = append(fields, bossencounter.FieldDeletedBy)
+	}
+	if m.FieldCleared(bossencounter.FieldDeleteReason) {
+		fields = append(fields, bossencounter.FieldDeleteReason)
+	}
+	if m.FieldCleared(bossencounter.FieldPartyID) {
+		fields = append(fields, bossencounter.FieldPartyID)
+	}
+	if m.FieldCleared(bossencounter.FieldPartyActivityID) {
+		fields = append(fields, bossencounter.FieldPartyActivityID)
+	}
+	if m.FieldCleared(bossencounter.FieldLeaderID) {
+		fields = append(fields, bossencounter.FieldLeaderID)
+	}
+	if m.FieldCleared(bossencounter.FieldCurrentPhase) {
+		fields = append(fields, bossencounter.FieldCurrentPhase)
+	}
+	if m.FieldCleared(bossencounter.FieldDeadlineAt) {
+		fields = append(fields, bossencounter.FieldDeadlineAt)
+	}
+	if m.FieldCleared(bossencounter.FieldPhaseDeadlineAt) {
+		fields = append(fields, bossencounter.FieldPhaseDeadlineAt)
+	}
+	if m.FieldCleared(bossencounter.FieldOutcome) {
+		fields = append(fields, bossencounter.FieldOutcome)
+	}
+	if m.FieldCleared(bossencounter.FieldEndReason) {
+		fields = append(fields, bossencounter.FieldEndReason)
+	}
+	if m.FieldCleared(bossencounter.FieldStartedAt) {
+		fields = append(fields, bossencounter.FieldStartedAt)
+	}
+	if m.FieldCleared(bossencounter.FieldEndedAt) {
+		fields = append(fields, bossencounter.FieldEndedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BossEncounterMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BossEncounterMutation) ClearField(name string) error {
+	switch name {
+	case bossencounter.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case bossencounter.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case bossencounter.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case bossencounter.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case bossencounter.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case bossencounter.FieldPartyID:
+		m.ClearPartyID()
+		return nil
+	case bossencounter.FieldPartyActivityID:
+		m.ClearPartyActivityID()
+		return nil
+	case bossencounter.FieldLeaderID:
+		m.ClearLeaderID()
+		return nil
+	case bossencounter.FieldCurrentPhase:
+		m.ClearCurrentPhase()
+		return nil
+	case bossencounter.FieldDeadlineAt:
+		m.ClearDeadlineAt()
+		return nil
+	case bossencounter.FieldPhaseDeadlineAt:
+		m.ClearPhaseDeadlineAt()
+		return nil
+	case bossencounter.FieldOutcome:
+		m.ClearOutcome()
+		return nil
+	case bossencounter.FieldEndReason:
+		m.ClearEndReason()
+		return nil
+	case bossencounter.FieldStartedAt:
+		m.ClearStartedAt()
+		return nil
+	case bossencounter.FieldEndedAt:
+		m.ClearEndedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown BossEncounter nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BossEncounterMutation) ResetField(name string) error {
+	switch name {
+	case bossencounter.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case bossencounter.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case bossencounter.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case bossencounter.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case bossencounter.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case bossencounter.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case bossencounter.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case bossencounter.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case bossencounter.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case bossencounter.FieldSchoolID:
+		m.ResetSchoolID()
+		return nil
+	case bossencounter.FieldBossID:
+		m.ResetBossID()
+		return nil
+	case bossencounter.FieldBossVersionID:
+		m.ResetBossVersionID()
+		return nil
+	case bossencounter.FieldMode:
+		m.ResetMode()
+		return nil
+	case bossencounter.FieldPartyID:
+		m.ResetPartyID()
+		return nil
+	case bossencounter.FieldPartyActivityID:
+		m.ResetPartyActivityID()
+		return nil
+	case bossencounter.FieldLeaderID:
+		m.ResetLeaderID()
+		return nil
+	case bossencounter.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case bossencounter.FieldPhaseIndex:
+		m.ResetPhaseIndex()
+		return nil
+	case bossencounter.FieldCurrentPhase:
+		m.ResetCurrentPhase()
+		return nil
+	case bossencounter.FieldPhaseRetries:
+		m.ResetPhaseRetries()
+		return nil
+	case bossencounter.FieldPlanFailures:
+		m.ResetPlanFailures()
+		return nil
+	case bossencounter.FieldPhasesCleared:
+		m.ResetPhasesCleared()
+		return nil
+	case bossencounter.FieldEnergyRemaining:
+		m.ResetEnergyRemaining()
+		return nil
+	case bossencounter.FieldStateVersion:
+		m.ResetStateVersion()
+		return nil
+	case bossencounter.FieldReadyDeadlineAt:
+		m.ResetReadyDeadlineAt()
+		return nil
+	case bossencounter.FieldDeadlineAt:
+		m.ResetDeadlineAt()
+		return nil
+	case bossencounter.FieldPhaseDeadlineAt:
+		m.ResetPhaseDeadlineAt()
+		return nil
+	case bossencounter.FieldOutcome:
+		m.ResetOutcome()
+		return nil
+	case bossencounter.FieldEndReason:
+		m.ResetEndReason()
+		return nil
+	case bossencounter.FieldPeriodKey:
+		m.ResetPeriodKey()
+		return nil
+	case bossencounter.FieldStartedAt:
+		m.ResetStartedAt()
+		return nil
+	case bossencounter.FieldEndedAt:
+		m.ResetEndedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown BossEncounter field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BossEncounterMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BossEncounterMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BossEncounterMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BossEncounterMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BossEncounterMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BossEncounterMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BossEncounterMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BossEncounter unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BossEncounterMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BossEncounter edge %s", name)
+}
+
+// BossEncounterContributionMutation represents an operation that mutates the BossEncounterContribution nodes in the graph.
+type BossEncounterContributionMutation struct {
+	config
+	op                      Op
+	typ                     string
+	id                      *uuid.UUID
+	tenant_id               *uuid.UUID
+	created_at              *time.Time
+	created_by              *uuid.UUID
+	updated_at              *time.Time
+	updated_by              *uuid.UUID
+	deleted_at              *time.Time
+	deleted_by              *uuid.UUID
+	delete_reason           *string
+	version                 *int64
+	addversion              *int64
+	encounter_id            *uuid.UUID
+	student_id              *uuid.UUID
+	phase_id                *string
+	correct_count           *int
+	addcorrect_count        *int
+	activities_completed    *int
+	addactivities_completed *int
+	contribution_pct        *float64
+	addcontribution_pct     *float64
+	eligible                *bool
+	cleared                 *bool
+	clearedFields           map[string]struct{}
+	done                    bool
+	oldValue                func(context.Context) (*BossEncounterContribution, error)
+	predicates              []predicate.BossEncounterContribution
+}
+
+var _ ent.Mutation = (*BossEncounterContributionMutation)(nil)
+
+// bossencountercontributionOption allows management of the mutation configuration using functional options.
+type bossencountercontributionOption func(*BossEncounterContributionMutation)
+
+// newBossEncounterContributionMutation creates new mutation for the BossEncounterContribution entity.
+func newBossEncounterContributionMutation(c config, op Op, opts ...bossencountercontributionOption) *BossEncounterContributionMutation {
+	m := &BossEncounterContributionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBossEncounterContribution,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBossEncounterContributionID sets the ID field of the mutation.
+func withBossEncounterContributionID(id uuid.UUID) bossencountercontributionOption {
+	return func(m *BossEncounterContributionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BossEncounterContribution
+		)
+		m.oldValue = func(ctx context.Context) (*BossEncounterContribution, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BossEncounterContribution.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBossEncounterContribution sets the old BossEncounterContribution of the mutation.
+func withBossEncounterContribution(node *BossEncounterContribution) bossencountercontributionOption {
+	return func(m *BossEncounterContributionMutation) {
+		m.oldValue = func(context.Context) (*BossEncounterContribution, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BossEncounterContributionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BossEncounterContributionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of BossEncounterContribution entities.
+func (m *BossEncounterContributionMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BossEncounterContributionMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BossEncounterContributionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BossEncounterContribution.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *BossEncounterContributionMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *BossEncounterContributionMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *BossEncounterContributionMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BossEncounterContributionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BossEncounterContributionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BossEncounterContributionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *BossEncounterContributionMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *BossEncounterContributionMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *BossEncounterContributionMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[bossencountercontribution.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *BossEncounterContributionMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[bossencountercontribution.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *BossEncounterContributionMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, bossencountercontribution.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BossEncounterContributionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BossEncounterContributionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BossEncounterContributionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *BossEncounterContributionMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *BossEncounterContributionMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *BossEncounterContributionMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[bossencountercontribution.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *BossEncounterContributionMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[bossencountercontribution.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *BossEncounterContributionMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, bossencountercontribution.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *BossEncounterContributionMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *BossEncounterContributionMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *BossEncounterContributionMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[bossencountercontribution.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *BossEncounterContributionMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[bossencountercontribution.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *BossEncounterContributionMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, bossencountercontribution.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *BossEncounterContributionMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *BossEncounterContributionMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *BossEncounterContributionMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[bossencountercontribution.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *BossEncounterContributionMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[bossencountercontribution.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *BossEncounterContributionMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, bossencountercontribution.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *BossEncounterContributionMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *BossEncounterContributionMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *BossEncounterContributionMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[bossencountercontribution.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *BossEncounterContributionMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[bossencountercontribution.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *BossEncounterContributionMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, bossencountercontribution.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *BossEncounterContributionMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *BossEncounterContributionMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *BossEncounterContributionMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *BossEncounterContributionMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *BossEncounterContributionMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetEncounterID sets the "encounter_id" field.
+func (m *BossEncounterContributionMutation) SetEncounterID(u uuid.UUID) {
+	m.encounter_id = &u
+}
+
+// EncounterID returns the value of the "encounter_id" field in the mutation.
+func (m *BossEncounterContributionMutation) EncounterID() (r uuid.UUID, exists bool) {
+	v := m.encounter_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEncounterID returns the old "encounter_id" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldEncounterID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEncounterID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEncounterID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEncounterID: %w", err)
+	}
+	return oldValue.EncounterID, nil
+}
+
+// ResetEncounterID resets all changes to the "encounter_id" field.
+func (m *BossEncounterContributionMutation) ResetEncounterID() {
+	m.encounter_id = nil
+}
+
+// SetStudentID sets the "student_id" field.
+func (m *BossEncounterContributionMutation) SetStudentID(u uuid.UUID) {
+	m.student_id = &u
+}
+
+// StudentID returns the value of the "student_id" field in the mutation.
+func (m *BossEncounterContributionMutation) StudentID() (r uuid.UUID, exists bool) {
+	v := m.student_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStudentID returns the old "student_id" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldStudentID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStudentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStudentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStudentID: %w", err)
+	}
+	return oldValue.StudentID, nil
+}
+
+// ResetStudentID resets all changes to the "student_id" field.
+func (m *BossEncounterContributionMutation) ResetStudentID() {
+	m.student_id = nil
+}
+
+// SetPhaseID sets the "phase_id" field.
+func (m *BossEncounterContributionMutation) SetPhaseID(s string) {
+	m.phase_id = &s
+}
+
+// PhaseID returns the value of the "phase_id" field in the mutation.
+func (m *BossEncounterContributionMutation) PhaseID() (r string, exists bool) {
+	v := m.phase_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPhaseID returns the old "phase_id" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldPhaseID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPhaseID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPhaseID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPhaseID: %w", err)
+	}
+	return oldValue.PhaseID, nil
+}
+
+// ResetPhaseID resets all changes to the "phase_id" field.
+func (m *BossEncounterContributionMutation) ResetPhaseID() {
+	m.phase_id = nil
+}
+
+// SetCorrectCount sets the "correct_count" field.
+func (m *BossEncounterContributionMutation) SetCorrectCount(i int) {
+	m.correct_count = &i
+	m.addcorrect_count = nil
+}
+
+// CorrectCount returns the value of the "correct_count" field in the mutation.
+func (m *BossEncounterContributionMutation) CorrectCount() (r int, exists bool) {
+	v := m.correct_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCorrectCount returns the old "correct_count" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldCorrectCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCorrectCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCorrectCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCorrectCount: %w", err)
+	}
+	return oldValue.CorrectCount, nil
+}
+
+// AddCorrectCount adds i to the "correct_count" field.
+func (m *BossEncounterContributionMutation) AddCorrectCount(i int) {
+	if m.addcorrect_count != nil {
+		*m.addcorrect_count += i
+	} else {
+		m.addcorrect_count = &i
+	}
+}
+
+// AddedCorrectCount returns the value that was added to the "correct_count" field in this mutation.
+func (m *BossEncounterContributionMutation) AddedCorrectCount() (r int, exists bool) {
+	v := m.addcorrect_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCorrectCount resets all changes to the "correct_count" field.
+func (m *BossEncounterContributionMutation) ResetCorrectCount() {
+	m.correct_count = nil
+	m.addcorrect_count = nil
+}
+
+// SetActivitiesCompleted sets the "activities_completed" field.
+func (m *BossEncounterContributionMutation) SetActivitiesCompleted(i int) {
+	m.activities_completed = &i
+	m.addactivities_completed = nil
+}
+
+// ActivitiesCompleted returns the value of the "activities_completed" field in the mutation.
+func (m *BossEncounterContributionMutation) ActivitiesCompleted() (r int, exists bool) {
+	v := m.activities_completed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActivitiesCompleted returns the old "activities_completed" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldActivitiesCompleted(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActivitiesCompleted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActivitiesCompleted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActivitiesCompleted: %w", err)
+	}
+	return oldValue.ActivitiesCompleted, nil
+}
+
+// AddActivitiesCompleted adds i to the "activities_completed" field.
+func (m *BossEncounterContributionMutation) AddActivitiesCompleted(i int) {
+	if m.addactivities_completed != nil {
+		*m.addactivities_completed += i
+	} else {
+		m.addactivities_completed = &i
+	}
+}
+
+// AddedActivitiesCompleted returns the value that was added to the "activities_completed" field in this mutation.
+func (m *BossEncounterContributionMutation) AddedActivitiesCompleted() (r int, exists bool) {
+	v := m.addactivities_completed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetActivitiesCompleted resets all changes to the "activities_completed" field.
+func (m *BossEncounterContributionMutation) ResetActivitiesCompleted() {
+	m.activities_completed = nil
+	m.addactivities_completed = nil
+}
+
+// SetContributionPct sets the "contribution_pct" field.
+func (m *BossEncounterContributionMutation) SetContributionPct(f float64) {
+	m.contribution_pct = &f
+	m.addcontribution_pct = nil
+}
+
+// ContributionPct returns the value of the "contribution_pct" field in the mutation.
+func (m *BossEncounterContributionMutation) ContributionPct() (r float64, exists bool) {
+	v := m.contribution_pct
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContributionPct returns the old "contribution_pct" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldContributionPct(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContributionPct is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContributionPct requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContributionPct: %w", err)
+	}
+	return oldValue.ContributionPct, nil
+}
+
+// AddContributionPct adds f to the "contribution_pct" field.
+func (m *BossEncounterContributionMutation) AddContributionPct(f float64) {
+	if m.addcontribution_pct != nil {
+		*m.addcontribution_pct += f
+	} else {
+		m.addcontribution_pct = &f
+	}
+}
+
+// AddedContributionPct returns the value that was added to the "contribution_pct" field in this mutation.
+func (m *BossEncounterContributionMutation) AddedContributionPct() (r float64, exists bool) {
+	v := m.addcontribution_pct
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetContributionPct resets all changes to the "contribution_pct" field.
+func (m *BossEncounterContributionMutation) ResetContributionPct() {
+	m.contribution_pct = nil
+	m.addcontribution_pct = nil
+}
+
+// SetEligible sets the "eligible" field.
+func (m *BossEncounterContributionMutation) SetEligible(b bool) {
+	m.eligible = &b
+}
+
+// Eligible returns the value of the "eligible" field in the mutation.
+func (m *BossEncounterContributionMutation) Eligible() (r bool, exists bool) {
+	v := m.eligible
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEligible returns the old "eligible" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldEligible(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEligible is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEligible requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEligible: %w", err)
+	}
+	return oldValue.Eligible, nil
+}
+
+// ResetEligible resets all changes to the "eligible" field.
+func (m *BossEncounterContributionMutation) ResetEligible() {
+	m.eligible = nil
+}
+
+// SetCleared sets the "cleared" field.
+func (m *BossEncounterContributionMutation) SetCleared(b bool) {
+	m.cleared = &b
+}
+
+// Cleared returns the value of the "cleared" field in the mutation.
+func (m *BossEncounterContributionMutation) Cleared() (r bool, exists bool) {
+	v := m.cleared
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCleared returns the old "cleared" field's value of the BossEncounterContribution entity.
+// If the BossEncounterContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterContributionMutation) OldCleared(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCleared is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCleared requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCleared: %w", err)
+	}
+	return oldValue.Cleared, nil
+}
+
+// ResetCleared resets all changes to the "cleared" field.
+func (m *BossEncounterContributionMutation) ResetCleared() {
+	m.cleared = nil
+}
+
+// Where appends a list predicates to the BossEncounterContributionMutation builder.
+func (m *BossEncounterContributionMutation) Where(ps ...predicate.BossEncounterContribution) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BossEncounterContributionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BossEncounterContributionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BossEncounterContribution, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BossEncounterContributionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BossEncounterContributionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BossEncounterContribution).
+func (m *BossEncounterContributionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BossEncounterContributionMutation) Fields() []string {
+	fields := make([]string, 0, 17)
+	if m.tenant_id != nil {
+		fields = append(fields, bossencountercontribution.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, bossencountercontribution.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, bossencountercontribution.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, bossencountercontribution.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, bossencountercontribution.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, bossencountercontribution.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, bossencountercontribution.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, bossencountercontribution.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, bossencountercontribution.FieldVersion)
+	}
+	if m.encounter_id != nil {
+		fields = append(fields, bossencountercontribution.FieldEncounterID)
+	}
+	if m.student_id != nil {
+		fields = append(fields, bossencountercontribution.FieldStudentID)
+	}
+	if m.phase_id != nil {
+		fields = append(fields, bossencountercontribution.FieldPhaseID)
+	}
+	if m.correct_count != nil {
+		fields = append(fields, bossencountercontribution.FieldCorrectCount)
+	}
+	if m.activities_completed != nil {
+		fields = append(fields, bossencountercontribution.FieldActivitiesCompleted)
+	}
+	if m.contribution_pct != nil {
+		fields = append(fields, bossencountercontribution.FieldContributionPct)
+	}
+	if m.eligible != nil {
+		fields = append(fields, bossencountercontribution.FieldEligible)
+	}
+	if m.cleared != nil {
+		fields = append(fields, bossencountercontribution.FieldCleared)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BossEncounterContributionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case bossencountercontribution.FieldTenantID:
+		return m.TenantID()
+	case bossencountercontribution.FieldCreatedAt:
+		return m.CreatedAt()
+	case bossencountercontribution.FieldCreatedBy:
+		return m.CreatedBy()
+	case bossencountercontribution.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case bossencountercontribution.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case bossencountercontribution.FieldDeletedAt:
+		return m.DeletedAt()
+	case bossencountercontribution.FieldDeletedBy:
+		return m.DeletedBy()
+	case bossencountercontribution.FieldDeleteReason:
+		return m.DeleteReason()
+	case bossencountercontribution.FieldVersion:
+		return m.Version()
+	case bossencountercontribution.FieldEncounterID:
+		return m.EncounterID()
+	case bossencountercontribution.FieldStudentID:
+		return m.StudentID()
+	case bossencountercontribution.FieldPhaseID:
+		return m.PhaseID()
+	case bossencountercontribution.FieldCorrectCount:
+		return m.CorrectCount()
+	case bossencountercontribution.FieldActivitiesCompleted:
+		return m.ActivitiesCompleted()
+	case bossencountercontribution.FieldContributionPct:
+		return m.ContributionPct()
+	case bossencountercontribution.FieldEligible:
+		return m.Eligible()
+	case bossencountercontribution.FieldCleared:
+		return m.Cleared()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BossEncounterContributionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case bossencountercontribution.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case bossencountercontribution.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case bossencountercontribution.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case bossencountercontribution.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case bossencountercontribution.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case bossencountercontribution.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case bossencountercontribution.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case bossencountercontribution.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case bossencountercontribution.FieldVersion:
+		return m.OldVersion(ctx)
+	case bossencountercontribution.FieldEncounterID:
+		return m.OldEncounterID(ctx)
+	case bossencountercontribution.FieldStudentID:
+		return m.OldStudentID(ctx)
+	case bossencountercontribution.FieldPhaseID:
+		return m.OldPhaseID(ctx)
+	case bossencountercontribution.FieldCorrectCount:
+		return m.OldCorrectCount(ctx)
+	case bossencountercontribution.FieldActivitiesCompleted:
+		return m.OldActivitiesCompleted(ctx)
+	case bossencountercontribution.FieldContributionPct:
+		return m.OldContributionPct(ctx)
+	case bossencountercontribution.FieldEligible:
+		return m.OldEligible(ctx)
+	case bossencountercontribution.FieldCleared:
+		return m.OldCleared(ctx)
+	}
+	return nil, fmt.Errorf("unknown BossEncounterContribution field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossEncounterContributionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case bossencountercontribution.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case bossencountercontribution.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case bossencountercontribution.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case bossencountercontribution.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case bossencountercontribution.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case bossencountercontribution.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case bossencountercontribution.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case bossencountercontribution.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case bossencountercontribution.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case bossencountercontribution.FieldEncounterID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEncounterID(v)
+		return nil
+	case bossencountercontribution.FieldStudentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStudentID(v)
+		return nil
+	case bossencountercontribution.FieldPhaseID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPhaseID(v)
+		return nil
+	case bossencountercontribution.FieldCorrectCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCorrectCount(v)
+		return nil
+	case bossencountercontribution.FieldActivitiesCompleted:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActivitiesCompleted(v)
+		return nil
+	case bossencountercontribution.FieldContributionPct:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContributionPct(v)
+		return nil
+	case bossencountercontribution.FieldEligible:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEligible(v)
+		return nil
+	case bossencountercontribution.FieldCleared:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCleared(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossEncounterContribution field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BossEncounterContributionMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, bossencountercontribution.FieldVersion)
+	}
+	if m.addcorrect_count != nil {
+		fields = append(fields, bossencountercontribution.FieldCorrectCount)
+	}
+	if m.addactivities_completed != nil {
+		fields = append(fields, bossencountercontribution.FieldActivitiesCompleted)
+	}
+	if m.addcontribution_pct != nil {
+		fields = append(fields, bossencountercontribution.FieldContributionPct)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BossEncounterContributionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case bossencountercontribution.FieldVersion:
+		return m.AddedVersion()
+	case bossencountercontribution.FieldCorrectCount:
+		return m.AddedCorrectCount()
+	case bossencountercontribution.FieldActivitiesCompleted:
+		return m.AddedActivitiesCompleted()
+	case bossencountercontribution.FieldContributionPct:
+		return m.AddedContributionPct()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossEncounterContributionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case bossencountercontribution.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case bossencountercontribution.FieldCorrectCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCorrectCount(v)
+		return nil
+	case bossencountercontribution.FieldActivitiesCompleted:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddActivitiesCompleted(v)
+		return nil
+	case bossencountercontribution.FieldContributionPct:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddContributionPct(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossEncounterContribution numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BossEncounterContributionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(bossencountercontribution.FieldCreatedBy) {
+		fields = append(fields, bossencountercontribution.FieldCreatedBy)
+	}
+	if m.FieldCleared(bossencountercontribution.FieldUpdatedBy) {
+		fields = append(fields, bossencountercontribution.FieldUpdatedBy)
+	}
+	if m.FieldCleared(bossencountercontribution.FieldDeletedAt) {
+		fields = append(fields, bossencountercontribution.FieldDeletedAt)
+	}
+	if m.FieldCleared(bossencountercontribution.FieldDeletedBy) {
+		fields = append(fields, bossencountercontribution.FieldDeletedBy)
+	}
+	if m.FieldCleared(bossencountercontribution.FieldDeleteReason) {
+		fields = append(fields, bossencountercontribution.FieldDeleteReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BossEncounterContributionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BossEncounterContributionMutation) ClearField(name string) error {
+	switch name {
+	case bossencountercontribution.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case bossencountercontribution.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case bossencountercontribution.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case bossencountercontribution.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case bossencountercontribution.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	}
+	return fmt.Errorf("unknown BossEncounterContribution nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BossEncounterContributionMutation) ResetField(name string) error {
+	switch name {
+	case bossencountercontribution.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case bossencountercontribution.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case bossencountercontribution.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case bossencountercontribution.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case bossencountercontribution.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case bossencountercontribution.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case bossencountercontribution.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case bossencountercontribution.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case bossencountercontribution.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case bossencountercontribution.FieldEncounterID:
+		m.ResetEncounterID()
+		return nil
+	case bossencountercontribution.FieldStudentID:
+		m.ResetStudentID()
+		return nil
+	case bossencountercontribution.FieldPhaseID:
+		m.ResetPhaseID()
+		return nil
+	case bossencountercontribution.FieldCorrectCount:
+		m.ResetCorrectCount()
+		return nil
+	case bossencountercontribution.FieldActivitiesCompleted:
+		m.ResetActivitiesCompleted()
+		return nil
+	case bossencountercontribution.FieldContributionPct:
+		m.ResetContributionPct()
+		return nil
+	case bossencountercontribution.FieldEligible:
+		m.ResetEligible()
+		return nil
+	case bossencountercontribution.FieldCleared:
+		m.ResetCleared()
+		return nil
+	}
+	return fmt.Errorf("unknown BossEncounterContribution field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BossEncounterContributionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BossEncounterContributionMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BossEncounterContributionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BossEncounterContributionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BossEncounterContributionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BossEncounterContributionMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BossEncounterContributionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BossEncounterContribution unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BossEncounterContributionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BossEncounterContribution edge %s", name)
+}
+
+// BossEncounterMemberMutation represents an operation that mutates the BossEncounterMember nodes in the graph.
+type BossEncounterMemberMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	tenant_id       *uuid.UUID
+	created_at      *time.Time
+	created_by      *uuid.UUID
+	updated_at      *time.Time
+	updated_by      *uuid.UUID
+	deleted_at      *time.Time
+	deleted_by      *uuid.UUID
+	delete_reason   *string
+	version         *int64
+	addversion      *int64
+	encounter_id    *uuid.UUID
+	student_id      *uuid.UUID
+	school_id       *uuid.UUID
+	grade_level     *int
+	addgrade_level  *int
+	join_order      *int
+	addjoin_order   *int
+	ready           *bool
+	joined_at       *time.Time
+	disconnected_at *time.Time
+	left_at         *time.Time
+	left_reason     *string
+	eligible        *bool
+	first_defeat    *bool
+	clearedFields   map[string]struct{}
+	done            bool
+	oldValue        func(context.Context) (*BossEncounterMember, error)
+	predicates      []predicate.BossEncounterMember
+}
+
+var _ ent.Mutation = (*BossEncounterMemberMutation)(nil)
+
+// bossencountermemberOption allows management of the mutation configuration using functional options.
+type bossencountermemberOption func(*BossEncounterMemberMutation)
+
+// newBossEncounterMemberMutation creates new mutation for the BossEncounterMember entity.
+func newBossEncounterMemberMutation(c config, op Op, opts ...bossencountermemberOption) *BossEncounterMemberMutation {
+	m := &BossEncounterMemberMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBossEncounterMember,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBossEncounterMemberID sets the ID field of the mutation.
+func withBossEncounterMemberID(id uuid.UUID) bossencountermemberOption {
+	return func(m *BossEncounterMemberMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BossEncounterMember
+		)
+		m.oldValue = func(ctx context.Context) (*BossEncounterMember, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BossEncounterMember.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBossEncounterMember sets the old BossEncounterMember of the mutation.
+func withBossEncounterMember(node *BossEncounterMember) bossencountermemberOption {
+	return func(m *BossEncounterMemberMutation) {
+		m.oldValue = func(context.Context) (*BossEncounterMember, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BossEncounterMemberMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BossEncounterMemberMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of BossEncounterMember entities.
+func (m *BossEncounterMemberMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BossEncounterMemberMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BossEncounterMemberMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BossEncounterMember.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *BossEncounterMemberMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *BossEncounterMemberMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *BossEncounterMemberMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BossEncounterMemberMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BossEncounterMemberMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BossEncounterMemberMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *BossEncounterMemberMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *BossEncounterMemberMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *BossEncounterMemberMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[bossencountermember.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *BossEncounterMemberMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[bossencountermember.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *BossEncounterMemberMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, bossencountermember.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BossEncounterMemberMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BossEncounterMemberMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BossEncounterMemberMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *BossEncounterMemberMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *BossEncounterMemberMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *BossEncounterMemberMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[bossencountermember.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *BossEncounterMemberMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[bossencountermember.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *BossEncounterMemberMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, bossencountermember.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *BossEncounterMemberMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *BossEncounterMemberMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *BossEncounterMemberMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[bossencountermember.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *BossEncounterMemberMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[bossencountermember.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *BossEncounterMemberMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, bossencountermember.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *BossEncounterMemberMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *BossEncounterMemberMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *BossEncounterMemberMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[bossencountermember.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *BossEncounterMemberMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[bossencountermember.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *BossEncounterMemberMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, bossencountermember.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *BossEncounterMemberMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *BossEncounterMemberMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *BossEncounterMemberMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[bossencountermember.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *BossEncounterMemberMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[bossencountermember.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *BossEncounterMemberMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, bossencountermember.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *BossEncounterMemberMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *BossEncounterMemberMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *BossEncounterMemberMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *BossEncounterMemberMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *BossEncounterMemberMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetEncounterID sets the "encounter_id" field.
+func (m *BossEncounterMemberMutation) SetEncounterID(u uuid.UUID) {
+	m.encounter_id = &u
+}
+
+// EncounterID returns the value of the "encounter_id" field in the mutation.
+func (m *BossEncounterMemberMutation) EncounterID() (r uuid.UUID, exists bool) {
+	v := m.encounter_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEncounterID returns the old "encounter_id" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldEncounterID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEncounterID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEncounterID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEncounterID: %w", err)
+	}
+	return oldValue.EncounterID, nil
+}
+
+// ResetEncounterID resets all changes to the "encounter_id" field.
+func (m *BossEncounterMemberMutation) ResetEncounterID() {
+	m.encounter_id = nil
+}
+
+// SetStudentID sets the "student_id" field.
+func (m *BossEncounterMemberMutation) SetStudentID(u uuid.UUID) {
+	m.student_id = &u
+}
+
+// StudentID returns the value of the "student_id" field in the mutation.
+func (m *BossEncounterMemberMutation) StudentID() (r uuid.UUID, exists bool) {
+	v := m.student_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStudentID returns the old "student_id" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldStudentID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStudentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStudentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStudentID: %w", err)
+	}
+	return oldValue.StudentID, nil
+}
+
+// ResetStudentID resets all changes to the "student_id" field.
+func (m *BossEncounterMemberMutation) ResetStudentID() {
+	m.student_id = nil
+}
+
+// SetSchoolID sets the "school_id" field.
+func (m *BossEncounterMemberMutation) SetSchoolID(u uuid.UUID) {
+	m.school_id = &u
+}
+
+// SchoolID returns the value of the "school_id" field in the mutation.
+func (m *BossEncounterMemberMutation) SchoolID() (r uuid.UUID, exists bool) {
+	v := m.school_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchoolID returns the old "school_id" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldSchoolID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchoolID: %w", err)
+	}
+	return oldValue.SchoolID, nil
+}
+
+// ResetSchoolID resets all changes to the "school_id" field.
+func (m *BossEncounterMemberMutation) ResetSchoolID() {
+	m.school_id = nil
+}
+
+// SetGradeLevel sets the "grade_level" field.
+func (m *BossEncounterMemberMutation) SetGradeLevel(i int) {
+	m.grade_level = &i
+	m.addgrade_level = nil
+}
+
+// GradeLevel returns the value of the "grade_level" field in the mutation.
+func (m *BossEncounterMemberMutation) GradeLevel() (r int, exists bool) {
+	v := m.grade_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGradeLevel returns the old "grade_level" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldGradeLevel(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGradeLevel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGradeLevel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGradeLevel: %w", err)
+	}
+	return oldValue.GradeLevel, nil
+}
+
+// AddGradeLevel adds i to the "grade_level" field.
+func (m *BossEncounterMemberMutation) AddGradeLevel(i int) {
+	if m.addgrade_level != nil {
+		*m.addgrade_level += i
+	} else {
+		m.addgrade_level = &i
+	}
+}
+
+// AddedGradeLevel returns the value that was added to the "grade_level" field in this mutation.
+func (m *BossEncounterMemberMutation) AddedGradeLevel() (r int, exists bool) {
+	v := m.addgrade_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetGradeLevel resets all changes to the "grade_level" field.
+func (m *BossEncounterMemberMutation) ResetGradeLevel() {
+	m.grade_level = nil
+	m.addgrade_level = nil
+}
+
+// SetJoinOrder sets the "join_order" field.
+func (m *BossEncounterMemberMutation) SetJoinOrder(i int) {
+	m.join_order = &i
+	m.addjoin_order = nil
+}
+
+// JoinOrder returns the value of the "join_order" field in the mutation.
+func (m *BossEncounterMemberMutation) JoinOrder() (r int, exists bool) {
+	v := m.join_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJoinOrder returns the old "join_order" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldJoinOrder(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJoinOrder is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJoinOrder requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJoinOrder: %w", err)
+	}
+	return oldValue.JoinOrder, nil
+}
+
+// AddJoinOrder adds i to the "join_order" field.
+func (m *BossEncounterMemberMutation) AddJoinOrder(i int) {
+	if m.addjoin_order != nil {
+		*m.addjoin_order += i
+	} else {
+		m.addjoin_order = &i
+	}
+}
+
+// AddedJoinOrder returns the value that was added to the "join_order" field in this mutation.
+func (m *BossEncounterMemberMutation) AddedJoinOrder() (r int, exists bool) {
+	v := m.addjoin_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetJoinOrder resets all changes to the "join_order" field.
+func (m *BossEncounterMemberMutation) ResetJoinOrder() {
+	m.join_order = nil
+	m.addjoin_order = nil
+}
+
+// SetReady sets the "ready" field.
+func (m *BossEncounterMemberMutation) SetReady(b bool) {
+	m.ready = &b
+}
+
+// Ready returns the value of the "ready" field in the mutation.
+func (m *BossEncounterMemberMutation) Ready() (r bool, exists bool) {
+	v := m.ready
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReady returns the old "ready" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldReady(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReady is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReady requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReady: %w", err)
+	}
+	return oldValue.Ready, nil
+}
+
+// ResetReady resets all changes to the "ready" field.
+func (m *BossEncounterMemberMutation) ResetReady() {
+	m.ready = nil
+}
+
+// SetJoinedAt sets the "joined_at" field.
+func (m *BossEncounterMemberMutation) SetJoinedAt(t time.Time) {
+	m.joined_at = &t
+}
+
+// JoinedAt returns the value of the "joined_at" field in the mutation.
+func (m *BossEncounterMemberMutation) JoinedAt() (r time.Time, exists bool) {
+	v := m.joined_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJoinedAt returns the old "joined_at" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldJoinedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJoinedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJoinedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJoinedAt: %w", err)
+	}
+	return oldValue.JoinedAt, nil
+}
+
+// ResetJoinedAt resets all changes to the "joined_at" field.
+func (m *BossEncounterMemberMutation) ResetJoinedAt() {
+	m.joined_at = nil
+}
+
+// SetDisconnectedAt sets the "disconnected_at" field.
+func (m *BossEncounterMemberMutation) SetDisconnectedAt(t time.Time) {
+	m.disconnected_at = &t
+}
+
+// DisconnectedAt returns the value of the "disconnected_at" field in the mutation.
+func (m *BossEncounterMemberMutation) DisconnectedAt() (r time.Time, exists bool) {
+	v := m.disconnected_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDisconnectedAt returns the old "disconnected_at" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldDisconnectedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDisconnectedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDisconnectedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDisconnectedAt: %w", err)
+	}
+	return oldValue.DisconnectedAt, nil
+}
+
+// ClearDisconnectedAt clears the value of the "disconnected_at" field.
+func (m *BossEncounterMemberMutation) ClearDisconnectedAt() {
+	m.disconnected_at = nil
+	m.clearedFields[bossencountermember.FieldDisconnectedAt] = struct{}{}
+}
+
+// DisconnectedAtCleared returns if the "disconnected_at" field was cleared in this mutation.
+func (m *BossEncounterMemberMutation) DisconnectedAtCleared() bool {
+	_, ok := m.clearedFields[bossencountermember.FieldDisconnectedAt]
+	return ok
+}
+
+// ResetDisconnectedAt resets all changes to the "disconnected_at" field.
+func (m *BossEncounterMemberMutation) ResetDisconnectedAt() {
+	m.disconnected_at = nil
+	delete(m.clearedFields, bossencountermember.FieldDisconnectedAt)
+}
+
+// SetLeftAt sets the "left_at" field.
+func (m *BossEncounterMemberMutation) SetLeftAt(t time.Time) {
+	m.left_at = &t
+}
+
+// LeftAt returns the value of the "left_at" field in the mutation.
+func (m *BossEncounterMemberMutation) LeftAt() (r time.Time, exists bool) {
+	v := m.left_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeftAt returns the old "left_at" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldLeftAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeftAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeftAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeftAt: %w", err)
+	}
+	return oldValue.LeftAt, nil
+}
+
+// ClearLeftAt clears the value of the "left_at" field.
+func (m *BossEncounterMemberMutation) ClearLeftAt() {
+	m.left_at = nil
+	m.clearedFields[bossencountermember.FieldLeftAt] = struct{}{}
+}
+
+// LeftAtCleared returns if the "left_at" field was cleared in this mutation.
+func (m *BossEncounterMemberMutation) LeftAtCleared() bool {
+	_, ok := m.clearedFields[bossencountermember.FieldLeftAt]
+	return ok
+}
+
+// ResetLeftAt resets all changes to the "left_at" field.
+func (m *BossEncounterMemberMutation) ResetLeftAt() {
+	m.left_at = nil
+	delete(m.clearedFields, bossencountermember.FieldLeftAt)
+}
+
+// SetLeftReason sets the "left_reason" field.
+func (m *BossEncounterMemberMutation) SetLeftReason(s string) {
+	m.left_reason = &s
+}
+
+// LeftReason returns the value of the "left_reason" field in the mutation.
+func (m *BossEncounterMemberMutation) LeftReason() (r string, exists bool) {
+	v := m.left_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeftReason returns the old "left_reason" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldLeftReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeftReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeftReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeftReason: %w", err)
+	}
+	return oldValue.LeftReason, nil
+}
+
+// ClearLeftReason clears the value of the "left_reason" field.
+func (m *BossEncounterMemberMutation) ClearLeftReason() {
+	m.left_reason = nil
+	m.clearedFields[bossencountermember.FieldLeftReason] = struct{}{}
+}
+
+// LeftReasonCleared returns if the "left_reason" field was cleared in this mutation.
+func (m *BossEncounterMemberMutation) LeftReasonCleared() bool {
+	_, ok := m.clearedFields[bossencountermember.FieldLeftReason]
+	return ok
+}
+
+// ResetLeftReason resets all changes to the "left_reason" field.
+func (m *BossEncounterMemberMutation) ResetLeftReason() {
+	m.left_reason = nil
+	delete(m.clearedFields, bossencountermember.FieldLeftReason)
+}
+
+// SetEligible sets the "eligible" field.
+func (m *BossEncounterMemberMutation) SetEligible(b bool) {
+	m.eligible = &b
+}
+
+// Eligible returns the value of the "eligible" field in the mutation.
+func (m *BossEncounterMemberMutation) Eligible() (r bool, exists bool) {
+	v := m.eligible
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEligible returns the old "eligible" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldEligible(ctx context.Context) (v *bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEligible is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEligible requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEligible: %w", err)
+	}
+	return oldValue.Eligible, nil
+}
+
+// ClearEligible clears the value of the "eligible" field.
+func (m *BossEncounterMemberMutation) ClearEligible() {
+	m.eligible = nil
+	m.clearedFields[bossencountermember.FieldEligible] = struct{}{}
+}
+
+// EligibleCleared returns if the "eligible" field was cleared in this mutation.
+func (m *BossEncounterMemberMutation) EligibleCleared() bool {
+	_, ok := m.clearedFields[bossencountermember.FieldEligible]
+	return ok
+}
+
+// ResetEligible resets all changes to the "eligible" field.
+func (m *BossEncounterMemberMutation) ResetEligible() {
+	m.eligible = nil
+	delete(m.clearedFields, bossencountermember.FieldEligible)
+}
+
+// SetFirstDefeat sets the "first_defeat" field.
+func (m *BossEncounterMemberMutation) SetFirstDefeat(b bool) {
+	m.first_defeat = &b
+}
+
+// FirstDefeat returns the value of the "first_defeat" field in the mutation.
+func (m *BossEncounterMemberMutation) FirstDefeat() (r bool, exists bool) {
+	v := m.first_defeat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFirstDefeat returns the old "first_defeat" field's value of the BossEncounterMember entity.
+// If the BossEncounterMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossEncounterMemberMutation) OldFirstDefeat(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFirstDefeat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFirstDefeat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFirstDefeat: %w", err)
+	}
+	return oldValue.FirstDefeat, nil
+}
+
+// ResetFirstDefeat resets all changes to the "first_defeat" field.
+func (m *BossEncounterMemberMutation) ResetFirstDefeat() {
+	m.first_defeat = nil
+}
+
+// Where appends a list predicates to the BossEncounterMemberMutation builder.
+func (m *BossEncounterMemberMutation) Where(ps ...predicate.BossEncounterMember) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BossEncounterMemberMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BossEncounterMemberMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BossEncounterMember, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BossEncounterMemberMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BossEncounterMemberMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BossEncounterMember).
+func (m *BossEncounterMemberMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BossEncounterMemberMutation) Fields() []string {
+	fields := make([]string, 0, 21)
+	if m.tenant_id != nil {
+		fields = append(fields, bossencountermember.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, bossencountermember.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, bossencountermember.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, bossencountermember.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, bossencountermember.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, bossencountermember.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, bossencountermember.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, bossencountermember.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, bossencountermember.FieldVersion)
+	}
+	if m.encounter_id != nil {
+		fields = append(fields, bossencountermember.FieldEncounterID)
+	}
+	if m.student_id != nil {
+		fields = append(fields, bossencountermember.FieldStudentID)
+	}
+	if m.school_id != nil {
+		fields = append(fields, bossencountermember.FieldSchoolID)
+	}
+	if m.grade_level != nil {
+		fields = append(fields, bossencountermember.FieldGradeLevel)
+	}
+	if m.join_order != nil {
+		fields = append(fields, bossencountermember.FieldJoinOrder)
+	}
+	if m.ready != nil {
+		fields = append(fields, bossencountermember.FieldReady)
+	}
+	if m.joined_at != nil {
+		fields = append(fields, bossencountermember.FieldJoinedAt)
+	}
+	if m.disconnected_at != nil {
+		fields = append(fields, bossencountermember.FieldDisconnectedAt)
+	}
+	if m.left_at != nil {
+		fields = append(fields, bossencountermember.FieldLeftAt)
+	}
+	if m.left_reason != nil {
+		fields = append(fields, bossencountermember.FieldLeftReason)
+	}
+	if m.eligible != nil {
+		fields = append(fields, bossencountermember.FieldEligible)
+	}
+	if m.first_defeat != nil {
+		fields = append(fields, bossencountermember.FieldFirstDefeat)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BossEncounterMemberMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case bossencountermember.FieldTenantID:
+		return m.TenantID()
+	case bossencountermember.FieldCreatedAt:
+		return m.CreatedAt()
+	case bossencountermember.FieldCreatedBy:
+		return m.CreatedBy()
+	case bossencountermember.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case bossencountermember.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case bossencountermember.FieldDeletedAt:
+		return m.DeletedAt()
+	case bossencountermember.FieldDeletedBy:
+		return m.DeletedBy()
+	case bossencountermember.FieldDeleteReason:
+		return m.DeleteReason()
+	case bossencountermember.FieldVersion:
+		return m.Version()
+	case bossencountermember.FieldEncounterID:
+		return m.EncounterID()
+	case bossencountermember.FieldStudentID:
+		return m.StudentID()
+	case bossencountermember.FieldSchoolID:
+		return m.SchoolID()
+	case bossencountermember.FieldGradeLevel:
+		return m.GradeLevel()
+	case bossencountermember.FieldJoinOrder:
+		return m.JoinOrder()
+	case bossencountermember.FieldReady:
+		return m.Ready()
+	case bossencountermember.FieldJoinedAt:
+		return m.JoinedAt()
+	case bossencountermember.FieldDisconnectedAt:
+		return m.DisconnectedAt()
+	case bossencountermember.FieldLeftAt:
+		return m.LeftAt()
+	case bossencountermember.FieldLeftReason:
+		return m.LeftReason()
+	case bossencountermember.FieldEligible:
+		return m.Eligible()
+	case bossencountermember.FieldFirstDefeat:
+		return m.FirstDefeat()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BossEncounterMemberMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case bossencountermember.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case bossencountermember.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case bossencountermember.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case bossencountermember.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case bossencountermember.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case bossencountermember.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case bossencountermember.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case bossencountermember.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case bossencountermember.FieldVersion:
+		return m.OldVersion(ctx)
+	case bossencountermember.FieldEncounterID:
+		return m.OldEncounterID(ctx)
+	case bossencountermember.FieldStudentID:
+		return m.OldStudentID(ctx)
+	case bossencountermember.FieldSchoolID:
+		return m.OldSchoolID(ctx)
+	case bossencountermember.FieldGradeLevel:
+		return m.OldGradeLevel(ctx)
+	case bossencountermember.FieldJoinOrder:
+		return m.OldJoinOrder(ctx)
+	case bossencountermember.FieldReady:
+		return m.OldReady(ctx)
+	case bossencountermember.FieldJoinedAt:
+		return m.OldJoinedAt(ctx)
+	case bossencountermember.FieldDisconnectedAt:
+		return m.OldDisconnectedAt(ctx)
+	case bossencountermember.FieldLeftAt:
+		return m.OldLeftAt(ctx)
+	case bossencountermember.FieldLeftReason:
+		return m.OldLeftReason(ctx)
+	case bossencountermember.FieldEligible:
+		return m.OldEligible(ctx)
+	case bossencountermember.FieldFirstDefeat:
+		return m.OldFirstDefeat(ctx)
+	}
+	return nil, fmt.Errorf("unknown BossEncounterMember field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossEncounterMemberMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case bossencountermember.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case bossencountermember.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case bossencountermember.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case bossencountermember.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case bossencountermember.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case bossencountermember.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case bossencountermember.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case bossencountermember.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case bossencountermember.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case bossencountermember.FieldEncounterID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEncounterID(v)
+		return nil
+	case bossencountermember.FieldStudentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStudentID(v)
+		return nil
+	case bossencountermember.FieldSchoolID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchoolID(v)
+		return nil
+	case bossencountermember.FieldGradeLevel:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGradeLevel(v)
+		return nil
+	case bossencountermember.FieldJoinOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJoinOrder(v)
+		return nil
+	case bossencountermember.FieldReady:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReady(v)
+		return nil
+	case bossencountermember.FieldJoinedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJoinedAt(v)
+		return nil
+	case bossencountermember.FieldDisconnectedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDisconnectedAt(v)
+		return nil
+	case bossencountermember.FieldLeftAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeftAt(v)
+		return nil
+	case bossencountermember.FieldLeftReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeftReason(v)
+		return nil
+	case bossencountermember.FieldEligible:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEligible(v)
+		return nil
+	case bossencountermember.FieldFirstDefeat:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFirstDefeat(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossEncounterMember field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BossEncounterMemberMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, bossencountermember.FieldVersion)
+	}
+	if m.addgrade_level != nil {
+		fields = append(fields, bossencountermember.FieldGradeLevel)
+	}
+	if m.addjoin_order != nil {
+		fields = append(fields, bossencountermember.FieldJoinOrder)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BossEncounterMemberMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case bossencountermember.FieldVersion:
+		return m.AddedVersion()
+	case bossencountermember.FieldGradeLevel:
+		return m.AddedGradeLevel()
+	case bossencountermember.FieldJoinOrder:
+		return m.AddedJoinOrder()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossEncounterMemberMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case bossencountermember.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case bossencountermember.FieldGradeLevel:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGradeLevel(v)
+		return nil
+	case bossencountermember.FieldJoinOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddJoinOrder(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossEncounterMember numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BossEncounterMemberMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(bossencountermember.FieldCreatedBy) {
+		fields = append(fields, bossencountermember.FieldCreatedBy)
+	}
+	if m.FieldCleared(bossencountermember.FieldUpdatedBy) {
+		fields = append(fields, bossencountermember.FieldUpdatedBy)
+	}
+	if m.FieldCleared(bossencountermember.FieldDeletedAt) {
+		fields = append(fields, bossencountermember.FieldDeletedAt)
+	}
+	if m.FieldCleared(bossencountermember.FieldDeletedBy) {
+		fields = append(fields, bossencountermember.FieldDeletedBy)
+	}
+	if m.FieldCleared(bossencountermember.FieldDeleteReason) {
+		fields = append(fields, bossencountermember.FieldDeleteReason)
+	}
+	if m.FieldCleared(bossencountermember.FieldDisconnectedAt) {
+		fields = append(fields, bossencountermember.FieldDisconnectedAt)
+	}
+	if m.FieldCleared(bossencountermember.FieldLeftAt) {
+		fields = append(fields, bossencountermember.FieldLeftAt)
+	}
+	if m.FieldCleared(bossencountermember.FieldLeftReason) {
+		fields = append(fields, bossencountermember.FieldLeftReason)
+	}
+	if m.FieldCleared(bossencountermember.FieldEligible) {
+		fields = append(fields, bossencountermember.FieldEligible)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BossEncounterMemberMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BossEncounterMemberMutation) ClearField(name string) error {
+	switch name {
+	case bossencountermember.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case bossencountermember.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case bossencountermember.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case bossencountermember.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case bossencountermember.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case bossencountermember.FieldDisconnectedAt:
+		m.ClearDisconnectedAt()
+		return nil
+	case bossencountermember.FieldLeftAt:
+		m.ClearLeftAt()
+		return nil
+	case bossencountermember.FieldLeftReason:
+		m.ClearLeftReason()
+		return nil
+	case bossencountermember.FieldEligible:
+		m.ClearEligible()
+		return nil
+	}
+	return fmt.Errorf("unknown BossEncounterMember nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BossEncounterMemberMutation) ResetField(name string) error {
+	switch name {
+	case bossencountermember.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case bossencountermember.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case bossencountermember.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case bossencountermember.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case bossencountermember.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case bossencountermember.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case bossencountermember.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case bossencountermember.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case bossencountermember.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case bossencountermember.FieldEncounterID:
+		m.ResetEncounterID()
+		return nil
+	case bossencountermember.FieldStudentID:
+		m.ResetStudentID()
+		return nil
+	case bossencountermember.FieldSchoolID:
+		m.ResetSchoolID()
+		return nil
+	case bossencountermember.FieldGradeLevel:
+		m.ResetGradeLevel()
+		return nil
+	case bossencountermember.FieldJoinOrder:
+		m.ResetJoinOrder()
+		return nil
+	case bossencountermember.FieldReady:
+		m.ResetReady()
+		return nil
+	case bossencountermember.FieldJoinedAt:
+		m.ResetJoinedAt()
+		return nil
+	case bossencountermember.FieldDisconnectedAt:
+		m.ResetDisconnectedAt()
+		return nil
+	case bossencountermember.FieldLeftAt:
+		m.ResetLeftAt()
+		return nil
+	case bossencountermember.FieldLeftReason:
+		m.ResetLeftReason()
+		return nil
+	case bossencountermember.FieldEligible:
+		m.ResetEligible()
+		return nil
+	case bossencountermember.FieldFirstDefeat:
+		m.ResetFirstDefeat()
+		return nil
+	}
+	return fmt.Errorf("unknown BossEncounterMember field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BossEncounterMemberMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BossEncounterMemberMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BossEncounterMemberMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BossEncounterMemberMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BossEncounterMemberMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BossEncounterMemberMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BossEncounterMemberMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BossEncounterMember unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BossEncounterMemberMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BossEncounterMember edge %s", name)
+}
+
+// BossPhasePlanMutation represents an operation that mutates the BossPhasePlan nodes in the graph.
+type BossPhasePlanMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	tenant_id      *uuid.UUID
+	created_at     *time.Time
+	created_by     *uuid.UUID
+	updated_at     *time.Time
+	updated_by     *uuid.UUID
+	deleted_at     *time.Time
+	deleted_by     *uuid.UUID
+	delete_reason  *string
+	version        *int64
+	addversion     *int64
+	encounter_id   *uuid.UUID
+	phase_id       *string
+	retry_no       *int
+	addretry_no    *int
+	student_id     *uuid.UUID
+	requirement_id *string
+	plan_id        *uuid.UUID
+	item_count     *int
+	additem_count  *int
+	items          *[]map[string]interface{}
+	appenditems    []map[string]interface{}
+	expires_at     *time.Time
+	clearedFields  map[string]struct{}
+	done           bool
+	oldValue       func(context.Context) (*BossPhasePlan, error)
+	predicates     []predicate.BossPhasePlan
+}
+
+var _ ent.Mutation = (*BossPhasePlanMutation)(nil)
+
+// bossphaseplanOption allows management of the mutation configuration using functional options.
+type bossphaseplanOption func(*BossPhasePlanMutation)
+
+// newBossPhasePlanMutation creates new mutation for the BossPhasePlan entity.
+func newBossPhasePlanMutation(c config, op Op, opts ...bossphaseplanOption) *BossPhasePlanMutation {
+	m := &BossPhasePlanMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBossPhasePlan,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBossPhasePlanID sets the ID field of the mutation.
+func withBossPhasePlanID(id uuid.UUID) bossphaseplanOption {
+	return func(m *BossPhasePlanMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BossPhasePlan
+		)
+		m.oldValue = func(ctx context.Context) (*BossPhasePlan, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BossPhasePlan.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBossPhasePlan sets the old BossPhasePlan of the mutation.
+func withBossPhasePlan(node *BossPhasePlan) bossphaseplanOption {
+	return func(m *BossPhasePlanMutation) {
+		m.oldValue = func(context.Context) (*BossPhasePlan, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BossPhasePlanMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BossPhasePlanMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of BossPhasePlan entities.
+func (m *BossPhasePlanMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BossPhasePlanMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BossPhasePlanMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BossPhasePlan.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *BossPhasePlanMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *BossPhasePlanMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *BossPhasePlanMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BossPhasePlanMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BossPhasePlanMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BossPhasePlanMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *BossPhasePlanMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *BossPhasePlanMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *BossPhasePlanMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[bossphaseplan.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *BossPhasePlanMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[bossphaseplan.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *BossPhasePlanMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, bossphaseplan.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BossPhasePlanMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BossPhasePlanMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BossPhasePlanMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *BossPhasePlanMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *BossPhasePlanMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *BossPhasePlanMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[bossphaseplan.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *BossPhasePlanMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[bossphaseplan.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *BossPhasePlanMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, bossphaseplan.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *BossPhasePlanMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *BossPhasePlanMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *BossPhasePlanMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[bossphaseplan.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *BossPhasePlanMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[bossphaseplan.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *BossPhasePlanMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, bossphaseplan.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *BossPhasePlanMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *BossPhasePlanMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *BossPhasePlanMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[bossphaseplan.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *BossPhasePlanMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[bossphaseplan.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *BossPhasePlanMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, bossphaseplan.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *BossPhasePlanMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *BossPhasePlanMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *BossPhasePlanMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[bossphaseplan.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *BossPhasePlanMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[bossphaseplan.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *BossPhasePlanMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, bossphaseplan.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *BossPhasePlanMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *BossPhasePlanMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *BossPhasePlanMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *BossPhasePlanMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *BossPhasePlanMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetEncounterID sets the "encounter_id" field.
+func (m *BossPhasePlanMutation) SetEncounterID(u uuid.UUID) {
+	m.encounter_id = &u
+}
+
+// EncounterID returns the value of the "encounter_id" field in the mutation.
+func (m *BossPhasePlanMutation) EncounterID() (r uuid.UUID, exists bool) {
+	v := m.encounter_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEncounterID returns the old "encounter_id" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldEncounterID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEncounterID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEncounterID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEncounterID: %w", err)
+	}
+	return oldValue.EncounterID, nil
+}
+
+// ResetEncounterID resets all changes to the "encounter_id" field.
+func (m *BossPhasePlanMutation) ResetEncounterID() {
+	m.encounter_id = nil
+}
+
+// SetPhaseID sets the "phase_id" field.
+func (m *BossPhasePlanMutation) SetPhaseID(s string) {
+	m.phase_id = &s
+}
+
+// PhaseID returns the value of the "phase_id" field in the mutation.
+func (m *BossPhasePlanMutation) PhaseID() (r string, exists bool) {
+	v := m.phase_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPhaseID returns the old "phase_id" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldPhaseID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPhaseID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPhaseID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPhaseID: %w", err)
+	}
+	return oldValue.PhaseID, nil
+}
+
+// ResetPhaseID resets all changes to the "phase_id" field.
+func (m *BossPhasePlanMutation) ResetPhaseID() {
+	m.phase_id = nil
+}
+
+// SetRetryNo sets the "retry_no" field.
+func (m *BossPhasePlanMutation) SetRetryNo(i int) {
+	m.retry_no = &i
+	m.addretry_no = nil
+}
+
+// RetryNo returns the value of the "retry_no" field in the mutation.
+func (m *BossPhasePlanMutation) RetryNo() (r int, exists bool) {
+	v := m.retry_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRetryNo returns the old "retry_no" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldRetryNo(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRetryNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRetryNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRetryNo: %w", err)
+	}
+	return oldValue.RetryNo, nil
+}
+
+// AddRetryNo adds i to the "retry_no" field.
+func (m *BossPhasePlanMutation) AddRetryNo(i int) {
+	if m.addretry_no != nil {
+		*m.addretry_no += i
+	} else {
+		m.addretry_no = &i
+	}
+}
+
+// AddedRetryNo returns the value that was added to the "retry_no" field in this mutation.
+func (m *BossPhasePlanMutation) AddedRetryNo() (r int, exists bool) {
+	v := m.addretry_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRetryNo resets all changes to the "retry_no" field.
+func (m *BossPhasePlanMutation) ResetRetryNo() {
+	m.retry_no = nil
+	m.addretry_no = nil
+}
+
+// SetStudentID sets the "student_id" field.
+func (m *BossPhasePlanMutation) SetStudentID(u uuid.UUID) {
+	m.student_id = &u
+}
+
+// StudentID returns the value of the "student_id" field in the mutation.
+func (m *BossPhasePlanMutation) StudentID() (r uuid.UUID, exists bool) {
+	v := m.student_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStudentID returns the old "student_id" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldStudentID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStudentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStudentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStudentID: %w", err)
+	}
+	return oldValue.StudentID, nil
+}
+
+// ResetStudentID resets all changes to the "student_id" field.
+func (m *BossPhasePlanMutation) ResetStudentID() {
+	m.student_id = nil
+}
+
+// SetRequirementID sets the "requirement_id" field.
+func (m *BossPhasePlanMutation) SetRequirementID(s string) {
+	m.requirement_id = &s
+}
+
+// RequirementID returns the value of the "requirement_id" field in the mutation.
+func (m *BossPhasePlanMutation) RequirementID() (r string, exists bool) {
+	v := m.requirement_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequirementID returns the old "requirement_id" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldRequirementID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequirementID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequirementID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequirementID: %w", err)
+	}
+	return oldValue.RequirementID, nil
+}
+
+// ResetRequirementID resets all changes to the "requirement_id" field.
+func (m *BossPhasePlanMutation) ResetRequirementID() {
+	m.requirement_id = nil
+}
+
+// SetPlanID sets the "plan_id" field.
+func (m *BossPhasePlanMutation) SetPlanID(u uuid.UUID) {
+	m.plan_id = &u
+}
+
+// PlanID returns the value of the "plan_id" field in the mutation.
+func (m *BossPhasePlanMutation) PlanID() (r uuid.UUID, exists bool) {
+	v := m.plan_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlanID returns the old "plan_id" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldPlanID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlanID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlanID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlanID: %w", err)
+	}
+	return oldValue.PlanID, nil
+}
+
+// ResetPlanID resets all changes to the "plan_id" field.
+func (m *BossPhasePlanMutation) ResetPlanID() {
+	m.plan_id = nil
+}
+
+// SetItemCount sets the "item_count" field.
+func (m *BossPhasePlanMutation) SetItemCount(i int) {
+	m.item_count = &i
+	m.additem_count = nil
+}
+
+// ItemCount returns the value of the "item_count" field in the mutation.
+func (m *BossPhasePlanMutation) ItemCount() (r int, exists bool) {
+	v := m.item_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldItemCount returns the old "item_count" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldItemCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldItemCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldItemCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldItemCount: %w", err)
+	}
+	return oldValue.ItemCount, nil
+}
+
+// AddItemCount adds i to the "item_count" field.
+func (m *BossPhasePlanMutation) AddItemCount(i int) {
+	if m.additem_count != nil {
+		*m.additem_count += i
+	} else {
+		m.additem_count = &i
+	}
+}
+
+// AddedItemCount returns the value that was added to the "item_count" field in this mutation.
+func (m *BossPhasePlanMutation) AddedItemCount() (r int, exists bool) {
+	v := m.additem_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetItemCount resets all changes to the "item_count" field.
+func (m *BossPhasePlanMutation) ResetItemCount() {
+	m.item_count = nil
+	m.additem_count = nil
+}
+
+// SetItems sets the "items" field.
+func (m *BossPhasePlanMutation) SetItems(value []map[string]interface{}) {
+	m.items = &value
+	m.appenditems = nil
+}
+
+// Items returns the value of the "items" field in the mutation.
+func (m *BossPhasePlanMutation) Items() (r []map[string]interface{}, exists bool) {
+	v := m.items
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldItems returns the old "items" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldItems(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldItems is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldItems requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldItems: %w", err)
+	}
+	return oldValue.Items, nil
+}
+
+// AppendItems adds value to the "items" field.
+func (m *BossPhasePlanMutation) AppendItems(value []map[string]interface{}) {
+	m.appenditems = append(m.appenditems, value...)
+}
+
+// AppendedItems returns the list of values that were appended to the "items" field in this mutation.
+func (m *BossPhasePlanMutation) AppendedItems() ([]map[string]interface{}, bool) {
+	if len(m.appenditems) == 0 {
+		return nil, false
+	}
+	return m.appenditems, true
+}
+
+// ResetItems resets all changes to the "items" field.
+func (m *BossPhasePlanMutation) ResetItems() {
+	m.items = nil
+	m.appenditems = nil
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (m *BossPhasePlanMutation) SetExpiresAt(t time.Time) {
+	m.expires_at = &t
+}
+
+// ExpiresAt returns the value of the "expires_at" field in the mutation.
+func (m *BossPhasePlanMutation) ExpiresAt() (r time.Time, exists bool) {
+	v := m.expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiresAt returns the old "expires_at" field's value of the BossPhasePlan entity.
+// If the BossPhasePlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossPhasePlanMutation) OldExpiresAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiresAt: %w", err)
+	}
+	return oldValue.ExpiresAt, nil
+}
+
+// ResetExpiresAt resets all changes to the "expires_at" field.
+func (m *BossPhasePlanMutation) ResetExpiresAt() {
+	m.expires_at = nil
+}
+
+// Where appends a list predicates to the BossPhasePlanMutation builder.
+func (m *BossPhasePlanMutation) Where(ps ...predicate.BossPhasePlan) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BossPhasePlanMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BossPhasePlanMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BossPhasePlan, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BossPhasePlanMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BossPhasePlanMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BossPhasePlan).
+func (m *BossPhasePlanMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BossPhasePlanMutation) Fields() []string {
+	fields := make([]string, 0, 18)
+	if m.tenant_id != nil {
+		fields = append(fields, bossphaseplan.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, bossphaseplan.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, bossphaseplan.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, bossphaseplan.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, bossphaseplan.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, bossphaseplan.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, bossphaseplan.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, bossphaseplan.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, bossphaseplan.FieldVersion)
+	}
+	if m.encounter_id != nil {
+		fields = append(fields, bossphaseplan.FieldEncounterID)
+	}
+	if m.phase_id != nil {
+		fields = append(fields, bossphaseplan.FieldPhaseID)
+	}
+	if m.retry_no != nil {
+		fields = append(fields, bossphaseplan.FieldRetryNo)
+	}
+	if m.student_id != nil {
+		fields = append(fields, bossphaseplan.FieldStudentID)
+	}
+	if m.requirement_id != nil {
+		fields = append(fields, bossphaseplan.FieldRequirementID)
+	}
+	if m.plan_id != nil {
+		fields = append(fields, bossphaseplan.FieldPlanID)
+	}
+	if m.item_count != nil {
+		fields = append(fields, bossphaseplan.FieldItemCount)
+	}
+	if m.items != nil {
+		fields = append(fields, bossphaseplan.FieldItems)
+	}
+	if m.expires_at != nil {
+		fields = append(fields, bossphaseplan.FieldExpiresAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BossPhasePlanMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case bossphaseplan.FieldTenantID:
+		return m.TenantID()
+	case bossphaseplan.FieldCreatedAt:
+		return m.CreatedAt()
+	case bossphaseplan.FieldCreatedBy:
+		return m.CreatedBy()
+	case bossphaseplan.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case bossphaseplan.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case bossphaseplan.FieldDeletedAt:
+		return m.DeletedAt()
+	case bossphaseplan.FieldDeletedBy:
+		return m.DeletedBy()
+	case bossphaseplan.FieldDeleteReason:
+		return m.DeleteReason()
+	case bossphaseplan.FieldVersion:
+		return m.Version()
+	case bossphaseplan.FieldEncounterID:
+		return m.EncounterID()
+	case bossphaseplan.FieldPhaseID:
+		return m.PhaseID()
+	case bossphaseplan.FieldRetryNo:
+		return m.RetryNo()
+	case bossphaseplan.FieldStudentID:
+		return m.StudentID()
+	case bossphaseplan.FieldRequirementID:
+		return m.RequirementID()
+	case bossphaseplan.FieldPlanID:
+		return m.PlanID()
+	case bossphaseplan.FieldItemCount:
+		return m.ItemCount()
+	case bossphaseplan.FieldItems:
+		return m.Items()
+	case bossphaseplan.FieldExpiresAt:
+		return m.ExpiresAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BossPhasePlanMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case bossphaseplan.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case bossphaseplan.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case bossphaseplan.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case bossphaseplan.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case bossphaseplan.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case bossphaseplan.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case bossphaseplan.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case bossphaseplan.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case bossphaseplan.FieldVersion:
+		return m.OldVersion(ctx)
+	case bossphaseplan.FieldEncounterID:
+		return m.OldEncounterID(ctx)
+	case bossphaseplan.FieldPhaseID:
+		return m.OldPhaseID(ctx)
+	case bossphaseplan.FieldRetryNo:
+		return m.OldRetryNo(ctx)
+	case bossphaseplan.FieldStudentID:
+		return m.OldStudentID(ctx)
+	case bossphaseplan.FieldRequirementID:
+		return m.OldRequirementID(ctx)
+	case bossphaseplan.FieldPlanID:
+		return m.OldPlanID(ctx)
+	case bossphaseplan.FieldItemCount:
+		return m.OldItemCount(ctx)
+	case bossphaseplan.FieldItems:
+		return m.OldItems(ctx)
+	case bossphaseplan.FieldExpiresAt:
+		return m.OldExpiresAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown BossPhasePlan field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossPhasePlanMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case bossphaseplan.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case bossphaseplan.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case bossphaseplan.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case bossphaseplan.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case bossphaseplan.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case bossphaseplan.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case bossphaseplan.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case bossphaseplan.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case bossphaseplan.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case bossphaseplan.FieldEncounterID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEncounterID(v)
+		return nil
+	case bossphaseplan.FieldPhaseID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPhaseID(v)
+		return nil
+	case bossphaseplan.FieldRetryNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRetryNo(v)
+		return nil
+	case bossphaseplan.FieldStudentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStudentID(v)
+		return nil
+	case bossphaseplan.FieldRequirementID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequirementID(v)
+		return nil
+	case bossphaseplan.FieldPlanID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlanID(v)
+		return nil
+	case bossphaseplan.FieldItemCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetItemCount(v)
+		return nil
+	case bossphaseplan.FieldItems:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetItems(v)
+		return nil
+	case bossphaseplan.FieldExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiresAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossPhasePlan field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BossPhasePlanMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, bossphaseplan.FieldVersion)
+	}
+	if m.addretry_no != nil {
+		fields = append(fields, bossphaseplan.FieldRetryNo)
+	}
+	if m.additem_count != nil {
+		fields = append(fields, bossphaseplan.FieldItemCount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BossPhasePlanMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case bossphaseplan.FieldVersion:
+		return m.AddedVersion()
+	case bossphaseplan.FieldRetryNo:
+		return m.AddedRetryNo()
+	case bossphaseplan.FieldItemCount:
+		return m.AddedItemCount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossPhasePlanMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case bossphaseplan.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case bossphaseplan.FieldRetryNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRetryNo(v)
+		return nil
+	case bossphaseplan.FieldItemCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddItemCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossPhasePlan numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BossPhasePlanMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(bossphaseplan.FieldCreatedBy) {
+		fields = append(fields, bossphaseplan.FieldCreatedBy)
+	}
+	if m.FieldCleared(bossphaseplan.FieldUpdatedBy) {
+		fields = append(fields, bossphaseplan.FieldUpdatedBy)
+	}
+	if m.FieldCleared(bossphaseplan.FieldDeletedAt) {
+		fields = append(fields, bossphaseplan.FieldDeletedAt)
+	}
+	if m.FieldCleared(bossphaseplan.FieldDeletedBy) {
+		fields = append(fields, bossphaseplan.FieldDeletedBy)
+	}
+	if m.FieldCleared(bossphaseplan.FieldDeleteReason) {
+		fields = append(fields, bossphaseplan.FieldDeleteReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BossPhasePlanMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BossPhasePlanMutation) ClearField(name string) error {
+	switch name {
+	case bossphaseplan.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case bossphaseplan.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case bossphaseplan.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case bossphaseplan.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case bossphaseplan.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	}
+	return fmt.Errorf("unknown BossPhasePlan nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BossPhasePlanMutation) ResetField(name string) error {
+	switch name {
+	case bossphaseplan.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case bossphaseplan.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case bossphaseplan.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case bossphaseplan.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case bossphaseplan.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case bossphaseplan.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case bossphaseplan.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case bossphaseplan.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case bossphaseplan.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case bossphaseplan.FieldEncounterID:
+		m.ResetEncounterID()
+		return nil
+	case bossphaseplan.FieldPhaseID:
+		m.ResetPhaseID()
+		return nil
+	case bossphaseplan.FieldRetryNo:
+		m.ResetRetryNo()
+		return nil
+	case bossphaseplan.FieldStudentID:
+		m.ResetStudentID()
+		return nil
+	case bossphaseplan.FieldRequirementID:
+		m.ResetRequirementID()
+		return nil
+	case bossphaseplan.FieldPlanID:
+		m.ResetPlanID()
+		return nil
+	case bossphaseplan.FieldItemCount:
+		m.ResetItemCount()
+		return nil
+	case bossphaseplan.FieldItems:
+		m.ResetItems()
+		return nil
+	case bossphaseplan.FieldExpiresAt:
+		m.ResetExpiresAt()
+		return nil
+	}
+	return fmt.Errorf("unknown BossPhasePlan field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BossPhasePlanMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BossPhasePlanMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BossPhasePlanMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BossPhasePlanMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BossPhasePlanMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BossPhasePlanMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BossPhasePlanMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BossPhasePlan unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BossPhasePlanMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BossPhasePlan edge %s", name)
+}
+
+// BossVersionMutation represents an operation that mutates the BossVersion nodes in the graph.
+type BossVersionMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *uuid.UUID
+	created_at          *time.Time
+	created_by          *uuid.UUID
+	updated_at          *time.Time
+	updated_by          *uuid.UUID
+	deleted_at          *time.Time
+	deleted_by          *uuid.UUID
+	delete_reason       *string
+	version             *int64
+	addversion          *int64
+	boss_id             *uuid.UUID
+	version_no          *int
+	addversion_no       *int
+	status              *string
+	payload             *map[string]interface{}
+	payload_sha256      *string
+	change_note         *string
+	snapshot_key        *string
+	snapshot_sha256     *string
+	based_on_version_id *uuid.UUID
+	published_at        *time.Time
+	published_by        *uuid.UUID
+	code                *string
+	mode                *string
+	grade_levels        *[]int
+	appendgrade_levels  []int
+	subject_id          *uuid.UUID
+	area_id             *string
+	phase_count         *int
+	addphase_count      *int
+	clearedFields       map[string]struct{}
+	done                bool
+	oldValue            func(context.Context) (*BossVersion, error)
+	predicates          []predicate.BossVersion
+}
+
+var _ ent.Mutation = (*BossVersionMutation)(nil)
+
+// bossversionOption allows management of the mutation configuration using functional options.
+type bossversionOption func(*BossVersionMutation)
+
+// newBossVersionMutation creates new mutation for the BossVersion entity.
+func newBossVersionMutation(c config, op Op, opts ...bossversionOption) *BossVersionMutation {
+	m := &BossVersionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBossVersion,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBossVersionID sets the ID field of the mutation.
+func withBossVersionID(id uuid.UUID) bossversionOption {
+	return func(m *BossVersionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BossVersion
+		)
+		m.oldValue = func(ctx context.Context) (*BossVersion, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BossVersion.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBossVersion sets the old BossVersion of the mutation.
+func withBossVersion(node *BossVersion) bossversionOption {
+	return func(m *BossVersionMutation) {
+		m.oldValue = func(context.Context) (*BossVersion, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BossVersionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BossVersionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of BossVersion entities.
+func (m *BossVersionMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BossVersionMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BossVersionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BossVersion.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BossVersionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BossVersionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BossVersionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *BossVersionMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *BossVersionMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *BossVersionMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[bossversion.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *BossVersionMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[bossversion.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *BossVersionMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, bossversion.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BossVersionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BossVersionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BossVersionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *BossVersionMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *BossVersionMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *BossVersionMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[bossversion.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *BossVersionMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[bossversion.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *BossVersionMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, bossversion.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *BossVersionMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *BossVersionMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *BossVersionMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[bossversion.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *BossVersionMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[bossversion.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *BossVersionMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, bossversion.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *BossVersionMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *BossVersionMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *BossVersionMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[bossversion.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *BossVersionMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[bossversion.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *BossVersionMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, bossversion.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *BossVersionMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *BossVersionMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *BossVersionMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[bossversion.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *BossVersionMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[bossversion.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *BossVersionMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, bossversion.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *BossVersionMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *BossVersionMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *BossVersionMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *BossVersionMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *BossVersionMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetBossID sets the "boss_id" field.
+func (m *BossVersionMutation) SetBossID(u uuid.UUID) {
+	m.boss_id = &u
+}
+
+// BossID returns the value of the "boss_id" field in the mutation.
+func (m *BossVersionMutation) BossID() (r uuid.UUID, exists bool) {
+	v := m.boss_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBossID returns the old "boss_id" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldBossID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBossID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBossID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBossID: %w", err)
+	}
+	return oldValue.BossID, nil
+}
+
+// ResetBossID resets all changes to the "boss_id" field.
+func (m *BossVersionMutation) ResetBossID() {
+	m.boss_id = nil
+}
+
+// SetVersionNo sets the "version_no" field.
+func (m *BossVersionMutation) SetVersionNo(i int) {
+	m.version_no = &i
+	m.addversion_no = nil
+}
+
+// VersionNo returns the value of the "version_no" field in the mutation.
+func (m *BossVersionMutation) VersionNo() (r int, exists bool) {
+	v := m.version_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersionNo returns the old "version_no" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldVersionNo(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersionNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersionNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersionNo: %w", err)
+	}
+	return oldValue.VersionNo, nil
+}
+
+// AddVersionNo adds i to the "version_no" field.
+func (m *BossVersionMutation) AddVersionNo(i int) {
+	if m.addversion_no != nil {
+		*m.addversion_no += i
+	} else {
+		m.addversion_no = &i
+	}
+}
+
+// AddedVersionNo returns the value that was added to the "version_no" field in this mutation.
+func (m *BossVersionMutation) AddedVersionNo() (r int, exists bool) {
+	v := m.addversion_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersionNo resets all changes to the "version_no" field.
+func (m *BossVersionMutation) ResetVersionNo() {
+	m.version_no = nil
+	m.addversion_no = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *BossVersionMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *BossVersionMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *BossVersionMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetPayload sets the "payload" field.
+func (m *BossVersionMutation) SetPayload(value map[string]interface{}) {
+	m.payload = &value
+}
+
+// Payload returns the value of the "payload" field in the mutation.
+func (m *BossVersionMutation) Payload() (r map[string]interface{}, exists bool) {
+	v := m.payload
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPayload returns the old "payload" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldPayload(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPayload is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPayload requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPayload: %w", err)
+	}
+	return oldValue.Payload, nil
+}
+
+// ResetPayload resets all changes to the "payload" field.
+func (m *BossVersionMutation) ResetPayload() {
+	m.payload = nil
+}
+
+// SetPayloadSha256 sets the "payload_sha256" field.
+func (m *BossVersionMutation) SetPayloadSha256(s string) {
+	m.payload_sha256 = &s
+}
+
+// PayloadSha256 returns the value of the "payload_sha256" field in the mutation.
+func (m *BossVersionMutation) PayloadSha256() (r string, exists bool) {
+	v := m.payload_sha256
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPayloadSha256 returns the old "payload_sha256" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldPayloadSha256(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPayloadSha256 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPayloadSha256 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPayloadSha256: %w", err)
+	}
+	return oldValue.PayloadSha256, nil
+}
+
+// ResetPayloadSha256 resets all changes to the "payload_sha256" field.
+func (m *BossVersionMutation) ResetPayloadSha256() {
+	m.payload_sha256 = nil
+}
+
+// SetChangeNote sets the "change_note" field.
+func (m *BossVersionMutation) SetChangeNote(s string) {
+	m.change_note = &s
+}
+
+// ChangeNote returns the value of the "change_note" field in the mutation.
+func (m *BossVersionMutation) ChangeNote() (r string, exists bool) {
+	v := m.change_note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChangeNote returns the old "change_note" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldChangeNote(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChangeNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChangeNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChangeNote: %w", err)
+	}
+	return oldValue.ChangeNote, nil
+}
+
+// ClearChangeNote clears the value of the "change_note" field.
+func (m *BossVersionMutation) ClearChangeNote() {
+	m.change_note = nil
+	m.clearedFields[bossversion.FieldChangeNote] = struct{}{}
+}
+
+// ChangeNoteCleared returns if the "change_note" field was cleared in this mutation.
+func (m *BossVersionMutation) ChangeNoteCleared() bool {
+	_, ok := m.clearedFields[bossversion.FieldChangeNote]
+	return ok
+}
+
+// ResetChangeNote resets all changes to the "change_note" field.
+func (m *BossVersionMutation) ResetChangeNote() {
+	m.change_note = nil
+	delete(m.clearedFields, bossversion.FieldChangeNote)
+}
+
+// SetSnapshotKey sets the "snapshot_key" field.
+func (m *BossVersionMutation) SetSnapshotKey(s string) {
+	m.snapshot_key = &s
+}
+
+// SnapshotKey returns the value of the "snapshot_key" field in the mutation.
+func (m *BossVersionMutation) SnapshotKey() (r string, exists bool) {
+	v := m.snapshot_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSnapshotKey returns the old "snapshot_key" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldSnapshotKey(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSnapshotKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSnapshotKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSnapshotKey: %w", err)
+	}
+	return oldValue.SnapshotKey, nil
+}
+
+// ClearSnapshotKey clears the value of the "snapshot_key" field.
+func (m *BossVersionMutation) ClearSnapshotKey() {
+	m.snapshot_key = nil
+	m.clearedFields[bossversion.FieldSnapshotKey] = struct{}{}
+}
+
+// SnapshotKeyCleared returns if the "snapshot_key" field was cleared in this mutation.
+func (m *BossVersionMutation) SnapshotKeyCleared() bool {
+	_, ok := m.clearedFields[bossversion.FieldSnapshotKey]
+	return ok
+}
+
+// ResetSnapshotKey resets all changes to the "snapshot_key" field.
+func (m *BossVersionMutation) ResetSnapshotKey() {
+	m.snapshot_key = nil
+	delete(m.clearedFields, bossversion.FieldSnapshotKey)
+}
+
+// SetSnapshotSha256 sets the "snapshot_sha256" field.
+func (m *BossVersionMutation) SetSnapshotSha256(s string) {
+	m.snapshot_sha256 = &s
+}
+
+// SnapshotSha256 returns the value of the "snapshot_sha256" field in the mutation.
+func (m *BossVersionMutation) SnapshotSha256() (r string, exists bool) {
+	v := m.snapshot_sha256
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSnapshotSha256 returns the old "snapshot_sha256" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldSnapshotSha256(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSnapshotSha256 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSnapshotSha256 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSnapshotSha256: %w", err)
+	}
+	return oldValue.SnapshotSha256, nil
+}
+
+// ClearSnapshotSha256 clears the value of the "snapshot_sha256" field.
+func (m *BossVersionMutation) ClearSnapshotSha256() {
+	m.snapshot_sha256 = nil
+	m.clearedFields[bossversion.FieldSnapshotSha256] = struct{}{}
+}
+
+// SnapshotSha256Cleared returns if the "snapshot_sha256" field was cleared in this mutation.
+func (m *BossVersionMutation) SnapshotSha256Cleared() bool {
+	_, ok := m.clearedFields[bossversion.FieldSnapshotSha256]
+	return ok
+}
+
+// ResetSnapshotSha256 resets all changes to the "snapshot_sha256" field.
+func (m *BossVersionMutation) ResetSnapshotSha256() {
+	m.snapshot_sha256 = nil
+	delete(m.clearedFields, bossversion.FieldSnapshotSha256)
+}
+
+// SetBasedOnVersionID sets the "based_on_version_id" field.
+func (m *BossVersionMutation) SetBasedOnVersionID(u uuid.UUID) {
+	m.based_on_version_id = &u
+}
+
+// BasedOnVersionID returns the value of the "based_on_version_id" field in the mutation.
+func (m *BossVersionMutation) BasedOnVersionID() (r uuid.UUID, exists bool) {
+	v := m.based_on_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBasedOnVersionID returns the old "based_on_version_id" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldBasedOnVersionID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBasedOnVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBasedOnVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBasedOnVersionID: %w", err)
+	}
+	return oldValue.BasedOnVersionID, nil
+}
+
+// ClearBasedOnVersionID clears the value of the "based_on_version_id" field.
+func (m *BossVersionMutation) ClearBasedOnVersionID() {
+	m.based_on_version_id = nil
+	m.clearedFields[bossversion.FieldBasedOnVersionID] = struct{}{}
+}
+
+// BasedOnVersionIDCleared returns if the "based_on_version_id" field was cleared in this mutation.
+func (m *BossVersionMutation) BasedOnVersionIDCleared() bool {
+	_, ok := m.clearedFields[bossversion.FieldBasedOnVersionID]
+	return ok
+}
+
+// ResetBasedOnVersionID resets all changes to the "based_on_version_id" field.
+func (m *BossVersionMutation) ResetBasedOnVersionID() {
+	m.based_on_version_id = nil
+	delete(m.clearedFields, bossversion.FieldBasedOnVersionID)
+}
+
+// SetPublishedAt sets the "published_at" field.
+func (m *BossVersionMutation) SetPublishedAt(t time.Time) {
+	m.published_at = &t
+}
+
+// PublishedAt returns the value of the "published_at" field in the mutation.
+func (m *BossVersionMutation) PublishedAt() (r time.Time, exists bool) {
+	v := m.published_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedAt returns the old "published_at" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldPublishedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedAt: %w", err)
+	}
+	return oldValue.PublishedAt, nil
+}
+
+// ClearPublishedAt clears the value of the "published_at" field.
+func (m *BossVersionMutation) ClearPublishedAt() {
+	m.published_at = nil
+	m.clearedFields[bossversion.FieldPublishedAt] = struct{}{}
+}
+
+// PublishedAtCleared returns if the "published_at" field was cleared in this mutation.
+func (m *BossVersionMutation) PublishedAtCleared() bool {
+	_, ok := m.clearedFields[bossversion.FieldPublishedAt]
+	return ok
+}
+
+// ResetPublishedAt resets all changes to the "published_at" field.
+func (m *BossVersionMutation) ResetPublishedAt() {
+	m.published_at = nil
+	delete(m.clearedFields, bossversion.FieldPublishedAt)
+}
+
+// SetPublishedBy sets the "published_by" field.
+func (m *BossVersionMutation) SetPublishedBy(u uuid.UUID) {
+	m.published_by = &u
+}
+
+// PublishedBy returns the value of the "published_by" field in the mutation.
+func (m *BossVersionMutation) PublishedBy() (r uuid.UUID, exists bool) {
+	v := m.published_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedBy returns the old "published_by" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldPublishedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedBy: %w", err)
+	}
+	return oldValue.PublishedBy, nil
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (m *BossVersionMutation) ClearPublishedBy() {
+	m.published_by = nil
+	m.clearedFields[bossversion.FieldPublishedBy] = struct{}{}
+}
+
+// PublishedByCleared returns if the "published_by" field was cleared in this mutation.
+func (m *BossVersionMutation) PublishedByCleared() bool {
+	_, ok := m.clearedFields[bossversion.FieldPublishedBy]
+	return ok
+}
+
+// ResetPublishedBy resets all changes to the "published_by" field.
+func (m *BossVersionMutation) ResetPublishedBy() {
+	m.published_by = nil
+	delete(m.clearedFields, bossversion.FieldPublishedBy)
+}
+
+// SetCode sets the "code" field.
+func (m *BossVersionMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *BossVersionMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *BossVersionMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetMode sets the "mode" field.
+func (m *BossVersionMutation) SetMode(s string) {
+	m.mode = &s
+}
+
+// Mode returns the value of the "mode" field in the mutation.
+func (m *BossVersionMutation) Mode() (r string, exists bool) {
+	v := m.mode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMode returns the old "mode" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldMode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMode: %w", err)
+	}
+	return oldValue.Mode, nil
+}
+
+// ResetMode resets all changes to the "mode" field.
+func (m *BossVersionMutation) ResetMode() {
+	m.mode = nil
+}
+
+// SetGradeLevels sets the "grade_levels" field.
+func (m *BossVersionMutation) SetGradeLevels(i []int) {
+	m.grade_levels = &i
+	m.appendgrade_levels = nil
+}
+
+// GradeLevels returns the value of the "grade_levels" field in the mutation.
+func (m *BossVersionMutation) GradeLevels() (r []int, exists bool) {
+	v := m.grade_levels
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGradeLevels returns the old "grade_levels" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldGradeLevels(ctx context.Context) (v []int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGradeLevels is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGradeLevels requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGradeLevels: %w", err)
+	}
+	return oldValue.GradeLevels, nil
+}
+
+// AppendGradeLevels adds i to the "grade_levels" field.
+func (m *BossVersionMutation) AppendGradeLevels(i []int) {
+	m.appendgrade_levels = append(m.appendgrade_levels, i...)
+}
+
+// AppendedGradeLevels returns the list of values that were appended to the "grade_levels" field in this mutation.
+func (m *BossVersionMutation) AppendedGradeLevels() ([]int, bool) {
+	if len(m.appendgrade_levels) == 0 {
+		return nil, false
+	}
+	return m.appendgrade_levels, true
+}
+
+// ResetGradeLevels resets all changes to the "grade_levels" field.
+func (m *BossVersionMutation) ResetGradeLevels() {
+	m.grade_levels = nil
+	m.appendgrade_levels = nil
+}
+
+// SetSubjectID sets the "subject_id" field.
+func (m *BossVersionMutation) SetSubjectID(u uuid.UUID) {
+	m.subject_id = &u
+}
+
+// SubjectID returns the value of the "subject_id" field in the mutation.
+func (m *BossVersionMutation) SubjectID() (r uuid.UUID, exists bool) {
+	v := m.subject_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubjectID returns the old "subject_id" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldSubjectID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubjectID: %w", err)
+	}
+	return oldValue.SubjectID, nil
+}
+
+// ResetSubjectID resets all changes to the "subject_id" field.
+func (m *BossVersionMutation) ResetSubjectID() {
+	m.subject_id = nil
+}
+
+// SetAreaID sets the "area_id" field.
+func (m *BossVersionMutation) SetAreaID(s string) {
+	m.area_id = &s
+}
+
+// AreaID returns the value of the "area_id" field in the mutation.
+func (m *BossVersionMutation) AreaID() (r string, exists bool) {
+	v := m.area_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAreaID returns the old "area_id" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldAreaID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAreaID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAreaID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAreaID: %w", err)
+	}
+	return oldValue.AreaID, nil
+}
+
+// ResetAreaID resets all changes to the "area_id" field.
+func (m *BossVersionMutation) ResetAreaID() {
+	m.area_id = nil
+}
+
+// SetPhaseCount sets the "phase_count" field.
+func (m *BossVersionMutation) SetPhaseCount(i int) {
+	m.phase_count = &i
+	m.addphase_count = nil
+}
+
+// PhaseCount returns the value of the "phase_count" field in the mutation.
+func (m *BossVersionMutation) PhaseCount() (r int, exists bool) {
+	v := m.phase_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPhaseCount returns the old "phase_count" field's value of the BossVersion entity.
+// If the BossVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BossVersionMutation) OldPhaseCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPhaseCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPhaseCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPhaseCount: %w", err)
+	}
+	return oldValue.PhaseCount, nil
+}
+
+// AddPhaseCount adds i to the "phase_count" field.
+func (m *BossVersionMutation) AddPhaseCount(i int) {
+	if m.addphase_count != nil {
+		*m.addphase_count += i
+	} else {
+		m.addphase_count = &i
+	}
+}
+
+// AddedPhaseCount returns the value that was added to the "phase_count" field in this mutation.
+func (m *BossVersionMutation) AddedPhaseCount() (r int, exists bool) {
+	v := m.addphase_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPhaseCount resets all changes to the "phase_count" field.
+func (m *BossVersionMutation) ResetPhaseCount() {
+	m.phase_count = nil
+	m.addphase_count = nil
+}
+
+// Where appends a list predicates to the BossVersionMutation builder.
+func (m *BossVersionMutation) Where(ps ...predicate.BossVersion) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BossVersionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BossVersionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BossVersion, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BossVersionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BossVersionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BossVersion).
+func (m *BossVersionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BossVersionMutation) Fields() []string {
+	fields := make([]string, 0, 25)
+	if m.created_at != nil {
+		fields = append(fields, bossversion.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, bossversion.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, bossversion.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, bossversion.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, bossversion.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, bossversion.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, bossversion.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, bossversion.FieldVersion)
+	}
+	if m.boss_id != nil {
+		fields = append(fields, bossversion.FieldBossID)
+	}
+	if m.version_no != nil {
+		fields = append(fields, bossversion.FieldVersionNo)
+	}
+	if m.status != nil {
+		fields = append(fields, bossversion.FieldStatus)
+	}
+	if m.payload != nil {
+		fields = append(fields, bossversion.FieldPayload)
+	}
+	if m.payload_sha256 != nil {
+		fields = append(fields, bossversion.FieldPayloadSha256)
+	}
+	if m.change_note != nil {
+		fields = append(fields, bossversion.FieldChangeNote)
+	}
+	if m.snapshot_key != nil {
+		fields = append(fields, bossversion.FieldSnapshotKey)
+	}
+	if m.snapshot_sha256 != nil {
+		fields = append(fields, bossversion.FieldSnapshotSha256)
+	}
+	if m.based_on_version_id != nil {
+		fields = append(fields, bossversion.FieldBasedOnVersionID)
+	}
+	if m.published_at != nil {
+		fields = append(fields, bossversion.FieldPublishedAt)
+	}
+	if m.published_by != nil {
+		fields = append(fields, bossversion.FieldPublishedBy)
+	}
+	if m.code != nil {
+		fields = append(fields, bossversion.FieldCode)
+	}
+	if m.mode != nil {
+		fields = append(fields, bossversion.FieldMode)
+	}
+	if m.grade_levels != nil {
+		fields = append(fields, bossversion.FieldGradeLevels)
+	}
+	if m.subject_id != nil {
+		fields = append(fields, bossversion.FieldSubjectID)
+	}
+	if m.area_id != nil {
+		fields = append(fields, bossversion.FieldAreaID)
+	}
+	if m.phase_count != nil {
+		fields = append(fields, bossversion.FieldPhaseCount)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BossVersionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case bossversion.FieldCreatedAt:
+		return m.CreatedAt()
+	case bossversion.FieldCreatedBy:
+		return m.CreatedBy()
+	case bossversion.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case bossversion.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case bossversion.FieldDeletedAt:
+		return m.DeletedAt()
+	case bossversion.FieldDeletedBy:
+		return m.DeletedBy()
+	case bossversion.FieldDeleteReason:
+		return m.DeleteReason()
+	case bossversion.FieldVersion:
+		return m.Version()
+	case bossversion.FieldBossID:
+		return m.BossID()
+	case bossversion.FieldVersionNo:
+		return m.VersionNo()
+	case bossversion.FieldStatus:
+		return m.Status()
+	case bossversion.FieldPayload:
+		return m.Payload()
+	case bossversion.FieldPayloadSha256:
+		return m.PayloadSha256()
+	case bossversion.FieldChangeNote:
+		return m.ChangeNote()
+	case bossversion.FieldSnapshotKey:
+		return m.SnapshotKey()
+	case bossversion.FieldSnapshotSha256:
+		return m.SnapshotSha256()
+	case bossversion.FieldBasedOnVersionID:
+		return m.BasedOnVersionID()
+	case bossversion.FieldPublishedAt:
+		return m.PublishedAt()
+	case bossversion.FieldPublishedBy:
+		return m.PublishedBy()
+	case bossversion.FieldCode:
+		return m.Code()
+	case bossversion.FieldMode:
+		return m.Mode()
+	case bossversion.FieldGradeLevels:
+		return m.GradeLevels()
+	case bossversion.FieldSubjectID:
+		return m.SubjectID()
+	case bossversion.FieldAreaID:
+		return m.AreaID()
+	case bossversion.FieldPhaseCount:
+		return m.PhaseCount()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BossVersionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case bossversion.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case bossversion.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case bossversion.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case bossversion.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case bossversion.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case bossversion.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case bossversion.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case bossversion.FieldVersion:
+		return m.OldVersion(ctx)
+	case bossversion.FieldBossID:
+		return m.OldBossID(ctx)
+	case bossversion.FieldVersionNo:
+		return m.OldVersionNo(ctx)
+	case bossversion.FieldStatus:
+		return m.OldStatus(ctx)
+	case bossversion.FieldPayload:
+		return m.OldPayload(ctx)
+	case bossversion.FieldPayloadSha256:
+		return m.OldPayloadSha256(ctx)
+	case bossversion.FieldChangeNote:
+		return m.OldChangeNote(ctx)
+	case bossversion.FieldSnapshotKey:
+		return m.OldSnapshotKey(ctx)
+	case bossversion.FieldSnapshotSha256:
+		return m.OldSnapshotSha256(ctx)
+	case bossversion.FieldBasedOnVersionID:
+		return m.OldBasedOnVersionID(ctx)
+	case bossversion.FieldPublishedAt:
+		return m.OldPublishedAt(ctx)
+	case bossversion.FieldPublishedBy:
+		return m.OldPublishedBy(ctx)
+	case bossversion.FieldCode:
+		return m.OldCode(ctx)
+	case bossversion.FieldMode:
+		return m.OldMode(ctx)
+	case bossversion.FieldGradeLevels:
+		return m.OldGradeLevels(ctx)
+	case bossversion.FieldSubjectID:
+		return m.OldSubjectID(ctx)
+	case bossversion.FieldAreaID:
+		return m.OldAreaID(ctx)
+	case bossversion.FieldPhaseCount:
+		return m.OldPhaseCount(ctx)
+	}
+	return nil, fmt.Errorf("unknown BossVersion field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossVersionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case bossversion.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case bossversion.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case bossversion.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case bossversion.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case bossversion.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case bossversion.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case bossversion.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case bossversion.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case bossversion.FieldBossID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBossID(v)
+		return nil
+	case bossversion.FieldVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersionNo(v)
+		return nil
+	case bossversion.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case bossversion.FieldPayload:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPayload(v)
+		return nil
+	case bossversion.FieldPayloadSha256:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPayloadSha256(v)
+		return nil
+	case bossversion.FieldChangeNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChangeNote(v)
+		return nil
+	case bossversion.FieldSnapshotKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSnapshotKey(v)
+		return nil
+	case bossversion.FieldSnapshotSha256:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSnapshotSha256(v)
+		return nil
+	case bossversion.FieldBasedOnVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBasedOnVersionID(v)
+		return nil
+	case bossversion.FieldPublishedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedAt(v)
+		return nil
+	case bossversion.FieldPublishedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedBy(v)
+		return nil
+	case bossversion.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case bossversion.FieldMode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMode(v)
+		return nil
+	case bossversion.FieldGradeLevels:
+		v, ok := value.([]int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGradeLevels(v)
+		return nil
+	case bossversion.FieldSubjectID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubjectID(v)
+		return nil
+	case bossversion.FieldAreaID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAreaID(v)
+		return nil
+	case bossversion.FieldPhaseCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPhaseCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossVersion field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BossVersionMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, bossversion.FieldVersion)
+	}
+	if m.addversion_no != nil {
+		fields = append(fields, bossversion.FieldVersionNo)
+	}
+	if m.addphase_count != nil {
+		fields = append(fields, bossversion.FieldPhaseCount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BossVersionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case bossversion.FieldVersion:
+		return m.AddedVersion()
+	case bossversion.FieldVersionNo:
+		return m.AddedVersionNo()
+	case bossversion.FieldPhaseCount:
+		return m.AddedPhaseCount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BossVersionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case bossversion.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case bossversion.FieldVersionNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersionNo(v)
+		return nil
+	case bossversion.FieldPhaseCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPhaseCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BossVersion numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BossVersionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(bossversion.FieldCreatedBy) {
+		fields = append(fields, bossversion.FieldCreatedBy)
+	}
+	if m.FieldCleared(bossversion.FieldUpdatedBy) {
+		fields = append(fields, bossversion.FieldUpdatedBy)
+	}
+	if m.FieldCleared(bossversion.FieldDeletedAt) {
+		fields = append(fields, bossversion.FieldDeletedAt)
+	}
+	if m.FieldCleared(bossversion.FieldDeletedBy) {
+		fields = append(fields, bossversion.FieldDeletedBy)
+	}
+	if m.FieldCleared(bossversion.FieldDeleteReason) {
+		fields = append(fields, bossversion.FieldDeleteReason)
+	}
+	if m.FieldCleared(bossversion.FieldChangeNote) {
+		fields = append(fields, bossversion.FieldChangeNote)
+	}
+	if m.FieldCleared(bossversion.FieldSnapshotKey) {
+		fields = append(fields, bossversion.FieldSnapshotKey)
+	}
+	if m.FieldCleared(bossversion.FieldSnapshotSha256) {
+		fields = append(fields, bossversion.FieldSnapshotSha256)
+	}
+	if m.FieldCleared(bossversion.FieldBasedOnVersionID) {
+		fields = append(fields, bossversion.FieldBasedOnVersionID)
+	}
+	if m.FieldCleared(bossversion.FieldPublishedAt) {
+		fields = append(fields, bossversion.FieldPublishedAt)
+	}
+	if m.FieldCleared(bossversion.FieldPublishedBy) {
+		fields = append(fields, bossversion.FieldPublishedBy)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BossVersionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BossVersionMutation) ClearField(name string) error {
+	switch name {
+	case bossversion.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case bossversion.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case bossversion.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case bossversion.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case bossversion.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case bossversion.FieldChangeNote:
+		m.ClearChangeNote()
+		return nil
+	case bossversion.FieldSnapshotKey:
+		m.ClearSnapshotKey()
+		return nil
+	case bossversion.FieldSnapshotSha256:
+		m.ClearSnapshotSha256()
+		return nil
+	case bossversion.FieldBasedOnVersionID:
+		m.ClearBasedOnVersionID()
+		return nil
+	case bossversion.FieldPublishedAt:
+		m.ClearPublishedAt()
+		return nil
+	case bossversion.FieldPublishedBy:
+		m.ClearPublishedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown BossVersion nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BossVersionMutation) ResetField(name string) error {
+	switch name {
+	case bossversion.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case bossversion.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case bossversion.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case bossversion.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case bossversion.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case bossversion.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case bossversion.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case bossversion.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case bossversion.FieldBossID:
+		m.ResetBossID()
+		return nil
+	case bossversion.FieldVersionNo:
+		m.ResetVersionNo()
+		return nil
+	case bossversion.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case bossversion.FieldPayload:
+		m.ResetPayload()
+		return nil
+	case bossversion.FieldPayloadSha256:
+		m.ResetPayloadSha256()
+		return nil
+	case bossversion.FieldChangeNote:
+		m.ResetChangeNote()
+		return nil
+	case bossversion.FieldSnapshotKey:
+		m.ResetSnapshotKey()
+		return nil
+	case bossversion.FieldSnapshotSha256:
+		m.ResetSnapshotSha256()
+		return nil
+	case bossversion.FieldBasedOnVersionID:
+		m.ResetBasedOnVersionID()
+		return nil
+	case bossversion.FieldPublishedAt:
+		m.ResetPublishedAt()
+		return nil
+	case bossversion.FieldPublishedBy:
+		m.ResetPublishedBy()
+		return nil
+	case bossversion.FieldCode:
+		m.ResetCode()
+		return nil
+	case bossversion.FieldMode:
+		m.ResetMode()
+		return nil
+	case bossversion.FieldGradeLevels:
+		m.ResetGradeLevels()
+		return nil
+	case bossversion.FieldSubjectID:
+		m.ResetSubjectID()
+		return nil
+	case bossversion.FieldAreaID:
+		m.ResetAreaID()
+		return nil
+	case bossversion.FieldPhaseCount:
+		m.ResetPhaseCount()
+		return nil
+	}
+	return fmt.Errorf("unknown BossVersion field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BossVersionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BossVersionMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BossVersionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BossVersionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BossVersionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BossVersionMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BossVersionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BossVersion unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BossVersionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BossVersion edge %s", name)
 }
 
 // ChallengeMutation represents an operation that mutates the Challenge nodes in the graph.
@@ -70177,6 +81520,3353 @@ func (m *NpcDialogueVersionMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *NpcDialogueVersionMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown NpcDialogueVersion edge %s", name)
+}
+
+// PartyQuestContributionMutation represents an operation that mutates the PartyQuestContribution nodes in the graph.
+type PartyQuestContributionMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *uuid.UUID
+	tenant_id              *uuid.UUID
+	created_at             *time.Time
+	created_by             *uuid.UUID
+	updated_at             *time.Time
+	updated_by             *uuid.UUID
+	deleted_at             *time.Time
+	deleted_by             *uuid.UUID
+	delete_reason          *string
+	version                *int64
+	addversion             *int64
+	party_quest_session_id *uuid.UUID
+	student_id             *uuid.UUID
+	step_id                *string
+	metric_value           *int
+	addmetric_value        *int
+	min_contribution_met   *bool
+	attempt_ids            *[]string
+	appendattempt_ids      []string
+	clearedFields          map[string]struct{}
+	done                   bool
+	oldValue               func(context.Context) (*PartyQuestContribution, error)
+	predicates             []predicate.PartyQuestContribution
+}
+
+var _ ent.Mutation = (*PartyQuestContributionMutation)(nil)
+
+// partyquestcontributionOption allows management of the mutation configuration using functional options.
+type partyquestcontributionOption func(*PartyQuestContributionMutation)
+
+// newPartyQuestContributionMutation creates new mutation for the PartyQuestContribution entity.
+func newPartyQuestContributionMutation(c config, op Op, opts ...partyquestcontributionOption) *PartyQuestContributionMutation {
+	m := &PartyQuestContributionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePartyQuestContribution,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPartyQuestContributionID sets the ID field of the mutation.
+func withPartyQuestContributionID(id uuid.UUID) partyquestcontributionOption {
+	return func(m *PartyQuestContributionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PartyQuestContribution
+		)
+		m.oldValue = func(ctx context.Context) (*PartyQuestContribution, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PartyQuestContribution.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPartyQuestContribution sets the old PartyQuestContribution of the mutation.
+func withPartyQuestContribution(node *PartyQuestContribution) partyquestcontributionOption {
+	return func(m *PartyQuestContributionMutation) {
+		m.oldValue = func(context.Context) (*PartyQuestContribution, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PartyQuestContributionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PartyQuestContributionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of PartyQuestContribution entities.
+func (m *PartyQuestContributionMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PartyQuestContributionMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PartyQuestContributionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PartyQuestContribution.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *PartyQuestContributionMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *PartyQuestContributionMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *PartyQuestContributionMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PartyQuestContributionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PartyQuestContributionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PartyQuestContributionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *PartyQuestContributionMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *PartyQuestContributionMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *PartyQuestContributionMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[partyquestcontribution.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *PartyQuestContributionMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[partyquestcontribution.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *PartyQuestContributionMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, partyquestcontribution.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PartyQuestContributionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PartyQuestContributionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PartyQuestContributionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *PartyQuestContributionMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *PartyQuestContributionMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *PartyQuestContributionMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[partyquestcontribution.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *PartyQuestContributionMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[partyquestcontribution.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *PartyQuestContributionMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, partyquestcontribution.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *PartyQuestContributionMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *PartyQuestContributionMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *PartyQuestContributionMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[partyquestcontribution.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *PartyQuestContributionMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[partyquestcontribution.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *PartyQuestContributionMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, partyquestcontribution.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *PartyQuestContributionMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *PartyQuestContributionMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *PartyQuestContributionMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[partyquestcontribution.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *PartyQuestContributionMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[partyquestcontribution.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *PartyQuestContributionMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, partyquestcontribution.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *PartyQuestContributionMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *PartyQuestContributionMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *PartyQuestContributionMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[partyquestcontribution.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *PartyQuestContributionMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[partyquestcontribution.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *PartyQuestContributionMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, partyquestcontribution.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *PartyQuestContributionMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *PartyQuestContributionMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *PartyQuestContributionMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *PartyQuestContributionMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *PartyQuestContributionMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetPartyQuestSessionID sets the "party_quest_session_id" field.
+func (m *PartyQuestContributionMutation) SetPartyQuestSessionID(u uuid.UUID) {
+	m.party_quest_session_id = &u
+}
+
+// PartyQuestSessionID returns the value of the "party_quest_session_id" field in the mutation.
+func (m *PartyQuestContributionMutation) PartyQuestSessionID() (r uuid.UUID, exists bool) {
+	v := m.party_quest_session_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPartyQuestSessionID returns the old "party_quest_session_id" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldPartyQuestSessionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPartyQuestSessionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPartyQuestSessionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPartyQuestSessionID: %w", err)
+	}
+	return oldValue.PartyQuestSessionID, nil
+}
+
+// ResetPartyQuestSessionID resets all changes to the "party_quest_session_id" field.
+func (m *PartyQuestContributionMutation) ResetPartyQuestSessionID() {
+	m.party_quest_session_id = nil
+}
+
+// SetStudentID sets the "student_id" field.
+func (m *PartyQuestContributionMutation) SetStudentID(u uuid.UUID) {
+	m.student_id = &u
+}
+
+// StudentID returns the value of the "student_id" field in the mutation.
+func (m *PartyQuestContributionMutation) StudentID() (r uuid.UUID, exists bool) {
+	v := m.student_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStudentID returns the old "student_id" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldStudentID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStudentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStudentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStudentID: %w", err)
+	}
+	return oldValue.StudentID, nil
+}
+
+// ResetStudentID resets all changes to the "student_id" field.
+func (m *PartyQuestContributionMutation) ResetStudentID() {
+	m.student_id = nil
+}
+
+// SetStepID sets the "step_id" field.
+func (m *PartyQuestContributionMutation) SetStepID(s string) {
+	m.step_id = &s
+}
+
+// StepID returns the value of the "step_id" field in the mutation.
+func (m *PartyQuestContributionMutation) StepID() (r string, exists bool) {
+	v := m.step_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStepID returns the old "step_id" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldStepID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStepID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStepID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStepID: %w", err)
+	}
+	return oldValue.StepID, nil
+}
+
+// ResetStepID resets all changes to the "step_id" field.
+func (m *PartyQuestContributionMutation) ResetStepID() {
+	m.step_id = nil
+}
+
+// SetMetricValue sets the "metric_value" field.
+func (m *PartyQuestContributionMutation) SetMetricValue(i int) {
+	m.metric_value = &i
+	m.addmetric_value = nil
+}
+
+// MetricValue returns the value of the "metric_value" field in the mutation.
+func (m *PartyQuestContributionMutation) MetricValue() (r int, exists bool) {
+	v := m.metric_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMetricValue returns the old "metric_value" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldMetricValue(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMetricValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMetricValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMetricValue: %w", err)
+	}
+	return oldValue.MetricValue, nil
+}
+
+// AddMetricValue adds i to the "metric_value" field.
+func (m *PartyQuestContributionMutation) AddMetricValue(i int) {
+	if m.addmetric_value != nil {
+		*m.addmetric_value += i
+	} else {
+		m.addmetric_value = &i
+	}
+}
+
+// AddedMetricValue returns the value that was added to the "metric_value" field in this mutation.
+func (m *PartyQuestContributionMutation) AddedMetricValue() (r int, exists bool) {
+	v := m.addmetric_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMetricValue resets all changes to the "metric_value" field.
+func (m *PartyQuestContributionMutation) ResetMetricValue() {
+	m.metric_value = nil
+	m.addmetric_value = nil
+}
+
+// SetMinContributionMet sets the "min_contribution_met" field.
+func (m *PartyQuestContributionMutation) SetMinContributionMet(b bool) {
+	m.min_contribution_met = &b
+}
+
+// MinContributionMet returns the value of the "min_contribution_met" field in the mutation.
+func (m *PartyQuestContributionMutation) MinContributionMet() (r bool, exists bool) {
+	v := m.min_contribution_met
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMinContributionMet returns the old "min_contribution_met" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldMinContributionMet(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMinContributionMet is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMinContributionMet requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMinContributionMet: %w", err)
+	}
+	return oldValue.MinContributionMet, nil
+}
+
+// ResetMinContributionMet resets all changes to the "min_contribution_met" field.
+func (m *PartyQuestContributionMutation) ResetMinContributionMet() {
+	m.min_contribution_met = nil
+}
+
+// SetAttemptIds sets the "attempt_ids" field.
+func (m *PartyQuestContributionMutation) SetAttemptIds(s []string) {
+	m.attempt_ids = &s
+	m.appendattempt_ids = nil
+}
+
+// AttemptIds returns the value of the "attempt_ids" field in the mutation.
+func (m *PartyQuestContributionMutation) AttemptIds() (r []string, exists bool) {
+	v := m.attempt_ids
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttemptIds returns the old "attempt_ids" field's value of the PartyQuestContribution entity.
+// If the PartyQuestContribution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestContributionMutation) OldAttemptIds(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttemptIds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttemptIds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttemptIds: %w", err)
+	}
+	return oldValue.AttemptIds, nil
+}
+
+// AppendAttemptIds adds s to the "attempt_ids" field.
+func (m *PartyQuestContributionMutation) AppendAttemptIds(s []string) {
+	m.appendattempt_ids = append(m.appendattempt_ids, s...)
+}
+
+// AppendedAttemptIds returns the list of values that were appended to the "attempt_ids" field in this mutation.
+func (m *PartyQuestContributionMutation) AppendedAttemptIds() ([]string, bool) {
+	if len(m.appendattempt_ids) == 0 {
+		return nil, false
+	}
+	return m.appendattempt_ids, true
+}
+
+// ResetAttemptIds resets all changes to the "attempt_ids" field.
+func (m *PartyQuestContributionMutation) ResetAttemptIds() {
+	m.attempt_ids = nil
+	m.appendattempt_ids = nil
+}
+
+// Where appends a list predicates to the PartyQuestContributionMutation builder.
+func (m *PartyQuestContributionMutation) Where(ps ...predicate.PartyQuestContribution) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PartyQuestContributionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PartyQuestContributionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PartyQuestContribution, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PartyQuestContributionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PartyQuestContributionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PartyQuestContribution).
+func (m *PartyQuestContributionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PartyQuestContributionMutation) Fields() []string {
+	fields := make([]string, 0, 15)
+	if m.tenant_id != nil {
+		fields = append(fields, partyquestcontribution.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, partyquestcontribution.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, partyquestcontribution.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, partyquestcontribution.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, partyquestcontribution.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, partyquestcontribution.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, partyquestcontribution.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, partyquestcontribution.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, partyquestcontribution.FieldVersion)
+	}
+	if m.party_quest_session_id != nil {
+		fields = append(fields, partyquestcontribution.FieldPartyQuestSessionID)
+	}
+	if m.student_id != nil {
+		fields = append(fields, partyquestcontribution.FieldStudentID)
+	}
+	if m.step_id != nil {
+		fields = append(fields, partyquestcontribution.FieldStepID)
+	}
+	if m.metric_value != nil {
+		fields = append(fields, partyquestcontribution.FieldMetricValue)
+	}
+	if m.min_contribution_met != nil {
+		fields = append(fields, partyquestcontribution.FieldMinContributionMet)
+	}
+	if m.attempt_ids != nil {
+		fields = append(fields, partyquestcontribution.FieldAttemptIds)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PartyQuestContributionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case partyquestcontribution.FieldTenantID:
+		return m.TenantID()
+	case partyquestcontribution.FieldCreatedAt:
+		return m.CreatedAt()
+	case partyquestcontribution.FieldCreatedBy:
+		return m.CreatedBy()
+	case partyquestcontribution.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case partyquestcontribution.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case partyquestcontribution.FieldDeletedAt:
+		return m.DeletedAt()
+	case partyquestcontribution.FieldDeletedBy:
+		return m.DeletedBy()
+	case partyquestcontribution.FieldDeleteReason:
+		return m.DeleteReason()
+	case partyquestcontribution.FieldVersion:
+		return m.Version()
+	case partyquestcontribution.FieldPartyQuestSessionID:
+		return m.PartyQuestSessionID()
+	case partyquestcontribution.FieldStudentID:
+		return m.StudentID()
+	case partyquestcontribution.FieldStepID:
+		return m.StepID()
+	case partyquestcontribution.FieldMetricValue:
+		return m.MetricValue()
+	case partyquestcontribution.FieldMinContributionMet:
+		return m.MinContributionMet()
+	case partyquestcontribution.FieldAttemptIds:
+		return m.AttemptIds()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PartyQuestContributionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case partyquestcontribution.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case partyquestcontribution.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case partyquestcontribution.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case partyquestcontribution.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case partyquestcontribution.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case partyquestcontribution.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case partyquestcontribution.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case partyquestcontribution.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case partyquestcontribution.FieldVersion:
+		return m.OldVersion(ctx)
+	case partyquestcontribution.FieldPartyQuestSessionID:
+		return m.OldPartyQuestSessionID(ctx)
+	case partyquestcontribution.FieldStudentID:
+		return m.OldStudentID(ctx)
+	case partyquestcontribution.FieldStepID:
+		return m.OldStepID(ctx)
+	case partyquestcontribution.FieldMetricValue:
+		return m.OldMetricValue(ctx)
+	case partyquestcontribution.FieldMinContributionMet:
+		return m.OldMinContributionMet(ctx)
+	case partyquestcontribution.FieldAttemptIds:
+		return m.OldAttemptIds(ctx)
+	}
+	return nil, fmt.Errorf("unknown PartyQuestContribution field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartyQuestContributionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case partyquestcontribution.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case partyquestcontribution.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case partyquestcontribution.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case partyquestcontribution.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case partyquestcontribution.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case partyquestcontribution.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case partyquestcontribution.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case partyquestcontribution.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case partyquestcontribution.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case partyquestcontribution.FieldPartyQuestSessionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPartyQuestSessionID(v)
+		return nil
+	case partyquestcontribution.FieldStudentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStudentID(v)
+		return nil
+	case partyquestcontribution.FieldStepID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStepID(v)
+		return nil
+	case partyquestcontribution.FieldMetricValue:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMetricValue(v)
+		return nil
+	case partyquestcontribution.FieldMinContributionMet:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMinContributionMet(v)
+		return nil
+	case partyquestcontribution.FieldAttemptIds:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttemptIds(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PartyQuestContribution field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PartyQuestContributionMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, partyquestcontribution.FieldVersion)
+	}
+	if m.addmetric_value != nil {
+		fields = append(fields, partyquestcontribution.FieldMetricValue)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PartyQuestContributionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case partyquestcontribution.FieldVersion:
+		return m.AddedVersion()
+	case partyquestcontribution.FieldMetricValue:
+		return m.AddedMetricValue()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartyQuestContributionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case partyquestcontribution.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case partyquestcontribution.FieldMetricValue:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMetricValue(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PartyQuestContribution numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PartyQuestContributionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(partyquestcontribution.FieldCreatedBy) {
+		fields = append(fields, partyquestcontribution.FieldCreatedBy)
+	}
+	if m.FieldCleared(partyquestcontribution.FieldUpdatedBy) {
+		fields = append(fields, partyquestcontribution.FieldUpdatedBy)
+	}
+	if m.FieldCleared(partyquestcontribution.FieldDeletedAt) {
+		fields = append(fields, partyquestcontribution.FieldDeletedAt)
+	}
+	if m.FieldCleared(partyquestcontribution.FieldDeletedBy) {
+		fields = append(fields, partyquestcontribution.FieldDeletedBy)
+	}
+	if m.FieldCleared(partyquestcontribution.FieldDeleteReason) {
+		fields = append(fields, partyquestcontribution.FieldDeleteReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PartyQuestContributionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PartyQuestContributionMutation) ClearField(name string) error {
+	switch name {
+	case partyquestcontribution.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case partyquestcontribution.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case partyquestcontribution.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case partyquestcontribution.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case partyquestcontribution.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	}
+	return fmt.Errorf("unknown PartyQuestContribution nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PartyQuestContributionMutation) ResetField(name string) error {
+	switch name {
+	case partyquestcontribution.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case partyquestcontribution.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case partyquestcontribution.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case partyquestcontribution.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case partyquestcontribution.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case partyquestcontribution.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case partyquestcontribution.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case partyquestcontribution.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case partyquestcontribution.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case partyquestcontribution.FieldPartyQuestSessionID:
+		m.ResetPartyQuestSessionID()
+		return nil
+	case partyquestcontribution.FieldStudentID:
+		m.ResetStudentID()
+		return nil
+	case partyquestcontribution.FieldStepID:
+		m.ResetStepID()
+		return nil
+	case partyquestcontribution.FieldMetricValue:
+		m.ResetMetricValue()
+		return nil
+	case partyquestcontribution.FieldMinContributionMet:
+		m.ResetMinContributionMet()
+		return nil
+	case partyquestcontribution.FieldAttemptIds:
+		m.ResetAttemptIds()
+		return nil
+	}
+	return fmt.Errorf("unknown PartyQuestContribution field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PartyQuestContributionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PartyQuestContributionMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PartyQuestContributionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PartyQuestContributionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PartyQuestContributionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PartyQuestContributionMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PartyQuestContributionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown PartyQuestContribution unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PartyQuestContributionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown PartyQuestContribution edge %s", name)
+}
+
+// PartyQuestSessionMutation represents an operation that mutates the PartyQuestSession nodes in the graph.
+type PartyQuestSessionMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *uuid.UUID
+	tenant_id              *uuid.UUID
+	created_at             *time.Time
+	created_by             *uuid.UUID
+	updated_at             *time.Time
+	updated_by             *uuid.UUID
+	deleted_at             *time.Time
+	deleted_by             *uuid.UUID
+	delete_reason          *string
+	version                *int64
+	addversion             *int64
+	school_id              *uuid.UUID
+	party_id               *uuid.UUID
+	party_activity_id      *uuid.UUID
+	leader_id              *uuid.UUID
+	quest_id               *uuid.UUID
+	quest_version_id       *uuid.UUID
+	party_mode             *string
+	shared_progress_policy *string
+	party_size_min         *int
+	addparty_size_min      *int
+	status                 *string
+	member_ids             *[]string
+	appendmember_ids       []string
+	member_states          *[]map[string]interface{}
+	appendmember_states    []map[string]interface{}
+	shared_step_states     *map[string]interface{}
+	role_assignments       *map[string]interface{}
+	shared_clues           *[]map[string]interface{}
+	appendshared_clues     []map[string]interface{}
+	state_version          *int64
+	addstate_version       *int64
+	started_at             *time.Time
+	ended_at               *time.Time
+	end_reason             *string
+	clearedFields          map[string]struct{}
+	done                   bool
+	oldValue               func(context.Context) (*PartyQuestSession, error)
+	predicates             []predicate.PartyQuestSession
+}
+
+var _ ent.Mutation = (*PartyQuestSessionMutation)(nil)
+
+// partyquestsessionOption allows management of the mutation configuration using functional options.
+type partyquestsessionOption func(*PartyQuestSessionMutation)
+
+// newPartyQuestSessionMutation creates new mutation for the PartyQuestSession entity.
+func newPartyQuestSessionMutation(c config, op Op, opts ...partyquestsessionOption) *PartyQuestSessionMutation {
+	m := &PartyQuestSessionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePartyQuestSession,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPartyQuestSessionID sets the ID field of the mutation.
+func withPartyQuestSessionID(id uuid.UUID) partyquestsessionOption {
+	return func(m *PartyQuestSessionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PartyQuestSession
+		)
+		m.oldValue = func(ctx context.Context) (*PartyQuestSession, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PartyQuestSession.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPartyQuestSession sets the old PartyQuestSession of the mutation.
+func withPartyQuestSession(node *PartyQuestSession) partyquestsessionOption {
+	return func(m *PartyQuestSessionMutation) {
+		m.oldValue = func(context.Context) (*PartyQuestSession, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PartyQuestSessionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PartyQuestSessionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of PartyQuestSession entities.
+func (m *PartyQuestSessionMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PartyQuestSessionMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PartyQuestSessionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PartyQuestSession.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *PartyQuestSessionMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *PartyQuestSessionMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *PartyQuestSessionMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PartyQuestSessionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PartyQuestSessionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PartyQuestSessionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *PartyQuestSessionMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *PartyQuestSessionMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *PartyQuestSessionMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[partyquestsession.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *PartyQuestSessionMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[partyquestsession.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *PartyQuestSessionMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, partyquestsession.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PartyQuestSessionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PartyQuestSessionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PartyQuestSessionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *PartyQuestSessionMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *PartyQuestSessionMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *PartyQuestSessionMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[partyquestsession.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *PartyQuestSessionMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[partyquestsession.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *PartyQuestSessionMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, partyquestsession.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *PartyQuestSessionMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *PartyQuestSessionMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *PartyQuestSessionMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[partyquestsession.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *PartyQuestSessionMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[partyquestsession.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *PartyQuestSessionMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, partyquestsession.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *PartyQuestSessionMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *PartyQuestSessionMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *PartyQuestSessionMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[partyquestsession.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *PartyQuestSessionMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[partyquestsession.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *PartyQuestSessionMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, partyquestsession.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *PartyQuestSessionMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *PartyQuestSessionMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *PartyQuestSessionMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[partyquestsession.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *PartyQuestSessionMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[partyquestsession.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *PartyQuestSessionMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, partyquestsession.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *PartyQuestSessionMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *PartyQuestSessionMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *PartyQuestSessionMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *PartyQuestSessionMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *PartyQuestSessionMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetSchoolID sets the "school_id" field.
+func (m *PartyQuestSessionMutation) SetSchoolID(u uuid.UUID) {
+	m.school_id = &u
+}
+
+// SchoolID returns the value of the "school_id" field in the mutation.
+func (m *PartyQuestSessionMutation) SchoolID() (r uuid.UUID, exists bool) {
+	v := m.school_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchoolID returns the old "school_id" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldSchoolID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchoolID: %w", err)
+	}
+	return oldValue.SchoolID, nil
+}
+
+// ResetSchoolID resets all changes to the "school_id" field.
+func (m *PartyQuestSessionMutation) ResetSchoolID() {
+	m.school_id = nil
+}
+
+// SetPartyID sets the "party_id" field.
+func (m *PartyQuestSessionMutation) SetPartyID(u uuid.UUID) {
+	m.party_id = &u
+}
+
+// PartyID returns the value of the "party_id" field in the mutation.
+func (m *PartyQuestSessionMutation) PartyID() (r uuid.UUID, exists bool) {
+	v := m.party_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPartyID returns the old "party_id" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldPartyID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPartyID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPartyID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPartyID: %w", err)
+	}
+	return oldValue.PartyID, nil
+}
+
+// ResetPartyID resets all changes to the "party_id" field.
+func (m *PartyQuestSessionMutation) ResetPartyID() {
+	m.party_id = nil
+}
+
+// SetPartyActivityID sets the "party_activity_id" field.
+func (m *PartyQuestSessionMutation) SetPartyActivityID(u uuid.UUID) {
+	m.party_activity_id = &u
+}
+
+// PartyActivityID returns the value of the "party_activity_id" field in the mutation.
+func (m *PartyQuestSessionMutation) PartyActivityID() (r uuid.UUID, exists bool) {
+	v := m.party_activity_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPartyActivityID returns the old "party_activity_id" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldPartyActivityID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPartyActivityID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPartyActivityID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPartyActivityID: %w", err)
+	}
+	return oldValue.PartyActivityID, nil
+}
+
+// ResetPartyActivityID resets all changes to the "party_activity_id" field.
+func (m *PartyQuestSessionMutation) ResetPartyActivityID() {
+	m.party_activity_id = nil
+}
+
+// SetLeaderID sets the "leader_id" field.
+func (m *PartyQuestSessionMutation) SetLeaderID(u uuid.UUID) {
+	m.leader_id = &u
+}
+
+// LeaderID returns the value of the "leader_id" field in the mutation.
+func (m *PartyQuestSessionMutation) LeaderID() (r uuid.UUID, exists bool) {
+	v := m.leader_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeaderID returns the old "leader_id" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldLeaderID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeaderID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeaderID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeaderID: %w", err)
+	}
+	return oldValue.LeaderID, nil
+}
+
+// ResetLeaderID resets all changes to the "leader_id" field.
+func (m *PartyQuestSessionMutation) ResetLeaderID() {
+	m.leader_id = nil
+}
+
+// SetQuestID sets the "quest_id" field.
+func (m *PartyQuestSessionMutation) SetQuestID(u uuid.UUID) {
+	m.quest_id = &u
+}
+
+// QuestID returns the value of the "quest_id" field in the mutation.
+func (m *PartyQuestSessionMutation) QuestID() (r uuid.UUID, exists bool) {
+	v := m.quest_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestID returns the old "quest_id" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldQuestID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestID: %w", err)
+	}
+	return oldValue.QuestID, nil
+}
+
+// ResetQuestID resets all changes to the "quest_id" field.
+func (m *PartyQuestSessionMutation) ResetQuestID() {
+	m.quest_id = nil
+}
+
+// SetQuestVersionID sets the "quest_version_id" field.
+func (m *PartyQuestSessionMutation) SetQuestVersionID(u uuid.UUID) {
+	m.quest_version_id = &u
+}
+
+// QuestVersionID returns the value of the "quest_version_id" field in the mutation.
+func (m *PartyQuestSessionMutation) QuestVersionID() (r uuid.UUID, exists bool) {
+	v := m.quest_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestVersionID returns the old "quest_version_id" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldQuestVersionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestVersionID: %w", err)
+	}
+	return oldValue.QuestVersionID, nil
+}
+
+// ResetQuestVersionID resets all changes to the "quest_version_id" field.
+func (m *PartyQuestSessionMutation) ResetQuestVersionID() {
+	m.quest_version_id = nil
+}
+
+// SetPartyMode sets the "party_mode" field.
+func (m *PartyQuestSessionMutation) SetPartyMode(s string) {
+	m.party_mode = &s
+}
+
+// PartyMode returns the value of the "party_mode" field in the mutation.
+func (m *PartyQuestSessionMutation) PartyMode() (r string, exists bool) {
+	v := m.party_mode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPartyMode returns the old "party_mode" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldPartyMode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPartyMode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPartyMode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPartyMode: %w", err)
+	}
+	return oldValue.PartyMode, nil
+}
+
+// ResetPartyMode resets all changes to the "party_mode" field.
+func (m *PartyQuestSessionMutation) ResetPartyMode() {
+	m.party_mode = nil
+}
+
+// SetSharedProgressPolicy sets the "shared_progress_policy" field.
+func (m *PartyQuestSessionMutation) SetSharedProgressPolicy(s string) {
+	m.shared_progress_policy = &s
+}
+
+// SharedProgressPolicy returns the value of the "shared_progress_policy" field in the mutation.
+func (m *PartyQuestSessionMutation) SharedProgressPolicy() (r string, exists bool) {
+	v := m.shared_progress_policy
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSharedProgressPolicy returns the old "shared_progress_policy" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldSharedProgressPolicy(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSharedProgressPolicy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSharedProgressPolicy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSharedProgressPolicy: %w", err)
+	}
+	return oldValue.SharedProgressPolicy, nil
+}
+
+// ResetSharedProgressPolicy resets all changes to the "shared_progress_policy" field.
+func (m *PartyQuestSessionMutation) ResetSharedProgressPolicy() {
+	m.shared_progress_policy = nil
+}
+
+// SetPartySizeMin sets the "party_size_min" field.
+func (m *PartyQuestSessionMutation) SetPartySizeMin(i int) {
+	m.party_size_min = &i
+	m.addparty_size_min = nil
+}
+
+// PartySizeMin returns the value of the "party_size_min" field in the mutation.
+func (m *PartyQuestSessionMutation) PartySizeMin() (r int, exists bool) {
+	v := m.party_size_min
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPartySizeMin returns the old "party_size_min" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldPartySizeMin(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPartySizeMin is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPartySizeMin requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPartySizeMin: %w", err)
+	}
+	return oldValue.PartySizeMin, nil
+}
+
+// AddPartySizeMin adds i to the "party_size_min" field.
+func (m *PartyQuestSessionMutation) AddPartySizeMin(i int) {
+	if m.addparty_size_min != nil {
+		*m.addparty_size_min += i
+	} else {
+		m.addparty_size_min = &i
+	}
+}
+
+// AddedPartySizeMin returns the value that was added to the "party_size_min" field in this mutation.
+func (m *PartyQuestSessionMutation) AddedPartySizeMin() (r int, exists bool) {
+	v := m.addparty_size_min
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPartySizeMin resets all changes to the "party_size_min" field.
+func (m *PartyQuestSessionMutation) ResetPartySizeMin() {
+	m.party_size_min = nil
+	m.addparty_size_min = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *PartyQuestSessionMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *PartyQuestSessionMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *PartyQuestSessionMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetMemberIds sets the "member_ids" field.
+func (m *PartyQuestSessionMutation) SetMemberIds(s []string) {
+	m.member_ids = &s
+	m.appendmember_ids = nil
+}
+
+// MemberIds returns the value of the "member_ids" field in the mutation.
+func (m *PartyQuestSessionMutation) MemberIds() (r []string, exists bool) {
+	v := m.member_ids
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMemberIds returns the old "member_ids" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldMemberIds(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMemberIds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMemberIds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMemberIds: %w", err)
+	}
+	return oldValue.MemberIds, nil
+}
+
+// AppendMemberIds adds s to the "member_ids" field.
+func (m *PartyQuestSessionMutation) AppendMemberIds(s []string) {
+	m.appendmember_ids = append(m.appendmember_ids, s...)
+}
+
+// AppendedMemberIds returns the list of values that were appended to the "member_ids" field in this mutation.
+func (m *PartyQuestSessionMutation) AppendedMemberIds() ([]string, bool) {
+	if len(m.appendmember_ids) == 0 {
+		return nil, false
+	}
+	return m.appendmember_ids, true
+}
+
+// ResetMemberIds resets all changes to the "member_ids" field.
+func (m *PartyQuestSessionMutation) ResetMemberIds() {
+	m.member_ids = nil
+	m.appendmember_ids = nil
+}
+
+// SetMemberStates sets the "member_states" field.
+func (m *PartyQuestSessionMutation) SetMemberStates(value []map[string]interface{}) {
+	m.member_states = &value
+	m.appendmember_states = nil
+}
+
+// MemberStates returns the value of the "member_states" field in the mutation.
+func (m *PartyQuestSessionMutation) MemberStates() (r []map[string]interface{}, exists bool) {
+	v := m.member_states
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMemberStates returns the old "member_states" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldMemberStates(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMemberStates is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMemberStates requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMemberStates: %w", err)
+	}
+	return oldValue.MemberStates, nil
+}
+
+// AppendMemberStates adds value to the "member_states" field.
+func (m *PartyQuestSessionMutation) AppendMemberStates(value []map[string]interface{}) {
+	m.appendmember_states = append(m.appendmember_states, value...)
+}
+
+// AppendedMemberStates returns the list of values that were appended to the "member_states" field in this mutation.
+func (m *PartyQuestSessionMutation) AppendedMemberStates() ([]map[string]interface{}, bool) {
+	if len(m.appendmember_states) == 0 {
+		return nil, false
+	}
+	return m.appendmember_states, true
+}
+
+// ResetMemberStates resets all changes to the "member_states" field.
+func (m *PartyQuestSessionMutation) ResetMemberStates() {
+	m.member_states = nil
+	m.appendmember_states = nil
+}
+
+// SetSharedStepStates sets the "shared_step_states" field.
+func (m *PartyQuestSessionMutation) SetSharedStepStates(value map[string]interface{}) {
+	m.shared_step_states = &value
+}
+
+// SharedStepStates returns the value of the "shared_step_states" field in the mutation.
+func (m *PartyQuestSessionMutation) SharedStepStates() (r map[string]interface{}, exists bool) {
+	v := m.shared_step_states
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSharedStepStates returns the old "shared_step_states" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldSharedStepStates(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSharedStepStates is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSharedStepStates requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSharedStepStates: %w", err)
+	}
+	return oldValue.SharedStepStates, nil
+}
+
+// ResetSharedStepStates resets all changes to the "shared_step_states" field.
+func (m *PartyQuestSessionMutation) ResetSharedStepStates() {
+	m.shared_step_states = nil
+}
+
+// SetRoleAssignments sets the "role_assignments" field.
+func (m *PartyQuestSessionMutation) SetRoleAssignments(value map[string]interface{}) {
+	m.role_assignments = &value
+}
+
+// RoleAssignments returns the value of the "role_assignments" field in the mutation.
+func (m *PartyQuestSessionMutation) RoleAssignments() (r map[string]interface{}, exists bool) {
+	v := m.role_assignments
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRoleAssignments returns the old "role_assignments" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldRoleAssignments(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRoleAssignments is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRoleAssignments requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRoleAssignments: %w", err)
+	}
+	return oldValue.RoleAssignments, nil
+}
+
+// ResetRoleAssignments resets all changes to the "role_assignments" field.
+func (m *PartyQuestSessionMutation) ResetRoleAssignments() {
+	m.role_assignments = nil
+}
+
+// SetSharedClues sets the "shared_clues" field.
+func (m *PartyQuestSessionMutation) SetSharedClues(value []map[string]interface{}) {
+	m.shared_clues = &value
+	m.appendshared_clues = nil
+}
+
+// SharedClues returns the value of the "shared_clues" field in the mutation.
+func (m *PartyQuestSessionMutation) SharedClues() (r []map[string]interface{}, exists bool) {
+	v := m.shared_clues
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSharedClues returns the old "shared_clues" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldSharedClues(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSharedClues is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSharedClues requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSharedClues: %w", err)
+	}
+	return oldValue.SharedClues, nil
+}
+
+// AppendSharedClues adds value to the "shared_clues" field.
+func (m *PartyQuestSessionMutation) AppendSharedClues(value []map[string]interface{}) {
+	m.appendshared_clues = append(m.appendshared_clues, value...)
+}
+
+// AppendedSharedClues returns the list of values that were appended to the "shared_clues" field in this mutation.
+func (m *PartyQuestSessionMutation) AppendedSharedClues() ([]map[string]interface{}, bool) {
+	if len(m.appendshared_clues) == 0 {
+		return nil, false
+	}
+	return m.appendshared_clues, true
+}
+
+// ResetSharedClues resets all changes to the "shared_clues" field.
+func (m *PartyQuestSessionMutation) ResetSharedClues() {
+	m.shared_clues = nil
+	m.appendshared_clues = nil
+}
+
+// SetStateVersion sets the "state_version" field.
+func (m *PartyQuestSessionMutation) SetStateVersion(i int64) {
+	m.state_version = &i
+	m.addstate_version = nil
+}
+
+// StateVersion returns the value of the "state_version" field in the mutation.
+func (m *PartyQuestSessionMutation) StateVersion() (r int64, exists bool) {
+	v := m.state_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStateVersion returns the old "state_version" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldStateVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStateVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStateVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStateVersion: %w", err)
+	}
+	return oldValue.StateVersion, nil
+}
+
+// AddStateVersion adds i to the "state_version" field.
+func (m *PartyQuestSessionMutation) AddStateVersion(i int64) {
+	if m.addstate_version != nil {
+		*m.addstate_version += i
+	} else {
+		m.addstate_version = &i
+	}
+}
+
+// AddedStateVersion returns the value that was added to the "state_version" field in this mutation.
+func (m *PartyQuestSessionMutation) AddedStateVersion() (r int64, exists bool) {
+	v := m.addstate_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetStateVersion resets all changes to the "state_version" field.
+func (m *PartyQuestSessionMutation) ResetStateVersion() {
+	m.state_version = nil
+	m.addstate_version = nil
+}
+
+// SetStartedAt sets the "started_at" field.
+func (m *PartyQuestSessionMutation) SetStartedAt(t time.Time) {
+	m.started_at = &t
+}
+
+// StartedAt returns the value of the "started_at" field in the mutation.
+func (m *PartyQuestSessionMutation) StartedAt() (r time.Time, exists bool) {
+	v := m.started_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartedAt returns the old "started_at" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldStartedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartedAt: %w", err)
+	}
+	return oldValue.StartedAt, nil
+}
+
+// ResetStartedAt resets all changes to the "started_at" field.
+func (m *PartyQuestSessionMutation) ResetStartedAt() {
+	m.started_at = nil
+}
+
+// SetEndedAt sets the "ended_at" field.
+func (m *PartyQuestSessionMutation) SetEndedAt(t time.Time) {
+	m.ended_at = &t
+}
+
+// EndedAt returns the value of the "ended_at" field in the mutation.
+func (m *PartyQuestSessionMutation) EndedAt() (r time.Time, exists bool) {
+	v := m.ended_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndedAt returns the old "ended_at" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldEndedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndedAt: %w", err)
+	}
+	return oldValue.EndedAt, nil
+}
+
+// ClearEndedAt clears the value of the "ended_at" field.
+func (m *PartyQuestSessionMutation) ClearEndedAt() {
+	m.ended_at = nil
+	m.clearedFields[partyquestsession.FieldEndedAt] = struct{}{}
+}
+
+// EndedAtCleared returns if the "ended_at" field was cleared in this mutation.
+func (m *PartyQuestSessionMutation) EndedAtCleared() bool {
+	_, ok := m.clearedFields[partyquestsession.FieldEndedAt]
+	return ok
+}
+
+// ResetEndedAt resets all changes to the "ended_at" field.
+func (m *PartyQuestSessionMutation) ResetEndedAt() {
+	m.ended_at = nil
+	delete(m.clearedFields, partyquestsession.FieldEndedAt)
+}
+
+// SetEndReason sets the "end_reason" field.
+func (m *PartyQuestSessionMutation) SetEndReason(s string) {
+	m.end_reason = &s
+}
+
+// EndReason returns the value of the "end_reason" field in the mutation.
+func (m *PartyQuestSessionMutation) EndReason() (r string, exists bool) {
+	v := m.end_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndReason returns the old "end_reason" field's value of the PartyQuestSession entity.
+// If the PartyQuestSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyQuestSessionMutation) OldEndReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndReason: %w", err)
+	}
+	return oldValue.EndReason, nil
+}
+
+// ClearEndReason clears the value of the "end_reason" field.
+func (m *PartyQuestSessionMutation) ClearEndReason() {
+	m.end_reason = nil
+	m.clearedFields[partyquestsession.FieldEndReason] = struct{}{}
+}
+
+// EndReasonCleared returns if the "end_reason" field was cleared in this mutation.
+func (m *PartyQuestSessionMutation) EndReasonCleared() bool {
+	_, ok := m.clearedFields[partyquestsession.FieldEndReason]
+	return ok
+}
+
+// ResetEndReason resets all changes to the "end_reason" field.
+func (m *PartyQuestSessionMutation) ResetEndReason() {
+	m.end_reason = nil
+	delete(m.clearedFields, partyquestsession.FieldEndReason)
+}
+
+// Where appends a list predicates to the PartyQuestSessionMutation builder.
+func (m *PartyQuestSessionMutation) Where(ps ...predicate.PartyQuestSession) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PartyQuestSessionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PartyQuestSessionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PartyQuestSession, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PartyQuestSessionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PartyQuestSessionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PartyQuestSession).
+func (m *PartyQuestSessionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PartyQuestSessionMutation) Fields() []string {
+	fields := make([]string, 0, 28)
+	if m.tenant_id != nil {
+		fields = append(fields, partyquestsession.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, partyquestsession.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, partyquestsession.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, partyquestsession.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, partyquestsession.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, partyquestsession.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, partyquestsession.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, partyquestsession.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, partyquestsession.FieldVersion)
+	}
+	if m.school_id != nil {
+		fields = append(fields, partyquestsession.FieldSchoolID)
+	}
+	if m.party_id != nil {
+		fields = append(fields, partyquestsession.FieldPartyID)
+	}
+	if m.party_activity_id != nil {
+		fields = append(fields, partyquestsession.FieldPartyActivityID)
+	}
+	if m.leader_id != nil {
+		fields = append(fields, partyquestsession.FieldLeaderID)
+	}
+	if m.quest_id != nil {
+		fields = append(fields, partyquestsession.FieldQuestID)
+	}
+	if m.quest_version_id != nil {
+		fields = append(fields, partyquestsession.FieldQuestVersionID)
+	}
+	if m.party_mode != nil {
+		fields = append(fields, partyquestsession.FieldPartyMode)
+	}
+	if m.shared_progress_policy != nil {
+		fields = append(fields, partyquestsession.FieldSharedProgressPolicy)
+	}
+	if m.party_size_min != nil {
+		fields = append(fields, partyquestsession.FieldPartySizeMin)
+	}
+	if m.status != nil {
+		fields = append(fields, partyquestsession.FieldStatus)
+	}
+	if m.member_ids != nil {
+		fields = append(fields, partyquestsession.FieldMemberIds)
+	}
+	if m.member_states != nil {
+		fields = append(fields, partyquestsession.FieldMemberStates)
+	}
+	if m.shared_step_states != nil {
+		fields = append(fields, partyquestsession.FieldSharedStepStates)
+	}
+	if m.role_assignments != nil {
+		fields = append(fields, partyquestsession.FieldRoleAssignments)
+	}
+	if m.shared_clues != nil {
+		fields = append(fields, partyquestsession.FieldSharedClues)
+	}
+	if m.state_version != nil {
+		fields = append(fields, partyquestsession.FieldStateVersion)
+	}
+	if m.started_at != nil {
+		fields = append(fields, partyquestsession.FieldStartedAt)
+	}
+	if m.ended_at != nil {
+		fields = append(fields, partyquestsession.FieldEndedAt)
+	}
+	if m.end_reason != nil {
+		fields = append(fields, partyquestsession.FieldEndReason)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PartyQuestSessionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case partyquestsession.FieldTenantID:
+		return m.TenantID()
+	case partyquestsession.FieldCreatedAt:
+		return m.CreatedAt()
+	case partyquestsession.FieldCreatedBy:
+		return m.CreatedBy()
+	case partyquestsession.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case partyquestsession.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case partyquestsession.FieldDeletedAt:
+		return m.DeletedAt()
+	case partyquestsession.FieldDeletedBy:
+		return m.DeletedBy()
+	case partyquestsession.FieldDeleteReason:
+		return m.DeleteReason()
+	case partyquestsession.FieldVersion:
+		return m.Version()
+	case partyquestsession.FieldSchoolID:
+		return m.SchoolID()
+	case partyquestsession.FieldPartyID:
+		return m.PartyID()
+	case partyquestsession.FieldPartyActivityID:
+		return m.PartyActivityID()
+	case partyquestsession.FieldLeaderID:
+		return m.LeaderID()
+	case partyquestsession.FieldQuestID:
+		return m.QuestID()
+	case partyquestsession.FieldQuestVersionID:
+		return m.QuestVersionID()
+	case partyquestsession.FieldPartyMode:
+		return m.PartyMode()
+	case partyquestsession.FieldSharedProgressPolicy:
+		return m.SharedProgressPolicy()
+	case partyquestsession.FieldPartySizeMin:
+		return m.PartySizeMin()
+	case partyquestsession.FieldStatus:
+		return m.Status()
+	case partyquestsession.FieldMemberIds:
+		return m.MemberIds()
+	case partyquestsession.FieldMemberStates:
+		return m.MemberStates()
+	case partyquestsession.FieldSharedStepStates:
+		return m.SharedStepStates()
+	case partyquestsession.FieldRoleAssignments:
+		return m.RoleAssignments()
+	case partyquestsession.FieldSharedClues:
+		return m.SharedClues()
+	case partyquestsession.FieldStateVersion:
+		return m.StateVersion()
+	case partyquestsession.FieldStartedAt:
+		return m.StartedAt()
+	case partyquestsession.FieldEndedAt:
+		return m.EndedAt()
+	case partyquestsession.FieldEndReason:
+		return m.EndReason()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PartyQuestSessionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case partyquestsession.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case partyquestsession.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case partyquestsession.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case partyquestsession.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case partyquestsession.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case partyquestsession.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case partyquestsession.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case partyquestsession.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case partyquestsession.FieldVersion:
+		return m.OldVersion(ctx)
+	case partyquestsession.FieldSchoolID:
+		return m.OldSchoolID(ctx)
+	case partyquestsession.FieldPartyID:
+		return m.OldPartyID(ctx)
+	case partyquestsession.FieldPartyActivityID:
+		return m.OldPartyActivityID(ctx)
+	case partyquestsession.FieldLeaderID:
+		return m.OldLeaderID(ctx)
+	case partyquestsession.FieldQuestID:
+		return m.OldQuestID(ctx)
+	case partyquestsession.FieldQuestVersionID:
+		return m.OldQuestVersionID(ctx)
+	case partyquestsession.FieldPartyMode:
+		return m.OldPartyMode(ctx)
+	case partyquestsession.FieldSharedProgressPolicy:
+		return m.OldSharedProgressPolicy(ctx)
+	case partyquestsession.FieldPartySizeMin:
+		return m.OldPartySizeMin(ctx)
+	case partyquestsession.FieldStatus:
+		return m.OldStatus(ctx)
+	case partyquestsession.FieldMemberIds:
+		return m.OldMemberIds(ctx)
+	case partyquestsession.FieldMemberStates:
+		return m.OldMemberStates(ctx)
+	case partyquestsession.FieldSharedStepStates:
+		return m.OldSharedStepStates(ctx)
+	case partyquestsession.FieldRoleAssignments:
+		return m.OldRoleAssignments(ctx)
+	case partyquestsession.FieldSharedClues:
+		return m.OldSharedClues(ctx)
+	case partyquestsession.FieldStateVersion:
+		return m.OldStateVersion(ctx)
+	case partyquestsession.FieldStartedAt:
+		return m.OldStartedAt(ctx)
+	case partyquestsession.FieldEndedAt:
+		return m.OldEndedAt(ctx)
+	case partyquestsession.FieldEndReason:
+		return m.OldEndReason(ctx)
+	}
+	return nil, fmt.Errorf("unknown PartyQuestSession field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartyQuestSessionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case partyquestsession.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case partyquestsession.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case partyquestsession.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case partyquestsession.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case partyquestsession.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case partyquestsession.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case partyquestsession.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case partyquestsession.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case partyquestsession.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case partyquestsession.FieldSchoolID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchoolID(v)
+		return nil
+	case partyquestsession.FieldPartyID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPartyID(v)
+		return nil
+	case partyquestsession.FieldPartyActivityID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPartyActivityID(v)
+		return nil
+	case partyquestsession.FieldLeaderID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeaderID(v)
+		return nil
+	case partyquestsession.FieldQuestID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestID(v)
+		return nil
+	case partyquestsession.FieldQuestVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestVersionID(v)
+		return nil
+	case partyquestsession.FieldPartyMode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPartyMode(v)
+		return nil
+	case partyquestsession.FieldSharedProgressPolicy:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSharedProgressPolicy(v)
+		return nil
+	case partyquestsession.FieldPartySizeMin:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPartySizeMin(v)
+		return nil
+	case partyquestsession.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case partyquestsession.FieldMemberIds:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMemberIds(v)
+		return nil
+	case partyquestsession.FieldMemberStates:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMemberStates(v)
+		return nil
+	case partyquestsession.FieldSharedStepStates:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSharedStepStates(v)
+		return nil
+	case partyquestsession.FieldRoleAssignments:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRoleAssignments(v)
+		return nil
+	case partyquestsession.FieldSharedClues:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSharedClues(v)
+		return nil
+	case partyquestsession.FieldStateVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStateVersion(v)
+		return nil
+	case partyquestsession.FieldStartedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartedAt(v)
+		return nil
+	case partyquestsession.FieldEndedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndedAt(v)
+		return nil
+	case partyquestsession.FieldEndReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndReason(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PartyQuestSession field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PartyQuestSessionMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, partyquestsession.FieldVersion)
+	}
+	if m.addparty_size_min != nil {
+		fields = append(fields, partyquestsession.FieldPartySizeMin)
+	}
+	if m.addstate_version != nil {
+		fields = append(fields, partyquestsession.FieldStateVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PartyQuestSessionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case partyquestsession.FieldVersion:
+		return m.AddedVersion()
+	case partyquestsession.FieldPartySizeMin:
+		return m.AddedPartySizeMin()
+	case partyquestsession.FieldStateVersion:
+		return m.AddedStateVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartyQuestSessionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case partyquestsession.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case partyquestsession.FieldPartySizeMin:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPartySizeMin(v)
+		return nil
+	case partyquestsession.FieldStateVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddStateVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PartyQuestSession numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PartyQuestSessionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(partyquestsession.FieldCreatedBy) {
+		fields = append(fields, partyquestsession.FieldCreatedBy)
+	}
+	if m.FieldCleared(partyquestsession.FieldUpdatedBy) {
+		fields = append(fields, partyquestsession.FieldUpdatedBy)
+	}
+	if m.FieldCleared(partyquestsession.FieldDeletedAt) {
+		fields = append(fields, partyquestsession.FieldDeletedAt)
+	}
+	if m.FieldCleared(partyquestsession.FieldDeletedBy) {
+		fields = append(fields, partyquestsession.FieldDeletedBy)
+	}
+	if m.FieldCleared(partyquestsession.FieldDeleteReason) {
+		fields = append(fields, partyquestsession.FieldDeleteReason)
+	}
+	if m.FieldCleared(partyquestsession.FieldEndedAt) {
+		fields = append(fields, partyquestsession.FieldEndedAt)
+	}
+	if m.FieldCleared(partyquestsession.FieldEndReason) {
+		fields = append(fields, partyquestsession.FieldEndReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PartyQuestSessionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PartyQuestSessionMutation) ClearField(name string) error {
+	switch name {
+	case partyquestsession.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case partyquestsession.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case partyquestsession.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case partyquestsession.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case partyquestsession.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case partyquestsession.FieldEndedAt:
+		m.ClearEndedAt()
+		return nil
+	case partyquestsession.FieldEndReason:
+		m.ClearEndReason()
+		return nil
+	}
+	return fmt.Errorf("unknown PartyQuestSession nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PartyQuestSessionMutation) ResetField(name string) error {
+	switch name {
+	case partyquestsession.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case partyquestsession.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case partyquestsession.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case partyquestsession.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case partyquestsession.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case partyquestsession.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case partyquestsession.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case partyquestsession.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case partyquestsession.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case partyquestsession.FieldSchoolID:
+		m.ResetSchoolID()
+		return nil
+	case partyquestsession.FieldPartyID:
+		m.ResetPartyID()
+		return nil
+	case partyquestsession.FieldPartyActivityID:
+		m.ResetPartyActivityID()
+		return nil
+	case partyquestsession.FieldLeaderID:
+		m.ResetLeaderID()
+		return nil
+	case partyquestsession.FieldQuestID:
+		m.ResetQuestID()
+		return nil
+	case partyquestsession.FieldQuestVersionID:
+		m.ResetQuestVersionID()
+		return nil
+	case partyquestsession.FieldPartyMode:
+		m.ResetPartyMode()
+		return nil
+	case partyquestsession.FieldSharedProgressPolicy:
+		m.ResetSharedProgressPolicy()
+		return nil
+	case partyquestsession.FieldPartySizeMin:
+		m.ResetPartySizeMin()
+		return nil
+	case partyquestsession.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case partyquestsession.FieldMemberIds:
+		m.ResetMemberIds()
+		return nil
+	case partyquestsession.FieldMemberStates:
+		m.ResetMemberStates()
+		return nil
+	case partyquestsession.FieldSharedStepStates:
+		m.ResetSharedStepStates()
+		return nil
+	case partyquestsession.FieldRoleAssignments:
+		m.ResetRoleAssignments()
+		return nil
+	case partyquestsession.FieldSharedClues:
+		m.ResetSharedClues()
+		return nil
+	case partyquestsession.FieldStateVersion:
+		m.ResetStateVersion()
+		return nil
+	case partyquestsession.FieldStartedAt:
+		m.ResetStartedAt()
+		return nil
+	case partyquestsession.FieldEndedAt:
+		m.ResetEndedAt()
+		return nil
+	case partyquestsession.FieldEndReason:
+		m.ResetEndReason()
+		return nil
+	}
+	return fmt.Errorf("unknown PartyQuestSession field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PartyQuestSessionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PartyQuestSessionMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PartyQuestSessionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PartyQuestSessionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PartyQuestSessionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PartyQuestSessionMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PartyQuestSessionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown PartyQuestSession unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PartyQuestSessionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown PartyQuestSession edge %s", name)
 }
 
 // PeriodicQuestGrantMutation represents an operation that mutates the PeriodicQuestGrant nodes in the graph.

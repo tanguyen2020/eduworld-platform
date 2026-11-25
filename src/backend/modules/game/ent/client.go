@@ -19,6 +19,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementprogressevent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/avatarpreset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossanswerresult"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossdefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossencounter"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossencountercontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossencountermember"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossphaseplan"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challenge"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeattempt"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeversion"
@@ -65,6 +72,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/partyquestcontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/partyquestsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/periodicquestgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/previewsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurve"
@@ -115,6 +124,20 @@ type Client struct {
 	AchievementVersion *AchievementVersionClient
 	// AvatarPreset is the client for interacting with the AvatarPreset builders.
 	AvatarPreset *AvatarPresetClient
+	// BossAnswerResult is the client for interacting with the BossAnswerResult builders.
+	BossAnswerResult *BossAnswerResultClient
+	// BossDefinition is the client for interacting with the BossDefinition builders.
+	BossDefinition *BossDefinitionClient
+	// BossEncounter is the client for interacting with the BossEncounter builders.
+	BossEncounter *BossEncounterClient
+	// BossEncounterContribution is the client for interacting with the BossEncounterContribution builders.
+	BossEncounterContribution *BossEncounterContributionClient
+	// BossEncounterMember is the client for interacting with the BossEncounterMember builders.
+	BossEncounterMember *BossEncounterMemberClient
+	// BossPhasePlan is the client for interacting with the BossPhasePlan builders.
+	BossPhasePlan *BossPhasePlanClient
+	// BossVersion is the client for interacting with the BossVersion builders.
+	BossVersion *BossVersionClient
 	// Challenge is the client for interacting with the Challenge builders.
 	Challenge *ChallengeClient
 	// ChallengeAttempt is the client for interacting with the ChallengeAttempt builders.
@@ -207,6 +230,10 @@ type Client struct {
 	NpcDialogue *NpcDialogueClient
 	// NpcDialogueVersion is the client for interacting with the NpcDialogueVersion builders.
 	NpcDialogueVersion *NpcDialogueVersionClient
+	// PartyQuestContribution is the client for interacting with the PartyQuestContribution builders.
+	PartyQuestContribution *PartyQuestContributionClient
+	// PartyQuestSession is the client for interacting with the PartyQuestSession builders.
+	PartyQuestSession *PartyQuestSessionClient
 	// PeriodicQuestGrant is the client for interacting with the PeriodicQuestGrant builders.
 	PeriodicQuestGrant *PeriodicQuestGrantClient
 	// PreviewSession is the client for interacting with the PreviewSession builders.
@@ -288,6 +315,13 @@ func (c *Client) init() {
 	c.AchievementProgressEvent = NewAchievementProgressEventClient(c.config)
 	c.AchievementVersion = NewAchievementVersionClient(c.config)
 	c.AvatarPreset = NewAvatarPresetClient(c.config)
+	c.BossAnswerResult = NewBossAnswerResultClient(c.config)
+	c.BossDefinition = NewBossDefinitionClient(c.config)
+	c.BossEncounter = NewBossEncounterClient(c.config)
+	c.BossEncounterContribution = NewBossEncounterContributionClient(c.config)
+	c.BossEncounterMember = NewBossEncounterMemberClient(c.config)
+	c.BossPhasePlan = NewBossPhasePlanClient(c.config)
+	c.BossVersion = NewBossVersionClient(c.config)
 	c.Challenge = NewChallengeClient(c.config)
 	c.ChallengeAttempt = NewChallengeAttemptClient(c.config)
 	c.ChallengeVersion = NewChallengeVersionClient(c.config)
@@ -334,6 +368,8 @@ func (c *Client) init() {
 	c.NicknameChange = NewNicknameChangeClient(c.config)
 	c.NpcDialogue = NewNpcDialogueClient(c.config)
 	c.NpcDialogueVersion = NewNpcDialogueVersionClient(c.config)
+	c.PartyQuestContribution = NewPartyQuestContributionClient(c.config)
+	c.PartyQuestSession = NewPartyQuestSessionClient(c.config)
 	c.PeriodicQuestGrant = NewPeriodicQuestGrantClient(c.config)
 	c.PreviewSession = NewPreviewSessionClient(c.config)
 	c.ProgressionCurve = NewProgressionCurveClient(c.config)
@@ -466,6 +502,13 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		AchievementProgressEvent:  NewAchievementProgressEventClient(cfg),
 		AchievementVersion:        NewAchievementVersionClient(cfg),
 		AvatarPreset:              NewAvatarPresetClient(cfg),
+		BossAnswerResult:          NewBossAnswerResultClient(cfg),
+		BossDefinition:            NewBossDefinitionClient(cfg),
+		BossEncounter:             NewBossEncounterClient(cfg),
+		BossEncounterContribution: NewBossEncounterContributionClient(cfg),
+		BossEncounterMember:       NewBossEncounterMemberClient(cfg),
+		BossPhasePlan:             NewBossPhasePlanClient(cfg),
+		BossVersion:               NewBossVersionClient(cfg),
 		Challenge:                 NewChallengeClient(cfg),
 		ChallengeAttempt:          NewChallengeAttemptClient(cfg),
 		ChallengeVersion:          NewChallengeVersionClient(cfg),
@@ -512,6 +555,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		NicknameChange:            NewNicknameChangeClient(cfg),
 		NpcDialogue:               NewNpcDialogueClient(cfg),
 		NpcDialogueVersion:        NewNpcDialogueVersionClient(cfg),
+		PartyQuestContribution:    NewPartyQuestContributionClient(cfg),
+		PartyQuestSession:         NewPartyQuestSessionClient(cfg),
 		PeriodicQuestGrant:        NewPeriodicQuestGrantClient(cfg),
 		PreviewSession:            NewPreviewSessionClient(cfg),
 		ProgressionCurve:          NewProgressionCurveClient(cfg),
@@ -568,6 +613,13 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		AchievementProgressEvent:  NewAchievementProgressEventClient(cfg),
 		AchievementVersion:        NewAchievementVersionClient(cfg),
 		AvatarPreset:              NewAvatarPresetClient(cfg),
+		BossAnswerResult:          NewBossAnswerResultClient(cfg),
+		BossDefinition:            NewBossDefinitionClient(cfg),
+		BossEncounter:             NewBossEncounterClient(cfg),
+		BossEncounterContribution: NewBossEncounterContributionClient(cfg),
+		BossEncounterMember:       NewBossEncounterMemberClient(cfg),
+		BossPhasePlan:             NewBossPhasePlanClient(cfg),
+		BossVersion:               NewBossVersionClient(cfg),
 		Challenge:                 NewChallengeClient(cfg),
 		ChallengeAttempt:          NewChallengeAttemptClient(cfg),
 		ChallengeVersion:          NewChallengeVersionClient(cfg),
@@ -614,6 +666,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		NicknameChange:            NewNicknameChangeClient(cfg),
 		NpcDialogue:               NewNpcDialogueClient(cfg),
 		NpcDialogueVersion:        NewNpcDialogueVersionClient(cfg),
+		PartyQuestContribution:    NewPartyQuestContributionClient(cfg),
+		PartyQuestSession:         NewPartyQuestSessionClient(cfg),
 		PeriodicQuestGrant:        NewPeriodicQuestGrantClient(cfg),
 		PreviewSession:            NewPreviewSessionClient(cfg),
 		ProgressionCurve:          NewProgressionCurveClient(cfg),
@@ -677,9 +731,11 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Achievement, c.AchievementProgressEvent, c.AchievementVersion, c.AvatarPreset,
-		c.Challenge, c.ChallengeAttempt, c.ChallengeVersion, c.CharacterCatalog,
-		c.CharacterCatalogVersion, c.ClientManifest, c.Collection, c.CollectionItem,
-		c.CollectionProgress, c.CollectionVersion, c.CommunityGoal,
+		c.BossAnswerResult, c.BossDefinition, c.BossEncounter,
+		c.BossEncounterContribution, c.BossEncounterMember, c.BossPhasePlan,
+		c.BossVersion, c.Challenge, c.ChallengeAttempt, c.ChallengeVersion,
+		c.CharacterCatalog, c.CharacterCatalogVersion, c.ClientManifest, c.Collection,
+		c.CollectionItem, c.CollectionProgress, c.CollectionVersion, c.CommunityGoal,
 		c.CommunityGoalContribution, c.CommunityGoalProgress, c.ContentRelease,
 		c.Currency, c.CurrencyLedgerEntry, c.EconomyAdjustment, c.Event,
 		c.EventParticipation, c.EventPointEntry, c.EventRun, c.EventTemplate,
@@ -689,16 +745,16 @@ func (c *Client) Use(hooks ...Hook) {
 		c.LevelDefinition, c.LevelHistory, c.LevelSession, c.LevelVersion,
 		c.LoginEvent, c.MediaAsset, c.MediaUsage, c.MiniGameConfig,
 		c.MiniGameConfigVersion, c.MiniGamePlay, c.NicknameChange, c.NpcDialogue,
-		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.PreviewSession,
-		c.ProgressionCurve, c.ProgressionCurveVersion, c.ProgressionLevel,
-		c.QuestDefinition, c.QuestProgress, c.QuestStepAttempt, c.QuestVersion,
-		c.RenderJob, c.RewardGrant, c.RewardRule, c.RewardRuleVersion,
-		c.ScheduledPublication, c.SeasonPointEntry, c.SeasonTrack,
-		c.SeasonTrackProgress, c.SeasonTrackVersion, c.ShopItem, c.ShopItemVersion,
-		c.ShopPurchase, c.StoryChapter, c.StoryChapterVersion, c.StoryProgress,
-		c.StudentAchievement, c.TenantResourceAssignment, c.Wallet, c.WorldArea,
-		c.WorldAreaUnlock, c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap,
-		c.XpLedgerEntry,
+		c.NpcDialogueVersion, c.PartyQuestContribution, c.PartyQuestSession,
+		c.PeriodicQuestGrant, c.PreviewSession, c.ProgressionCurve,
+		c.ProgressionCurveVersion, c.ProgressionLevel, c.QuestDefinition,
+		c.QuestProgress, c.QuestStepAttempt, c.QuestVersion, c.RenderJob,
+		c.RewardGrant, c.RewardRule, c.RewardRuleVersion, c.ScheduledPublication,
+		c.SeasonPointEntry, c.SeasonTrack, c.SeasonTrackProgress, c.SeasonTrackVersion,
+		c.ShopItem, c.ShopItemVersion, c.ShopPurchase, c.StoryChapter,
+		c.StoryChapterVersion, c.StoryProgress, c.StudentAchievement,
+		c.TenantResourceAssignment, c.Wallet, c.WorldArea, c.WorldAreaUnlock,
+		c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap, c.XpLedgerEntry,
 	} {
 		n.Use(hooks...)
 	}
@@ -709,9 +765,11 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Achievement, c.AchievementProgressEvent, c.AchievementVersion, c.AvatarPreset,
-		c.Challenge, c.ChallengeAttempt, c.ChallengeVersion, c.CharacterCatalog,
-		c.CharacterCatalogVersion, c.ClientManifest, c.Collection, c.CollectionItem,
-		c.CollectionProgress, c.CollectionVersion, c.CommunityGoal,
+		c.BossAnswerResult, c.BossDefinition, c.BossEncounter,
+		c.BossEncounterContribution, c.BossEncounterMember, c.BossPhasePlan,
+		c.BossVersion, c.Challenge, c.ChallengeAttempt, c.ChallengeVersion,
+		c.CharacterCatalog, c.CharacterCatalogVersion, c.ClientManifest, c.Collection,
+		c.CollectionItem, c.CollectionProgress, c.CollectionVersion, c.CommunityGoal,
 		c.CommunityGoalContribution, c.CommunityGoalProgress, c.ContentRelease,
 		c.Currency, c.CurrencyLedgerEntry, c.EconomyAdjustment, c.Event,
 		c.EventParticipation, c.EventPointEntry, c.EventRun, c.EventTemplate,
@@ -721,16 +779,16 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.LevelDefinition, c.LevelHistory, c.LevelSession, c.LevelVersion,
 		c.LoginEvent, c.MediaAsset, c.MediaUsage, c.MiniGameConfig,
 		c.MiniGameConfigVersion, c.MiniGamePlay, c.NicknameChange, c.NpcDialogue,
-		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.PreviewSession,
-		c.ProgressionCurve, c.ProgressionCurveVersion, c.ProgressionLevel,
-		c.QuestDefinition, c.QuestProgress, c.QuestStepAttempt, c.QuestVersion,
-		c.RenderJob, c.RewardGrant, c.RewardRule, c.RewardRuleVersion,
-		c.ScheduledPublication, c.SeasonPointEntry, c.SeasonTrack,
-		c.SeasonTrackProgress, c.SeasonTrackVersion, c.ShopItem, c.ShopItemVersion,
-		c.ShopPurchase, c.StoryChapter, c.StoryChapterVersion, c.StoryProgress,
-		c.StudentAchievement, c.TenantResourceAssignment, c.Wallet, c.WorldArea,
-		c.WorldAreaUnlock, c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap,
-		c.XpLedgerEntry,
+		c.NpcDialogueVersion, c.PartyQuestContribution, c.PartyQuestSession,
+		c.PeriodicQuestGrant, c.PreviewSession, c.ProgressionCurve,
+		c.ProgressionCurveVersion, c.ProgressionLevel, c.QuestDefinition,
+		c.QuestProgress, c.QuestStepAttempt, c.QuestVersion, c.RenderJob,
+		c.RewardGrant, c.RewardRule, c.RewardRuleVersion, c.ScheduledPublication,
+		c.SeasonPointEntry, c.SeasonTrack, c.SeasonTrackProgress, c.SeasonTrackVersion,
+		c.ShopItem, c.ShopItemVersion, c.ShopPurchase, c.StoryChapter,
+		c.StoryChapterVersion, c.StoryProgress, c.StudentAchievement,
+		c.TenantResourceAssignment, c.Wallet, c.WorldArea, c.WorldAreaUnlock,
+		c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap, c.XpLedgerEntry,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -747,6 +805,20 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.AchievementVersion.mutate(ctx, m)
 	case *AvatarPresetMutation:
 		return c.AvatarPreset.mutate(ctx, m)
+	case *BossAnswerResultMutation:
+		return c.BossAnswerResult.mutate(ctx, m)
+	case *BossDefinitionMutation:
+		return c.BossDefinition.mutate(ctx, m)
+	case *BossEncounterMutation:
+		return c.BossEncounter.mutate(ctx, m)
+	case *BossEncounterContributionMutation:
+		return c.BossEncounterContribution.mutate(ctx, m)
+	case *BossEncounterMemberMutation:
+		return c.BossEncounterMember.mutate(ctx, m)
+	case *BossPhasePlanMutation:
+		return c.BossPhasePlan.mutate(ctx, m)
+	case *BossVersionMutation:
+		return c.BossVersion.mutate(ctx, m)
 	case *ChallengeMutation:
 		return c.Challenge.mutate(ctx, m)
 	case *ChallengeAttemptMutation:
@@ -839,6 +911,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.NpcDialogue.mutate(ctx, m)
 	case *NpcDialogueVersionMutation:
 		return c.NpcDialogueVersion.mutate(ctx, m)
+	case *PartyQuestContributionMutation:
+		return c.PartyQuestContribution.mutate(ctx, m)
+	case *PartyQuestSessionMutation:
+		return c.PartyQuestSession.mutate(ctx, m)
 	case *PeriodicQuestGrantMutation:
 		return c.PeriodicQuestGrant.mutate(ctx, m)
 	case *PreviewSessionMutation:
@@ -1447,6 +1523,951 @@ func (c *AvatarPresetClient) mutate(ctx context.Context, m *AvatarPresetMutation
 		return (&AvatarPresetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown AvatarPreset mutation op: %q", m.Op())
+	}
+}
+
+// BossAnswerResultClient is a client for the BossAnswerResult schema.
+type BossAnswerResultClient struct {
+	config
+}
+
+// NewBossAnswerResultClient returns a client for the BossAnswerResult from the given config.
+func NewBossAnswerResultClient(c config) *BossAnswerResultClient {
+	return &BossAnswerResultClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `bossanswerresult.Hooks(f(g(h())))`.
+func (c *BossAnswerResultClient) Use(hooks ...Hook) {
+	c.hooks.BossAnswerResult = append(c.hooks.BossAnswerResult, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `bossanswerresult.Intercept(f(g(h())))`.
+func (c *BossAnswerResultClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BossAnswerResult = append(c.inters.BossAnswerResult, interceptors...)
+}
+
+// Create returns a builder for creating a BossAnswerResult entity.
+func (c *BossAnswerResultClient) Create() *BossAnswerResultCreate {
+	mutation := newBossAnswerResultMutation(c.config, OpCreate)
+	return &BossAnswerResultCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BossAnswerResult entities.
+func (c *BossAnswerResultClient) CreateBulk(builders ...*BossAnswerResultCreate) *BossAnswerResultCreateBulk {
+	return &BossAnswerResultCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BossAnswerResultClient) MapCreateBulk(slice any, setFunc func(*BossAnswerResultCreate, int)) *BossAnswerResultCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BossAnswerResultCreateBulk{err: fmt.Errorf("calling to BossAnswerResultClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BossAnswerResultCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BossAnswerResultCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BossAnswerResult.
+func (c *BossAnswerResultClient) Update() *BossAnswerResultUpdate {
+	mutation := newBossAnswerResultMutation(c.config, OpUpdate)
+	return &BossAnswerResultUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BossAnswerResultClient) UpdateOne(_m *BossAnswerResult) *BossAnswerResultUpdateOne {
+	mutation := newBossAnswerResultMutation(c.config, OpUpdateOne, withBossAnswerResult(_m))
+	return &BossAnswerResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BossAnswerResultClient) UpdateOneID(id uuid.UUID) *BossAnswerResultUpdateOne {
+	mutation := newBossAnswerResultMutation(c.config, OpUpdateOne, withBossAnswerResultID(id))
+	return &BossAnswerResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BossAnswerResult.
+func (c *BossAnswerResultClient) Delete() *BossAnswerResultDelete {
+	mutation := newBossAnswerResultMutation(c.config, OpDelete)
+	return &BossAnswerResultDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BossAnswerResultClient) DeleteOne(_m *BossAnswerResult) *BossAnswerResultDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BossAnswerResultClient) DeleteOneID(id uuid.UUID) *BossAnswerResultDeleteOne {
+	builder := c.Delete().Where(bossanswerresult.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BossAnswerResultDeleteOne{builder}
+}
+
+// Query returns a query builder for BossAnswerResult.
+func (c *BossAnswerResultClient) Query() *BossAnswerResultQuery {
+	return &BossAnswerResultQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBossAnswerResult},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BossAnswerResult entity by its id.
+func (c *BossAnswerResultClient) Get(ctx context.Context, id uuid.UUID) (*BossAnswerResult, error) {
+	return c.Query().Where(bossanswerresult.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BossAnswerResultClient) GetX(ctx context.Context, id uuid.UUID) *BossAnswerResult {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *BossAnswerResultClient) Hooks() []Hook {
+	hooks := c.hooks.BossAnswerResult
+	return append(hooks[:len(hooks):len(hooks)], bossanswerresult.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BossAnswerResultClient) Interceptors() []Interceptor {
+	inters := c.inters.BossAnswerResult
+	return append(inters[:len(inters):len(inters)], bossanswerresult.Interceptors[:]...)
+}
+
+func (c *BossAnswerResultClient) mutate(ctx context.Context, m *BossAnswerResultMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BossAnswerResultCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BossAnswerResultUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BossAnswerResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BossAnswerResultDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BossAnswerResult mutation op: %q", m.Op())
+	}
+}
+
+// BossDefinitionClient is a client for the BossDefinition schema.
+type BossDefinitionClient struct {
+	config
+}
+
+// NewBossDefinitionClient returns a client for the BossDefinition from the given config.
+func NewBossDefinitionClient(c config) *BossDefinitionClient {
+	return &BossDefinitionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `bossdefinition.Hooks(f(g(h())))`.
+func (c *BossDefinitionClient) Use(hooks ...Hook) {
+	c.hooks.BossDefinition = append(c.hooks.BossDefinition, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `bossdefinition.Intercept(f(g(h())))`.
+func (c *BossDefinitionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BossDefinition = append(c.inters.BossDefinition, interceptors...)
+}
+
+// Create returns a builder for creating a BossDefinition entity.
+func (c *BossDefinitionClient) Create() *BossDefinitionCreate {
+	mutation := newBossDefinitionMutation(c.config, OpCreate)
+	return &BossDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BossDefinition entities.
+func (c *BossDefinitionClient) CreateBulk(builders ...*BossDefinitionCreate) *BossDefinitionCreateBulk {
+	return &BossDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BossDefinitionClient) MapCreateBulk(slice any, setFunc func(*BossDefinitionCreate, int)) *BossDefinitionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BossDefinitionCreateBulk{err: fmt.Errorf("calling to BossDefinitionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BossDefinitionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BossDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BossDefinition.
+func (c *BossDefinitionClient) Update() *BossDefinitionUpdate {
+	mutation := newBossDefinitionMutation(c.config, OpUpdate)
+	return &BossDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BossDefinitionClient) UpdateOne(_m *BossDefinition) *BossDefinitionUpdateOne {
+	mutation := newBossDefinitionMutation(c.config, OpUpdateOne, withBossDefinition(_m))
+	return &BossDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BossDefinitionClient) UpdateOneID(id uuid.UUID) *BossDefinitionUpdateOne {
+	mutation := newBossDefinitionMutation(c.config, OpUpdateOne, withBossDefinitionID(id))
+	return &BossDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BossDefinition.
+func (c *BossDefinitionClient) Delete() *BossDefinitionDelete {
+	mutation := newBossDefinitionMutation(c.config, OpDelete)
+	return &BossDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BossDefinitionClient) DeleteOne(_m *BossDefinition) *BossDefinitionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BossDefinitionClient) DeleteOneID(id uuid.UUID) *BossDefinitionDeleteOne {
+	builder := c.Delete().Where(bossdefinition.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BossDefinitionDeleteOne{builder}
+}
+
+// Query returns a query builder for BossDefinition.
+func (c *BossDefinitionClient) Query() *BossDefinitionQuery {
+	return &BossDefinitionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBossDefinition},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BossDefinition entity by its id.
+func (c *BossDefinitionClient) Get(ctx context.Context, id uuid.UUID) (*BossDefinition, error) {
+	return c.Query().Where(bossdefinition.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BossDefinitionClient) GetX(ctx context.Context, id uuid.UUID) *BossDefinition {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *BossDefinitionClient) Hooks() []Hook {
+	hooks := c.hooks.BossDefinition
+	return append(hooks[:len(hooks):len(hooks)], bossdefinition.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BossDefinitionClient) Interceptors() []Interceptor {
+	inters := c.inters.BossDefinition
+	return append(inters[:len(inters):len(inters)], bossdefinition.Interceptors[:]...)
+}
+
+func (c *BossDefinitionClient) mutate(ctx context.Context, m *BossDefinitionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BossDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BossDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BossDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BossDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BossDefinition mutation op: %q", m.Op())
+	}
+}
+
+// BossEncounterClient is a client for the BossEncounter schema.
+type BossEncounterClient struct {
+	config
+}
+
+// NewBossEncounterClient returns a client for the BossEncounter from the given config.
+func NewBossEncounterClient(c config) *BossEncounterClient {
+	return &BossEncounterClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `bossencounter.Hooks(f(g(h())))`.
+func (c *BossEncounterClient) Use(hooks ...Hook) {
+	c.hooks.BossEncounter = append(c.hooks.BossEncounter, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `bossencounter.Intercept(f(g(h())))`.
+func (c *BossEncounterClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BossEncounter = append(c.inters.BossEncounter, interceptors...)
+}
+
+// Create returns a builder for creating a BossEncounter entity.
+func (c *BossEncounterClient) Create() *BossEncounterCreate {
+	mutation := newBossEncounterMutation(c.config, OpCreate)
+	return &BossEncounterCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BossEncounter entities.
+func (c *BossEncounterClient) CreateBulk(builders ...*BossEncounterCreate) *BossEncounterCreateBulk {
+	return &BossEncounterCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BossEncounterClient) MapCreateBulk(slice any, setFunc func(*BossEncounterCreate, int)) *BossEncounterCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BossEncounterCreateBulk{err: fmt.Errorf("calling to BossEncounterClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BossEncounterCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BossEncounterCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BossEncounter.
+func (c *BossEncounterClient) Update() *BossEncounterUpdate {
+	mutation := newBossEncounterMutation(c.config, OpUpdate)
+	return &BossEncounterUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BossEncounterClient) UpdateOne(_m *BossEncounter) *BossEncounterUpdateOne {
+	mutation := newBossEncounterMutation(c.config, OpUpdateOne, withBossEncounter(_m))
+	return &BossEncounterUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BossEncounterClient) UpdateOneID(id uuid.UUID) *BossEncounterUpdateOne {
+	mutation := newBossEncounterMutation(c.config, OpUpdateOne, withBossEncounterID(id))
+	return &BossEncounterUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BossEncounter.
+func (c *BossEncounterClient) Delete() *BossEncounterDelete {
+	mutation := newBossEncounterMutation(c.config, OpDelete)
+	return &BossEncounterDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BossEncounterClient) DeleteOne(_m *BossEncounter) *BossEncounterDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BossEncounterClient) DeleteOneID(id uuid.UUID) *BossEncounterDeleteOne {
+	builder := c.Delete().Where(bossencounter.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BossEncounterDeleteOne{builder}
+}
+
+// Query returns a query builder for BossEncounter.
+func (c *BossEncounterClient) Query() *BossEncounterQuery {
+	return &BossEncounterQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBossEncounter},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BossEncounter entity by its id.
+func (c *BossEncounterClient) Get(ctx context.Context, id uuid.UUID) (*BossEncounter, error) {
+	return c.Query().Where(bossencounter.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BossEncounterClient) GetX(ctx context.Context, id uuid.UUID) *BossEncounter {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *BossEncounterClient) Hooks() []Hook {
+	hooks := c.hooks.BossEncounter
+	return append(hooks[:len(hooks):len(hooks)], bossencounter.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BossEncounterClient) Interceptors() []Interceptor {
+	inters := c.inters.BossEncounter
+	return append(inters[:len(inters):len(inters)], bossencounter.Interceptors[:]...)
+}
+
+func (c *BossEncounterClient) mutate(ctx context.Context, m *BossEncounterMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BossEncounterCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BossEncounterUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BossEncounterUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BossEncounterDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BossEncounter mutation op: %q", m.Op())
+	}
+}
+
+// BossEncounterContributionClient is a client for the BossEncounterContribution schema.
+type BossEncounterContributionClient struct {
+	config
+}
+
+// NewBossEncounterContributionClient returns a client for the BossEncounterContribution from the given config.
+func NewBossEncounterContributionClient(c config) *BossEncounterContributionClient {
+	return &BossEncounterContributionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `bossencountercontribution.Hooks(f(g(h())))`.
+func (c *BossEncounterContributionClient) Use(hooks ...Hook) {
+	c.hooks.BossEncounterContribution = append(c.hooks.BossEncounterContribution, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `bossencountercontribution.Intercept(f(g(h())))`.
+func (c *BossEncounterContributionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BossEncounterContribution = append(c.inters.BossEncounterContribution, interceptors...)
+}
+
+// Create returns a builder for creating a BossEncounterContribution entity.
+func (c *BossEncounterContributionClient) Create() *BossEncounterContributionCreate {
+	mutation := newBossEncounterContributionMutation(c.config, OpCreate)
+	return &BossEncounterContributionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BossEncounterContribution entities.
+func (c *BossEncounterContributionClient) CreateBulk(builders ...*BossEncounterContributionCreate) *BossEncounterContributionCreateBulk {
+	return &BossEncounterContributionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BossEncounterContributionClient) MapCreateBulk(slice any, setFunc func(*BossEncounterContributionCreate, int)) *BossEncounterContributionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BossEncounterContributionCreateBulk{err: fmt.Errorf("calling to BossEncounterContributionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BossEncounterContributionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BossEncounterContributionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BossEncounterContribution.
+func (c *BossEncounterContributionClient) Update() *BossEncounterContributionUpdate {
+	mutation := newBossEncounterContributionMutation(c.config, OpUpdate)
+	return &BossEncounterContributionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BossEncounterContributionClient) UpdateOne(_m *BossEncounterContribution) *BossEncounterContributionUpdateOne {
+	mutation := newBossEncounterContributionMutation(c.config, OpUpdateOne, withBossEncounterContribution(_m))
+	return &BossEncounterContributionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BossEncounterContributionClient) UpdateOneID(id uuid.UUID) *BossEncounterContributionUpdateOne {
+	mutation := newBossEncounterContributionMutation(c.config, OpUpdateOne, withBossEncounterContributionID(id))
+	return &BossEncounterContributionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BossEncounterContribution.
+func (c *BossEncounterContributionClient) Delete() *BossEncounterContributionDelete {
+	mutation := newBossEncounterContributionMutation(c.config, OpDelete)
+	return &BossEncounterContributionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BossEncounterContributionClient) DeleteOne(_m *BossEncounterContribution) *BossEncounterContributionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BossEncounterContributionClient) DeleteOneID(id uuid.UUID) *BossEncounterContributionDeleteOne {
+	builder := c.Delete().Where(bossencountercontribution.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BossEncounterContributionDeleteOne{builder}
+}
+
+// Query returns a query builder for BossEncounterContribution.
+func (c *BossEncounterContributionClient) Query() *BossEncounterContributionQuery {
+	return &BossEncounterContributionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBossEncounterContribution},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BossEncounterContribution entity by its id.
+func (c *BossEncounterContributionClient) Get(ctx context.Context, id uuid.UUID) (*BossEncounterContribution, error) {
+	return c.Query().Where(bossencountercontribution.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BossEncounterContributionClient) GetX(ctx context.Context, id uuid.UUID) *BossEncounterContribution {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *BossEncounterContributionClient) Hooks() []Hook {
+	hooks := c.hooks.BossEncounterContribution
+	return append(hooks[:len(hooks):len(hooks)], bossencountercontribution.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BossEncounterContributionClient) Interceptors() []Interceptor {
+	inters := c.inters.BossEncounterContribution
+	return append(inters[:len(inters):len(inters)], bossencountercontribution.Interceptors[:]...)
+}
+
+func (c *BossEncounterContributionClient) mutate(ctx context.Context, m *BossEncounterContributionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BossEncounterContributionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BossEncounterContributionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BossEncounterContributionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BossEncounterContributionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BossEncounterContribution mutation op: %q", m.Op())
+	}
+}
+
+// BossEncounterMemberClient is a client for the BossEncounterMember schema.
+type BossEncounterMemberClient struct {
+	config
+}
+
+// NewBossEncounterMemberClient returns a client for the BossEncounterMember from the given config.
+func NewBossEncounterMemberClient(c config) *BossEncounterMemberClient {
+	return &BossEncounterMemberClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `bossencountermember.Hooks(f(g(h())))`.
+func (c *BossEncounterMemberClient) Use(hooks ...Hook) {
+	c.hooks.BossEncounterMember = append(c.hooks.BossEncounterMember, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `bossencountermember.Intercept(f(g(h())))`.
+func (c *BossEncounterMemberClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BossEncounterMember = append(c.inters.BossEncounterMember, interceptors...)
+}
+
+// Create returns a builder for creating a BossEncounterMember entity.
+func (c *BossEncounterMemberClient) Create() *BossEncounterMemberCreate {
+	mutation := newBossEncounterMemberMutation(c.config, OpCreate)
+	return &BossEncounterMemberCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BossEncounterMember entities.
+func (c *BossEncounterMemberClient) CreateBulk(builders ...*BossEncounterMemberCreate) *BossEncounterMemberCreateBulk {
+	return &BossEncounterMemberCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BossEncounterMemberClient) MapCreateBulk(slice any, setFunc func(*BossEncounterMemberCreate, int)) *BossEncounterMemberCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BossEncounterMemberCreateBulk{err: fmt.Errorf("calling to BossEncounterMemberClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BossEncounterMemberCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BossEncounterMemberCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BossEncounterMember.
+func (c *BossEncounterMemberClient) Update() *BossEncounterMemberUpdate {
+	mutation := newBossEncounterMemberMutation(c.config, OpUpdate)
+	return &BossEncounterMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BossEncounterMemberClient) UpdateOne(_m *BossEncounterMember) *BossEncounterMemberUpdateOne {
+	mutation := newBossEncounterMemberMutation(c.config, OpUpdateOne, withBossEncounterMember(_m))
+	return &BossEncounterMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BossEncounterMemberClient) UpdateOneID(id uuid.UUID) *BossEncounterMemberUpdateOne {
+	mutation := newBossEncounterMemberMutation(c.config, OpUpdateOne, withBossEncounterMemberID(id))
+	return &BossEncounterMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BossEncounterMember.
+func (c *BossEncounterMemberClient) Delete() *BossEncounterMemberDelete {
+	mutation := newBossEncounterMemberMutation(c.config, OpDelete)
+	return &BossEncounterMemberDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BossEncounterMemberClient) DeleteOne(_m *BossEncounterMember) *BossEncounterMemberDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BossEncounterMemberClient) DeleteOneID(id uuid.UUID) *BossEncounterMemberDeleteOne {
+	builder := c.Delete().Where(bossencountermember.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BossEncounterMemberDeleteOne{builder}
+}
+
+// Query returns a query builder for BossEncounterMember.
+func (c *BossEncounterMemberClient) Query() *BossEncounterMemberQuery {
+	return &BossEncounterMemberQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBossEncounterMember},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BossEncounterMember entity by its id.
+func (c *BossEncounterMemberClient) Get(ctx context.Context, id uuid.UUID) (*BossEncounterMember, error) {
+	return c.Query().Where(bossencountermember.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BossEncounterMemberClient) GetX(ctx context.Context, id uuid.UUID) *BossEncounterMember {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *BossEncounterMemberClient) Hooks() []Hook {
+	hooks := c.hooks.BossEncounterMember
+	return append(hooks[:len(hooks):len(hooks)], bossencountermember.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BossEncounterMemberClient) Interceptors() []Interceptor {
+	inters := c.inters.BossEncounterMember
+	return append(inters[:len(inters):len(inters)], bossencountermember.Interceptors[:]...)
+}
+
+func (c *BossEncounterMemberClient) mutate(ctx context.Context, m *BossEncounterMemberMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BossEncounterMemberCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BossEncounterMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BossEncounterMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BossEncounterMemberDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BossEncounterMember mutation op: %q", m.Op())
+	}
+}
+
+// BossPhasePlanClient is a client for the BossPhasePlan schema.
+type BossPhasePlanClient struct {
+	config
+}
+
+// NewBossPhasePlanClient returns a client for the BossPhasePlan from the given config.
+func NewBossPhasePlanClient(c config) *BossPhasePlanClient {
+	return &BossPhasePlanClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `bossphaseplan.Hooks(f(g(h())))`.
+func (c *BossPhasePlanClient) Use(hooks ...Hook) {
+	c.hooks.BossPhasePlan = append(c.hooks.BossPhasePlan, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `bossphaseplan.Intercept(f(g(h())))`.
+func (c *BossPhasePlanClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BossPhasePlan = append(c.inters.BossPhasePlan, interceptors...)
+}
+
+// Create returns a builder for creating a BossPhasePlan entity.
+func (c *BossPhasePlanClient) Create() *BossPhasePlanCreate {
+	mutation := newBossPhasePlanMutation(c.config, OpCreate)
+	return &BossPhasePlanCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BossPhasePlan entities.
+func (c *BossPhasePlanClient) CreateBulk(builders ...*BossPhasePlanCreate) *BossPhasePlanCreateBulk {
+	return &BossPhasePlanCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BossPhasePlanClient) MapCreateBulk(slice any, setFunc func(*BossPhasePlanCreate, int)) *BossPhasePlanCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BossPhasePlanCreateBulk{err: fmt.Errorf("calling to BossPhasePlanClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BossPhasePlanCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BossPhasePlanCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BossPhasePlan.
+func (c *BossPhasePlanClient) Update() *BossPhasePlanUpdate {
+	mutation := newBossPhasePlanMutation(c.config, OpUpdate)
+	return &BossPhasePlanUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BossPhasePlanClient) UpdateOne(_m *BossPhasePlan) *BossPhasePlanUpdateOne {
+	mutation := newBossPhasePlanMutation(c.config, OpUpdateOne, withBossPhasePlan(_m))
+	return &BossPhasePlanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BossPhasePlanClient) UpdateOneID(id uuid.UUID) *BossPhasePlanUpdateOne {
+	mutation := newBossPhasePlanMutation(c.config, OpUpdateOne, withBossPhasePlanID(id))
+	return &BossPhasePlanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BossPhasePlan.
+func (c *BossPhasePlanClient) Delete() *BossPhasePlanDelete {
+	mutation := newBossPhasePlanMutation(c.config, OpDelete)
+	return &BossPhasePlanDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BossPhasePlanClient) DeleteOne(_m *BossPhasePlan) *BossPhasePlanDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BossPhasePlanClient) DeleteOneID(id uuid.UUID) *BossPhasePlanDeleteOne {
+	builder := c.Delete().Where(bossphaseplan.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BossPhasePlanDeleteOne{builder}
+}
+
+// Query returns a query builder for BossPhasePlan.
+func (c *BossPhasePlanClient) Query() *BossPhasePlanQuery {
+	return &BossPhasePlanQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBossPhasePlan},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BossPhasePlan entity by its id.
+func (c *BossPhasePlanClient) Get(ctx context.Context, id uuid.UUID) (*BossPhasePlan, error) {
+	return c.Query().Where(bossphaseplan.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BossPhasePlanClient) GetX(ctx context.Context, id uuid.UUID) *BossPhasePlan {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *BossPhasePlanClient) Hooks() []Hook {
+	hooks := c.hooks.BossPhasePlan
+	return append(hooks[:len(hooks):len(hooks)], bossphaseplan.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BossPhasePlanClient) Interceptors() []Interceptor {
+	inters := c.inters.BossPhasePlan
+	return append(inters[:len(inters):len(inters)], bossphaseplan.Interceptors[:]...)
+}
+
+func (c *BossPhasePlanClient) mutate(ctx context.Context, m *BossPhasePlanMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BossPhasePlanCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BossPhasePlanUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BossPhasePlanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BossPhasePlanDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BossPhasePlan mutation op: %q", m.Op())
+	}
+}
+
+// BossVersionClient is a client for the BossVersion schema.
+type BossVersionClient struct {
+	config
+}
+
+// NewBossVersionClient returns a client for the BossVersion from the given config.
+func NewBossVersionClient(c config) *BossVersionClient {
+	return &BossVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `bossversion.Hooks(f(g(h())))`.
+func (c *BossVersionClient) Use(hooks ...Hook) {
+	c.hooks.BossVersion = append(c.hooks.BossVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `bossversion.Intercept(f(g(h())))`.
+func (c *BossVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.BossVersion = append(c.inters.BossVersion, interceptors...)
+}
+
+// Create returns a builder for creating a BossVersion entity.
+func (c *BossVersionClient) Create() *BossVersionCreate {
+	mutation := newBossVersionMutation(c.config, OpCreate)
+	return &BossVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of BossVersion entities.
+func (c *BossVersionClient) CreateBulk(builders ...*BossVersionCreate) *BossVersionCreateBulk {
+	return &BossVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *BossVersionClient) MapCreateBulk(slice any, setFunc func(*BossVersionCreate, int)) *BossVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &BossVersionCreateBulk{err: fmt.Errorf("calling to BossVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*BossVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &BossVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for BossVersion.
+func (c *BossVersionClient) Update() *BossVersionUpdate {
+	mutation := newBossVersionMutation(c.config, OpUpdate)
+	return &BossVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *BossVersionClient) UpdateOne(_m *BossVersion) *BossVersionUpdateOne {
+	mutation := newBossVersionMutation(c.config, OpUpdateOne, withBossVersion(_m))
+	return &BossVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *BossVersionClient) UpdateOneID(id uuid.UUID) *BossVersionUpdateOne {
+	mutation := newBossVersionMutation(c.config, OpUpdateOne, withBossVersionID(id))
+	return &BossVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for BossVersion.
+func (c *BossVersionClient) Delete() *BossVersionDelete {
+	mutation := newBossVersionMutation(c.config, OpDelete)
+	return &BossVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *BossVersionClient) DeleteOne(_m *BossVersion) *BossVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *BossVersionClient) DeleteOneID(id uuid.UUID) *BossVersionDeleteOne {
+	builder := c.Delete().Where(bossversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &BossVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for BossVersion.
+func (c *BossVersionClient) Query() *BossVersionQuery {
+	return &BossVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeBossVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a BossVersion entity by its id.
+func (c *BossVersionClient) Get(ctx context.Context, id uuid.UUID) (*BossVersion, error) {
+	return c.Query().Where(bossversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *BossVersionClient) GetX(ctx context.Context, id uuid.UUID) *BossVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *BossVersionClient) Hooks() []Hook {
+	hooks := c.hooks.BossVersion
+	return append(hooks[:len(hooks):len(hooks)], bossversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *BossVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.BossVersion
+	return append(inters[:len(inters):len(inters)], bossversion.Interceptors[:]...)
+}
+
+func (c *BossVersionClient) mutate(ctx context.Context, m *BossVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&BossVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&BossVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&BossVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&BossVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown BossVersion mutation op: %q", m.Op())
 	}
 }
 
@@ -7658,6 +8679,276 @@ func (c *NpcDialogueVersionClient) mutate(ctx context.Context, m *NpcDialogueVer
 	}
 }
 
+// PartyQuestContributionClient is a client for the PartyQuestContribution schema.
+type PartyQuestContributionClient struct {
+	config
+}
+
+// NewPartyQuestContributionClient returns a client for the PartyQuestContribution from the given config.
+func NewPartyQuestContributionClient(c config) *PartyQuestContributionClient {
+	return &PartyQuestContributionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `partyquestcontribution.Hooks(f(g(h())))`.
+func (c *PartyQuestContributionClient) Use(hooks ...Hook) {
+	c.hooks.PartyQuestContribution = append(c.hooks.PartyQuestContribution, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `partyquestcontribution.Intercept(f(g(h())))`.
+func (c *PartyQuestContributionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PartyQuestContribution = append(c.inters.PartyQuestContribution, interceptors...)
+}
+
+// Create returns a builder for creating a PartyQuestContribution entity.
+func (c *PartyQuestContributionClient) Create() *PartyQuestContributionCreate {
+	mutation := newPartyQuestContributionMutation(c.config, OpCreate)
+	return &PartyQuestContributionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PartyQuestContribution entities.
+func (c *PartyQuestContributionClient) CreateBulk(builders ...*PartyQuestContributionCreate) *PartyQuestContributionCreateBulk {
+	return &PartyQuestContributionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PartyQuestContributionClient) MapCreateBulk(slice any, setFunc func(*PartyQuestContributionCreate, int)) *PartyQuestContributionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PartyQuestContributionCreateBulk{err: fmt.Errorf("calling to PartyQuestContributionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PartyQuestContributionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PartyQuestContributionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PartyQuestContribution.
+func (c *PartyQuestContributionClient) Update() *PartyQuestContributionUpdate {
+	mutation := newPartyQuestContributionMutation(c.config, OpUpdate)
+	return &PartyQuestContributionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PartyQuestContributionClient) UpdateOne(_m *PartyQuestContribution) *PartyQuestContributionUpdateOne {
+	mutation := newPartyQuestContributionMutation(c.config, OpUpdateOne, withPartyQuestContribution(_m))
+	return &PartyQuestContributionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PartyQuestContributionClient) UpdateOneID(id uuid.UUID) *PartyQuestContributionUpdateOne {
+	mutation := newPartyQuestContributionMutation(c.config, OpUpdateOne, withPartyQuestContributionID(id))
+	return &PartyQuestContributionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PartyQuestContribution.
+func (c *PartyQuestContributionClient) Delete() *PartyQuestContributionDelete {
+	mutation := newPartyQuestContributionMutation(c.config, OpDelete)
+	return &PartyQuestContributionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PartyQuestContributionClient) DeleteOne(_m *PartyQuestContribution) *PartyQuestContributionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PartyQuestContributionClient) DeleteOneID(id uuid.UUID) *PartyQuestContributionDeleteOne {
+	builder := c.Delete().Where(partyquestcontribution.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PartyQuestContributionDeleteOne{builder}
+}
+
+// Query returns a query builder for PartyQuestContribution.
+func (c *PartyQuestContributionClient) Query() *PartyQuestContributionQuery {
+	return &PartyQuestContributionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePartyQuestContribution},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PartyQuestContribution entity by its id.
+func (c *PartyQuestContributionClient) Get(ctx context.Context, id uuid.UUID) (*PartyQuestContribution, error) {
+	return c.Query().Where(partyquestcontribution.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PartyQuestContributionClient) GetX(ctx context.Context, id uuid.UUID) *PartyQuestContribution {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PartyQuestContributionClient) Hooks() []Hook {
+	hooks := c.hooks.PartyQuestContribution
+	return append(hooks[:len(hooks):len(hooks)], partyquestcontribution.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PartyQuestContributionClient) Interceptors() []Interceptor {
+	inters := c.inters.PartyQuestContribution
+	return append(inters[:len(inters):len(inters)], partyquestcontribution.Interceptors[:]...)
+}
+
+func (c *PartyQuestContributionClient) mutate(ctx context.Context, m *PartyQuestContributionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PartyQuestContributionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PartyQuestContributionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PartyQuestContributionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PartyQuestContributionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PartyQuestContribution mutation op: %q", m.Op())
+	}
+}
+
+// PartyQuestSessionClient is a client for the PartyQuestSession schema.
+type PartyQuestSessionClient struct {
+	config
+}
+
+// NewPartyQuestSessionClient returns a client for the PartyQuestSession from the given config.
+func NewPartyQuestSessionClient(c config) *PartyQuestSessionClient {
+	return &PartyQuestSessionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `partyquestsession.Hooks(f(g(h())))`.
+func (c *PartyQuestSessionClient) Use(hooks ...Hook) {
+	c.hooks.PartyQuestSession = append(c.hooks.PartyQuestSession, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `partyquestsession.Intercept(f(g(h())))`.
+func (c *PartyQuestSessionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PartyQuestSession = append(c.inters.PartyQuestSession, interceptors...)
+}
+
+// Create returns a builder for creating a PartyQuestSession entity.
+func (c *PartyQuestSessionClient) Create() *PartyQuestSessionCreate {
+	mutation := newPartyQuestSessionMutation(c.config, OpCreate)
+	return &PartyQuestSessionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PartyQuestSession entities.
+func (c *PartyQuestSessionClient) CreateBulk(builders ...*PartyQuestSessionCreate) *PartyQuestSessionCreateBulk {
+	return &PartyQuestSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PartyQuestSessionClient) MapCreateBulk(slice any, setFunc func(*PartyQuestSessionCreate, int)) *PartyQuestSessionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PartyQuestSessionCreateBulk{err: fmt.Errorf("calling to PartyQuestSessionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PartyQuestSessionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PartyQuestSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PartyQuestSession.
+func (c *PartyQuestSessionClient) Update() *PartyQuestSessionUpdate {
+	mutation := newPartyQuestSessionMutation(c.config, OpUpdate)
+	return &PartyQuestSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PartyQuestSessionClient) UpdateOne(_m *PartyQuestSession) *PartyQuestSessionUpdateOne {
+	mutation := newPartyQuestSessionMutation(c.config, OpUpdateOne, withPartyQuestSession(_m))
+	return &PartyQuestSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PartyQuestSessionClient) UpdateOneID(id uuid.UUID) *PartyQuestSessionUpdateOne {
+	mutation := newPartyQuestSessionMutation(c.config, OpUpdateOne, withPartyQuestSessionID(id))
+	return &PartyQuestSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PartyQuestSession.
+func (c *PartyQuestSessionClient) Delete() *PartyQuestSessionDelete {
+	mutation := newPartyQuestSessionMutation(c.config, OpDelete)
+	return &PartyQuestSessionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PartyQuestSessionClient) DeleteOne(_m *PartyQuestSession) *PartyQuestSessionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PartyQuestSessionClient) DeleteOneID(id uuid.UUID) *PartyQuestSessionDeleteOne {
+	builder := c.Delete().Where(partyquestsession.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PartyQuestSessionDeleteOne{builder}
+}
+
+// Query returns a query builder for PartyQuestSession.
+func (c *PartyQuestSessionClient) Query() *PartyQuestSessionQuery {
+	return &PartyQuestSessionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePartyQuestSession},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PartyQuestSession entity by its id.
+func (c *PartyQuestSessionClient) Get(ctx context.Context, id uuid.UUID) (*PartyQuestSession, error) {
+	return c.Query().Where(partyquestsession.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PartyQuestSessionClient) GetX(ctx context.Context, id uuid.UUID) *PartyQuestSession {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PartyQuestSessionClient) Hooks() []Hook {
+	hooks := c.hooks.PartyQuestSession
+	return append(hooks[:len(hooks):len(hooks)], partyquestsession.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PartyQuestSessionClient) Interceptors() []Interceptor {
+	inters := c.inters.PartyQuestSession
+	return append(inters[:len(inters):len(inters)], partyquestsession.Interceptors[:]...)
+}
+
+func (c *PartyQuestSessionClient) mutate(ctx context.Context, m *PartyQuestSessionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PartyQuestSessionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PartyQuestSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PartyQuestSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PartyQuestSessionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PartyQuestSession mutation op: %q", m.Op())
+	}
+}
+
 // PeriodicQuestGrantClient is a client for the PeriodicQuestGrant schema.
 type PeriodicQuestGrantClient struct {
 	config
@@ -12116,17 +13407,19 @@ func (c *XpLedgerEntryClient) mutate(ctx context.Context, m *XpLedgerEntryMutati
 type (
 	hooks struct {
 		Achievement, AchievementProgressEvent, AchievementVersion, AvatarPreset,
-		Challenge, ChallengeAttempt, ChallengeVersion, CharacterCatalog,
-		CharacterCatalogVersion, ClientManifest, Collection, CollectionItem,
-		CollectionProgress, CollectionVersion, CommunityGoal,
-		CommunityGoalContribution, CommunityGoalProgress, ContentRelease, Currency,
-		CurrencyLedgerEntry, EconomyAdjustment, Event, EventParticipation,
-		EventPointEntry, EventRun, EventTemplate, EventTemplateVersion, EventVersion,
-		ExplorationProgress, GameConfigItem, GameConfigVersion, GameProfile,
-		GameSession, InventoryItem, ItemDefinition, ItemDefinitionVersion,
-		ItemLedgerEntry, LevelDefinition, LevelHistory, LevelSession, LevelVersion,
-		LoginEvent, MediaAsset, MediaUsage, MiniGameConfig, MiniGameConfigVersion,
-		MiniGamePlay, NicknameChange, NpcDialogue, NpcDialogueVersion,
+		BossAnswerResult, BossDefinition, BossEncounter, BossEncounterContribution,
+		BossEncounterMember, BossPhasePlan, BossVersion, Challenge, ChallengeAttempt,
+		ChallengeVersion, CharacterCatalog, CharacterCatalogVersion, ClientManifest,
+		Collection, CollectionItem, CollectionProgress, CollectionVersion,
+		CommunityGoal, CommunityGoalContribution, CommunityGoalProgress,
+		ContentRelease, Currency, CurrencyLedgerEntry, EconomyAdjustment, Event,
+		EventParticipation, EventPointEntry, EventRun, EventTemplate,
+		EventTemplateVersion, EventVersion, ExplorationProgress, GameConfigItem,
+		GameConfigVersion, GameProfile, GameSession, InventoryItem, ItemDefinition,
+		ItemDefinitionVersion, ItemLedgerEntry, LevelDefinition, LevelHistory,
+		LevelSession, LevelVersion, LoginEvent, MediaAsset, MediaUsage, MiniGameConfig,
+		MiniGameConfigVersion, MiniGamePlay, NicknameChange, NpcDialogue,
+		NpcDialogueVersion, PartyQuestContribution, PartyQuestSession,
 		PeriodicQuestGrant, PreviewSession, ProgressionCurve, ProgressionCurveVersion,
 		ProgressionLevel, QuestDefinition, QuestProgress, QuestStepAttempt,
 		QuestVersion, RenderJob, RewardGrant, RewardRule, RewardRuleVersion,
@@ -12138,17 +13431,19 @@ type (
 	}
 	inters struct {
 		Achievement, AchievementProgressEvent, AchievementVersion, AvatarPreset,
-		Challenge, ChallengeAttempt, ChallengeVersion, CharacterCatalog,
-		CharacterCatalogVersion, ClientManifest, Collection, CollectionItem,
-		CollectionProgress, CollectionVersion, CommunityGoal,
-		CommunityGoalContribution, CommunityGoalProgress, ContentRelease, Currency,
-		CurrencyLedgerEntry, EconomyAdjustment, Event, EventParticipation,
-		EventPointEntry, EventRun, EventTemplate, EventTemplateVersion, EventVersion,
-		ExplorationProgress, GameConfigItem, GameConfigVersion, GameProfile,
-		GameSession, InventoryItem, ItemDefinition, ItemDefinitionVersion,
-		ItemLedgerEntry, LevelDefinition, LevelHistory, LevelSession, LevelVersion,
-		LoginEvent, MediaAsset, MediaUsage, MiniGameConfig, MiniGameConfigVersion,
-		MiniGamePlay, NicknameChange, NpcDialogue, NpcDialogueVersion,
+		BossAnswerResult, BossDefinition, BossEncounter, BossEncounterContribution,
+		BossEncounterMember, BossPhasePlan, BossVersion, Challenge, ChallengeAttempt,
+		ChallengeVersion, CharacterCatalog, CharacterCatalogVersion, ClientManifest,
+		Collection, CollectionItem, CollectionProgress, CollectionVersion,
+		CommunityGoal, CommunityGoalContribution, CommunityGoalProgress,
+		ContentRelease, Currency, CurrencyLedgerEntry, EconomyAdjustment, Event,
+		EventParticipation, EventPointEntry, EventRun, EventTemplate,
+		EventTemplateVersion, EventVersion, ExplorationProgress, GameConfigItem,
+		GameConfigVersion, GameProfile, GameSession, InventoryItem, ItemDefinition,
+		ItemDefinitionVersion, ItemLedgerEntry, LevelDefinition, LevelHistory,
+		LevelSession, LevelVersion, LoginEvent, MediaAsset, MediaUsage, MiniGameConfig,
+		MiniGameConfigVersion, MiniGamePlay, NicknameChange, NpcDialogue,
+		NpcDialogueVersion, PartyQuestContribution, PartyQuestSession,
 		PeriodicQuestGrant, PreviewSession, ProgressionCurve, ProgressionCurveVersion,
 		ProgressionLevel, QuestDefinition, QuestProgress, QuestStepAttempt,
 		QuestVersion, RenderJob, RewardGrant, RewardRule, RewardRuleVersion,
@@ -12167,6 +13462,13 @@ var (
 		AchievementProgressEvent:  tableSchemas[1],
 		AchievementVersion:        tableSchemas[1],
 		AvatarPreset:              tableSchemas[0],
+		BossAnswerResult:          tableSchemas[0],
+		BossDefinition:            tableSchemas[0],
+		BossEncounter:             tableSchemas[0],
+		BossEncounterContribution: tableSchemas[0],
+		BossEncounterMember:       tableSchemas[0],
+		BossPhasePlan:             tableSchemas[0],
+		BossVersion:               tableSchemas[0],
 		Challenge:                 tableSchemas[0],
 		ChallengeAttempt:          tableSchemas[0],
 		ChallengeVersion:          tableSchemas[0],
@@ -12213,6 +13515,8 @@ var (
 		NicknameChange:            tableSchemas[0],
 		NpcDialogue:               tableSchemas[0],
 		NpcDialogueVersion:        tableSchemas[0],
+		PartyQuestContribution:    tableSchemas[0],
+		PartyQuestSession:         tableSchemas[0],
 		PeriodicQuestGrant:        tableSchemas[0],
 		PreviewSession:            tableSchemas[0],
 		ProgressionCurve:          tableSchemas[0],

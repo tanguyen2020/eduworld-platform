@@ -20,6 +20,20 @@ type Tx struct {
 	AchievementVersion *AchievementVersionClient
 	// AvatarPreset is the client for interacting with the AvatarPreset builders.
 	AvatarPreset *AvatarPresetClient
+	// BossAnswerResult is the client for interacting with the BossAnswerResult builders.
+	BossAnswerResult *BossAnswerResultClient
+	// BossDefinition is the client for interacting with the BossDefinition builders.
+	BossDefinition *BossDefinitionClient
+	// BossEncounter is the client for interacting with the BossEncounter builders.
+	BossEncounter *BossEncounterClient
+	// BossEncounterContribution is the client for interacting with the BossEncounterContribution builders.
+	BossEncounterContribution *BossEncounterContributionClient
+	// BossEncounterMember is the client for interacting with the BossEncounterMember builders.
+	BossEncounterMember *BossEncounterMemberClient
+	// BossPhasePlan is the client for interacting with the BossPhasePlan builders.
+	BossPhasePlan *BossPhasePlanClient
+	// BossVersion is the client for interacting with the BossVersion builders.
+	BossVersion *BossVersionClient
 	// Challenge is the client for interacting with the Challenge builders.
 	Challenge *ChallengeClient
 	// ChallengeAttempt is the client for interacting with the ChallengeAttempt builders.
@@ -112,6 +126,10 @@ type Tx struct {
 	NpcDialogue *NpcDialogueClient
 	// NpcDialogueVersion is the client for interacting with the NpcDialogueVersion builders.
 	NpcDialogueVersion *NpcDialogueVersionClient
+	// PartyQuestContribution is the client for interacting with the PartyQuestContribution builders.
+	PartyQuestContribution *PartyQuestContributionClient
+	// PartyQuestSession is the client for interacting with the PartyQuestSession builders.
+	PartyQuestSession *PartyQuestSessionClient
 	// PeriodicQuestGrant is the client for interacting with the PeriodicQuestGrant builders.
 	PeriodicQuestGrant *PeriodicQuestGrantClient
 	// PreviewSession is the client for interacting with the PreviewSession builders.
@@ -313,6 +331,13 @@ func (tx *Tx) init() {
 	tx.AchievementProgressEvent = NewAchievementProgressEventClient(tx.config)
 	tx.AchievementVersion = NewAchievementVersionClient(tx.config)
 	tx.AvatarPreset = NewAvatarPresetClient(tx.config)
+	tx.BossAnswerResult = NewBossAnswerResultClient(tx.config)
+	tx.BossDefinition = NewBossDefinitionClient(tx.config)
+	tx.BossEncounter = NewBossEncounterClient(tx.config)
+	tx.BossEncounterContribution = NewBossEncounterContributionClient(tx.config)
+	tx.BossEncounterMember = NewBossEncounterMemberClient(tx.config)
+	tx.BossPhasePlan = NewBossPhasePlanClient(tx.config)
+	tx.BossVersion = NewBossVersionClient(tx.config)
 	tx.Challenge = NewChallengeClient(tx.config)
 	tx.ChallengeAttempt = NewChallengeAttemptClient(tx.config)
 	tx.ChallengeVersion = NewChallengeVersionClient(tx.config)
@@ -359,6 +384,8 @@ func (tx *Tx) init() {
 	tx.NicknameChange = NewNicknameChangeClient(tx.config)
 	tx.NpcDialogue = NewNpcDialogueClient(tx.config)
 	tx.NpcDialogueVersion = NewNpcDialogueVersionClient(tx.config)
+	tx.PartyQuestContribution = NewPartyQuestContributionClient(tx.config)
+	tx.PartyQuestSession = NewPartyQuestSessionClient(tx.config)
 	tx.PeriodicQuestGrant = NewPeriodicQuestGrantClient(tx.config)
 	tx.PreviewSession = NewPreviewSessionClient(tx.config)
 	tx.ProgressionCurve = NewProgressionCurveClient(tx.config)

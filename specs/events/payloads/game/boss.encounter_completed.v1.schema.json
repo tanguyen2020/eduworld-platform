@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/boss.encounter_completed.v1.schema.json",
+  "title": "Payload boss.encounter_completed v1 (module game, owner F103)",
+  "description": "Encounter kết thúc đúng một lần, chốt trong một transaction (F103-AC-10): result defeated (hạ boss) hoặc ended (outcome time_up/abandoned). contributions[].eligible = đạt min_contribution ở mọi phase đã tham gia; first_defeat = lần hạ boss đầu tiên của học sinh. Reward Engine (F074) trao defeat_rewards (+ first_defeat_rewards) cho người eligible khi result = defeated, idempotent theo (encounter_id, student_id), qua cap XP/Xu; module competition kết thúc party activity theo party_activity_id (F101); quest engine hoàn thành bước boss cho người eligible (F103-AC-18). Không có số câu đúng hay xếp hạng đóng góp (R19, FR-PTY-013).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["encounter_id", "boss_id", "boss_version_id", "mode", "result", "outcome", "phases_cleared", "phase_count", "contributions", "defeat_rewards", "first_defeat_rewards", "ended_at"],
+  "properties": {
+    "encounter_id": { "type": "string", "format": "uuid" },
+    "boss_id": { "type": "string", "format": "uuid" },
+    "boss_version_id": { "type": "string", "format": "uuid" },
+    "mode": { "type": "string", "enum": ["solo", "party"] },
+    "party_id": { "type": ["string", "null"], "format": "uuid" },
+    "party_activity_id": { "type": ["string", "null"], "format": "uuid" },
+    "subject_id": { "type": ["string", "null"], "format": "uuid" },
+    "result": { "type": "string", "enum": ["defeated", "ended"] },
+    "outcome": { "type": "string", "enum": ["defeated", "time_up", "abandoned"] },
+    "end_reason": { "type": ["string", "null"], "maxLength": 64 },
+    "phases_cleared": { "type": "integer", "minimum": 0, "maximum": 8 },
+    "phase_count": { "type": "integer", "minimum": 1, "maximum": 8 },
+    "contributions": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["student_id", "eligible", "first_defeat"],
+        "properties": {
+          "student_id": { "type": "string", "format": "uuid" },
+          "eligible": { "type": "boolean" },
+          "first_defeat": { "type": "boolean" }
+        }
+      }
+    },
+    "defeat_rewards": { "type": "array", "maxItems": 10, "items": { "$ref": "#/$defs/reward" } },
+    "first_defeat_rewards": { "type": "array", "maxItems": 10, "items": { "$ref": "#/$defs/reward" } },
+    "ended_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "reward": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "enum": ["xp", "currency", "item", "badge", "title", "collection_item"] },
+        "amount": { "type": "integer", "minimum": 1, "maximum": 100000 },
+        "currency_code": { "type": "string", "maxLength": 64 },
+        "item_id": { "type": "string", "maxLength": 64 },
+        "badge_id": { "type": "string", "maxLength": 64 },
+        "title_code": { "type": "string", "maxLength": 64 },
+        "collection_item_id": { "type": "string", "maxLength": 64 }
+      }
+    }
+  },
+  "examples": [
+    {
+      "encounter_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "boss_id": "0193a5f4-6c1e-7b2a-9d1f-000000010301",
+      "boss_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000010311",
+      "mode": "party",
+      "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1",
+      "party_activity_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000b1",
+      "subject_id": "0193a5f4-6c1e-7b2a-9d1f-0000000720f1",
+      "result": "defeated",
+      "outcome": "defeated",
+      "end_reason": "defeated",
+      "phases_cleared": 2,
+      "phase_count": 2,
+      "contributions": [
+        { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "eligible": false, "first_defeat": false },
+        { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000006", "eligible": true, "first_defeat": true }
+      ],
+      "defeat_rewards": [{ "type": "xp", "amount": 50 }],
+      "first_defeat_rewards": [{ "type": "currency", "amount": 20, "currency_code": "xu" }],
+      "ended_at": "2026-11-24T03:12:00Z"
+    }
+  ]
+}

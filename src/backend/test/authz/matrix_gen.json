@@ -275,6 +275,18 @@
     ]
   },
   {
+    "operation_id": "assignQuestStepRoles",
+    "module": "game",
+    "method": "PUT",
+    "path": "/game/quests/{quest_id}/steps/{step_id}/roles",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "assignToTenants",
     "module": "identity",
     "method": "POST",
@@ -2699,6 +2711,18 @@
     "module": "game",
     "method": "GET",
     "path": "/game/quests/{quest_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getQuestStepClues",
+    "module": "game",
+    "method": "GET",
+    "path": "/game/quests/{quest_id}/steps/{step_id}/clues",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -5777,6 +5801,18 @@
     "path": "/auth/portal/setup:password",
     "public": true,
     "required": []
+  },
+  {
+    "operation_id": "shareQuestStepClue",
+    "module": "game",
+    "method": "POST",
+    "path": "/game/quests/{quest_id}/steps/{step_id}/clues/{role}:share",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
   },
   {
     "operation_id": "simulateGameConfig",

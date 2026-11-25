@@ -34,7 +34,7 @@ func invalid(field, format string, args ...any) error {
 // TriggerEvents are the server events a reward rule of F074 may react to (reward-rule.schema.json trigger.event_type
 // of the F074 sources). None of them is a login, a session, online time, speed or a streak (F074-AC-09, NFR-SAFE-003).
 var TriggerEvents = []string{"activity.graded", "lesson.completed", "quest.completed", "minigame.completed",
-	"learning_objective.mastered", "world.discovery_found", "world.area_completed", "challenge.completed"}
+	"learning_objective.mastered", "world.discovery_found", "world.area_completed", "challenge.completed", "boss.encounter_completed"}
 
 // ChallengeStatuses are the end statuses of challenge.completed a rule may reward (F076): abandoned never is.
 var ChallengeStatuses = []string{"succeeded", "failed"}
@@ -68,6 +68,17 @@ type Trigger struct {
 	ChallengeStatus  string
 	RewardMultiplier float64
 	FirstClear       bool
+	// ContentRules are the rewards of the content itself (F103: defeat_rewards / first_defeat_rewards of a boss version)
+	// evaluated like published rules — same caps, ledger and idempotency — next to the rules of the event.
+	ContentRules []Rule
+}
+
+// ContentRule turns the rewards of a content version into a rule of the Reward Engine (F103): the rule id is stable per
+// (content version, kind) so a replay never grants twice (xp_ledger source key); only xp_daily_cap and the caps of the
+// appliers bound it.
+func ContentRule(id uuid.UUID, code, sourceCode, eventType string, grants []Grant) Rule {
+	return Rule{RuleID: id, VersionID: id, Version: 1, Code: code, SourceCode: sourceCode, EventType: eventType, Grants: grants,
+		Caps: Caps{XPPerDay: math.MaxInt32}}
 }
 
 // Conditions are the rule conditions (reward-rule.schema.json conditions).

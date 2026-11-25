@@ -330,8 +330,34 @@ func (h *Host) fire(ctx context.Context) {
 			if err := h.reg.Forget(ctx, r.room.ID); err != nil {
 				slog.WarnContext(ctx, "roomhost: forget failed", "room_type", r.room.Type, "error", err)
 			}
+			continue
 		}
+		h.reload(ctx, r, now)
 	}
+}
+
+// reload reads the checkpoint again after a timer that did not end the room (F103: the next deadline of a boss phase
+// or a presence check): the due time of the database wins; a room closed there is forgotten. A failed read keeps the
+// room and retries at the next second.
+func (h *Host) reload(ctx context.Context, r *hosted, now time.Time) {
+	cp, err := h.store.Load(ctx, r.room)
+	if err != nil {
+		h.mu.Lock()
+		r.nextTryAt = now.Add(time.Second)
+		h.mu.Unlock()
+		return
+	}
+	if cp.Closed {
+		h.drop(r.room.ID)
+		_ = h.reg.Forget(ctx, r.room.ID)
+		return
+	}
+	h.mu.Lock()
+	r.room.DueAt = cp.Room.DueAt
+	if r.room.DueAt != nil && !r.room.DueAt.After(now) {
+		r.nextTryAt = now.Add(time.Second) // a due time still past: no busy loop
+	}
+	h.mu.Unlock()
 }
 
 // handover releases every local lease (graceful stop): the rooms become orphans another node takes at once.

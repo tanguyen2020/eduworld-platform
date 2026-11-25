@@ -75,6 +75,10 @@ func Compose(r *module.Registry) (*Composition, error) {
 	if f := lrn.Facade(); f != nil {
 		cin.Learning = f
 	}
+	// The Party Lobby asks module game for the party quests and bosses and starts them (F101 → F103 facade).
+	if f := gam.Facade(); f != nil {
+		cin.Game = f
+	}
 	cmp.Wire(cin)
 	in := identity.Imports{}
 	if f := lrn.Facade(); f != nil {

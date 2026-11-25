@@ -150,8 +150,12 @@ func (h Progression) AwardFromEvent(ctx context.Context, tenant, studentID uuid.
 		return nil
 	}
 	rules, err := h.Rules.RulesFor(ctx, t.EventType, t.OccurredAt)
-	if err != nil || len(rules) == 0 {
+	if err != nil {
 		return err
+	}
+	rules = append(rules, t.ContentRules...)
+	if len(rules) == 0 {
+		return nil
 	}
 	if err := h.Store.LockStudent(ctx, studentID); err != nil {
 		return err

@@ -305,3 +305,54 @@ func TestHostLeaseLostAndClose(t *testing.T) {
 		t.Fatal("closed room forgotten")
 	}
 }
+
+// pending is a handler whose timer does not end the room (F103 boss rooms: a phase deadline or a presence check).
+type pending struct{ fired atomic.Int32 }
+
+func (p *pending) OnTimer(context.Context, roomhost.Room, time.Time) (bool, error) {
+	p.fired.Add(1)
+	return false, nil
+}
+
+// F103: a timer that does not end the room reloads its due time from the checkpoint (the database wins): it fires again
+// at the new due time, never in a busy loop; a room closed in the database is forgotten.
+func TestHostReloadDueAfterTimer(t *testing.T) {
+	t0 := time.Date(2026, 11, 24, 3, 0, 0, 0, time.UTC)
+	clk := clock.NewFake(t0)
+	reg := newMem(clk)
+	due := t0.Add(5 * time.Second)
+	st := &store{due: map[string]time.Time{"b1": due}, closed: map[string]bool{}}
+	p := &pending{}
+	c := cfg("node-a")
+	c.Grace = roomhost.Grace{}
+	h := roomhost.NewHost(c, reg, st, clk, nil)
+	h.Handle("boss", p)
+	ctx := context.Background()
+	if err := reg.Announce(ctx, roomhost.Room{ID: "b1", Type: "boss", TenantID: "t1", DueAt: &due}); err != nil {
+		t.Fatal(err)
+	}
+	h.Step(ctx)
+	clk.Advance(5 * time.Second)
+	st.mu.Lock()
+	st.due["b1"] = t0.Add(20 * time.Second) // the phase moved on: next deadline later
+	st.mu.Unlock()
+	h.Step(ctx)
+	if p.fired.Load() != 1 {
+		t.Fatalf("fired once at the first due time, got %d", p.fired.Load())
+	}
+	for range 10 {
+		clk.Advance(time.Second)
+		h.Step(ctx)
+	}
+	if p.fired.Load() != 1 {
+		t.Fatalf("no fire before the reloaded due time, got %d", p.fired.Load())
+	}
+	clk.Advance(5 * time.Second)
+	st.mu.Lock()
+	st.closed["b1"] = true
+	st.mu.Unlock()
+	h.Step(ctx)
+	if p.fired.Load() != 2 || h.Hosting() != 0 {
+		t.Fatalf("fired at the reloaded due time, then forgotten when closed: fired=%d hosting=%d", p.fired.Load(), h.Hosting())
+	}
+}

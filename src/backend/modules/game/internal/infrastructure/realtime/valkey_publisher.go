@@ -165,3 +165,34 @@ func (p ChallengePublisher) ChallengeAttemptUpdated(ctx context.Context, student
 	}
 	return rt.Publisher{C: p.C, Timeout: p.Timeout}.ToUser(ctx, student, e)
 }
+
+// BossPublisher implements port.BossRealtime and port.QuestMessages (F103): the boss and co-op quest messages to every
+// connection of one member through Valkey ew:rt:user:<id> (an encounter or a session has at most 8 members; questions
+// and per-answer results go to their owner only, F103-AC-09).
+type BossPublisher struct {
+	C       valkey.Client
+	Timeout time.Duration
+}
+
+var (
+	_ port.BossRealtime  = BossPublisher{}
+	_ port.QuestMessages = BossPublisher{}
+)
+
+func (p BossPublisher) send(ctx context.Context, student uuid.UUID, typ string, payload map[string]any, at time.Time) error {
+	e, err := rt.NewMessage(typ, payload, at)
+	if err != nil {
+		return err
+	}
+	return rt.Publisher{C: p.C, Timeout: p.Timeout}.ToUser(ctx, student, e)
+}
+
+// BossMessage implements port.BossRealtime.
+func (p BossPublisher) BossMessage(ctx context.Context, student uuid.UUID, typ string, payload map[string]any, at time.Time) error {
+	return p.send(ctx, student, typ, payload, at)
+}
+
+// QuestMessage implements port.QuestMessages.
+func (p BossPublisher) QuestMessage(ctx context.Context, student uuid.UUID, typ string, payload map[string]any, at time.Time) error {
+	return p.send(ctx, student, typ, payload, at)
+}

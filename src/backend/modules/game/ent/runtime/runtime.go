@@ -10,6 +10,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementprogressevent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/avatarpreset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossanswerresult"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossdefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossencounter"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossencountercontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossencountermember"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossphaseplan"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/bossversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challenge"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeattempt"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeversion"
@@ -56,6 +63,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/partyquestcontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/partyquestsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/periodicquestgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/previewsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurve"
@@ -254,6 +263,359 @@ func init() {
 	avatarpresetDescID := avatarpresetMixinFields0[0].Descriptor()
 	// avatarpreset.DefaultID holds the default value on creation for the id field.
 	avatarpreset.DefaultID = avatarpresetDescID.Default.(func() uuid.UUID)
+	bossanswerresultMixin := schema.BossAnswerResult{}.Mixin()
+	bossanswerresultMixinHooks0 := bossanswerresultMixin[0].Hooks()
+	bossanswerresult.Hooks[0] = bossanswerresultMixinHooks0[0]
+	bossanswerresultMixinInters0 := bossanswerresultMixin[0].Interceptors()
+	bossanswerresult.Interceptors[0] = bossanswerresultMixinInters0[0]
+	bossanswerresultMixinFields0 := bossanswerresultMixin[0].Fields()
+	_ = bossanswerresultMixinFields0
+	bossanswerresultFields := schema.BossAnswerResult{}.Fields()
+	_ = bossanswerresultFields
+	// bossanswerresultDescCreatedAt is the schema descriptor for created_at field.
+	bossanswerresultDescCreatedAt := bossanswerresultMixinFields0[2].Descriptor()
+	// bossanswerresult.DefaultCreatedAt holds the default value on creation for the created_at field.
+	bossanswerresult.DefaultCreatedAt = bossanswerresultDescCreatedAt.Default.(func() time.Time)
+	// bossanswerresultDescPhaseID is the schema descriptor for phase_id field.
+	bossanswerresultDescPhaseID := bossanswerresultFields[4].Descriptor()
+	// bossanswerresult.PhaseIDValidator is a validator for the "phase_id" field. It is called by the builders before save.
+	bossanswerresult.PhaseIDValidator = bossanswerresultDescPhaseID.Validators[0].(func(string) error)
+	// bossanswerresultDescRequirementID is the schema descriptor for requirement_id field.
+	bossanswerresultDescRequirementID := bossanswerresultFields[6].Descriptor()
+	// bossanswerresult.RequirementIDValidator is a validator for the "requirement_id" field. It is called by the builders before save.
+	bossanswerresult.RequirementIDValidator = bossanswerresultDescRequirementID.Validators[0].(func(string) error)
+	// bossanswerresultDescRapidGuess is the schema descriptor for rapid_guess field.
+	bossanswerresultDescRapidGuess := bossanswerresultFields[9].Descriptor()
+	// bossanswerresult.DefaultRapidGuess holds the default value on creation for the rapid_guess field.
+	bossanswerresult.DefaultRapidGuess = bossanswerresultDescRapidGuess.Default.(bool)
+	// bossanswerresultDescID is the schema descriptor for id field.
+	bossanswerresultDescID := bossanswerresultMixinFields0[0].Descriptor()
+	// bossanswerresult.DefaultID holds the default value on creation for the id field.
+	bossanswerresult.DefaultID = bossanswerresultDescID.Default.(func() uuid.UUID)
+	bossdefinitionMixin := schema.BossDefinition{}.Mixin()
+	bossdefinitionMixinHooks0 := bossdefinitionMixin[0].Hooks()
+	bossdefinition.Hooks[0] = bossdefinitionMixinHooks0[0]
+	bossdefinitionMixinInters0 := bossdefinitionMixin[0].Interceptors()
+	bossdefinition.Interceptors[0] = bossdefinitionMixinInters0[0]
+	bossdefinitionMixinFields0 := bossdefinitionMixin[0].Fields()
+	_ = bossdefinitionMixinFields0
+	bossdefinitionFields := schema.BossDefinition{}.Fields()
+	_ = bossdefinitionFields
+	// bossdefinitionDescCreatedAt is the schema descriptor for created_at field.
+	bossdefinitionDescCreatedAt := bossdefinitionMixinFields0[1].Descriptor()
+	// bossdefinition.DefaultCreatedAt holds the default value on creation for the created_at field.
+	bossdefinition.DefaultCreatedAt = bossdefinitionDescCreatedAt.Default.(func() time.Time)
+	// bossdefinitionDescUpdatedAt is the schema descriptor for updated_at field.
+	bossdefinitionDescUpdatedAt := bossdefinitionMixinFields0[3].Descriptor()
+	// bossdefinition.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	bossdefinition.DefaultUpdatedAt = bossdefinitionDescUpdatedAt.Default.(func() time.Time)
+	// bossdefinition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	bossdefinition.UpdateDefaultUpdatedAt = bossdefinitionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// bossdefinitionDescDeleteReason is the schema descriptor for delete_reason field.
+	bossdefinitionDescDeleteReason := bossdefinitionMixinFields0[7].Descriptor()
+	// bossdefinition.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	bossdefinition.DeleteReasonValidator = bossdefinitionDescDeleteReason.Validators[0].(func(string) error)
+	// bossdefinitionDescVersion is the schema descriptor for version field.
+	bossdefinitionDescVersion := bossdefinitionMixinFields0[8].Descriptor()
+	// bossdefinition.DefaultVersion holds the default value on creation for the version field.
+	bossdefinition.DefaultVersion = bossdefinitionDescVersion.Default.(int64)
+	// bossdefinitionDescCode is the schema descriptor for code field.
+	bossdefinitionDescCode := bossdefinitionFields[0].Descriptor()
+	// bossdefinition.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	bossdefinition.CodeValidator = bossdefinitionDescCode.Validators[0].(func(string) error)
+	// bossdefinitionDescOwnerScope is the schema descriptor for owner_scope field.
+	bossdefinitionDescOwnerScope := bossdefinitionFields[1].Descriptor()
+	// bossdefinition.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	bossdefinition.DefaultOwnerScope = bossdefinitionDescOwnerScope.Default.(string)
+	// bossdefinition.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	bossdefinition.OwnerScopeValidator = bossdefinitionDescOwnerScope.Validators[0].(func(string) error)
+	// bossdefinitionDescLatestVersionNo is the schema descriptor for latest_version_no field.
+	bossdefinitionDescLatestVersionNo := bossdefinitionFields[3].Descriptor()
+	// bossdefinition.DefaultLatestVersionNo holds the default value on creation for the latest_version_no field.
+	bossdefinition.DefaultLatestVersionNo = bossdefinitionDescLatestVersionNo.Default.(int)
+	// bossdefinitionDescID is the schema descriptor for id field.
+	bossdefinitionDescID := bossdefinitionMixinFields0[0].Descriptor()
+	// bossdefinition.DefaultID holds the default value on creation for the id field.
+	bossdefinition.DefaultID = bossdefinitionDescID.Default.(func() uuid.UUID)
+	bossencounterMixin := schema.BossEncounter{}.Mixin()
+	bossencounterMixinHooks0 := bossencounterMixin[0].Hooks()
+	bossencounter.Hooks[0] = bossencounterMixinHooks0[0]
+	bossencounterMixinInters0 := bossencounterMixin[0].Interceptors()
+	bossencounter.Interceptors[0] = bossencounterMixinInters0[0]
+	bossencounterMixinFields0 := bossencounterMixin[0].Fields()
+	_ = bossencounterMixinFields0
+	bossencounterFields := schema.BossEncounter{}.Fields()
+	_ = bossencounterFields
+	// bossencounterDescCreatedAt is the schema descriptor for created_at field.
+	bossencounterDescCreatedAt := bossencounterMixinFields0[2].Descriptor()
+	// bossencounter.DefaultCreatedAt holds the default value on creation for the created_at field.
+	bossencounter.DefaultCreatedAt = bossencounterDescCreatedAt.Default.(func() time.Time)
+	// bossencounterDescUpdatedAt is the schema descriptor for updated_at field.
+	bossencounterDescUpdatedAt := bossencounterMixinFields0[4].Descriptor()
+	// bossencounter.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	bossencounter.DefaultUpdatedAt = bossencounterDescUpdatedAt.Default.(func() time.Time)
+	// bossencounter.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	bossencounter.UpdateDefaultUpdatedAt = bossencounterDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// bossencounterDescDeleteReason is the schema descriptor for delete_reason field.
+	bossencounterDescDeleteReason := bossencounterMixinFields0[8].Descriptor()
+	// bossencounter.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	bossencounter.DeleteReasonValidator = bossencounterDescDeleteReason.Validators[0].(func(string) error)
+	// bossencounterDescVersion is the schema descriptor for version field.
+	bossencounterDescVersion := bossencounterMixinFields0[9].Descriptor()
+	// bossencounter.DefaultVersion holds the default value on creation for the version field.
+	bossencounter.DefaultVersion = bossencounterDescVersion.Default.(int64)
+	// bossencounterDescMode is the schema descriptor for mode field.
+	bossencounterDescMode := bossencounterFields[3].Descriptor()
+	// bossencounter.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
+	bossencounter.ModeValidator = bossencounterDescMode.Validators[0].(func(string) error)
+	// bossencounterDescStatus is the schema descriptor for status field.
+	bossencounterDescStatus := bossencounterFields[7].Descriptor()
+	// bossencounter.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	bossencounter.StatusValidator = bossencounterDescStatus.Validators[0].(func(string) error)
+	// bossencounterDescPhaseIndex is the schema descriptor for phase_index field.
+	bossencounterDescPhaseIndex := bossencounterFields[8].Descriptor()
+	// bossencounter.DefaultPhaseIndex holds the default value on creation for the phase_index field.
+	bossencounter.DefaultPhaseIndex = bossencounterDescPhaseIndex.Default.(int)
+	// bossencounterDescCurrentPhase is the schema descriptor for current_phase field.
+	bossencounterDescCurrentPhase := bossencounterFields[9].Descriptor()
+	// bossencounter.CurrentPhaseValidator is a validator for the "current_phase" field. It is called by the builders before save.
+	bossencounter.CurrentPhaseValidator = bossencounterDescCurrentPhase.Validators[0].(func(string) error)
+	// bossencounterDescPhaseRetries is the schema descriptor for phase_retries field.
+	bossencounterDescPhaseRetries := bossencounterFields[10].Descriptor()
+	// bossencounter.DefaultPhaseRetries holds the default value on creation for the phase_retries field.
+	bossencounter.DefaultPhaseRetries = bossencounterDescPhaseRetries.Default.(int)
+	// bossencounterDescPlanFailures is the schema descriptor for plan_failures field.
+	bossencounterDescPlanFailures := bossencounterFields[11].Descriptor()
+	// bossencounter.DefaultPlanFailures holds the default value on creation for the plan_failures field.
+	bossencounter.DefaultPlanFailures = bossencounterDescPlanFailures.Default.(int)
+	// bossencounterDescPhasesCleared is the schema descriptor for phases_cleared field.
+	bossencounterDescPhasesCleared := bossencounterFields[12].Descriptor()
+	// bossencounter.DefaultPhasesCleared holds the default value on creation for the phases_cleared field.
+	bossencounter.DefaultPhasesCleared = bossencounterDescPhasesCleared.Default.(int)
+	// bossencounterDescEnergyRemaining is the schema descriptor for energy_remaining field.
+	bossencounterDescEnergyRemaining := bossencounterFields[13].Descriptor()
+	// bossencounter.DefaultEnergyRemaining holds the default value on creation for the energy_remaining field.
+	bossencounter.DefaultEnergyRemaining = bossencounterDescEnergyRemaining.Default.(float64)
+	// bossencounterDescStateVersion is the schema descriptor for state_version field.
+	bossencounterDescStateVersion := bossencounterFields[14].Descriptor()
+	// bossencounter.DefaultStateVersion holds the default value on creation for the state_version field.
+	bossencounter.DefaultStateVersion = bossencounterDescStateVersion.Default.(int64)
+	// bossencounterDescOutcome is the schema descriptor for outcome field.
+	bossencounterDescOutcome := bossencounterFields[18].Descriptor()
+	// bossencounter.OutcomeValidator is a validator for the "outcome" field. It is called by the builders before save.
+	bossencounter.OutcomeValidator = bossencounterDescOutcome.Validators[0].(func(string) error)
+	// bossencounterDescEndReason is the schema descriptor for end_reason field.
+	bossencounterDescEndReason := bossencounterFields[19].Descriptor()
+	// bossencounter.EndReasonValidator is a validator for the "end_reason" field. It is called by the builders before save.
+	bossencounter.EndReasonValidator = bossencounterDescEndReason.Validators[0].(func(string) error)
+	// bossencounterDescPeriodKey is the schema descriptor for period_key field.
+	bossencounterDescPeriodKey := bossencounterFields[20].Descriptor()
+	// bossencounter.PeriodKeyValidator is a validator for the "period_key" field. It is called by the builders before save.
+	bossencounter.PeriodKeyValidator = bossencounterDescPeriodKey.Validators[0].(func(string) error)
+	// bossencounterDescID is the schema descriptor for id field.
+	bossencounterDescID := bossencounterMixinFields0[0].Descriptor()
+	// bossencounter.DefaultID holds the default value on creation for the id field.
+	bossencounter.DefaultID = bossencounterDescID.Default.(func() uuid.UUID)
+	bossencountercontributionMixin := schema.BossEncounterContribution{}.Mixin()
+	bossencountercontributionMixinHooks0 := bossencountercontributionMixin[0].Hooks()
+	bossencountercontribution.Hooks[0] = bossencountercontributionMixinHooks0[0]
+	bossencountercontributionMixinInters0 := bossencountercontributionMixin[0].Interceptors()
+	bossencountercontribution.Interceptors[0] = bossencountercontributionMixinInters0[0]
+	bossencountercontributionMixinFields0 := bossencountercontributionMixin[0].Fields()
+	_ = bossencountercontributionMixinFields0
+	bossencountercontributionFields := schema.BossEncounterContribution{}.Fields()
+	_ = bossencountercontributionFields
+	// bossencountercontributionDescCreatedAt is the schema descriptor for created_at field.
+	bossencountercontributionDescCreatedAt := bossencountercontributionMixinFields0[2].Descriptor()
+	// bossencountercontribution.DefaultCreatedAt holds the default value on creation for the created_at field.
+	bossencountercontribution.DefaultCreatedAt = bossencountercontributionDescCreatedAt.Default.(func() time.Time)
+	// bossencountercontributionDescUpdatedAt is the schema descriptor for updated_at field.
+	bossencountercontributionDescUpdatedAt := bossencountercontributionMixinFields0[4].Descriptor()
+	// bossencountercontribution.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	bossencountercontribution.DefaultUpdatedAt = bossencountercontributionDescUpdatedAt.Default.(func() time.Time)
+	// bossencountercontribution.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	bossencountercontribution.UpdateDefaultUpdatedAt = bossencountercontributionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// bossencountercontributionDescDeleteReason is the schema descriptor for delete_reason field.
+	bossencountercontributionDescDeleteReason := bossencountercontributionMixinFields0[8].Descriptor()
+	// bossencountercontribution.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	bossencountercontribution.DeleteReasonValidator = bossencountercontributionDescDeleteReason.Validators[0].(func(string) error)
+	// bossencountercontributionDescVersion is the schema descriptor for version field.
+	bossencountercontributionDescVersion := bossencountercontributionMixinFields0[9].Descriptor()
+	// bossencountercontribution.DefaultVersion holds the default value on creation for the version field.
+	bossencountercontribution.DefaultVersion = bossencountercontributionDescVersion.Default.(int64)
+	// bossencountercontributionDescPhaseID is the schema descriptor for phase_id field.
+	bossencountercontributionDescPhaseID := bossencountercontributionFields[2].Descriptor()
+	// bossencountercontribution.PhaseIDValidator is a validator for the "phase_id" field. It is called by the builders before save.
+	bossencountercontribution.PhaseIDValidator = bossencountercontributionDescPhaseID.Validators[0].(func(string) error)
+	// bossencountercontributionDescCorrectCount is the schema descriptor for correct_count field.
+	bossencountercontributionDescCorrectCount := bossencountercontributionFields[3].Descriptor()
+	// bossencountercontribution.DefaultCorrectCount holds the default value on creation for the correct_count field.
+	bossencountercontribution.DefaultCorrectCount = bossencountercontributionDescCorrectCount.Default.(int)
+	// bossencountercontributionDescActivitiesCompleted is the schema descriptor for activities_completed field.
+	bossencountercontributionDescActivitiesCompleted := bossencountercontributionFields[4].Descriptor()
+	// bossencountercontribution.DefaultActivitiesCompleted holds the default value on creation for the activities_completed field.
+	bossencountercontribution.DefaultActivitiesCompleted = bossencountercontributionDescActivitiesCompleted.Default.(int)
+	// bossencountercontributionDescContributionPct is the schema descriptor for contribution_pct field.
+	bossencountercontributionDescContributionPct := bossencountercontributionFields[5].Descriptor()
+	// bossencountercontribution.DefaultContributionPct holds the default value on creation for the contribution_pct field.
+	bossencountercontribution.DefaultContributionPct = bossencountercontributionDescContributionPct.Default.(float64)
+	// bossencountercontributionDescEligible is the schema descriptor for eligible field.
+	bossencountercontributionDescEligible := bossencountercontributionFields[6].Descriptor()
+	// bossencountercontribution.DefaultEligible holds the default value on creation for the eligible field.
+	bossencountercontribution.DefaultEligible = bossencountercontributionDescEligible.Default.(bool)
+	// bossencountercontributionDescCleared is the schema descriptor for cleared field.
+	bossencountercontributionDescCleared := bossencountercontributionFields[7].Descriptor()
+	// bossencountercontribution.DefaultCleared holds the default value on creation for the cleared field.
+	bossencountercontribution.DefaultCleared = bossencountercontributionDescCleared.Default.(bool)
+	// bossencountercontributionDescID is the schema descriptor for id field.
+	bossencountercontributionDescID := bossencountercontributionMixinFields0[0].Descriptor()
+	// bossencountercontribution.DefaultID holds the default value on creation for the id field.
+	bossencountercontribution.DefaultID = bossencountercontributionDescID.Default.(func() uuid.UUID)
+	bossencountermemberMixin := schema.BossEncounterMember{}.Mixin()
+	bossencountermemberMixinHooks0 := bossencountermemberMixin[0].Hooks()
+	bossencountermember.Hooks[0] = bossencountermemberMixinHooks0[0]
+	bossencountermemberMixinInters0 := bossencountermemberMixin[0].Interceptors()
+	bossencountermember.Interceptors[0] = bossencountermemberMixinInters0[0]
+	bossencountermemberMixinFields0 := bossencountermemberMixin[0].Fields()
+	_ = bossencountermemberMixinFields0
+	bossencountermemberFields := schema.BossEncounterMember{}.Fields()
+	_ = bossencountermemberFields
+	// bossencountermemberDescCreatedAt is the schema descriptor for created_at field.
+	bossencountermemberDescCreatedAt := bossencountermemberMixinFields0[2].Descriptor()
+	// bossencountermember.DefaultCreatedAt holds the default value on creation for the created_at field.
+	bossencountermember.DefaultCreatedAt = bossencountermemberDescCreatedAt.Default.(func() time.Time)
+	// bossencountermemberDescUpdatedAt is the schema descriptor for updated_at field.
+	bossencountermemberDescUpdatedAt := bossencountermemberMixinFields0[4].Descriptor()
+	// bossencountermember.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	bossencountermember.DefaultUpdatedAt = bossencountermemberDescUpdatedAt.Default.(func() time.Time)
+	// bossencountermember.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	bossencountermember.UpdateDefaultUpdatedAt = bossencountermemberDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// bossencountermemberDescDeleteReason is the schema descriptor for delete_reason field.
+	bossencountermemberDescDeleteReason := bossencountermemberMixinFields0[8].Descriptor()
+	// bossencountermember.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	bossencountermember.DeleteReasonValidator = bossencountermemberDescDeleteReason.Validators[0].(func(string) error)
+	// bossencountermemberDescVersion is the schema descriptor for version field.
+	bossencountermemberDescVersion := bossencountermemberMixinFields0[9].Descriptor()
+	// bossencountermember.DefaultVersion holds the default value on creation for the version field.
+	bossencountermember.DefaultVersion = bossencountermemberDescVersion.Default.(int64)
+	// bossencountermemberDescReady is the schema descriptor for ready field.
+	bossencountermemberDescReady := bossencountermemberFields[5].Descriptor()
+	// bossencountermember.DefaultReady holds the default value on creation for the ready field.
+	bossencountermember.DefaultReady = bossencountermemberDescReady.Default.(bool)
+	// bossencountermemberDescLeftReason is the schema descriptor for left_reason field.
+	bossencountermemberDescLeftReason := bossencountermemberFields[9].Descriptor()
+	// bossencountermember.LeftReasonValidator is a validator for the "left_reason" field. It is called by the builders before save.
+	bossencountermember.LeftReasonValidator = bossencountermemberDescLeftReason.Validators[0].(func(string) error)
+	// bossencountermemberDescFirstDefeat is the schema descriptor for first_defeat field.
+	bossencountermemberDescFirstDefeat := bossencountermemberFields[11].Descriptor()
+	// bossencountermember.DefaultFirstDefeat holds the default value on creation for the first_defeat field.
+	bossencountermember.DefaultFirstDefeat = bossencountermemberDescFirstDefeat.Default.(bool)
+	// bossencountermemberDescID is the schema descriptor for id field.
+	bossencountermemberDescID := bossencountermemberMixinFields0[0].Descriptor()
+	// bossencountermember.DefaultID holds the default value on creation for the id field.
+	bossencountermember.DefaultID = bossencountermemberDescID.Default.(func() uuid.UUID)
+	bossphaseplanMixin := schema.BossPhasePlan{}.Mixin()
+	bossphaseplanMixinHooks0 := bossphaseplanMixin[0].Hooks()
+	bossphaseplan.Hooks[0] = bossphaseplanMixinHooks0[0]
+	bossphaseplanMixinInters0 := bossphaseplanMixin[0].Interceptors()
+	bossphaseplan.Interceptors[0] = bossphaseplanMixinInters0[0]
+	bossphaseplanMixinFields0 := bossphaseplanMixin[0].Fields()
+	_ = bossphaseplanMixinFields0
+	bossphaseplanFields := schema.BossPhasePlan{}.Fields()
+	_ = bossphaseplanFields
+	// bossphaseplanDescCreatedAt is the schema descriptor for created_at field.
+	bossphaseplanDescCreatedAt := bossphaseplanMixinFields0[2].Descriptor()
+	// bossphaseplan.DefaultCreatedAt holds the default value on creation for the created_at field.
+	bossphaseplan.DefaultCreatedAt = bossphaseplanDescCreatedAt.Default.(func() time.Time)
+	// bossphaseplanDescUpdatedAt is the schema descriptor for updated_at field.
+	bossphaseplanDescUpdatedAt := bossphaseplanMixinFields0[4].Descriptor()
+	// bossphaseplan.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	bossphaseplan.DefaultUpdatedAt = bossphaseplanDescUpdatedAt.Default.(func() time.Time)
+	// bossphaseplan.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	bossphaseplan.UpdateDefaultUpdatedAt = bossphaseplanDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// bossphaseplanDescDeleteReason is the schema descriptor for delete_reason field.
+	bossphaseplanDescDeleteReason := bossphaseplanMixinFields0[8].Descriptor()
+	// bossphaseplan.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	bossphaseplan.DeleteReasonValidator = bossphaseplanDescDeleteReason.Validators[0].(func(string) error)
+	// bossphaseplanDescVersion is the schema descriptor for version field.
+	bossphaseplanDescVersion := bossphaseplanMixinFields0[9].Descriptor()
+	// bossphaseplan.DefaultVersion holds the default value on creation for the version field.
+	bossphaseplan.DefaultVersion = bossphaseplanDescVersion.Default.(int64)
+	// bossphaseplanDescPhaseID is the schema descriptor for phase_id field.
+	bossphaseplanDescPhaseID := bossphaseplanFields[1].Descriptor()
+	// bossphaseplan.PhaseIDValidator is a validator for the "phase_id" field. It is called by the builders before save.
+	bossphaseplan.PhaseIDValidator = bossphaseplanDescPhaseID.Validators[0].(func(string) error)
+	// bossphaseplanDescRequirementID is the schema descriptor for requirement_id field.
+	bossphaseplanDescRequirementID := bossphaseplanFields[4].Descriptor()
+	// bossphaseplan.RequirementIDValidator is a validator for the "requirement_id" field. It is called by the builders before save.
+	bossphaseplan.RequirementIDValidator = bossphaseplanDescRequirementID.Validators[0].(func(string) error)
+	// bossphaseplanDescID is the schema descriptor for id field.
+	bossphaseplanDescID := bossphaseplanMixinFields0[0].Descriptor()
+	// bossphaseplan.DefaultID holds the default value on creation for the id field.
+	bossphaseplan.DefaultID = bossphaseplanDescID.Default.(func() uuid.UUID)
+	bossversionMixin := schema.BossVersion{}.Mixin()
+	bossversionMixinHooks0 := bossversionMixin[0].Hooks()
+	bossversion.Hooks[0] = bossversionMixinHooks0[0]
+	bossversionMixinInters0 := bossversionMixin[0].Interceptors()
+	bossversion.Interceptors[0] = bossversionMixinInters0[0]
+	bossversionMixinFields0 := bossversionMixin[0].Fields()
+	_ = bossversionMixinFields0
+	bossversionFields := schema.BossVersion{}.Fields()
+	_ = bossversionFields
+	// bossversionDescCreatedAt is the schema descriptor for created_at field.
+	bossversionDescCreatedAt := bossversionMixinFields0[1].Descriptor()
+	// bossversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	bossversion.DefaultCreatedAt = bossversionDescCreatedAt.Default.(func() time.Time)
+	// bossversionDescUpdatedAt is the schema descriptor for updated_at field.
+	bossversionDescUpdatedAt := bossversionMixinFields0[3].Descriptor()
+	// bossversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	bossversion.DefaultUpdatedAt = bossversionDescUpdatedAt.Default.(func() time.Time)
+	// bossversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	bossversion.UpdateDefaultUpdatedAt = bossversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// bossversionDescDeleteReason is the schema descriptor for delete_reason field.
+	bossversionDescDeleteReason := bossversionMixinFields0[7].Descriptor()
+	// bossversion.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	bossversion.DeleteReasonValidator = bossversionDescDeleteReason.Validators[0].(func(string) error)
+	// bossversionDescVersion is the schema descriptor for version field.
+	bossversionDescVersion := bossversionMixinFields0[8].Descriptor()
+	// bossversion.DefaultVersion holds the default value on creation for the version field.
+	bossversion.DefaultVersion = bossversionDescVersion.Default.(int64)
+	// bossversionDescStatus is the schema descriptor for status field.
+	bossversionDescStatus := bossversionFields[2].Descriptor()
+	// bossversion.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	bossversion.StatusValidator = bossversionDescStatus.Validators[0].(func(string) error)
+	// bossversionDescPayloadSha256 is the schema descriptor for payload_sha256 field.
+	bossversionDescPayloadSha256 := bossversionFields[4].Descriptor()
+	// bossversion.PayloadSha256Validator is a validator for the "payload_sha256" field. It is called by the builders before save.
+	bossversion.PayloadSha256Validator = bossversionDescPayloadSha256.Validators[0].(func(string) error)
+	// bossversionDescChangeNote is the schema descriptor for change_note field.
+	bossversionDescChangeNote := bossversionFields[5].Descriptor()
+	// bossversion.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	bossversion.ChangeNoteValidator = bossversionDescChangeNote.Validators[0].(func(string) error)
+	// bossversionDescSnapshotKey is the schema descriptor for snapshot_key field.
+	bossversionDescSnapshotKey := bossversionFields[6].Descriptor()
+	// bossversion.SnapshotKeyValidator is a validator for the "snapshot_key" field. It is called by the builders before save.
+	bossversion.SnapshotKeyValidator = bossversionDescSnapshotKey.Validators[0].(func(string) error)
+	// bossversionDescSnapshotSha256 is the schema descriptor for snapshot_sha256 field.
+	bossversionDescSnapshotSha256 := bossversionFields[7].Descriptor()
+	// bossversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
+	bossversion.SnapshotSha256Validator = bossversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// bossversionDescCode is the schema descriptor for code field.
+	bossversionDescCode := bossversionFields[11].Descriptor()
+	// bossversion.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	bossversion.CodeValidator = bossversionDescCode.Validators[0].(func(string) error)
+	// bossversionDescMode is the schema descriptor for mode field.
+	bossversionDescMode := bossversionFields[12].Descriptor()
+	// bossversion.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
+	bossversion.ModeValidator = bossversionDescMode.Validators[0].(func(string) error)
+	// bossversionDescAreaID is the schema descriptor for area_id field.
+	bossversionDescAreaID := bossversionFields[15].Descriptor()
+	// bossversion.AreaIDValidator is a validator for the "area_id" field. It is called by the builders before save.
+	bossversion.AreaIDValidator = bossversionDescAreaID.Validators[0].(func(string) error)
+	// bossversionDescID is the schema descriptor for id field.
+	bossversionDescID := bossversionMixinFields0[0].Descriptor()
+	// bossversion.DefaultID holds the default value on creation for the id field.
+	bossversion.DefaultID = bossversionDescID.Default.(func() uuid.UUID)
 	challengeMixin := schema.Challenge{}.Mixin()
 	challengeMixinHooks0 := challengeMixin[0].Hooks()
 	challenge.Hooks[0] = challengeMixinHooks0[0]
@@ -2398,6 +2760,100 @@ func init() {
 	npcdialogueversionDescID := npcdialogueversionMixinFields0[0].Descriptor()
 	// npcdialogueversion.DefaultID holds the default value on creation for the id field.
 	npcdialogueversion.DefaultID = npcdialogueversionDescID.Default.(func() uuid.UUID)
+	partyquestcontributionMixin := schema.PartyQuestContribution{}.Mixin()
+	partyquestcontributionMixinHooks0 := partyquestcontributionMixin[0].Hooks()
+	partyquestcontribution.Hooks[0] = partyquestcontributionMixinHooks0[0]
+	partyquestcontributionMixinInters0 := partyquestcontributionMixin[0].Interceptors()
+	partyquestcontribution.Interceptors[0] = partyquestcontributionMixinInters0[0]
+	partyquestcontributionMixinFields0 := partyquestcontributionMixin[0].Fields()
+	_ = partyquestcontributionMixinFields0
+	partyquestcontributionFields := schema.PartyQuestContribution{}.Fields()
+	_ = partyquestcontributionFields
+	// partyquestcontributionDescCreatedAt is the schema descriptor for created_at field.
+	partyquestcontributionDescCreatedAt := partyquestcontributionMixinFields0[2].Descriptor()
+	// partyquestcontribution.DefaultCreatedAt holds the default value on creation for the created_at field.
+	partyquestcontribution.DefaultCreatedAt = partyquestcontributionDescCreatedAt.Default.(func() time.Time)
+	// partyquestcontributionDescUpdatedAt is the schema descriptor for updated_at field.
+	partyquestcontributionDescUpdatedAt := partyquestcontributionMixinFields0[4].Descriptor()
+	// partyquestcontribution.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	partyquestcontribution.DefaultUpdatedAt = partyquestcontributionDescUpdatedAt.Default.(func() time.Time)
+	// partyquestcontribution.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	partyquestcontribution.UpdateDefaultUpdatedAt = partyquestcontributionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// partyquestcontributionDescDeleteReason is the schema descriptor for delete_reason field.
+	partyquestcontributionDescDeleteReason := partyquestcontributionMixinFields0[8].Descriptor()
+	// partyquestcontribution.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	partyquestcontribution.DeleteReasonValidator = partyquestcontributionDescDeleteReason.Validators[0].(func(string) error)
+	// partyquestcontributionDescVersion is the schema descriptor for version field.
+	partyquestcontributionDescVersion := partyquestcontributionMixinFields0[9].Descriptor()
+	// partyquestcontribution.DefaultVersion holds the default value on creation for the version field.
+	partyquestcontribution.DefaultVersion = partyquestcontributionDescVersion.Default.(int64)
+	// partyquestcontributionDescStepID is the schema descriptor for step_id field.
+	partyquestcontributionDescStepID := partyquestcontributionFields[2].Descriptor()
+	// partyquestcontribution.StepIDValidator is a validator for the "step_id" field. It is called by the builders before save.
+	partyquestcontribution.StepIDValidator = partyquestcontributionDescStepID.Validators[0].(func(string) error)
+	// partyquestcontributionDescMetricValue is the schema descriptor for metric_value field.
+	partyquestcontributionDescMetricValue := partyquestcontributionFields[3].Descriptor()
+	// partyquestcontribution.DefaultMetricValue holds the default value on creation for the metric_value field.
+	partyquestcontribution.DefaultMetricValue = partyquestcontributionDescMetricValue.Default.(int)
+	// partyquestcontributionDescMinContributionMet is the schema descriptor for min_contribution_met field.
+	partyquestcontributionDescMinContributionMet := partyquestcontributionFields[4].Descriptor()
+	// partyquestcontribution.DefaultMinContributionMet holds the default value on creation for the min_contribution_met field.
+	partyquestcontribution.DefaultMinContributionMet = partyquestcontributionDescMinContributionMet.Default.(bool)
+	// partyquestcontributionDescID is the schema descriptor for id field.
+	partyquestcontributionDescID := partyquestcontributionMixinFields0[0].Descriptor()
+	// partyquestcontribution.DefaultID holds the default value on creation for the id field.
+	partyquestcontribution.DefaultID = partyquestcontributionDescID.Default.(func() uuid.UUID)
+	partyquestsessionMixin := schema.PartyQuestSession{}.Mixin()
+	partyquestsessionMixinHooks0 := partyquestsessionMixin[0].Hooks()
+	partyquestsession.Hooks[0] = partyquestsessionMixinHooks0[0]
+	partyquestsessionMixinInters0 := partyquestsessionMixin[0].Interceptors()
+	partyquestsession.Interceptors[0] = partyquestsessionMixinInters0[0]
+	partyquestsessionMixinFields0 := partyquestsessionMixin[0].Fields()
+	_ = partyquestsessionMixinFields0
+	partyquestsessionFields := schema.PartyQuestSession{}.Fields()
+	_ = partyquestsessionFields
+	// partyquestsessionDescCreatedAt is the schema descriptor for created_at field.
+	partyquestsessionDescCreatedAt := partyquestsessionMixinFields0[2].Descriptor()
+	// partyquestsession.DefaultCreatedAt holds the default value on creation for the created_at field.
+	partyquestsession.DefaultCreatedAt = partyquestsessionDescCreatedAt.Default.(func() time.Time)
+	// partyquestsessionDescUpdatedAt is the schema descriptor for updated_at field.
+	partyquestsessionDescUpdatedAt := partyquestsessionMixinFields0[4].Descriptor()
+	// partyquestsession.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	partyquestsession.DefaultUpdatedAt = partyquestsessionDescUpdatedAt.Default.(func() time.Time)
+	// partyquestsession.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	partyquestsession.UpdateDefaultUpdatedAt = partyquestsessionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// partyquestsessionDescDeleteReason is the schema descriptor for delete_reason field.
+	partyquestsessionDescDeleteReason := partyquestsessionMixinFields0[8].Descriptor()
+	// partyquestsession.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	partyquestsession.DeleteReasonValidator = partyquestsessionDescDeleteReason.Validators[0].(func(string) error)
+	// partyquestsessionDescVersion is the schema descriptor for version field.
+	partyquestsessionDescVersion := partyquestsessionMixinFields0[9].Descriptor()
+	// partyquestsession.DefaultVersion holds the default value on creation for the version field.
+	partyquestsession.DefaultVersion = partyquestsessionDescVersion.Default.(int64)
+	// partyquestsessionDescPartyMode is the schema descriptor for party_mode field.
+	partyquestsessionDescPartyMode := partyquestsessionFields[6].Descriptor()
+	// partyquestsession.PartyModeValidator is a validator for the "party_mode" field. It is called by the builders before save.
+	partyquestsession.PartyModeValidator = partyquestsessionDescPartyMode.Validators[0].(func(string) error)
+	// partyquestsessionDescSharedProgressPolicy is the schema descriptor for shared_progress_policy field.
+	partyquestsessionDescSharedProgressPolicy := partyquestsessionFields[7].Descriptor()
+	// partyquestsession.SharedProgressPolicyValidator is a validator for the "shared_progress_policy" field. It is called by the builders before save.
+	partyquestsession.SharedProgressPolicyValidator = partyquestsessionDescSharedProgressPolicy.Validators[0].(func(string) error)
+	// partyquestsessionDescStatus is the schema descriptor for status field.
+	partyquestsessionDescStatus := partyquestsessionFields[9].Descriptor()
+	// partyquestsession.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	partyquestsession.StatusValidator = partyquestsessionDescStatus.Validators[0].(func(string) error)
+	// partyquestsessionDescStateVersion is the schema descriptor for state_version field.
+	partyquestsessionDescStateVersion := partyquestsessionFields[15].Descriptor()
+	// partyquestsession.DefaultStateVersion holds the default value on creation for the state_version field.
+	partyquestsession.DefaultStateVersion = partyquestsessionDescStateVersion.Default.(int64)
+	// partyquestsessionDescEndReason is the schema descriptor for end_reason field.
+	partyquestsessionDescEndReason := partyquestsessionFields[18].Descriptor()
+	// partyquestsession.EndReasonValidator is a validator for the "end_reason" field. It is called by the builders before save.
+	partyquestsession.EndReasonValidator = partyquestsessionDescEndReason.Validators[0].(func(string) error)
+	// partyquestsessionDescID is the schema descriptor for id field.
+	partyquestsessionDescID := partyquestsessionMixinFields0[0].Descriptor()
+	// partyquestsession.DefaultID holds the default value on creation for the id field.
+	partyquestsession.DefaultID = partyquestsessionDescID.Default.(func() uuid.UUID)
 	periodicquestgrantMixin := schema.PeriodicQuestGrant{}.Mixin()
 	periodicquestgrantMixinHooks0 := periodicquestgrantMixin[0].Hooks()
 	periodicquestgrant.Hooks[0] = periodicquestgrantMixinHooks0[0]

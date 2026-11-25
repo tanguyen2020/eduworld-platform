@@ -15,6 +15,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/attempt"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question/selection"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/ids"
@@ -73,7 +74,25 @@ type CreatePlanInput struct {
 	QuestionCount    int
 	TimePerQuestionS int
 	Participants     []uuid.UUID
+	// F103 (boss rounds of module game, research R1): the context of the attempts (boss_encounter + encounter id), the
+	// attempt mode (challenge) and the published activity whose question source the plan draws from (subject not needed).
+	ContextType     string
+	ContextID       uuid.UUID
+	AttemptMode     string
+	ActivityID      *uuid.UUID
+	ActivityVersion *int
 }
+
+// Boss plans (F103): the context and attempt mode module game asks for.
+const (
+	PlanContextBoss  = "boss_encounter"
+	PlanModeBoss     = "boss"
+	PlanAttemptBoss  = "challenge"
+	planAttemptMatch = "competition"
+)
+
+// boss reports a plan of a boss round.
+func (in CreatePlanInput) boss() bool { return in.ContextType == PlanContextBoss }
 
 // PlanItemView is one question of a plan as module competition receives it: render data only (no answer data).
 type PlanItemView struct {
@@ -102,6 +121,8 @@ type PlanScore struct {
 	ScoreFraction   float64   `json:"score_fraction"`
 	AttemptAnswerID uuid.UUID `json:"attempt_answer_id"`
 	Late            bool      `json:"late"`
+	// RapidGuess: answered faster than rapid_guess_min_response_ms (never for mode competition, F103 anti-cheat).
+	RapidGuess bool `json:"rapid_guess"`
 }
 
 // ScorePlanInput is PlanAnswerScoreRequest of scorePlanAnswer.
@@ -114,7 +135,7 @@ type ScorePlanInput struct {
 	ClientElapsedMS *int64
 }
 
-var planModes = []string{"battle_1v1", "team_battle", "coop_challenge", "timed_quiz", "tournament"}
+var planModes = []string{"battle_1v1", "team_battle", "coop_challenge", "timed_quiz", "tournament", PlanModeBoss}
 
 func planTenant(ctx context.Context) (uuid.UUID, error) {
 	s, ok := tenancy.ScopeFrom(ctx)
@@ -151,7 +172,14 @@ func (in CreatePlanInput) validate() error {
 		return problem.Invalid("/mode", problem.SubInvalid, "is not a competition mode")
 	case in.GradeLevel < 1 || in.GradeLevel > 9:
 		return problem.Invalid("/grade_level", problem.SubInvalid, "is between 1 and 9")
-	case in.SubjectID == uuid.Nil:
+	case in.ContextType != "" && in.ContextType != planContext && in.ContextType != PlanContextBoss:
+		return problem.Invalid("/context_type", problem.SubInvalid, "match or boss_encounter")
+	case in.boss() && (in.ContextID == uuid.Nil || in.ActivityID == nil || in.Mode != PlanModeBoss || in.AttemptMode != PlanAttemptBoss ||
+		len(in.Participants) != 1):
+		return problem.Invalid("/context_id", problem.SubInvalid, "a boss round needs context_id, activity_ref, mode boss, attempt_mode challenge and one participant")
+	case !in.boss() && (in.Mode == PlanModeBoss || (in.AttemptMode != "" && in.AttemptMode != planAttemptMatch)):
+		return problem.Invalid("/mode", problem.SubInvalid, "mode boss and attempt_mode challenge are for boss_encounter plans")
+	case in.SubjectID == uuid.Nil && in.ActivityID == nil:
 		return problem.Invalid("/subject_id", problem.SubRequired, "is required")
 	case in.QuestionCount < 1 || in.QuestionCount > 30:
 		return problem.Invalid("/question_count", problem.SubInvalid, "is between 1 and 30")
@@ -207,21 +235,48 @@ func (h QuestionPlans) CreatePlan(ctx context.Context, in CreatePlanInput) (out 
 				recent = append(recent, seen...)
 			}
 		}
-		f := selection.Filters{SubjectID: &in.SubjectID, GradeLevels: []int{in.GradeLevel}, TopicIDs: in.TopicIDs}
-		if in.DifficultyMin > 0 || in.DifficultyMax > 0 {
-			f.Difficulty = &selection.Range{Min: in.DifficultyMin, Max: in.DifficultyMax}
+		var qids []uuid.UUID
+		var allowed []string
+		subject := in.SubjectID
+		if in.ActivityID != nil {
+			// F103: the questions of the published activity of the boss requirement (its question source), at most
+			// question_count, for the grade module game chose (per_grade).
+			src, err := h.activitySource(ctx, *in.ActivityID, in.ActivityVersion)
+			if err != nil {
+				return err
+			}
+			allowed = src.Plugin.AllowedQuestionTypes(src.Config)
+			if qids, err = a.sourceQuestions(ctx, src.Config.Content.QuestionSource, src.Version.SubjectID, src.Version.GradeLevels, allowed,
+				seed); err != nil {
+				return err
+			}
+			if len(qids) > in.QuestionCount {
+				qids = qids[:in.QuestionCount]
+			}
+			if len(qids) == 0 {
+				return problem.New(problem.QuestionPoolInsufficient, "the activity has no question")
+			}
+			if src.Version.SubjectID != nil {
+				subject = *src.Version.SubjectID
+			}
+		} else {
+			f := selection.Filters{SubjectID: &in.SubjectID, GradeLevels: []int{in.GradeLevel}, TopicIDs: in.TopicIDs}
+			if in.DifficultyMin > 0 || in.DifficultyMax > 0 {
+				f.Difficulty = &selection.Range{Min: in.DifficultyMin, Max: in.DifficultyMax}
+			}
+			cs, err := a.Delivery.Select(ctx, selection.Request{Rule: selection.Rule{Filters: f, Count: in.QuestionCount}, Seed: uint64(seed), Recent: recent})
+			if err != nil {
+				return err
+			}
+			qids = versionsOf(cs)
 		}
-		cs, err := a.Delivery.Select(ctx, selection.Request{Rule: selection.Rule{Filters: f, Count: in.QuestionCount}, Seed: uint64(seed), Recent: recent})
-		if err != nil {
-			return err
-		}
-		items, rendered, err := a.pinItems(ctx, versionsOf(cs), seed, false, nil)
+		items, rendered, err := a.pinItems(ctx, qids, seed, false, allowed)
 		if err != nil {
 			return err
 		}
 		planID := ids.New()
 		row := write.QuestionPlanRow{PlanID: planID, TenantID: tenant, MatchID: in.MatchID, Mode: in.Mode, GradeLevel: in.GradeLevel,
-			SubjectID: in.SubjectID, Seed: seed, Participants: in.Participants, CreatedAt: now}
+			SubjectID: subject, Seed: seed, Participants: in.Participants, CreatedAt: now}
 		for i, it := range items {
 			row.Items = append(row.Items, write.QuestionPlanItem{Index: i, QuestionVersionID: it.QuestionVersionID, QuestionType: it.QuestionType,
 				TimeLimitSeconds: in.TimePerQuestionS, MaxScore: it.MaxScore, Presentation: it.Presentation, ObjectiveIDs: it.ObjectiveIDs})
@@ -232,15 +287,20 @@ func (h QuestionPlans) CreatePlan(ctx context.Context, in CreatePlanInput) (out 
 		if err := h.Plans.InsertPlan(ctx, row); err != nil {
 			return err
 		}
-		// One attempt mode competition per participant (context match): its items are the plan.
+		// One attempt mode competition per participant (context match): its items are the plan. A boss round (F103) opens
+		// one attempt mode challenge, context boss_encounter of the encounter: the learning record of that student only.
+		mode, ctxType, ctxID := attempt.ModeCompetition, planContext, in.MatchID
+		if in.boss() {
+			mode, ctxType, ctxID = attempt.ModeChallenge, PlanContextBoss, in.ContextID
+		}
 		for _, s := range in.Participants {
 			own := make([]attempt.Item, len(items))
 			for i, it := range items {
 				it.ID = ids.New()
 				own[i] = it
 			}
-			att := attempt.New(attempt.Start{ID: ids.New(), TenantID: tenant, SchoolID: schools[s], StudentID: s, Mode: attempt.ModeCompetition,
-				ContextType: planContext, ContextID: in.MatchID, ActivityType: "quiz", SourceKind: "selection", SourceVersionID: planID, Seed: seed,
+			att := attempt.New(attempt.Start{ID: ids.New(), TenantID: tenant, SchoolID: schools[s], StudentID: s, Mode: mode,
+				ContextType: ctxType, ContextID: ctxID, ActivityType: "quiz", SourceKind: "selection", SourceVersionID: planID, Seed: seed,
 				Now: now, ActivityFeedback: string(attempt.FeedbackAfterClose), IdempotencyKey: planAttemptKey(planID), Items: own})
 			if err := a.Store.InsertAttempt(ctx, att); err != nil {
 				return err
@@ -356,6 +416,9 @@ func (h QuestionPlans) scoreOnce(ctx context.Context, in ScorePlanInput) (out Pl
 			return attemptProblem(err)
 		}
 		ans.IsScored = !late
+		grade := p.GradeLevel
+		rapid := attempt.DefaultRapidGuess().Flag(attempt.GuessInput{Mode: att.Mode, QuestionType: it.QuestionType, Grade: &grade,
+			ResponseMS: ans.ResponseMS, Scored: ans.IsScored})
 		score := min(max(g.Score, 0), it.MaxScore)
 		if late {
 			score = 0
@@ -380,14 +443,31 @@ func (h QuestionPlans) scoreOnce(ctx context.Context, in ScorePlanInput) (out Pl
 			it.ObjectiveIDs, "student", map[string]any{"attempt_id": att.ID, "position": pos, "question_version_id": it.QuestionVersionID,
 				"question_type": it.QuestionType, "is_correct": g.IsCorrect && !late, "is_scored": ans.IsScored,
 				"score": learningScore(score, it.MaxScore), "response_ms": ans.ResponseMS, "attempt_no": ans.AttemptNo, "hints_used": 0,
-				"rapid_guess": false}); err != nil {
+				"rapid_guess": rapid}); err != nil {
 			return err
 		}
-		out.IsCorrect, out.Late, out.AttemptAnswerID = g.IsCorrect && !late, late, answerID
+		out.IsCorrect, out.Late, out.AttemptAnswerID, out.RapidGuess = g.IsCorrect && !late, late, answerID, rapid
 		if it.MaxScore > 0 {
 			out.ScoreFraction = min(max(score/it.MaxScore, 0), 1)
 		}
 		return nil
 	})
 	return out, err
+}
+
+// activitySource loads the published activity of a boss requirement (F103): the version number given (still published)
+// or the current release.
+func (h QuestionPlans) activitySource(ctx context.Context, id uuid.UUID, versionNo *int) (ActivitySource, error) {
+	a := h.Attempts
+	if versionNo == nil {
+		return LoadActivityVersion(ctx, a.Docs, a.Registry, id, nil)
+	}
+	v, err := a.Docs.DocVersion(ctx, contentmodel.TypeActivity, id, *versionNo)
+	if err != nil {
+		return ActivitySource{}, err
+	}
+	if v.Status != contentmodel.StatusPublished {
+		return ActivitySource{}, problem.New(problem.ContentNotPublished, "the activity version is not published")
+	}
+	return LoadActivityVersion(ctx, a.Docs, a.Registry, id, &v.ID)
 }

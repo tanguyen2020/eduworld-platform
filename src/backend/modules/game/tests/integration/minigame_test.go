@@ -157,7 +157,7 @@ func TestStartMiniGame(t *testing.T) {
 	c := calls[len(calls)-1]
 	if c.Mode != learningapi.AttemptModeMinigame || c.Activity.ContentType != learningapi.ActivityRefContentTypeMinigameConfig ||
 		c.Activity.ContentId.String() != mgMatching || c.Activity.ContentVersionId == nil || c.Activity.ContentVersionId.String() != version ||
-		c.Context.ContextType != learningapi.MinigameSession || c.Context.ContextId.String() != r.body["play_id"] || keys[len(keys)-1] != k ||
+		c.Context.ContextType != learningapi.AttemptCreateRequestContextContextTypeMinigameSession || c.Context.ContextId.String() != r.body["play_id"] || keys[len(keys)-1] != k ||
 		c.StudentId != an.id {
 		t.Fatalf("createAttempt: %+v key %s", c, keys[len(keys)-1])
 	}
@@ -378,7 +378,7 @@ func TestQuestMiniGameStep(t *testing.T) {
 	version := e.currentVersion(ctx, t, mgMatching)
 	if c.Mode != learningapi.AttemptModeQuest || c.Activity.ContentType != learningapi.ActivityRefContentTypeMinigameConfig ||
 		c.Activity.ContentId.String() != mgMatching || c.Activity.ContentVersionId == nil || c.Activity.ContentVersionId.String() != version ||
-		c.Context.ContextType != learningapi.QuestStep || c.Context.StepId == nil || *c.Context.StepId != "solve" {
+		c.Context.ContextType != learningapi.AttemptCreateRequestContextContextTypeQuestStep || c.Context.StepId == nil || *c.Context.StepId != "solve" {
 		t.Fatalf("createAttempt of the step: %+v", c)
 	}
 	grade := func(attempt string, correct int, met bool) {

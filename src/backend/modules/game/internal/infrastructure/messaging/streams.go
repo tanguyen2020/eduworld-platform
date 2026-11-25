@@ -134,9 +134,9 @@ var RewardEngineLearningEvents = []string{"activity.graded", "lesson.completed",
 // a JetStream consumer reads one stream); minigame.completed since F073.
 const RewardEngineGameName = "game.reward_engine_game"
 
-// RewardEngineGameEvents are the game events it handles (owners F071, F072, F073, F076).
+// RewardEngineGameEvents are the game events it handles (owners F071, F072, F073, F076, F103).
 var RewardEngineGameEvents = []string{"quest.completed", "world.discovery_found", "world.area_completed", "minigame.completed",
-	"challenge.completed"}
+	"challenge.completed", "boss.encounter_completed"}
 
 // ChallengeProgressName updates the challenge attempts in progress on the graded learning attempts they opened (F076
 // T025): score, lives and goal from the result of module learning only (ADR-0016).
@@ -215,3 +215,28 @@ const SeasonProjectionName = "game.season_projection"
 
 // SeasonProjectionEvents are the competition events it handles (owner F106).
 var SeasonProjectionEvents = []string{"season.started", "season.ended"}
+
+// F103 consumers (boss battles and co-op quests).
+const (
+	// BossPartyMembershipName applies the party membership changes to the live boss encounters and the shared quest
+	// sessions of the party (F103-AC-12, AC-19).
+	BossPartyMembershipName = "game.boss_party_membership"
+	// PartyQuestStepName shares the frame steps and assigns the interdependent roles of the co-op quests (F103-AC-14, AC-20).
+	PartyQuestStepName = "game.party_quest_on_step_completed"
+	// PartyQuestGradedName applies the graded attempts of collective and interdependent steps (F103-AC-15, AC-23).
+	PartyQuestGradedName = "game.party_quest_on_activity_graded"
+	// QuestBossName completes the boss steps of the eligible members of a defeated encounter (F103-AC-18).
+	QuestBossName = "game.quest_on_boss_completed"
+)
+
+// BossPartyMembershipEvents are the competition events of the party membership (owner F100).
+var BossPartyMembershipEvents = []string{"party.member_left", "party.member_kicked", "party.disbanded"}
+
+// PartyQuestStepEvents are the game events of the shared steps (owner F072).
+var PartyQuestStepEvents = []string{"quest.step_completed"}
+
+// PartyQuestGradedEvents are the learning events of the collective steps (owner F030).
+var PartyQuestGradedEvents = []string{"activity.graded"}
+
+// QuestBossEvents are the game events of the boss steps (owner F103).
+var QuestBossEvents = []string{"boss.encounter_completed"}

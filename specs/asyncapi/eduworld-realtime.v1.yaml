@@ -215,6 +215,10 @@ channels:
       BossPhaseStarted: { $ref: '#/components/messages/BossPhaseStarted' }
       BossPhaseCompleted: { $ref: '#/components/messages/BossPhaseCompleted' }
       BossEncounterEnded: { $ref: '#/components/messages/BossEncounterEnded' }
+      BossQuestionAssigned: { $ref: '#/components/messages/BossQuestionAssigned' }
+      BossAnswerEvaluated: { $ref: '#/components/messages/BossAnswerEvaluated' }
+      QuestRolesAssigned: { $ref: '#/components/messages/QuestRolesAssigned' }
+      QuestClueShared: { $ref: '#/components/messages/QuestClueShared' }
       ChallengeAttemptUpdated: { $ref: '#/components/messages/ChallengeAttemptUpdated' }
       ProgressionXpUpdated: { $ref: '#/components/messages/ProgressionXpUpdated' }
       ProgressionLevelReached: { $ref: '#/components/messages/ProgressionLevelReached' }
@@ -444,11 +448,23 @@ operations:
   sendBossEvents:
     action: send
     channel: { $ref: '#/channels/realtime' }
+    summary: |
+      Boss encounter (module game, F103): mọi message gửi tới từng thành viên qua Valkey ew:rt:user:<user_id> (encounter ≤ 8
+      người); câu hỏi và kết quả từng câu chỉ tới chính người trả lời (F103-AC-09).
     messages:
       - $ref: '#/channels/realtime/messages/BossEncounterUpdated'
       - $ref: '#/channels/realtime/messages/BossPhaseStarted'
       - $ref: '#/channels/realtime/messages/BossPhaseCompleted'
       - $ref: '#/channels/realtime/messages/BossEncounterEnded'
+      - $ref: '#/channels/realtime/messages/BossQuestionAssigned'
+      - $ref: '#/channels/realtime/messages/BossAnswerEvaluated'
+  sendCoopQuestEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    summary: Quest co-op (module game, F103) — phân vai và thẻ dữ kiện của bước interdependent tới từng thành viên phiên (ew:rt:user:<user_id>).
+    messages:
+      - $ref: '#/channels/realtime/messages/QuestRolesAssigned'
+      - $ref: '#/channels/realtime/messages/QuestClueShared'
   sendProgressionEvents:
     action: send
     channel: { $ref: '#/channels/realtime' }
@@ -2746,7 +2762,7 @@ components:
     # ---------- boss / challenge / progression (CHALLENGE_BOSS_SYSTEM, PROGRESSION_SYSTEM) — module game qua ew.cmd.game.*
     BossEncounterReady:
       name: boss.encounter.ready
-      summary: Báo sẵn sàng trong lobby encounter (gateway → NATS ew.cmd.game.boss.ready). Tạo encounter đi qua REST.
+      summary: Báo sẵn sàng trong lobby encounter (gateway → NATS ew.cmd.game.boss.encounter.ready). Tạo encounter solo qua REST, party qua Party Lobby.
       payload:
         allOf:
           - $ref: '#/components/schemas/ClientEnvelope'
@@ -2761,7 +2777,7 @@ components:
                   ready: { type: boolean }
     BossAnswerSubmit:
       name: boss.answer.submit
-      summary: Nộp câu trả lời cho yêu cầu của phase hiện tại (ew.cmd.game.boss.answer); module game gọi module learning chấm. Phase đã đóng → BOSS_PHASE_CLOSED.
+      summary: Nộp câu trả lời cho yêu cầu của phase hiện tại (ew.cmd.game.boss.answer.submit); người trả lời lấy từ phiên, module game gọi module learning chấm. Phase đã đóng → BOSS_PHASE_CLOSED; không là thành viên → ROOM_NOT_MEMBER; encounter tenant khác → PERMISSION_DENIED.
       payload:
         allOf:
           - $ref: '#/components/schemas/ClientEnvelope'
@@ -2795,7 +2811,9 @@ components:
                   state_version: { type: integer, minimum: 0 }
                   status: { type: string, enum: [lobby, phase_active, phase_transition, phase_retry, defeated, ended] }
                   current_phase: { type: integer, minimum: 0 }
+                  phase_id: { type: string, maxLength: 64 }
                   energy_remaining_pct: { type: number, minimum: 0, maximum: 100 }
+                  phase_progress: { type: number, minimum: 0, maximum: 1, description: Tiến độ chung của phase (không theo từng người) }
                   phase_deadline_at: { type: string, format: date-time }
                   members:
                     type: array
@@ -2858,8 +2876,97 @@ components:
                 required: [encounter_id, outcome]
                 properties:
                   encounter_id: { $ref: '#/components/schemas/Uuid' }
-                  outcome: { type: string, enum: [defeated, time_up, abandoned] }
+                  outcome: { type: string, enum: [defeated, time_up, abandoned], description: 'Thống nhất với event boss.encounter_completed (result defeated/ended + outcome)' }
+                  phases_cleared: { type: integer, minimum: 0, maximum: 8, description: 'Tóm tắt "đã đi được tới phase N/M" (CHALLENGE_BOSS_SYSTEM §3.5)' }
+                  phase_count: { type: integer, minimum: 1, maximum: 8 }
+                  eligible: { type: boolean, description: Người nhận đạt min_contribution (chỉ gửi cho chính người đó) }
                   rewards: { $ref: '#/components/schemas/RewardList' }
+    BossQuestionAssigned:
+      name: boss.question.assigned
+      summary: Câu hỏi riêng của một thành viên cho lượt phase hiện tại (chỉ tới người đó, ew:rt:user:<id>; không đáp án — ADR-0016).
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: boss.question.assigned }
+              payload:
+                type: object
+                required: [encounter_id, phase_id, requirement_id, questions, deadline_at]
+                properties:
+                  encounter_id: { $ref: '#/components/schemas/Uuid' }
+                  phase_id: { type: string, maxLength: 64 }
+                  requirement_id: { type: string, maxLength: 64 }
+                  questions:
+                    type: array
+                    maxItems: 30
+                    items: { $ref: '#/components/schemas/QuestionRender' }
+                  deadline_at: { type: string, format: date-time }
+    BossAnswerEvaluated:
+      name: boss.answer.evaluated
+      summary: Kết quả câu trả lời boss — chỉ gửi cho người trả lời (F103-AC-09); sai không làm mất tiến độ đã đạt.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: boss.answer.evaluated }
+              payload:
+                type: object
+                required: [encounter_id, question_instance_id, is_correct]
+                properties:
+                  encounter_id: { $ref: '#/components/schemas/Uuid' }
+                  question_instance_id: { type: string, maxLength: 64 }
+                  is_correct: { type: boolean }
+                  counted: { type: boolean, description: Câu được tính vào đóng góp (false khi trễ phase hoặc trả lời quá nhanh) }
+                  explanation: { $ref: '#/components/schemas/LocalizedText' }
+    QuestRolesAssigned:
+      name: quest.roles.assigned
+      summary: Phân vai của bước interdependent (F103-AC-20) — chỉ role và nickname, không có nội dung thẻ dữ kiện.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: quest.roles.assigned }
+              payload:
+                type: object
+                required: [quest_id, step_id, assignments]
+                properties:
+                  quest_id: { $ref: '#/components/schemas/Uuid' }
+                  step_id: { type: string, maxLength: 64 }
+                  assignments:
+                    type: array
+                    maxItems: 4
+                    items:
+                      type: object
+                      required: [role, student_id]
+                      properties:
+                        role: { type: string, maxLength: 32 }
+                        student_id: { $ref: '#/components/schemas/Uuid' }
+                        nickname: { type: string, maxLength: 32 }
+                  my_roles:
+                    type: array
+                    maxItems: 4
+                    items: { type: string, maxLength: 32 }
+                  pending_leader: { type: boolean, description: role_assignment = leader_assigns và leader chưa gán }
+    QuestClueShared:
+      name: quest.clue.shared
+      summary: Một thẻ dữ kiện vừa được đưa lên bảng chung (F103-AC-22); client gọi getQuestStepClues để lấy bản render.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: quest.clue.shared }
+              payload:
+                type: object
+                required: [quest_id, step_id, role]
+                properties:
+                  quest_id: { $ref: '#/components/schemas/Uuid' }
+                  step_id: { type: string, maxLength: 64 }
+                  role: { type: string, maxLength: 32 }
+                  shared_by_nickname: { type: string, maxLength: 32 }
     ChallengeAttemptUpdated:
       name: challenge.attempt.updated
       payload:
@@ -2928,6 +3035,15 @@ components:
                     items: { type: string, maxLength: 64 }
                   progress_label: { $ref: '#/components/schemas/LocalizedName' }
                   completed_at: { type: string, format: date-time }
+                  party_progress:
+                    type: object
+                    description: Tiến độ chung của phiên quest party (F103-AC-15) — chỉ tỷ lệ chung và đóng góp của chính người nhận
+                    required: [step_id]
+                    properties:
+                      step_id: { type: string, maxLength: 64 }
+                      collective_progress: { type: number, minimum: 0, maximum: 1 }
+                      my_contribution_met: { type: boolean }
+                      shared_completed: { type: boolean }
     WorldAreaUnlocked:
       name: world.area.unlocked
       summary: Một khu vực vừa được mở khóa cho người chơi (WORLD_DESIGN §7) — client hiển thị hiệu ứng và cập nhật bản đồ.

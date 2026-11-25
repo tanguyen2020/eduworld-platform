@@ -137,6 +137,316 @@ var (
 			},
 		},
 	}
+	// BossAnswerResultsColumns holds the columns for the "boss_answer_results" table.
+	BossAnswerResultsColumns = []*schema.Column{
+		{Name: "answer_result_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "encounter_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "plan_id", Type: field.TypeUUID},
+		{Name: "item_index", Type: field.TypeInt},
+		{Name: "phase_id", Type: field.TypeString, Size: 64},
+		{Name: "retry_no", Type: field.TypeInt},
+		{Name: "requirement_id", Type: field.TypeString, Size: 64},
+		{Name: "is_correct", Type: field.TypeBool},
+		{Name: "counted", Type: field.TypeBool},
+		{Name: "rapid_guess", Type: field.TypeBool, Default: false},
+		{Name: "received_at", Type: field.TypeTime},
+	}
+	// BossAnswerResultsTable holds the schema information for the "boss_answer_results" table.
+	BossAnswerResultsTable = &schema.Table{
+		Name:       "boss_answer_results",
+		Columns:    BossAnswerResultsColumns,
+		PrimaryKey: []*schema.Column{BossAnswerResultsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "boss_answer_results_uq",
+				Unique:  true,
+				Columns: []*schema.Column{BossAnswerResultsColumns[6], BossAnswerResultsColumns[7], BossAnswerResultsColumns[5]},
+			},
+			{
+				Name:    "boss_answer_results_member_idx",
+				Unique:  false,
+				Columns: []*schema.Column{BossAnswerResultsColumns[4], BossAnswerResultsColumns[5]},
+			},
+		},
+	}
+	// BossDefinitionsColumns holds the columns for the "boss_definitions" table.
+	BossDefinitionsColumns = []*schema.Column{
+		{Name: "boss_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "platform"},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// BossDefinitionsTable holds the schema information for the "boss_definitions" table.
+	BossDefinitionsTable = &schema.Table{
+		Name:       "boss_definitions",
+		Columns:    BossDefinitionsColumns,
+		PrimaryKey: []*schema.Column{BossDefinitionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "boss_definitions_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{BossDefinitionsColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// BossEncountersColumns holds the columns for the "boss_encounters" table.
+	BossEncountersColumns = []*schema.Column{
+		{Name: "encounter_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "boss_id", Type: field.TypeUUID},
+		{Name: "boss_version_id", Type: field.TypeUUID},
+		{Name: "mode", Type: field.TypeString, Size: 64},
+		{Name: "party_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "party_activity_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "leader_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "phase_index", Type: field.TypeInt, Default: 0},
+		{Name: "current_phase", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "phase_retries", Type: field.TypeInt, Default: 0},
+		{Name: "plan_failures", Type: field.TypeInt, Default: 0},
+		{Name: "phases_cleared", Type: field.TypeInt, Default: 0},
+		{Name: "energy_remaining", Type: field.TypeFloat64, Default: 1, SchemaType: map[string]string{"postgres": "numeric(5,4)"}},
+		{Name: "state_version", Type: field.TypeInt64, Default: 0},
+		{Name: "ready_deadline_at", Type: field.TypeTime},
+		{Name: "deadline_at", Type: field.TypeTime, Nullable: true},
+		{Name: "phase_deadline_at", Type: field.TypeTime, Nullable: true},
+		{Name: "outcome", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "end_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "period_key", Type: field.TypeString, Size: 16},
+		{Name: "started_at", Type: field.TypeTime, Nullable: true},
+		{Name: "ended_at", Type: field.TypeTime, Nullable: true},
+	}
+	// BossEncountersTable holds the schema information for the "boss_encounters" table.
+	BossEncountersTable = &schema.Table{
+		Name:       "boss_encounters",
+		Columns:    BossEncountersColumns,
+		PrimaryKey: []*schema.Column{BossEncountersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "boss_encounters_party_activity_uq",
+				Unique:  true,
+				Columns: []*schema.Column{BossEncountersColumns[15]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "party_activity_id IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "boss_encounters_party_idx",
+				Unique:  false,
+				Columns: []*schema.Column{BossEncountersColumns[1], BossEncountersColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "party_id IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "boss_encounters_live_idx",
+				Unique:  false,
+				Columns: []*schema.Column{BossEncountersColumns[17]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status IN ('lobby','phase_active') AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// BossEncounterContributionsColumns holds the columns for the "boss_encounter_contributions" table.
+	BossEncounterContributionsColumns = []*schema.Column{
+		{Name: "contribution_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "encounter_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "phase_id", Type: field.TypeString, Size: 64},
+		{Name: "correct_count", Type: field.TypeInt, Default: 0},
+		{Name: "activities_completed", Type: field.TypeInt, Default: 0},
+		{Name: "contribution_pct", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "numeric(5,2)"}},
+		{Name: "eligible", Type: field.TypeBool, Default: false},
+		{Name: "cleared", Type: field.TypeBool, Default: false},
+	}
+	// BossEncounterContributionsTable holds the schema information for the "boss_encounter_contributions" table.
+	BossEncounterContributionsTable = &schema.Table{
+		Name:       "boss_encounter_contributions",
+		Columns:    BossEncounterContributionsColumns,
+		PrimaryKey: []*schema.Column{BossEncounterContributionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "boss_encounter_contributions_uq",
+				Unique:  true,
+				Columns: []*schema.Column{BossEncounterContributionsColumns[10], BossEncounterContributionsColumns[11], BossEncounterContributionsColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// BossEncounterMembersColumns holds the columns for the "boss_encounter_members" table.
+	BossEncounterMembersColumns = []*schema.Column{
+		{Name: "boss_encounter_member_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "encounter_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "grade_level", Type: field.TypeInt},
+		{Name: "join_order", Type: field.TypeInt},
+		{Name: "ready", Type: field.TypeBool, Default: false},
+		{Name: "joined_at", Type: field.TypeTime},
+		{Name: "disconnected_at", Type: field.TypeTime, Nullable: true},
+		{Name: "left_at", Type: field.TypeTime, Nullable: true},
+		{Name: "left_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "eligible", Type: field.TypeBool, Nullable: true},
+		{Name: "first_defeat", Type: field.TypeBool, Default: false},
+	}
+	// BossEncounterMembersTable holds the schema information for the "boss_encounter_members" table.
+	BossEncounterMembersTable = &schema.Table{
+		Name:       "boss_encounter_members",
+		Columns:    BossEncounterMembersColumns,
+		PrimaryKey: []*schema.Column{BossEncounterMembersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "boss_encounter_members_uq",
+				Unique:  true,
+				Columns: []*schema.Column{BossEncounterMembersColumns[10], BossEncounterMembersColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "boss_encounter_members_student_idx",
+				Unique:  false,
+				Columns: []*schema.Column{BossEncounterMembersColumns[1], BossEncounterMembersColumns[11], BossEncounterMembersColumns[16]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// BossPhasePlansColumns holds the columns for the "boss_phase_plans" table.
+	BossPhasePlansColumns = []*schema.Column{
+		{Name: "boss_phase_plan_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "encounter_id", Type: field.TypeUUID},
+		{Name: "phase_id", Type: field.TypeString, Size: 64},
+		{Name: "retry_no", Type: field.TypeInt},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "requirement_id", Type: field.TypeString, Size: 64},
+		{Name: "plan_id", Type: field.TypeUUID},
+		{Name: "item_count", Type: field.TypeInt},
+		{Name: "items", Type: field.TypeJSON},
+		{Name: "expires_at", Type: field.TypeTime},
+	}
+	// BossPhasePlansTable holds the schema information for the "boss_phase_plans" table.
+	BossPhasePlansTable = &schema.Table{
+		Name:       "boss_phase_plans",
+		Columns:    BossPhasePlansColumns,
+		PrimaryKey: []*schema.Column{BossPhasePlansColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "boss_phase_plans_uq",
+				Unique:  true,
+				Columns: []*schema.Column{BossPhasePlansColumns[10], BossPhasePlansColumns[11], BossPhasePlansColumns[12], BossPhasePlansColumns[13], BossPhasePlansColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "boss_phase_plans_plan_idx",
+				Unique:  false,
+				Columns: []*schema.Column{BossPhasePlansColumns[15]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// BossVersionsColumns holds the columns for the "boss_versions" table.
+	BossVersionsColumns = []*schema.Column{
+		{Name: "boss_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "boss_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "mode", Type: field.TypeString, Size: 64},
+		{Name: "grade_levels", Type: field.TypeJSON},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "area_id", Type: field.TypeString, Size: 64},
+		{Name: "phase_count", Type: field.TypeInt},
+	}
+	// BossVersionsTable holds the schema information for the "boss_versions" table.
+	BossVersionsTable = &schema.Table{
+		Name:       "boss_versions",
+		Columns:    BossVersionsColumns,
+		PrimaryKey: []*schema.Column{BossVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "boss_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{BossVersionsColumns[9], BossVersionsColumns[10]},
+			},
+		},
+	}
 	// ChallengesColumns holds the columns for the "challenges" table.
 	ChallengesColumns = []*schema.Column{
 		{Name: "challenge_id", Type: field.TypeUUID},
@@ -1832,6 +2142,97 @@ var (
 			},
 		},
 	}
+	// PartyQuestContributionsColumns holds the columns for the "party_quest_contributions" table.
+	PartyQuestContributionsColumns = []*schema.Column{
+		{Name: "party_quest_contribution_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "party_quest_session_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "step_id", Type: field.TypeString, Size: 64},
+		{Name: "metric_value", Type: field.TypeInt, Default: 0},
+		{Name: "min_contribution_met", Type: field.TypeBool, Default: false},
+		{Name: "attempt_ids", Type: field.TypeJSON},
+	}
+	// PartyQuestContributionsTable holds the schema information for the "party_quest_contributions" table.
+	PartyQuestContributionsTable = &schema.Table{
+		Name:       "party_quest_contributions",
+		Columns:    PartyQuestContributionsColumns,
+		PrimaryKey: []*schema.Column{PartyQuestContributionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "party_quest_contributions_uq",
+				Unique:  true,
+				Columns: []*schema.Column{PartyQuestContributionsColumns[10], PartyQuestContributionsColumns[11], PartyQuestContributionsColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// PartyQuestSessionsColumns holds the columns for the "party_quest_sessions" table.
+	PartyQuestSessionsColumns = []*schema.Column{
+		{Name: "party_quest_session_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "party_id", Type: field.TypeUUID},
+		{Name: "party_activity_id", Type: field.TypeUUID},
+		{Name: "leader_id", Type: field.TypeUUID},
+		{Name: "quest_id", Type: field.TypeUUID},
+		{Name: "quest_version_id", Type: field.TypeUUID},
+		{Name: "party_mode", Type: field.TypeString, Size: 64},
+		{Name: "shared_progress_policy", Type: field.TypeString, Size: 64},
+		{Name: "party_size_min", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "member_ids", Type: field.TypeJSON},
+		{Name: "member_states", Type: field.TypeJSON},
+		{Name: "shared_step_states", Type: field.TypeJSON},
+		{Name: "role_assignments", Type: field.TypeJSON},
+		{Name: "shared_clues", Type: field.TypeJSON},
+		{Name: "state_version", Type: field.TypeInt64, Default: 0},
+		{Name: "started_at", Type: field.TypeTime},
+		{Name: "ended_at", Type: field.TypeTime, Nullable: true},
+		{Name: "end_reason", Type: field.TypeString, Nullable: true, Size: 64},
+	}
+	// PartyQuestSessionsTable holds the schema information for the "party_quest_sessions" table.
+	PartyQuestSessionsTable = &schema.Table{
+		Name:       "party_quest_sessions",
+		Columns:    PartyQuestSessionsColumns,
+		PrimaryKey: []*schema.Column{PartyQuestSessionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "party_quest_sessions_activity_uq",
+				Unique:  true,
+				Columns: []*schema.Column{PartyQuestSessionsColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "party_quest_sessions_party_idx",
+				Unique:  false,
+				Columns: []*schema.Column{PartyQuestSessionsColumns[1], PartyQuestSessionsColumns[11], PartyQuestSessionsColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'active' AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// PeriodicQuestGrantsColumns holds the columns for the "periodic_quest_grants" table.
 	PeriodicQuestGrantsColumns = []*schema.Column{
 		{Name: "grant_id", Type: field.TypeUUID},
@@ -3025,6 +3426,13 @@ var (
 		AchievementProgressEventsTable,
 		AchievementVersionsTable,
 		AvatarPresetsTable,
+		BossAnswerResultsTable,
+		BossDefinitionsTable,
+		BossEncountersTable,
+		BossEncounterContributionsTable,
+		BossEncounterMembersTable,
+		BossPhasePlansTable,
+		BossVersionsTable,
 		ChallengesTable,
 		ChallengeAttemptsTable,
 		ChallengeVersionsTable,
@@ -3071,6 +3479,8 @@ var (
 		NicknameChangesTable,
 		NpcDialoguesTable,
 		NpcDialogueVersionsTable,
+		PartyQuestContributionsTable,
+		PartyQuestSessionsTable,
 		PeriodicQuestGrantsTable,
 		PreviewSessionsTable,
 		ProgressionCurvesTable,
@@ -3119,6 +3529,27 @@ func init() {
 	}
 	AvatarPresetsTable.Annotation = &entsql.Annotation{
 		Table: "avatar_presets",
+	}
+	BossAnswerResultsTable.Annotation = &entsql.Annotation{
+		Table: "boss_answer_results",
+	}
+	BossDefinitionsTable.Annotation = &entsql.Annotation{
+		Table: "boss_definitions",
+	}
+	BossEncountersTable.Annotation = &entsql.Annotation{
+		Table: "boss_encounters",
+	}
+	BossEncounterContributionsTable.Annotation = &entsql.Annotation{
+		Table: "boss_encounter_contributions",
+	}
+	BossEncounterMembersTable.Annotation = &entsql.Annotation{
+		Table: "boss_encounter_members",
+	}
+	BossPhasePlansTable.Annotation = &entsql.Annotation{
+		Table: "boss_phase_plans",
+	}
+	BossVersionsTable.Annotation = &entsql.Annotation{
+		Table: "boss_versions",
 	}
 	ChallengesTable.Annotation = &entsql.Annotation{
 		Table: "challenges",
@@ -3257,6 +3688,12 @@ func init() {
 	}
 	NpcDialogueVersionsTable.Annotation = &entsql.Annotation{
 		Table: "npc_dialogue_versions",
+	}
+	PartyQuestContributionsTable.Annotation = &entsql.Annotation{
+		Table: "party_quest_contributions",
+	}
+	PartyQuestSessionsTable.Annotation = &entsql.Annotation{
+		Table: "party_quest_sessions",
 	}
 	PeriodicQuestGrantsTable.Annotation = &entsql.Annotation{
 		Table: "periodic_quest_grants",

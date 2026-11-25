@@ -11,6 +11,13 @@ type SchemaConfig struct {
 	AchievementProgressEvent  string // AchievementProgressEvent table.
 	AchievementVersion        string // AchievementVersion table.
 	AvatarPreset              string // AvatarPreset table.
+	BossAnswerResult          string // BossAnswerResult table.
+	BossDefinition            string // BossDefinition table.
+	BossEncounter             string // BossEncounter table.
+	BossEncounterContribution string // BossEncounterContribution table.
+	BossEncounterMember       string // BossEncounterMember table.
+	BossPhasePlan             string // BossPhasePlan table.
+	BossVersion               string // BossVersion table.
 	Challenge                 string // Challenge table.
 	ChallengeAttempt          string // ChallengeAttempt table.
 	ChallengeVersion          string // ChallengeVersion table.
@@ -57,6 +64,8 @@ type SchemaConfig struct {
 	NicknameChange            string // NicknameChange table.
 	NpcDialogue               string // NpcDialogue table.
 	NpcDialogueVersion        string // NpcDialogueVersion table.
+	PartyQuestContribution    string // PartyQuestContribution table.
+	PartyQuestSession         string // PartyQuestSession table.
 	PeriodicQuestGrant        string // PeriodicQuestGrant table.
 	PreviewSession            string // PreviewSession table.
 	ProgressionCurve          string // ProgressionCurve table.

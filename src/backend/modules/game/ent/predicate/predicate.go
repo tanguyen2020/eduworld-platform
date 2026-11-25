@@ -18,6 +18,27 @@ type AchievementVersion func(*sql.Selector)
 // AvatarPreset is the predicate function for avatarpreset builders.
 type AvatarPreset func(*sql.Selector)
 
+// BossAnswerResult is the predicate function for bossanswerresult builders.
+type BossAnswerResult func(*sql.Selector)
+
+// BossDefinition is the predicate function for bossdefinition builders.
+type BossDefinition func(*sql.Selector)
+
+// BossEncounter is the predicate function for bossencounter builders.
+type BossEncounter func(*sql.Selector)
+
+// BossEncounterContribution is the predicate function for bossencountercontribution builders.
+type BossEncounterContribution func(*sql.Selector)
+
+// BossEncounterMember is the predicate function for bossencountermember builders.
+type BossEncounterMember func(*sql.Selector)
+
+// BossPhasePlan is the predicate function for bossphaseplan builders.
+type BossPhasePlan func(*sql.Selector)
+
+// BossVersion is the predicate function for bossversion builders.
+type BossVersion func(*sql.Selector)
+
 // Challenge is the predicate function for challenge builders.
 type Challenge func(*sql.Selector)
 
@@ -155,6 +176,12 @@ type NpcDialogue func(*sql.Selector)
 
 // NpcDialogueVersion is the predicate function for npcdialogueversion builders.
 type NpcDialogueVersion func(*sql.Selector)
+
+// PartyQuestContribution is the predicate function for partyquestcontribution builders.
+type PartyQuestContribution func(*sql.Selector)
+
+// PartyQuestSession is the predicate function for partyquestsession builders.
+type PartyQuestSession func(*sql.Selector)
 
 // PeriodicQuestGrant is the predicate function for periodicquestgrant builders.
 type PeriodicQuestGrant func(*sql.Selector)

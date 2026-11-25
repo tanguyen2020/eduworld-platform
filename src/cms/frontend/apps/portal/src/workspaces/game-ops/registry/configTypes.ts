@@ -2,7 +2,7 @@
 // menu shows a `config_type`, its catalog action keys (ADR-0090), the JSON Schema copy the form is generated from
 // (pnpm gen:schemas, single source specs/schemas), the builder, the payload fields the server fills, and what the
 // release API offers for it (F078 Clarifications 2026-11-24: `events` has no rollback/unpublish; `reward-rules` no
-// rollback; `bosses`, `currencies`, `progression-levels` have no type module yet → 404). The server authorizes and
+// rollback; `currencies`, `progression-levels` have no type module yet → 404; `bosses` is served since F103). The server authorizes and
 // validates everything again (AGENTS R1, R20).
 import type { JsonSchema } from '@eduworld/ops-ui/game-console';
 import type { ActionKey } from '../../../generated/menu-catalog';
@@ -68,7 +68,7 @@ export const CONFIG_TYPES: Record<ConfigType, ConfigTypeDef> = {
   quests: def({ type: 'quests', menu: 'quests', builder: 'quest', schema: quest as unknown as JsonSchema, served: true, idField: 'quest_id', uuidKey: true, versionIdField: 'quest_version_id', codeField: 'code', nameField: 'name', rollback: true, unpublish: true, has3D: true, writePermission: 'game.quest.write' }),
   'minigame-configs': def({ type: 'minigame-configs', menu: 'minigames', builder: 'generic', schema: minigameConfig as unknown as JsonSchema, served: true, idField: 'minigame_config_id', uuidKey: true, versionIdField: 'minigame_config_version_id', codeField: 'code', nameField: 'name', rollback: true, unpublish: true, has3D: false, writePermission: 'game.minigame.write' }),
   challenges: def({ type: 'challenges', menu: 'challenges', builder: 'generic', schema: challenge as unknown as JsonSchema, served: true, idField: 'challenge_id', uuidKey: true, versionIdField: 'challenge_version_id', codeField: 'code', nameField: 'name', rollback: true, unpublish: true, has3D: true, writePermission: 'game.challenge.write' }),
-  bosses: def({ type: 'bosses', menu: 'bosses', builder: 'generic', schema: boss as unknown as JsonSchema, served: false, idField: 'boss_id', uuidKey: true, versionIdField: 'boss_version_id', codeField: 'code', nameField: 'name', rollback: true, unpublish: true, has3D: true, writePermission: 'game.boss.write' }),
+  bosses: def({ type: 'bosses', menu: 'bosses', builder: 'generic', schema: boss as unknown as JsonSchema, served: true, idField: 'boss_id', uuidKey: true, versionIdField: 'boss_version_id', codeField: 'code', nameField: 'name', rollback: true, unpublish: true, has3D: false, writePermission: 'game.boss.write' }),
   'progression-curves': def({ type: 'progression-curves', menu: 'progression', builder: 'progression', schema: progressionCurve as unknown as JsonSchema, served: true, idField: 'curve_id', uuidKey: true, versionIdField: 'curve_version_id', codeField: 'code', rollback: true, unpublish: true, has3D: false, writePermission: 'game.progression.write' }),
   'progression-levels': def({ type: 'progression-levels', menu: 'progression', builder: 'generic', served: false, idField: 'level', uuidKey: false, codeField: 'level', rollback: true, unpublish: true, has3D: false, writePermission: 'game.progression.write' }),
   achievements: def({ type: 'achievements', menu: 'achievements', builder: 'generic', schema: achievement as unknown as JsonSchema, served: true, idField: 'achievement_id', uuidKey: true, versionIdField: 'achievement_version_id', codeField: 'code', nameField: 'name', rollback: true, unpublish: true, has3D: false, writePermission: 'game.achievement.write' }),

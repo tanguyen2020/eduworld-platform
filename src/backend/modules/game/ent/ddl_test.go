@@ -39,6 +39,8 @@ var migrations = map[string][]string{
 	"20261231000760_f076_challenge.sql": {"challenges", "challenge_versions", "challenge_attempts"},
 	"20261231000780_f078_gameadmin.sql": {"config_items", "config_versions", "scheduled_publications", "preview_sessions", "render_jobs",
 		"media_assets", "media_usages", "client_manifests"},
+	"20270101000103_f103_boss_coop.sql": {"boss_definitions", "boss_versions", "boss_encounters", "boss_encounter_members",
+		"boss_encounter_contributions", "boss_phase_plans", "boss_answer_results", "party_quest_sessions", "party_quest_contributions"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -97,7 +99,11 @@ func schemas() map[string]string {
 		"challenges": c.Challenge, "challenge_versions": c.ChallengeVersion, "challenge_attempts": c.ChallengeAttempt,
 		"config_items": c.GameConfigItem, "config_versions": c.GameConfigVersion, "scheduled_publications": c.ScheduledPublication,
 		"preview_sessions": c.PreviewSession, "render_jobs": c.RenderJob, "media_assets": c.MediaAsset, "media_usages": c.MediaUsage,
-		"client_manifests": c.ClientManifest}
+		"client_manifests": c.ClientManifest,
+		"boss_definitions": c.BossDefinition, "boss_versions": c.BossVersion, "boss_encounters": c.BossEncounter,
+		"boss_encounter_members": c.BossEncounterMember, "boss_encounter_contributions": c.BossEncounterContribution,
+		"boss_phase_plans": c.BossPhasePlan, "boss_answer_results": c.BossAnswerResult, "party_quest_sessions": c.PartyQuestSession,
+		"party_quest_contributions": c.PartyQuestContribution}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

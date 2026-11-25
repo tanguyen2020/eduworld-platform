@@ -393,8 +393,10 @@ paths:
       operationId: listPartyActivityCandidates
       summary: Hoạt động quest/boss có thể chơi theo party và điều kiện của từng thành viên
       description: |
-        Gọi trong tiến trình từ `listPartyEligibleActivities` (F101-AC-05). Trả mã lý do theo thành viên, không bao giờ khối/lớp thực
-        của học sinh (R16). Hiện thực ở F103; trước đó bên gọi chỉ trả `explore`.
+        Gọi trong tiến trình từ `listPartyEligibleActivities` (F101-AC-05). Trả mã lý do theo thành viên, không bao giờ khối/trường
+        thực của học sinh (R16, ADR-0095). Hiện thực ở F103 (F103-AC-02): quest `party_mode ≠ solo` và boss `mode ≠ solo` đã publish,
+        gán cho tenant, theo `area_id` khi có; tối đa 50 hoạt động theo `(activity_type, activity_ref)` (giới hạn trong truy vấn).
+        Mọi `student_id` phải là học sinh của tenant trong `TenantScope`, nếu không `422 VALIDATION_FAILED` (F103-AC-26).
       x-allowed-callers: [competition]
       x-context-required: [tenant_scope]
       requestBody:
@@ -419,7 +421,8 @@ paths:
       summary: Kiểm điều kiện một hoạt động quest/boss cho các thành viên party
       description: |
         Gọi khi leader chọn hoạt động và ở bước (3) của Start Session (F101-AC-03, AC-08, AC-10). Trả `min_members`/`max_members`
-        theo `party_size` và `allow_continue_on_disconnect`.
+        theo `party_size` và `allow_continue_on_disconnect` (quy tắc QUEST_SYSTEM §6: `party_mode ≠ party_required`; boss: luôn
+        true — encounter tiếp tục khi còn ≥ `party_size.min`). `activity_ref` là `code` của quest/boss; không có → `404`.
       x-allowed-callers: [competition]
       x-context-required: [tenant_scope]
       requestBody:
@@ -445,8 +448,9 @@ paths:
       summary: Tạo encounter boss hoặc phiên quest chung cho một party activity
       description: |
         Bước (4) của Start Session (F101 research R2): idempotent theo `Idempotency-Key = party_activity_id` — gọi lại trả cùng
-        `external_ref`. Module game kiểm lại điều kiện mọi thành viên; commit phía competition thất bại thì phòng không ai vào và tự
-        đóng sau `disconnect_grace`.
+        `external_ref`. Module game kiểm lại điều kiện mọi thành viên (F103-AC-03, AC-13; thành viên không đủ điều kiện → `422
+        PARTY_ACTIVITY_NOT_ELIGIBLE`); commit phía competition thất bại thì phòng không ai vào và tự đóng sau `boss_reconnect_grace`
+        (F103-AC-12). Thiếu `Idempotency-Key` → `428` (F103-AC-28).
       x-allowed-callers: [competition]
       x-context-required: [tenant_scope, idempotency_key]
       requestBody:
@@ -465,6 +469,11 @@ paths:
         '404': { $ref: 'common/internal-common.v1.yaml#/components/responses/NotFound' }
         '409': { $ref: 'common/internal-common.v1.yaml#/components/responses/Conflict' }
         '422': { $ref: 'common/internal-common.v1.yaml#/components/responses/ValidationFailed' }
+        '428':
+          description: '`IDEMPOTENCY_KEY_REQUIRED` — thiếu `Idempotency-Key` (= `party_activity_id`) trong context của lời gọi'
+          content:
+            application/problem+json:
+              schema: { $ref: 'common/internal-common.v1.yaml#/components/schemas/Problem' }
         '503': { $ref: 'common/internal-common.v1.yaml#/components/responses/DependencyUnavailable' }
   /internal/v1/game/assigned-activities:
     get:

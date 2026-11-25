@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/quest.party_completed.v1.schema.json",
+  "title": "Payload quest.party_completed v1 (module game, owner F103)",
+  "description": "Phiên quest chung của party kết thúc đúng một lần (F103-AC-17): completed (mọi thành viên còn lại hoàn thành quest), failed (party giải tán với failure condition party_disbanded on_fail fail_quest) hoặc abandoned (thiếu người quá grace với party_required; party giải tán với reset_step). Kết quả của từng học sinh vẫn phát quest.completed riêng; không có đóng góp hay điểm của học sinh (FR-PTY-013). Consumer: competition (kết thúc party activity, F101), analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["party_quest_session_id", "party_activity_id", "party_id", "quest_id", "quest_version_id", "outcome", "member_ids", "ended_at"],
+  "properties": {
+    "party_quest_session_id": { "type": "string", "format": "uuid" },
+    "party_activity_id": { "type": "string", "format": "uuid" },
+    "party_id": { "type": "string", "format": "uuid" },
+    "quest_id": { "type": "string", "format": "uuid" },
+    "quest_version_id": { "type": "string", "format": "uuid" },
+    "outcome": { "type": "string", "enum": ["completed", "failed", "abandoned"] },
+    "end_reason": { "type": ["string", "null"], "maxLength": 64 },
+    "member_ids": { "type": "array", "maxItems": 8, "items": { "type": "string", "format": "uuid" } },
+    "ended_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "party_quest_session_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000d1",
+      "party_activity_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000b2",
+      "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1",
+      "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000072001",
+      "quest_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000072011",
+      "outcome": "completed",
+      "end_reason": "completed",
+      "member_ids": ["0193a5f4-6c1e-7b2a-9d1f-000000000005", "0193a5f4-6c1e-7b2a-9d1f-000000000006"],
+      "ended_at": "2026-11-24T03:40:00Z"
+    }
+  ]
+}

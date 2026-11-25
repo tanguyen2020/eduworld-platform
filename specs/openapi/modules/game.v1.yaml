@@ -890,6 +890,137 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /game/quests/{quest_id}/steps/{step_id}/clues:
+    get:
+      x-service: game
+      tags:
+        - game
+      operationId: getQuestStepClues
+      summary: Thẻ dữ kiện của bước interdependent — chỉ role của người gọi và thẻ đã chia sẻ (F103-AC-21)
+      description: |
+        Bước `interdependent` đang `active`/`completed` trong tiến độ của người gọi. Chơi theo party: chỉ dữ kiện đã render của các
+        role người gọi đang giữ và các thẻ đã được chia sẻ lên bảng chung; quest `party_optional` chơi solo: mọi role (F103-AC-24).
+        Dữ kiện không chứa đáp án (ADR-0016); thẻ chưa chia sẻ của người khác không bao giờ có trong response. Không có tiến độ
+        quest hoặc không phải bước interdependent → `404`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/QuestId'
+        - $ref: '#/components/parameters/StepId'
+      responses:
+        '200':
+          description: Thẻ dữ kiện người gọi được xem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestStepClues'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '503':
+          description: UNAVAILABLE — module learning chưa trả bản render dữ kiện; thử lại theo Retry-After
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /game/quests/{quest_id}/steps/{step_id}/clues/{role}:share:
+    post:
+      x-service: game
+      tags:
+        - game
+      operationId: shareQuestStepClue
+      summary: Chia sẻ thẻ dữ kiện của role mình giữ lên bảng chung của party (F103-AC-22)
+      description: |
+        Người giữ role đưa thẻ lên bảng chung và mọi thành viên phiên nhận `quest.clue.shared`. Người không giữ role → `403
+        PERMISSION_DENIED`; gọi lặp không tạo thẻ trùng (`Idempotency-Key` bắt buộc).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/QuestId'
+        - $ref: '#/components/parameters/StepId'
+        - $ref: '#/components/parameters/QuestRole'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Bảng thẻ đã chia sẻ sau thao tác
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestStepClues'
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /game/quests/{quest_id}/steps/{step_id}/roles:
+    put:
+      x-service: game
+      tags:
+        - game
+      operationId: assignQuestStepRoles
+      summary: Leader party gán role của bước interdependent (role_assignment = leader_assigns, F103-AC-20)
+      description: |
+        Chỉ leader của phiên quest chung (`403 PARTY_NOT_LEADER` cho thành viên khác). Mỗi role của bước có đúng một người giữ là
+        thành viên phiên; một người nhiều role chỉ khi `allow_multi_role`. Mọi thành viên nhận `quest.roles.assigned`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/QuestId'
+        - $ref: '#/components/parameters/StepId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestStepRoleAssignment'
+      responses:
+        '200':
+          description: Phân vai sau thao tác
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestStepRoles'
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /game/minigames/{minigame_config_id}:start:
     post:
       x-service: game
@@ -3506,6 +3637,10 @@ paths:
         - game
       operationId: listBosses
       summary: Boss khả dụng (theo khu vực, khối, mở khóa)
+      description: |
+        Boss đã publish, gán cho tenant (ADR-0029), có khối của học sinh trong `grade_levels` (F103-AC-01). Phân trang keyset theo
+        `boss_id` trong truy vấn (`page.next_cursor`). `modes` cho biết boss chơi được một mình (`solo`) hay theo party
+        (`party`, chỉ qua Party Lobby — F101).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -3514,6 +3649,8 @@ paths:
           schema:
             type: string
             maxLength: 64
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
@@ -3529,18 +3666,29 @@ paths:
                     maxItems: 200
                     items:
                       $ref: '#/components/schemas/BossSummary'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /game/bosses/{boss_id}/encounters:
     post:
       x-service: game
       tags:
         - game
       operationId: createBossEncounter
-      summary: Tạo encounter solo hoặc cho party (chỉ leader) — trạng thái realtime qua WS boss.*
+      summary: Tạo encounter solo — encounter party chỉ tạo qua Party Lobby (startPartyActivity, F101)
+      description: |
+        F103-AC-01: boss khả dụng (khối thuộc `grade_levels`, khu đã mở, boss không `party_required`, còn lượt trong ngày) →
+        encounter `lobby` ghim `boss_version_id`, hạn tổng theo giờ server; không đủ điều kiện → `403 CHALLENGE_NOT_ELIGIBLE`;
+        hết lượt → `409 CHALLENGE_ATTEMPT_LIMIT`. `mode = party` qua route này → `422 VALIDATION_FAILED` (party vào boss chỉ qua
+        Party Lobby, research R2); `party_id` bị bỏ qua (giữ để tương thích). Trạng thái realtime qua WS `boss.*`.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -3564,8 +3712,12 @@ paths:
                   enum:
                     - solo
                     - party
+                  description: Chỉ `solo`; `party` → 422 (F103 research R2)
                 party_id:
-                  $ref: '#/components/schemas/Uuid'
+                  type: string
+                  format: uuid
+                  deprecated: true
+                  description: Không dùng — encounter party tạo qua Party Lobby
       responses:
         '201':
           description: Encounter ở trạng thái lobby
@@ -3578,10 +3730,18 @@ paths:
               $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /game/boss-encounters/{encounter_id}:
     get:
       x-service: game
@@ -3589,6 +3749,10 @@ paths:
         - game
       operationId: getBossEncounter
       summary: Trạng thái encounter (dự phòng khi mất WebSocket)
+      description: |
+        Snapshot đầy đủ cho thành viên (F103-AC-11), kể cả khi quay lại từ thiết bị khác: phase, năng lượng, hạn theo giờ server,
+        `my_questions` (câu hỏi của chính người gọi trong lượt phase hiện tại, không đáp án — ADR-0016). Không có đúng/sai hay số
+        câu đúng của người khác, chỉ `contribution_met` (F103-AC-09). Không phải thành viên hoặc tenant khác → `404`.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -3603,6 +3767,10 @@ paths:
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
   /game/boss-encounters/{encounter_id}:leave:
@@ -3612,6 +3780,9 @@ paths:
         - game
       operationId: leaveBossEncounter
       summary: Rời encounter (đóng góp và learning attempt đã ghi giữ nguyên)
+      description: |
+        F103-AC-12: người gọi rời encounter, đóng góp và learning record giữ nguyên; còn ít hơn `party_size.min` người → encounter
+        `abandoned`, không thưởng. Rời lần hai trả cùng kết quả.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -3623,10 +3794,16 @@ paths:
           headers:
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /game/inventory/history:
     get:
       x-service: game
@@ -5059,6 +5236,15 @@ components:
         type: string
         maxLength: 64
         pattern: ^[a-z0-9_\-]{1,64}$
+    QuestRole:
+      name: role
+      in: path
+      required: true
+      description: role của bước interdependent (quest.schema.json `roles[].role`)
+      schema:
+        type: string
+        maxLength: 32
+        pattern: ^[a-z][a-z0-9_]{1,31}$
     StudentId:
       name: student_id
       in: path
@@ -6728,6 +6914,14 @@ components:
           description: Hết giờ theo availability.time_limit_minutes
         failed_at:
           $ref: '#/components/schemas/Timestamp'
+        party_progress:
+          type: array
+          maxItems: 30
+          description: |
+            Tiến độ chung của phiên quest party (F103-AC-15): chỉ tỷ lệ chung và việc chính người gọi đã đạt `min_contribution`
+            — không có số câu đúng hay xếp hạng của thành viên khác (R19).
+          items:
+            $ref: '#/components/schemas/QuestPartyStepProgress'
     QuestProgressStatus:
       type: string
       description: Trạng thái QuestProgress (QUEST_SYSTEM §5)
@@ -6760,6 +6954,23 @@ components:
         - locked
         - active
         - completed
+    QuestPartyStepProgress:
+      type: object
+      required:
+        - step_id
+      properties:
+        step_id:
+          type: string
+          maxLength: 64
+        shared_completed:
+          type: boolean
+          description: Bước khung đã hoàn thành cho cả party
+        collective_progress:
+          type: number
+          minimum: 0
+          maximum: 1
+        my_contribution_met:
+          type: boolean
     PageInfo:
       type: object
       required:
@@ -7904,6 +8115,108 @@ components:
         completion_met:
           type: boolean
           description: 'Mini-game (F073): completion_rule của cấu hình thỏa'
+    QuestStepClues:
+      type: object
+      required:
+        - quest_id
+        - step_id
+        - my_roles
+        - clues
+      properties:
+        quest_id:
+          $ref: '#/components/schemas/Uuid'
+        step_id:
+          type: string
+          maxLength: 64
+        my_roles:
+          type: array
+          maxItems: 4
+          items:
+            type: string
+            maxLength: 32
+        clues:
+          type: array
+          maxItems: 4
+          items:
+            $ref: '#/components/schemas/QuestStepClue'
+    QuestStepClue:
+      type: object
+      required:
+        - role
+        - title
+        - shared
+      properties:
+        role:
+          type: string
+          maxLength: 32
+        title:
+          $ref: '#/components/schemas/LocalizedText'
+        icon_key:
+          type: string
+          maxLength: 64
+        shared:
+          type: boolean
+          description: Thẻ đã lên bảng chung
+        shared_by_nickname:
+          type: string
+          maxLength: 32
+        content:
+          type: object
+          maxProperties: 20
+          description: Bản render của learning material (block hiển thị, không đáp án — ADR-0016)
+    QuestStepRoleAssignment:
+      type: object
+      additionalProperties: false
+      required:
+        - assignments
+      properties:
+        assignments:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - role
+              - student_id
+            properties:
+              role:
+                type: string
+                maxLength: 32
+                pattern: ^[a-z][a-z0-9_]{1,31}$
+              student_id:
+                $ref: '#/components/schemas/Uuid'
+    QuestStepRoles:
+      type: object
+      required:
+        - quest_id
+        - step_id
+        - assignments
+      properties:
+        quest_id:
+          $ref: '#/components/schemas/Uuid'
+        step_id:
+          type: string
+          maxLength: 64
+        assignments:
+          type: array
+          maxItems: 4
+          items:
+            type: object
+            required:
+              - role
+              - student_id
+              - nickname
+            properties:
+              role:
+                type: string
+                maxLength: 32
+              student_id:
+                $ref: '#/components/schemas/Uuid'
+              nickname:
+                type: string
+                maxLength: 32
     MiniGameSession:
       type: object
       required:
@@ -9869,11 +10182,45 @@ components:
         current_phase:
           type: integer
           minimum: 0
+        phase_id:
+          type: string
+          maxLength: 64
+        phase_count:
+          type: integer
+          minimum: 1
+          maximum: 8
         energy_remaining_pct:
           type: number
           minimum: 0
           maximum: 100
+        phase_progress:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Tiến độ chung của phase hiện tại
         phase_deadline_at:
+          $ref: '#/components/schemas/Timestamp'
+        deadline_at:
+          $ref: '#/components/schemas/Timestamp'
+          description: Hạn tổng theo giờ server
+        phase_retries_left:
+          type: integer
+          minimum: 0
+          maximum: 10
+        phases_cleared:
+          type: integer
+          minimum: 0
+          maximum: 8
+        state_version:
+          type: integer
+          minimum: 0
+        outcome:
+          type: string
+          enum:
+            - defeated
+            - time_up
+            - abandoned
+        server_time:
           $ref: '#/components/schemas/Timestamp'
         members:
           type: array
@@ -9891,13 +10238,50 @@ components:
                 maxLength: 32
               ready:
                 type: boolean
+              present:
+                type: boolean
+                description: Còn trong encounter (chưa rời, chưa quá grace)
               contribution_met:
                 type: boolean
                 description: Đạt min_contribution của phase hiện tại (không công bố xếp hạng trong nhóm)
+        my_questions:
+          type: array
+          maxItems: 60
+          description: Câu hỏi của người gọi trong lượt phase hiện tại (khôi phục sau mất kết nối); không đáp án
+          items:
+            $ref: '#/components/schemas/BossQuestion'
         started_at:
           $ref: '#/components/schemas/Timestamp'
         ended_at:
           $ref: '#/components/schemas/Timestamp'
+    BossQuestion:
+      type: object
+      required:
+        - question_instance_id
+        - requirement_id
+        - question_type
+        - render
+      properties:
+        question_instance_id:
+          type: string
+          maxLength: 64
+        requirement_id:
+          type: string
+          maxLength: 64
+        question_type:
+          type: string
+          maxLength: 64
+        time_limit_seconds:
+          type: integer
+          minimum: 0
+          maximum: 3600
+        answered:
+          type: boolean
+          description: Người gọi đã trả lời câu này
+        render:
+          type: object
+          maxProperties: 30
+          description: Render payload của module learning (không đáp án, ADR-0016)
     ItemLedgerEntry:
       type: object
       required:

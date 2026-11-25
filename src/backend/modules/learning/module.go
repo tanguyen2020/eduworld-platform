@@ -123,6 +123,7 @@ type Facade interface {
 	RevealPlanItem(ctx context.Context, req api.RevealPlanItemRequestObject) (api.RevealPlanItemResponseObject, error)
 	ValidateMinigameQuestionSource(ctx context.Context, req api.ValidateMinigameQuestionSourceRequestObject) (api.ValidateMinigameQuestionSourceResponseObject, error)
 	CheckPublishedLearningContent(ctx context.Context, req api.CheckPublishedLearningContentRequestObject) (api.CheckPublishedLearningContentResponseObject, error)
+	GetLearningMaterialRenders(ctx context.Context, req api.GetLearningMaterialRendersRequestObject) (api.GetLearningMaterialRendersResponseObject, error)
 }
 
 var _ Facade = facade.Facade{}
@@ -485,6 +486,8 @@ func build(r *module.Registry) (*wiring, error) {
 	// F073: validateMinigameQuestionSource (caller module game, publish of a mini-game configuration).
 	f.MinigameSources = query.ValidateMinigameQuestionSource{Session: core.ReadSession, Docs: read.DocModel{}, Sources: read.MinigameSourceModel{}}
 	f.PublishedContent = query.CheckPublishedContent{Session: core.ReadSession, Content: read.PublishedContentModel{}}
+	// F103: renders of the clue cards (learning materials) of the interdependent quest steps of module game.
+	f.Materials = query.MaterialRenders{Session: core.ReadSession, Model: read.DocModel{}}
 	// F044: exports on the dashboard session (replica) in core-api and in the worker, quality jobs and reads.
 	reportCfg := reporting.DefaultConfig()
 	reports := command.Reports{UoW: core.UoW, Jobs: write.ReportRepo{}, Queue: write.ReportRepo{}, Read: core.ReadSession, Scope: read.QualityModel{},

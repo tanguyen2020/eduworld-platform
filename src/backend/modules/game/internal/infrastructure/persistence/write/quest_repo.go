@@ -139,10 +139,11 @@ func (QuestRepo) Save(ctx context.Context, p *quest.Progress) error {
 		return err
 	}
 	// tenancyguard:ok tenant table game.quest_progress: explicit tenant_id + deleted_at IS NULL (RLS update policy)
+	// party_id: a progress joins the shared session of a party quest (F103 startPartyActivity); it is never cleared.
 	ok, err := exec(ctx, `UPDATE game.quest_progress SET status = $3, step_states = $4::jsonb, completed_at = $5, expires_at = $6, deadline_at = $7,
-			failed_at = $8, ended_at = $9, updated_at = now(), updated_by = $10, version = version + 1
+			failed_at = $8, ended_at = $9, party_id = COALESCE($12, party_id), updated_at = now(), updated_by = $10, version = version + 1
 		WHERE tenant_id = $1 AND quest_progress_id = $2 AND version = $11 AND deleted_at IS NULL`, p.TenantID, p.ID, p.Status, steps, p.CompletedAt,
-		p.ExpiresAt, p.DeadlineAt, p.FailedAt, p.EndedAt, actor(ctx), p.Version)
+		p.ExpiresAt, p.DeadlineAt, p.FailedAt, p.EndedAt, actor(ctx), p.Version, p.PartyID)
 	if err != nil {
 		return fmt.Errorf("quest progress: save: %w", err)
 	}

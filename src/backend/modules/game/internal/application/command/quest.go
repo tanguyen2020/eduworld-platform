@@ -712,6 +712,9 @@ func (h Quests) ApplyActivityResult(ctx context.Context, g GradedAttempt) (err e
 	if !p.Active() {
 		return nil
 	}
+	if p.PartyID != nil && (s.CollectiveTarget != nil || s.Type == quest.StepInterdep) {
+		return nil // F103: a collective or interdependent step of a party progress completes from the party session (PartyQuests)
+	}
 	o := p.ActivityResult(v, sa.StepID, passed, at)
 	push := progressPush(p, sa.StepID, nil)
 	if o.Changed {

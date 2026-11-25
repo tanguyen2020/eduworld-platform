@@ -1787,6 +1787,20 @@ func (response StartPartyActivity422ApplicationProblemPlusJSONResponse) VisitSta
 	return err
 }
 
+type StartPartyActivity428ApplicationProblemPlusJSONResponse CommonInternalCommonV1Problem
+
+func (response StartPartyActivity428ApplicationProblemPlusJSONResponse) VisitStartPartyActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(428)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type StartPartyActivity503ApplicationProblemPlusJSONResponse struct {
 	CommonInternalCommonV1DependencyUnavailableApplicationProblemPlusJSONResponse
 }

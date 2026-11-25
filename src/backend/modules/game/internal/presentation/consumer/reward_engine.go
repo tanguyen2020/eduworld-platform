@@ -59,11 +59,74 @@ func (c RewardEngine) Handle(ctx context.Context, e outbox.Envelope) error {
 	if e.TenantID == nil {
 		return reject(c.name(), invalid(e.EventType, "tenant event expected"))
 	}
+	if e.EventType == "boss.encounter_completed" {
+		return c.bossRewards(ctx, e)
+	}
 	student, t, err := Trigger(e)
 	if err != nil {
 		return reject(c.name(), err)
 	}
 	return c.Awards.AwardFromEvent(ctx, *e.TenantID, student, t)
+}
+
+// bossNS is the UUIDv5 namespace of the content rules of the boss rewards.
+var bossNS = uuid.MustParse("0193a5f4-6c1e-7b2a-9d1f-00000000b055")
+
+// bossRewards grants the rewards of a defeated boss (F103-AC-10, AC-CHL-004, AC-CHL-006): every eligible member gets
+// defeat_rewards (+ first_defeat_rewards on its first defeat of the boss) through the Reward Engine — the published
+// rules of boss.encounter_completed (source boss.defeated) and the content rules of the pinned boss version — with the
+// XP cap and the Xu cap of the appliers; one ledger posting per (encounter, student, rule): a replayed event grants
+// nothing more. A member below min_contribution and an encounter not defeated get nothing.
+func (c RewardEngine) bossRewards(ctx context.Context, e outbox.Envelope) error {
+	p, err := bossCompleted(e)
+	if err != nil {
+		return reject(c.name(), err)
+	}
+	if p.Result != "defeated" {
+		return nil
+	}
+	boss, version := p.BossID, p.BossVersionID
+	defeat := reward.ContentRule(uuid.NewSHA1(bossNS, []byte("defeat:"+version.String())), "boss.defeat", "boss.defeated",
+		e.EventType, rewardGrants(p.DefeatRewards))
+	first := reward.ContentRule(uuid.NewSHA1(bossNS, []byte("first_defeat:"+version.String())), "boss.first_defeat", "boss.defeated",
+		e.EventType, rewardGrants(p.FirstRewards))
+	for _, m := range p.Contributions {
+		if !m.Eligible || m.StudentID == uuid.Nil {
+			continue
+		}
+		t := reward.Trigger{EventType: e.EventType, EventID: e.EventID, OccurredAt: e.OccurredAt.UTC(), SourceType: "boss",
+			SourceID: p.EncounterID, SourceCodes: []string{"boss.defeated"}, ContentID: &boss, ContentVersionID: &version, SubjectID: p.SubjectID}
+		if len(defeat.Grants) > 0 {
+			t.ContentRules = append(t.ContentRules, defeat)
+		}
+		if m.FirstDefeat && len(first.Grants) > 0 {
+			t.ContentRules = append(t.ContentRules, first)
+		}
+		if err := c.Awards.AwardFromEvent(ctx, *e.TenantID, m.StudentID, t); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// rewardGrants maps the rewards of boss.schema.json to the grants of the Reward Engine.
+func rewardGrants(rs []map[string]any) []reward.Grant {
+	out := make([]reward.Grant, 0, len(rs))
+	str := func(m map[string]any, k string) string {
+		v, _ := m[k].(string)
+		return v
+	}
+	for _, r := range rs {
+		g := reward.Grant{Type: str(r, "type"), CurrencyCode: str(r, "currency_code"), ItemID: str(r, "item_id"), BadgeID: str(r, "badge_id"),
+			TitleCode: str(r, "title_code"), CollectionItemID: str(r, "collection_item_id")}
+		if n, ok := r["amount"].(float64); ok {
+			g.Amount = int(n)
+		}
+		if g.Type != "" {
+			out = append(out, g)
+		}
+	}
+	return out
 }
 
 // Trigger maps an event of the Reward Engine to the student and the trigger (exported for tests).

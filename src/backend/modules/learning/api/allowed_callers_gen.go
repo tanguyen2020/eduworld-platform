@@ -10,9 +10,10 @@ var AllowedCallers = map[string][]string{
 	"checkPublishedLearningContent":  {"game"},
 	"cleanupStudentData":             {"identity"},
 	"createAttempt":                  {"game"},
-	"createQuestionPlan":             {"competition"},
+	"createQuestionPlan":             {"competition", "game"},
 	"executeTenantCloneStep":         {"identity"},
 	"getAttemptResult":               {"game"},
+	"getLearningMaterialRenders":     {"game"},
 	"listResourceAssignments":        {"identity"},
 	"listTrash":                      {"identity"},
 	"mergeUserData":                  {"identity"},
@@ -20,7 +21,7 @@ var AllowedCallers = map[string][]string{
 	"restoreTrashItem":               {"identity"},
 	"revealPlanItem":                 {"competition"},
 	"revokeTenantAssignments":        {"identity"},
-	"scorePlanAnswer":                {"competition"},
+	"scorePlanAnswer":                {"competition", "game"},
 	"validateMinigameQuestionSource": {"game"},
 }
 
@@ -34,6 +35,7 @@ var ContextRequired = map[string][]string{
 	"createQuestionPlan":             {"idempotency_key", "tenant_scope"},
 	"executeTenantCloneStep":         {"idempotency_key"},
 	"getAttemptResult":               {"tenant_scope"},
+	"getLearningMaterialRenders":     {"tenant_scope"},
 	"mergeUserData":                  {"idempotency_key", "tenant_scope"},
 	"restoreStudentData":             {"idempotency_key", "tenant_scope"},
 	"restoreTrashItem":               {"idempotency_key", "tenant_scope"},

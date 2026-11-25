@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/boss.phase_completed.v1.schema.json",
+  "title": "Payload boss.phase_completed v1 (module game, owner F103)",
+  "description": "Một phase của encounter đạt completion_rule (F103-AC-07): năng lượng giảm theo energy_share. Không có đóng góp của từng học sinh (FR-PTY-013). Consumer: RT, analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["encounter_id", "boss_version_id", "phase_id", "phase_index", "energy_remaining", "completed_at"],
+  "properties": {
+    "encounter_id": { "type": "string", "format": "uuid" },
+    "boss_version_id": { "type": "string", "format": "uuid" },
+    "party_id": { "type": ["string", "null"], "format": "uuid" },
+    "phase_id": { "type": "string", "maxLength": 64 },
+    "phase_index": { "type": "integer", "minimum": 0, "maximum": 7 },
+    "retry_no": { "type": "integer", "minimum": 0, "maximum": 10 },
+    "energy_remaining": { "type": "number", "minimum": 0, "maximum": 1 },
+    "completed_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "encounter_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "boss_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000010311",
+      "party_id": null,
+      "phase_id": "p1",
+      "phase_index": 0,
+      "retry_no": 0,
+      "energy_remaining": 0.5,
+      "completed_at": "2026-11-24T03:05:00Z"
+    }
+  ]
+}

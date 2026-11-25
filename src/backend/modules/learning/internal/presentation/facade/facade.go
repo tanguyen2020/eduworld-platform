@@ -43,6 +43,8 @@ type Facade struct {
 	MinigameSources query.ValidateMinigameQuestionSourceHandler
 	// PublishedContent serves checkPublishedLearningContent (caller module game, F078-AC-07).
 	PublishedContent query.CheckPublishedContentHandler
+	// Materials serves getLearningMaterialRenders (caller module game, F103 research R3).
+	Materials query.MaterialRendersHandler
 	// Idempotency stores the results of the writing operations (infra.idempotency_records, idempotency_record_ttl).
 	Idempotency *idempotency.Store
 }

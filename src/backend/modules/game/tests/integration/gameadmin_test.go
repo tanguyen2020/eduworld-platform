@@ -94,7 +94,8 @@ func TestGameAdminAuthz(t *testing.T) {
 	if c.status != http.StatusCreated || c.body["status"] != "draft" || c.body["version"] != float64(1) {
 		t.Fatalf("create with X-Tenant-Id: %d %s", c.status, c.raw)
 	}
-	for _, typ := range []string{"gifs", "matchmaking-configs", "currencies", "bosses"} {
+	// bosses has a type module since F103 (spec Clarifications): no longer an unknown type.
+	for _, typ := range []string{"gifs", "matchmaking-configs", "currencies"} {
 		if r := e.adminCall(t, http.MethodGet, "/game-admin/"+typ, a.designer, "", nil); r.status != http.StatusNotFound {
 			t.Errorf("%s: %d %s", typ, r.status, r.raw)
 		}

@@ -15,6 +15,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/achievement"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/boss"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/challenge"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/collection"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/economy"
@@ -95,7 +96,9 @@ type PublishGameContent struct {
 	MiniGames *MiniGamePublishRules
 	// Challenges are the F076 checks (challenge.schema.json, profiles, sources) and the published challenges.
 	Challenges *ChallengePublishRules
-	Now        func() time.Time
+	// Bosses are the F103 checks (boss.schema.json, phases, requirements).
+	Bosses *BossPublishRules
+	Now    func() time.Time
 }
 
 type parsedItem struct {
@@ -120,6 +123,7 @@ type parsedItem struct {
 	template *liveops.Template
 	track    *season.Track
 	chal     *challenge.Version
+	boss     *boss.Version
 }
 
 // Publish publishes items in one platform transaction; key makes the release rows idempotent per item.
@@ -208,6 +212,8 @@ func (h PublishGameContent) parseItem(ctx context.Context, it ContentItem, now t
 		return parseLiveOps(it, h.LiveOps)
 	case challengeItem(it.Type):
 		return parseChallenge(it, h.Challenges)
+	case bossItem(it.Type):
+		return parseBoss(it, h.Bosses)
 	}
 	return parse(it)
 }
@@ -315,6 +321,9 @@ func (h PublishGameContent) checkRefs(ctx context.Context, items []parsedItem) e
 	if err := h.checkQuests(ctx, items, areas, chapters); err != nil {
 		return err
 	}
+	if err := h.checkBosses(ctx, items, known); err != nil {
+		return err
+	}
 	if err := h.checkChallenges(ctx, items, known, quests); err != nil {
 		return err
 	}
@@ -418,6 +427,11 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, pin *P
 	}
 	if p.chal != nil {
 		if stored, err = challengeStored(p.doc, vid, no); err != nil {
+			return GameRelease{}, false, err
+		}
+	}
+	if p.boss != nil {
+		if stored, err = bossStored(p.doc, vid, no); err != nil {
 			return GameRelease{}, false, err
 		}
 	}

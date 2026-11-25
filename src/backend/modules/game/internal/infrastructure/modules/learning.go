@@ -50,11 +50,11 @@ func (l LearningAttempts) CreateAttempt(ctx context.Context, in port.LearningAtt
 	if in.MiniGamePlayID != nil {
 		// F073: a free mini-game play — mode minigame, context minigame_session of the play.
 		body.Mode = learningapi.AttemptModeMinigame
-		body.Context.ContextType = learningapi.MinigameSession
+		body.Context.ContextType = learningapi.AttemptCreateRequestContextContextTypeMinigameSession
 		body.Context.ContextId = *in.MiniGamePlayID
 		body.Context.GameSessionId = in.GameSessionID
 	} else {
-		body.Context.ContextType = learningapi.QuestStep
+		body.Context.ContextType = learningapi.AttemptCreateRequestContextContextTypeQuestStep
 		body.Context.ContextId = in.QuestProgressID
 		body.Context.QuestVersionId, body.Context.StepId, body.Context.GameSessionId = &qv, &step, in.GameSessionID
 	}
@@ -128,7 +128,7 @@ func (l LearningAttempts) CreateChallengeAttempt(ctx context.Context, in port.Ch
 		Activity: learningapi.ActivityRef{ContentType: learningapi.ActivityRefContentTypeActivity, ContentId: in.ActivityID,
 			DifficultyMin: &lo, DifficultyMax: &hi, GradeLevel: &grade, ObjectiveIds: &objectives, QuestionCount: in.QuestionCount,
 			TimeLimitSeconds: in.TimeLimitSeconds}}
-	body.Context.ContextType = learningapi.ChallengeAttempt
+	body.Context.ContextType = learningapi.AttemptCreateRequestContextContextTypeChallengeAttempt
 	body.Context.ContextId = in.ChallengeAttemptID
 	body.Context.GameSessionId = in.GameSessionID
 	return l.create(ctx, body)

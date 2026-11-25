@@ -16,6 +16,8 @@ type Facade struct {
 	Lifecycle command.StudentLifecycle
 	// GameAdmin serves the tenant assignments (identity) and the school catalog (learning) of F078.
 	GameAdmin
+	// PartyActivities serves the party activities of the Party Lobby (competition, F103).
+	PartyActivities
 }
 
 // CleanupStudentData implements gameapi.StrictServerInterface (x-allowed-callers: identity).
