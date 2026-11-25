@@ -24,6 +24,7 @@ Nhóm mục: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`, `
   - **Test:** `test_export_presets.gd`, `src/game/web/tests/shell.test.mjs`, `shell.browser.test.mjs`, rule `godot-rules.test.mjs`.
 
 ### Changed
+- 2026-11-25 — **F068 câu hỏi mở chốt [Confirmed]** (lệnh "chốt hết"): Cây Tia Sáng lớn theo mức mastery tổng hợp của (trường, khối) qua một operation đọc mới ở module learning (không tên, không xếp hạng, ô < 5 học sinh trả "chưa đủ dữ liệu") — task F068 T040, tới lúc đó cây hiện cấp 3; ánh xạ biểu cảm, độ dài clip, nhịp chớp mắt (`avatar_blink`) và `spark_tree_default_stage` là mặc định Release 1.
 - 2026-11-25 — **Gateway: bản Web của game gọi được API từ origin khác** (F133, [DEPLOYMENT §9](docs/11-operations/DEPLOYMENT.md#9-cdn-và-phân-phối-godot-client)). Bản Web nằm trên CDN `play.<domain>`, API ở `api.<domain>`; trước đây CORS chỉ nhận origin portal nên đăng nhập game trên Web bị chặn.
   - Route game (`/auth/game/*`, `/game/client-config`, `player`, `/realtime/v1`) đánh dấu `cors: game` trong `routes.yaml`, nhận thêm `EW_CORS_GAME_ORIGINS` (local `http://localhost:8060`, staging `https://play.staging.eduworld.example`).
   - Route cookie của portal không nhận origin này. `render.mjs` từ chối `*`, origin có path hoặc danh sách rỗng; `allow_credential` không đổi.

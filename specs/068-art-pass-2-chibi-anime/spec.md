@@ -11,17 +11,17 @@
 - Q: Có tải pack ngoài không? → A: [Confirmed] Không (phân quyền chặn tải). Toàn bộ asset tự làm bằng code trong `src/game/tools/art/`, MIT; URL pack CC0 đề xuất ghi ở quickstart §6 để owner tự tải sau.
 - Q: Tròn hơn thì có vỡ ngân sách tam giác (PERFORMANCE_BUDGET §7, §8) không? → A: [Confirmed] Giữ nguyên ngân sách. Độ tròn chủ yếu từ pháp tuyến mượt trong góc 62° (không thêm tam giác); chỉ vát cạnh khối đủ dày (≥ 0,035 m cho nhân vật, ≥ 0,15 m cho Hub); vật thể lặp, xa và NPC giữ bậc chia gốc; mặt đất và bụi cây không đổ bóng. Benchmark có renderer trên Mobile và Compatibility là cổng (F068-AC-10).
 - Q: Rig và animation làm thế nào khi không có Blender/pack? → A: [Confirmed] Skeleton `kid_base` 8 xương định nghĩa trong code (`KidSkeleton`), mesh thân và trang phục bake kèm BONES/WEIGHTS, clip bake bằng công thức keyframe (`character_anim.gd`) ra `.res`; tóc/phụ kiện gắn `BoneAttachment3D`. Clip nhún giữ chỗ (R17) của F062/F070 được thay cho rig này; thân không có rig vẫn dùng clip giữ chỗ.
-- Q: Biểu cảm đổi bằng gì để không có logic trong scene (R1)? → A: [Confirmed] Mỗi biểu cảm (`neutral`, `happy`, `surprised`, `trying`) là một mesh mặt bake; `AvatarBuilder.set_expression()` đổi mesh; `AnimDriver` chọn biểu cảm theo trạng thái chuyển động đã có (bảng ở CHARACTER_SYSTEM §4.1), emote theo `ItemVisual.expression`. Ánh xạ trạng thái → biểu cảm và nhịp chớp mắt là [Proposed].
+- Q: Biểu cảm đổi bằng gì để không có logic trong scene (R1)? → A: [Confirmed] Mỗi biểu cảm (`neutral`, `happy`, `surprised`, `trying`) là một mesh mặt bake; `AvatarBuilder.set_expression()` đổi mesh; `AnimDriver` chọn biểu cảm theo trạng thái chuyển động đã có (bảng ở CHARACTER_SYSTEM §4.1), emote theo `ItemVisual.expression`. Ánh xạ trạng thái → biểu cảm và nhịp chớp mắt là mặc định [Confirmed] (F068-2, 2026-11-25).
 - Q: Viền nhân vật có xương bị lệch khi tay giơ lên (pháp tuyến mượt trong COLOR không đi theo xương)? → A: [Confirmed] Thêm preset sinh từ token `mat_toon_skinned.tres`: viền đẩy theo NORMAL đã skin; mesh tĩnh giữ COLOR.
 - Q: Blob shadow hiện khi nào (F067-3)? → A: [Confirmed — F067-3 đã chốt] Khi mặt trời không có bóng thời gian thực: renderer Compatibility (Web) hoặc bóng nắng tắt (preset Thấp, hoặc học sinh tắt bóng). Màu/độ mờ là token `light.blob_shadow_*`.
-- Q: Cây Tia Sáng lấy dữ liệu mastery ở đâu (F067-4: "dữ liệu mastery có sẵn qua API game")? → A: [Proposed — Câu hỏi mở F068-1] WORLD_DESIGN §4.1 nói cây lớn theo **tổng mastery của khối trong trường**; hiện **không có** API nào trả tổng này cho client (game client chưa gọi `getMyMastery`/`getMyProgress`; `getWorldExploration` không có mastery). Lượt này làm đủ phần hình: 5 cấp mesh, ánh xạ `MasteryLevel` → cấp (`SparkTreeModel`, trung bình làm tròn) và `SparkTree.show_mastery()`; Hub hiện cấp mặc định 3 (`spark_tree_default_stage`) cho tới khi có nguồn dữ liệu. Không thêm logic backend trong feature này.
+- Q: Cây Tia Sáng lấy dữ liệu mastery ở đâu (F067-4: "dữ liệu mastery có sẵn qua API game")? → A: [Confirmed 2026-11-25 — xem F068-1 bên dưới] WORLD_DESIGN §4.1 nói cây lớn theo **tổng mastery của khối trong trường**; hiện **không có** API nào trả tổng này cho client (game client chưa gọi `getMyMastery`/`getMyProgress`; `getWorldExploration` không có mastery). Lượt này làm đủ phần hình: 5 cấp mesh, ánh xạ `MasteryLevel` → cấp (`SparkTreeModel`, trung bình làm tròn) và `SparkTree.show_mastery()`; Hub hiện cấp mặc định 3 (`spark_tree_default_stage`) cho tới khi có nguồn dữ liệu. Không thêm logic backend trong feature này.
 - Q: Các vùng khác (Vương quốc Số, Rừng Ngôn Ngữ, Đại dương, Núi, Đấu trường…)? → A: [Confirmed] Quá lớn cho một lượt; tách sang **F093** (art pass 3: các vùng còn lại theo ADR-0103), CODE_PLAN. Lượt này làm đầy đủ Hub + nhân vật; các vùng khác hưởng nhân vật, NPC, cổng gió, shader và blob shadow mới.
 - Q: Linh vật Mây ở màn đăng nhập S01 có phải sửa không? → A: [Confirmed] Không: Mây (vector 2D, viền đậm, má hồng, mắt tròn) không mâu thuẫn hướng mới; chỉ sửa khi lệch (nhiệm vụ owner).
 
-**Câu hỏi mở**
+**Câu hỏi mở — chốt 2026-11-25 (owner "chốt hết") [Confirmed]**
 
-- F068-1: Nguồn dữ liệu tổng mastery của khối trong trường cho Cây Tia Sáng — cần một operation đọc mới (module `learning`, theo khối + trường, không tên, không xếp hạng) hay dùng mastery của chính học sinh (`getMyMastery`, khác ý WORLD_DESIGN §4.1)? Mặc định [Proposed]: cấp 3, không gọi API.
-- F068-2: Ánh xạ trạng thái → biểu cảm, độ dài clip và nhịp chớp mắt là [Proposed]; Game Director chỉnh qua công thức clip/`CHARACTER_SYSTEM §4.1`.
+- F068-1: Theo đúng WORLD_DESIGN §4.1 — **operation đọc mới ở module `learning`** trả mức mastery tổng của (trường, khối) của học sinh đang chơi: chỉ một mức tổng hợp, không tên, không xếp hạng, không số liệu từng học sinh; ô dưới `analytics_min_cell_size` (5 học sinh) trả "chưa đủ dữ liệu" và cây giữ cấp mặc định 3. Không dùng mastery riêng của học sinh (sẽ lộ tiến độ cá nhân trên cây dùng chung của Hub). Việc backend + nối `SparkTree.show_mastery()` là **task F068 T040** (follow-up, cần contract mới + test cô lập tenant/trường); tới lúc đó cây hiện cấp 3.
+- F068-2: Ánh xạ trạng thái → biểu cảm, độ dài clip, nhịp chớp mắt (3,4 s / 0,12 s) và cấp cây mặc định 3 là mặc định Release 1 [Confirmed]; Game Director chỉnh qua công thức clip/token (`CHARACTER_SYSTEM §4.1`), không sửa scene.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -144,8 +144,8 @@ Trên Web nhân vật có bóng mờ dưới chân (không "lơ lửng"); Cây T
 |---|---|
 | `scene_budget_hub`, `character_asset_budget`, `perf_budget_tolerance_ci` | Ngân sách (F068-AC-10) |
 | `quality_presets`, `renderer_default` | Bóng nắng theo preset/renderer → blob shadow (F068-AC-08) |
-| `avatar_blink` [Proposed] | Nhịp chớp mắt (F068-AC-04) |
-| `spark_tree_default_stage` [Proposed] | Cấp cây khi chưa có dữ liệu (F068-AC-09) |
+| `avatar_blink` [Confirmed] | Nhịp chớp mắt (F068-AC-04) |
+| `spark_tree_default_stage` [Confirmed] | Cấp cây khi chưa có dữ liệu (F068-AC-09) |
 
 ### Ràng buộc phi chức năng
 
@@ -174,4 +174,4 @@ Trên Web nhân vật có bóng mờ dưới chân (không "lơ lửng"); Cây T
 ## Assumptions
 
 - Hướng "Chibi anime cartoon 3D" là [Confirmed] (owner 2026-11-25); giá trị màu viền, độ mềm dải, độ mờ bóng là mặc định token, Game Director chỉnh qua `design/game-tokens/`.
-- Ánh xạ biểu cảm, độ dài clip, nhịp chớp mắt, cấp cây mặc định là [Proposed] (F068-1, F068-2).
+- Ánh xạ biểu cảm, độ dài clip, nhịp chớp mắt, cấp cây mặc định là [Confirmed] (F068-1, F068-2, chốt 2026-11-25).

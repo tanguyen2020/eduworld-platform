@@ -76,6 +76,10 @@
 - [x] T029 Tài liệu sở hữu: WORLD_DESIGN §11, CHARACTER_SYSTEM §4.1, DESIGN_SYSTEM §1/§5.3, WORLD_RENDERING §6.1/§7/§8.1, PERFORMANCE_BUDGET §4/§5, CONFIG_DEFAULTS (`avatar_blink`, `spark_tree_default_stage`), OPEN_QUESTIONS OQ-16, CODE_PLAN (F068, F093), RTM, CHANGELOG, `design/CHANGELOG.md`, `assets/LICENSES.md`
 - [x] T030 Gate: GdUnit4 toàn bộ, `check_typed`, `lint_theme_overrides`, `lint_layers`, `lint_signals`, `lint_art`, `zone_lint`, `extract_pot --check`, `pseudo_locale --check`, `gen_fixtures --check`, `check_no_admin_ui`, `bake_art --check`, `make design-tokens-check`, check-features, check-cross-features, check-links, check-mermaid, build-rtm `--check`
 
+## Phase 9: Follow-up chốt 2026-11-25 (Câu hỏi mở F068-1 [Confirmed])
+
+- [ ] T040 Operation đọc mới ở module `learning`: mức mastery tổng của (trường, khối) của học sinh đang chơi — một mức tổng hợp, không tên/xếp hạng/số liệu cá nhân, ô < `analytics_min_cell_size` → "chưa đủ dữ liệu"; route `game_player`, `TenantScope`, contract + `x-portal-action` không cần (chỉ game); test cô lập tenant/trường và ô nhỏ; client gọi khi vào Hub và nối `SparkTree.show_mastery()` (thiếu dữ liệu → cấp mặc định 3)
+
 ## Dependencies & Execution Order
 
 - Phase 1 → Phase 2 (token, shader, builder, KidSkeleton) → US1 ∥ US2 → US3 (clip cần rig) → US4 → US5 (đo, ảnh, export) → Polish.

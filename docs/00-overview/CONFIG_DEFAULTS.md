@@ -422,8 +422,8 @@ Giá trị do [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) sở
 | `dynamic_resolution` | Bước 0,05; giảm khi vượt mục tiêu 10% (2 s), tăng khi dưới 20% (10 s) | — | code | [Confirmed] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §6 |
 | `scene_budget_hub` | Mobile/Web (gồm PC chạy bản Web): 150k tam giác, 100 draw call, 256 MB texture, RAM 1 GB | — | code | [Confirmed] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §7 |
 | `character_asset_budget` | LOD0/1/2: 8k/3k/1k tam giác; atlas 512²; ≤ 60 xương; ≤ 3 material | — | code | [Confirmed] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §8 |
-| `avatar_blink` | Mặt `neutral` chớp mắt mỗi 3,4 s, mỗi lần 0,12 s (chỉ hiển thị, F068) | s | code | [Proposed] | [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) §4.1 |
-| `spark_tree_default_stage` | Cây Tia Sáng hiện cấp 3 (cây đa đầy đủ) khi client chưa có dữ liệu mastery (Câu hỏi mở F068-1) | cấp 0–4 | code | [Proposed] | [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) §11 |
+| `avatar_blink` | Mặt `neutral` chớp mắt mỗi 3,4 s, mỗi lần 0,12 s (chỉ hiển thị, F068) | s | code | [Confirmed] (2026-11-25) | [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) §4.1 |
+| `spark_tree_default_stage` | Cây Tia Sáng hiện cấp 3 (cây đa đầy đủ) khi client chưa có dữ liệu mastery (F068-1 chốt: nguồn là operation tổng hợp khối–trường, task F068 T040) | cấp 0–4 | code | [Confirmed] (2026-11-25) | [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) §11 |
 | `ui_cpu_budget` | ≤ 3 ms (mobile/Web) mỗi khung; ≤ 150 Control trên HUD | ms | code | [Confirmed] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §9 |
 | `hub_sync_bandwidth` | ≤ 30 KB/s xuống, ≤ 3 KB/s lên | KB/s | code | [Confirmed] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §10 |
 | `load_time` | Khởi động lạnh → Hub ≤ 20 s; chuyển vùng ≤ 5 s; mở activity ≤ 2 s | s | code | [Confirmed] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §11 |
