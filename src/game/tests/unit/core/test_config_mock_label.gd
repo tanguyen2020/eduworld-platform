@@ -52,7 +52,7 @@ func test_release_presets_exclude_the_mock_profile() -> void:
 		assert_str(include).not_contains("mock")
 		for path: String in ["config/env/mock.json", "tests/*", "tools/*", "scenes/ui/debug/*"]:
 			assert_str(exclude).override_failure_message("%s %s" % [section, path]).contains(path)
-	# Android today; Web and iOS presets join with F133 T002 (no Windows preset, ADR-0101).
-	assert_int(presets).is_greater_equal(1)
+	# Android, iOS and Web (F133 T002; no Windows preset, ADR-0101) — details in test_export_presets.gd.
+	assert_int(presets).is_equal(3)
 	# The release Config never accepts --env=mock: only debug builds read the command line.
 	assert_str(Config.resolve_env_name(PackedStringArray(["--env=mock"]), false)).is_not_equal("mock")
