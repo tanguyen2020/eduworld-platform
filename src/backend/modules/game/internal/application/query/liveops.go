@@ -565,7 +565,34 @@ type TemplateView struct {
 	MaxDurationDays  int               `json:"max_duration_days"`
 	QuestOptions     []uuid.UUID       `json:"quest_options"`
 	ChallengeOptions []uuid.UUID       `json:"challenge_options"`
+	QuestItems       []OptionItemView  `json:"quest_option_items"`
+	ChallengeItems   []OptionItemView  `json:"challenge_option_items"`
 	RewardOptions    []map[string]any  `json:"reward_options"`
+}
+
+// OptionItemView is EventTemplateOptionItem: a quest or challenge of the template with the title and grades of its
+// current published version (F081-AC-02: the portal never looks names up in another module).
+type OptionItemView struct {
+	ID          uuid.UUID         `json:"id"`
+	Title       map[string]string `json:"title"`
+	GradeLevels []int             `json:"grade_levels"`
+}
+
+// optionItems keeps the order of the template; an option without a published version is left out.
+func optionItems(ids []uuid.UUID, known map[uuid.UUID]read.OptionItem) []OptionItemView {
+	out := []OptionItemView{}
+	for _, id := range ids {
+		it, ok := known[id]
+		if !ok {
+			continue
+		}
+		grades := it.GradeLevels
+		if grades == nil {
+			grades = []int{}
+		}
+		out = append(out, OptionItemView{ID: id, Title: bilingual(it.Title), GradeLevels: grades})
+	}
+	return out
 }
 
 func staffTenant(ctx context.Context) (authz.Principal, uuid.UUID, error) {
@@ -644,11 +671,24 @@ func (h LiveOps) ListEventTemplates(ctx context.Context, limit int, cursor strin
 			rows, out.Page.HasMore = rows[:limit], true
 			out.Page.NextCursor = h.next(rows[len(rows)-1].Template.Code, uuid.Nil)
 		}
+		var questIDs, challengeIDs []uuid.UUID
+		for _, r := range rows {
+			questIDs = append(questIDs, r.Template.QuestOptions...)
+			challengeIDs = append(challengeIDs, r.Template.ChallengeOptions...)
+		}
+		quests, err := h.Data.QuestOptionItems(ctx, questIDs)
+		if err != nil {
+			return err
+		}
+		challenges, err := h.Data.ChallengeOptionItems(ctx, challengeIDs)
+		if err != nil {
+			return err
+		}
 		for _, r := range rows {
 			t := r.Template
 			v := TemplateView{TemplateID: r.TemplateID, Code: t.Code, Name: bilingual(t.Name), EventKind: t.Kind, AllowedParams: nonNilStrings(t.AllowedParams),
 				MaxDurationDays: t.MaxDurationDays, QuestOptions: nonNilUUIDs(t.QuestOptions), ChallengeOptions: nonNilUUIDs(t.ChallengeOptions),
-				RewardOptions: []map[string]any{}}
+				QuestItems: optionItems(t.QuestOptions, quests), ChallengeItems: optionItems(t.ChallengeOptions, challenges), RewardOptions: []map[string]any{}}
 			if t.Description != nil {
 				v.Description = bilingual(t.Description)
 			}
@@ -669,18 +709,26 @@ func nonNilStrings(s []string) []string {
 	return s
 }
 
-// ListSchoolEvents is listSchoolEvents (F077-AC-25): the school events of the session tenant, newest first (keyset on
-// created_at, event_id); school-limited staff see their schools only.
+// ListSchoolEvents is listSchoolEvents (F077-AC-25, F081-AC-06): the school events of the session tenant, newest first
+// (keyset on created_at, event_id); school-limited staff see their schools only. System Admin without X-Tenant-Id reads
+// the tenants of tenant_ids or every tenant (audited cross_tenant.accessed); each row carries its tenant_id.
 func (h LiveOps) ListSchoolEvents(ctx context.Context, status string, limit int, cursor string) (out Page[map[string]any], err error) {
 	ctx, done := observability.UseCase(ctx, "game.query.ListSchoolEvents")
 	defer func() { done(err) }()
-	p, tenant, err := staffTenant(ctx)
-	if err != nil {
-		return out, err
-	}
-	schools, err := requireSchoolEvents(ctx, p, tenant)
-	if err != nil {
-		return out, err
+	var f read.SchoolEventsFilter
+	if p, ok := authz.PrincipalFrom(ctx); ok && p.TenantID == nil && p.UserType == authz.UserTypeStaff {
+		if ctx, f, err = crossTenantEvents(ctx, p); err != nil {
+			return out, err
+		}
+	} else {
+		p, tenant, err := staffTenant(ctx)
+		if err != nil {
+			return out, err
+		}
+		if f.Schools, err = requireSchoolEvents(ctx, p, tenant); err != nil {
+			return out, err
+		}
+		f.Tenants = []uuid.UUID{tenant}
 	}
 	if limit, err = limitOf(limit); err != nil {
 		return out, err
@@ -691,7 +739,8 @@ func (h LiveOps) ListSchoolEvents(ctx context.Context, status string, limit int,
 	}
 	out = Page[map[string]any]{Data: []map[string]any{}, Page: PageInfo{Limit: limit}}
 	err = h.Read.Read(ctx, func(ctx context.Context) error {
-		rows, err := h.Data.SchoolEvents(ctx, read.SchoolEventsFilter{Tenant: tenant, Schools: schools, Status: status, After: after, Limit: limit + 1})
+		f.Status, f.After, f.Limit = status, after, limit+1
+		rows, err := h.Data.SchoolEvents(ctx, f)
 		if err != nil {
 			return err
 		}

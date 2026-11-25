@@ -273,14 +273,14 @@ func TenantName(l liveops.Localized) map[string]string {
 	return out
 }
 
-// SchoolStatus is SchoolEvent.status of a run (suspended shows live; archived shows ended or cancelled).
+// SchoolStatus is SchoolEvent.status of a run (SchoolEventStatus): suspended stays suspended so the school sees the
+// emergency stop of EduWorld and gets no edit/cancel action (F081 edge case); archived shows ended or cancelled (the end
+// the school knows).
 func SchoolStatus(r *EventRunRow) string {
 	if r == nil {
 		return "draft"
 	}
 	switch r.Status {
-	case liveops.StatusLive, liveops.StatusSuspended:
-		return "live"
 	case liveops.StatusArchived:
 		if r.CancelledAt != nil {
 			return "cancelled"

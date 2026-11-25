@@ -1029,12 +1029,14 @@ func (s Store) SchoolEvent(ctx context.Context, tenant, event uuid.UUID) (*port.
 	return s.schoolEvent(ctx, tenant, event, false)
 }
 
-// schoolStatus is the SchoolEvent.status of a run (suspended shows as live, archived as ended or cancelled).
-const schoolStatus = `CASE WHEN r.status IN ('live', 'suspended') THEN 'live' WHEN r.status = 'archived' AND r.cancelled_at IS NOT NULL THEN 'cancelled'
+// schoolStatus is the SchoolEvent.status of a run (port.SchoolStatus: suspended stays suspended — F081, archived shows
+// ended or cancelled).
+const schoolStatus = `CASE WHEN r.status = 'archived' AND r.cancelled_at IS NOT NULL THEN 'cancelled'
 	WHEN r.status = 'archived' THEN 'ended' ELSE r.status END`
 
 // SchoolEvents implements read.LiveOpsReadModel: newest first, keyset on (created_at, event_id), school-limited staff
-// see the events of their schools only.
+// see the events of their schools only; System Admin reads the tenants of the CrossTenantScope or every tenant under the
+// audited bypass (F081-AC-06).
 func (s Store) SchoolEvents(ctx context.Context, f read.SchoolEventsFilter) ([]port.SchoolEventRow, error) {
 	t, err := tx(ctx)
 	if err != nil {
@@ -1049,12 +1051,18 @@ func (s Store) SchoolEvents(ctx context.Context, f read.SchoolEventsFilter) ([]p
 	if schools == nil {
 		schools = []uuid.UUID{}
 	}
+	tenants := f.Tenants
+	if tenants == nil {
+		tenants = []uuid.UUID{}
+	}
+	// tenancyguard:ok tenant table game.events: explicit tenant_id list (or the audited all-tenant bypass of System Admin) +
+	// deleted_at IS NULL
 	rows, err := t.QueryContext(ctx, `SELECT `+schoolEventColumns+` FROM game.events e
 		LEFT JOIN LATERAL (SELECT r.status, r.cancelled_at FROM game.event_runs r WHERE r.event_id = e.event_id AND r.tenant_id = e.tenant_id
 			AND r.deleted_at IS NULL ORDER BY r.created_at DESC LIMIT 1) r ON true
-		WHERE e.tenant_id = $1 AND e.owner_scope = 'tenant' AND e.deleted_at IS NULL AND ($2 OR e.school_id = ANY($3::uuid[]))
+		WHERE ($8 OR e.tenant_id = ANY($1::uuid[])) AND e.owner_scope = 'tenant' AND e.deleted_at IS NULL AND ($2 OR e.school_id = ANY($3::uuid[]))
 			AND ($4 = '' OR `+schoolStatus+` = $4) AND (e.created_at, e.event_id) < ($5, $6)
-		ORDER BY e.created_at DESC, e.event_id DESC LIMIT $7`, f.Tenant, all, schools, f.Status, before, beforeID, f.Limit)
+		ORDER BY e.created_at DESC, e.event_id DESC LIMIT $7`, tenants, all, schools, f.Status, before, beforeID, f.Limit, f.AllTenants)
 	if err != nil {
 		return nil, fmt.Errorf("school events: %w", err)
 	}

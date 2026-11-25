@@ -2838,6 +2838,18 @@
     ]
   },
   {
+    "operation_id": "getSchoolEventProgress",
+    "module": "game",
+    "method": "GET",
+    "path": "/lms/school-events/{event_id}/progress",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getSchoolImport",
     "module": "identity",
     "method": "GET",

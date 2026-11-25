@@ -85,6 +85,12 @@ func TestTenantIDsOnlyForSystemAdmin(t *testing.T) {
 	if r.status != 200 || len(r.body.Scope) != 2 || r.body.TenantID != "" {
 		t.Fatalf("system admin cross-tenant: %d %+v %v", r.status, r.body, r.raw)
 	}
+	// F081-AC-06: the contract parameter TenantIds is `style: form, explode: true` (the portal sends tenant_ids=a&tenant_ids=b):
+	// every repeated value counts, not only the first.
+	r = e.do(t, http.MethodGet, "/api/v1/lms/reports?tenant_ids="+ta.String()+"&tenant_ids="+tb.String(), e.idp.sign(tok{claims: sa}), nil)
+	if r.status != 200 || len(r.body.Scope) != 2 {
+		t.Fatalf("system admin cross-tenant, repeated tenant_ids: %d %+v %v", r.status, r.body, r.raw)
+	}
 	if e.auditCount(audit.ActionCrossTenantAccessed) != 0 {
 		// Recorded by data access when the scope is used (tenancy.RecordCrossTenantScope), not here.
 		t.Fatal("cross_tenant.accessed recorded by middleware")

@@ -98,6 +98,10 @@ func TestSchoolEvents(t *testing.T) {
 		if r.status != http.StatusUnprocessableEntity || r.code() != string(problem.EventTemplateParamNotAllowed) {
 			t.Fatalf("%s: %d %s", name, r.status, r.raw)
 		}
+		// F081-AC-04: errors[].field names the parameter (the portal shows it on that form field).
+		if errs, _ := r.body["errors"].([]any); len(errs) != 1 || errs[0].(map[string]any)["field"] == "" {
+			t.Fatalf("%s: errors[].field: %s", name, r.raw)
+		}
 	}
 	// AC-23: screening (placeholder only, R15), chat down, maxLength, vi required.
 	calls := e.live().screen.calls

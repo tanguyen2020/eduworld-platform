@@ -262,7 +262,8 @@ func (h *LiveOps) checkTemplate(ctx context.Context, tenant uuid.UUID, in School
 		return nil, err
 	}
 	if tpl == nil {
-		return nil, problem.New(problem.EventTemplateParamNotAllowed, "template_id: no template assigned to the tenant")
+		return nil, problem.New(problem.EventTemplateParamNotAllowed, "template_id: no template assigned to the tenant").
+			AddField("template_id", problem.SubInvalid, "no template assigned to the tenant")
 	}
 	if err := tpl.Template.Check(in.params(), h.policy().SchoolEventMaxDays); err != nil {
 		return nil, liveopsProblem(err)
@@ -280,7 +281,8 @@ func (h *LiveOps) checkSchools(ctx context.Context, tenant uuid.UUID, schools []
 		return err
 	}
 	if n != len(schools) {
-		return problem.New(problem.EventTemplateParamNotAllowed, "audience.school_ids: a school outside the tenant")
+		return problem.New(problem.EventTemplateParamNotAllowed, "audience.school_ids: a school outside the tenant").
+			AddField("audience.school_ids", problem.SubInvalid, "a school outside the tenant")
 	}
 	return nil
 }

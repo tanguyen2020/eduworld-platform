@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -30,6 +31,7 @@ type LiveOpsQueries interface {
 	ListEventTemplates(ctx context.Context, limit int, cursor string) (query.Page[query.TemplateView], error)
 	ListSchoolEvents(ctx context.Context, status string, limit int, cursor string) (query.Page[map[string]any], error)
 	GetSchoolEvent(ctx context.Context, event uuid.UUID) (map[string]any, error)
+	GetSchoolEventProgress(ctx context.Context, event uuid.UUID, school *uuid.UUID) (query.SchoolEventProgressView, error)
 }
 
 // LiveOpsCommands are the live-ops write use cases (command.LiveOps, F077).
@@ -54,7 +56,7 @@ var LiveOpsAdminOperations = []string{"suspendEventRun", "resumeEventRun", "canc
 
 // LiveOpsSchoolOperations are the school event routes (/lms/*, portal staff, lms.school_event.write — F077-AC-25).
 var LiveOpsSchoolOperations = []string{"listEventTemplates", "listSchoolEvents", "createSchoolEvent", "getSchoolEvent", "updateSchoolEvent",
-	"cancelSchoolEvent"}
+	"cancelSchoolEvent", "getSchoolEventProgress"}
 
 // liveOpsOperations are the F077 operations (method, path, X-Tenant-Id mode, Idempotency-Key, success status and guard
 // of the spec; the contract test checks them against specs/openapi/eduworld-api.v1.yaml). /game-admin/ and /lms/ routes
@@ -86,7 +88,7 @@ var liveOpsOperations = []httpx.Operation{
 		Tenant: httpx.TenantNone, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardPortalStaff | httpx.GuardPlatformRole},
 	{ID: "listEventTemplates", Module: "game", Method: http.MethodGet, Pattern: "/lms/event-templates", Tenant: httpx.TenantRequired,
 		Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardPortalStaff},
-	{ID: "listSchoolEvents", Module: "game", Method: http.MethodGet, Pattern: "/lms/school-events", Tenant: httpx.TenantRequired,
+	{ID: "listSchoolEvents", Module: "game", Method: http.MethodGet, Pattern: "/lms/school-events", Tenant: httpx.TenantOptional,
 		Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardPortalStaff},
 	{ID: "createSchoolEvent", Module: "game", Method: http.MethodPost, Pattern: "/lms/school-events", Tenant: httpx.TenantRequired,
 		Idempotency: httpx.IdempotencyRequired, SuccessStatus: http.StatusCreated, Guard: httpx.GuardPortalStaff},
@@ -96,6 +98,8 @@ var liveOpsOperations = []httpx.Operation{
 		Idempotency: httpx.IdempotencyRequired, SuccessStatus: http.StatusOK, Guard: httpx.GuardPortalStaff},
 	{ID: "cancelSchoolEvent", Module: "game", Method: http.MethodPost, Pattern: "/lms/school-events/{event_id}:cancel", Tenant: httpx.TenantRequired,
 		Idempotency: httpx.IdempotencyRequired, SuccessStatus: http.StatusOK, Guard: httpx.GuardPortalStaff},
+	{ID: "getSchoolEventProgress", Module: "game", Method: http.MethodGet, Pattern: "/lms/school-events/{event_id}/progress", Tenant: httpx.TenantRequired,
+		Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardPortalStaff},
 }
 
 func init() {
@@ -125,6 +129,7 @@ func (h Handlers) liveOpsRoutes() map[string]http.HandlerFunc {
 		"getSchoolEvent":         h.getSchoolEvent,
 		"updateSchoolEvent":      h.updateSchoolEvent,
 		"cancelSchoolEvent":      h.cancelSchoolEvent,
+		"getSchoolEventProgress": h.getSchoolEventProgress,
 	}
 }
 
@@ -320,7 +325,39 @@ func (h Handlers) listSchoolEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := r.URL.Query()
-	out, err := h.LiveOpsQueries.ListSchoolEvents(r.Context(), q.Get("status"), limit, q.Get("cursor"))
+	status := q.Get("status")
+	if status != "" && !slices.Contains(schoolEventStatuses, status) {
+		fail(w, r, problem.Invalid("status", problem.SubInvalid, "not a SchoolEventStatus"))
+		return
+	}
+	out, err := h.LiveOpsQueries.ListSchoolEvents(r.Context(), status, limit, q.Get("cursor"))
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// schoolEventStatuses is the enum SchoolEventStatus of the contract (filter of listSchoolEvents).
+var schoolEventStatuses = []string{"draft", "scheduled", "live", "suspended", "ended", "cancelled", "archived"}
+
+// getSchoolEventProgress serves getSchoolEventProgress (F081-AC-10): optional school_id (UUID) of the school viewed.
+func (h Handlers) getSchoolEventProgress(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "event_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var school *uuid.UUID
+	if raw := r.URL.Query().Get("school_id"); raw != "" {
+		s, err := uuid.Parse(raw)
+		if err != nil {
+			fail(w, r, problem.Invalid("school_id", problem.SubInvalid, "school_id must be a UUID"))
+			return
+		}
+		school = &s
+	}
+	out, err := h.LiveOpsQueries.GetSchoolEventProgress(r.Context(), id, school)
 	if err != nil {
 		fail(w, r, err)
 		return

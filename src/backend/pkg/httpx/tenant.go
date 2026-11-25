@@ -133,7 +133,8 @@ func (s *Server) scopeFor(r *http.Request, p authz.Principal) (tenancy.Scope, er
 	if p.UserType != authz.UserTypeStaff {
 		return nil, nil // students always have a tenant; nothing to scope
 	}
-	raw := r.URL.Query().Get("tenant_ids")
+	// tenant_ids is `style: form, explode: true` in the contract (tenant_ids=a&tenant_ids=b); a comma list is accepted too.
+	raw := strings.Join(r.URL.Query()["tenant_ids"], ",")
 	if raw != "" && p.Has(authz.PermPlatformCrossTenantRead) {
 		parts := strings.Split(raw, ",")
 		if len(parts) > maxTenantIDs {

@@ -176,6 +176,9 @@ func (p liveQueryProxy) ListSchoolEvents(ctx context.Context, st string, l int, 
 func (p liveQueryProxy) GetSchoolEvent(ctx context.Context, id uuid.UUID) (map[string]any, error) {
 	return p.e.liveQueries().GetSchoolEvent(ctx, id)
 }
+func (p liveQueryProxy) GetSchoolEventProgress(ctx context.Context, id uuid.UUID, school *uuid.UUID) (query.SchoolEventProgressView, error) {
+	return p.e.liveQueries().GetSchoolEventProgress(ctx, id, school)
+}
 
 type liveCommandProxy struct{ e *env }
 

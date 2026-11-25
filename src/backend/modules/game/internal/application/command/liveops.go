@@ -174,7 +174,8 @@ func liveopsProblem(err error) error {
 	}
 	var pe *liveops.ParamError
 	if errors.As(err, &pe) {
-		return problem.New(problem.EventTemplateParamNotAllowed, pe.Error())
+		// errors[].field names the parameter so the portal shows it on its form field (F081-AC-04)
+		return problem.New(problem.EventTemplateParamNotAllowed, pe.Error()).AddField(pe.Param, problem.SubInvalid, pe.Reason)
 	}
 	switch {
 	case errors.Is(err, liveops.ErrInvalidTransition):

@@ -61,7 +61,9 @@ func TestOperationsMatchSpec(t *testing.T) {
 			}
 			joined := strings.Join(params, ",")
 			want := httpx.TenantNone
-			if strings.Contains(joined, "TenantIdHeader") {
+			if strings.Contains(joined, "TenantIdHeaderOptional") {
+				want = httpx.TenantOptional // System Admin reads across tenants without the header (F081-AC-06)
+			} else if strings.Contains(joined, "TenantIdHeader") {
 				want = httpx.TenantRequired
 			}
 			if o.Tenant != want {
@@ -85,7 +87,7 @@ func TestOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	if len(found) != len(gamehttp.Operations) || len(found) != 87 { // 7 of F014 + createRealtimeTicket (F090) + 7 of F070 + 8 of F071 + 6 of F072 + 1 of F073 + 4 of F074 + 13 of F075 + 6 of F076 + 18 of F077 + 6 of F078 + 3 of F079 + 7 of F103
+	if len(found) != len(gamehttp.Operations) || len(found) != 88 { // 7 of F014 + createRealtimeTicket (F090) + 7 of F070 + 8 of F071 + 6 of F072 + 1 of F073 + 4 of F074 + 13 of F075 + 6 of F076 + 18 of F077 + 6 of F078 + 3 of F079 + 7 of F103 + 1 of F081
 		t.Fatalf("F014/F090 operations found in the spec: %v", found)
 	}
 	// F078: the shared /game-admin/{config_type} operations module game serves (x-service-routing: game for its types).
