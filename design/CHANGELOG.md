@@ -2,6 +2,10 @@
 
 Phiên bản token theo semver (`design/package.json`, DESIGN_SYSTEM §3, §8). Đổi tên hoặc xóa token cần tăng MAJOR; token bị xóa phải mang `$deprecated` ít nhất một phiên bản trước (kiểm bởi `design/checks/semver.mjs`).
 
+## tokens@0.11.0
+
+- 2026-11-25 — Art pass 3 "chibi anime cartoon 3D" cho năm vùng môn học (F093, ADR-0103, DESIGN_SYSTEM §5.3, WORLD_DESIGN §4.2): primitive `palette.art.{tile-blue,tile-blue-dark,leaf-autumn,bronze,bronze-patina,metal,metal-dark,blossom-violet}`; art3d `art.palette.{tile_blue,tile_blue_dark,leaf_autumn,bronze,bronze_patina,metal,metal_dark,blossom_violet}` (slot 52–59: ngói men xanh Vương quốc Số, lá thu Rừng Ngôn Ngữ, đồng/đồng xanh của trống đồng và bánh răng, thép của xưởng robot/trạm thời tiết, hoa bằng lăng). Mọi preset toon sinh lại với bảng màu 60 slot. MINOR vì chỉ thêm token.
+
 ## tokens@0.10.0
 
 - 2026-11-25 — Art pass 2 "chibi anime cartoon 3D" (F068, ADR-0103, DESIGN_SYSTEM §5.3): primitive `palette.art.{eye-iris,eye-white,ash,ash-dark}`, `number.toon.band-softness`, `number.light.blob-opacity`; art3d `art.palette.{eye_iris,eye_white,ash,ash_dark}` (slot 48–51), `toon.band_softness`, `light.{blob_shadow_color,blob_shadow_opacity}`. Đổi giá trị: `number.toon.steps` 3 → 2 (dải cel rõ: tối / giữa / sáng), `palette.zone.outline` `#1E2A44` → `#3A2C3F` (viền mực tím ấm). Sinh thêm preset `resources/art/generated/mat_toon_skinned.tres` (viền theo NORMAL đã skin cho nhân vật có xương) và uniform `band_softness` trong mọi preset toon. MINOR vì chỉ thêm token và đổi giá trị.

@@ -4,7 +4,9 @@
 // collectibles, boards) carry the ids of the area layout, so the zone lint (tools/zone_lint.gd) and the server agree.
 // PLACEHOLDER art (AGENTS R17; ADR-0102: first-party MIT art, F067 did main_hub only): boxes without materials; the
 // environment comes from the generated design tokens (resources/art/generated/env_*.tres, R32).
-// main_hub keeps its hand-made F062 scene: only a generated block (anchors of F071) is appended between markers.
+// Hand-made scenes keep everything above the marker and get only a generated block (anchors of F071) between the
+// markers: main_hub (F062/F067/F068, a few anchors placed by hand) and every zone of an art pass (F093) — a scene
+// that already carries the BEGIN marker is never regenerated as a greybox.
 //
 //   node src/game/tools/gen_greybox_zones.mjs           write the scenes
 //   node src/game/tools/gen_greybox_zones.mjs --check   exit 1 when a scene differs from the seed
@@ -121,9 +123,13 @@ mesh = SubResource("BoxMesh_ground")
 ${anchors(a)}`;
 }
 
-function hubBlock(a) {
-  return `${BEGIN}\n\n${anchors(a, { skipSpawns: ['main_hub.default', 'main_hub.from_arena'],
-    skipInteractables: ['board.school_assignments', 'board.exam_sessions'] })}\n${END}\n`;
+// Anchors placed by hand in a hand-made scene (not repeated in the generated block).
+const HAND_ANCHORS = {
+  main_hub: { skipSpawns: ['main_hub.default', 'main_hub.from_arena'], skipInteractables: ['board.school_assignments', 'board.exam_sessions'] },
+};
+
+function anchorBlock(a) {
+  return `${BEGIN}\n\n${anchors(a, HAND_ANCHORS[a.area_id] ?? {})}\n${END}\n`;
 }
 
 let drift = 0;
@@ -137,19 +143,20 @@ const write = (file, text) => {
 };
 for (const a of areas) {
   const file = path.join(game, 'scenes/world/zones', a.area_id.replace('.', '_'), 'Zone.tscn');
-  if (a.area_id !== 'main_hub') {
+  const old = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+  if (a.area_id !== 'main_hub' && !old.includes(BEGIN)) {
     write(file, zone(a));
     continue;
   }
-  let hub = fs.readFileSync(file, 'utf8');
-  const i = hub.indexOf(BEGIN);
-  if (i >= 0) hub = hub.slice(0, i);
-  hub = hub.replace(/\n*$/, '\n\n');
-  if (!hub.includes('id="6_portal"')) {
-    hub = hub.replace('[ext_resource type="PackedScene" path="res://scenes/character/Player.tscn" id="5_player"]',
+  let hand = old;
+  const i = hand.indexOf(BEGIN);
+  if (i >= 0) hand = hand.slice(0, i);
+  hand = hand.replace(/\n*$/, '\n\n');
+  if (!hand.includes('id="6_portal"')) {
+    hand = hand.replace('[ext_resource type="PackedScene" path="res://scenes/character/Player.tscn" id="5_player"]',
       `[ext_resource type="PackedScene" path="res://scenes/character/Player.tscn" id="5_player"]\n${RES}`);
   }
-  write(file, hub + hubBlock(a));
+  write(file, hand + anchorBlock(a));
 }
 if (drift) process.exit(1);
 console.log(`gen_greybox_zones: ${areas.length} zones ${check ? 'checked' : 'up to date'}`);

@@ -590,6 +590,9 @@ static func _icon_points(target_area_id: String) -> PackedVector2Array:
 		"social_zone":  # heart
 			return PackedVector2Array([Vector2(0, -0.95), Vector2(0.85, -0.05), Vector2(0.95, 0.45), Vector2(0.65, 0.85), Vector2(0.25, 0.8),
 				Vector2(0, 0.45), Vector2(-0.25, 0.8), Vector2(-0.65, 0.85), Vector2(-0.95, 0.45), Vector2(-0.85, -0.05)])
+		"main_hub":  # house: the gate home of every zone (F093)
+			return PackedVector2Array([Vector2(-0.75, -1), Vector2(0.75, -1), Vector2(0.75, 0.15), Vector2(1.0, 0.15), Vector2(0, 1),
+				Vector2(-1.0, 0.15), Vector2(-0.75, 0.15)])
 	return _star(0.8, 0.8)
 
 
@@ -617,6 +620,8 @@ static func _icon_color(target_area_id: String) -> String:
 			return "leaf_dark"
 		"social_zone":
 			return "flower_pink"
+		"main_hub":
+			return "roof"
 	return "spark"
 
 

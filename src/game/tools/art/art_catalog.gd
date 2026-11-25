@@ -1,5 +1,5 @@
 extends RefCounted
-## Catalog of the baked art (F067, F068; ADR-0102): output path under res://assets/models/<category>/ → recipe. Used by
+## Catalog of the baked art (F067, F068, F093; ADR-0102): output path under res://assets/models/<category>/ → recipe. Used by
 ## the bake CLI (tools/art/bake_art.gd) and by the freshness test, which re-runs every recipe in memory and compares it
 ## with the committed resource (same vertex count, positions/UVs/bone weights within a small tolerance, MultiMesh
 ## transforms, animation keys).
@@ -8,12 +8,18 @@ extends RefCounted
 const HubArt := preload("res://tools/art/hub_art.gd")
 const CharacterArt := preload("res://tools/art/character_art.gd")
 const CharacterAnim := preload("res://tools/art/character_anim.gd")
+const ZoneMathArt := preload("res://tools/art/zone_math_art.gd")
+const ZoneVietnameseArt := preload("res://tools/art/zone_vietnamese_art.gd")
+const ZoneEnglishArt := preload("res://tools/art/zone_english_art.gd")
+const ZoneScienceArt := preload("res://tools/art/zone_science_art.gd")
+const ZoneHistoryArt := preload("res://tools/art/zone_history_art.gd")
 
 const MODELS_DIR: String = "res://assets/models"
 const TOLERANCE: float = 0.002
 ## Hub portal targets with their own wind-gate icon (area ids of the world seed, F071); others use the default gate.
+## "main_hub" is the gate home of every other zone (F093: house icon).
 const GATE_TARGETS: PackedStringArray = [
-	"learning_zone.math", "learning_zone.vietnamese", "learning_zone.english", "learning_zone.science",
+	"main_hub", "learning_zone.math", "learning_zone.vietnamese", "learning_zone.english", "learning_zone.science",
 	"learning_zone.history", "quest_zone.discovery_ocean", "challenge_mountain", "exam_zone", "arena", "practice_zone",
 	"social_zone",
 ]
@@ -23,6 +29,9 @@ const VEG_KINDS: Dictionary = {
 	"tuft": "veg_tuft_a", "flower": "veg_flower_a", "rice": "veg_rice_a",
 }
 const ACCESSORIES: PackedStringArray = ["acc_cap_star", "acc_glasses_round", "acc_backpack_owl", "acc_flag_small"]
+## Subject zones of art pass 3 (F093, WORLD_DESIGN §4.2): zone slug → recipe script (meshes(), SCATTER, placements()).
+const ZONES: Dictionary = {"math": ZoneMathArt, "vietnamese": ZoneVietnameseArt, "english": ZoneEnglishArt,
+	"science": ZoneScienceArt, "history": ZoneHistoryArt}
 ## Growth stages of the Spark Tree (F068, WORLD_DESIGN §11 mastery visualization): 0 grey … 4 in bloom.
 const SPARK_TREE_STAGES: int = 5
 
@@ -61,6 +70,23 @@ static func veg_scatter_path(kind: String) -> String:
 	return "%s/env/env_hub_scatter_%s_a.res" % [MODELS_DIR, kind]
 
 
+## Scatter of one vegetation kind in a subject zone (F093).
+static func zone_scatter_path(slug: String, kind: String) -> String:
+	return "%s/env/env_%s_scatter_%s_a.res" % [MODELS_DIR, slug, kind]
+
+
+## Every zone scatter: path → [veg mesh path, placements Callable].
+static func zone_scatters() -> Dictionary:
+	var out: Dictionary = {}
+	for slug: String in ZONES:
+		var recipe: GDScript = ZONES[slug] as GDScript
+		var kinds: Dictionary = recipe.get_script_constant_map()["SCATTER"] as Dictionary
+		for kind: String in kinds:
+			out[zone_scatter_path(slug, kind)] = ["%s/veg/%s.res" % [MODELS_DIR, String(kinds[kind])],
+				Callable(recipe, "placements").bind(kind)]
+	return out
+
+
 ## Mesh recipes: path → Callable returning an ArrayMesh.
 static func meshes() -> Dictionary:
 	var out: Dictionary = {
@@ -90,6 +116,10 @@ static func meshes() -> Dictionary:
 		out["%s/chr/chr_%s_a.res" % [MODELS_DIR, code]] = CharacterArt.accessory.bind(code)
 	for look: String in CharacterArt.NPC_LOOKS:
 		out["%s/chr/chr_npc_%s_a.res" % [MODELS_DIR, look]] = CharacterArt.npc.bind(look)
+	for slug: String in ZONES:
+		var zone: Dictionary = (ZONES[slug] as GDScript).call("meshes") as Dictionary
+		for key: String in zone:
+			out["%s/%s.res" % [MODELS_DIR, key]] = zone[key]
 	return out
 
 
@@ -98,6 +128,14 @@ static func scatter(kind: String, mesh: Mesh) -> ScatterSet:
 	var data: ScatterSet = ScatterSet.new()
 	data.mesh = mesh
 	data.transforms = HubArt.placements(kind)
+	return data
+
+
+## Scatter referencing a saved veg mesh with explicit placements (zones, F093).
+static func scatter_of(mesh: Mesh, transforms: Array[Transform3D]) -> ScatterSet:
+	var data: ScatterSet = ScatterSet.new()
+	data.mesh = mesh
+	data.transforms = transforms
 	return data
 
 
@@ -117,10 +155,15 @@ static func drift() -> PackedStringArray:
 		var why_clip: String = animation_difference(saved_clip, (clips[path] as Callable).call() as Animation)
 		if not why_clip.is_empty():
 			out.append("%s: %s" % [path, why_clip])
+	var sets: Dictionary = {}
 	for kind: String in VEG_KINDS:
-		var path: String = veg_scatter_path(kind)
+		sets[veg_scatter_path(kind)] = HubArt.placements(kind)
+	var zone_sets: Dictionary = zone_scatters()
+	for path: String in zone_sets:
+		sets[path] = ((zone_sets[path] as Array)[1] as Callable).call()
+	for path: String in sets:
 		var saved_set: ScatterSet = load(path) as ScatterSet if ResourceLoader.exists(path) else null
-		var expected: Array[Transform3D] = HubArt.placements(kind)
+		var expected: Array[Transform3D] = sets[path]
 		if saved_set == null:
 			out.append("%s: missing" % path)
 		elif saved_set.transforms.size() != expected.size():

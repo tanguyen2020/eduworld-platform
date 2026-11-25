@@ -1,5 +1,5 @@
 extends SceneTree
-## CLI: bakes the first-party art (F067, F068; ADR-0102, ADR-0103 — meshes, MultiMesh scatters, animation clips) into
+## CLI: bakes the first-party art (F067, F068, F093; ADR-0102, ADR-0103 — meshes, MultiMesh scatters, animation clips) into
 ## res://assets/models/** or checks it is up to date.
 ##   godot --headless --path src/game -s res://tools/art/bake_art.gd             write every mesh / MultiMesh
 ##   godot --headless --path src/game -s res://tools/art/bake_art.gd -- --check  exit 1 when a resource is stale
@@ -32,6 +32,12 @@ func _initialize() -> void:
 	for kind: String in ArtCatalog.VEG_KINDS:
 		var mesh_res: Mesh = ResourceLoader.load(ArtCatalog.veg_mesh_path(kind), "", ResourceLoader.CACHE_MODE_REPLACE) as Mesh
 		written += _save(ArtCatalog.scatter(kind, mesh_res), ArtCatalog.veg_scatter_path(kind))
+	var zone_sets: Dictionary = ArtCatalog.zone_scatters()
+	for path: String in zone_sets:
+		var entry: Array = zone_sets[path] as Array
+		var veg: Mesh = ResourceLoader.load(String(entry[0]), "", ResourceLoader.CACHE_MODE_REPLACE) as Mesh
+		var transforms: Array[Transform3D] = (entry[1] as Callable).call()
+		written += _save(ArtCatalog.scatter_of(veg, transforms), path)
 	print("bake_art: %d resource(s) written, %d mesh triangles" % [written, triangles])
 	quit(0)
 
