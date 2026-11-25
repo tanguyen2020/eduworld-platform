@@ -189,7 +189,7 @@ workspaces:
             label_key: portal.action.school_lms.school_events.view
             title: Xem template và sự kiện trường
             required_permissions: [lms.school_event.write]
-            operation_ids: [listEventTemplates, listSchoolEvents, getSchoolEvent]
+            operation_ids: [listEventTemplates, listSchoolEvents, getSchoolEvent, getSchoolEventProgress]
             can_disable: true
           - key: action.school_lms.school_events.edit
             label_key: portal.action.school_lms.school_events.edit

@@ -4978,15 +4978,18 @@ paths:
       operationId: listSchoolEvents
       x-portal-action: action.school_lms.school_events.view
       summary: Sự kiện trường của tenant — route ngoại lệ trong /lms/* → module game (lms.school_event.write)
+      description: |
+        Người dùng tenant: tenant của phiên (`X-Tenant-Id`); nhân sự giới hạn trường chỉ thấy sự kiện của trường mình.
+        System Admin (F081-AC-06): không gửi `X-Tenant-Id`, lọc `tenant_ids` (vắng mặt = mọi tenant, audit
+        `cross_tenant.accessed`); mỗi dòng có `tenant_id`. Trang keyset (`created_at`, `event_id`) trong SQL.
       parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/TenantIds'
         - name: status
           in: query
           required: false
           schema:
-            type: string
-            maxLength: 32
+            $ref: '#/components/schemas/SchoolEventStatus'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -5142,6 +5145,44 @@ paths:
           $ref: '#/components/responses/Conflict'
         '428':
           $ref: '#/components/responses/PreconditionRequired'
+  /lms/school-events/{event_id}/progress:
+    get:
+      x-service: game
+      tags:
+        - lms
+      operationId: getSchoolEventProgress
+      x-portal-action: action.school_lms.school_events.view
+      summary: Tiến độ sự kiện trường (chỉ số tổng hợp, không định danh học sinh) — route ngoại lệ trong /lms/* → module game (lms.school_event.write)
+      description: |
+        F081-AC-10, AC-12 (FR-EVT-004): trạng thái run, số học sinh tham gia, tổng và mốc community goal của phạm vi trường,
+        đóng góp theo khối (`by_grade`, chỉ khối 4–9 — EVENT_SEASON_SYSTEM §6; khối có < `analytics_min_cell_size` học sinh
+        đóng góp không trả dòng — ADR-0095 mục 4, FR-ANL-016). Đọc PostgreSQL (`community_goal_progress`), không đọc bộ đếm
+        Valkey. Không có `student_id`, tên, nickname hay thứ hạng. Sự kiện của trường ngoài scope UserRole hoặc tenant khác → 404.
+        `school_id`: trường được xem khi sự kiện gồm nhiều trường hoặc cả đơn vị (mặc định = trường duy nhất của sự kiện; thiếu
+        khi sự kiện có nhiều trường → 422 `VALIDATION_FAILED` trên `school_id`; trường ngoài đối tượng hoặc ngoài scope → 404).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/EventIdPath'
+        - name: school_id
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchoolEventProgress'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
 components:
   parameters:
     TenantIdHeader:
@@ -11120,6 +11161,18 @@ components:
           maxItems: 100
           items:
             $ref: '#/components/schemas/Uuid'
+        quest_option_items:
+          type: array
+          maxItems: 100
+          description: Quest của `quest_options` kèm tiêu đề và khối của version đang phát hành (F081-AC-02; quest chưa phát hành không có dòng)
+          items:
+            $ref: '#/components/schemas/EventTemplateOptionItem'
+        challenge_option_items:
+          type: array
+          maxItems: 100
+          description: Thử thách của `challenge_options` kèm tiêu đề và khối của version đang phát hành (F081-AC-02)
+          items:
+            $ref: '#/components/schemas/EventTemplateOptionItem'
         reward_options:
           type: array
           maxItems: 20
@@ -11131,6 +11184,37 @@ components:
                 maxLength: 64
               label:
                 $ref: '#/components/schemas/LocalizedName'
+    EventTemplateOptionItem:
+      type: object
+      required:
+        - id
+        - title
+        - grade_levels
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        title:
+          $ref: '#/components/schemas/LocalizedName'
+        grade_levels:
+          type: array
+          maxItems: 12
+          items:
+            type: integer
+            minimum: 1
+            maximum: 12
+    SchoolEventStatus:
+      type: string
+      description: |
+        Trạng thái sự kiện trường (F081): `suspended` = EduWorld dừng khẩn cấp (tenant không sửa/hủy); run đã lưu trữ hiển thị
+        `ended` hoặc `cancelled` (giữ trạng thái kết thúc mà trường biết); `archived` giữ cho khớp `EventRunStatus`.
+      enum:
+        - draft
+        - scheduled
+        - live
+        - suspended
+        - ended
+        - cancelled
+        - archived
     SchoolEvent:
       allOf:
         - $ref: '#/components/schemas/SchoolEventCreate'
@@ -11145,13 +11229,7 @@ components:
             tenant_id:
               $ref: '#/components/schemas/Uuid'
             status:
-              type: string
-              enum:
-                - draft
-                - scheduled
-                - live
-                - ended
-                - cancelled
+              $ref: '#/components/schemas/SchoolEventStatus'
             version:
               type: integer
               minimum: 1
@@ -11252,6 +11330,101 @@ components:
         reward_option_id:
           type: string
           maxLength: 64
+    SchoolEventProgress:
+      type: object
+      required:
+        - event_id
+        - event_run_id
+        - status
+        - participants_count
+        - community_goal
+        - by_grade
+        - data_as_of
+      description: Chỉ số tổng hợp — không `student_id`, tên, nickname hay thứ hạng (AGENTS R16, F081-AC-10)
+      properties:
+        event_id:
+          $ref: '#/components/schemas/Uuid'
+        event_run_id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          $ref: '#/components/schemas/EventRunStatus'
+        school_id:
+          description: Trường của phạm vi đang xem (null = cả đơn vị khi mục tiêu tính theo tenant và sự kiện không gắn một trường)
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        participants_count:
+          type: integer
+          minimum: 0
+        community_goal:
+          description: null khi sự kiện không có community goal
+          oneOf:
+            - $ref: '#/components/schemas/SchoolEventGoalProgress'
+            - type: 'null'
+        by_grade:
+          type: array
+          maxItems: 9
+          description: Sắp theo khối tăng dần; chỉ khối 4–9 và có ≥ `analytics_min_cell_size` học sinh đóng góp (ADR-0095)
+          items:
+            type: object
+            required:
+              - grade_level
+              - contribution_total
+              - contributors_count
+            properties:
+              grade_level:
+                type: integer
+                minimum: 1
+                maximum: 9
+              contribution_total:
+                type: integer
+                minimum: 0
+              contributors_count:
+                type: integer
+                minimum: 0
+        data_as_of:
+          $ref: '#/components/schemas/Timestamp'
+    SchoolEventGoalProgress:
+      type: object
+      required:
+        - goal_id
+        - metric
+        - target
+        - total
+        - milestones
+      properties:
+        goal_id:
+          $ref: '#/components/schemas/Uuid'
+        metric:
+          type: string
+          enum:
+            - correct_answers
+            - activities_completed
+            - quests_completed
+            - discoveries_found
+            - boss_phases_cleared
+            - coop_sessions
+        target:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+        milestones:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required:
+              - pct
+              - reached
+            properties:
+              pct:
+                type: integer
+                minimum: 1
+                maximum: 100
+              reached:
+                type: boolean
   headers:
     ContentLanguage:
       description: Ngôn ngữ của văn bản đã chọn trong response (`vi-VN` | `en-US`)
