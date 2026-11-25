@@ -1,11 +1,13 @@
 extends RefCounted
-## Catalog of the baked F067 art (ADR-0102): output path under res://assets/models/<category>/ → recipe. Used by the
-## bake CLI (tools/art/bake_art.gd) and by the freshness test, which re-runs every recipe in memory and compares it
-## with the committed resource (same vertex count, positions/UVs within a small tolerance, MultiMesh transforms).
+## Catalog of the baked art (F067, F068; ADR-0102): output path under res://assets/models/<category>/ → recipe. Used by
+## the bake CLI (tools/art/bake_art.gd) and by the freshness test, which re-runs every recipe in memory and compares it
+## with the committed resource (same vertex count, positions/UVs/bone weights within a small tolerance, MultiMesh
+## transforms, animation keys).
 ## SPDX-License-Identifier: MIT — EduWorld first-party.
 
 const HubArt := preload("res://tools/art/hub_art.gd")
 const CharacterArt := preload("res://tools/art/character_art.gd")
+const CharacterAnim := preload("res://tools/art/character_anim.gd")
 
 const MODELS_DIR: String = "res://assets/models"
 const TOLERANCE: float = 0.002
@@ -21,6 +23,26 @@ const VEG_KINDS: Dictionary = {
 	"tuft": "veg_tuft_a", "flower": "veg_flower_a", "rice": "veg_rice_a",
 }
 const ACCESSORIES: PackedStringArray = ["acc_cap_star", "acc_glasses_round", "acc_backpack_owl", "acc_flag_small"]
+## Growth stages of the Spark Tree (F068, WORLD_DESIGN §11 mastery visualization): 0 grey … 4 in bloom.
+const SPARK_TREE_STAGES: int = 5
+
+
+static func spark_tree_path(stage: int) -> String:
+	return "%s/veg/veg_banyan_spark_s%d_a.res" % [MODELS_DIR, stage]
+
+
+static func face_expressions() -> PackedStringArray:
+	var out: PackedStringArray = KidSkeleton.EXPRESSIONS.duplicate()
+	out.append(KidSkeleton.BLINK)
+	return out
+
+
+## Animation clips: path → Callable returning an Animation.
+static func animations() -> Dictionary:
+	var out: Dictionary = {}
+	for clip_name: String in CharacterAnim.names():
+		out[KidSkeleton.clip_path(clip_name)] = CharacterAnim.clip.bind(clip_name)
+	return out
 
 
 static func gate_slug(target_area_id: String) -> String:
@@ -45,7 +67,6 @@ static func meshes() -> Dictionary:
 		MODELS_DIR + "/env/env_hub_terrain_a.res": HubArt.terrain,
 		MODELS_DIR + "/bld/bld_hub_set_a.res": HubArt.buildings,
 		MODELS_DIR + "/prop/prop_hub_set_a.res": HubArt.props,
-		MODELS_DIR + "/veg/veg_banyan_spark_a.res": HubArt.banyan,
 		MODELS_DIR + "/prop/prop_notice_board_a.res": HubArt.notice_board,
 		MODELS_DIR + "/prop/prop_spark_marker_a.res": HubArt.spark_marker,
 		MODELS_DIR + "/prop/prop_wind_gate_default.res": HubArt.wind_gate.bind(""),
@@ -53,6 +74,10 @@ static func meshes() -> Dictionary:
 	}
 	for target: String in GATE_TARGETS:
 		out[gate_path(target)] = HubArt.wind_gate.bind(target)
+	for stage: int in SPARK_TREE_STAGES:
+		out[spark_tree_path(stage)] = HubArt.spark_tree.bind(stage)
+	for expression: String in face_expressions():
+		out[KidSkeleton.face_path(expression)] = CharacterArt.face.bind(expression)
 	var veg: Dictionary = {"tree": HubArt.tree_round, "palm": HubArt.palm, "bamboo": HubArt.bamboo, "bush": HubArt.bush,
 		"tuft": HubArt.tuft, "flower": HubArt.flower, "rice": HubArt.rice}
 	for kind: String in VEG_KINDS:
@@ -86,6 +111,12 @@ static func drift() -> PackedStringArray:
 		var why: String = mesh_difference(saved, fresh)
 		if not why.is_empty():
 			out.append("%s: %s" % [path, why])
+	var clips: Dictionary = animations()
+	for path: String in clips:
+		var saved_clip: Animation = load(path) as Animation if ResourceLoader.exists(path) else null
+		var why_clip: String = animation_difference(saved_clip, (clips[path] as Callable).call() as Animation)
+		if not why_clip.is_empty():
+			out.append("%s: %s" % [path, why_clip])
 	for kind: String in VEG_KINDS:
 		var path: String = veg_scatter_path(kind)
 		var saved_set: ScatterSet = load(path) as ScatterSet if ResourceLoader.exists(path) else null
@@ -119,4 +150,37 @@ static func mesh_difference(saved: ArrayMesh, fresh: ArrayMesh) -> String:
 		for i: int in va.size():
 			if va[i].distance_to(vb[i]) > TOLERANCE or ua[i].distance_to(ub[i]) > TOLERANCE:
 				return "vertex %d differs (re-run tools/art/bake_art.gd)" % i
+		var ba: Variant = a[Mesh.ARRAY_BONES]
+		var bb: Variant = b[Mesh.ARRAY_BONES]
+		if (ba == null) != (bb == null) or (bb != null and ba != bb):
+			return "bone indices differ (re-run tools/art/bake_art.gd)"
+		var wa: Variant = a[Mesh.ARRAY_WEIGHTS]
+		var wb: Variant = b[Mesh.ARRAY_WEIGHTS]
+		if bb != null:
+			for i: int in (wb as PackedFloat32Array).size():
+				if absf((wa as PackedFloat32Array)[i] - (wb as PackedFloat32Array)[i]) > TOLERANCE:
+					return "bone weight %d differs (re-run tools/art/bake_art.gd)" % i
+	return ""
+
+
+static func animation_difference(saved: Animation, fresh: Animation) -> String:
+	if saved == null:
+		return "missing"
+	if not is_equal_approx(saved.length, fresh.length) or saved.loop_mode != fresh.loop_mode:
+		return "length/loop differ"
+	if saved.get_track_count() != fresh.get_track_count():
+		return "%d tracks, recipe has %d" % [saved.get_track_count(), fresh.get_track_count()]
+	for t: int in fresh.get_track_count():
+		if saved.track_get_path(t) != fresh.track_get_path(t) or saved.track_get_key_count(t) != fresh.track_get_key_count(t):
+			return "track %d differs" % t
+		for k: int in fresh.track_get_key_count(t):
+			var va: Variant = saved.track_get_key_value(t, k)
+			var vb: Variant = fresh.track_get_key_value(t, k)
+			var same: bool = absf(saved.track_get_key_time(t, k) - fresh.track_get_key_time(t, k)) < TOLERANCE
+			if vb is Quaternion:
+				same = same and (va as Quaternion).is_equal_approx(vb as Quaternion)
+			elif vb is Vector3:
+				same = same and (va as Vector3).distance_to(vb as Vector3) < TOLERANCE
+			if not same:
+				return "track %d key %d differs (re-run tools/art/bake_art.gd)" % [t, k]
 	return ""

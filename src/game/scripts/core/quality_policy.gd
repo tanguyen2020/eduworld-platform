@@ -65,6 +65,13 @@ static func shadows_supported(rendering_method: String) -> bool:
 	return rendering_method != RENDERER_COMPATIBILITY
 
 
+## F068 (open decision F067-3): characters get a blob shadow wherever the sun casts no real-time shadow — the
+## Compatibility renderer (Web) or sun shadows off (preset Low, or the student turned them off) — so they never look
+## like they float. `sun_shadows`: whether the preset/setting asks for real-time sun shadows.
+static func blob_shadow_visible(rendering_method: String, sun_shadows: bool) -> bool:
+	return not (shadows_supported(rendering_method) and sun_shadows)
+
+
 static func is_valid_preset(preset: String) -> bool:
 	return preset in PRESET_NAMES
 

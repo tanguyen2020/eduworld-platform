@@ -1,7 +1,8 @@
-[gd_scene load_steps=37 format=3]
+[gd_scene load_steps=42 format=3]
 
-; Main Hub "Quảng trường Tia Sáng" (F062 layout, F071 anchors, F067 art pass — ADR-0102): stylized low-poly meshes baked
-; by tools/art/bake_art.gd (first-party MIT, assets/LICENSES.md), materials from the generated toon presets (R32).
+; Main Hub "Quảng trường Tia Sáng" (F062 layout, F071 anchors, F067/F068 art passes — ADR-0102, ADR-0103): rounded
+; chibi anime cartoon meshes baked by tools/art/bake_art.gd (first-party MIT, assets/LICENSES.md), materials from the
+; generated toon presets (R32); the Spark Tree shows one growth stage (SparkTree, F068).
 
 [ext_resource type="Script" path="res://scripts/world/zone_root.gd" id="1_zone"]
 [ext_resource type="Environment" path="res://resources/art/generated/env_hub.tres" id="2_env"]
@@ -16,7 +17,12 @@
 [ext_resource type="ArrayMesh" path="res://assets/models/env/env_hub_terrain_a.res" id="11_terrain"]
 [ext_resource type="ArrayMesh" path="res://assets/models/bld/bld_hub_set_a.res" id="12_buildings"]
 [ext_resource type="ArrayMesh" path="res://assets/models/prop/prop_hub_set_a.res" id="13_props"]
-[ext_resource type="ArrayMesh" path="res://assets/models/veg/veg_banyan_spark_a.res" id="14_banyan"]
+[ext_resource type="ArrayMesh" path="res://assets/models/veg/veg_banyan_spark_s3_a.res" id="14_banyan"]
+[ext_resource type="ArrayMesh" path="res://assets/models/veg/veg_banyan_spark_s0_a.res" id="24_tree_s0"]
+[ext_resource type="ArrayMesh" path="res://assets/models/veg/veg_banyan_spark_s1_a.res" id="25_tree_s1"]
+[ext_resource type="ArrayMesh" path="res://assets/models/veg/veg_banyan_spark_s2_a.res" id="26_tree_s2"]
+[ext_resource type="ArrayMesh" path="res://assets/models/veg/veg_banyan_spark_s4_a.res" id="27_tree_s4"]
+[ext_resource type="Script" path="res://scripts/world/spark_tree.gd" id="28_spark_tree"]
 [ext_resource type="ArrayMesh" path="res://assets/models/prop/prop_notice_board_a.res" id="15_board"]
 [ext_resource type="Resource" path="res://assets/models/env/env_hub_scatter_tree_a.res" id="16_trees"]
 [ext_resource type="Resource" path="res://assets/models/env/env_hub_scatter_palm_a.res" id="17_palms"]
@@ -92,6 +98,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_ground")
 
 [node name="Ground" type="MeshInstance3D" parent="Terrain"]
+cast_shadow = 0
 material_override = ExtResource("9_toon")
 mesh = ExtResource("11_terrain")
 
@@ -164,6 +171,8 @@ mesh = ExtResource("13_props")
 [node name="SparkTree" type="MeshInstance3D" parent="Static"]
 material_override = ExtResource("9_toon")
 mesh = ExtResource("14_banyan")
+script = ExtResource("28_spark_tree")
+stage_meshes = Array[Mesh]([ExtResource("24_tree_s0"), ExtResource("25_tree_s1"), ExtResource("26_tree_s2"), ExtResource("14_banyan"), ExtResource("27_tree_s4")])
 
 [node name="Navigation" type="NavigationRegion3D" parent="."]
 
@@ -266,6 +275,7 @@ script = ExtResource("23_scatter")
 scatter = ExtResource("18_bamboo")
 
 [node name="Bushes" type="MultiMeshInstance3D" parent="Ambient" groups=["decor"]]
+cast_shadow = 0
 material_override = ExtResource("9_toon")
 script = ExtResource("23_scatter")
 scatter = ExtResource("19_bushes")

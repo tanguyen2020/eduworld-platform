@@ -63,7 +63,7 @@
       "fog-green": { "$value": "#E2F7E7", "$description": "Green fog." },
       "sun": { "$value": "#FFF4D6", "$description": "Sun light color." },
       "shadow-tint": { "$value": "#3B3F6B", "$description": "Toon shadow tint." },
-      "outline": { "$value": "#1E2A44", "$description": "Toon outline." },
+      "outline": { "$value": "#3A2C3F", "$description": "Toon ink outline (warm plum ink, chibi anime cartoon art direction, ADR-0103)." },
       "sparkle": { "$value": "#FFFFFF", "$description": "VFX sparkle white." },
       "gold": { "$value": "#FFC83D", "$description": "VFX reward gold." },
       "mint": { "$value": "#5CE1A1", "$description": "VFX correct mint." },
@@ -106,6 +106,10 @@
       "wind": { "$value": "#CFEFFF", "$description": "Wind gate swirl." },
       "eye": { "$value": "#26304A", "$description": "Character eyes, brows." },
       "eye-light": { "$value": "#FFFFFF", "$description": "Eye highlight." },
+      "eye-iris": { "$value": "#8A5A44", "$description": "Lower iris (warm brown) of the anime eyes (F068)." },
+      "eye-white": { "$value": "#FFFBF4", "$description": "Eye white of the anime eyes (F068)." },
+      "ash": { "$value": "#C9C4BA", "$description": "Colourless (grey) Spark Tree before mastery: leaves (F068, WORLD_DESIGN §11)." },
+      "ash-dark": { "$value": "#9A948A", "$description": "Colourless (grey) Spark Tree before mastery: trunk (F068)." },
       "mouth": { "$value": "#B24A5A", "$description": "Mouth." },
       "cheek": { "$value": "#F7A9A1", "$description": "Cheek blush." },
       "shoe": { "$value": "#5F4838", "$description": "Shoes." },
@@ -204,7 +208,8 @@
       "135": { "$value": 1.35, "$description": "1.35× (text_expansion_allowance, CONFIG_DEFAULTS)." }
     },
     "toon": {
-      "steps": { "$value": 3, "$description": "Toon shading light steps." },
+      "steps": { "$value": 2, "$description": "Toon cel shading light steps: 2 gives shadow / mid / lit bands (ADR-0103)." },
+      "band-softness": { "$value": 0.06, "$description": "Half width of a cel band edge (share of one step): small = crisp anime bands (ADR-0103)." },
       "rim": { "$value": 0.35, "$description": "Toon rim light strength." }
     },
     "outline": {
@@ -214,7 +219,8 @@
       "sun": { "$value": 0.95, "$description": "Sun energy (warm key light, F067)." },
       "ambient": { "$value": 0.5, "$description": "Sky ambient energy: keeps toon shadow bands readable (F067)." },
       "fog": { "$value": 0.0035, "$description": "Exponential fog density per metre: soft depth without washing the hub out (F067)." },
-      "exposure": { "$value": 1.0, "$description": "Tonemap exposure (filmic, F067)." }
+      "exposure": { "$value": 1.0, "$description": "Tonemap exposure (filmic, F067)." },
+      "blob-opacity": { "$value": 0.38, "$description": "Opacity of the blob shadow under characters where real-time shadows are off (F068, F067-3)." }
     }
   }
 }

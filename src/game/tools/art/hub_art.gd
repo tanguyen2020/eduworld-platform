@@ -27,17 +27,23 @@ const HOUSES: Array = [
 	[Vector3(13.0, 0, 22.0), 0.0, Vector2(5.4, 4.0)],
 ]
 ## Lamp posts around the plaza edge (angles in degrees, 0 = +X), skipping the four paths.
+const HUB_MIN_BEVEL: float = 0.15
 const LAMP_ANGLES: PackedFloat32Array = [25.0, 65.0, 115.0, 155.0, 205.0, 245.0, 295.0, 335.0]
 
 
+## World builder (F068): rounded and smooth shaded, but only boxes thicker than HUB_MIN_BEVEL get a bevel — thin beams,
+## boards and rafters seen from a distance stay sharp so the hub keeps its triangle budget (PERFORMANCE_BUDGET §7).
 static func _builder() -> LowPoly:
-	return LowPoly.new()
+	var m: LowPoly = LowPoly.new()
+	m.min_bevel_size = HUB_MIN_BEVEL
+	return m
 
 
 # ---------- terrain ----------
 
 static func terrain() -> ArrayMesh:
 	var m: LowPoly = _builder()
+	m.blob_detail = 0  # far hills: smooth shading at base detail (F068 budget)
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 6701
 	# Far ground disk under everything.
@@ -189,7 +195,7 @@ static func _hills(m: LowPoly, rng: RandomNumberGenerator) -> void:
 		var h: float = rng.randf_range(10.0, 24.0)
 		var w: float = rng.randf_range(20.0, 32.0)
 		var col: String = "hill" if i % 2 == 0 else "hill_far"
-		m.blob(Vector3(cos(a) * r, -h * 0.25, sin(a) * r), Vector3(w, h, w * 0.8), col, 1, 0.12, rng)
+		m.blob(Vector3(cos(a) * r, -h * 0.25, sin(a) * r), Vector3(w, h, w * 0.8), col, 1, 0.05, rng)
 	# Challenge Mountain on the northern horizon, with a pale cap.
 	m.cylinder(Vector3(18, -2, -150), 46.0, 6.0, 58.0, 7, "hill_far", "flower_white", true, 0.3)
 	m.cylinder(Vector3(18, 40.5, -150), 13.4, 0.5, 18.0, 7, "flower_white", "", false, 0.3)
@@ -199,6 +205,7 @@ static func _hills(m: LowPoly, rng: RandomNumberGenerator) -> void:
 
 static func buildings() -> ArrayMesh:
 	var m: LowPoly = _builder()
+	m.blob_detail = 0  # lanterns and knobs: smooth shading at base detail (F068 budget)
 	_hall(m)
 	_library(m)
 	for h: Array in HOUSES:
@@ -310,6 +317,7 @@ static func _hedges(m: LowPoly) -> void:
 
 static func props() -> ArrayMesh:
 	var m: LowPoly = _builder()
+	m.blob_detail = 0  # lanterns, lotus, stones: smooth shading at base detail (F068 budget)
 	_pond(m)
 	for a: float in LAMP_ANGLES:
 		var r: float = PLAZA_RADIUS - 0.8
@@ -428,48 +436,67 @@ static func _signpost(m: LowPoly, p: Vector3) -> void:
 
 # ---------- banyan Spark Tree ----------
 
-## Cây đa — the Spark Tree of the square (WORLD_DESIGN §4.1): flared trunk, aerial roots, layered dark canopy and
-## glowing spark fruits, on a round stone seat (collision cylinder SparkTreeCollision in Zone.tscn).
-static func banyan() -> ArrayMesh:
+## Cây đa — the Spark Tree of the square (WORLD_DESIGN §4.1, §11 mastery visualization; F068): one mesh per growth
+## stage on the same round stone seat (collision cylinder SparkTreeCollision in Zone.tscn). 0 = grey sapling (no
+## mastery yet), 1 = young green tree (beginning), 2 = growing banyan with a few sparks (developing), 3 = full banyan with
+## aerial roots and glowing spark fruits (proficient), 4 = the full tree in bloom with more sparks (mastered).
+static func spark_tree(stage: int) -> ArrayMesh:
 	var m: LowPoly = _builder()
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 6703
+	var grey: bool = stage <= 0
+	var trunk: String = "ash_dark" if grey else "trunk"
+	var g: float = ([0.34, 0.52, 0.76, 1.0, 1.0] as Array)[clampi(stage, 0, 4)]
 	m.push_at(TREE_CENTER)
 	_ring(m, Vector3.ZERO, 1.25, 2.0, 0.45, 16, "stone")
 	_disk(m, Vector3(0, 0.3, 0), 1.25, 16, "soil")
-	m.lathe(Vector3.ZERO, PackedVector2Array([Vector2(1.35, 0.25), Vector2(1.0, 0.9), Vector2(0.8, 2.2),
-		Vector2(0.85, 3.4), Vector2(1.15, 4.3)]), 9, "trunk")
-	for k: int in 4:
-		var a: float = TAU * (float(k) + 0.3) / 4.0
-		var d: Vector3 = Vector3(cos(a), 0, sin(a))
-		var start: Vector3 = Vector3(0, 3.9, 0) + d * 0.5
-		var end: Vector3 = Vector3(0, 6.0, 0) + d * 2.8
-		_limb(m, start, end, 0.42, 0.22, "trunk")
-	# aerial roots
-	for k: int in 7:
-		var a: float = TAU * (float(k) + rng.randf_range(0.2, 0.8)) / 7.0
-		var r: float = rng.randf_range(2.3, 3.4)
-		var top: Vector3 = Vector3(cos(a) * r, rng.randf_range(4.8, 5.4), sin(a) * r)
-		var foot: Vector3 = Vector3(cos(a) * (r + 0.3), 0.0, sin(a) * (r + 0.3))
-		_limb(m, foot, top, 0.05, 0.035, "trunk")
-	# canopy: wide layered blobs
-	var blobs: Array = [[Vector3(0, 7.2, 0), Vector3(4.0, 2.0, 3.8)], [Vector3(2.8, 6.4, 1.2), Vector3(2.9, 1.6, 2.7)],
-		[Vector3(-2.9, 6.5, 0.8), Vector3(3.0, 1.6, 2.8)], [Vector3(0.6, 6.3, -2.9), Vector3(3.0, 1.5, 2.6)],
-		[Vector3(-0.8, 6.1, 3.0), Vector3(2.8, 1.5, 2.5)], [Vector3(0.4, 8.4, 0.3), Vector3(2.6, 1.4, 2.4)]]
-	for i: int in blobs.size():
-		var b: Array = blobs[i]
-		m.blob(b[0] as Vector3, b[1] as Vector3, "leaf_dark" if i % 2 == 0 else "leaf", 1, 0.12, rng)
-	for i: int in 3:
-		var b: Array = blobs[i + 1]
-		m.blob((b[0] as Vector3) + Vector3(0.4, 0.9, 0.2), (b[1] as Vector3) * 0.55, "leaf_light", 1, 0.1, rng)
-	# spark fruits
-	for k: int in 14:
-		var a: float = TAU * float(k) / 14.0 + rng.randf_range(-0.2, 0.2)
+	m.push(Transform3D(Basis.IDENTITY.scaled(Vector3(g, g, g)), Vector3(0, 0.3, 0)))
+	m.lathe(Vector3(0, -0.05, 0), PackedVector2Array([Vector2(1.35, 0.0), Vector2(1.0, 0.65), Vector2(0.8, 1.9),
+		Vector2(0.85, 3.1), Vector2(1.15, 4.0)]), 12, trunk)
+	if stage < 2:
+		_limb(m, Vector3(0, 3.8, 0), Vector3(0, 6.2, 0), 0.75, 0.5, trunk)
+	if stage >= 2:
+		for k: int in 4:
+			var a: float = TAU * (float(k) + 0.3) / 4.0
+			var d: Vector3 = Vector3(cos(a), 0, sin(a))
+			_limb(m, Vector3(0, 3.6, 0) + d * 0.5, Vector3(0, 5.7, 0) + d * 2.8, 0.42, 0.22, trunk)
+		var roots: int = 3 if stage == 2 else 7
+		for k: int in roots:
+			var a: float = TAU * (float(k) + rng.randf_range(0.2, 0.8)) / float(roots)
+			var r: float = rng.randf_range(2.3, 3.4)
+			var top: Vector3 = Vector3(cos(a) * r, rng.randf_range(4.5, 5.1), sin(a) * r)
+			var foot: Vector3 = Vector3(cos(a) * (r + 0.3), -0.3 / g, sin(a) * (r + 0.3))
+			_limb(m, foot, top, 0.055, 0.04, trunk)
+	# canopy: soft cartoon clouds of leaves
+	var blobs: Array = [[Vector3(0, 6.9, 0), Vector3(4.0, 2.0, 3.8)], [Vector3(2.8, 6.1, 1.2), Vector3(2.9, 1.6, 2.7)],
+		[Vector3(-2.9, 6.2, 0.8), Vector3(3.0, 1.6, 2.8)], [Vector3(0.6, 6.0, -2.9), Vector3(3.0, 1.5, 2.6)],
+		[Vector3(-0.8, 5.8, 3.0), Vector3(2.8, 1.5, 2.5)], [Vector3(0.4, 8.1, 0.3), Vector3(2.6, 1.4, 2.4)]]
+	var count: int = 2 if stage <= 1 else blobs.size()
+	for i: int in count:
+		var b: Array = blobs[i * 5 if stage <= 1 else i]
+		var shades: PackedStringArray = ["leaf_dark", "leaf", "leaf_dark", "leaf", "leaf_dark", "leaf_light"]
+		var col: String = "ash" if grey else shades[i * 5 if stage <= 1 else i]
+		m.blob(b[0] as Vector3, b[1] as Vector3, col, 1, 0.02, rng)
+	# spark fruits hanging under the canopy, more with mastery (small: flat-light detail)
+	m.blob_detail = 0
+	m.min_sides = 3
+	var sparks: int = ([0, 0, 5, 12, 12] as Array)[clampi(stage, 0, 4)]
+	for k: int in sparks:
+		var a: float = TAU * float(k) / float(sparks) + rng.randf_range(-0.2, 0.2)
 		var r: float = rng.randf_range(2.2, 4.2)
-		var y: float = rng.randf_range(5.0, 5.8)
-		var c: Vector3 = Vector3(cos(a) * r, y, sin(a) * r)
-		m.cylinder(c + Vector3.UP * 0.12, 0.015, 0.015, 0.5, 3, "trunk")
-		m.blob(c, Vector3(0.16, 0.16, 0.16), "spark" if k % 3 else "lantern_glow", 0)
+		var c: Vector3 = Vector3(cos(a) * r, rng.randf_range(4.7, 5.5), sin(a) * r)
+		m.cylinder(c + Vector3.UP * 0.12, 0.015, 0.015, 0.5, 3, trunk, "", false)
+		m.blob(c, Vector3(0.17, 0.17, 0.17), "spark" if k % 3 else "lantern_glow", 0)
+	# blossoms all over the canopy when mastered
+	if stage >= 4:
+		for k: int in 11:
+			var b: Array = blobs[k % blobs.size()]
+			var dir: Vector3 = Vector3(rng.randf_range(-1, 1), rng.randf_range(0.1, 1), rng.randf_range(-1, 1)).normalized()
+			var p: Vector3 = (b[0] as Vector3) + dir * (b[1] as Vector3) * 0.95
+			m.blob(p, Vector3(0.5, 0.4, 0.5), "flower_pink" if k % 3 else "flower_white", 0)
+	m.blob_detail = LowPoly.BLOB_DETAIL
+	m.min_sides = LowPoly.MIN_SIDES
+	m.pop()
 	m.pop()
 	return m.build()
 
@@ -491,6 +518,7 @@ static func _limb(m: LowPoly, a: Vector3, b: Vector3, ra: float, rb: float, col:
 ## shape icon in its subject colour (local coordinates, faces +Z towards the plaza).
 static func wind_gate(target_area_id: String) -> ArrayMesh:
 	var m: LowPoly = _builder()
+	m.min_sides = 6  # eleven gates in a row (F068 budget)
 	for x: float in [-1.45, 1.45]:
 		m.box(Vector3(x, 0.15, 0), Vector3(0.6, 0.3, 0.6), "stone")
 		m.cylinder(Vector3(x, 0.3, 0), 0.16, 0.13, 3.0, 8, "wood_dark")
@@ -643,11 +671,13 @@ static func spark_marker() -> ArrayMesh:
 
 static func tree_round() -> ArrayMesh:
 	var m: LowPoly = _builder()
+	m.blob_detail = 0  # scattered by the dozen: smooth shading, base detail (F068 budget)
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 6710
 	m.cylinder(Vector3.ZERO, 0.22, 0.16, 2.0, 6, "trunk")
-	m.blob(Vector3(0, 2.6, 0), Vector3(1.5, 1.3, 1.5), "leaf", 1, 0.12, rng)
-	m.blob(Vector3(0.5, 3.3, 0.2), Vector3(0.9, 0.8, 0.9), "leaf_light", 0, 0.1, rng)
+	m.blob(Vector3(0, 2.6, 0), Vector3(1.45, 1.25, 1.45), "leaf", 1, 0.03, rng)
+	m.blob(Vector3(-0.55, 2.35, 0.45), Vector3(0.85, 0.75, 0.85), "leaf", 0, 0.03, rng)
+	m.blob(Vector3(0.45, 3.25, 0.2), Vector3(0.9, 0.75, 0.9), "leaf_light", 0, 0.03, rng)
 	return m.build()
 
 
@@ -669,6 +699,8 @@ static func palm() -> ArrayMesh:
 
 static func bamboo() -> ArrayMesh:
 	var m: LowPoly = _builder()
+	m.blob_detail = 0  # scattered by the dozen: smooth shading, base detail (F068 budget)
+	m.min_sides = 6
 	for p: Vector3 in [Vector3(0, 0, 0), Vector3(0.35, 0, 0.15), Vector3(-0.25, 0, 0.3), Vector3(0.1, 0, -0.35), Vector3(-0.3, 0, -0.2)]:
 		var h: float = 3.6 + p.x * 2.0
 		m.cylinder(p, 0.06, 0.05, h, 5, "bamboo")
@@ -678,9 +710,10 @@ static func bamboo() -> ArrayMesh:
 
 static func bush() -> ArrayMesh:
 	var m: LowPoly = _builder()
+	m.blob_detail = 0  # scattered by the dozen: smooth shading, base detail (F068 budget)
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 6711
-	m.blob(Vector3(0, 0.38, 0), Vector3(0.75, 0.5, 0.7), "leaf", 1, 0.15, rng)
+	m.blob(Vector3(0, 0.38, 0), Vector3(0.75, 0.5, 0.7), "leaf", 1, 0.05, rng)
 	m.blob(Vector3(0.25, 0.65, 0.1), Vector3(0.18, 0.18, 0.18), "flower_pink", 0)
 	m.blob(Vector3(-0.3, 0.55, -0.25), Vector3(0.16, 0.16, 0.16), "flower_white", 0)
 	return m.build()
@@ -688,6 +721,7 @@ static func bush() -> ArrayMesh:
 
 static func tuft() -> ArrayMesh:
 	var m: LowPoly = _builder()
+	m.set_flat()  # dense decor: flat and light (F068)
 	for k: int in 4:
 		var a: float = TAU * float(k) / 4.0 + 0.4
 		var d: Vector3 = Vector3(cos(a), 0, sin(a))
@@ -699,6 +733,7 @@ static func tuft() -> ArrayMesh:
 
 static func flower() -> ArrayMesh:
 	var m: LowPoly = _builder()
+	m.set_flat()  # dense decor: flat and light (F068)
 	m.cylinder(Vector3.ZERO, 0.02, 0.02, 0.32, 3, "grass_dark")
 	m.blob(Vector3(0, 0.36, 0), Vector3(0.09, 0.06, 0.09), "flower_white", 0)
 	m.blob(Vector3(0, 0.39, 0), Vector3(0.035, 0.03, 0.035), "lantern_glow", 0)
@@ -707,6 +742,7 @@ static func flower() -> ArrayMesh:
 
 static func rice() -> ArrayMesh:
 	var m: LowPoly = _builder()
+	m.set_flat()  # dense decor: flat and light (F068)
 	for k: int in 3:
 		var a: float = TAU * float(k) / 3.0
 		var d: Vector3 = Vector3(cos(a), 0, sin(a)) * 0.08

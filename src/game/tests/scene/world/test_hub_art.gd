@@ -71,6 +71,10 @@ func test_every_mesh_uses_a_generated_toon_preset() -> void:
 		var material: Material = geo.material_override
 		if node.get_parent() is AvatarBuilder or _inside_avatar(node):
 			continue
+		if node is BlobShadow:
+			# F068: the blob shadow has its own token material (test_blob_shadow.gd), not a toon preset.
+			assert_object(material).is_same(BlobShadow.shared_material())
+			continue
 		assert_object(material).override_failure_message(str(node.get_path())).is_not_null()
 		assert_str(material.resource_path).override_failure_message(str(node.get_path())).starts_with(GENERATED)
 		var decor: bool = node.is_in_group(ZoneArtQuality.DECOR_GROUP) and material.next_pass == null

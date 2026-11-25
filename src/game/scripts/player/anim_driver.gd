@@ -3,8 +3,11 @@ extends Node
 ## One animation state machine for an avatar (F062-AC-03, CHARACTER_SYSTEM §4): idle / walk / run / jump chosen from
 ## the body's velocity and floor contact only (no input or game logic), plus the one-shot Emote state (F070-AC-20):
 ## `play_emote()` plays the clip once, then the driver returns to Locomotion when the clip ends or the body moves.
-## Builds the AnimationTree state machine in code; until the OQ-16 rig and clips exist the clips are PLACEHOLDER
-## bob animations of the greybox body (AGENTS R17). Used by the Player and the avatar previews (S02, Wardrobe).
+## Builds the AnimationTree state machine in code. On the F068 `kid_base` rig (KidSkeleton, ADR-0103 "3D Animated
+## Cartoon") the clips are the baked idle breathing / walk / bouncy run / jump with squash & stretch
+## (tools/art/character_anim.gd), and each state shows a facial expression on the AvatarBuilder (EXPRESSION_FOR_STATE;
+## an emote shows its ItemVisual.expression, default happy). A body without that rig keeps the PLACEHOLDER bob clips
+## (AGENTS R17). Used by the Player, remote players and the avatar previews (S02, Wardrobe).
 
 signal emote_started(emote_id: String)
 signal emote_finished(emote_id: String)
@@ -17,6 +20,11 @@ const EMOTE: StringName = &"emote"
 ## Locomotion states (the Emote node is added next to them).
 const STATES: Array[StringName] = [&"idle", &"walk", &"run", &"jump"]
 const LIBRARY: StringName = &"avatar"
+## F068: facial expression per state (display only) and of an emote without its own.
+const EXPRESSION_FOR_STATE: Dictionary = {
+	&"idle": "neutral", &"walk": "neutral", &"run": "trying", &"jump": "surprised", &"emote": "happy",
+}
+const EMOTE_EXPRESSION: String = "happy"
 ## PLACEHOLDER clips: [length s, bob height m, loop].
 const PLACEHOLDER_CLIPS: Dictionary = {
 	&"idle": [1.6, 0.02, true], &"walk": [0.6, 0.06, true], &"run": [0.4, 0.1, true], &"jump": [0.5, 0.15, false],
@@ -38,11 +46,22 @@ var state: StringName = IDLE
 ## Emote being played ("" when in Locomotion) and the time left of its clip.
 var emote_id: String = ""
 var emote_time_left: float = 0.0
+## Avatar whose face follows the state (the AnimationPlayer root when it is an AvatarBuilder).
+var face: AvatarBuilder = null
+## True when the clips are the baked kid_base clips (not the placeholders).
+var rig_clips: bool = false
 
 
 func _ready() -> void:
+	if animation_player != null:
+		face = animation_player.get_node_or_null(animation_player.root_node) as AvatarBuilder
 	if animation_player != null and not animation_player.has_animation_library(LIBRARY):
-		animation_player.add_animation_library(LIBRARY, build_placeholder_library(bob_track))
+		var rig: Node = animation_player.get_node_or_null(animation_player.root_node)
+		var library: AnimationLibrary = null
+		if rig != null and rig.get_node_or_null(KidSkeleton.SKELETON_PATH) is Skeleton3D:
+			library = build_rig_library(bob_track)
+		rig_clips = library != null
+		animation_player.add_animation_library(LIBRARY, library if library != null else build_placeholder_library(bob_track))
 	if animation_tree != null and animation_player != null:
 		animation_tree.anim_player = animation_tree.get_path_to(animation_player)
 		animation_tree.tree_root = build_state_machine()
@@ -79,6 +98,7 @@ func update(velocity: Vector3, on_floor: bool) -> StringName:
 		var machine_playback: AnimationNodeStateMachinePlayback = playback()
 		if machine_playback != null:
 			machine_playback.travel(next)
+		_show_expression(String(EXPRESSION_FOR_STATE.get(next, "neutral")))
 	return state
 
 
@@ -95,6 +115,7 @@ func set_locomotion(anim_name: String) -> StringName:
 		var machine_playback: AnimationNodeStateMachinePlayback = playback()
 		if machine_playback != null:
 			machine_playback.travel(next)
+		_show_expression(String(EXPRESSION_FOR_STATE.get(next, "neutral")))
 	return state
 
 
@@ -115,6 +136,8 @@ func play_emote(id: String, clip: Animation = null) -> bool:
 	var machine_playback: AnimationNodeStateMachinePlayback = playback()
 	if machine_playback != null:
 		machine_playback.start(EMOTE, true)
+	var visual: ItemVisual = ItemVisual.load_item(id)
+	_show_expression(visual.expression if visual != null and not visual.expression.is_empty() else EMOTE_EXPRESSION)
 	emote_started.emit(id)
 	return true
 
@@ -142,7 +165,13 @@ func _end_emote(next: StringName) -> void:
 	var machine_playback: AnimationNodeStateMachinePlayback = playback()
 	if machine_playback != null:
 		machine_playback.travel(next)
+	_show_expression(String(EXPRESSION_FOR_STATE.get(next, "neutral")))
 	emote_finished.emit(finished)
+
+
+func _show_expression(expression: String) -> void:
+	if face != null:
+		face.set_expression(expression)
 
 
 ## State machine with one node per locomotion state plus Emote, every transition allowed (cross-fade), from idle.
@@ -165,6 +194,19 @@ static func build_state_machine() -> AnimationNodeStateMachine:
 	var start: AnimationNodeStateMachineTransition = AnimationNodeStateMachineTransition.new()
 	machine.add_transition(&"Start", IDLE, start)
 	return machine
+
+
+## F068: the baked kid_base locomotion clips (KidSkeleton.clip_path) plus the placeholder emote slot; null when a
+## clip is missing on this client (the caller then keeps the placeholders).
+static func build_rig_library(track_path: String) -> AnimationLibrary:
+	var library: AnimationLibrary = AnimationLibrary.new()
+	for s: StringName in STATES:
+		var path: String = KidSkeleton.clip_path(String(s))
+		if not ResourceLoader.exists(path):
+			return null
+		library.add_animation(s, load(path) as Animation)
+	library.add_animation(EMOTE, build_placeholder_emote(track_path))
+	return library
 
 
 ## PLACEHOLDER (R17): vertical bob of the greybox body per state, plus the placeholder emote.

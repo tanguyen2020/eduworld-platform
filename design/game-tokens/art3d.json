@@ -92,13 +92,18 @@
       "subject_vietnamese": { "$value": "{color.subject.vietnamese}", "$description": "Subject colour (vietnamese, shared-tokens game variant): wind-gate banner and signpost icon.", "$extensions": { "eduworld": { "index": 44 } } },
       "subject_english": { "$value": "{color.subject.english}", "$description": "Subject colour (english, shared-tokens game variant): wind-gate banner and signpost icon.", "$extensions": { "eduworld": { "index": 45 } } },
       "subject_science": { "$value": "{color.subject.science}", "$description": "Subject colour (science, shared-tokens game variant): wind-gate banner and signpost icon.", "$extensions": { "eduworld": { "index": 46 } } },
-      "skin_npc": { "$value": "{palette.avatar.tone-03}", "$description": "Bare skin of NPC bodies baked with their whole look (avatar palette tone 3).", "$extensions": { "eduworld": { "index": 47 } } }
+      "skin_npc": { "$value": "{palette.avatar.tone-03}", "$description": "Bare skin of NPC bodies baked with their whole look (avatar palette tone 3).", "$extensions": { "eduworld": { "index": 47 } } },
+      "eye_iris": { "$value": "{palette.art.eye-iris}", "$description": "Lower iris of the anime eyes (F068).", "$extensions": { "eduworld": { "index": 48 } } },
+      "eye_white": { "$value": "{palette.art.eye-white}", "$description": "Eye white of the anime eyes (F068).", "$extensions": { "eduworld": { "index": 49 } } },
+      "ash": { "$value": "{palette.art.ash}", "$description": "Grey leaves of the Spark Tree before mastery (F068).", "$extensions": { "eduworld": { "index": 50 } } },
+      "ash_dark": { "$value": "{palette.art.ash-dark}", "$description": "Grey trunk of the Spark Tree before mastery (F068).", "$extensions": { "eduworld": { "index": 51 } } }
     }
   },
   "toon": {
     "steps": { "$type": "number", "$value": "{number.toon.steps}", "$description": "Toon shader light steps (shared toon shader uniform)." },
     "shadow_tint": { "$type": "color", "$value": "{palette.zone.shadow-tint}", "$description": "Toon shadow tint uniform." },
-    "rim_strength": { "$type": "number", "$value": "{number.toon.rim}", "$description": "Toon rim light strength uniform." }
+    "rim_strength": { "$type": "number", "$value": "{number.toon.rim}", "$description": "Toon rim light strength uniform." },
+    "band_softness": { "$type": "number", "$value": "{number.toon.band-softness}", "$description": "Half width of a cel band edge uniform (F068, ADR-0103)." }
   },
   "outline": {
     "width": { "$type": "number", "$value": "{number.outline.width}", "$description": "Outline width uniform (world units)." },
@@ -110,6 +115,8 @@
     "ambient_energy": { "$type": "number", "$value": "{number.light.ambient}", "$description": "Environment ambient light energy (every zone Environment)." },
     "fog_density": { "$type": "number", "$value": "{number.light.fog}", "$description": "Environment fog density (every zone Environment)." },
     "exposure": { "$type": "number", "$value": "{number.light.exposure}", "$description": "Environment filmic tonemap exposure." },
+    "blob_shadow_color": { "$type": "color", "$value": "{palette.zone.shadow-tint}", "$description": "Colour of the blob shadow under characters where real-time shadows are off (F068, F067-3)." },
+    "blob_shadow_opacity": { "$type": "number", "$value": "{number.light.blob-opacity}", "$description": "Opacity of the character blob shadow (F068)." },
     "ambient_color": { "$type": "color", "$value": "{palette.zone.fog-warm}", "$description": "Flat ambient light colour of every zone Environment (warm, WORLD_DESIGN §11; same in Mobile and Compatibility)." }
   },
   "env": {

@@ -1,38 +1,127 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
+
+; Chibi avatar rig (F068, ADR-0103; CHARACTER_SYSTEM §5.2): the kid_base Skeleton3D (bones = KidSkeleton, checked by
+; tests/unit/art/test_kid_rig.gd), the skinned body, the expression face and the item slot anchors on bone
+; attachments; BlobShadow under the feet where the sun casts no real-time shadow. Meshes baked by tools/art/bake_art.gd.
 
 [ext_resource type="Script" path="res://scripts/player/avatar_builder.gd" id="1_builder"]
 [ext_resource type="ArrayMesh" path="res://assets/models/chr/chr_body_kid_a.res" id="2_body"]
+[ext_resource type="ArrayMesh" path="res://assets/models/chr/chr_face_neutral_a.res" id="3_face"]
+[ext_resource type="Script" path="res://scripts/world/blob_shadow.gd" id="4_blob"]
+[ext_resource type="Material" path="res://resources/art/generated/mat_toon_no_outline.tres" id="5_face_mat"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_empty"]
 
-[node name="AvatarRig" type="Node3D" node_paths=PackedStringArray("body_mesh", "proportions")]
+[node name="AvatarRig" type="Node3D" node_paths=PackedStringArray("body_mesh", "face_mesh", "skeleton", "proportions")]
 script = ExtResource("1_builder")
-body_mesh = NodePath("Bob/Body")
+body_mesh = NodePath("Bob/Skeleton3D/Body")
+face_mesh = NodePath("Bob/Skeleton3D/HeadAttach/FaceMesh")
+skeleton = NodePath("Bob/Skeleton3D")
 proportions = NodePath("Bob")
 
 [node name="Bob" type="Node3D" parent="."]
 
-[node name="Body" type="MeshInstance3D" parent="Bob"]
+[node name="Skeleton3D" type="Skeleton3D" parent="Bob"]
+bones/0/name = "root"
+bones/0/parent = -1
+bones/0/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/0/enabled = true
+bones/0/position = Vector3(0, 0, 0)
+bones/0/rotation = Quaternion(0, 0, 0, 1)
+bones/0/scale = Vector3(1, 1, 1)
+bones/1/name = "hips"
+bones/1/parent = 0
+bones/1/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+bones/1/enabled = true
+bones/1/position = Vector3(0, 0.3, 0)
+bones/1/rotation = Quaternion(0, 0, 0, 1)
+bones/1/scale = Vector3(1, 1, 1)
+bones/2/name = "chest"
+bones/2/parent = 1
+bones/2/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+bones/2/enabled = true
+bones/2/position = Vector3(0, 0.14, 0)
+bones/2/rotation = Quaternion(0, 0, 0, 1)
+bones/2/scale = Vector3(1, 1, 1)
+bones/3/name = "head"
+bones/3/parent = 2
+bones/3/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
+bones/3/enabled = true
+bones/3/position = Vector3(0, 0.18, 0)
+bones/3/rotation = Quaternion(0, 0, 0, 1)
+bones/3/scale = Vector3(1, 1, 1)
+bones/4/name = "arm_l"
+bones/4/parent = 2
+bones/4/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.115, 0)
+bones/4/enabled = true
+bones/4/position = Vector3(-0.17, 0.115, 0)
+bones/4/rotation = Quaternion(0, 0, 0, 1)
+bones/4/scale = Vector3(1, 1, 1)
+bones/5/name = "arm_r"
+bones/5/parent = 2
+bones/5/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.115, 0)
+bones/5/enabled = true
+bones/5/position = Vector3(0.17, 0.115, 0)
+bones/5/rotation = Quaternion(0, 0, 0, 1)
+bones/5/scale = Vector3(1, 1, 1)
+bones/6/name = "leg_l"
+bones/6/parent = 1
+bones/6/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.085, 0, 0)
+bones/6/enabled = true
+bones/6/position = Vector3(-0.085, 0, 0)
+bones/6/rotation = Quaternion(0, 0, 0, 1)
+bones/6/scale = Vector3(1, 1, 1)
+bones/7/name = "leg_r"
+bones/7/parent = 1
+bones/7/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0, 0)
+bones/7/enabled = true
+bones/7/position = Vector3(0.085, 0, 0)
+bones/7/rotation = Quaternion(0, 0, 0, 1)
+bones/7/scale = Vector3(1, 1, 1)
+
+[node name="Body" type="MeshInstance3D" parent="Bob/Skeleton3D"]
 mesh = ExtResource("2_body")
+skeleton = NodePath("..")
 
-[node name="Slots" type="Node3D" parent="Bob"]
+[node name="Outfit" type="Node3D" parent="Bob/Skeleton3D"]
 
-[node name="Hair" type="Node3D" parent="Bob/Slots"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+[node name="HeadAttach" type="BoneAttachment3D" parent="Bob/Skeleton3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.62, 0)
+bone_name = "head"
+bone_idx = 3
 
-[node name="Outfit" type="Node3D" parent="Bob/Slots"]
+[node name="FaceMesh" type="MeshInstance3D" parent="Bob/Skeleton3D/HeadAttach"]
+material_override = ExtResource("5_face_mat")
+cast_shadow = 0
+mesh = ExtResource("3_face")
 
-[node name="Head" type="Node3D" parent="Bob/Slots"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+[node name="Hair" type="Node3D" parent="Bob/Skeleton3D/HeadAttach"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.29, 0)
 
-[node name="Face" type="Node3D" parent="Bob/Slots"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, -0.29)
+[node name="Head" type="Node3D" parent="Bob/Skeleton3D/HeadAttach"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 
-[node name="Back" type="Node3D" parent="Bob/Slots"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.56, 0.2)
+[node name="Face" type="Node3D" parent="Bob/Skeleton3D/HeadAttach"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.27, -0.3)
 
-[node name="Hand" type="Node3D" parent="Bob/Slots"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 0.37, -0.01)
+[node name="ChestAttach" type="BoneAttachment3D" parent="Bob/Skeleton3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, 0)
+bone_name = "chest"
+bone_idx = 2
+
+[node name="Back" type="Node3D" parent="Bob/Skeleton3D/ChestAttach"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
+
+[node name="HandAttach" type="BoneAttachment3D" parent="Bob/Skeleton3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.555, 0)
+bone_name = "arm_r"
+bone_idx = 5
+
+[node name="Hand" type="Node3D" parent="Bob/Skeleton3D/HandAttach"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.065, -0.235, -0.01)
+
+[node name="BlobShadow" type="MeshInstance3D" parent="."]
+script = ExtResource("4_blob")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {

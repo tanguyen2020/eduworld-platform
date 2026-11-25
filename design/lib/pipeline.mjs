@@ -12,8 +12,8 @@ import { formatGodotJson } from '../sd/formats/godot-json.mjs';
 import { formatUiTokens, formatArt3dTokens, themeFile, HIGH_CONTRAST_THEME } from '../sd/formats/gdscript-tokens.mjs';
 import { formatTheme, formatEnvironment, formatGradient, formatIcon, godotFontFiles, artPaletteSlots, formatToonMaterial } from '../sd/formats/godot-tres.mjs';
 
-/** Toon material presets (F067, DESIGN_SYSTEM §5.3): with the outline pass, and without it for small dense decor. */
-export const TOON_MATERIALS = { toon: { outline: true }, toon_no_outline: { outline: false } };
+/** Toon material presets (F067, DESIGN_SYSTEM §5.3): with the outline pass, without it for small dense decor, and for skinned characters (F068: the outline follows the skinned NORMAL, not the rest-pose COLOR normal). */
+export const TOON_MATERIALS = { toon: { outline: true }, toon_no_outline: { outline: false }, toon_skinned: { outline: true, smoothNormals: false } };
 
 export function tokensVersion(designDir = DESIGN_DIR) {
   return JSON.parse(fs.readFileSync(path.join(designDir, 'package.json'), 'utf8')).version;

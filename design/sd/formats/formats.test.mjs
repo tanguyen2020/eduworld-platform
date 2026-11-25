@@ -143,7 +143,8 @@ test('UiTokens and Art3dTokens are typed GDScript classes', async () => {
   assert.doesNotMatch(ui, /^const (ZONE|TOON|ENV|VFX|OUTLINE)_/m);
   const art = files.get(`${OUTPUTS.artDir}/art3d_tokens.gd`);
   assert.match(art, /^class_name Art3dTokens$/m);
-  assert.match(art, /const TOON_STEPS: float = 3\.0/);
+  assert.match(art, /const TOON_STEPS: float = 2\.0/);
+  assert.match(art, /const TOON_BAND_SOFTNESS: float = /);
   assert.match(art, /"legendary": Color\(/);
   assert.equal(formatUiTokens.length, 3);
 });

@@ -46,3 +46,6 @@ current = true
 [node name="TapToMove" type="Node" parent="." node_paths=PackedStringArray("camera")]
 script = ExtResource("4_tap")
 camera = NodePath("../CameraRig/SpringArm3D/Camera3D")
+
+[node name="BlobShadow" parent="AvatarRig" index="1"]
+snap_to_ground = true

@@ -2,7 +2,8 @@ class_name NpcAnchor
 extends Interactable
 ## NPC of a zone (WORLD_DESIGN §2.3, WORLD_RENDERING §9, F071 T037): an Interactable of kind `npc` carrying the stable
 ## `npc_id` (`npc.mr_numbers`). Name and dialogue come from the server (`getNpcDialogue`), never from the scene (R2).
-## Display (F067): the chibi `Body` takes one of `body_variants`, chosen from `npc_id` so an NPC keeps its look.
+## Display (F067, F068): the chibi `Body` takes one of `body_variants`, chosen from `npc_id` so an NPC keeps its look;
+## the idle breathing clip (`Idle`) starts at a phase from `npc_id` so NPCs do not breathe in step.
 
 @export var npc_id: String = ""
 ## Baked NPC bodies (res://assets/models/chr/chr_npc_*.res); display only.
@@ -19,6 +20,10 @@ func _ready() -> void:
 	var body: MeshInstance3D = get_node_or_null(^"Body") as MeshInstance3D
 	if body != null and not body_variants.is_empty():
 		body.mesh = body_variants[variant_index(npc_id, body_variants.size())]
+	var idle: AnimationPlayer = get_node_or_null(^"Idle") as AnimationPlayer
+	if idle != null and idle.has_animation(&"breathe"):
+		idle.play(&"breathe")
+		idle.seek(float(variant_index(npc_id, 100)) / 100.0 * idle.current_animation_length, true)
 
 
 ## Stable variant of `id` among `count` looks (0 when there is nothing to choose).

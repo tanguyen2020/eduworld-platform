@@ -4,7 +4,8 @@ extends RefCounted
 ## trang trí", "Khoảng cách nhìn"; values in QualityPolicy.PRESETS, CONFIG_DEFAULTS `quality_presets`). Display only:
 ## - the global shader parameter `outline_fade_distance` of the toon outline (0 = outline at every distance);
 ## - every MultiMeshInstance3D in the `decor` group draws `decor_density` of its instances (spatially uniform: the
-##   bake shuffles placements) up to the preset's visibility range.
+##   bake shuffles placements) up to the preset's visibility range;
+## - every BlobShadow (F068) is shown only where the sun casts no real-time shadow (QualityPolicy.blob_shadow_visible).
 
 const DECOR_GROUP: StringName = &"decor"
 const OUTLINE_PARAMETER: StringName = &"outline_fade_distance"
@@ -29,6 +30,11 @@ static func apply(zone: Node, preset: String) -> void:
 	RenderingServer.global_shader_parameter_set(OUTLINE_PARAMETER, outline_distance(preset))
 	var density: float = decor_density(preset)
 	var view: float = float(QualityPolicy.preset_value(preset, "view_distance"))
+	if zone.is_inside_tree():
+		var blob: bool = QualityPolicy.blob_shadow_visible(RenderingServer.get_current_rendering_method(),
+				BlobShadow.sun_shadows(zone))
+		for node: Node in zone.get_tree().get_nodes_in_group(BlobShadow.GROUP):
+			(node as Node3D).visible = blob
 	for node: Node in zone.find_children("*", "MultiMeshInstance3D", true, false):
 		var decor: MultiMeshInstance3D = node as MultiMeshInstance3D
 		if not decor.is_in_group(DECOR_GROUP) or decor.multimesh == null:

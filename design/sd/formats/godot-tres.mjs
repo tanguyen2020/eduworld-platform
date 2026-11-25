@@ -396,6 +396,7 @@ export function formatToonMaterial(map, version, { label, slots, smoothNormals =
     ['shader_parameter/toon_steps', gdFloat(Number(v('toon.steps')))],
     ['shader_parameter/shadow_tint', godotColor(v('toon.shadow_tint'))],
     ['shader_parameter/rim_strength', gdFloat(Number(v('toon.rim_strength')))],
+    ['shader_parameter/band_softness', gdFloat(Number(v('toon.band_softness')))],
   );
   return resource('ShaderMaterial', subs, ext, props, mark(`Toon material preset "${label}"`, version));
 }

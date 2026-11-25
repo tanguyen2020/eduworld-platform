@@ -44,6 +44,8 @@ static var _loaded: Dictionary = {}
 @export var icon: Texture2D = null
 ## One-shot clip of an emote (emote codes only); null → AnimDriver plays its placeholder clip.
 @export var emote_clip: Animation = null
+## Facial expression shown during the emote (KidSkeleton.EXPRESSIONS; empty → AnimDriver.EMOTE_EXPRESSION). F068.
+@export var expression: String = ""
 ## True while the visual is a primitive stand-in for the OQ-16 art (AGENTS R17).
 @export var placeholder: bool = false
 

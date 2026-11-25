@@ -2,6 +2,10 @@
 
 Phiên bản token theo semver (`design/package.json`, DESIGN_SYSTEM §3, §8). Đổi tên hoặc xóa token cần tăng MAJOR; token bị xóa phải mang `$deprecated` ít nhất một phiên bản trước (kiểm bởi `design/checks/semver.mjs`).
 
+## tokens@0.10.0
+
+- 2026-11-25 — Art pass 2 "chibi anime cartoon 3D" (F068, ADR-0103, DESIGN_SYSTEM §5.3): primitive `palette.art.{eye-iris,eye-white,ash,ash-dark}`, `number.toon.band-softness`, `number.light.blob-opacity`; art3d `art.palette.{eye_iris,eye_white,ash,ash_dark}` (slot 48–51), `toon.band_softness`, `light.{blob_shadow_color,blob_shadow_opacity}`. Đổi giá trị: `number.toon.steps` 3 → 2 (dải cel rõ: tối / giữa / sáng), `palette.zone.outline` `#1E2A44` → `#3A2C3F` (viền mực tím ấm). Sinh thêm preset `resources/art/generated/mat_toon_skinned.tres` (viền theo NORMAL đã skin cho nhân vật có xương) và uniform `band_softness` trong mọi preset toon. MINOR vì chỉ thêm token và đổi giá trị.
+
 ## tokens@0.9.0
 
 - 2026-11-25 — Output mới `src/game/web/shell_tokens.css` (F133 T028): biến CSS `--ew-*` cho Web shell của game (trang trước khi engine chạy), lấy từ token game: `color.{surface,text,accent,feedback}.*`, `color.focus`, `size.{space,radius,border,layout}.*`, `font.family.*` và density cơ sở `g6_7` dưới dạng `--ew-density-*`. Check separation coi file này là output game (không token admin). Không thêm/đổi token nên giữ phiên bản.

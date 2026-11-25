@@ -1,14 +1,37 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/npc_anchor.gd" id="1_script"]
 [ext_resource type="ArrayMesh" path="res://assets/models/chr/chr_npc_farmer_a.res" id="2_farmer"]
 [ext_resource type="ArrayMesh" path="res://assets/models/chr/chr_npc_postie_a.res" id="3_postie"]
 [ext_resource type="ArrayMesh" path="res://assets/models/chr/chr_npc_scholar_a.res" id="4_scholar"]
 [ext_resource type="Material" path="res://resources/art/generated/mat_toon.tres" id="5_toon"]
+[ext_resource type="Script" path="res://scripts/world/blob_shadow.gd" id="6_blob"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_talk"]
 height = 2.5
 radius = 2.2
+
+[sub_resource type="Animation" id="Animation_breathe"]
+resource_name = "breathe"
+length = 2.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Body:scale")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1.2, 2.4),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(1, 1, 1), Vector3(0.988, 1.025, 0.988), Vector3(1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_npc"]
+_data = {
+&"breathe": SubResource("Animation_breathe")
+}
 
 [node name="NPC" type="Area3D"]
 script = ExtResource("1_script")
@@ -24,3 +47,11 @@ shape = SubResource("CylinderShape3D_talk")
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)
 material_override = ExtResource("5_toon")
 mesh = ExtResource("2_farmer")
+
+[node name="BlobShadow" type="MeshInstance3D" parent="."]
+script = ExtResource("6_blob")
+
+[node name="Idle" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_npc")
+}

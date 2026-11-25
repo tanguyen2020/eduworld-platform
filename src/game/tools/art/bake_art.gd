@@ -1,5 +1,6 @@
 extends SceneTree
-## CLI: bakes the F067 stylized low-poly art (ADR-0102) into res://assets/models/** or checks it is up to date.
+## CLI: bakes the first-party art (F067, F068; ADR-0102, ADR-0103 — meshes, MultiMesh scatters, animation clips) into
+## res://assets/models/** or checks it is up to date.
 ##   godot --headless --path src/game -s res://tools/art/bake_art.gd             write every mesh / MultiMesh
 ##   godot --headless --path src/game -s res://tools/art/bake_art.gd -- --check  exit 1 when a resource is stale
 ## The recipes (tools/art/*_art.gd) are the source; the .res files are build output reviewed with screenshots
@@ -25,6 +26,9 @@ func _initialize() -> void:
 		triangles += mesh.get_faces().size() / 3
 		prints(path.get_file(), mesh.get_faces().size() / 3)
 		written += _save(mesh, path)
+	var clips: Dictionary = ArtCatalog.animations()
+	for path: String in clips:
+		written += _save((clips[path] as Callable).call() as Animation, path)
 	for kind: String in ArtCatalog.VEG_KINDS:
 		var mesh_res: Mesh = ResourceLoader.load(ArtCatalog.veg_mesh_path(kind), "", ResourceLoader.CACHE_MODE_REPLACE) as Mesh
 		written += _save(ArtCatalog.scatter(kind, mesh_res), ArtCatalog.veg_scatter_path(kind))

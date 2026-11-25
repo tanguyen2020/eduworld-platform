@@ -84,28 +84,36 @@ func test_assets_are_within_the_asset_budgets() -> void:
 	var accessories: int = 0
 	for code: String in ArtCatalog.ACCESSORIES:
 		accessories += _triangles("%s/chr/chr_%s_a.res" % [models, code])
-	assert_int(_triangles(models + "/chr/chr_body_kid_a.res") + heaviest_hair + heaviest_outfit + accessories) \
-			.is_less_equal(BUDGET_CHARACTER)
+	var heaviest_face: int = 0
+	for expression: String in ArtCatalog.face_expressions():
+		heaviest_face = maxi(heaviest_face, _triangles(KidSkeleton.face_path(expression)))
+	# F068: the character total also counts the expression face mesh.
+	assert_int(_triangles(models + "/chr/chr_body_kid_a.res") + heaviest_face + heaviest_hair + heaviest_outfit
+			+ accessories).is_less_equal(BUDGET_CHARACTER)
 	for look: String in CharacterArt.NPC_LOOKS:
 		assert_int(_triangles("%s/chr/chr_npc_%s_a.res" % [models, look])).is_less_equal(BUDGET_NPC)
 	for target: String in ArtCatalog.GATE_TARGETS:
 		assert_int(_triangles(ArtCatalog.gate_path(target))).is_less_equal(BUDGET_LARGE_PROP)
-	assert_int(_triangles(models + "/veg/veg_banyan_spark_a.res")).is_less_equal(BUDGET_LARGE_PROP)
+	for stage: int in ArtCatalog.SPARK_TREE_STAGES:
+		assert_int(_triangles(ArtCatalog.spark_tree_path(stage))).override_failure_message("spark tree %d" % stage) \
+				.is_less_equal(BUDGET_LARGE_PROP)
 	assert_int(_triangles(models + "/bld/bld_hub_set_a.res")).is_less_equal(BUDGET_BUILDING_SET_PER_BUILDING)
 	assert_int(_triangles(models + "/env/env_hub_terrain_a.res")).is_less_equal(BUDGET_GROUND)
 	for kind: String in ["tree", "palm", "bamboo"]:
 		assert_int(_triangles(ArtCatalog.veg_mesh_path(kind))).is_less_equal(BUDGET_TREE)
 
 
-## AC-08: the chibi body — head about a third of the height, a face with eyes, highlights, mouth and blush.
+## AC-08 (F067, proportions superseded by F068-AC-04 / ADR-0103: head 1/3–1/2 of the height): the chibi body and its
+## neutral face mesh (eyes, highlights, mouth, blush).
 func test_chibi_body_has_a_big_head_and_a_face() -> void:
 	var mesh: ArrayMesh = load(ArtCatalog.MODELS_DIR + "/chr/chr_body_kid_a.res") as ArrayMesh
 	var height: float = mesh.get_aabb().size.y
 	var head: float = CharacterArt.HEAD_RADII.y * 2.0
-	assert_float(head / height).is_between(0.3, 0.45)
-	assert_float(height).is_between(1.2, 1.5)
+	assert_float(head / height).is_between(0.33, 0.5)
+	assert_float(height).is_between(1.1, 1.4)
+	var face: ArrayMesh = load(KidSkeleton.face_path("neutral")) as ArrayMesh
 	var slots: Dictionary = {}
-	for uv: Vector2 in mesh.surface_get_arrays(0)[Mesh.ARRAY_TEX_UV]:
+	for uv: Vector2 in face.surface_get_arrays(0)[Mesh.ARRAY_TEX_UV]:
 		if uv.y < 1.0:
 			slots[Art3dTokens.ART_PALETTE[int(uv.x)]] = true
 	for feature: String in ["eye", "eye_light", "mouth", "cheek"]:
