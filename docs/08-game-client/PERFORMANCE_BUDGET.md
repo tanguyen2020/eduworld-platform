@@ -107,6 +107,7 @@ Học sinh đổi preset và từng thiết lập trong Cài đặt; lựa chọ
 | Trận 1v1 / đội (≤ 8 người) | ≤ 80k | ≤ 70 | ≤ 180 MB | ≤ 750 MB | ≤ 20 | ≤ 400 |
 | **Activity player** (thế giới 3D tạm dừng phía sau) | ≤ 30k (nền mờ/ảnh chụp) | ≤ 40 | ≤ 128 MB thêm cho media/SVG của bài | ≤ 700 MB | Chỉ UI | ≤ 100 (hiệu ứng đúng/sai) |
 
+- Năm vùng môn học (F093) đo bằng `tests/perf/ZoneBenchmark.tscn --area=<area_id>` trên Mobile và Compatibility theo dòng "Vùng môn học / khám phá" (`scene_budget_zone`); cảnh xa (đồi, mặt đất xa, biển) là mesh riêng vẽ bằng preset không viền, không đổ bóng vì mọi pass (viền, bóng nắng) đều được tính vào primitive.
 - Khi mở activity player toàn màn, thế giới 3D **tạm dừng render** (thay bằng ảnh chụp mờ) hoặc giảm còn 10 FPS; mạng hub tiếp tục ở tần suất thấp.
 - Ánh sáng động: 1 `DirectionalLight3D` + ≤ 4 `OmniLight3D`/`SpotLight3D` trong tầm nhìn; không GI realtime.
 - Physics: chỉ người chơi cục bộ, NPC di chuyển và vật tương tác là body động; props tĩnh dùng `StaticBody3D` gộp collider.

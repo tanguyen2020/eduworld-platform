@@ -9,6 +9,13 @@ Nhóm mục: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`, `
 ## [Unreleased]
 
 ### Added
+- 2026-11-25 — **F093 Art pass 3: năm vùng môn học theo "Chibi anime cartoon 3D"** (`src/game/`, `design/`, [spec](specs/093-art-pass-3-subject-zones/spec.md), [ADR-0103](docs/adr/ADR-0103-art-direction-chibi-anime-cartoon-3d-thay-stylized-low-poly.md); license ADR-0102, toàn bộ asset tự làm bằng code, MIT):
+  - **Prefab vùng chung** `tools/art/zone_kit.gd` (WORLD_DESIGN §4.2): quảng trường tròn, lối chính và lối ngang theo bố cục seed F071, bệ lát dưới điểm neo, rào biên có collision, cảnh xa riêng (không viền, không bóng), luật rải cây tránh bố cục; công thức từng môn `zone_<môn>_art.gd` đăng ký ở `ArtCatalog.ZONES`.
+  - **Vương quốc Số** (lâu đài ngói men xanh, cầu Số cong có hạt đếm trên suối với sàn đi được, giếng làng, cổng Bàn Tính, sạp trái cây và rổ táo, cọn nước, khối đếm, cây cắt hình khối), **Rừng Ngôn Ngữ — Tiếng Việt** (Khuê Văn Các, bia rùa, Cây Chữ, bút lông + cuộn giấy, giếng Thiên Quang, hồ sen, án thư) và **— Tiếng Anh** (tháp đồng hồ, xưởng robot, Hang Vọng, cổng Bánh Răng, hòm thư, tượng robot, bằng lăng), **Đảo Khoa Học** (biển, bãi cát, dừa, núi lửa hiền, nhà kính, trạm thời tiết, hồ thủy triều, cổng Hóa Thạch, vòng đời cây), **Vương quốc Lịch Sử** (cổng thành lầu Ngũ Phụng, trống đồng Đông Sơn, đình bản đồ cổ, cổng Đồng Xu, chùa Một Cột, đồng hồ cát); cổng gió về Thị trấn có biểu tượng ngôi nhà.
+  - **Token** `tokens@0.11.0`: 8 slot `art.palette.*` (52–59).
+  - **Công cụ/test:** `tools/capture_zone.gd`, `tests/perf/ZoneBenchmark.tscn` (`--area`), `test_zone_benchmark.gd`, `test_subject_zone_art.gd`; `gen_greybox_zones.mjs` giữ phần làm tay của mọi scene có marker.
+  - **Ngân sách** (`scene_budget_zone`, CONFIG_DEFAULTS mới): Mobile 103–115k primitive / 31–40 draw call, Compatibility 60–67k / 36–44; export Web OK.
+  - **Điểm neo = seed:** Vương quốc Số nay có đủ 4 vật thể quest F072 (thiếu trong greybox vì generator chưa chạy lại). Sáu vùng còn lại → F094.
 - 2026-11-25 — **F068 Art pass 2: "Chibi anime cartoon 3D" cho Main Hub và nhân vật** (`src/game/`, `design/`, [spec](specs/068-art-pass-2-chibi-anime/spec.md), [ADR-0103](docs/adr/ADR-0103-art-direction-chibi-anime-cartoon-3d-thay-stylized-low-poly.md); license vẫn ADR-0102, toàn bộ asset tự làm bằng code, MIT):
   - **Hình khối (Stylized 3D Cartoon):** builder `lowpoly_mesh.gd` làm mượt pháp tuyến trong góc 62° (trọng số diện tích), vát cạnh khối, bo vành trụ, tối thiểu 8 cạnh; Hub, cổng gió, cây, đồi bake lại tròn mềm.
   - **Cel shading + viền mực (Stylized Anime 3D):** shader cel dải rõ (`toon.band_softness`), viền mực tím ấm; preset mới `mat_toon_skinned.tres` cho nhân vật có xương.
