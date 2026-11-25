@@ -5,7 +5,14 @@
 ## Phase 1: Setup
 
 - [ ] T001 Image CI Godot ghim phiên bản + export templates (Linux) và cấu hình runner macOS (GitHub-hosted) cho iOS — file: `.github/images/godot/Dockerfile`
-- [ ] T002 [P] 3 preset export (Android arm64-v8a AAB/APK không intent filter OAuth — đã có từ F060, iOS arm64, Web Compatibility single-threaded), không mật khẩu, không preset Windows (ADR-0101; preset "Windows Desktop" đã gỡ 2026-11-24); thêm preset Web/iOS cần owner duyệt tải export templates — file: `src/game/export_presets.cfg`
+- [x] T002 [P] 3 preset export (Android arm64-v8a AAB/APK không intent filter OAuth — đã có từ F060, iOS arm64, Web Compatibility single-threaded), không mật khẩu, không preset Windows (ADR-0101; preset "Windows Desktop" đã gỡ 2026-11-24); thêm preset Web/iOS cần owner duyệt tải export templates — file: `src/game/export_presets.cfg` — **xong 2026-11-25:**
+  - **Preset:** Android (preset.0, thêm loại `web/*`), iOS (preset.1: arm64, iOS 15.0, `vn.eduworld.game`, App Store; team id/ký để trống), Web (preset.2: đơn luồng, không GDExtension, ETC2/ASTC, shell `res://web/shell.html`). Cùng `eduworld_production`, chỉ `production.json`, cùng danh sách loại trừ.
+  - **Test và export:**
+    - `tests/unit/core/test_export_presets.gd`: 6 test pass; `test_config_mock_label.gd` nay đòi đúng 3 preset.
+    - Export local Godot 4.7.2: Web `index.wasm` 39 514 754 B, `index.pck` 2 240 404 B; PCK Android 2 240 404 B.
+    - `scan_artifact.sh` OK (4 artifact, gồm `index.html`); `check_web_export.sh` OK.
+    - APK/AAB không build được trên máy này (không có Android SDK/JDK/Gradle); CI job `export` build APK.
+    - iOS: Godot sinh được project Xcode (deployment target 15.0, entitlements rỗng) khi đặt team id tạm (không commit). Export dừng ở "Invalid icon" vì project chưa có icon ứng dụng, xem Clarifications 2026-11-25. Không build được IPA trên Windows.
 - [ ] T003 [P] `gen-config.mjs` sinh `src/game/config/<env>.json` từ biến/secret của GitHub Environment (URL, khóa công khai manifest) — file: `scripts/godot/gen-config.mjs`
 
 ## Phase 2: Foundational (chặn mọi user story)
@@ -71,12 +78,21 @@
 ### Tests cho User Story 3
 
 - [ ] T025 [P] [US3] Job F133-AC-14 (TC-PERF-018): benchmark headless chạy trên bản build release, chặn khi vượt `perf_budget_tolerance_ci` — file: `.github/workflows/godot.yml` — phải FAIL trước khi code
-- [ ] T026 [P] [US3] Playwright F133-AC-16 (TC-SIM-005 tham chiếu): `shell.html` trên Firefox/không WebGL 2 hiện thông báo; Chrome tải engine single-threaded — file: `src/game/web/tests/shell.spec.ts`
+- [x] T026 [P] [US3] Playwright F133-AC-16 (TC-SIM-005 tham chiếu): `shell.html` khi không có WebGL 2 hiện thông báo; Firefox/Safari có WebGL 2 chỉ có banner, không bị chặn (OQ-04, Clarifications 2026-11-25); Chrome tải engine single-threaded — file: `src/game/web/tests/shell.browser.test.mjs` (+ `shell.test.mjs` jsdom; `.mjs` thay `.ts` vì game không có toolchain TypeScript) — **xong 2026-11-25:**
+  - jsdom `shell.test.mjs` 9/9 pass: không WebGL 2/không secure context → thông báo và không tải engine; Firefox/Safari/Chrome iOS/Opera → banner và engine vẫn tải; Chrome/Edge/Chrome Android → không banner, engine chỉ `start` sau khi bấm; heap 512 MiB/1 GiB; không dùng storage; CSS chỉ dùng token.
+  - Playwright trên bản export: Chromium (headless shell) 2/2 pass. Có tải, không `AudioContext` trước khi bấm, Godot 4.7 khởi động sau "Chơi", không lỗi trang; khi tắt WebGL thì có thông báo và không request `.wasm`/`.pck`.
+  - WebKit bỏ qua: bản WebKit mà Playwright 1.64.1 cần chưa cài, tải bị chặn. Firefox không có trong bộ trình duyệt của repo; Gecko được kiểm bằng test UA của jsdom.
+  - CI `godot.yml` job `export` chạy `make godot-export-web` + `node --test src/game/web/tests/` (phần trình duyệt tự bỏ qua khi thiếu Playwright).
 - [ ] T027 [P] [US3] Checklist lab F133-AC-13 (TC-PERF-009, TC-PERF-019…024) và F133-AC-15 (TC-AUTH-001) + mẫu báo cáo — file: `docs/12-project/perf-reports/client-template.md`
 
 ### Implementation cho User Story 3
 
-- [ ] T028 [US3] `src/game/web/shell.html` (kiểm WebGL 2/UA, âm thanh sau tương tác) và cấu hình heap Web theo PERFORMANCE_BUDGET §14 — file: `src/game/web/shell.html`
+- [x] T028 [US3] `src/game/web/shell.html` (kiểm WebGL 2/UA, âm thanh sau tương tác) và cấu hình heap Web theo PERFORMANCE_BUDGET §14 — file: `src/game/web/shell.html` — **xong 2026-11-25:**
+  - **Shell:** kiểm WebGL 2/WebAssembly/fetch/secure context trước khi chèn `index.js`; banner cho trình duyệt khác Chrome/Edge; heap qua `WebAssembly.Memory.prototype.grow` (dành 512 MiB lần đầu, chặn trên 1 GiB); tải engine + PCK ngay nhưng chỉ `engine.start()` khi bấm "Chơi"; chuỗi vi/en.
+  - **Giao diện:** `shell_tokens.css` sinh từ `design/game-tokens` (output mới `gameShellCss` của `make design-tokens`, check separation coi là output game).
+  - **Công cụ:** `make godot-export-web`, `godot-web-preview` (`tools/web/serve_web.mjs`, cổng 8060), `godot-web-test`, `godot-export-ios`; `tools/ci/check_web_export.sh` (shell đúng, placeholder đã thay, đơn luồng, không GDExtension, không dùng storage, có `shell_tokens.css`); `scan_artifact.sh` quét cả `.html`.
+  - **CORS bản Web khác origin** (Clarifications 2026-11-25): APISIX `cors: game` + `EW_CORS_GAME_ORIGINS`, `allow_headers` thêm `X-Client-Version`/`X-Client-Platform`, Origin của realtime trong compose. Test `deploy/apisix/scripts/render.test.mjs` (2 test mới pass).
+  - Bằng chứng test: xem T026.
 - [ ] T029 [US3] Bật `certificate_pinning` cho Android/iOS trong `ApiClient` (phối hợp F061; ADR-0101) — file: `src/game/scripts/networking/api_client.gd`
 - [ ] T030 [US3] Chạy chứng nhận trên lab, ghi báo cáo — file: `docs/12-project/perf-reports/client-2026-12-01.md`
 

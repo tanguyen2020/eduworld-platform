@@ -9,6 +9,21 @@ Nhóm mục: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`, `
 ## [Unreleased]
 
 ### Added
+- 2026-11-25 — **F133 T002/T028/T026: preset export Web + iOS, Web shell, CORS cho bản Web** (`src/game/`, `deploy/apisix`, `design/`, [spec](specs/133-client-build-release/spec.md) Clarifications 2026-11-25; ADR-0101, ADR-0086, ADR-0068; R3, R4, R32):
+  - **Preset** (`export_presets.cfg`): đúng 3 preset phát hành — Android (giữ nguyên, thêm loại `web/*`), iOS (arm64, iOS 15.0, `vn.eduworld.game`, App Store, team id/ký để trống cho job macOS), Web (Compatibility, đơn luồng, không GDExtension, ETC2/ASTC, shell riêng). Cả ba cùng `eduworld_production` và chỉ đóng gói `production.json`.
+  - **Web shell** `src/game/web/shell.html`: không có WebGL 2 thì hiện trang thông báo, không tải engine; Firefox/Safari có WebGL 2 chỉ có banner, không bị chặn (OQ-04). Heap wasm theo PERFORMANCE_BUDGET §14 (512 MiB/1 GiB). Engine + PCK tải ngay nhưng chỉ khởi động (tạo `AudioContext`) khi bấm "Chơi". Không dùng storage của trình duyệt. Màu và cỡ chữ lấy từ `shell_tokens.css`, sinh từ token game.
+  - **Make và CI:** target `godot-export-web` (export + `tools/ci/check_web_export.sh` + quét), `godot-web-preview` (`tools/web/serve_web.mjs`, `http://localhost:8060`), `godot-web-test` (jsdom + Playwright Chromium/WebKit), `godot-export-ios` (chỉ project Xcode). `scan_artifact.sh` quét cả `.html`. CI `godot.yml` job `export` export và kiểm bản Web, upload `build/web/`.
+  - **Test:** `test_export_presets.gd`, `src/game/web/tests/shell.test.mjs`, `shell.browser.test.mjs`, rule `godot-rules.test.mjs`.
+
+### Changed
+- 2026-11-25 — **Gateway: bản Web của game gọi được API từ origin khác** (F133, [DEPLOYMENT §9](docs/11-operations/DEPLOYMENT.md#9-cdn-và-phân-phối-godot-client)). Bản Web nằm trên CDN `play.<domain>`, API ở `api.<domain>`; trước đây CORS chỉ nhận origin portal nên đăng nhập game trên Web bị chặn.
+  - Route game (`/auth/game/*`, `/game/client-config`, `player`, `/realtime/v1`) đánh dấu `cors: game` trong `routes.yaml`, nhận thêm `EW_CORS_GAME_ORIGINS` (local `http://localhost:8060`, staging `https://play.staging.eduworld.example`).
+  - Route cookie của portal không nhận origin này. `render.mjs` từ chối `*`, origin có path hoặc danh sách rỗng; `allow_credential` không đổi.
+  - `allow_headers` thêm `X-Client-Version`, `X-Client-Platform`.
+  - `realtime` trong compose có `EW_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8060`.
+  - CORS của CDN media/gói cho origin bản Web làm ở T022 (F130).
+
+### Added
 - 2026-11-24 — **F067 Art pass 1: Main Hub low-poly stylized và nhân vật chibi** (`src/game/`, [spec](specs/067-art-pass-hub-chibi/spec.md), [ADR-0102](docs/adr/ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md)): greybox Quảng trường Tia Sáng thay bằng đồ họa tự làm bằng code (MIT) — cây đa Tia Sáng, đình và nhà mái ngói, cổng làng, hồ sen có thuyền thúng, đèn lồng, ruộng bậc thang, hồ, đồi, núi Thử Thách; 11 cổng gió có biểu tượng hình dạng theo vùng đích; bảng tin mái ngói; marker tia sáng. Công thức `tools/art/*_art.gd` bake ra `src/game/assets/models/**` (`make godot-art-bake`, `bake_art.gd --check` trong `make godot-lint`). Shader toon chung + viền inverted hull mềm (`resources/art/shaders/`, MIT), preset `mat_toon*.tres` sinh từ token; mesh chỉ lưu slot của bảng màu `art.palette.*`. Nhân vật chibi (đầu ≈ 1/3, mắt có điểm sáng, miệng cười, má hồng), 6 kiểu tóc, 6 trang phục, 4 phụ kiện, 3 dáng NPC (nón lá, mũ bưu tá, khăn đóng); tùy biến F070 giữ nguyên, màu đồ từ `ItemVisual.tint_token`. Preset Thấp/Trung bình/Cao điều khiển viền toon (12 m / 30 m / luôn bật) và mật độ cỏ/hoa/lúa (25/60/100 %) qua `ZoneArtQuality`; renderer Compatibility (Web) không bật bóng nắng thời gian thực (renderer parity). Lint mới `tools/lint_art.gd` (license theo `src/game/assets/LICENSES.md` + cấm literal màu trong nguồn mỹ thuật 3D). Đình lùi sau hàng cổng gió (trước đây đè cổng đi Đại dương). Benchmark Hub có renderer: Mobile 65 draw call / 123k primitive, Compatibility 73 / 69k.
 
 ### Decisions

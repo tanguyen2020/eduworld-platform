@@ -502,7 +502,8 @@ flowchart LR
 
 - Chạy Godot headless trong container có phiên bản Godot + export templates khóa cứng.
 - `client_version` = SemVer, nhúng vào `Config` lúc build; build number = `github.run_number`.
-- `export_presets.cfg` không chứa mật khẩu; CI ghi đè qua biến môi trường.
+- `export_presets.cfg` có đúng 3 preset phát hành: "Android" (arm64-v8a, Android 9+), "iOS" (arm64, iOS 15+, bundle `vn.eduworld.game`), "Web" (Compatibility, đơn luồng, không GDExtension). Cả ba có cùng feature `eduworld_production`, chỉ đóng gói `config/env/production.json`, và loại cùng một danh sách (mock, test, tool, scene debug, pseudo-locale, `web/*`). File không chứa mật khẩu, team id Apple hay provisioning profile; CI ghi đè qua biến môi trường hoặc job ký trên runner macOS (F133 T002, T019).
+- Bản Web dùng shell riêng `src/game/web/shell.html`. Shell kiểm WebGL 2 trước khi tải engine (thiếu thì hiện trang thông báo); Chrome/Edge được hỗ trợ chính thức, trình duyệt khác chỉ có banner, không bị chặn. Shell giữ heap wasm theo [PERFORMANCE_BUDGET §14](PERFORMANCE_BUDGET.md) (dành 512 MiB ở lần tăng đầu, không quá 1 GiB) và chỉ khởi động engine (âm thanh) sau tương tác đầu. Màu và cỡ chữ lấy từ `shell_tokens.css`, sinh từ token game. Bản Web nằm ở origin khác API: CORS theo [DEPLOYMENT §9](../11-operations/DEPLOYMENT.md#9-cdn-và-phân-phối-godot-client).
 - Mỗi target export kiểm tra có adapter `SecureStorage` đúng nền tảng (Android/iOS native; Web `MemoryOnly`) — thiếu thì build fail (F133, ADR-0086).
 
 ## 12. Testing

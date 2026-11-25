@@ -53,6 +53,7 @@ flowchart LR
   SD --> GT[src/game/resources/ui/theme/eduworld_theme.tres\n+ density variants]
   SD --> GC[src/game/scripts/core/ui_tokens.gd\nclass_name UiTokens]
   SD --> G3[src/game/resources/art/generated/\nmaterial presets, Environment, Gradient]
+  SD --> GW[src/game/web/shell_tokens.css\n--ew-* của Web shell game]
   SD --> AT[src/cms/frontend/packages/ops-ui/src/theme/\nantd-theme.ts light/dark/compact]
   SD --> CV[src/cms/frontend/packages/ops-ui/src/theme/\ntokens.css: --ew-* variables]
   SD --> CK[báo cáo tương phản WCAG\n+ kiểm tra alias]
@@ -176,6 +177,7 @@ Portal (`apps/portal`) dùng thêm **Tailwind CSS v3** (ghim phiên bản) cho b
 
 - `semantic.json`: nền panel, chữ, nhấn, phản hồi đúng/sai, cảnh báo nhẹ; `component.json`: nút chính/phụ, panel nhiệm vụ, thẻ câu hỏi, dải phản hồi + nút gợi ý (`HintButton`, đếm cấp gợi ý), khung phụ đề lời thoại có icon người nói (`VoiceCaption`, dùng cho `g1_3` — PED-07), badge XP/cấp độ, thanh tiến độ, toast, HUD.
 - Sinh `Theme` Godot (`src/game/resources/ui/theme/eduworld_theme.tres`) và lớp hằng `UiTokens` (`src/game/scripts/core/ui_tokens.gd`) để code dùng khi cần giá trị (khoảng cách, thời lượng tween).
+- Sinh `src/game/web/shell_tokens.css` (biến `--ew-*` từ token game: màu ngữ nghĩa, khoảng cách, bo góc, viền, layout, font, density cơ sở) cho Web shell `src/game/web/shell.html` — trang HTML chạy trước engine trên bản Web (F133). Đây là output game, không chứa token admin; shell không có màu/cỡ literal.
 - Mọi `Control` lấy style từ Theme; component tái sử dụng trong `src/game/scenes/ui/components/`.
 - **Biến thể Theme dùng chung (tokens@0.9.0, sinh bởi `design/sd/formats/godot-tres.mjs`):** `IconButton` (nút chỉ có icon, vuông, cao bằng `density.<band>.button.min_height`), `ChoiceChip` (lựa chọn bật/tắt, đang chọn = nền nhấn + icon ✓), `TextButton` (hành động dạng liên kết, chữ màu nhấn + icon, vùng chạm như nút), `InlineErrorPanel`/`InlineErrorLabel` (nền đỏ nhạt, viền đỏ, luôn kèm icon cảnh báo), `InfoBannerPanel`/`InfoBannerLabel`, `FormCard` (thẻ form có bóng mềm, `component.form_card.*`), `SpeechBubble`/`SpeechBubbleLabel` (lời NPC), `LogoLabel` (wordmark Baloo 2 viền trắng), container `FormBox` (¾ khoảng cách khối), `FieldBox` (nhãn + ô), `ToolbarBox`, `ScreenMargin` (lề màn = khoảng cách khối). `LineEdit` cao bằng chiều cao nút tối thiểu của khối (có kiểu `read_only`); `CheckBox` có ô 40 px và vùng chạm theo khối. Padding dọc của nút/ô nhập tính từ chiều cao dòng thật của font thân (fontkit) để đạt đúng chiều cao tối thiểu.
 - **Focus bàn phím/tay cầm:** mọi `Button` (và biến thể) dùng vòng focus chỉ có viền `component.focus_ring.*`, vẽ ra ngoài control một khoảng nhỏ — thấy được trên cả nút nền đặc lẫn nút viền; không phủ nền khi focus.

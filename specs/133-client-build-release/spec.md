@@ -34,6 +34,29 @@
 - Q: "Bộ cài trường" còn gì? → A: [Confirmed] Chỉ gói APK Android kèm gói vùng theo khối, phân phối qua MDM/USB (ADR-0101 mục 7).
 - Q: PC phòng máy chạy Web không đọc được `device.cfg` (không có `lan_cache_url`, không tải trước ngoài giờ, không gói cài sẵn) — US4/F133-AC-22 (40 máy vào Hub ≤ 2 phút) đạt cho PC phòng máy bằng cách nào? → A: [TBD] Câu hỏi mở cho owner; tạm thời F133-AC-17…22 áp cho thiết bị Android dùng chung, PC phòng máy dựa vào cache HTTP của trình duyệt và CDN (chưa có tiêu chí riêng).
 
+### Session 2026-11-25 (T002, T028 — chọn mặc định an toàn khi triển khai)
+
+- Q: Bản Web ở origin khác API (`play.<domain>` so với `api.<domain>`), đăng nhập bị CORS chặn — phục vụ cùng origin hay mở CORS? → A: [Confirmed] **Mở CORS theo allowlist, chỉ cho route của game.** Lý do: DEPLOYMENT §9 đã đặt bản Web trên CDN theo phiên bản, còn API ở `api.<domain>` (`api_base_url` của `config/<env>.json`); game dùng Bearer trong RAM, không cookie. SECURITY_ARCHITECTURE chỉ đòi cùng origin cho route cookie của portal. Cách làm:
+  - Route `cors: game` trong `deploy/apisix/routes/routes.yaml` (`/auth/game/*`, `/game/client-config`, `player`, `/realtime/v1`) nhận thêm origin bản Web từ `EW_CORS_GAME_ORIGINS` (local `http://localhost:8060`, staging `https://play.staging.eduworld.example`).
+  - Route portal, nhất là `/auth/portal/*`, không bao giờ nhận origin này. Không `*`, không đổi `allow_credential`.
+  - Thêm `X-Client-Version`, `X-Client-Platform` vào `allow_headers` (game gửi ở mọi request).
+  - `realtime` của compose đặt `EW_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8060`.
+  - CORS của CDN media/gói cho origin bản Web thuộc T022 (cần F130).
+  - Chi tiết: [DEPLOYMENT §9](../../docs/11-operations/DEPLOYMENT.md#9-cdn-và-phân-phối-godot-client).
+- Q: T026 ghi "Firefox → trang thông báo", trái F133-AC-16 sau ngày 2026-11-20 — theo bên nào? → A: [Confirmed] Theo F133-AC-16 và OQ-04: chỉ thiếu WebGL 2 (hoặc thiếu WebAssembly/fetch/secure context) mới hiện trang thông báo và không tải engine. Trình duyệt khác Chrome/Edge có WebGL 2 (Firefox, Safari, Chrome iOS, Opera) chỉ có banner "không hỗ trợ chính thức" đóng được. T026 sửa theo.
+- Q: Heap Web "khởi tạo 512 MB, tối đa 1 GB" (PERFORMANCE_BUDGET §14) đặt ở đâu khi template Godot 4.7.2 cố định bộ nhớ lúc build (wasm tự export memory, tăng tới 2 GiB)? → A: [Confirmed] Shell đặt chính sách trên `WebAssembly.Memory.prototype.grow`:
+  - lần tăng đầu dành sẵn 512 MiB (thiết bị không đủ thì tăng đúng mức xin);
+  - không bao giờ vượt 1 GiB (vượt thì ném `RangeError`, engine báo hết bộ nhớ, shell hiện thông báo lỗi).
+  Không build template riêng.
+- Q: "Âm thanh bật sau tương tác đầu" làm thế nào? → A: [Confirmed] Shell tải engine + PCK ngay. Engine chỉ `start()` (lúc đó mới tạo `AudioContext`) khi học sinh bấm "Chơi", nên không có âm thanh hay `AudioContext` nào trước cử chỉ người dùng. PWA/service worker tắt (`progressive_web_app/enabled=false`); cache theo hash CDN (§9, T022).
+- Q: Chuỗi và giao diện của shell (chạy trước engine, chưa có file dịch hay Theme)? → A: [Confirmed] Chuỗi vi (mặc định)/en nằm trong shell, chọn theo `navigator.languages`. Màu, cỡ chữ, khoảng cách lấy từ `src/game/web/shell_tokens.css`, sinh bởi `make design-tokens` từ `design/game-tokens` (output game, không token admin — R32). File này được `make godot-export-web` chép cạnh `index.html`. Shell không dùng localStorage/sessionStorage/IndexedDB/cookie (ADR-0086).
+- Q: Preset iOS — bản tối thiểu, ký, icon? → A: [Confirmed] Thông số preset:
+  - arm64 (template 4.7.2 chỉ có arm64), `min_ios_version = 15.0`, bundle `vn.eduworld.game` (khớp Android), xuất App Store (release)/Development (debug);
+  - team id, identity, provisioning profile để trống: job ký trên runner macOS ghi vào (T019);
+  - không entitlement thêm, không Game Center, không mở thư mục app cho ứng dụng Tệp/iTunes.
+  Trên Windows Godot 4.7.2 sinh được project Xcode khi có team id, nhưng không build/ký được IPA (cần Xcode). Project chưa có icon ứng dụng (`application/config/icon`), nên export iOS báo "Invalid icon". **Không** dùng icon giả: icon thương hiệu 1024×1024 là điều kiện trước T019 (việc của thiết kế).
+- Q: Chạy bản Web với stack local khi preset phát hành chỉ đóng gói `production.json`? → A: [Confirmed] Không thêm preset debug/local và không sửa `local.json` hay preset rồi commit. Bản Web chạy với stack local dùng `config` sinh bởi `gen-config.mjs` (T003, chưa làm). `make godot-web-preview` phục vụ ở `http://localhost:8060`, origin đã có trong CORS local.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Export 3 nền tảng từ tag, có cổng dung lượng và quét bảo mật (Priority: P1)
