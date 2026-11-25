@@ -1,6 +1,6 @@
 # Performance Budget — Ngân sách hiệu năng client (máy tầm trung)
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-25 (ADR-0103/F068: ngân sách giữ nguyên với art direction mới, blob shadow trên Web) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-15
 > Liên quan: [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0013](../adr/ADR-0013-nen-tang-client-release-1-0-gom-windows-android-ios-web.md) · [ADR-0101](../adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [ADR-0055](../adr/ADR-0055-cong-thuc-toan-vat-ly-hoa-hoc-mathjax-4-hien-thi-mathlive-nh.md) · [GODOT_ARCHITECTURE](GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](WORLD_RENDERING.md) · [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [TEST_STRATEGY](../12-project/TEST_STRATEGY.md)
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Hạng thiết bị tham chiếu · 3. Mục tiêu khung hình · 4. Renderer theo nền tảng · 5. Preset chất lượng · 6. Tự phát hiện và độ phân giải động · 7. Ngân sách theo cảnh · 8. Ngân sách asset · 9. Ngân sách UI 2D · 10. Ngân sách mạng (10.1 phòng máy) · 11. Thời gian tải và dung lượng · 12. Pin và nhiệt · 13. Kỹ thuật tối ưu bắt buộc · 14. Web export · 15. Quy trình kiểm soát · 16. Tiêu chí nghiệm thu
@@ -63,7 +63,7 @@ Cột Mobile / Web áp dụng cho Android, iOS và Web, gồm PC phòng máy ch�
 | Desktop chạy từ editor/bản debug (Windows, macOS, Linux — không phát hành, ADR-0101) | Mobile; Forward+ ở preset Cao | Compatibility | Chỉ để phát triển: `QualityPolicy` coi mọi nền tảng ngoài Android/iOS/Web là nhánh desktop (giới hạn 60 FPS ở preset Trung bình/Cao); không có ngân sách, thiết bị tham chiếu hay nghiệm thu cho nhánh này |
 
 - Lựa chọn renderer lưu ở `user://settings.cfg`; lần khởi động lỗi do renderer → tự chuyển sang Compatibility ở lần sau và gửi telemetry.
-- Art direction stylized/toon phải đạt **renderer parity** giữa Mobile và Compatibility (shader toon dùng tính năng chung, không phụ thuộc SSAO/SSR/SDFGI); kiểm tra theo [WORLD_RENDERING](WORLD_RENDERING.md) và [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md). Trên Compatibility (Web) mặt trời không có bóng thời gian thực ở mọi preset (F067, [WORLD_RENDERING §7](WORLD_RENDERING.md#7-lighting)).
+- Art direction stylized/toon phải đạt **renderer parity** giữa Mobile và Compatibility (shader toon dùng tính năng chung, không phụ thuộc SSAO/SSR/SDFGI); kiểm tra theo [WORLD_RENDERING](WORLD_RENDERING.md) và [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md). Trên Compatibility (Web) mặt trời không có bóng thời gian thực ở mọi preset (F067, [WORLD_RENDERING §7](WORLD_RENDERING.md#7-lighting)); nhân vật dùng blob shadow ở đó (F068). Art direction "Chibi anime cartoon 3D" ([ADR-0103](../adr/ADR-0103-art-direction-chibi-anime-cartoon-3d-thay-stylized-low-poly.md)) giữ nguyên các ngân sách §7, §8: khối tròn làm bằng pháp tuyến mượt (không thêm tam giác), chỉ vát cạnh khối đủ dày, vật thể lặp/xa/NPC giữ bậc chia gốc, mặt đất và trang trí nhỏ không đổ bóng; đo bằng benchmark có renderer (§15) trên cả Mobile và Compatibility.
 
 ## 5. Preset chất lượng
 
@@ -71,7 +71,7 @@ Cột Mobile / Web áp dụng cho Android, iOS và Web, gồm PC phòng máy ch�
 |---|---|---|---|
 | Render scale 3D (UI luôn 1,0) | 0,75 (động 0,6–0,75) | 0,9 (động 0,7–1,0) | 1,0 |
 | Giới hạn FPS | 30 | 30 | 60 |
-| Bóng | Blob shadow (decal) cho nhân vật, không bóng realtime | 1 directional, 1 cascade, shadow map 1024, khoảng cách 25 m | 2 cascade, 2048, 40 m |
+| Bóng | Blob shadow cho nhân vật (F068), không bóng realtime | 1 directional, 1 cascade, shadow map 1024, khoảng cách 25 m | 2 cascade, 2048, 40 m |
 | Khoảng cách nhìn (visibility range) | 40 m | 70 m | 120 m |
 | LOD bias (`mesh_lod_threshold`) | 4,0 | 2,0 | 1,0 |
 | Nhân vật render đầy đủ (LOD0/1) | 10 | 20 | 40 |

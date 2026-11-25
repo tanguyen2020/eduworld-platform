@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-> Trạng thái: Review · Phiên bản: 1.1 · Owner: Solution Architect · Cập nhật: 2026-11-24 (ADR-0102 nguồn asset đồ họa theo license MIT/CC0, thay phần nguồn asset của OQ-16) · 2026-11-24 (ADR-0101 bỏ Windows: client chỉ Web, Android, iOS; ADR-0013, 0057, 0073, 0078, 0086, 0088 superseded một phần) · 2026-11-21 (ADR-0095 bỏ khái niệm lớp; ADR-0084 Superseded) · 2026-11-20 (owner chốt toàn bộ ADR còn `Proposed`: chuyển `Accepted`, trừ ADR-0053 và ADR-0077 hoãn theo ADR-0082; ADR-0007 Superseded)
+> Trạng thái: Review · Phiên bản: 1.1 · Owner: Solution Architect · Cập nhật: 2026-11-25 (ADR-0103 art direction "Chibi anime cartoon 3D" thay stylized low-poly; ADR-0102 một phần superseded — câu về phong cách) · 2026-11-24 (ADR-0102 nguồn asset đồ họa theo license MIT/CC0, thay phần nguồn asset của OQ-16) · 2026-11-24 (ADR-0101 bỏ Windows: client chỉ Web, Android, iOS; ADR-0013, 0057, 0073, 0078, 0086, 0088 superseded một phần) · 2026-11-21 (ADR-0095 bỏ khái niệm lớp; ADR-0084 Superseded) · 2026-11-20 (owner chốt toàn bộ ADR còn `Proposed`: chuyển `Accepted`, trừ ADR-0053 và ADR-0077 hoãn theo ADR-0082; ADR-0007 Superseded)
 > Liên quan: [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md) · [OPEN_QUESTIONS](../12-project/OPEN_QUESTIONS.md) · [DOCUMENTATION_AUDIT](../12-project/DOCUMENTATION_AUDIT.md)
 
 ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng của EduWorld: bối cảnh, phương án, quyết định, hệ quả và lịch sử thay đổi. Mỗi ADR là một file `ADR-NNNN-<slug>.md`. Người mới nên đọc mục **Quyết định hiện hành theo chủ đề** trước, không cần đọc ADR đã bị thay.
@@ -119,7 +119,8 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0099](ADR-0099-doi-ten-config-type-levels-thanh-progression-levels.md) | Đổi tên config type `levels` thành `progression-levels` | Accepted | — |
 | [0100](ADR-0100-item-id-la-ma-chuoi-trong-moi-hop-dong-vat-pham.md) | `item_id` là mã chuỗi trong mọi hợp đồng vật phẩm | Accepted | — |
 | [0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) | Bỏ Windows khỏi nền tảng client Release 1.0 — client chỉ Web, Android, iOS | Accepted · một phần supersedes ADR-0013, 0057, 0073, 0078, 0086, 0088 | OQ-04 |
-| [0102](ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md) | Nguồn asset đồ họa theo license MIT (hoặc dễ dãi hơn), asset tự làm phát hành MIT | Accepted · thay phần nguồn asset của OQ-16 | OQ-16 |
+| [0102](ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md) | Nguồn asset đồ họa theo license MIT (hoặc dễ dãi hơn), asset tự làm phát hành MIT | Accepted · thay phần nguồn asset của OQ-16 · Superseded một phần bởi ADR-0103 (câu về phong cách ở mục 7) | OQ-16 |
+| [0103](ADR-0103-art-direction-chibi-anime-cartoon-3d-thay-stylized-low-poly.md) | Art direction "Chibi anime cartoon 3D" thay stylized low-poly | Accepted · thay phần phong cách của OQ-16 và WORLD_DESIGN §11 | OQ-16 |
 
 ## Quyết định hiện hành theo chủ đề
 
@@ -248,6 +249,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 | [0027](ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) | Một Admin Portal 5 workspace; tenant chỉ Learning Management; System Admin liên tenant |
 | [0022](ADR-0022-cms-lms-web-la-react-typescript-spa.md) | Portal là React SPA |
 | [0047](ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) | Hai design system: Game (Godot 3D) và Admin/Ops (Ant Design 5) |
+| [0103](ADR-0103-art-direction-chibi-anime-cartoon-3d-thay-stylized-low-poly.md) | Art direction **"Chibi anime cartoon 3D"**: khối tròn vát cạnh đổ bóng mượt (Stylized 3D Cartoon), tỉ lệ chibi đầu 1/2–1/3 (3D Chibi), cel shading + viền mực + mắt to có điểm sáng + tóc lọn + má hồng (Stylized Anime 3D), chuyển động thở/đi/chạy nhún/nhảy/vẫy/ăn mừng + squash & stretch + biểu cảm (3D Animated Cartoon); cấm tỉ lệ anime người thật; license vẫn theo 0102 |
 | [0102](ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md) | Asset đồ họa game chỉ dùng license MIT, CC0 hoặc public domain (cấm SA, NC, ND, GPL, pack trả phí); asset tự làm phát hành MIT; mỗi file một dòng trong `src/game/assets/LICENSES.md`, `lint_art.gd` kiểm (font giữ OFL) |
 | [0098](ADR-0098-tailwind-css-lam-lop-tien-ich-bo-cuc-cho-admin-portal.md) | Portal dùng thêm Tailwind CSS v3 (ghim phiên bản) chỉ cho bố cục/tiện ích: Preflight tắt, theme chỉ trỏ biến admin token `var(--ew-*)`, cấm arbitrary value (ESLint/stylelint/test); Ant Design vẫn là thư viện component |
 | [0066](ADR-0066-dang-nhap-rieng-cho-portal-va-phan-quyen-role-userrole.md) | Đăng nhập portal riêng (màn đăng nhập theo 0091); màn quản trị Role / UserRole |

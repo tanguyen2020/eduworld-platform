@@ -1,6 +1,6 @@
 # World Rendering — Kỹ thuật dựng thế giới 3D (Godot)
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-25 (ADR-0103 / F068: mesh tròn mượt, cel shader, rig `kid_base`, blob shadow, Cây Tia Sáng theo cấp) · 2026-11-15
 > Liên quan: [ADR-0012, ADR-0013](../adr/README.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) · [GODOT_ARCHITECTURE](GODOT_ARCHITECTURE.md) · [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md)
 
 ## Mục đích và phạm vi
@@ -111,8 +111,8 @@ Mọi con số (ngân sách theo cảnh, asset, ánh sáng, physics, dung lượ
 | LOD | Godot automatic mesh LOD khi import + `visibility_range_end` cho props nhỏ; nhân vật 3 mức (full / giảm / impostor billboard > 30 m) |
 | Occlusion | `OccluderInstance3D` bake cho tòa nhà, tường; bật occlusion culling ở zone có nhiều khối |
 | Batching | Gộp props tĩnh cùng material; cây/cỏ/đá dùng `MultiMeshInstance3D`; một material toon cho cả zone, màu là slot của bảng màu token `art.palette.*` (mảng uniform của preset `mat_toon.tres`, không texture) |
-| Texture | Palette texture 256–512px cho low-poly; ETC2/ASTC trên Android, BPTC/S3TC trên PC; mipmaps bật |
-| Shader | Một shader toon chung `src/game/resources/art/shaders/toon.gdshader` (dải sáng mềm + rim, không specular) và viền inverted hull `toon_outline.gdshader` làm `next_pass`; preset `resources/art/generated/mat_toon.tres` (có viền) / `mat_toon_no_outline.tres` (cỏ, hoa, lúa) sinh từ token; zone không tự tạo material; precompile qua màn hình warm-up |
+| Texture | Palette (mảng uniform) thay texture cho mesh tự làm; ETC2/ASTC trên Android, BPTC/S3TC trên PC; mipmaps bật |
+| Shader | Một shader cel chung `src/game/resources/art/shaders/toon.gdshader` (dải sáng phân bậc rõ, cạnh dải `toon.band_softness`, rim, không specular — ADR-0103) và viền mực inverted hull `toon_outline.gdshader` làm `next_pass`; preset `resources/art/generated/mat_toon.tres` (có viền, mesh tĩnh) / `mat_toon_skinned.tres` (nhân vật có xương: viền theo NORMAL đã skin) / `mat_toon_no_outline.tres` (cỏ, hoa, lúa, mặt nhân vật) sinh từ token; zone không tự tạo material; precompile qua màn hình warm-up |
 | Hiệu ứng | Particle GPU số lượng thấp; tắt SSAO/SSR/volumetric fog trên Mobile renderer |
 | Giới hạn theo thiết bị | Preset Thấp/Trung bình/Cao, tự phát hiện và độ phân giải động theo [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §5–§6; zone đọc thiết lập từ `QualityManager` (mật độ cỏ, visibility range, outline), không tự đặt giá trị |
 | Streaming vùng | Mỗi vùng là một gói PCK + scene gốc; vào vùng mới thì tải nền gói, giải phóng scene/texture vùng cũ sau khi chuyển xong; giữ tối đa 2 vùng trong RAM |
@@ -123,7 +123,7 @@ Mọi zone phải qua **benchmark scene** tự động trong CI và trên thiế
 ## 7. Lighting
 
 - **Baked lighting**: `LightmapGI` cho zone tĩnh (độ phân giải texel vừa phải), kết hợp 1 directional light thời gian thực cho bóng nhân vật.
-- Mobile renderer: bóng nhân vật dùng blob shadow (decal) ở preset `low`.
+- **Blob shadow** (F068, quyết định F067-3): mỗi nhân vật (người chơi, người chơi khác, NPC, xem trước avatar) có `BlobShadow` — vệt tròn mờ dưới chân, màu/độ mờ từ token `light.blob_shadow_*` — **chỉ hiện khi mặt trời không có bóng thời gian thực**: renderer Compatibility (Web) hoặc bóng nắng tắt (preset Thấp hay học sinh tắt bóng trong cài đặt) (`QualityPolicy.blob_shadow_visible`, `ZoneArtQuality` cập nhật khi đổi preset). Người chơi cục bộ dò mặt đất để vệt bóng nằm trên sàn khi nhảy và nhỏ lại theo độ cao.
 - Ambient là màu phẳng ấm (`light.ambient_color`, `light.ambient_energy`), tonemap linear, sương `light.fog_density` — cùng kết quả trên Mobile và Compatibility. Trên **Compatibility (Web)** mặt trời không bật bóng thời gian thực (`QualityPolicy.shadows_supported`): renderer này vẽ ánh sáng có bóng thêm một pass cộng mà shader toon `light()` không phân biệt được (F067).
 - Không dùng chu kỳ ngày/đêm động (chi phí hiệu năng trên máy tầm trung, ADR-0057) [Confirmed]; mỗi zone có `Environment` riêng, sinh từ token `env.<zone>.*` trong `design/game-tokens/art3d.json` vào `resources/art/generated/` (ADR-0047); không đặt màu trời/sương/ánh sáng trực tiếp trong scene. Sự kiện mùa (World Event) đổi environment preset qua manifest.
 
@@ -132,7 +132,7 @@ Mọi zone phải qua **benchmark scene** tự động trong CI và trên thiế
 ```mermaid
 flowchart LR
   A[Blender .blend] -->|export glTF 2.0 .glb| B["src/game/assets/models/<category>/"]
-  P["tools/art/*_art.gd<br/>low-poly tự làm, F067"] -->|make godot-art-bake| B
+  P["tools/art/*_art.gd<br/>asset tự làm, F067/F068"] -->|make godot-art-bake| B
   B --> C["Godot import preset\n(LOD, collision, material remap)"]
   C --> D[Scene zone / prefab .tscn]
   D --> E[Benchmark + lint asset]
@@ -145,7 +145,7 @@ flowchart LR
 | Hạng mục | Quy chuẩn |
 |---|---|
 | Định dạng | glTF 2.0 binary (`.glb`); không commit `.fbx` |
-| Đơn vị | 1 unit = 1 mét; nhân vật học sinh cao 1.2–1.5 m (chibi tỉ lệ 1:3) |
+| Đơn vị | 1 unit = 1 mét; nhân vật học sinh cao 1,1–1,4 m, đầu 1/3–1/2 chiều cao ([CHARACTER_SYSTEM §4.1](../01-game-design/CHARACTER_SYSTEM.md#41-rig-kid_base-clip-và-biểu-cảm)) |
 | Trục | Y-up, nhân vật nhìn hướng -Z (chuẩn Godot) |
 | Pivot | Gốc tại đáy giữa vật thể |
 | Đặt tên file | `<category>_<name>_<variant>.glb` — `prop_bench_wood_a.glb`, `bld_library_main.glb`, `chr_body_kid_a.glb` |
@@ -154,7 +154,7 @@ flowchart LR
 | Texture | Lũy thừa của 2; tên `<asset>_<map>.png` (`_albedo`, `_orm`, `_normal` — hạn chế normal map) |
 | Audio | `.ogg` cho nhạc/ambience, `.wav` ngắn cho SFX; loudness chuẩn hóa −16 LUFS |
 | License | Mỗi file asset đồ họa có một dòng (glob đường dẫn, URL nguồn, tác giả, license, ngày) trong `src/game/assets/LICENSES.md` (= `res://assets/LICENSES.md`); chỉ MIT, CC0-1.0, public domain (font: OFL-1.1); asset tự làm phát hành MIT ([ADR-0102](../adr/ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md)); `src/game/tools/lint_art.gd` chặn file thiếu dòng hoặc license khác |
-| Asset tự làm bằng code | Công thức low-poly trong `src/game/tools/art/` (`*_art.gd`, builder `lowpoly_mesh.gd`) bake bằng `make godot-art-bake` ra `src/game/assets/models/<category>/<category>_<name>_<variant>.res`; mỗi mặt chỉ lưu **slot** của bảng màu token `art.palette.*` (UV.x = slot + 0,5; UV.y > 1 = `albedo` theo avatar), pháp tuyến mượt cho viền trong COLOR; `bake_art.gd --check` (CI) chặn mesh lệch công thức. Vật thể lặp lưu `ScatterSet` (mesh + transform), vẽ bằng `ScatterInstance` (MultiMesh) |
+| Asset tự làm bằng code | Công thức trong `src/game/tools/art/` (`*_art.gd`, builder `lowpoly_mesh.gd`) bake bằng `make godot-art-bake` ra `src/game/assets/models/<category>/<category>_<name>_<variant>.res`; mỗi mặt chỉ lưu **slot** của bảng màu token `art.palette.*` (UV.x = slot + 0,5; UV.y > 1 = `albedo` theo avatar), pháp tuyến mượt hàn hoàn toàn cho viền trong COLOR; `bake_art.gd --check` (CI) chặn mesh/clip lệch công thức. Vật thể lặp lưu `ScatterSet` (mesh + transform), vẽ bằng `ScatterInstance` (MultiMesh). **Hình khối "Stylized 3D Cartoon"** (ADR-0103, F068): builder làm mượt pháp tuyến trong góc 62° (trọng số diện tích), vát cạnh khối dày ≥ 0,035 m (Hub: ≥ 0,15 m) 20 % cạnh nhỏ nhất tối đa 0,09 m, bo vành trụ có nắp, tối thiểu 8 cạnh cho trụ/tiện, thêm một bậc chia cho khối cầu; vật thể lặp, xa và NPC giữ bậc chia gốc để đúng ngân sách. **Nhân vật**: thân và trang phục skinned theo `KidSkeleton` (BONES/WEIGHTS), mặt theo biểu cảm `chr_face_<biểu cảm>_a.res`, clip `anim_kid_<clip>_a.res` (công thức `character_anim.gd`); **Cây Tia Sáng** 5 cấp `veg_banyan_spark_s<0–4>_a.res` (`SparkTree` chỉ đổi mesh) |
 
 ### 8.2. Asset bundles (PCK)
 

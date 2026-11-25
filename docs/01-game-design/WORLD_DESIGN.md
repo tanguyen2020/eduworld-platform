@@ -1,6 +1,6 @@
 # World Design — Thế giới, vùng đất, khám phá
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director · Cập nhật: 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director · Cập nhật: 2026-11-25 (ADR-0103: art direction "Chibi anime cartoon 3D", Cây Tia Sáng 5 cấp — F068) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [GAME_DESIGN](GAME_DESIGN.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [ADR-0012](../adr/ADR-0012-the-gioi-game-hybrid-hub-instance-private-instance-match-roo.md) · [ADR-0013](../adr/ADR-0013-nen-tang-client-release-1-0-gom-windows-android-ios-web.md) · OQ-05, OQ-16
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Thế giới và cốt truyện · 3. Bản đồ vùng đất · 4. Chi tiết từng vùng · 5. Cấu trúc kỹ thuật–nội dung của thế giới · 6. Di chuyển, cổng, spawn · 7. Mở khóa và gating · 8. Khám phá và hoàn thành bản đồ · 9. Capacity và instance · 10. World event · 11. Art direction · 12. Dữ liệu, API, event, lỗi · 13. Mở rộng · 14. Acceptance criteria
@@ -239,14 +239,14 @@ Sự kiện thế giới là sự kiện live-ops loại `world_festival` (lễ 
 
 | Khía cạnh | Hướng | Nhãn |
 |---|---|---|
-| Phong cách | Stylized low-poly, màu tươi vừa, viền mềm, ánh sáng ấm, không bạo lực | [Confirmed — Master Prompt §3.1] |
-| Nhân vật | Tỉ lệ chibi (đầu ~1/3 thân), biểu cảm rõ, không vũ khí | [Confirmed] |
+| Phong cách | **Chibi anime cartoon 3D** ([ADR-0103](../adr/ADR-0103-art-direction-chibi-anime-cartoon-3d-thay-stylized-low-poly.md), thay stylized low-poly của Master Prompt §3.1/OQ-16): hình khối thế giới và đạo cụ tròn, mềm, vát cạnh, đổ bóng mượt, màu tươi không chói (Stylized 3D Cartoon); nhân vật tỉ lệ chibi (3D Chibi); cel shading phân dải rõ + viền mực, mắt to có điểm sáng, tóc lọn, má hồng (Stylized Anime 3D); chuyển động thở/đi/chạy nhún/nhảy/vẫy/ăn mừng có squash & stretch và biểu cảm mặt (3D Animated Cartoon). Không tỉ lệ anime người thật (chân dài, cao). Ánh sáng ấm, không bạo lực | [Confirmed — owner 2026-11-25] |
+| Nhân vật | Tỉ lệ chibi (đầu khoảng 1/2–1/3 chiều cao), biểu cảm rõ, không vũ khí; tỉ lệ, khuôn mặt, biểu cảm, rig và clip: [CHARACTER_SYSTEM §4.1](CHARACTER_SYSTEM.md#41-rig-kid_base-clip-và-biểu-cảm) | [Confirmed — ADR-0103] |
 | Văn hóa | Cảm hứng Việt Nam (mái ngói, cây đa, ruộng bậc thang, thuyền thúng) trộn kỳ ảo; tránh khuôn mẫu | [Confirmed] |
 | Màu theo môn/vùng | Toán xanh dương, Tiếng Việt cam, Tiếng Anh tím, Khoa học xanh lá, Lịch sử nâu đỏ; là **mã màu nghiệp vụ dùng chung** (`design/shared-tokens/`) để game và portal cùng màu (ADR-0047) | [Confirmed] |
-| Mastery visualization | Đất xám → có màu → nở hoa/cây lớn theo `beginning/developing/proficient/mastered` | [Confirmed] |
+| Mastery visualization | Đất xám → có màu → nở hoa/cây lớn theo `beginning/developing/proficient/mastered`. **Cây Tia Sáng** của Quảng trường có 5 cấp hình: 0 cây non xám (`not_started`), 1 cây non xanh (`beginning`), 2 cây đa đang lớn có vài tia sáng (`developing`), 3 cây đa đầy đủ rễ phụ và quả tia sáng (`proficient`), 4 cây đa nở hoa, nhiều tia sáng (`mastered`); cấp = trung bình các mức `MasteryLevel` làm tròn; chưa có dữ liệu → cấp 3 [Proposed — Câu hỏi mở F068-1: chưa có API tổng mastery của khối trong trường]. Chỉ hiển thị (client `SparkTreeModel`), không luật phía server | [Confirmed] · cấp mặc định [Proposed] |
 | Trợ năng | Không chỉ dùng màu (thêm biểu tượng); chế độ tương phản cao | [Confirmed] |
 | Ngân sách hiệu năng | Theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) (nơi sở hữu, máy tầm trung — ADR-0057); áp dụng trong pipeline dựng ở [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) §6 | — |
-| Nguồn asset | Chỉ license MIT, CC0 hoặc public domain; asset tự làm phát hành MIT; cấm share-alike, non-commercial, GPL, pack trả phí — [ADR-0102](../adr/ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md) (thay phần nguồn asset của OQ-16; phong cách stylized low-poly giữ nguyên). Lượt đầu: Main Hub + nhân vật chibi tự làm bằng code ([F067](../../specs/067-art-pass-hub-chibi/spec.md)) | [Confirmed — owner 2026-11-24] |
+| Nguồn asset | Chỉ license MIT, CC0 hoặc public domain; asset tự làm phát hành MIT; cấm share-alike, non-commercial, GPL, pack trả phí — [ADR-0102](../adr/ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md) (thay phần nguồn asset của OQ-16; phong cách thay bởi ADR-0103, license không đổi). Lượt đầu: Main Hub + nhân vật chibi tự làm bằng code ([F067](../../specs/067-art-pass-hub-chibi/spec.md)); art pass 2 theo hướng Chibi anime cartoon 3D: [F068](../../specs/068-art-pass-2-chibi-anime/spec.md); các vùng còn lại: F093 | [Confirmed — owner 2026-11-24] |
 | Design system | Màu, font, UI, toon/outline, ánh sáng, VFX từ game design system ([DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) §5) | [Confirmed — ADR-0047] |
 
 ## 12. Dữ liệu, API, event, lỗi

@@ -1,6 +1,6 @@
 # Character System
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Director + Senior Godot Developer · Cập nhật: 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Director + Senior Godot Developer · Cập nhật: 2026-11-25 (ADR-0103: chibi anime cartoon 3D — rig `kid_base`, clip, biểu cảm, tỉ lệ, F068) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [DOMAIN_MODEL §5](../06-architecture/DOMAIN_MODEL.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md)
 
 ## 1. Mục đích và phạm vi
@@ -80,6 +80,20 @@ stateDiagram-v2
 - `anim_driver.gd` nhận **trạng thái logic** (speed, on_floor, action) chứ không đọc input — cùng driver dùng cho `Player` và `RemotePlayer` (remote nhận trạng thái từ snapshot).
 - Emote/celebrate là one-shot; emote không có clip nào gợi ý chế giễu/xúc phạm (review an toàn nội dung).
 
+### 4.1. Rig `kid_base`, clip và biểu cảm
+
+Nguồn quy tắc của nhân vật theo art direction "Chibi anime cartoon 3D" ([ADR-0103](../adr/ADR-0103-art-direction-chibi-anime-cartoon-3d-thay-stylized-low-poly.md)); triển khai [F068](../../specs/068-art-pass-2-chibi-anime/spec.md).
+
+| Khía cạnh | Quy tắc | Nhãn |
+|---|---|---|
+| Tỉ lệ (3D Chibi) | Chiều cao đầu = 1/3–1/2 chiều cao thân (hiện 0,58 / 1,2 m ≈ 0,48); nhân vật cao 1,1–1,4 m; tay (vai → bàn tay) và chân ngắn hơn chiều cao đầu; thân tròn. Không tỉ lệ anime người thật | [Confirmed — ADR-0103] |
+| Khuôn mặt (Stylized Anime 3D) | Mắt to có lòng trắng, tròng hai tông (`eye`, `eye_iris`), hai điểm sáng (`eye_light`), đường mi trên đậm; lông mày ngắn; miệng nhỏ; má hồng (`cheek`); tóc dạng lọn khối có mái (ahoge ở kiểu tóc ngắn); mọi màu là slot `art.palette.*` | [Confirmed — ADR-0103] |
+| Biểu cảm | `neutral` (mặc định, chớp mắt mỗi 3,4 s trong 0,12 s), `happy` (mắt cười ^ ^, miệng mở), `surprised` (mắt tròn, miệng "o"), `trying` (mắt > <, giọt mồ hôi). Mỗi biểu cảm là một mesh mặt riêng gắn xương đầu; đổi qua `AvatarBuilder.set_expression()` (không có logic trong scene) | [Confirmed] · thời gian chớp mắt [Proposed] |
+| Biểu cảm theo trạng thái | `idle`/`walk` → `neutral`, `run` → `trying`, `jump` → `surprised`, emote → `ItemVisual.expression` của emote (mặc định `happy`; `emote_apologize` → `trying`); `anim_driver.gd` chọn theo trạng thái logic, không đọc input | [Proposed] |
+| Rig | Skeleton `kid_base` 8 xương: `root` (squash & stretch, nảy), `hips`, `chest` (thở), `head`, `arm_l`, `arm_r`, `leg_l`, `leg_r` (định nghĩa `scripts/player/kid_skeleton.gd`); thân và trang phục skinned (tối đa 2 xương/đỉnh ở eo), tóc và phụ kiện gắn `BoneAttachment3D` (đầu, ngực, tay phải); mọi body type dùng chung skeleton (`body_scale`) | [Confirmed] |
+| Clip (3D Animated Cartoon) | Locomotion lặp: `idle` (thở 2,4 s), `walk` (0,8 s), `run` (chạy nhún 0,5 s, nghiêng người, squash khi chạm đất, stretch khi bay), `jump` (stretch khi bật, co chân, giơ tay); emote một lần: `wave`, `celebrate` (hai lần nhảy), `clap`, `dance`, `thank` (cúi chào), `apologize` (cúi sâu). Squash & stretch giữ thể tích (x·y·z = 1) | [Confirmed] · độ dài clip [Proposed] |
+| NPC | Mesh tĩnh cùng tỉ lệ và khuôn mặt `neutral`, thở nhẹ (scale 2,4 s, lệch pha theo `npc_id`) | [Proposed] |
+
 ## 5. Customization
 
 ### 5.0. Tạo avatar lần đầu
@@ -157,7 +171,7 @@ Học sinh không sửa được trường/khối trong game (dữ liệu do SIS
 - Nếu client chưa có visual của item (bundle chưa tải) → hiển thị item mặc định thay thế, tải bundle nền.
 - Màu độ hiếm (viền, hào quang item, khung icon) lấy từ mã màu nghiệp vụ dùng chung `rarity.*` (`design/shared-tokens/`, ADR-0047) để CMS và game hiển thị cùng màu. Material nhân vật/item dùng preset toon/outline sinh từ `design/game-tokens/art3d.json`.
 - Mỗi version item/nhân vật/bộ trang phục được publish sẽ có **thumbnail và turntable render headless** ([WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) §8.3) để Game Studio và CMS hiển thị; icon item trong game có thể dùng cùng ảnh render (cỡ nhỏ).
-- `avatar_builder.gd` lắp avatar: gắn mesh vào `BoneAttachment3D` theo slot, đổi material theo skin tone/màu tóc qua palette token (`design/game-tokens/art3d.json` nhóm `avatar`, khóa là mã danh mục — [DESIGN_SYSTEM §5.3](../05-ux/DESIGN_SYSTEM.md#53-token-3dart-art3djson)) — dùng chung cho Player, RemotePlayer, CustomizationStudio, thẻ profile.
+- `avatar_builder.gd` lắp avatar: gắn mesh vào `BoneAttachment3D` theo slot (trang phục skinned gắn thẳng skeleton `kid_base`, §4.1), đổi material theo skin tone/màu tóc qua palette token (`design/game-tokens/art3d.json` nhóm `avatar`, khóa là mã danh mục — [DESIGN_SYSTEM §5.3](../05-ux/DESIGN_SYSTEM.md#53-token-3dart-art3djson)) — dùng chung cho Player, RemotePlayer, CustomizationStudio, thẻ profile.
 - **Hiệu năng (máy tầm trung, ADR-0057):** avatar ghép từ nhiều phần phải nằm trong ngân sách nhân vật (tam giác LOD0/1/2, một atlas texture, số xương, số material) và số nhân vật render đầy đủ theo preset do [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §5, §8 sở hữu. `avatar_builder.gd` gộp mesh các slot thành một mesh skinned và bake palette vào một material khi avatar không đổi trong phiên; RemotePlayer ngoài giới hạn hiển thị đầy đủ dùng LOD thấp, xa hơn dùng impostor billboard; nhân vật dùng object pool khi vào/ra tầm nhìn. Item mới không đạt ngân sách bị chặn ở CI import.
 
 ### 5.3. Nickname
