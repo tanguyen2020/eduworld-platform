@@ -24,7 +24,7 @@
 | `PRG` Learning Progress & Mastery | module learning | 9 | 9 | 0 | 8 | 0 | LRN (18) | 1 | 2 | 0 / 0 |
 | `ANL` Learning Events & Analytics | module learning · module game | 23 | 23 | 1 | 23 | 0 | ANL (11), DASH (10) | 0 | 0 | 0 / 21 |
 | `GAME` Game World & Character | module game | 18 | 18 | 2 | 20 | 0 | WLD (6), GAM (12) | 2 | 0 | 0 / 9 |
-| `QST` Quest | module game | 9 | 9 | 0 | 37 | 0 | GAM (12) | 2 | 0 | 0 / 15 |
+| `QST` Quest | module game | 9 | 9 | 0 | 40 | 0 | GAM (12) | 2 | 0 | 0 / 15 |
 | `MG` Mini-game Engine | module learning · game client | 4 | 4 | 0 | 1 | 0 | ACT (5) | 1 | 0 | 0 / 10 |
 | `MP` Multiplayer & Presence | module competition · realtime | 6 | 6 | 0 | 2 | 0 | PTY (14), CMP (10) | 0 | 0 | 0 / 11 |
 | `PTY` Party | module competition | 14 | 14 | 1 | 18 | 0 | PTY (14) | 4 | 13 | 0 / 0 |
@@ -44,9 +44,9 @@
 | `EVT` Event & Season (live-ops) | module game | 8 | 8 | 0 | 18 | 0 | EVT (12) | 0 | 0 | 0 / 12 |
 | `CMS` CMS | module learning · module game (game-admin) | 18 | 17 | 1 | 132 | 0 | CMS (4) | 2 | 5 | 0 / 0 |
 | `LMS` LMS | module learning | 10 | 10 | 1 | 33 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
-| `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
+| `AUD` Audit | module identity | 2 | 2 | 0 | 28 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 21 | 591 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 21 | 594 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -347,15 +347,15 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 15 AC, 0 US — [QUEST_SYSTEM](../
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-QST-001 | Quest có: ID, tên, mô tả, loại, khối, môn, chủ đề, LO, điều kiện bắt đầu, các bước, điều kiện hoàn thành, p… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-GAM |
-| FR-QST-002 | 12 loại quest: Main, Side, Daily, Weekly, Learning, Exploration, Social, Party, Challenge, Seasonal, Specia… | P2 (Party/Challenge/Boss: P3–P4) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-GAM |
-| FR-QST-008 | Quest hỗ trợ narrative, NPC, level requirement, learning requirement, repeatability, cooldown, failure cond… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-GAM |
-| FR-QST-003 | Quest liên kết nội dung học tập; bước activity tạo Attempt trong Activity & Attempt Engine | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-GAM |
-| FR-QST-004 | Bước: talk_npc, go_to, activity, collect, minigame, party_activity | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-GAM |
-| FR-QST-005 | Tiến độ quest lưu server, hoàn thành bước qua domain event (ADR-0019) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-GAM |
-| FR-QST-006 | Quest lọc theo grade_level của học sinh; không giao nội dung sai khối | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-GAM |
-| FR-QST-007 | Shared Quest Progress theo cấu hình shared_progress_policy; kết quả học tập vẫn riêng từng học sinh | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-GAM |
-| FR-QST-009 | Bước quest kiểu interdependent có role: mỗi thành viên party giữ một phần dữ kiện, cả nhóm phải phối hợp mớ… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-GAM |
+| FR-QST-001 | Quest có: ID, tên, mô tả, loại, khối, môn, chủ đề, LO, điều kiện bắt đầu, các bước, điều kiện hoàn thành, p… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 40 op | _suy luận:_ TC-GAM |
+| FR-QST-002 | 12 loại quest: Main, Side, Daily, Weekly, Learning, Exploration, Social, Party, Challenge, Seasonal, Specia… | P2 (Party/Challenge/Boss: P3–P4) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 40 op | _suy luận:_ TC-GAM |
+| FR-QST-008 | Quest hỗ trợ narrative, NPC, level requirement, learning requirement, repeatability, cooldown, failure cond… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 40 op | _suy luận:_ TC-GAM |
+| FR-QST-003 | Quest liên kết nội dung học tập; bước activity tạo Attempt trong Activity & Attempt Engine | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 40 op | _suy luận:_ TC-GAM |
+| FR-QST-004 | Bước: talk_npc, go_to, activity, collect, minigame, party_activity | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 40 op | _suy luận:_ TC-GAM |
+| FR-QST-005 | Tiến độ quest lưu server, hoàn thành bước qua domain event (ADR-0019) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 40 op | _suy luận:_ TC-GAM |
+| FR-QST-006 | Quest lọc theo grade_level của học sinh; không giao nội dung sai khối | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 40 op | _suy luận:_ TC-GAM |
+| FR-QST-007 | Shared Quest Progress theo cấu hình shared_progress_policy; kết quả học tập vẫn riêng từng học sinh | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 40 op | _suy luận:_ TC-GAM |
+| FR-QST-009 | Bước quest kiểu interdependent có role: mỗi thành viên party giữ một phần dữ kiện, cả nhóm phải phối hợp mớ… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 40 op | _suy luận:_ TC-GAM |
 
 ### 3.13. `MG` Mini-game Engine
 
@@ -698,8 +698,8 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 4 AC, 0 US — [AUDIO_LANGUAGE_LEA
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-AUD-001 | Audit log cho: đăng nhập admin, thay đổi quyền, truy cập dữ liệu học sinh chéo phạm vi, publish nội dung, k… | P1+ | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 27 op | _suy luận:_ TC-AUD |
-| FR-AUD-002 | Audit log append-only, partition theo tháng, retention theo data inventory ở DATA_PRIVACY §2 (rà soát thời… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 27 op | _suy luận:_ TC-AUD |
+| FR-AUD-001 | Audit log cho: đăng nhập admin, thay đổi quyền, truy cập dữ liệu học sinh chéo phạm vi, publish nội dung, k… | P1+ | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 28 op | _suy luận:_ TC-AUD |
+| FR-AUD-002 | Audit log append-only, partition theo tháng, retention theo data inventory ở DATA_PRIVACY §2 (rà soát thời… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 28 op | _suy luận:_ TC-AUD |
 
 ### 3.33. `OPS` Vận hành
 

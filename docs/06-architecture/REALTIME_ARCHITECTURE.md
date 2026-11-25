@@ -192,7 +192,7 @@ Mọi lệnh client nhận đúng một `system.command.acked` hoặc `system.co
 | `chat.*` | `ew.cmd.chat.<type>` (request/reply) | module chat (`core-api`) |
 | `party.*`, `matchmaking.*`, `battle.*`, `coop.*`, `hub.instance.*` | `ew.cmd.competition.<type>` (request/reply) | module competition (`core-api`); lệnh trong trận tới replica `core-api` đang giữ lease room |
 | `hub.player.move` | `ew.in.room.<room_id>` (core publish, không reply) | room host của module competition (replica `core-api` giữ lease) |
-| `game.*`, `session.*`, `boss.*` | `ew.cmd.game.<type>` (request/reply) | module game (`core-api`; encounter boss chạy room host trong module game; encounter party chỉ tạo từ Party Lobby qua `startPartyActivity` — [CHALLENGE_BOSS_SYSTEM §4](../01-game-design/CHALLENGE_BOSS_SYSTEM.md#4-multiplayer-boss-chạy-ở-đâu)) |
+| `game.*`, `session.*`, `boss.*` | `ew.cmd.game.<type>` (request/reply; F103: `ew.cmd.game.boss.encounter.ready`, `ew.cmd.game.boss.answer.submit` — người gửi lấy từ header `Ew-*`, không từ payload) | module game (`core-api`, xử lý trong transaction khóa dòng encounter; timer của encounter chạy trên room host của module game; encounter party chỉ tạo từ Party Lobby qua `startPartyActivity`; message boss/quest co-op gửi từng thành viên qua `ew:rt:user:<id>` — [CHALLENGE_BOSS_SYSTEM §4](../01-game-design/CHALLENGE_BOSS_SYSTEM.md#4-multiplayer-boss-chạy-ở-đâu)) |
 | `system.*` | xử lý tại gateway | realtime |
 
 Reply của handler: `{ok: true, result?, subscribe?: [topics], unsubscribe?: [topics]}` hoặc `{ok: false, problem: {code, retryable, retry_after_ms?}}`. Gateway áp `subscribe`/`unsubscribe` cho session (ví dụ khi join party/channel/room), rồi gửi ack/failed xuống client.

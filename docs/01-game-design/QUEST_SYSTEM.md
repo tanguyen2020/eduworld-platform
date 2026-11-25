@@ -218,6 +218,13 @@ Quy tắc [Confirmed] (Addendum §4, §6):
 - Server kiểm tra mọi thành viên thỏa `grade_levels` và policy trước khi bắt đầu (Addendum §5 bước 3).
 - `min_contribution` chống "ăn theo": mỗi thành viên phải tự hoàn thành tối thiểu phần học tập của mình mới nhận thưởng.
 
+Hiện thực F103 [Confirmed] (owner "chốt hết" 2026-11-24):
+- Quest party bắt đầu chỉ từ Party Lobby (`startPartyActivity`): mỗi thành viên dùng `QuestProgress` đang active của quest (gắn `party_id`) hoặc bắt đầu mới ghim version hiện hành; có **phiên quest chung** (`game.party_quest_sessions`) giữ bước chung, tổng `collective_target`, phân vai và thẻ đã chia sẻ (không nội dung thẻ).
+- Bước khung chia sẻ khi policy ≠ `individual` và `assignee` là `any_member` hoặc vắng (mặc định của bước khung trong policy chia sẻ); `each_member` không chia sẻ. "Cùng instance" được hiểu là thành viên còn trong phiên quest chung.
+- `collective_target`: `metric` lấy từ attempt riêng của từng người (`correct_answers` = số câu đúng, `completed_items` = số câu), mỗi attempt tính một lần; bước hoàn thành cho người có đóng góp ≥ `min_contribution` khi tổng đạt `count`, người đóng góp sau đó hoàn thành bằng attempt kế tiếp của chính mình. Không có phiên quest chung (party đã kết thúc) thì áp `pass_rule` của từng người.
+- `party.disbanded`: áp `failure_conditions` kind `party_disbanded` đã khai báo (`reset_step` mặc định hoặc `fail_quest`); không khai báo thì tiến độ giữ nguyên. Phiên đóng một lần, phát `quest.party_completed` (`failed` khi `fail_quest`, ngược lại `abandoned`). Thành viên mất kết nối quá `coop_quest_reconnect_grace` (game session không còn heartbeat) rời phiên như rời party.
+- Bước `interdependent`: phân vai khi bước chuyển `active` lần đầu với một thành viên của phiên; `auto` chia role i cho thành viên i theo thứ tự vào phòng (thiếu người + `allow_multi_role` thì vòng lại); `leader_assigns` chờ leader gọi `assignQuestStepRoles` (leader cũng có thể đổi vai ở chế độ `auto`). Câu hỏi cuối mở bằng `startQuestActivity` như bước học tập; `completion = all_members` hoàn thành cho mọi người khi mọi thành viên còn lại đạt `pass_rule`, `min_members` khi đủ `min_members_count` người đạt (người chưa đạt không được tính). Thẻ dữ kiện lấy qua `getLearningMaterialRenders` (chỉ block `rich_text`/`media`, cache `ew:game:clue:*`).
+
 ## 7. Phần thưởng
 
 `rewards[]` khai báo phần thưởng dự kiến (`xp`, `item`, `badge`), kèm `reward_rule_id` tùy chọn. Khi `quest.completed`, Reward Engine của module game áp [reward-rule](../../specs/schemas/reward-rule.schema.json): cap ngày/tuần, diminishing returns cho daily lặp, idempotency theo `(quest_progress_id, rule_id)`. Client chỉ hiển thị `RewardGrant` server trả qua notification `reward.granted`.

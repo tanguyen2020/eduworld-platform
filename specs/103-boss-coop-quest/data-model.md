@@ -4,6 +4,8 @@
 
 Database `eduworld_game`, schema `game`. Mọi bảng T: `tenant_id NOT NULL` + RLS, mixin `Base`, `deleted_at`/`deleted_by`. `boss_definitions`/`boss_versions`, `quest_definitions`/`quest_versions` (G) do F076/F072/F078 tạo; F103 chỉ đọc theo version ghim.
 
+> **Hiện thực F103 (2026-11-24):** bảng/cột thực tế ở [DATABASE_DESIGN §2.8a](../../docs/07-backend/DATABASE_DESIGN.md) và migration `f103_boss_coop` của module game. Khác bản thiết kế: thêm `boss_definitions`/`boss_versions` (chưa có trước F103); `boss_encounters` thêm `leader_id`, `plan_failures`, `phases_cleared`, `ready_deadline_at`, `end_reason`, `period_key`, không dùng `checkpoint`/`owner_node`; members dùng khóa thay thế + `school_id`, `join_order`, `disconnected_at`, `eligible`, `first_defeat`; contributions thêm `cleared`; plans thêm `item_count`, `items` (render, không đáp án); answers thêm `requirement_id`, `rapid_guess`; sessions thêm `leader_id`, `quest_id`, `party_mode`, `party_size_min`, `member_states`, `state_version`; contributions thêm `attempt_ids`.
+
 ## 1. Entity
 
 ### BossEncounter — `game.boss_encounters` (Có sẵn §2.8a · Thêm cột)

@@ -9,13 +9,13 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → `specs/openapi/modules/ga
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
 | `listBosses` | `GET /api/v1/game/bosses?area_id=` | game.v1.yaml | `game_player` | Có sẵn |
-| `createBossEncounter` | `POST /api/v1/game/bosses/{boss_id}/encounters` (`Idempotency-Key`) | game.v1.yaml | `game_player` | Cần sửa (chỉ `mode = solo`, bỏ `party_id`; thêm `422`) |
-| `getBossEncounter` | `GET /api/v1/game/boss-encounters/{encounter_id}` | game.v1.yaml | thành viên encounter | Cần sửa (`BossEncounter` thêm `state_version`, `deadline_at`, `phase_retries_left`, `outcome`, `my_questions` khi resync) |
+| `createBossEncounter` | `POST /api/v1/game/bosses/{boss_id}/encounters` (`Idempotency-Key`) | game.v1.yaml | `game_player` | Đã sửa (F103) (chỉ `mode = solo`, bỏ `party_id`; thêm `422`) |
+| `getBossEncounter` | `GET /api/v1/game/boss-encounters/{encounter_id}` | game.v1.yaml | thành viên encounter | Đã sửa (F103) (`BossEncounter` thêm `state_version`, `deadline_at`, `phase_retries_left`, `outcome`, `my_questions` khi resync) |
 | `leaveBossEncounter` | `POST /api/v1/game/boss-encounters/{encounter_id}:leave` | game.v1.yaml | thành viên encounter | Có sẵn |
-| `getQuest` / `startQuestActivity` | `/api/v1/game/quests/{quest_id}…` | game.v1.yaml | `game_player` | Cần sửa (`QuestDetail.steps.step_type` thêm `discover`, `interdependent`, `challenge`, `boss`; `QuestProgress` thêm `party_progress`) |
-| `getQuestStepClues` | `GET /api/v1/game/quests/{quest_id}/steps/{step_id}/clues` | game.v1.yaml | thành viên phiên | Cần thêm |
-| `shareQuestStepClue` | `POST /api/v1/game/quests/{quest_id}/steps/{step_id}/clues/{role}:share` (`Idempotency-Key`) | game.v1.yaml | người giữ role | Cần thêm |
-| `assignQuestStepRoles` | `PUT /api/v1/game/quests/{quest_id}/steps/{step_id}/roles` (`Idempotency-Key`; body `{assignments: [{role ≤ 32, student_id}] ≤ 4}`) | game.v1.yaml | leader party | Cần thêm |
+| `getQuest` / `startQuestActivity` | `/api/v1/game/quests/{quest_id}…` | game.v1.yaml | `game_player` | Đã sửa (F103) (`QuestDetail.steps.step_type` thêm `discover`, `interdependent`, `challenge`, `boss`; `QuestProgress` thêm `party_progress`) |
+| `getQuestStepClues` | `GET /api/v1/game/quests/{quest_id}/steps/{step_id}/clues` | game.v1.yaml | thành viên phiên | Đã thêm (F103) |
+| `shareQuestStepClue` | `POST /api/v1/game/quests/{quest_id}/steps/{step_id}/clues/{role}:share` (`Idempotency-Key`) | game.v1.yaml | người giữ role | Đã thêm (F103) |
+| `assignQuestStepRoles` | `PUT /api/v1/game/quests/{quest_id}/steps/{step_id}/roles` (`Idempotency-Key`; body `{assignments: [{role ≤ 32, student_id}] ≤ 4}`) | game.v1.yaml | leader party | Đã thêm (F103) |
 
 `ProblemCode` dùng: `CHALLENGE_NOT_ELIGIBLE`, `CHALLENGE_ATTEMPT_LIMIT`, `BOSS_ENCOUNTER_FULL`, `BOSS_PHASE_CLOSED`, `ROOM_NOT_MEMBER`, `PARTY_NOT_LEADER`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `PRECONDITION_REQUIRED`, `GAME_ACCESS_STUDENT_ONLY`, `CALLER_NOT_ALLOWED`.
 
@@ -23,11 +23,11 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → `specs/openapi/modules/ga
 
 | operationId | Gọi từ → tới | Spec | `x-allowed-callers` | Trạng thái |
 |---|---|---|---|---|
-| `listPartyActivityCandidates` | competition → game (facade; body `{party_id, area_id? ≤ 64, members: [{student_id}] ≤ 8}` → `{data: [{activity_type: quest\|boss, activity_ref, title, min_members, max_members, all_eligible, members: [{student_id, eligible, reason_code}]}] ≤ 50}`) | game.internal.v1.yaml | `competition` | Cần thêm |
-| `checkPartyActivityEligibility` | competition → game (facade; body `{party_id, activity_type, activity_ref, members}` → `{eligible, min_members, max_members, allow_continue_on_disconnect, members[]}`) | game.internal.v1.yaml | `competition` | Cần thêm |
-| `startPartyActivity` | competition → game (facade; `Idempotency-Key = party_activity_id`; body `{party_activity_id, party_id, leader_id, activity_type, activity_ref, members: [{student_id, game_session_id}]}` → `201 {external_ref, room_type: boss\|private_instance, area_id ≤ 64, scene_ref ≤ 255}`) | game.internal.v1.yaml | `competition` | Cần thêm |
-| `createQuestionPlan`, `scorePlanAnswer` | game → learning | learning.internal.v1.yaml | thêm `game` | Cần sửa (research R1) |
-| `getLearningMaterialRenders` | game → learning (facade; batch `{refs: [{id, version}] ≤ 4}`) | learning.internal.v1.yaml | `game` | Cần thêm |
+| `listPartyActivityCandidates` | competition → game (facade; body `{party_id, area_id? ≤ 64, members: [{student_id}] ≤ 8}` → `{data: [{activity_type: quest\|boss, activity_ref, title, min_members, max_members, all_eligible, members: [{student_id, eligible, reason_code}]}] ≤ 50}`) | game.internal.v1.yaml | `competition` | Đã thêm (F103) |
+| `checkPartyActivityEligibility` | competition → game (facade; body `{party_id, activity_type, activity_ref, members}` → `{eligible, min_members, max_members, allow_continue_on_disconnect, members[]}`) | game.internal.v1.yaml | `competition` | Đã thêm (F103) |
+| `startPartyActivity` | competition → game (facade; `Idempotency-Key = party_activity_id`; body `{party_activity_id, party_id, leader_id, activity_type, activity_ref, members: [{student_id, game_session_id}]}` → `201 {external_ref, room_type: boss\|private_instance, area_id ≤ 64, scene_ref ≤ 255}`) | game.internal.v1.yaml | `competition` | Đã thêm (F103) |
+| `createQuestionPlan`, `scorePlanAnswer` | game → learning | learning.internal.v1.yaml | thêm `game` | Đã sửa (F103) (research R1) |
+| `getLearningMaterialRenders` | game → learning (facade; batch `{refs: [{id, version}] ≤ 4}`) | learning.internal.v1.yaml | `game` | Đã thêm (F103) |
 
 `reason_code` (enum chung): `grade_not_allowed`, `grade_band_mismatch`, `prerequisite_missing`, `area_locked`, `attempt_limit`, `party_size_out_of_range`, `sanctioned`.
 
@@ -37,19 +37,19 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → `specs/openapi/modules/ga
 |---|---|---|
 | `boss.encounter.ready`, `boss.answer.submit` | client → game (`ew.cmd.game.boss.*`) | Có sẵn |
 | `boss.encounter.updated`, `boss.phase.started`, `boss.phase.completed`, `boss.encounter.ended` | game → thành viên (`ew:rt:room:<encounter_id>:out`) | Có sẵn |
-| `boss.question.assigned` | game → một thành viên (`ew:rt:user:<id>`: `encounter_id`, `phase_id`, `requirement_id`, `questions[QuestionRender]`, `deadline_at`) | Cần thêm |
-| `boss.answer.evaluated` | game → người trả lời (`question_instance_id`, `is_correct`, `explanation`) | Cần thêm |
-| `quest.progress.updated` | game → thành viên | Cần sửa (thêm `party_progress {step_id, collective_progress 0–1, my_contribution_met}`) |
-| `quest.roles.assigned`, `quest.clue.shared` | game → thành viên phiên | Cần thêm |
+| `boss.question.assigned` | game → một thành viên (`ew:rt:user:<id>`: `encounter_id`, `phase_id`, `requirement_id`, `questions[QuestionRender]`, `deadline_at`) | Đã thêm (F103) |
+| `boss.answer.evaluated` | game → người trả lời (`question_instance_id`, `is_correct`, `explanation`) | Đã thêm (F103) |
+| `quest.progress.updated` | game → thành viên | Đã sửa (F103) (thêm `party_progress {step_id, collective_progress 0–1, my_contribution_met}`) |
+| `quest.roles.assigned`, `quest.clue.shared` | game → thành viên phiên | Đã thêm (F103) |
 
 ## 4. Event (NATS)
 
 | Event | Phát / Tiêu thụ | Payload schema | Trạng thái |
 |---|---|---|---|
-| `boss.encounter_started`, `boss.phase_completed` | game → RT, LA, ANA | `specs/events/payloads/game/boss.encounter_started.v1.schema.json`, `boss.phase_completed.v1.schema.json` | Cần thêm |
-| `boss.encounter_completed` | game → competition (F101), reward, achievement, QST, LA | `boss.encounter_completed.v1.schema.json` (+ `party_activity_id`) | Cần thêm |
-| `quest.party_completed` | game → competition (F101), ANA | `quest.party_completed.v1.schema.json` | Cần thêm (event mới, EVENT_DESIGN §4) |
-| `party.member_left`, `party.member_kicked`, `party.disbanded`, `party.leader_transferred` | competition → game | `specs/events/payloads/competition/` | Cần thêm (F100) |
+| `boss.encounter_started`, `boss.phase_completed` | game → RT, LA, ANA | `specs/events/payloads/game/boss.encounter_started.v1.schema.json`, `boss.phase_completed.v1.schema.json` | Đã thêm (F103) |
+| `boss.encounter_completed` | game → competition (F101), reward, achievement, QST, LA | `boss.encounter_completed.v1.schema.json` (+ `party_activity_id`) | Đã thêm (F103) |
+| `quest.party_completed` | game → competition (F101), ANA | `quest.party_completed.v1.schema.json` | Đã thêm (F103, event mới, EVENT_DESIGN §4) |
+| `party.member_left`, `party.member_kicked`, `party.disbanded`, `party.leader_transferred` | competition → game | `specs/events/payloads/competition/` | Đã thêm (F103, F100) |
 | `activity.graded` | learning → game | `specs/events/payloads/learning/activity.graded.v1.schema.json` | Có sẵn |
 
 ## 5. JSON Schema nội dung

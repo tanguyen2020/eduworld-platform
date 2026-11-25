@@ -146,7 +146,7 @@ Tần suất, interest grid, envelope: [REALTIME_ARCHITECTURE](../06-architectur
 |---|---|---|---|---|
 | `hub_instance` | 30 s | Avatar đứng yên, mờ | Rời instance; quay lại → ưu tiên instance cũ | [Confirmed] |
 | `private_instance` (quest co-op) | 120 s | Thành viên khác tiếp tục theo quy tắc disconnect của [QUEST_SYSTEM §6](../01-game-design/QUEST_SYSTEM.md#6-party--shared-progress) (`party_mode ≠ party_required` hoặc số người còn lại ≥ `party_size.min`) | Rời activity; tiến độ cá nhân giữ nguyên, vào lại được khi activity còn mở | [Confirmed] |
-| `boss` | 120 s | Encounter tiếp tục nếu số người còn lại ≥ `party_size.min` | Rời encounter; đóng góp đã có được giữ | [Confirmed] |
+| `boss` | 120 s (`reconnect_grace_seconds` của boss version, mặc định `boss_reconnect_grace`) | Encounter tiếp tục nếu số người còn lại ≥ `party_size.min`; người chưa Ready trong grace kể từ khi tạo encounter coi là vắng (F103) | Rời encounter; đóng góp đã có được giữ; dưới `party_size.min` → encounter `abandoned`, không thưởng | [Confirmed] |
 | `lobby` (ready check) | 10 s | — | Coi như `not_ready`, proposal hủy, người còn lại quay lại hàng chờ với ưu tiên | [Confirmed] |
 | `battle_1v1` | 30 s | Câu hiện tại chạy tiếp; không trả lời = sai | Thua do `abandon`, tính rating, đối thủ thắng | [Confirmed] |
 | `team_battle` | 45 s | Đội tiếp tục thiếu người | Thành viên ghi `abandon`; đội vẫn tính kết quả | [Confirmed] |

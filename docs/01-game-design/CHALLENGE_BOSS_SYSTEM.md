@@ -108,6 +108,12 @@ Boss là nhân vật/thử thách lớn của một vùng và thường là đ�
 | `on_fail` | `retry_phase` (mặc định) hoặc `end_encounter` |
 | `presentation` | Hoạt ảnh, câu thoại boss, hiệu ứng (dữ liệu cho client) |
 
+Quy tắc chấm của phase (F103, [Confirmed] owner "chốt hết" 2026-11-24):
+- Release này phục vụ requirement `kind = activity` (câu hỏi của learning activity, chấm từng câu qua question plan của module learning — `createQuestionPlan` mode `boss`, attempt mode `challenge`, context `boss_encounter`; `scorePlanAnswer`). `minigame`, `interaction`, `group_puzzle` bị từ chối khi publish cho tới khi có feature riêng.
+- Một requirement "xong" với một thành viên khi số câu đúng được tính ≥ ⌈`min_correct_ratio` × n⌉ với n = min(`min_items`, số câu của plan); không có `pass_rule` thì dùng tỷ lệ của `quest_pass_rule` (0,7). Mỗi requirement mỗi lượt lấy tối đa `boss_requirement_questions` câu ([CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md)).
+- `all`: mọi thành viên còn trong encounter xong mọi requirement; `any_n`: n requirement khác nhau đã xong bởi ít nhất một thành viên; `collective_count`: tổng câu đúng được tính của các thành viên ≥ `collective_target` **và** mọi thành viên còn trong encounter ≥ `min_contribution`.
+- `min_contribution` mặc định 1 câu đúng khi phase không khai báo (dùng cho `eligible`). Thử lại phase đặt lại đóng góp của phase đó (câu mới), các phase đã vượt giữ nguyên.
+
 ### 3.3. Trạng thái encounter
 
 ```mermaid
@@ -154,6 +160,8 @@ Lý do:
 Party vào boss **chỉ** qua Party Lobby: leader chọn hoạt động `boss` ([PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md)), module competition kiểm tra điều kiện qua `checkPartyActivityEligibility` rồi gọi `startPartyActivity` của module game, module game tạo encounter cho các thành viên đủ điều kiện và trả `encounter_id`; lệnh WS `boss.*` định tuyến tới module game ([REALTIME_ARCHITECTURE §4.1](../06-architecture/REALTIME_ARCHITECTURE.md#41-dịch-lệnh-ws--nats)); chat `party` tiếp tục dùng trong encounter.
 
 Mất kết nối: grace 120 s như quest co-op; encounter tiếp tục nếu số người còn lại ≥ `party_size.min`; người quay lại (kể cả từ thiết bị khác, ADR-0031) nhận lại trạng thái từ checkpoint.
+
+Hiện thực F103 [Confirmed] (owner "chốt hết" 2026-11-24): trạng thái encounter nằm ở PostgreSQL (`game.boss_encounters` và bảng con là checkpoint); lệnh `boss.encounter.ready`/`boss.answer.submit` do core-api xử lý trong transaction khóa dòng encounter (`SELECT … FOR UPDATE`), nên mọi node xử lý được và hai lệnh của cùng encounter luôn tuần tự; room host (room type `boss`, và `party_quest` cho phiên quest chung) chỉ chạy timer: hạn Ready, hạn phase/tổng, grace mất kết nối, kiểm tra định kỳ mỗi `boss_room_check` (5 s) — thời điểm hạn đọc lại từ checkpoint sau mỗi timer. Message realtime gửi tới từng thành viên qua `ew:rt:user:<id>` (encounter ≤ 8 người): câu hỏi (`boss.question.assigned`) và kết quả từng câu (`boss.answer.evaluated`) chỉ tới chính người đó; `boss.encounter.updated` chỉ có năng lượng, tiến độ chung và `contribution_met`. Một thành viên "online" khi có game session active với heartbeat trong `game_session_heartbeat_timeout`; offline quá grace thì rời encounter (giữ đóng góp). Câu trả lời nhanh hơn `rapid_guess_min_response_ms` (module learning báo `rapid_guess`) vẫn là learning record nhưng không tính đóng góp và ghi audit `boss.integrity_flagged`.
 
 Thư viện room host dùng chung (`src/backend/pkg/roomhost`, F076) [Confirmed]: `Host` cấp lease độc quyền mỗi room qua Valkey (`ew:rt:room:<room_id>:lease`, TTL 10 s, gia hạn 3 s), quét room mất owner (index orphan riêng mỗi module, vd. `ew:rt:rooms:game`), chiếm lease sau TTL và khôi phục từ checkpoint do module cung cấp (PostgreSQL là nguồn sự thật), chạy timer theo giờ server với grace theo loại room; không chứa nghiệp vụ — mỗi module viết handler của loại room (`challenge_solo` của F076; boss F103, battle F105 dùng lại).
 
@@ -207,9 +215,9 @@ Cấu hình (Game Studio): `/api/v1/game-admin/challenges`, `/api/v1/game-admin/
 |---|---|---|---|
 | `challenge.started` | module game | LA | `challenge_attempt_id`, `challenge_version_id`, `difficulty` |
 | `challenge.completed` | module game | reward (XP), achievement, LA | đúng một lần mỗi attempt: `status` (succeeded/failed/abandoned), `end_reason`, `score`, `difficulty`, `reward_multiplier`, `first_clear`, `objective_ids[]` ([schema](../../specs/events/payloads/game/challenge.completed.v1.schema.json)) |
-| `boss.encounter_started` | module game | RT, LA | `encounter_id`, `boss_version_id`, `member_ids[]` |
-| `boss.phase_completed` | module game | RT | `encounter_id`, `phase_id` |
-| `boss.encounter_completed` | module game | reward, achievement, LA | `encounter_id`, `result` (defeated/ended), `contributions[]` (`student_id`, `eligible`) |
+| `boss.encounter_started` | module game | RT, LA | `encounter_id`, `boss_version_id`, `member_ids[]`, `party_activity_id` ([schema](../../specs/events/payloads/game/boss.encounter_started.v1.schema.json)) |
+| `boss.phase_completed` | module game | RT, ANA | `encounter_id`, `phase_id`, `energy_remaining` ([schema](../../specs/events/payloads/game/boss.phase_completed.v1.schema.json)) |
+| `boss.encounter_completed` | module game | reward (Reward Engine: `defeat_rewards` + `first_defeat_rewards` cho người `eligible`, idempotent theo `(encounter_id, student_id)`), quest (bước `boss`), competition (kết thúc party activity, F101), achievement, LA | đúng một lần mỗi encounter: `result` (defeated/ended), `outcome` (defeated/time_up/abandoned), `party_activity_id`, `phases_cleared`, `contributions[]` (`student_id`, `eligible`, `first_defeat`) ([schema](../../specs/events/payloads/game/boss.encounter_completed.v1.schema.json)) |
 
 ## 9. Lỗi
 

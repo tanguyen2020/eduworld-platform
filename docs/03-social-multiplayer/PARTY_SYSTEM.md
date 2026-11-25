@@ -148,6 +148,8 @@ sequenceDiagram
   RT-->>M: party.session.ended
 ```
 
+Phía module game của bước (3)–(5) do F103 hiện thực (facade `listPartyActivityCandidates`, `checkPartyActivityEligibility`, `startPartyActivity`, chỉ module competition gọi được): `activity_ref` là `code` của quest/boss; mọi thành viên phải là học sinh của tenant trong `TenantScope` (khác → `422`); lý do không đủ điều kiện chỉ là mã + yêu cầu của hoạt động (`grade_levels:3`), không bao giờ khối/trường của học sinh; `startPartyActivity` idempotent theo `party_activity_id` — boss trả `room_type = boss` (encounter), quest trả `private_instance` (phiên quest chung, [QUEST_SYSTEM §6](../01-game-design/QUEST_SYSTEM.md#6-party--shared-progress)); thiếu `Idempotency-Key` → `428`.
+
 ### 6.2. Kiểm tra ở bước (3) — eligibility
 
 | Điều kiện | Mặc định | Nhãn |

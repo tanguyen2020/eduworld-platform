@@ -57,7 +57,7 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `quest_reset_time` | 04:00 ICT; weekly: thứ Hai 04:00 | — | platform (env `EW_GAME_QUEST_RESET_TIME` HH:MM ICT — F072) | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
 | `max_active_quests` | 10 | quest | platform (env `EW_GAME_MAX_ACTIVE_QUESTS`, 1–50 — F072) | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
 | `quest_pass_rule` | tỷ lệ đúng 0,7; tối thiểu 8 câu; 5 lần/ngày | — | platform (theo quest) | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
-| `coop_quest_reconnect_grace` | 120 | giây | platform | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
+| `coop_quest_reconnect_grace` | 120 | giây | platform (env `EW_GAME_COOP_QUEST_RECONNECT_GRACE`, 10 s–10 phút — F103) | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
 | `interdependent_roles` | 2–4 vai mỗi bước `interdependent` | vai | platform | [Confirmed — Technical Architect 2026-11-15] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) §3.2 |
 
 ## 5. Challenge và boss
@@ -71,7 +71,10 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `challenge_survival_regen_streak` | 3 (vòng đúng hết liên tiếp hồi 1 sức bền, không vượt sức bền của mức) | vòng | code | [Confirmed] (F076) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §2.1 |
 | `challenge_room_lease` | lease 10 s, gia hạn 3 s, quét room mất owner 2 s, timer 250 ms (room `challenge_solo`, `src/backend/pkg/roomhost`) | — | code | [Confirmed] (F076) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §4 |
 | `challenge_deadline_scan` | 15 (job `challenge-deadline`, dự phòng timer room host) | giây | code | [Confirmed] (F076, owner "chốt hết" 2026-11-24) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §2.3 |
-| `boss_reconnect_grace` | 120 | giây | platform | [Confirmed] | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
+| `boss_reconnect_grace` | 120 | giây | platform (env `EW_GAME_BOSS_RECONNECT_GRACE`, 10 s–10 phút — F103; boss version có `reconnect_grace_seconds` thì dùng giá trị đó; cũng là hạn chờ Ready của encounter mới) | [Confirmed] | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
+| `boss_room_check` | 5 (kiểm tra định kỳ room `boss`/`party_quest`: hạn phase/tổng, người chơi mất kết nối; thời điểm hạn đọc lại từ PostgreSQL sau mỗi timer) | giây | code | [Confirmed] (F103, owner "chốt hết" 2026-11-24) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §4 |
+| `boss_plan_retries` | 2 (thử lại tạo bộ câu hỏi của một lượt phase; quá số này encounter `abandoned`, không thưởng, không tính lượt) | lần | code | [Confirmed] (F103 spec — Edge Cases) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §3.3 |
+| `boss_requirement_questions` | tối đa 10 câu mỗi requirement mỗi lượt (activity cho số câu tự nhiên, ≤ 30); requirement không có `pass_rule` dùng tỷ lệ đúng của `quest_pass_rule` (0,7) | câu | code | [Confirmed] (F103, owner "chốt hết" 2026-11-24) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §3.2 |
 
 ## 6. Kinh tế, vật phẩm, sưu tầm
 
