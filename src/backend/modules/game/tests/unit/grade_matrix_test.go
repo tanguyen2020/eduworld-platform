@@ -245,11 +245,15 @@ func TestGradeMatrixQuests(t *testing.T) {
 				t.Errorf("quest of grade %d on a move to grade %d: expires %v", g, h, v.ExpiresOnGradeChange(h))
 			}
 		}
-		explore := v
-		explore.QuestType = quest.TypeExploration
-		for _, h := range grades {
-			if explore.ExpiresOnGradeChange(h) {
-				t.Errorf("exploration quest of grade %d expires on grade %d", g, h)
+		// Daily and weekly quests (granted by grade) expire like learning quests; exploration and social quests never.
+		for typ, expires := range map[string]bool{quest.TypeDaily: true, quest.TypeWeekly: true, quest.TypeExploration: false,
+			quest.TypeSocial: false} {
+			other := v
+			other.QuestType = typ
+			for _, h := range grades {
+				if other.ExpiresOnGradeChange(h) != (expires && h != g) {
+					t.Errorf("%s quest of grade %d on a move to grade %d: expires %v", typ, g, h, other.ExpiresOnGradeChange(h))
+				}
 			}
 		}
 	}

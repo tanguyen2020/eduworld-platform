@@ -66,8 +66,8 @@ func TestGradeMatrixMasteryDisplay(t *testing.T) {
 			t.Errorf("grade %d band %s shows value %v", g, b, mastery.ShowsValue(b))
 		}
 	}
-	for _, g := range []*int{nil, gp(0), gp(10)} {
-		if b := mastery.GradeBand(g); b != mastery.BandG13 && !(g != nil && *g == 10) {
+	for _, g := range []*int{nil, gp(0)} {
+		if b := mastery.GradeBand(g); b != mastery.BandG13 {
 			t.Errorf("unknown grade band %s", b)
 		}
 	}
