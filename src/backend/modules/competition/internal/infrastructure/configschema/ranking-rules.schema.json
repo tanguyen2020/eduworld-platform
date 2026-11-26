@@ -1,0 +1,345 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:ranking-rules:1",
+  "title": "RankingRules",
+  "description": "Ranking Rules (config_type ranking-rules, code default — F106, F108): tham số Glicko-2, provisional, tier (ngưỡng tăng dần, tên vi/en), soft reset mùa, bảng Competition Points, effort_points, mức hiển thị bảng xếp hạng theo dải khối (không nới quá COMPETITION_SYSTEM §9.4: lớp 1–3 không thứ hạng cá nhân, lớp 4–5 top ≤ 10 và không lộ người cuối, lớp 6–9 top ≤ 50 ± 3). Giá trị khởi tạo: CONFIG_DEFAULTS glicko2_params, rating_provisional, tiers, season_soft_reset, competition_points_daily_cap, effort_points, leaderboard_visibility.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "glicko2_params",
+    "rating_provisional",
+    "tiers",
+    "season_soft_reset",
+    "competition_points",
+    "effort_points",
+    "leaderboard_visibility",
+    "analytics_min_cell_size",
+    "friends_max"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "glicko2_params": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "r0",
+        "rd0",
+        "sigma0",
+        "tau",
+        "rd_min",
+        "rd_max",
+        "epsilon"
+      ],
+      "properties": {
+        "r0": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4000
+        },
+        "rd0": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        },
+        "sigma0": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "tau": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 2
+        },
+        "rd_min": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        },
+        "rd_max": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        },
+        "epsilon": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 0.01
+        }
+      }
+    },
+    "rating_provisional": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min_games",
+        "max_rd"
+      ],
+      "properties": {
+        "min_games": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "max_rd": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        }
+      }
+    },
+    "tiers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hysteresis",
+        "levels"
+      ],
+      "properties": {
+        "hysteresis": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 500
+        },
+        "levels": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 12,
+          "description": "Tier theo ngưỡng tăng dần; tier đầu không có ngưỡng dưới (min_rating null)",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "min_rating",
+              "names"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^T[0-9]{1,2}$",
+                "maxLength": 64
+              },
+              "min_rating": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 4000
+              },
+              "names": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "vi-VN",
+                  "en-US"
+                ],
+                "properties": {
+                  "vi-VN": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "en-US": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "season_soft_reset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "factor",
+        "rd_floor"
+      ],
+      "properties": {
+        "factor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rd_floor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000
+        }
+      }
+    },
+    "competition_points": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completed",
+        "win",
+        "draw",
+        "correct",
+        "correct_max",
+        "upset",
+        "abandon",
+        "daily_cap",
+        "daily_matches"
+      ],
+      "properties": {
+        "completed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "win": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "draw": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "correct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "correct_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "upset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "abandon": {
+          "type": "integer",
+          "minimum": -1000,
+          "maximum": 0
+        },
+        "daily_cap": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "daily_matches": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        }
+      }
+    },
+    "effort_points": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activity",
+        "activity_daily_max",
+        "review",
+        "active_day",
+        "daily_cap"
+      ],
+      "properties": {
+        "activity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "activity_daily_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "review": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "active_day": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "daily_cap": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        }
+      }
+    },
+    "leaderboard_visibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "g1_3",
+        "g4_5",
+        "g6_9"
+      ],
+      "description": "Ba dải khối cố định (không gộp g1_3 với dải khác — COMPETITION_SYSTEM §9.4)",
+      "properties": {
+        "g1_3": {
+          "$ref": "#/$defs/band"
+        },
+        "g4_5": {
+          "$ref": "#/$defs/band"
+        },
+        "g6_9": {
+          "$ref": "#/$defs/band"
+        }
+      }
+    },
+    "analytics_min_cell_size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "friends_max": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    }
+  },
+  "$defs": {
+    "band": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "personal_rank",
+        "top",
+        "percentile",
+        "hide_last",
+        "around"
+      ],
+      "properties": {
+        "personal_rank": {
+          "type": "boolean"
+        },
+        "top": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "percentile": {
+          "type": "boolean"
+        },
+        "hide_last": {
+          "type": "boolean"
+        },
+        "around": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        }
+      }
+    }
+  }
+}

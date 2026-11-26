@@ -122,3 +122,10 @@ const TournamentMatchName = "competition.tournament_match"
 
 // TournamentMatchEvents are the competition events it handles.
 var TournamentMatchEvents = []string{"match.completed", "match.aborted"}
+
+// ConfigApplyName applies a released competition configuration to the runtime tables (F108-AC-08): the seasons and the
+// leaderboard definitions in effect (competition_config.published of the module itself, platform event).
+const ConfigApplyName = "competition.config_apply"
+
+// ConfigApplyEvents are the competition events it handles (owner F108).
+var ConfigApplyEvents = []string{"competition_config.published"}

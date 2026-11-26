@@ -14,6 +14,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/battlehost"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/cache"
 	hubconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/configschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/messaging"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/observability"
@@ -213,6 +214,13 @@ func Register(r *module.Registry) (*Module, error) {
 	assignments := command.TemplateAssignments{UoW: core.UoW, Repo: persistence.TournamentStore{}, Audit: persistence.Auditor{R: core.Recorder}}
 	assignList := query.Assignments{Read: core.ReadSession, Reader: persistence.TournamentStore{}}
 
+	// F108 — competition configurations of the Game Operations Console (/game-admin/*, platform only) and their apply.
+	observability.RegisterGameConfig(r.Metrics())
+	configs := command.GameConfigs{UoW: core.UoW, Store: persistence.GameConfigStore{}, Schemas: configschema.Validator{},
+		Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder}, Metrics: observability.GameConfig{}}
+	configQueries := query.GameConfigs{Read: core.ReadSession, Reader: persistence.GameConfigStore{}}
+	configApply := command.ConfigApply{UoW: core.UoW, Store: persistence.GameConfigStore{}, Boards: boards}
+
 	if r.ServesHTTP() {
 		h := competitionhttp.Handlers{Commands: parties, Queries: query.Parties{Read: core.ReadSession, Reader: persistence.Parties{},
 			Presence: presence, Lobby: lobbies, LobbyReader: persistence.LobbyRead{}, Game: m.game, PrivateCapacity: lobbyCfg.PrivateCapacity},
@@ -220,7 +228,13 @@ func Register(r *module.Registry) (*Module, error) {
 			Battles:     query.Battles{Read: core.ReadSession, Reader: persistence.BattleRead{}, Plans: m.learning},
 			Rankings:    query.Rankings{Read: core.ReadSession, Reader: persistence.RankingRead{}, Store: boardStore},
 			Tournaments: tournaments, TournamentQueries: query.Tournaments{Read: core.ReadSession, Reader: persistence.TournamentRead{}}}
-		r.HTTP(Name, func(s *httpx.Server) error { return competitionhttp.Register(s, h) })
+		admin := competitionhttp.GameAdminHandlers{Commands: configs, Queries: configQueries}
+		r.HTTP(Name, func(s *httpx.Server) error {
+			if err := competitionhttp.Register(s, h); err != nil {
+				return err
+			}
+			return competitionhttp.RegisterGameAdmin(s, admin)
+		})
 	}
 	// Room host, realtime commands (F091 US1, US2) and the party presence store (F100): core-api.
 	if nc := r.NATS(); nc != nil && r.ServesHTTP() {
@@ -318,6 +332,11 @@ func Register(r *module.Registry) (*Module, error) {
 		return consumer.TournamentMatchOptions(consumer.TournamentMatch{H: tournaments}, core.UoW, core.App, js)
 	})
 	r.Job(Name, job.TournamentScheduler, trnCfg.Tick, module.JobFunc(job.TournamentJob(tournaments.Tick)))
+	// F108 consumer (competition_config.published) and job: apply the seasons and leaderboard definitions in effect.
+	r.Consumer(messaging.ConfigApplyName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.ConfigApplyOptions(consumer.ConfigApply{H: configApply}, core.UoW, core.App, js)
+	})
+	r.Job(Name, job.ConfigApply, job.ConfigApplyInterval, module.JobFunc(job.ConfigApplyJob(configApply.ApplyDue)))
 	r.Job(Name, job.PartyPresenceSweeper, job.SweepInterval,
 		module.JobFunc(job.PartyPresenceSweeperJob(command.NewSweeper(parties, job.SweepInterval))))
 	return m, nil

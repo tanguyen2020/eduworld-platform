@@ -33,6 +33,8 @@ const (
 	FieldReleasedBy = "released_by"
 	// FieldReleasedAt holds the string denoting the released_at field in the database.
 	FieldReleasedAt = "released_at"
+	// FieldEffectiveFrom holds the string denoting the effective_from field in the database.
+	FieldEffectiveFrom = "effective_from"
 	// Table holds the table name of the contentrelease in the database.
 	Table = "content_releases"
 )
@@ -49,6 +51,7 @@ var Columns = []string{
 	FieldReason,
 	FieldReleasedBy,
 	FieldReleasedAt,
+	FieldEffectiveFrom,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -131,4 +134,9 @@ func ByReleasedBy(opts ...sql.OrderTermOption) OrderOption {
 // ByReleasedAt orders the results by the released_at field.
 func ByReleasedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReleasedAt, opts...).ToFunc()
+}
+
+// ByEffectiveFrom orders the results by the effective_from field.
+func ByEffectiveFrom(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEffectiveFrom, opts...).ToFunc()
 }

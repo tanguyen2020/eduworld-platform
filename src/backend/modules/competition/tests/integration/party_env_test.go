@@ -177,6 +177,8 @@ type popts struct {
 	statuses port.PresenceStatuses
 	// F104: extra handlers mounted on the same server (matchmaking).
 	extra func(e *penv, h *competitionhttp.Handlers)
+	// F108: more operations mounted on the same server after the player routes (game-admin).
+	mount func(e *penv, s *httpx.Server)
 }
 
 func setupParty(t *testing.T, o popts) *penv {
@@ -254,6 +256,9 @@ func setupParty(t *testing.T, o popts) *penv {
 	}
 	if err := competitionhttp.Register(s, handlers); err != nil {
 		t.Fatal(err)
+	}
+	if o.mount != nil {
+		o.mount(e, s)
 	}
 	e.srv = httptest.NewServer(s)
 	t.Cleanup(e.srv.Close)

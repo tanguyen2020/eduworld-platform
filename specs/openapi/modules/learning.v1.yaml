@@ -10689,6 +10689,9 @@ components:
           $ref: '#/components/schemas/Timestamp'
         publish_at:
           $ref: '#/components/schemas/Timestamp'
+        effective_from:
+          description: Chỉ module competition (F108) — thời điểm version đã publish có hiệu lực
+          $ref: '#/components/schemas/Timestamp'
         active_pinned_sessions:
           type: integer
           minimum: 0
@@ -10739,7 +10742,12 @@ components:
       type: object
       properties:
         publish_at:
-          description: Hẹn giờ xuất bản (UTC); bỏ trống = xuất bản ngay
+          description: Hẹn giờ xuất bản (UTC); bỏ trống = xuất bản ngay. Module competition không hẹn giờ publish (dùng `effective_from`) → `422 VALIDATION_FAILED`.
+          $ref: '#/components/schemas/Timestamp'
+        effective_from:
+          description: |
+            Chỉ module competition (F108-AC-05): thời điểm cấu hình có hiệu lực cho trận/giải tạo sau đó (UTC, ≥ hiện tại — không hồi tố);
+            bỏ trống = ngay lúc publish. Con trỏ release đổi ngay; runtime áp đúng `effective_from` (F108-AC-08).
           $ref: '#/components/schemas/Timestamp'
         change_note:
           type: string
@@ -10792,6 +10800,9 @@ components:
         released_by:
           $ref: '#/components/schemas/Uuid'
         released_at:
+          $ref: '#/components/schemas/Timestamp'
+        effective_from:
+          description: Chỉ module competition (F108) — thời điểm release có hiệu lực ở runtime (publish theo `effective_from`; rollback/unpublish = lúc thao tác)
           $ref: '#/components/schemas/Timestamp'
         usages:
           type: array

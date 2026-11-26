@@ -145,6 +145,16 @@ func PublishedAt(v time.Time) predicate.GameConfigVersion {
 	return predicate.GameConfigVersion(sql.FieldEQ(FieldPublishedAt, v))
 }
 
+// ReviewNote applies equality check predicate on the "review_note" field. It's identical to ReviewNoteEQ.
+func ReviewNote(v string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldEQ(FieldReviewNote, v))
+}
+
+// PublishedBy applies equality check predicate on the "published_by" field. It's identical to PublishedByEQ.
+func PublishedBy(v uuid.UUID) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldEQ(FieldPublishedBy, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.GameConfigVersion {
 	return predicate.GameConfigVersion(sql.FieldEQ(FieldCreatedAt, v))
@@ -1073,6 +1083,131 @@ func PublishedAtIsNil() predicate.GameConfigVersion {
 // PublishedAtNotNil applies the NotNil predicate on the "published_at" field.
 func PublishedAtNotNil() predicate.GameConfigVersion {
 	return predicate.GameConfigVersion(sql.FieldNotNull(FieldPublishedAt))
+}
+
+// ReviewNoteEQ applies the EQ predicate on the "review_note" field.
+func ReviewNoteEQ(v string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldEQ(FieldReviewNote, v))
+}
+
+// ReviewNoteNEQ applies the NEQ predicate on the "review_note" field.
+func ReviewNoteNEQ(v string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldNEQ(FieldReviewNote, v))
+}
+
+// ReviewNoteIn applies the In predicate on the "review_note" field.
+func ReviewNoteIn(vs ...string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldIn(FieldReviewNote, vs...))
+}
+
+// ReviewNoteNotIn applies the NotIn predicate on the "review_note" field.
+func ReviewNoteNotIn(vs ...string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldNotIn(FieldReviewNote, vs...))
+}
+
+// ReviewNoteGT applies the GT predicate on the "review_note" field.
+func ReviewNoteGT(v string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldGT(FieldReviewNote, v))
+}
+
+// ReviewNoteGTE applies the GTE predicate on the "review_note" field.
+func ReviewNoteGTE(v string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldGTE(FieldReviewNote, v))
+}
+
+// ReviewNoteLT applies the LT predicate on the "review_note" field.
+func ReviewNoteLT(v string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldLT(FieldReviewNote, v))
+}
+
+// ReviewNoteLTE applies the LTE predicate on the "review_note" field.
+func ReviewNoteLTE(v string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldLTE(FieldReviewNote, v))
+}
+
+// ReviewNoteContains applies the Contains predicate on the "review_note" field.
+func ReviewNoteContains(v string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldContains(FieldReviewNote, v))
+}
+
+// ReviewNoteHasPrefix applies the HasPrefix predicate on the "review_note" field.
+func ReviewNoteHasPrefix(v string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldHasPrefix(FieldReviewNote, v))
+}
+
+// ReviewNoteHasSuffix applies the HasSuffix predicate on the "review_note" field.
+func ReviewNoteHasSuffix(v string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldHasSuffix(FieldReviewNote, v))
+}
+
+// ReviewNoteIsNil applies the IsNil predicate on the "review_note" field.
+func ReviewNoteIsNil() predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldIsNull(FieldReviewNote))
+}
+
+// ReviewNoteNotNil applies the NotNil predicate on the "review_note" field.
+func ReviewNoteNotNil() predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldNotNull(FieldReviewNote))
+}
+
+// ReviewNoteEqualFold applies the EqualFold predicate on the "review_note" field.
+func ReviewNoteEqualFold(v string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldEqualFold(FieldReviewNote, v))
+}
+
+// ReviewNoteContainsFold applies the ContainsFold predicate on the "review_note" field.
+func ReviewNoteContainsFold(v string) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldContainsFold(FieldReviewNote, v))
+}
+
+// PublishedByEQ applies the EQ predicate on the "published_by" field.
+func PublishedByEQ(v uuid.UUID) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldEQ(FieldPublishedBy, v))
+}
+
+// PublishedByNEQ applies the NEQ predicate on the "published_by" field.
+func PublishedByNEQ(v uuid.UUID) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldNEQ(FieldPublishedBy, v))
+}
+
+// PublishedByIn applies the In predicate on the "published_by" field.
+func PublishedByIn(vs ...uuid.UUID) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldIn(FieldPublishedBy, vs...))
+}
+
+// PublishedByNotIn applies the NotIn predicate on the "published_by" field.
+func PublishedByNotIn(vs ...uuid.UUID) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldNotIn(FieldPublishedBy, vs...))
+}
+
+// PublishedByGT applies the GT predicate on the "published_by" field.
+func PublishedByGT(v uuid.UUID) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldGT(FieldPublishedBy, v))
+}
+
+// PublishedByGTE applies the GTE predicate on the "published_by" field.
+func PublishedByGTE(v uuid.UUID) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldGTE(FieldPublishedBy, v))
+}
+
+// PublishedByLT applies the LT predicate on the "published_by" field.
+func PublishedByLT(v uuid.UUID) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldLT(FieldPublishedBy, v))
+}
+
+// PublishedByLTE applies the LTE predicate on the "published_by" field.
+func PublishedByLTE(v uuid.UUID) predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldLTE(FieldPublishedBy, v))
+}
+
+// PublishedByIsNil applies the IsNil predicate on the "published_by" field.
+func PublishedByIsNil() predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldIsNull(FieldPublishedBy))
+}
+
+// PublishedByNotNil applies the NotNil predicate on the "published_by" field.
+func PublishedByNotNil() predicate.GameConfigVersion {
+	return predicate.GameConfigVersion(sql.FieldNotNull(FieldPublishedBy))
 }
 
 // And groups predicates with the AND operator between them.

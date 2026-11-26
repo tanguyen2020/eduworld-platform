@@ -4174,6 +4174,7 @@ paths:
           tournament-templates: action.game_ops.competition.view
           challenge-templates: action.game_ops.competition.view
           leaderboard-definitions: action.game_ops.competition.view
+          competition-rewards: action.game_ops.competition.view
           sticker-packs: action.game_ops.chat_assets.view
           gifs: action.game_ops.chat_assets.view
       summary: Danh sách cấu hình game theo loại (Game Studio)
@@ -4268,6 +4269,7 @@ paths:
           tournament-templates: action.game_ops.competition.edit
           challenge-templates: action.game_ops.competition.edit
           leaderboard-definitions: action.game_ops.competition.edit
+          competition-rewards: action.game_ops.competition.edit
           sticker-packs: action.game_ops.chat_assets.edit
           gifs: action.game_ops.chat_assets.edit
       summary: Tạo cấu hình game mới (version 1, draft)
@@ -4344,6 +4346,7 @@ paths:
           tournament-templates: action.game_ops.competition.view
           challenge-templates: action.game_ops.competition.view
           leaderboard-definitions: action.game_ops.competition.view
+          competition-rewards: action.game_ops.competition.view
           sticker-packs: action.game_ops.chat_assets.view
           gifs: action.game_ops.chat_assets.view
       summary: Xem một version cấu hình game
@@ -4408,9 +4411,14 @@ paths:
           tournament-templates: action.game_ops.competition.edit
           challenge-templates: action.game_ops.competition.edit
           leaderboard-definitions: action.game_ops.competition.edit
+          competition-rewards: action.game_ops.competition.edit
           sticker-packs: action.game_ops.chat_assets.edit
           gifs: action.game_ops.chat_assets.edit
       summary: Sửa version cấu hình game ở trạng thái draft
+      description: |
+        Thiếu `If-Match` → `428 PRECONDITION_REQUIRED`; ETag cũ → `412 VERSION_MISMATCH`. Version không phải `draft`/`rejected`
+        (đã publish, đang duyệt…) → `409 CONTENT_NOT_EDITABLE`; muốn sửa cấu hình đã publish thì tạo bản nháp mới (module game:
+        `createGameConfigVersion`; module competition: `createGameConfig` với `config_id` + `based_on_version_id` — F108).
       x-internal: true
       security:
         - keycloakAdminBearer: []
@@ -4488,6 +4496,7 @@ paths:
           tournament-templates: action.game_ops.competition.workflow
           challenge-templates: action.game_ops.competition.workflow
           leaderboard-definitions: action.game_ops.competition.workflow
+          competition-rewards: action.game_ops.competition.workflow
           sticker-packs: action.game_ops.chat_assets.workflow
           gifs: action.game_ops.chat_assets.workflow
       summary: Workflow cấu hình game Draft → Review → Approved → Published → Archived
@@ -4585,6 +4594,7 @@ paths:
           tournament-templates: action.game_ops.competition.view
           challenge-templates: action.game_ops.competition.view
           leaderboard-definitions: action.game_ops.competition.view
+          competition-rewards: action.game_ops.competition.view
           sticker-packs: action.game_ops.chat_assets.view
           gifs: action.game_ops.chat_assets.view
       summary: Lịch sử version của một cấu hình game (ADR-0043)
@@ -4650,6 +4660,7 @@ paths:
           tournament-templates: action.game_ops.competition.view
           challenge-templates: action.game_ops.competition.view
           leaderboard-definitions: action.game_ops.competition.view
+          competition-rewards: action.game_ops.competition.view
           sticker-packs: action.game_ops.chat_assets.view
           gifs: action.game_ops.chat_assets.view
       summary: So sánh hai version cấu hình game
@@ -4722,6 +4733,7 @@ paths:
           tournament-templates: action.game_ops.competition.publish
           challenge-templates: action.game_ops.competition.publish
           leaderboard-definitions: action.game_ops.competition.publish
+          competition-rewards: action.game_ops.competition.publish
           sticker-packs: action.game_ops.chat_assets.publish
           gifs: action.game_ops.chat_assets.publish
       summary: Xuất bản cấu hình game (ngay/hẹn giờ) — dựng snapshot, đổi con trỏ, cập nhật manifest tenant
@@ -4814,6 +4826,7 @@ paths:
           tournament-templates: action.game_ops.competition.rollback
           challenge-templates: action.game_ops.competition.rollback
           leaderboard-definitions: action.game_ops.competition.rollback
+          competition-rewards: action.game_ops.competition.rollback
           sticker-packs: action.game_ops.chat_assets.rollback
           gifs: action.game_ops.chat_assets.rollback
       summary: Dùng lại version cấu hình game đã publish (đổi con trỏ)
@@ -4891,6 +4904,7 @@ paths:
           tournament-templates: action.game_ops.competition.rollback
           challenge-templates: action.game_ops.competition.rollback
           leaderboard-definitions: action.game_ops.competition.rollback
+          competition-rewards: action.game_ops.competition.rollback
           sticker-packs: action.game_ops.chat_assets.rollback
           gifs: action.game_ops.chat_assets.rollback
       summary: Gỡ xuất bản cấu hình game
@@ -4968,6 +4982,7 @@ paths:
           tournament-templates: action.game_ops.competition.view
           challenge-templates: action.game_ops.competition.view
           leaderboard-definitions: action.game_ops.competition.view
+          competition-rewards: action.game_ops.competition.view
           sticker-packs: action.game_ops.chat_assets.view
           gifs: action.game_ops.chat_assets.view
       summary: Lịch sử publish/rollback/unpublish của cấu hình game
@@ -8356,6 +8371,7 @@ components:
         - tournament-templates
         - challenge-templates
         - leaderboard-definitions
+        - competition-rewards
         - sticker-packs
         - gifs
         - events
@@ -8390,8 +8406,21 @@ components:
           maxLength: 200
         payload:
           type: object
-          description: Nội dung cấu hình theo schema của loại (vd. specs/schemas/quest.schema.json, minigame-config.schema.json, reward-rule.schema.json)
+          description: |
+            Nội dung cấu hình theo schema của loại (vd. specs/schemas/quest.schema.json, minigame-config.schema.json, reward-rule.schema.json;
+            thi đấu — F108: matchmaking-config, ranking-rules, season, tournament-template, challenge-template, leaderboard-definition,
+            competition-reward `.schema.json`). Sai schema hoặc invariant nghiệp vụ → `422 VALIDATION_FAILED` chỉ rõ trường.
           additionalProperties: true
+        config_id:
+          description: |
+            Chỉ module competition (createGameConfig, F108): tạo **version nháp mới** cho cấu hình đã có thay vì cấu hình mới;
+            vắng → cấu hình mới (version 1). Cấu hình không tồn tại → `404 NOT_FOUND`.
+          $ref: '#/components/schemas/Uuid'
+        based_on_version_id:
+          description: |
+            Chỉ module competition, đi cùng `config_id`: version nguồn (thường là version đã publish); `payload`/`title` gửi kèm là nội dung
+            của bản nháp mới, version nguồn không đổi (R11). Version không thuộc `config_id` → `422 VALIDATION_FAILED`.
+          $ref: '#/components/schemas/Uuid'
     ContentVersionHistory:
       type: object
       required:
@@ -8439,6 +8468,9 @@ components:
         published_at:
           $ref: '#/components/schemas/Timestamp'
         publish_at:
+          $ref: '#/components/schemas/Timestamp'
+        effective_from:
+          description: Chỉ module competition (F108) — thời điểm version đã publish có hiệu lực
           $ref: '#/components/schemas/Timestamp'
         active_pinned_sessions:
           type: integer
@@ -8505,7 +8537,12 @@ components:
       type: object
       properties:
         publish_at:
-          description: Hẹn giờ xuất bản (UTC); bỏ trống = xuất bản ngay
+          description: Hẹn giờ xuất bản (UTC); bỏ trống = xuất bản ngay. Module competition không hẹn giờ publish (dùng `effective_from`) → `422 VALIDATION_FAILED`.
+          $ref: '#/components/schemas/Timestamp'
+        effective_from:
+          description: |
+            Chỉ module competition (F108-AC-05): thời điểm cấu hình có hiệu lực cho trận/giải tạo sau đó (UTC, ≥ hiện tại — không hồi tố);
+            bỏ trống = ngay lúc publish. Con trỏ release đổi ngay; runtime áp đúng `effective_from` (F108-AC-08).
           $ref: '#/components/schemas/Timestamp'
         change_note:
           type: string
@@ -8558,6 +8595,9 @@ components:
         released_by:
           $ref: '#/components/schemas/Uuid'
         released_at:
+          $ref: '#/components/schemas/Timestamp'
+        effective_from:
+          description: Chỉ module competition (F108) — thời điểm release có hiệu lực ở runtime (publish theo `effective_from`; rollback/unpublish = lúc thao tác)
           $ref: '#/components/schemas/Timestamp'
         usages:
           type: array

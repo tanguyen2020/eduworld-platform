@@ -131,6 +131,20 @@ func (_c *ContentReleaseCreate) SetNillableReleasedAt(v *time.Time) *ContentRele
 	return _c
 }
 
+// SetEffectiveFrom sets the "effective_from" field.
+func (_c *ContentReleaseCreate) SetEffectiveFrom(v time.Time) *ContentReleaseCreate {
+	_c.mutation.SetEffectiveFrom(v)
+	return _c
+}
+
+// SetNillableEffectiveFrom sets the "effective_from" field if the given value is not nil.
+func (_c *ContentReleaseCreate) SetNillableEffectiveFrom(v *time.Time) *ContentReleaseCreate {
+	if v != nil {
+		_c.SetEffectiveFrom(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *ContentReleaseCreate) SetID(v uuid.UUID) *ContentReleaseCreate {
 	_c.mutation.SetID(v)
@@ -301,6 +315,10 @@ func (_c *ContentReleaseCreate) createSpec() (*ContentRelease, *sqlgraph.CreateS
 	if value, ok := _c.mutation.ReleasedAt(); ok {
 		_spec.SetField(contentrelease.FieldReleasedAt, field.TypeTime, value)
 		_node.ReleasedAt = value
+	}
+	if value, ok := _c.mutation.EffectiveFrom(); ok {
+		_spec.SetField(contentrelease.FieldEffectiveFrom, field.TypeTime, value)
+		_node.EffectiveFrom = &value
 	}
 	return _node, _spec
 }

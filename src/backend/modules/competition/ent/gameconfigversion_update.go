@@ -291,6 +291,46 @@ func (_u *GameConfigVersionUpdate) ClearPublishedAt() *GameConfigVersionUpdate {
 	return _u
 }
 
+// SetReviewNote sets the "review_note" field.
+func (_u *GameConfigVersionUpdate) SetReviewNote(v string) *GameConfigVersionUpdate {
+	_u.mutation.SetReviewNote(v)
+	return _u
+}
+
+// SetNillableReviewNote sets the "review_note" field if the given value is not nil.
+func (_u *GameConfigVersionUpdate) SetNillableReviewNote(v *string) *GameConfigVersionUpdate {
+	if v != nil {
+		_u.SetReviewNote(*v)
+	}
+	return _u
+}
+
+// ClearReviewNote clears the value of the "review_note" field.
+func (_u *GameConfigVersionUpdate) ClearReviewNote() *GameConfigVersionUpdate {
+	_u.mutation.ClearReviewNote()
+	return _u
+}
+
+// SetPublishedBy sets the "published_by" field.
+func (_u *GameConfigVersionUpdate) SetPublishedBy(v uuid.UUID) *GameConfigVersionUpdate {
+	_u.mutation.SetPublishedBy(v)
+	return _u
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_u *GameConfigVersionUpdate) SetNillablePublishedBy(v *uuid.UUID) *GameConfigVersionUpdate {
+	if v != nil {
+		_u.SetPublishedBy(*v)
+	}
+	return _u
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (_u *GameConfigVersionUpdate) ClearPublishedBy() *GameConfigVersionUpdate {
+	_u.mutation.ClearPublishedBy()
+	return _u
+}
+
 // Mutation returns the GameConfigVersionMutation object of the builder.
 func (_u *GameConfigVersionUpdate) Mutation() *GameConfigVersionMutation {
 	return _u.mutation
@@ -358,6 +398,11 @@ func (_u *GameConfigVersionUpdate) check() error {
 	if v, ok := _u.mutation.ChangeNote(); ok {
 		if err := gameconfigversion.ChangeNoteValidator(v); err != nil {
 			return &ValidationError{Name: "change_note", err: fmt.Errorf(`ent: validator failed for field "GameConfigVersion.change_note": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ReviewNote(); ok {
+		if err := gameconfigversion.ReviewNoteValidator(v); err != nil {
+			return &ValidationError{Name: "review_note", err: fmt.Errorf(`ent: validator failed for field "GameConfigVersion.review_note": %w`, err)}
 		}
 	}
 	return nil
@@ -455,6 +500,18 @@ func (_u *GameConfigVersionUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if _u.mutation.PublishedAtCleared() {
 		_spec.ClearField(gameconfigversion.FieldPublishedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ReviewNote(); ok {
+		_spec.SetField(gameconfigversion.FieldReviewNote, field.TypeString, value)
+	}
+	if _u.mutation.ReviewNoteCleared() {
+		_spec.ClearField(gameconfigversion.FieldReviewNote, field.TypeString)
+	}
+	if value, ok := _u.mutation.PublishedBy(); ok {
+		_spec.SetField(gameconfigversion.FieldPublishedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.PublishedByCleared() {
+		_spec.ClearField(gameconfigversion.FieldPublishedBy, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.GameConfigVersion
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -739,6 +796,46 @@ func (_u *GameConfigVersionUpdateOne) ClearPublishedAt() *GameConfigVersionUpdat
 	return _u
 }
 
+// SetReviewNote sets the "review_note" field.
+func (_u *GameConfigVersionUpdateOne) SetReviewNote(v string) *GameConfigVersionUpdateOne {
+	_u.mutation.SetReviewNote(v)
+	return _u
+}
+
+// SetNillableReviewNote sets the "review_note" field if the given value is not nil.
+func (_u *GameConfigVersionUpdateOne) SetNillableReviewNote(v *string) *GameConfigVersionUpdateOne {
+	if v != nil {
+		_u.SetReviewNote(*v)
+	}
+	return _u
+}
+
+// ClearReviewNote clears the value of the "review_note" field.
+func (_u *GameConfigVersionUpdateOne) ClearReviewNote() *GameConfigVersionUpdateOne {
+	_u.mutation.ClearReviewNote()
+	return _u
+}
+
+// SetPublishedBy sets the "published_by" field.
+func (_u *GameConfigVersionUpdateOne) SetPublishedBy(v uuid.UUID) *GameConfigVersionUpdateOne {
+	_u.mutation.SetPublishedBy(v)
+	return _u
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_u *GameConfigVersionUpdateOne) SetNillablePublishedBy(v *uuid.UUID) *GameConfigVersionUpdateOne {
+	if v != nil {
+		_u.SetPublishedBy(*v)
+	}
+	return _u
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (_u *GameConfigVersionUpdateOne) ClearPublishedBy() *GameConfigVersionUpdateOne {
+	_u.mutation.ClearPublishedBy()
+	return _u
+}
+
 // Mutation returns the GameConfigVersionMutation object of the builder.
 func (_u *GameConfigVersionUpdateOne) Mutation() *GameConfigVersionMutation {
 	return _u.mutation
@@ -819,6 +916,11 @@ func (_u *GameConfigVersionUpdateOne) check() error {
 	if v, ok := _u.mutation.ChangeNote(); ok {
 		if err := gameconfigversion.ChangeNoteValidator(v); err != nil {
 			return &ValidationError{Name: "change_note", err: fmt.Errorf(`ent: validator failed for field "GameConfigVersion.change_note": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ReviewNote(); ok {
+		if err := gameconfigversion.ReviewNoteValidator(v); err != nil {
+			return &ValidationError{Name: "review_note", err: fmt.Errorf(`ent: validator failed for field "GameConfigVersion.review_note": %w`, err)}
 		}
 	}
 	return nil
@@ -933,6 +1035,18 @@ func (_u *GameConfigVersionUpdateOne) sqlSave(ctx context.Context) (_node *GameC
 	}
 	if _u.mutation.PublishedAtCleared() {
 		_spec.ClearField(gameconfigversion.FieldPublishedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ReviewNote(); ok {
+		_spec.SetField(gameconfigversion.FieldReviewNote, field.TypeString, value)
+	}
+	if _u.mutation.ReviewNoteCleared() {
+		_spec.ClearField(gameconfigversion.FieldReviewNote, field.TypeString)
+	}
+	if value, ok := _u.mutation.PublishedBy(); ok {
+		_spec.SetField(gameconfigversion.FieldPublishedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.PublishedByCleared() {
+		_spec.ClearField(gameconfigversion.FieldPublishedBy, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.GameConfigVersion
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

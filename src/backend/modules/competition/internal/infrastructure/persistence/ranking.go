@@ -40,27 +40,17 @@ var (
 
 func dayArg(d time.Time) string { return d.UTC().Format("2006-01-02") }
 
-// published returns the published configuration version of (type, default) in effect at at.
+// published returns the configuration version of (type, default) in effect at at by the release timeline (F108,
+// ADR-0043: a publish takes effect at its effective_from, a rollback at once; trận đã ghim version giữ version đó).
 func published(ctx context.Context, typ string, at time.Time) (uuid.UUID, []byte, error) {
-	t, err := tx(ctx)
+	id, payload, err := effective(ctx, typ, at)
 	if err != nil {
 		return uuid.Nil, nil, err
 	}
-	var id uuid.UUID
-	var payload []byte
-	// tenancyguard:ok platform configuration (G tables game_configs/game_config_versions, no tenant), live rows only
-	err = t.QueryRowContext(ctx, `SELECT v.config_version_id, v.payload FROM competition.game_configs c
-		JOIN competition.game_config_versions v ON v.config_id = c.config_id
-		WHERE c.config_type = $1 AND c.code = $2 AND c.deleted_at IS NULL AND v.deleted_at IS NULL AND v.status = 'published'
-			AND (v.effective_from IS NULL OR v.effective_from <= $3)
-		ORDER BY v.effective_from DESC NULLS LAST, v.version_no DESC LIMIT 1`, typ, defaultCode, at).Scan(&id, &payload)
-	if errors.Is(err, sql.ErrNoRows) {
+	if id == nil {
 		return uuid.Nil, nil, ErrNoRankingRules
 	}
-	if err != nil {
-		return uuid.Nil, nil, fmt.Errorf("%s config: %w", typ, err)
-	}
-	return id, payload, nil
+	return *id, payload, nil
 }
 
 // Rules implements write.RankingRepository: the Ranking Rules in effect at at (effective_from: only matches after it,

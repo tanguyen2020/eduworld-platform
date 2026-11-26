@@ -238,7 +238,7 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 		"game": {"session-timeout", "curfew-session-closer", "quest-period-expiry", "quest-failure-timer", "curve-rollout", "xp-reconcile",
 			"wallet-reconcile", "event-scheduler", "goal-recompute", "challenge-deadline", "scheduled-publish", "game-media-pipeline", "render-retry"},
 		"competition": {"close-idle-hub-instances", "party-invitation-expiry", "party-presence-sweeper", "matchmaker", "matchmaking-ticket-expiry", "duel-expiry",
-			"leaderboard-period-close", "leaderboard-rebuild", "leaderboard-reconcile", "season-scheduler", "rd-inflation", "tournament-scheduler"},
+			"leaderboard-period-close", "leaderboard-rebuild", "leaderboard-reconcile", "season-scheduler", "rd-inflation", "tournament-scheduler", "competition-config-apply"},
 		"chat": {"expire-friend-requests", "moderation-switch-expirer", "moderation-sla-escalator", "school-notification-reminder",
 			"sanction-expirer", "oncall-escalator", "break-glass-expirer"},
 	}

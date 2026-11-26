@@ -56,7 +56,11 @@ type GameConfigVersion struct {
 	// BasedOnVersionID holds the value of the "based_on_version_id" field.
 	BasedOnVersionID *uuid.UUID `json:"based_on_version_id,omitempty"`
 	// PublishedAt holds the value of the "published_at" field.
-	PublishedAt  *time.Time `json:"published_at,omitempty"`
+	PublishedAt *time.Time `json:"published_at,omitempty"`
+	// ReviewNote holds the value of the "review_note" field.
+	ReviewNote *string `json:"review_note,omitempty"`
+	// PublishedBy holds the value of the "published_by" field.
+	PublishedBy  *uuid.UUID `json:"published_by,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -65,13 +69,13 @@ func (*GameConfigVersion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case gameconfigversion.FieldCreatedBy, gameconfigversion.FieldUpdatedBy, gameconfigversion.FieldDeletedBy, gameconfigversion.FieldAuthorID, gameconfigversion.FieldReviewerID, gameconfigversion.FieldBasedOnVersionID:
+		case gameconfigversion.FieldCreatedBy, gameconfigversion.FieldUpdatedBy, gameconfigversion.FieldDeletedBy, gameconfigversion.FieldAuthorID, gameconfigversion.FieldReviewerID, gameconfigversion.FieldBasedOnVersionID, gameconfigversion.FieldPublishedBy:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case gameconfigversion.FieldPayload:
 			values[i] = new([]byte)
 		case gameconfigversion.FieldVersion, gameconfigversion.FieldVersionNo:
 			values[i] = new(sql.NullInt64)
-		case gameconfigversion.FieldDeleteReason, gameconfigversion.FieldStatus, gameconfigversion.FieldTitle, gameconfigversion.FieldChangeNote:
+		case gameconfigversion.FieldDeleteReason, gameconfigversion.FieldStatus, gameconfigversion.FieldTitle, gameconfigversion.FieldChangeNote, gameconfigversion.FieldReviewNote:
 			values[i] = new(sql.NullString)
 		case gameconfigversion.FieldCreatedAt, gameconfigversion.FieldUpdatedAt, gameconfigversion.FieldDeletedAt, gameconfigversion.FieldEffectiveFrom, gameconfigversion.FieldPublishedAt:
 			values[i] = new(sql.NullTime)
@@ -225,6 +229,20 @@ func (_m *GameConfigVersion) assignValues(columns []string, values []any) error 
 				_m.PublishedAt = new(time.Time)
 				*_m.PublishedAt = value.Time
 			}
+		case gameconfigversion.FieldReviewNote:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field review_note", values[i])
+			} else if value.Valid {
+				_m.ReviewNote = new(string)
+				*_m.ReviewNote = value.String
+			}
+		case gameconfigversion.FieldPublishedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field published_by", values[i])
+			} else if value.Valid {
+				_m.PublishedBy = new(uuid.UUID)
+				*_m.PublishedBy = *value.S.(*uuid.UUID)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -338,6 +356,16 @@ func (_m *GameConfigVersion) String() string {
 	if v := _m.PublishedAt; v != nil {
 		builder.WriteString("published_at=")
 		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.ReviewNote; v != nil {
+		builder.WriteString("review_note=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.PublishedBy; v != nil {
+		builder.WriteString("published_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteByte(')')
 	return builder.String()

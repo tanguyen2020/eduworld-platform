@@ -53,6 +53,10 @@ const (
 	FieldBasedOnVersionID = "based_on_version_id"
 	// FieldPublishedAt holds the string denoting the published_at field in the database.
 	FieldPublishedAt = "published_at"
+	// FieldReviewNote holds the string denoting the review_note field in the database.
+	FieldReviewNote = "review_note"
+	// FieldPublishedBy holds the string denoting the published_by field in the database.
+	FieldPublishedBy = "published_by"
 	// Table holds the table name of the gameconfigversion in the database.
 	Table = "game_config_versions"
 )
@@ -79,6 +83,8 @@ var Columns = []string{
 	FieldChangeNote,
 	FieldBasedOnVersionID,
 	FieldPublishedAt,
+	FieldReviewNote,
+	FieldPublishedBy,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -117,6 +123,8 @@ var (
 	TitleValidator func(string) error
 	// ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
 	ChangeNoteValidator func(string) error
+	// ReviewNoteValidator is a validator for the "review_note" field. It is called by the builders before save.
+	ReviewNoteValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -217,4 +225,14 @@ func ByBasedOnVersionID(opts ...sql.OrderTermOption) OrderOption {
 // ByPublishedAt orders the results by the published_at field.
 func ByPublishedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPublishedAt, opts...).ToFunc()
+}
+
+// ByReviewNote orders the results by the review_note field.
+func ByReviewNote(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReviewNote, opts...).ToFunc()
+}
+
+// ByPublishedBy orders the results by the published_by field.
+func ByPublishedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPublishedBy, opts...).ToFunc()
 }

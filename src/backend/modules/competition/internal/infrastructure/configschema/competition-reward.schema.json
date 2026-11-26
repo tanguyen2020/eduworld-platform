@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:competition-reward:1",
+  "title": "CompetitionReward",
+  "description": "Phần thưởng thi đấu (config_type competition-rewards, quyền competition.config.reward.write — F108, RB-415; COMPETITION_SYSTEM §8.1, §9.5, §10.8, §11): bộ quy tắc thưởng của mùa (theo tier cao nhất đạt được, không theo thứ hạng tuyệt đối), bảng xếp hạng (theo ngưỡng điểm), giải hoặc thử thách (theo hạng/số trận). Phần thưởng chỉ tham chiếu cosmetic/badge/title của module game — không tiền tệ, không vật phẩm trả phí, không ảnh hưởng điểm học tập (R19). code do server giữ sau khi tạo.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "applies_to",
+    "name",
+    "rules"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_]{2,63}$",
+      "description": "Mã bộ thưởng (dùng khi tạo; server giữ mã của cấu hình)",
+      "maxLength": 64
+    },
+    "applies_to": {
+      "type": "string",
+      "enum": [
+        "season",
+        "leaderboard",
+        "tournament",
+        "challenge"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rule_id",
+          "reward_ref"
+        ],
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_]{0,63}$",
+            "maxLength": 64
+          },
+          "tier_code": {
+            "type": "string",
+            "pattern": "^T[0-9]{1,2}$",
+            "description": "Mùa: tier cao nhất đạt được",
+            "maxLength": 64
+          },
+          "points_min": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000,
+            "description": "Bảng xếp hạng: ngưỡng điểm của kỳ (thưởng theo ngưỡng, không top 1)"
+          },
+          "rank_min": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256,
+            "description": "Giải/thử thách: hạng từ"
+          },
+          "rank_max": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256,
+            "description": "Giải/thử thách: hạng đến"
+          },
+          "min_matches": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Giải/thử thách: thưởng tham gia khi hoàn thành ít nhất số trận"
+          },
+          "reward_ref": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "maxProperties": 3,
+            "description": "Chỉ cosmetic/badge/title của module game (R19)",
+            "properties": {
+              "badge_code": {
+                "type": "string",
+                "pattern": "^badge\\.[a-z0-9_.]{1,59}$",
+                "maxLength": 64
+              },
+              "title_code": {
+                "type": "string",
+                "pattern": "^title\\.[a-z0-9_.]{1,59}$",
+                "maxLength": 64
+              },
+              "cosmetic_code": {
+                "type": "string",
+                "pattern": "^cosmetic\\.[a-z0-9_.]{1,56}$",
+                "maxLength": 64
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

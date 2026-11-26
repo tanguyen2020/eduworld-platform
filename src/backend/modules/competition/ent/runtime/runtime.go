@@ -394,6 +394,10 @@ func init() {
 	gameconfigversionDescChangeNote := gameconfigversionFields[8].Descriptor()
 	// gameconfigversion.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
 	gameconfigversion.ChangeNoteValidator = gameconfigversionDescChangeNote.Validators[0].(func(string) error)
+	// gameconfigversionDescReviewNote is the schema descriptor for review_note field.
+	gameconfigversionDescReviewNote := gameconfigversionFields[11].Descriptor()
+	// gameconfigversion.ReviewNoteValidator is a validator for the "review_note" field. It is called by the builders before save.
+	gameconfigversion.ReviewNoteValidator = gameconfigversionDescReviewNote.Validators[0].(func(string) error)
 	// gameconfigversionDescID is the schema descriptor for id field.
 	gameconfigversionDescID := gameconfigversionMixinFields0[0].Descriptor()
 	// gameconfigversion.DefaultID holds the default value on creation for the id field.

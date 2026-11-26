@@ -7732,6 +7732,7 @@ type ContentReleaseMutation struct {
 	reason          *string
 	released_by     *uuid.UUID
 	released_at     *time.Time
+	effective_from  *time.Time
 	clearedFields   map[string]struct{}
 	done            bool
 	oldValue        func(context.Context) (*ContentRelease, error)
@@ -8231,6 +8232,55 @@ func (m *ContentReleaseMutation) ResetReleasedAt() {
 	m.released_at = nil
 }
 
+// SetEffectiveFrom sets the "effective_from" field.
+func (m *ContentReleaseMutation) SetEffectiveFrom(t time.Time) {
+	m.effective_from = &t
+}
+
+// EffectiveFrom returns the value of the "effective_from" field in the mutation.
+func (m *ContentReleaseMutation) EffectiveFrom() (r time.Time, exists bool) {
+	v := m.effective_from
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEffectiveFrom returns the old "effective_from" field's value of the ContentRelease entity.
+// If the ContentRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ContentReleaseMutation) OldEffectiveFrom(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEffectiveFrom is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEffectiveFrom requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEffectiveFrom: %w", err)
+	}
+	return oldValue.EffectiveFrom, nil
+}
+
+// ClearEffectiveFrom clears the value of the "effective_from" field.
+func (m *ContentReleaseMutation) ClearEffectiveFrom() {
+	m.effective_from = nil
+	m.clearedFields[contentrelease.FieldEffectiveFrom] = struct{}{}
+}
+
+// EffectiveFromCleared returns if the "effective_from" field was cleared in this mutation.
+func (m *ContentReleaseMutation) EffectiveFromCleared() bool {
+	_, ok := m.clearedFields[contentrelease.FieldEffectiveFrom]
+	return ok
+}
+
+// ResetEffectiveFrom resets all changes to the "effective_from" field.
+func (m *ContentReleaseMutation) ResetEffectiveFrom() {
+	m.effective_from = nil
+	delete(m.clearedFields, contentrelease.FieldEffectiveFrom)
+}
+
 // Where appends a list predicates to the ContentReleaseMutation builder.
 func (m *ContentReleaseMutation) Where(ps ...predicate.ContentRelease) {
 	m.predicates = append(m.predicates, ps...)
@@ -8265,7 +8315,7 @@ func (m *ContentReleaseMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ContentReleaseMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.created_at != nil {
 		fields = append(fields, contentrelease.FieldCreatedAt)
 	}
@@ -8293,6 +8343,9 @@ func (m *ContentReleaseMutation) Fields() []string {
 	if m.released_at != nil {
 		fields = append(fields, contentrelease.FieldReleasedAt)
 	}
+	if m.effective_from != nil {
+		fields = append(fields, contentrelease.FieldEffectiveFrom)
+	}
 	return fields
 }
 
@@ -8319,6 +8372,8 @@ func (m *ContentReleaseMutation) Field(name string) (ent.Value, bool) {
 		return m.ReleasedBy()
 	case contentrelease.FieldReleasedAt:
 		return m.ReleasedAt()
+	case contentrelease.FieldEffectiveFrom:
+		return m.EffectiveFrom()
 	}
 	return nil, false
 }
@@ -8346,6 +8401,8 @@ func (m *ContentReleaseMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldReleasedBy(ctx)
 	case contentrelease.FieldReleasedAt:
 		return m.OldReleasedAt(ctx)
+	case contentrelease.FieldEffectiveFrom:
+		return m.OldEffectiveFrom(ctx)
 	}
 	return nil, fmt.Errorf("unknown ContentRelease field %s", name)
 }
@@ -8418,6 +8475,13 @@ func (m *ContentReleaseMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetReleasedAt(v)
 		return nil
+	case contentrelease.FieldEffectiveFrom:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEffectiveFrom(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ContentRelease field %s", name)
 }
@@ -8463,6 +8527,9 @@ func (m *ContentReleaseMutation) ClearedFields() []string {
 	if m.FieldCleared(contentrelease.FieldReleasedBy) {
 		fields = append(fields, contentrelease.FieldReleasedBy)
 	}
+	if m.FieldCleared(contentrelease.FieldEffectiveFrom) {
+		fields = append(fields, contentrelease.FieldEffectiveFrom)
+	}
 	return fields
 }
 
@@ -8491,6 +8558,9 @@ func (m *ContentReleaseMutation) ClearField(name string) error {
 		return nil
 	case contentrelease.FieldReleasedBy:
 		m.ClearReleasedBy()
+		return nil
+	case contentrelease.FieldEffectiveFrom:
+		m.ClearEffectiveFrom()
 		return nil
 	}
 	return fmt.Errorf("unknown ContentRelease nullable field %s", name)
@@ -8526,6 +8596,9 @@ func (m *ContentReleaseMutation) ResetField(name string) error {
 		return nil
 	case contentrelease.FieldReleasedAt:
 		m.ResetReleasedAt()
+		return nil
+	case contentrelease.FieldEffectiveFrom:
+		m.ResetEffectiveFrom()
 		return nil
 	}
 	return fmt.Errorf("unknown ContentRelease field %s", name)
@@ -11213,6 +11286,8 @@ type GameConfigVersionMutation struct {
 	change_note         *string
 	based_on_version_id *uuid.UUID
 	published_at        *time.Time
+	review_note         *string
+	published_by        *uuid.UUID
 	clearedFields       map[string]struct{}
 	done                bool
 	oldValue            func(context.Context) (*GameConfigVersion, error)
@@ -12190,6 +12265,104 @@ func (m *GameConfigVersionMutation) ResetPublishedAt() {
 	delete(m.clearedFields, gameconfigversion.FieldPublishedAt)
 }
 
+// SetReviewNote sets the "review_note" field.
+func (m *GameConfigVersionMutation) SetReviewNote(s string) {
+	m.review_note = &s
+}
+
+// ReviewNote returns the value of the "review_note" field in the mutation.
+func (m *GameConfigVersionMutation) ReviewNote() (r string, exists bool) {
+	v := m.review_note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReviewNote returns the old "review_note" field's value of the GameConfigVersion entity.
+// If the GameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameConfigVersionMutation) OldReviewNote(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReviewNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReviewNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReviewNote: %w", err)
+	}
+	return oldValue.ReviewNote, nil
+}
+
+// ClearReviewNote clears the value of the "review_note" field.
+func (m *GameConfigVersionMutation) ClearReviewNote() {
+	m.review_note = nil
+	m.clearedFields[gameconfigversion.FieldReviewNote] = struct{}{}
+}
+
+// ReviewNoteCleared returns if the "review_note" field was cleared in this mutation.
+func (m *GameConfigVersionMutation) ReviewNoteCleared() bool {
+	_, ok := m.clearedFields[gameconfigversion.FieldReviewNote]
+	return ok
+}
+
+// ResetReviewNote resets all changes to the "review_note" field.
+func (m *GameConfigVersionMutation) ResetReviewNote() {
+	m.review_note = nil
+	delete(m.clearedFields, gameconfigversion.FieldReviewNote)
+}
+
+// SetPublishedBy sets the "published_by" field.
+func (m *GameConfigVersionMutation) SetPublishedBy(u uuid.UUID) {
+	m.published_by = &u
+}
+
+// PublishedBy returns the value of the "published_by" field in the mutation.
+func (m *GameConfigVersionMutation) PublishedBy() (r uuid.UUID, exists bool) {
+	v := m.published_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedBy returns the old "published_by" field's value of the GameConfigVersion entity.
+// If the GameConfigVersion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameConfigVersionMutation) OldPublishedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedBy: %w", err)
+	}
+	return oldValue.PublishedBy, nil
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (m *GameConfigVersionMutation) ClearPublishedBy() {
+	m.published_by = nil
+	m.clearedFields[gameconfigversion.FieldPublishedBy] = struct{}{}
+}
+
+// PublishedByCleared returns if the "published_by" field was cleared in this mutation.
+func (m *GameConfigVersionMutation) PublishedByCleared() bool {
+	_, ok := m.clearedFields[gameconfigversion.FieldPublishedBy]
+	return ok
+}
+
+// ResetPublishedBy resets all changes to the "published_by" field.
+func (m *GameConfigVersionMutation) ResetPublishedBy() {
+	m.published_by = nil
+	delete(m.clearedFields, gameconfigversion.FieldPublishedBy)
+}
+
 // Where appends a list predicates to the GameConfigVersionMutation builder.
 func (m *GameConfigVersionMutation) Where(ps ...predicate.GameConfigVersion) {
 	m.predicates = append(m.predicates, ps...)
@@ -12224,7 +12397,7 @@ func (m *GameConfigVersionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GameConfigVersionMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 21)
 	if m.created_at != nil {
 		fields = append(fields, gameconfigversion.FieldCreatedAt)
 	}
@@ -12282,6 +12455,12 @@ func (m *GameConfigVersionMutation) Fields() []string {
 	if m.published_at != nil {
 		fields = append(fields, gameconfigversion.FieldPublishedAt)
 	}
+	if m.review_note != nil {
+		fields = append(fields, gameconfigversion.FieldReviewNote)
+	}
+	if m.published_by != nil {
+		fields = append(fields, gameconfigversion.FieldPublishedBy)
+	}
 	return fields
 }
 
@@ -12328,6 +12507,10 @@ func (m *GameConfigVersionMutation) Field(name string) (ent.Value, bool) {
 		return m.BasedOnVersionID()
 	case gameconfigversion.FieldPublishedAt:
 		return m.PublishedAt()
+	case gameconfigversion.FieldReviewNote:
+		return m.ReviewNote()
+	case gameconfigversion.FieldPublishedBy:
+		return m.PublishedBy()
 	}
 	return nil, false
 }
@@ -12375,6 +12558,10 @@ func (m *GameConfigVersionMutation) OldField(ctx context.Context, name string) (
 		return m.OldBasedOnVersionID(ctx)
 	case gameconfigversion.FieldPublishedAt:
 		return m.OldPublishedAt(ctx)
+	case gameconfigversion.FieldReviewNote:
+		return m.OldReviewNote(ctx)
+	case gameconfigversion.FieldPublishedBy:
+		return m.OldPublishedBy(ctx)
 	}
 	return nil, fmt.Errorf("unknown GameConfigVersion field %s", name)
 }
@@ -12517,6 +12704,20 @@ func (m *GameConfigVersionMutation) SetField(name string, value ent.Value) error
 		}
 		m.SetPublishedAt(v)
 		return nil
+	case gameconfigversion.FieldReviewNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReviewNote(v)
+		return nil
+	case gameconfigversion.FieldPublishedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedBy(v)
+		return nil
 	}
 	return fmt.Errorf("unknown GameConfigVersion field %s", name)
 }
@@ -12607,6 +12808,12 @@ func (m *GameConfigVersionMutation) ClearedFields() []string {
 	if m.FieldCleared(gameconfigversion.FieldPublishedAt) {
 		fields = append(fields, gameconfigversion.FieldPublishedAt)
 	}
+	if m.FieldCleared(gameconfigversion.FieldReviewNote) {
+		fields = append(fields, gameconfigversion.FieldReviewNote)
+	}
+	if m.FieldCleared(gameconfigversion.FieldPublishedBy) {
+		fields = append(fields, gameconfigversion.FieldPublishedBy)
+	}
 	return fields
 }
 
@@ -12653,6 +12860,12 @@ func (m *GameConfigVersionMutation) ClearField(name string) error {
 		return nil
 	case gameconfigversion.FieldPublishedAt:
 		m.ClearPublishedAt()
+		return nil
+	case gameconfigversion.FieldReviewNote:
+		m.ClearReviewNote()
+		return nil
+	case gameconfigversion.FieldPublishedBy:
+		m.ClearPublishedBy()
 		return nil
 	}
 	return fmt.Errorf("unknown GameConfigVersion nullable field %s", name)
@@ -12718,6 +12931,12 @@ func (m *GameConfigVersionMutation) ResetField(name string) error {
 		return nil
 	case gameconfigversion.FieldPublishedAt:
 		m.ResetPublishedAt()
+		return nil
+	case gameconfigversion.FieldReviewNote:
+		m.ResetReviewNote()
+		return nil
+	case gameconfigversion.FieldPublishedBy:
+		m.ResetPublishedBy()
 		return nil
 	}
 	return fmt.Errorf("unknown GameConfigVersion field %s", name)

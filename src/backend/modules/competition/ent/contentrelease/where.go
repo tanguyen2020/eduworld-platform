@@ -100,6 +100,11 @@ func ReleasedAt(v time.Time) predicate.ContentRelease {
 	return predicate.ContentRelease(sql.FieldEQ(FieldReleasedAt, v))
 }
 
+// EffectiveFrom applies equality check predicate on the "effective_from" field. It's identical to EffectiveFromEQ.
+func EffectiveFrom(v time.Time) predicate.ContentRelease {
+	return predicate.ContentRelease(sql.FieldEQ(FieldEffectiveFrom, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.ContentRelease {
 	return predicate.ContentRelease(sql.FieldEQ(FieldCreatedAt, v))
@@ -558,6 +563,56 @@ func ReleasedAtLT(v time.Time) predicate.ContentRelease {
 // ReleasedAtLTE applies the LTE predicate on the "released_at" field.
 func ReleasedAtLTE(v time.Time) predicate.ContentRelease {
 	return predicate.ContentRelease(sql.FieldLTE(FieldReleasedAt, v))
+}
+
+// EffectiveFromEQ applies the EQ predicate on the "effective_from" field.
+func EffectiveFromEQ(v time.Time) predicate.ContentRelease {
+	return predicate.ContentRelease(sql.FieldEQ(FieldEffectiveFrom, v))
+}
+
+// EffectiveFromNEQ applies the NEQ predicate on the "effective_from" field.
+func EffectiveFromNEQ(v time.Time) predicate.ContentRelease {
+	return predicate.ContentRelease(sql.FieldNEQ(FieldEffectiveFrom, v))
+}
+
+// EffectiveFromIn applies the In predicate on the "effective_from" field.
+func EffectiveFromIn(vs ...time.Time) predicate.ContentRelease {
+	return predicate.ContentRelease(sql.FieldIn(FieldEffectiveFrom, vs...))
+}
+
+// EffectiveFromNotIn applies the NotIn predicate on the "effective_from" field.
+func EffectiveFromNotIn(vs ...time.Time) predicate.ContentRelease {
+	return predicate.ContentRelease(sql.FieldNotIn(FieldEffectiveFrom, vs...))
+}
+
+// EffectiveFromGT applies the GT predicate on the "effective_from" field.
+func EffectiveFromGT(v time.Time) predicate.ContentRelease {
+	return predicate.ContentRelease(sql.FieldGT(FieldEffectiveFrom, v))
+}
+
+// EffectiveFromGTE applies the GTE predicate on the "effective_from" field.
+func EffectiveFromGTE(v time.Time) predicate.ContentRelease {
+	return predicate.ContentRelease(sql.FieldGTE(FieldEffectiveFrom, v))
+}
+
+// EffectiveFromLT applies the LT predicate on the "effective_from" field.
+func EffectiveFromLT(v time.Time) predicate.ContentRelease {
+	return predicate.ContentRelease(sql.FieldLT(FieldEffectiveFrom, v))
+}
+
+// EffectiveFromLTE applies the LTE predicate on the "effective_from" field.
+func EffectiveFromLTE(v time.Time) predicate.ContentRelease {
+	return predicate.ContentRelease(sql.FieldLTE(FieldEffectiveFrom, v))
+}
+
+// EffectiveFromIsNil applies the IsNil predicate on the "effective_from" field.
+func EffectiveFromIsNil() predicate.ContentRelease {
+	return predicate.ContentRelease(sql.FieldIsNull(FieldEffectiveFrom))
+}
+
+// EffectiveFromNotNil applies the NotNil predicate on the "effective_from" field.
+func EffectiveFromNotNil() predicate.ContentRelease {
+	return predicate.ContentRelease(sql.FieldNotNull(FieldEffectiveFrom))
 }
 
 // And groups predicates with the AND operator between them.

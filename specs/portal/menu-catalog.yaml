@@ -1476,7 +1476,7 @@ workspaces:
             can_disable: true
       - key: menu.game_ops.competition
         label_key: portal.menu.game_ops.competition
-        title: Thi đấu (matchmaking, ranking, mùa giải, template, leaderboard)
+        title: Thi đấu (matchmaking, ranking, mùa giải, template, leaderboard, phần thưởng)
         path: /game-ops/competition
         order: 140
         required_permissions:
@@ -1485,6 +1485,7 @@ workspaces:
           - competition.config.season.write
           - competition.config.tournament_template.write
           - competition.config.leaderboard.write
+          - competition.config.reward.write
           - game.content.review
           - game.content.publish
         can_disable: true
@@ -1498,6 +1499,7 @@ workspaces:
               - competition.config.season.write
               - competition.config.tournament_template.write
               - competition.config.leaderboard.write
+              - competition.config.reward.write
               - game.content.review
               - game.content.publish
             operation_ids:
@@ -1527,10 +1529,15 @@ workspaces:
               - "diffGameConfigVersions[config_type=challenge-templates]"
               - "listGameConfigReleases[config_type=challenge-templates]"
               - "listGameConfigs[config_type=leaderboard-definitions]"
+              - "listGameConfigs[config_type=competition-rewards]"
               - "getGameConfigVersion[config_type=leaderboard-definitions]"
+              - "getGameConfigVersion[config_type=competition-rewards]"
               - "listGameConfigVersions[config_type=leaderboard-definitions]"
+              - "listGameConfigVersions[config_type=competition-rewards]"
               - "diffGameConfigVersions[config_type=leaderboard-definitions]"
+              - "diffGameConfigVersions[config_type=competition-rewards]"
               - "listGameConfigReleases[config_type=leaderboard-definitions]"
+              - "listGameConfigReleases[config_type=competition-rewards]"
             can_disable: true
           - key: action.game_ops.competition.edit
             label_key: portal.action.game_ops.competition.edit
@@ -1541,6 +1548,7 @@ workspaces:
               - competition.config.season.write
               - competition.config.tournament_template.write
               - competition.config.leaderboard.write
+              - competition.config.reward.write
             operation_ids:
               - "createGameConfig[config_type=matchmaking-configs]"
               - "updateGameConfigDraft[config_type=matchmaking-configs]"
@@ -1553,7 +1561,9 @@ workspaces:
               - "createGameConfig[config_type=challenge-templates]"
               - "updateGameConfigDraft[config_type=challenge-templates]"
               - "createGameConfig[config_type=leaderboard-definitions]"
+              - "createGameConfig[config_type=competition-rewards]"
               - "updateGameConfigDraft[config_type=leaderboard-definitions]"
+              - "updateGameConfigDraft[config_type=competition-rewards]"
             can_disable: true
           - key: action.game_ops.competition.workflow
             label_key: portal.action.game_ops.competition.workflow
@@ -1564,6 +1574,7 @@ workspaces:
               - competition.config.season.write
               - competition.config.tournament_template.write
               - competition.config.leaderboard.write
+              - competition.config.reward.write
               - game.content.review
             operation_ids:
               - "transitionGameConfigVersion[config_type=matchmaking-configs]"
@@ -1572,10 +1583,11 @@ workspaces:
               - "transitionGameConfigVersion[config_type=tournament-templates]"
               - "transitionGameConfigVersion[config_type=challenge-templates]"
               - "transitionGameConfigVersion[config_type=leaderboard-definitions]"
+              - "transitionGameConfigVersion[config_type=competition-rewards]"
             can_disable: true
           - key: action.game_ops.competition.publish
             label_key: portal.action.game_ops.competition.publish
-            title: Xuất bản (ngay hoặc hẹn giờ)
+            title: Xuất bản (có hiệu lực ngay hoặc từ effective_from)
             required_permissions: [game.content.publish]
             operation_ids:
               - "publishGameConfigVersion[config_type=matchmaking-configs]"
@@ -1584,11 +1596,12 @@ workspaces:
               - "publishGameConfigVersion[config_type=tournament-templates]"
               - "publishGameConfigVersion[config_type=challenge-templates]"
               - "publishGameConfigVersion[config_type=leaderboard-definitions]"
+              - "publishGameConfigVersion[config_type=competition-rewards]"
             can_disable: true
           - key: action.game_ops.competition.rollback
             label_key: portal.action.game_ops.competition.rollback
-            title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
+            title: Rollback / gỡ xuất bản (template, phần thưởng)
+            required_permissions: [game.content.publish]
             operation_ids:
               - "rollbackGameConfig[config_type=matchmaking-configs]"
               - "unpublishGameConfig[config_type=matchmaking-configs]"
@@ -1601,7 +1614,9 @@ workspaces:
               - "rollbackGameConfig[config_type=challenge-templates]"
               - "unpublishGameConfig[config_type=challenge-templates]"
               - "rollbackGameConfig[config_type=leaderboard-definitions]"
+              - "rollbackGameConfig[config_type=competition-rewards]"
               - "unpublishGameConfig[config_type=leaderboard-definitions]"
+              - "unpublishGameConfig[config_type=competition-rewards]"
             can_disable: true
       - key: menu.game_ops.chat_assets
         label_key: portal.menu.game_ops.chat_assets

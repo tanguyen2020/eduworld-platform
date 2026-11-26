@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/competition_config.published.v1.schema.json",
+  "title": "Payload competition_config.published v1 (module competition, owner F108)",
+  "description": "Con trỏ release của một cấu hình thi đấu đổi (platform event, tenant_id = null; ADR-0043): publish (effective_from ≥ lúc publish), rollback hoặc unpublish (effective_from = lúc thao tác). Phát cùng transaction với content_releases (outbox). Consumer: module competition (competition.config_apply — đồng bộ competition.seasons và competition.leaderboard_definitions khi version có hiệu lực; matchmaking/ranking đọc version hiệu lực theo dòng thời gian release, trận/giải đã bắt đầu giữ version đã ghim — F108-AC-08), AUD. content_refs: nội dung học tập được tham chiếu (OQ F054-3; module learning dựng content.external_usages với ref_type competition) — các loại hiện có không tham chiếu nội dung học tập nên thường rỗng.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["config_type", "config_id", "code", "action", "effective_from", "release_id", "released_by", "content_refs"],
+  "properties": {
+    "config_type": {
+      "type": "string",
+      "enum": ["matchmaking-configs", "ranking-rules", "seasons", "tournament-templates", "challenge-templates", "leaderboard-definitions", "competition-rewards"]
+    },
+    "config_id": { "type": "string", "format": "uuid" },
+    "code": { "type": "string", "maxLength": 64 },
+    "config_version_id": { "type": ["string", "null"], "format": "uuid", "description": "Version đích; null khi unpublish" },
+    "version": { "type": ["integer", "null"], "minimum": 1 },
+    "previous_version_id": { "type": ["string", "null"], "format": "uuid" },
+    "action": { "type": "string", "enum": ["publish", "rollback", "unpublish"] },
+    "effective_from": { "type": "string", "format": "date-time" },
+    "release_id": { "type": "string", "format": "uuid" },
+    "released_by": { "type": "string", "format": "uuid" },
+    "reason": { "type": ["string", "null"], "maxLength": 500 },
+    "content_refs": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["content_type", "content_id"],
+        "properties": {
+          "content_type": { "type": "string", "enum": ["activity", "question_set", "lesson"] },
+          "content_id": { "type": "string", "format": "uuid" },
+          "version": { "type": ["integer", "null"], "minimum": 1 }
+        }
+      }
+    }
+  },
+  "examples": [
+    { "config_type": "ranking-rules", "config_id": "01936a00-0000-7000-8000-000000000106", "code": "default", "config_version_id": "01936a00-0000-7000-8000-0000000010a2", "version": 2, "previous_version_id": "01936a00-0000-7000-8000-000000001061", "action": "publish", "effective_from": "2026-11-30T00:00:00+07:00", "release_id": "01936a00-0000-7000-8000-0000000010a3", "released_by": "01936a00-0000-7000-8000-00000000a001", "reason": "Nới cửa sổ tier", "content_refs": [] }
+  ]
+}

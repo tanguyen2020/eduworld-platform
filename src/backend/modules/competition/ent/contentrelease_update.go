@@ -84,6 +84,9 @@ func (_u *ContentReleaseUpdate) sqlSave(ctx context.Context) (_node int, err err
 	if _u.mutation.ReleasedByCleared() {
 		_spec.ClearField(contentrelease.FieldReleasedBy, field.TypeUUID)
 	}
+	if _u.mutation.EffectiveFromCleared() {
+		_spec.ClearField(contentrelease.FieldEffectiveFrom, field.TypeTime)
+	}
 	_spec.Node.Schema = _u.schemaConfig.ContentRelease
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
@@ -191,6 +194,9 @@ func (_u *ContentReleaseUpdateOne) sqlSave(ctx context.Context) (_node *ContentR
 	}
 	if _u.mutation.ReleasedByCleared() {
 		_spec.ClearField(contentrelease.FieldReleasedBy, field.TypeUUID)
+	}
+	if _u.mutation.EffectiveFromCleared() {
+		_spec.ClearField(contentrelease.FieldEffectiveFrom, field.TypeTime)
 	}
 	_spec.Node.Schema = _u.schemaConfig.ContentRelease
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

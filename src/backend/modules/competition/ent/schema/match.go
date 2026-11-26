@@ -229,6 +229,9 @@ func (GameConfigVersion) Fields() []ent.Field {
 		field.String("change_note").MaxLen(500).Optional().Nillable(),
 		field.UUID("based_on_version_id", uuid.UUID{}).Optional().Nillable(),
 		field.Time("published_at").Optional().Nillable(),
+		// F108: note of the last review transition (reject reason) and the publisher of the version.
+		field.String("review_note").MaxLen(2000).Optional().Nillable(),
+		field.UUID("published_by", uuid.UUID{}).Optional().Nillable(),
 	}
 }
 func (GameConfigVersion) Indexes() []ent.Index {
@@ -257,6 +260,8 @@ func (ContentRelease) Fields() []ent.Field {
 		field.String("reason").MaxLen(1000).Optional().Nillable().Immutable(),
 		field.UUID("released_by", uuid.UUID{}).Optional().Nillable().Immutable(),
 		field.Time("released_at").Default(nowUTC).Immutable(),
+		// F108: when the release takes effect at runtime (publish: effective_from ≥ now; rollback/unpublish: the action time).
+		field.Time("effective_from").Optional().Nillable().Immutable(),
 	}
 }
 func (ContentRelease) Indexes() []ent.Index {

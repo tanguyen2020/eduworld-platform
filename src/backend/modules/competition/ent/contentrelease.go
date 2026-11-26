@@ -35,8 +35,10 @@ type ContentRelease struct {
 	// ReleasedBy holds the value of the "released_by" field.
 	ReleasedBy *uuid.UUID `json:"released_by,omitempty"`
 	// ReleasedAt holds the value of the "released_at" field.
-	ReleasedAt   time.Time `json:"released_at,omitempty"`
-	selectValues sql.SelectValues
+	ReleasedAt time.Time `json:"released_at,omitempty"`
+	// EffectiveFrom holds the value of the "effective_from" field.
+	EffectiveFrom *time.Time `json:"effective_from,omitempty"`
+	selectValues  sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -48,7 +50,7 @@ func (*ContentRelease) scanValues(columns []string) ([]any, error) {
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case contentrelease.FieldAction, contentrelease.FieldReason:
 			values[i] = new(sql.NullString)
-		case contentrelease.FieldCreatedAt, contentrelease.FieldReleasedAt:
+		case contentrelease.FieldCreatedAt, contentrelease.FieldReleasedAt, contentrelease.FieldEffectiveFrom:
 			values[i] = new(sql.NullTime)
 		case contentrelease.FieldID, contentrelease.FieldConfigID:
 			values[i] = new(uuid.UUID)
@@ -132,6 +134,13 @@ func (_m *ContentRelease) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ReleasedAt = value.Time
 			}
+		case contentrelease.FieldEffectiveFrom:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field effective_from", values[i])
+			} else if value.Valid {
+				_m.EffectiveFrom = new(time.Time)
+				*_m.EffectiveFrom = value.Time
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -204,6 +213,11 @@ func (_m *ContentRelease) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("released_at=")
 	builder.WriteString(_m.ReleasedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	if v := _m.EffectiveFrom; v != nil {
+		builder.WriteString("effective_from=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

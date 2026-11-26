@@ -237,6 +237,7 @@ var (
 		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 1000},
 		{Name: "released_by", Type: field.TypeUUID, Nullable: true},
 		{Name: "released_at", Type: field.TypeTime},
+		{Name: "effective_from", Type: field.TypeTime, Nullable: true},
 	}
 	// ContentReleasesTable holds the schema information for the "content_releases" table.
 	ContentReleasesTable = &schema.Table{
@@ -357,6 +358,8 @@ var (
 		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
 		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "review_note", Type: field.TypeString, Nullable: true, Size: 2000},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
 	}
 	// GameConfigVersionsTable holds the schema information for the "game_config_versions" table.
 	GameConfigVersionsTable = &schema.Table{

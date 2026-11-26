@@ -245,11 +245,15 @@ func TestF106GradeGoal(t *testing.T) {
 	}
 	// a definition the rules forbid is never materialized (XP inside a school, class scope — F106-AC-12)
 	r.exec(`UPDATE competition.game_config_versions SET status = 'archived' WHERE config_version_id = '01936a00-0000-7000-8000-000000001071'`)
+	v2 := uuid.New()
 	r.exec(`INSERT INTO competition.game_config_versions (config_version_id, config_id, version_no, status, title, payload, published_at)
-		VALUES ($1, '01936a00-0000-7000-8000-000000000107', 2, 'published', 'v2', $2, now())`, uuid.New(),
+		VALUES ($1, '01936a00-0000-7000-8000-000000000107', 2, 'published', 'v2', $2, now())`, v2,
 		`{"schema_version":1,"definitions":[{"leaderboard_id":"`+uuid.NewString()+`","code":"xp_school","title":"XP trường","metric":"xp","scope_type":"school","period":"weekly","filters":{},"grade_levels":[6],"display":{},"sort_order":1,"status":"active"},`+
 			`{"leaderboard_id":"`+uuid.NewString()+`","code":"class_x","title":"Lớp","metric":"competition_points","scope_type":"class","period":"weekly","filters":{},"grade_levels":[6],"display":{},"sort_order":2,"status":"active"},`+
 			`{"leaderboard_id":"`+uuid.NewString()+`","code":"daily_g7","title":"Ngày","metric":"competition_points","scope_type":"grade","period":"daily","filters":{},"grade_levels":[7],"display":{},"sort_order":3,"status":"active"}]}`)
+	// the runtime reads the release timeline (F108, ADR-0043): the publish release of v2
+	r.exec(`INSERT INTO competition.content_releases (release_id, created_at, config_id, action, to_version_id, reason, released_at)
+		VALUES ($1, clock_timestamp(), '01936a00-0000-7000-8000-000000000107', 'publish', $2, 'test', now())`, uuid.New(), v2)
 	if n, err := r.boards.Materialize(jobCtx()); err != nil || n != 1 {
 		t.Fatalf("materialize: %d %v", n, err)
 	}

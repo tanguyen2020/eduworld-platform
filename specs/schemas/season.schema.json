@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:season:1",
+  "title": "SeasonCatalog",
+  "description": "Danh mục mùa giải (config_type seasons, code default — F106, F108). Khi version có hiệu lực, worker đồng bộ vào competition.seasons theo code (giữ season_id): mùa mới vào trạng thái scheduled; mùa đã kết thúc không đổi; mùa đang chạy chỉ đổi tên/chủ đề/ends_at. Các mùa không chồng thời gian; mùa mới không bắt đầu trong quá khứ (F108 edge case). Độ dài mặc định: CONFIG_DEFAULTS season_length (8 tuần). status do scheduler sở hữu, giá trị trong payload chỉ để tham khảo.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "seasons"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "seasons": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "season_id",
+          "code",
+          "name",
+          "starts_at",
+          "ends_at"
+        ],
+        "properties": {
+          "season_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{1,63}$",
+            "maxLength": 64
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "name_en": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "theme_code": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "scheduled",
+              "active",
+              "ended"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

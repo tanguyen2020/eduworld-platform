@@ -113,3 +113,14 @@ const TournamentScheduler = "tournament-scheduler"
 
 // TournamentJob returns one run of the job.
 func TournamentJob(run Runner) func(ctx context.Context) (int, error) { return run }
+
+// ConfigApply is the job competition-config-apply (F108-AC-08): applies the seasons and leaderboard definitions of the
+// competition configurations in effect, so a release whose effective_from is in the future takes effect within one
+// interval (SC-001: ≤ 1 minute).
+const ConfigApply = "competition-config-apply"
+
+// ConfigApplyInterval is its interval.
+const ConfigApplyInterval = time.Minute
+
+// ConfigApplyJob returns one run of the job.
+func ConfigApplyJob(run Runner) func(ctx context.Context) (int, error) { return run }

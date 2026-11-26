@@ -255,6 +255,34 @@ func (_c *GameConfigVersionCreate) SetNillablePublishedAt(v *time.Time) *GameCon
 	return _c
 }
 
+// SetReviewNote sets the "review_note" field.
+func (_c *GameConfigVersionCreate) SetReviewNote(v string) *GameConfigVersionCreate {
+	_c.mutation.SetReviewNote(v)
+	return _c
+}
+
+// SetNillableReviewNote sets the "review_note" field if the given value is not nil.
+func (_c *GameConfigVersionCreate) SetNillableReviewNote(v *string) *GameConfigVersionCreate {
+	if v != nil {
+		_c.SetReviewNote(*v)
+	}
+	return _c
+}
+
+// SetPublishedBy sets the "published_by" field.
+func (_c *GameConfigVersionCreate) SetPublishedBy(v uuid.UUID) *GameConfigVersionCreate {
+	_c.mutation.SetPublishedBy(v)
+	return _c
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_c *GameConfigVersionCreate) SetNillablePublishedBy(v *uuid.UUID) *GameConfigVersionCreate {
+	if v != nil {
+		_c.SetPublishedBy(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *GameConfigVersionCreate) SetID(v uuid.UUID) *GameConfigVersionCreate {
 	_c.mutation.SetID(v)
@@ -384,6 +412,11 @@ func (_c *GameConfigVersionCreate) check() error {
 			return &ValidationError{Name: "change_note", err: fmt.Errorf(`ent: validator failed for field "GameConfigVersion.change_note": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.ReviewNote(); ok {
+		if err := gameconfigversion.ReviewNoteValidator(v); err != nil {
+			return &ValidationError{Name: "review_note", err: fmt.Errorf(`ent: validator failed for field "GameConfigVersion.review_note": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -495,6 +528,14 @@ func (_c *GameConfigVersionCreate) createSpec() (*GameConfigVersion, *sqlgraph.C
 	if value, ok := _c.mutation.PublishedAt(); ok {
 		_spec.SetField(gameconfigversion.FieldPublishedAt, field.TypeTime, value)
 		_node.PublishedAt = &value
+	}
+	if value, ok := _c.mutation.ReviewNote(); ok {
+		_spec.SetField(gameconfigversion.FieldReviewNote, field.TypeString, value)
+		_node.ReviewNote = &value
+	}
+	if value, ok := _c.mutation.PublishedBy(); ok {
+		_spec.SetField(gameconfigversion.FieldPublishedBy, field.TypeUUID, value)
+		_node.PublishedBy = &value
 	}
 	return _node, _spec
 }

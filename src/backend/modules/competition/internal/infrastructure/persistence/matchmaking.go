@@ -35,28 +35,18 @@ const (
 // ErrNoConfig: no published matchmaking configuration is in effect (the migration seeds one).
 var ErrNoConfig = errors.New("matchmaking: no published configuration in effect")
 
-// ActiveConfig implements write.MatchRepository and read.MatchmakingReader: the published version with the latest
-// effective_from ≤ at (MATCHMAKING §5.1); platform data, no tenant.
+// ActiveConfig implements write.MatchRepository and read.MatchmakingReader: the matchmaking configuration in effect at
+// at by the release timeline (MATCHMAKING §5.1, F108-AC-08: a publish takes effect at its effective_from, a rollback at
+// once); platform data, no tenant.
 func (Matchmaking) ActiveConfig(ctx context.Context, at time.Time) (mm.Config, error) {
-	t, err := tx(ctx)
-	if err != nil {
-		return mm.Config{}, err
-	}
-	var id uuid.UUID
-	var payload []byte
-	// tenancyguard:ok platform configuration (G tables game_configs/game_config_versions, no tenant), live rows only
-	err = t.QueryRowContext(ctx, `SELECT v.config_version_id, v.payload FROM competition.game_configs c
-		JOIN competition.game_config_versions v ON v.config_id = c.config_id
-		WHERE c.config_type = $1 AND c.code = $2 AND c.deleted_at IS NULL AND v.deleted_at IS NULL AND v.status = 'published'
-			AND (v.effective_from IS NULL OR v.effective_from <= $3)
-		ORDER BY v.effective_from DESC NULLS LAST, v.version_no DESC LIMIT 1`, MatchmakingConfigType, MatchmakingConfigCode, at).
-		Scan(&id, &payload)
-	if errors.Is(err, sql.ErrNoRows) {
-		return mm.Config{}, ErrNoConfig
-	}
+	vid, payload, err := effective(ctx, MatchmakingConfigType, at)
 	if err != nil {
 		return mm.Config{}, fmt.Errorf("matchmaking config: %w", err)
 	}
+	if vid == nil {
+		return mm.Config{}, ErrNoConfig
+	}
+	id := *vid
 	cfg, err := mm.Parse(payload)
 	if err != nil {
 		return mm.Config{}, err

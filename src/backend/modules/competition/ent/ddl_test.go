@@ -30,6 +30,7 @@ var migrations = map[string][]string{
 		"leaderboard_definitions", "leaderboard_snapshots", "seasons", "season_results"},
 	"20261231000006_f107_tournament.sql": {"challenges", "tournaments", "tournament_entries", "tournament_groups", "bracket_nodes",
 		"tournament_results", "tournament_rewards", "tenant_resource_assignments"},
+	"20261231000007_f108_config_console.sql": {},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -40,6 +41,10 @@ type addition struct {
 }
 
 var added = map[string][]addition{
+	"20261231000007_f108_config_console.sql": {
+		{"game_config_versions", []string{"review_note", "published_by"}, nil},
+		{"content_releases", []string{"effective_from"}, nil},
+	},
 	"20261231000003_f105_battle.sql": {
 		{"matches", []string{"question_plan_id", "question_plan_version", "room_id", "end_reason"}, nil},
 		{"match_participants", []string{"correct_count", "disconnects"}, nil},
@@ -133,9 +138,13 @@ func TestMigrationMatchesEnt(t *testing.T) {
 		}
 	}
 	for file, names := range migrations {
-		want, err := entx.DDL(before(file, tablesOf(t, names)), func(table string) string { return sc[table] })
-		if err != nil {
-			t.Fatal(err)
+		want := "" // a file that only adds columns (F108) has no CREATE TABLE part
+		if len(names) > 0 {
+			ddl, err := entx.DDL(before(file, tablesOf(t, names)), func(table string) string { return sc[table] })
+			if err != nil {
+				t.Fatal(err)
+			}
+			want = ddl
 		}
 		for _, a := range added[file] {
 			alter, err := entx.AddedDDL(tablesOf(t, []string{a.table})[0], a.columns, a.indexes, func(table string) string { return sc[table] })

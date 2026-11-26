@@ -76,9 +76,13 @@ func (m *menv) publishConfig(over map[string]any) {
 	}
 	b := jsonMarshal(cfg)
 	n := m.count(`SELECT coalesce(max(version_no), 0) FROM competition.game_config_versions`) + 1
+	vid := uuid.New()
 	m.exec(`INSERT INTO competition.game_config_versions (config_version_id, created_at, updated_at, config_id, version_no, status, title,
 		payload, effective_from, published_at) VALUES ($1, now(), now(), '01936a00-0000-7000-8000-000000000104', $2, 'published', 'test', $3, $4, $4)`,
-		uuid.New(), n, string(b), m.clock.Now().Add(-time.Second))
+		vid, n, string(b), m.clock.Now().Add(-time.Second))
+	// The runtime reads the release timeline (F108, ADR-0043): the publish release of the version.
+	m.exec(`INSERT INTO competition.content_releases (release_id, created_at, config_id, action, to_version_id, reason, released_at, effective_from)
+		VALUES ($1, clock_timestamp(), '01936a00-0000-7000-8000-000000000104', 'publish', $2, 'test', $3, $3)`, uuid.New(), vid, m.clock.Now().Add(-time.Second))
 }
 
 // T033 — F104-AC-19, AC-20 (TC-CMP-010): a duel to a friend of the same grade band → pending 60 s, duel.sent; not a
