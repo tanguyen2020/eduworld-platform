@@ -120,6 +120,21 @@ routes:
     body_max: 1024
     priority: 250
 
+  # F081 (listSchoolEvents): System Admin lists events across tenants with tenant_ids and no X-Tenant-Id;
+  # module game still requires the header for every other caller. Only GET of the exact collection URI:
+  # create and the /{event_id}* operations stay on portal-tenant (X-Tenant-Id required).
+  - id: lms-school-events-list
+    gateway: both
+    uris: [/api/v1/lms/school-events]
+    methods: [GET]
+    upstream: core-api
+    modules: [game]
+    auth: oidc
+    rate: api
+    tenant_header: optional
+    body_max: 1024
+    priority: 200
+
   - id: portal-tenant
     gateway: both
     uris: [/api/v1/schools/*, /api/v1/tenant/*, /api/v1/lms/*, /api/v1/catalog/*]
@@ -135,7 +150,8 @@ routes:
     gateway: public
     cors: game
     uris: [/api/v1/auth/*, /api/v1/me/*, /api/v1/students/*, /api/v1/learning/*, /api/v1/exams/*, /api/v1/game/*,
-           /api/v1/multiplayer/*, /api/v1/competition/*, /api/v1/leaderboards/*, /api/v1/chat/*, /api/v1/social/*,
+           /api/v1/multiplayer/*, /api/v1/competition/*, /api/v1/leaderboards, /api/v1/leaderboards/*, /api/v1/chat/*,
+           /api/v1/social/*,
            /api/v1/notifications, /api/v1/notifications/*]
     upstream: core-api
     modules: [identity, learning, game, competition, chat]

@@ -36,6 +36,10 @@ Owner ra lệnh "chốt hết": các khoảng trống gặp khi triển khai đ�
 - Q: `422 EVENT_TEMPLATE_PARAM_NOT_ALLOWED` không có `errors[]` — portal map về trường thế nào (F081-AC-04)? → A: [Confirmed] Module game thêm `errors[] {field = tên tham số (vd. `audience.school_ids`, `quest_ids`, `ends_at`, `template_id`), code invalid}` (cộng thêm, không breaking); portal đặt lỗi lên đúng ô; lỗi từ nhạy cảm (`VALIDATION_FAILED`) chỉ hiện thông điệp chung.
 - Q: Test đơn vị portal đặt ở `tests/unit/...` như plan? → A: [Confirmed] Theo quy ước hiện có của portal: `src/workspaces/school-lms/school-events/__tests__/` (Vitest + MOCK `src/test/school-events-mock.ts`, nhãn MOCK — R17). E2E Playwright với backend compose (T014, T029, T032, T034) chưa chạy được trong phiên này; tiêu chí tương ứng có test Vitest toàn portal + integration test module game (bảng AC → test trong tasks.md).
 
+### Session 2026-11-26 (follow-up gateway — owner "chốt hết", [Confirmed])
+
+- Q: `check-routes.mjs` báo route `portal-tenant` bắt buộc `X-Tenant-Id` trong khi `listSchoolEvents` khai `TenantIdHeaderOptional` — sửa ở gateway thế nào mà không nới các route khác? → A: [Confirmed] Route riêng `lms-school-events-list` trong `deploy/apisix/routes/routes.yaml` (gateway `both`, chỉ `GET`, đúng URI `/api/v1/lms/school-events`, `tenant_header: optional`, ưu tiên 200 > `portal-tenant`), theo cách các operation "System Admin bỏ `X-Tenant-Id`" khác dùng route chế độ tùy chọn (`tenant-optional`, `platform-internal`). `POST /lms/school-events` và mọi `/lms/school-events/{event_id}*` vẫn ở `portal-tenant` (bắt buộc); module game vẫn đòi header với mọi người gọi trừ System Admin. Test: `deploy/apisix/scripts/check-routes.test.mjs`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo sự kiện trường từ template (Priority: P1) 🎯 MVP

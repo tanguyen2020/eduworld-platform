@@ -43,6 +43,10 @@ Quyết định của agent khi tài liệu thiếu/mâu thuẫn, theo hướng 
 - Q: `xp`, `quest_completed` khi payload `xp.awarded`/`quest.completed` chưa có (owner F074/F072)? → A: Metric và definition được hỗ trợ (bảng `friends_xp_weekly` seed), consumer `xp.awarded`/`quest.completed` **không** tạo trong F106 (không tự viết schema của feature khác) — bảng rỗng tới khi các feature đó phát event.
 - Q: Đấu trường môn và Xếp hạng rating (cần `subject_id` cụ thể)? → A: Engine hỗ trợ (filter môn/mode, rating theo mode × môn), nhưng **không seed** — F108 publish definition theo từng môn.
 
+### Session 2026-11-26 (follow-up gateway — owner "chốt hết", [Confirmed])
+
+- Q: `GET /leaderboards` (`listLeaderboards`) không có route trên gateway public — `/api/v1/leaderboards/*` không khớp chính URI collection? → A: [Confirmed] Thêm `/api/v1/leaderboards` vào route người chơi `player` (cùng cách `/api/v1/notifications` + `/api/v1/notifications/*`): gateway public, `cors: game`, OIDC, `X-Tenant-Id` bắt buộc, rate `api`; module competition vẫn qua middleware `game_player` (R23). Test: `deploy/apisix/scripts/check-routes.test.mjs`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Rating Glicko-2 sau trận ranked (Priority: P1) 🎯 MVP

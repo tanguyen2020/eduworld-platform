@@ -90,6 +90,11 @@
     "service": "core-api"
   },
   {
+    "prefix": "/api/v1/leaderboards",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
     "prefix": "/api/v1/leaderboards/",
     "gateway": "public",
     "service": "core-api"
@@ -101,6 +106,11 @@
   },
   {
     "prefix": "/api/v1/lms/",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/lms/school-events",
     "gateway": "public",
     "service": "core-api"
   },
@@ -206,6 +216,11 @@
   },
   {
     "prefix": "/api/v1/lms/",
+    "gateway": "internal",
+    "service": "core-api"
+  },
+  {
+    "prefix": "/api/v1/lms/school-events",
     "gateway": "internal",
     "service": "core-api"
   },

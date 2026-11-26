@@ -56,6 +56,59 @@ routes:
         redis_host: valkey
         redis_port: 6379
         allow_degradation: true
+  - id: internal-lms-school-events-list
+    uris:
+      - /api/v1/lms/school-events
+    priority: 200
+    upstream_id: core-api
+    plugins:
+      request-id:
+        header_name: X-Request-Id
+        include_in_response: true
+      prometheus:
+        prefer_name: true
+      opentelemetry:
+        sampler:
+          name: always_on
+      ip-restriction:
+        whitelist:
+          - 127.0.0.1/32
+          - 10.0.0.0/8
+          - 172.16.0.0/12
+          - 192.168.0.0/16
+        message: Forbidden
+      client-control:
+        max_body_size: 1024
+      openid-connect:
+        client_id: eduworld-api
+        client_secret: bearer-only-not-used
+        discovery: http://keycloak:8180/realms/eduworld/.well-known/openid-configuration
+        bearer_only: true
+        use_jwks: true
+        token_signing_alg_values_expected: RS256
+        set_access_token_header: false
+        set_id_token_header: false
+        set_userinfo_header: false
+        claim_validator:
+          issuer:
+            valid_issuers:
+              - http://localhost:8180/realms/eduworld
+              - http://keycloak:8180/realms/eduworld
+          audience:
+            claim: aud
+            required: true
+            match_with_client_id: true
+      ew-tenant-header:
+        mode: optional
+      ew-api-rate:
+        name: api
+        read_count: 300
+        write_count: 60
+        redis_host: valkey
+        redis_port: 6379
+        allow_degradation: true
+    methods:
+      - GET
   - id: internal-portal-tenant
     uris:
       - /api/v1/schools/*

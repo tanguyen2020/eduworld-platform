@@ -111,3 +111,17 @@ test('the repository routes match the merged spec', () => {
   const sp = yaml.load(readFileSync(new URL('../../specs/openapi/eduworld-api.v1.yaml', ROOT), 'utf8'));
   assert.deepEqual(check(src, sp), []);
 });
+
+test('repository routes: player leaderboards collection and the System Admin school-events listing', () => {
+  const src = loadRoutes(loadEnv('local.env'));
+  // F106: the collection URI itself (not only /leaderboards/*) reaches the player route, X-Tenant-Id required.
+  const lb = route(src, 'public', 'GET', '/api/v1/leaderboards');
+  assert.equal(lb.id, 'player');
+  assert.equal(lb.tenant_header, 'required');
+  // F081: only GET of the exact collection may omit X-Tenant-Id; create and the event operations still require it.
+  assert.equal(route(src, 'public', 'GET', '/api/v1/lms/school-events').tenant_header, 'optional');
+  assert.equal(route(src, 'internal', 'GET', '/api/v1/lms/school-events').tenant_header, 'optional');
+  assert.equal(route(src, 'public', 'POST', '/api/v1/lms/school-events').id, 'portal-tenant');
+  assert.equal(route(src, 'public', 'GET', '/api/v1/lms/school-events/x').id, 'portal-tenant');
+  assert.equal(route(src, 'public', 'GET', '/api/v1/lms/school-events/x/progress').tenant_header, 'required');
+});
