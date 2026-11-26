@@ -51,19 +51,19 @@ specs/119-godot-chat-ui/
 
 ```text
 src/game/
-├── scenes/chat/        ChatDock.tscn, ChatPanel.tscn, ChannelTabs.tscn, MessageList.tscn, MessageBubble.tscn,
-│                       MessageActionMenu.tscn, Composer.tscn, QuickMessageBar.tscn, EmojiStickerGifPicker.tscn,
-│                       MentionAutocomplete.tscn, PinnedBar.tscn, TypingIndicator.tscn, ReceiptBadge.tscn,
-│                       ReportDialog.tscn, ModerationFeedbackToast.tscn, RetentionNotice.tscn
-├── scripts/chat/       chat_service.gd, chat_store.gd, chat_asset_cache.gd, quick_message_catalog.gd,
-│                       report_service.gd, chat_feedback_mapper.gd (mã lỗi/decision → khóa ui.chat.feedback.*),
-│                       models/{chat_message.gd, channel.gd, receipt_state.gd}
-├── scripts/social/     social_service.gd (blockUser, muteUser — dùng chung F095 UI)
+├── scenes/chat/        ChatDock.tscn + chat_dock.gd (tab, thu gọn / dải 2 dòng, băng, ghim, typing, lưu giữ),
+│                       chat_message_list.gd (ảo hóa), chat_bubble.gd, chat_composer.gd (quick message, ô nhập, nhắc tên, khóa),
+│                       chat_picker.gd (Emoji/Nhãn dán/Ảnh động), chat_sheet.gd + chat_dialogs.gd (menu tin, báo cáo,
+│                       chuyển tiếp, ai đã xem, thu hồi), chat_player_safety.gd (Báo cáo/Chặn người chơi cho màn kết quả)
+├── scripts/chat/       chat_service.gd, chat_store.gd, chat_asset_cache.gd, chat_animation_budget.gd, quick_message_catalog.gd,
+│                       report_service.gd, chat_feedback_mapper.gd (mã lỗi/decision → khóa ui.chat.feedback.*), chat_text.gd,
+│                       models/{chat_message_model.gd, chat_channel_model.gd, receipt_state_model.gd}
+├── scripts/social/     social_service.gd (blockUser, muteUser — dùng lại ở F110)
 ├── locale/             vi.po, en.po (ui.chat.*)
 └── tests/{unit/chat, scene/chat, fixtures/chat}/
 ```
 
-**Structure Decision**: Theo cây thư mục GODOT_ARCHITECTURE §3; `ChatDock` là điểm nhúng duy nhất để F102/F103/F109 gắn panel mà không biết chi tiết chat.
+**Structure Decision**: Theo cây thư mục GODOT_ARCHITECTURE §3; `ChatDock` là điểm nhúng duy nhất để F102/F103/F109 gắn panel mà không biết chi tiết chat. Thành phần con dựng bằng code (`UiBuild`, biến thể Theme) như màn Nhóm F102 thay vì một `.tscn` mỗi thành phần; chỉ `ChatDock.tscn` là scene (2026-11-27).
 
 ## Phase 0: Research
 

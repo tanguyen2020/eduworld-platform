@@ -1,6 +1,6 @@
 # Feature Specification: F119 — Giao diện chat trong Godot: panel, quick message, tab, tắt tiếng, báo cáo
 
-**Feature Branch**: `119-godot-chat-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M4b · **Phụ thuộc**: F092, F117
+**Feature Branch**: `119-godot-chat-ui` · **Created**: 2026-11-16 · **Status**: In progress · **Module**: `src/game/` · **Mốc**: M4b · **Phụ thuộc**: F092, F117
 **Input**: Giao diện chat của học sinh trong game Godot cho channel gameplay (party lobby, trận 1v1, trận đội, boss): panel luôn có (thu gọn được, không tắt), hàng quick message một chạm, tab "Đội"/"Cả trận", menu Tắt tiếng/Chặn/Báo cáo trên từng tin và từ màn hình kết quả trận, bảng emoji/sticker/GIF, menu thao tác tin (trả lời, trích dẫn, chuyển tiếp, sao chép, ghim, sửa, thu hồi, cảm xúc), trạng thái gửi/nhận/xem, phản hồi kiểm duyệt thân thiện. FR nguồn: FR-CHAT-003, FR-CHAT-010, FR-CHAT-014.
 
 ## Clarifications
@@ -19,6 +19,16 @@
 ### Session 2026-11-21 (ADR-0095 — [Confirmed])
 
 - Q: `ChatDock` còn tab "Lớp"/"Nhóm học tập"? → A: Không. Channel `class`/`study_group` bị bỏ, không có kênh theo khối ([ADR-0095 §5](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md)); tab kênh lấy từ `listMyChannels` nên chỉ có `world`, `area`, `match`, `party`, `team` (trận hoặc club), `direct`. Nếu server cũ còn trả `channel_type` lạ, client bỏ qua channel đó. Wireframe STUDENT_GAME_UX_SOCIAL §7 đã đổi tab "Lớp" thành "Club" (WP-S). Không đổi tiêu chí F119-AC-*.
+
+### Session 2026-11-27 (triển khai client — quyết định trong phạm vi spec)
+
+- Q: Panel nhúng ở đâu khi F109 (arena) và F110 (boss) chưa có màn? → A: `ChatDock` (`scenes/chat/ChatDock.tscn`) là điểm nhúng duy nhất: đã gắn vào `PartyLobby` (slot `EmbeddedChat` của F102 — PC dưới thẻ hoạt động; điện thoại nút "Chat nhóm" + panel trượt phải 45%); F109/F110 gọi `show_match(match_id, chat_channel_ids…)` và phát `EventBus.question_shown/question_hidden`. Nút "Báo cáo người chơi"/"Chặn" của màn kết quả là thành phần `ChatPlayerSafety` (đã có, có test) để F109 nhúng vào `BattleResult`; trong lúc chờ, dock có nút "Người chơi cùng em" mở cùng danh sách. [Confirmed]
+- Q: N ngày lưu (AC-07) khi `Channel` không có trường số ngày? → A: N = số ngày còn lại tới `purge_after` của channel đã đóng (dữ liệu server), làm tròn lên, ≥ 1; channel đang mở không hiện số. [Confirmed]
+- Q: `features` và `max_text_length` khi `listMyChannels` không trả? → A: client đọc nếu có; channel gameplay thiếu `features` dùng các mục "✓ luôn" của CHAT_SYSTEM §7.1 (chuyển tiếp, ghim ẩn tới khi server liệt kê), thiếu `max_text_length` dùng giới hạn hợp đồng `MessageCreate.body` (300); server luôn kiểm lại. Câu hỏi mở cho backend (thêm hai trường vào `Channel` của `listMyChannels`). [Proposed]
+- Q: Thời hạn sửa/thu hồi (AC-19) khi client không có giá trị cấu hình? → A: mục Sửa/Thu hồi hiện cho tin của mình khi channel cho phép; quá hạn server trả `CHAT_EDIT_WINDOW_EXPIRED`/`CHAT_RECALL_WINDOW_EXPIRED` → câu thân thiện; không có hằng số thời hạn ở client (R33). [Proposed]
+- Q: Bảng emoji/reaction khi không có API danh sách? → A: emoji vẽ bằng SVG theo mã của bộ platform (`emoji_sets.json`), hàng 6 cảm xúc nhanh là tập con bộ reaction; server từ chối mã ngoài bộ. GIF hiện ảnh tĩnh `preview_url` (Godot không giải mã GIF) với hiệu ứng nhún nhẹ trong giới hạn 3 ảnh động. [Proposed]
+- Q: `g1_3` "bảng emoji mở mặc định" mà panel vẫn vừa màn ngang? → A: bảng mặt cười và hàng gõ chữ thay phiên nhau ("Gõ chữ" trên bảng, nút mặt cười cạnh ô nhập); `g1_3` mở bảng sẵn, khối khác mở hàng gõ chữ. [Confirmed]
+- Q: `createReport` dùng Prism mock? → A: Không cần — F121 đã Done; client gọi backend thật, không tạo mock (T006/T031). [Confirmed]
 
 ## User Scenarios & Testing *(bắt buộc)*
 

@@ -13,7 +13,7 @@ Client gọi qua `ApiClient` (token game, `X-Tenant-Id` của phiên, `Accept-La
 | `listStickerPacks`, `listGifs` | `GET /api/v1/chat/stickers`, `GET /api/v1/chat/gifs?tag=` | chat.v1.yaml | `game_player` | Có sẵn (F118) |
 | `listChannelPins`, `getMessageReceipts` | `GET …/pins`, `GET …/receipts` | chat.v1.yaml | `game_player` | Có sẵn (F118) |
 | `editMessage`, `recallMessage`, `forwardMessage`, `pinMessage`, `unpinMessage` | REST fallback | chat.v1.yaml | `game_player` | Có sẵn (F118) |
-| `toggleMessageReaction` | `POST /api/v1/chat/messages/{message_id}/reactions` | chat.v1.yaml | `game_player` | Cần thêm (F118) |
+| `toggleMessageReaction` | `POST /api/v1/chat/messages/{message_id}/reactions` | chat.v1.yaml | `game_player` | Có sẵn (F118); client dùng lệnh WS `chat.reaction.toggle` |
 | `createReport` | `POST /api/v1/chat/reports` (`Idempotency-Key`, `ReportCreate`) | chat.v1.yaml | học sinh | Có sẵn (backend F121) |
 | `blockUser`, `muteUser` | `PUT /api/v1/social/blocks/{user_id}`, `PUT /api/v1/social/mutes/{user_id}` | chat.v1.yaml | học sinh | Có sẵn (backend F095) |
 
@@ -47,4 +47,6 @@ Client gọi qua `ApiClient` (token game, `X-Tenant-Id` của phiên, `Accept-La
 ## 6. Delta cần thực hiện
 
 - Không có delta riêng của F119; phụ thuộc delta của F116 (`params` quick message, `category_code` trong lỗi), F118 (`toggleMessageReaction`, `CHAT_REACTION_LIMIT`), F117 (`chat_channel_ids` trong message trận).
-- Fixture GdUnit4 sinh từ example OpenAPI/AsyncAPI (`src/game/tests/fixtures/chat/`).
+- Fixture GdUnit4 sinh từ example OpenAPI/AsyncAPI vào `src/game/tests/fixtures/contract/` (`tools/gen_fixtures.mjs`, tiền tố `chat.`).
+- **Đã làm 2026-11-27 (chỉ ví dụ, không đổi schema):** ví dụ response `listMyChannels`, `listChannelMessages`, `listQuickMessages`, `listStickerPacks`, `listGifs`, `createReport` trong `specs/openapi/eduworld-api.v1.yaml` (module tách lại); `examples` cho `chat.message.created/acked/held/edited/recalled/removed`, `chat.reaction.updated`, `chat.pin.updated`, `chat.typing.updated`, `chat.receipt.updated`, `chat.unread.updated`, `chat.mention.created`, `chat.sanction.applied`, `chat.history.loaded`, `system.command.acked` (gửi tin) và `system.command.failed` (`CHAT_CONTENT_BLOCKED` pii/từ, `CHAT_TEMPORARILY_UNAVAILABLE`, `CHAT_RATE_LIMITED`, `CHAT_CHANNEL_CLOSED`, `NOT_FOUND`, `CHAT_REACTION_LIMIT`, `CHAT_MUTED`) — nội dung chữ trung tính (R15).
+- **Câu hỏi mở cho backend [Proposed]:** `Channel` của `listMyChannels` chưa trả `features` và `max_text_length` (backend chỉ có trong policy hiệu lực); chưa có API danh sách emoji/reaction cho phép và thời hạn sửa/thu hồi cho client; `chat_channel_ids` trong message trận vẫn chờ F105/F109.
