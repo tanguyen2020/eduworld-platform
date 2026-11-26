@@ -19,13 +19,15 @@ const FRAMES: Array = [["PanelContainer", "panel"], ["FormCard", "panel"], ["Win
 ## Tier 2 information surfaces (type, stylebox).
 const INFO: Array = [["HudPanel", "panel"], ["SpeechBubble", "panel"], ["InfoBannerPanel", "panel"],
 		["InlineErrorPanel", "panel"], ["ProgressBar", "background"], ["ProgressBar", "fill"], ["HudChip", "normal"],
-		["HudChip", "pressed"], ["SectionTag", "normal"], ["ValueChip", "normal"]]
+		["HudChip", "pressed"], ["SectionTag", "normal"], ["ValueChip", "normal"], ["CountBadge", "normal"]]
 ## F114 variants declared by the token pipeline (F114-AC-01).
 const VARIANTS: Dictionary = {
 	"DangerButton": "Button", "HudChip": "Button", "TabButton": "Button", "TabButtonSelected": "Button",
 	"ToggleSwitch": "CheckButton", "SectionTag": "Label", "ValueChip": "Label", "WindowTitleLabel": "Label",
 	"ConfirmTitleLabel": "Label", "WindowTitleBar": "PanelContainer", "ConfirmTitleBar": "PanelContainer",
 	"SettingsTabColumn": "PanelContainer", "Scrim": "Panel", "ScrimNested": "Panel",
+	# F123: unread count pill / "Mới" tag (tier 2).
+	"CountBadge": "Label",
 }
 
 
@@ -46,7 +48,8 @@ func _box(theme: Theme, type_name: String, box_name: String) -> StyleBoxFlat:
 
 
 func test_tokens_hold_the_confirmed_values() -> void:
-	assert_str(UiTokens.TOKENS_VERSION).is_equal("0.17.0")
+	# F123 bumped the tokens to 0.18.0 (CountBadge, count_badge.*): MINOR, the F114 values below are unchanged.
+	assert_str(UiTokens.TOKENS_VERSION).is_equal("0.18.0")
 	_assert_color(UiTokens.COLOR_OUTLINE, Color("#1E2A44"))
 	_assert_color(UiTokens.COLOR_OUTLINE, UiTokens.COLOR_TEXT_PRIMARY)
 	var scrim: Color = UiTokens.COLOR_OVERLAY_SCRIM

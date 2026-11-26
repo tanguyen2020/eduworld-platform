@@ -171,6 +171,18 @@
       },
       "border": { "$type": "color", "$value": "{color.outline}", "$description": "Section tag ink outline (F114)." }
     },
+    "count_badge": {
+      "bg": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Unread count pill beside the HUD bell and the word \"Mới\" on an unread inbox row (CountBadge, tier 2 info item, F123). The count / word carries the state, never the colour alone." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.on_accent}",
+        "$description": "Unread count / \"Mới\" words: bold, the band small font (F123).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.count_badge.bg", "level": "normal" }
+        ] } }
+      },
+      "border": { "$type": "color", "$value": "{color.outline}", "$description": "Count badge thin ink outline (tier 2, F123)." }
+    },
     "toggle": {
       "track_on": {
         "$type": "color",
