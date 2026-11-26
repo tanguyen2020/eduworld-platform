@@ -158,8 +158,9 @@ Policy trường `student_club_creation` (do `school_admin` đặt, như nhau ch
 | Tin nhắn mới, mention | Badge unread trên HUD ([CHAT_SYSTEM §8.2](CHAT_SYSTEM.md#82-unread-count)) | Âm thanh tắt mặc định |
 | Thông báo trường: **chỉ** bài được giao và kết quả bài giao đã công bố | Bảng tin trường ở Main Hub + hộp thông báo (tab "Nhà trường giao") | Ưu tiên cao; không có thông báo tự do của nhân sự nhà trường tới học sinh |
 | Kết quả xử lý báo cáo | Hộp thông báo ("Báo cáo của em đã được xử lý") | Không nêu chi tiết hình phạt |
+| Lên cấp, mở khóa thành tích | Hộp thông báo + badge (không popup) | Chỉ cấp độ/hạng thành tích của chính học sinh |
 
-**Không có push notification ngoài game cho học sinh trong Release 1.0** [Confirmed]: tránh kéo trẻ quay lại game ([GAME_DESIGN](../01-game-design/GAME_DESIGN.md), [CHILD_SAFETY](../10-security/CHILD_SAFETY.md)). Thông báo chỉ hiển thị trong game; nhân sự nhà trường nhận thông báo trong Admin Portal. API: `GET /api/v1/notifications`; đẩy realtime qua `notification.item.created`. Loại thông báo dùng **một enum `kind`** chung cho REST và WS (contract ở `specs/openapi`, `specs/asyncapi`).
+**Không có push notification ngoài game cho học sinh trong Release 1.0** [Confirmed]: tránh kéo trẻ quay lại game ([GAME_DESIGN](../01-game-design/GAME_DESIGN.md), [CHILD_SAFETY](../10-security/CHILD_SAFETY.md)). Thông báo chỉ hiển thị trong game; nhân sự nhà trường nhận thông báo trong Admin Portal. API: `GET /api/v1/notifications` (kèm `unread_count`), `POST /api/v1/notifications/{notification_id}:read`, `POST /api/v1/notifications:read-all`; đẩy realtime qua `notification.item.created`, đánh dấu đã đọc qua WS `notification.item.mark_read` (F123, cơ chế ở [CHAT_SYSTEM §10](CHAT_SYSTEM.md#10-notifications)). CI chặn SDK push (FCM, APNs, OneSignal, Web Push) trong backend và bản build Godot (`scripts/ci/check-no-push-sdk.sh`). Loại thông báo dùng **một enum `kind`** chung cho REST và WS (contract ở `specs/openapi`, `specs/asyncapi`).
 
 ## 9. Acceptance criteria
 

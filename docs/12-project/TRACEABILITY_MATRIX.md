@@ -36,7 +36,7 @@
 | `SOC` Social | module chat | 4 | 4 | 0 | 35 | 0 | SOC (9) | 1 | 0 | 0 / 11 |
 | `CHAT` Chat | module chat | 17 | 17 | 0 | 17 | 0 | CHAT (48) | 2 | 15 | 0 / 0 |
 | `MOD` Moderation & Child Safety | module chat | 18 | 18 | 0 | 41 | 0 | CHAT (48) | 4 | 6 | 0 / 25 |
-| `NTF` Notification | module chat | 3 | 3 | 1 | 1 | 0 | SOC (9) | 0 | 0 | 0 / 0 |
+| `NTF` Notification | module chat | 3 | 3 | 2 | 3 | 0 | SOC (9) | 0 | 0 | 0 / 0 |
 | `GAM` XP, level, tiến trình | module game | 11 | 11 | 0 | 5 | 0 | GAM (12) | 1 | 4 | 0 / 10 |
 | `RWD` Phần thưởng | module game | 3 | 3 | 0 | 12 | 0 | GAM (12), ECO (8) | 0 | 0 | 0 / 0 |
 | `CHL` Challenge & Boss | module game | 3 | 3 | 0 | 17 | 0 | CHL (8) | 0 | 0 | 0 / 8 |
@@ -46,7 +46,7 @@
 | `LMS` LMS | module learning | 10 | 10 | 1 | 34 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 28 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 22 | 598 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 23 | 600 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -563,9 +563,9 @@ Service: module chat · Tài liệu sở hữu: [SOCIAL_SYSTEM](../03-social-mul
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-NTF-001 | Thông báo trong game: lời mời party/kết bạn, bài được giao, kết quả, phần thưởng, thông báo trường | P2 (in-game) – P5 (realtime đầy đủ) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 1 op | _suy luận:_ TC-SOC |
+| FR-NTF-001 | Thông báo trong game: lời mời party/kết bạn, bài được giao, kết quả, phần thưởng, thông báo trường | P2 (in-game) – P5 (realtime đầy đủ) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-SOC |
 | FR-NTF-002 | Realtime qua WebSocket; lưu bền vững để xem lại (/api/v1/notifications) | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `listNotifications` | _suy luận:_ TC-SOC |
-| FR-NTF-003 | Không gửi push notification ngoài game tới học sinh trong Release 1.0; thông báo chỉ hiển thị trong game (i… | P5 | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 1 op | _suy luận:_ TC-SOC |
+| FR-NTF-003 | Không gửi push notification ngoài game tới học sinh trong Release 1.0; thông báo chỉ hiển thị trong game (i… | P5 | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `listNotifications` | _suy luận:_ TC-SOC |
 
 ### 3.25. `GAM` XP, level, tiến trình
 
@@ -837,7 +837,7 @@ Tính trên 334 FR thuộc Release 1.0 (phase P1–P6).
 | Kiểm tra | Không có liên kết tường minh | Không có cả suy luận (mồ côi thật) |
 |---|---|---|
 | FR không có tài liệu thiết kế | 1 | 0 |
-| FR không có operation OpenAPI | 312 | 0 |
+| FR không có operation OpenAPI | 311 | 0 |
 | FR không có TC | 333 | 0 |
 | AC không thuộc domain FR nào | — | 0 |
 | US không thuộc domain FR nào | — | 0 |

@@ -773,8 +773,8 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 | Method | Path | Mô tả | Role | Idem | Phase |
 |---|---|---|---|---|---|
 | GET | `/notifications` | Thông báo trong game (`?unread=true`), kèm `unread_count`; loại thông báo là enum `kind` dùng chung REST và WS (`notification.item.created`) | Mọi role | T | P2 |
-| POST | `/notifications/{notification_id}:read` | Đánh dấu đã đọc | owner | T | P2 |
-| POST | `/notifications:read-all` | Đọc tất cả | owner | T | P2 |
+| POST | `/notifications/{notification_id}:read` | Đánh dấu đã đọc (`markNotificationRead`; `read_at` đặt một lần, thông báo không phải của mình → `404`) | owner | T | P2 |
+| POST | `/notifications:read-all` | Đọc tất cả (`markAllNotificationsRead`, mục tạo trước thời điểm gọi) → `{unread_count}` | owner | T | P2 |
 
 ### 9.12. Schools (quản trị trường) — `/api/v1/schools`
 
