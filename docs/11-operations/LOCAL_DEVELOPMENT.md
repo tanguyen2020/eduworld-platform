@@ -163,7 +163,7 @@ EW_GAME_RENDER_MAX_ATTEMPTS=5                  # game_render_max_attempts (rồi
 EW_GAME_RENDER_BACKOFF_SECONDS=60              # game_render_retry_backoff (lũy thừa 2, tối đa 1 giờ)
 # Container game-renderer (deploy/compose/game-renderer.yml): EW_NATS_URL (hoặc EW_NATS_URLS), EW_S3_*, EW_RENDERER_GODOT
 # (mặc định godot-render = xvfb-run + godot --rendering-driver opengl3), EW_RENDERER_PROJECT, EW_RENDERER_TIMEOUT=120s, EW_RENDERER_WORKDIR;
-# cổng admin 9210 (health/metrics).
+# cổng admin :9090 (health/metrics) chỉ trong network compose, không publish ra host (F001-AC-06): kiểm bằng `docker compose … exec game-renderer /app/game-renderer healthcheck`.
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318   # OTLP/HTTP (exporter otlptracehttp, F002)
 OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 OTEL_TRACES_SAMPLER=parentbased_traceidratio
