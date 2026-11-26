@@ -49,8 +49,8 @@
 
 ## Phase 7: Follow-up
 
-- [ ] T030 F094 — art pass 4: `practice_zone`, `social_zone`, `quest_zone.discovery_ocean`, `challenge_mountain`, `exam_zone`, `arena` trên prefab/pipeline này; kèm Câu hỏi mở F093-3 (cây cau, mặt phẳng hai mặt của Hub)
-- [ ] T031 Câu hỏi mở F093-1 (vật thể quest F072 của Hub) và F093-2 (màu môn Lịch sử dùng chung, `env_history`)
+- [x] T030 F094 — art pass 4: `practice_zone`, `social_zone`, `quest_zone.discovery_ocean`, `challenge_mountain`, `exam_zone`, `arena` trên prefab/pipeline này; kèm Câu hỏi mở F093-3 (cây cau, mặt phẳng hai mặt của Hub)
+- [x] T031 (F094) Câu hỏi mở F093-1 (vật thể quest F072 của Hub) và F093-2 (màu môn Lịch sử dùng chung, `env_history`)
 
 ## Dependencies & Execution Order
 

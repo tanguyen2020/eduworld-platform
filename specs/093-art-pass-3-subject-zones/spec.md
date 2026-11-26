@@ -9,17 +9,18 @@
 
 - Q: Làm vùng nào trong lượt này? → A: [Confirmed — giao việc của orchestrator 2026-11-25: "nếu quá lớn, ưu tiên vùng học sinh tới trước, làm trọn, phần còn lại ghi follow-up"] Năm vùng môn học (khu B) làm trọn; `practice_zone`, `social_zone`, `quest_zone.discovery_ocean`, `challenge_mountain`, `exam_zone`, `arena` → **F094** (art pass 4) trên cùng pipeline.
 - Q: Năm vùng có bố cục điểm neo giống nhau (seed F071), dựng thế nào để môn mới dùng lại? → A: [Confirmed — theo WORLD_DESIGN §4.2 "môn mới dùng prefab vùng chung + cấu hình"] Một **prefab vùng chung** (`tools/art/zone_kit.gd`: nền cỏ hai tông, quảng trường tròn quanh NPC, đường chính spawn → vật sưu tầm → cổng gió, đường ngang tới hai điểm khám phá, bệ lát dưới mỗi điểm neo, vòng rào biên, rải cây theo luật tránh bố cục) + **bộ set piece và bảng màu riêng của từng môn** (`zone_<môn>_art.gd`). Landmark của mỗi vùng đặt sau cổng gió, khung nhìn từ điểm spawn.
-- Q: Set piece cụ thể của từng vùng? → A: [Proposed — diễn giải mô tả WORLD_DESIGN §2.2, §2.3, §4.2, §11 "cảm hứng Việt Nam trộn kỳ ảo"; Game Director/owner chỉnh qua công thức, không sửa scene] Bảng ở F093-AC-01.
+- Q: Set piece cụ thể của từng vùng? → A: [Confirmed — owner "chốt hết" 2026-11-25 là mặc định Release 1 (trước đó Proposed); diễn giải mô tả WORLD_DESIGN §2.2, §2.3, §4.2, §11 "cảm hứng Việt Nam trộn kỳ ảo"; Game Director/owner chỉnh qua công thức, không sửa scene] Bảng ở F093-AC-01.
 - Q: Bảng màu có đủ không? → A: [Confirmed] Thêm 8 slot `art.palette.*` (`tile_blue`, `tile_blue_dark`, `leaf_autumn`, `bronze`, `bronze_patina`, `metal`, `metal_dark`, `blossom_violet`; slot 52–59) — `tokens@0.11.0`, MINOR; mọi màu vẫn là slot token (R32).
 - Q: Ngân sách cảnh của vùng môn học? → A: [Confirmed — PERFORMANCE_BUDGET §7 dòng "Vùng môn học / khám phá"] ≤ 120k primitive, ≤ 90 draw call, ≤ 50 vật thể động trên Mobile và Compatibility, đăng ký `scene_budget_zone` ở CONFIG_DEFAULTS (tham số đã có giá trị ở tài liệu sở hữu, chỉ thêm tên). Để giữ ngân sách: cảnh xa (đồi, mặt đất xa, biển, đảo, núi lửa) bake riêng (`env_<môn>_far_a`) và vẽ bằng preset không viền, không đổ bóng; cây lặp giữ bậc chia gốc; số cây ngoài vòng rào và trang trí nhỏ giới hạn.
 - Q: Cây cau của Hub (lá là hai mặt phẳng dính nhau) bị viền mực tô đen khi nhìn từ phía sau — dùng cho Đảo Khoa Học thế nào? → A: [Confirmed] Đảo dùng cây dừa riêng `veg_palm_coconut_a` (lá là khối dẹt kín, viền inverted hull đúng); sửa cây cau/mái chợ của Hub để sau (Câu hỏi mở F093-3).
 - Q: Có đổi hợp đồng thế giới F071 không? → A: [Confirmed] Không. Điểm neo lấy **nguyên** từ seed (`gen_greybox_zones.mjs` chỉ sinh lại khối neo giữa hai marker cho scene đã có art); collision mặt đất 50 × 50 m giữ; collision mới (rào biên, nhà, set piece) không chắn spawn, điểm neo và hai lối đi; cầu Vương quốc Số là sàn đi được (convex). Vương quốc Số nay có đủ 4 vật thể quest F072 (`quest.math.fruit_stall`, `quest.math.apple_basket_1–3`) vốn có trong seed nhưng thiếu trong scene greybox vì generator chưa chạy lại sau F072.
 
-**Câu hỏi mở**
+**Câu hỏi mở** (đã đóng ở [F094](../094-art-pass-4-remaining-zones/spec.md))
 
-- F093-1: Main Hub vẫn thiếu 3 vật thể quest F072 có trong seed (`quest.hub.lantern_east`, `quest.hub.lantern_west`, `quest.hub.welcome_sign`): sinh lại khối neo của Hub làm `test_interactable.gd` hỏng (người chơi được đưa tới (0, 0, 12) để rời bảng tin, trùng `welcome_sign`). Cần F072/F071 chỉnh test hoặc vị trí — ngoài phạm vi F093 (chỉ đồ họa) [Proposed: follow-up F072].
-- F093-2: Lịch sử chưa có mã màu môn học (`color.subject.history`, "nâu đỏ" theo WORLD_DESIGN §11) và environment riêng (`env_history`); vùng dùng `env_hub` và slot `roof_dark`/`lantern`/`wall_yellow`. Thêm màu nghiệp vụ dùng chung ảnh hưởng portal (shared-tokens, ADR-0047) → cần owner chốt [Proposed: thêm ở F094 hoặc feature design system].
-- F093-3: Cây cau (`veg_palm_cau_a`) và các mặt phẳng hai mặt khác của Hub hiện viền đen khi nhìn từ phía sau (viền inverted hull trên mặt dày 0) — sửa trong F094 cùng các vùng Thị trấn Trung Tâm [Proposed].
+- F093-1: Main Hub vẫn thiếu 3 vật thể quest F072 có trong seed (`quest.hub.lantern_east`, `quest.hub.lantern_west`, `quest.hub.welcome_sign`): sinh lại khối neo của Hub làm `test_interactable.gd` hỏng (người chơi được đưa tới (0, 0, 12) để rời bảng tin, trùng `welcome_sign`). → [Confirmed — owner "chốt hết" 2026-11-25, làm ở F094] Sinh lại khối neo Hub từ seed (`gen_greybox_zones.mjs --check` sạch cho mọi vùng); không dời vật thể seed (seed/spec không nói vị trí là tùy ý); test đổi sang một điểm rời trống khác.
+- F093-2: Lịch sử chưa có mã màu môn học (`color.subject.history`) và environment riêng (`env_history`). → [Confirmed — WORLD_DESIGN §11 đã chốt "Lịch sử nâu đỏ", không phải quyết định mới; owner "chốt hết" 2026-11-25, làm ở F094] Thêm `color.subject.history` vào `design/shared-tokens/domain.json` (game + portal), slot `art.palette.subject_history`, `env_history`.
+- F093-3: Cây cau (`veg_palm_cau_a`) và các mặt phẳng hai mặt khác của Hub viền đen khi nhìn từ phía sau (viền inverted hull trên mặt dày 0). → [Confirmed — owner "chốt hết" 2026-11-25, làm ở F094 theo cách F093 đã kiểm] Tấm mỏng vẽ bằng preset có viền là khối kín; test chặn mặt hai mặt dày 0.
+- Diễn giải set piece Việt Nam (Văn Miếu/Khuê Văn Các, Ngọ Môn, Chùa Một Cột, trống đồng Đông Sơn, cọn nước, bằng lăng, gốm men lam). → [Confirmed — owner "chốt hết" 2026-11-25] Là mặc định Release 1; Game Director chỉnh công thức `tools/art/zone_<môn>_art.gd` rồi bake lại.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -126,9 +127,9 @@ Học sinh đi qua cổng gió từ Quảng trường Tia Sáng vào Vương qu�
 - Đồ họa `practice_zone`, `social_zone`, `quest_zone.discovery_ocean`, `challenge_mountain`, `exam_zone`, `arena` → **F094**.
 - Trạm theo Topic hiển thị mastery bằng màu (WORLD_DESIGN §4.2 — dữ liệu curriculum, chưa có ở client) và "đất xám → có màu" theo mastery của vùng.
 - Bundle PCK theo vùng (WORLD_RENDERING §8.2), lightmap/occluder bake, NavMesh, âm thanh vùng.
-- Sửa Hub (Câu hỏi mở F093-1, F093-3); màu môn Lịch sử dùng chung (F093-2).
+- Sửa Hub (Câu hỏi mở F093-1, F093-3); màu môn Lịch sử dùng chung (F093-2) → đã làm ở F094.
 
 ## Assumptions
 
-- Diễn giải set piece Việt Nam (Văn Miếu, Ngọ Môn, Chùa Một Cột, trống đồng Đông Sơn, cọn nước, bằng lăng, gốm men lam) là [Proposed]; Game Director chỉnh qua công thức `tools/art/zone_<môn>_art.gd` rồi bake, không sửa scene.
+- Diễn giải set piece Việt Nam (Văn Miếu, Ngọ Môn, Chùa Một Cột, trống đồng Đông Sơn, cọn nước, bằng lăng, gốm men lam) là mặc định Release 1 [Confirmed — owner 2026-11-25]; Game Director chỉnh qua công thức `tools/art/zone_<môn>_art.gd` rồi bake, không sửa scene.
 - Không tải asset ngoài (phân quyền phiên làm việc chặn); toàn bộ tự làm bằng code, MIT.
