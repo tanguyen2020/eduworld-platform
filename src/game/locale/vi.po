@@ -90,6 +90,18 @@ msgstr "Bài này cần phiên bản trò chơi mới hơn. Em hãy nhờ thầy
 msgid "ui.activity_player.waiting"
 msgstr "Đang gửi…"
 
+msgid "ui.audio.coach_again"
+msgstr "Muốn nghe thêm thì bấm Nghe lại nhé!"
+
+msgid "ui.audio.coach_listen"
+msgstr "Nghe kỹ nhé!"
+
+msgid "ui.audio.coach_plays_done"
+msgstr "Em đã nghe đủ lượt rồi. Mình trả lời câu hỏi nhé!"
+
+msgid "ui.audio.coach_start"
+msgstr "Bấm Nghe để bắt đầu nhé!"
+
 msgid "ui.audio.not_ready"
 msgstr "Bài nghe đang được chuẩn bị, em quay lại sau nhé."
 
@@ -984,6 +996,27 @@ msgstr "Nếu nhập sai nhiều lần, hãy đợi vài phút rồi thử lại
 msgid "ui.login.wordmark"
 msgstr "EduWorld"
 
+msgid "ui.media.back10"
+msgstr "Lùi 10 giây"
+
+msgid "ui.media.listen"
+msgstr "Nghe"
+
+msgid "ui.media.listen_again"
+msgstr "Nghe lại"
+
+msgid "ui.media.off"
+msgstr "Tắt"
+
+msgid "ui.media.pause"
+msgstr "Tạm dừng"
+
+msgid "ui.media.play"
+msgstr "Phát"
+
+msgid "ui.media.replay"
+msgstr "Xem lại"
+
 msgid "ui.minigame.completed"
 msgstr "Em đã hoàn thành trò chơi!"
 
@@ -1302,11 +1335,29 @@ msgstr "Cài đặt"
 msgid "ui.simulation.checking"
 msgstr "Đang kiểm tra kết quả…"
 
+msgid "ui.simulation.coach_checking"
+msgstr "Mây đang xem kết quả…"
+
+msgid "ui.simulation.coach_not_reached"
+msgstr "Chưa được, mình thử lại nhé!"
+
+msgid "ui.simulation.coach_reached"
+msgstr "Em làm được rồi!"
+
+msgid "ui.simulation.coach_runs_done"
+msgstr "Hết lượt thử rồi. Mình trả lời câu hỏi nhé!"
+
+msgid "ui.simulation.coach_start"
+msgstr "Làm theo các bước rồi bấm Thả nhé!"
+
 msgid "ui.simulation.goal_not_reached"
 msgstr "Chưa đạt mục tiêu, em thử lại nhé."
 
 msgid "ui.simulation.goal_reached"
 msgstr "Đạt mục tiêu!"
+
+msgid "ui.simulation.goals"
+msgstr "Mục tiêu"
 
 msgid "ui.simulation.left"
 msgstr "Trái"
@@ -1335,8 +1386,32 @@ msgstr "Làm lại"
 msgid "ui.simulation.right"
 msgstr "Phải"
 
+msgid "ui.simulation.runs"
+msgstr "Lượt thử: {used}/{max}"
+
 msgid "ui.simulation.runs_exhausted"
 msgstr "Em đã dùng hết số lần chạy. Hãy trả lời câu hỏi kết luận."
+
+msgid "ui.simulation.steps"
+msgstr "Các bước"
+
+msgid "ui.video.coach_branch"
+msgstr "Em muốn câu chuyện đi tiếp thế nào?"
+
+msgid "ui.video.coach_done"
+msgstr "Em xem hết rồi, giỏi quá!"
+
+msgid "ui.video.coach_seek_locked"
+msgstr "Em xem tới đây rồi mới tua tiếp được nhé!"
+
+msgid "ui.video.coach_start"
+msgstr "Bấm Phát để xem video nhé!"
+
+msgid "ui.video.coach_watch"
+msgstr "Xem kỹ nhé!"
+
+msgid "ui.video.coach_watch_questions"
+msgstr "Xem kỹ nhé! Dấu ? trên thanh là chỗ có câu hỏi."
 
 msgid "ui.video.not_ready"
 msgstr "Video đang được chuẩn bị, em quay lại sau nhé."

@@ -60,7 +60,7 @@ func test_run_is_sent_and_goals_follow_the_server() -> void:
 	r.show_run_result(SimulationFixtures.result(true, 1))
 	assert_bool(goal.button_pressed).is_true()
 	assert_str((r.get_node("%Status") as Label).text).is_equal("ui.simulation.goal_reached")
-	assert_str((r.get_node("%Runs") as Label).text).is_equal("1 / 3")
+	assert_str((r.get_node("%Runs") as Label).text).is_equal(tr("ui.simulation.runs").format({"used": 1, "max": 3}))
 
 
 func test_a_network_loss_resends_the_same_run() -> void:

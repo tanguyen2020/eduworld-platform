@@ -23,6 +23,8 @@ const SCREENS: PackedStringArray = [
 	"challenge_hud", "challenge_result_failed", "challenge_result_succeeded",
 	# F098: tap-to-answer (grading, right, not yet right + right answer from the server, two-tap confirmation).
 	"activity_tap_grading", "activity_tap_correct", "activity_tap_incorrect", "activity_tap_confirm",
+	# F099: media players (video playing with a caption, video question, audio lesson, simulation).
+	"activity_video", "activity_video_cue", "activity_audio", "activity_simulation",
 ]
 ## Sample look of the local player (catalog codes of the F070 fixture; display only).
 const SAMPLE_AVATAR: Dictionary = {
@@ -594,5 +596,94 @@ func _screen_activity_tap_confirm() -> Node:
 	var host: Control = await _activity_host()
 	await _select(host, 1)
 	for i: int in 5:
+		await get_tree().process_frame
+	return host
+
+
+# ---------- F099: media players ----------
+
+## The activity player on a media attempt (`video_lesson`, `audio_lesson`, `simulation`). TEST-ONLY: the media files
+## are placeholders (no decoding) and the playback is swapped for the scripted fakes of res://tests/fakes.
+func _media_host(attempt: Dictionary) -> Control:
+	await _sign_in()
+	_harness.http.reply_bytes("GET https://cdn.example.invalid/ew-media-private/media/*/vi.vtt*", 200,
+			VideoFixtures.VTT_VI.to_utf8_buffer())
+	_harness.http.reply_bytes("GET https://cdn.example.invalid/ew-media-private/media/*/en.vtt*", 200,
+			VideoFixtures.VTT_EN.to_utf8_buffer())
+	_harness.http.reply_bytes("GET https://cdn.example.invalid/ew-media-private/media/*/transcript.txt*", 200,
+			AudioFixtures.TRANSCRIPT.to_utf8_buffer())
+	AppState.services.video_files.downloader = VideoFixtures.fake_download
+	var host: Control = (load("res://scenes/learning/ActivityHost.tscn") as PackedScene).instantiate() as Control
+	host.set("services", AppState.services)
+	host.set("client_version", AuthHarness.VERSION)
+	host.set("grade_band", _band)
+	get_tree().root.add_child(host)
+	_harness.http.reply(LearningFixtures.ROUTE_START, 201, attempt)
+	_harness.http.reply(LearningFixtures.ROUTE_RESPOND, 200, LearningFixtures.response_result_correct())
+	host.call("open", {"activity_id": LearningFixtures.ACTIVITY_ID, "mode": "practice", "context_type": "free_play"})
+	for i: int in 60:
+		await get_tree().process_frame
+	return host
+
+
+## Swaps the renderer playback for a scripted fake at `at_ms` and renders one step (the fake does not advance).
+func _fake_video(host: Control, at_ms: int, playing: bool) -> VideoLessonRenderer:
+	var r: VideoLessonRenderer = host.get("renderer") as VideoLessonRenderer
+	if r == null:
+		return null
+	var fake: FakeVideoPlayback = FakeVideoPlayback.new()
+	fake.playback_finished.connect(r._on_finished)
+	r.playback.pause()
+	r.playback = fake
+	fake.pos = at_ms
+	fake.playing = true
+	r.reporter.ranges.load_from([{"start_ms": 0, "end_ms": maxi(at_ms, 45000)}])
+	r._process(0.016)
+	fake.playing = playing and not (r.get_node("%Overlay") as Control).visible
+	if r.has_method("_refresh_controls"):
+		r.call("_refresh_controls")
+	return r
+
+
+## F099: a video lesson playing, with the caption of the teacher and the chapter / question marks on the bar.
+func _screen_activity_video() -> Node:
+	var host: Control = await _media_host(VideoFixtures.attempt())
+	_fake_video(host, 6000, true)
+	for i: int in 10:
+		await get_tree().process_frame
+	return host
+
+
+## F099: the video stopped at its question (question card + answer tiles of F097 on the board).
+func _screen_activity_video_cue() -> Node:
+	var host: Control = await _media_host(VideoFixtures.attempt())
+	_fake_video(host, 30000, true)
+	for i: int in 20:
+		await get_tree().process_frame
+	return host
+
+
+## F099: an audio lesson paused in its second play (plays left, the question mark on the bar, the coach hint).
+func _screen_activity_audio() -> Node:
+	var host: Control = await _media_host(AudioFixtures.attempt(2, 1))
+	var r: AudioLessonRenderer = host.get("renderer") as AudioLessonRenderer
+	if r != null:
+		var fake: FakeAudioPlayback = FakeAudioPlayback.new()
+		fake.playback_finished.connect(r._on_finished)
+		r.playback.pause()
+		r.playback = fake
+		fake.pos = 12000
+		# The placeholder file cannot be decoded: drop its "not ready" toast (the fake plays instead).
+		(r.get_node("%Toast") as Control).visible = false
+		r._refresh()
+	for i: int in 10:
+		await get_tree().process_frame
+	return host
+
+
+## F099: a simulation with its goals, numbered steps and the release / redo buttons.
+func _screen_activity_simulation() -> Node:
+	var host: Control = await _media_host(SimulationFixtures.attempt())
+	for i: int in 20:
 		await get_tree().process_frame
 	return host

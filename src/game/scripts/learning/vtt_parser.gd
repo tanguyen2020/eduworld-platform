@@ -2,10 +2,13 @@ class_name VttParser
 extends RefCounted
 ## WebVTT subtitles parsed by the client (F065-AC-16, GODOT_ARCHITECTURE §6.2: "phụ đề WebVTT tự parse và vẽ theo
 ## Theme"). Supports the cue timing line `hh:mm:ss.mmm --> hh:mm:ss.mmm` (hours optional), optional cue identifiers,
-## multi-line cue text and NOTE/STYLE blocks (skipped). Tags such as `<b>` or `<v Speaker>` are stripped.
+## multi-line cue text and NOTE/STYLE blocks (skipped). Tags such as `<b>` or `<v Speaker>` are stripped; F099 keeps the
+## speaker of `<v Speaker>` so the caption card writes it as words ("Cô: …"), never as a colour.
 
 const MAX_CUES: int = 5000
 const TAG_PATTERN: String = "<[^>]*>"
+## F099: the voice span `<v Name>` / `<v.class Name>` (speaker name in group 1).
+const VOICE_PATTERN: String = "<v(?:\\.[^ >]*)?\\s+([^>]+)>"
 
 
 class Cue:
@@ -13,6 +16,8 @@ class Cue:
 	var start_ms: int = 0
 	var end_ms: int = 0
 	var text: String = ""
+	## Speaker of the cue (`<v Name>`), "" when none (F099).
+	var voice: String = ""
 
 
 var cues: Array[Cue] = []
@@ -27,6 +32,7 @@ func parse(source: String) -> bool:
 	if not text.begins_with("WEBVTT"):
 		return false
 	var tags: RegEx = RegEx.create_from_string(TAG_PATTERN)
+	var voices: RegEx = RegEx.create_from_string(VOICE_PATTERN)
 	for block: String in text.split("\n\n", false):
 		var lines: PackedStringArray = block.strip_edges().split("\n", false)
 		var timing: int = -1
@@ -42,9 +48,14 @@ func parse(source: String) -> bool:
 		if start < 0 or end <= start:
 			continue
 		var body: PackedStringArray = []
+		var voice: String = ""
 		for j: int in range(timing + 1, lines.size()):
+			var found: RegExMatch = voices.search(lines[j])
+			if found != null and voice.is_empty():
+				voice = found.get_string(1).strip_edges()
 			body.append(tags.sub(lines[j], "", true).strip_edges())
 		var cue: Cue = Cue.new()
+		cue.voice = voice
 		cue.start_ms = start
 		cue.end_ms = end
 		cue.text = "\n".join(body).strip_edges()
@@ -84,6 +95,17 @@ func text_at(position_ms: int) -> String:
 			break
 		if position_ms < cue.end_ms:
 			out.append(cue.text)
+	return "\n".join(out)
+
+
+## F099: the caption card text at `position_ms`: each cue prefixed by its speaker in words ("Cô: …"), "" when none.
+func caption_at(position_ms: int) -> String:
+	var out: PackedStringArray = []
+	for cue: Cue in cues:
+		if cue.start_ms > position_ms:
+			break
+		if position_ms < cue.end_ms:
+			out.append(cue.text if cue.voice.is_empty() else "%s: %s" % [cue.voice, cue.text])
 	return "\n".join(out)
 
 

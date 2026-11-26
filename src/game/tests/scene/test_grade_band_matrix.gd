@@ -40,7 +40,8 @@ func after_test() -> void:
 
 ## Builds `build` (a Callable returning the screen root, coroutine allowed) for every band × window, probes it and
 ## returns every problem found.
-func _matrix(label: String, build: Callable) -> PackedStringArray:
+## F099-AC-07: `empty` also checks that the activity board has no empty band taller than 25% of the view.
+func _matrix(label: String, build: Callable, empty: bool = false) -> PackedStringArray:
 	var failures: PackedStringArray = []
 	for band: String in UiTokens.DENSITY_BANDS:
 		for window: String in BandLayoutProbe.SIZES.keys():
@@ -56,10 +57,18 @@ func _matrix(label: String, build: Callable) -> PackedStringArray:
 				for i: int in SETTLE_FRAMES:
 					await await_idle_frame()
 				failures.append_array(BandLayoutProbe.check(root, vp, band, "%s %s" % [label, window]))
+				var band_note: String = ""
+				if empty:
+					failures.append_array(BandLayoutProbe.empty_bands(root, vp, "%s %s %s" % [label, band, window]))
+					band_note = ", largest empty band %.0f%%" % (BandLayoutProbe.last_largest_band * 100.0)
+				for track: Node in root.find_children("*", "MediaTrack", true, false):
+					var t: MediaTrack = track as MediaTrack
+					if t.is_visible_in_tree() and t.size.y + 0.5 < float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[band]):
+						failures.append("%s %s %s: media bar %.0f px < touch target" % [label, band, window, t.size.y])
 				if BandLayoutProbe.last_texts == 0:
 					failures.append("%s %s %s: no visible text checked" % [label, band, window])
-				_seen.append("%s %s %s: %d buttons, %d texts, %d tiles" % [label, band, window,
-						BandLayoutProbe.last_buttons, BandLayoutProbe.last_texts, BandLayoutProbe.last_tiles])
+				_seen.append("%s %s %s: %d buttons, %d texts, %d tiles%s" % [label, band, window,
+						BandLayoutProbe.last_buttons, BandLayoutProbe.last_texts, BandLayoutProbe.last_tiles, band_note])
 			vp.queue_free()
 			await await_idle_frame()
 	return failures
@@ -111,6 +120,44 @@ func _activity(vp: SubViewport, band: String, types: PackedStringArray, result: 
 	return host
 
 
+## F099-AC-15: the activity player on a media attempt; the playback is swapped for the scripted fakes (TEST-ONLY) and
+## moved to `at_ms` (a video at its question opens the question on the board).
+func _media(vp: SubViewport, band: String, attempt: Dictionary, at_ms: int = -1) -> Node:
+	s.h.http.reply_bytes("GET https://cdn.example.invalid/ew-media-private/media/*/vi.vtt*", 200,
+			VideoFixtures.VTT_VI.to_utf8_buffer())
+	s.h.http.reply_bytes("GET https://cdn.example.invalid/ew-media-private/media/*/en.vtt*", 200,
+			VideoFixtures.VTT_EN.to_utf8_buffer())
+	s.services.video_files.downloader = VideoFixtures.fake_download
+	var host: Control = _mount(vp, _scene(HOST)) as Control
+	host.set("services", s.services)
+	host.set("client_version", "1.2.3")
+	host.set("grade_band", band)
+	s.h.http.delay_frames = 1
+	s.h.http.clear(LearningFixtures.ROUTE_START)
+	s.h.http.reply(LearningFixtures.ROUTE_START, 201, attempt)
+	await host.call("open", {"activity_id": LearningFixtures.ACTIVITY_ID, "mode": "practice", "context_type": "free_play"})
+	for i: int in 3:
+		await await_idle_frame()
+	var r: ActivityRendererBase = host.get("renderer") as ActivityRendererBase
+	if r is VideoLessonRenderer:
+		var v: VideoLessonRenderer = r as VideoLessonRenderer
+		var fake: FakeVideoPlayback = FakeVideoPlayback.new()
+		v.playback.pause()
+		v.playback = fake
+		fake.pos = maxi(at_ms, 0)
+		fake.playing = true
+		v._process(0.016)
+	elif r is AudioLessonRenderer:
+		var a: AudioLessonRenderer = r as AudioLessonRenderer
+		var fake_audio: FakeAudioPlayback = FakeAudioPlayback.new()
+		a.playback.pause()
+		a.playback = fake_audio
+		fake_audio.pos = maxi(at_ms, 0)
+		(a.get_node("%Toast") as Control).visible = false
+		a._refresh()
+	return host
+
+
 func _correct_with_answer() -> Dictionary:
 	var r: Dictionary = LearningFixtures.response_result()
 	r["correct_response"] = {"option_id": "o_b"}
@@ -134,13 +181,15 @@ func test_hub_hud_fits_every_band() -> void:
 
 
 func test_activity_single_choice_fits_every_band() -> void:
-	_assert_none(await _matrix("activity", func(vp: SubViewport, band: String) -> Node:
-		return await _activity(vp, band, PackedStringArray(["single_choice"]))))
+	var build: Callable = func(vp: SubViewport, band: String) -> Node:
+		return await _activity(vp, band, PackedStringArray(["single_choice"]))
+	_assert_none(await _matrix("activity", build, true))
 
 
 func test_activity_true_false_fits_every_band() -> void:
-	_assert_none(await _matrix("true_false", func(vp: SubViewport, band: String) -> Node:
-		return await _activity(vp, band, PackedStringArray(["true_false"]))))
+	var build: Callable = func(vp: SubViewport, band: String) -> Node:
+		return await _activity(vp, band, PackedStringArray(["true_false"]))
+	_assert_none(await _matrix("true_false", build, true))
 
 
 func test_activity_matching_fits_every_band() -> void:
@@ -154,20 +203,48 @@ func test_activity_numeric_fits_every_band() -> void:
 
 
 func test_feedback_grading_fits_every_band() -> void:
-	_assert_none(await _matrix("tap_grading", func(vp: SubViewport, band: String) -> Node:
+	var build: Callable = func(vp: SubViewport, band: String) -> Node:
 		return await _activity(vp, band, PackedStringArray(["single_choice"]),
-				LearningFixtures.response_result_correct(), 1, true)))
+				LearningFixtures.response_result_correct(), 1, true)
+	_assert_none(await _matrix("tap_grading", build, true))
 
 
 func test_feedback_right_fits_every_band() -> void:
-	_assert_none(await _matrix("tap_correct", func(vp: SubViewport, band: String) -> Node:
+	var build: Callable = func(vp: SubViewport, band: String) -> Node:
 		return await _activity(vp, band, PackedStringArray(["single_choice"]),
-				LearningFixtures.response_result_correct(), 1)))
+				LearningFixtures.response_result_correct(), 1)
+	_assert_none(await _matrix("tap_correct", build, true))
 
 
 func test_feedback_not_yet_right_fits_every_band() -> void:
-	_assert_none(await _matrix("tap_incorrect", func(vp: SubViewport, band: String) -> Node:
-		return await _activity(vp, band, PackedStringArray(["single_choice"]), _correct_with_answer(), 0)))
+	var build: Callable = func(vp: SubViewport, band: String) -> Node:
+		return await _activity(vp, band, PackedStringArray(["single_choice"]), _correct_with_answer(), 0)
+	_assert_none(await _matrix("tap_incorrect", build, true))
+
+
+## F099-AC-15: video playing with its caption card, the question inside the video, an audio lesson, a simulation.
+func test_video_player_fits_every_band() -> void:
+	var build: Callable = func(vp: SubViewport, band: String) -> Node:
+		return await _media(vp, band, VideoFixtures.attempt(), 6000)
+	_assert_none(await _matrix("video", build))
+
+
+func test_video_question_fits_every_band() -> void:
+	var build: Callable = func(vp: SubViewport, band: String) -> Node:
+		return await _media(vp, band, VideoFixtures.attempt(), 30000)
+	_assert_none(await _matrix("video_cue", build))
+
+
+func test_audio_player_fits_every_band() -> void:
+	var build: Callable = func(vp: SubViewport, band: String) -> Node:
+		return await _media(vp, band, AudioFixtures.attempt(2, 1), 12000)
+	_assert_none(await _matrix("audio", build))
+
+
+func test_simulation_fits_every_band() -> void:
+	var build: Callable = func(vp: SubViewport, band: String) -> Node:
+		return await _media(vp, band, SimulationFixtures.attempt())
+	_assert_none(await _matrix("simulation", build))
 
 
 func test_result_fits_every_band() -> void:
@@ -271,3 +348,39 @@ func test_probe_flags_small_buttons_small_fonts_and_overflow() -> void:
 	assert_str(text).contains("outside the view")
 	assert_str(text).contains("font 10 px")
 	assert_str(text).contains("trimmed text")
+
+
+## F099-AC-07: the empty-band rule catches a board with a big hole (a guard against a silent check).
+func test_probe_flags_an_empty_band() -> void:
+	AppState.set_grade_band("g8_9")
+	var vp: SubViewport = auto_free(SubViewport.new()) as SubViewport
+	vp.size = Vector2i(1280, 720)
+	add_child(vp)
+	var board: PanelContainer = PanelContainer.new()
+	board.theme = AppState.theme_service.current_theme
+	board.theme_type_variation = &"ActivityBoard"
+	board.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	vp.add_child(board)
+	var box: VBoxContainer = VBoxContainer.new()
+	board.add_child(box)
+	var top: Label = Label.new()
+	top.text = "top"
+	box.add_child(top)
+	var hole: Control = Control.new()
+	hole.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(hole)
+	var bottom: Button = Button.new()
+	bottom.text = "bottom"
+	box.add_child(bottom)
+	await await_idle_frame()
+	await await_idle_frame()
+	var text: String = "
+".join(BandLayoutProbe.empty_bands(board, vp, "probe"))
+	assert_str(text).contains("empty band")
+	# A filled board passes.
+	hole.custom_minimum_size.y = 0.0
+	hole.size_flags_vertical = Control.SIZE_FILL
+	bottom.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	await await_idle_frame()
+	await await_idle_frame()
+	assert_array(BandLayoutProbe.empty_bands(board, vp, "probe")).is_empty()

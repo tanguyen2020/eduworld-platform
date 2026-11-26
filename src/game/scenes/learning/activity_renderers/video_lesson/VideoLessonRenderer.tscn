@@ -1,7 +1,11 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scenes/learning/activity_renderers/video_lesson/video_lesson_renderer.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://resources/ui/icons/play.svg" id="90_icon_play"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/play_light.svg" id="2_play"]
+[ext_resource type="Script" path="res://scenes/ui/components/media_track.gd" id="3_track"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/rewind.svg" id="4_rewind"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/captions.svg" id="5_captions"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/next_light.svg" id="6_resume"]
 
 [node name="VideoLessonRenderer" type="VBoxContainer"]
 anchors_preset = 15
@@ -11,11 +15,22 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_type_variation = &"FieldBox"
 script = ExtResource("1_script")
 
 [node name="Stage" type="Control" parent="."]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="Screen" type="PanelContainer" parent="Stage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"MediaStage"
 
 [node name="Video" type="VideoStreamPlayer" parent="Stage"]
 unique_name_in_owner = true
@@ -25,25 +40,41 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 expand = true
+
+[node name="BigPlay" type="Button" parent="Stage"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+icon = ExtResource("2_play")
+text = "ui.media.play"
 
 [node name="SubtitlePanel" type="PanelContainer" parent="Stage"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.1
-anchor_top = 0.78
-anchor_right = 0.9
-anchor_bottom = 0.96
+anchors_preset = 12
+anchor_left = 0.06
+anchor_top = 1.0
+anchor_right = 0.94
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_type_variation = &"VoiceCaption"
+mouse_filter = 2
+theme_type_variation = &"CaptionCard"
 
 [node name="Subtitle" type="Label" parent="Stage/SubtitlePanel"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"VoiceCaptionLabel"
+theme_type_variation = &"CaptionLabel"
 auto_translate_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 3
@@ -52,13 +83,12 @@ autowrap_mode = 3
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.08
-anchor_top = 0.06
-anchor_right = 0.92
-anchor_bottom = 0.94
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ActivityBoard"
 
 [node name="Scroll" type="ScrollContainer" parent="Stage/Overlay"]
 layout_mode = 2
@@ -69,27 +99,30 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+alignment = 1
 
 [node name="Branch" type="PanelContainer" parent="Stage"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.2
-anchor_top = 0.3
-anchor_right = 0.8
-anchor_bottom = 0.7
+anchor_left = 0.1
+anchor_top = 0.15
+anchor_right = 0.9
+anchor_bottom = 0.85
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ActivityBoard"
 
 [node name="Box" type="VBoxContainer" parent="Stage/Branch"]
 layout_mode = 2
+theme_type_variation = &"AnswerBox"
 alignment = 1
 
 [node name="BranchPrompt" type="Label" parent="Stage/Branch/Box"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"HeadingLabel"
+theme_type_variation = &"StemLabel"
 auto_translate_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 3
@@ -97,6 +130,7 @@ autowrap_mode = 3
 [node name="BranchOptions" type="HBoxContainer" parent="Stage/Branch/Box"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 alignment = 1
 
 [node name="Resume" type="PanelContainer" parent="Stage"]
@@ -104,26 +138,30 @@ unique_name_in_owner = true
 visible = false
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.25
-anchor_top = 0.35
-anchor_right = 0.75
-anchor_bottom = 0.65
+anchor_left = 0.12
+anchor_top = 0.2
+anchor_right = 0.88
+anchor_bottom = 0.8
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ActivityBoard"
 
 [node name="Box" type="VBoxContainer" parent="Stage/Resume"]
 layout_mode = 2
+theme_type_variation = &"AnswerBox"
 alignment = 1
 
 [node name="ResumeLabel" type="Label" parent="Stage/Resume/Box"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"StemLabel"
 auto_translate_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="Buttons" type="HBoxContainer" parent="Stage/Resume/Box"]
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 alignment = 1
 
 [node name="ResumeNo" type="Button" parent="Stage/Resume/Box/Buttons"]
@@ -135,44 +173,64 @@ text = "ui.video.restart"
 [node name="ResumeYes" type="Button" parent="Stage/Resume/Box/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
+icon = ExtResource("6_resume")
 text = "ui.video.resume"
 
 [node name="Toast" type="Label" parent="."]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_type_variation = &"MutedLabel"
+theme_type_variation = &"InstructionLabel"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Controls" type="HBoxContainer" parent="."]
+[node name="TrackRow" type="HBoxContainer" parent="."]
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 
-[node name="PlayPause" type="Button" parent="Controls"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SecondaryButton"
-icon = ExtResource("90_icon_play")
-text = "ui.video.play_pause"
-
-[node name="Seek" type="HSlider" parent="Controls"]
+[node name="Seek" type="Range" parent="TrackRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 max_value = 1.0
 step = 1.0
+script = ExtResource("3_track")
 
-[node name="Time" type="Label" parent="Controls"]
+[node name="Time" type="Label" parent="TrackRow"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"InstructionLabel"
 auto_translate_mode = 2
+
+[node name="Controls" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="PlayPause" type="Button" parent="Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+icon = ExtResource("2_play")
+text = "ui.media.play"
+
+[node name="Rewind" type="Button" parent="Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+icon = ExtResource("4_rewind")
+text = "ui.media.back10"
+
+[node name="Spacer" type="Control" parent="Controls"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
 
 [node name="Captions" type="Button" parent="Controls"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SecondaryButton"
 auto_translate_mode = 2
+icon = ExtResource("5_captions")
 
 [node name="Chapters" type="OptionButton" parent="Controls"]
 unique_name_in_owner = true

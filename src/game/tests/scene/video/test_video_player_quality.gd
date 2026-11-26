@@ -61,7 +61,7 @@ func test_subtitles_default_to_ui_language_and_cycle() -> void:
 	h.play_for(1000)
 	var line: Label = h.renderer.get_node("%Subtitle") as Label
 	assert_str(line.text).is_equal("Xin chào các em!")
-	assert_str(String((h.renderer.get_node("%SubtitlePanel") as PanelContainer).theme_type_variation)).is_equal("VoiceCaption")
+	assert_str(String((h.renderer.get_node("%SubtitlePanel") as PanelContainer).theme_type_variation)).is_equal("CaptionCard")
 	await h.renderer.cycle_subtitles()
 	assert_str(h.renderer.subtitle_language).is_equal("en")
 	h.play_for(1000)

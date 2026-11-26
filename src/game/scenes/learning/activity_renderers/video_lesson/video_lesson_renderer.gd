@@ -6,6 +6,10 @@ extends ActivityRendererBase
 ## to the watched frontier under `watched_only`, embedded questions that pause the video and open the F063 question
 ## renderer, branch prompts of an interactive video, a resume prompt, and heartbeats through `progress_reported`.
 ## Display and intents only: completion, watched ratio and grading are the server's (ADR-0016, AGENTS R1/R5).
+## F099 (STUDENT_GAME_UX_LEARNING §5): big main button with icon + words ("Phát" / "Tạm dừng" / "Xem lại"), "Lùi 10
+## giây", a big "Phát" in the middle of the paused picture (tapping the picture plays / pauses), a MediaTrack with
+## chapter notches and question discs (?/✓), the caption card (CaptionCard, speaker written as words), the board look
+## for questions and branches, and the coach line through `coach_hint()`.
 
 const SUSPEND_REASON: StringName = &"video"
 const VARIANT_LOW: String = "ogv_480"
@@ -15,6 +19,21 @@ const STALL_SEC: float = 3.0
 const STALLS_BEFORE_DOWNGRADE: int = 2
 const TOAST_SEC: float = 3.0
 const SEEK_LOCKED_KEY: String = "ui.video.seek_locked"
+## F099: "Lùi 10 giây" (STUDENT_GAME_UX_LEARNING §5.1).
+const REWIND_MS: int = 10000
+const PLAY_KEY: String = "ui.media.play"
+const PAUSE_KEY: String = "ui.media.pause"
+const REPLAY_KEY: String = "ui.media.replay"
+const ICON_PLAY: Texture2D = preload("res://resources/ui/icons/play_light.svg")
+const ICON_PAUSE: Texture2D = preload("res://resources/ui/icons/pause_light.svg")
+const ICON_REPLAY: Texture2D = preload("res://resources/ui/icons/retry_light.svg")
+## F099: coach lines (kind words, no countdown, no comparison — AGENTS R19).
+const COACH_START_KEY: String = "ui.video.coach_start"
+const COACH_WATCH_KEY: String = "ui.video.coach_watch"
+const COACH_WATCH_QUESTIONS_KEY: String = "ui.video.coach_watch_questions"
+const COACH_SEEK_LOCKED_KEY: String = "ui.video.coach_seek_locked"
+const COACH_DONE_KEY: String = "ui.video.coach_done"
+const COACH_BRANCH_KEY: String = "ui.video.coach_branch"
 
 var payload: Dictionary = {}
 var cues: Array[Dictionary] = []
@@ -45,6 +64,8 @@ var _last_pos: int = -1
 var _toast_sec: float = 0.0
 var _shown_at_msec: int = 0
 var _suspended: bool = false
+var _seek_locked_sec: float = 0.0
+var _hint: String = ""
 
 
 func setup(attempt_model: AttemptModel, ctx: RendererContext) -> void:
@@ -66,6 +87,7 @@ func setup(attempt_model: AttemptModel, ctx: RendererContext) -> void:
 	else:
 		await start_at(0)
 	_load_subtitles()
+	_refresh_controls()
 
 
 func _read_payload() -> void:
@@ -135,6 +157,7 @@ func start_at(at_ms: int) -> void:
 	playback.play()
 	reporter.started(at_ms)
 	_last_pos = -1
+	_refresh_controls()
 
 
 func _load_variant() -> bool:
@@ -160,13 +183,17 @@ func _process(delta: float) -> void:
 		_toast_sec -= delta
 		if _toast_sec <= 0.0:
 			(%Toast as Control).visible = false
+	if _seek_locked_sec > 0.0:
+		_seek_locked_sec -= delta
+		if _seek_locked_sec <= 0.0:
+			_refresh_controls()
 	if playback == null or not playback.is_playing():
 		return
 	var pos: int = playback.position_ms()
 	_watch_stall(pos, delta)
 	_render_time(pos)
 	if not subtitle_language.is_empty():
-		var line: String = subtitles.text_at(pos)
+		var line: String = subtitles.caption_at(pos)
 		(%Subtitle as Label).text = line
 		(%SubtitlePanel as Control).visible = not line.is_empty()
 	var report: Dictionary = reporter.advanced(pos, delta)
@@ -201,10 +228,25 @@ func _watch_stall(pos: int, delta: float) -> void:
 
 
 func _render_time(pos: int) -> void:
-	var seek: HSlider = %Seek as HSlider
+	var seek: MediaTrack = %Seek as MediaTrack
 	seek.max_value = maxf(1.0, float(duration_ms if duration_ms > 0 else playback.duration_ms()))
 	seek.set_value_no_signal(float(pos))
+	seek.watched_value = float(reporter.ranges.frontier())
 	(%Time as Label).text = "%s / %s" % [format_time(pos), format_time(int(seek.max_value))]
+	# F099: the chapter button names the chapter now playing (words next to the time).
+	var chapter: int = chapter_at(pos)
+	var chapters_btn: OptionButton = %Chapters as OptionButton
+	if chapter >= 0 and chapter < chapters_btn.item_count and chapters_btn.selected != chapter:
+		chapters_btn.select(chapter)
+
+
+## Index of the chapter playing at `pos` (-1 without chapters).
+func chapter_at(pos: int) -> int:
+	var out: int = -1
+	for i: int in chapters.size():
+		if int(chapters[i].get("start_ms", 0)) <= pos:
+			out = i
+	return out
 
 
 ## The student drags the seek bar or picks a chapter (AC-17): past the watched frontier is refused under watched_only /
@@ -223,6 +265,8 @@ func request_seek(target_ms: int) -> int:
 	ended = false
 	if was_playing:
 		playback.play()
+	_render_time(allowed)
+	_refresh_controls()
 	return allowed
 
 
@@ -231,8 +275,19 @@ func toggle_play() -> void:
 		playback.pause()
 		_report_now()
 	elif not (%Overlay as Control).visible and not (%Branch as Control).visible:
+		if ended:
+			# F099 "Xem lại": back to the start (always allowed — the student only goes backwards).
+			request_seek(0)
 		playback.play()
 		reporter.started(playback.position_ms())
+	_refresh_controls()
+
+
+## F099 "Lùi 10 giây": a backward seek through the usual seek rules.
+func rewind() -> void:
+	if playback == null:
+		return
+	request_seek(maxi(0, playback.position_ms() - REWIND_MS))
 
 
 # ---------- embedded questions (AC-18) ----------
@@ -260,6 +315,7 @@ func open_cue_overlay(cue: Dictionary) -> void:
 	_shown_at_msec = Time.get_ticks_msec()
 	item_shown.emit(int(cue.get("position", 0)))
 	answer_changed.emit(false)
+	_refresh_controls()
 
 
 func _on_response_prepared(position: int, response: Dictionary) -> void:
@@ -277,6 +333,8 @@ func show_result(result: ResponseResultModel) -> void:
 		return
 	if question != null:
 		question.set_locked(true)
+		# F099: the graded tiles look like any question (chosen + right answer coloured, the others resting).
+		question.show_verdict(result)
 	var id: String = String(open_cue.get("cue_id", ""))
 	if not id.is_empty() and not id in answered_cues:
 		answered_cues.append(id)
@@ -294,6 +352,7 @@ func advance() -> bool:
 			return _after_end()
 		playback.play()
 		reporter.started(playback.position_ms())
+		_refresh_controls()
 		return true
 	return not ended
 
@@ -346,6 +405,7 @@ func _on_finished() -> void:
 	ended = true
 	reporter.position_ms = maxi(reporter.position_ms, duration_ms)
 	progress_reported.emit(reporter.paused(maxi(playback.position_ms(), duration_ms)))
+	_refresh_controls()
 	if segment_id.is_empty() and not branches.is_empty() and chosen_branches.size() < branches.size():
 		return
 	_after_end()
@@ -377,13 +437,19 @@ func open_branch_prompt(branch: Dictionary) -> void:
 	var box: Control = %BranchOptions as Control
 	for child: Node in box.get_children():
 		child.queue_free()
+	var i: int = 0
 	for o: Dictionary in _dicts(branch.get("options")):
 		var b: Button = Button.new()
+		# F099: the choices are answer tiles (colour set + number badge, band size).
+		b.theme_type_variation = AnswerBadge.tile_type(i)
+		b.add_child(AnswerBadge.new(i + 1, i))
+		i += 1
 		b.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		b.text = context.text(o.get("label")) if context != null else String(o.get("option_id", ""))
 		b.pressed.connect(choose_branch.bind(String(o.get("option_id", ""))))
 		box.add_child(b)
 	(%Branch as Control).visible = true
+	_refresh_controls()
 
 
 func choose_branch(option_id: String) -> void:
@@ -398,6 +464,7 @@ func _branch_chosen(next_segment: String) -> void:
 		chosen_branches.append(String(open_branch.get("branch_point_id", "")))
 	open_branch = {}
 	(%Branch as Control).visible = false
+	_refresh_controls()
 	segment_id = next_segment
 	ended = false
 	await start_at(0)
@@ -453,7 +520,9 @@ func _load_subtitles() -> void:
 func set_subtitle_language(language: String) -> void:
 	subtitle_language = language
 	(%SubtitlePanel as Control).visible = false
-	(%Captions as Button).text = tr("ui.video.subtitles") + (" · " + language.to_upper() if not language.is_empty() else " · —")
+	# F099: the caption state is written in words (language code or "Tắt"), never shown by colour only.
+	(%Captions as Button).text = tr("ui.video.subtitles") + (" · " + language.to_upper() if not language.is_empty() \
+			else " · " + tr("ui.media.off"))
 	if language.is_empty():
 		return
 	var text: String = String(_subtitle_files.get(language, ""))
@@ -485,11 +554,18 @@ func _build_controls() -> void:
 	if not chapters_btn.item_selected.is_connected(_on_chapter_selected):
 		chapters_btn.item_selected.connect(_on_chapter_selected)
 		(%PlayPause as Button).pressed.connect(toggle_play)
+		(%BigPlay as Button).pressed.connect(toggle_play)
+		(%Rewind as Button).pressed.connect(rewind)
 		(%Captions as Button).pressed.connect(cycle_subtitles)
-		(%Seek as HSlider).drag_ended.connect(func(_changed: bool) -> void: request_seek(int((%Seek as HSlider).value)))
+		(%Seek as MediaTrack).seek_released.connect(func(ms: float) -> void: request_seek(int(ms)))
+		(%Screen as Control).gui_input.connect(_on_screen_input)
 		(%ResumeYes as Button).pressed.connect(func() -> void: start_at(attempt.resume_position_ms))
 		(%ResumeNo as Button).pressed.connect(func() -> void: start_at(0))
 	(%Captions as Button).visible = not subtitle_tracks.is_empty()
+	var marks: PackedFloat32Array = []
+	for ch: Dictionary in chapters:
+		marks.append(float(ch.get("start_ms", 0)))
+	(%Seek as MediaTrack).chapters = marks
 
 
 func _on_chapter_selected(index: int) -> void:
@@ -501,3 +577,54 @@ func _toast(key: String) -> void:
 	(%Toast as Label).text = key
 	(%Toast as Control).visible = true
 	_toast_sec = TOAST_SEC
+	if key == SEEK_LOCKED_KEY:
+		_seek_locked_sec = TOAST_SEC
+		_refresh_controls()
+
+
+## Tapping the picture plays / pauses (F099).
+func _on_screen_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed \
+			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		toggle_play()
+
+
+## F099: the main button, the big play button, the question discs and the coach line follow the player state.
+func _refresh_controls() -> void:
+	var playing: bool = playback != null and playback.is_playing()
+	var blocked: bool = (%Overlay as Control).visible or (%Branch as Control).visible or (%Resume as Control).visible
+	var main: Button = %PlayPause as Button
+	main.text = PAUSE_KEY if playing else (REPLAY_KEY if ended else PLAY_KEY)
+	main.icon = ICON_PAUSE if playing else (ICON_REPLAY if ended else ICON_PLAY)
+	# A question, a branch or the resume prompt takes the whole stage: the bar and the buttons step aside.
+	(get_node("TrackRow") as Control).visible = not (%Overlay as Control).visible and not (%Branch as Control).visible
+	(get_node("Controls") as Control).visible = (get_node("TrackRow") as Control).visible
+	main.disabled = blocked
+	(%Rewind as Button).disabled = blocked
+	var big: Button = %BigPlay as Button
+	big.visible = not playing and not blocked
+	big.text = REPLAY_KEY if ended else PLAY_KEY
+	big.icon = ICON_REPLAY if ended else ICON_PLAY
+	var marks: Array[Dictionary] = []
+	for c: Dictionary in cues:
+		var id: String = String(c.get("cue_id", ""))
+		marks.append({"at": float(c.get("at_ms", 0)), "done": id in answered_cues or not id in pending_cues})
+	(%Seek as MediaTrack).markers = marks
+	var hint: String = coach_hint()
+	if hint != _hint:
+		_hint = hint
+		coach_hint_changed.emit()
+
+
+func coach_hint() -> String:
+	if (%Branch as Control).visible:
+		return COACH_BRANCH_KEY
+	if (%Overlay as Control).visible or (%Resume as Control).visible:
+		return ""
+	if _seek_locked_sec > 0.0:
+		return COACH_SEEK_LOCKED_KEY
+	if ended:
+		return COACH_DONE_KEY
+	if playback != null and playback.is_playing():
+		return COACH_WATCH_QUESTIONS_KEY if not cues.is_empty() else COACH_WATCH_KEY
+	return COACH_START_KEY

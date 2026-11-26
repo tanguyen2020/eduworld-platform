@@ -90,6 +90,18 @@ msgstr "This activity needs a newer version of the game. Please ask a teacher or
 msgid "ui.activity_player.waiting"
 msgstr "Sending…"
 
+msgid "ui.audio.coach_again"
+msgstr "Press Listen again to hear it once more!"
+
+msgid "ui.audio.coach_listen"
+msgstr "Listen carefully!"
+
+msgid "ui.audio.coach_plays_done"
+msgstr "You have used all your listens. Let us answer the questions!"
+
+msgid "ui.audio.coach_start"
+msgstr "Press Listen to start!"
+
 msgid "ui.audio.not_ready"
 msgstr "The listening lesson is still being prepared. Please come back later."
 
@@ -984,6 +996,27 @@ msgstr "If you got it wrong several times, wait a few minutes and try again."
 msgid "ui.login.wordmark"
 msgstr "EduWorld"
 
+msgid "ui.media.back10"
+msgstr "Back 10 s"
+
+msgid "ui.media.listen"
+msgstr "Listen"
+
+msgid "ui.media.listen_again"
+msgstr "Listen again"
+
+msgid "ui.media.off"
+msgstr "Off"
+
+msgid "ui.media.pause"
+msgstr "Pause"
+
+msgid "ui.media.play"
+msgstr "Play"
+
+msgid "ui.media.replay"
+msgstr "Watch again"
+
 msgid "ui.minigame.completed"
 msgstr "You completed the game!"
 
@@ -1302,11 +1335,29 @@ msgstr "Settings"
 msgid "ui.simulation.checking"
 msgstr "Checking the result…"
 
+msgid "ui.simulation.coach_checking"
+msgstr "Mây is checking the result…"
+
+msgid "ui.simulation.coach_not_reached"
+msgstr "Not yet. Let us try again!"
+
+msgid "ui.simulation.coach_reached"
+msgstr "You did it!"
+
+msgid "ui.simulation.coach_runs_done"
+msgstr "No tries left. Let us answer the questions!"
+
+msgid "ui.simulation.coach_start"
+msgstr "Follow the steps, then press Release!"
+
 msgid "ui.simulation.goal_not_reached"
 msgstr "Not yet — try again."
 
 msgid "ui.simulation.goal_reached"
 msgstr "Goal reached!"
+
+msgid "ui.simulation.goals"
+msgstr "Goals"
 
 msgid "ui.simulation.left"
 msgstr "Left"
@@ -1335,8 +1386,32 @@ msgstr "Try again"
 msgid "ui.simulation.right"
 msgstr "Right"
 
+msgid "ui.simulation.runs"
+msgstr "Tries: {used}/{max}"
+
 msgid "ui.simulation.runs_exhausted"
 msgstr "You have used all your runs. Answer the conclusion questions."
+
+msgid "ui.simulation.steps"
+msgstr "Steps"
+
+msgid "ui.video.coach_branch"
+msgstr "How should the story go on?"
+
+msgid "ui.video.coach_done"
+msgstr "You watched it all, great job!"
+
+msgid "ui.video.coach_seek_locked"
+msgstr "Watch up to here first, then you can skip ahead!"
+
+msgid "ui.video.coach_start"
+msgstr "Press Play to watch the video!"
+
+msgid "ui.video.coach_watch"
+msgstr "Watch carefully!"
+
+msgid "ui.video.coach_watch_questions"
+msgstr "Watch carefully! A ? on the bar marks a question."
 
 msgid "ui.video.not_ready"
 msgstr "The video is still being prepared. Please come back later."

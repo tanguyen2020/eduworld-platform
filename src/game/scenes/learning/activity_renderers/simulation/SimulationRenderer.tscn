@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/learning/activity_renderers/simulation/simulation_renderer.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/learning/simulation/SimulationHost.tscn" id="2_host"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/play_light.svg" id="3_release"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/rotate_left.svg" id="4_retry"]
 
 [node name="SimulationRenderer" type="HBoxContainer"]
 anchors_preset = 15
@@ -11,12 +13,14 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_type_variation = &"ToolbarBox"
 script = ExtResource("1_script")
 
 [node name="Main" type="VBoxContainer" parent="."]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 3.0
+size_flags_stretch_ratio = 2.4
+theme_type_variation = &"FieldBox"
 
 [node name="Stage" type="Control" parent="Main"]
 layout_mode = 2
@@ -50,22 +54,23 @@ autowrap_mode = 3
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.04
-anchor_top = 0.04
-anchor_right = 0.96
-anchor_bottom = 0.96
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ActivityBoard"
 
 [node name="Scroll" type="ScrollContainer" parent="Main/Stage/Overlay"]
 layout_mode = 2
+horizontal_scroll_mode = 0
 
 [node name="OverlayContent" type="VBoxContainer" parent="Main/Stage/Overlay/Scroll"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+alignment = 1
 
 [node name="Status" type="Label" parent="Main"]
 unique_name_in_owner = true
@@ -73,27 +78,31 @@ visible = false
 layout_mode = 2
 theme_type_variation = &"HeadingLabel"
 horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="Controls" type="HBoxContainer" parent="Main"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 alignment = 1
 
 [node name="Retry" type="Button" parent="Main/Controls"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SecondaryButton"
+icon = ExtResource("4_retry")
 text = "ui.simulation.retry"
 
 [node name="Release" type="Button" parent="Main/Controls"]
 unique_name_in_owner = true
 layout_mode = 2
+icon = ExtResource("3_release")
 text = "ui.simulation.release"
 
 [node name="Runs" type="Label" parent="Main/Controls"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"MutedLabel"
+theme_type_variation = &"InstructionLabel"
 auto_translate_mode = 2
 
 [node name="Questions" type="Button" parent="Main/Controls"]
@@ -102,14 +111,32 @@ layout_mode = 2
 theme_type_variation = &"SecondaryButton"
 text = "ui.simulation.questions"
 
-[node name="Side" type="VBoxContainer" parent="."]
+[node name="Side" type="PanelContainer" parent="."]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_type_variation = &"QuestionCard"
 
-[node name="Goals" type="VBoxContainer" parent="Side"]
+[node name="SideBox" type="VBoxContainer" parent="Side"]
+layout_mode = 2
+theme_type_variation = &"FieldBox"
+
+[node name="GoalsTitle" type="Label" parent="Side/SideBox"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.simulation.goals"
+autowrap_mode = 3
+
+[node name="Goals" type="VBoxContainer" parent="Side/SideBox"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Steps" type="VBoxContainer" parent="Side"]
+[node name="StepsTitle" type="Label" parent="Side/SideBox"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.simulation.steps"
+autowrap_mode = 3
+
+[node name="Steps" type="VBoxContainer" parent="Side/SideBox"]
 unique_name_in_owner = true
 layout_mode = 2

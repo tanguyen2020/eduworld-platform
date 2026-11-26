@@ -1,6 +1,10 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/learning/activity_renderers/audio_lesson/audio_lesson_renderer.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/play_light.svg" id="2_play"]
+[ext_resource type="Script" path="res://scenes/ui/components/media_track.gd" id="3_track"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/rewind.svg" id="4_rewind"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/sound_on.svg" id="5_sound"]
 
 [node name="AudioLessonRenderer" type="VBoxContainer"]
 anchors_preset = 15
@@ -10,6 +14,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_type_variation = &"FieldBox"
 script = ExtResource("1_script")
 
 [node name="Player" type="AudioStreamPlayer" parent="."]
@@ -17,6 +22,7 @@ unique_name_in_owner = true
 
 [node name="Header" type="HBoxContainer" parent="."]
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 
 [node name="Plays" type="Label" parent="Header"]
 unique_name_in_owner = true
@@ -30,12 +36,45 @@ text = "ui.audio.plays_left"
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_type_variation = &"MutedLabel"
+theme_type_variation = &"InstructionLabel"
 text = "ui.audio.plays_exhausted"
 
 [node name="Stage" type="Control" parent="."]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="AudioCard" type="PanelContainer" parent="Stage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"QuestionCard"
+
+[node name="Row" type="HBoxContainer" parent="Stage/AudioCard"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Stage/AudioCard/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("5_sound")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SegmentTitle" type="Label" parent="Stage/AudioCard/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"StemLabel"
+auto_translate_mode = 2
 
 [node name="TranscriptPanel" type="PanelContainer" parent="Stage"]
 unique_name_in_owner = true
@@ -46,6 +85,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"QuestionCard"
 
 [node name="Scroll" type="ScrollContainer" parent="Stage/TranscriptPanel"]
 layout_mode = 2
@@ -54,6 +94,7 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"CaptionLabel"
 auto_translate_mode = 2
 autowrap_mode = 3
 
@@ -61,49 +102,72 @@ autowrap_mode = 3
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.04
-anchor_top = 0.04
-anchor_right = 0.96
-anchor_bottom = 0.96
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ActivityBoard"
 
 [node name="Scroll" type="ScrollContainer" parent="Stage/Overlay"]
 layout_mode = 2
+horizontal_scroll_mode = 0
 
 [node name="OverlayContent" type="VBoxContainer" parent="Stage/Overlay/Scroll"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+alignment = 1
 
 [node name="Toast" type="Label" parent="."]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_type_variation = &"MutedLabel"
+theme_type_variation = &"InstructionLabel"
 horizontal_alignment = 1
+autowrap_mode = 3
 
-[node name="Controls" type="HBoxContainer" parent="."]
+[node name="TrackRow" type="HBoxContainer" parent="."]
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 
-[node name="Play" type="Button" parent="Controls"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "ui.audio.play"
-
-[node name="Seek" type="HSlider" parent="Controls"]
+[node name="Seek" type="Range" parent="TrackRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 max_value = 1.0
+step = 1.0
+script = ExtResource("3_track")
 
-[node name="Time" type="Label" parent="Controls"]
+[node name="Time" type="Label" parent="TrackRow"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"InstructionLabel"
 auto_translate_mode = 2
+
+[node name="Controls" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="Play" type="Button" parent="Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+icon = ExtResource("2_play")
+text = "ui.media.listen"
+
+[node name="Rewind" type="Button" parent="Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+icon = ExtResource("4_rewind")
+text = "ui.media.back10"
+
+[node name="Spacer" type="Control" parent="Controls"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
 
 [node name="Speed" type="Button" parent="Controls"]
 unique_name_in_owner = true

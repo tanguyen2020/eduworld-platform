@@ -6,9 +6,19 @@ extends ActivityRendererBase
 ## (`kind = simulation_question`) through the F063 question renderers. A missing template shows
 ## `ui.activity_player.update_required` and emits `template_load_failed` (telemetry by the host), never a crash.
 ## Display and intents only: the server checker decides goals, score and completion (ADR-0052, AGENTS R1/R5).
+## F099 (STUDENT_GAME_UX_LEARNING §8): the side card lists the goals (box ticked only from a verified result, words next
+## to it) and the numbered steps; "Thả" and "Làm lại" carry an icon and words; the runs read "Lượt thử: n/m"; the
+## conclusion question uses the board look and the graded tiles; the coach line comes from `coach_hint()`.
 
 ## The template of the render cannot run in this client (`update_required`, `pack_mismatch`).
 signal template_load_failed(reason: String)
+
+const RUNS_KEY: String = "ui.simulation.runs"
+const COACH_START_KEY: String = "ui.simulation.coach_start"
+const COACH_CHECKING_KEY: String = "ui.simulation.coach_checking"
+const COACH_REACHED_KEY: String = "ui.simulation.coach_reached"
+const COACH_NOT_REACHED_KEY: String = "ui.simulation.coach_not_reached"
+const COACH_RUNS_DONE_KEY: String = "ui.simulation.coach_runs_done"
 
 var payload: Dictionary = {}
 var goals: Array[Dictionary] = []
@@ -25,6 +35,7 @@ var open_position: int = 0
 var pending_run: Dictionary = {}
 var _goal_boxes: Dictionary = {}
 var _shown_at_msec: int = 0
+var _hint: String = ""
 
 
 func setup(attempt_model: AttemptModel, ctx: RendererContext) -> void:
@@ -61,7 +72,10 @@ func _build_goals() -> void:
 	_goal_boxes.clear()
 	for g: Dictionary in goals:
 		var cb: CheckBox = CheckBox.new()
-		cb.disabled = true
+		# F099: read-only but not greyed out — the box (✓ / empty) and the words stay readable.
+		cb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cb.focus_mode = Control.FOCUS_NONE
+		cb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		cb.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		cb.text = context.text(g.get("description")) if context != null else String(g.get("goal_id", ""))
 		box.add_child(cb)
@@ -72,11 +86,14 @@ func _build_steps() -> void:
 	var box: Control = %Steps as Control
 	for c: Node in box.get_children():
 		c.queue_free()
+	var n: int = 0
 	for s: Dictionary in VideoLessonRenderer._dicts(payload.get("steps")):
+		n += 1
 		var l: Label = Label.new()
 		l.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.text = "• " + (context.text(s.get("instruction")) if context != null else String(s.get("step_id", "")))
+		# F099: numbered steps (1, 2, 3…) instead of bullets.
+		l.text = "%d. %s" % [n, context.text(s.get("instruction")) if context != null else String(s.get("step_id", ""))]
 		box.add_child(l)
 
 
@@ -152,7 +169,7 @@ func _refresh() -> void:
 	release_btn.disabled = locked_runs
 	(%Retry as Button).disabled = locked_runs
 	(%Runs as Label).visible = max_runs >= 0
-	(%Runs as Label).text = "%d / %d" % [runs_used, max_runs]
+	(%Runs as Label).text = tr(RUNS_KEY).format({"used": runs_used, "max": max_runs})
 	(%Questions as Button).visible = not questions.is_empty() and _unanswered() > 0
 	if locked_runs and (%Status as Label).text != "ui.simulation.runs_exhausted" and not goal_reached:
 		_status("ui.simulation.runs_exhausted")
@@ -162,6 +179,31 @@ func _status(key: String) -> void:
 	var l: Label = %Status as Label
 	l.text = key
 	l.visible = not key.is_empty()
+	_refresh_hint()
+
+
+## F099: the coach line follows the run (guide, checking, reached, not reached, no runs left).
+func coach_hint() -> String:
+	if (%Overlay as Control).visible:
+		return ""
+	var status: String = (%Status as Label).text if (%Status as Label).visible else ""
+	match status:
+		"ui.simulation.checking":
+			return COACH_CHECKING_KEY
+		"ui.simulation.goal_reached":
+			return COACH_REACHED_KEY
+		"ui.simulation.runs_exhausted":
+			return COACH_RUNS_DONE_KEY
+		"ui.simulation.goal_not_reached", "ui.simulation.log_invalid":
+			return COACH_NOT_REACHED_KEY
+	return COACH_START_KEY
+
+
+func _refresh_hint() -> void:
+	var hint: String = coach_hint()
+	if hint != _hint:
+		_hint = hint
+		coach_hint_changed.emit()
 
 
 # ---------- conclusion questions ----------
@@ -200,6 +242,7 @@ func open_next_question() -> bool:
 		_shown_at_msec = Time.get_ticks_msec()
 		item_shown.emit(position)
 		answer_changed.emit(false)
+		_refresh_hint()
 		return true
 	finish_requested.emit()
 	return false
@@ -214,9 +257,11 @@ func check() -> bool:
 	return question != null and (%Overlay as Control).visible and question.commit()
 
 
-func show_result(_result: ResponseResultModel) -> void:
+func show_result(result: ResponseResultModel) -> void:
 	if question != null:
 		question.set_locked(true)
+		# F099: the graded tiles look like any question (chosen + right answer coloured, the others resting).
+		question.show_verdict(result)
 	if open_position > 0 and not open_position in answered:
 		answered.append(open_position)
 
@@ -227,6 +272,7 @@ func advance() -> bool:
 	(%Overlay as Control).visible = false
 	open_position = 0
 	_refresh()
+	_refresh_hint()
 	if _unanswered() > 0:
 		return open_next_question()
 	finish_requested.emit()

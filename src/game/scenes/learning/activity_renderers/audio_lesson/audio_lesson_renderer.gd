@@ -6,11 +6,27 @@ extends ActivityRendererBase
 ## renderers, heartbeats through `progress_reported`. A new play is asked to the server first (`play_started`) and
 ## starts only once accepted; at the limit the play button greys out and answering stays possible (F066-AC-19). No
 ## recording node, no microphone (F066-AC-20). Display and intents only: plays, completion and grading are the server's.
+## F099 (STUDENT_GAME_UX_LEARNING §6): a listening card (speaker icon + segment title), the main button with icon + words
+## ("Nghe" / "Tạm dừng" / "Nghe lại" — a new play is still asked to the server), "Lùi 10 giây" inside the current play,
+## a MediaTrack with segment notches and question discs (?/✓), the board look for questions and the coach line through
+## `coach_hint()`.
 
 const SUSPEND_REASON: StringName = &"audio"
 const AUDIO_VARIANT: String = "ogg"
 const TOAST_SEC: float = 3.0
 const SPEEDS: Array[float] = [1.0, 0.75]
+## F099 (STUDENT_GAME_UX_LEARNING §6.1).
+const REWIND_MS: int = 10000
+const LISTEN_KEY: String = "ui.media.listen"
+const PAUSE_KEY: String = "ui.media.pause"
+const LISTEN_AGAIN_KEY: String = "ui.media.listen_again"
+const ICON_PLAY: Texture2D = preload("res://resources/ui/icons/play_light.svg")
+const ICON_PAUSE: Texture2D = preload("res://resources/ui/icons/pause_light.svg")
+const ICON_REPLAY: Texture2D = preload("res://resources/ui/icons/retry_light.svg")
+const COACH_START_KEY: String = "ui.audio.coach_start"
+const COACH_LISTEN_KEY: String = "ui.audio.coach_listen"
+const COACH_PLAYS_DONE_KEY: String = "ui.audio.coach_plays_done"
+const COACH_AGAIN_KEY: String = "ui.audio.coach_again"
 
 var payload: Dictionary = {}
 ## Questions `{cue_id, position, at_ms?}` by position (timed ones first, then those asked after the end).
@@ -30,6 +46,7 @@ var _speed_index: int = 0
 var _toast_sec: float = 0.0
 var _shown_at_msec: int = 0
 var _suspended: bool = false
+var _hint: String = ""
 
 
 func setup(attempt_model: AttemptModel, ctx: RendererContext) -> void:
@@ -122,6 +139,7 @@ func press_play() -> void:
 		reporter.started(playback.position_ms())
 		_refresh()
 		return
+	_refresh()
 	if plays.exhausted:
 		_toast("ui.audio.plays_exhausted")
 		_refresh()
@@ -229,6 +247,7 @@ func open_question_overlay(q: Dictionary) -> void:
 		question.response_prepared.connect(_on_response_prepared)
 	(%Overlay as Control).visible = true
 	_shown_at_msec = Time.get_ticks_msec()
+	_refresh()
 	item_shown.emit(position)
 	answer_changed.emit(false)
 	_refresh()
@@ -243,9 +262,11 @@ func check() -> bool:
 	return question != null and (%Overlay as Control).visible and question.commit()
 
 
-func show_result(_result: ResponseResultModel) -> void:
+func show_result(result: ResponseResultModel) -> void:
 	if question != null:
 		question.set_locked(true)
+		# F099: the graded tiles look like any question (chosen + right answer coloured, the others resting).
+		question.show_verdict(result)
 	var position: int = int(open_question.get("position", 0))
 	if position > 0 and not position in answered:
 		answered.append(position)
@@ -336,6 +357,7 @@ func toggle_transcript() -> void:
 	var panel: Control = %TranscriptPanel as Control
 	if panel.visible:
 		panel.visible = false
+		_refresh()
 		return
 	if not transcript_available():
 		return
@@ -343,6 +365,7 @@ func toggle_transcript() -> void:
 		transcript_text = (await context.media.bytes(String(transcript_entry(_media()).get("url", "")))).get_string_from_utf8()
 	(%TranscriptText as Label).text = transcript_text
 	panel.visible = true
+	_refresh()
 
 
 # ---------- controls ----------
@@ -353,7 +376,14 @@ func _bind_controls() -> void:
 		play.pressed.connect(press_play)
 		(%Speed as Button).pressed.connect(toggle_speed)
 		(%Transcript as Button).pressed.connect(toggle_transcript)
-		(%Seek as HSlider).drag_ended.connect(func(_changed: bool) -> void: _seek_to(int((%Seek as HSlider).value)))
+		(%Rewind as Button).pressed.connect(rewind)
+		(%Seek as MediaTrack).seek_released.connect(func(ms: float) -> void: _seek_to(int(ms)))
+		var icon: TextureRect = %Icon as TextureRect
+		icon.custom_minimum_size = Vector2.ONE * float(UiTokens.SIZE_LAYOUT_120)
+	var marks: PackedFloat32Array = []
+	for seg: Dictionary in VideoLessonRenderer._dicts(payload.get("segments")):
+		marks.append(float(seg.get("start_ms", 0)))
+	(%Seek as MediaTrack).chapters = marks
 
 
 ## Seeking inside the current play is free (no plays counted, research R1).
@@ -366,6 +396,13 @@ func _seek_to(ms: int) -> void:
 	reporter.started(ms)
 	if was:
 		playback.play()
+	_refresh()
+
+
+## F099 "Lùi 10 giây": back inside the current play (free, no play counted).
+func rewind() -> void:
+	if playback != null:
+		_seek_to(maxi(0, playback.position_ms() - REWIND_MS))
 
 
 func _refresh() -> void:
@@ -383,13 +420,61 @@ func _refresh() -> void:
 	(%Transcript as Button).visible = transcript_available()
 	if playback != null:
 		_render_time(playback.position_ms())
+	_refresh_media(play)
+
+
+## F099: main button words + icon, the listening card, question discs and the coach line.
+func _refresh_media(play: Button) -> void:
+	var playing: bool = playback != null and playback.is_playing()
+	var again: bool = playback != null and plays.plays_used > 0 and plays.needs_new_play(playback.position_ms())
+	play.text = PAUSE_KEY if playing else (LISTEN_AGAIN_KEY if again else LISTEN_KEY)
+	play.icon = ICON_PAUSE if playing else (ICON_REPLAY if again else ICON_PLAY)
+	var overlay: bool = (%Overlay as Control).visible
+	(%Rewind as Button).visible = not overlay and not plays.ended
+	(get_node("TrackRow") as Control).visible = not overlay
+	(get_node("Controls") as Control).visible = not overlay
+	(%AudioCard as Control).visible = not overlay and not (%TranscriptPanel as Control).visible
+	(%SegmentTitle as Label).text = _segment_title(playback.position_ms() if playback != null else 0)
+	var marks: Array[Dictionary] = []
+	for q: Dictionary in questions:
+		if q.has("at_ms"):
+			marks.append({"at": float(q.get("at_ms", 0)), "done": int(q.get("position", 0)) in answered})
+	(%Seek as MediaTrack).markers = marks
+	var hint: String = coach_hint()
+	if hint != _hint:
+		_hint = hint
+		coach_hint_changed.emit()
+
+
+## Title of the segment at `pos` (content language), the activity title when the audio has no segment.
+func _segment_title(pos: int) -> String:
+	var title: String = ""
+	for seg: Dictionary in VideoLessonRenderer._dicts(payload.get("segments")):
+		if int(seg.get("start_ms", 0)) <= pos and context != null:
+			title = context.text(seg.get("title"))
+	if title.is_empty() and attempt != null and attempt.render != null:
+		title = attempt.render.title
+	return title
+
+
+func coach_hint() -> String:
+	if (%Overlay as Control).visible:
+		return ""
+	if playback != null and playback.is_playing():
+		return COACH_LISTEN_KEY
+	if plays.exhausted and playback != null and plays.needs_new_play(playback.position_ms()):
+		return COACH_PLAYS_DONE_KEY
+	if plays.plays_used > 0 and playback != null and plays.needs_new_play(playback.position_ms()):
+		return COACH_AGAIN_KEY
+	return COACH_START_KEY
 
 
 func _render_time(pos: int) -> void:
-	var seek: HSlider = %Seek as HSlider
+	var seek: MediaTrack = %Seek as MediaTrack
 	seek.max_value = maxf(1.0, float(duration_ms if duration_ms > 0 else playback.duration_ms()))
 	seek.set_value_no_signal(float(pos))
 	seek.editable = not plays.ended
+	seek.watched_value = float(reporter.ranges.frontier())
 	(%Time as Label).text = "%s / %s" % [VideoLessonRenderer.format_time(pos), VideoLessonRenderer.format_time(int(seek.max_value))]
 
 
