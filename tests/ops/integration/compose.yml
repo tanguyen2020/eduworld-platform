@@ -31,7 +31,9 @@ services:
     image: ew-f130/postgres-patroni:test
     user: "0"                                     # docker-entrypoint switches to postgres (uid 999)
     command: ["docker-entrypoint.sh", "postgres", "-c", "wal_level=replica", "-c", "archive_mode=on", "-c", "archive_timeout=5",
-      "-c", "archive_command=pgbackrest --stanza=eduworld archive-push %p", "-c", "max_wal_senders=4", "-c", "unix_socket_directories=/var/run/postgresql"]
+      "-c", "max_wal_senders=4", "-c", "unix_socket_directories=/var/run/postgresql"]
+    # archive_command is set with ALTER SYSTEM by run.sh (a command-line value would win over ALTER SYSTEM and the
+    # "archiving stuck" check could not break it), same value as deploy/postgres/patroni.yml.
     environment:
       POSTGRES_PASSWORD: it-only-superuser       # TEST VALUE of a throwaway container
       PGDATA: /var/lib/postgresql/data/pgdata

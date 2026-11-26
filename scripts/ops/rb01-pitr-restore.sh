@@ -111,6 +111,7 @@ SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'db' AND
 SELECT format('ALTER DATABASE %I RENAME TO %I', :'db', :'old') \gexec
 SELECT format('ALTER DATABASE %I RENAME TO %I', :'new', :'db') \gexec
 SELECT format('ALTER DATABASE %I WITH ALLOW_CONNECTIONS true', :'db') \gexec
+SELECT format('ALTER DATABASE %I WITH ALLOW_CONNECTIONS true', :'old') \gexec
 SQL
     rm -f "$pgpass"
     audit rb01_swap_finished db="$DB" kept_as="$old"

@@ -37,6 +37,7 @@ load_secret TGT_SECRET_KEY "${EW_TARGET_SECRET_KEY_FILE:?EW_TARGET_SECRET_KEY_FI
 rclone_s3_remote off "${EW_BACKUP_OFFSITE_URL:?}" "${EW_BACKUP_OFFSITE_REGION:-us-east-1}" OFF_ACCESS_KEY OFF_SECRET_KEY
 rclone_crypt_remote offcrypt "off:${EW_BACKUP_OFFSITE_BUCKET:?}/${EW_BACKUP_OFFSITE_PREFIX:-object-storage}" OFF_CRYPT_PASSWORD
 rclone_s3_remote tgt "${EW_TARGET_URL:?EW_TARGET_URL required}" "${EW_TARGET_REGION:-us-east-1}" TGT_ACCESS_KEY TGT_SECRET_KEY
+export RCLONE_CONFIG_TGT_NO_CHECK_BUCKET=false   # the new cluster has no bucket yet: `rclone mkdir` must create them
 if [ -n "${EW_REPLICA_URL:-}" ]; then
   load_secret REPLICA_ACCESS_KEY "${EW_REPLICA_ACCESS_KEY_FILE:?}"
   load_secret REPLICA_SECRET_KEY "${EW_REPLICA_SECRET_KEY_FILE:?}"

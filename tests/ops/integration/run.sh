@@ -99,6 +99,8 @@ cp_in "$tmp/pgbackrest-repo.conf" backup-tools /etc/pgbackrest/pgbackrest.conf
 cp_in "$root/deploy/ops-scheduler/socket-proxy.cfg" docker-api-proxy /usr/local/etc/haproxy/haproxy.cfg
 "${DC[@]}" start >/dev/null || exit 1
 for _ in $(seq 1 60); do psql_pg -c 'SELECT 1' >/dev/null 2>&1 && break; sleep 2; done
+ARCHIVE_ON="ALTER SYSTEM SET archive_command = 'pgbackrest --stanza=eduworld archive-push %p'"
+psql_pg -d postgres -c "$ARCHIVE_ON" -c "SELECT pg_reload_conf()" >/dev/null || ko "set archive_command"
 
 echo "== buckets and schema =="
 bt bash -c 'export RCLONE_CONFIG_R_TYPE=s3 RCLONE_CONFIG_R_PROVIDER=Other RCLONE_CONFIG_R_ENDPOINT=http://s3-repo:4566 RCLONE_CONFIG_R_ACCESS_KEY_ID=test RCLONE_CONFIG_R_SECRET_ACCESS_KEY=test RCLONE_CONFIG_R_FORCE_PATH_STYLE=true
@@ -134,14 +136,14 @@ check "pg_backup.sh diff → status 1 (pgbackrest check: WAL archived)" bt pg_ba
 check "pgbackrest info shows full + diff, repo encrypted" bt bash -c '. /opt/eduworld/backup/lib-backup.sh; load_repo_write_credentials; i=$(pgbackrest --stanza=eduworld --output=json info); echo "$i" | jq -e "[.[0].backup[].type] | index(\"full\") != null and index(\"diff\") != null" >/dev/null && echo "$i" | jq -e ".[0].cipher == \"aes-256-cbc\"" >/dev/null'
 check "WAL archive reachable from the repo (archive min/max present)" bt bash -c '. /opt/eduworld/backup/lib-backup.sh; load_repo_write_credentials; pgbackrest --stanza=eduworld --output=json info | jq -e ".[0].archive[0].max != null" >/dev/null'
 check "pg_logical_dump.sh → one encrypted pg_dump per module database" bt env EW_BACKUP_DATABASES="eduworld_identity eduworld_learning eduworld_game eduworld_competition eduworld_chat" PGBACKREST_REPO1_S3_REGION=us-east-1 pg_logical_dump.sh
-check "logical dumps stored under logical/<database>/<day>.dump" bt bash -c 'export RCLONE_CONFIG_R_TYPE=s3 RCLONE_CONFIG_R_PROVIDER=Other RCLONE_CONFIG_R_ENDPOINT=http://s3-repo:4566 RCLONE_CONFIG_R_ACCESS_KEY_ID=test RCLONE_CONFIG_R_SECRET_ACCESS_KEY=test RCLONE_CONFIG_R_FORCE_PATH_STYLE=true; [ "$(rclone lsf -R r:eduworld-backups/logical | grep -c "\.dump$")" = 5 ]'
+check "logical dumps stored under logical/<database>/<day>.dump" bt bash -c 'export RCLONE_CONFIG_R_TYPE=s3 RCLONE_CONFIG_R_PROVIDER=Other RCLONE_CONFIG_R_ENDPOINT=http://s3-repo:4566 RCLONE_CONFIG_R_ACCESS_KEY_ID=test RCLONE_CONFIG_R_SECRET_ACCESS_KEY=test RCLONE_CONFIG_R_FORCE_PATH_STYLE=true; [ "$(rclone lsf -R r:eduworld-backups/logical | grep -cE "\.dump(\.bin)?$")" = 5 ]'
 
 echo "== AC-13: WAL archiving stuck → check fails, metric status 0 =="
-psql_pg -d postgres -c "ALTER SYSTEM SET archive_command = 'false'; SELECT pg_reload_conf();" >/dev/null
+psql_pg -d postgres -c "ALTER SYSTEM SET archive_command = 'false'" -c "SELECT pg_reload_conf()" >/dev/null
 sleep 1
 if bt env PGBACKREST_ARCHIVE_TIMEOUT=10 pg_check.sh >/dev/null 2>&1; then ko "pg_check.sh fails while archiving is stuck"; else ok "pg_check.sh fails while archiving is stuck"; fi
 check "metric check status 0 while archiving is stuck" bt grep -q 'eduworld_backup_last_status{target="postgres",type="check"} 0' /var/lib/node_exporter/textfile/eduworld_backup_postgres_check.prom
-psql_pg -d postgres -c "ALTER SYSTEM RESET archive_command; SELECT pg_reload_conf();" >/dev/null
+psql_pg -d postgres -c "$ARCHIVE_ON" -c "SELECT pg_reload_conf()" >/dev/null
 sleep 1
 check "pg_check.sh recovers once archiving works again" bt pg_check.sh
 
@@ -174,7 +176,7 @@ check "other module databases untouched by the module restore" test "$(psql_pg -
 
 echo "== US3/US4: object storage — versioning, off-site copy, replication lag, RB-05 (F130-AC-14, AC-20) =="
 bt bash -c '. /opt/eduworld/backup/lib-backup.sh
-  export K=test; rclone_s3_remote src http://s3-primary:4566 us-east-1 K K
+  export K=test; rclone_s3_remote src http://s3-primary:4566 us-east-1 K K; export RCLONE_CONFIG_SRC_NO_CHECK_BUCKET=false
   for b in ew-media-quarantine ew-media-public ew-media-private ew-game-bundles ew-exports; do rclone mkdir "src:$b"; done
   for i in 1 2 3; do printf "media-$i-content" > /tmp/o$i; s=$(sha256sum /tmp/o$i | cut -d" " -f1)
     rclone copyto /tmp/o$i "src:ew-media-public/media/$s/original.png"; printf "thumb-$i" | rclone rcat "src:ew-media-public/media/$s/thumb.webp"
