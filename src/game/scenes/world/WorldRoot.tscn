@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scenes/world/world_root.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/world/zones/main_hub/Zone.tscn" id="2_zone"]
@@ -7,6 +7,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/NoticeDialog.tscn" id="5_notice"]
 [ext_resource type="PackedScene" path="res://scenes/bootstrap/QualityBenchmark.tscn" id="6_benchmark"]
 [ext_resource type="PackedScene" path="res://scenes/character/EmoteWheel.tscn" id="7_emotes"]
+[ext_resource type="PackedScene" path="res://scenes/progression/LevelUpModal.tscn" id="8_levelup"]
+[ext_resource type="PackedScene" path="res://scenes/challenge/ChallengeHud.tscn" id="9_challenge_hud"]
 
 [node name="WorldRoot" type="Node"]
 script = ExtResource("1_script")
@@ -35,6 +37,12 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
+[node name="Overlays" type="CanvasLayer" parent="."]
+layer = 7
+
+[node name="ChallengeHud" parent="Overlays" instance=ExtResource("9_challenge_hud")]
+unique_name_in_owner = true
+
 [node name="Dialogs" type="CanvasLayer" parent="."]
 layer = 10
 
@@ -58,6 +66,11 @@ visible = false
 layout_mode = 1
 
 [node name="Notice" parent="Dialogs/DialogRoot" instance=ExtResource("5_notice")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+
+[node name="LevelUpModal" parent="Dialogs/DialogRoot" instance=ExtResource("8_levelup")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1

@@ -75,7 +75,11 @@ func test_hud_button_opens_the_wardrobe_and_a_saved_avatar_redraws_the_player() 
 	var r: Array = await _world()
 	var runner: GdUnitSceneRunner = r[0] as GdUnitSceneRunner
 	var world: Node = r[1] as Node
+	# F069: the HUD Tủ đồ button opens S08 (tab Tủ đồ); its "Phối đồ" opens the F070 CustomizationStudio.
 	(world.find_child("WardrobeButton", true, false) as Button).pressed.emit()
+	await runner.simulate_frames(6)
+	assert_str(String(world.get("open_screen"))).is_equal("inventory")
+	(world.find_child("Customize", true, false) as Button).pressed.emit()
 	await runner.simulate_frames(6)
 	assert_str(String(world.get("open_screen"))).is_equal("wardrobe")
 	var studio: Control = world.find_child("CustomizationStudio", true, false) as Control

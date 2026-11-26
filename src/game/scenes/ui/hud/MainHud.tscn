@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/hud/main_hud.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/ContextActionButton.tscn" id="2_action"]
@@ -14,6 +14,9 @@
 [ext_resource type="Texture2D" path="res://resources/ui/icons/map.svg" id="12_icon_map"]
 [ext_resource type="Texture2D" path="res://resources/ui/icons/home.svg" id="13_icon_home"]
 [ext_resource type="Texture2D" path="res://resources/ui/icons/bell.svg" id="14_icon_bell"]
+[ext_resource type="Script" path="res://scenes/ui/hud/xp_bar.gd" id="15_xp_bar"]
+[ext_resource type="Script" path="res://scenes/ui/hud/currency_chip.gd" id="16_currency"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/menu.svg" id="17_icon_menu"]
 
 [node name="MainHud" type="CanvasLayer"]
 layer = 2
@@ -58,19 +61,9 @@ layout_mode = 2
 theme_type_variation = &"HudLabel"
 text_overrun_behavior = 3
 
-[node name="XpBar" type="Control" parent="Root/TopBar"]
-visible = false
-layout_mode = 2
-mouse_filter = 2
-
 [node name="Spacer" type="Control" parent="Root/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
-mouse_filter = 2
-
-[node name="CurrencyChip" type="Control" parent="Root/TopBar"]
-visible = false
-layout_mode = 2
 mouse_filter = 2
 
 [node name="AssignmentsChip" type="Button" parent="Root/TopBar"]
@@ -121,6 +114,18 @@ theme_type_variation = &"SecondaryButton"
 icon = ExtResource("12_icon_map")
 text = "ui.hub.map"
 
+[node name="XpPanel" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+mouse_filter = 2
+theme_type_variation = &"HudPanel"
+
+[node name="XpBar" type="VBoxContainer" parent="Root/XpPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("15_xp_bar")
+
 [node name="NextStep" type="PanelContainer" parent="Root"]
 unique_name_in_owner = true
 layout_mode = 1
@@ -146,6 +151,33 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SecondaryButton"
 auto_translate_mode = 2
+autowrap_mode = 3
+
+[node name="SideBar" type="VBoxContainer" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_top = 0.14
+anchor_right = 1.0
+anchor_bottom = 0.14
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="CurrencyChip" type="Button" parent="Root/SideBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+script = ExtResource("16_currency")
+
+[node name="MenuButton" type="Button" parent="Root/SideBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+tooltip_text = "ui.hub.menu.tooltip"
+theme_type_variation = &"SecondaryButton"
+icon = ExtResource("17_icon_menu")
+text = "ui.hub.menu"
 autowrap_mode = 3
 
 [node name="SystemBanner" type="PanelContainer" parent="Root"]

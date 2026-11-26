@@ -1,0 +1,28 @@
+{
+  "level": 1,
+  "title": {
+    "code": "sample",
+    "label": {
+      "vi": "sample",
+      "en": "sample"
+    }
+  },
+  "xp_total": 0,
+  "xp_in_level": 0,
+  "xp_to_next": 0,
+  "daily_xp_remaining": 0,
+  "curve_version": 1,
+  "max_level": 1,
+  "next_level_rewards": [
+    {
+      "kind": "xp",
+      "amount": 0,
+      "currency_code": "sample",
+      "item_id": "sample1",
+      "label": {
+        "vi": "sample",
+        "en": "sample"
+      }
+    }
+  ]
+}

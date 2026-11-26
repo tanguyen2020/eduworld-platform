@@ -8,6 +8,8 @@ extends Node
 signal player_changed(player: Dictionary)
 signal grade_band_changed(band: String)
 signal assignments_changed(count: int)
+## F069: a timed activity started or ended (`challenge`, `exam`, later `boss`); "" = none — holds the level-up modal.
+signal blocking_activity_changed(activity: StringName)
 
 const MOCK_BADGE_SCENE: String = "res://scenes/ui/debug/MockBadge.tscn"
 const TELEMETRY_QUEUE_MAX: int = 100
@@ -33,6 +35,10 @@ var services: ServiceLocator = null
 ## Realtime network counters (RTT p50/p95, reconnects, resume results) for the batched telemetry of F080 (F092 T028).
 var net_stats: NetStats = null
 var mock_badge: CanvasLayer = null
+## F069 (data-model §2): the timed activity running now (`challenge` in Starting…Result, `exam` in the runner, `boss`
+## phase in F110); "" = none. LevelUpQueue keeps S07 waiting while it is set (F069-AC-03, AC-UX-0701).
+var blocking_activity: StringName = &""
+var _blockers: Array[StringName] = []
 
 
 func _init() -> void:
@@ -150,3 +156,24 @@ static func _connect_once(source: Object, signal_name: StringName, target: Calla
 ## WorldService publishes its state here (F071); never written to disk.
 func set_world(state: Dictionary) -> void:
 	world = state
+
+
+## F069: a timed activity starts (several may overlap; the first still open is reported).
+func begin_blocking(activity: StringName) -> void:
+	if activity in _blockers:
+		return
+	_blockers.append(activity)
+	_set_blocking()
+
+
+func end_blocking(activity: StringName) -> void:
+	_blockers.erase(activity)
+	_set_blocking()
+
+
+func _set_blocking() -> void:
+	var next: StringName = _blockers[0] if not _blockers.is_empty() else &""
+	if next == blocking_activity:
+		return
+	blocking_activity = next
+	blocking_activity_changed.emit(blocking_activity)

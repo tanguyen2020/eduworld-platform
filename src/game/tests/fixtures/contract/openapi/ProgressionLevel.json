@@ -1,0 +1,18 @@
+{
+  "level": 1,
+  "xp_required": 0,
+  "xp_cumulative": 0,
+  "title_code": "sample",
+  "rewards": [
+    {
+      "kind": "xp",
+      "amount": 0,
+      "currency_code": "sample",
+      "item_id": "sample1",
+      "label": {
+        "vi": "sample",
+        "en": "sample"
+      }
+    }
+  ]
+}

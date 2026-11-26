@@ -3,29 +3,29 @@
   "name": "sample",
   "avatar_config": {
     "schema_version": 1,
-    "body_type": "SAMPLE1",
-    "skin_tone": "SAMPLE1",
+    "body_type": "sample1",
+    "skin_tone": "sample1",
     "hair": {
-      "item_id": "SAMPLE1",
-      "color": "SAMPLE1"
+      "item_id": "sample1",
+      "color": "sample1"
     },
     "outfit": {
-      "item_id": "SAMPLE1"
+      "item_id": "sample1"
     },
     "accessories": [
       {
         "slot": "head",
-        "item_id": "SAMPLE1"
+        "item_id": "sample1"
       }
     ],
     "emote_slots": [
-      "SAMPLE1"
+      "sample1"
     ],
-    "pet": "SAMPLE1",
-    "title": "SAMPLE1",
-    "frame": "SAMPLE1",
+    "pet": "sample1",
+    "title": "sample1",
+    "frame": "sample1",
     "badge_showcase": [
-      "SAMPLE1"
+      "sample1"
     ]
   },
   "updated_at": "2026-11-15T07:30:00Z"

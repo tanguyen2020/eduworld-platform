@@ -1517,3 +1517,654 @@ msgstr "Chưa kết nối được, em thử lại sau một chút nhé."
 
 msgid "ui.quest.notice.try_again"
 msgstr "Gần đúng rồi! Em ôn lại một chút và thử lại nhé."
+
+msgid "ui.achievement.category.competition"
+msgstr "Thi đấu"
+
+msgid "ui.achievement.category.event"
+msgstr "Sự kiện"
+
+msgid "ui.achievement.category.exploration"
+msgstr "Khám phá"
+
+msgid "ui.achievement.category.first_time"
+msgstr "Lần đầu"
+
+msgid "ui.achievement.category.hidden"
+msgstr "Bí mật"
+
+msgid "ui.achievement.category.learning"
+msgstr "Học tập"
+
+msgid "ui.achievement.category.progress"
+msgstr "Tiến bộ"
+
+msgid "ui.achievement.category.seasonal"
+msgstr "Theo mùa"
+
+msgid "ui.achievement.category.social"
+msgstr "Bạn bè"
+
+msgid "ui.achievement.category.team"
+msgstr "Đồng đội"
+
+msgid "ui.achievement.empty"
+msgstr "Hành trình mới bắt đầu! Thành tựu đầu tiên đang chờ em ở Thị trấn Trung Tâm."
+
+msgid "ui.achievement.hidden_hint"
+msgstr "Tiếp tục khám phá để mở khóa"
+
+msgid "ui.achievement.load_failed"
+msgstr "Chưa tải được thành tựu. Em thử lại nhé."
+
+msgid "ui.achievement.loading"
+msgstr "Đang tải…"
+
+msgid "ui.achievement.no_badges"
+msgstr "Em chưa có huy hiệu nào. Hoàn thành thử thách và nhiệm vụ để nhận nhé!"
+
+msgid "ui.achievement.progress_spoken"
+msgstr "{current} trên {target}"
+
+msgid "ui.achievement.received"
+msgstr "Đã nhận"
+
+msgid "ui.achievement.showcase_empty"
+msgstr "Ô trống"
+
+msgid "ui.achievement.showcase_hint"
+msgstr "Chọn huy hiệu để bạn bè thấy. Chạm vào huy hiệu để thêm hoặc bỏ."
+
+msgid "ui.achievement.showcase_owned"
+msgstr "Huy hiệu của em"
+
+msgid "ui.achievement.showcase_save"
+msgstr "Lưu trưng bày"
+
+msgid "ui.achievement.showcase_saved"
+msgstr "Đã lưu huy hiệu trưng bày!"
+
+msgid "ui.achievement.tab.achievements"
+msgstr "Thành tựu"
+
+msgid "ui.achievement.tab.showcase"
+msgstr "Huy hiệu trưng bày"
+
+msgid "ui.achievement.tier.bronze"
+msgstr "Đồng"
+
+msgid "ui.achievement.tier.gold"
+msgstr "Vàng"
+
+msgid "ui.achievement.tier.platinum"
+msgstr "Bạch kim"
+
+msgid "ui.achievement.tier.silver"
+msgstr "Bạc"
+
+msgid "ui.achievement.tier.single"
+msgstr "Đã đạt"
+
+msgid "ui.achievement.title"
+msgstr "Thành tựu & Bộ sưu tập"
+
+msgid "ui.challenge.attempts_left"
+msgstr "Còn {n} lượt hôm nay"
+
+msgid "ui.challenge.back_to_board"
+msgstr "Núi Thử Thách"
+
+msgid "ui.challenge.board_title"
+msgstr "Núi Thử Thách"
+
+msgid "ui.challenge.continue"
+msgstr "Tiếp tục"
+
+msgid "ui.challenge.cooldown"
+msgstr "Nghỉ một chút nhé, thử lại sau {time}"
+
+msgid "ui.challenge.difficulty.easy"
+msgstr "Dễ"
+
+msgid "ui.challenge.difficulty.expert"
+msgstr "Chuyên gia"
+
+msgid "ui.challenge.difficulty.hard"
+msgstr "Khó"
+
+msgid "ui.challenge.difficulty.legendary"
+msgstr "Huyền thoại"
+
+msgid "ui.challenge.difficulty.normal"
+msgstr "Thường"
+
+msgid "ui.challenge.difficulty_title"
+msgstr "Chọn độ khó"
+
+msgid "ui.challenge.empty"
+msgstr "Chưa có thử thách nào mở cho em. Quay lại sau nhé!"
+
+msgid "ui.challenge.enter"
+msgstr "Vào"
+
+msgid "ui.challenge.first_clear"
+msgstr "Thưởng lần đầu hoàn thành"
+
+msgid "ui.challenge.gone"
+msgstr "Thử thách không còn mở."
+
+msgid "ui.challenge.keep_playing"
+msgstr "Chơi tiếp"
+
+msgid "ui.challenge.lives"
+msgstr "{n} sức bền"
+
+msgid "ui.challenge.loading"
+msgstr "Đang tải thử thách…"
+
+msgid "ui.challenge.locked.grade_not_allowed"
+msgstr "Dành cho các anh chị lớp lớn hơn"
+
+msgid "ui.challenge.locked.not_unlocked"
+msgstr "Hoàn thành mức trước để mở"
+
+msgid "ui.challenge.locked.school_disabled"
+msgstr "Trường em chưa mở mức này"
+
+msgid "ui.challenge.multiplier"
+msgstr "Thưởng ×{x}"
+
+msgid "ui.challenge.no_attempts"
+msgstr "Em đã dùng hết lượt hôm nay, quay lại vào ngày mai nhé! Trong lúc chờ, em có thể luyện tập thoải mái ở Bản đồ."
+
+msgid "ui.challenge.notice.attempt_limit_at"
+msgstr "Em đã dùng hết lượt. Em có thể thử lại lúc {time} nhé!"
+
+msgid "ui.challenge.notice.in_progress"
+msgstr "Em đang có một thử thách chưa xong. Mình chơi tiếp nhé!"
+
+msgid "ui.challenge.notice.not_eligible"
+msgstr "Thử thách này chưa dành cho em lúc này."
+
+msgid "ui.challenge.notice.reconnecting"
+msgstr "Đang kết nối lại… Em đợi một chút nhé."
+
+msgid "ui.challenge.notice.unavailable"
+msgstr "Hệ thống đang bận, em thử lại sau ít phút nhé."
+
+msgid "ui.challenge.party_only"
+msgstr "Thử thách này cần đi cùng nhóm bạn."
+
+msgid "ui.challenge.practice"
+msgstr "Luyện tập"
+
+msgid "ui.challenge.progress"
+msgstr "Đã làm {n} · Điểm {score}"
+
+msgid "ui.challenge.result.abandoned"
+msgstr "Em đã dừng thử thách"
+
+msgid "ui.challenge.result.abandoned_line"
+msgstr "Em đã làm {n} hoạt động. Lúc nào sẵn sàng thì mình thử lại nhé!"
+
+msgid "ui.challenge.result.completed_n"
+msgstr "Em đã hoàn thành {n} hoạt động"
+
+msgid "ui.challenge.result.review_hint"
+msgstr "Ôn lại một chút rồi thử lại nhé, em làm được mà!"
+
+msgid "ui.challenge.result.succeeded"
+msgstr "Hoàn thành thử thách!"
+
+msgid "ui.challenge.result.succeeded_line"
+msgstr "Em đã hoàn thành {n} hoạt động. Giỏi quá!"
+
+msgid "ui.challenge.result_title"
+msgstr "Kết quả thử thách"
+
+msgid "ui.challenge.resume"
+msgstr "Tiếp tục"
+
+msgid "ui.challenge.resume_hint"
+msgstr "Em đang có một thử thách chưa xong."
+
+msgid "ui.challenge.rewards"
+msgstr "Phần thưởng đã vào túi đồ"
+
+msgid "ui.challenge.stop"
+msgstr "Dừng lại"
+
+msgid "ui.challenge.stop_confirm"
+msgstr "Em muốn dừng thử thách? Các bài đã làm vẫn được ghi lại."
+
+msgid "ui.challenge.stop_now"
+msgstr "Dừng lại"
+
+msgid "ui.challenge.time_left_tooltip"
+msgstr "Thời gian còn lại"
+
+msgid "ui.challenge.time_limit"
+msgstr "Thời gian: {time}"
+
+msgid "ui.challenge.time_up"
+msgstr "Hết giờ"
+
+msgid "ui.challenge.type.boss"
+msgstr "Boss"
+
+msgid "ui.challenge.type.coop"
+msgstr "Hợp tác"
+
+msgid "ui.challenge.type.knowledge"
+msgstr "Kiến thức"
+
+msgid "ui.challenge.type.other"
+msgstr "Thử thách"
+
+msgid "ui.challenge.type.party"
+msgstr "Nhóm"
+
+msgid "ui.challenge.type.perfect"
+msgstr "Hoàn hảo"
+
+msgid "ui.challenge.type.puzzle"
+msgstr "Giải đố"
+
+msgid "ui.challenge.type.seasonal"
+msgstr "Theo mùa"
+
+msgid "ui.challenge.type.survival"
+msgstr "Bền bỉ"
+
+msgid "ui.challenge.type.time"
+msgstr "Tính giờ"
+
+msgid "ui.challenge.type.tournament"
+msgstr "Giải đấu"
+
+msgid "ui.challenge.type.weekly"
+msgstr "Hằng tuần"
+
+msgid "ui.collection.back"
+msgstr "Các bộ sưu tập"
+
+msgid "ui.collection.duplicate_converted"
+msgstr "Đã quy đổi thành {amount} Xu"
+
+msgid "ui.collection.empty"
+msgstr "Em chưa có bộ sưu tập nào. Khám phá thế giới để tìm món đầu tiên nhé!"
+
+msgid "ui.collection.gone"
+msgstr "Bộ sưu tập này không còn mở."
+
+msgid "ui.collection.how_to_obtain_line"
+msgstr "Cách nhận: {how}"
+
+msgid "ui.collection.missing"
+msgstr "Chưa có"
+
+msgid "ui.collection.owned"
+msgstr "Đã có"
+
+msgid "ui.collection.progress"
+msgstr "{progress} món"
+
+msgid "ui.collection.tab"
+msgstr "Bộ sưu tập"
+
+msgid "ui.collection.type.badge"
+msgstr "Huy hiệu"
+
+msgid "ui.collection.type.cosmetic"
+msgstr "Trang phục"
+
+msgid "ui.collection.type.event"
+msgstr "Sự kiện"
+
+msgid "ui.collection.type.exploration"
+msgstr "Khám phá"
+
+msgid "ui.collection.type.knowledge_card"
+msgstr "Thẻ kiến thức"
+
+msgid "ui.collection.type.pet"
+msgstr "Thú cưng"
+
+msgid "ui.common.cancel"
+msgstr "Hủy"
+
+msgid "ui.hub.daily_cap_reached"
+msgstr "Hôm nay em đã nhận đủ XP, phần học vẫn được ghi nhận"
+
+msgid "ui.hub.menu"
+msgstr "Thêm"
+
+msgid "ui.hub.menu.tooltip"
+msgstr "Cửa hàng, thành tựu, thử thách, hành trình"
+
+msgid "ui.inventory.customize"
+msgstr "Phối đồ"
+
+msgid "ui.inventory.customize.tooltip"
+msgstr "Ngoại hình, bộ phối đồ và vòng biểu cảm"
+
+msgid "ui.inventory.empty_hint"
+msgstr "Chưa có món nào ở đây. Hoàn thành nhiệm vụ để nhận nhé!"
+
+msgid "ui.inventory.equip"
+msgstr "Trang bị"
+
+msgid "ui.inventory.equipped"
+msgstr "Em đã mặc {item}!"
+
+msgid "ui.inventory.equipping"
+msgstr "Đang mặc…"
+
+msgid "ui.inventory.filter.accessory"
+msgstr "Phụ kiện"
+
+msgid "ui.inventory.filter.all"
+msgstr "Tất cả"
+
+msgid "ui.inventory.filter.badge"
+msgstr "Huy hiệu"
+
+msgid "ui.inventory.filter.emote"
+msgstr "Biểu cảm"
+
+msgid "ui.inventory.filter.frame"
+msgstr "Khung"
+
+msgid "ui.inventory.filter.hair"
+msgstr "Tóc"
+
+msgid "ui.inventory.filter.outfit"
+msgstr "Trang phục"
+
+msgid "ui.inventory.filter.pet"
+msgstr "Thú cưng"
+
+msgid "ui.inventory.filter.title"
+msgstr "Danh hiệu"
+
+msgid "ui.inventory.history.currency"
+msgstr "Xu"
+
+msgid "ui.inventory.history.empty"
+msgstr "Chưa có gì trong lịch sử."
+
+msgid "ui.inventory.history.items"
+msgstr "Vật phẩm"
+
+msgid "ui.inventory.history.title"
+msgstr "Lịch sử"
+
+msgid "ui.inventory.loading"
+msgstr "Đang tải…"
+
+msgid "ui.inventory.offline_locked"
+msgstr "Mất kết nối: em vẫn xem được đồ, chưa mua hay mặc được."
+
+msgid "ui.inventory.quantity"
+msgstr "×{n}"
+
+msgid "ui.inventory.rarity.common"
+msgstr "Thường"
+
+msgid "ui.inventory.rarity.epic"
+msgstr "Sử thi"
+
+msgid "ui.inventory.rarity.legendary"
+msgstr "Huyền thoại"
+
+msgid "ui.inventory.rarity.rare"
+msgstr "Hiếm"
+
+msgid "ui.inventory.rarity.uncommon"
+msgstr "Ít gặp"
+
+msgid "ui.inventory.reason.adjustment"
+msgstr "Điều chỉnh của nhà trường"
+
+msgid "ui.inventory.reason.collection"
+msgstr "Bộ sưu tập"
+
+msgid "ui.inventory.reason.duplicate_conversion"
+msgstr "Quy đổi món trùng"
+
+msgid "ui.inventory.reason.other"
+msgstr "Thay đổi khác"
+
+msgid "ui.inventory.reason.refund"
+msgstr "Hoàn lại"
+
+msgid "ui.inventory.reason.reward"
+msgstr "Phần thưởng"
+
+msgid "ui.inventory.reason.shop_purchase"
+msgstr "Mua ở Cửa hàng"
+
+msgid "ui.inventory.tab.history"
+msgstr "Lịch sử"
+
+msgid "ui.inventory.tab.wardrobe"
+msgstr "Tủ đồ"
+
+msgid "ui.inventory.title"
+msgstr "Tủ đồ"
+
+msgid "ui.journey.empty"
+msgstr "Hành trình mới bắt đầu! Làm bài và khám phá để nhận XP nhé."
+
+msgid "ui.journey.load_failed"
+msgstr "Chưa tải được hành trình. Em thử lại nhé."
+
+msgid "ui.journey.loading"
+msgstr "Đang tải…"
+
+msgid "ui.journey.milestones"
+msgstr "Các mốc cấp độ"
+
+msgid "ui.journey.more"
+msgstr "Xem thêm"
+
+msgid "ui.journey.not_a_grade"
+msgstr "Cấp độ trò chơi cho biết em đã chăm chỉ thế nào, không phải điểm học tập."
+
+msgid "ui.journey.recent"
+msgstr "Những lần nhận XP"
+
+msgid "ui.journey.source.achievement.unlocked"
+msgstr "Mở khóa thành tựu"
+
+msgid "ui.journey.source.activity.completed"
+msgstr "Hoàn thành bài học"
+
+msgid "ui.journey.source.boss.defeated"
+msgstr "Hạ boss"
+
+msgid "ui.journey.source.challenge.completed"
+msgstr "Hoàn thành thử thách"
+
+msgid "ui.journey.source.competition.participation"
+msgstr "Tham gia thi đấu"
+
+msgid "ui.journey.source.coop.contribution"
+msgstr "Góp sức cùng nhóm"
+
+msgid "ui.journey.source.event.participation"
+msgstr "Tham gia sự kiện"
+
+msgid "ui.journey.source.exploration.area_completed"
+msgstr "Khám phá xong một khu vực"
+
+msgid "ui.journey.source.exploration.discovery"
+msgstr "Tìm thấy điểm khám phá"
+
+msgid "ui.journey.source.lesson.completed"
+msgstr "Học xong bài"
+
+msgid "ui.journey.source.mastery.objective_mastered"
+msgstr "Thành thạo một mục tiêu học tập"
+
+msgid "ui.journey.source.other"
+msgstr "Nhận XP"
+
+msgid "ui.journey.source.quest.daily_completed"
+msgstr "Hoàn thành nhiệm vụ hằng ngày"
+
+msgid "ui.journey.source.quest.main_completed"
+msgstr "Hoàn thành nhiệm vụ chính"
+
+msgid "ui.journey.source.quest.side_completed"
+msgstr "Hoàn thành nhiệm vụ phụ"
+
+msgid "ui.journey.source.quest.weekly_completed"
+msgstr "Hoàn thành nhiệm vụ hằng tuần"
+
+msgid "ui.journey.title"
+msgstr "Hành trình của tôi"
+
+msgid "ui.levelup.equip_now"
+msgstr "Trang bị ngay"
+
+msgid "ui.levelup.journey"
+msgstr "Hành trình của tôi"
+
+msgid "ui.levelup.multi"
+msgstr "Lên {count} cấp!"
+
+msgid "ui.levelup.new_title"
+msgstr "Danh hiệu mới: {title}"
+
+msgid "ui.levelup.ok"
+msgstr "Tuyệt!"
+
+msgid "ui.levelup.rewards"
+msgstr "Phần thưởng đã vào túi đồ"
+
+msgid "ui.levelup.title"
+msgstr "Lên cấp {level}!"
+
+msgid "ui.levelup.xp_to_next"
+msgstr "Còn {xp} XP nữa tới cấp {next}"
+
+msgid "ui.menu.achievements"
+msgstr "Thành tựu & Bộ sưu tập"
+
+msgid "ui.menu.challenges"
+msgstr "Núi Thử Thách"
+
+msgid "ui.menu.journey"
+msgstr "Hành trình của tôi"
+
+msgid "ui.menu.shop"
+msgstr "Cửa hàng"
+
+msgid "ui.menu.title"
+msgstr "Thêm"
+
+msgid "ui.progression.level"
+msgstr "Cấp {level}"
+
+msgid "ui.progression.max_level"
+msgstr "Cấp tối đa"
+
+msgid "ui.progression.xp_gained"
+msgstr "+{xp} XP"
+
+msgid "ui.progression.xp_numbers"
+msgstr "{xp}/{total} XP"
+
+msgid "ui.reward.badge"
+msgstr "Huy hiệu"
+
+msgid "ui.reward.currency"
+msgstr "{amount} Xu"
+
+msgid "ui.reward.item"
+msgstr "Vật phẩm"
+
+msgid "ui.reward.title"
+msgstr "Danh hiệu"
+
+msgid "ui.reward.xp"
+msgstr "{amount} XP"
+
+msgid "ui.shop.available_to"
+msgstr "Có bán đến {date}"
+
+msgid "ui.shop.balance_after"
+msgstr "Số dư sau khi mua: {balance} Xu"
+
+msgid "ui.shop.bought"
+msgstr "Em đã mua {item}! Món đồ đã vào Tủ đồ."
+
+msgid "ui.shop.buy"
+msgstr "Mua"
+
+msgid "ui.shop.buying"
+msgstr "Đang mua…"
+
+msgid "ui.shop.confirm_purchase"
+msgstr "Mua {item} với {price} Xu?"
+
+msgid "ui.shop.empty"
+msgstr "Cửa hàng đang chuẩn bị món mới. Quay lại sau nhé!"
+
+msgid "ui.shop.limit"
+msgstr "Đã mua {count}/{limit}"
+
+msgid "ui.shop.need_more"
+msgstr "Cần thêm {n} Xu"
+
+msgid "ui.shop.open.tooltip"
+msgstr "Mở Cửa hàng (phím B)"
+
+msgid "ui.shop.owned"
+msgstr "Đã sở hữu"
+
+msgid "ui.shop.price"
+msgstr "Giá: {price} Xu"
+
+msgid "ui.shop.retry_safe"
+msgstr "Mạng đang chập chờn. Em bấm Mua lần nữa để thử lại — em sẽ không bị trừ Xu hai lần."
+
+msgid "ui.shop.tab"
+msgstr "Cửa hàng"
+
+msgid "ui.shop.title"
+msgstr "Cửa hàng"
+
+msgid "ui.shop.try_on"
+msgstr "Xem trước"
+
+msgid "ui.error.INSUFFICIENT_BALANCE"
+msgstr "Em chưa đủ Xu cho món này. Làm thêm bài để nhận Xu nhé!"
+
+msgid "ui.error.PURCHASE_LIMIT_REACHED"
+msgstr "Em đã mua đủ số lượng của món này rồi."
+
+msgid "ui.error.ITEM_ALREADY_OWNED"
+msgstr "Em đã có món này trong Tủ đồ rồi."
+
+msgid "ui.error.SHOP_ITEM_UNAVAILABLE"
+msgstr "Món này sẽ quay lại mùa sau."
+
+msgid "ui.error.CHALLENGE_NOT_ELIGIBLE"
+msgstr "Thử thách này chưa dành cho em lúc này."
+
+msgid "ui.error.CHALLENGE_ATTEMPT_LIMIT"
+msgstr "Em đã dùng hết lượt hôm nay, quay lại vào ngày mai nhé!"
+
+msgid "ui.error.INVALID_STATE_TRANSITION"
+msgstr "Thử thách đã kết thúc. Mình xem kết quả nhé."
+
+msgid "ui.error.CONFLICT"
+msgstr "Có thay đổi mới, em thử lại nhé."
+
+msgid "ui.collection.completion_reward"
+msgstr "Thưởng khi đủ bộ:"
+
+msgid "ui.challenge.minutes"
+msgstr "{m} phút"

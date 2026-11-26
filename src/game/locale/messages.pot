@@ -6,6 +6,96 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "ui.achievement.category.competition"
+msgstr ""
+
+msgid "ui.achievement.category.event"
+msgstr ""
+
+msgid "ui.achievement.category.exploration"
+msgstr ""
+
+msgid "ui.achievement.category.first_time"
+msgstr ""
+
+msgid "ui.achievement.category.hidden"
+msgstr ""
+
+msgid "ui.achievement.category.learning"
+msgstr ""
+
+msgid "ui.achievement.category.progress"
+msgstr ""
+
+msgid "ui.achievement.category.seasonal"
+msgstr ""
+
+msgid "ui.achievement.category.social"
+msgstr ""
+
+msgid "ui.achievement.category.team"
+msgstr ""
+
+msgid "ui.achievement.empty"
+msgstr ""
+
+msgid "ui.achievement.hidden_hint"
+msgstr ""
+
+msgid "ui.achievement.load_failed"
+msgstr ""
+
+msgid "ui.achievement.loading"
+msgstr ""
+
+msgid "ui.achievement.no_badges"
+msgstr ""
+
+msgid "ui.achievement.progress_spoken"
+msgstr ""
+
+msgid "ui.achievement.received"
+msgstr ""
+
+msgid "ui.achievement.showcase_empty"
+msgstr ""
+
+msgid "ui.achievement.showcase_hint"
+msgstr ""
+
+msgid "ui.achievement.showcase_owned"
+msgstr ""
+
+msgid "ui.achievement.showcase_save"
+msgstr ""
+
+msgid "ui.achievement.showcase_saved"
+msgstr ""
+
+msgid "ui.achievement.tab.achievements"
+msgstr ""
+
+msgid "ui.achievement.tab.showcase"
+msgstr ""
+
+msgid "ui.achievement.tier.bronze"
+msgstr ""
+
+msgid "ui.achievement.tier.gold"
+msgstr ""
+
+msgid "ui.achievement.tier.platinum"
+msgstr ""
+
+msgid "ui.achievement.tier.silver"
+msgstr ""
+
+msgid "ui.achievement.tier.single"
+msgstr ""
+
+msgid "ui.achievement.title"
+msgstr ""
+
 msgid "ui.activity_player.back"
 msgstr ""
 
@@ -201,6 +291,234 @@ msgstr ""
 msgid "ui.boot.loading"
 msgstr ""
 
+msgid "ui.challenge.attempts_left"
+msgstr ""
+
+msgid "ui.challenge.back_to_board"
+msgstr ""
+
+msgid "ui.challenge.board_title"
+msgstr ""
+
+msgid "ui.challenge.continue"
+msgstr ""
+
+msgid "ui.challenge.cooldown"
+msgstr ""
+
+msgid "ui.challenge.difficulty.easy"
+msgstr ""
+
+msgid "ui.challenge.difficulty.expert"
+msgstr ""
+
+msgid "ui.challenge.difficulty.hard"
+msgstr ""
+
+msgid "ui.challenge.difficulty.legendary"
+msgstr ""
+
+msgid "ui.challenge.difficulty.normal"
+msgstr ""
+
+msgid "ui.challenge.difficulty_title"
+msgstr ""
+
+msgid "ui.challenge.empty"
+msgstr ""
+
+msgid "ui.challenge.enter"
+msgstr ""
+
+msgid "ui.challenge.first_clear"
+msgstr ""
+
+msgid "ui.challenge.gone"
+msgstr ""
+
+msgid "ui.challenge.keep_playing"
+msgstr ""
+
+msgid "ui.challenge.lives"
+msgstr ""
+
+msgid "ui.challenge.loading"
+msgstr ""
+
+msgid "ui.challenge.locked.grade_not_allowed"
+msgstr ""
+
+msgid "ui.challenge.locked.not_unlocked"
+msgstr ""
+
+msgid "ui.challenge.locked.school_disabled"
+msgstr ""
+
+msgid "ui.challenge.minutes"
+msgstr ""
+
+msgid "ui.challenge.multiplier"
+msgstr ""
+
+msgid "ui.challenge.no_attempts"
+msgstr ""
+
+msgid "ui.challenge.notice.attempt_limit_at"
+msgstr ""
+
+msgid "ui.challenge.notice.in_progress"
+msgstr ""
+
+msgid "ui.challenge.notice.not_eligible"
+msgstr ""
+
+msgid "ui.challenge.notice.reconnecting"
+msgstr ""
+
+msgid "ui.challenge.notice.unavailable"
+msgstr ""
+
+msgid "ui.challenge.party_only"
+msgstr ""
+
+msgid "ui.challenge.practice"
+msgstr ""
+
+msgid "ui.challenge.progress"
+msgstr ""
+
+msgid "ui.challenge.result.abandoned"
+msgstr ""
+
+msgid "ui.challenge.result.abandoned_line"
+msgstr ""
+
+msgid "ui.challenge.result.completed_n"
+msgstr ""
+
+msgid "ui.challenge.result.review_hint"
+msgstr ""
+
+msgid "ui.challenge.result.succeeded"
+msgstr ""
+
+msgid "ui.challenge.result.succeeded_line"
+msgstr ""
+
+msgid "ui.challenge.result_title"
+msgstr ""
+
+msgid "ui.challenge.resume"
+msgstr ""
+
+msgid "ui.challenge.resume_hint"
+msgstr ""
+
+msgid "ui.challenge.rewards"
+msgstr ""
+
+msgid "ui.challenge.stop"
+msgstr ""
+
+msgid "ui.challenge.stop_confirm"
+msgstr ""
+
+msgid "ui.challenge.stop_now"
+msgstr ""
+
+msgid "ui.challenge.time_left_tooltip"
+msgstr ""
+
+msgid "ui.challenge.time_limit"
+msgstr ""
+
+msgid "ui.challenge.time_up"
+msgstr ""
+
+msgid "ui.challenge.type.boss"
+msgstr ""
+
+msgid "ui.challenge.type.coop"
+msgstr ""
+
+msgid "ui.challenge.type.knowledge"
+msgstr ""
+
+msgid "ui.challenge.type.other"
+msgstr ""
+
+msgid "ui.challenge.type.party"
+msgstr ""
+
+msgid "ui.challenge.type.perfect"
+msgstr ""
+
+msgid "ui.challenge.type.puzzle"
+msgstr ""
+
+msgid "ui.challenge.type.seasonal"
+msgstr ""
+
+msgid "ui.challenge.type.survival"
+msgstr ""
+
+msgid "ui.challenge.type.time"
+msgstr ""
+
+msgid "ui.challenge.type.tournament"
+msgstr ""
+
+msgid "ui.challenge.type.weekly"
+msgstr ""
+
+msgid "ui.collection.back"
+msgstr ""
+
+msgid "ui.collection.completion_reward"
+msgstr ""
+
+msgid "ui.collection.duplicate_converted"
+msgstr ""
+
+msgid "ui.collection.empty"
+msgstr ""
+
+msgid "ui.collection.gone"
+msgstr ""
+
+msgid "ui.collection.how_to_obtain_line"
+msgstr ""
+
+msgid "ui.collection.missing"
+msgstr ""
+
+msgid "ui.collection.owned"
+msgstr ""
+
+msgid "ui.collection.progress"
+msgstr ""
+
+msgid "ui.collection.tab"
+msgstr ""
+
+msgid "ui.collection.type.badge"
+msgstr ""
+
+msgid "ui.collection.type.cosmetic"
+msgstr ""
+
+msgid "ui.collection.type.event"
+msgstr ""
+
+msgid "ui.collection.type.exploration"
+msgstr ""
+
+msgid "ui.collection.type.knowledge_card"
+msgstr ""
+
+msgid "ui.collection.type.pet"
+msgstr ""
+
 msgid "ui.common.break_reminder"
 msgstr ""
 
@@ -208,6 +526,9 @@ msgid "ui.common.break_reminder.ok"
 msgstr ""
 
 msgid "ui.common.break_reminder.title"
+msgstr ""
+
+msgid "ui.common.cancel"
 msgstr ""
 
 msgid "ui.common.close"
@@ -285,7 +606,16 @@ msgstr ""
 msgid "ui.error.ATTEMPT_NOT_IN_PROGRESS"
 msgstr ""
 
+msgid "ui.error.CHALLENGE_ATTEMPT_LIMIT"
+msgstr ""
+
+msgid "ui.error.CHALLENGE_NOT_ELIGIBLE"
+msgstr ""
+
 msgid "ui.error.CLIENT_VERSION_UNSUPPORTED"
+msgstr ""
+
+msgid "ui.error.CONFLICT"
 msgstr ""
 
 msgid "ui.error.CURFEW_ACTIVE"
@@ -327,6 +657,9 @@ msgstr ""
 msgid "ui.error.HINTS_NOT_ALLOWED"
 msgstr ""
 
+msgid "ui.error.INSUFFICIENT_BALANCE"
+msgstr ""
+
 msgid "ui.error.INTERNAL"
 msgstr ""
 
@@ -334,6 +667,12 @@ msgid "ui.error.INVALID_CREDENTIALS"
 msgstr ""
 
 msgid "ui.error.INVALID_RESPONSE"
+msgstr ""
+
+msgid "ui.error.INVALID_STATE_TRANSITION"
+msgstr ""
+
+msgid "ui.error.ITEM_ALREADY_OWNED"
 msgstr ""
 
 msgid "ui.error.ITEM_NOT_OWNED"
@@ -360,6 +699,9 @@ msgstr ""
 msgid "ui.error.NO_ACTIVE_ENROLLMENT"
 msgstr ""
 
+msgid "ui.error.PURCHASE_LIMIT_REACHED"
+msgstr ""
+
 msgid "ui.error.RATE_LIMITED"
 msgstr ""
 
@@ -370,6 +712,9 @@ msgid "ui.error.REFRESH_TOKEN_INVALID"
 msgstr ""
 
 msgid "ui.error.REFRESH_TOKEN_REUSED"
+msgstr ""
+
+msgid "ui.error.SHOP_ITEM_UNAVAILABLE"
 msgstr ""
 
 msgid "ui.error.TENANT_ACCESS_DISABLED"
@@ -720,6 +1065,9 @@ msgstr ""
 msgid "ui.hub.board.school_assignments"
 msgstr ""
 
+msgid "ui.hub.daily_cap_reached"
+msgstr ""
+
 msgid "ui.hub.emote_not_owned"
 msgstr ""
 
@@ -759,6 +1107,12 @@ msgstr ""
 msgid "ui.hub.map.tooltip"
 msgstr ""
 
+msgid "ui.hub.menu"
+msgstr ""
+
+msgid "ui.hub.menu.tooltip"
+msgstr ""
+
 msgid "ui.hub.player_default"
 msgstr ""
 
@@ -774,7 +1128,214 @@ msgstr ""
 msgid "ui.hub.wardrobe.tooltip"
 msgstr ""
 
+msgid "ui.inventory.customize"
+msgstr ""
+
+msgid "ui.inventory.customize.tooltip"
+msgstr ""
+
+msgid "ui.inventory.empty_hint"
+msgstr ""
+
+msgid "ui.inventory.equip"
+msgstr ""
+
+msgid "ui.inventory.equipped"
+msgstr ""
+
+msgid "ui.inventory.equipping"
+msgstr ""
+
+msgid "ui.inventory.filter.accessory"
+msgstr ""
+
+msgid "ui.inventory.filter.all"
+msgstr ""
+
+msgid "ui.inventory.filter.badge"
+msgstr ""
+
+msgid "ui.inventory.filter.emote"
+msgstr ""
+
+msgid "ui.inventory.filter.frame"
+msgstr ""
+
+msgid "ui.inventory.filter.hair"
+msgstr ""
+
+msgid "ui.inventory.filter.outfit"
+msgstr ""
+
+msgid "ui.inventory.filter.pet"
+msgstr ""
+
+msgid "ui.inventory.filter.title"
+msgstr ""
+
+msgid "ui.inventory.history.currency"
+msgstr ""
+
+msgid "ui.inventory.history.empty"
+msgstr ""
+
+msgid "ui.inventory.history.items"
+msgstr ""
+
+msgid "ui.inventory.history.title"
+msgstr ""
+
+msgid "ui.inventory.loading"
+msgstr ""
+
+msgid "ui.inventory.offline_locked"
+msgstr ""
+
+msgid "ui.inventory.quantity"
+msgstr ""
+
+msgid "ui.inventory.rarity.common"
+msgstr ""
+
+msgid "ui.inventory.rarity.epic"
+msgstr ""
+
+msgid "ui.inventory.rarity.legendary"
+msgstr ""
+
+msgid "ui.inventory.rarity.rare"
+msgstr ""
+
+msgid "ui.inventory.rarity.uncommon"
+msgstr ""
+
+msgid "ui.inventory.reason.adjustment"
+msgstr ""
+
+msgid "ui.inventory.reason.collection"
+msgstr ""
+
+msgid "ui.inventory.reason.duplicate_conversion"
+msgstr ""
+
+msgid "ui.inventory.reason.other"
+msgstr ""
+
+msgid "ui.inventory.reason.refund"
+msgstr ""
+
+msgid "ui.inventory.reason.reward"
+msgstr ""
+
+msgid "ui.inventory.reason.shop_purchase"
+msgstr ""
+
+msgid "ui.inventory.tab.history"
+msgstr ""
+
+msgid "ui.inventory.tab.wardrobe"
+msgstr ""
+
+msgid "ui.inventory.title"
+msgstr ""
+
+msgid "ui.journey.empty"
+msgstr ""
+
+msgid "ui.journey.load_failed"
+msgstr ""
+
+msgid "ui.journey.loading"
+msgstr ""
+
+msgid "ui.journey.milestones"
+msgstr ""
+
+msgid "ui.journey.more"
+msgstr ""
+
+msgid "ui.journey.not_a_grade"
+msgstr ""
+
+msgid "ui.journey.recent"
+msgstr ""
+
+msgid "ui.journey.source.achievement.unlocked"
+msgstr ""
+
+msgid "ui.journey.source.activity.completed"
+msgstr ""
+
+msgid "ui.journey.source.boss.defeated"
+msgstr ""
+
+msgid "ui.journey.source.challenge.completed"
+msgstr ""
+
+msgid "ui.journey.source.competition.participation"
+msgstr ""
+
+msgid "ui.journey.source.coop.contribution"
+msgstr ""
+
+msgid "ui.journey.source.event.participation"
+msgstr ""
+
+msgid "ui.journey.source.exploration.area_completed"
+msgstr ""
+
+msgid "ui.journey.source.exploration.discovery"
+msgstr ""
+
+msgid "ui.journey.source.lesson.completed"
+msgstr ""
+
+msgid "ui.journey.source.mastery.objective_mastered"
+msgstr ""
+
+msgid "ui.journey.source.other"
+msgstr ""
+
+msgid "ui.journey.source.quest.daily_completed"
+msgstr ""
+
+msgid "ui.journey.source.quest.main_completed"
+msgstr ""
+
+msgid "ui.journey.source.quest.side_completed"
+msgstr ""
+
+msgid "ui.journey.source.quest.weekly_completed"
+msgstr ""
+
+msgid "ui.journey.title"
+msgstr ""
+
 msgid "ui.learning.no_translation"
+msgstr ""
+
+msgid "ui.levelup.equip_now"
+msgstr ""
+
+msgid "ui.levelup.journey"
+msgstr ""
+
+msgid "ui.levelup.multi"
+msgstr ""
+
+msgid "ui.levelup.new_title"
+msgstr ""
+
+msgid "ui.levelup.ok"
+msgstr ""
+
+msgid "ui.levelup.rewards"
+msgstr ""
+
+msgid "ui.levelup.title"
+msgstr ""
+
+msgid "ui.levelup.xp_to_next"
 msgstr ""
 
 msgid "ui.login.button_sign_in"
@@ -972,6 +1533,21 @@ msgstr ""
 msgid "ui.login.wordmark"
 msgstr ""
 
+msgid "ui.menu.achievements"
+msgstr ""
+
+msgid "ui.menu.challenges"
+msgstr ""
+
+msgid "ui.menu.journey"
+msgstr ""
+
+msgid "ui.menu.shop"
+msgstr ""
+
+msgid "ui.menu.title"
+msgstr ""
+
 msgid "ui.minigame.completed"
 msgstr ""
 
@@ -1054,6 +1630,18 @@ msgid "ui.onboarding.step_explore"
 msgstr ""
 
 msgid "ui.onboarding.step_welcome"
+msgstr ""
+
+msgid "ui.progression.level"
+msgstr ""
+
+msgid "ui.progression.max_level"
+msgstr ""
+
+msgid "ui.progression.xp_gained"
+msgstr ""
+
+msgid "ui.progression.xp_numbers"
 msgstr ""
 
 msgid "ui.quality.antialiasing"
@@ -1275,6 +1863,21 @@ msgstr ""
 msgid "ui.result.weak_count"
 msgstr ""
 
+msgid "ui.reward.badge"
+msgstr ""
+
+msgid "ui.reward.currency"
+msgstr ""
+
+msgid "ui.reward.item"
+msgstr ""
+
+msgid "ui.reward.title"
+msgstr ""
+
+msgid "ui.reward.xp"
+msgstr ""
+
 msgid "ui.settings.about"
 msgstr ""
 
@@ -1315,6 +1918,54 @@ msgid "ui.settings.replay_guide"
 msgstr ""
 
 msgid "ui.settings.title"
+msgstr ""
+
+msgid "ui.shop.available_to"
+msgstr ""
+
+msgid "ui.shop.balance_after"
+msgstr ""
+
+msgid "ui.shop.bought"
+msgstr ""
+
+msgid "ui.shop.buy"
+msgstr ""
+
+msgid "ui.shop.buying"
+msgstr ""
+
+msgid "ui.shop.confirm_purchase"
+msgstr ""
+
+msgid "ui.shop.empty"
+msgstr ""
+
+msgid "ui.shop.limit"
+msgstr ""
+
+msgid "ui.shop.need_more"
+msgstr ""
+
+msgid "ui.shop.open.tooltip"
+msgstr ""
+
+msgid "ui.shop.owned"
+msgstr ""
+
+msgid "ui.shop.price"
+msgstr ""
+
+msgid "ui.shop.retry_safe"
+msgstr ""
+
+msgid "ui.shop.tab"
+msgstr ""
+
+msgid "ui.shop.title"
+msgstr ""
+
+msgid "ui.shop.try_on"
 msgstr ""
 
 msgid "ui.simulation.checking"

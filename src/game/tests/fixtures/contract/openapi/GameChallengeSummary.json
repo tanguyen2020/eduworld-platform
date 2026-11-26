@@ -1,0 +1,16 @@
+{
+  "challenge_id": "00000000-0000-4000-8000-000000000001",
+  "challenge_type": "time",
+  "title": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "area_id": "sample",
+  "subject_id": "00000000-0000-4000-8000-000000000001",
+  "available_difficulties": [
+    "easy"
+  ],
+  "party_required": false,
+  "available_to": "2026-11-15T07:30:00Z",
+  "attempts_left": 0
+}

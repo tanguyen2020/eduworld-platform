@@ -1517,3 +1517,654 @@ msgstr "Could not connect, please try again in a moment."
 
 msgid "ui.quest.notice.try_again"
 msgstr "Almost there! Review a little and try again."
+
+msgid "ui.achievement.category.competition"
+msgstr "Competition"
+
+msgid "ui.achievement.category.event"
+msgstr "Events"
+
+msgid "ui.achievement.category.exploration"
+msgstr "Exploring"
+
+msgid "ui.achievement.category.first_time"
+msgstr "First times"
+
+msgid "ui.achievement.category.hidden"
+msgstr "Secret"
+
+msgid "ui.achievement.category.learning"
+msgstr "Learning"
+
+msgid "ui.achievement.category.progress"
+msgstr "Progress"
+
+msgid "ui.achievement.category.seasonal"
+msgstr "Seasonal"
+
+msgid "ui.achievement.category.social"
+msgstr "Friends"
+
+msgid "ui.achievement.category.team"
+msgstr "Team"
+
+msgid "ui.achievement.empty"
+msgstr "Your journey has just begun! Your first achievement is waiting in the Central Town."
+
+msgid "ui.achievement.hidden_hint"
+msgstr "Keep exploring to unlock"
+
+msgid "ui.achievement.load_failed"
+msgstr "Achievements could not load. Please try again."
+
+msgid "ui.achievement.loading"
+msgstr "Loading…"
+
+msgid "ui.achievement.no_badges"
+msgstr "You have no badges yet. Finish challenges and quests to get some!"
+
+msgid "ui.achievement.progress_spoken"
+msgstr "{current} of {target}"
+
+msgid "ui.achievement.received"
+msgstr "Received"
+
+msgid "ui.achievement.showcase_empty"
+msgstr "Empty slot"
+
+msgid "ui.achievement.showcase_hint"
+msgstr "Choose the badges your friends can see. Tap a badge to add or remove it."
+
+msgid "ui.achievement.showcase_owned"
+msgstr "Your badges"
+
+msgid "ui.achievement.showcase_save"
+msgstr "Save showcase"
+
+msgid "ui.achievement.showcase_saved"
+msgstr "Showcase saved!"
+
+msgid "ui.achievement.tab.achievements"
+msgstr "Achievements"
+
+msgid "ui.achievement.tab.showcase"
+msgstr "Badge showcase"
+
+msgid "ui.achievement.tier.bronze"
+msgstr "Bronze"
+
+msgid "ui.achievement.tier.gold"
+msgstr "Gold"
+
+msgid "ui.achievement.tier.platinum"
+msgstr "Platinum"
+
+msgid "ui.achievement.tier.silver"
+msgstr "Silver"
+
+msgid "ui.achievement.tier.single"
+msgstr "Achieved"
+
+msgid "ui.achievement.title"
+msgstr "Achievements & Collections"
+
+msgid "ui.challenge.attempts_left"
+msgstr "{n} tries left today"
+
+msgid "ui.challenge.back_to_board"
+msgstr "Challenge Mountain"
+
+msgid "ui.challenge.board_title"
+msgstr "Challenge Mountain"
+
+msgid "ui.challenge.continue"
+msgstr "Continue"
+
+msgid "ui.challenge.cooldown"
+msgstr "Take a short break, try again in {time}"
+
+msgid "ui.challenge.difficulty.easy"
+msgstr "Easy"
+
+msgid "ui.challenge.difficulty.expert"
+msgstr "Expert"
+
+msgid "ui.challenge.difficulty.hard"
+msgstr "Hard"
+
+msgid "ui.challenge.difficulty.legendary"
+msgstr "Legendary"
+
+msgid "ui.challenge.difficulty.normal"
+msgstr "Normal"
+
+msgid "ui.challenge.difficulty_title"
+msgstr "Choose a level"
+
+msgid "ui.challenge.empty"
+msgstr "No challenge is open for you yet. Come back later!"
+
+msgid "ui.challenge.enter"
+msgstr "Start"
+
+msgid "ui.challenge.first_clear"
+msgstr "First-clear reward"
+
+msgid "ui.challenge.gone"
+msgstr "This challenge is no longer open."
+
+msgid "ui.challenge.keep_playing"
+msgstr "Keep playing"
+
+msgid "ui.challenge.lives"
+msgstr "{n} stamina"
+
+msgid "ui.challenge.loading"
+msgstr "Loading challenges…"
+
+msgid "ui.challenge.locked.grade_not_allowed"
+msgstr "For older grades"
+
+msgid "ui.challenge.locked.not_unlocked"
+msgstr "Finish the level before to unlock"
+
+msgid "ui.challenge.locked.school_disabled"
+msgstr "Your school has not opened this level"
+
+msgid "ui.challenge.multiplier"
+msgstr "Reward ×{x}"
+
+msgid "ui.challenge.no_attempts"
+msgstr "You have used all your tries today, come back tomorrow! Meanwhile you can practise as much as you like from the Map."
+
+msgid "ui.challenge.notice.attempt_limit_at"
+msgstr "You have used all your tries. You can try again at {time}!"
+
+msgid "ui.challenge.notice.in_progress"
+msgstr "You have a challenge in progress. Let us continue it!"
+
+msgid "ui.challenge.notice.not_eligible"
+msgstr "This challenge is not open for you right now."
+
+msgid "ui.challenge.notice.reconnecting"
+msgstr "Reconnecting… Please wait a moment."
+
+msgid "ui.challenge.notice.unavailable"
+msgstr "The system is busy, please try again in a few minutes."
+
+msgid "ui.challenge.party_only"
+msgstr "This challenge needs a team."
+
+msgid "ui.challenge.practice"
+msgstr "Practise"
+
+msgid "ui.challenge.progress"
+msgstr "Done {n} · Score {score}"
+
+msgid "ui.challenge.result.abandoned"
+msgstr "You stopped the challenge"
+
+msgid "ui.challenge.result.abandoned_line"
+msgstr "You did {n} activities. Try again whenever you are ready!"
+
+msgid "ui.challenge.result.completed_n"
+msgstr "You completed {n} activities"
+
+msgid "ui.challenge.result.review_hint"
+msgstr "Review a little and try again, you can do it!"
+
+msgid "ui.challenge.result.succeeded"
+msgstr "Challenge complete!"
+
+msgid "ui.challenge.result.succeeded_line"
+msgstr "You completed {n} activities. Great job!"
+
+msgid "ui.challenge.result_title"
+msgstr "Challenge result"
+
+msgid "ui.challenge.resume"
+msgstr "Continue"
+
+msgid "ui.challenge.resume_hint"
+msgstr "You have a challenge in progress."
+
+msgid "ui.challenge.rewards"
+msgstr "Rewards added to your bag"
+
+msgid "ui.challenge.stop"
+msgstr "Stop"
+
+msgid "ui.challenge.stop_confirm"
+msgstr "Do you want to stop the challenge? The activities you did are kept."
+
+msgid "ui.challenge.stop_now"
+msgstr "Stop"
+
+msgid "ui.challenge.time_left_tooltip"
+msgstr "Time left"
+
+msgid "ui.challenge.time_limit"
+msgstr "Time: {time}"
+
+msgid "ui.challenge.time_up"
+msgstr "Time is up"
+
+msgid "ui.challenge.type.boss"
+msgstr "Boss"
+
+msgid "ui.challenge.type.coop"
+msgstr "Co-op"
+
+msgid "ui.challenge.type.knowledge"
+msgstr "Knowledge"
+
+msgid "ui.challenge.type.other"
+msgstr "Challenge"
+
+msgid "ui.challenge.type.party"
+msgstr "Party"
+
+msgid "ui.challenge.type.perfect"
+msgstr "Perfect"
+
+msgid "ui.challenge.type.puzzle"
+msgstr "Puzzle"
+
+msgid "ui.challenge.type.seasonal"
+msgstr "Seasonal"
+
+msgid "ui.challenge.type.survival"
+msgstr "Survival"
+
+msgid "ui.challenge.type.time"
+msgstr "Timed"
+
+msgid "ui.challenge.type.tournament"
+msgstr "Tournament"
+
+msgid "ui.challenge.type.weekly"
+msgstr "Weekly"
+
+msgid "ui.collection.back"
+msgstr "All collections"
+
+msgid "ui.collection.duplicate_converted"
+msgstr "Converted to {amount} Coins"
+
+msgid "ui.collection.empty"
+msgstr "You have no collection yet. Explore the world to find your first item!"
+
+msgid "ui.collection.gone"
+msgstr "This collection is no longer open."
+
+msgid "ui.collection.how_to_obtain_line"
+msgstr "How to get: {how}"
+
+msgid "ui.collection.missing"
+msgstr "Not yet"
+
+msgid "ui.collection.owned"
+msgstr "Collected"
+
+msgid "ui.collection.progress"
+msgstr "{progress} items"
+
+msgid "ui.collection.tab"
+msgstr "Collections"
+
+msgid "ui.collection.type.badge"
+msgstr "Badges"
+
+msgid "ui.collection.type.cosmetic"
+msgstr "Outfits"
+
+msgid "ui.collection.type.event"
+msgstr "Events"
+
+msgid "ui.collection.type.exploration"
+msgstr "Exploring"
+
+msgid "ui.collection.type.knowledge_card"
+msgstr "Knowledge cards"
+
+msgid "ui.collection.type.pet"
+msgstr "Pets"
+
+msgid "ui.common.cancel"
+msgstr "Cancel"
+
+msgid "ui.hub.daily_cap_reached"
+msgstr "You have earned all of today's XP; your learning is still recorded"
+
+msgid "ui.hub.menu"
+msgstr "More"
+
+msgid "ui.hub.menu.tooltip"
+msgstr "Shop, achievements, challenges, journey"
+
+msgid "ui.inventory.customize"
+msgstr "Customise"
+
+msgid "ui.inventory.customize.tooltip"
+msgstr "Look, saved outfits and emote wheel"
+
+msgid "ui.inventory.empty_hint"
+msgstr "Nothing here yet. Finish quests to get some!"
+
+msgid "ui.inventory.equip"
+msgstr "Wear"
+
+msgid "ui.inventory.equipped"
+msgstr "You are wearing {item}!"
+
+msgid "ui.inventory.equipping"
+msgstr "Putting on…"
+
+msgid "ui.inventory.filter.accessory"
+msgstr "Accessories"
+
+msgid "ui.inventory.filter.all"
+msgstr "All"
+
+msgid "ui.inventory.filter.badge"
+msgstr "Badges"
+
+msgid "ui.inventory.filter.emote"
+msgstr "Emotes"
+
+msgid "ui.inventory.filter.frame"
+msgstr "Frames"
+
+msgid "ui.inventory.filter.hair"
+msgstr "Hair"
+
+msgid "ui.inventory.filter.outfit"
+msgstr "Outfits"
+
+msgid "ui.inventory.filter.pet"
+msgstr "Pets"
+
+msgid "ui.inventory.filter.title"
+msgstr "Titles"
+
+msgid "ui.inventory.history.currency"
+msgstr "Coins"
+
+msgid "ui.inventory.history.empty"
+msgstr "Nothing in your history yet."
+
+msgid "ui.inventory.history.items"
+msgstr "Items"
+
+msgid "ui.inventory.history.title"
+msgstr "History"
+
+msgid "ui.inventory.loading"
+msgstr "Loading…"
+
+msgid "ui.inventory.offline_locked"
+msgstr "Offline: you can look at your items but cannot buy or wear them yet."
+
+msgid "ui.inventory.quantity"
+msgstr "×{n}"
+
+msgid "ui.inventory.rarity.common"
+msgstr "Common"
+
+msgid "ui.inventory.rarity.epic"
+msgstr "Epic"
+
+msgid "ui.inventory.rarity.legendary"
+msgstr "Legendary"
+
+msgid "ui.inventory.rarity.rare"
+msgstr "Rare"
+
+msgid "ui.inventory.rarity.uncommon"
+msgstr "Uncommon"
+
+msgid "ui.inventory.reason.adjustment"
+msgstr "Adjustment"
+
+msgid "ui.inventory.reason.collection"
+msgstr "Collection"
+
+msgid "ui.inventory.reason.duplicate_conversion"
+msgstr "Duplicate converted"
+
+msgid "ui.inventory.reason.other"
+msgstr "Other change"
+
+msgid "ui.inventory.reason.refund"
+msgstr "Refund"
+
+msgid "ui.inventory.reason.reward"
+msgstr "Reward"
+
+msgid "ui.inventory.reason.shop_purchase"
+msgstr "Shop purchase"
+
+msgid "ui.inventory.tab.history"
+msgstr "History"
+
+msgid "ui.inventory.tab.wardrobe"
+msgstr "Wardrobe"
+
+msgid "ui.inventory.title"
+msgstr "Wardrobe"
+
+msgid "ui.journey.empty"
+msgstr "Your journey has just begun! Learn and explore to earn XP."
+
+msgid "ui.journey.load_failed"
+msgstr "Your journey could not load. Please try again."
+
+msgid "ui.journey.loading"
+msgstr "Loading…"
+
+msgid "ui.journey.milestones"
+msgstr "Level milestones"
+
+msgid "ui.journey.more"
+msgstr "Show more"
+
+msgid "ui.journey.not_a_grade"
+msgstr "Your game level shows how hard you have worked; it is not a school mark."
+
+msgid "ui.journey.recent"
+msgstr "XP you earned"
+
+msgid "ui.journey.source.achievement.unlocked"
+msgstr "Achievement unlocked"
+
+msgid "ui.journey.source.activity.completed"
+msgstr "Finished an activity"
+
+msgid "ui.journey.source.boss.defeated"
+msgstr "Boss defeated"
+
+msgid "ui.journey.source.challenge.completed"
+msgstr "Finished a challenge"
+
+msgid "ui.journey.source.competition.participation"
+msgstr "Took part in a match"
+
+msgid "ui.journey.source.coop.contribution"
+msgstr "Helped your team"
+
+msgid "ui.journey.source.event.participation"
+msgstr "Took part in an event"
+
+msgid "ui.journey.source.exploration.area_completed"
+msgstr "Explored a whole area"
+
+msgid "ui.journey.source.exploration.discovery"
+msgstr "Found a discovery"
+
+msgid "ui.journey.source.lesson.completed"
+msgstr "Finished a lesson"
+
+msgid "ui.journey.source.mastery.objective_mastered"
+msgstr "Mastered a learning goal"
+
+msgid "ui.journey.source.other"
+msgstr "XP earned"
+
+msgid "ui.journey.source.quest.daily_completed"
+msgstr "Finished a daily quest"
+
+msgid "ui.journey.source.quest.main_completed"
+msgstr "Finished a main quest"
+
+msgid "ui.journey.source.quest.side_completed"
+msgstr "Finished a side quest"
+
+msgid "ui.journey.source.quest.weekly_completed"
+msgstr "Finished a weekly quest"
+
+msgid "ui.journey.title"
+msgstr "My journey"
+
+msgid "ui.levelup.equip_now"
+msgstr "Wear it now"
+
+msgid "ui.levelup.journey"
+msgstr "My journey"
+
+msgid "ui.levelup.multi"
+msgstr "{count} levels up!"
+
+msgid "ui.levelup.new_title"
+msgstr "New title: {title}"
+
+msgid "ui.levelup.ok"
+msgstr "Awesome!"
+
+msgid "ui.levelup.rewards"
+msgstr "Rewards added to your bag"
+
+msgid "ui.levelup.title"
+msgstr "Level {level}!"
+
+msgid "ui.levelup.xp_to_next"
+msgstr "{xp} XP more to level {next}"
+
+msgid "ui.menu.achievements"
+msgstr "Achievements & Collections"
+
+msgid "ui.menu.challenges"
+msgstr "Challenge Mountain"
+
+msgid "ui.menu.journey"
+msgstr "My journey"
+
+msgid "ui.menu.shop"
+msgstr "Shop"
+
+msgid "ui.menu.title"
+msgstr "More"
+
+msgid "ui.progression.level"
+msgstr "Level {level}"
+
+msgid "ui.progression.max_level"
+msgstr "Top level"
+
+msgid "ui.progression.xp_gained"
+msgstr "+{xp} XP"
+
+msgid "ui.progression.xp_numbers"
+msgstr "{xp}/{total} XP"
+
+msgid "ui.reward.badge"
+msgstr "Badge"
+
+msgid "ui.reward.currency"
+msgstr "{amount} Coins"
+
+msgid "ui.reward.item"
+msgstr "Item"
+
+msgid "ui.reward.title"
+msgstr "Title"
+
+msgid "ui.reward.xp"
+msgstr "{amount} XP"
+
+msgid "ui.shop.available_to"
+msgstr "On sale until {date}"
+
+msgid "ui.shop.balance_after"
+msgstr "Balance after: {balance} Coins"
+
+msgid "ui.shop.bought"
+msgstr "You bought {item}! It is in your wardrobe."
+
+msgid "ui.shop.buy"
+msgstr "Buy"
+
+msgid "ui.shop.buying"
+msgstr "Buying…"
+
+msgid "ui.shop.confirm_purchase"
+msgstr "Buy {item} for {price} Coins?"
+
+msgid "ui.shop.empty"
+msgstr "The shop is getting new items ready. Come back later!"
+
+msgid "ui.shop.limit"
+msgstr "Bought {count}/{limit}"
+
+msgid "ui.shop.need_more"
+msgstr "Need {n} more Coins"
+
+msgid "ui.shop.open.tooltip"
+msgstr "Open the Shop (key B)"
+
+msgid "ui.shop.owned"
+msgstr "Owned"
+
+msgid "ui.shop.price"
+msgstr "Price: {price} Coins"
+
+msgid "ui.shop.retry_safe"
+msgstr "The connection is unstable. Press Buy again to retry — you will never pay twice."
+
+msgid "ui.shop.tab"
+msgstr "Shop"
+
+msgid "ui.shop.title"
+msgstr "Shop"
+
+msgid "ui.shop.try_on"
+msgstr "Try on"
+
+msgid "ui.error.INSUFFICIENT_BALANCE"
+msgstr "You do not have enough Coins for this yet. Learn a bit more to earn Coins!"
+
+msgid "ui.error.PURCHASE_LIMIT_REACHED"
+msgstr "You have bought as many of this as you can."
+
+msgid "ui.error.ITEM_ALREADY_OWNED"
+msgstr "You already have this in your wardrobe."
+
+msgid "ui.error.SHOP_ITEM_UNAVAILABLE"
+msgstr "This item will be back next season."
+
+msgid "ui.error.CHALLENGE_NOT_ELIGIBLE"
+msgstr "This challenge is not open for you right now."
+
+msgid "ui.error.CHALLENGE_ATTEMPT_LIMIT"
+msgstr "You have used all your tries today, come back tomorrow!"
+
+msgid "ui.error.INVALID_STATE_TRANSITION"
+msgstr "The challenge has ended. Let us see the result."
+
+msgid "ui.error.CONFLICT"
+msgstr "Something changed, please try again."
+
+msgid "ui.collection.completion_reward"
+msgstr "Reward for the full set:"
+
+msgid "ui.challenge.minutes"
+msgstr "{m} min"

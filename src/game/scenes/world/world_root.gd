@@ -36,6 +36,9 @@ var _area_started_ms: int = 0
 @onready var _notice: PanelContainer = %Notice
 @onready var _benchmark: Control = %QualityBenchmark
 @onready var _emotes: EmoteWheel = %EmoteWheel
+## F069: S07 level-up (above the panels) and the HUD of a solo challenge run.
+@onready var _level_up: Control = %LevelUpModal
+@onready var _challenge_hud: ChallengeHud = %ChallengeHud
 
 
 func _ready() -> void:
@@ -49,6 +52,8 @@ func _ready() -> void:
 	_hud.connect("joystick_moved", _on_joystick_moved)
 	_hud.connect("notifications_pressed", _on_notifications_pressed)
 	_hud.connect("next_step_pressed", _on_next_step_pressed)
+	_hud.connect("shop_pressed", _on_shop_pressed)
+	_hud.connect("menu_pressed", _on_menu_pressed)
 	_bind_zone(zone)
 	SceneRouter.area_entered.connect(_on_area_entered)
 	SceneRouter.area_change_failed.connect(_on_area_change_failed)
@@ -65,6 +70,7 @@ func _ready() -> void:
 	_emotes.anim_driver = local.anim_driver if local != null else null
 	_apply_avatar(services.profile.avatar_config())
 	_emotes.emote_selected.connect(_on_emote_selected)
+	_bind_progression(services)
 	_start_hub(services)
 	_benchmark.connect("finished", _on_benchmark_finished)
 	_start_quality()
@@ -72,6 +78,7 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	_stop_hub()
+	_unbind_progression()
 	for pair: Array in [[SceneRouter.area_entered, _on_area_entered], [SceneRouter.area_change_failed, _on_area_change_failed]]:
 		if (pair[0] as Signal).is_connected(pair[1] as Callable):
 			(pair[0] as Signal).disconnect(pair[1] as Callable)
@@ -127,6 +134,9 @@ func _on_ui_requested(screen_id: StringName, args: Dictionary) -> void:
 	if panel.get(HOLD_PROPERTY) == true:
 		AppState.get_services().play_time.hold(screen_id)
 	panel.call("open", args)
+	if screen_id == &"activity_host":
+		_challenge_hud.set_activity_open(true)
+		_inset_activity()
 
 
 func _close_panel(screen_id: StringName) -> void:
@@ -208,9 +218,18 @@ func _on_notifications_pressed() -> void:
 	AppState.get_services().notifications.open_assigned()
 
 
-## F070 Tủ đồ: HUD button or `open_wardrobe` (I).
+## F069: Tủ đồ (S08) — HUD button or `open_wardrobe` (I); the F070 studio is "Phối đồ" inside it.
 func _on_wardrobe_pressed() -> void:
-	EventBus.ui_requested.emit(&"wardrobe", {})
+	EventBus.ui_requested.emit(&"inventory", {"tab": "wardrobe"})
+
+
+## F069: Cửa hàng (S08 tab Shop) — the Xu chip or `open_shop` (B).
+func _on_shop_pressed() -> void:
+	EventBus.ui_requested.emit(&"inventory", {"tab": "shop"})
+
+
+func _on_menu_pressed() -> void:
+	EventBus.ui_requested.emit(&"game_menu", {})
 
 
 func _input(event: InputEvent) -> void:
@@ -223,6 +242,9 @@ func _input(event: InputEvent) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if open_screen.is_empty() and event.is_action_pressed("open_wardrobe"):
 		_on_wardrobe_pressed()
+		get_viewport().set_input_as_handled()
+	elif open_screen.is_empty() and event.is_action_pressed("open_shop"):
+		_on_shop_pressed()
 		get_viewport().set_input_as_handled()
 	elif open_screen.is_empty() and event.is_action_pressed("open_world_map"):
 		_on_map_pressed()
@@ -473,3 +495,80 @@ func _on_discovery_requested(interactable_id: String) -> void:
 
 func _on_area_unlocked(_area_id: String, area_name: Dictionary) -> void:
 	_hud.call("show_banner", "ui.world.area_unlocked", {"name": L10n.pick(area_name)})
+
+
+# ---------- F069: progression, wallet, level-up, solo challenge ----------
+
+## Entering the world reads the progression and the wallet (F069-AC-01), shows held level-ups through S07 and hosts
+## the challenge HUD; a run in progress found on the board is resumed by ChallengeClient (F069-AC-20).
+func _bind_progression(services: ServiceLocator) -> void:
+	if services.progression == null:
+		return
+	services.progression.queue.batch_released.connect(_on_level_up_batch)
+	services.progression.store.progression_changed.connect(_on_progression_for_modal)
+	_level_up.connect("closed", _on_level_up_closed)
+	_level_up.connect("equip_requested", _on_level_up_equip)
+	_level_up.connect("journey_requested", _on_level_up_journey)
+	_challenge_hud.bind(services.challenge)
+	services.challenge.attempt_changed.connect(_on_challenge_changed)
+	EventBus.ui_closed.connect(_on_screen_closed_for_challenge)
+	services.progression.refresh()
+	services.inventory.load_wallet()
+	# A batch released before the world existed (e.g. during S02) is shown now.
+	if services.progression.queue.current != null and not _level_up.visible:
+		_on_level_up_batch(services.progression.queue.current)
+
+
+func _unbind_progression() -> void:
+	var services: ServiceLocator = AppState.services
+	if services == null or services.progression == null:
+		return
+	if services.progression.queue.batch_released.is_connected(_on_level_up_batch):
+		services.progression.queue.batch_released.disconnect(_on_level_up_batch)
+	if services.progression.store.progression_changed.is_connected(_on_progression_for_modal):
+		services.progression.store.progression_changed.disconnect(_on_progression_for_modal)
+	if services.challenge.attempt_changed.is_connected(_on_challenge_changed):
+		services.challenge.attempt_changed.disconnect(_on_challenge_changed)
+	if EventBus.ui_closed.is_connected(_on_screen_closed_for_challenge):
+		EventBus.ui_closed.disconnect(_on_screen_closed_for_challenge)
+
+
+func _on_level_up_batch(batch: LevelUpModel) -> void:
+	var services: ServiceLocator = AppState.get_services()
+	_level_up.call("present", batch, services.progression.progression(), AppState.grade_band)
+
+
+func _on_level_up_closed() -> void:
+	AppState.get_services().progression.queue.mark_shown()
+
+
+func _on_level_up_equip(item_id: String) -> void:
+	EventBus.ui_requested.emit(&"inventory", {"tab": "wardrobe", "item_id": item_id})
+
+
+func _on_level_up_journey() -> void:
+	EventBus.ui_requested.emit(&"journey", {})
+
+
+## The activity player of a run closed: the challenge HUD offers "Tiếp tục" again.
+func _on_screen_closed_for_challenge(screen_id: StringName) -> void:
+	if screen_id == &"activity_host":
+		_challenge_hud.set_activity_open(false)
+		AppState.get_services().challenge.on_activity_closed()
+
+
+## A run started or ended: the HUD steps back for the challenge strip, the activity player starts below it.
+func _on_challenge_changed(attempt: ChallengeAttemptModel) -> void:
+	var running: bool = attempt != null and not attempt.is_finished()
+	_hud.call("set_challenge_mode", running)
+	_inset_activity.call_deferred()
+
+
+func _inset_activity() -> void:
+	var host: Control = panels.get(&"activity_host") as Control
+	if host != null and host.has_method("set_top_inset"):
+		host.call("set_top_inset", _challenge_hud.strip_height())
+
+
+func _on_progression_for_modal(progression: ProgressionModel) -> void:
+	_level_up.call("update_progression", progression)

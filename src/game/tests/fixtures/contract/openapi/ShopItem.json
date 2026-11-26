@@ -1,0 +1,21 @@
+{
+  "shop_item_id": "00000000-0000-4000-8000-000000000001",
+  "item_id": "sample1",
+  "name": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "description": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "kind": "outfit",
+  "rarity": "common",
+  "price": 1,
+  "currency_code": "sample",
+  "purchase_limit": 1,
+  "purchased_count": 0,
+  "owned": false,
+  "available_to": "2026-11-15T07:30:00Z",
+  "thumbnail_url": "https://example.invalid/resource"
+}

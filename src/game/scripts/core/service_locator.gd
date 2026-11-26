@@ -27,6 +27,10 @@ var presence: PresenceService = null
 var world: WorldService = null
 ## Quests of the student: list, delivery, accept/abandon, step reports, learning steps, realtime progress (F072).
 var quest: QuestService = null
+## F069: progression (XP, level, S07 queue), achievements + collections + badge showcase, solo challenges.
+var progression: ProgressionService = null
+var achievements: AchievementService = null
+var challenge: ChallengeClient = null
 ## `(code: String) -> void` for session-ending refusals; default `AuthService.handle_access_denied` (F062-AC-12/23).
 var access_denied_handler: Callable = Callable()
 
@@ -51,8 +55,18 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	video_files = VideoFileCache.new(rest)
 	profile = ProfileService.new(rest, app_state)
 	profile.access_denied.connect(_on_access_denied)
-	inventory = InventoryService.new(rest)
 	realtime = realtime_client if realtime_client != null else _realtime_autoload()
+	inventory = InventoryService.new(rest, realtime, telemetry)
+	inventory.profile = profile
+	inventory.access_denied.connect(_on_access_denied)
+	progression = ProgressionService.new(rest, app_state, realtime, telemetry)
+	progression.access_denied.connect(_on_access_denied)
+	progression.level_reached.connect(func(_level: int) -> void: inventory.load_wallet())
+	achievements = AchievementService.new(rest, profile, telemetry)
+	achievements.access_denied.connect(_on_access_denied)
+	challenge = ChallengeClient.new(rest, app_state, clock, realtime, learning, telemetry)
+	challenge.access_denied.connect(_on_access_denied)
+	challenge.challenge_finished.connect(func(_a: ChallengeAttemptModel) -> void: inventory.load_wallet())
 	hub = HubSync.new(realtime)
 	presence = PresenceService.new(realtime, clock)
 	world = WorldService.new(rest, app_state, realtime)
@@ -87,6 +101,10 @@ func end_session() -> void:
 	media.clear()
 	profile.clear()
 	world.clear()
+	inventory.clear()
+	progression.clear()
+	achievements.clear()
+	challenge.clear()
 	play_time.configure({})
 	telemetry.clear()
 	hub.leave_area()
@@ -95,6 +113,10 @@ func end_session() -> void:
 ## F092-AC-05: the resume failed — read the profile again over REST, join the current area again, then Online.
 func resync() -> void:
 	await profile.fetch_profile()
+	progression.refresh()
+	inventory.load_wallet()
+	if challenge.is_running():
+		challenge.resume(challenge.attempt().challenge_attempt_id)
 	if not hub.desired_area.is_empty():
 		await hub.join()
 	if realtime != null:

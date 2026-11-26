@@ -719,3 +719,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		handled = false
 	if handled:
 		get_viewport().set_input_as_handled()
+
+
+## F069: room left at the top for the solo-challenge strip (ChallengeHud) while a run is open; 0 = full screen.
+func set_top_inset(px: float) -> void:
+	var frame: Control = get_node_or_null("%Frame") as Control
+	if frame != null:
+		frame.offset_top = maxf(0.0, px)

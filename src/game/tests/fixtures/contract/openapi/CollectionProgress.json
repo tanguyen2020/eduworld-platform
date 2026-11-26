@@ -1,0 +1,12 @@
+{
+  "collection_id": "00000000-0000-4000-8000-000000000001",
+  "code": "sample",
+  "title": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "type": "pet",
+  "owned_count": 0,
+  "total_count": 0,
+  "completed_at": "2026-11-15T07:30:00Z"
+}

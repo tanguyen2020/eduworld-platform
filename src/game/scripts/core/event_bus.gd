@@ -21,3 +21,9 @@ signal ui_requested(screen_id: StringName, args: Dictionary)
 signal ui_closed(screen_id: StringName)
 ## F096: "Xem lại hướng dẫn của Mây" in Cài đặt — the world host opens the Hub guide again.
 signal onboarding_requested()
+## F069: the S07 level-up modal was shown (accessibility announce, analytics without PII).
+@warning_ignore("unused_signal")
+signal level_up_shown(to_level: int)
+## F069: the Xu balance changed (server value: `getWallet` or `balance_after`).
+@warning_ignore("unused_signal")
+signal wallet_changed(balance: int)

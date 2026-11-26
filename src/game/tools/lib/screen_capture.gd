@@ -17,6 +17,10 @@ const SCREENS: PackedStringArray = [
 	"activity_feedback", "activity_incorrect", "activity_hint", "activity_multiple", "activity_true_false",
 	"activity_fill_blank", "activity_numeric", "activity_matching", "activity_ordering", "activity_drag_drop",
 	"result", "world_map", "settings", "about",
+	# F069: progression, economy, achievements, solo challenge.
+	"hub_progress", "game_menu", "level_up", "level_up_multi", "journey", "inventory", "shop", "shop_confirm", "shop_need_more",
+	"history", "achievements", "collection", "showcase", "challenge_board", "challenge_locked", "challenge_no_tries",
+	"challenge_hud", "challenge_result_failed", "challenge_result_succeeded",
 ]
 ## Sample look of the local player (catalog codes of the F070 fixture; display only).
 const SAMPLE_AVATAR: Dictionary = {
@@ -113,6 +117,7 @@ func _sign_in(first_time: bool = false) -> void:
 	_harness.http.reply(WorldFixtures.ROUTE_EXPLORATION, 200, WorldFixtures.exploration())
 	_harness.http.reply("GET /learning/my-assignments", 200, AssignmentFixtures.two())
 	_harness.http.reply("GET /game/quests", 200, {"data": [], "page": {"has_more": false}})
+	F069Fixtures.script_all(_harness.http, _band)
 	AppState.services = ServiceLocator.new(_harness.api, AppState, _harness.clock)
 	AppState.player = AuthHarness.bootstrap()
 	AppState.set_grade_band(_band)
@@ -180,6 +185,11 @@ func _world(onboarding: bool = false) -> Node:
 	var world: Node = _add("res://scenes/world/WorldRoot.tscn")
 	for i: int in 30:
 		await get_tree().process_frame
+	var profile: ProfileService = AppState.get_services().profile
+	if profile.profile == null:
+		await profile.fetch_profile()
+	if profile.profile != null:
+		profile.profile.avatar_config = AvatarConfigModel.from_dict(SAMPLE_AVATAR)
 	var zone: ZoneRoot = world.get("zone") as ZoneRoot
 	if zone != null and zone.player != null:
 		var rig: AvatarBuilder = zone.player.get_node_or_null("AvatarRig") as AvatarBuilder
@@ -354,3 +364,186 @@ func _screen_activity_ordering() -> Node:
 
 func _screen_activity_drag_drop() -> Node:
 	return await _one_type("drag_drop")
+
+
+# ---------- F069: progression, economy, achievements, solo challenge ----------
+
+func _screen_hub_progress() -> Node:
+	var world: Node = await _world()
+	for i: int in 20:
+		await get_tree().process_frame
+	return world
+
+
+func _screen_game_menu() -> Node:
+	var world: Node = await _world()
+	await _open_panel(world, &"game_menu")
+	return world
+
+
+func _level_up(from_level: int, to_level: int) -> Node:
+	var world: Node = await _world()
+	for i: int in 10:
+		await get_tree().process_frame
+	var service: ProgressionService = AppState.get_services().progression
+	_harness.http.clear(F069Fixtures.ROUTE_PROGRESSION)
+	_harness.http.reply(F069Fixtures.ROUTE_PROGRESSION, 200, F069Fixtures.progression(to_level, 20, 140))
+	for level: int in range(from_level, to_level):
+		service.handle_message(ProgressionService.MSG_LEVEL_REACHED, F069Fixtures.level_up(level, level + 1, level == from_level))
+	for i: int in 20:
+		await get_tree().process_frame
+	var modal: Control = world.find_child("LevelUpModal", true, false) as Control
+	if modal != null:
+		modal.call("skip_effect")
+	return world
+
+
+func _screen_level_up() -> Node:
+	return await _level_up(3, 4)
+
+
+func _screen_level_up_multi() -> Node:
+	return await _level_up(3, 5)
+
+
+func _screen_journey() -> Node:
+	var world: Node = await _world()
+	await _open_panel(world, &"journey")
+	return world
+
+
+func _inventory(tab: String, select: int = -1) -> Node:
+	var world: Node = await _world()
+	await _open_panel(world, &"inventory", {"tab": tab})
+	var screen: Control = world.find_child("InventoryShopScreen", true, false) as Control
+	if screen != null and select >= 0:
+		screen.call("select_entry", select)
+		for i: int in 10:
+			await get_tree().process_frame
+	return world
+
+
+func _screen_inventory() -> Node:
+	return await _inventory("wardrobe", 1)
+
+
+func _screen_shop() -> Node:
+	return await _inventory("shop", 0)
+
+
+func _screen_shop_confirm() -> Node:
+	var world: Node = await _inventory("shop", 0)
+	var screen: Control = world.find_child("InventoryShopScreen", true, false) as Control
+	screen.call("ask_purchase")
+	for i: int in 10:
+		await get_tree().process_frame
+	return world
+
+
+func _screen_shop_need_more() -> Node:
+	return await _inventory("shop", 1)
+
+
+func _screen_history() -> Node:
+	return await _inventory("history")
+
+
+func _achievements(tab: String) -> Node:
+	var world: Node = await _world()
+	if tab == "showcase":
+		_harness.http.clear(F069Fixtures.ROUTE_INVENTORY)
+		_harness.http.reply(F069Fixtures.ROUTE_INVENTORY, 200, F069Fixtures.badges())
+	await _open_panel(world, &"achievements", {"tab": tab})
+	return world
+
+
+func _screen_achievements() -> Node:
+	return await _achievements("achievements")
+
+
+func _screen_collection() -> Node:
+	var world: Node = await _achievements("collections")
+	var screen: Control = world.find_child("AchievementCollectionScreen", true, false) as Control
+	await screen.call("open_collection", F069Fixtures.COLLECTION_ID)
+	for i: int in 10:
+		await get_tree().process_frame
+	return world
+
+
+func _screen_showcase() -> Node:
+	var world: Node = await _achievements("showcase")
+	var screen: Control = world.find_child("AchievementCollectionScreen", true, false) as Control
+	screen.call("toggle_badge", "badge_explorer")
+	for i: int in 5:
+		await get_tree().process_frame
+	return world
+
+
+func _screen_challenge_board() -> Node:
+	var world: Node = await _world()
+	await _open_panel(world, &"challenge_board")
+	return world
+
+
+func _screen_challenge_locked() -> Node:
+	var world: Node = await _world()
+	_harness.http.clear(F069Fixtures.ROUTE_CHALLENGE)
+	_harness.http.reply(F069Fixtures.ROUTE_CHALLENGE, 200, F069Fixtures.challenge_detail(_band, 3, "", true),
+			{"Date": F069Fixtures.SERVER_DATE})
+	await _open_panel(world, &"challenge_board")
+	return world
+
+
+func _screen_challenge_no_tries() -> Node:
+	var world: Node = await _world()
+	_harness.http.clear(F069Fixtures.ROUTE_CHALLENGES)
+	_harness.http.clear(F069Fixtures.ROUTE_CHALLENGE)
+	_harness.http.reply(F069Fixtures.ROUTE_CHALLENGES, 200, F069Fixtures.challenges(_band, 0))
+	_harness.http.reply(F069Fixtures.ROUTE_CHALLENGE, 200, F069Fixtures.challenge_detail(_band, 0, "2026-11-26T07:42:00Z"),
+			{"Date": F069Fixtures.SERVER_DATE})
+	await _open_panel(world, &"challenge_board")
+	return world
+
+
+func _run_challenge(world: Node) -> ChallengeClient:
+	var client: ChallengeClient = AppState.get_services().challenge
+	client.intent_sink = func(_screen: StringName, _args: Dictionary) -> void: pass
+	await client.list()
+	await client.get_challenge(F069Fixtures.CHALLENGE_TIME)
+	_harness.http.reply(F069Fixtures.ROUTE_START, 201, F069Fixtures.attempt("in_progress", 2, 2),
+			{"Date": F069Fixtures.SERVER_DATE})
+	_harness.http.reply(F069Fixtures.ROUTE_NEXT, 200, F069Fixtures.next_activity(F069Fixtures.LEARNING_ATTEMPT_1, 2),
+			{"Date": F069Fixtures.SERVER_DATE})
+	await client.start(F069Fixtures.CHALLENGE_TIME, "hard")
+	for i: int in 10:
+		await get_tree().process_frame
+	return client
+
+
+func _screen_challenge_hud() -> Node:
+	var world: Node = await _world()
+	await _run_challenge(world)
+	return world
+
+
+func _challenge_result(status: String) -> Node:
+	var world: Node = await _world()
+	var client: ChallengeClient = await _run_challenge(world)
+	client.intent_sink = Callable()
+	var rewards: Array = [{"kind": "xp", "amount": 60}, {"kind": "currency", "amount": 30}] if status == "succeeded" \
+			else [{"kind": "xp", "amount": 10}]
+	client.handle_message(ChallengeClient.MSG_UPDATED, {"challenge_attempt_id": F069Fixtures.ATTEMPT_ID, "status": status,
+		"activities_completed": 6 if status == "succeeded" else 4, "rewards": rewards})
+	# The activity player of the run closes: the held result opens (ChallengeClient.on_activity_closed).
+	client.on_activity_closed()
+	for i: int in 40:
+		await get_tree().process_frame
+	return world
+
+
+func _screen_challenge_result_failed() -> Node:
+	return await _challenge_result("failed")
+
+
+func _screen_challenge_result_succeeded() -> Node:
+	return await _challenge_result("succeeded")

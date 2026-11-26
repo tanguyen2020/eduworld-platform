@@ -61,6 +61,14 @@ const ERROR_KEYS: PackedStringArray = [
 	"ui.error.EXAM_TIME_OVER",
 	"ui.error.EXAM_ALREADY_SUBMITTED",
 	"ui.error.EXAM_RESULTS_NOT_RELEASED",
+	"ui.error.INSUFFICIENT_BALANCE",
+	"ui.error.PURCHASE_LIMIT_REACHED",
+	"ui.error.ITEM_ALREADY_OWNED",
+	"ui.error.SHOP_ITEM_UNAVAILABLE",
+	"ui.error.CHALLENGE_NOT_ELIGIBLE",
+	"ui.error.CHALLENGE_ATTEMPT_LIMIT",
+	"ui.error.INVALID_STATE_TRANSITION",
+	"ui.error.CONFLICT",
 ]
 
 

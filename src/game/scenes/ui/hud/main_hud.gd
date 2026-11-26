@@ -22,14 +22,21 @@ signal notifications_pressed()
 signal joystick_moved(vector: Vector2)
 ## F096: the "Việc tiếp theo" card was pressed — the owner opens `screen_id` with `args` (EventBus.ui_requested).
 signal next_step_pressed(screen_id: StringName, args: Dictionary)
+## F069: the Xu chip was pressed (S08 tab Shop) / the "Thêm" menu (Cửa hàng, Thành tựu, Núi Thử Thách, Hành trình).
+signal shop_pressed()
+signal menu_pressed()
 
 ## PlayerBadge width in touch-target units (nickname ≤ 24 chars + grade band fit at every density).
 const BADGE_WIDTH_FACTOR: float = 3.0
 ## "Việc tiếp theo" card width in touch-target units (a two-line label wraps inside it, F096-AC-11).
 const NEXT_STEP_WIDTH_FACTOR: float = 4.0
+## F069: the "Việc tiếp theo" card never goes above this share of the screen height (its F096 place).
+const NEXT_STEP_MIN_TOP: float = 0.14
 const NO_MINIMAP_BANDS: PackedStringArray = ["g1_3"]
+## F069: XpBar (level · title, XP, moon at the daily cap) in the PlayerBadge and the Xu CurrencyChip + "Thêm" menu on
+## the right (SideBar) show once their data is loaded (ProgressionStore, WalletStore signals — no polling).
 ## Slots owned by later features (F074 XP, F075 Xu, F072 quest tracker, F071 minimap, F110 chat, F102 party).
-const FUTURE_SLOTS: PackedStringArray = ["XpBar", "CurrencyChip", "QuestTracker", "Minimap", "ChatDock", "PartyChip"]
+const FUTURE_SLOTS: PackedStringArray = ["QuestTracker", "Minimap", "ChatDock", "PartyChip"]
 const BAND_KEYS: Dictionary = {
 	"g1_3": "ui.hub.grade_band.g1_3", "g4_5": "ui.hub.grade_band.g4_5", "g6_7": "ui.hub.grade_band.g6_7",
 	"g8_9": "ui.hub.grade_band.g8_9",
@@ -59,6 +66,11 @@ var banner_args: Dictionary = {}
 @onready var _toasts: VBoxContainer = %ToastStack
 @onready var _next_step_button: Button = %NextStepButton
 @onready var _onboarding: OnboardingHint = %OnboardingHint
+@onready var _xp_bar: XpBar = %XpBar
+@onready var _xp_panel: PanelContainer = %XpPanel
+@onready var _next_step_card: PanelContainer = %NextStep
+@onready var _currency: CurrencyChip = %CurrencyChip
+@onready var _menu: Button = %MenuButton
 
 ## F096: the current "Việc tiếp theo" suggestion (NextStepHint.for_assignments).
 var next_step: Dictionary = {}
@@ -82,6 +94,14 @@ func _ready() -> void:
 	_bell.pressed.connect(notifications_pressed.emit)
 	_toasts.connect("toast_pressed", notifications_pressed.emit)
 	_next_step_button.pressed.connect(_on_next_step_pressed)
+	_badge.resized.connect(_layout_left_column)
+	_xp_panel.resized.connect(_layout_left_column)
+	_next_step_card.resized.connect(_layout_left_column)
+	get_viewport().size_changed.connect(_layout_left_column)
+	_currency.pressed.connect(shop_pressed.emit)
+	_menu.pressed.connect(menu_pressed.emit)
+	bind_progression(AppState.services.progression.store if AppState.services != null else null,
+			AppState.services.inventory.wallet_store if AppState.services != null else null)
 	_onboarding.target_root = self
 	bind_notifications(AppState.services.notifications if AppState.services != null else null)
 	AppState.player_changed.connect(_on_player_changed)
@@ -94,6 +114,9 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	bind_notifications(null)
+	bind_progression(null, null)
+	if get_viewport() != null and get_viewport().size_changed.is_connected(_layout_left_column):
+		get_viewport().size_changed.disconnect(_layout_left_column)
 	for pair: Array in [[AppState.player_changed, _on_player_changed], [AppState.assignments_changed,
 			_on_assignments_changed], [AppState.grade_band_changed, apply_band], [EventBus.locale_changed, _on_locale_changed]]:
 		var sig: Signal = pair[0] as Signal
@@ -147,7 +170,8 @@ func show_hub_notice(key: String) -> void:
 ## F096-AC-18: every button of the HUD whose touch target follows the grade band.
 func touch_buttons() -> Array[Button]:
 	return [_assignments_chip, _journal, _bell, _settings, _wardrobe, _map, _home, _context_action, _next_step_button,
-		_onboarding.find_child("Skip", true, false) as Button, _onboarding.find_child("Next", true, false) as Button]
+		_onboarding.find_child("Skip", true, false) as Button, _onboarding.find_child("Next", true, false) as Button,
+		_currency, _menu]
 
 
 ## F096-AC-10: opens Mây's guide (the owner decides when: first entry on the device or right after S02).
@@ -207,3 +231,56 @@ func _on_assignments_changed(_count: int) -> void:
 
 func _on_locale_changed(_locale: String) -> void:
 	_render()
+
+
+## F069-AC-01: follows the progression and the wallet of the session (null unbinds; previews and HUD-only tests).
+func bind_progression(progression: ProgressionStore, wallet: WalletStore) -> void:
+	if _xp_bar.store != null and _xp_bar.store.progression_changed.is_connected(_on_progression_changed):
+		_xp_bar.store.progression_changed.disconnect(_on_progression_changed)
+	_xp_bar.bind(progression)
+	_currency.bind(wallet)
+	if progression != null and not progression.progression_changed.is_connected(_on_progression_changed):
+		progression.progression_changed.connect(_on_progression_changed)
+	_on_progression_changed(progression.progression if progression != null else null)
+
+
+func xp_bar() -> XpBar:
+	return _xp_bar
+
+
+func currency_chip() -> CurrencyChip:
+	return _currency
+
+
+## F069: the XpPanel (level · title, XP bar) sits under the PlayerBadge once the progression is known; the "Việc tiếp
+## theo" card moves under it (signal-driven layout, no `_process`).
+func _on_progression_changed(progression: ProgressionModel) -> void:
+	_xp_panel.visible = progression != null
+	_layout_left_column.call_deferred()
+
+
+func _layout_left_column() -> void:
+	if _badge == null or not is_inside_tree():
+		return
+	var gap: float = float(UiTokens.SIZE_SPACE_8)
+	var rect: Rect2 = _badge.get_global_rect()
+	var y: float = rect.end.y + gap
+	var width: float = maxf(_next_step_card.size.x, rect.size.x)
+	if _xp_panel.visible:
+		_xp_panel.position = Vector2(rect.position.x, y)
+		_xp_panel.custom_minimum_size.x = width
+		_xp_panel.reset_size()
+		y = _xp_panel.position.y + _xp_panel.size.y + gap
+	_next_step_card.anchor_top = 0.0
+	_next_step_card.anchor_bottom = 0.0
+	_next_step_card.offset_top = maxf(y, get_viewport().get_visible_rect().size.y * NEXT_STEP_MIN_TOP)
+	_next_step_card.offset_bottom = _next_step_card.offset_top
+
+
+## F069 (S06 §3): during a solo challenge run the HUD steps back — the top bar, the side bar, the XP panel and the
+## "Việc tiếp theo" card hide so the ChallengeHud strip has the top of the screen; they come back when it ends.
+func set_challenge_mode(on: bool) -> void:
+	(find_child("TopBar", true, false) as Control).visible = not on
+	(find_child("SideBar", true, false) as Control).visible = not on
+	_next_step_card.visible = not on
+	_xp_panel.visible = not on and _xp_bar.store != null and _xp_bar.store.progression != null

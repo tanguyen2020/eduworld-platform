@@ -23,7 +23,8 @@ const OUT_DIR = path.join(root, 'src/game/tests/fixtures/contract');
 // Component schemas the client parses: F060 frame + F061 login, refresh, tenant choice, game session, takeover;
 // F062 school assignments (MyAssignment) and telemetry batches; F063 activity player (Attempt with the 11 question
 // types, ActivityResponseResult, HintResult, AttemptReview — the OpenAPI examples); F070 player profile (GameProfile,
-// CharacterCatalog, NicknameSuggestion, AvatarPreset); F064 exam zone (ExamSession, AttemptResult).
+// CharacterCatalog, NicknameSuggestion, AvatarPreset); F064 exam zone (ExamSession, AttemptResult). F069 progression,
+// economy and solo challenges (ProgressionStatus … ChallengeNextActivity).
 const SCHEMAS = [
   'ClientConfig', 'Problem',
   'GameLoginResponse', 'GameTokenRefreshResponse', 'GameLoginProblem', 'ClientVersionProblem', 'GameSession',
@@ -31,6 +32,10 @@ const SCHEMAS = [
   'Attempt', 'ActivityResponseResult', 'HintResult', 'AttemptReview',
   'GameProfile', 'CharacterCatalog', 'NicknameSuggestion', 'AvatarPreset',
   'ExamSession', 'AttemptResult',
+  // F069: progression, wallet, inventory, shop, collections, achievements, solo challenges.
+  'ProgressionStatus', 'XpLedgerEntry', 'ProgressionLevel', 'Wallet', 'CurrencyLedgerEntry', 'ItemLedgerEntry',
+  'InventoryItem', 'ShopItem', 'PurchaseResult', 'AchievementProgress', 'CollectionProgress', 'CollectionDetail',
+  'GameChallengeSummary', 'GameChallengeDetail', 'GameChallengeAttempt', 'ChallengeNextActivity',
 ];
 // Response examples the client parses as a whole: [operationId, status] → openapi/<operationId>.<status>.json.
 const RESPONSES = [['listMyAssignments', '200']];
@@ -64,6 +69,18 @@ const FORMAT_SAMPLES = {
   email: 'student@example.invalid',
 };
 
+// A string matching `pattern` (codes such as CatalogCode `^[a-z0-9_]+$` get a valid lowercase code; F069).
+function patternSample(pattern) {
+  for (const candidate of ['sample1', 'SAMPLE1', 'sample', '1']) {
+    try {
+      if (new RegExp(pattern, 'u').test(candidate)) return candidate;
+    } catch {
+      return 'SAMPLE1';
+    }
+  }
+  return 'SAMPLE1';
+}
+
 function sample(schemaIn, depth = 0, seen = new Set()) {
   const schema = deref(schemaIn, seen);
   if (schema.example !== undefined) return schema.example;
@@ -90,7 +107,7 @@ function sample(schemaIn, depth = 0, seen = new Set()) {
     case 'boolean':
       return false;
     default:
-      return FORMAT_SAMPLES[schema.format] ?? (schema.pattern ? 'SAMPLE1' : 'sample');
+      return FORMAT_SAMPLES[schema.format] ?? (schema.pattern ? patternSample(schema.pattern) : 'sample');
   }
 }
 

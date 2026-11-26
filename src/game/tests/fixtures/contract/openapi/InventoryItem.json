@@ -1,0 +1,12 @@
+{
+  "item_id": "sample1",
+  "equip_slot": "sample",
+  "kind": "outfit",
+  "rarity": "common",
+  "quantity": 1,
+  "acquired_at": "2026-11-15T07:30:00Z",
+  "name": {
+    "vi": "sample",
+    "en": "sample"
+  }
+}

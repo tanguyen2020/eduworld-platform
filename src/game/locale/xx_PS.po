@@ -8,6 +8,96 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "ui.achievement.category.competition"
+msgstr "[!! Çöɱþëţïţïöñ ~~~~~ !!]"
+
+msgid "ui.achievement.category.event"
+msgstr "[!! Ẹvëñţš ~~~ !!]"
+
+msgid "ui.achievement.category.exploration"
+msgstr "[!! Ẹxþĺöŕïñğ ~~~~ !!]"
+
+msgid "ui.achievement.category.first_time"
+msgstr "[!! Fïŕšţ ţïɱëš ~~~~~ !!]"
+
+msgid "ui.achievement.category.hidden"
+msgstr "[!! Šëçŕëţ ~~~ !!]"
+
+msgid "ui.achievement.category.learning"
+msgstr "[!! Ĺëáŕñïñğ ~~~~ !!]"
+
+msgid "ui.achievement.category.progress"
+msgstr "[!! Pŕöğŕëšš ~~~~ !!]"
+
+msgid "ui.achievement.category.seasonal"
+msgstr "[!! Šëášöñáĺ ~~~~ !!]"
+
+msgid "ui.achievement.category.social"
+msgstr "[!! Fŕïëñđš ~~~ !!]"
+
+msgid "ui.achievement.category.team"
+msgstr "[!! Ţëáɱ ~~ !!]"
+
+msgid "ui.achievement.empty"
+msgstr "[!! Ýöüŕ ĵöüŕñëý ĥáš ĵüšţ ƀëğüñ! Ýöüŕ ƒïŕšţ áçĥïëvëɱëñţ ïš ŵáïţïñğ ïñ ţĥë Çëñţŕáĺ Ţöŵñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.achievement.hidden_hint"
+msgstr "[!! Ķëëþ ëxþĺöŕïñğ ţö üñĺöçķ ~~~~~~~~~~ !!]"
+
+msgid "ui.achievement.load_failed"
+msgstr "[!! Åçĥïëvëɱëñţš çöüĺđ ñöţ ĺöáđ. Pĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.achievement.loading"
+msgstr "[!! Ĺöáđïñğ… ~~~~ !!]"
+
+msgid "ui.achievement.no_badges"
+msgstr "[!! Ýöü ĥávë ñö ƀáđğëš ýëţ. Fïñïšĥ çĥáĺĺëñğëš áñđ qüëšţš ţö ğëţ šöɱë! ~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.achievement.progress_spoken"
+msgstr "[!! {current} öƒ {target} ~~~~~~~~~ !!]"
+
+msgid "ui.achievement.received"
+msgstr "[!! Ŕëçëïvëđ ~~~~ !!]"
+
+msgid "ui.achievement.showcase_empty"
+msgstr "[!! Ẹɱþţý šĺöţ ~~~~ !!]"
+
+msgid "ui.achievement.showcase_hint"
+msgstr "[!! Çĥööšë ţĥë ƀáđğëš ýöüŕ ƒŕïëñđš çáñ šëë. Ţáþ á ƀáđğë ţö áđđ öŕ ŕëɱövë ïţ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.achievement.showcase_owned"
+msgstr "[!! Ýöüŕ ƀáđğëš ~~~~~ !!]"
+
+msgid "ui.achievement.showcase_save"
+msgstr "[!! Šávë šĥöŵçášë ~~~~~~ !!]"
+
+msgid "ui.achievement.showcase_saved"
+msgstr "[!! Šĥöŵçášë šávëđ! ~~~~~~ !!]"
+
+msgid "ui.achievement.tab.achievements"
+msgstr "[!! Åçĥïëvëɱëñţš ~~~~~ !!]"
+
+msgid "ui.achievement.tab.showcase"
+msgstr "[!! Ɓáđğë šĥöŵçášë ~~~~~~ !!]"
+
+msgid "ui.achievement.tier.bronze"
+msgstr "[!! Ɓŕöñžë ~~~ !!]"
+
+msgid "ui.achievement.tier.gold"
+msgstr "[!! Ğöĺđ ~~ !!]"
+
+msgid "ui.achievement.tier.platinum"
+msgstr "[!! Pĺáţïñüɱ ~~~~ !!]"
+
+msgid "ui.achievement.tier.silver"
+msgstr "[!! Šïĺvëŕ ~~~ !!]"
+
+msgid "ui.achievement.tier.single"
+msgstr "[!! Åçĥïëvëđ ~~~~ !!]"
+
+msgid "ui.achievement.title"
+msgstr "[!! Åçĥïëvëɱëñţš & Çöĺĺëçţïöñš ~~~~~~~~~~~ !!]"
+
 msgid "ui.activity_player.back"
 msgstr "[!! Ɓáçķ ~~ !!]"
 
@@ -206,6 +296,234 @@ msgstr "[!! Ĺöáđïñğ… ~~~~ !!]"
 msgid "ui.boot.title"
 msgstr "[!! ẸđüŴöŕĺđ ~~~~ !!]"
 
+msgid "ui.challenge.attempts_left"
+msgstr "[!! {n} ţŕïëš ĺëƒţ ţöđáý ~~~~~~~~ !!]"
+
+msgid "ui.challenge.back_to_board"
+msgstr "[!! Çĥáĺĺëñğë Möüñţáïñ ~~~~~~~~ !!]"
+
+msgid "ui.challenge.board_title"
+msgstr "[!! Çĥáĺĺëñğë Möüñţáïñ ~~~~~~~~ !!]"
+
+msgid "ui.challenge.continue"
+msgstr "[!! Çöñţïñüë ~~~~ !!]"
+
+msgid "ui.challenge.cooldown"
+msgstr "[!! Ţáķë á šĥöŕţ ƀŕëáķ, ţŕý áğáïñ ïñ {time} ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.difficulty.easy"
+msgstr "[!! Ẹášý ~~ !!]"
+
+msgid "ui.challenge.difficulty.expert"
+msgstr "[!! Ẹxþëŕţ ~~~ !!]"
+
+msgid "ui.challenge.difficulty.hard"
+msgstr "[!! Ĥáŕđ ~~ !!]"
+
+msgid "ui.challenge.difficulty.legendary"
+msgstr "[!! Ĺëğëñđáŕý ~~~~ !!]"
+
+msgid "ui.challenge.difficulty.normal"
+msgstr "[!! Ñöŕɱáĺ ~~~ !!]"
+
+msgid "ui.challenge.difficulty_title"
+msgstr "[!! Çĥööšë á ĺëvëĺ ~~~~~~ !!]"
+
+msgid "ui.challenge.empty"
+msgstr "[!! Ñö çĥáĺĺëñğë ïš öþëñ ƒöŕ ýöü ýëţ. Çöɱë ƀáçķ ĺáţëŕ! ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.enter"
+msgstr "[!! Šţáŕţ ~~ !!]"
+
+msgid "ui.challenge.first_clear"
+msgstr "[!! Fïŕšţ-çĺëáŕ ŕëŵáŕđ ~~~~~~~~ !!]"
+
+msgid "ui.challenge.gone"
+msgstr "[!! Ţĥïš çĥáĺĺëñğë ïš ñö ĺöñğëŕ öþëñ. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.keep_playing"
+msgstr "[!! Ķëëþ þĺáýïñğ ~~~~~ !!]"
+
+msgid "ui.challenge.lives"
+msgstr "[!! {n} šţáɱïñá ~~~~~ !!]"
+
+msgid "ui.challenge.loading"
+msgstr "[!! Ĺöáđïñğ çĥáĺĺëñğëš… ~~~~~~~~ !!]"
+
+msgid "ui.challenge.locked.grade_not_allowed"
+msgstr "[!! Föŕ öĺđëŕ ğŕáđëš ~~~~~~~ !!]"
+
+msgid "ui.challenge.locked.not_unlocked"
+msgstr "[!! Fïñïšĥ ţĥë ĺëvëĺ ƀëƒöŕë ţö üñĺöçķ ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.locked.school_disabled"
+msgstr "[!! Ýöüŕ šçĥööĺ ĥáš ñöţ öþëñëđ ţĥïš ĺëvëĺ ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.minutes"
+msgstr "[!! {m} ɱïñ ~~~ !!]"
+
+msgid "ui.challenge.multiplier"
+msgstr "[!! Ŕëŵáŕđ ×{x} ~~~~~ !!]"
+
+msgid "ui.challenge.no_attempts"
+msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ ţŕïëš ţöđáý, çöɱë ƀáçķ ţöɱöŕŕöŵ! Mëáñŵĥïĺë ýöü çáñ þŕáçţïšë áš ɱüçĥ áš ýöü ĺïķë ƒŕöɱ ţĥë Máþ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.notice.attempt_limit_at"
+msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ ţŕïëš. Ýöü çáñ ţŕý áğáïñ áţ {time}! ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.notice.in_progress"
+msgstr "[!! Ýöü ĥávë á çĥáĺĺëñğë ïñ þŕöğŕëšš. Ĺëţ üš çöñţïñüë ïţ! ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.notice.not_eligible"
+msgstr "[!! Ţĥïš çĥáĺĺëñğë ïš ñöţ öþëñ ƒöŕ ýöü ŕïğĥţ ñöŵ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.notice.reconnecting"
+msgstr "[!! Ŕëçöññëçţïñğ… Pĺëášë ŵáïţ á ɱöɱëñţ. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.notice.unavailable"
+msgstr "[!! Ţĥë šýšţëɱ ïš ƀüšý, þĺëášë ţŕý áğáïñ ïñ á ƒëŵ ɱïñüţëš. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.party_only"
+msgstr "[!! Ţĥïš çĥáĺĺëñğë ñëëđš á ţëáɱ. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.practice"
+msgstr "[!! Pŕáçţïšë ~~~~ !!]"
+
+msgid "ui.challenge.progress"
+msgstr "[!! Đöñë {n} · Šçöŕë {score} ~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.result.abandoned"
+msgstr "[!! Ýöü šţöþþëđ ţĥë çĥáĺĺëñğë ~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.result.abandoned_line"
+msgstr "[!! Ýöü đïđ {n} áçţïvïţïëš. Ţŕý áğáïñ ŵĥëñëvëŕ ýöü áŕë ŕëáđý! ~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.result.completed_n"
+msgstr "[!! Ýöü çöɱþĺëţëđ {n} áçţïvïţïëš ~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.result.review_hint"
+msgstr "[!! Ŕëvïëŵ á ĺïţţĺë áñđ ţŕý áğáïñ, ýöü çáñ đö ïţ! ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.result.succeeded"
+msgstr "[!! Çĥáĺĺëñğë çöɱþĺëţë! ~~~~~~~~ !!]"
+
+msgid "ui.challenge.result.succeeded_line"
+msgstr "[!! Ýöü çöɱþĺëţëđ {n} áçţïvïţïëš. Ğŕëáţ ĵöƀ! ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.result_title"
+msgstr "[!! Çĥáĺĺëñğë ŕëšüĺţ ~~~~~~~ !!]"
+
+msgid "ui.challenge.resume"
+msgstr "[!! Çöñţïñüë ~~~~ !!]"
+
+msgid "ui.challenge.resume_hint"
+msgstr "[!! Ýöü ĥávë á çĥáĺĺëñğë ïñ þŕöğŕëšš. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.rewards"
+msgstr "[!! Ŕëŵáŕđš áđđëđ ţö ýöüŕ ƀáğ ~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.stop"
+msgstr "[!! Šţöþ ~~ !!]"
+
+msgid "ui.challenge.stop_confirm"
+msgstr "[!! Đö ýöü ŵáñţ ţö šţöþ ţĥë çĥáĺĺëñğë? Ţĥë áçţïvïţïëš ýöü đïđ áŕë ķëþţ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.challenge.stop_now"
+msgstr "[!! Šţöþ ~~ !!]"
+
+msgid "ui.challenge.time_left_tooltip"
+msgstr "[!! Ţïɱë ĺëƒţ ~~~~ !!]"
+
+msgid "ui.challenge.time_limit"
+msgstr "[!! Ţïɱë: {time} ~~~~~ !!]"
+
+msgid "ui.challenge.time_up"
+msgstr "[!! Ţïɱë ïš üþ ~~~~ !!]"
+
+msgid "ui.challenge.type.boss"
+msgstr "[!! Ɓöšš ~~ !!]"
+
+msgid "ui.challenge.type.coop"
+msgstr "[!! Çö-öþ ~~ !!]"
+
+msgid "ui.challenge.type.knowledge"
+msgstr "[!! Ķñöŵĺëđğë ~~~~ !!]"
+
+msgid "ui.challenge.type.other"
+msgstr "[!! Çĥáĺĺëñğë ~~~~ !!]"
+
+msgid "ui.challenge.type.party"
+msgstr "[!! Páŕţý ~~ !!]"
+
+msgid "ui.challenge.type.perfect"
+msgstr "[!! Pëŕƒëçţ ~~~ !!]"
+
+msgid "ui.challenge.type.puzzle"
+msgstr "[!! Püžžĺë ~~~ !!]"
+
+msgid "ui.challenge.type.seasonal"
+msgstr "[!! Šëášöñáĺ ~~~~ !!]"
+
+msgid "ui.challenge.type.survival"
+msgstr "[!! Šüŕvïváĺ ~~~~ !!]"
+
+msgid "ui.challenge.type.time"
+msgstr "[!! Ţïɱëđ ~~ !!]"
+
+msgid "ui.challenge.type.tournament"
+msgstr "[!! Ţöüŕñáɱëñţ ~~~~ !!]"
+
+msgid "ui.challenge.type.weekly"
+msgstr "[!! Ŵëëķĺý ~~~ !!]"
+
+msgid "ui.collection.back"
+msgstr "[!! Åĺĺ çöĺĺëçţïöñš ~~~~~~ !!]"
+
+msgid "ui.collection.completion_reward"
+msgstr "[!! Ŕëŵáŕđ ƒöŕ ţĥë ƒüĺĺ šëţ: ~~~~~~~~~~ !!]"
+
+msgid "ui.collection.duplicate_converted"
+msgstr "[!! Çöñvëŕţëđ ţö {amount} Çöïñš ~~~~~~~~~~~ !!]"
+
+msgid "ui.collection.empty"
+msgstr "[!! Ýöü ĥávë ñö çöĺĺëçţïöñ ýëţ. Ẹxþĺöŕë ţĥë ŵöŕĺđ ţö ƒïñđ ýöüŕ ƒïŕšţ ïţëɱ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.collection.gone"
+msgstr "[!! Ţĥïš çöĺĺëçţïöñ ïš ñö ĺöñğëŕ öþëñ. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.collection.how_to_obtain_line"
+msgstr "[!! Ĥöŵ ţö ğëţ: {how} ~~~~~~~ !!]"
+
+msgid "ui.collection.missing"
+msgstr "[!! Ñöţ ýëţ ~~~ !!]"
+
+msgid "ui.collection.owned"
+msgstr "[!! Çöĺĺëçţëđ ~~~~ !!]"
+
+msgid "ui.collection.progress"
+msgstr "[!! {progress} ïţëɱš ~~~~~~~ !!]"
+
+msgid "ui.collection.tab"
+msgstr "[!! Çöĺĺëçţïöñš ~~~~~ !!]"
+
+msgid "ui.collection.type.badge"
+msgstr "[!! Ɓáđğëš ~~~ !!]"
+
+msgid "ui.collection.type.cosmetic"
+msgstr "[!! Öüţƒïţš ~~~ !!]"
+
+msgid "ui.collection.type.event"
+msgstr "[!! Ẹvëñţš ~~~ !!]"
+
+msgid "ui.collection.type.exploration"
+msgstr "[!! Ẹxþĺöŕïñğ ~~~~ !!]"
+
+msgid "ui.collection.type.knowledge_card"
+msgstr "[!! Ķñöŵĺëđğë çáŕđš ~~~~~~ !!]"
+
+msgid "ui.collection.type.pet"
+msgstr "[!! Pëţš ~~ !!]"
+
 msgid "ui.common.break_reminder"
 msgstr "[!! Ýöü ĥávë þĺáýëđ ƒöŕ {minutes} ɱïñüţëš. Mâý šáýš: ŕëšţ ýöüŕ ëýëš, đŕïñķ šöɱë ŵáţëŕ áñđ šţŕëţçĥ á ĺïţţĺë! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -214,6 +532,9 @@ msgstr "[!! Ğöţ ïţ ~~~ !!]"
 
 msgid "ui.common.break_reminder.title"
 msgstr "[!! Ɓŕëáķ ţïɱë ~~~~ !!]"
+
+msgid "ui.common.cancel"
+msgstr "[!! Çáñçëĺ ~~~ !!]"
 
 msgid "ui.common.close"
 msgstr "[!! Çĺöšë ~~ !!]"
@@ -290,8 +611,17 @@ msgstr "[!! Ţĥïš áţţëɱþţ ĥáš ëxþïŕëđ. ~~~~~~~~~~ !!]"
 msgid "ui.error.ATTEMPT_NOT_IN_PROGRESS"
 msgstr "[!! Ţĥïš áçţïvïţý ĥáš ëñđëđ; ñö ɱöŕë áñšŵëŕš çáñ ƀë šëñţ. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.CHALLENGE_ATTEMPT_LIMIT"
+msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ ţŕïëš ţöđáý, çöɱë ƀáçķ ţöɱöŕŕöŵ! ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.CHALLENGE_NOT_ELIGIBLE"
+msgstr "[!! Ţĥïš çĥáĺĺëñğë ïš ñöţ öþëñ ƒöŕ ýöü ŕïğĥţ ñöŵ. ~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.CLIENT_VERSION_UNSUPPORTED"
 msgstr "[!! Ţĥë ğáɱë ñëëđš ţö ƀë üþđáţëđ ţö á ñëŵ vëŕšïöñ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.CONFLICT"
+msgstr "[!! Šöɱëţĥïñğ çĥáñğëđ, þĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.CURFEW_ACTIVE"
 msgstr "[!! Ïţ ïš ŕëšţ ţïɱë. ẸđüŴöŕĺđ ŵïĺĺ öþëñ áğáïñ đüŕïñğ ţĥë áĺĺöŵëđ ĥöüŕš. ~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
@@ -332,6 +662,9 @@ msgstr "[!! Ýöü'vë šëëñ áĺĺ ţĥë ĥïñţš. ~~~~~~~~~~~ !!]"
 msgid "ui.error.HINTS_NOT_ALLOWED"
 msgstr "[!! Ĥïñţš áŕëñ'ţ áváïĺáƀĺë ĥëŕë. ~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.INSUFFICIENT_BALANCE"
+msgstr "[!! Ýöü đö ñöţ ĥávë ëñöüğĥ Çöïñš ƒöŕ ţĥïš ýëţ. Ĺëáŕñ á ƀïţ ɱöŕë ţö ëáŕñ Çöïñš! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.INTERNAL"
 msgstr "[!! Šöɱëţĥïñğ ŵëñţ ŵŕöñğ. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -340,6 +673,12 @@ msgstr "[!! Ţĥë üšëŕñáɱë öŕ þáššŵöŕđ ïš ñöţ çöŕŕë
 
 msgid "ui.error.INVALID_RESPONSE"
 msgstr "[!! Ţĥáţ áñšŵëŕ çöüĺđñ'ţ ƀë ŕëáđ. Pĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.INVALID_STATE_TRANSITION"
+msgstr "[!! Ţĥë çĥáĺĺëñğë ĥáš ëñđëđ. Ĺëţ üš šëë ţĥë ŕëšüĺţ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.ITEM_ALREADY_OWNED"
+msgstr "[!! Ýöü áĺŕëáđý ĥávë ţĥïš ïñ ýöüŕ ŵáŕđŕöƀë. ~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.ITEM_NOT_OWNED"
 msgstr "[!! Ýöü đöñ'ţ ĥávë ţĥïš ïţëɱ ýëţ. Pĺëášë þïçķ áñöţĥëŕ öñë. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
@@ -365,6 +704,9 @@ msgstr "[!! Ţĥïš áçţïvïţý çöüĺđñ'ţ ƀë ƒöüñđ. ~~~~~~~~~~
 msgid "ui.error.NO_ACTIVE_ENROLLMENT"
 msgstr "[!! Ýöüŕ šçĥööĺ áñđ ğŕáđë ƒöŕ ţĥïš šçĥööĺ ýëáŕ áŕë ñöţ šëţ ýëţ. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.PURCHASE_LIMIT_REACHED"
+msgstr "[!! Ýöü ĥávë ƀöüğĥţ áš ɱáñý öƒ ţĥïš áš ýöü çáñ. ~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.RATE_LIMITED"
 msgstr "[!! Ţöö ɱáñý ţŕïëš. Pĺëášë ŵáïţ á ɱöɱëñţ áñđ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -376,6 +718,9 @@ msgstr "[!! Ýöüŕ šëššïöñ ĥáš ëñđëđ, þĺëášë šïğñ ï�
 
 msgid "ui.error.REFRESH_TOKEN_REUSED"
 msgstr "[!! Ýöüŕ šëššïöñ ĥáš ëñđëđ, þĺëášë šïğñ ïñ áğáïñ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.SHOP_ITEM_UNAVAILABLE"
+msgstr "[!! Ţĥïš ïţëɱ ŵïĺĺ ƀë ƀáçķ ñëxţ šëášöñ. ~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.TENANT_ACCESS_DISABLED"
 msgstr "[!! Ýöüŕ šçĥööĺ ĥáš ñöţ öþëñëđ ẸđüŴöŕĺđ ýëţ. ~~~~~~~~~~~~~~~~ !!]"
@@ -725,6 +1070,9 @@ msgstr "[!! Ẹxáɱ Ŕööɱ ~~~~ !!]"
 msgid "ui.hub.board.school_assignments"
 msgstr "[!! Šçĥööĺ Åššïğñɱëñţš Ɓöáŕđ ~~~~~~~~~~ !!]"
 
+msgid "ui.hub.daily_cap_reached"
+msgstr "[!! Ýöü ĥávë ëáŕñëđ áĺĺ öƒ ţöđáý'š XP; ýöüŕ ĺëáŕñïñğ ïš šţïĺĺ ŕëçöŕđëđ ~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.hub.emote_not_owned"
 msgstr "[!! Ýöü đöñ'ţ ĥávë ţĥïš ëɱöţë ýëţ. ~~~~~~~~~~~~ !!]"
 
@@ -764,6 +1112,12 @@ msgstr "[!! Máþ ~~ !!]"
 msgid "ui.hub.map.tooltip"
 msgstr "[!! Ŵöŕĺđ ɱáþ (M) ~~~~~~ !!]"
 
+msgid "ui.hub.menu"
+msgstr "[!! Möŕë ~~ !!]"
+
+msgid "ui.hub.menu.tooltip"
+msgstr "[!! Šĥöþ, áçĥïëvëɱëñţš, çĥáĺĺëñğëš, ĵöüŕñëý ~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.hub.player_default"
 msgstr "[!! Ẹxþĺöŕëŕ ~~~~ !!]"
 
@@ -779,8 +1133,215 @@ msgstr "[!! Ŵáŕđŕöƀë ~~~~ !!]"
 msgid "ui.hub.wardrobe.tooltip"
 msgstr "[!! Ŵáŕđŕöƀë (Ï) ~~~~~ !!]"
 
+msgid "ui.inventory.customize"
+msgstr "[!! Çüšţöɱïšë ~~~~ !!]"
+
+msgid "ui.inventory.customize.tooltip"
+msgstr "[!! Ĺööķ, šávëđ öüţƒïţš áñđ ëɱöţë ŵĥëëĺ ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.inventory.empty_hint"
+msgstr "[!! Ñöţĥïñğ ĥëŕë ýëţ. Fïñïšĥ qüëšţš ţö ğëţ šöɱë! ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.inventory.equip"
+msgstr "[!! Ŵëáŕ ~~ !!]"
+
+msgid "ui.inventory.equipped"
+msgstr "[!! Ýöü áŕë ŵëáŕïñğ {item}! ~~~~~~~~~~ !!]"
+
+msgid "ui.inventory.equipping"
+msgstr "[!! Püţţïñğ öñ… ~~~~~ !!]"
+
+msgid "ui.inventory.filter.accessory"
+msgstr "[!! Åççëššöŕïëš ~~~~~ !!]"
+
+msgid "ui.inventory.filter.all"
+msgstr "[!! Åĺĺ ~~ !!]"
+
+msgid "ui.inventory.filter.badge"
+msgstr "[!! Ɓáđğëš ~~~ !!]"
+
+msgid "ui.inventory.filter.emote"
+msgstr "[!! Ẹɱöţëš ~~~ !!]"
+
+msgid "ui.inventory.filter.frame"
+msgstr "[!! Fŕáɱëš ~~~ !!]"
+
+msgid "ui.inventory.filter.hair"
+msgstr "[!! Ĥáïŕ ~~ !!]"
+
+msgid "ui.inventory.filter.outfit"
+msgstr "[!! Öüţƒïţš ~~~ !!]"
+
+msgid "ui.inventory.filter.pet"
+msgstr "[!! Pëţš ~~ !!]"
+
+msgid "ui.inventory.filter.title"
+msgstr "[!! Ţïţĺëš ~~~ !!]"
+
+msgid "ui.inventory.history.currency"
+msgstr "[!! Çöïñš ~~ !!]"
+
+msgid "ui.inventory.history.empty"
+msgstr "[!! Ñöţĥïñğ ïñ ýöüŕ ĥïšţöŕý ýëţ. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.inventory.history.items"
+msgstr "[!! Ïţëɱš ~~ !!]"
+
+msgid "ui.inventory.history.title"
+msgstr "[!! Ĥïšţöŕý ~~~ !!]"
+
+msgid "ui.inventory.loading"
+msgstr "[!! Ĺöáđïñğ… ~~~~ !!]"
+
+msgid "ui.inventory.offline_locked"
+msgstr "[!! Öƒƒĺïñë: ýöü çáñ ĺööķ áţ ýöüŕ ïţëɱš ƀüţ çáññöţ ƀüý öŕ ŵëáŕ ţĥëɱ ýëţ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.inventory.quantity"
+msgstr "[!! ×{n} ~~ !!]"
+
+msgid "ui.inventory.rarity.common"
+msgstr "[!! Çöɱɱöñ ~~~ !!]"
+
+msgid "ui.inventory.rarity.epic"
+msgstr "[!! Ẹþïç ~~ !!]"
+
+msgid "ui.inventory.rarity.legendary"
+msgstr "[!! Ĺëğëñđáŕý ~~~~ !!]"
+
+msgid "ui.inventory.rarity.rare"
+msgstr "[!! Ŕáŕë ~~ !!]"
+
+msgid "ui.inventory.rarity.uncommon"
+msgstr "[!! Üñçöɱɱöñ ~~~~ !!]"
+
+msgid "ui.inventory.reason.adjustment"
+msgstr "[!! Åđĵüšţɱëñţ ~~~~ !!]"
+
+msgid "ui.inventory.reason.collection"
+msgstr "[!! Çöĺĺëçţïöñ ~~~~ !!]"
+
+msgid "ui.inventory.reason.duplicate_conversion"
+msgstr "[!! Đüþĺïçáţë çöñvëŕţëđ ~~~~~~~~ !!]"
+
+msgid "ui.inventory.reason.other"
+msgstr "[!! Öţĥëŕ çĥáñğë ~~~~~ !!]"
+
+msgid "ui.inventory.reason.refund"
+msgstr "[!! Ŕëƒüñđ ~~~ !!]"
+
+msgid "ui.inventory.reason.reward"
+msgstr "[!! Ŕëŵáŕđ ~~~ !!]"
+
+msgid "ui.inventory.reason.shop_purchase"
+msgstr "[!! Šĥöþ þüŕçĥášë ~~~~~~ !!]"
+
+msgid "ui.inventory.tab.history"
+msgstr "[!! Ĥïšţöŕý ~~~ !!]"
+
+msgid "ui.inventory.tab.wardrobe"
+msgstr "[!! Ŵáŕđŕöƀë ~~~~ !!]"
+
+msgid "ui.inventory.title"
+msgstr "[!! Ŵáŕđŕöƀë ~~~~ !!]"
+
+msgid "ui.journey.empty"
+msgstr "[!! Ýöüŕ ĵöüŕñëý ĥáš ĵüšţ ƀëğüñ! Ĺëáŕñ áñđ ëxþĺöŕë ţö ëáŕñ XP. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.journey.load_failed"
+msgstr "[!! Ýöüŕ ĵöüŕñëý çöüĺđ ñöţ ĺöáđ. Pĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.journey.loading"
+msgstr "[!! Ĺöáđïñğ… ~~~~ !!]"
+
+msgid "ui.journey.milestones"
+msgstr "[!! Ĺëvëĺ ɱïĺëšţöñëš ~~~~~~~ !!]"
+
+msgid "ui.journey.more"
+msgstr "[!! Šĥöŵ ɱöŕë ~~~~ !!]"
+
+msgid "ui.journey.not_a_grade"
+msgstr "[!! Ýöüŕ ğáɱë ĺëvëĺ šĥöŵš ĥöŵ ĥáŕđ ýöü ĥávë ŵöŕķëđ; ïţ ïš ñöţ á šçĥööĺ ɱáŕķ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.journey.recent"
+msgstr "[!! XP ýöü ëáŕñëđ ~~~~~~ !!]"
+
+msgid "ui.journey.source.achievement.unlocked"
+msgstr "[!! Åçĥïëvëɱëñţ üñĺöçķëđ ~~~~~~~~ !!]"
+
+msgid "ui.journey.source.activity.completed"
+msgstr "[!! Fïñïšĥëđ áñ áçţïvïţý ~~~~~~~~ !!]"
+
+msgid "ui.journey.source.boss.defeated"
+msgstr "[!! Ɓöšš đëƒëáţëđ ~~~~~~ !!]"
+
+msgid "ui.journey.source.challenge.completed"
+msgstr "[!! Fïñïšĥëđ á çĥáĺĺëñğë ~~~~~~~~ !!]"
+
+msgid "ui.journey.source.competition.participation"
+msgstr "[!! Ţööķ þáŕţ ïñ á ɱáţçĥ ~~~~~~~~ !!]"
+
+msgid "ui.journey.source.coop.contribution"
+msgstr "[!! Ĥëĺþëđ ýöüŕ ţëáɱ ~~~~~~~ !!]"
+
+msgid "ui.journey.source.event.participation"
+msgstr "[!! Ţööķ þáŕţ ïñ áñ ëvëñţ ~~~~~~~~~ !!]"
+
+msgid "ui.journey.source.exploration.area_completed"
+msgstr "[!! Ẹxþĺöŕëđ á ŵĥöĺë áŕëá ~~~~~~~~~ !!]"
+
+msgid "ui.journey.source.exploration.discovery"
+msgstr "[!! Föüñđ á đïšçövëŕý ~~~~~~~ !!]"
+
+msgid "ui.journey.source.lesson.completed"
+msgstr "[!! Fïñïšĥëđ á ĺëššöñ ~~~~~~~ !!]"
+
+msgid "ui.journey.source.mastery.objective_mastered"
+msgstr "[!! Mášţëŕëđ á ĺëáŕñïñğ ğöáĺ ~~~~~~~~~~ !!]"
+
+msgid "ui.journey.source.other"
+msgstr "[!! XP ëáŕñëđ ~~~~ !!]"
+
+msgid "ui.journey.source.quest.daily_completed"
+msgstr "[!! Fïñïšĥëđ á đáïĺý qüëšţ ~~~~~~~~~ !!]"
+
+msgid "ui.journey.source.quest.main_completed"
+msgstr "[!! Fïñïšĥëđ á ɱáïñ qüëšţ ~~~~~~~~~ !!]"
+
+msgid "ui.journey.source.quest.side_completed"
+msgstr "[!! Fïñïšĥëđ á šïđë qüëšţ ~~~~~~~~~ !!]"
+
+msgid "ui.journey.source.quest.weekly_completed"
+msgstr "[!! Fïñïšĥëđ á ŵëëķĺý qüëšţ ~~~~~~~~~~ !!]"
+
+msgid "ui.journey.title"
+msgstr "[!! Mý ĵöüŕñëý ~~~~ !!]"
+
 msgid "ui.learning.no_translation"
 msgstr "[!! Ẹñğĺïšĥ vëŕšïöñ ñöţ áváïĺáƀĺë ~~~~~~~~~~~~ !!]"
+
+msgid "ui.levelup.equip_now"
+msgstr "[!! Ŵëáŕ ïţ ñöŵ ~~~~~ !!]"
+
+msgid "ui.levelup.journey"
+msgstr "[!! Mý ĵöüŕñëý ~~~~ !!]"
+
+msgid "ui.levelup.multi"
+msgstr "[!! {count} ĺëvëĺš üþ! ~~~~~~~~ !!]"
+
+msgid "ui.levelup.new_title"
+msgstr "[!! Ñëŵ ţïţĺë: {title} ~~~~~~~~ !!]"
+
+msgid "ui.levelup.ok"
+msgstr "[!! Åŵëšöɱë! ~~~~ !!]"
+
+msgid "ui.levelup.rewards"
+msgstr "[!! Ŕëŵáŕđš áđđëđ ţö ýöüŕ ƀáğ ~~~~~~~~~~ !!]"
+
+msgid "ui.levelup.title"
+msgstr "[!! Ĺëvëĺ {level}! ~~~~~~ !!]"
+
+msgid "ui.levelup.xp_to_next"
+msgstr "[!! {xp} XP ɱöŕë ţö ĺëvëĺ {next} ~~~~~~~~~~~~ !!]"
 
 msgid "ui.login.button_sign_in"
 msgstr "[!! Šïğñ ïñ ~~~ !!]"
@@ -977,6 +1538,21 @@ msgstr "[!! Ïƒ ýöü ğöţ ïţ ŵŕöñğ šëvëŕáĺ ţïɱëš, ŵáï�
 msgid "ui.login.wordmark"
 msgstr "[!! ẸđüŴöŕĺđ ~~~~ !!]"
 
+msgid "ui.menu.achievements"
+msgstr "[!! Åçĥïëvëɱëñţš & Çöĺĺëçţïöñš ~~~~~~~~~~~ !!]"
+
+msgid "ui.menu.challenges"
+msgstr "[!! Çĥáĺĺëñğë Möüñţáïñ ~~~~~~~~ !!]"
+
+msgid "ui.menu.journey"
+msgstr "[!! Mý ĵöüŕñëý ~~~~ !!]"
+
+msgid "ui.menu.shop"
+msgstr "[!! Šĥöþ ~~ !!]"
+
+msgid "ui.menu.title"
+msgstr "[!! Möŕë ~~ !!]"
+
 msgid "ui.minigame.completed"
 msgstr "[!! Ýöü çöɱþĺëţëđ ţĥë ğáɱë! ~~~~~~~~~~ !!]"
 
@@ -1060,6 +1636,18 @@ msgstr "[!! Öþëñ ţĥë Máþ öŕ ŵáĺķ ţĥŕöüğĥ á ŵïñđ ğá�
 
 msgid "ui.onboarding.step_welcome"
 msgstr "[!! Ĥï! Ï'ɱ Çĺöüđý. Ŵëĺçöɱë ţö Šþáŕķ Šqüáŕë! ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.progression.level"
+msgstr "[!! Ĺëvëĺ {level} ~~~~~~ !!]"
+
+msgid "ui.progression.max_level"
+msgstr "[!! Ţöþ ĺëvëĺ ~~~~ !!]"
+
+msgid "ui.progression.xp_gained"
+msgstr "[!! +{xp} XP ~~~~ !!]"
+
+msgid "ui.progression.xp_numbers"
+msgstr "[!! {xp}/{total} XP ~~~~~~ !!]"
 
 msgid "ui.quality.antialiasing"
 msgstr "[!! Åñţï-áĺïášïñğ ~~~~~~ !!]"
@@ -1298,6 +1886,21 @@ msgstr "[!! Öñë šţáŕ ƒöŕ ëáçĥ ŕïğĥţ áñšŵëŕ ~~~~~~~~~~~~
 msgid "ui.result.weak_count"
 msgstr "[!! Ţö ŕëvïëŵ: {n} ğöáĺš ~~~~~~~~ !!]"
 
+msgid "ui.reward.badge"
+msgstr "[!! Ɓáđğë ~~ !!]"
+
+msgid "ui.reward.currency"
+msgstr "[!! {amount} Çöïñš ~~~~~~ !!]"
+
+msgid "ui.reward.item"
+msgstr "[!! Ïţëɱ ~~ !!]"
+
+msgid "ui.reward.title"
+msgstr "[!! Ţïţĺë ~~ !!]"
+
+msgid "ui.reward.xp"
+msgstr "[!! {amount} XP ~~~~~ !!]"
+
 msgid "ui.settings.about"
 msgstr "[!! Åƀöüţ ~~ !!]"
 
@@ -1339,6 +1942,54 @@ msgstr "[!! Šĥöŵ Çĺöüđý'š ğüïđë áğáïñ ~~~~~~~~~~ !!]"
 
 msgid "ui.settings.title"
 msgstr "[!! Šëţţïñğš ~~~~ !!]"
+
+msgid "ui.shop.available_to"
+msgstr "[!! Öñ šáĺë üñţïĺ {date} ~~~~~~~~ !!]"
+
+msgid "ui.shop.balance_after"
+msgstr "[!! Ɓáĺáñçë áƒţëŕ: {balance} Çöïñš ~~~~~~~~~~~~ !!]"
+
+msgid "ui.shop.bought"
+msgstr "[!! Ýöü ƀöüğĥţ {item}! Ïţ ïš ïñ ýöüŕ ŵáŕđŕöƀë. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.shop.buy"
+msgstr "[!! Ɓüý ~~ !!]"
+
+msgid "ui.shop.buying"
+msgstr "[!! Ɓüýïñğ… ~~~ !!]"
+
+msgid "ui.shop.confirm_purchase"
+msgstr "[!! Ɓüý {item} ƒöŕ {price} Çöïñš? ~~~~~~~~~~~~ !!]"
+
+msgid "ui.shop.empty"
+msgstr "[!! Ţĥë šĥöþ ïš ğëţţïñğ ñëŵ ïţëɱš ŕëáđý. Çöɱë ƀáçķ ĺáţëŕ! ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.shop.limit"
+msgstr "[!! Ɓöüğĥţ {count}/{limit} ~~~~~~~~~ !!]"
+
+msgid "ui.shop.need_more"
+msgstr "[!! Ñëëđ {n} ɱöŕë Çöïñš ~~~~~~~~ !!]"
+
+msgid "ui.shop.open.tooltip"
+msgstr "[!! Öþëñ ţĥë Šĥöþ (ķëý Ɓ) ~~~~~~~~~ !!]"
+
+msgid "ui.shop.owned"
+msgstr "[!! Öŵñëđ ~~ !!]"
+
+msgid "ui.shop.price"
+msgstr "[!! Pŕïçë: {price} Çöïñš ~~~~~~~~ !!]"
+
+msgid "ui.shop.retry_safe"
+msgstr "[!! Ţĥë çöññëçţïöñ ïš üñšţáƀĺë. Pŕëšš Ɓüý áğáïñ ţö ŕëţŕý — ýöü ŵïĺĺ ñëvëŕ þáý ţŵïçë. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.shop.tab"
+msgstr "[!! Šĥöþ ~~ !!]"
+
+msgid "ui.shop.title"
+msgstr "[!! Šĥöþ ~~ !!]"
+
+msgid "ui.shop.try_on"
+msgstr "[!! Ţŕý öñ ~~~ !!]"
 
 msgid "ui.simulation.checking"
 msgstr "[!! Çĥëçķïñğ ţĥë ŕëšüĺţ… ~~~~~~~~ !!]"

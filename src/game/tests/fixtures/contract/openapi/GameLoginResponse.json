@@ -14,7 +14,7 @@
       "display_name": "sample",
       "roles": [
         {
-          "role": "SAMPLE1",
+          "role": "sample1",
           "scope_type": "platform",
           "tenant_id": "00000000-0000-4000-8000-000000000001",
           "scope_id": "00000000-0000-4000-8000-000000000001"
@@ -58,29 +58,29 @@
       "avatar_config_hash": "sample",
       "avatar_config": {
         "schema_version": 1,
-        "body_type": "SAMPLE1",
-        "skin_tone": "SAMPLE1",
+        "body_type": "sample1",
+        "skin_tone": "sample1",
         "hair": {
-          "item_id": "SAMPLE1",
-          "color": "SAMPLE1"
+          "item_id": "sample1",
+          "color": "sample1"
         },
         "outfit": {
-          "item_id": "SAMPLE1"
+          "item_id": "sample1"
         },
         "accessories": [
           {
             "slot": "head",
-            "item_id": "SAMPLE1"
+            "item_id": "sample1"
           }
         ],
         "emote_slots": [
-          "SAMPLE1"
+          "sample1"
         ],
-        "pet": "SAMPLE1",
-        "title": "SAMPLE1",
-        "frame": "SAMPLE1",
+        "pet": "sample1",
+        "title": "sample1",
+        "frame": "sample1",
         "badge_showcase": [
-          "SAMPLE1"
+          "sample1"
         ]
       },
       "last_area_id": "sample",

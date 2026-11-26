@@ -1,0 +1,8 @@
+{
+  "currency_code": "sample",
+  "delta": 1,
+  "balance_after": 0,
+  "reason_code": "reward",
+  "source_label": "sample",
+  "created_at": "2026-11-15T07:30:00Z"
+}

@@ -1,0 +1,30 @@
+{
+  "achievement_id": "00000000-0000-4000-8000-000000000001",
+  "code": "sample",
+  "title": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "description": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "category": "first_time",
+  "unlocked": false,
+  "unlocked_at": "2026-11-15T07:30:00Z",
+  "tier": "none",
+  "progress_current": 0,
+  "progress_target": 0,
+  "rewards": [
+    {
+      "kind": "xp",
+      "amount": 0,
+      "currency_code": "sample",
+      "item_id": "sample1",
+      "label": {
+        "vi": "sample",
+        "en": "sample"
+      }
+    }
+  ]
+}

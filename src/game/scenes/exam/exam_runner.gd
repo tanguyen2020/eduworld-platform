@@ -12,6 +12,8 @@ signal finished(attempt_id: String)
 signal left()
 
 const SUSPEND_REASON: StringName = &"exam"
+## F069: name of the timed activity that holds the level-up modal (AppState.blocking_activity).
+const BLOCKING_ACTIVITY: StringName = &"exam"
 ## Typed answers are saved when the student leaves the question (or submits, leaves the exam, time is up) instead of
 ## at every keystroke; other answers are saved at once.
 const TEXT_TYPES: PackedStringArray = ["fill_in_blank", "short_answer", "numeric"]
@@ -80,6 +82,8 @@ func begin(exam: ExamService, ctx: RendererContext, band: String) -> void:
 	_confirm.hide()
 	show()
 	QualityManager.suspend_world(SUSPEND_REASON)
+	# F069-AC-03: a level-up waits until the timed exam is over.
+	AppState.begin_blocking(BLOCKING_ACTIVITY)
 	_show_current()
 	_render_clock()
 	_render_offline()
@@ -272,6 +276,7 @@ func _teardown() -> void:
 	_exit_confirm.hide()
 	hide()
 	QualityManager.resume_world(SUSPEND_REASON)
+	AppState.end_blocking(BLOCKING_ACTIVITY)
 
 
 # ---------- rendering ----------

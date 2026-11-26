@@ -1,0 +1,33 @@
+{
+  "collection_id": "00000000-0000-4000-8000-000000000001",
+  "code": "sample",
+  "title": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "type": "pet",
+  "owned_count": 0,
+  "total_count": 0,
+  "completed_at": "2026-11-15T07:30:00Z",
+  "items": [
+    {
+      "item_id": "sample1",
+      "name": "sample",
+      "rarity": "common",
+      "owned": false,
+      "how_to_obtain": "sample"
+    }
+  ],
+  "completion_rewards": [
+    {
+      "kind": "xp",
+      "amount": 0,
+      "currency_code": "sample",
+      "item_id": "sample1",
+      "label": {
+        "vi": "sample",
+        "en": "sample"
+      }
+    }
+  ]
+}
