@@ -1,0 +1,14 @@
+# Dashboards provisioned from Git (F131 T031, MONITORING §4): JSON built by scripts/obs/build-dashboards.mjs. Read-only
+# in Grafana (edits go through Git).
+apiVersion: 1
+providers:
+  - name: eduworld
+    orgId: 1
+    folder: EduWorld
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 60
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false
