@@ -93,8 +93,10 @@ healthcheck_exempt: [nats-exporter, storage-filer-sync, otel-collector, otel-age
 # Services deployed `mode: global` on every node (F131 exporters/agents): no node.labels.role constraint required.
 global_services: [node-exporter, cadvisor, otel-agent]
 
-# The only services allowed to mount the Docker socket (read-only): cAdvisor needs it for container names and Swarm labels
-# ([Proposed], MONITORING §1). Every other Docker API access goes through an allowlist proxy.
+# The only services allowed to mount the Docker socket (read-only): cAdvisor needs the Engine API of its own node for
+# container names and Swarm labels; docker-api-proxy-ro only reaches the manager Engine API and Swarm has no node-local
+# service routing, so the proxy cannot serve it (MONITORING §1, checked 2026-11-27). Every other Docker API access goes
+# through an allowlist proxy.
 docker_socket: [cadvisor]
 
 # Secret rules (DEPLOYMENT §13, ADR-0068, ADR-0074 mục 5, ADR-0033). Every secret referenced by a stack must match

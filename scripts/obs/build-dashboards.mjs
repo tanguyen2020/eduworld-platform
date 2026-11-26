@@ -108,7 +108,7 @@ export const DASHBOARDS = [
     ts('Tỷ lệ blocked/masked/held', q('sum by (decision) (rate(eduworld_chat_messages_total{decision=~"blocked|masked|held"}[15m])) / ignoring (decision) group_left sum(rate(eduworld_chat_messages_total[15m]))', '{{decision}}'), 'percentunit'),
     ts('Phát hiện PII', q('sum(rate(eduworld_chat_sensitive_matches_total{category="pii"}[5m]))', 'pii'), 'ops'),
     ts('Báo cáo theo lý do', q('sum by (reason) (rate(eduworld_reports_total[1h]))', '{{reason}}'), 'ops'),
-    ts('Hàng đợi kiểm duyệt', q('sum by (priority) (eduworld_moderation_queue_size)', '{{priority}}')),
+    ts('Hàng đợi kiểm duyệt', q('sum by (severity) (eduworld_moderation_cases_open)', '{{severity}}')),
     ts('Tuổi case chưa nhận lâu nhất', q('max by (severity) (eduworld_moderation_case_unclaimed_age_seconds)', '{{severity}}'), 's'),
     ts('Thông báo trường quá hạn', q('sum(eduworld_moderation_school_notifications_overdue)', 'quá hạn')),
     stat('Bước kiểm duyệt đang tắt', q('count(eduworld_chat_policy_disabled == 1) or vector(0)')),

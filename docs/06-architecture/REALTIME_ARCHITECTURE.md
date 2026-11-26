@@ -82,7 +82,7 @@ sequenceDiagram
   participant VK as Valkey
   participant GW as gateway node
   G->>GAM: POST /api/v1/game/sessions/{id}/realtime-tickets (Bearer)
-  GAM->>VK: SET ew:rt:ticket:<sha256> {user,tenant,session,device,school,exp} EX 60 NX
+  GAM->>VK: SET ew:rt:ticket:<sha256> {user,tenant,session,device,school,iat,platform,grade_band} EX 60 NX
   GAM-->>G: { ticket, url, expires_in: 60 }
   G->>GW: WSS /realtime/v1?ticket=...  (Sec-WebSocket-Protocol: eduworld.v1)
   GW->>VK: GETDEL ew:rt:ticket:<sha256>
@@ -393,7 +393,7 @@ Kiểm chứng: TC-PERF (10.000 CCU giả lập, 70% hub/20% trận/10% học) t
 
 | Metric | Loại | Nguồn |
 |---|---|---|
-| `eduworld_rt_connections{node}` | gauge | gateway |
+| `eduworld_ws_connections{node}`, `eduworld_ws_connect_total{result}`, `eduworld_players_online{platform,grade_band}` (tên, nhãn do [MONITORING §3](../11-operations/MONITORING.md#3-metric-bắt-buộc-master-prompt-18) sở hữu) | gauge / counter / gauge | gateway |
 | `eduworld_rt_messages_total{direction,type}` | counter | gateway |
 | `eduworld_rt_send_queue_dropped_total{type}` | counter | gateway |
 | `eduworld_rt_cmd_latency_seconds{module,type}` | histogram — thời gian NATS request/reply tới `core-api` | gateway |

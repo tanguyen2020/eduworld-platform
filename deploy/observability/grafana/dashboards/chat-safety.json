@@ -206,8 +206,8 @@
             "uid": "prometheus"
           },
           "refId": "A",
-          "expr": "sum by (priority) (eduworld_moderation_queue_size)",
-          "legendFormat": "{{priority}}"
+          "expr": "sum by (severity) (eduworld_moderation_cases_open)",
+          "legendFormat": "{{severity}}"
         }
       ],
       "fieldConfig": {

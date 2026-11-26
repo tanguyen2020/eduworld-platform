@@ -245,7 +245,8 @@ services:
       <<: *update
 
   # Only service with the Docker socket (read-only mount, policy docker_socket): container names and Swarm labels of
-  # the cgroups ([Proposed], MONITORING §1).
+  # the cgroups of its own node. docker-api-proxy-ro reaches only the manager Engine API, so it cannot serve a global
+  # cAdvisor (MONITORING §1, checked 2026-11-27).
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.52.1
     command: ["--docker_only=true", "--store_container_labels=false",

@@ -29,7 +29,7 @@ groups:
         expr: histogram_quantile(0.95, sum by (le) (rate(eduworld_chat_send_latency_seconds_bucket[5m])))
       # Realtime connect: WS connects with a valid ticket that succeed.
       - record: eduworld:sli_ws_connect:ratio_rate5m
-        expr: sum(rate(eduworld_ws_connect_total{result="ok"}[5m])) / sum(rate(eduworld_ws_connect_total{result!~"ticket_invalid|ticket_expired"}[5m]))
+        expr: sum(rate(eduworld_ws_connect_total{result="ok"}[5m])) / sum(rate(eduworld_ws_connect_total{result!="ticket_invalid"}[5m]))
       # Login: password login → hub < 3 s (login_slo).
       - record: eduworld:sli_login:ratio_rate5m
         expr: sum(rate(eduworld_auth_login_duration_seconds_bucket{method="password",le="3"}[5m])) / sum(rate(eduworld_auth_login_duration_seconds_count{method="password"}[5m]))

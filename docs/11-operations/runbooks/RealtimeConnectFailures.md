@@ -13,13 +13,13 @@ Học sinh không vào được hub/trận (WebSocket), có thể kẹt ở màn
 
 ## Chẩn đoán
 
-1. `eduworld_ws_connect_total` theo `result` (Dashboard Grafana **Realtime**): `ticket_invalid`/`ticket_expired` = lỗi phát ticket ở `core-api`; `rejected` = realtime từ chối
+1. `eduworld_ws_connect_total` theo `result` (Dashboard Grafana **Realtime**): `ticket_invalid` = vé thiếu/sai/hết hạn/đã dùng (lỗi phát ticket ở `core-api` module game hoặc client dùng lại vé; lý do chi tiết ở `eduworld_rt_ticket_rejected_total{reason}`); `rejected` = realtime từ chối (draining, Valkey, Origin/subprotocol, sức chứa)
 2. APISIX route `/realtime/v1` và upstream realtime
 3. Grafana → Explore (Loki) `{service="<binary>"} | json | level="error"`, lọc theo `trace_id` lấy từ Tempo
 
 ## Xử lý
 
-1. Ticket lỗi: kiểm tra `core-api` (module identity) và Valkey
+1. Ticket lỗi: kiểm tra `core-api` (module game, `issueRealtimeTicket`) và Valkey
 2. Realtime quá tải: scale `realtime` (drain có `stop_grace_period`)
 3. Sau deploy realtime: `make deploy-rollback ENV=<env> SERVICE=<swarm-service>` nếu bắt đầu sau một bản deploy ([DEPLOYMENT §11](../DEPLOYMENT.md))
 

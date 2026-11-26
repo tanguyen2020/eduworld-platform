@@ -161,7 +161,7 @@ Không dùng. Domain event đi qua outbox → NATS JetStream (ADR-0042, [EVENT_D
 
 ```text
 # module game cấp ticket
-SET ew:rt:ticket:9f2c…e1 '{"user_id":"…","game_session_id":"…","tenant_id":"…","school_id":"…","iat":1763190000}' EX 60 NX
+SET ew:rt:ticket:9f2c…e1 '{"user_id":"…","game_session_id":"…","tenant_id":"…","school_id":"…","device_id":"…","iat":1763190000,"platform":"windows","grade_band":"g4_5"}' EX 60 NX
 # realtime tiêu thụ (dùng 1 lần)
 GETDEL ew:rt:ticket:9f2c…e1
 ```
