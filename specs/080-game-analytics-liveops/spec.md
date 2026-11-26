@@ -50,6 +50,11 @@
 - Q: Catalog menu cho School Admin? → A: [Confirmed] `action.school_lms.reports.view` và `menu.school_lms.reports` thêm `analytics.school.read`.
 - Q: Portal workspace E? → A: [Confirmed] Thẻ KPI dùng `DashboardWidget` (dự án không có `@ant-design/pro-components`); không thêm `GrainLabel`/`DataAsOf` vì `DashboardWidget` đã hiển thị độ hạt, "Cập nhật lúc", "Tạm tính"; dropdown tenant chỉ hiện cho System Admin (`platform.cross_tenant.read`), role `liveops` xem tổng mọi tenant không QA.
 
+### Session 2026-11-26 (follow-up — owner hoãn)
+
+- Q: Phía phát cờ `analytics_product_telemetry_enabled` của tenant (khóa trong `TenantSettings`/`settings_subset` của identity, delta F015)? → A: **Hoãn** (owner 2026-11-26: "cài đặt telemetry để sau vì chỉ xem log"). Module game giữ hành vi hiện tại: đọc `ref.tenants.settings_subset.analytics_product_telemetry_enabled`, vắng mặt = bật theo giá trị platform (CONFIG_DEFAULTS); identity chưa phát khóa này nên mọi tenant hiện dùng mặc định. Không có thay đổi contract/settings/migration nào cho cờ này.
+- Q: `excluded_tenant_ids` (loại tenant QA khỏi analytics, F134-AC-09)? → A: **Hoãn** cùng đợt, làm trong F134; F080 tiếp tục loại tenant QA theo `ref.tenants.is_qa` như đã triển khai.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Telemetry client không PII (Priority: P1) 🎯 MVP
