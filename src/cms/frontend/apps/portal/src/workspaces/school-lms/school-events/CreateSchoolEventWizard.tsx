@@ -35,7 +35,7 @@ function TemplatePicker({ templates, loading, onPick }: { templates: EventTempla
   }
   return (
     <List
-      loading={loading}
+      loading={loading && templates.length === 0}
       grid={{ gutter: 16, xs: 1, md: 2, xl: 3 }}
       dataSource={templates}
       renderItem={(x) => (

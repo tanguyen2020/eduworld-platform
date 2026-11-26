@@ -36300,7 +36300,8 @@ export interface operations {
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 limit?: components["parameters"]["Limit"];
-                status?: components["schemas"]["SchoolEventStatus"];
+                /** @description Một giá trị của `SchoolEventStatus` (giữ kiểu chuỗi để không breaking — F081 Clarifications 2026-11-25; giá trị khác không khớp sự kiện nào) */
+                status?: string;
                 /**
                  * @description Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
                  *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.

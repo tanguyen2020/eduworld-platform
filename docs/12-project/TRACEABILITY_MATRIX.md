@@ -21,7 +21,7 @@
 | `QB` Question Bank | module learning | 14 | 14 | 0 | 17 | 0 | LRN (18) | 0 | 0 | 0 / 0 |
 | `EXR` Activity & Attempt Engine | module learning | 16 | 16 | 2 | 35 | 0 | ACT (5), LRN (18), VID (5), SIM (5), MATH (3) | 3 | 8 | 0 / 25 |
 | `EXM` Exam & Practice | module learning | 10 | 10 | 1 | 13 | 0 | EXM (6) | 1 | 2 | 0 / 8 |
-| `PRG` Learning Progress & Mastery | module learning | 9 | 9 | 0 | 8 | 0 | LRN (18) | 1 | 2 | 0 / 0 |
+| `PRG` Learning Progress & Mastery | module learning | 9 | 9 | 0 | 9 | 0 | LRN (18) | 1 | 2 | 0 / 0 |
 | `ANL` Learning Events & Analytics | module learning · module game | 23 | 23 | 1 | 23 | 0 | ANL (11), DASH (10) | 0 | 0 | 0 / 21 |
 | `GAME` Game World & Character | module game | 18 | 18 | 2 | 20 | 0 | WLD (6), GAM (12) | 2 | 0 | 0 / 9 |
 | `QST` Quest | module game | 9 | 9 | 0 | 40 | 0 | GAM (12) | 2 | 0 | 0 / 15 |
@@ -41,12 +41,12 @@
 | `RWD` Phần thưởng | module game | 3 | 3 | 0 | 12 | 0 | GAM (12), ECO (8) | 0 | 0 | 0 / 0 |
 | `CHL` Challenge & Boss | module game | 3 | 3 | 0 | 17 | 0 | CHL (8) | 0 | 0 | 0 / 8 |
 | `ECO` Kinh tế, vật phẩm, sưu tầm | module game | 5 | 5 | 0 | 13 | 0 | ECO (8) | 0 | 0 | 0 / 8 |
-| `EVT` Event & Season (live-ops) | module game | 8 | 8 | 0 | 18 | 0 | EVT (12) | 0 | 0 | 0 / 12 |
+| `EVT` Event & Season (live-ops) | module game | 8 | 8 | 1 | 19 | 0 | EVT (12) | 0 | 0 | 0 / 12 |
 | `CMS` CMS | module learning · module game (game-admin) | 18 | 17 | 1 | 132 | 0 | CMS (4) | 2 | 5 | 0 / 0 |
-| `LMS` LMS | module learning | 10 | 10 | 1 | 33 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
+| `LMS` LMS | module learning | 10 | 10 | 1 | 34 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 28 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 21 | 594 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 22 | 595 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -266,15 +266,15 @@ AC: AC-PRG-001, AC-PRG-002 · US: US-PRG-001
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-PRG-001 | Theo dõi tiến độ, số bài hoàn thành, tỷ lệ chính xác, thời gian học, số lần làm, LO mastery, kỹ năng yếu, t… | P2–P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 8 op | _suy luận:_ TC-LRN |
-| FR-PRG-002 | Mastery theo (student, LO) tính từ nhiều bằng chứng, không đồng nhất với điểm một lần làm bài | P2 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 8 op | _suy luận:_ TC-LRN |
-| FR-PRG-003 | Mô hình mastery cấu hình được, mặc định Weighted Evidence (ADR-0017), lưu model_version | P2 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 8 op | _suy luận:_ TC-LRN |
-| FR-PRG-004 | Gợi ý ôn tập dựa trên LO yếu (/api/v1/learning/recommendations) | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 8 op | _suy luận:_ TC-LRN |
-| FR-PRG-005 | Học sinh xem tiến độ dạng thân thiện theo độ tuổi (sao/huy hiệu cho lớp 1–5, biểu đồ cho 6–9) | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 8 op | _suy luận:_ TC-LRN |
-| FR-PRG-006 | Lọc đoán bừa: response có response_ms dưới ngưỡng tối thiểu của item (mặc định theo loại câu) gắn cờ rapid_… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 8 op | _suy luận:_ TC-LRN |
-| FR-PRG-007 | Bài chẩn đoán (AttemptMode = diagnostic) ngắn đầu năm học/đầu chủ đề để khởi tạo mastery và gợi ý điểm bắt… | P3 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 8 op | _suy luận:_ TC-LRN |
-| FR-PRG-008 | Gợi ý ôn tập tự động có giải thích (LO yếu, LO tiên quyết) là con đường học chính thay cho chỉ định của giá… | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 8 op | _suy luận:_ TC-LRN |
-| FR-PRG-009 | Recompute mastery: job tính lại mastery từ learning_events khi đổi model_version (chạy shadow, so sánh rồi… | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 8 op | _suy luận:_ TC-LRN |
+| FR-PRG-001 | Theo dõi tiến độ, số bài hoàn thành, tỷ lệ chính xác, thời gian học, số lần làm, LO mastery, kỹ năng yếu, t… | P2–P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 9 op | _suy luận:_ TC-LRN |
+| FR-PRG-002 | Mastery theo (student, LO) tính từ nhiều bằng chứng, không đồng nhất với điểm một lần làm bài | P2 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 9 op | _suy luận:_ TC-LRN |
+| FR-PRG-003 | Mô hình mastery cấu hình được, mặc định Weighted Evidence (ADR-0017), lưu model_version | P2 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 9 op | _suy luận:_ TC-LRN |
+| FR-PRG-004 | Gợi ý ôn tập dựa trên LO yếu (/api/v1/learning/recommendations) | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 9 op | _suy luận:_ TC-LRN |
+| FR-PRG-005 | Học sinh xem tiến độ dạng thân thiện theo độ tuổi (sao/huy hiệu cho lớp 1–5, biểu đồ cho 6–9) | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 9 op | _suy luận:_ TC-LRN |
+| FR-PRG-006 | Lọc đoán bừa: response có response_ms dưới ngưỡng tối thiểu của item (mặc định theo loại câu) gắn cờ rapid_… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 9 op | _suy luận:_ TC-LRN |
+| FR-PRG-007 | Bài chẩn đoán (AttemptMode = diagnostic) ngắn đầu năm học/đầu chủ đề để khởi tạo mastery và gợi ý điểm bắt… | P3 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 9 op | _suy luận:_ TC-LRN |
+| FR-PRG-008 | Gợi ý ôn tập tự động có giải thích (LO yếu, LO tiên quyết) là con đường học chính thay cho chỉ định của giá… | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 9 op | _suy luận:_ TC-LRN |
+| FR-PRG-009 | Recompute mastery: job tính lại mastery từ learning_events khi đổi model_version (chạy shadow, so sánh rồi… | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 9 op | _suy luận:_ TC-LRN |
 
 ### 3.10. `ANL` Learning Events & Analytics
 
@@ -299,7 +299,7 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 21 AC, 0 US — [DASHBOARD_DATA](.
 | FR-ANL-013 | Dashboard chỉ đọc bảng tổng hợp dựng gia tăng; khoảng thời gian tối đa 2 năm, độ hạt tự chọn theo khoảng; h… | P3 | [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 23 op | _suy luận:_ TC-ANL, TC-DASH |
 | FR-ANL-014 | Xuất báo cáo dashboard chạy bất đồng bộ, link tải có hạn, có audit | P3 | [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 23 op | _suy luận:_ TC-ANL, TC-DASH |
 | FR-ANL-015 | Báo cáo tham khảo theo mức đánh giá TT27/2020 (tiểu học) và TT22/2021 (THCS) từ mastery/kết quả; ghi rõ "ch… | P3 | [ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 23 op | _suy luận:_ TC-ANL, TC-DASH |
-| FR-ANL-016 | Báo cáo learning analytics cấp tổ chức/tenant/platform chỉ dùng dữ liệu gộp, ẩn ô có < 5 học sinh (k-anonym… | P3 | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · +1 | `getGradeDashboard` · `getSchoolAnalyticsSeries` · `getSchoolDashboard` | _suy luận:_ TC-ANL, TC-DASH |
+| FR-ANL-016 | Báo cáo learning analytics cấp tổ chức/tenant/platform chỉ dùng dữ liệu gộp, ẩn ô có < 5 học sinh (k-anonym… | P3 | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · +1 | `getGradeDashboard` · `getSchoolAnalyticsSeries` · `getSchoolDashboard` · `getSchoolEventProgress` | _suy luận:_ TC-ANL, TC-DASH |
 | FR-ANL-017 | Ngân hàng câu hỏi/đề đo hiệu quả (efficacy_instrument) tách khỏi mọi luyện tập, không xuất hiện trong pract… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 23 op | _suy luận:_ TC-ANL, TC-DASH |
 | FR-ANL-018 | Bài kiểm tra độc lập trước/sau cho cụm (trường, khối) tham gia và cụm so sánh cùng khối (ADR-0095); không t… | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 23 op | _suy luận:_ TC-ANL, TC-DASH |
 | FR-ANL-019 | Ghi thỏa thuận tham gia nghiên cứu của tenant (pilot), có thu hồi và audit (LEARNING_EFFICACY_PLAN, ADR-0080) | P3 | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 23 op | _suy luận:_ TC-ANL, TC-DASH |
@@ -633,14 +633,14 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 12 AC, 0 US — [EVENT_SEASON_SYST
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-EVT-001 | Sự kiện live-ops: lễ hội thế giới, cuối tuần, sự kiện trường, community goal, chiến dịch học tập, boss đặc… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-EVT |
-| FR-EVT-002 | Event Builder trong Game Operations Console: lịch, đối tượng (khối/trường/tenant), nội dung tham chiếu, phầ… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-EVT |
-| FR-EVT-003 | Vòng đời Scheduled → Live → Ended → Archived, dừng khẩn cấp/tiếp tục/hủy có lý do và audit; lượt chơi đang… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-EVT |
-| FR-EVT-004 | Community goal cộng dồn theo trường/tenant từ event server đã kiểm chứng, trần đóng góp mỗi học sinh/ngày,… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-EVT |
-| FR-EVT-005 | Season track miễn phí (không track trả phí), điểm mùa từ hoạt động đa dạng có trần/ngày, thưởng cosmetic; h… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-EVT |
-| FR-EVT-006 | Tenant tổ chức sự kiện trường từ template platform, chỉ với allowed_params (ADR-0027, ADR-0029) | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-EVT |
-| FR-EVT-007 | Quy tắc lành mạnh: không phạt mất chuỗi, không ép online, không khóa học tập, tôn trọng giờ truy cập và nhắ… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-EVT |
-| FR-EVT-008 | Nội dung sự kiện platform song ngữ bắt buộc (ADR-0056); trang trí trong ngân sách máy tầm trung, có biến th… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-EVT |
+| FR-EVT-001 | Sự kiện live-ops: lễ hội thế giới, cuối tuần, sự kiện trường, community goal, chiến dịch học tập, boss đặc… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 19 op | _suy luận:_ TC-EVT |
+| FR-EVT-002 | Event Builder trong Game Operations Console: lịch, đối tượng (khối/trường/tenant), nội dung tham chiếu, phầ… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 19 op | _suy luận:_ TC-EVT |
+| FR-EVT-003 | Vòng đời Scheduled → Live → Ended → Archived, dừng khẩn cấp/tiếp tục/hủy có lý do và audit; lượt chơi đang… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 19 op | _suy luận:_ TC-EVT |
+| FR-EVT-004 | Community goal cộng dồn theo trường/tenant từ event server đã kiểm chứng, trần đóng góp mỗi học sinh/ngày,… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `getSchoolEventProgress` | _suy luận:_ TC-EVT |
+| FR-EVT-005 | Season track miễn phí (không track trả phí), điểm mùa từ hoạt động đa dạng có trần/ngày, thưởng cosmetic; h… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 19 op | _suy luận:_ TC-EVT |
+| FR-EVT-006 | Tenant tổ chức sự kiện trường từ template platform, chỉ với allowed_params (ADR-0027, ADR-0029) | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 19 op | _suy luận:_ TC-EVT |
+| FR-EVT-007 | Quy tắc lành mạnh: không phạt mất chuỗi, không ép online, không khóa học tập, tôn trọng giờ truy cập và nhắ… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 19 op | _suy luận:_ TC-EVT |
+| FR-EVT-008 | Nội dung sự kiện platform song ngữ bắt buộc (ADR-0056); trang trí trong ngân sách máy tầm trung, có biến th… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 19 op | _suy luận:_ TC-EVT |
 
 ### 3.30. `CMS` CMS
 
@@ -679,16 +679,16 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 17 AC, 0 US — [SCHOOL_LMS](../04
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-LMS-001 | Module: Assignment, Lesson Delivery, Assessment, Learning Progress, Learning Analytics, School Learning Das… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 33 op | _suy luận:_ TC-LMS, TC-DASH |
-| FR-LMS-002 | school_admin/academic_manager giao bài tập, giao đề ôn tập (target: khối của một trường + thêm học sinh khá… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 33 op | _suy luận:_ TC-LMS, TC-DASH |
-| FR-LMS-003 | Nhà trường theo dõi kết quả, tiến độ, kỹ năng yếu theo LO qua School Learning Dashboard (FR-LMS-011) | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 33 op | _suy luận:_ TC-LMS, TC-DASH |
-| FR-LMS-004 | Chỉ school_admin tổ chức thử thách khối/giải trường từ template; nhóm học tập đã bỏ theo ADR-0095 | P4 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 33 op | _suy luận:_ TC-LMS, TC-DASH |
-| FR-LMS-005 | Phân quyền theo trường và môn (scope school, subject của UserRole); không có scope lớp theo phân công giảng… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 33 op | _suy luận:_ TC-LMS, TC-DASH |
-| FR-LMS-006 | Bài được giao xuất hiện trong game như quest/nhiệm vụ đặc biệt, ở tab "Nhà trường giao" | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [STUDENT_GAME_UX_CORE](../05-ux/STUDENT_GAME_UX_CORE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 33 op | _suy luận:_ TC-LMS, TC-DASH |
-| FR-LMS-007 | Nhà trường chỉ chọn quest/mini-game đã publish và được gán cho tenant để giao bài; thử thách/giải trường tạ… | P2–P4 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 33 op | _suy luận:_ TC-LMS, TC-DASH |
+| FR-LMS-001 | Module: Assignment, Lesson Delivery, Assessment, Learning Progress, Learning Analytics, School Learning Das… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-LMS, TC-DASH |
+| FR-LMS-002 | school_admin/academic_manager giao bài tập, giao đề ôn tập (target: khối của một trường + thêm học sinh khá… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-LMS, TC-DASH |
+| FR-LMS-003 | Nhà trường theo dõi kết quả, tiến độ, kỹ năng yếu theo LO qua School Learning Dashboard (FR-LMS-011) | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-LMS, TC-DASH |
+| FR-LMS-004 | Chỉ school_admin tổ chức thử thách khối/giải trường từ template; nhóm học tập đã bỏ theo ADR-0095 | P4 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-LMS, TC-DASH |
+| FR-LMS-005 | Phân quyền theo trường và môn (scope school, subject của UserRole); không có scope lớp theo phân công giảng… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-LMS, TC-DASH |
+| FR-LMS-006 | Bài được giao xuất hiện trong game như quest/nhiệm vụ đặc biệt, ở tab "Nhà trường giao" | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [STUDENT_GAME_UX_CORE](../05-ux/STUDENT_GAME_UX_CORE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-LMS, TC-DASH |
+| FR-LMS-007 | Nhà trường chỉ chọn quest/mini-game đã publish và được gán cho tenant để giao bài; thử thách/giải trường tạ… | P2–P4 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-LMS, TC-DASH |
 | FR-LMS-011 | School Learning Dashboard cho school_admin/academic_manager: trường → khối → học sinh (ADR-0095), tiến độ b… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `getSchoolDashboard` | _suy luận:_ TC-LMS, TC-DASH |
-| FR-LMS-012 | Thao tác cá nhân trên bài giao: gia hạn due_at (extend), miễn (excuse), nhắc học sinh chưa làm (remind, giớ… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 33 op | _suy luận:_ TC-LMS, TC-DASH |
-| FR-LMS-013 | Bảng kết quả bài giao (theo khối, không course — ADR-0095) theo điểm tự chấm (không sổ điểm chấm tay, không… | P3 | [ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 33 op | _suy luận:_ TC-LMS, TC-DASH |
+| FR-LMS-012 | Thao tác cá nhân trên bài giao: gia hạn due_at (extend), miễn (excuse), nhắc học sinh chưa làm (remind, giớ… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-LMS, TC-DASH |
+| FR-LMS-013 | Bảng kết quả bài giao (theo khối, không course — ADR-0095) theo điểm tự chấm (không sổ điểm chấm tay, không… | P3 | [ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-LMS, TC-DASH |
 
 ### 3.32. `AUD` Audit
 
@@ -837,7 +837,7 @@ Tính trên 334 FR thuộc Release 1.0 (phase P1–P6).
 | Kiểm tra | Không có liên kết tường minh | Không có cả suy luận (mồ côi thật) |
 |---|---|---|
 | FR không có tài liệu thiết kế | 1 | 0 |
-| FR không có operation OpenAPI | 313 | 0 |
+| FR không có operation OpenAPI | 312 | 0 |
 | FR không có TC | 333 | 0 |
 | AC không thuộc domain FR nào | — | 0 |
 | US không thuộc domain FR nào | — | 0 |

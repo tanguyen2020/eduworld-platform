@@ -9,7 +9,7 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` → `specs/openapi/modules/game.v1.ya
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
 | `listEventTemplates` | `GET /api/v1/lms/event-templates` | game.v1.yaml | `lms.school_event.write` | Có sẵn · **Đã sửa (F081)** `EventTemplate.quest_option_items`/`challenge_option_items` |
-| `listSchoolEvents` | `GET /api/v1/lms/school-events` (`tenant_ids`, `status`) | game.v1.yaml | `lms.school_event.write` | Có sẵn · **Đã sửa (F081)** `status` = `SchoolEventStatus`, `X-Tenant-Id` tùy chọn (System Admin liên tenant) |
+| `listSchoolEvents` | `GET /api/v1/lms/school-events` (`tenant_ids`, `status`) | game.v1.yaml | `lms.school_event.write` | Có sẵn · **Đã sửa (F081)** `SchoolEvent.status` = `SchoolEventStatus` (tham số `status` giữ chuỗi — không breaking), `X-Tenant-Id` tùy chọn (System Admin liên tenant) |
 | `createSchoolEvent` | `POST /api/v1/lms/school-events` (`Idempotency-Key`) | game.v1.yaml | `lms.school_event.write` | Có sẵn (`409`/`503`/`428`: delta của F077 T005) |
 | `getSchoolEvent` · `updateSchoolEvent` | `GET/PATCH /api/v1/lms/school-events/{event_id}` (`If-Match`) | game.v1.yaml | `lms.school_event.write` | Có sẵn |
 | `cancelSchoolEvent` | `POST /api/v1/lms/school-events/{event_id}:cancel` (`EventRunOperation`) | game.v1.yaml | `lms.school_event.write` | Có sẵn |

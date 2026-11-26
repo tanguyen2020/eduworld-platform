@@ -18424,7 +18424,8 @@ paths:
         - name: status
           in: query
           required: false
-          schema: { $ref: '#/components/schemas/SchoolEventStatus' }
+          description: Một giá trị của `SchoolEventStatus` (giữ kiểu chuỗi để không breaking — F081 Clarifications 2026-11-25; giá trị khác không khớp sự kiện nào)
+          schema: { type: string, maxLength: 32 }
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:

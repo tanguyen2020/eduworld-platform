@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -325,21 +324,14 @@ func (h Handlers) listSchoolEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := r.URL.Query()
-	status := q.Get("status")
-	if status != "" && !slices.Contains(schoolEventStatuses, status) {
-		fail(w, r, problem.Invalid("status", problem.SubInvalid, "not a SchoolEventStatus"))
-		return
-	}
-	out, err := h.LiveOpsQueries.ListSchoolEvents(r.Context(), status, limit, q.Get("cursor"))
+	// status: one value of SchoolEventStatus; another value matches no event (string in the contract — not breaking)
+	out, err := h.LiveOpsQueries.ListSchoolEvents(r.Context(), q.Get("status"), limit, q.Get("cursor"))
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, out)
 }
-
-// schoolEventStatuses is the enum SchoolEventStatus of the contract (filter of listSchoolEvents).
-var schoolEventStatuses = []string{"draft", "scheduled", "live", "suspended", "ended", "cancelled", "archived"}
 
 // getSchoolEventProgress serves getSchoolEventProgress (F081-AC-10): optional school_id (UUID) of the school viewed.
 func (h Handlers) getSchoolEventProgress(w http.ResponseWriter, r *http.Request) {

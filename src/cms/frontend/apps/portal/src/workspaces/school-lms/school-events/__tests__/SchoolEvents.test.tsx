@@ -30,10 +30,14 @@ afterEach(() => {
 const posts = (backend: { calls: (m: string, p: string) => { headers: Record<string, string>; body: unknown }[] }) => backend.calls('POST', '/lms/school-events');
 
 /** Fills the always-present fields of the form (name and dates in ICT). */
-async function fillBasics(user: { type: (e: Element, s: string) => Promise<void> }, name = 'Tuần lễ Toán học trường A') {
+async function fillBasics(user: { type: (e: Element, s: string) => Promise<void>; tab: () => Promise<void> }, name = 'Tuần lễ Toán học trường A') {
   fireEvent.change(await screen.findByLabelText('Tên sự kiện (tiếng Việt)'), { target: { value: name } });
-  await user.type(screen.getByLabelText('Bắt đầu'), '01/12/2026 08:00{enter}');
-  await user.type(screen.getByLabelText('Kết thúc'), '08/12/2026 08:00{enter}');
+  // typed then blurred (Enter inside the form would submit it)
+  await user.type(screen.getByLabelText('Bắt đầu'), '01/12/2026 08:00');
+  await user.tab();
+  await user.type(screen.getByLabelText('Kết thúc'), '08/12/2026 08:00');
+  await user.tab();
+  await waitFor(() => expect(screen.getByTestId('event-duration')).toHaveTextContent('Thời lượng: 7 ngày'));
 }
 
 describe('Tạo sự kiện từ mẫu (F081 US1)', () => {
@@ -44,15 +48,15 @@ describe('Tạo sự kiện từ mẫu (F081 US1)', () => {
     expect(within(card).getByText('Sự kiện trường')).toBeInTheDocument();
     expect(within(card).getByText('Cả trường cùng giải toán')).toBeInTheDocument();
     expect(backend.calls('GET', '/lms/event-templates').every((r) => r.headers['x-tenant-id'] === T_A)).toBe(true);
-    await user.click(within(card).getByRole('button', { name: /Dùng mẫu Tuần lễ Toán học/ }));
+    fireEvent.click(within(card).getByRole('button', { name: /Dùng mẫu Tuần lễ Toán học/ }));
     // AC-05: vi required (+ counter), en optional, description limits
     const nameVi = await screen.findByLabelText('Tên sự kiện (tiếng Việt)');
     expect(nameVi).toHaveAttribute('maxlength', '255');
     expect(screen.getByLabelText('Tên sự kiện (tiếng Anh, không bắt buộc)')).toHaveAttribute('maxlength', '255');
     expect(screen.getByLabelText('Mô tả (tiếng Việt)')).toHaveAttribute('maxlength', '4000');
     // AC-02: allowed parameters only — no school picker (not allowed), no challenge picker, no rule/score input
-    expect(screen.getByRole('group', { name: 'Khối' })).toBeInTheDocument();
     expect(screen.getAllByRole('checkbox')).toHaveLength(9);
+    expect(screen.getByRole('checkbox', { name: 'Khối 9' })).toBeInTheDocument();
     expect(screen.queryByText(/lớp/i)).toBeNull();
     expect(screen.getByLabelText('Mục tiêu chung')).toBeInTheDocument();
     expect(screen.queryByLabelText('Trường')).toBeNull();
@@ -89,7 +93,7 @@ describe('Tạo sự kiện từ mẫu (F081 US1)', () => {
   it('AC-03, AC-04: same Idempotency-Key on retry (503 keeps the form), flagged name on its field without the word, 409 limit', async () => {
     const state = schoolEventsState();
     const { user, backend } = await renderSchoolEvents('/school-lms/school-events/new', { state });
-    await user.click(await screen.findByRole('button', { name: /Dùng mẫu Tuần lễ Toán học/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Dùng mẫu Tuần lễ Toán học/ }));
     // flagged text → generic message on the name field, the word never shown
     await fillBasics(user, `Sự kiện ${FLAGGED}`);
     await user.click(screen.getByRole('button', { name: 'Tạo sự kiện' }));
@@ -106,7 +110,10 @@ describe('Tạo sự kiện từ mẫu (F081 US1)', () => {
     state.screeningDown = false;
     await user.click(screen.getByRole('button', { name: 'Tạo sự kiện' }));
     await screen.findByText('Tiến độ sự kiện');
-    const keys = posts(backend).slice(1).map((r) => r.headers['idempotency-key']);
+    // the attempts after the flagged one (503, automatic retries, the retry click): one key for the one intent
+    const keys = posts(backend)
+      .filter((r) => !JSON.stringify(r.body).includes(FLAGGED))
+      .map((r) => r.headers['idempotency-key']);
     expect(keys.length).toBeGreaterThanOrEqual(2);
     expect(new Set(keys).size).toBe(1);
     expect(state.created).toBe(1);
@@ -116,7 +123,7 @@ describe('Tạo sự kiện từ mẫu (F081 US1)', () => {
     const s2 = schoolEventsState();
     s2.tooMany = true;
     const r2 = await renderSchoolEvents('/school-lms/school-events/new', { state: s2 });
-    await r2.user.click(await screen.findByRole('button', { name: /Dùng mẫu Tuần lễ Toán học/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Dùng mẫu Tuần lễ Toán học/ }));
     await fillBasics(r2.user);
     await r2.user.click(screen.getByRole('button', { name: 'Tạo sự kiện' }));
     expect(await screen.findByText(/số sự kiện diễn ra đồng thời tối đa/)).toBeInTheDocument();
@@ -162,6 +169,7 @@ describe('Danh sách, sửa, hủy (F081 US2)', () => {
     expect(patch[0]!.headers['if-match']).toBe('"1"');
     expect(patch[0]!.headers['idempotency-key']).toBeTruthy();
     await r3.user.click(screen.getByRole('button', { name: 'Tải lại' }));
+    await waitFor(() => expect(screen.getByLabelText('Tên sự kiện (tiếng Việt)')).toHaveValue('Tuần lễ Toán học trường A')); // reloaded (version 2)
     await r3.user.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
     await screen.findByText('Tiến độ sự kiện');
     expect(r3.backend.calls('PATCH', `/lms/school-events/${EV.eventScheduled}`).at(-1)!.headers['if-match']).toBe('"2"');
@@ -264,7 +272,7 @@ describe('Tiến độ (F081 US3) và ràng buộc chung (US4)', () => {
     const { backend, user } = await renderSchoolEvents('/school-lms/school-events/new');
     const before = backend.calls('GET', '/me/permissions').length;
     backend.overrides.unshift((r) => (r.method === 'POST' && r.path === '/lms/school-events' ? problem(403, 'FEATURE_DISABLED', { feature_key: 'action.school_lms.school_events.edit' }) : undefined));
-    await user.click(await screen.findByRole('button', { name: /Dùng mẫu Tuần lễ Toán học/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Dùng mẫu Tuần lễ Toán học/ }));
     await fillBasics(user);
     await user.click(screen.getByRole('button', { name: 'Tạo sự kiện' }));
     expect((await screen.findAllByText(/tạm tắt/)).length).toBeGreaterThan(0);

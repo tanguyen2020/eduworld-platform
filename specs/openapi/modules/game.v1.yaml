@@ -4988,8 +4988,10 @@ paths:
         - name: status
           in: query
           required: false
+          description: Một giá trị của `SchoolEventStatus` (giữ kiểu chuỗi để không breaking — F081 Clarifications 2026-11-25; giá trị khác không khớp sự kiện nào)
           schema:
-            $ref: '#/components/schemas/SchoolEventStatus'
+            type: string
+            maxLength: 32
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -11202,19 +11204,6 @@ components:
             type: integer
             minimum: 1
             maximum: 12
-    SchoolEventStatus:
-      type: string
-      description: |
-        Trạng thái sự kiện trường (F081): `suspended` = EduWorld dừng khẩn cấp (tenant không sửa/hủy); run đã lưu trữ hiển thị
-        `ended` hoặc `cancelled` (giữ trạng thái kết thúc mà trường biết); `archived` giữ cho khớp `EventRunStatus`.
-      enum:
-        - draft
-        - scheduled
-        - live
-        - suspended
-        - ended
-        - cancelled
-        - archived
     SchoolEvent:
       allOf:
         - $ref: '#/components/schemas/SchoolEventCreate'
@@ -11288,6 +11277,19 @@ components:
         reward_option_id:
           type: string
           maxLength: 64
+    SchoolEventStatus:
+      type: string
+      description: |
+        Trạng thái sự kiện trường (F081): `suspended` = EduWorld dừng khẩn cấp (tenant không sửa/hủy); run đã lưu trữ hiển thị
+        `ended` hoặc `cancelled` (giữ trạng thái kết thúc mà trường biết); `archived` giữ cho khớp `EventRunStatus`.
+      enum:
+        - draft
+        - scheduled
+        - live
+        - suspended
+        - ended
+        - cancelled
+        - archived
     SchoolEventUpdate:
       type: object
       properties:
