@@ -4,6 +4,10 @@ extends RefCounted
 ## Density variant follows the grade band (`g1_3` before bootstrap); the user's font scale (3 levels) and high
 ## contrast are layered on a copy of the generated Theme at runtime — the generated `.tres` files are never edited.
 ## Held by `AppState`; changing any input re-applies the Theme so open screens update without restart.
+## F114: a Control right under a CanvasLayer (HUD, world panels, dialogs) does not inherit the Window's Theme in Godot 4
+## (it fell back to the project theme `g1_3` for every band); the service gives those layer roots the current Theme
+## when they enter the tree and keeps them in step with every change. A layer root with a Theme of its own (the rotate
+## prompt) is left alone.
 
 signal theme_applied(band: String)
 signal density_changed(band: String)
@@ -22,6 +26,8 @@ var current_theme: Theme = null
 
 var _window: Window = null
 var _cache: Dictionary = {}
+## Layer roots given the current Theme: instance id → WeakRef.
+var _layer_roots: Dictionary = {}
 
 
 func _init(initial_band: String = "") -> void:
@@ -40,7 +46,17 @@ static func is_valid_band(value: String) -> bool:
 ## Binds the service to a window (normally the root) and applies the current Theme to it.
 func attach(window: Window) -> void:
 	_window = window
+	var tree: SceneTree = window.get_tree()
+	if tree != null and not tree.node_added.is_connected(_on_node_added):
+		tree.node_added.connect(_on_node_added)
 	_apply()
+	for node: Node in window.find_children("*", "Control", true, false):
+		_on_node_added(node)
+
+
+## Layer roots currently following the service (tests, diagnostics).
+func layer_root_count() -> int:
+	return _layer_roots.size()
 
 
 func set_band(value: String) -> void:
@@ -84,13 +100,32 @@ func build_theme() -> Theme:
 
 
 func _apply() -> void:
+	var previous: Theme = current_theme
 	current_theme = build_theme()
 	if _window != null and is_instance_valid(_window):
 		_window.theme = current_theme
+	for id: int in _layer_roots.keys():
+		var root: Control = (_layer_roots[id] as WeakRef).get_ref() as Control
+		if root == null or root.theme != previous:
+			_layer_roots.erase(id)
+		else:
+			root.theme = current_theme
 	theme_applied.emit(band)
 
 
-## Colours come from the high-contrast Theme; sizes and margins stay those of the density variant.
+func _on_node_added(node: Node) -> void:
+	var control: Control = node as Control
+	if control == null or control.theme != null or not (control.get_parent() is CanvasLayer):
+		return
+	if _window == null or not is_instance_valid(_window) or control.get_window() != _window:
+		return
+	control.theme = current_theme
+	_layer_roots[control.get_instance_id()] = weakref(control)
+
+
+## Colours come from the high-contrast Theme; sizes and margins stay those of the density variant. F114-AC-06: the
+## outline widths come from the high-contrast Theme too (tier 1 and tier 2 outlines 3 px in every band) while the hard
+## bottom edge keeps the band's depth — the bottom border grows by the same amount as the outline.
 static func _apply_contrast(theme: Theme, contrast: Theme) -> void:
 	for type_name: String in contrast.get_type_list():
 		for color_name: String in contrast.get_color_list(type_name):
@@ -104,6 +139,20 @@ static func _apply_contrast(theme: Theme, contrast: Theme) -> void:
 				continue
 			target.bg_color = source.bg_color
 			target.border_color = source.border_color
+			_apply_outline(target, source)
+
+
+## Outline sides of `source`; the bottom border keeps the depth of `target` above its outline. Boxes without an
+## outline (focus ring, tier 3 tiles, tabs at rest) have the same widths in both Themes and stay as they are.
+static func _apply_outline(target: StyleBoxFlat, source: StyleBoxFlat) -> void:
+	var outline: int = source.border_width_left
+	var delta: int = outline - target.border_width_left
+	if delta == 0 or target.border_width_left == 0:
+		return
+	target.border_width_left = outline
+	target.border_width_top = source.border_width_top
+	target.border_width_right = source.border_width_right
+	target.border_width_bottom += delta
 
 
 static func _scale_fonts(theme: Theme, scale: float) -> void:

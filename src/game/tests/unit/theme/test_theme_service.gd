@@ -72,3 +72,29 @@ func test_app_state_grade_band_drives_density_and_event_bus() -> void:
 	EventBus.density_changed.disconnect(on_density)
 	assert_array(bands).contains(["g8_9", "g1_3"])
 	AppState.set_grade_band(previous)
+
+
+## F114: a Control right under a CanvasLayer (HUD, world panels) gets the band Theme (Godot 4 does not pass the Window
+## Theme through a CanvasLayer) and follows band changes; a layer root with its own Theme keeps it.
+func test_canvas_layer_roots_follow_the_band_theme() -> void:
+	var window: Window = auto_free(Window.new()) as Window
+	window.visible = false
+	add_child(window)
+	var service: ThemeService = ThemeService.new("g8_9")
+	service.attach(window)
+	var layer: CanvasLayer = CanvasLayer.new()
+	window.add_child(layer)
+	var hud: Control = Control.new()
+	layer.add_child(hud)
+	var own: Control = Control.new()
+	var own_theme: Theme = Theme.new()
+	own.theme = own_theme
+	layer.add_child(own)
+	assert_object(hud.theme).is_same(service.current_theme)
+	assert_int(hud.get_theme_font_size(&"font_size", &"Button")).is_equal(int(UiTokens.DENSITY_FONT_BASE["g8_9"]))
+	assert_object(own.theme).is_same(own_theme)
+	service.set_band("g4_5")
+	assert_object(hud.theme).is_same(service.current_theme)
+	assert_int(hud.get_theme_font_size(&"font_size", &"Button")).is_equal(int(UiTokens.DENSITY_FONT_BASE["g4_5"]))
+	assert_object(own.theme).is_same(own_theme)
+	assert_int(service.layer_root_count()).is_equal(1)
