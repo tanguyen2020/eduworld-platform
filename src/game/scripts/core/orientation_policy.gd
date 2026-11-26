@@ -20,7 +20,7 @@ static func base_short() -> float:
 	return maxf(1.0, minf(width, height))
 
 
-## Scale of the prompt layer on a logical view `view` (F113-AC-05): the short side of the view over the short side of
+## Extra scale for the prompt on a logical view `view` (F113-AC-05): the short side of the view over the short side of
 ## the base canvas, never below 1. With `stretch canvas_items` + `expand`, a 390×844 window is a 1280×2770 logical view
 ## (factor 0.305), so unscaled text would show at a third of its size; scaled by 1280/720 it shows as on the
 ## landscape canvas of the same phone.
@@ -28,3 +28,20 @@ static func prompt_scale(view: Vector2, short_side: float) -> float:
 	if short_side <= 0.0 or view.x <= 0.0 or view.y <= 0.0:
 		return 1.0
 	return maxf(1.0, minf(view.x, view.y) / short_side)
+
+
+## F113-AC-05: `content_scale_factor` of the window while the prompt shows, for a window of `window` pixels on the
+## base canvas `base` (stretch canvas_items + expand): the logical view is window / min(window / base), and the prompt
+## is laid out on a canvas whose short side is the base short side. Text is rasterised at the final size (font
+## oversampling follows the content scale), unlike a scaled CanvasLayer which blurs small text.
+static func prompt_content_scale(window: Vector2, base: Vector2) -> float:
+	if window.x <= 0.0 or window.y <= 0.0 or base.x <= 0.0 or base.y <= 0.0:
+		return 1.0
+	var stretch: float = minf(window.x / base.x, window.y / base.y)
+	return prompt_scale(window / stretch, minf(base.x, base.y))
+
+
+## The base canvas (display/window/size/viewport_width × viewport_height).
+static func base_size() -> Vector2:
+	return Vector2(float(ProjectSettings.get_setting("display/window/size/viewport_width", 1280)),
+			float(ProjectSettings.get_setting(BASE_HEIGHT_SETTING, 720)))

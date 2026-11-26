@@ -315,7 +315,8 @@ func test_world_map_fits_every_band() -> void:
 
 
 ## F113-AC-05: a window taller than wide (720×1280, 390×844) shows only the rotate prompt; it covers the view and its
-## texts keep the band sizes (scaled on the short side of the base canvas).
+## texts keep the band sizes (on the device the window content scale lays it out on the base short side — see
+## test_orientation_guard.gd; here the SubViewport has the logical size of the unscaled window, the hardest case).
 func test_rotate_prompt_fits_every_band() -> void:
 	var covers: PackedStringArray = []
 	var build: Callable = func(vp: SubViewport, _band: String) -> Node:
@@ -324,12 +325,15 @@ func test_rotate_prompt_fits_every_band() -> void:
 		guard.set("set_paused", func(_value: bool) -> void: pass)
 		guard.set("is_paused", func() -> bool: return false)
 		guard.set("lock_landscape", func() -> void: pass)
+		guard.set("set_content_scale", func(_value: float) -> void: pass)
+		guard.set("get_content_scale", func() -> float: return 1.0)
 		vp.add_child(guard)
 		guard.call("apply", Vector2(vp.size))
+		for i: int in 2:
+			await await_idle_frame()
 		var prompt: Control = guard.call("prompt") as Control
-		var layer: CanvasLayer = guard.call("layer") as CanvasLayer
-		if not (prompt.size * layer.scale).is_equal_approx(Vector2(vp.size)):
-			covers.append("prompt %s × %s does not cover %s" % [prompt.size, layer.scale, vp.size])
+		if not prompt.size.is_equal_approx(Vector2(vp.size)):
+			covers.append("prompt %s does not cover %s" % [prompt.size, vp.size])
 		return guard
 	_assert_none(await _matrix("rotate_prompt", build, false, BandLayoutProbe.PORTRAIT_SIZES))
 	assert_array(covers).override_failure_message("\n".join(covers)).is_empty()

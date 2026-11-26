@@ -2278,7 +2278,7 @@ msgid "ui.rotate.title"
 msgstr "Turn your phone sideways to play!"
 
 msgid "ui.rotate.hint"
-msgstr "Your game is waiting. Turn sideways to carry on right away."
+msgstr "Your game is waiting. Turn sideways to keep playing."
 
 msgid "ui.rotate.desktop"
 msgstr "On a computer, make the window wider."
