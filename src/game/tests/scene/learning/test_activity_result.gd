@@ -110,9 +110,11 @@ func _host() -> Control:
 
 
 func _finish(host: Control) -> void:
-	(host.get("renderer") as QuizActivityRenderer).select_index(0)
 	h.http.reply(LearningFixtures.ROUTE_RESPOND, 200, LearningFixtures.response_result_hidden())
-	host.call("press_primary")
+	# F098: the tap itself sends a one-step answer when feedback is immediate; otherwise "Kiểm tra" sends it.
+	(host.get("renderer") as QuizActivityRenderer).select_index(0)
+	if int(host.get("state")) == 2:
+		host.call("press_primary")
 	await _until(func() -> bool: return int(host.get("state")) == 4)
 	host.call("press_primary")
 	await _until(func() -> bool: return host.get("result_view") != null and int(host.get("state")) in [6, 7])

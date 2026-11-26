@@ -11,6 +11,10 @@ extends Control
 ## question trail (stars / ring / dots) beside "1/11"; the stem lives in the renderer's question card (no caption
 ## repeating it, F096-3); the coach Mây sits bottom-left with a speech bubble holding the cheer, the verdict (icon
 ## + words, kind wording), the hint button and errors; the main button is bottom-right with an icon.
+## F098 (STUDENT_GAME_UX_LEARNING §4.1b): when InstantAnswerPolicy allows it (effective feedback timing immediate, not
+## exam/diagnostic/competition, one-step question), a tap on an answer tile sends the answer at once — no "Kiểm tra"
+## step; the tiles lock and the tapped one shows "Đang chấm…" until the server's verdict; a refused answer offers
+## "Gửi lại". Grade bands in `eduworld/learning/tap_confirm_bands` confirm with a second tap on the same tile.
 
 signal closed()
 
@@ -37,6 +41,10 @@ const CHEER_HINT_KEY: String = "ui.activity_player.coach_cheer_hint"
 ## F097: icon of the main button per action (icon + words, STUDENT_GAME_UX_LEARNING §3.7).
 const ICON_CHECK: Texture2D = preload("res://resources/ui/icons/check.svg")
 const ICON_NEXT: Texture2D = preload("res://resources/ui/icons/next_light.svg")
+## F098: Mây's line after the first tap when the band confirms with a second tap; the main button after a refusal.
+const TAP_AGAIN_KEY: String = "ui.activity_player.tap_again"
+const RESEND_KEY: String = "ui.activity_player.resend"
+const ICON_RESEND: Texture2D = preload("res://resources/ui/icons/retry_light.svg")
 
 ## WorldRoot holds the break reminder while a learning screen is open (F062-AC-22).
 var blocks_break_reminder: bool = true
@@ -58,6 +66,9 @@ var _state_sec: float = 0.0
 var _clock_accum: float = 0.0
 var _offline_accum: float = 0.0
 var _flushing: bool = false
+## F098: the current item sends its answer on tap / asks for a second tap first (InstantAnswerPolicy, per item).
+var _instant: bool = false
+var _double_tap: bool = false
 
 @onready var _exit: Button = %Exit
 @onready var _title: Label = %Title
@@ -189,6 +200,7 @@ func present(attempt: AttemptModel) -> void:
 	renderer.finish_requested.connect(_on_finish_requested)
 	renderer.run_submitted.connect(_on_run_submitted)
 	renderer.read_aloud_requested.connect(_on_read_aloud_requested)
+	renderer.choice_tapped.connect(_on_choice_tapped)
 	if renderer.has_signal("template_load_failed"):
 		renderer.connect("template_load_failed", _on_template_load_failed.bind(attempt.activity_type))
 	_set_state(State.PRESENTING)
@@ -219,6 +231,9 @@ func ask_exit() -> void:
 
 func _on_response_submitted(submission: Dictionary) -> void:
 	_set_state(State.AWAITING_RESULT)
+	# F098: no second tap reaches the item while the server grades (a queued answer keeps it locked).
+	if _instant and renderer != null:
+		renderer.set_grading(true)
 	var result: ResponseResultModel = null
 	if String(submission.get("kind", "")) == "branch_choice":
 		result = await service.choose_branch(String(submission.get("branch_point_id", "")), String(submission.get("option_id", "")))
@@ -313,8 +328,14 @@ func _on_item_shown(position: int) -> void:
 	var attempt: AttemptModel = service.attempt
 	var item: QuestionRenderModel = attempt.item_at(position) if attempt != null else null
 	_feedback.call("clear")
+	_instant = false
+	_double_tap = false
 	if item == null:
 		return
+	# F098: tap-to-answer only where the server's timing allows per-question feedback and the item is one step.
+	_instant = renderer.supports_instant_answer() and InstantAnswerPolicy.applies(attempt, item)
+	_double_tap = _instant and InstantAnswerPolicy.double_tap(grade_band)
+	renderer.set_instant_answer(_instant, _double_tap)
 	_hints.call("configure", attempt.hints_allowed(), item.hint_count, attempt.hints_revealed(position))
 	var p: Vector2i = renderer.progress()
 	_progress.text = "%d/%d" % [p.x, p.y]
@@ -337,6 +358,18 @@ func _present_voice(item: QuestionRenderModel) -> void:
 	var clip: AudioStream = await context.media.audio(url)
 	if clip != null and renderer != null and renderer.current_position() == item.position:
 		_voice.call("present", caption, clip, context.auto_voice)
+
+
+## F098: a tile of a one-step question tapped (or its key pressed). With tap-to-answer it sends the answer at once
+## through the same path as "Kiểm tra" (the state turns AWAITING_RESULT before any further tap is handled, so an
+## answer is never sent twice); a band confirming with two taps waits for a second tap on the same tile.
+func _on_choice_tapped(repeated: bool) -> void:
+	if not _instant or state != State.PRESENTING or renderer == null or not renderer.is_answer_complete():
+		return
+	if _double_tap and not repeated:
+		_refresh_coach()
+		return
+	await press_primary()
 
 
 ## "Đọc to" on the question card (F097): same as key R.
@@ -405,11 +438,14 @@ func _on_action_failed(code: String) -> void:
 		await _show_results(true)
 		return
 	_set_state(State.PRESENTING)
+	# F098: the tiles open again with the choice kept; "Gửi lại" (or a tap on the same tile) sends it again.
+	if renderer != null:
+		renderer.set_grading(false)
 	_status.text = L10n.error_text(code)
 	_status.visible = true
 	_action_details.set_meta("code", _details_text(code))
 	_action_details.visible = true
-	_refresh_coach()
+	_render_action_bar()
 
 
 ## 404 / session refusal (F063-AC-11): no data of the attempt stays on screen.
@@ -547,7 +583,9 @@ func _set_state(next: State) -> void:
 		_details.visible = true
 	var answering: bool = next in [State.PRESENTING, State.AWAITING_RESULT, State.FEEDBACK, State.SUBMITTING, State.TIME_UP]
 	# F097: after grading the bubble holds the verdict; the hint button returns with the next question.
-	_hints.visible = next in [State.PRESENTING, State.AWAITING_RESULT] and bool(_hints.get("allowed"))
+	# F098: while a tapped answer is graded the bubble only cheers (the tile says "Đang chấm…").
+	_hints.visible = next in [State.PRESENTING, State.AWAITING_RESULT] and bool(_hints.get("allowed")) \
+			and not (_instant and next == State.AWAITING_RESULT)
 	if not answering:
 		_feedback.call("clear")
 		_voice.visible = false
@@ -564,9 +602,12 @@ func _render_action_bar() -> void:
 	_offline.visible = service != null and service.offline and answering
 	match state:
 		State.PRESENTING:
-			_primary.visible = renderer == null or renderer.wants_action_bar()
-			_primary.text = "ui.activity_player.check"
-			_primary.icon = ICON_CHECK
+			# F098: with tap-to-answer there is no "Kiểm tra" step; the button returns as "Gửi lại" after a refusal
+			# (and stays for the second-tap confirmation of a band that asks for it).
+			var resend: bool = _instant and _status.visible
+			_primary.visible = (renderer == null or renderer.wants_action_bar()) and (not _instant or _double_tap or resend)
+			_primary.text = RESEND_KEY if resend else "ui.activity_player.check"
+			_primary.icon = ICON_RESEND if resend else ICON_CHECK
 			var complete: bool = renderer != null and renderer.is_answer_complete()
 			_primary.disabled = not complete
 			# F097: "Chọn một đáp án" is the question's own instruction; the bar does not repeat it.
@@ -577,6 +618,8 @@ func _render_action_bar() -> void:
 			_primary.icon = ICON_NEXT
 			_status.visible = false
 		State.AWAITING_RESULT, State.SUBMITTING:
+			# F098: the tapped tile already says "Đang chấm…"; no second waiting button.
+			_primary.visible = not (_instant and state == State.AWAITING_RESULT)
 			_primary.disabled = true
 			_primary.text = "ui.activity_player.waiting"
 			_primary.icon = null
@@ -597,7 +640,12 @@ func _refresh_coach() -> void:
 	_action_row.visible = _status.visible or _action_details.visible
 	var busy: bool = _feedback.visible or _action_row.visible or bool(_hints.call("is_showing_hint"))
 	_coach_line.visible = not busy
-	_coach_line.text = CHEER_HINT_KEY if _hints.visible else CHEER_KEY
+	_coach_line.text = TAP_AGAIN_KEY if _confirm_ready() else (CHEER_HINT_KEY if _hints.visible else CHEER_KEY)
+
+
+## F098: a band that confirms with two taps has a chosen tile waiting for its second tap.
+func _confirm_ready() -> bool:
+	return _double_tap and state == State.PRESENTING and renderer != null and renderer.is_answer_complete()
 
 
 func _set_header(title: String, translation_missing: bool) -> void:

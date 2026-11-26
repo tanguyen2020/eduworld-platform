@@ -69,8 +69,14 @@ msgstr "Take a break? Your progress is saved."
 msgid "ui.activity_player.read_aloud"
 msgstr "Read aloud"
 
+msgid "ui.activity_player.resend"
+msgstr "Send again"
+
 msgid "ui.activity_player.results_later"
 msgstr "Submitted! Results will appear when your school releases them."
+
+msgid "ui.activity_player.tap_again"
+msgstr "Tap it again to be sure!"
 
 msgid "ui.activity_player.time_up"
 msgstr "Time's up! Your work has been submitted."
@@ -1152,6 +1158,9 @@ msgstr "False"
 msgid "ui.question.fill_blanks"
 msgstr "Fill in the blanks"
 
+msgid "ui.question.grading"
+msgstr "Checking…"
+
 msgid "ui.question.match_pairs"
 msgstr "Tap a card on the left, then one on the right to match"
 
@@ -1170,8 +1179,23 @@ msgstr "Choose all correct answers"
 msgid "ui.question.select_answer"
 msgstr "Choose an answer"
 
+msgid "ui.question.tap_answer"
+msgstr "Tap the answer you choose"
+
+msgid "ui.question.tap_answer_twice"
+msgstr "Tap the answer you choose twice"
+
 msgid "ui.question.tap_image"
 msgstr "Tap the picture to answer"
+
+msgid "ui.question.tile_answer"
+msgstr "Right answer"
+
+msgid "ui.question.tile_correct"
+msgstr "That's right!"
+
+msgid "ui.question.tile_try"
+msgstr "Not quite, that's okay!"
 
 msgid "ui.question.true"
 msgstr "True"

@@ -24,6 +24,10 @@ var next_segment_id: String = ""
 var has_game_points: bool = false
 var game_points: int = 0
 var streak: int = 0
+## F098: the right answer in the `QuestionResponse` shape of the item (`{option_id}`, `{value}`…), present only when the
+## server's policy allows it after an immediate answer (contract `correct_response`); {} otherwise. Display only —
+## never stored, logged or reused (AGENTS R6, R14).
+var correct_response: Dictionary = {}
 
 
 ## Per-option feedback (`AnswerFeedback`).
@@ -68,6 +72,8 @@ static func from_dict(data: Dictionary) -> ResponseResultModel:
 	r.game_points = maxi(0, int(points)) if r.has_game_points else 0
 	var streak: Variant = data.get("streak")
 	r.streak = maxi(0, int(streak)) if streak is int or streak is float else 0
+	var correct: Variant = data.get("correct_response")
+	r.correct_response = (correct as Dictionary).duplicate(true) if correct is Dictionary else {}
 	return r
 
 

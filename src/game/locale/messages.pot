@@ -156,7 +156,13 @@ msgstr ""
 msgid "ui.activity_player.read_aloud"
 msgstr ""
 
+msgid "ui.activity_player.resend"
+msgstr ""
+
 msgid "ui.activity_player.results_later"
+msgstr ""
+
+msgid "ui.activity_player.tap_again"
 msgstr ""
 
 msgid "ui.activity_player.time_up"
@@ -1782,6 +1788,9 @@ msgstr ""
 msgid "ui.question.fill_blanks"
 msgstr ""
 
+msgid "ui.question.grading"
+msgstr ""
+
 msgid "ui.question.match_pairs"
 msgstr ""
 
@@ -1800,7 +1809,22 @@ msgstr ""
 msgid "ui.question.select_answer"
 msgstr ""
 
+msgid "ui.question.tap_answer"
+msgstr ""
+
+msgid "ui.question.tap_answer_twice"
+msgstr ""
+
 msgid "ui.question.tap_image"
+msgstr ""
+
+msgid "ui.question.tile_answer"
+msgstr ""
+
+msgid "ui.question.tile_correct"
+msgstr ""
+
+msgid "ui.question.tile_try"
 msgstr ""
 
 msgid "ui.question.true"

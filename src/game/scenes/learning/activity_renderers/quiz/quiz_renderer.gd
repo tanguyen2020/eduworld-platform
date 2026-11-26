@@ -40,6 +40,7 @@ func show_index(i: int) -> void:
 		question.restore(attempt.saved_response(item.position))
 		question.answer_changed.connect(_on_question_changed)
 		question.response_prepared.connect(_on_response_prepared)
+		question.choice_tapped.connect(func(repeated: bool) -> void: choice_tapped.emit(repeated))
 	shown_at_msec = context.now_msec() if context != null else Time.get_ticks_msec()
 	item_shown.emit(item.position)
 	answer_changed.emit(is_answer_complete())
@@ -49,9 +50,25 @@ func check() -> bool:
 	return question != null and question.commit()
 
 
-func show_result(_result: ResponseResultModel) -> void:
+func show_result(result: ResponseResultModel) -> void:
 	if question != null:
 		question.set_locked(true)
+		# F098: the graded tile shows the server's verdict (and the right answer only when the server sent it).
+		question.show_verdict(result)
+
+
+func supports_instant_answer() -> bool:
+	return true
+
+
+func set_instant_answer(on: bool, two_taps: bool = false) -> void:
+	if question != null:
+		question.set_instant_answer(on, two_taps)
+
+
+func set_grading(on: bool) -> void:
+	if question != null:
+		question.set_grading(on)
 
 
 func advance() -> bool:

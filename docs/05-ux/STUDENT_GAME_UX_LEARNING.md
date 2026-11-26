@@ -1,6 +1,6 @@
 # Student Game UX — Màn học tập
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Cập nhật 2026-11-26 (F097: §3.3a khung làm bài như trò chơi — bảng trên nền trời, đường tiến độ, Mây + bong bóng, nút nhất quán; §4.1a thẻ câu hỏi + thẻ đáp án; §4.8 phản hồi nền nhạt lời tử tế; §7 đề hiện một lần) · 2026-11-26 (F096: dải chúc mừng ở màn kết quả, icon thay emoji) (bỏ ghi âm/tự luận, thêm gợi ý, phản hồi theo phương án, hỗ trợ lớp 1–3 — ADR-0072) · Owner: UX/UI Designer + EdTech Specialist · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.4 · Cập nhật 2026-11-26 (F098: §4.1b chạm là trả lời cho câu một bước khi FeedbackTiming hiệu lực là `immediate`, cài đặt "chạm hai lần" theo khối; §3.6 phím `1–6` = chạm; §4.5 trạng thái chấm/gửi lại) · 2026-11-26 (F097: §3.3a khung làm bài như trò chơi — bảng trên nền trời, đường tiến độ, Mây + bong bóng, nút nhất quán; §4.1a thẻ câu hỏi + thẻ đáp án; §4.8 phản hồi nền nhạt lời tử tế; §7 đề hiện một lần) · 2026-11-26 (F096: dải chúc mừng ở màn kết quả, icon thay emoji) (bỏ ghi âm/tự luận, thêm gợi ý, phản hồi theo phương án, hỗ trợ lớp 1–3 — ADR-0072) · Owner: UX/UI Designer + EdTech Specialist · Cập nhật: 2026-11-15
 > Liên quan: [STUDENT_GAME_UX](STUDENT_GAME_UX.md) (quy ước chung, màn game) · [DESIGN_SYSTEM §5](DESIGN_SYSTEM.md#5-game-design-system-godot-3d) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md) · [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) · [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [ADR-0055](../adr/ADR-0055-cong-thuc-toan-vat-ly-hoa-hoc-mathjax-4-hien-thi-mathlive-nh.md) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0059](../adr/ADR-0059-hop-nhat-api-attempt-va-chua-lam-ai-giong-noi.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md)
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Quy ước áp dụng · 3. Learning activity player (khung chung) · 4. Exercise / question player · 5. Video player · 6. Bài nghe · 7. Hỗ trợ lớp 1–3 · 8. Mô phỏng · 9. Bài kiểm tra có giờ · 10. Kết quả học tập · 11. Khóa dịch đề xuất · 12. Acceptance criteria
@@ -128,7 +128,7 @@ Tablet ngang: dùng bố cục Web/PC thu tỉ lệ (vùng nội dung rộng t�
 
 ### 3.6. Tương tác & phản hồi
 
-- Phím tắt PC: `Enter` = nút chính, `Esc` = mở hộp thoát, `H` = gợi ý cấp tiếp theo, `R` = đọc to, `1–6` = chọn đáp án (§4), `Tab` duyệt phần tử.
+- Phím tắt PC: `Enter` = nút chính, `Esc` = mở hộp thoát, `H` = gợi ý cấp tiếp theo, `R` = đọc to, `1–6` = chọn đáp án (§4) — hành xử **đúng như chạm** thẻ số đó, kể cả khi chạm là trả lời (§4.1b), `Tab` duyệt phần tử; focus bàn phím luôn thấy (vòng focus của Theme).
 - Mobile: nút chính luôn ở vùng ngón cái phải; vuốt xuống trên header không đóng màn (tránh thoát nhầm).
 - Phản hồi đúng/sai, số lượt thử, gợi ý theo [LEARNING_EXPERIENCE §4](../02-learning/LEARNING_EXPERIENCE.md#4-phản-hồi-đúngsai-thân-thiện) và [ACTIVITY_ENGINE §8](../02-learning/ACTIVITY_ENGINE.md#8-phản-hồi-trong-game). Không bao giờ hiện đáp án, giải thích hay phản hồi theo phương án trước thời điểm FeedbackTiming cho phép (`after_submit`, `after_close`, `never` với bài giao và đề — [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md)).
 
@@ -193,13 +193,28 @@ Tablet ngang: dùng bố cục Web/PC thu tỉ lệ (vùng nội dung rộng t�
 - **Thẻ đáp án** (`AnswerTile1…6`): mọi lựa chọn chọn một/nhiều, đúng/sai, cột trái ghép cặp, thẻ sắp xếp, thẻ kéo thả, nhãn ảnh. Sáu bộ màu luân phiên (xanh dương, cam, xanh lá, tím, hồng, xanh ngọc): nền nhạt, viền màu nhấn, viền đáy dày (khối "kẹo", ADR-0103); **huy hiệu số** bên trái = phím `1–6` (sắp xếp: số thứ tự hiện tại); chữ đậm cỡ đề bài của khối; cao tối thiểu `density.<band>.answer.min_height` (88/80/72/64 px — luôn ≥ vùng chạm của khối). **Đang chọn** = nền màu nhấn, chữ trắng **và** huy hiệu thành dấu ✓ (hình, không chỉ màu). Sau khi chấm, thẻ không bị làm xám: thẻ đã chọn giữ dáng "đã chọn", chỉ không nhận chạm/nhấp/focus.
 - **Vùng thả / cột phải ghép cặp** (`DropZone`): thẻ trắng bo tròn viền xanh nhạt, cùng cỡ chữ; hiện thẻ đã thả. Sắp xếp: nút "Lên/Xuống" có icon mũi tên kèm chữ. Nhập số: phím lớn viền (cao bằng thẻ đáp án). Khoảng cách giữa thẻ = khoảng cách cơ sở của khối (`AnswerGrid`, `AnswerBox`, `AnswerFlow`).
 
+### 4.1b. Chạm là trả lời (F098) [Confirmed — owner duyệt 2026-11-26]
+
+Quy tắc tương tác; **thời điểm** được hiện phản hồi vẫn do [ACTIVITY_ENGINE §8.1](../02-learning/ACTIVITY_ENGINE.md#81-feedbacktiming-và-resultrelease) sở hữu (không đổi).
+
+| Hạng mục | Hành vi |
+|---|---|
+| Áp dụng khi | Câu **chọn một** (`single_choice`) hoặc **đúng/sai một mệnh đề** (`true_false` không có `statements[]`) **và** attempt có `feedback_timing = immediate`, `mode ∉ {exam, diagnostic, competition}`, `result_release` rỗng hoặc `immediate` (giá trị server trả trong `Attempt`). Thực tế: practice, quest, challenge, minigame, retry_wrong, bài giao `immediate`. Renderer từng câu của `quiz`/`interactive_exercise`; câu chèn video/bài nghe/mô phỏng, mini-game F073 và đề thi giữ luồng riêng |
+| Một chạm (mặc định) | Chạm thẻ (hoặc phím `1–6`) gửi ngay `POST …/responses` — không có bước "Kiểm tra"; dòng hướng dẫn của câu là "Chạm vào đáp án em chọn"; nút chính ẩn khi đang trả lời |
+| Đang chấm | Mọi thẻ khóa (không nhận chạm/phím/focus); thẻ vừa chạm có nhãn **"Đang chấm…"** + huy hiệu ba chấm; không gửi hai lần; mất mạng → câu trả lời vào hàng đợi, gửi lại **cùng `Idempotency-Key`**, thẻ giữ "Đang chấm…" + banner mất kết nối (§3.5) |
+| Có kết quả | Thẻ vừa chạm: **đúng** = nền xanh lá nhạt, viền xanh dày, huy hiệu ✓, nhãn "Đúng rồi!"; **chưa đúng** = nền cam ấm nhạt (không đỏ), huy hiệu ✗ mềm, nhãn "Chưa đúng, không sao!". Khi server gửi `correct_response` (chính sách cho phép) thẻ đó có nhãn **"Đáp án đúng"** + ✓; không gửi thì không đánh dấu thẻ nào khác. `is_correct` rỗng → không trạng thái đúng/sai (chỉ "Đã lưu câu trả lời."). Bong bóng của Mây hiện bảng kết quả + phản hồi theo phương án + giải thích (§4.8); nét mặt Mây vui/động viên; nút chính "Tiếp"/"Hoàn thành" |
+| Bị từ chối (4xx) | Thẻ mở khóa, giữ lựa chọn, lỗi trong bong bóng (§3.5); nút chính **"Gửi lại"** (↻); chạm lại thẻ đang chọn cũng gửi lại |
+| Chạm hai lần để chắc chắn (tùy chọn) | Theo khối, cấu hình client `tap_confirm_bands` ([CONFIG_DEFAULTS §13](../00-overview/CONFIG_DEFAULTS.md#13-học-tập); mặc định rỗng = một chạm ở mọi khối; không có chính sách backend). Khối bật: chạm 1 chọn thẻ (✓) + Mây "Chạm lần nữa để chắc chắn nhé!", hướng dẫn "Chạm hai lần vào đáp án em chọn"; chạm lại đúng thẻ đó (hoặc phím số đó, hoặc nút chính) mới gửi; chạm thẻ khác chỉ đổi lựa chọn |
+| Không đổi | `exam`, `diagnostic`, `competition`, mọi attempt `feedback_timing ≠ immediate` hoặc `result_release ∉ {rỗng, immediate}`, và dạng nhiều bước (chọn nhiều, sắp xếp, kéo thả, điền khuyết, nhập số, ghép cặp, đúng/sai nhiều mệnh đề, câu hình ảnh, trả lời ngắn, tương tác): chạm chỉ chọn, nút "Kiểm tra" như §4.5 |
+| Trợ năng | Trạng thái thẻ luôn có hình (huy hiệu ✓/✗/ba chấm) **và** chữ (nhãn ghim trên mép thẻ), không chỉ màu; nhãn dùng cỡ chữ nhỏ nhất của khối `density.<band>.font.small` |
+
 ### 4.3. Bố cục theo nhóm dạng câu hỏi
 
 | Nhóm | Web/PC | Mobile | Nhập liệu |
 |---|---|---|---|
 | Chọn một / nhiều, đúng/sai, câu hình ảnh (chọn trên ảnh) | §4.1; nhiều đáp án có checkbox + nhãn "Chọn tất cả đáp án đúng"; đúng/sai là 2 nút lớn | §4.2; đúng/sai 2 nút chiếm toàn chiều rộng | Chuột/phím `1–6`; chạm |
 | Điền khuyết (từ/số) | Câu văn với ô trống inline; ô đang chọn được tô viền | Câu văn ở trên, ô nhập ở dưới cùng + bàn phím; điền lần lượt từng ô | Bàn phím; mobile dùng bàn phím hệ thống (chữ) hoặc bàn phím số tùy biến (số) |
-| Nhập số | Ô nhập lớn + đơn vị bên phải; bàn phím số tùy biến hiện ở dưới ô (có `,` thập phân, `−`, xóa) | Bàn phím số tùy biến chiếm nửa phải màn, đề bên trái | Bàn phím số tùy biến (không mở bàn phím hệ thống) |
+| Nhập số | Ô nhập lớn + đơn vị bên phải; bàn phím số tùy biến hiện ở dưới ô (có `,` thập phân, `−`, xóa) — hai hàng ngang theo thứ tự đọc `1 … 9 0` rồi dấu và Xóa, phím cao bằng thẻ đáp án của khối, nên vừa bảng 720/750 px mà không phải cuộn (F098) | Bàn phím số tùy biến chiếm nửa phải màn, đề bên trái | Bàn phím số tùy biến (không mở bàn phím hệ thống) |
 | Ghép cặp | Hai cột thẻ; kéo thẻ trái sang phải hoặc chạm trái rồi chạm phải; nối bằng đường màu | Hai cột hẹp; chỉ chạm-chạm (kéo dễ nhầm trên màn nhỏ) | Chuột kéo / chạm |
 | Sắp xếp | Danh sách thẻ dọc có tay nắm kéo; phím `↑ ↓` di chuyển thẻ đang chọn | Thẻ dọc; giữ để kéo; nút ▲▼ trên thẻ cho lớp 1–3 | Kéo / nút |
 | Kéo thả (vào vùng/nhãn ảnh) | Ảnh hoặc sơ đồ ở giữa, khay thẻ ở dưới; vùng thả sáng lên khi kéo gần | Ảnh bên trái (phóng to được), khay thẻ cột phải | Kéo; mobile có "chạm thẻ → chạm vùng" thay thế |
@@ -214,8 +229,8 @@ Tablet ngang: dùng bố cục Web/PC thu tỉ lệ (vùng nội dung rộng t�
 
 ### 4.5. Dữ liệu & API, trạng thái
 
-- Mỗi lần "Kiểm tra" → `POST …/responses` `{position, response, client_elapsed_ms}`; phản hồi theo mode. Lượt thử lại theo [LEARNING_EXPERIENCE §4.2](../02-learning/LEARNING_EXPERIENCE.md#42-số-lượt-thử-confirmed).
-- Trạng thái riêng: chưa chọn đáp án → nút chính mờ + gợi ý "Chọn một đáp án"; đã khóa câu (hết lượt) → hiển thị đáp án đúng + giải thích (khi mode cho phép); gửi lỗi → giữ lựa chọn, nút "Gửi lại".
+- Mỗi lần "Kiểm tra" (hoặc mỗi chạm khi chạm là trả lời, §4.1b) → `POST …/responses` `{position, response, client_elapsed_ms}`; phản hồi theo mode. Lượt thử lại theo [LEARNING_EXPERIENCE §4.2](../02-learning/LEARNING_EXPERIENCE.md#42-số-lượt-thử-confirmed).
+- Trạng thái riêng: chưa chọn đáp án → nút chính mờ + gợi ý "Chọn một đáp án" (chạm là trả lời: không có nút chính, hướng dẫn "Chạm vào đáp án em chọn"); đang chấm → thẻ khóa + "Đang chấm…" (§4.1b); đã khóa câu (hết lượt) → hiển thị đáp án đúng + giải thích (khi mode cho phép); gửi lỗi → giữ lựa chọn, nút "Gửi lại".
 
 ### 4.6. Khác biệt grade band
 
@@ -502,6 +517,9 @@ Khóa theo mẫu `ui.<screen>.<element>`; giá trị vi/en trong `src/game/local
 | `ui.activity_player.update_required` | Cần cập nhật game để làm hoạt động này. | Please update the game to play this activity. |
 | `ui.question.select_answer` | Chọn một đáp án | Choose an answer |
 | `ui.question.select_all` | Chọn tất cả đáp án đúng | Choose all correct answers |
+| `ui.question.tap_answer` / `.tap_answer_twice` (F098) | Chạm vào đáp án em chọn / Chạm hai lần vào đáp án em chọn | Tap the answer you choose / Tap the answer you choose twice |
+| `ui.question.grading` / `.tile_correct` / `.tile_try` / `.tile_answer` (F098) | Đang chấm… / Đúng rồi! / Chưa đúng, không sao! / Đáp án đúng | Checking… / That's right! / Not quite, that's okay! / Right answer |
+| `ui.activity_player.tap_again` / `.resend` (F098) | Chạm lần nữa để chắc chắn nhé! / Gửi lại | Tap it again to be sure! / Send again |
 | `ui.learning.no_translation` | Chưa có bản tiếng Anh | English version not available |
 | `ui.video.seek_locked` | Em xem hết phần này trước nhé. | Watch this part first. |
 | `ui.video.not_ready` | Video đang được chuẩn bị, em quay lại sau nhé. | The video is still being prepared. Please come back later. |

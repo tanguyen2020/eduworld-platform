@@ -21,6 +21,8 @@ const SCREENS: PackedStringArray = [
 	"hub_progress", "game_menu", "level_up", "level_up_multi", "journey", "inventory", "shop", "shop_confirm", "shop_need_more",
 	"history", "achievements", "collection", "showcase", "challenge_board", "challenge_locked", "challenge_no_tries",
 	"challenge_hud", "challenge_result_failed", "challenge_result_succeeded",
+	# F098: tap-to-answer (grading, right, not yet right + right answer from the server, two-tap confirmation).
+	"activity_tap_grading", "activity_tap_correct", "activity_tap_incorrect", "activity_tap_confirm",
 ]
 ## Sample look of the local player (catalog codes of the F070 fixture; display only).
 const SAMPLE_AVATAR: Dictionary = {
@@ -97,6 +99,7 @@ func run(args: PackedStringArray) -> int:
 
 func _reset() -> void:
 	await get_tree().process_frame
+	ProjectSettings.set_setting(InstantAnswerPolicy.SETTING, PackedStringArray())
 	if _harness != null:
 		_harness.dispose()
 		_harness = null
@@ -547,3 +550,49 @@ func _screen_challenge_result_failed() -> Node:
 
 func _screen_challenge_result_succeeded() -> Node:
 	return await _challenge_result("succeeded")
+
+
+# ---------- F098: tap-to-answer ----------
+
+## F098: the tapped tile while the server grades ("Đang chấm…", the other tiles locked). The fake server never
+## answers during the capture.
+func _screen_activity_tap_grading() -> Node:
+	var host: Control = await _activity_host()
+	_harness.http.delay_frames = 1000000
+	await _select(host, 1)
+	for i: int in 5:
+		await get_tree().process_frame
+	return host
+
+
+## F098: one tap on the right answer: green tile with a tick and "Đúng rồi!", Mây happy, "Tiếp".
+func _screen_activity_tap_correct() -> Node:
+	var host: Control = await _activity_host()
+	await _select(host, 1)
+	for i: int in 20:
+		await get_tree().process_frame
+	return host
+
+
+## F098: one tap on a wrong answer: warm tile with a cross and kind words; the right answer is marked because the
+## (fake) server sent `correct_response`; the option feedback and explanation in Mây's bubble.
+func _screen_activity_tap_incorrect() -> Node:
+	var host: Control = await _activity_host()
+	var result: Dictionary = LearningFixtures.response_result()
+	result["correct_response"] = {"option_id": "o_b"}
+	_harness.http.clear(LearningFixtures.ROUTE_RESPOND)
+	_harness.http.reply(LearningFixtures.ROUTE_RESPOND, 200, result)
+	await _select(host, 0)
+	for i: int in 20:
+		await get_tree().process_frame
+	return host
+
+
+## F098: a band set to confirm with a second tap, after the first tap (tick + Mây "Chạm lần nữa…").
+func _screen_activity_tap_confirm() -> Node:
+	ProjectSettings.set_setting(InstantAnswerPolicy.SETTING, PackedStringArray([_band]))
+	var host: Control = await _activity_host()
+	await _select(host, 1)
+	for i: int in 5:
+		await get_tree().process_frame
+	return host

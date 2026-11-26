@@ -25,9 +25,9 @@ func test_worked_example_button_opens_the_lesson_overlay() -> void:
 	add_child(host)
 	h.http.reply(LearningFixtures.ROUTE_START, 201, LearningFixtures.fresh_attempt())
 	await host.call("open", {"activity_id": LearningFixtures.ACTIVITY_ID})
-	(host.get("renderer") as QuizActivityRenderer).select_index(0)
 	h.http.reply(LearningFixtures.ROUTE_RESPOND, 200, LearningFixtures.response_result())
-	host.call("press_primary")
+	# F098: the tap itself sends a single-choice answer in practice (no "Kiểm tra" press).
+	(host.get("renderer") as QuizActivityRenderer).select_index(0)
 	var strip: Control = host.get_node("%FeedbackStrip") as Control
 	var button: Button = strip.get_node("%WorkedExample") as Button
 	for i: int in 60:

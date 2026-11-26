@@ -31,6 +31,9 @@ signal item_shown(position: int)
 ## F097: "Đọc to" pressed on the question card (the host replays the recorded stem).
 @warning_ignore("unused_signal")
 signal read_aloud_requested()
+## F098: an answer tile of a one-step question was tapped (or its key pressed); `repeated` = already selected.
+@warning_ignore("unused_signal")
+signal choice_tapped(repeated: bool)
 
 var attempt: AttemptModel = null
 var context: RendererContext = null
@@ -50,6 +53,22 @@ func wire_question(q: QuestionRendererBase) -> void:
 ## Whether the question stem is drawn on screen (F096-3: the host then shows no caption repeating it).
 func shows_stem() -> bool:
 	return get("question") is QuestionRendererBase
+
+
+## F098: whether this renderer can send a one-step answer on tap (quiz-style renderers); media, simulation and
+## mini-game renderers keep their own flow.
+func supports_instant_answer() -> bool:
+	return false
+
+
+## F098: the current item sends its answer on tap (`two_taps`: after a second tap on the same tile).
+func set_instant_answer(_on: bool, _two_taps: bool = false) -> void:
+	pass
+
+
+## F098: locks the current item while the server grades a tapped answer (the tapped tile shows "Đang chấm…").
+func set_grading(_on: bool) -> void:
+	pass
 
 
 ## "Kiểm tra" pressed: emits `response_submitted` when the answer is complete; false otherwise.

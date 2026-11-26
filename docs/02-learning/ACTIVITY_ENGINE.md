@@ -1,6 +1,6 @@
 # Activity & Attempt Engine
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Backend Architect + EdTech Specialist · Cập nhật: 2026-11-16
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Backend Architect + EdTech Specialist · Cập nhật: 2026-11-26 (F098: ghi chú hành vi client ở §8.1 — chạm là trả lời; luật không đổi) · 2026-11-16
 > Liên quan: [ADR-0048](../adr/ADR-0048-learning-activity-registry-mo-rong-loai-hoat-dong-hoc-tap-kh.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0016](../adr/ADR-0016-server-authoritative-scoring-answer-key-khong-bao-gio-roi-se.md) · [ADR-0043](../adr/ADR-0043-phat-hanh-noi-dung-draft-publish-con-tro-phien-ban-giu-phien.md) · [LEARNING_EXPERIENCE](LEARNING_EXPERIENCE.md) · [CONTENT_MODEL](CONTENT_MODEL.md) · [QUESTION_BANK](QUESTION_BANK.md) · [EXAM_ENGINE](EXAM_ENGINE.md) · [LEARNING_ANALYTICS](LEARNING_ANALYTICS.md) · [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) · [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md)
 
 > Tài liệu này **gộp Exercise Engine cũ** (vòng đời attempt, mode, resume, phản hồi, lưu dữ liệu) với Activity Registry (ADR-0048). Đây là nơi **duy nhất** mô tả: vòng đời attempt, chiến lược chấm chung, chính sách phản hồi (`FeedbackTiming`, `ResultRelease`), gợi ý trong attempt, cờ `rapid_guess` và resume. Các tài liệu theo loại (video, audio, mô phỏng) chỉ mô tả phần riêng của loại đó.
@@ -254,6 +254,7 @@ Mini-game có thêm thuộc tính hiển thị `feedback_display: end_of_round |
 
 - Thử lại câu sai trong practice/quest/challenge: lần thử lại có `is_scored=false`; lần đầu tính điểm và evidence. Số lượt thử theo khối lớp do [LEARNING_EXPERIENCE §4.2](LEARNING_EXPERIENCE.md#42-số-lượt-thử-confirmed) quy định; cách trình bày phản hồi (NPC, hiệu ứng, gợi ý nhiều cấp) ở [LEARNING_EXPERIENCE §4](LEARNING_EXPERIENCE.md#4-phản-hồi-đúngsai-thân-thiện).
 - `feedback_timing` trong activity definition (§4) ghi đè mặc định của mode trong phạm vi ràng buộc trên.
+- Hành vi client (F098, không đổi luật ở bảng trên): khi `Attempt` có `feedback_timing = immediate`, `result_release` rỗng/`immediate` và mode ∉ {`exam`, `diagnostic`, `competition`}, game gửi câu một bước (chọn một, đúng/sai một mệnh đề) ngay khi học sinh chạm đáp án, không qua nút "Kiểm tra"; đáp án đúng chỉ hiện từ `ActivityResponseResult.correct_response` server gửi. Quy tắc tương tác: [STUDENT_GAME_UX_LEARNING §4.1b](../05-ux/STUDENT_GAME_UX_LEARNING.md#41b-chạm-là-trả-lời-f098-confirmed--owner-duyệt-2026-11-26). `competition` giữ luồng trận riêng dù phản hồi `immediate` sau khi câu khóa.
 
 ### 8.2. Phản hồi theo phương án nhiễu [Confirmed]
 

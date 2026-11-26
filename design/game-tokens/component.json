@@ -259,7 +259,33 @@
       },
       "edge": { "$type": "dimension", "$value": "{size.border.6}", "$description": "Bottom depth edge of an answer tile (candy look)." },
       "radius": { "$type": "dimension", "$value": "{size.radius.24}", "$description": "Answer tile corner radius." },
-      "badge_size": { "$type": "dimension", "$value": "{size.icon.40}", "$description": "Number badge diameter on the left of an answer tile." }
+      "badge_size": { "$type": "dimension", "$value": "{size.icon.40}", "$description": "Number badge diameter on the left of an answer tile." },
+      "correct_bg": { "$type": "color", "$value": "{palette.green.50}", "$description": "Tile background after a right answer (tap-to-answer, F098); shown with a tick badge and words, never colour alone." },
+      "correct_border": { "$type": "color", "$value": "{palette.green.700}", "$description": "Tile border and verdict badge after a right answer, and the right-answer tile (F098)." },
+      "try_bg": { "$type": "color", "$value": "{palette.orange.50}", "$description": "Tile background after a not-yet-right answer: warm, never a punishing red (F098)." },
+      "try_border": { "$type": "color", "$value": "{palette.orange.700}", "$description": "Tile border and verdict badge after a not-yet-right answer (F098)." },
+      "result_border": { "$type": "dimension", "$value": "{size.border.4}", "$description": "Border width of a graded tile (right / not yet right / right answer), thicker than a normal tile (F098)." },
+      "tag_correct_bg": { "$type": "color", "$value": "{palette.green.700}", "$description": "Verdict tag on a right or right-answer tile (F098)." },
+      "tag_try_bg": { "$type": "color", "$value": "{palette.orange.700}", "$description": "Verdict tag on a not-yet-right tile (F098)." },
+      "tag_pending_bg": { "$type": "color", "$value": "{palette.white}", "$description": "Grading tag on the tapped tile while the server grades (F098)." },
+      "tag_pending_border": { "$type": "color", "$value": "{palette.blue.600}", "$description": "Border of the grading tag and the dots of the pending badge (F098)." },
+      "tag_text": {
+        "$type": "color",
+        "$value": "{palette.white}",
+        "$description": "Words of the verdict tags (F098).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.answer_tile.tag_correct_bg", "level": "normal" },
+          { "token": "component.answer_tile.tag_try_bg", "level": "normal" }
+        ] } }
+      },
+      "tag_pending_text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Words of the grading tag (F098).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.answer_tile.tag_pending_bg", "level": "normal" }
+        ] } }
+      }
     },
     "question_card": {
       "bg": { "$type": "color", "$value": "{palette.white}", "$description": "Question card (stem + read-aloud) background (F097)." },

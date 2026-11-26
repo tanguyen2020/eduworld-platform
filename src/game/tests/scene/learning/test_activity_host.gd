@@ -77,12 +77,12 @@ func test_close_resumes_the_world_and_returns_to_the_game() -> void:
 	assert_int(closed).is_equal(1)
 
 
+## F098: in practice (feedback immediate) a single-choice / true-false answer is sent by the tap itself — no
+## "Kiểm tra" press; the rest of the flow (feedback → Tiếp → Hoàn thành → submit → result) is F063's.
 func test_check_next_finish_submit_and_result() -> void:
 	await _open(LearningFixtures.attempt_with_types(["single_choice", "true_false"]))
-	_renderer().select_index(0)
-	assert_bool(_primary().disabled).is_false()
 	h.http.reply(LearningFixtures.ROUTE_RESPOND, 200, LearningFixtures.response_result())
-	await host.call("press_primary")
+	_renderer().select_index(0)
 	await _settle()
 	var body: Dictionary = h.http.last(LearningFixtures.ROUTE_RESPOND).body
 	assert_dict(body["response"] as Dictionary).is_equal({"option_id": "o_a"})
@@ -93,9 +93,8 @@ func test_check_next_finish_submit_and_result() -> void:
 	assert_str(_primary().text).is_equal("ui.activity_player.next")
 	await host.call("press_primary")
 	assert_int(_renderer().current_position()).is_equal(2)
-	_renderer().select_index(0)
 	h.http.reply(LearningFixtures.ROUTE_RESPOND, 200, LearningFixtures.response_result_correct())
-	await host.call("press_primary")
+	_renderer().select_index(0)
 	await _settle()
 	assert_str(String(strip.call("verdict_icon"))).is_equal("correct")
 	assert_str(_primary().text).is_equal("ui.activity_player.finish")
@@ -113,9 +112,9 @@ func test_check_next_finish_submit_and_result() -> void:
 
 func test_already_submitted_on_finish_still_shows_the_result() -> void:
 	await _open(LearningFixtures.attempt_with_types(["true_false"]))
-	_renderer().select_index(1)
 	h.http.reply(LearningFixtures.ROUTE_RESPOND, 200, LearningFixtures.response_result_hidden())
-	await host.call("press_primary")
+	# F098: the tap itself sends the answer in practice.
+	_renderer().select_index(1)
 	await _settle()
 	h.http.reply(LearningFixtures.ROUTE_SUBMIT, 409, LearningFixtures.problem(409, "ATTEMPT_ALREADY_SUBMITTED"))
 	h.http.reply(LearningFixtures.ROUTE_GET, 200, LearningFixtures.submitted())
@@ -140,9 +139,9 @@ func test_exit_asks_then_pauses_and_closes() -> void:
 
 func test_refused_answer_shows_the_code_message_and_keeps_the_answer() -> void:
 	await _open(LearningFixtures.fresh_attempt())
-	_renderer().select_index(1)
 	h.http.reply(LearningFixtures.ROUTE_RESPOND, 422, LearningFixtures.problem(422, "INVALID_RESPONSE"))
-	await host.call("press_primary")
+	# F098: the tap itself sends the answer in practice.
+	_renderer().select_index(1)
 	await _settle()
 	var status: Label = host.get_node("%Status") as Label
 	assert_bool(status.visible).is_true()
@@ -156,9 +155,9 @@ func test_refused_answer_shows_the_code_message_and_keeps_the_answer() -> void:
 
 func test_offline_answer_shows_the_banner_and_is_sent_later() -> void:
 	await _open(LearningFixtures.fresh_attempt())
-	_renderer().select_index(1)
 	h.http.fail(LearningFixtures.ROUTE_RESPOND)
-	await host.call("press_primary")
+	# F098: the tap itself sends the answer in practice.
+	_renderer().select_index(1)
 	await _settle()
 	assert_bool((host.find_child("Offline", true, false) as Control).visible).is_true()
 	assert_bool(_primary().disabled).is_true()

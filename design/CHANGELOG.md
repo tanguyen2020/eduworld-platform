@@ -2,6 +2,10 @@
 
 Phiên bản token theo semver (`design/package.json`, DESIGN_SYSTEM §3, §8). Đổi tên hoặc xóa token cần tăng MAJOR; token bị xóa phải mang `$deprecated` ít nhất một phiên bản trước (kiểm bởi `design/checks/semver.mjs`).
 
+## tokens@0.15.0
+
+- 2026-11-26 — Student UX pass 3 (F098, ADR-0047, ADR-0103, DESIGN_SYSTEM §5.1, STUDENT_GAME_UX_LEARNING §4.1b): chạm là trả lời — component `component.answer_tile.{correct_bg,correct_border,try_bg,try_border}` (thẻ đã chấm: xanh lá nhạt / cam ấm nhạt, không đỏ gắt), `component.answer_tile.result_border` (viền thẻ đã chấm dày hơn), `component.answer_tile.{tag_correct_bg,tag_try_bg,tag_pending_bg,tag_pending_border,tag_text,tag_pending_text}` (nhãn ghim trên thẻ: "Đúng rồi!", "Chưa đúng, không sao!", "Đáp án đúng", "Đang chấm…"; mọi cặp chữ có `contrastWith`). Theme sinh thêm biến thể `AnswerTileCorrect`, `AnswerTileTry` (mọi trạng thái nút cùng một kiểu: thẻ đã chấm không đổi màu khi rê/nhấn), `TileTagCorrect`, `TileTagTry`, `TileTagPending` (Label có nền viên thuốc, cỡ chữ nhỏ nhất của khối `density.<band>.font.small`). Icon mới `retry_light` (↻ trắng cho nút chính "Gửi lại"). `UiTokens` sinh thêm `DENSITY_FONT_SMALL` (cỡ chữ nhỏ nhất theo khối, dùng cho test ma trận khối). MINOR vì chỉ thêm token và icon.
+
 ## tokens@0.14.0
 
 - 2026-11-26 — Tiến trình, kho đồ, cửa hàng, thành tựu, thử thách solo (F069, DESIGN_SYSTEM §5.1, STUDENT_GAME_UX_CORE S03/S06/S07, STUDENT_GAME_UX_SOCIAL §3–§4): icon game mới trong `design/icons/game/` (sinh vào `src/game/resources/ui/icons/`) — `coin` (Xu, đĩa vàng có sao), `gift` (phần thưởng/vật phẩm), `moon` (trần XP ngày), `heart` (sức bền), `shop`, `lock` (mức khóa, món chưa có), `clock` (đồng hồ thử thách), `menu` (nút "Thêm"), `collection`, `history`. Không thêm/đổi token nên giữ phiên bản.

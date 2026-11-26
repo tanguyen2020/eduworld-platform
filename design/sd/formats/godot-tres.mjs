@@ -91,6 +91,7 @@ export function formatTheme(map, band, version, label) {
   const n = (p) => Math.round(px(v(p)));
   const font = n(`density.${band}.font.base`);
   const heading = n(`density.${band}.font.heading`);
+  const small = n(`density.${band}.font.small`);
   const minH = n(`density.${band}.button.min_height`);
   const space = n(`density.${band}.spacing.base`);
   const padV = Math.max(Math.ceil((minH - bodyLineHeight(font)) / 2), 4);
@@ -127,6 +128,9 @@ export function formatTheme(map, band, version, label) {
   const edge = n('component.answer_tile.edge');
   const badge = n('component.answer_tile.badge_size');
   const tilePadV = Math.max(Math.ceil((tileH - Math.min(bodyLineHeight(stem), bodyLineHeight(stem, 'bodyBold'))) / 2), 4);
+  const resultW = n('component.answer_tile.result_border');
+  // Tag pinned on a tile (F098): a pill of the band's small font, half the band spacing around the words.
+  const tag = { radius: tileR, padH: halfSpace, padV: Math.round(space4 / 2) };
   const tile = { radius: tileR, borderWidth: border, borderBottom: edge, padH: space, padV: tilePadV, padL: space + badge + halfSpace };
   const zone = { radius: tileR, borderWidth: border, borderBottom: edge, padH: space, padV: tilePadV };
   const shadow = { shadow: v('component.form_card.shadow'), shadowSize: n('component.form_card.shadow_size') };
@@ -150,6 +154,12 @@ export function formatTheme(map, band, version, label) {
       styleBox(`tile${i}_hover`, { ...tile, borderWidth: border + 1, bg: v(`component.answer_tile.bg_${i}`), border: v(`component.answer_tile.accent_${i}`) }),
       styleBox(`tile${i}_pressed`, { ...tile, bg: v(`component.answer_tile.accent_${i}`), border: v('component.progress_trail.outline') }),
     ]),
+    // F098 tap-to-answer: graded tiles (right / not yet right / right answer) and the tags pinned on them.
+    styleBox('tile_correct', { ...tile, borderWidth: resultW, borderBottom: edge, bg: v('component.answer_tile.correct_bg'), border: v('component.answer_tile.correct_border') }),
+    styleBox('tile_try', { ...tile, borderWidth: resultW, borderBottom: edge, bg: v('component.answer_tile.try_bg'), border: v('component.answer_tile.try_border') }),
+    styleBox('tag_correct', { ...tag, bg: v('component.answer_tile.tag_correct_bg') }),
+    styleBox('tag_try', { ...tag, bg: v('component.answer_tile.tag_try_bg') }),
+    styleBox('tag_pending', { ...tag, borderWidth: border, bg: v('component.answer_tile.tag_pending_bg'), border: v('component.answer_tile.tag_pending_border') }),
     styleBox('picture_normal', { ...picture, bg: v('component.button.secondary.bg') }),
     styleBox('picture_hover', { ...picture, bg: v('component.button.secondary.bg_hover') }),
     styleBox('picture_selected', { ...picture, bg: v('component.chip.selected_bg'), border: v('component.chip.selected_bg') }),
@@ -255,6 +265,58 @@ export function formatTheme(map, band, version, label) {
       [`AnswerTile${i}/styles/normal`, sub(`tile${i}_normal`)],
       [`AnswerTile${i}/styles/pressed`, sub(`tile${i}_pressed`)],
     ]),
+    // F098: graded answer tiles and their tags (icon badge + words, never colour alone).
+    ...[
+      [`AnswerTileCorrect/base_type`, '&"Button"'],
+      [`AnswerTileCorrect/colors/font_color`, c('component.answer_tile.text')],
+      [`AnswerTileCorrect/colors/font_disabled_color`, c('component.answer_tile.text')],
+      [`AnswerTileCorrect/colors/font_focus_color`, c('component.answer_tile.text')],
+      [`AnswerTileCorrect/colors/font_hover_color`, c('component.answer_tile.text')],
+      [`AnswerTileCorrect/colors/font_hover_pressed_color`, c('component.answer_tile.text')],
+      [`AnswerTileCorrect/colors/font_pressed_color`, c('component.answer_tile.text')],
+      [`AnswerTileCorrect/constants/h_separation`, String(halfSpace)],
+      [`AnswerTileCorrect/constants/icon_max_width`, String(icon)],
+      [`AnswerTileCorrect/font_sizes/font_size`, String(stem)],
+      [`AnswerTileCorrect/fonts/font`, 'ExtResource("2_body_bold")'],
+      [`AnswerTileCorrect/styles/disabled`, sub('tile_correct')],
+      [`AnswerTileCorrect/styles/hover`, sub('tile_correct')],
+      [`AnswerTileCorrect/styles/hover_pressed`, sub('tile_correct')],
+      [`AnswerTileCorrect/styles/normal`, sub('tile_correct')],
+      [`AnswerTileCorrect/styles/pressed`, sub('tile_correct')],
+      [`AnswerTileCorrect/styles/focus`, sub('focus_ring')],
+      [`AnswerTileTry/base_type`, '&"Button"'],
+      [`AnswerTileTry/colors/font_color`, c('component.answer_tile.text')],
+      [`AnswerTileTry/colors/font_disabled_color`, c('component.answer_tile.text')],
+      [`AnswerTileTry/colors/font_focus_color`, c('component.answer_tile.text')],
+      [`AnswerTileTry/colors/font_hover_color`, c('component.answer_tile.text')],
+      [`AnswerTileTry/colors/font_hover_pressed_color`, c('component.answer_tile.text')],
+      [`AnswerTileTry/colors/font_pressed_color`, c('component.answer_tile.text')],
+      [`AnswerTileTry/constants/h_separation`, String(halfSpace)],
+      [`AnswerTileTry/constants/icon_max_width`, String(icon)],
+      [`AnswerTileTry/font_sizes/font_size`, String(stem)],
+      [`AnswerTileTry/fonts/font`, 'ExtResource("2_body_bold")'],
+      [`AnswerTileTry/styles/disabled`, sub('tile_try')],
+      [`AnswerTileTry/styles/hover`, sub('tile_try')],
+      [`AnswerTileTry/styles/hover_pressed`, sub('tile_try')],
+      [`AnswerTileTry/styles/normal`, sub('tile_try')],
+      [`AnswerTileTry/styles/pressed`, sub('tile_try')],
+      [`AnswerTileTry/styles/focus`, sub('focus_ring')],
+      [`TileTagCorrect/base_type`, '&"Label"'],
+      [`TileTagCorrect/colors/font_color`, c('component.answer_tile.tag_text')],
+      [`TileTagCorrect/font_sizes/font_size`, String(small)],
+      [`TileTagCorrect/fonts/font`, 'ExtResource("2_body_bold")'],
+      [`TileTagCorrect/styles/normal`, sub('tag_correct')],
+      [`TileTagTry/base_type`, '&"Label"'],
+      [`TileTagTry/colors/font_color`, c('component.answer_tile.tag_text')],
+      [`TileTagTry/font_sizes/font_size`, String(small)],
+      [`TileTagTry/fonts/font`, 'ExtResource("2_body_bold")'],
+      [`TileTagTry/styles/normal`, sub('tag_try')],
+      [`TileTagPending/base_type`, '&"Label"'],
+      [`TileTagPending/colors/font_color`, c('component.answer_tile.tag_pending_text')],
+      [`TileTagPending/font_sizes/font_size`, String(small)],
+      [`TileTagPending/fonts/font`, 'ExtResource("2_body_bold")'],
+      [`TileTagPending/styles/normal`, sub('tag_pending')],
+    ],
     ['ActivityBoard/base_type', '&"PanelContainer"'],
     ['AnswerBox/base_type', '&"VBoxContainer"'],
     ['AnswerBox/constants/separation', String(space)],

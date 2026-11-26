@@ -4,6 +4,11 @@ extends Control
 ## tile's accent colour with its keyboard number (1–6). When the tile is selected the badge turns into a white disc
 ## with a tick in the accent colour — the choice is shown by shape and words, never by colour alone (NFR-A11Y-001).
 ## Drawn with `UiTokens.COMPONENT_ANSWER_TILE_*` colours; it follows the state of its parent Button. Display only.
+## F098 (tap-to-answer): `verdict` overrides the look — three dots while the server grades, a tick on a green disc for
+## a right answer or the right-answer tile, a soft cross on a warm orange disc for a not-yet-right answer (shape and the
+## tile's tag words, never colour alone).
+
+enum Verdict { NONE, PENDING, CORRECT, TRY, ANSWER }
 
 const ACCENTS: Array[Color] = [
 	UiTokens.COMPONENT_ANSWER_TILE_ACCENT_1, UiTokens.COMPONENT_ANSWER_TILE_ACCENT_2,
@@ -18,6 +23,11 @@ const TILE_TYPES: Array[StringName] = [&"AnswerTile1", &"AnswerTile2", &"AnswerT
 var number: int = 1
 ## Colour set of the tile (0-based, wraps at 6).
 var palette_index: int = 0
+## F098: grading state of the tile (NONE = number / tick of the selection).
+var verdict: Verdict = Verdict.NONE:
+	set(value):
+		verdict = value
+		queue_redraw()
 
 
 static func tile_type(index: int) -> StringName:
@@ -71,6 +81,9 @@ func _draw() -> void:
 		return
 	var c: Vector2 = size / 2.0
 	var accent: Color = ACCENTS[palette_index]
+	if verdict != Verdict.NONE:
+		_draw_verdict(c, r)
+		return
 	if is_selected():
 		draw_circle(c, r, UiTokens.COMPONENT_ANSWER_TILE_TEXT_SELECTED)
 		var w: float = maxf(r * 0.28, 2.0)
@@ -85,3 +98,23 @@ func _draw() -> void:
 	var baseline: float = c.y + (font.get_ascent(font_size) - font.get_descent(font_size)) / 2.0
 	draw_string(font, Vector2(c.x - text_size.x / 2.0, baseline), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
 			UiTokens.COMPONENT_ANSWER_TILE_TEXT_SELECTED)
+
+
+## F098: the grading look of the badge (pending dots, tick, soft cross).
+func _draw_verdict(c: Vector2, r: float) -> void:
+	var w: float = maxf(r * 0.28, 2.0)
+	match verdict:
+		Verdict.PENDING:
+			draw_circle(c, r, UiTokens.COMPONENT_ANSWER_TILE_TAG_PENDING_BG)
+			draw_arc(c, r - w / 2.0, 0.0, TAU, 32, UiTokens.COMPONENT_ANSWER_TILE_TAG_PENDING_BORDER, w * 0.6, true)
+			for x: float in [-0.42, 0.0, 0.42]:
+				draw_circle(c + Vector2(x, 0.0) * r, r * 0.14, UiTokens.COMPONENT_ANSWER_TILE_TAG_PENDING_BORDER)
+		Verdict.CORRECT, Verdict.ANSWER:
+			draw_circle(c, r, UiTokens.COMPONENT_ANSWER_TILE_CORRECT_BORDER)
+			draw_polyline(PackedVector2Array([c + Vector2(-0.45, 0.02) * r, c + Vector2(-0.12, 0.35) * r,
+					c + Vector2(0.5, -0.32) * r]), UiTokens.COMPONENT_ANSWER_TILE_TAG_TEXT, w, true)
+		Verdict.TRY:
+			draw_circle(c, r, UiTokens.COMPONENT_ANSWER_TILE_TRY_BORDER)
+			var d: float = r * 0.36
+			draw_line(c + Vector2(-d, -d), c + Vector2(d, d), UiTokens.COMPONENT_ANSWER_TILE_TAG_TEXT, w, true)
+			draw_line(c + Vector2(d, -d), c + Vector2(-d, d), UiTokens.COMPONENT_ANSWER_TILE_TAG_TEXT, w, true)

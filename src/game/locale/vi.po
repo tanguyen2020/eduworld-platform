@@ -69,8 +69,14 @@ msgstr "Em muốn tạm dừng? Tiến độ được giữ lại."
 msgid "ui.activity_player.read_aloud"
 msgstr "Đọc to"
 
+msgid "ui.activity_player.resend"
+msgstr "Gửi lại"
+
 msgid "ui.activity_player.results_later"
 msgstr "Bài đã nộp! Kết quả sẽ có khi nhà trường công bố."
+
+msgid "ui.activity_player.tap_again"
+msgstr "Chạm lần nữa để chắc chắn nhé!"
 
 msgid "ui.activity_player.time_up"
 msgstr "Hết giờ rồi! Bài đã được nộp."
@@ -1152,6 +1158,9 @@ msgstr "Sai"
 msgid "ui.question.fill_blanks"
 msgstr "Điền vào chỗ trống"
 
+msgid "ui.question.grading"
+msgstr "Đang chấm…"
+
 msgid "ui.question.match_pairs"
 msgstr "Chạm thẻ bên trái rồi chạm thẻ bên phải để nối"
 
@@ -1170,8 +1179,23 @@ msgstr "Chọn tất cả đáp án đúng"
 msgid "ui.question.select_answer"
 msgstr "Chọn một đáp án"
 
+msgid "ui.question.tap_answer"
+msgstr "Chạm vào đáp án em chọn"
+
+msgid "ui.question.tap_answer_twice"
+msgstr "Chạm hai lần vào đáp án em chọn"
+
 msgid "ui.question.tap_image"
 msgstr "Chạm vào hình để trả lời"
+
+msgid "ui.question.tile_answer"
+msgstr "Đáp án đúng"
+
+msgid "ui.question.tile_correct"
+msgstr "Đúng rồi!"
+
+msgid "ui.question.tile_try"
+msgstr "Chưa đúng, không sao!"
 
 msgid "ui.question.true"
 msgstr "Đúng"

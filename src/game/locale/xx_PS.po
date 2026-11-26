@@ -158,8 +158,14 @@ msgstr "[!! Ţáķë á ƀŕëáķ? Ýöüŕ þŕöğŕëšš ïš šávëđ. ~~
 msgid "ui.activity_player.read_aloud"
 msgstr "[!! Ŕëáđ áĺöüđ ~~~~ !!]"
 
+msgid "ui.activity_player.resend"
+msgstr "[!! Šëñđ áğáïñ ~~~~ !!]"
+
 msgid "ui.activity_player.results_later"
 msgstr "[!! Šüƀɱïţţëđ! Ŕëšüĺţš ŵïĺĺ áþþëáŕ ŵĥëñ ýöüŕ šçĥööĺ ŕëĺëášëš ţĥëɱ. ~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.activity_player.tap_again"
+msgstr "[!! Ţáþ ïţ áğáïñ ţö ƀë šüŕë! ~~~~~~~~~~ !!]"
 
 msgid "ui.activity_player.time_up"
 msgstr "[!! Ţïɱë'š üþ! Ýöüŕ ŵöŕķ ĥáš ƀëëñ šüƀɱïţţëđ. ~~~~~~~~~~~~~~~~ !!]"
@@ -1805,6 +1811,9 @@ msgstr "[!! Fáĺšë ~~ !!]"
 msgid "ui.question.fill_blanks"
 msgstr "[!! Fïĺĺ ïñ ţĥë ƀĺáñķš ~~~~~~~~ !!]"
 
+msgid "ui.question.grading"
+msgstr "[!! Çĥëçķïñğ… ~~~~ !!]"
+
 msgid "ui.question.match_pairs"
 msgstr "[!! Ţáþ á çáŕđ öñ ţĥë ĺëƒţ, ţĥëñ öñë öñ ţĥë ŕïğĥţ ţö ɱáţçĥ ~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -1823,8 +1832,23 @@ msgstr "[!! Çĥööšë áĺĺ çöŕŕëçţ áñšŵëŕš ~~~~~~~~~~~ !!]"
 msgid "ui.question.select_answer"
 msgstr "[!! Çĥööšë áñ áñšŵëŕ ~~~~~~~ !!]"
 
+msgid "ui.question.tap_answer"
+msgstr "[!! Ţáþ ţĥë áñšŵëŕ ýöü çĥööšë ~~~~~~~~~~ !!]"
+
+msgid "ui.question.tap_answer_twice"
+msgstr "[!! Ţáþ ţĥë áñšŵëŕ ýöü çĥööšë ţŵïçë ~~~~~~~~~~~~~ !!]"
+
 msgid "ui.question.tap_image"
 msgstr "[!! Ţáþ ţĥë þïçţüŕë ţö áñšŵëŕ ~~~~~~~~~~ !!]"
+
+msgid "ui.question.tile_answer"
+msgstr "[!! Ŕïğĥţ áñšŵëŕ ~~~~~ !!]"
+
+msgid "ui.question.tile_correct"
+msgstr "[!! Ţĥáţ'š ŕïğĥţ! ~~~~~~ !!]"
+
+msgid "ui.question.tile_try"
+msgstr "[!! Ñöţ qüïţë, ţĥáţ'š öķáý! ~~~~~~~~~~ !!]"
 
 msgid "ui.question.true"
 msgstr "[!! Ţŕüë ~~ !!]"
