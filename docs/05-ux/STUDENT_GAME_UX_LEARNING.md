@@ -1,6 +1,6 @@
 # Student Game UX — Màn học tập
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Cập nhật 2026-11-26 (F096: dải chúc mừng ở màn kết quả, icon thay emoji) (bỏ ghi âm/tự luận, thêm gợi ý, phản hồi theo phương án, hỗ trợ lớp 1–3 — ADR-0072) · Owner: UX/UI Designer + EdTech Specialist · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Cập nhật 2026-11-26 (F097: §3.3a khung làm bài như trò chơi — bảng trên nền trời, đường tiến độ, Mây + bong bóng, nút nhất quán; §4.1a thẻ câu hỏi + thẻ đáp án; §4.8 phản hồi nền nhạt lời tử tế; §7 đề hiện một lần) · 2026-11-26 (F096: dải chúc mừng ở màn kết quả, icon thay emoji) (bỏ ghi âm/tự luận, thêm gợi ý, phản hồi theo phương án, hỗ trợ lớp 1–3 — ADR-0072) · Owner: UX/UI Designer + EdTech Specialist · Cập nhật: 2026-11-15
 > Liên quan: [STUDENT_GAME_UX](STUDENT_GAME_UX.md) (quy ước chung, màn game) · [DESIGN_SYSTEM §5](DESIGN_SYSTEM.md#5-game-design-system-godot-3d) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md) · [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) · [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [ADR-0055](../adr/ADR-0055-cong-thuc-toan-vat-ly-hoa-hoc-mathjax-4-hien-thi-mathlive-nh.md) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0059](../adr/ADR-0059-hop-nhat-api-attempt-va-chua-lam-ai-giong-noi.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md)
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Quy ước áp dụng · 3. Learning activity player (khung chung) · 4. Exercise / question player · 5. Video player · 6. Bài nghe · 7. Hỗ trợ lớp 1–3 · 8. Mô phỏng · 9. Bài kiểm tra có giờ · 10. Kết quả học tập · 11. Khóa dịch đề xuất · 12. Acceptance criteria
@@ -92,6 +92,16 @@ Tablet ngang: dùng bố cục Web/PC thu tỉ lệ (vùng nội dung rộng t�
 | Action bar | Nút chính một hành động duy nhất tại một thời điểm (Kiểm tra → Tiếp → Hoàn thành) |
 | Hộp xác nhận thoát | "Em muốn tạm dừng? Tiến độ được giữ lại." — Tiếp tục / Tạm dừng |
 
+### 3.3a. Khung làm bài như một trò chơi (F097) [Confirmed — owner "chốt hết", 2026-11-26]
+
+| Phần | Hiển thị |
+|---|---|
+| Nền | Nền trời S01 (`SkyBackdrop`), bảng bo tròn (`ActivityBoard`) cách mép `component.activity_board.inset` — không còn khung biểu mẫu sát mép |
+| Header | Trái: "Thoát" (icon cửa + chữ). Giữa: tên hoạt động. Phải: **đường tiến độ** (`ProgressTrail`): câu đã qua = ngôi sao đặc, câu hiện tại = vòng lớn, câu còn lại = chấm rỗng (hình khác nhau, không chỉ màu); > 15 câu = thanh bo tròn có ngôi sao ở vị trí hiện tại; bài 1 câu không vẽ đường; luôn kèm "n/N". Đồng hồ theo §3.7 |
+| Mây đồng hành | Góc dưới trái: Mây bản nhỏ (`component.coach.size`) + bong bóng lời bên phải. Bong bóng chứa (theo thứ tự): câu động viên khi không có gì khác ("Em làm được mà!", có gợi ý: "… Cần giúp thì bấm Gợi ý nhé."), kết quả chấm (§4.8), nút Gợi ý + gợi ý đã mở (§4.7), lỗi gửi (§3.5). Nét mặt: bình thường ở câu mới, vui (mắt cười) khi đúng, động viên (mày nhướng, cười hiền) khi chưa đúng — không bao giờ buồn/giận |
+| Nút | Thoát luôn trên trái; Gợi ý luôn trong bong bóng của Mây (ẩn sau khi chấm, trở lại ở câu sau); nút chính luôn dưới phải, icon theo hành động: ✓ Kiểm tra, → Tiếp/Hoàn thành. Câu "Chọn một đáp án" chỉ là hướng dẫn của câu (không lặp ở thanh dưới) |
+| Hộp tạm dừng | Thẻ form có Mây, "Làm tiếp" (→) và "Tạm dừng" (⏸) |
+
 ### 3.4. Dữ liệu & API
 
 | Hành động | API |
@@ -177,6 +187,12 @@ Tablet ngang: dùng bố cục Web/PC thu tỉ lệ (vùng nội dung rộng t�
 
 Đề dài vượt nửa chiều cao: đề thu gọn còn 3 dòng + "Xem đầy đủ" mở overlay; lựa chọn luôn hiển thị không cần cuộn.
 
+### 4.1a. Thẻ câu hỏi và thẻ đáp án (F097) [Confirmed — owner "chốt hết", 2026-11-26]
+
+- **Thẻ câu hỏi** (`QuestionCard`): thẻ trắng bo tròn có bóng mềm; đề bài bằng `StemLabel` (Baloo 2, cỡ đề bài của khối `density.<band>.font.stem`, theo [LEARNING_EXPERIENCE §8](../02-learning/LEARNING_EXPERIENCE.md#8-ux-học-tập-theo-grade-band)); nút "Đọc to" (icon loa + chữ) ở góc phải khi câu có bản ghi lồng tiếng. Hướng dẫn thao tác của dạng câu ("Chọn một đáp án", "Kéo hoặc chạm thẻ…") là `InstructionLabel` ngay dưới thẻ.
+- **Thẻ đáp án** (`AnswerTile1…6`): mọi lựa chọn chọn một/nhiều, đúng/sai, cột trái ghép cặp, thẻ sắp xếp, thẻ kéo thả, nhãn ảnh. Sáu bộ màu luân phiên (xanh dương, cam, xanh lá, tím, hồng, xanh ngọc): nền nhạt, viền màu nhấn, viền đáy dày (khối "kẹo", ADR-0103); **huy hiệu số** bên trái = phím `1–6` (sắp xếp: số thứ tự hiện tại); chữ đậm cỡ đề bài của khối; cao tối thiểu `density.<band>.answer.min_height` (88/80/72/64 px — luôn ≥ vùng chạm của khối). **Đang chọn** = nền màu nhấn, chữ trắng **và** huy hiệu thành dấu ✓ (hình, không chỉ màu). Sau khi chấm, thẻ không bị làm xám: thẻ đã chọn giữ dáng "đã chọn", chỉ không nhận chạm/nhấp/focus.
+- **Vùng thả / cột phải ghép cặp** (`DropZone`): thẻ trắng bo tròn viền xanh nhạt, cùng cỡ chữ; hiện thẻ đã thả. Sắp xếp: nút "Lên/Xuống" có icon mũi tên kèm chữ. Nhập số: phím lớn viền (cao bằng thẻ đáp án). Khoảng cách giữa thẻ = khoảng cách cơ sở của khối (`AnswerGrid`, `AnswerBox`, `AnswerFlow`).
+
 ### 4.3. Bố cục theo nhóm dạng câu hỏi
 
 | Nhóm | Web/PC | Mobile | Nhập liệu |
@@ -223,6 +239,7 @@ Nghiệp vụ: `hints[]` trong question version ([QUESTION_BANK](../02-learning/
 - Thời điểm hiện theo FeedbackTiming: `immediate` ngay sau "Kiểm tra"; `after_submit`/`after_close` trong màn "Xem lại câu sai" (§10); `never` không hiện.
 - Câu có ví dụ mẫu (`worked_example`) hiện nút "Xem ví dụ giải từng bước" mở overlay chỉ đọc.
 - Phản hồi luôn có icon ✓/✗ và chữ, không chỉ dựa vào màu; `g1_3` có lồng tiếng hoặc phụ đề.
+- **Dáng phản hồi (F097):** kết quả nằm trong bong bóng của Mây (§3.3a), là bảng nền nhạt có viền: đúng = xanh lá nhạt, icon ✓ trong đĩa xanh, "Đúng rồi! Em giỏi quá!" (`en`: "That's right! Great job!"); chưa đúng = **cam ấm nhạt** (không dùng nền đỏ đậm), icon ✗ mềm trong đĩa cam, "Chưa đúng rồi. Không sao, mình cùng xem lại nhé!" (`en`: "Not quite. That's okay, let's look at it together!"). Không từ "sai rồi", "trừ", "phạt". Phản hồi theo phương án và giải thích ngay dưới, nút "Xem ví dụ giải từng bước" bên cạnh. Mini-game dùng cùng bảng.
 
 ## 5. Video player
 
@@ -345,7 +362,9 @@ API: `POST /learning/activities/{id}/attempts` (URL audio, transcript nếu đư
 | Gợi ý | Gợi ý cấp 1 có lồng tiếng và hình minh họa; hiện sau lượt sai đầu tiên theo [LEARNING_EXPERIENCE §4.2](../02-learning/LEARNING_EXPERIENCE.md#42-số-lượt-thử-confirmed) |
 | Thiếu file lồng tiếng (nội dung cũ) | Dùng TTS nếu có, kèm phụ đề; không chặn học sinh làm bài |
 
-Cài đặt "Tự đọc đề bài" mặc định bật cho `g1_3`, tắt được trong S15. Tắt tiếng thiết bị → phụ đề luôn hiện. Hiệu năng: audio thoại nén Ogg Vorbis, tải trước cùng media câu kế tiếp (P-4).
+Cài đặt "Tự đọc đề bài" mặc định bật cho `g1_3`, tắt được trong S15. Tắt tiếng thiết bị → phụ đề luôn hiện.
+
+**Đề hiện một lần (F097, chốt F096-3) [Confirmed].** Khi renderer vẽ đề bài trong thẻ câu hỏi (§4.1a), thẻ đề **chính là phụ đề** (chữ to theo cỡ đề của khối, đọc được khi tắt tiếng): `VoiceCaption` không hiện lại nội dung đề — kể cả khi tắt tiếng hay thiếu file lồng tiếng — và chỉ phát lồng tiếng (tự phát `g1_3`, phím `R`, nút "Đọc to" trên thẻ đề). Khung phụ đề riêng chỉ dùng cho lời không vẽ trên màn (vd. hướng dẫn S02). Hiệu năng: audio thoại nén Ogg Vorbis, tải trước cùng media câu kế tiếp (P-4).
 
 ## 8. Mô phỏng
 

@@ -1,6 +1,6 @@
 # World Rendering — Kỹ thuật dựng thế giới 3D (Godot)
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-25 (ADR-0103 / F068: mesh tròn mượt, cel shader, rig `kid_base`, blob shadow, Cây Tia Sáng theo cấp) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-26 (F097: §5.1 ẩn marker gần camera) · 2026-11-25 (ADR-0103 / F068: mesh tròn mượt, cel shader, rig `kid_base`, blob shadow, Cây Tia Sáng theo cấp) · 2026-11-15
 > Liên quan: [ADR-0012, ADR-0013](../adr/README.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) · [GODOT_ARCHITECTURE](GODOT_ARCHITECTURE.md) · [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md)
 
 ## Mục đích và phạm vi
@@ -99,6 +99,20 @@ Mọi vật thể tương tác kế thừa `Interactable` (Area3D):
 | `action` | phát signal `interacted(interactable_id)` → service tương ứng |
 
 Quest object (vật cần thu thập, điểm cần đến) được đặt sẵn trong scene với `interactable_id` ổn định; dữ liệu quest tham chiếu ID đó (xem [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) §3). Như vậy level designer đặt "điểm neo", nhà thiết kế nội dung gắn nhiệm vụ trong CMS mà không sửa scene.
+
+### 5.1. Marker gần camera (F097, chốt F096-4)
+
+Marker thế giới (đá Tia Sáng của `WorldAnchor`, `QuestMarker3D` — nhóm node `camera_fade`) không được đứng chắn giữa camera và nhân vật [Confirmed — owner "chốt hết", 2026-11-26]:
+
+| Quy tắc | Giá trị |
+|---|---|
+| Ẩn khi | khoảng cách marker → camera < `marker_near_fade_m` **và** marker gần camera hơn nhân vật (đứng giữa camera và nhân vật) |
+| `marker_near_fade_m` | 5 m (`ProjectSettings eduworld/world/marker_near_fade_m`, đăng ký ở [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md) §2) |
+| Hiện lại khi | xa camera hơn ngưỡng + 0,5 m (trễ chống nhấp nháy) hoặc xa hơn nhân vật |
+| Tần suất kiểm | 10 lần/giây (`MarkerFader` do `ZoneRoot` thêm), không mỗi frame |
+| Cách ẩn | tắt `visible` của mesh marker; không mờ dần bằng alpha (shader toon dùng chung không có alpha theo instance) |
+
+Chỉ là hiển thị: seed và vị trí điểm neo không đổi, `Area3D` tương tác vẫn hoạt động, không báo service (AGENTS R1). Ví dụ: ở spawn Hub, đá Tia Sáng của `quest.hub.welcome_sign` (0, 0, 12) nằm giữa camera và nhân vật nên được ẩn; khi học sinh đi tới, đá ở phía trước nhân vật và hiện lại. Test: `tests/unit/world/test_marker_fader.gd`.
 
 ## 6. Hiệu năng
 

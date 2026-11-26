@@ -19,13 +19,13 @@ text = "ui.activity_player.hint"
 [node name="Level" type="Label" parent="Row"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"MutedLabel"
+theme_type_variation = &"SpeechBubbleLabel"
 
 [node name="Status" type="Label" parent="Row"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"MutedLabel"
+theme_type_variation = &"SpeechBubbleLabel"
 autowrap_mode = 3
 
 [node name="Intro" type="Label" parent="."]

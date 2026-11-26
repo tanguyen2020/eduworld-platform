@@ -8,9 +8,10 @@ extends VBoxContainer
 signal worked_example_requested(lesson_id: String)
 signal math_failed()
 
-## F096-AC-15: tick/cross icons of design/icons/game (the shipped fonts have no ✓/✗; the Web build has no fallback).
-const ICON_CORRECT: Texture2D = preload("res://resources/ui/icons/check.svg")
-const ICON_INCORRECT: Texture2D = preload("res://resources/ui/icons/cross.svg")
+## F096-AC-15 / F097: tick and cross in a coloured disc (design/icons/game; the shipped fonts have no ✓/✗). A wrong
+## answer gets a warm, soft panel and kind words — never a punishing red (F097-AC-06, NFR-SAFE-003).
+const ICON_CORRECT: Texture2D = preload("res://resources/ui/icons/verdict_correct.svg")
+const ICON_INCORRECT: Texture2D = preload("res://resources/ui/icons/verdict_try.svg")
 
 var result: ResponseResultModel = null
 var worked_example_ref: String = ""
@@ -18,7 +19,7 @@ var worked_example_ref: String = ""
 @onready var _verdict_panel: PanelContainer = %VerdictPanel
 @onready var _icon: TextureRect = %Icon
 @onready var _verdict: Label = %Verdict
-@onready var _details: PanelContainer = %Details
+@onready var _details: HBoxContainer = %Details
 @onready var _feedback: RichTextLabel = %FeedbackText
 @onready var _explanation: RichTextLabel = %Explanation
 @onready var _saved: Label = %Saved
@@ -26,7 +27,7 @@ var worked_example_ref: String = ""
 
 
 func _ready() -> void:
-	_icon.custom_minimum_size = Vector2.ONE * UiTokens.COMPONENT_ICON_SIZE
+	_icon.custom_minimum_size = Vector2.ONE * UiTokens.COMPONENT_ANSWER_TILE_BADGE_SIZE
 	_worked.pressed.connect(_on_worked_pressed)
 	clear()
 
@@ -57,6 +58,11 @@ func show_result(graded: ResponseResultModel, math: MathSvgCache) -> void:
 		await _fill(_feedback, fb.text, fb.math_assets, math)
 	if _explanation.visible and result == graded:
 		await _fill(_explanation, graded.explanation, graded.explanation_math, math)
+
+
+## Whether the last verdict was "correct" (Mây smiles), "incorrect" (Mây encourages) or hidden ("").
+func verdict_kind() -> String:
+	return verdict_icon() if visible else ""
 
 
 ## Text shown for the verdict (tests and read-aloud).

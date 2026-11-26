@@ -26,6 +26,9 @@ var row_height: float = 0.0
 @onready var _scroll: ScrollContainer = %List
 @onready var _content: Control = %Content
 @onready var _notice: PanelContainer = %Notice
+## F097: the chosen tab is a filled chip with a tick (not colour alone, NFR-A11Y-001).
+const ICON_TAB_CHOSEN: Texture2D = preload("res://resources/ui/icons/check.svg")
+
 @onready var _tab_assigned: Button = %TabAssigned
 @onready var _tab_active: Button = %TabActive
 @onready var _tab_available: Button = %TabAvailable
@@ -184,6 +187,8 @@ func _select_tab(next: String) -> void:
 	_tab_assigned.button_pressed = tab == TAB_ASSIGNED
 	_tab_active.button_pressed = tab == TAB_ACTIVE
 	_tab_available.button_pressed = tab == TAB_AVAILABLE
+	for b: Button in [_tab_assigned, _tab_active, _tab_available]:
+		b.icon = ICON_TAB_CHOSEN if b.button_pressed else null
 	var quest_tab: bool = tab != TAB_ASSIGNED
 	_scroll.visible = not quest_tab
 	_quest_scroll.visible = quest_tab

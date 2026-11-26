@@ -8,6 +8,8 @@ signal math_failed()
 
 const MATH_SCENE: PackedScene = preload("res://scenes/learning/math/MathInline.tscn")
 
+## Theme variation of paragraph labels (F097: `StemLabel` for a question stem); empty = default Label.
+var label_variation: StringName = &""
 var formulas: Array[MathInline] = []
 var images: Array[TextureRect] = []
 
@@ -24,13 +26,13 @@ func show_content(rich: Dictionary, ctx: RendererContext, item: QuestionRenderMo
 func _add_block(block: Dictionary, ctx: RendererContext, item: QuestionRenderModel) -> void:
 	match String(block.get("type", "")):
 		"paragraph", "callout":
-			_add_label(ctx.text(block.get("text")), &"")
+			_add_label(ctx.text(block.get("text")), label_variation)
 		"heading":
 			_add_label(ctx.text(block.get("text")), &"HeadingLabel")
 		"list":
 			if block.get("items") is Array:
 				for entry: Variant in (block["items"] as Array):
-					_add_label("• " + ctx.text(entry), &"")
+					_add_label("• " + ctx.text(entry), label_variation)
 		"table":
 			if block.get("rows") is Array:
 				for row: Variant in (block["rows"] as Array):

@@ -6,11 +6,16 @@
         "$type": "dimension",
         "base": { "$value": "{size.font.22}", "$description": "Base font size (g4_5)." },
         "heading": { "$value": "{size.font.28}", "$description": "Heading font size (g4_5)." },
-        "small": { "$value": "{size.font.18}", "$description": "Smallest allowed font size (g4_5)." }
+        "small": { "$value": "{size.font.18}", "$description": "Smallest allowed font size (g4_5)." },
+        "stem": { "$value": "{size.font.28}", "$description": "Question stem and answer tile font size (g4_5, LEARNING_EXPERIENCE §8)." }
       },
       "button": {
         "$type": "dimension",
         "min_height": { "$value": "{size.control.56}", "$description": "Minimum button height (g4_5)." }
+      },
+      "answer": {
+        "$type": "dimension",
+        "min_height": { "$value": "{size.control.80}", "$description": "Minimum answer tile height (g4_5, F097)." }
       },
       "spacing": {
         "$type": "dimension",

@@ -25,6 +25,7 @@ func _build() -> void:
 			continue
 		var label: Label = Label.new()
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.theme_type_variation = &"InstructionLabel"
 		label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		label.text = _plain((s as Dictionary).get("content"))
 		box.add_child(label)
@@ -32,15 +33,18 @@ func _build() -> void:
 
 
 func _add_pair(box: VBoxContainer, statement_id: String) -> Array[Button]:
-	var row: HBoxContainer = HBoxContainer.new()
+	var row: GridContainer = GridContainer.new()
+	row.columns = 2
+	row.theme_type_variation = &"AnswerGrid"
 	box.add_child(row)
 	var out: Array[Button] = []
 	for value: bool in [true, false]:
 		var b: Button = Button.new()
 		b.toggle_mode = true
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		# F097: two big tiles (1 = true, 2 = false: the keyboard keys).
+		_style_tile(b, 0 if value else 1)
+		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		b.text = _label(value)
-		b.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		if statement_id.is_empty():
 			b.pressed.connect((answer as TrueFalseAnswer).set_value.bind(value))
 		else:
@@ -67,8 +71,8 @@ func _refresh() -> void:
 			chosen = (1 if bool(model.statement_values[id]) else 0) if model.statement_values.has(id) else -1
 		row[0].set_pressed_no_signal(chosen == 1)
 		row[1].set_pressed_no_signal(chosen == 0)
-		row[0].disabled = locked
-		row[1].disabled = locked
+		_lock_tile(row[0], locked)
+		_lock_tile(row[1], locked)
 
 
 func select_index(index: int) -> void:

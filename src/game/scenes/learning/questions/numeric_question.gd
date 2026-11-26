@@ -30,14 +30,19 @@ func _build() -> void:
 		row.add_child(unit)
 	var pad: GridContainer = GridContainer.new()
 	pad.columns = 3
+	pad.theme_type_variation = &"AnswerGrid"
 	box.add_child(pad)
 	for key: String in model.pad_keys():
 		var b: Button = Button.new()
+		# F097: big outlined keys, as tall as an answer tile of the band.
+		b.theme_type_variation = &"SecondaryButton"
+		b.custom_minimum_size = Vector2.ONE * _tile_height()
 		b.text = key
 		b.pressed.connect(model.press.bind(key))
 		pad.add_child(b)
 		pad_buttons.append(b)
 	var back: Button = Button.new()
+	back.theme_type_variation = &"SecondaryButton"
 	back.text = "ui.question.backspace"
 	back.tooltip_text = "ui.question.backspace"
 	back.pressed.connect(model.backspace)

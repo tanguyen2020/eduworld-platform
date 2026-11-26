@@ -1,5 +1,5 @@
 extends VBoxContainer
-## Multi-level hints (STUDENT_GAME_UX_LEARNING §4.7, ACTIVITY_ENGINE §8.3, F063-AC-15/16). "💡 Gợi ý" asks the host
+## Multi-level hints (STUDENT_GAME_UX_LEARNING §4.7, ACTIVITY_ENGINE §8.3, F063-AC-15/16). "Gợi ý" asks the host
 ## for the next level (`hint_requested`); the panel shows "Mây nhắc em một chút nhé.", "Gợi ý {n}/{total}" and the
 ## hint text with formulas. `409 HINTS_EXHAUSTED` greys the button with `ui.activity_player.hints_exhausted`;
 ## `403 HINTS_NOT_ALLOWED` or a mode without hints hides it. The panel never counts hints: levels come from the
@@ -97,6 +97,11 @@ func is_button_visible() -> bool:
 
 func is_button_disabled() -> bool:
 	return _button.disabled
+
+
+## A revealed hint is on screen (F097: the coach stops cheering while Mây gives the hint).
+func is_showing_hint() -> bool:
+	return visible and _text.visible
 
 
 func level_text() -> String:

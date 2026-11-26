@@ -2,6 +2,10 @@ extends QuestionRendererBase
 ## `ordering`: vertical cards in the order the server sent; ▲▼ buttons on each card (all bands, g1_3 included), drag
 ## a card onto another to move it there, `↑ ↓` move the focused card. Emits `{order}`.
 
+## F097: arrow icons beside the words (g1_3: icon + text).
+const ICON_UP: Texture2D = preload("res://resources/ui/icons/arrow_up.svg")
+const ICON_DOWN: Texture2D = preload("res://resources/ui/icons/arrow_down.svg")
+
 var rows: Dictionary = {}
 var labels: Dictionary = {}
 
@@ -21,18 +25,21 @@ func _build() -> void:
 	for id: String in model.order:
 		var row: HBoxContainer = HBoxContainer.new()
 		var card: DropButton = DropButton.new()
-		card.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_style_tile(card, rows.size(), false)
+		card.add_child(AnswerBadge.new(rows.size() + 1, rows.size()))
 		card.drag_source_id = id
 		card.drop_target_id = id
 		card.dropped.connect(_on_dropped)
 		card.gui_input.connect(_on_card_input.bind(id))
 		var up: Button = Button.new()
+		up.theme_type_variation = &"SecondaryButton"
+		up.icon = ICON_UP
 		up.text = "ui.question.move_up"
 		up.tooltip_text = "ui.question.move_up"
 		up.pressed.connect(model.move.bind(id, -1))
 		var down: Button = Button.new()
+		down.theme_type_variation = &"SecondaryButton"
+		down.icon = ICON_DOWN
 		down.text = "ui.question.move_down"
 		down.tooltip_text = "ui.question.move_down"
 		down.pressed.connect(model.move.bind(id, 1))
@@ -68,7 +75,12 @@ func _refresh() -> void:
 			continue
 		box.move_child(row, i)
 		var card: DropButton = row.get_child(0) as DropButton
-		card.text = "%d. %s" % [i + 1, String(labels.get(id, ""))]
+		card.text = String(labels.get(id, ""))
+		var badge: AnswerBadge = card.get_node_or_null(^"Badge") as AnswerBadge
+		if badge != null:
+			# The badge shows the place in the order (1 = first).
+			badge.number = i + 1
+			badge.queue_redraw()
 		card.drag_enabled = not locked
 		for b: Node in row.get_children():
 			(b as Button).disabled = locked

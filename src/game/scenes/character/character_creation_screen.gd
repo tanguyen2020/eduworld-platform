@@ -6,6 +6,10 @@ extends Control
 ## clip shows the caption only) and loading/error/"Thử lại" states. Every choice redraws the preview locally; the only
 ## requests are the model's (catalog, profile, suggestions, confirm). UI only: no rules, no network (AGENTS R1).
 ## Style from the generated Theme; touch targets from the UiTokens density of the grade band (g1_3 ≥ 64 dp).
+## F097 (F096-1): a board over the sky; the preview is a large stage (sky behind the character) that turns slowly on
+## every step like a turntable (paused a moment after the student turns it, off with reduced motion); presets are
+## picture tiles (AvatarThumb in the preset colours), skin/hair colours are round swatches with a tick when chosen,
+## other options are chips — big enough for young grades.
 
 ## Recorded voice hints (`<lang>/<key>.ogg`); none ship yet — the caption is shown instead.
 const VOICE_DIR: String = "res://resources/audio/voice"
@@ -17,6 +21,11 @@ const STATUS_LOADING: String = "ui.avatar.loading"
 const STATUS_SAVING: String = "ui.avatar.saving"
 ## Preview turn speed on the preview step (rad/s) and per button press (rad); off with reduced motion.
 const AUTO_TURN_SPEED: float = 0.6
+## F097: slower turntable on the other steps, paused this long after the student turns the preview.
+const IDLE_TURN_SPEED: float = 0.3
+const MANUAL_PAUSE_MSEC: int = 3000
+## F097: preset tile width in band touch targets (picture tile; its height comes from the Theme `PictureTile`).
+const PRESET_TILE_WIDTH: float = 2.3
 const TURN_STEP: float = PI / 6.0
 const DRAG_TURN_FACTOR: float = 0.01
 
@@ -26,6 +35,7 @@ var notice_key: String = ""
 var _target: float = 0.0
 var _built: bool = false
 var _profile: ProfileService = null
+var _manual_until_msec: int = 0
 
 @onready var _steps: HBoxContainer = %StepIndicator
 @onready var _preview: SubViewportContainer = %Preview
@@ -77,8 +87,14 @@ func _ready() -> void:
 	(%HairNext as Button).pressed.connect(func() -> void: model.cycle_hair(1))
 	(%OutfitPrev as Button).pressed.connect(func() -> void: model.cycle_outfit(-1))
 	(%OutfitNext as Button).pressed.connect(func() -> void: model.cycle_outfit(1))
-	(%RotateLeft as Button).pressed.connect(func() -> void: _rig.rotation.y -= TURN_STEP)
-	(%RotateRight as Button).pressed.connect(func() -> void: _rig.rotation.y += TURN_STEP)
+	(%RotateLeft as Button).pressed.connect(func() -> void: _turn(-TURN_STEP))
+	(%RotateRight as Button).pressed.connect(func() -> void: _turn(TURN_STEP))
+	var inset: float = float(UiTokens.COMPONENT_ACTIVITY_BOARD_INSET)
+	var window: Control = %Window as Control
+	window.offset_left = inset
+	window.offset_top = inset
+	window.offset_right = -inset
+	window.offset_bottom = -inset
 	_preview.gui_input.connect(_on_preview_input)
 	_size_buttons()
 	_render()
@@ -93,9 +109,18 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
-	if model != null and model.state == CharacterCreationModel.State.READY \
-			and model.current_step() == CharacterCreationModel.STEP_PREVIEW and not bool(Settings.reduce_motion):
-		_rig.rotation.y += AUTO_TURN_SPEED * delta
+	if model == null or model.state != CharacterCreationModel.State.READY or bool(Settings.reduce_motion):
+		return
+	if Time.get_ticks_msec() < _manual_until_msec:
+		return
+	var speed: float = AUTO_TURN_SPEED if model.current_step() == CharacterCreationModel.STEP_PREVIEW else IDLE_TURN_SPEED
+	_rig.rotation.y += speed * delta
+
+
+## Turns the preview by hand (buttons, drag) and pauses the turntable for a moment.
+func _turn(radians: float) -> void:
+	_rig.rotation.y += radians
+	_manual_until_msec = Time.get_ticks_msec() + MANUAL_PAUSE_MSEC
 
 
 # ---------- model → view ----------
@@ -185,9 +210,9 @@ func _on_retry() -> void:
 
 func _on_preview_input(event: InputEvent) -> void:
 	if event is InputEventScreenDrag:
-		_rig.rotation.y += (event as InputEventScreenDrag).relative.x * DRAG_TURN_FACTOR
+		_turn((event as InputEventScreenDrag).relative.x * DRAG_TURN_FACTOR)
 	elif event is InputEventMouseMotion and (event as InputEventMouseMotion).button_mask != 0:
-		_rig.rotation.y += (event as InputEventMouseMotion).relative.x * DRAG_TURN_FACTOR
+		_turn((event as InputEventMouseMotion).relative.x * DRAG_TURN_FACTOR)
 
 
 # ---------- building ----------
@@ -199,6 +224,7 @@ func _build_options() -> void:
 	for entry: Dictionary in catalog.presets:
 		var b: Button = _option_button(_preset_grid, String(entry["preset_code"]))
 		b.pressed.connect(model.select_preset.bind(String(entry["preset_code"])))
+		_make_picture_tile(b, entry.get("avatar_config") as AvatarConfigModel)
 	_build_named(_body_types, catalog.body_types, model.set_body_type, false)
 	_build_named(_skin_tones, catalog.skin_tones, model.set_skin_tone, true)
 	_build_named(_hair_colors, catalog.hair_colors, model.set_hair_color, true)
@@ -217,23 +243,28 @@ func _build_named(container: Container, list: Array[Dictionary], setter: Callabl
 		var b: Button = _option_button(container, code)
 		b.pressed.connect(setter.bind(code))
 		if swatch:
-			var fill: ColorRect = ColorRect.new()
-			fill.name = "Swatch"
-			fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			fill.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE,
-					UiTokens.SIZE_SPACE_8)
-			fill.color = ItemVisual.appearance_color(code)
-			b.add_child(fill)
+			# F097: a round swatch (tick when chosen) instead of a square colour patch.
+			b.add_child(ColorDot.new(ItemVisual.appearance_color(code)))
 
 
 func _option_button(container: Container, code: String) -> Button:
 	var b: Button = Button.new()
 	b.name = code
 	b.toggle_mode = true
+	b.theme_type_variation = &"ChoiceChip"
 	b.set_meta(&"code", code)
 	b.custom_minimum_size = Vector2(_target, _target)
 	container.add_child(b)
 	return b
+
+
+## A preset tile (F097, F096-1): the preset's picture in the tall top margin of `PictureTile`, its name below.
+func _make_picture_tile(b: Button, config: AvatarConfigModel) -> void:
+	b.theme_type_variation = &"PictureTile"
+	b.custom_minimum_size = Vector2(_target * PRESET_TILE_WIDTH, _target)
+	var thumb: AvatarThumb = AvatarThumb.new()
+	b.add_child(thumb)
+	thumb.set_look(config, AnswerBadge.ACCENTS[posmod(b.get_index(), AnswerBadge.ACCENTS.size())])
 
 
 func _build_chips() -> void:
@@ -242,6 +273,7 @@ func _build_chips() -> void:
 		var chip: Button = Button.new()
 		chip.name = "Chip%d" % _chips.get_child_count()
 		chip.toggle_mode = true
+		chip.theme_type_variation = &"ChoiceChip"
 		chip.text = option.nickname
 		chip.set_meta(&"code", option.option_id)
 		chip.custom_minimum_size = Vector2(_target, _target)
@@ -369,7 +401,9 @@ func _wave() -> bool:
 
 func _size_buttons() -> void:
 	for node: Node in find_children("*", "Button", true, false):
-		(node as Button).custom_minimum_size = Vector2(_target, _target)
+		var b: Button = node as Button
+		# Never smaller than the band target; picture tiles keep their larger size (F097).
+		b.custom_minimum_size = Vector2(maxf(b.custom_minimum_size.x, _target), maxf(b.custom_minimum_size.y, _target))
 
 
 static func _clear(container: Node) -> void:

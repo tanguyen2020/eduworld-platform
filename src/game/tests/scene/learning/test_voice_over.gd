@@ -97,3 +97,19 @@ func test_no_recording_shows_caption() -> void:
 	v.call("present", VIETNAMESE, null, true)
 	assert_bool(bool(v.call("is_caption_visible"))).is_true()
 	assert_str(String(v.call("icon_name"))).is_equal("sound_off")
+
+
+## F097-AC-04 (F096-3): when the renderer shows the stem in its question card, the voice-over never repeats it as a
+## caption — in any band, muted or not, with or without a recording — and still plays the clip.
+func test_stem_on_screen_never_repeats_the_stem_as_caption() -> void:
+	AudioServer.set_bus_mute(_voice_bus, true)
+	var v: PanelContainer = _voice()
+	v.set("always_caption", true)
+	v.set("stem_on_screen", true)
+	v.call("present", VIETNAMESE, null, true)
+	assert_bool(bool(v.call("is_caption_visible"))).is_false()
+	assert_bool(v.visible).is_false()
+	AudioServer.set_bus_mute(_voice_bus, false)
+	v.call("present", VIETNAMESE, _tone(), true)
+	assert_bool(v.visible).is_false()
+	assert_bool(bool(v.call("is_playing"))).is_true()

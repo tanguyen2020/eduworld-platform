@@ -27,7 +27,7 @@ func test_wrong_answer_shows_cross_text_option_feedback_and_explanation() -> voi
 	var panel: PanelContainer = _node("VerdictPanel") as PanelContainer
 	assert_bool(panel.visible).is_true()
 	assert_str(String(panel.theme_type_variation)).is_equal("FeedbackIncorrectPanel")
-	assert_object((_node("Icon") as TextureRect).texture).is_equal(preload("res://resources/ui/icons/cross.svg"))
+	assert_object((_node("Icon") as TextureRect).texture).is_equal(preload("res://resources/ui/icons/verdict_try.svg"))
 	assert_str(String(strip.call("verdict_text"))).is_equal(tr("ui.feedback.incorrect"))
 	assert_str(String(strip.call("verdict_icon"))).is_equal("incorrect")
 	var feedback: RichTextLabel = _node("FeedbackText") as RichTextLabel
@@ -61,10 +61,15 @@ func test_feedback_panels_come_from_the_generated_theme() -> void:
 	var theme: Theme = load(UiTokens.THEME_PATHS["g4_5"]) as Theme
 	for variation: String in ["FeedbackCorrectPanel", "FeedbackIncorrectPanel", "FeedbackLabel"]:
 		assert_bool(theme.get_type_variation_base(variation) != &"").override_failure_message(variation).is_true()
+	# F097: soft panels with a border in the verdict colour; a wrong answer is warm orange, never a punishing red.
 	var correct: StyleBoxFlat = theme.get_stylebox("panel", "FeedbackCorrectPanel") as StyleBoxFlat
 	assert_object(correct).is_not_null()
-	assert_bool(correct.bg_color.is_equal_approx(UiTokens.COLOR_FEEDBACK_CORRECT)).is_true()
-	assert_bool(theme.get_color("font_color", "FeedbackLabel").is_equal_approx(UiTokens.COLOR_TEXT_ON_ACCENT)).is_true()
+	assert_bool(correct.bg_color.is_equal_approx(UiTokens.COMPONENT_FEEDBACK_CORRECT_BG)).is_true()
+	assert_bool(correct.border_color.is_equal_approx(UiTokens.COMPONENT_FEEDBACK_CORRECT_BORDER)).is_true()
+	var wrong: StyleBoxFlat = theme.get_stylebox("panel", "FeedbackIncorrectPanel") as StyleBoxFlat
+	assert_bool(wrong.bg_color.is_equal_approx(UiTokens.COMPONENT_FEEDBACK_TRY_BG)).is_true()
+	assert_bool(wrong.bg_color.is_equal_approx(UiTokens.COLOR_FEEDBACK_INCORRECT)).is_false()
+	assert_bool(theme.get_color("font_color", "FeedbackLabel").is_equal_approx(UiTokens.COMPONENT_FEEDBACK_TEXT)).is_true()
 
 
 func test_clear_hides_the_strip() -> void:

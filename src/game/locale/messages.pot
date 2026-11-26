@@ -12,6 +12,12 @@ msgstr ""
 msgid "ui.activity_player.check"
 msgstr ""
 
+msgid "ui.activity_player.coach_cheer"
+msgstr ""
+
+msgid "ui.activity_player.coach_cheer_hint"
+msgstr ""
+
 msgid "ui.activity_player.continue"
 msgstr ""
 

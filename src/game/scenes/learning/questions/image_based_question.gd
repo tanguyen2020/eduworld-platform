@@ -35,6 +35,7 @@ func _build() -> void:
 	if model.interaction != ImageBasedAnswer.INTERACTION_LABEL:
 		return
 	var tray: HFlowContainer = HFlowContainer.new()
+	tray.theme_type_variation = &"AnswerFlow"
 	box.add_child(tray)
 	var raw: Variant = item.render_payload.get("labels", [])
 	for l: Variant in (raw as Array if raw is Array else []):
@@ -43,7 +44,9 @@ func _build() -> void:
 			continue
 		var b: DropButton = DropButton.new()
 		b.toggle_mode = true
-		b.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+		_style_tile(b, label_buttons.size())
+		b.autowrap_mode = TextServer.AUTOWRAP_OFF
+		b.size_flags_horizontal = Control.SIZE_FILL
 		b.text = _plain((l as Dictionary).get("content"))
 		b.drag_source_id = id
 		b.pressed.connect(model.tap_label.bind(id))

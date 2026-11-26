@@ -218,6 +218,94 @@
       "border": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Rounded loading bar outline." },
       "height": { "$type": "dimension", "$value": "{size.space.24}", "$description": "Rounded loading bar height." }
     },
+    "answer_tile": {
+      "bg_1": { "$type": "color", "$value": "{palette.sky.100}", "$description": "Answer tile 1 background (blue tint, F097)." },
+      "accent_1": { "$type": "color", "$value": "{palette.blue.600}", "$description": "Answer tile 1 border, number badge and selected fill (blue, F097)." },
+      "bg_2": { "$type": "color", "$value": "{palette.orange.50}", "$description": "Answer tile 2 background (orange tint, F097)." },
+      "accent_2": { "$type": "color", "$value": "{palette.orange.700}", "$description": "Answer tile 2 border, number badge and selected fill (orange, F097)." },
+      "bg_3": { "$type": "color", "$value": "{palette.green.50}", "$description": "Answer tile 3 background (green tint, F097)." },
+      "accent_3": { "$type": "color", "$value": "{palette.green.700}", "$description": "Answer tile 3 border, number badge and selected fill (green, F097)." },
+      "bg_4": { "$type": "color", "$value": "{palette.violet.50}", "$description": "Answer tile 4 background (violet tint, F097)." },
+      "accent_4": { "$type": "color", "$value": "{palette.violet.700}", "$description": "Answer tile 4 border, number badge and selected fill (violet, F097)." },
+      "bg_5": { "$type": "color", "$value": "{palette.pink.50}", "$description": "Answer tile 5 background (pink tint, F097)." },
+      "accent_5": { "$type": "color", "$value": "{palette.pink.700}", "$description": "Answer tile 5 border, number badge and selected fill (pink, F097)." },
+      "bg_6": { "$type": "color", "$value": "{palette.teal.50}", "$description": "Answer tile 6 background (teal tint, F097)." },
+      "accent_6": { "$type": "color", "$value": "{palette.teal.700}", "$description": "Answer tile 6 border, number badge and selected fill (teal, F097)." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Answer tile label on its tint.",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.answer_tile.bg_1", "level": "normal" },
+          { "token": "component.answer_tile.bg_2", "level": "normal" },
+          { "token": "component.answer_tile.bg_3", "level": "normal" },
+          { "token": "component.answer_tile.bg_4", "level": "normal" },
+          { "token": "component.answer_tile.bg_5", "level": "normal" },
+          { "token": "component.answer_tile.bg_6", "level": "normal" }
+        ] } }
+      },
+      "text_selected": {
+        "$type": "color",
+        "$value": "{palette.white}",
+        "$description": "Answer tile label and badge number on the selected (accent) fill; the badge also shows a tick (never colour alone).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.answer_tile.accent_1", "level": "normal" },
+          { "token": "component.answer_tile.accent_2", "level": "normal" },
+          { "token": "component.answer_tile.accent_3", "level": "normal" },
+          { "token": "component.answer_tile.accent_4", "level": "normal" },
+          { "token": "component.answer_tile.accent_5", "level": "normal" },
+          { "token": "component.answer_tile.accent_6", "level": "normal" }
+        ] } }
+      },
+      "edge": { "$type": "dimension", "$value": "{size.border.6}", "$description": "Bottom depth edge of an answer tile (candy look)." },
+      "radius": { "$type": "dimension", "$value": "{size.radius.24}", "$description": "Answer tile corner radius." },
+      "badge_size": { "$type": "dimension", "$value": "{size.icon.40}", "$description": "Number badge diameter on the left of an answer tile." }
+    },
+    "question_card": {
+      "bg": { "$type": "color", "$value": "{palette.white}", "$description": "Question card (stem + read-aloud) background (F097)." },
+      "border": { "$type": "color", "$value": "{palette.sky.300}", "$description": "Question card border." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Question stem text (StemLabel).",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.question_card.bg", "level": "normal" }] } }
+      }
+    },
+    "drop_zone": {
+      "bg": { "$type": "color", "$value": "{palette.white}", "$description": "Drop zone / matching target background (F097)." },
+      "border": { "$type": "color", "$value": "{palette.sky.300}", "$description": "Drop zone outline." },
+      "bg_hover": { "$type": "color", "$value": "{palette.sky.100}", "$description": "Drop zone background on hover / while a card is picked." }
+    },
+    "feedback": {
+      "correct_bg": { "$type": "color", "$value": "{palette.green.50}", "$description": "Correct verdict panel background (soft, with a tick icon and words, F097)." },
+      "correct_border": { "$type": "color", "$value": "{color.feedback.correct}", "$description": "Correct verdict panel border and icon disc." },
+      "try_bg": { "$type": "color", "$value": "{palette.orange.50}", "$description": "Not-yet-correct verdict panel background: warm, never a punishing red (F097)." },
+      "try_border": { "$type": "color", "$value": "{palette.orange.700}", "$description": "Not-yet-correct verdict panel border and icon disc." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Verdict words on the soft verdict panels.",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.feedback.correct_bg", "level": "normal" },
+          { "token": "component.feedback.try_bg", "level": "normal" }
+        ] } }
+      }
+    },
+    "progress_trail": {
+      "done": { "$type": "color", "$value": "{palette.amber.400}", "$description": "Answered question: a filled star (shape, not only colour, F097)." },
+      "current": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Current question: a large ring." },
+      "todo": { "$type": "color", "$value": "{palette.white}", "$description": "Question still to do: a small hollow dot." },
+      "track": { "$type": "color", "$value": "{palette.sky.200}", "$description": "Line joining the dots." },
+      "outline": { "$type": "color", "$value": "{palette.ink.900}", "$description": "Outline of stars and dots." }
+    },
+    "activity_board": {
+      "bg": { "$type": "color", "$value": "{color.surface.panel}", "$description": "Activity player board over the sky backdrop (F097)." },
+      "border": { "$type": "color", "$value": "{palette.white}", "$description": "Activity board soft white rim." },
+      "inset": { "$type": "dimension", "$value": "{size.space.12}", "$description": "Gap between the window edge and the activity board (the sky shows around it)." }
+    },
+    "coach": {
+      "size": { "$type": "dimension", "$value": "{size.layout.120}", "$description": "Coach Mây beside the activity feedback and hints (F097)." }
+    },
     "focus_ring": {
       "color": { "$type": "color", "$value": "{color.focus}", "$description": "Focus ring color." },
       "width": { "$type": "dimension", "$value": "{size.border.4}", "$description": "Focus ring width." }

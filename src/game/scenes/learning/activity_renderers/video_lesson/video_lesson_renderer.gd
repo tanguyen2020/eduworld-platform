@@ -251,6 +251,7 @@ func open_cue_overlay(cue: Dictionary) -> void:
 		notice.text = "ui.activity_player.update_required"
 		content.add_child(notice)
 	else:
+		wire_question(question)
 		content.add_child(question)
 		question.setup(item, context)
 		question.answer_changed.connect(func(complete: bool) -> void: answer_changed.emit(complete and not question.locked))

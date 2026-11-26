@@ -50,6 +50,8 @@ func _ready() -> void:
 		EventBus.ui_closed.connect(_on_ui_closed)
 		EventBus.zone_changed.emit(area_id)
 		refresh_assignments()
+	# F097 (F096-4): markers near the camera are hidden so they never cover the player.
+	add_child(MarkerFader.new())
 	QualityManager.register_world(self)
 	QualityManager.quality_changed.connect(_on_quality_changed)
 	_on_quality_changed(QualityManager.preset)

@@ -24,10 +24,10 @@ Owner có lệnh thường trực "chốt hết": điểm thiếu được chố
 
 **Câu hỏi mở**
 
-- F096-1: S02 Tạo nhân vật — khung xem trước 3D nhỏ và nhiều khoảng trống, mẫu nhân vật chỉ có chữ (không ảnh) cho `g1_3` [Proposed: lượt UX sau, cần ảnh thumbnail mẫu từ pipeline `thumbnail_renderer`].
+- F096-1: S02 Tạo nhân vật — khung xem trước 3D nhỏ và nhiều khoảng trống, mẫu nhân vật chỉ có chữ (không ảnh) cho `g1_3` [Proposed: lượt UX sau, cần ảnh thumbnail mẫu từ pipeline `thumbnail_renderer`]. → **Đóng ở [F097](../097-student-ux-pass-2/spec.md)** (2026-11-26: sân khấu xem trước lớn + bàn xoay, mẫu là ô hình chân dung vẽ theo màu mẫu).
 - F096-2: Lồng tiếng thật cho bước hướng dẫn của Mây (`g1_3`) cần asset audio có version [Proposed: khi có asset, bước hướng dẫn phát giọng; nay phụ đề + icon theo STUDENT_GAME_UX_LEARNING §7].
-- F096-3: Phụ đề `VoiceCaption` lặp lại nguyên đề bài ngay trên đề (S16) — đúng spec F063 nhưng thừa chữ [Proposed: chỉ hiện phụ đề khi tắt tiếng/không có tai nghe, cần quyết định UX ở LEARNING].
-- F096-4: Ở điểm spawn Hub, marker Tia Sáng (cao > 1,5 m, F094-AC-13) của `quest.hub.welcome_sign` (0, 0, 12) nằm giữa camera và nhân vật, che phần thân dưới [Proposed: làm mờ/ẩn marker khi cách camera < khoảng cách tầm với — quyết định ở WORLD_RENDERING, không dời seed].
+- F096-3: Phụ đề `VoiceCaption` lặp lại nguyên đề bài ngay trên đề (S16) — đúng spec F063 nhưng thừa chữ [Proposed: chỉ hiện phụ đề khi tắt tiếng/không có tai nghe, cần quyết định UX ở LEARNING]. → **Đóng ở [F097](../097-student-ux-pass-2/spec.md)** (2026-11-26: thẻ đề là phụ đề, đề hiện một lần).
+- F096-4: Ở điểm spawn Hub, marker Tia Sáng (cao > 1,5 m, F094-AC-13) của `quest.hub.welcome_sign` (0, 0, 12) nằm giữa camera và nhân vật, che phần thân dưới [Proposed: làm mờ/ẩn marker khi cách camera < khoảng cách tầm với — quyết định ở WORLD_RENDERING, không dời seed]. → **Đóng ở [F097](../097-student-ux-pass-2/spec.md)** (2026-11-26: ẩn marker gần camera hơn 5 m và gần hơn nhân vật, WORLD_RENDERING §5.1).
 
 ## Bảng kiểm UX (trước khi sửa)
 

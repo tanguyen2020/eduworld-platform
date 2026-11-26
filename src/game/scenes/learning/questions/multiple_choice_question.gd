@@ -33,7 +33,7 @@ func _refresh() -> void:
 	for id: Variant in buttons.keys():
 		var b: Button = buttons[id] as Button
 		b.set_pressed_no_signal(model.is_selected(String(id)))
-		b.disabled = locked
+		_lock_tile(b, locked)
 
 
 func select_index(index: int) -> void:

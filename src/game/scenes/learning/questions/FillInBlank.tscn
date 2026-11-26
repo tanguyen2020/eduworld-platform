@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scenes/learning/questions/fill_in_blank_question.gd" id="1_script"]
 
 [node name="FillInBlank" type="VBoxContainer"]
+theme_type_variation = &"AnswerBox"
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_script")
@@ -10,15 +11,17 @@ script = ExtResource("1_script")
 [node name="Stem" type="VBoxContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"AnswerBox"
 
 [node name="Prompt" type="Label" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"MutedLabel"
+theme_type_variation = &"InstructionLabel"
 text = "ui.question.fill_blanks"
 autowrap_mode = 3
 
 [node name="Answers" type="VBoxContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"AnswerBox"
 size_flags_horizontal = 3

@@ -68,7 +68,10 @@ func test_single_choice_keyboard_number_selects() -> void:
 	var q: QuestionRendererBase = _scene("single_choice")
 	q.select_index(2)
 	assert_dict(_commit(q, "single_choice")).is_equal({"option_id": "o_c"})
-	assert_str(((q.get("buttons") as Dictionary)["o_a"] as Button).text).starts_with("1. ")
+	# F097: the keyboard number is the tile's badge, not a text prefix.
+	var first: Button = (q.get("buttons") as Dictionary)["o_a"] as Button
+	assert_str(first.text).is_equal("9 quả")
+	assert_int((first.get_node("Badge") as AnswerBadge).number).is_equal(1)
 
 
 func test_multiple_choice() -> void:
@@ -174,7 +177,11 @@ func test_locked_question_ignores_input() -> void:
 	var q: QuestionRendererBase = _scene("single_choice")
 	q.select_index(0)
 	q.set_locked(true)
-	assert_bool(((q.get("buttons") as Dictionary)["o_b"] as Button).disabled).is_true()
+	# F097: a locked tile keeps its look (the chosen one stays selected) but takes no click, tap or focus.
+	var other: Button = (q.get("buttons") as Dictionary)["o_b"] as Button
+	assert_int(other.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
+	assert_int(other.focus_mode).is_equal(Control.FOCUS_NONE)
+	assert_bool(((q.get("buttons") as Dictionary)["o_a"] as Button).button_pressed).is_true()
 	assert_bool(q.commit()).is_false()
 
 

@@ -7,6 +7,10 @@ extends Control
 ## the attempt language (+ "no translation" label, F063-AC-13), progress, server-clock countdown refreshed once per
 ## second (P-6). Keys: Enter, Esc, H, R, 1–6, Tab (focus). UI glue only: every decision is the server's or the
 ## service's (AGENTS R1, R5); no answer or payload is logged or written to disk.
+## F097 (STUDENT_GAME_UX_LEARNING §3.3, §3.7): the player is a board over the sky backdrop; the header shows a
+## question trail (stars / ring / dots) beside "1/11"; the stem lives in the renderer's question card (no caption
+## repeating it, F096-3); the coach Mây sits bottom-left with a speech bubble holding the cheer, the verdict (icon
+## + words, kind wording), the hint button and errors; the main button is bottom-right with an icon.
 
 signal closed()
 
@@ -27,6 +31,12 @@ const BAND_NO_CLOCK: String = "g1_3"
 const TIMED_KEY: String = "ui.common.timed"
 ## Codes after which the attempt can no longer be answered: the player goes to the result flow.
 const CLOSED_CODES: PackedStringArray = ["ATTEMPT_EXPIRED", "ATTEMPT_NOT_IN_PROGRESS", "ATTEMPT_ALREADY_SUBMITTED"]
+## F097: the coach's cheer when the bubble has nothing else to say (with / without the hint button).
+const CHEER_KEY: String = "ui.activity_player.coach_cheer"
+const CHEER_HINT_KEY: String = "ui.activity_player.coach_cheer_hint"
+## F097: icon of the main button per action (icon + words, STUDENT_GAME_UX_LEARNING §3.7).
+const ICON_CHECK: Texture2D = preload("res://resources/ui/icons/check.svg")
+const ICON_NEXT: Texture2D = preload("res://resources/ui/icons/next_light.svg")
 
 ## WorldRoot holds the break reminder while a learning screen is open (F062-AC-22).
 var blocks_break_reminder: bool = true
@@ -53,6 +63,11 @@ var _flushing: bool = false
 @onready var _title: Label = %Title
 @onready var _no_translation: Label = %NoTranslation
 @onready var _progress: Label = %Progress
+@onready var _trail: ProgressTrail = %Trail
+@onready var _frame: PanelContainer = %Frame
+@onready var _coach: CloudyMascot = %Coach
+@onready var _coach_line: Label = %CoachLine
+@onready var _action_row: HBoxContainer = %ActionRow
 @onready var _clock: Label = %Clock
 @onready var _offline: Label = %Offline
 @onready var _voice: PanelContainer = %VoiceOver
@@ -76,6 +91,12 @@ var _flushing: bool = false
 
 func _ready() -> void:
 	visible = false
+	# F097: the sky shows around the board (component.activity_board.inset).
+	var inset: float = float(UiTokens.COMPONENT_ACTIVITY_BOARD_INSET)
+	_frame.offset_left = inset
+	_frame.offset_top = inset
+	_frame.offset_right = -inset
+	_frame.offset_bottom = -inset
 	_exit.pressed.connect(ask_exit)
 	_primary.pressed.connect(press_primary)
 	_retry.pressed.connect(_on_retry_pressed)
@@ -167,6 +188,7 @@ func present(attempt: AttemptModel) -> void:
 	renderer.progress_reported.connect(_on_progress_reported)
 	renderer.finish_requested.connect(_on_finish_requested)
 	renderer.run_submitted.connect(_on_run_submitted)
+	renderer.read_aloud_requested.connect(_on_read_aloud_requested)
 	if renderer.has_signal("template_load_failed"):
 		renderer.connect("template_load_failed", _on_template_load_failed.bind(attempt.activity_type))
 	_set_state(State.PRESENTING)
@@ -222,11 +244,14 @@ func _apply_result(result: ResponseResultModel) -> void:
 	last_result = result
 	renderer.show_result(result)
 	_feedback.call("show_result", result, context.math)
+	if result.has_verdict:
+		_coach.mood = CloudyMascot.Mood.HAPPY if result.is_correct else CloudyMascot.Mood.ENCOURAGE
 	_set_state(State.FEEDBACK)
 
 
 func _next() -> void:
 	_feedback.call("clear")
+	_coach.mood = CloudyMascot.Mood.NEUTRAL
 	if renderer != null and renderer.advance():
 		_set_state(State.PRESENTING)
 		return
@@ -256,6 +281,7 @@ func _show_results(after_submit: bool) -> void:
 	_clear_body()
 	# F096: the result screen has no question position ("1/11" belonged to the questions).
 	_progress.text = ""
+	_trail.set_progress(0, 0)
 	result_view = RESULT_SCENE.instantiate() as Control
 	_body.add_child(result_view)
 	result_view.connect("practice_requested", _on_practice_requested)
@@ -292,6 +318,9 @@ func _on_item_shown(position: int) -> void:
 	_hints.call("configure", attempt.hints_allowed(), item.hint_count, attempt.hints_revealed(position))
 	var p: Vector2i = renderer.progress()
 	_progress.text = "%d/%d" % [p.x, p.y]
+	_trail.set_progress(p.x, p.y)
+	_trail.visible = p.y > 1
+	_coach.mood = CloudyMascot.Mood.NEUTRAL
 	_present_voice(item)
 	_render_action_bar()
 
@@ -300,12 +329,19 @@ func _present_voice(item: QuestionRenderModel) -> void:
 	var caption: String = RichText.plain_text(item.stem(), context)
 	var url: String = item.voice_url()
 	_voice.set("always_caption", context.auto_voice)
+	# F096-3: the question card already shows the stem; the voice-over only plays it.
+	_voice.set("stem_on_screen", renderer != null and renderer.shows_stem())
 	_voice.call("present", caption, null, false)
 	if url.is_empty() or context.media == null:
 		return
 	var clip: AudioStream = await context.media.audio(url)
 	if clip != null and renderer != null and renderer.current_position() == item.position:
 		_voice.call("present", caption, clip, context.auto_voice)
+
+
+## "Đọc to" on the question card (F097): same as key R.
+func _on_read_aloud_requested() -> void:
+	_voice.call("replay")
 
 
 func _on_hint_requested() -> void:
@@ -318,6 +354,7 @@ func _on_hint_requested() -> void:
 	if hint != null:
 		renderer.show_hint(hint)
 		_hints.call("show_hint", hint, context.math)
+		_refresh_coach()
 		return
 	match service.last_error_code:
 		LearningService.CODE_HINTS_EXHAUSTED:
@@ -372,6 +409,7 @@ func _on_action_failed(code: String) -> void:
 	_status.visible = true
 	_action_details.set_meta("code", _details_text(code))
 	_action_details.visible = true
+	_refresh_coach()
 
 
 ## 404 / session refusal (F063-AC-11): no data of the attempt stays on screen.
@@ -508,12 +546,14 @@ func _set_state(next: State) -> void:
 	elif next == State.ERROR:
 		_details.visible = true
 	var answering: bool = next in [State.PRESENTING, State.AWAITING_RESULT, State.FEEDBACK, State.SUBMITTING, State.TIME_UP]
-	_hints.visible = answering and bool(_hints.get("allowed"))
+	# F097: after grading the bubble holds the verdict; the hint button returns with the next question.
+	_hints.visible = next in [State.PRESENTING, State.AWAITING_RESULT] and bool(_hints.get("allowed"))
 	if not answering:
 		_feedback.call("clear")
 		_voice.visible = false
 	if next == State.TIME_UP:
 		_status.text = "ui.activity_player.time_up"
+	_trail.visible = answering and _trail.total > 1
 	_render_action_bar()
 
 
@@ -526,23 +566,38 @@ func _render_action_bar() -> void:
 		State.PRESENTING:
 			_primary.visible = renderer == null or renderer.wants_action_bar()
 			_primary.text = "ui.activity_player.check"
+			_primary.icon = ICON_CHECK
 			var complete: bool = renderer != null and renderer.is_answer_complete()
 			_primary.disabled = not complete
-			if not complete and renderer != null and not renderer.current_item_unsupported() and _primary.visible:
-				_status.text = "ui.question.select_answer"
-				_status.visible = true
+			# F097: "Chọn một đáp án" is the question's own instruction; the bar does not repeat it.
 		State.FEEDBACK:
 			_primary.disabled = false
 			_primary.text = "ui.activity_player.finish" if renderer != null and renderer.is_last() \
 					else "ui.activity_player.next"
+			_primary.icon = ICON_NEXT
 			_status.visible = false
 		State.AWAITING_RESULT, State.SUBMITTING:
 			_primary.disabled = true
 			_primary.text = "ui.activity_player.waiting"
+			_primary.icon = null
 			_status.visible = false
 		State.TIME_UP:
 			_primary.disabled = true
 			_status.visible = true
+	_refresh_coach()
+
+
+## The coach row (F097): Mây + bubble while answering. The bubble shows the verdict, the hint and errors; when it has
+## nothing else it cheers ("Em làm được mà!", with "bấm Gợi ý" when hints are allowed) — never a countdown, a streak
+## or a comparison (AGENTS R19, NFR-SAFE-003).
+func _refresh_coach() -> void:
+	var answering: bool = state in [State.PRESENTING, State.AWAITING_RESULT, State.FEEDBACK, State.SUBMITTING,
+			State.TIME_UP]
+	(_coach.get_parent() as Control).visible = answering
+	_action_row.visible = _status.visible or _action_details.visible
+	var busy: bool = _feedback.visible or _action_row.visible or bool(_hints.call("is_showing_hint"))
+	_coach_line.visible = not busy
+	_coach_line.text = CHEER_HINT_KEY if _hints.visible else CHEER_KEY
 
 
 func _set_header(title: String, translation_missing: bool) -> void:

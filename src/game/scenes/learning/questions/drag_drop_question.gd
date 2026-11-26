@@ -20,7 +20,8 @@ func _build() -> void:
 	_add_stem(%Stem as Control)
 	var model: DragDropAnswer = answer as DragDropAnswer
 	var box: VBoxContainer = %Answers as VBoxContainer
-	var zone_row: HBoxContainer = HBoxContainer.new()
+	var zone_row: GridContainer = GridContainer.new()
+	zone_row.theme_type_variation = &"AnswerGrid"
 	box.add_child(zone_row)
 	var raw_zones: Variant = item.render_payload.get("zones", [])
 	for z: Variant in (raw_zones as Array if raw_zones is Array else []):
@@ -28,6 +29,8 @@ func _build() -> void:
 		if not id in model.zones:
 			continue
 		var b: DropButton = DropButton.new()
+		# F097: a drop zone is a white rounded target; the cards are colourful tiles.
+		b.theme_type_variation = &"DropZone"
 		b.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -37,7 +40,9 @@ func _build() -> void:
 		zone_labels[id] = context.text((z as Dictionary).get("label"))
 		zone_row.add_child(b)
 		zones[id] = b
+	zone_row.columns = maxi(zones.size(), 1)
 	var tray: HFlowContainer = HFlowContainer.new()
+	tray.theme_type_variation = &"AnswerFlow"
 	box.add_child(tray)
 	var raw_cards: Variant = item.render_payload.get("draggables", [])
 	for c: Variant in (raw_cards as Array if raw_cards is Array else []):
@@ -45,8 +50,11 @@ func _build() -> void:
 		if not id in model.draggables:
 			continue
 		var b: DropButton = DropButton.new()
-		b.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 		b.toggle_mode = true
+		_style_tile(b, cards.size())
+		# A card in the tray is as wide as its words (no wrapping inside a flow row).
+		b.autowrap_mode = TextServer.AUTOWRAP_OFF
+		b.size_flags_horizontal = Control.SIZE_FILL
 		b.drag_source_id = id
 		b.pressed.connect(_on_card_pressed.bind(id))
 		card_labels[id] = _plain((c as Dictionary).get("content"))

@@ -1,10 +1,17 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scenes/learning/activity_host.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/learning/FeedbackStrip.tscn" id="2_feedback"]
 [ext_resource type="PackedScene" path="res://scenes/learning/HintPanel.tscn" id="3_hints"]
 [ext_resource type="PackedScene" path="res://scenes/learning/VoiceOverPlayer.tscn" id="4_voice"]
 [ext_resource type="PackedScene" path="res://scenes/learning/WorkedExampleOverlay.tscn" id="5_worked"]
+[ext_resource type="Script" path="res://scenes/ui/components/sky_backdrop.gd" id="6_sky"]
+[ext_resource type="Script" path="res://scenes/ui/components/progress_trail.gd" id="7_trail"]
+[ext_resource type="Script" path="res://scenes/ui/components/cloudy_mascot.gd" id="8_mascot"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/exit.svg" id="9_exit"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/check.svg" id="10_check"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/next_light.svg" id="11_play"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/pause.svg" id="12_pause"]
 
 [node name="ActivityHost" type="Control"]
 layout_mode = 3
@@ -15,6 +22,16 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
+[node name="Backdrop" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_sky")
+
 [node name="Frame" type="PanelContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
@@ -23,17 +40,21 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ActivityBoard"
 
 [node name="Layout" type="VBoxContainer" parent="Frame"]
 layout_mode = 2
+theme_type_variation = &"AnswerBox"
 
 [node name="Header" type="HBoxContainer" parent="Frame/Layout"]
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 
 [node name="Exit" type="Button" parent="Frame/Layout/Header"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SecondaryButton"
+icon = ExtResource("9_exit")
 text = "ui.activity_player.exit"
 
 [node name="Title" type="Label" parent="Frame/Layout/Header"]
@@ -51,9 +72,19 @@ layout_mode = 2
 theme_type_variation = &"MutedLabel"
 text = "ui.learning.no_translation"
 
+[node name="Trail" type="Control" parent="Frame/Layout/Header"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("7_trail")
+
 [node name="Progress" type="Label" parent="Frame/Layout/Header"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"InstructionLabel"
 auto_translate_mode = 2
 
 [node name="Clock" type="Label" parent="Frame/Layout/Header"]
@@ -98,6 +129,7 @@ horizontal_alignment = 1
 
 [node name="StateButtons" type="HBoxContainer" parent="Frame/Layout/StatePanel"]
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 alignment = 1
 
 [node name="Back" type="Button" parent="Frame/Layout/StatePanel/StateButtons"]
@@ -124,36 +156,75 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="FeedbackStrip" parent="Frame/Layout" instance=ExtResource("2_feedback")]
+[node name="Bottom" type="HBoxContainer" parent="Frame/Layout"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="Coach" type="Control" parent="Frame/Layout/Bottom"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 2
+script = ExtResource("8_mascot")
+bubble_tail = false
+compact = true
+side_tail = true
+
+[node name="Bubble" type="PanelContainer" parent="Frame/Layout/Bottom"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"SpeechBubble"
+
+[node name="BubbleBox" type="VBoxContainer" parent="Frame/Layout/Bottom/Bubble"]
+layout_mode = 2
+theme_type_variation = &"FieldBox"
+
+[node name="CoachLine" type="Label" parent="Frame/Layout/Bottom/Bubble/BubbleBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SpeechBubbleLabel"
+text = "ui.activity_player.coach_cheer"
+autowrap_mode = 3
+
+[node name="FeedbackStrip" parent="Frame/Layout/Bottom/Bubble/BubbleBox" instance=ExtResource("2_feedback")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HintPanel" parent="Frame/Layout" instance=ExtResource("3_hints")]
+[node name="HintPanel" parent="Frame/Layout/Bottom/Bubble/BubbleBox" instance=ExtResource("3_hints")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="ActionBar" type="HBoxContainer" parent="Frame/Layout"]
+[node name="ActionRow" type="HBoxContainer" parent="Frame/Layout/Bottom/Bubble/BubbleBox"]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 
-[node name="Status" type="Label" parent="Frame/Layout/ActionBar"]
+[node name="Status" type="Label" parent="Frame/Layout/Bottom/Bubble/BubbleBox/ActionRow"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"MutedLabel"
+theme_type_variation = &"SpeechBubbleLabel"
 autowrap_mode = 3
 
-[node name="ActionDetails" type="Button" parent="Frame/Layout/ActionBar"]
+[node name="ActionDetails" type="Button" parent="Frame/Layout/Bottom/Bubble/BubbleBox/ActionRow"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_type_variation = &"SecondaryButton"
 text = "ui.activity_player.details"
 
-[node name="Primary" type="Button" parent="Frame/Layout/ActionBar"]
+[node name="ActionBar" type="VBoxContainer" parent="Frame/Layout/Bottom"]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="Primary" type="Button" parent="Frame/Layout/Bottom/ActionBar"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 10
+icon = ExtResource("10_check")
 text = "ui.activity_player.check"
 
 [node name="ExitConfirm" type="PanelContainer" parent="."]
@@ -162,33 +233,51 @@ visible = false
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.25
-anchor_top = 0.35
+anchor_top = 0.3
 anchor_right = 0.75
-anchor_bottom = 0.65
+anchor_bottom = 0.7
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"FormCard"
 
 [node name="Box" type="VBoxContainer" parent="ExitConfirm"]
 layout_mode = 2
+theme_type_variation = &"FormBox"
+alignment = 1
 
-[node name="Body" type="Label" parent="ExitConfirm/Box"]
+[node name="Row" type="HBoxContainer" parent="ExitConfirm/Box"]
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="ConfirmMascot" type="Control" parent="ExitConfirm/Box/Row"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("8_mascot")
+bubble_tail = false
+compact = true
+
+[node name="Body" type="Label" parent="ExitConfirm/Box/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "ui.activity_player.pause_confirm"
 autowrap_mode = 3
 
 [node name="Buttons" type="HBoxContainer" parent="ExitConfirm/Box"]
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 alignment = 1
 
 [node name="Continue" type="Button" parent="ExitConfirm/Box/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
+icon = ExtResource("11_play")
 text = "ui.activity_player.continue"
 
 [node name="Pause" type="Button" parent="ExitConfirm/Box/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SecondaryButton"
+icon = ExtResource("12_pause")
 text = "ui.activity_player.pause"
 
 [node name="WorkedExample" parent="." instance=ExtResource("5_worked")]

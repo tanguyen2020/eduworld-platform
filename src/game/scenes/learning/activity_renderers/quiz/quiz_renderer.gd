@@ -34,6 +34,7 @@ func show_index(i: int) -> void:
 		notice.text = UNSUPPORTED_KEY
 		content.add_child(notice)
 	else:
+		wire_question(question)
 		content.add_child(question)
 		question.setup(item, context)
 		question.restore(attempt.saved_response(item.position))

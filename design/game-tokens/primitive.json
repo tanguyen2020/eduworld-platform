@@ -16,7 +16,8 @@
     "sky": {
       "50": { "$value": "#F2F5FB", "$description": "Alternative panel background." },
       "100": { "$value": "#E8F0FF", "$description": "Hint / caption background." },
-      "200": { "$value": "#CFE0FF", "$description": "Progress track." }
+      "200": { "$value": "#CFE0FF", "$description": "Progress track." },
+      "300": { "$value": "#9DBFF5", "$description": "Answer tile depth edge and drop zone outline on light surfaces (F097)." }
     },
     "blue": {
       "600": { "$value": "#2457D6", "$description": "Primary button background." },
@@ -24,6 +25,7 @@
       "800": { "$value": "#0B3FB8", "$description": "High contrast primary." }
     },
     "green": {
+      "50": { "$value": "#E8F6EE", "$description": "Soft correct feedback background, green answer tile (F097)." },
       "300": { "$value": "#9BD77A", "$description": "Near hill on the sky backdrop (S01 login)." },
       "400": { "$value": "#6DBE5A", "$description": "Floating island grass on the sky backdrop." },
       "700": { "$value": "#1B7F45", "$description": "Correct feedback background." }
@@ -33,7 +35,9 @@
       "700": { "$value": "#C62828", "$description": "Incorrect feedback background." }
     },
     "pink": {
-      "200": { "$value": "#FFB8C9", "$description": "Cheeks of the guide Mây (Cloudy)." }
+      "50": { "$value": "#FDECF3", "$description": "Pink answer tile background (F097)." },
+      "200": { "$value": "#FFB8C9", "$description": "Cheeks of the guide Mây (Cloudy)." },
+      "700": { "$value": "#C2255C", "$description": "Pink answer tile accent (F097)." }
     },
     "sand": {
       "200": { "$value": "#F4D9A6", "$description": "Floating island rock, lit side." },
@@ -46,7 +50,16 @@
       "400": { "$value": "#FFD43B", "$description": "XP badge, reward accent." },
       "200": { "$value": "#FFE08A", "$description": "Soft warning accent." }
     },
+    "orange": {
+      "50": { "$value": "#FFF1E8", "$description": "Orange answer tile and gentle try-again feedback background (F097)." },
+      "700": { "$value": "#C2410C", "$description": "Orange answer tile accent, try-again feedback border and icon (F097)." }
+    },
+    "teal": {
+      "50": { "$value": "#E3F5F8", "$description": "Teal answer tile background (F097)." },
+      "700": { "$value": "#0B7285", "$description": "Teal answer tile accent (F097)." }
+    },
     "violet": {
+      "50": { "$value": "#F2ECFF", "$description": "Violet answer tile background (F097)." },
       "700": { "$value": "#6D28D9", "$description": "Hint button background." }
     },
     "yellow": {
@@ -180,12 +193,16 @@
       "44": { "$value": "44px", "$description": "Control height 44." },
       "48": { "$value": "48px", "$description": "Control height 48." },
       "56": { "$value": "56px", "$description": "Control height 56." },
-      "64": { "$value": "64px", "$description": "Control height 64." }
+      "64": { "$value": "64px", "$description": "Control height 64." },
+      "72": { "$value": "72px", "$description": "Control height 72 (answer tile g6_7, F097)." },
+      "80": { "$value": "80px", "$description": "Control height 80 (answer tile g4_5, F097)." },
+      "88": { "$value": "88px", "$description": "Control height 88 (answer tile g1_3, F097)." }
     },
     "border": {
       "2": { "$value": "2px", "$description": "Border 2." },
       "3": { "$value": "3px", "$description": "Border 3." },
       "4": { "$value": "4px", "$description": "Border 4 (focus, high contrast)." },
+      "6": { "$value": "6px", "$description": "Border 6 (bottom depth edge of answer tiles, F097)." },
       "8": { "$value": "8px", "$description": "Border 8 (sticker outline of the logo wordmark)." }
     },
     "icon": {
@@ -193,6 +210,7 @@
       "40": { "$value": "40px", "$description": "Icon 40 (checkbox box)." }
     },
     "layout": {
+      "120": { "$value": "120px", "$description": "Layout 120 (coach Mây beside the activity feedback, F097)." },
       "200": { "$value": "200px", "$description": "Layout 200 (mascot illustration)." },
       "280": { "$value": "280px", "$description": "Layout 280 (side column beside a centred form)." },
       "660": { "$value": "660px", "$description": "Layout 660 (form card width: the S01 hint fits one line)." }

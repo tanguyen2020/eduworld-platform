@@ -14,6 +14,12 @@ msgstr "[!! Ɓáçķ ~~ !!]"
 msgid "ui.activity_player.check"
 msgstr "[!! Çĥëçķ ~~ !!]"
 
+msgid "ui.activity_player.coach_cheer"
+msgstr "[!! Ýöü çáñ đö ïţ! ~~~~~~ !!]"
+
+msgid "ui.activity_player.coach_cheer_hint"
+msgstr "[!! Ýöü çáñ đö ïţ! Ţáþ Ĥïñţ ïƒ ýöü ñëëđ ĥëĺþ. ~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.activity_player.continue"
 msgstr "[!! Ķëëþ ğöïñğ ~~~~ !!]"
 
@@ -549,10 +555,10 @@ msgid "ui.exam.view_result"
 msgstr "[!! Šëë ŕëšüĺţ ~~~~ !!]"
 
 msgid "ui.feedback.correct"
-msgstr "[!! Çöŕŕëçţ! ~~~~ !!]"
+msgstr "[!! Ţĥáţ'š ŕïğĥţ! Ğŕëáţ ĵöƀ! ~~~~~~~~~~ !!]"
 
 msgid "ui.feedback.incorrect"
-msgstr "[!! Ñöţ qüïţë — ĺëţ'š ĺööķ áğáïñ. ~~~~~~~~~~~~ !!]"
+msgstr "[!! Ñöţ qüïţë. Ţĥáţ'š öķáý, ĺëţ'š ĺööķ áţ ïţ ţöğëţĥëŕ! ~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.feedback.saved"
 msgstr "[!! Ýöüŕ áñšŵëŕ ïš šávëđ. ~~~~~~~~~ !!]"

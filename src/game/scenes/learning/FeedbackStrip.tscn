@@ -1,8 +1,10 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/learning/feedback_strip.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/verdict_correct.svg" id="2_correct"]
 
 [node name="FeedbackStrip" type="VBoxContainer"]
+theme_type_variation = &"FieldBox"
 script = ExtResource("1_script")
 
 [node name="VerdictPanel" type="PanelContainer" parent="."]
@@ -12,11 +14,13 @@ theme_type_variation = &"FeedbackCorrectPanel"
 
 [node name="Row" type="HBoxContainer" parent="VerdictPanel"]
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 
 [node name="Icon" type="TextureRect" parent="VerdictPanel/Row"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
+texture = ExtResource("2_correct")
 expand_mode = 1
 stretch_mode = 5
 
@@ -28,34 +32,38 @@ theme_type_variation = &"FeedbackLabel"
 text = "ui.feedback.correct"
 autowrap_mode = 3
 
-[node name="Details" type="PanelContainer" parent="."]
+[node name="Details" type="HBoxContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 
-[node name="Box" type="VBoxContainer" parent="Details"]
+[node name="Texts" type="VBoxContainer" parent="Details"]
 layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"FieldBox"
 
-[node name="Saved" type="Label" parent="Details/Box"]
+[node name="Saved" type="Label" parent="Details/Texts"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"SpeechBubbleLabel"
 text = "ui.feedback.saved"
 autowrap_mode = 3
 
-[node name="FeedbackText" type="RichTextLabel" parent="Details/Box"]
+[node name="FeedbackText" type="RichTextLabel" parent="Details/Texts"]
 unique_name_in_owner = true
 layout_mode = 2
 fit_content = true
 auto_translate_mode = 2
 
-[node name="Explanation" type="RichTextLabel" parent="Details/Box"]
+[node name="Explanation" type="RichTextLabel" parent="Details/Texts"]
 unique_name_in_owner = true
 layout_mode = 2
 fit_content = true
 auto_translate_mode = 2
 
-[node name="WorkedExample" type="Button" parent="Details/Box"]
+[node name="WorkedExample" type="Button" parent="Details"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 0
+size_flags_vertical = 4
 theme_type_variation = &"SecondaryButton"
 text = "ui.feedback.worked_example"

@@ -28,6 +28,9 @@ signal answer_changed(complete: bool)
 ## The item now on screen (host refreshes progress, hints and voice-over).
 @warning_ignore("unused_signal")
 signal item_shown(position: int)
+## F097: "Đọc to" pressed on the question card (the host replays the recorded stem).
+@warning_ignore("unused_signal")
+signal read_aloud_requested()
 
 var attempt: AttemptModel = null
 var context: RendererContext = null
@@ -36,6 +39,17 @@ var context: RendererContext = null
 func setup(attempt_model: AttemptModel, ctx: RendererContext) -> void:
 	attempt = attempt_model
 	context = ctx
+
+
+## Prepares a question scene before its `setup` (F097): its "Đọc to" button reports to the host.
+func wire_question(q: QuestionRendererBase) -> void:
+	q.read_aloud_enabled = true
+	q.read_aloud_requested.connect(func() -> void: read_aloud_requested.emit())
+
+
+## Whether the question stem is drawn on screen (F096-3: the host then shows no caption repeating it).
+func shows_stem() -> bool:
+	return get("question") is QuestionRendererBase
 
 
 ## "Kiểm tra" pressed: emits `response_submitted` when the answer is complete; false otherwise.

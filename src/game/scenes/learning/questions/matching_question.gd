@@ -14,12 +14,14 @@ func _make_answer() -> AnswerModel:
 
 func _build() -> void:
 	_add_stem(%Stem as Control)
-	var columns: HBoxContainer = %Answers as HBoxContainer
+	var columns: GridContainer = %Answers as GridContainer
 	var model: MatchingAnswer = answer as MatchingAnswer
 	var left_col: VBoxContainer = VBoxContainer.new()
 	var right_col: VBoxContainer = VBoxContainer.new()
 	left_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_col.theme_type_variation = &"AnswerBox"
+	right_col.theme_type_variation = &"AnswerBox"
 	columns.add_child(left_col)
 	columns.add_child(right_col)
 	var n: int = 1
@@ -31,6 +33,7 @@ func _build() -> void:
 		b.dropped.connect(_on_dropped)
 		b.pressed.connect(model.tap_right.bind(id))
 		_style(b)
+		b.theme_type_variation = &"DropZone"
 		right_col.add_child(b)
 		right_buttons[id] = b
 		right_numbers[id] = char(64 + n)
@@ -42,7 +45,7 @@ func _build() -> void:
 		b.drag_source_id = id
 		b.set_meta("label", _plain(entry.get("content")))
 		b.pressed.connect(model.tap_left.bind(id))
-		_style(b)
+		_style_tile(b, left_buttons.size())
 		left_col.add_child(b)
 		left_buttons[id] = b
 

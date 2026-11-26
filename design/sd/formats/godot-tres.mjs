@@ -33,18 +33,20 @@ function resource(type, subs, ext, props, comment) {
 /**
  * StyleBoxFlat. `bg` omitted → `draw_center = false` (outline only: focus ring, flat buttons). `shadow` adds a
  * soft drop shadow (cards); `expand` draws the box that far outside the control (focus ring with a gap).
+ * `borderBottom` thickens the bottom edge (F097 answer tiles: candy depth); `padL` widens the left content margin
+ * (room for the number badge of an answer tile); `padT` a tall top margin (picture tiles: picture above the label).
  */
-function styleBox(id, { bg, border, borderWidth = 0, radius = 0, padH = 0, padV = 0, shadow, shadowSize = 0, expand = 0 }) {
+function styleBox(id, { bg, border, borderWidth = 0, borderBottom, radius = 0, padH = 0, padV = 0, padL, padT, shadow, shadowSize = 0, expand = 0 }) {
   const props = [
-    ['content_margin_left', gdFloat(padH)],
-    ['content_margin_top', gdFloat(padV)],
+    ['content_margin_left', gdFloat(padL ?? padH)],
+    ['content_margin_top', gdFloat(padT ?? padV)],
     ['content_margin_right', gdFloat(padH)],
     ['content_margin_bottom', gdFloat(padV)],
   ];
   if (bg === undefined) props.push(['draw_center', 'false']);
   else props.push(['bg_color', godotColor(bg)]);
   if (borderWidth > 0) {
-    for (const side of ['left', 'top', 'right', 'bottom']) props.push([`border_width_${side}`, String(borderWidth)]);
+    for (const side of ['left', 'top', 'right', 'bottom']) props.push([`border_width_${side}`, String(side === 'bottom' && borderBottom !== undefined ? borderBottom : borderWidth)]);
     props.push(['border_color', godotColor(border)]);
   }
   for (const c of ['top_left', 'top_right', 'bottom_right', 'bottom_left']) props.push([`corner_radius_${c}`, String(radius)]);
@@ -64,8 +66,8 @@ const sub = (id) => `SubResource("StyleBoxFlat_${id}")`;
  * Line height Godot gives a single line of the body font at `size` px: ascent + descent of the font file, each
  * rounded up (FreeType metrics). Used so controls reach the band's minimum height exactly.
  */
-export function bodyLineHeight(size) {
-  const font = fontkit.openSync(path.join(DESIGN_DIR, GODOT_FONTS.body.file));
+export function bodyLineHeight(size, key = 'body') {
+  const font = fontkit.openSync(path.join(DESIGN_DIR, GODOT_FONTS[key].file));
   return Math.ceil((font.ascent * size) / font.unitsPerEm) + Math.ceil((-font.descent * size) / font.unitsPerEm);
 }
 
@@ -118,6 +120,18 @@ export function formatTheme(map, band, version, label) {
   const iconBtn = { ...outlined, padH: padIcon, padV: padIcon };
   const chip = { ...outlined, padV: padIcon };
   const message = { radius: btnRadius, borderWidth: border, padH: space, padV: halfSpace };
+  // F097 activity player: answer tiles (6 colour sets), question card, drop zones, soft verdict panels.
+  const stem = n(`density.${band}.font.stem`);
+  const tileH = n(`density.${band}.answer.min_height`);
+  const tileR = n('component.answer_tile.radius');
+  const edge = n('component.answer_tile.edge');
+  const badge = n('component.answer_tile.badge_size');
+  const tilePadV = Math.max(Math.ceil((tileH - Math.min(bodyLineHeight(stem), bodyLineHeight(stem, 'bodyBold'))) / 2), 4);
+  const tile = { radius: tileR, borderWidth: border, borderBottom: edge, padH: space, padV: tilePadV, padL: space + badge + halfSpace };
+  const zone = { radius: tileR, borderWidth: border, borderBottom: edge, padH: space, padV: tilePadV };
+  const shadow = { shadow: v('component.form_card.shadow'), shadowSize: n('component.form_card.shadow_size') };
+  // Picture tile (S02 presets): the picture fills the top margin (1.5 × the band's touch target), the label below.
+  const picture = { ...chip, padH: halfSpace, padV: halfSpace, padT: Math.round(minH * 1.5) + halfSpace };
   const subs = [
     styleBox('button_normal', { ...btn, bg: v('component.button.primary.bg') }),
     styleBox('button_hover', { ...btn, bg: v('component.button.primary.bg_pressed') }),
@@ -129,8 +143,21 @@ export function formatTheme(map, band, version, label) {
     styleBox('quest_card', { bg: v('component.quest_card.bg'), radius: n('component.quest_card.radius'), padH: space, padV: space }),
     styleBox('hud', { bg: v('component.hud.bg'), radius: btnRadius, padH: space, padV: Math.round(space / 2) }),
     styleBox('voice_caption', { bg: v('component.voice_caption.bg'), radius: btnRadius, padH: space, padV: Math.round(space / 2) }),
-    styleBox('feedback_correct', { bg: v('color.feedback.correct'), radius: btnRadius, padH: space, padV: Math.round(space / 2) }),
-    styleBox('feedback_incorrect', { bg: v('color.feedback.incorrect'), radius: btnRadius, padH: space, padV: Math.round(space / 2) }),
+    styleBox('feedback_correct', { bg: v('component.feedback.correct_bg'), border: v('component.feedback.correct_border'), borderWidth: border, radius: btnRadius, padH: space, padV: Math.round(space / 2) }),
+    styleBox('feedback_incorrect', { bg: v('component.feedback.try_bg'), border: v('component.feedback.try_border'), borderWidth: border, radius: btnRadius, padH: space, padV: Math.round(space / 2) }),
+    ...[1, 2, 3, 4, 5, 6].flatMap((i) => [
+      styleBox(`tile${i}_normal`, { ...tile, bg: v(`component.answer_tile.bg_${i}`), border: v(`component.answer_tile.accent_${i}`) }),
+      styleBox(`tile${i}_hover`, { ...tile, borderWidth: border + 1, bg: v(`component.answer_tile.bg_${i}`), border: v(`component.answer_tile.accent_${i}`) }),
+      styleBox(`tile${i}_pressed`, { ...tile, bg: v(`component.answer_tile.accent_${i}`), border: v('component.progress_trail.outline') }),
+    ]),
+    styleBox('picture_normal', { ...picture, bg: v('component.button.secondary.bg') }),
+    styleBox('picture_hover', { ...picture, bg: v('component.button.secondary.bg_hover') }),
+    styleBox('picture_selected', { ...picture, bg: v('component.chip.selected_bg'), border: v('component.chip.selected_bg') }),
+    styleBox('question_card', { bg: v('component.question_card.bg'), border: v('component.question_card.border'), borderWidth: border, radius: tileR, padH: space, padV: space, ...shadow }),
+    styleBox('drop_zone', { ...zone, bg: v('component.drop_zone.bg'), border: v('component.drop_zone.border') }),
+    styleBox('drop_zone_hover', { ...zone, bg: v('component.drop_zone.bg_hover'), border: v('component.drop_zone.border') }),
+    styleBox('drop_zone_pressed', { ...zone, bg: v('component.drop_zone.bg_hover'), border: v('color.accent.primary') }),
+    styleBox('activity_board', { bg: v('component.activity_board.bg'), border: v('component.activity_board.border'), borderWidth: border, radius: n('component.panel.radius'), padH: space, padV: space, ...shadow }),
     styleBox('progress_bg', { bg: v('component.progress.track'), radius: btnRadius }),
     styleBox('progress_fill', { bg: v('component.progress.fill'), radius: btnRadius }),
     // Single-line fields are as tall as the band's minimum control height (S01: ≥ 48 px, g1_3 ≥ 64 px).
@@ -207,7 +234,75 @@ export function formatTheme(map, band, version, label) {
     ['FeedbackIncorrectPanel/base_type', '&"PanelContainer"'],
     ['FeedbackIncorrectPanel/styles/panel', sub('feedback_incorrect')],
     ['FeedbackLabel/base_type', '&"Label"'],
-    ['FeedbackLabel/colors/font_color', c('color.text.on_accent')],
+    ['FeedbackLabel/colors/font_color', c('component.feedback.text')],
+    ['FeedbackLabel/fonts/font', 'ExtResource("3_heading")'],
+    ...[1, 2, 3, 4, 5, 6].flatMap((i) => [
+      [`AnswerTile${i}/base_type`, '&"Button"'],
+      [`AnswerTile${i}/colors/font_color`, c('component.answer_tile.text')],
+      [`AnswerTile${i}/colors/font_disabled_color`, c('component.answer_tile.text')],
+      [`AnswerTile${i}/colors/font_focus_color`, c('component.answer_tile.text')],
+      [`AnswerTile${i}/colors/font_hover_color`, c('component.answer_tile.text')],
+      [`AnswerTile${i}/colors/font_hover_pressed_color`, c('component.answer_tile.text_selected')],
+      [`AnswerTile${i}/colors/font_pressed_color`, c('component.answer_tile.text_selected')],
+      [`AnswerTile${i}/constants/h_separation`, String(halfSpace)],
+      [`AnswerTile${i}/constants/icon_max_width`, String(icon)],
+      [`AnswerTile${i}/font_sizes/font_size`, String(stem)],
+      [`AnswerTile${i}/fonts/font`, 'ExtResource("2_body_bold")'],
+      [`AnswerTile${i}/styles/disabled`, sub(`tile${i}_normal`)],
+      [`AnswerTile${i}/styles/focus`, sub('focus_ring')],
+      [`AnswerTile${i}/styles/hover`, sub(`tile${i}_hover`)],
+      [`AnswerTile${i}/styles/hover_pressed`, sub(`tile${i}_pressed`)],
+      [`AnswerTile${i}/styles/normal`, sub(`tile${i}_normal`)],
+      [`AnswerTile${i}/styles/pressed`, sub(`tile${i}_pressed`)],
+    ]),
+    ['ActivityBoard/base_type', '&"PanelContainer"'],
+    ['AnswerBox/base_type', '&"VBoxContainer"'],
+    ['AnswerBox/constants/separation', String(space)],
+    ['AnswerFlow/base_type', '&"HFlowContainer"'],
+    ['AnswerFlow/constants/h_separation', String(space)],
+    ['AnswerFlow/constants/v_separation', String(space)],
+    ['AnswerGrid/base_type', '&"GridContainer"'],
+    ['AnswerGrid/constants/h_separation', String(space)],
+    ['AnswerGrid/constants/v_separation', String(space)],
+    ['ActivityBoard/styles/panel', sub('activity_board')],
+    ['DropZone/base_type', '&"Button"'],
+    ['DropZone/colors/font_color', c('component.question_card.text')],
+    ['DropZone/colors/font_disabled_color', c('component.question_card.text')],
+    ['DropZone/colors/font_focus_color', c('component.question_card.text')],
+    ['DropZone/colors/font_hover_color', c('component.question_card.text')],
+    ['DropZone/colors/font_hover_pressed_color', c('component.question_card.text')],
+    ['DropZone/colors/font_pressed_color', c('component.question_card.text')],
+    ['DropZone/constants/h_separation', String(halfSpace)],
+    ['DropZone/constants/icon_max_width', String(icon)],
+    ['DropZone/font_sizes/font_size', String(stem)],
+    ['DropZone/fonts/font', 'ExtResource("2_body_bold")'],
+    ['DropZone/styles/disabled', sub('drop_zone')],
+    ['DropZone/styles/focus', sub('focus_ring')],
+    ['DropZone/styles/hover', sub('drop_zone_hover')],
+    ['DropZone/styles/hover_pressed', sub('drop_zone_pressed')],
+    ['DropZone/styles/normal', sub('drop_zone')],
+    ['DropZone/styles/pressed', sub('drop_zone_pressed')],
+    ['InstructionLabel/base_type', '&"Label"'],
+    ['InstructionLabel/colors/font_color', c('component.text_button.text')],
+    ['InstructionLabel/fonts/font', 'ExtResource("2_body_bold")'],
+    ['PictureTile/base_type', '&"Button"'],
+    ['PictureTile/colors/font_color', c('component.button.secondary.text')],
+    ['PictureTile/colors/font_focus_color', c('component.button.secondary.text')],
+    ['PictureTile/colors/font_hover_color', c('component.button.secondary.text')],
+    ['PictureTile/colors/font_hover_pressed_color', c('component.chip.selected_text')],
+    ['PictureTile/colors/font_pressed_color', c('component.chip.selected_text')],
+    ['PictureTile/styles/disabled', sub('picture_normal')],
+    ['PictureTile/styles/focus', sub('focus_ring')],
+    ['PictureTile/styles/hover', sub('picture_hover')],
+    ['PictureTile/styles/hover_pressed', sub('picture_selected')],
+    ['PictureTile/styles/normal', sub('picture_normal')],
+    ['PictureTile/styles/pressed', sub('picture_selected')],
+    ['QuestionCard/base_type', '&"PanelContainer"'],
+    ['QuestionCard/styles/panel', sub('question_card')],
+    ['StemLabel/base_type', '&"Label"'],
+    ['StemLabel/colors/font_color', c('component.question_card.text')],
+    ['StemLabel/font_sizes/font_size', String(stem)],
+    ['StemLabel/fonts/font', 'ExtResource("3_heading")'],
     ['FieldBox/base_type', '&"VBoxContainer"'],
     ['FieldBox/constants/separation', String(space4)],
     ['FormBox/base_type', '&"VBoxContainer"'],

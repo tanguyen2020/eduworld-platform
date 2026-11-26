@@ -15,6 +15,12 @@ msgstr "Back"
 msgid "ui.activity_player.check"
 msgstr "Check"
 
+msgid "ui.activity_player.coach_cheer"
+msgstr "You can do it!"
+
+msgid "ui.activity_player.coach_cheer_hint"
+msgstr "You can do it! Tap Hint if you need help."
+
 msgid "ui.activity_player.continue"
 msgstr "Keep going"
 
@@ -550,10 +556,10 @@ msgid "ui.exam.view_result"
 msgstr "See result"
 
 msgid "ui.feedback.correct"
-msgstr "Correct!"
+msgstr "That's right! Great job!"
 
 msgid "ui.feedback.incorrect"
-msgstr "Not quite — let's look again."
+msgstr "Not quite. That's okay, let's look at it together!"
 
 msgid "ui.feedback.saved"
 msgstr "Your answer is saved."

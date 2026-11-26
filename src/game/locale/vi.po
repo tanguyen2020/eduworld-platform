@@ -15,6 +15,12 @@ msgstr "Quay lại"
 msgid "ui.activity_player.check"
 msgstr "Kiểm tra"
 
+msgid "ui.activity_player.coach_cheer"
+msgstr "Em làm được mà!"
+
+msgid "ui.activity_player.coach_cheer_hint"
+msgstr "Em làm được mà! Cần giúp thì bấm Gợi ý nhé."
+
 msgid "ui.activity_player.continue"
 msgstr "Làm tiếp"
 
@@ -550,10 +556,10 @@ msgid "ui.exam.view_result"
 msgstr "Xem kết quả"
 
 msgid "ui.feedback.correct"
-msgstr "Đúng rồi!"
+msgstr "Đúng rồi! Em giỏi quá!"
 
 msgid "ui.feedback.incorrect"
-msgstr "Chưa đúng, em xem lại nhé."
+msgstr "Chưa đúng rồi. Không sao, mình cùng xem lại nhé!"
 
 msgid "ui.feedback.saved"
 msgstr "Đã lưu câu trả lời."

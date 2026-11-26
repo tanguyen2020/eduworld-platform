@@ -67,6 +67,8 @@ const DENSITY_BANDS: Array[String] = [${DENSITY_BANDS.map((b) => `"${b}"`).join(
 const BASE_DENSITY: String = "${BASE_DENSITY}"
 ${dict('DENSITY_FONT_BASE', DENSITY_BANDS.map((b) => [b, String(Math.round(px(map.get(`density.${b}.font.base`).value)))]))}
 ${dict('DENSITY_BUTTON_MIN_HEIGHT', DENSITY_BANDS.map((b) => [b, String(Math.round(px(map.get(`density.${b}.button.min_height`).value)))]))}
+${dict('DENSITY_FONT_STEM', DENSITY_BANDS.map((b) => [b, String(Math.round(px(map.get(`density.${b}.font.stem`).value)))]))}
+${dict('DENSITY_ANSWER_MIN_HEIGHT', DENSITY_BANDS.map((b) => [b, String(Math.round(px(map.get(`density.${b}.answer.min_height`).value)))]))}
 
 # generated Theme resources
 const BASE_THEME_PATH: String = "${themeDir}/${themeFile()}"

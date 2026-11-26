@@ -13,7 +13,9 @@ const SIZES: Dictionary = {
 ## Screen name → builder method. Order follows the student journey (STUDENT_GAME_UX §11).
 const SCREENS: PackedStringArray = [
 	"splash", "login", "login_busy", "login_busy_cancel", "login_error_busy", "resume", "curfew", "character",
-	"hub", "hub_onboarding", "hub_onboarding_step2", "hub_offline", "journal", "activity", "activity_feedback",
+	"hub", "hub_onboarding", "hub_onboarding_step2", "hub_offline", "journal", "activity", "activity_selected",
+	"activity_feedback", "activity_incorrect", "activity_hint", "activity_multiple", "activity_true_false",
+	"activity_fill_blank", "activity_numeric", "activity_matching", "activity_ordering", "activity_drag_drop",
 	"result", "world_map", "settings", "about",
 ]
 ## Sample look of the local player (catalog codes of the F070 fixture; display only).
@@ -54,6 +56,10 @@ func run(args: PackedStringArray) -> int:
 	QualityManager.settings = _settings
 	QualityManager.apply_preset(QualityPolicy.MEDIUM, false)
 	AuthService.autostart = false
+	# F097: the density Theme of the band (as Boot does), so g6_7 captures show the g6_7 sizes.
+	if AppState.theme_service == null:
+		AppState.theme_service = ThemeService.new(_band)
+	AppState.theme_service.attach(get_tree().root)
 	var count: int = 0
 	for screen: String in SCREENS:
 		if not only.is_empty() and not screen in only:
@@ -237,14 +243,17 @@ func _screen_about() -> Node:
 	return world
 
 
-func _activity_host() -> Control:
+func _activity_host(types: PackedStringArray = []) -> Control:
 	await _sign_in()
 	var host: Control = (load("res://scenes/learning/ActivityHost.tscn") as PackedScene).instantiate() as Control
 	host.set("services", AppState.services)
 	host.set("client_version", AuthHarness.VERSION)
 	host.set("grade_band", _band)
 	get_tree().root.add_child(host)
-	_harness.http.reply(LearningFixtures.ROUTE_START, 201, LearningFixtures.fresh_attempt())
+	var attempt: Dictionary = LearningFixtures.fresh_attempt() if types.is_empty() \
+			else LearningFixtures.attempt_with_types(types)
+	_harness.http.reply(LearningFixtures.ROUTE_START, 201, attempt)
+	_harness.http.reply(LearningFixtures.ROUTE_HINT, 200, LearningFixtures.hint())
 	_harness.http.reply(LearningFixtures.ROUTE_RESPOND, 200, LearningFixtures.response_result_correct())
 	_harness.http.reply(LearningFixtures.ROUTE_REVIEW, 200, LearningFixtures.review())
 	_harness.http.reply(LearningFixtures.ROUTE_SUBMIT, 200, LearningFixtures.submitted())
@@ -261,6 +270,7 @@ func _screen_activity() -> Node:
 func _screen_activity_feedback() -> Node:
 	var host: Control = await _activity_host()
 	var service: LearningService = host.get("service") as LearningService
+	await _select(host, 1)
 	if service != null:
 		host.call("_apply_result", ResponseResultModel.from_dict(LearningFixtures.response_result_correct()))
 	return host
@@ -276,3 +286,71 @@ func _screen_result() -> Node:
 	# Let the celebration finish (≤ CelebrationBanner.ANIMATION_MAX_SEC) so the stars are drawn.
 	await get_tree().create_timer(CelebrationBanner.ANIMATION_MAX_SEC + 0.2).timeout
 	return host
+
+
+## F097: the student picked the second answer (before "Kiểm tra").
+func _screen_activity_selected() -> Node:
+	var host: Control = await _activity_host()
+	await _select(host, 1)
+	return host
+
+
+func _select(host: Control, index: int) -> void:
+	var renderer: ActivityRendererBase = host.get("renderer") as ActivityRendererBase
+	if renderer != null:
+		renderer.select_index(index)
+	await get_tree().process_frame
+
+
+## F097: a wrong answer with the option feedback and the explanation (kind wording, no penalty).
+func _screen_activity_incorrect() -> Node:
+	var host: Control = await _activity_host()
+	await _select(host, 0)
+	host.call("_apply_result", ResponseResultModel.from_dict(LearningFixtures.response_result()))
+	for i: int in 10:
+		await get_tree().process_frame
+	return host
+
+
+## F097: a hint revealed by Mây.
+func _screen_activity_hint() -> Node:
+	var host: Control = await _activity_host()
+	await host.call("_on_hint_requested")
+	for i: int in 10:
+		await get_tree().process_frame
+	return host
+
+
+func _one_type(type: String) -> Node:
+	return await _activity_host(PackedStringArray([type]))
+
+
+func _screen_activity_multiple() -> Node:
+	var host: Control = await _one_type("multiple_choice")
+	await _select(host, 0)
+	await _select(host, 2)
+	return host
+
+
+func _screen_activity_true_false() -> Node:
+	return await _one_type("true_false")
+
+
+func _screen_activity_fill_blank() -> Node:
+	return await _one_type("fill_in_blank")
+
+
+func _screen_activity_numeric() -> Node:
+	return await _one_type("numeric")
+
+
+func _screen_activity_matching() -> Node:
+	return await _one_type("matching")
+
+
+func _screen_activity_ordering() -> Node:
+	return await _one_type("ordering")
+
+
+func _screen_activity_drag_drop() -> Node:
+	return await _one_type("drag_drop")

@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/quest/assignment_row.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/next_light.svg" id="90_icon_start"]
 
 [node name="AssignmentRow" type="PanelContainer"]
 theme_type_variation = &"QuestCard"
@@ -46,6 +47,7 @@ layout_mode = 2
 theme_type_variation = &"MutedLabel"
 
 [node name="Start" type="Button" parent="Box"]
+icon = ExtResource("90_icon_start")
 unique_name_in_owner = true
 layout_mode = 2
 text = "ui.quest.start"
