@@ -11,6 +11,8 @@
   No storage API is used here (no localStorage, sessionStorage, IndexedDB or cookie: the Web build keeps the refresh
   token in RAM only, ADR-0086). Colors, fonts and sizes come from shell_tokens.css, generated from design/game-tokens
   (make design-tokens, AGENTS R32) and copied next to index.html by make godot-export-web.
+  EduWorld loading view (F096-AC-02): the S01 sky, the logo (Knowledge Spark + wordmark), the guide Mây speaking the
+  status in a bubble and a rounded progress bar — no Godot logo; the shapes are inline SVG painted with token variables.
   The exporter replaces the GODOT_URL, GODOT_CONFIG, ... placeholders (dollar sign + name). Tests: src/game/web/tests/.
 -->
 <html lang="vi">
@@ -27,7 +29,7 @@ html, body, #canvas {
 }
 
 body {
-	background-color: var(--ew-color-surface-hud);
+	background-color: var(--ew-component-backdrop-sky-top);
 	color: var(--ew-color-text-primary);
 	font-family: var(--ew-font-family-body);
 	font-size: var(--ew-density-font-base);
@@ -43,6 +45,7 @@ body {
 	outline: none;
 }
 
+/* EduWorld loading view (F096-AC-02): the sky, hills and floating sparks of S01, the logo, Mây and a rounded bar. */
 #ew-shell {
 	position: absolute;
 	inset: 0;
@@ -50,47 +53,203 @@ body {
 	align-items: center;
 	justify-content: center;
 	padding: var(--ew-size-space-16);
-	background-color: var(--ew-color-surface-hud);
+	overflow: hidden;
+	background: linear-gradient(var(--ew-component-backdrop-sky-top), var(--ew-component-backdrop-sky-bottom));
 }
 
 #ew-shell[hidden], #ew-banner[hidden], #ew-progress[hidden], #ew-play[hidden] {
 	display: none;
 }
 
+.ew-hill {
+	position: absolute;
+	left: -10%;
+	right: -10%;
+	border-radius: 50% 50% 0 0;
+}
+
+.ew-hill-far {
+	bottom: -6%;
+	height: 34%;
+	background-color: var(--ew-component-backdrop-hill-far);
+}
+
+.ew-hill-near {
+	bottom: -14%;
+	height: 30%;
+	left: 20%;
+	background-color: var(--ew-component-backdrop-hill-near);
+}
+
+.ew-spark-fill {
+	fill: var(--ew-component-logo-spark);
+}
+
+.ew-spark-line {
+	stroke: var(--ew-component-logo-spark-outline);
+}
+
+.ew-spark-core {
+	fill: var(--ew-component-logo-spark-core);
+}
+
+.ew-float {
+	position: absolute;
+	width: 3%;
+	min-width: var(--ew-size-space-16);
+}
+
+.ew-float-1 {
+	left: 12%;
+	top: 14%;
+}
+
+.ew-float-2 {
+	right: 14%;
+	top: 22%;
+}
+
+.ew-float-3 {
+	left: 22%;
+	top: 62%;
+}
+
 .ew-panel {
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	gap: var(--ew-size-space-16);
+	width: 100%;
 	max-width: var(--ew-size-layout-660);
-	padding: var(--ew-size-space-24);
-	border-radius: var(--ew-size-radius-16);
-	background-color: var(--ew-color-surface-panel);
 	text-align: center;
 }
 
-.ew-panel h1 {
+.ew-logo {
+	display: flex;
+	align-items: center;
+	gap: var(--ew-size-space-12);
+}
+
+.ew-logo svg {
+	width: var(--ew-component-logo-font-size);
+	height: var(--ew-component-logo-font-size);
+}
+
+.ew-wordmark {
 	margin: 0;
 	font-family: var(--ew-font-family-heading);
+	font-size: var(--ew-component-logo-font-size);
+	font-weight: bold;
+	line-height: 1.2;
+	color: var(--ew-component-logo-text);
+	-webkit-text-stroke: var(--ew-component-logo-outline-width) var(--ew-component-logo-outline);
+	paint-order: stroke fill;
+}
+
+.ew-bubble {
+	position: relative;
+	box-sizing: border-box;
+	width: 100%;
+	padding: var(--ew-size-space-16) var(--ew-size-space-24);
+	border: var(--ew-size-border-3) solid var(--ew-color-accent-primary);
+	border-radius: var(--ew-size-radius-24);
+	background-color: var(--ew-color-surface-panel);
+}
+
+.ew-bubble::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	bottom: calc(-2 * var(--ew-size-space-8));
+	border: var(--ew-size-space-8) solid transparent;
+	border-top-color: var(--ew-color-accent-primary);
+	transform: translateX(-50%);
+}
+
+.ew-bubble p {
+	margin: 0;
+	color: var(--ew-color-text-primary);
 	font-size: var(--ew-density-font-heading);
 }
 
-.ew-panel p {
-	margin: 0;
-	color: var(--ew-color-text-secondary);
+#ew-shell[data-state="unsupported"] .ew-bubble, #ew-shell[data-state="error"] .ew-bubble {
+	border-color: var(--ew-color-feedback-incorrect);
 }
 
-#ew-shell[data-state="unsupported"] .ew-panel, #ew-shell[data-state="error"] .ew-panel {
-	border: var(--ew-size-border-3) solid var(--ew-color-feedback-incorrect);
+.ew-mascot {
+	width: var(--ew-component-mascot-size);
+	max-width: 40%;
+}
+
+.ew-puff-line {
+	fill: var(--ew-component-mascot-outline);
+}
+
+.ew-puff {
+	fill: var(--ew-component-mascot-body);
+}
+
+.ew-eye {
+	fill: var(--ew-component-mascot-eye);
+}
+
+.ew-eye-light {
+	fill: var(--ew-component-mascot-body);
+}
+
+.ew-cheek {
+	fill: var(--ew-component-mascot-cheek);
+}
+
+.ew-smile {
+	fill: none;
+	stroke: var(--ew-component-mascot-eye);
 }
 
 #ew-progress {
+	box-sizing: border-box;
 	width: 100%;
-	accent-color: var(--ew-color-accent-primary);
+	height: var(--ew-component-progress-height);
+	padding: var(--ew-size-border-3);
+	border: var(--ew-size-border-3) solid var(--ew-component-progress-border);
+	border-radius: var(--ew-size-radius-24);
+	background-color: var(--ew-component-progress-track);
+	overflow: hidden;
+}
+
+#ew-progress-fill {
+	width: 8%;
+	height: 100%;
+	border-radius: var(--ew-size-radius-24);
+	background-color: var(--ew-component-progress-fill);
+	transition: width 0.3s ease-out;
+}
+
+#ew-progress[data-indeterminate="true"] #ew-progress-fill {
+	width: 30%;
+	animation: ew-slide 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes ew-slide {
+	from { margin-left: 0; }
+	to { margin-left: 70%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#ew-progress-fill {
+		transition: none;
+	}
+
+	#ew-progress[data-indeterminate="true"] #ew-progress-fill {
+		width: 100%;
+		animation: none;
+	}
 }
 
 #ew-play {
 	min-height: var(--ew-density-button-min-height);
+	min-width: 50%;
 	padding: 0 var(--ew-size-space-32);
 	border: 0;
 	border-radius: var(--ew-size-radius-12);
@@ -151,10 +310,28 @@ body {
 		</div>
 
 		<div id="ew-shell" data-state="checking">
+			<div class="ew-hill ew-hill-far" aria-hidden="true"></div>
+			<div class="ew-hill ew-hill-near" aria-hidden="true"></div>
+			<svg class="ew-float ew-float-1" viewBox="0 0 40 40" aria-hidden="true"><path class="ew-spark-fill" d="M20 2 L25 15 L38 20 L25 25 L20 38 L15 25 L2 20 L15 15 Z"/></svg>
+			<svg class="ew-float ew-float-2" viewBox="0 0 40 40" aria-hidden="true"><path class="ew-spark-fill" d="M20 2 L25 15 L38 20 L25 25 L20 38 L15 25 L2 20 L15 15 Z"/></svg>
+			<svg class="ew-float ew-float-3" viewBox="0 0 40 40" aria-hidden="true"><path class="ew-spark-fill" d="M20 2 L25 15 L38 20 L25 25 L20 38 L15 25 L2 20 L15 15 Z"/></svg>
 			<div class="ew-panel">
-				<h1 id="ew-title"></h1>
-				<p id="ew-message" role="status" aria-live="polite"></p>
-				<progress id="ew-progress" hidden></progress>
+				<div class="ew-logo">
+					<!-- Knowledge Spark (Tia Sáng): the four-point star of SparkMark (scenes/ui/components/spark_mark.gd). -->
+					<svg viewBox="0 0 48 48" aria-hidden="true"><path class="ew-spark-fill ew-spark-line" stroke-width="4" stroke-linejoin="round" d="M24 4 L31.8 16.2 L44 24 L31.8 31.8 L24 44 L16.2 31.8 L4 24 L16.2 16.2 Z"/><circle class="ew-spark-core" cx="21.6" cy="21.6" r="2.8"/></svg>
+					<h1 id="ew-title" class="ew-wordmark"></h1>
+				</div>
+				<div class="ew-bubble"><p id="ew-message" role="status" aria-live="polite"></p></div>
+				<!-- Mây (Cloudy), the guide: the puffs and face of CloudyMascot (scenes/ui/components/cloudy_mascot.gd), side = 100. -->
+				<svg class="ew-mascot" viewBox="0 0 100 100" aria-hidden="true">
+					<g class="ew-puff-line"><circle cx="50" cy="56" r="27"/><circle cx="27" cy="64" r="19"/><circle cx="73" cy="64" r="19"/><circle cx="38" cy="43" r="18"/><circle cx="62" cy="40" r="21"/><circle cx="36" cy="74" r="14"/><circle cx="64" cy="74" r="14"/><circle cx="87" cy="42" r="9.5"/></g>
+					<g class="ew-puff"><circle cx="50" cy="56" r="25"/><circle cx="27" cy="64" r="17"/><circle cx="73" cy="64" r="17"/><circle cx="38" cy="43" r="16"/><circle cx="62" cy="40" r="19"/><circle cx="36" cy="74" r="12"/><circle cx="64" cy="74" r="12"/><circle cx="87" cy="42" r="7.5"/></g>
+					<circle class="ew-eye" cx="42" cy="54" r="3.6"/><circle class="ew-eye" cx="58" cy="54" r="3.6"/>
+					<circle class="ew-eye-light" cx="43.2" cy="52.8" r="1.2"/><circle class="ew-eye-light" cx="59.2" cy="52.8" r="1.2"/>
+					<circle class="ew-cheek" cx="34" cy="62" r="4.2"/><circle class="ew-cheek" cx="66" cy="62" r="4.2"/>
+					<path class="ew-smile" stroke-width="2.4" stroke-linecap="round" d="M44.9 61.8 A6 6 0 0 0 55.1 61.8"/>
+				</svg>
+				<div id="ew-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" data-indeterminate="true" hidden><div id="ew-progress-fill"></div></div>
 				<button id="ew-play" type="button" hidden></button>
 			</div>
 		</div>
@@ -173,7 +350,7 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 		vi: {
 			title: 'EduWorld',
 			checking: 'Đang kiểm tra trình duyệt…',
-			loading: 'Đang tải trò chơi…',
+			loading: 'Đang chuẩn bị thế giới cho em…',
 			ready: 'Đã sẵn sàng. Nhấn "Chơi" để bắt đầu.',
 			play: 'Chơi',
 			starting: 'Đang khởi động…',
@@ -186,7 +363,7 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 		en: {
 			title: 'EduWorld',
 			checking: 'Checking your browser…',
-			loading: 'Loading the game…',
+			loading: 'Getting your world ready…',
 			ready: 'Ready. Press "Play" to start.',
 			play: 'Play',
 			starting: 'Starting…',
@@ -277,6 +454,21 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 		return grow.eduworldHeapPolicy;
 	}
 
+	// Rounded loading bar (F096-AC-02): the share downloaded when the size is known, else a gentle back-and-forth.
+	function setProgress(bar, current, total) {
+		const fill = bar.firstElementChild;
+		if (current > 0 && total > 0) {
+			const pct = Math.max(0, Math.min(100, Math.round((current / total) * 100)));
+			bar.dataset.indeterminate = 'false';
+			bar.setAttribute('aria-valuenow', String(pct));
+			fill.style.width = pct + '%';
+		} else {
+			bar.dataset.indeterminate = 'true';
+			bar.removeAttribute('aria-valuenow');
+			fill.style.removeProperty('width');
+		}
+	}
+
 	function loadScript(doc, src) {
 		return new Promise((resolve, reject) => {
 			const s = doc.createElement('script');
@@ -340,15 +532,7 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 
 		return d.loadScript(GODOT_URL).then(() => {
 			const config = Object.assign({}, GODOT_CONFIG, {
-				onProgress: (current, total) => {
-					if (current > 0 && total > 0) {
-						progress.value = current;
-						progress.max = total;
-					} else {
-						progress.removeAttribute('value');
-						progress.removeAttribute('max');
-					}
-				},
+				onProgress: (current, total) => setProgress(progress, current, total),
 				onExit: (code) => {
 					if (code !== 0) {
 						fail(new Error('engine exited with code ' + code));
@@ -388,6 +572,7 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 		STRINGS: STRINGS,
 		HEAP_POLICY: HEAP_POLICY,
 		pickLocale: pickLocale,
+		setProgress: setProgress,
 		browserSupport: browserSupport,
 		hasWebGL2: hasWebGL2,
 		installHeapPolicy: installHeapPolicy,
@@ -400,4 +585,3 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 }(window));
 		</script>
 	</body>
-</html>

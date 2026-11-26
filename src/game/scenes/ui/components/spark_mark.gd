@@ -24,7 +24,9 @@ func _ready() -> void:
 
 
 func _draw() -> void:
-	var outline: float = float(UiTokens.COMPONENT_MASCOT_OUTLINE_WIDTH)
+	# The outline grows with the mark (app icon) and keeps the token width at the wordmark size.
+	var grow: float = maxf(1.0, minf(size.x, size.y) / float(UiTokens.COMPONENT_LOGO_FONT_SIZE))
+	var outline: float = float(UiTokens.COMPONENT_MASCOT_OUTLINE_WIDTH) * grow
 	var outer: float = minf(size.x, size.y) / 2.0 - outline
 	if outer <= 0.0:
 		return

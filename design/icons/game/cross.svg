@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <path d="M14 14l20 20M34 14L14 34" fill="none" stroke="{component.icon.on_accent}" stroke-width="6" stroke-linecap="round"/>
+</svg>

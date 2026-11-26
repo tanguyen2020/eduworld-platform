@@ -12,6 +12,12 @@ run/main_scene="res://scenes/bootstrap/Boot.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 ; F062-AC-17: QualityManager writes the renderer chosen for the next run (fallback to Compatibility) here.
 config/project_settings_override="user://renderer_override.cfg"
+boot_splash/image="res://resources/branding/boot_splash.png"
+boot_splash/bg_color=Color(0.5608, 0.8275, 1, 1)
+boot_splash/use_filter=true
+boot_splash/stretch_mode=1
+boot_splash/show_image=true
+config/icon="res://resources/branding/icon_1024.png"
 
 [audio]
 

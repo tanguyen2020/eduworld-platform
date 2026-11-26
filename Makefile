@@ -284,7 +284,7 @@ GAME_ENV ?= mock
 godot-import: ## Import the Godot project headless (global class cache, fonts); needed once after checkout
 	$(GODOT_HL) --import
 
-godot-lint: godot-import ## gdlint + typed check + theme override/layer/signal/art lints + baked art + translation keys + pseudo-locale + fixtures + no Admin UI
+godot-lint: godot-import ## gdlint + typed check + theme override/layer/signal/art lints + baked art + brand images + translation keys + pseudo-locale + fixtures + no Admin UI
 	cd $(GAME_DIR) && $(GDLINT) scripts scenes tools tests
 	$(GODOT_HL) -s res://tools/check_typed.gd
 	$(GODOT_HL) -s res://tools/lint_theme_overrides.gd
@@ -292,6 +292,7 @@ godot-lint: godot-import ## gdlint + typed check + theme override/layer/signal/a
 	$(GODOT_HL) -s res://tools/lint_signals.gd
 	$(GODOT_HL) -s res://tools/lint_art.gd
 	$(GODOT_HL) -s res://tools/art/bake_art.gd -- --check
+	$(GODOT_HL) -s res://tools/brand_assets.gd -- --check
 	$(GODOT_HL) -s res://tools/extract_pot.gd -- --check
 	$(GODOT_HL) -s res://tools/pseudo_locale.gd -- --check
 	node $(GAME_DIR)/tools/gen_fixtures.mjs --check

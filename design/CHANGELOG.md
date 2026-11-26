@@ -2,6 +2,10 @@
 
 Phiên bản token theo semver (`design/package.json`, DESIGN_SYSTEM §3, §8). Đổi tên hoặc xóa token cần tăng MAJOR; token bị xóa phải mang `$deprecated` ít nhất một phiên bản trước (kiểm bởi `design/checks/semver.mjs`).
 
+## tokens@0.13.0
+
+- 2026-11-26 — Student UX pass 1 (F096, ADR-0047, ADR-0102, DESIGN_SYSTEM §5.1, STUDENT_GAME_UX §3, §4.3): component `component.progress.{track,fill,border,height}` (thanh tải bo tròn của Web shell); output `src/game/web/shell_tokens.css` sinh thêm `--ew-component-{logo,backdrop,mascot,progress}-*` để màn chờ Web vẽ logo Tia Sáng, nền trời S01 và Mây chỉ bằng biến token (không literal màu); Theme Godot thêm `Button/constants/{icon_max_width,h_separation}` (icon nút = `component.icon.size`, mọi biến thể nút có icon kèm chữ). Icon game mới trong `design/icons/game/` (sinh vào `src/game/resources/ui/icons/`): nút HUD `assignments`, `journal`, `bell`, `settings`, `wardrobe`, `map`, `home`, `emote`, `next`; học tập/kết quả `tick`, `cross`, `hint`, `sound_on`, `sound_off`, `star`, `medal`, `party`, `flag`, `fire`, `play`, `pause`; vùng World Map `area_<icon_key>` (`central`, `math_kingdom`, `language_forest`, `science_island`, `history_kingdom`, `practice`, `social`, `exam`, `challenge_mountain`, `discovery_ocean`, `champion_arena`) — thay emoji (bản Web không có font emoji). MINOR vì chỉ thêm token/icon và hằng Theme.
+
 ## tokens@0.12.0
 
 - 2026-11-25 — Art pass 4 (F094, ADR-0103, ADR-0047, DESIGN_SYSTEM §5.3, §6, WORLD_DESIGN §11) và Câu hỏi mở F093-2: màu nghiệp vụ dùng chung `color.subject.history` (Lịch sử & Địa lý, nâu đỏ: light `#9A3B26`, dark `#E8A48C`, game `#A0522D`) — portal (`domainColors`, `tokens.css`) và game (`Art3dTokens`); art3d `art.palette.subject_history` (slot 60; còn trống 61–63 trong mảng 64 slot), `zone.history.{primary,accent}`, `env.{history,ocean,mountain,exam,arena}` (sinh `env_<zone>.tres`); primitive `palette.zone.{fog-rose,fog-sea,sea-horizon}`. MINOR vì chỉ thêm token.

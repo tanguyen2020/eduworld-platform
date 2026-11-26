@@ -164,6 +164,8 @@ export function formatTheme(map, band, version, label) {
     ['Button/colors/font_focus_color', c('component.button.primary.text')],
     ['Button/colors/font_hover_color', c('component.button.primary.text')],
     ['Button/colors/font_pressed_color', c('component.button.primary.text')],
+    ['Button/constants/h_separation', String(halfSpace)],
+    ['Button/constants/icon_max_width', String(icon)],
     ['Button/font_sizes/font_size', String(font)],
     ['Button/fonts/font', 'ExtResource("2_body_bold")'],
     ['Button/styles/disabled', sub('button_disabled')],

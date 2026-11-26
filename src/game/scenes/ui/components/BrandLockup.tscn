@@ -1,0 +1,37 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/components/brand_lockup.gd" id="1_lockup"]
+[ext_resource type="Script" path="res://scenes/ui/components/spark_mark.gd" id="2_spark"]
+[ext_resource type="Script" path="res://scenes/ui/components/cloudy_mascot.gd" id="3_mascot"]
+
+[node name="BrandLockup" type="VBoxContainer"]
+theme_type_variation = &"FormBox"
+alignment = 1
+script = ExtResource("1_lockup")
+
+[node name="Logo" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"ToolbarBox"
+alignment = 1
+
+[node name="Spark" type="Control" parent="Logo"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("2_spark")
+
+[node name="Wordmark" type="Label" parent="Logo"]
+layout_mode = 2
+tooltip_text = "ui.login.wordmark"
+theme_type_variation = &"LogoLabel"
+text = "ui.login.wordmark"
+vertical_alignment = 1
+text_overrun_behavior = 3
+
+[node name="Mascot" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+script = ExtResource("3_mascot")
+bubble_tail = false

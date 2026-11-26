@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <path d="M24 41S7 31 7 18a8.5 8.5 0 0 1 17-3 8.5 8.5 0 0 1 17 3c0 13-17 23-17 23z" fill="none" stroke="{component.icon.primary}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

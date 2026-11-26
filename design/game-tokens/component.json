@@ -212,6 +212,12 @@
       "size": { "$type": "dimension", "$value": "{size.layout.200}", "$description": "Mây illustration size." },
       "outline_width": { "$type": "dimension", "$value": "{size.border.4}", "$description": "Mây outline width." }
     },
+    "progress": {
+      "track": { "$type": "color", "$value": "{palette.white}", "$description": "Rounded loading bar track (Web shell, F096)." },
+      "fill": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Rounded loading bar fill.", "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.progress.track", "level": "graphic" }] } } },
+      "border": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Rounded loading bar outline." },
+      "height": { "$type": "dimension", "$value": "{size.space.24}", "$description": "Rounded loading bar height." }
+    },
     "focus_ring": {
       "color": { "$type": "color", "$value": "{color.focus}", "$description": "Focus ring color." },
       "width": { "$type": "dimension", "$value": "{size.border.4}", "$description": "Focus ring width." }

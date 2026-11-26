@@ -8,6 +8,7 @@ import { cssValue } from './css-vars.mjs';
 
 /** Token path prefixes emitted for the shell. */
 export const SHELL_PREFIXES = ['color.surface.', 'color.text.', 'color.accent.', 'color.feedback.', 'color.focus',
+  'component.logo.', 'component.backdrop.', 'component.mascot.', 'component.progress.',
   'size.space.', 'size.radius.', 'size.border.', 'size.layout.', 'font.family.'];
 
 /**
