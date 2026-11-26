@@ -1,6 +1,6 @@
 # Security Architecture & Program
 
-> Trạng thái: Draft · Phiên bản: 0.9 · Owner: Identity & Security Engineer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-21 (ADR-0094: bỏ MFA/TOTP cho đăng nhập Admin Portal, rủi ro được chấp nhận — §3.3) · 2026-11-17 (ADR-0091: đăng nhập portal qua backend — §3.3, cookie + CSRF, `portal_login_rate`; ADR-0090: `featuregate` không phải lớp authz; ADR-0074: gọi giữa module trong tiến trình thay token service-to-service, phân vùng mạng và NATS user theo binary/Swarm service; ADR-0076 Rejected: bỏ đăng nhập QR/PIN/mật khẩu hình; máy dùng chung, màn "Tiếp tục là…"; PII/grooming luôn chạy và giờ giới nghiêm — ADR-0078; object storage theo ADR-0075) · 2026-11-16 (ADR-0086)
+> Trạng thái: Draft · Phiên bản: 0.9 · Owner: Identity & Security Engineer · Cập nhật: 2026-11-27 (F130 T053: bảng quyền NATS §8.1 theo cấu hình `deploy/nats/permissions.yaml`) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-21 (ADR-0094: bỏ MFA/TOTP cho đăng nhập Admin Portal, rủi ro được chấp nhận — §3.3) · 2026-11-17 (ADR-0091: đăng nhập portal qua backend — §3.3, cookie + CSRF, `portal_login_rate`; ADR-0090: `featuregate` không phải lớp authz; ADR-0074: gọi giữa module trong tiến trình thay token service-to-service, phân vùng mạng và NATS user theo binary/Swarm service; ADR-0076 Rejected: bỏ đăng nhập QR/PIN/mật khẩu hình; máy dùng chung, màn "Tiếp tục là…"; PII/grooming luôn chạy và giờ giới nghiêm — ADR-0078; object storage theo ADR-0075) · 2026-11-16 (ADR-0086)
 > Liên quan: [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · [ADR-0005..0009, 0016, 0020, 0040](../adr/README.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [ADR-0091](../adr/ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · [DATA_PRIVACY](DATA_PRIVACY.md) · [CHILD_SAFETY](CHILD_SAFETY.md) · [ANTI_CHEAT](ANTI_CHEAT.md) · [MODERATION](../03-social-multiplayer/MODERATION.md)
 
 > **Thay đổi v0.7 (ADR-0074, thay ADR-0036):** backend là modular monolith gồm 3 binary (`core-api`, `realtime`, `worker` chạy 3 profile). Gọi giữa module diễn ra **trong tiến trình** qua facade (`src/backend/pkg/modcall`), nên bỏ token service-to-service, allowlist `azp` nội bộ và mTLS giữa service; ranh giới giữa module được cưỡng chế bằng compiler + linter (`x-allowed-callers`) và role DB theo module (§5.5). Phân vùng mạng, NATS user và secret tính theo binary/Swarm service (§8, §8.1); database riêng mỗi module trên một cụm (ADR-0037, ADR-0074 mục 4).
@@ -390,7 +390,7 @@ Module gọi nhau **trong tiến trình** qua facade sinh từ `specs/openapi/mo
 |---|---|---|---|
 | DB password theo role (mỗi database một bộ) | Nguồn gốc: SOPS (age) mã hóa trong Git `deploy/secrets/<env>/`, khóa age trong secret của GitHub Environment [Confirmed — owner 2026-11-20, OQ-10; theo F130]; phân phối bằng Docker secrets ([DEPLOYMENT §13](../11-operations/DEPLOYMENT.md#13-secret-management)); local: `.env` không commit | chỉ module sở hữu database | 90 ngày |
 | Keycloak client secret `svc-identity` (chỉ Keycloak Admin API, ADR-0074 mục 5) | Secret manager | Swarm service chạy module identity | 90 ngày |
-| NATS credentials (user theo Swarm service: `core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs`) | Secret manager | Swarm service tương ứng | 90 ngày |
+| NATS credentials (user theo binary: `core-api`, `realtime`, `worker` — ba Swarm service worker dùng chung, tách theo profile [Proposed]; `ops` cho job một lần — F130 T053) | Secret manager | Swarm service tương ứng | 90 ngày |
 | Valkey ACL password (user theo module) | Secret manager | Swarm service nạp module đó | 90 ngày |
 | Keycloak service account secret (`eduworld-sis-sync`) | Secret manager | Swarm service chạy job SIS của module identity | 90 ngày |
 | SIS credentials theo `sis_connections` | Secret manager, DB chỉ lưu `secret_ref` | adapter SIS của module identity | Theo SIS |
@@ -431,12 +431,12 @@ Quy tắc:
 
 | User NATS | Publish | Subscribe |
 |---|---|---|
-| `realtime` | `ew.cmd.>`, `ew.in.>` | `_INBOX.>` (reply) |
-| `core-api` | `ew.chat.>` (module chat publish tin vào `CHAT_MESSAGES`), reply `_INBOX.>` | `ew.cmd.>` (handler của 5 module, queue group theo module; `ew.cmd.competition.room.<room_id>.>` theo queue group của room), `ew.in.room.>` (room host của module competition, chỉ replica giữ lease subscribe subject của room) |
-| `worker-events` | `ew.evt.>` (outbox relay của 5 module), `ew.dlq.>` | `ew.evt.>` (consumer domain, projection, audit sink, analytics) |
-| `worker-chat` | `ew.chat.*.evt.>`, `ew.dlq.chat.>` | Consumer `CHAT_MESSAGES` (`ew.chat.>`), `ew.evt.identity.>`, `ew.evt.competition.>`, `ew.evt.game.>` (đóng channel, chặn người dùng) |
-| `worker-jobs` | — (job ghi outbox, relay do `worker-events` làm) | — |
-| `ops` (vận hành) | `$JS.API.>` (quản trị stream) | — |
+| `realtime` | `ew.cmd.>`, `ew.in.room.>`, `ew.rt.presence.*` (tín hiệu presence), `ew.evt.realtime.>` (`audit.recorded` thẳng vào `EVT_REALTIME`, binary không có outbox) | `_INBOX.>` (reply) |
+| `core-api` | `ew.chat.*.msg.*`, `ew.chat.*.evt.*` (module chat ghi `CHAT_MESSAGES` trước fan-out), `ew.int.competition.>` (thao tác room/battle giữa replica), `ew.job.identity.sis.>`, `ew.job.game.render.request`; trả lời request (`allow_responses`) | `ew.cmd.>` (handler của 5 module, queue group theo module), `ew.in.room.>` (room host, replica giữ lease), `ew.rt.presence.*`, `ew.int.competition.>`; consumer có thứ tự `EVT_IDENTITY` (vô hiệu cache Principal) |
+| `worker` (`worker-events`, `worker-chat`, `worker-jobs` dùng chung — tách theo profile [Proposed]) | `ew.evt.<module>.>` (outbox relay của 5 module), `ew.dlq.<module>.>`, `ew.int.competition.battle.open`, `ew.job.identity.sis.>`, `ew.job.game.render.request` | Consumer `EVT_<MODULE>` (domain, projection, audit sink, analytics), `CHAT_MESSAGES` (`chat-persister`), `IDENTITY_SIS_JOBS`, `GAME_RENDER_JOBS` |
+| `ops` (vận hành, chỉ job một lần) | `$JS.API.>` (quản trị stream) | `_INBOX.>` |
+
+Cấu hình máy đọc: [`deploy/nats/permissions.yaml`](../../deploy/nats/permissions.yaml) (ký vào JWT user bằng `scripts/deploy/nats-accounts.sh`); CI `check-acl-templates.mjs` đối chiếu với subject trong mã và chặn grant thừa ([DEPLOYMENT §8b](../11-operations/DEPLOYMENT.md#8b-nats-jetstream-adr-0035-adr-0042)).
 
 Ngoài publish/subscribe ở trên, mỗi user có quyền `$JS.API.CONSUMER.*`/`$JS.ACK.>` chỉ trên stream/consumer của mình. Chỉ user `realtime` được publish `ew.cmd.>`/`ew.in.>`, nên header danh tính (`Ew-User-Id`, `Ew-Tenant-Id`) trong lệnh realtime là đáng tin.
 
