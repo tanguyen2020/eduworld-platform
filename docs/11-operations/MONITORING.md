@@ -1,6 +1,6 @@
 # Monitoring & Observability
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: DevOps Engineer · Cập nhật: 2026-11-17 (Áp ADR-0074: nhãn `service` = binary + nhãn `module`, metric gọi facade `eduworld_internal_client_*` theo `caller_module`/`callee_module`, circuit/retry/bulkhead đổi thành `eduworld_external_client_*` chỉ cho tích hợp ngoài, resilience chỉ cho tích hợp ngoài, alert theo binary/module; áp ADR-0089: metric bypass nhãn `module` + 10 lý do; tên metric typed client, rate limit, bypass tenant, DLQ theo service; loại tenant QA)
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: DevOps Engineer · Cập nhật: 2026-11-27 (F131: Alertmanager trong §1, alert meta + `SyntheticProbeFailing` + alert đã có của module vào bảng §5, rule ở `deploy/observability/prometheus/rules/` có unit test `promtool`, runbook mỗi alert ở `runbooks/`, SLI recording rule §6, quy ước nhãn khi scrape trên Swarm §2, GlitchTip §9) · 2026-11-17 (Áp ADR-0074: nhãn `service` = binary + nhãn `module`, metric gọi facade `eduworld_internal_client_*` theo `caller_module`/`callee_module`, circuit/retry/bulkhead đổi thành `eduworld_external_client_*` chỉ cho tích hợp ngoài, resilience chỉ cho tích hợp ngoài, alert theo binary/module; áp ADR-0089: metric bypass nhãn `module` + 10 lý do; tên metric typed client, rate limit, bypass tenant, DLQ theo service; loại tenant QA)
 > Liên quan: [ADR-0023](../adr/ADR-0023-observability-bang-opentelemetry-prometheus-grafana-loki-tem.md) · [SYSTEM_ARCHITECTURE §7](../06-architecture/SYSTEM_ARCHITECTURE.md#7-non-functional-baseline) · [DEPLOYMENT](DEPLOYMENT.md) · [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · [ADR-0037…0042](../adr/README.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md)
 
 **Mục đích & phạm vi.** Nguồn duy nhất về **metric, dashboard, alert, SLO**, tracing, logging vận hành, error tracking. Tài liệu khác chỉ nêu tên metric/alert và link về đây. Logging bảo mật (cái gì không được log) → [SECURITY_ARCHITECTURE §10](../10-security/SECURITY_ARCHITECTURE.md). Chỉ số **hành vi chơi game** và **hiệu năng thực tế theo hạng thiết bị** tổng hợp từ telemetry (DAU, retention, funnel, `crash_free_sessions`, `fps_budget_pass_rate`…) do [GAME_ANALYTICS](GAME_ANALYTICS.md) định nghĩa; tài liệu này giữ metric kỹ thuật thời gian thực (CCU, độ trễ, lỗi, hàng đợi) và alert.
@@ -26,8 +26,10 @@ flowchart LR
   prom[(Prometheus)]
   tempo[(Tempo)]
   loki[(Loki)]
-  graf[Grafana\ndashboards + alerting]
-  err[Error tracking\nSentry-compatible]
+  graf[Grafana\ndashboards]
+  am[Alertmanager\nroute · group · inhibit · silence]
+  err[GlitchTip\nSentry-compatible]
+  hb[Heartbeat ngoài\nWatchdog]
   oncall[Kênh trực: chat nhóm vận hành / email / SMS]
 
   api & rt & wk -- OTLP traces/metrics --> col
@@ -39,11 +41,16 @@ flowchart LR
   api & rt & wk -- panics/errors --> err
   prom & loki --> graf
   tempo --> graf
-  graf --> oncall
+  prom -- rules --> am
+  am --> oncall
+  am -- Watchdog --> hb
+  hb -. mất heartbeat .-> oncall
 ```
 
 Nguyên tắc:
 - Metric qua Prometheus (pull `/metrics` trên cổng admin `:909x`); trace qua OTLP; log JSON ra stdout, collector đẩy Loki.
+- Prometheus đánh giá rule (`deploy/observability/prometheus/rules/*.yaml`); **Alertmanager** định tuyến, gom nhóm, inhibit, silence (`deploy/observability/alertmanager/alertmanager.yml`); Grafana chỉ hiển thị (F131, không dùng Grafana Alerting). Alert `Watchdog` luôn bắn tới dịch vụ heartbeat ngoài; mất heartbeat 10 phút thì dịch vụ đó báo người trực (Prometheus/Alertmanager chết).
+- Stack staging/production: `deploy/swarm/<env>/obs.stack.yml` trên node `ops` (OTel Collector, Prometheus, Alertmanager, Loki, Tempo, Grafana, GlitchTip, blackbox_exporter, probe synthetic) + exporter `mode: global` (node_exporter, cAdvisor); `swarm-exporter` nằm trong `ops.stack.yml` (dùng chung `docker-api-proxy` chỉ `GET`). Truy cập công cụ chỉ qua network `admin` (VPN) — [DEPLOYMENT §4.3](DEPLOYMENT.md).
 - Mỗi request có `trace_id` từ APISIX (W3C `traceparent`) xuyên **mọi binary và module** tham gia (NFR-OBS-001): lời gọi facade trong tiến trình (span con do `src/backend/pkg/modcall` mở, ADR-0074 mục 3), NATS request/reply và JetStream (header `traceparent` trong message), rồi tới PostgreSQL (comment SQL `/* trace_id=... */` qua pgx tracer).
 - Mọi metric, log, span có thuộc tính `service` (= `OTEL_SERVICE_NAME` = binary: `core-api`, `realtime`, `worker`), `module` (`identity`, `learning`, `game`, `competition`, `chat`, `realtime`; gắn theo route, handler, consumer, job) và với `worker` thêm `profile` (`events`, `chat`, `jobs`). Dashboard và alert tách theo module bằng nhãn `module`, theo tiến trình bằng `service`/`profile`.
 - `trace_id` được trả cho client trong Problem Details (ADR-0010) để hỗ trợ tra cứu.
@@ -54,6 +61,8 @@ Nguyên tắc:
 - Prefix `eduworld_`; đơn vị trong tên (`_seconds`, `_bytes`, `_total`).
 - Label **không** chứa ID người dùng, tên, IP, nội dung tin nhắn. Label cho phép: `service`, `module`, `profile`, `route` (template, không phải path thực), `method`, `status_class`, `mode`, `grade_band`, `subject`, `channel_type`, `queue`, `result`.
 - `school_id` **không** làm label mặc định (cardinality + privacy); số liệu theo trường lấy từ analytics/reporting, không từ Prometheus.
+- **Nhãn gắn khi scrape trên Swarm (F131):** binary không tự phát nhãn `service`; Prometheus suy ra từ tên Swarm service (`dockerswarm_sd_configs`, role `tasks`): `core-api` → `service="core-api"`, `realtime` → `service="realtime"`, `worker-<p>` → `service="worker"` + `profile="<p>"`, canary `core-api-canary` → `service="core-api-canary"`; nhãn `module` do binary phát. Nhãn `job` của metric job định kỳ (`eduworld_job_runs_total`) được giữ (relabel `exported_job` → `job`). Exporter ngoài đổi tên về tên tài liệu này: `jetstream_*` của prometheus-nats-exporter → `nats_*` (nhãn `stream`, `consumer`); cAdvisor thêm `swarm_service`; node_exporter thêm `node`, `role`.
+- Nhãn **cấm** (job `obs-label-policy` chặn trong rule, dashboard và metric scrape được): `user_id`, `student_id`, `school_id`, `ip`, `email`, `username`, `message`, `content`, `text`, `body`, `token`; nhãn `route` phải là template (không chứa giá trị thật như UUID hay số). `tenant` chỉ dùng ở metric đã liệt kê ở §3. Mỗi target có `sample_limit` (Prometheus cắt scrape vượt ngưỡng và bắn `PrometheusTargetSampleLimit`).
 
 ## 3. Metric bắt buộc (Master Prompt §18)
 
@@ -116,7 +125,7 @@ Metric bổ sung:
 | `eduworld_external_client_requests_total` (`module`, `integration`: keycloak_admin/keycloak_token/sis/s3/smtp, `outcome`), `eduworld_external_client_circuit_state` (`module`, `integration`) gauge 0=closed/1=half-open/2=open, `eduworld_external_client_retries_total`, `eduworld_external_client_bulkhead_rejected_total` (`module`, `integration`) | Resilience của adapter tích hợp bên ngoài (ADR-0074 mục 5): timeout, retry cho thao tác idempotent, circuit breaker |
 | `eduworld_nats_request_duration_seconds` (`module`, `subject_group`), `eduworld_nats_request_errors_total` (`module`, `reason`: timeout/no_responders) | Lệnh từ `realtime` tới handler trong `core-api` qua NATS request/reply (ADR-0074) |
 | `eduworld_projection_lag_seconds` (`module`, `projection`) | Độ trễ projection `ref_*` so với event gốc (ADR-0037) |
-| `eduworld_panics_recovered_total` (`service`, `module`, `entrypoint`: http/nats/consumer/job) | Panic đã được recover middleware bắt; một panic không bắt làm sập cả binary và mọi module trong đó (ADR-0074 hệ quả) |
+| `eduworld_panics_recovered_total` (`service`, `module`, `entrypoint`: http/nats/consumer/job/facade — `facade` = panic trong lời gọi facade qua `src/backend/pkg/modcall`, đếm theo module được gọi) | Panic đã được recover middleware bắt; một panic không bắt làm sập cả binary và mọi module trong đó (ADR-0074 hệ quả) |
 | `eduworld_saga_runs_total` (`saga`: tenant_clone/student_cleanup/trash_restore, `result`), `eduworld_saga_step_duration_seconds`, `eduworld_saga_stuck` (gauge) | Saga điều phối từ module identity |
 | `eduworld_cqrs_handler_duration_seconds` (`module`, `kind`: command/query, `handler`), `eduworld_cqrs_handler_errors_total` | Thời gian/ lỗi theo command/query handler (ADR-0038) |
 | `eduworld_sis_sync_runs_total` (`connection`, `mode`, `status`), `eduworld_sis_last_success_timestamp` (`connection`), `eduworld_sis_contract_unknown_fields_total` (`connection`, `entity`), `eduworld_sis_sync_records_total` (`entity`, `action`), `eduworld_sis_reconciliation_issues` | SIS ([SIS_INTEGRATION §8](../09-identity/SIS_INTEGRATION.md)); F011 phát hai metric đầu, F017 phát `eduworld_sis_contract_unknown_fields_total` |
@@ -141,7 +150,7 @@ Metric bổ sung:
 | `eduworld_game_session_start_total` (`result`: created/takeover/conflict/denied/curfew/client_version_unsupported/maintenance/not_projected/error), `eduworld_game_session_start_duration_seconds` (histogram) | Kết quả và thời gian `createGameSession` (SLO `login_slo` phía module game, F014) |
 | `eduworld_game_projection_lag_seconds` (`table`), `eduworld_game_consumer_rejected_total` (`consumer`, `reason`) | Projection `ref.*` và consumer của module game (F014; tên riêng module vì `eduworld_projection_lag_seconds` đã được module learning đăng ký với label khác — OQ F014-6) |
 | `eduworld_student_cleanup_total` (`tenant`, `result`: cleaned/excluded/skipped_active/restored), `eduworld_student_cleanup_candidates` (gauge, `tenant`), `eduworld_student_cleanup_large_batch_total` (`tenant`; lần chạy vượt ngưỡng chờ duyệt — F016) | Worker dọn học sinh (ADR-0032) |
-| `eduworld_chat_purge_total` (`tenant`, `kind`: gameplay/ephemeral), `eduworld_chat_purge_backlog_days` (gauge), `eduworld_chat_purge_last_success_timestamp` | Purge chat gameplay (ADR-0033) |
+| `eduworld_chat_purge_total` (`tenant`, `kind`: gameplay/ephemeral), `eduworld_chat_purge_backlog_oldest_seconds` (gauge — tuổi tin chưa purge cũ nhất), `eduworld_chat_purge_failures_total` | Purge chat gameplay (ADR-0033) |
 | `eduworld_ratelimit_rejected_total` (`policy`) | Lạm dụng |
 | `eduworld_anticheat_flags_total` (`rule`) | Anti-cheat ([ANTI_CHEAT](../10-security/ANTI_CHEAT.md)) |
 | `eduworld_xp_granted_total` (`source_type`), `eduworld_reward_cap_hits_total` | Kiểm soát farm XP |
@@ -157,6 +166,11 @@ Metric bổ sung:
 | `eduworld_notifications_created_total` (`kind`), `eduworld_notifications_read_total`, `eduworld_notification_delivery_latency_seconds` — F123, module chat, không nhãn người dùng/thông báo | Thông báo trong game: số tạo theo loại, số đã đọc, độ trễ từ event nguồn tới `notification.item.created` (SC-001 p95 ≤ 2 s) |
 | `eduworld_chat_sensitive_matches_total` (`category`, `action`), `eduworld_chat_sensitive_catalog_version` (`scope`), `eduworld_chat_sensitive_reload_seconds` | Danh mục từ nhạy cảm: khớp theo nhóm (không nội dung), version đang chạy trên node, thời gian reload |
 | `eduworld_dashboard_query_duration_seconds` (histogram, `module`, `query_id`, `grain`, `cache`), `eduworld_dashboard_cache_requests_total` (`result`), `eduworld_dashboard_rejected_total` (`reason`: range/busy/timeout) | Dashboard ([DASHBOARD_DATA §13](../07-backend/DASHBOARD_DATA.md#13-quan-sát-và-cảnh-báo), ADR-0062) |
+| `eduworld_synthetic_probe_success` (gauge 0/1, `probe`: client_config/student_login, `result`: ok/error/rate_limited), `eduworld_synthetic_probe_duration_seconds` (`probe`) — F131, remote write từ service `synthetic-probe` | Probe synthetic bằng tenant QA (alert `SyntheticProbeFailing`, [TEST_STRATEGY §4](../12-project/TEST_STRATEGY.md)) |
+| `swarm_service_replicas_desired`, `swarm_service_replicas_running`, `swarm_task_restarts_total` (`swarm_service`, `service`, `profile`), `swarm_node_ready` (`node`, `role`, `manager`), `swarm_node_manager_reachable` (`node`), `swarm_exporter_scrape_errors_total`, `swarm_exporter_last_success_timestamp_seconds` — F131 `swarm-exporter` | Trạng thái Swarm (`ServiceDown`, `SwarmReplicasBelowDesired`, `SwarmTaskRestartLoop`, `SwarmNodeDown`); restart = task mới thấy ở trạng thái `failed`/`rejected` |
+| `eduworld_client_sessions_total` (`platform`, `client_version`) — telemetry phiên client → module game (F080) [Proposed] | Mẫu số của `ClientCrashRateHigh` |
+| `eduworld_glitchtip_bridge_tickets_total` (`result`: created/duplicate/ignored_env/error) — F131 | Ticket GitHub Issues từ issue GlitchTip (§9) |
+| `eduworld_backup_*` (`target`, `type`), `eduworld_object_storage_replication_lag_seconds` (`bucket`) — F130, textfile của node_exporter trên node `ops` ([BACKUP_RECOVERY §3.4](BACKUP_RECOVERY.md)) | `BackupFailed`, `BackupMissing`, `ObjectStorage*` |
 | `eduworld_rollup_lag_seconds` (`module`, `rollup`), `eduworld_rollup_day_close_duration_seconds`, `eduworld_rollup_day_close_last_success_timestamp`, `eduworld_rollup_late_events_total` (`bucket`), `eduworld_export_jobs_total` (`status`) | Pipeline rollup dashboard và export |
 
 ## 4. Dashboard Grafana
@@ -178,7 +192,7 @@ Metric bổ sung:
 | **Identity** | Login rate theo result, Keycloak metrics (login failures, sessions), JWKS fetch errors | Security |
 | **Client** | FPS theo device tier, crash rate theo version, load time hub | Godot |
 
-Dashboard lưu dạng JSON trong `deploy/observability/grafana/dashboards/` (provisioning as code).
+Dashboard lưu dạng JSON trong `deploy/observability/grafana/dashboards/` (provisioning as code), sinh từ `scripts/obs/build-dashboards.mjs` (`--check` trong CI); job `obs-dashboards` (`scripts/obs/check-dashboards.mjs`) chặn datasource UID không tồn tại, metric không có trong §3 (hoặc recording rule `eduworld:*`, metric exporter đã khai báo), nhãn cấm, và với Chat Safety mọi truy vấn không phải số đếm/tỷ lệ theo nhóm (F131-AC-14, AC-16).
 
 ## 5. Alert rules — [Confirmed]
 
@@ -199,7 +213,7 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 | `AccountNotProvisionedSpike` | `eduworld_auth_logins_total{result="not_provisioned"}` > 50/giờ ở một trường | Warning | SIS sync lỗi hoặc tài khoản chưa cấp; báo School Admin (ADR-0063) |
 | `GameRefreshReuseSpike` | `rate(eduworld_auth_game_refresh_total{result=~"reused|device_mismatch"}[15m])` > 5× baseline hoặc > 20/giờ ở một tenant | Warning | Dấu hiệu token bị đánh cắp hoặc client refresh song song; xem audit theo `device_id`, kiểm tra bản client mới (single-flight) |
 | `LoginWaitingRoomActive` | `eduworld_auth_waiting_room_queued` > 0 liên tục 10 phút | Warning | Xem có cần nâng ngưỡng/scale |
-| `LoginErrorSpike` | `keycloak_user_events_total{event="login_error"}` tăng > 5× baseline 15 phút | Warning | Có thể credential stuffing; xem brute-force |
+| `LoginErrorSpike` | `keycloak_user_events_total{event="login_error"}` tăng > 5× baseline 15 phút (baseline = tốc độ 1 ngày trước; sàn 1 lỗi/phút [Proposed]) | Warning | Có thể credential stuffing; xem brute-force |
 | `SisSyncStale` | `time() - eduworld_sis_last_success_timestamp` > 26 giờ theo connection ([SIS_INTEGRATION §8](../09-identity/SIS_INTEGRATION.md)) | Warning | Xem run lỗi (`listSisSyncRuns`), báo trường |
 | `SisLoginSyncTimeouts` | `eduworld_sis_login_sync_total{branch="blocking",result="timeout"}` > 5% nhánh B trong 10 phút ([SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md)) | Warning | Kiểm tra SIS của trường; breaker theo connection |
 | `SisLookupTimeouts` | `eduworld_sis_lookup_total{result="timeout"}` > 20% trong 15 phút theo connection | Warning | Báo trường; kiểm tra facade SIS |
@@ -207,13 +221,15 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 | `ContentCacheHitLow` | Hit ratio Valkey nội dung < 90% trong 30 phút (giờ học) | Warning | Kiểm tra TTL, eviction |
 | `MediaPipelineBacklog` | `eduworld_media_queue_pending` > 200 trong 15 phút | Warning | Tăng replica `worker-events` (hoặc tách profile `media`) |
 | `MediaInfectedFile` | `eduworld_media_infected_total` tăng | Warning | Xem tài khoản upload, audit |
-| `CdnErrorRate` | CDN 5xx > 1% trong 10 phút | Critical | Kiểm tra origin object storage |
+| `CdnErrorRate` | CDN 5xx > 1% trong 10 phút — **tạm thời** đo bằng tỷ lệ lỗi probe blackbox một object CDN công khai (job `blackbox-cdn`) cho tới khi tích hợp metric của nhà cung cấp CDN (stand-in, AGENTS R17) | Critical | Kiểm tra origin object storage |
 | `ObjectStorageDown` | Health check backend lỗi hoặc tỷ lệ lỗi S3 từ adapter S3 của các module > 5% trong 2 phút | Critical | RB-05 (BACKUP_RECOVERY); kiểm tra nhà cung cấp hoặc node `storage` |
 | `ObjectStorageNodeDown` | Cụm tự host (ADR-0075): < 3 node `storage` khỏe trong 5 phút | Warning | Thay node, theo dõi rebalance (RB-05 bước 1) |
 | `ObjectStorageReplicationLag` | Độ trễ replication bucket riêng tư > 5 phút trong 10 phút | Critical | Kiểm tra replication; vi phạm RPO bucket riêng tư (BACKUP_RECOVERY §1) |
 | `ObjectStorageVolumeHigh` | Dung lượng cụm/hạn mức bucket > 80% | Warning | Mở rộng dung lượng, rà soát object mồ côi |
 | `ObjectStorageBackupMissing` | Không có bản sao object storage ngoài cụm/ngoài nhà cung cấp thành công trong 26 giờ | Critical | Chạy lại job sao chép, kiểm tra đích lưu trữ |
-| `AnalyticsRawRowsHigh` | `analytics.events_raw` > 400 triệu dòng (80% ngưỡng ADR-0058) | Warning | Chuẩn bị ADR chuyển kho/lưu trữ lạnh (ADR-0070) |
+| `AnalyticsRawRowsHigh` | `analytics.events_raw` > 400 triệu dòng (80% ngưỡng ADR-0058) trong 1 giờ | Warning | Chuẩn bị ADR chuyển kho/lưu trữ lạnh (ADR-0070) |
+| `AnalyticsRollupSlow` | p95 rollup một ngày-tenant của Game Analytics > 2 giờ trong 1 giờ (§10, [GAME_ANALYTICS §10](GAME_ANALYTICS.md)) | Warning | Xem job `analytics-rollup-hourly`/`dashboard-day-close-game`, kích thước `events_raw` |
+| `ExperimentGuardrailBreached` | Một thí nghiệm A/B bị guardrail dừng (`increase(eduworld_experiment_guardrail_breaches_total[1d]) > 0`, F035) | Warning | Xem kết quả `getLearningExperimentResults` |
 | `ServiceDown` | Mọi replica của một Swarm service (`core-api`, `realtime`, `worker-*`) không ready > 2 phút (label `service`, `profile`) | Critical | `core-api` down = mọi REST của 5 module down; xem log/trace và panic gần nhất, rollback nếu sau deploy; các binary khác chạy chế độ suy giảm |
 | `ModuleDatabaseUnavailable` | Pool database của một module trong `core-api` không kết nối được > 2 phút (label `module`) | Critical | Route của module đó trả `503`, module khác vẫn chạy (DEPLOYMENT §14); kiểm tra PgBouncer/role của module |
 | `PanicRecoveredSpike` | `increase(eduworld_panics_recovered_total[5m]) > 10` cho một `module` | Warning (Critical nếu kèm `SwarmTaskRestartLoop` của `core-api`) | Lỗi lập trình trong module; xem trace, tắt tính năng bằng feature flag hoặc rollback `core-api` |
@@ -236,15 +252,17 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 | `LearningPartitionsMissing` | `eduworld_learning_events_partition_months_ahead < 2` (bảng `learning_events`, `attempt_answers`, `mastery_history`, `progress_daily`) | Critical | Job `learning-events-partitions` (worker `jobs`, mỗi ngày) không chạy hoặc lỗi; các bảng này không có partition `DEFAULT` nên ghi sẽ lỗi khi hết tháng (F031-AC-04) |
 | `InfraPartitionRefused` | `increase(eduworld_infra_partition_refused_total[1d]) > 0` | Warning | Partition hết hạn còn outbox chưa publish hoặc dead letter chưa xử lý: kiểm tra relay/DLQ |
 | `MatchmakingStalled` | `mm_queue_size` > 0 và không có proposal mới trong 3 phút (giờ học) | Warning | Kiểm tra lock matchmaker |
-| `MatchmakingWaitHigh` | p95 `mm_wait_seconds` > 90s trong 15 phút | Warning | Xem mở rộng rating window |
+| `MatchmakingWaitHigh` | p95 `mm_wait_seconds{result="matched"}` > 60 s trong 15 phút (thống nhất [MATCHMAKING §10](../03-social-multiplayer/MATCHMAKING.md), F104) | Warning | Xem mở rộng rating window |
+| `MatchmakerLoopSlow` | p95 một lượt matchmaker > 1 s trong 10 phút ([MATCHMAKING §10](../03-social-multiplayer/MATCHMAKING.md)) | Warning | Kiểm tra độ trễ Valkey, số hàng đợi mỗi worker |
+| `CompetitionRoomTickSlow` | p99 tick phòng > 20 ms trong 10 phút ([REALTIME_ARCHITECTURE §8](../06-architecture/REALTIME_ARCHITECTURE.md)) | Warning | Xem số phòng mỗi replica `core-api` |
 | `DuplicateMatchResults` | `match_results_total{result="duplicate_rejected"}` tăng đột biến > 20/5 phút | Warning | Nghi lỗi client/anti-cheat |
-| `OutboxLagHigh` | `outbox_relay_lag_seconds{module}` > 60s trong 5 phút | Critical | XP/quest/mastery/projection bị trễ; kiểm tra `worker-events` (relay của module) và NATS |
+| `OutboxLagHigh` | `eduworld_outbox_lag_seconds{module}` > 60s trong 5 phút | Critical | XP/quest/mastery/projection bị trễ; kiểm tra `worker-events` (relay của module) và NATS |
 | `PostgresReplicationLag` | > 30s | Critical | Nguy cơ RPO |
 | `PostgresConnectionsHigh` | > 85% `max_connections` | Warning | |
 | `PostgresDiskHigh` | > 80% | Warning; > 90% Critical | |
 | `ValkeyMemoryHigh` | > 85% maxmemory | Warning | |
 | `ValkeyDown` | không phản hồi 1 phút | Critical | Realtime degraded |
-| `KeycloakLoginFailuresSpike` | Login thất bại > 5× baseline trong 10 phút | Warning | Nghi brute-force/IdP lỗi |
+| `KeycloakLoginFailuresSpike` | Login game thất bại (`eduworld_auth_game_login_total{result=~"invalid_credentials|account_locked"}`) > 5× baseline trong 10 phút (sàn 1/phút [Proposed]) | Warning | Nghi brute-force/IdP lỗi |
 | `JWKSFetchFailing` | Lỗi tải JWKS > 5 phút | Critical | |
 | `SISSyncFailed` | 2 lần sync liên tiếp thất bại cho một connection | Warning | Báo School Admin |
 | `ChatModerationBacklog` | Case `high` chờ > 30 phút | Critical | Báo ca trực Platform Safety Team (ADR-0072); case p1 (grooming, tự hại) theo on-call 24/7 [Confirmed] |
@@ -253,10 +271,8 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 | `ModerationOncallGap` | `min by (oncall_role) (eduworld_moderation_oncall_coverage) == 0` trong 5 phút (không có ca trực hiện hành của vai trò, F124) | Critical | Trưởng ca tạo ca thiếu; xem [Runbook vòng trực](#runbook-moderation-oncall-gap) |
 | `EmailDeliveryFailing` | `increase(eduworld_email_deliveries_total{status="failed"}[15m]) > 0` (email nhân sự hết `email_delivery_max_attempts`, F124) | Critical | Kiểm SMTP; xem [Runbook email](#runbook-email-delivery-failing) |
 | `SchoolSafetyNotificationNoRecipient` | `increase(eduworld_school_safety_notification_no_recipient_total[1h]) > 0` (trường không có School Admin/Tenant Admin nhận email, F124) | Warning | Gán School Admin; Safety Team liên hệ trường trực tiếp |
-
-Alert có nhãn `team: safety` (`ModerationP1Unclaimed`, `ModerationSlaBreached`, `ModerationSchoolNotificationsOverdue`, `ModerationOncallGap`, `EmailDeliveryFailing`, `SchoolSafetyNotificationNoRecipient`) định tuyến tới receiver `safety-oncall` của Alertmanager (`deploy/observability/alertmanager/alertmanager.yml`: gửi ngay, nhắc lại mỗi 15 phút; URL webhook là secret `ops_alert_safety_*`) — F124; định tuyến chung và kênh SMS: F131.
 | `ModerationSchoolNotificationsOverdue` | `eduworld_moderation_school_notifications_overdue > 0` trong 1 giờ | Warning | Theo dõi trường chưa xác nhận ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md)) |
-| `ChatPIISpike` | Tỷ lệ PII blocked > 5× baseline 15 phút | Warning | Kiểm tra sự cố/chiến dịch spam |
+| `ChatPIISpike` | Tỷ lệ PII blocked (`eduworld_chat_sensitive_matches_total{category="pii"}`) > 5× baseline 15 phút (sàn 1/phút [Proposed]) | Warning | Kiểm tra sự cố/chiến dịch spam |
 | `NotificationConsumerBacklog` | `eduworld_consumer_pending{consumer=~"chat.notify_.*"} > 1000` trong 10 phút (F123) | Warning | Kiểm tra module learning (`listAssignmentRecipients`) và `DLQ_CHAT` |
 | `NotificationDeliverySlow` | p95 `eduworld_notification_delivery_latency_seconds` > 2 s trong 15 phút (SC-001 của F123) | Warning | Kiểm tra độ trễ consumer `chat.notify_*` và publish Valkey `ew:rt:user:<id>` |
 | `ChatModerationDisabled` | `eduworld_chat_policy_disabled == 1` cho bất kỳ tenant/bước nào | Warning (ngay khi tắt) | Xác nhận với System Admin đã tắt, kiểm tra lý do và `expires_at` (ADR-0030) |
@@ -268,39 +284,39 @@ Alert có nhãn `team: safety` (`ModerationP1Unclaimed`, `ModerationSlaBreached`
 | `ChatPersistLagHigh` | `histogram_quantile(0.95, eduworld_chat_persist_lag_seconds) > 5` trong 10' hoặc `nats_consumer_num_pending{consumer="persister"} > 10000` | Warning | Kiểm tra `chat-persister`, PostgreSQL; JetStream giữ 72 h nên còn thời gian xử lý |
 | `ChatDLQNotEmpty` | `nats_stream_total_messages{stream="DLQ_CHAT"} > 0` | Warning | Xem message lỗi, sửa và replay |
 | `ChatSendLatencyHigh` | p95 `eduworld_chat_send_latency_seconds` > 0,3 s trong 10' | Warning | NFR-PERF-003 |
-| `ChatPurgeBacklog` | `eduworld_chat_purge_backlog_days > 2` hoặc job lỗi | Warning | Kiểm tra job `gameplay-chat-purge`, case mở đang hoãn purge (ADR-0033) |
-| `GameTakeoverSpike` | `eduworld_game_session_takeovers_total` tăng > 5× baseline 1 h | Warning | Có thể dùng chung tài khoản / lộ mật khẩu hàng loạt |
+| `ChatPurgeBacklog` | `eduworld_chat_purge_backlog_oldest_seconds` > 2 ngày hoặc `eduworld_chat_purge_failures_total` tăng | Warning | Kiểm tra job `gameplay-chat-purge`, case mở đang hoãn purge (ADR-0033) |
+| `GameTakeoverSpike` | `eduworld_game_session_takeovers_total` tăng > 5× baseline 1 h (sàn 10 lượt/giờ [Proposed]) | Warning | Có thể dùng chung tài khoản / lộ mật khẩu hàng loạt |
 | `BackupFailed` / `BackupMissing` | Job backup thất bại hoặc không có backup thành công trong 26h | Critical | [BACKUP_RECOVERY](BACKUP_RECOVERY.md) |
 | `CertificateExpiring` | TLS cert hết hạn < 14 ngày | Warning | |
-| `ClientCrashRateHigh` | Crash rate phiên bản mới > 2% phiên | Warning | Cân nhắc dừng rollout store |
+| `ClientCrashRateHigh` | Crash rate theo `client_version` > 2% phiên trong 1 giờ (`eduworld_client_crashes_total` / `eduworld_client_sessions_total`) | Warning | Cân nhắc dừng rollout store |
 | `DashboardSlow` | p95 `eduworld_dashboard_query_duration_seconds` > 2 s trong 15 phút (giờ học) | Warning | Xem query_id chậm, EXPLAIN, cache hit; cân nhắc ngưỡng nâng cấp ([DASHBOARD_DATA §12](../07-backend/DASHBOARD_DATA.md#12-ngưỡng-nâng-cấp)) |
 | `DashboardTimeoutsSpike` | `eduworld_dashboard_rejected_total{reason="timeout"}` > 1% truy vấn trong 15 phút | Warning | Truy vấn vượt `statement_timeout` 5 s; kiểm tra index/partition pruning |
 | `RollupLagHigh` | `eduworld_rollup_lag_seconds` > 900 s (learning) hoặc > 3.600 s (game) trong 15 phút | Warning | Kiểm tra consumer rollup, NATS pending |
 | `DayCloseNotDone` | Job `dashboard-day-close` chưa thành công cho ngày hôm qua lúc 05:00 ICT | Warning | Chạy lại job; dashboard hiển thị "Đang tính" |
 | `DashboardReplicaLag` | Replica dành cho dashboard lag > 60 s trong 10 phút | Warning | Số liệu dashboard bị trễ; không chuyển truy vấn về primary |
 | `LateEventsHigh` | `eduworld_rollup_late_events_total{bucket=">48h"}` > 0,5% event trong ngày | Warning | Kiểm tra client offline/consumer chậm; cân nhắc backfill |
+| `SyntheticProbeFailing` | Probe synthetic (`eduworld_synthetic_probe_success`, chu kỳ 5 phút) không thành công 2 chu kỳ liên tiếp (không mẫu thành công trong 11 phút; lượt `rate_limited` không tính) | Critical | Luồng chính của học sinh hỏng: xem `client-config`/đăng nhập, APISIX, Keycloak |
+| `Watchdog` | Luôn bắn (`vector(1)`) — gửi tới heartbeat ngoài mỗi phút | Warning (không trang) | Mất heartbeat 10 phút: Prometheus hoặc Alertmanager chết |
+| `PrometheusTargetDown` | `up == 0` > 5 phút | Warning | Target không scrape được; xem task/network |
+| `PrometheusTargetSampleLimit` | `prometheus_target_scrapes_exceeded_sample_limit_total` tăng | Warning | Nhãn cardinality cao bất thường; xem metric mới của binary/module |
+| `PrometheusRuleFailures` | `prometheus_rule_evaluation_failures_total` tăng | Critical | Rule lỗi đánh giá: alert có thể mù |
+| `AlertmanagerNotificationsFailing` | `alertmanager_notifications_failed_total` tăng liên tục 10 phút | Critical | Kênh trực không nhận được thông báo; kiểm tra secret `ops_alert_*` và nhà cung cấp |
+
+Alert có nhãn `team: safety` (`ModerationP1Unclaimed`, `ModerationSlaBreached`, `ModerationSchoolNotificationsOverdue`, `ModerationOncallGap`, `EmailDeliveryFailing`, `SchoolSafetyNotificationNoRecipient`) định tuyến tới receiver `safety-oncall` của Alertmanager (`deploy/observability/alertmanager/alertmanager.yml`: gửi ngay, nhắc lại mỗi 15 phút; URL webhook là secret `ops_alert_safety_*`) — F124; định tuyến chung và kênh SMS: F131.
 
 ### Runbook moderation-p1-unclaimed
 
-1. Mở hàng đợi Safety Team: `listModerationCases?severity=p1&assignee=unassigned` (portal workspace E, F122).
-2. Người trực nhận case cũ nhất (`assignModerationCase`); case p1 đã có hạn chế tạm thời người bị báo cáo (`case_hold`, F121-AC-04).
-3. Case tự hại có `support_guide = child_protection_111`: làm theo [CHILD_SAFETY §8–§9](../10-security/CHILD_SAFETY.md); gửi thông báo trường (`notifySchoolForCase`).
-4. Quá 1 giờ: `moderation-sla-escalator` đã chuyển `escalated` — trưởng ca nhận; ghi biên bản vào `docs/11-operations/alert-drills/`.
-5. Vòng trực (F124): case p1 mới đã gán `rotation` cho ca `primary` và email người trực; job `oncall-escalator` gọi tiếp `secondary` (15 phút), trưởng ca (30 phút), System Admin (1 giờ) — kiểm `oncall_page_level` trên case.
+Chuyển sang [runbooks/ModerationP1Unclaimed.md](runbooks/ModerationP1Unclaimed.md) (F131: mỗi alert một runbook).
 
 ### Runbook moderation-oncall-gap
 
-1. `listModerationOncallShifts?from=<now>&to=<now+1d>` — tìm vai trò không có ca hiện hành (gauge `eduworld_moderation_oncall_coverage{oncall_role}` = 0).
-2. Trưởng ca tạo ca bù (`createModerationOncallShift`, người trực có `moderation.case.act`); trong lúc thiếu, case p1 gọi thẳng mức kế tiếp (trưởng ca).
-3. Ghi biên bản thiếu ca vào `docs/11-operations/alert-drills/`.
+Chuyển sang [runbooks/ModerationOncallGap.md](runbooks/ModerationOncallGap.md).
 
 ### Runbook email-delivery-failing
 
-1. Kiểm relay SMTP (`EW_SMTP_HOST`/`EW_SMTP_PORT`, mailpit ở local) và `identity.email_deliveries` (`status = failed`, `last_error_code` chỉ là mã SMTP — không có địa chỉ).
-2. Thông báo vụ việc vẫn hiển thị trong portal của trường; với case p1, Safety Team liên hệ trực tiếp đầu mối an toàn của trường ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md)).
-3. Sửa relay rồi theo dõi lượt gửi mới (`eduworld_email_deliveries_total{status="sent"}`); lượt `failed` không tự gửi lại.
+Chuyển sang [runbooks/EmailDeliveryFailing.md](runbooks/EmailDeliveryFailing.md).
 
-Alert định nghĩa trong `deploy/observability/prometheus/rules/*.yaml`, mỗi alert có `runbook_url` trỏ tới runbook trong `docs/11-operations/runbooks/`; biên bản diễn tập alert lưu ở `docs/11-operations/alert-drills/` ([DEPLOYMENT §15](DEPLOYMENT.md)). Prometheus scrape mỗi task qua cổng quản trị `EW_ADMIN_ADDR` (`tasks.<swarm-service>:9090`, [DEPLOYMENT §14](DEPLOYMENT.md)). Probe synthetic chạy bằng tài khoản `hs.qa.probe` trong tenant QA (`is_qa = true`); số liệu của tenant QA bị loại khỏi analytics và dashboard ([GAME_ANALYTICS](GAME_ANALYTICS.md), [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md)).
+Alert định nghĩa trong `deploy/observability/prometheus/rules/*.yaml` (mỗi rule có nhãn `severity` `critical`/`warning`, `service`/`module`/`profile` khi theo binary/module, annotation `summary`, `runbook_url` = `docs/11-operations/runbooks/<AlertName>.md`, `source` = mục tài liệu này); unit test `promtool test rules` ở `deploy/observability/prometheus/tests/` (mỗi alert ít nhất một ca bắn và một ca không bắn, trừ `Watchdog` luôn bắn); `scripts/obs/check-alerts.mjs` (job `obs-rules`, `obs-runbooks`) đối chiếu song ánh bảng này ↔ rule ↔ runbook ↔ test. Bảng này là nguồn ngưỡng duy nhất (`alert_thresholds`); ngưỡng "giờ học" dùng recording rule `eduworld:school_hours`; biên bản diễn tập alert lưu ở `docs/11-operations/alert-drills/` ([DEPLOYMENT §15](DEPLOYMENT.md)). Prometheus scrape mỗi task qua cổng quản trị `EW_ADMIN_ADDR` (`tasks.<swarm-service>:9090`, [DEPLOYMENT §14](DEPLOYMENT.md)). Probe synthetic chạy bằng tài khoản `hs.qa.probe` trong tenant QA (`is_qa = true`); số liệu của tenant QA bị loại khỏi analytics và dashboard ([GAME_ANALYTICS](GAME_ANALYTICS.md), [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md)).
 
 ## 6. SLO — [Confirmed] (OQ-11)
 
@@ -317,6 +333,8 @@ Alert định nghĩa trong `deploy/observability/prometheus/rules/*.yaml`, mỗi
 | Learning durability | Attempt đã trả 2xx submit không bị mất | 100% (đo bằng đối soát hằng ngày) | — |
 
 Error budget hết → đóng băng tính năng mới, ưu tiên ổn định.
+
+SLI là recording rule trong `deploy/observability/prometheus/rules/slo.yaml` (F131): `eduworld:sli_availability_errors:ratio_rate{5m,30m,1h,6h}` (APISIX công khai, loại `429`), `eduworld:sli_latency_read:ratio_rate5m` (APISIX, nhãn phụ `method`), `eduworld:sli_latency_submit:ratio_rate5m`, `eduworld:sli_realtime_delivery:p95_5m`, `eduworld:sli_ws_connect:ratio_rate5m`, `eduworld:sli_login:ratio_rate5m`, `eduworld:sli_publish:ratio_rate1h`, `eduworld:sli_dashboard:ratio_rate5m`; mục tiêu availability ghi một lần ở `eduworld:slo_availability_target` (= `availability`). Histogram dùng cho SLI phải có bucket đúng ngưỡng SLO (200 ms gateway, 0,4 s submit, 3 s đăng nhập, 30 s publish, 2 s dashboard). Learning durability đo bằng đối soát hằng ngày, không qua Prometheus. Burn rate: `SLOBurnRateFast` (14,4× trên 1 h và 5 phút), `SLOBurnRateSlow` (6× trên 6 h và 30 phút), chỉ trong giờ học.
 
 ## 7. Tracing
 
@@ -345,6 +363,7 @@ Error budget hết → đóng băng tính năng mới, ưu tiên ổn định.
 - Backend gửi panic đã recover và lỗi 5xx không mong đợi kèm `trace_id`; tắt gửi request body, `send_default_pii=false`.
 - Godot: crash report + log ngắn (không PII) qua endpoint telemetry; ghép theo `client_version`, `platform`, `device_tier`.
 - Mỗi issue mới ở production tạo ticket tự động cho đội sở hữu module (theo thẻ `module`).
+- Triển khai (F131): GlitchTip tự host trên node `ops` (PostgreSQL + Valkey riêng, không dùng cụm nghiệp vụ); backend dùng `sentry-go` trong `src/backend/pkg/observability` (DSN qua `EW_ERROR_TRACKING_DSN_FILE`, không đặt = tắt; thu thập dữ liệu người dùng/cookie/header/body/query tắt hết, `BeforeSend` xóa request, user, breadcrumb data); thẻ `service`, `module`, `version`, `trace_id`, `entrypoint` (+ `profile` với worker). `glitchtip-bridge` (`src/backend/tools/glitchtip-bridge`) nhận webhook alert của GlitchTip (`POST /hook/<token>`), đọc thẻ issue qua API GlitchTip và tạo GitHub Issue nhãn `module:<name>` (hoặc `service:<binary>`) + `source:glitchtip`, khử trùng theo dấu `glitchtip-issue:<id>`; chỉ môi trường `production`.
 
 ## 10. Telemetry client Godot
 
