@@ -70,3 +70,5 @@ stateDiagram-v2
 |---|---|---|
 | `audit.recorded` (`game_translation.exported`, `game_translation.imported`) | Job export/import kết thúc | Theo audit pipeline F015 (không nội dung văn bản) |
 | (F078) sự kiện tạo/sửa version | Import tạo/ghi Draft qua command F078 | Theo F078 |
+| `content.rolled_back` (module chat, Mới) | Rollback sticker pack/GIF về version từng publish | [`specs/events/payloads/chat/content.rolled_back.v1.schema.json`](../events/payloads/chat/content.rolled_back.v1.schema.json) |
+| `content.unpublished` (module chat, Mới) | Gỡ sticker pack/GIF khỏi thư viện | [`specs/events/payloads/chat/content.unpublished.v1.schema.json`](../events/payloads/chat/content.unpublished.v1.schema.json) |

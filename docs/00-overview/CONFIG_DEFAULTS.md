@@ -308,14 +308,15 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 |---|---|---|---|---|---|
 | `lesson_completion_heartbeat` | ≥ 50% thời lượng | — | platform | [Confirmed] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
 | `school_dashboard_refresh` | 15 phút; trang chủ p95 < 1,5 s (School Learning Dashboard, ADR-0072) | — | code | [Confirmed] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
-| `report_link_ttl` | 15 | phút | code | [Confirmed] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
+| `report_link_ttl` | 15 (cũng là hạn link tải file dịch nội dung game — F082, `EW_GAME_REPORT_LINK_TTL_MINUTES`) | phút | code | [Confirmed] | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
+| `game_translation_job_lease` | 5 phút giữ job dịch đang chạy; hết hạn → worker khác nhận lại; tối đa 3 lần thử rồi `failed` | phút | code | [Confirmed — F082 2026-11-26] | [CONTENT_MODEL §8](../02-learning/CONTENT_MODEL.md#8-ngôn-ngữ-nội-dung-và-bản-dịch-adr-0056) |
 | `former_teacher_access` | 1 năm dữ liệu lớp cũ | — | tenant | Không dùng (ADR-0072: không có vai trò giáo viên) | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
 | `scheduled_publish_min_lead` | ≥ 5 | phút | platform | [Confirmed] | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) |
 | `assets_per_version_max` | 50 | asset | platform | [Confirmed] (ADR-0044) | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) |
 | `game_render_max_attempts` | 5 (số lần render thumbnail/turntable trước khi chuyển DLQ; `EW_GAME_RENDER_MAX_ATTEMPTS`) | lần | code | [Confirmed — F078 2026-11-24] | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) §7 |
 | `game_render_retry_backoff` | 60 (gốc backoff lũy thừa 2 giữa các lần render lỗi, tối đa 1 giờ; `EW_GAME_RENDER_BACKOFF_SECONDS`) | giây | code | [Confirmed — F078 2026-11-24] | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) §7 |
 | `content_snapshot_cache_ttl` | 7 ngày, TTL trượt (snapshot bất biến `ew:<module>:cv:…`) | ngày | code | [Confirmed — Technical Architect 2026-11-16] (ADR-0043) | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) §5.4 |
-| `media_max_bytes_by_kind` | ảnh ≤ 10 MB · âm thanh ≤ 20 MB, ≤ 10 phút · video ≤ 300 MB, ≤ 20 phút · mô hình 3D/scene ≤ 50 MB | — | platform | [Confirmed — Technical Architect 2026-11-16] (ADR-0044) | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) §7 |
+| `media_max_bytes_by_kind` | ảnh ≤ 10 MB · âm thanh ≤ 20 MB, ≤ 10 phút · video ≤ 300 MB, ≤ 20 phút · mô hình 3D/scene ≤ 50 MB · file dịch nội dung game (`document`, XLIFF/CSV) ≤ 5 MB [Confirmed F082 2026-11-26] | — | platform | [Confirmed — Technical Architect 2026-11-16] (ADR-0044) | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) §7 |
 | `media_presign_ttl` | 15 (presigned PUT tải lên `ew-media-quarantine`) | phút | code | [Confirmed — Technical Architect 2026-11-16] (ADR-0044) | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) §7 |
 | `media_signed_url_ttl` | 10 (signed URL CDN cho `ew-media-private`) | phút | code | [Confirmed — Technical Architect 2026-11-16] (ADR-0044) | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) §7 |
 | `preview_token_ttl` | 30 (chỉ đọc draft được chỉ định; không tạo attempt, XP, learning event) | phút | code | [Confirmed — Technical Architect 2026-11-16] | [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) §5 |

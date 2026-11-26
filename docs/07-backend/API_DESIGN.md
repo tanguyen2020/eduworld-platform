@@ -867,8 +867,8 @@ Vùng **Learning Management** (ADR-0027): dùng được bởi vận hành tenan
 | `challenge-templates` | module `competition` | Template thử thách khối (ADR-0095) | `competition.config.tournament_template.write` | `challenge-template.schema.json` | P4 |
 | `leaderboard-definitions` | module `competition` | Định nghĩa bảng xếp hạng (singleton, không gỡ) | `competition.config.leaderboard.write` | `leaderboard-definition.schema.json` | P4 |
 | `competition-rewards` | module `competition` | Phần thưởng thi đấu (mùa, bảng, giải, thử thách — chỉ cosmetic/badge/title) | `competition.config.reward.write` | `competition-reward.schema.json` | P4 |
-| `sticker-packs` | module `chat` | Sticker pack + sticker (upload qua presigned URL, `unlock_rule`, publish, gán tenant) | `game.chat_assets.write` | — | P4 |
-| `gifs` | module `chat` | Thư viện GIF nội bộ (upload presigned, tag, duyệt, publish) | `game.chat_assets.write` | — | P4 |
+| `sticker-packs` | module `chat` | Sticker pack + sticker (upload qua `presignChatAssetUpload` `POST /game-admin/{config_type}/{config_id}/assets:presign`, `unlock_rule` `{item_id}` mã vật phẩm hoặc `{reward_rule_id}`, publish, diff/rollback/unpublish/lịch sử — F082, gán tenant qua facade chat) | `game.chat_assets.write` | `sticker-pack.schema.json` | P4 |
+| `gifs` | module `chat` | Thư viện GIF nội bộ (upload presigned, tag, duyệt người khác người upload, publish, diff/rollback/unpublish — F082; danh sách lọc `tag`, `author_id`) | `game.chat_assets.write` | `gif.schema.json` | P4 |
 
 | Method | Path | Mô tả | Idem | Phase |
 |---|---|---|---|---|
@@ -889,7 +889,7 @@ Vùng **Learning Management** (ADR-0027): dùng được bởi vận hành tenan
 | POST / GET | `/game-media:presign-upload`, `/game-media/{asset_id}` | Upload/xem media nội dung game (module `game`, gateway nội bộ; tách prefix khỏi `/game-admin/{config_type}` để path không mơ hồ) | B / T | P2 |
 | POST | `/game-admin/preview/sessions` | Preview token Godot Web cho draft | B | P3 |
 | GET | `/game-admin/preview/snapshot?config_type=&config_id=&version=` | Portal đọc version của phiên preview (rồi chuyển cho Godot Web trong `GamePreviewFrame` — F079) với header `X-Preview-Token` (chỉ version đó, chỉ người tạo, hạn `preview_token_ttl`; khác → `403`) — `getGamePreviewSnapshot` (F078) | T | P3 |
-| POST | `/game-admin/translations:export` / `:import` | Xuất/nhập file dịch nội dung game (XLIFF/CSV, job `202`); nhập tạo version Draft mới; permission `game.content.translate` (ADR-0056) — `exportGameTranslations`, `importGameTranslations` | B | P3 |
+| POST | `/game-admin/translations:export` / `:import` | Xuất/nhập file dịch nội dung game (XLIFF/CSV, job `202`, `409`/`428` theo idempotency); nhập tạo version Draft mới, file nhập là media game `kind = document`; permission `game.content.translate` (ADR-0056, F082) — `exportGameTranslations`, `importGameTranslations`; `listGameConfigs` của loại game lọc thêm `translation_status`, `GameConfigVersion` mang `translation_status`/`missing_fields`/`outdated_fields` | B | P3 |
 | GET | `/game-admin/translations/jobs/{job_id}` | Trạng thái job dịch — `getGameTranslationJob` | T | P3 |
 | POST | `/game-admin/events/{event_id}/runs/{run_id}:suspend` / `:resume` / `:cancel` | Dừng khẩn cấp / tiếp tục / hủy sự kiện đang chạy; lý do bắt buộc; audit; permission `game.event.operate` ([EVENT_SEASON_SYSTEM §5](../01-game-design/EVENT_SEASON_SYSTEM.md#5-vòng-đời-sự-kiện)) | B | P3 |
 | GET | `/game-admin/events/{event_id}/runs/{run_id}/stats` | Số tham gia, tiến độ community goal, tỷ lệ nhận thưởng; `game.liveops.read` | T | P3 |

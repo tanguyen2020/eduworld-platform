@@ -267,6 +267,13 @@ Khóa ngôn ngữ trong dữ liệu luôn là `vi`/`en` (không dùng `vi-VN`/`e
 
 `translation_status` (`complete` \| `partial` \| `outdated`) được tính khi lưu, lưu cùng version để portal lọc nội dung cần dịch.
 
+**Văn bản game — trạng thái và file dịch (F082)** [Confirmed 2026-11-26]
+
+- Văn bản game là mọi node JSON chỉ gồm khóa `vi`/`en` (`$defs/localized_text`), pointer RFC 6901 cụ thể theo chỉ số mảng — cùng quy tắc với kiểm `TRANSLATION_INCOMPLETE` khi gửi duyệt.
+- Nháp được lưu khi còn thiếu bản dịch (`partial` + `missing_fields`); kiểm loại chạy trên bản sao điền tạm ngôn ngữ thiếu, đủ `vi` + `en` vẫn bắt buộc ở `submit_review` và publish.
+- `outdated`: SHA-256 (NFC) của bản `vi` khác hash lúc dịch lần cuối trong khi bản đích không đổi; meta chỉ lưu hash + version dịch (`translated_in_version`), diff bản gốc qua `diffGameConfigVersions`. Version tạo từ version khác kế thừa meta; version cũ chưa có trạng thái được job `game-translation-state-backfill` tính (bản dịch hiện có coi là mới).
+- File dịch: XLIFF 2.1 hoặc CSV UTF-8 có BOM (`key,source,target,note`), khóa `<config_type>/<config_id>/<version>/<json-pointer>`, mặc định chỉ trường thiếu/lỗi thời. Nhập: chỉ version mới nhất (`stale_version` nếu cũ hơn, `version_in_review` nếu đang duyệt), Draft mở được ghi tại chỗ, version `approved`/`published`/`archived` sinh Draft mới dựa trên nó — không bao giờ sửa version đã publish (ADR-0043); mỗi item một transaction, dòng lỗi vào `report.errors[]`, file sai định dạng → job `failed`; `dry_run` chỉ báo cáo. File nhập là media game `kind = document` (≤ 5 MB), kiểm kích thước/sha256/virus, giữ riêng tư, không CDN.
+
 **Phục vụ và fallback**
 
 - API nhận `Accept-Language`; với snapshot nội dung game và content manifest (cache dài, §5.3–5.4) **trả cả hai ngôn ngữ** để client đổi ngôn ngữ không phải tải lại; với API học tập trả bản theo ngôn ngữ yêu cầu, thiếu thì bản `content_language`.

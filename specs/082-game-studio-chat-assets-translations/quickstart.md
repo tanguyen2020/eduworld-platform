@@ -47,3 +47,8 @@ pnpm --filter portal exec playwright test tests/e2e/game-ops/chat-assets tests/e
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test (số pass/fail), trace_id của bước 12–13, file XLIFF mẫu (đã ẩn nội dung nếu cần), ảnh màn hình sticker editor/thư viện GIF/trang dịch (sáng/tối), báo cáo axe.
+
+## 5. Bằng chứng triển khai (2026-11-26)
+
+- Kịch bản 1–20 được phủ bằng test tự động (bảng AC → test trong [tasks.md](tasks.md)); chạy tay trên stack compose (`make up` + portal) chưa làm — máy triển khai không dựng stack đầy đủ (giống F079, T037 còn mở).
+- Lệnh đã chạy: `go test` unit module game/chat/identity, `go test -tags integration` (testcontainers) các test F082 và toàn bộ suite của module game/chat, Vitest các file `game-ops/__tests__` và ops-ui mới; số liệu trong báo cáo hoàn thành của CODE_PLAN.

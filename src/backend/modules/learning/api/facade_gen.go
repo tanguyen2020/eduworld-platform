@@ -411,6 +411,7 @@ const (
 	CommonInternalCommonV1ResourceTypeQuestionSet         CommonInternalCommonV1ResourceType = "question_set"
 	CommonInternalCommonV1ResourceTypeSchoolSettings      CommonInternalCommonV1ResourceType = "school_settings"
 	CommonInternalCommonV1ResourceTypeShopItem            CommonInternalCommonV1ResourceType = "shop_item"
+	CommonInternalCommonV1ResourceTypeStickerPack         CommonInternalCommonV1ResourceType = "sticker_pack"
 	CommonInternalCommonV1ResourceTypeTenantSettings      CommonInternalCommonV1ResourceType = "tenant_settings"
 	CommonInternalCommonV1ResourceTypeTournamentTemplate  CommonInternalCommonV1ResourceType = "tournament_template"
 )
@@ -451,6 +452,8 @@ func (e CommonInternalCommonV1ResourceType) Valid() bool {
 	case CommonInternalCommonV1ResourceTypeSchoolSettings:
 		return true
 	case CommonInternalCommonV1ResourceTypeShopItem:
+		return true
+	case CommonInternalCommonV1ResourceTypeStickerPack:
 		return true
 	case CommonInternalCommonV1ResourceTypeTenantSettings:
 		return true
