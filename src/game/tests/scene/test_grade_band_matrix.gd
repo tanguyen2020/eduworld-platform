@@ -7,7 +7,8 @@ extends GdUnitTestSuite
 ## nothing is cut off or outside the view. Screens: S01 login, Hub HUD, activity (single choice, true/false, matching,
 ## numeric), feedback (grading, right, not yet right), result, S02 character creation, wardrobe and shop (F069), level
 ## up, world map; F123: the HUD with the bell count and toasts, the notification inbox (rows, empty) and the Settings
-## tab Thông báo. FakeHttp + contract fixtures (TEST-ONLY).
+## tab Thông báo; F102: the Party screen (lobby, alone + invitation, invite picker, activity choice, leave, countdown) and
+## the HUD with the party strip + invitation popup. FakeHttp + contract fixtures (TEST-ONLY).
 
 const HOST: String = "res://scenes/learning/ActivityHost.tscn"
 const SETTLE_FRAMES: int = 6
@@ -417,6 +418,74 @@ func test_notification_inbox_fits_every_band() -> void:
 func test_notification_inbox_empty_fits_every_band() -> void:
 	_assert_none(await _matrix("notification_inbox_empty", func(vp: SubViewport, _band: String) -> Node:
 		return await _inbox(vp, true)))
+
+
+## F102 (F102-AC-17, AC-18): the Party screen — in the sample party as its leader (cards, activity, Ready / Start), alone
+## with a pending invitation, the invite picker, the activity choice (cards g1_3/g4_5, dropdown g6_7/g8_9), the leave
+## confirmation and the 3-2-1 countdown — and the HUD with the party strip and the invitation popup.
+func _party_lobby(vp: SubViewport, band: String, view: String) -> Node:
+	var party: PartyService = s.services.party
+	party.clear()
+	party._refresh_self()
+	PartyFixtures.script(s.h.http, party.store.self_id, view == "alone")
+	if view == "alone":
+		s.h.http.clear(PartyFixtures.ROUTE_INVITATIONS).reply(PartyFixtures.ROUTE_INVITATIONS, 200,
+				PartyFixtures.invitations(party.now_ms()))
+	var lobby: PartyLobby = _mount(vp, _scene("res://scenes/social/PartyLobby.tscn")) as PartyLobby
+	lobby.service = party
+	lobby.open({})
+	for i: int in 8:
+		await await_idle_frame()
+	match view:
+		"invite":
+			lobby.picker().open(party)
+		"activity":
+			lobby.selector().open(party, band)
+		"activity_open":
+			lobby.selector().open(party, band)
+			for i: int in 6:
+				await await_idle_frame()
+			if not lobby.selector().uses_cards():
+				lobby.selector().dropdown_button().pressed.emit()
+		"leave":
+			lobby.leave_button().pressed.emit()
+		"countdown":
+			lobby.start_countdown()
+	return lobby
+
+
+func test_party_lobby_fits_every_band() -> void:
+	var failures: PackedStringArray = []
+	for view: String in ["lobby", "alone", "invite", "activity", "activity_open", "leave", "countdown"]:
+		failures.append_array(await _matrix("party_" + view, func(vp: SubViewport, band: String) -> Node:
+			return await _party_lobby(vp, band, view)))
+	_assert_none(failures)
+
+
+## F102-AC-16: the pseudo-locale (+35% text, ADR-0056) still fits — wraps or ellipsises, nothing cut or outside.
+func test_party_lobby_fits_every_band_with_long_text() -> void:
+	var locale: String = String(Settings.locale)
+	Settings.set_locale(L10n.pseudo_locale(), false)
+	var failures: PackedStringArray = []
+	for view: String in ["lobby", "alone", "activity_open"]:
+		failures.append_array(await _matrix("party_pseudo_" + view, func(vp: SubViewport, band: String) -> Node:
+			return await _party_lobby(vp, band, view)))
+	Settings.set_locale(locale, false)
+	_assert_none(failures)
+
+
+func test_hub_with_party_fits_every_band() -> void:
+	await s.services.progression.refresh()
+	await s.services.inventory.load_wallet()
+	_assert_none(await _matrix("hud_party", func(vp: SubViewport, _band: String) -> Node:
+		var party: PartyService = s.services.party
+		party.clear()
+		party._refresh_self()
+		PartyFixtures.script(s.h.http, party.store.self_id)
+		var hud: Node = _mount(vp, _scene("res://scenes/ui/hud/MainHud.tscn"))
+		await party.load_my_party()
+		hud.call("show_invitation", InvitationModel.from_dict(PartyFixtures.invitation_ws(party.now_ms())))
+		return hud))
 
 
 ## The probe itself catches what it must (a guard against a silent matrix).

@@ -10,6 +10,14 @@ extends Control
 var skin: Color = Color.WHITE
 var hair: Color = Color.WHITE
 var outfit: Color = Color.WHITE
+## F102: a portrait of its own (party member card, HUD party strip, invite picker) sized by `custom_minimum_size` instead
+## of filling the top margin of a parent `PictureTile`.
+var standalone: bool = false
+## F102: the tick badge of a chosen tile on a standalone portrait (a party member who is Ready, on the HUD strip).
+var ready_mark: bool = false:
+	set(value):
+		ready_mark = value
+		queue_redraw()
 
 
 func _init() -> void:
@@ -18,6 +26,8 @@ func _init() -> void:
 
 
 func _ready() -> void:
+	if standalone:
+		return
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var parent: Control = get_parent() as Control
 	if parent != null:
@@ -42,7 +52,7 @@ func set_look(config: AvatarConfigModel, fallback: Color = UiTokens.COMPONENT_AN
 ## Covers the top margin of the tile (where `PictureTile` leaves room for the picture).
 func _layout() -> void:
 	var parent: Control = get_parent() as Control
-	if parent == null:
+	if parent == null or standalone:
 		return
 	var box: StyleBox = parent.get_theme_stylebox(&"normal")
 	var pad: float = box.content_margin_left if box != null else 0.0
@@ -56,6 +66,8 @@ func _layout() -> void:
 
 
 func is_selected() -> bool:
+	if standalone:
+		return false
 	var parent: BaseButton = get_parent() as BaseButton
 	return parent != null and parent.toggle_mode and parent.button_pressed
 
@@ -90,13 +102,16 @@ func _draw() -> void:
 	for x: float in [-0.19, 0.19]:
 		draw_circle(head_c + Vector2(x, 0.15) * side, side * 0.035, UiTokens.COMPONENT_MASCOT_CHEEK)
 	draw_arc(head_c + Vector2(0.0, 0.15) * side, side * 0.045, PI * 0.2, PI * 0.8, 10, ink, line, true)
-	if is_selected():
-		var c: Vector2 = o + Vector2(0.88, 0.14) * side
-		var r: float = side * 0.13
+	if is_selected() or ready_mark:
+		# A Ready badge on a small HUD portrait is drawn larger so the tick reads at phone size.
+		var big: bool = ready_mark and not is_selected()
+		var c: Vector2 = o + (Vector2(0.8, 0.2) if big else Vector2(0.88, 0.14)) * side
+		var r: float = side * (0.2 if big else 0.13)
+		# The HUD Ready badge is the chosen-chip pair (yellow disc, ink tick, F114); the tile badge keeps its F097 look.
 		draw_circle(c, r + line, ink)
-		draw_circle(c, r, UiTokens.COMPONENT_ANSWER_TILE_TEXT_SELECTED)
+		draw_circle(c, r, UiTokens.COMPONENT_CHOICE_CHIP_SELECTED_BG if big else UiTokens.COMPONENT_ANSWER_TILE_TEXT_SELECTED)
 		draw_polyline(PackedVector2Array([c + Vector2(-0.45, 0.0) * r, c + Vector2(-0.1, 0.35) * r,
-				c + Vector2(0.5, -0.35) * r]), UiTokens.COMPONENT_CHIP_SELECTED_BG, line * 1.6, true)
+				c + Vector2(0.5, -0.35) * r]), ink if big else UiTokens.COMPONENT_CHIP_SELECTED_BG, line * 1.6, true)
 
 
 static func _arc_points(c: Vector2, r: float, from: float, to: float, steps: int) -> PackedVector2Array:

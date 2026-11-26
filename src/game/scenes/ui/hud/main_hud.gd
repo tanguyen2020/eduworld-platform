@@ -2,8 +2,9 @@ extends CanvasLayer
 ## Main Hub HUD (STUDENT_GAME_UX_CORE S03, F062 US1/US2; spec Clarifications 2026-11-16): only components with real
 ## data in M-C2 — PlayerBadge (nickname + grade band from the bootstrap), the "Nhà trường giao (n)" chip, quest
 ## journal, settings, "Về Quảng trường", the system banner, the ContextActionButton and the touch joystick. The slots
-## XpBar, CurrencyChip, QuestTracker, Minimap, ChatDock and PartyChip exist in the layout but stay hidden until their
-## owning features. Reads AppState only and emits intents; no business logic, no network (AGENTS R1, G-4).
+## XpBar, CurrencyChip, QuestTracker, Minimap and ChatDock exist in the layout but stay hidden until their
+## owning features (F102: PartyChip = PartyHud "Nhóm" + members, InvitationToast). Reads AppState only and emits
+## intents; no business logic, no network (AGENTS R1, G-4).
 ## Layout follows the grade band (`g1_3`: touch targets ≥ 64 dp from UiTokens density, no minimap — F062-AC-05);
 ## every string is a `ui.hub.*` key, re-rendered on a locale change (F062-AC-06). F096: every button carries an icon of
 ## design/icons/game beside its label (F096-AC-09), the "Việc tiếp theo" card always says what to do next
@@ -27,6 +28,9 @@ signal next_step_pressed(screen_id: StringName, args: Dictionary)
 ## F069: the Xu chip was pressed (S08 tab Shop) / the "Thêm" menu (Cửa hàng, Thành tựu, Núi Thử Thách, Hành trình).
 signal shop_pressed()
 signal menu_pressed()
+## F102: the "Nhóm" button / P (no args) or the invitation toast (accepted, or a party switch to confirm) — the owner
+## opens the Party screen with `args`.
+signal party_requested(args: Dictionary)
 
 ## PlayerBadge width in touch-target units (nickname ≤ 24 chars + grade band fit at every density).
 const BADGE_WIDTH_FACTOR: float = 3.0
@@ -37,8 +41,8 @@ const NEXT_STEP_MIN_TOP: float = 0.14
 const NO_MINIMAP_BANDS: PackedStringArray = ["g1_3"]
 ## F069: XpBar (level · title, XP, moon at the daily cap) in the PlayerBadge and the Xu CurrencyChip + "Thêm" menu on
 ## the right (SideBar) show once their data is loaded (ProgressionStore, WalletStore signals — no polling).
-## Slots owned by later features (F074 XP, F075 Xu, F072 quest tracker, F071 minimap, F110 chat, F102 party).
-const FUTURE_SLOTS: PackedStringArray = ["QuestTracker", "Minimap", "ChatDock", "PartyChip"]
+## Slots owned by later features (F072 quest tracker, F071 minimap, F110 chat). F102: PartyChip is the PartyHud.
+const FUTURE_SLOTS: PackedStringArray = ["QuestTracker", "Minimap", "ChatDock"]
 const BAND_KEYS: Dictionary = {
 	"g1_3": "ui.hub.grade_band.g1_3", "g4_5": "ui.hub.grade_band.g4_5", "g6_7": "ui.hub.grade_band.g6_7",
 	"g8_9": "ui.hub.grade_band.g8_9",
@@ -73,12 +77,17 @@ var banner_args: Dictionary = {}
 @onready var _next_step_card: PanelContainer = %NextStep
 @onready var _currency: CurrencyChip = %CurrencyChip
 @onready var _menu: Button = %MenuButton
+## F102: PartyHud ("Nhóm" + member strip) and the invitation popup.
+@onready var _party: PartyHud = %PartyChip
+@onready var _invite_toast: InvitationToast = %InvitationToast
 
 ## F096: the current "Việc tiếp theo" suggestion (NextStepHint.for_assignments).
 var next_step: Dictionary = {}
 
 ## F123: in-game notifications (AppState.services; null in previews and unit tests of the HUD alone).
 var notifications: NotificationService = null
+## F102: the student's party (AppState.services; null in previews and HUD-only tests).
+var party: PartyService = null
 
 
 func _ready() -> void:
@@ -102,6 +111,10 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_layout_left_column)
 	_currency.pressed.connect(shop_pressed.emit)
 	_menu.pressed.connect(menu_pressed.emit)
+	_party.party_pressed.connect(_on_party_pressed)
+	_invite_toast.open_requested.connect(party_requested.emit)
+	EventBus.party_invitation_received.connect(_on_party_invitation)
+	bind_party(AppState.services.party if AppState.services != null else null)
 	bind_progression(AppState.services.progression.store if AppState.services != null else null,
 			AppState.services.inventory.wallet_store if AppState.services != null else null)
 	_onboarding.target_root = self
@@ -116,6 +129,9 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	bind_notifications(null)
+	bind_party(null)
+	if EventBus.party_invitation_received.is_connected(_on_party_invitation):
+		EventBus.party_invitation_received.disconnect(_on_party_invitation)
 	bind_progression(null, null)
 	if get_viewport() != null and get_viewport().size_changed.is_connected(_layout_left_column):
 		get_viewport().size_changed.disconnect(_layout_left_column)
@@ -137,6 +153,8 @@ func apply_band(value: String) -> void:
 	_next_step_button.custom_minimum_size.x = maxf(target * NEXT_STEP_WIDTH_FACTOR, float(UiTokens.SIZE_LAYOUT_280))
 	# F123: the bell widens again to hold its count pill at the new touch target.
 	_bell.call("set_count", notifications.badge if notifications != null else 0)
+	_party.apply_band()
+	_place_invite_toast()
 	_render()
 
 
@@ -152,6 +170,32 @@ func bind_notifications(service: NotificationService) -> void:
 		service.toast_requested.connect(_on_toast_requested)
 		service.badge_changed.connect(_on_badge_changed)
 	_bell.call("set_count", service.badge if service != null else 0)
+
+
+## F102: follows the party of `service` (null unbinds): PartyHud strip, invitation popup.
+func bind_party(service: PartyService) -> void:
+	party = service
+	_party.bind(service.store if service != null else null)
+	if service == null:
+		_invite_toast.dismiss()
+
+
+## F102-AC-03: a new invitation pops the InvitationToast unless popups are off or the student is in an exam, a
+## challenge or the activity player (then only the bell count changes — F123 inbox row).
+func show_invitation(invitation: InvitationModel) -> bool:
+	if party == null or invitation == null or not party.should_popup(invitation):
+		return false
+	_place_invite_toast()
+	_invite_toast.present(invitation, party)
+	return true
+
+
+func invitation_toast() -> InvitationToast:
+	return _invite_toast
+
+
+func party_hud() -> PartyHud:
+	return _party
 
 
 ## ContextActionButton for the Interactable the player stands in ("" hides it).
@@ -175,7 +219,7 @@ func show_hub_notice(key: String) -> void:
 func touch_buttons() -> Array[Button]:
 	return [_assignments_chip, _journal, _bell, _settings, _wardrobe, _map, _home, _context_action, _next_step_button,
 		_onboarding.find_child("Skip", true, false) as Button, _onboarding.find_child("Next", true, false) as Button,
-		_currency, _menu]
+		_currency, _menu, _party.button()]
 
 
 ## F096-AC-10: opens Mây's guide (the owner decides when: first entry on the device or right after S02).
@@ -215,6 +259,25 @@ func _render() -> void:
 	_next_step_button.icon = load(String(next_step["icon"])) as Texture2D
 	_banner.visible = not banner_key.is_empty()
 	_banner_label.text = tr(banner_key).format(banner_args) if not banner_key.is_empty() else ""
+
+
+func _on_party_pressed() -> void:
+	party_requested.emit({})
+
+
+func _on_party_invitation(invitation: InvitationModel) -> void:
+	show_invitation(invitation)
+
+
+## The popup sits at the top right under the top bar, at most the layout width wide.
+func _place_invite_toast() -> void:
+	if _invite_toast == null:
+		return
+	var gap: float = float(UiTokens.SIZE_SPACE_8)
+	var top_bar: Control = find_child("TopBar", true, false) as Control
+	_invite_toast.offset_right = -gap
+	_invite_toast.offset_left = -gap - float(UiTokens.SIZE_LAYOUT_660)
+	_invite_toast.offset_top = (top_bar.size.y if top_bar != null else UiBuild.target()) + gap
 
 
 func _on_next_step_pressed() -> void:

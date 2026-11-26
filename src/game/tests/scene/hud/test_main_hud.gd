@@ -61,7 +61,9 @@ func test_touch_targets_and_minimap_follow_the_grade_band() -> void:
 func test_only_m_c2_components_are_visible() -> void:
 	var r: Array = await _hud()
 	var hud: CanvasLayer = r[1] as CanvasLayer
-	for slot: String in ["XpBar", "CurrencyChip", "QuestTracker", "Minimap", "ChatDock", "PartyChip"]:
+	# F102: PartyChip is the PartyHud ("Nhóm" button) and is shown.
+	assert_bool((hud.find_child("PartyChip", true, false) as Control).visible).is_true()
+	for slot: String in ["XpBar", "CurrencyChip", "QuestTracker", "Minimap", "ChatDock"]:
 		var node: Control = hud.find_child(slot, true, false) as Control
 		assert_object(node).override_failure_message(slot).is_not_null()
 		assert_bool(node.visible).override_failure_message(slot).is_false()

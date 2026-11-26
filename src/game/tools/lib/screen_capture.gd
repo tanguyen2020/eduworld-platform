@@ -34,6 +34,10 @@ const SCREENS: PackedStringArray = [
 	"rotate_prompt",
 	# F123: in-game notifications — bell count + toasts on the HUD, the inbox (rows / empty), the Settings tab.
 	"hub_notifications", "notifications", "notifications_empty", "settings_notifications",
+	# F102: the Party screen (leader, member with a reconnecting leader, alone + invitation), the invite picker, the
+	# activity choice, the leave confirmation, the 3-2-1 countdown and the HUD party strip + invitation popup.
+	"party", "party_member", "party_alone", "party_invite", "party_activity", "party_confirm", "party_countdown",
+	"hub_party",
 ]
 ## Sample look of the local player (catalog codes of the F070 fixture; display only).
 const SAMPLE_AVATAR: Dictionary = {
@@ -137,6 +141,8 @@ func _sign_in(first_time: bool = false) -> void:
 	F069Fixtures.script_all(_harness.http, _band)
 	# F123: two unread notifications (bell count) and the inbox sample.
 	NotificationFixtures.script(_harness.http)
+	# F102: no party by default (the HUD shows the "Nhóm" button); the party screens script their own party.
+	PartyFixtures.script(_harness.http, "", true)
 	AppState.services = ServiceLocator.new(_harness.api, AppState, _harness.clock)
 	AppState.player = AuthHarness.bootstrap()
 	AppState.set_grade_band(_band)
@@ -328,6 +334,101 @@ func _screen_notifications_empty() -> Node:
 
 func _screen_settings_notifications() -> Node:
 	return await _settings_tab("notifications")
+
+
+# ---------- F102 party ----------
+
+## The world with the sample party of the signed-in student (leader, or a member when `member`) loaded.
+func _party_world(alone: bool = false, member: bool = false) -> Node:
+	var world: Node = await _world()
+	var party: PartyService = AppState.get_services().party
+	party._refresh_self()
+	PartyFixtures.script(_harness.http, party.store.self_id, alone)
+	if member:
+		var data: String = JSON.stringify(PartyFixtures.party()).replace(PartyFixtures.MEMBER, party.store.self_id)
+		_harness.http.clear(PartyFixtures.ROUTE_MY_PARTY).reply(PartyFixtures.ROUTE_MY_PARTY, 200, JSON.parse_string(data))
+	if alone:
+		_harness.http.clear(PartyFixtures.ROUTE_INVITATIONS).reply(PartyFixtures.ROUTE_INVITATIONS, 200,
+				PartyFixtures.invitations(party.now_ms()))
+	await party.load_my_party()
+	if not alone:
+		await party.load_eligible()
+	return world
+
+
+func _party_lobby(world: Node) -> PartyLobby:
+	await _open_panel(world, &"party")
+	return world.find_child("PartyLobby", true, false) as PartyLobby
+
+
+## Leader of "Nhóm Sao Băng": cards, the quest chosen, GauNau15 not ready yet (Start grey with the reason).
+func _screen_party() -> Node:
+	var world: Node = await _party_world()
+	await _party_lobby(world)
+	return world
+
+
+## A member: the leader is reconnecting (banner, faded card) and GauNau15 is ready.
+func _screen_party_member() -> Node:
+	var world: Node = await _party_world(false, true)
+	var party: PartyService = AppState.get_services().party
+	await _party_lobby(world)
+	party.handle_message("party.member.status_changed", {"party_id": PartyFixtures.PARTY_ID, "user_id": PartyFixtures.LEADER,
+		"status": "disconnected"})
+	party.handle_message("party.member.ready_changed", PartyFixtures.ws("member.ready_changed.ready"))
+	return world
+
+
+## Alone: Mây, "Tạo nhóm và mời bạn" and a pending invitation.
+func _screen_party_alone() -> Node:
+	var world: Node = await _party_world(true)
+	await _party_lobby(world)
+	return world
+
+
+func _screen_party_invite() -> Node:
+	var world: Node = await _party_world()
+	var lobby: PartyLobby = await _party_lobby(world)
+	lobby.picker().open(AppState.get_services().party)
+	for i: int in 20:
+		await get_tree().process_frame
+	return world
+
+
+func _screen_party_activity() -> Node:
+	var world: Node = await _party_world()
+	var lobby: PartyLobby = await _party_lobby(world)
+	lobby.selector().open(AppState.get_services().party, _band)
+	for i: int in 20:
+		await get_tree().process_frame
+	if not lobby.selector().uses_cards():
+		lobby.selector().dropdown_button().pressed.emit()
+	return world
+
+
+func _screen_party_confirm() -> Node:
+	var world: Node = await _party_world()
+	var lobby: PartyLobby = await _party_lobby(world)
+	lobby.leave_button().pressed.emit()
+	return world
+
+
+func _screen_party_countdown() -> Node:
+	var world: Node = await _party_world()
+	var lobby: PartyLobby = await _party_lobby(world)
+	lobby.start_countdown()
+	return world
+
+
+## The HUD in a party (member strip) with an invitation popup from another party.
+func _screen_hub_party() -> Node:
+	var world: Node = await _party_world()
+	var party: PartyService = AppState.get_services().party
+	var hud: CanvasLayer = world.find_child("MainHud", true, false) as CanvasLayer
+	var invitation: Dictionary = PartyFixtures.invitation_ws(party.now_ms())
+	(invitation["inviter"] as Dictionary)["nickname"] = "SaoBang12"
+	hud.call("show_invitation", InvitationModel.from_dict(invitation))
+	return world
 
 
 func _screen_about() -> Node:

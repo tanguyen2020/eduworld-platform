@@ -17,6 +17,8 @@ const BENCHMARK_HOLD: StringName = &"quality_benchmark"
 const UPDATE_REQUIRED_KEY: String = "ui.activity_player.update_required"
 ## F123: the notification inbox (UiScreenRegistry).
 const INBOX_SCREEN: StringName = &"notification_inbox"
+## F102: the Party screen (lobby, invitations, session countdown).
+const PARTY_SCREEN: StringName = &"party"
 ## Stable area_id of Quảng trường Tia Sáng (WORLD_DESIGN §3, the spawn of a first entry).
 const HUB_AREA_ID: String = "main_hub"
 const QUEST_TRACKER_SCENE: PackedScene = preload("res://scenes/quest/QuestTracker.tscn")
@@ -57,6 +59,7 @@ func _ready() -> void:
 	_hud.connect("next_step_pressed", _on_next_step_pressed)
 	_hud.connect("shop_pressed", _on_shop_pressed)
 	_hud.connect("menu_pressed", _on_menu_pressed)
+	_hud.connect("party_requested", _on_party_requested)
 	_bind_zone(zone)
 	SceneRouter.area_entered.connect(_on_area_entered)
 	SceneRouter.area_change_failed.connect(_on_area_change_failed)
@@ -76,6 +79,7 @@ func _ready() -> void:
 	_bind_progression(services)
 	# F123-AC-15: the unread notifications of the student (bell badge) on entering the world.
 	services.notifications.load_unread()
+	_bind_party(services)
 	_start_hub(services)
 	_benchmark.connect("finished", _on_benchmark_finished)
 	_start_quality()
@@ -83,6 +87,7 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	_stop_hub()
+	_unbind_party()
 	_unbind_progression()
 	for pair: Array in [[SceneRouter.area_entered, _on_area_entered], [SceneRouter.area_change_failed, _on_area_change_failed]]:
 		if (pair[0] as Signal).is_connected(pair[1] as Callable):
@@ -110,6 +115,7 @@ func _process(delta: float) -> void:
 	var services: ServiceLocator = AppState.get_services()
 	services.play_time.tick(delta)
 	services.presence.tick()
+	services.party.tick()
 	_sync_local(delta)
 	services.telemetry.drain_app_state(AppState)
 	if services.telemetry.can_flush():
@@ -261,6 +267,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif open_screen.is_empty() and event.is_action_pressed("open_world_map"):
 		_on_map_pressed()
 		get_viewport().set_input_as_handled()
+	elif open_screen.is_empty() and event.is_action_pressed("open_party"):
+		_on_party_requested({})
+		get_viewport().set_input_as_handled()
 
 
 ## Draws the local avatar from the profile (fallback visuals for missing items, F070-AC-18) and fills the emote
@@ -372,6 +381,49 @@ func _on_curfew_warning_raised(minutes_left: int) -> void:
 	_hud.call("show_banner", "ui.login.curfew_warning", {"minutes": minutes_left})
 
 
+# ---------- F102 party ----------
+
+## Entering the world reads the party and the pending invitations (F102-AC-15 resync is the service's own); a session
+## start opens the Party screen for the 3-2-1 countdown, a session end opens it with the shared outcome (F102-AC-11).
+func _bind_party(services: ServiceLocator) -> void:
+	if services.party == null:
+		return
+	services.party.store.session_started.connect(_on_party_session_started)
+	services.party.store.session_ended.connect(_on_party_session_ended)
+	services.party.load_my_party()
+	services.party.load_invitations()
+
+
+func _unbind_party() -> void:
+	var services: ServiceLocator = AppState.services
+	if services == null or services.party == null:
+		return
+	if services.party.store.session_started.is_connected(_on_party_session_started):
+		services.party.store.session_started.disconnect(_on_party_session_started)
+	if services.party.store.session_ended.is_connected(_on_party_session_ended):
+		services.party.store.session_ended.disconnect(_on_party_session_ended)
+
+
+## HUD "Nhóm" / P / the invitation toast: the Party screen.
+func _on_party_requested(args: Dictionary) -> void:
+	EventBus.ui_requested.emit(PARTY_SCREEN, args)
+
+
+## Another screen (an activity, the shop…) is never closed by the session start: a banner says the party started; the
+## Party screen starts the countdown when the student opens it.
+func _on_party_session_started(_info: Dictionary) -> void:
+	if open_screen.is_empty():
+		EventBus.ui_requested.emit(PARTY_SCREEN, {"countdown": true})
+	elif open_screen != PARTY_SCREEN:
+		_hud.call("show_banner", "ui.party.session_waiting", {})
+
+
+func _on_party_session_ended(info: Dictionary) -> void:
+	SceneRouter.leave_party_session()
+	if open_screen.is_empty() or open_screen == PARTY_SCREEN:
+		EventBus.ui_requested.emit(PARTY_SCREEN, {"summary": info})
+
+
 # ---------- F071 world: zones, portals, NPCs, discoveries ----------
 
 func _bind_zone(z: ZoneRoot) -> void:
@@ -412,7 +464,7 @@ func _request_area(area_id: String, portal_id: String) -> void:
 
 
 ## The server accepted the area: swap the zone scene, place the player, join the hub of the new area (F071-AC-12).
-func _on_area_entered(area_id: String, scene_ref: String, _spawn_point_id: String, _enter: Dictionary) -> void:
+func _on_area_entered(area_id: String, scene_ref: String, _spawn_point_id: String, enter: Dictionary) -> void:
 	var next: ZoneRoot = ZoneLoader.instantiate(scene_ref)
 	if next == null:
 		_on_area_change_failed(area_id, SceneRouter.CODE_BUNDLE_MISSING, [])
@@ -431,8 +483,10 @@ func _on_area_entered(area_id: String, scene_ref: String, _spawn_point_id: Strin
 	var services: ServiceLocator = AppState.get_services()
 	_apply_avatar(services.profile.avatar_config())
 	_emotes.anim_driver = (zone.player as PlayerController).anim_driver if zone.player is PlayerController else null
+	if not bool(enter.get("party_session", false)):
+		SceneRouter.leave_party_session()
 	_start_hub(services)
-	ZoneLoader.check_budget(area_id, Time.get_ticks_msec() - _area_started_ms)
+	ZoneLoader.check_budget(area_id if not area_id.is_empty() else zone.area_id, Time.get_ticks_msec() - _area_started_ms)
 
 
 func _on_area_change_failed(_area_id: String, code: String, missing: Array) -> void:
