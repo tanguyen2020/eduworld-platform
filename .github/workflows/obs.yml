@@ -98,6 +98,8 @@ jobs:
         with:
           node-version: 20
       - run: npm ci --prefix scripts --silent
+      - name: shellcheck
+        run: shellcheck -x -S warning scripts/obs/*.sh deploy/observability/*/tests/*.sh tests/obs/staging/*.sh
       - name: Alertmanager routes + inhibition (amtool, throwaway Alertmanager)
         run: bash deploy/observability/alertmanager/tests/routes_test.sh --live
       - name: collector redaction (throwaway otelcol-contrib)

@@ -17,7 +17,11 @@ receivers:
         parse_from: body
         if: 'body matches "^\\{"'
         on_error: send_quiet
-      - type: filter                          # only lines that carry a known service attribute
+      - type: add                             # Grafana JSON logs (router log = query access audit, F131-AC-07)
+        field: attributes.service
+        value: grafana
+        if: 'attributes.service == nil and attributes.logger != nil'
+      - type: filter                          # only lines of the binaries (slog field service) and Grafana
         expr: 'attributes.service == nil'
       - type: remove
         field: attributes.stream
