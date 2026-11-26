@@ -240,3 +240,24 @@ var PartyQuestGradedEvents = []string{"activity.graded"}
 
 // QuestBossEvents are the game events of the boss steps (owner F103).
 var QuestBossEvents = []string{"boss.encounter_completed"}
+
+// ChatStream is the stream of module chat (EVT_CHAT).
+var ChatStream = natsx.EventStream("chat")
+
+// ChatSubjects returns the exact subjects of chat events.
+func ChatSubjects(events []string) []string {
+	out := make([]string, len(events))
+	for i, e := range events {
+		out[i] = natsx.EventSubject("chat", e)
+	}
+	return out
+}
+
+// Durable consumers of Game Analytics (F080-AC-05, GAME_ANALYTICS §3.1, §5): one per producer stream, same handler; events
+// are mapped to analytics.events_raw with pseudonymous keys (domain analytics.Events lists them).
+const (
+	AnalyticsGameName        = "game.analytics"
+	AnalyticsCompetitionName = "game.analytics_competition"
+	AnalyticsLearningName    = "game.analytics_learning"
+	AnalyticsChatName        = "game.analytics_chat"
+)

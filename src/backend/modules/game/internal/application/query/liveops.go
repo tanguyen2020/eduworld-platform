@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"time"
 
@@ -549,6 +550,67 @@ func (h LiveOps) GetEventRunStats(ctx context.Context, event, run uuid.UUID) (ou
 			return err
 		}
 		out = port.RunStatsView(*r, st, h.now())
+		return nil
+	})
+	return out, err
+}
+
+// EventRunSummaryView is EventRunSummary (listEventRuns).
+type EventRunSummaryView struct {
+	EventID         uuid.UUID         `json:"event_id"`
+	EventRunID      uuid.UUID         `json:"event_run_id"`
+	EventKind       string            `json:"event_kind"`
+	Code            string            `json:"code,omitempty"`
+	Name            map[string]string `json:"name"`
+	Status          string            `json:"status"`
+	StartsAt        time.Time         `json:"starts_at"`
+	EndsAt          time.Time         `json:"ends_at"`
+	SuspendedReason *string           `json:"suspended_reason"`
+}
+
+// RunStatuses are the values of EventRunStatus.
+var RunStatuses = []string{"scheduled", "live", "suspended", "ended", "cancelled", "archived"}
+
+// ListEventRuns is listEventRuns (F080-AC-19, event monitor of workspace E): the platform runs for game.liveops.read,
+// newest start first, keyset page in the database (LIMIT n+1).
+func (h LiveOps) ListEventRuns(ctx context.Context, statuses []string, limit int, cursor string) (out Page[EventRunSummaryView], err error) {
+	ctx, done := observability.UseCase(ctx, "game.query.ListEventRuns")
+	defer func() { done(err) }()
+	p, ok := authz.PrincipalFrom(ctx)
+	if !ok {
+		return out, problem.New(problem.Unauthenticated, "")
+	}
+	if err := authz.Require(ctx, p, authz.PermGameLiveopsRead, authz.Resource{}); err != nil {
+		return out, err
+	}
+	for i, s := range statuses {
+		if !slices.Contains(RunStatuses, s) {
+			return out, problem.Invalid(fmt.Sprintf("status/%d", i), problem.SubInvalid, "unknown run status")
+		}
+	}
+	if limit, err = limitOf(limit); err != nil {
+		return out, err
+	}
+	after, err := h.timeCursor(cursor)
+	if err != nil {
+		return out, err
+	}
+	out = Page[EventRunSummaryView]{Data: []EventRunSummaryView{}, Page: PageInfo{Limit: limit}}
+	err = h.Read.Read(ctx, func(ctx context.Context) error {
+		rows, err := h.Data.PlatformRuns(ctx, statuses, after, limit+1)
+		if err != nil {
+			return err
+		}
+		if len(rows) > limit {
+			rows, out.Page.HasMore = rows[:limit], true
+			last := rows[len(rows)-1]
+			out.Page.NextCursor = h.next(last.StartsAt.Format(time.RFC3339Nano), last.RunID)
+		}
+		for _, r := range rows {
+			out.Data = append(out.Data, EventRunSummaryView{EventID: r.EventID, EventRunID: r.RunID, EventKind: r.Definition.Kind,
+				Code: r.Definition.Code, Name: tenantName(r.Definition.Name), Status: r.Status, StartsAt: r.StartsAt, EndsAt: r.EndsAt,
+				SuspendedReason: r.SuspendedReason})
+		}
 		return nil
 	})
 	return out, err

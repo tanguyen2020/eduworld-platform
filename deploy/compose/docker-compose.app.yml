@@ -24,6 +24,9 @@ x-db-env: &db-env
   # F043: dashboard reads (replica in staging/production; local = primary with the dashboard role, DASHBOARD_DATA §7).
   EW_DB_LEARNING_DASHBOARD_DSN: postgres://learning_dashboard:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_learning?sslmode=disable
   EW_DB_LEARNING_DASHBOARD_PLATFORM_DSN: postgres://learning_platform:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_learning?sslmode=disable
+  # F080: Game Analytics reads (replica in staging/production; local = primary with game_dashboard, DASHBOARD_DATA §7).
+  EW_DB_GAME_DASHBOARD_DSN: postgres://game_dashboard:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_game?sslmode=disable
+  EW_DB_GAME_DASHBOARD_PLATFORM_DSN: postgres://game_platform:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_game?sslmode=disable
 
 # Module configuration of core-api and worker (LOCAL_DEVELOPMENT §4; OQ F010-2). Local values only: secrets use the
 # same change-me-local defaults as deploy/keycloak (KC_*_SECRET) and can be overridden from the shell.
@@ -31,6 +34,9 @@ x-module-env: &module-env
   EW_PAGE_CURSOR_KEY: ${EW_PAGE_CURSOR_KEY:-change-me-local-cursor-key-0123456789abcdef}
   EW_OPENAPI_SPEC: /app/specs/openapi/eduworld-api.v1.yaml
   EW_PORTAL_MENU_CATALOG: /app/specs/portal/menu-catalog.yaml
+  # F080 Game Analytics: local pseudonymisation key (version:secret, secret store in staging/production) and Prometheus.
+  EW_ANALYTICS_PLAYER_KEYS: ${EW_ANALYTICS_PLAYER_KEYS:-1:change-me-local-analytics-player-key-0123456789}
+  EW_PROMETHEUS_URL: ${EW_PROMETHEUS_URL:-http://prometheus:9090}
   # Tokens are issued through the backend login (ADR-0068, ADR-0091): core-api calls Keycloak at keycloak:8180,
   # so the issuer of every token verified by the containers is http://keycloak:8180/realms/eduworld.
   EW_OIDC_ISSUERS: http://keycloak:8180/realms/eduworld

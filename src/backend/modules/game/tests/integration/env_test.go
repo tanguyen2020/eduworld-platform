@@ -181,6 +181,8 @@ type env struct {
 	bossPush  *bossPush
 	online    *memOnline
 	bossLearn *bossLearning
+	// F080: the Game Analytics kit (nil until setupAnalytics).
+	ana *anaKit
 }
 
 func open(t *testing.T, dsn string) *sql.DB {
@@ -299,7 +301,9 @@ func (e *env) server(ctx context.Context, t *testing.T) {
 		LiveOpsQueries: liveQueryProxy{e}, LiveOpsCommands: liveCommandProxy{e}, MiniGames: miniGameProxy{e},
 		Challenges: challengeProxy{e}, ChallengeQueries: challengeQueryProxy{e},
 		Bosses: bossProxy{e}, BossQueries: bossQueryProxy{e}, CoopQuests: coopProxy{e}, CoopQuestQueries: coopQueryProxy{e},
-		Admin: gamehttp.GameAdminHandlers{Commands: adminProxy{e}, Queries: adminQueryProxy{e}, Media: mediaProxy{e}}}
+		Admin:         gamehttp.GameAdminHandlers{Commands: adminProxy{e}, Queries: adminQueryProxy{e}, Media: mediaProxy{e}},
+		Analytics:     gamehttp.AnalyticsHandlers{Ingest: anaIngestProxy{e}, Queries: anaQueryProxy{e}, Exports: anaExportProxy{e}, Overview: anaOverviewProxy{e}},
+		TelemetryFlag: anaFlagProxy{e}}
 	if err := gamehttp.Register(s, h); err != nil {
 		t.Fatal(err)
 	}

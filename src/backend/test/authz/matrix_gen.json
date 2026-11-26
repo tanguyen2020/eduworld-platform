@@ -2195,6 +2195,17 @@
     ]
   },
   {
+    "operation_id": "getGameAnalyticsExport",
+    "module": "game",
+    "method": "GET",
+    "path": "/admin/analytics/game/exports/{export_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getGameChallenge",
     "module": "game",
     "method": "GET",
@@ -2448,6 +2459,15 @@
     "has_id_param": true,
     "required": [
       "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getLiveOpsOverview",
+    "module": "game",
+    "method": "GET",
+    "path": "/admin/liveops/overview",
+    "required": [
       "role_denied"
     ]
   },
@@ -3799,6 +3819,15 @@
     "has_id_param": true,
     "required": [
       "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listEventRuns",
+    "module": "game",
+    "method": "GET",
+    "path": "/game-admin/event-runs",
+    "required": [
       "role_denied"
     ]
   },

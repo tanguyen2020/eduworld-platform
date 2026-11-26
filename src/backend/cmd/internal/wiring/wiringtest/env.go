@@ -54,6 +54,7 @@ func Env(o Options) map[string]string {
 		"EW_CDN_BASE_URL":            "http://127.0.0.1:1",
 		"EW_CDN_SIGNING_KEY":         "test-only",
 		"EW_MEDIA_SCAN":              "disabled",
+		"EW_ANALYTICS_PLAYER_KEYS":   "1:test-only-analytics-player-key-0123456789", // F080 (TEST DOUBLE of the secret store)
 		"EW_OPENAPI_SPEC":            filepath.Join(o.RepoRoot, "specs", "openapi", "eduworld-api.v1.yaml"),
 		"EW_PORTAL_MENU_CATALOG":     filepath.Join(o.RepoRoot, "specs", "portal", "menu-catalog.yaml"),
 	}
@@ -67,6 +68,8 @@ func Env(o Options) map[string]string {
 	env["EW_DB_LEARNING_PARTITION_ADMIN_DSN"] = o.DSN("learning", "partition_admin")
 	env["EW_DB_LEARNING_DASHBOARD_DSN"] = o.DSN("learning", "dashboard")
 	env["EW_DB_LEARNING_DASHBOARD_PLATFORM_DSN"] = o.DSN("learning", "platform")
-	env["EW_DB_CHAT_PURGER_DSN"] = o.DSN("chat", "purger") // F117: gameplay-chat-purge of worker-chat (ADR-0033)
+	env["EW_DB_GAME_DASHBOARD_DSN"] = o.DSN("game", "dashboard")         // F080: Game Analytics reads (game_dashboard)
+	env["EW_DB_GAME_DASHBOARD_PLATFORM_DSN"] = o.DSN("game", "platform") // F080: cross-tenant platform reads
+	env["EW_DB_CHAT_PURGER_DSN"] = o.DSN("chat", "purger")               // F117: gameplay-chat-purge of worker-chat (ADR-0033)
 	return env
 }

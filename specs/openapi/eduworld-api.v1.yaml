@@ -1081,6 +1081,11 @@ paths:
       security: []
       parameters:
         - $ref: '#/components/parameters/AcceptLanguage'
+        - name: tenant_id
+          in: query
+          required: false
+          description: Tenant của học sinh (biết sau lần đăng nhập đầu) để trả `product_telemetry_enabled` hiệu lực của tenant (F080-AC-03); vắng mặt = giá trị platform
+          schema: { $ref: '#/components/schemas/Uuid' }
         - name: platform
           in: query
           required: true
@@ -13554,6 +13559,7 @@ paths:
               schema: { $ref: '#/components/schemas/TenantGameSummary' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
         "422": { $ref: '#/components/responses/ValidationFailed' }
         "429": { $ref: '#/components/responses/DashboardBusy' }
         "504": { $ref: '#/components/responses/DashboardTimeout' }
@@ -15106,6 +15112,37 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /game-admin/event-runs:
+    get:
+      x-service: game
+      tags: [game-admin]
+      operationId: listEventRuns
+      x-portal-action: action.game_ops.events.stats
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Lượt chạy sự kiện platform để giám sát (game.liveops.read; keyset theo starts_at giảm dần — F080-AC-19)
+      parameters:
+        - name: status
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 6
+            items: { $ref: '#/components/schemas/EventRunStatus' }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventRunPage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
   /game-admin/events/{event_id}/runs/{run_id}:suspend:
     post:
       x-service: game
@@ -17047,6 +17084,52 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
         "429": { $ref: '#/components/responses/DashboardBusy' }
+  /admin/analytics/game/exports/{export_id}:
+    get:
+      x-service: game
+      tags: [admin]
+      operationId: getGameAnalyticsExport
+      x-portal-action: action.live_ops.game_analytics.export
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: Trạng thái job xuất CSV Game Analytics + link ký hạn dashboard_export_link_ttl_minutes (game.analytics.read, chỉ người tạo)
+      parameters:
+        - name: export_id
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Uuid' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnalyticsExportJob' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /admin/liveops/overview:
+    get:
+      x-service: game
+      tags: [admin]
+      operationId: getLiveOpsOverview
+      x-portal-action: action.live_ops.live_dashboard.view
+      security:
+        - { keycloakAdminBearer: [] }
+      x-internal: true
+      summary: KPI Live dashboard thời gian thực từ Prometheus (game.liveops.read; truy vấn định nghĩa sẵn, không truy vấn tự do — DESIGN_SYSTEM §4.3)
+      parameters:
+        - $ref: '#/components/parameters/TenantIds'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LiveOpsOverview' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /admin/analytics/learning/summary:
     get:
       x-service: learning
@@ -20528,6 +20611,9 @@ components:
           type: array
           maxItems: 8
           items: { $ref: '#/components/schemas/Locale' }
+        product_telemetry_enabled:
+          type: boolean
+          description: false = client không gửi `screen_view`/`tutorial_step` (analytics_product_telemetry_enabled của platform, và của tenant khi có `tenant_id`); perf/crash/`break_reminder_shown` vẫn gửi — GAME_ANALYTICS §3.2, F080-AC-03. Server vẫn tự bỏ hai loại này khi tắt.
     # ---------- social: friends / clubs (SOCIAL_SYSTEM, ADR-0050, ADR-0054)
     PlayerRelation:
       type: object
@@ -20819,6 +20905,7 @@ components:
         npc_id: { type: string, maxLength: 64 }
     TelemetryBatch:
       type: object
+      additionalProperties: false
       required: [platform, client_version, events]
       description: Lô telemetry không PII (ADR-0058). Tenant tắt telemetry sản phẩm thì client không gửi screen_view/tutorial_step; perf/crash và break_reminder_shown (chỉ số chơi lành mạnh) vẫn gửi.
       properties:
@@ -27279,6 +27366,56 @@ components:
       required: [reason]
       properties:
         reason: { type: string, maxLength: 1000, minLength: 3 }
+    EventRunSummary:
+      type: object
+      required: [event_id, event_run_id, event_kind, status, starts_at, ends_at]
+      properties:
+        event_id: { $ref: '#/components/schemas/Uuid' }
+        event_run_id: { $ref: '#/components/schemas/Uuid' }
+        event_kind: { $ref: '#/components/schemas/EventKind' }
+        code: { type: string, maxLength: 64 }
+        name: { $ref: '#/components/schemas/TenantLocalizedName' }
+        status: { $ref: '#/components/schemas/EventRunStatus' }
+        starts_at: { $ref: '#/components/schemas/Timestamp' }
+        ends_at: { $ref: '#/components/schemas/Timestamp' }
+        suspended_reason: { type: [string, 'null'], maxLength: 1000 }
+    EventRunPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/EventRunSummary' }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    LiveOpsKpi:
+      type: object
+      required: [code, status]
+      properties:
+        code: { type: string, maxLength: 64, description: 'Mã KPI trong catalog cố định (DESIGN_SYSTEM §4.3, MONITORING)' }
+        value: { type: [number, 'null'], description: 'null khi Prometheus không có chuỗi cho KPI (không trả 0 giả)' }
+        unit: { type: string, maxLength: 16 }
+        status: { type: string, enum: [normal, warning, incident, unknown] }
+        threshold_warning: { type: [number, 'null'] }
+        threshold_incident: { type: [number, 'null'] }
+        breakdown:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            required: [label]
+            properties:
+              label: { type: string, maxLength: 64 }
+              value: { type: [number, 'null'] }
+    LiveOpsOverview:
+      type: object
+      required: [as_of, kpis]
+      properties:
+        as_of: { $ref: '#/components/schemas/Timestamp' }
+        kpis:
+          type: array
+          maxItems: 30
+          items: { $ref: '#/components/schemas/LiveOpsKpi' }
     EventRunStats:
       type: object
       required: [event_run_id, participants]
@@ -27308,6 +27445,11 @@ components:
         metric_code: { type: string, maxLength: 64, description: Mã chỉ số — định nghĩa tại GAME_ANALYTICS §4 }
         unit: { type: string, maxLength: 32 }
         granularity: { $ref: '#/components/schemas/DashboardGrain' }
+        dims:
+          type: object
+          maxProperties: 2
+          description: Giá trị chiều của chuỗi khi lọc theo một chiều (school_id, grade_band, platform, locale, device_tier); vắng mặt = toàn phạm vi
+          additionalProperties: { type: string, maxLength: 64 }
         points:
           type: array
           maxItems: 400
@@ -27328,6 +27470,7 @@ components:
           items: { $ref: '#/components/schemas/GameMetricSeries' }
         generated_at: { $ref: '#/components/schemas/Timestamp' }
         suppression_threshold: { type: integer, minimum: 1 }
+        available_from: { type: [string, 'null'], format: date, description: 'Ngày đầu tiên có số liệu của các chỉ số yêu cầu' }
         grain: { $ref: '#/components/schemas/DashboardGrain' }
         data_as_of:
           $ref: '#/components/schemas/Timestamp'
@@ -27423,6 +27566,10 @@ components:
         status: { type: string, enum: [queued, running, succeeded, failed] }
         download_url: { type: string, maxLength: 2048, format: uri }
         expires_at: { $ref: '#/components/schemas/Timestamp' }
+        report: { type: string, enum: [metrics, retention, funnel, content_stats, performance] }
+        row_count: { type: integer, minimum: 0 }
+        error_code: { type: string, maxLength: 64, description: 'EXPORT_TOO_LARGE (vượt dashboard_export_max_rows), EXPORT_EXPIRED, INTERNAL' }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
     TenantGameSummary:
       type: object
       required: [from, to, grain, data_as_of, is_partial]
@@ -27437,6 +27584,51 @@ components:
         quest_completion_rate: { type: [number, 'null'] }
         event_participation_rate: { type: [number, 'null'] }
         sessions_over_reminder_rate: { type: [number, 'null'] }
+        active_students_series:
+          type: array
+          maxItems: 120
+          description: Học sinh hoạt động theo kỳ của `grain` (dau / wau / mau tại cuối kỳ — GAME_ANALYTICS §4.1)
+          items:
+            type: object
+            required: [t]
+            properties:
+              t: { type: string, format: date }
+              value: { type: [integer, 'null'] }
+        active_days_3plus_rate: { type: [number, 'null'], description: '% người chơi hoạt động trong tuần có ≥ 3 ngày hoạt động (active_days_per_week)' }
+        session_duration_p50_seconds: { type: [number, 'null'] }
+        chapter0_completion_rate: { type: [number, 'null'] }
+        social_play_rate: { type: [number, 'null'] }
+        sessions_over_second_reminder_rate: { type: [number, 'null'] }
+        late_night_play_rate: { type: [number, 'null'] }
+        platform_distribution:
+          type: array
+          maxItems: 6
+          items:
+            type: object
+            required: [key]
+            properties:
+              key: { type: string, enum: [windows, android, ios, web, macos, linux] }
+              share: { type: [number, 'null'] }
+        device_tier_distribution:
+          type: array
+          maxItems: 3
+          items:
+            type: object
+            required: [key]
+            properties:
+              key: { type: string, maxLength: 8 }
+              share: { type: [number, 'null'] }
+        by_grade_band:
+          type: array
+          maxItems: 4
+          items:
+            type: object
+            required: [grade_band]
+            properties:
+              grade_band: { $ref: '#/components/schemas/GradeBand' }
+              active_students: { type: [integer, 'null'] }
+              quest_completion_rate: { type: [number, 'null'] }
+        available_from: { type: [string, 'null'], format: date, description: 'Ngày đầu tiên có số liệu; trước đó UI hiển thị "Chưa có số liệu trước ngày …"' }
         by_school:
           type: array
           maxItems: 200
@@ -27454,6 +27646,7 @@ components:
         is_partial: { type: boolean, description: true nếu có dòng chưa chốt (hôm nay) }
     TelemetryEvent:
       type: object
+      additionalProperties: false
       required: [type, occurred_at]
       description: Không PII (GAME_ANALYTICS §3.2). Thuộc tính dùng theo type.
       properties:

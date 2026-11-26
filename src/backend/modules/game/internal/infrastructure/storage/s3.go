@@ -328,3 +328,10 @@ func (s *S3) Stat(ctx context.Context, bucket, key string) (http.Header, error) 
 	_ = resp.Body.Close()
 	return resp.Header, nil
 }
+
+// PresignGet signs a GET of an object valid for ttl (signed download links of the exports, DASHBOARD_DATA §10).
+func (s *S3) PresignGet(_ context.Context, bucket, key string, ttl time.Duration) (string, error) {
+	uri := s.objectURI(bucket, key)
+	q := presign(s.cfg, http.MethodGet, s.base.Host, uri, nil, s.clock().UTC(), ttl)
+	return s.base.Scheme + "://" + s.base.Host + uri + "?" + q, nil
+}

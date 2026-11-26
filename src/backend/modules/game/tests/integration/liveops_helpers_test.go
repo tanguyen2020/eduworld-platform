@@ -167,6 +167,9 @@ func (p liveQueryProxy) ListSeasonTrackHistory(ctx context.Context, l int, c str
 func (p liveQueryProxy) GetEventRunStats(ctx context.Context, ev, run uuid.UUID) (map[string]any, error) {
 	return p.e.liveQueries().GetEventRunStats(ctx, ev, run)
 }
+func (p liveQueryProxy) ListEventRuns(ctx context.Context, s []string, l int, c string) (query.Page[query.EventRunSummaryView], error) {
+	return p.e.liveQueries().ListEventRuns(ctx, s, l, c)
+}
 func (p liveQueryProxy) ListEventTemplates(ctx context.Context, l int, c string) (query.Page[query.TemplateView], error) {
 	return p.e.liveQueries().ListEventTemplates(ctx, l, c)
 }

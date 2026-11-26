@@ -38,8 +38,15 @@ type StudentLifecycle struct {
 	Profiles write.ProfileRepository
 	Presets  write.PresetRepository
 	// XP moves the XP ledger of the source to the target (F074 T041); nil = no ledger step.
-	XP  XPMerger
-	Now func() time.Time
+	XP XPMerger
+	// Analytics clears the pseudonymous keys of the student in analytics.events_raw/player_days (F080-AC-07); nil = none.
+	Analytics AnalyticsAnonymizer
+	Now       func() time.Time
+}
+
+// AnalyticsAnonymizer is the analytics step of anonymizeUserData (AnalyticsIngest.AnonymizeStudent).
+type AnalyticsAnonymizer interface {
+	AnonymizeStudent(ctx context.Context, student uuid.UUID) (raw, days int64, err error)
 }
 
 // XPMerger is the XP step of mergeUserData (command.Progression.MergeXP).
@@ -133,8 +140,18 @@ func (h StudentLifecycle) Anonymize(ctx context.Context, userID uuid.UUID) (stat
 	}
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
 		changed, err := h.Profiles.Anonymize(ctx, tenant, userID, AnonymousNickname(userID))
+		if err != nil {
+			return err
+		}
+		if h.Analytics != nil {
+			raw, days, err := h.Analytics.AnonymizeStudent(ctx, userID)
+			if err != nil {
+				return err
+			}
+			changed = changed || raw+days > 0
+		}
 		status = outcome(changed)
-		return err
+		return nil
 	})
 	return status, err
 }

@@ -27,6 +27,7 @@ type LiveOpsQueries interface {
 	GetSeasonTrack(ctx context.Context) (query.SeasonTrackView, error)
 	ListSeasonTrackHistory(ctx context.Context, limit int, cursor string) (query.Page[query.SeasonHistoryView], error)
 	GetEventRunStats(ctx context.Context, event, run uuid.UUID) (map[string]any, error)
+	ListEventRuns(ctx context.Context, statuses []string, limit int, cursor string) (query.Page[query.EventRunSummaryView], error)
 	ListEventTemplates(ctx context.Context, limit int, cursor string) (query.Page[query.TemplateView], error)
 	ListSchoolEvents(ctx context.Context, status string, limit int, cursor string) (query.Page[map[string]any], error)
 	GetSchoolEvent(ctx context.Context, event uuid.UUID) (map[string]any, error)
@@ -51,7 +52,7 @@ var LiveOpsPlayerOperations = []string{"listGameEvents", "getGameEvent", "joinGa
 
 // LiveOpsAdminOperations are the operator routes (internal gateway, portal client, platform role; game.event.operate or
 // game.liveops.read — F077-AC-06).
-var LiveOpsAdminOperations = []string{"suspendEventRun", "resumeEventRun", "cancelEventRun", "getEventRunStats"}
+var LiveOpsAdminOperations = []string{"suspendEventRun", "resumeEventRun", "cancelEventRun", "getEventRunStats", "listEventRuns"}
 
 // LiveOpsSchoolOperations are the school event routes (/lms/*, portal staff, lms.school_event.write — F077-AC-25).
 var LiveOpsSchoolOperations = []string{"listEventTemplates", "listSchoolEvents", "createSchoolEvent", "getSchoolEvent", "updateSchoolEvent",
@@ -84,6 +85,8 @@ var liveOpsOperations = []httpx.Operation{
 	{ID: "cancelEventRun", Module: "game", Method: http.MethodPost, Pattern: "/game-admin/events/{event_id}/runs/{run_id}:cancel",
 		Tenant: httpx.TenantNone, Idempotency: httpx.IdempotencyRequired, SuccessStatus: http.StatusOK, Guard: httpx.GuardPortalStaff | httpx.GuardPlatformRole},
 	{ID: "getEventRunStats", Module: "game", Method: http.MethodGet, Pattern: "/game-admin/events/{event_id}/runs/{run_id}/stats",
+		Tenant: httpx.TenantNone, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardPortalStaff | httpx.GuardPlatformRole},
+	{ID: "listEventRuns", Module: "game", Method: http.MethodGet, Pattern: "/game-admin/event-runs",
 		Tenant: httpx.TenantNone, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardPortalStaff | httpx.GuardPlatformRole},
 	{ID: "listEventTemplates", Module: "game", Method: http.MethodGet, Pattern: "/lms/event-templates", Tenant: httpx.TenantRequired,
 		Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardPortalStaff},
@@ -122,6 +125,7 @@ func (h Handlers) liveOpsRoutes() map[string]http.HandlerFunc {
 		"resumeEventRun":         h.operateRun(liveops.ActionResume),
 		"cancelEventRun":         h.operateRun(liveops.ActionCancel),
 		"getEventRunStats":       h.getEventRunStats,
+		"listEventRuns":          h.listEventRuns,
 		"listEventTemplates":     h.listEventTemplates,
 		"listSchoolEvents":       h.listSchoolEvents,
 		"createSchoolEvent":      h.createSchoolEvent,
@@ -296,6 +300,21 @@ func (h Handlers) getEventRunStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out, err := h.LiveOpsQueries.GetEventRunStats(r.Context(), event, run)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// listEventRuns is the event monitor list of workspace E (F080-AC-19).
+func (h Handlers) listEventRuns(w http.ResponseWriter, r *http.Request) {
+	limit, err := limitParam(r)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	out, err := h.LiveOpsQueries.ListEventRuns(r.Context(), list(r, "status"), limit, r.URL.Query().Get("cursor"))
 	if err != nil {
 		fail(w, r, err)
 		return

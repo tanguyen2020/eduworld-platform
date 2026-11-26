@@ -136,6 +136,25 @@ func (Store) Run(ctx context.Context, run uuid.UUID) (*port.EventRunRow, error) 
 	return oneRun(t.QueryRowContext(ctx, `SELECT `+runColumns+` FROM `+runJoin+` WHERE r.event_run_id = $1 AND r.deleted_at IS NULL`, run))
 }
 
+// PlatformRuns implements read.LiveOpsReadModel (F080-AC-19).
+func (Store) PlatformRuns(ctx context.Context, statuses []string, after *read.RunCursor, limit int) ([]port.EventRunRow, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	at, id := time.Date(9999, 1, 1, 0, 0, 0, 0, time.UTC), uuid.Max
+	if after != nil {
+		at, id = after.StartsAt, after.ID
+	}
+	if statuses == nil {
+		statuses = []string{}
+	}
+	// tenancyguard:ok platform runs only (tenant_id IS NULL, read by platform staff); deleted_at filtered
+	return runRows(t.QueryContext(ctx, `SELECT `+runColumns+` FROM `+runJoin+` WHERE r.tenant_id IS NULL AND r.deleted_at IS NULL
+		AND (cardinality($1::text[]) = 0 OR r.status = ANY($1::text[])) AND (r.starts_at, r.event_run_id) < ($2, $3)
+		ORDER BY r.starts_at DESC, r.event_run_id DESC LIMIT $4`, statuses, at, id, limit))
+}
+
 // EventRun implements port.LiveOpsReader.
 func (Store) EventRun(ctx context.Context, tenant, event uuid.UUID) (*port.EventRunRow, error) {
 	t, err := tx(ctx)

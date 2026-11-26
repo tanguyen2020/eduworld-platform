@@ -10,6 +10,7 @@
 #   <module>_relay           outbox relay (granted by F003)
 #   <module>_partition_admin partition maintenance of infra.* (granted by F003)
 #   chat_purger              gameplay chat purge only (privileges granted by F117, ADR-0033)
+#   game_dashboard           Game Analytics reads on the replica: SELECT on analytics rollups only (F080, ADR-0062)
 #   learning_dashboard       School Learning Dashboard reads on the replica: SELECT on rollups/read models only (F043,
 #                            ADR-0062, DASHBOARD_DATA §7); statement_timeout 5 s, idle in transaction 10 s, work_mem 32 MB
 #
@@ -62,6 +63,17 @@ ALTER ROLE learning_dashboard SET statement_timeout = '5s';
 ALTER ROLE learning_dashboard SET idle_in_transaction_session_timeout = '10s';
 ALTER ROLE learning_dashboard SET work_mem = '32MB';
 ALTER ROLE learning_dashboard SET default_transaction_read_only = on;
+SQL
+
+# Dashboard role of module game (Game Analytics, F080, DASHBOARD_DATA §7): SELECT on the analytics rollups only (never
+# analytics.events_raw nor player_days), subject to RLS, same timeouts as learning_dashboard.
+create_role game_dashboard "NOBYPASSRLS"
+psql_su <<SQL
+GRANT CONNECT ON DATABASE eduworld_game TO game_dashboard;
+ALTER ROLE game_dashboard SET statement_timeout = '5s';
+ALTER ROLE game_dashboard SET idle_in_transaction_session_timeout = '10s';
+ALTER ROLE game_dashboard SET work_mem = '32MB';
+ALTER ROLE game_dashboard SET default_transaction_read_only = on;
 SQL
 
 # identity_membership_reader: NOLOGIN, BYPASSRLS, owner of the SECURITY DEFINER function

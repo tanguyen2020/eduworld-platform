@@ -87,6 +87,9 @@ type LiveOpsReadModel interface {
 	port.LiveOpsReader
 	// StudentRuns lists the runs a student may see, keyset on (starts_at, event_run_id), audience filtered in SQL.
 	StudentRuns(ctx context.Context, f StudentRunsFilter) ([]port.EventRunRow, error)
+	// PlatformRuns lists the platform runs (tenant_id NULL) of the statuses (all when empty), newest start first, keyset on
+	// (starts_at, event_run_id) descending (F080-AC-19, listEventRuns).
+	PlatformRuns(ctx context.Context, statuses []string, after *RunCursor, limit int) ([]port.EventRunRow, error)
 	// Templates lists the current published templates assigned to tenant, keyset on code.
 	Templates(ctx context.Context, tenant uuid.UUID, afterCode string, limit int) ([]port.TemplateRow, error)
 	// SchoolEvents lists the school events of a tenant, newest first (keyset on created_at, event_id).

@@ -4,11 +4,13 @@ package game
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
@@ -24,6 +26,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/minigameschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/analyticssql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/bosssql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/challengesql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/economysql"
@@ -36,6 +39,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/worldsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/progressionschema"
+	promsource "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/prometheus"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/questschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/realtime"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/render"
@@ -326,8 +330,44 @@ func Register(r *module.Registry) (*Module, error) {
 	}
 	assignUC := command.GameAssignments{UoW: core.UoW, Store: write.TenantAssignmentRepo{}, Manifests: gameManifest,
 		Audit: write.Auditor{R: core.Recorder}, Cursors: cursors}
+	// F080 Game Analytics: telemetry, the analytics consumers, rollup/close/retention/export jobs, the dashboard reads on
+	// their own session (game_dashboard / game_platform on the replica) and the Live dashboard from Prometheus.
+	anaCfg, err := gameconfig.AnalyticsFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
+	observability.RegisterAnalytics(r.Metrics())
+	// DB performance KPI of the Live dashboard (FR-OPS-003): pool statistics go_sql_* of the game database (label db_name).
+	_ = r.Metrics().Register(collectors.NewDBStatsCollector(core.App, "eduworld_game"))
+	ingest := command.AnalyticsIngest{UoW: core.UoW, Store: analyticssql.Store{}, Keys: anaCfg.Keys, Rate: cache.RateLimiter{C: vk},
+		Metrics: observability.AnalyticsMetrics{}, Config: anaCfg.Config}
+	dashSession, err := dashboardSession(r, r.ServesHTTP() || r.RunsJobs())
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
+	gameAnalytics := query.GameAnalytics{Model: analyticssql.Dashboard{}, Cache: cache.Dashboard{C: vk}, Limiter: cache.NewDashLimiter(vk),
+		Metrics: observability.AnalyticsMetrics{}, Config: anaCfg.Config, Cursors: cursors}
+	if dashSession != nil {
+		gameAnalytics.Session = dashSession
+	}
+	exportsUC := command.AnalyticsExports{UoW: core.UoW, Store: analyticssql.Exports{}, Renderer: gameAnalytics, Audit: core.Recorder, Config: anaCfg.Config}
+	if s3 := mediaUC.Storage; s3 != nil {
+		if st, ok := s3.(*storage.S3); ok {
+			exportsUC.Files = storage.Exports{S3: st, Bucket: gameconfig.ExportBucket}
+		}
+	}
+	rollupUC := command.AnalyticsRollup{UoW: core.UoW, Store: analyticssql.Store{}, Versions: cache.Dashboard{C: vk}, Metrics: observability.AnalyticsMetrics{},
+		Config: anaCfg.Config}
+	overview := query.LiveOpsOverview{Thresholds: anaCfg.Thresholds}
+	if anaCfg.PrometheusURL != "" {
+		overview.Source = promsource.Source{BaseURL: anaCfg.PrometheusURL}
+	}
+	var anonymizer command.AnalyticsAnonymizer
+	if len(anaCfg.Keys.All()) > 0 {
+		anonymizer = ingest
+	}
 	m := &Module{hub: hub, learning: learningLate, chat: chatLate, facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
-		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC},
+		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC, Analytics: anonymizer},
 		GameAdmin: facade.GameAdmin{Assignments: assignUC, Catalog: adminQueries},
 		PartyActivities: facade.PartyActivities{Queries: query.PartyActivities{Read: core.ReadSession, Bosses: bosssql.Content{},
 			BossReads: bosssql.Reads{}, Party: questsql.Content{}, Quests: questsql.Content{}, World: worldsql.Content{},
@@ -358,7 +398,9 @@ func Register(r *module.Registry) (*Module, error) {
 			Cursors: cursors},
 		CoopQuests: coopUC, CoopQuestQueries: query.QuestClues{Read: core.ReadSession, Reads: partyquestsql.Reads{}, Content: questsql.Content{},
 			Renders: clues, Names: bosssql.Reads{}},
-		Admin: gamehttp.GameAdminHandlers{Commands: adminUC, Queries: adminQueries, Media: mediaUC}}
+		Admin:         gamehttp.GameAdminHandlers{Commands: adminUC, Queries: adminQueries, Media: mediaUC},
+		Analytics:     gamehttp.AnalyticsHandlers{Ingest: ingest, Queries: gameAnalytics, Exports: exportsUC, Overview: overview},
+		TelemetryFlag: query.ProductTelemetryFlag{Read: core.ReadSession, Flags: analyticssql.Store{}, Platform: anaCfg.Config.ProductTelemetry}}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
 	}
@@ -497,7 +539,63 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Job(Name, job.ScheduledPublish, gameconfig.ScheduledPublishInterval, module.JobFunc(job.ScheduledPublishJob(adminUC)))
 	r.Job(Name, job.MediaPipeline, gameconfig.MediaPipelineInterval, module.JobFunc(job.MediaPipelineJob(mediaUC)))
 	r.Job(Name, job.RenderRetry, gameconfig.RenderRetryInterval, module.JobFunc(job.RenderRetryJob(mediaUC)))
+	// F080: analytics consumers (only with the player key) and jobs.
+	if len(anaCfg.Keys.All()) > 0 {
+		ah := consumer.Analytics{Ingest: ingest}
+		r.Consumer(messaging.AnalyticsGameName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+			return consumer.AnalyticsGameOptions(ah, core.UoW, core.App, js)
+		})
+		r.Consumer(messaging.AnalyticsCompetitionName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+			return consumer.AnalyticsCompetitionOptions(ah, core.UoW, core.App, js)
+		})
+		r.Consumer(messaging.AnalyticsLearningName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+			return consumer.AnalyticsLearningOptions(ah, core.UoW, core.App, js)
+		})
+		r.Consumer(messaging.AnalyticsChatName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+			return consumer.AnalyticsChatOptions(ah, core.UoW, core.App, js)
+		})
+	} else if r.RunsEvents() {
+		slog.Warn("game analytics consumers disabled: EW_ANALYTICS_PLAYER_KEYS is not set")
+	}
+	r.Job(Name, job.AnalyticsRollup, gameconfig.AnalyticsRollupInterval, module.JobFunc(job.AnalyticsRollupJob(rollupUC)))
+	r.Job(Name, job.AnalyticsDayClose, gameconfig.AnalyticsDayCloseInterval, module.JobFunc(job.AnalyticsDayCloseJob(rollupUC)))
+	r.Job(Name, job.AnalyticsRetention, gameconfig.AnalyticsRetentionInterval, module.JobFunc(job.AnalyticsRetentionJob(rollupUC,
+		gameconfig.AnalyticsRetentionBatch)))
+	// Without object storage (EW_S3_*) the export worker leaves the jobs queued.
+	r.Job(Name, job.AnalyticsExport, gameconfig.AnalyticsExportInterval, module.JobFunc(job.AnalyticsExportJob(exportsUC)))
 	r.Job(Name, job.SessionTimeout, cfg.TimeoutScan, module.JobFunc(job.SessionTimeoutJob(sessions)))
 	r.Job(Name, job.CurfewSessionCloser, job.CurfewCloserInterval, module.JobFunc(job.CurfewSessionCloserJob(sessions)))
 	return m, nil
+}
+
+// DashboardPoolSize is dashboard_db_pool_per_api_replica (CONFIG_DEFAULTS, DASHBOARD_DATA §7).
+const DashboardPoolSize = 10
+
+// dashboardSession opens the read session of Game Analytics (F080-AC-11, DASHBOARD_DATA §7): the role game_dashboard
+// (EW_DB_GAME_DASHBOARD_DSN) and, for the cross-tenant platform reads (audited platform_analytics bypass), game_platform
+// (EW_DB_GAME_DASHBOARD_PLATFORM_DSN), both on the read replica in staging/production (local: the primary). Without them
+// the analytics routes answer 503; they never fall back to the business pools.
+func dashboardSession(r *module.Registry, needed bool) (*entx.ReadSession, error) {
+	if !needed {
+		return nil, nil
+	}
+	dash, err := r.SQL(Name, "dashboard")
+	if errors.Is(err, module.ErrDatabaseNotConfigured) {
+		slog.Warn("game analytics dashboards disabled: EW_DB_GAME_DASHBOARD_DSN is not set (503)")
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	plat, err := r.SQL(Name, "dashboard_platform")
+	if errors.Is(err, module.ErrDatabaseNotConfigured) {
+		slog.Warn("game analytics dashboards disabled: EW_DB_GAME_DASHBOARD_PLATFORM_DSN is not set (503)")
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	dash.SetMaxOpenConns(DashboardPoolSize)
+	plat.SetMaxOpenConns(DashboardPoolSize)
+	return entx.NewReadSession(Name, entx.DBs{App: dash, Platform: plat})
 }

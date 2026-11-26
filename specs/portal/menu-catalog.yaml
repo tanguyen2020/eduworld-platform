@@ -236,13 +236,13 @@ workspaces:
         title: Báo cáo & analytics
         path: /school-lms/reports
         order: 150
-        required_permissions: [lms.report.read, analytics.tenant.read, report.export]
+        required_permissions: [lms.report.read, analytics.tenant.read, analytics.school.read, report.export]
         can_disable: true
         actions:
           - key: action.school_lms.reports.view
             label_key: portal.action.school_lms.reports.view
-            title: Xem báo cáo tổng hợp tenant
-            required_permissions: [analytics.tenant.read]
+            title: Xem báo cáo tổng hợp tenant (và "Hoạt động game" của trường — F080)
+            required_permissions: [analytics.tenant.read, analytics.school.read]
             operation_ids: [getTenantLearningSummary, getTenantGameSummary]
             can_disable: true
           - key: action.school_lms.reports.export
@@ -1472,7 +1472,7 @@ workspaces:
             label_key: portal.action.game_ops.events.stats
             title: Xem số liệu lượt chạy sự kiện
             required_permissions: [game.liveops.read]
-            operation_ids: [getEventRunStats]
+            operation_ids: [getEventRunStats, listEventRuns]
             can_disable: true
       - key: menu.game_ops.competition
         label_key: portal.menu.game_ops.competition
@@ -1775,7 +1775,7 @@ workspaces:
             label_key: portal.action.live_ops.live_dashboard.view
             title: Xem CCU, phiên, hàng chờ, sức khỏe
             required_permissions: [game.liveops.read]
-            operation_ids: []
+            operation_ids: [getLiveOpsOverview]
             can_disable: true
       - key: menu.live_ops.game_analytics
         label_key: portal.menu.live_ops.game_analytics
@@ -1795,7 +1795,7 @@ workspaces:
             label_key: portal.action.live_ops.game_analytics.export
             title: Xuất dữ liệu analytics
             required_permissions: [game.analytics.read]
-            operation_ids: [createGameAnalyticsExport]
+            operation_ids: [createGameAnalyticsExport, getGameAnalyticsExport]
             can_disable: true
       - key: menu.live_ops.moderation_cases
         label_key: portal.menu.live_ops.moderation_cases

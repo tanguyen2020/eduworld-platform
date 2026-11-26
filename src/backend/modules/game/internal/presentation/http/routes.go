@@ -89,6 +89,10 @@ type Handlers struct {
 	CoopQuestQueries CoopQuestQueries
 	// Admin are the Game Operations Console handlers (F078); nil Commands = not mounted (worker binaries).
 	Admin GameAdminHandlers
+	// Analytics are the F080 Game Analytics handlers (telemetry, dashboards, exports, Live dashboard); nil = not mounted.
+	Analytics AnalyticsHandlers
+	// TelemetryFlag answers ClientConfig.product_telemetry_enabled (nil = the platform default, on).
+	TelemetryFlag TelemetryFlag
 	// IPHasher hashes the client address for game.login_events.ip_hash (nil = no hash). The raw IP stops here.
 	IPHasher port.IPHasher
 }
@@ -222,6 +226,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		routes[id] = fn
 	}
 	for id, fn := range h.profileRoutes() {
+		routes[id] = fn
+	}
+	for id, fn := range h.analyticsRoutes() {
 		routes[id] = fn
 	}
 	if h.Admin.Commands != nil {
@@ -367,9 +374,24 @@ func (h Handlers) getClientConfig(w http.ResponseWriter, r *http.Request) {
 	if c.LoginURL != "" {
 		login["login_url"] = c.LoginURL
 	}
+	// F080-AC-03: product telemetry flag of the platform, and of the tenant when tenant_id is given.
+	var tenant *uuid.UUID
+	if s := q.Get("tenant_id"); s != "" {
+		id, err := uuid.Parse(s)
+		if err != nil {
+			fail(w, r, problem.Invalid("tenant_id", problem.SubInvalid, "must be a UUID"))
+			return
+		}
+		tenant = &id
+	}
+	product := true
+	if h.TelemetryFlag != nil {
+		product = h.TelemetryFlag.ProductTelemetry(r.Context(), tenant)
+	}
 	w.Header().Set("Cache-Control", "no-cache")
 	writeJSON(w, http.StatusOK, map[string]any{"min_client_version": c.MinClientVersion, "latest_client_version": c.LatestClientVersion,
-		"update_required": c.UpdateRequired, "maintenance": maintenance, "login": login, "supported_locales": c.SupportedLocales})
+		"update_required": c.UpdateRequired, "maintenance": maintenance, "login": login, "supported_locales": c.SupportedLocales,
+		"product_telemetry_enabled": product})
 }
 
 // etagMatches implements If-None-Match (weak comparison, list or *).
