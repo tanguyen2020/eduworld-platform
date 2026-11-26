@@ -44,7 +44,11 @@ Quyết định khi triển khai delta F069 T004 và ma trận khối ([TEST_STR
 
 - F076-1: Bước quest `challenge` (QUEST_SYSTEM) và QST tiêu thụ `challenge.completed` — ngoài AC của F076, chờ feature quest kế tiếp.
 - F076-2: Seed challenge cho quickstart (T004, T039) — cần learning dev seed có id activity cố định.
-- F076-3: `description`/`rules_summary` song ngữ (`LocalizedText`, F069 contracts §6) cần một field mới hoặc version API mới (đổi kiểu là breaking) — chờ owner chọn [Proposed: thêm `description_i18n` additive].
+- F076-3 — **Đã trả lời 2026-11-27 [Confirmed]:** thêm trường additive `description_i18n`, `rules_summary_i18n` — xem Session 2026-11-27.
+
+### Session 2026-11-27 (delta F076-3 — [Confirmed — orchestrator 2026-11-27, lệnh "chốt hết": chỉ thêm trường])
+
+- Q: Mô tả song ngữ cho client? → A: `GameChallengeDetail` thêm `description_i18n` và `rules_summary_i18n` (`LocalizedText`); `description`/`rules_summary` (chuỗi theo `Accept-Language`) giữ nguyên cho client cũ. `description_i18n` = `description` vi + en của version (văn bản game luôn đủ hai bản khi publish — CONTENT_MODEL §8; thiếu một bản thì không trả). `rules_summary_i18n` chưa có nguồn (`challenge.schema.json` không có tóm tắt luật) nên chưa trả, giống `rules_summary`. Quy tắc ở [CHALLENGE_BOSS_SYSTEM](../../docs/01-game-design/CHALLENGE_BOSS_SYSTEM.md). [Confirmed]
 
 ## User Scenarios & Testing *(bắt buộc)*
 

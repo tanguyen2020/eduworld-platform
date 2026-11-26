@@ -25,6 +25,10 @@
 - Q: Nút "Tạo nhóm" tạo loại party nào? → A: [Proposed] `friend` cho mọi khối (loại duy nhất mọi khối đều được tạo); party `quest` sinh từ quest co-op, `competition_team` từ thi đấu, `study_party`/`custom` (lớp 6–9) chưa có lối tạo trên client — server vẫn quyết định loại được phép.
 - Q: Cấp độ trên thẻ thành viên khi REST `PartyMember` không có `level`? → A: [Proposed] Hiện khi đã biết từ `PublicPlayer` của message realtime, ẩn khi chưa biết (không tự suy ra).
 
+### Session 2026-11-27 (delta backend F102-1 — [Confirmed — orchestrator 2026-11-27, lệnh "chốt hết": chỉ thêm trường])
+
+- Q: `PartyMember` của REST có `level`? → A: Có, tùy chọn (`integer ≥ 1`): level XP của thẻ công khai `ref.player_profiles` của module competition, giữ mới bằng event `level.reached` (cùng `game_profile.updated`) của module game qua consumer `competition.projection_game` — tái dùng projection có sẵn thay cho facade đồng bộ (R29: phản ứng phụ dùng event). Level chỉ tăng; chưa có thẻ → vắng `level`, đọc party không lỗi; không kèm tên thật/trường/khối (R16). Quy tắc ở [PARTY_SYSTEM](../../docs/03-social-multiplayer/PARTY_SYSTEM.md). Client đọc `level` khi có (ẩn khi vắng, như Clarification phía trên). [Confirmed]
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo nhóm, mời bạn, nhận lời mời (Priority: P1)
@@ -166,7 +170,7 @@ Bạn rớt mạng thì thẻ mờ đi; leader rớt mạng thì có băng "Trư
 
 ## Câu hỏi mở
 
-- F102-1 [Proposed]: Thêm `level` vào `PartyMember` của REST (delta F100) để thẻ thành viên luôn có cấp độ ngay khi mở màn.
+- F102-1 — **Đã trả lời 2026-11-27 [Confirmed]:** `PartyMember.level` (tùy chọn) trong REST party — xem Clarifications 2026-11-27 (delta backend).
 - F102-2 [Proposed]: Lối tạo party `study_party`/`custom` cho lớp 6–9 (chọn loại khi tạo) và API trả danh sách loại party được phép theo khối, để client không phải đoán.
 - F102-3 [Proposed]: Feature Godot cho màn chơi co-op/boss nhóm (HUD phase, thẻ dữ kiện `interdependent`, tiến độ chung) — hiện chỉ vào zone của phiên.
 

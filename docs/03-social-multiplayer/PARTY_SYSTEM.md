@@ -91,7 +91,7 @@ Trải nghiệm: tạo party từ Social Zone/menu/danh sách bạn bè/club; m�
 
 | Chức năng | Mô tả | Nguồn dữ liệu |
 |---|---|---|
-| Danh sách thành viên | nickname, avatar, level, vai trò leader | PG + cache |
+| Danh sách thành viên | nickname, avatar, level, vai trò leader — `PartyMember.level` (delta F102, [Confirmed — orchestrator 2026-11-27]) là level XP của thẻ công khai `ref.player_profiles`, projection từ `game_profile.updated` và `level.reached` của module game (event, không gọi đồng bộ — R29); level chỉ tăng nên event đến trễ/lặp không làm giảm; chưa có thẻ → vắng `level`, đọc party không lỗi; không bao giờ kèm tên thật, trường, khối (R16) | PG + cache |
 | Avatar & trạng thái online | Enum presence chung ([MULTIPLAYER_GAMEPLAY §5](MULTIPLAYER_GAMEPLAY.md#5-presence)); thành viên đang trong grace mất kết nối hiển thị nhãn "đang kết nối lại" | Valkey presence |
 | Ready / Not Ready | Từng member toggle; reset khi đổi activity | Valkey `ew:party:<party_id>:members` |
 | Leader Controls | Kick, transfer, đổi settings, chọn activity/mode, start | WS/REST |

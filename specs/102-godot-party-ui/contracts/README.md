@@ -44,4 +44,5 @@ Client chỉ tiêu thụ contract; không sở hữu contract nào.
 
 ## 6. Delta cần thực hiện
 
-- Không có delta riêng của F102. Phụ thuộc delta của F100 (`state_version`) và F101 (`listPartyEligibleActivities`, `expected_version`, `PARTY_NOT_READY`, `room_type: boss`). Fixture `src/game/tests/fixtures/multiplayer/*.json` sinh lại từ example sau khi delta merge; test contract parse mọi example (GODOT_ARCHITECTURE §12).
+- **Đã làm 2026-11-27 (delta backend F102-1, additive — [Confirmed]):** `PartyMember.level` (`integer ≥ 1`, tùy chọn) trong mọi response REST party của competition.v1.yaml; nguồn `ref.player_profiles` + event `level.reached` (consumer `competition.projection_game`, không thêm facade); fixture `Party.json` sinh lại.
+- Ngoài delta trên, không có delta riêng của F102. Phụ thuộc delta của F100 (`state_version`) và F101 (`listPartyEligibleActivities`, `expected_version`, `PARTY_NOT_READY`, `room_type: boss`). Fixture `src/game/tests/fixtures/multiplayer/*.json` sinh lại từ example sau khi delta merge; test contract parse mọi example (GODOT_ARCHITECTURE §12).
