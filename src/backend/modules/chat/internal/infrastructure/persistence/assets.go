@@ -23,7 +23,7 @@ type Assets struct{}
 var _ write.AssetRepository = Assets{}
 
 const assetVersionColumns = `v.version_id, v.config_type, v.config_id, v.version, v.status, coalesce(v.change_note, ''), v.payload,
-	v.created_by, v.reviewed_by, v.reviewed_at, v.published_by, v.published_at, v.updated_at`
+	v.created_by, v.reviewed_by, v.reviewed_at, v.published_by, v.published_at, v.updated_at, v.revision`
 
 func scanAssetVersion(r interface{ Scan(dest ...any) error }) (port.AssetVersion, error) {
 	var v port.AssetVersion
@@ -31,7 +31,7 @@ func scanAssetVersion(r interface{ Scan(dest ...any) error }) (port.AssetVersion
 	var reviewer, publisher uuid.NullUUID
 	var reviewed, published sql.NullTime
 	if err := r.Scan(&v.VersionID, &typ, &v.ConfigID, &v.Version, &status, &v.Title, &v.Payload, &v.AuthorID, &reviewer, &reviewed,
-		&publisher, &published, &v.UpdatedAt); err != nil {
+		&publisher, &published, &v.UpdatedAt, &v.Revision); err != nil {
 		return v, err
 	}
 	v.Type, v.Status = chatasset.Type(typ), chatasset.Status(status)
@@ -151,7 +151,8 @@ func (Assets) SaveVersion(ctx context.Context, v port.AssetVersion) error {
 	}
 	// tenancyguard:ok platform library versions (G table); the trigger refuses any change of a published version
 	if _, err := t.ExecContext(ctx, `UPDATE chat.chat_asset_versions SET status = $2, payload = $3::jsonb, change_note = NULLIF($4, ''),
-		created_by = $5, reviewed_by = $6, reviewed_at = $7, published_by = $8, published_at = $9, updated_at = $10 WHERE version_id = $1`,
+		created_by = $5, reviewed_by = $6, reviewed_at = $7, published_by = $8, published_at = $9, updated_at = $10,
+		revision = revision + 1 WHERE version_id = $1`,
 		v.VersionID, string(v.Status), string(v.Payload), v.Title, v.AuthorID, v.ReviewerID, v.ReviewedAt, v.PublishedBy, v.PublishedAt,
 		v.UpdatedAt); err != nil {
 		return fmt.Errorf("chat assets: save version: %w", err)
@@ -167,8 +168,8 @@ func (Assets) Publish(ctx context.Context, v port.AssetVersion, prev *port.Asset
 	}
 	if prev != nil && prev.VersionID != v.VersionID {
 		// tenancyguard:ok platform library versions (G table): published → archived is the only change allowed
-		if _, err := t.ExecContext(ctx, `UPDATE chat.chat_asset_versions SET status = 'archived', updated_at = $2 WHERE version_id = $1`,
-			prev.VersionID, r.At); err != nil {
+		if _, err := t.ExecContext(ctx, `UPDATE chat.chat_asset_versions SET status = 'archived', updated_at = $2, revision = revision + 1
+			WHERE version_id = $1`, prev.VersionID, r.At); err != nil {
 			return fmt.Errorf("chat assets: archive previous: %w", err)
 		}
 	}
@@ -438,8 +439,8 @@ func archivePublished(ctx context.Context, t *sql.Tx, prev *port.AssetVersion, a
 		return nil
 	}
 	// tenancyguard:ok platform library versions (G table): published → archived is the only change allowed
-	if _, err := t.ExecContext(ctx, `UPDATE chat.chat_asset_versions SET status = 'archived', updated_at = $2 WHERE version_id = $1`,
-		prev.VersionID, at); err != nil {
+	if _, err := t.ExecContext(ctx, `UPDATE chat.chat_asset_versions SET status = 'archived', updated_at = $2, revision = revision + 1
+		WHERE version_id = $1`, prev.VersionID, at); err != nil {
 		return fmt.Errorf("chat assets: archive previous: %w", err)
 	}
 	return nil

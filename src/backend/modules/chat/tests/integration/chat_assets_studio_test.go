@@ -46,7 +46,11 @@ func TestChatAssetsStudio(t *testing.T) {
 		f.platformStaff("liveops")
 	other := f.platformStaff("game_designer")
 	call := func(token, method, path string, body any) resp {
-		h := map[string]string{"Idempotency-Key": newKey(), "If-Match": `"1"`}
+		h := map[string]string{"Idempotency-Key": newKey()}
+		// A version write sends If-Match = the current ETag of that version (412 when stale — F082 Clarifications 2026-11-26).
+		if m := versionWrite.FindStringSubmatch(path); m != nil && method != http.MethodGet {
+			h["If-Match"] = f.do(http.MethodGet, m[1], token, nil, nil).header.Get("ETag")
+		}
 		if method == http.MethodPatch {
 			h["Content-Type"] = "application/merge-patch+json"
 		}

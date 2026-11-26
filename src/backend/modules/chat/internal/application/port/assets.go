@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -33,7 +35,8 @@ type AssetInspector interface {
 	Inspect(ctx context.Context, key string, maxBytes int) (chatasset.File, error)
 }
 
-// AssetVersion is one row of chat.chat_asset_versions.
+// AssetVersion is one row of chat.chat_asset_versions. Revision is its optimistic version: every change of the row adds 1,
+// ETag() is the entity tag of getGameConfigVersion and the If-Match of the writes (F082 Clarifications 2026-11-26).
 type AssetVersion struct {
 	VersionID   uuid.UUID
 	Type        chatasset.Type
@@ -48,6 +51,17 @@ type AssetVersion struct {
 	PublishedBy *uuid.UUID
 	PublishedAt *time.Time
 	UpdatedAt   time.Time
+	Revision    int64
+}
+
+// ETag is the entity tag of the version ("<revision>").
+func (v AssetVersion) ETag() string { return `"` + strconv.FormatInt(v.Revision, 10) + `"` }
+
+// MatchesETag reports whether an If-Match header names the current revision: "<revision>", W/"<revision>", the bare
+// number or *.
+func (v AssetVersion) MatchesETag(header string) bool {
+	h := strings.TrimPrefix(strings.TrimSpace(header), "W/")
+	return h == "*" || h == v.ETag() || h == strconv.FormatInt(v.Revision, 10)
 }
 
 // AssetRelease is one row of chat.chat_asset_releases.

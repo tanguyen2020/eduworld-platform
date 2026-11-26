@@ -85,6 +85,19 @@ func assetWrite(ctx context.Context) (authz.Principal, tenancy.Scope, error) {
 	return platformWrite(ctx, authz.PermGameChatAssetsWrite)
 }
 
+// ifMatch compares the If-Match header of a version write with the revision of the locked row (API_DESIGN §7): missing
+// → 428 PRECONDITION_REQUIRED, another revision → 412 VERSION_MISMATCH (F082 Clarifications 2026-11-26). The httpx contract
+// validator already answers 428 for a missing header; the check is repeated here so the use case never trusts its caller.
+func ifMatch(header string, cur *port.AssetVersion) error {
+	if strings.TrimSpace(header) == "" {
+		return problem.New(problem.PreconditionRequired, "")
+	}
+	if !cur.MatchesETag(header) {
+		return problem.New(problem.VersionMismatch, "")
+	}
+	return nil
+}
+
 func assetType(t string) (chatasset.Type, error) {
 	ct := chatasset.Type(t)
 	if !ct.Valid() {
@@ -163,7 +176,7 @@ func (h ChatAssets) Create(ctx context.Context, typ, title string, payload json.
 	}
 	now := h.now()
 	v = port.AssetVersion{VersionID: ids.New(), Type: t, ConfigID: ids.New(), Version: 1, Status: chatasset.StatusDraft, Title: title,
-		Payload: b, AuthorID: p.UserID, UpdatedAt: now}
+		Payload: b, AuthorID: p.UserID, UpdatedAt: now, Revision: 1}
 	err = h.UoW.InTenantTx(ctx, sc, func(ctx context.Context) error {
 		if pack != nil {
 			taken, err := h.Repo.CodeTaken(ctx, pack.Code, v.ConfigID)
@@ -183,8 +196,9 @@ func (h ChatAssets) Create(ctx context.Context, typ, title string, payload json.
 }
 
 // UpdateDraft is updateGameConfigDraft: changes a draft; on the newest published/archived version it starts the next
-// version as a draft (a published version is never changed, R31).
-func (h ChatAssets) UpdateDraft(ctx context.Context, typ string, id uuid.UUID, version int, title string, payload json.RawMessage) (v port.AssetVersion, err error) {
+// version as a draft (a published version is never changed, R31). match is the If-Match header: the revision of the
+// version read by the editor (428 when missing, 412 VERSION_MISMATCH when someone saved meanwhile).
+func (h ChatAssets) UpdateDraft(ctx context.Context, typ string, id uuid.UUID, version int, match, title string, payload json.RawMessage) (v port.AssetVersion, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.command.UpdateChatAssetDraft")
 	defer func() { done(err) }()
 	t, err := assetType(typ)
@@ -207,6 +221,9 @@ func (h ChatAssets) UpdateDraft(ctx context.Context, typ string, id uuid.UUID, v
 		if cur == nil {
 			return problem.New(problem.NotFound, "")
 		}
+		if err := ifMatch(match, cur); err != nil {
+			return err
+		}
 		if pack != nil {
 			taken, err := h.Repo.CodeTaken(ctx, pack.Code, id)
 			if err != nil {
@@ -223,6 +240,7 @@ func (h ChatAssets) UpdateDraft(ctx context.Context, typ string, id uuid.UUID, v
 			if err := h.Repo.SaveVersion(ctx, *cur); err != nil {
 				return err
 			}
+			cur.Revision++ // SaveVersion added 1 to the locked row
 			v = *cur
 		case chatasset.StatusPublished, chatasset.StatusArchived:
 			latest, err := h.Repo.Latest(ctx, t, id)
@@ -233,7 +251,7 @@ func (h ChatAssets) UpdateDraft(ctx context.Context, typ string, id uuid.UUID, v
 				return problem.New(problem.VersionMismatch, "")
 			}
 			v = port.AssetVersion{VersionID: ids.New(), Type: t, ConfigID: id, Version: latest + 1, Status: chatasset.StatusDraft, Title: title,
-				Payload: b, AuthorID: p.UserID, UpdatedAt: h.now()}
+				Payload: b, AuthorID: p.UserID, UpdatedAt: h.now(), Revision: 1}
 			if err := h.Repo.InsertVersion(ctx, v); err != nil {
 				return err
 			}
@@ -320,8 +338,8 @@ func (h ChatAssets) inspectStamp(ctx context.Context, t chatasset.Type, payload 
 }
 
 // Transition is transitionGameConfigVersion: submit_review (files checked), approve (a GIF by someone else than its
-// author), reject, archive.
-func (h ChatAssets) Transition(ctx context.Context, typ string, id uuid.UUID, version int, action string) (v port.AssetVersion, err error) {
+// author), reject, archive. match is the If-Match header (revision of the version, 428/412 as UpdateDraft).
+func (h ChatAssets) Transition(ctx context.Context, typ string, id uuid.UUID, version int, match, action string) (v port.AssetVersion, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.command.TransitionChatAsset")
 	defer func() { done(err) }()
 	t, err := assetType(typ)
@@ -343,6 +361,9 @@ func (h ChatAssets) Transition(ctx context.Context, typ string, id uuid.UUID, ve
 		}
 		if cur == nil {
 			return problem.New(problem.NotFound, "")
+		}
+		if err := ifMatch(match, cur); err != nil {
+			return err
 		}
 		next, err := chatasset.Next(t, cur.Status, action, p.UserID, cur.AuthorID)
 		switch {
@@ -382,6 +403,7 @@ func (h ChatAssets) Transition(ctx context.Context, typ string, id uuid.UUID, ve
 		if err := h.Repo.SaveVersion(ctx, *cur); err != nil {
 			return err
 		}
+		cur.Revision++
 		v = *cur
 		return h.record(ctx, AuditChatAssetTransition, t, id, map[string]any{"version": version, "action": action, "to": string(next)})
 	})
@@ -389,8 +411,9 @@ func (h ChatAssets) Transition(ctx context.Context, typ string, id uuid.UUID, ve
 }
 
 // Publish is publishGameConfigVersion: an approved version becomes the library state (immutable from now on), the version
-// published before is archived, content.published is written (item_type sticker_pack|gif).
-func (h ChatAssets) Publish(ctx context.Context, typ string, id uuid.UUID, version int, note string) (r port.AssetRelease, err error) {
+// published before is archived, content.published is written (item_type sticker_pack|gif). match is the If-Match header
+// (revision of the approved version, 428/412 as UpdateDraft).
+func (h ChatAssets) Publish(ctx context.Context, typ string, id uuid.UUID, version int, match, note string) (r port.AssetRelease, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.command.PublishChatAsset")
 	defer func() { done(err) }()
 	t, err := assetType(typ)
@@ -408,6 +431,9 @@ func (h ChatAssets) Publish(ctx context.Context, typ string, id uuid.UUID, versi
 		}
 		if cur == nil {
 			return problem.New(problem.NotFound, "")
+		}
+		if err := ifMatch(match, cur); err != nil {
+			return err
 		}
 		if cur.Status != chatasset.StatusApproved {
 			return problem.New(problem.InvalidStateTransition, "").Wrap(chatasset.ErrNotPublished)

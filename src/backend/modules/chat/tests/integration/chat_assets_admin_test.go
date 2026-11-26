@@ -110,10 +110,15 @@ func TestChatAssetsAdmin(t *testing.T) {
 	startFeatures(t, f)
 	author, reviewer := f.platformStaff("system_admin"), f.platformStaff("system_admin")
 	tenantAdmin := f.staff(f.tenantA, "tenant_admin")
+	const current = "current"
 	call := func(token, method, path string, ifMatch string, body any) resp {
 		h := map[string]string{"Idempotency-Key": newKey()}
 		if ifMatch != "" {
 			h["If-Match"] = ifMatch
+			// "current": the ETag of the version right now (a version write is 412 when stale — F082 Clarifications 2026-11-26).
+			if m := versionWrite.FindStringSubmatch(path); m != nil && ifMatch == current {
+				h["If-Match"] = f.do(http.MethodGet, m[1], token, nil, nil).header.Get("ETag")
+			}
 		}
 		if method == http.MethodPatch {
 			h["Content-Type"] = "application/merge-patch+json"
@@ -153,20 +158,20 @@ func TestChatAssetsAdmin(t *testing.T) {
 	}
 	payload := map[string]any{"asset_key": keys["cheer.gif"], "preview_key": keys["cheer.png"], "size_bytes": len(anim), "width": 320,
 		"height": 240, "tags_vi": []string{"co vu"}, "tags_en": []string{"cheer"}}
-	if r := call(author, http.MethodPatch, base+"/versions/1", `"1"`, map[string]any{"payload": payload}); r.status != http.StatusOK {
+	if r := call(author, http.MethodPatch, base+"/versions/1", current, map[string]any{"payload": payload}); r.status != http.StatusOK {
 		t.Fatalf("update draft: %d %s", r.status, r.raw)
 	}
-	if r := call(author, http.MethodPost, base+"/versions/1:transition", `"1"`, map[string]any{"action": "submit_review"}); r.status != http.StatusOK || r.body["status"] != "in_review" {
+	if r := call(author, http.MethodPost, base+"/versions/1:transition", current, map[string]any{"action": "submit_review"}); r.status != http.StatusOK || r.body["status"] != "in_review" {
 		t.Fatalf("submit: %d %s", r.status, r.raw)
 	}
 	// Four eyes: the author cannot approve its GIF.
-	if r := call(author, http.MethodPost, base+"/versions/1:transition", `"1"`, map[string]any{"action": "approve"}); r.status != http.StatusForbidden {
+	if r := call(author, http.MethodPost, base+"/versions/1:transition", current, map[string]any{"action": "approve"}); r.status != http.StatusForbidden {
 		t.Fatalf("self review: %d %s", r.status, r.raw)
 	}
-	if r := call(reviewer, http.MethodPost, base+"/versions/1:transition", `"1"`, map[string]any{"action": "approve"}); r.status != http.StatusOK || r.body["status"] != "approved" {
+	if r := call(reviewer, http.MethodPost, base+"/versions/1:transition", current, map[string]any{"action": "approve"}); r.status != http.StatusOK || r.body["status"] != "approved" {
 		t.Fatalf("approve: %d %s", r.status, r.raw)
 	}
-	if r := call(reviewer, http.MethodPost, base+"/versions/1:publish", `"1"`, nil); r.status != http.StatusOK || r.body["to_version"] != float64(1) {
+	if r := call(reviewer, http.MethodPost, base+"/versions/1:publish", current, nil); r.status != http.StatusOK || r.body["to_version"] != float64(1) {
 		t.Fatalf("publish: %d %s", r.status, r.raw)
 	}
 	if n := f.count(`SELECT count(*) FROM chat.gif_assets WHERE gif_id = $1 AND status = 'published' AND width = 320`, id); n != 1 {
@@ -176,7 +181,7 @@ func TestChatAssetsAdmin(t *testing.T) {
 	if _, err := f.su.Exec(`UPDATE chat.chat_asset_versions SET payload = '{}' WHERE config_id = $1 AND version = 1`, id); err == nil {
 		t.Fatal("a published version was changed")
 	}
-	if r := call(author, http.MethodPatch, base+"/versions/1", `"1"`, map[string]any{"payload": payload}); r.status != http.StatusOK || r.body["version"] != float64(2) {
+	if r := call(author, http.MethodPatch, base+"/versions/1", current, map[string]any{"payload": payload}); r.status != http.StatusOK || r.body["version"] != float64(2) {
 		t.Fatalf("edit after publish: %d %s", r.status, r.raw)
 	}
 	if len(f.events("content.published")) != 1 {
@@ -201,11 +206,11 @@ func TestChatAssetsAdmin(t *testing.T) {
 	for _, c := range []struct {
 		asset, preview, want string
 	}{{wideKey, keys["cheer.png"], "dimensions"}, {keys["cheer.gif"], prevKey, "preview"}} {
-		if r := call(author, http.MethodPatch, "/game-admin/gifs/"+g2+"/versions/1", `"1"`, map[string]any{"payload": map[string]any{
+		if r := call(author, http.MethodPatch, "/game-admin/gifs/"+g2+"/versions/1", current, map[string]any{"payload": map[string]any{
 			"asset_key": c.asset, "preview_key": c.preview}}); r.status != http.StatusOK {
 			t.Fatalf("draft: %d %s", r.status, r.raw)
 		}
-		if r := call(author, http.MethodPost, "/game-admin/gifs/"+g2+"/versions/1:transition", `"1"`, map[string]any{"action": "submit_review"}); r.status != http.StatusUnprocessableEntity || !strings.Contains(r.raw, c.want) {
+		if r := call(author, http.MethodPost, "/game-admin/gifs/"+g2+"/versions/1:transition", current, map[string]any{"action": "submit_review"}); r.status != http.StatusUnprocessableEntity || !strings.Contains(r.raw, c.want) {
 			t.Fatalf("file rule %s: %d %s", c.want, r.status, r.raw)
 		}
 	}
@@ -218,7 +223,7 @@ func TestChatAssetsAdmin(t *testing.T) {
 	if pr.status != http.StatusCreated {
 		t.Fatalf("create pack: %d %s", pr.status, pr.raw)
 	}
-	if r := call(author, http.MethodPost, "/game-admin/sticker-packs/"+pr.body["config_id"].(string)+"/versions/1:transition", `"1"`,
+	if r := call(author, http.MethodPost, "/game-admin/sticker-packs/"+pr.body["config_id"].(string)+"/versions/1:transition", current,
 		map[string]any{"action": "submit_review"}); r.status != http.StatusUnprocessableEntity || !strings.Contains(r.raw, "size") {
 		t.Fatalf("sticker over 512 KB: %d %s", r.status, r.raw)
 	}

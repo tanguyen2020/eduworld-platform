@@ -256,3 +256,46 @@ describe('Thư viện GIF (F082-AC-05, AC-06, AC-19)', () => {
     expect(within(input.closest('.ant-input-affix-wrapper') ?? document.body).getByText(/\/ ?64/)).toBeInTheDocument();
   });
 });
+
+// F082 follow-up (Clarifications 2026-11-26): module chat answers ETag = revision of the version and refuses a stale
+// If-Match with 412 VERSION_MISMATCH; the shared editor sends the last ETag and stops autosave with "Tải bản mới".
+describe('Khóa lạc quan sticker pack / GIF (F082 follow-up 2026-11-26)', () => {
+  const GIF = { asset_key: `media/${SHA}/fox.gif`, preview_key: `media/${SHA}/fox.png`, size_bytes: 1000, width: 200, height: 200, tags_vi: ['vui'], tags_en: ['happy'], preview_url: 'https://chat-assets.test/signed/fox.png', url: 'https://chat-assets.test/signed/fox.gif' };
+  const conflictFlow = async (r: Awaited<ReturnType<typeof renderGameOps>>, path: string, edit: (n: number) => Promise<void>) => {
+    await edit(1);
+    await r.user.click(screen.getByRole('button', { name: 'Lưu' }));
+    await waitFor(() => expect(r.backend.calls('PATCH', path)).toHaveLength(1));
+    expect(r.backend.calls('PATCH', path)[0]!.headers['if-match']).toBe('"1"');
+    // another editor saved meanwhile → 412 VERSION_MISMATCH (the code module chat answers)
+    r.backend.overrides.unshift((req) => (req.method === 'PATCH' ? problem(412, 'VERSION_MISMATCH') : undefined));
+    await edit(2);
+    await r.user.click(screen.getByRole('button', { name: 'Lưu' }));
+    expect(await screen.findByText('Người khác đã sửa bản nháp này')).toBeInTheDocument();
+    expect(r.backend.calls('PATCH', path)[1]!.headers['if-match']).toBe('"2"');
+    expect(screen.getByRole('button', { name: 'Lưu' })).toBeDisabled();
+    const reads = r.backend.calls('GET', path).length;
+    await r.user.click(screen.getByRole('button', { name: 'Tải bản mới' }));
+    await waitFor(() => expect(r.backend.calls('GET', path).length).toBeGreaterThan(reads));
+  };
+
+  it('sticker pack draft: If-Match of the last ETag; 412 stops autosave and offers "Tải bản mới"', async () => {
+    let id = '';
+    const r = await renderGameOps('/', { setup: (m) => (id = m.add('sticker-packs', [{ status: 'draft', author_id: DESIGNER, payload: PACK }]).config_id) });
+    await r.router.navigate(packUrl(id));
+    await screen.findByLabelText('Tên pack (Tiếng Việt)');
+    await conflictFlow(r, `/game-admin/sticker-packs/${id}/versions/1`, async (n) => {
+      fireEvent.change(screen.getByLabelText('Tên pack (Tiếng Việt)'), { target: { value: `Bạn đồng hành ${n}` } });
+    });
+  });
+
+  it('GIF draft: If-Match of the last ETag; 412 stops autosave and offers "Tải bản mới"', async () => {
+    let id = '';
+    const r = await renderGameOps('/', { setup: (m) => (id = m.add('gifs', [{ status: 'draft', author_id: DESIGNER, payload: GIF }]).config_id) });
+    await r.router.navigate(`/game-ops/chat-assets/gifs/${id}/v/1`);
+    await screen.findByLabelText('Tag tiếng Việt');
+    await conflictFlow(r, `/game-admin/gifs/${id}/versions/1`, async (n) => {
+      fireEvent.change(screen.getByLabelText('Tag tiếng Việt'), { target: { value: `vui ${n}` } });
+      await r.user.click(screen.getByRole('button', { name: 'Thêm tag tiếng Việt' }));
+    });
+  });
+});

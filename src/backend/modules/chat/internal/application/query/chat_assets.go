@@ -29,14 +29,20 @@ type ChatAssets struct {
 // PreviewTTL is media_presign_ttl (15 minutes): validity of a preview URL of the library.
 const PreviewTTL = 15 * time.Minute
 
+// assetRead authorizes a Game Studio read of the library (platform staff only, R20).
 func assetRead(ctx context.Context, typ string) (chatasset.Type, authz.Principal, error) {
 	t := chatasset.Type(typ)
 	p, ok := authz.PrincipalFrom(ctx)
 	if !ok || !p.Valid() {
 		return t, p, problem.New(problem.Unauthenticated, "")
 	}
-	if err := authz.Require(ctx, p, authz.PermGameChatAssetsWrite, authz.Resource{}); err != nil {
-		return t, p, err
+	// Reads follow action.game_ops.chat_assets.view: game.chat_assets.write, game.content.review or game.content.publish
+	// (the reviewer and Live-ops open the version they approve/publish and need its ETag for If-Match — same rule as
+	// gameadmin.RequireRead of module game); a denial is audited for game.chat_assets.write.
+	if !p.Has(authz.PermGameChatAssetsWrite) && !p.Has(authz.PermGameContentReview) && !p.Has(authz.PermGameContentPublish) {
+		if err := authz.Require(ctx, p, authz.PermGameChatAssetsWrite, authz.Resource{}); err != nil {
+			return t, p, err
+		}
 	}
 	if p.UserType != authz.UserTypeStaff || !p.HasPlatformRole() {
 		return t, p, problem.New(problem.PermissionDenied, "")

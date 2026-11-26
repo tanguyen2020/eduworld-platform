@@ -21,9 +21,9 @@ import (
 // AssetCommands are the Game Studio use cases of the sticker/GIF library (command.ChatAssets, F118-AC-17).
 type AssetCommands interface {
 	Create(ctx context.Context, typ, title string, payload json.RawMessage) (port.AssetVersion, error)
-	UpdateDraft(ctx context.Context, typ string, id uuid.UUID, version int, title string, payload json.RawMessage) (port.AssetVersion, error)
-	Transition(ctx context.Context, typ string, id uuid.UUID, version int, action string) (port.AssetVersion, error)
-	Publish(ctx context.Context, typ string, id uuid.UUID, version int, note string) (port.AssetRelease, error)
+	UpdateDraft(ctx context.Context, typ string, id uuid.UUID, version int, match, title string, payload json.RawMessage) (port.AssetVersion, error)
+	Transition(ctx context.Context, typ string, id uuid.UUID, version int, match, action string) (port.AssetVersion, error)
+	Publish(ctx context.Context, typ string, id uuid.UUID, version int, match, note string) (port.AssetRelease, error)
 	Presign(ctx context.Context, typ string, id uuid.UUID, file, contentType, sha string, size int) (string, string, time.Time, error)
 	Rollback(ctx context.Context, typ string, id uuid.UUID, to int, reason string) (port.AssetRelease, error)
 	Unpublish(ctx context.Context, typ string, id uuid.UUID, reason string) (port.AssetRelease, error)
@@ -197,7 +197,7 @@ func (h AssetHandlers) create(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, err)
 		return
 	}
-	w.Header().Set("ETag", `"`+strconv.Itoa(v.Version)+`"`)
+	w.Header().Set("ETag", v.ETag())
 	writeJSON(w, http.StatusCreated, h.render(r.Context(), v))
 }
 
@@ -217,6 +217,7 @@ func (h AssetHandlers) get(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, err)
 		return
 	}
+	w.Header().Set("ETag", v.ETag()) // If-Match of the draft edit, transition and publish
 	writeJSON(w, http.StatusOK, h.render(r.Context(), *v))
 }
 
@@ -236,11 +237,12 @@ func (h AssetHandlers) update(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, problem.Invalid("payload", problem.SubInvalid, "invalid JSON"))
 		return
 	}
-	v, err := h.Commands.UpdateDraft(r.Context(), configType(r), id, n, b.Title, b.Payload)
+	v, err := h.Commands.UpdateDraft(r.Context(), configType(r), id, n, r.Header.Get("If-Match"), b.Title, b.Payload)
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
+	w.Header().Set("ETag", v.ETag())
 	writeJSON(w, http.StatusOK, h.render(r.Context(), v))
 }
 
@@ -262,7 +264,7 @@ func (h AssetHandlers) transition(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, problem.Invalid("action", problem.SubInvalid, "invalid JSON"))
 		return
 	}
-	v, err := h.Commands.Transition(r.Context(), configType(r), id, n, b.Action)
+	v, err := h.Commands.Transition(r.Context(), configType(r), id, n, r.Header.Get("If-Match"), b.Action)
 	if err != nil {
 		fail(w, r, err)
 		return
@@ -427,7 +429,7 @@ func (h AssetHandlers) publish(w http.ResponseWriter, r *http.Request) {
 	if r.ContentLength != 0 {
 		_ = json.NewDecoder(r.Body).Decode(&b)
 	}
-	rel, err := h.Commands.Publish(r.Context(), configType(r), id, n, b.Note)
+	rel, err := h.Commands.Publish(r.Context(), configType(r), id, n, r.Header.Get("If-Match"), b.Note)
 	if err != nil {
 		fail(w, r, err)
 		return
