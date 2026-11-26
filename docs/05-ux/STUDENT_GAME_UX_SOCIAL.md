@@ -1,6 +1,6 @@
 # Student Game UX — Kinh tế, xã hội, thi đấu, sự kiện, cài đặt
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-26 (F069: lát cắt client §3 Tủ đồ · Cửa hàng · Lịch sử, §4 Thành tựu · Bộ sưu tập · Trưng bày) · 2026-11-26 (F096: nhóm Thông tin trong Cài đặt — Giấy phép có thông báo MIT của Godot, Xem lại hướng dẫn của Mây; lựa chọn đang chọn là chip có dấu ✓) · 2026-11-21 (ADR-0095 — WP-S: bỏ lớp: không nhóm "Bạn cùng lớp", không tab chat Lớp, hồ sơ hiện khối, mục tiêu khối thay mục tiêu lớp) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-26 (F069: lát cắt client §3 Tủ đồ · Cửa hàng · Lịch sử, §4 Thành tựu · Bộ sưu tập · Trưng bày) · 2026-11-27 (F114: §10 Cài đặt dựng lại — cửa sổ có thanh tiêu đề, 5 tab, âm lượng −/+ bước 10%, chip đang chọn vàng + ✓, hộp xác nhận Đăng xuất) · 2026-11-26 (F096: nhóm Thông tin trong Cài đặt — Giấy phép có thông báo MIT của Godot, Xem lại hướng dẫn của Mây; lựa chọn đang chọn là chip có dấu ✓) · 2026-11-21 (ADR-0095 — WP-S: bỏ lớp: không nhóm "Bạn cùng lớp", không tab chat Lớp, hồ sơ hiện khối, mục tiêu khối thay mục tiêu lớp) · 2026-11-15
 > Liên quan: [STUDENT_GAME_UX](STUDENT_GAME_UX.md) (quy ước chung, màn lõi) · [DESIGN_SYSTEM](DESIGN_SYSTEM.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [ADR-0056 song ngữ](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057 máy tầm trung](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md)
 
 > [!IMPORTANT]
@@ -503,36 +503,23 @@ Tablet: hai cột như PC.
 
 **Điểm vào/ra.** HUD trên-phải biểu tượng bánh răng (phím `Esc` khi không có màn phụ → Menu → Cài đặt). Ra: Đóng (lưu tự động từng thay đổi).
 
-**Bố cục Web/PC**
+**Bố cục (F114, mọi thiết bị — game chỉ chạy ngang, F113) [Confirmed — owner duyệt preview 2026-11-26]**
 
 ```text
-┌──────────────────────────────── Cài đặt · Settings ───────────────────────────── [X] ┐
-│ ▸ Ngôn ngữ      │ Ngôn ngữ / Language:   (•) Tiếng Việt   ( ) English                  │
-│ ▸ Đồ họa        │ Hiển thị song song tên riêng (VD "Vương quốc Số · Math Kingdom")  [◯] │
-│ ▸ Âm thanh      │────────────────────────────────────────────────────────────────────│
-│ ▸ Điều khiển    │ Đồ họa:  ( ) Thấp  (•) Trung bình  ( ) Cao     [Tự phát hiện lại]   │
-│ ▸ Trợ năng      │ Độ phân giải động (giữ khung hình ổn định)                     [●] │
-│ ▸ Riêng tư      │ Giới hạn khung hình: [30 ▼]   Hiển thị FPS                     [◯] │
-│ ▸ Tài khoản     │ Số người chơi hiển thị quanh em: [Vừa ▼]                           │
-│                 │ Đang chạy: Trung bình · renderer Mobile · 58 FPS trung bình         │
-└─────────────────┴────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│ CÀI ĐẶT  (thanh tiêu đề màu nhấn, chữ trắng in hoa, cạnh cứng mực)         [x Đóng] │  ← DangerButton đỏ
+├───────────────────┬──────────────────────────────────────────────────────────────────┤
+│ [(o) Ngôn ngữ]    │ (NGÔN NGỮ / LANGUAGE)      ← SectionTag vàng nhạt                │
+│  [^] Đồ họa       │ [v Tiếng Việt]  [ English ]  ← chip đang chọn vàng + ✓           │
+│  <)) Âm thanh     │                                                                  │
+│  (*) Trợ năng     │ Âm thanh:  (n) Nhạc nền [−] ━━━━━━●──── [+]  (70%)                 │
+│  (i) Thông tin    │ Trợ năng:  Tương phản cao              Tắt (◯━━)                 │
+│                   │            Giảm chuyển động            Bật (━━●)                 │
+│ [->| Đăng xuất]   │                       (nội dung cuộn dọc khi dài)                │
+└───────────────────┴──────────────────────────────────────────────────────────────────┘
 ```
 
-**Bố cục Mobile**
-
-```text
-┌ ←  Cài đặt                                                    ┐
-│ Ngôn ngữ        Tiếng Việt                                ›   │
-│ Đồ họa          Trung bình (tự động)                      ›   │
-│ Âm thanh                                                  ›   │
-│ Điều khiển      Joystick trái · Nút phải                  ›   │
-│ Trợ năng                                                  ›   │
-│ Riêng tư                                                  ›   │
-│ Tài khoản       MèoXanh42                                 ›   │
-└───────────────────────────────────────────────────────────────┘
-```
-
-Mỗi mục mở trang con toàn màn. Tablet: hai cột như PC.
+Cửa sổ giữa màn trên lớp phủ mực 50%, chừa ít nhất khoảng cách khối mỗi phía (vừa 1280×720 và điện thoại ngang 844×390). Cột tab trái nền nhạt của màu nhấn (`component.settings.tab_column_bg`), viền phải mực; tab = icon + chữ; tab đang mở = nền nhấn chữ trắng + viền + cạnh dưới; tab khác trong suốt chữ mực; "Đăng xuất" đỏ ở đáy cột; cột tab cuộn được khi cỡ chữ lớn. Nội dung bên phải cuộn dọc khi dài. Quy tắc viền/màu ở [DESIGN_SYSTEM §5.1](DESIGN_SYSTEM.md#51-token-ui). (Bố cục Web/PC và Mobile trước F114 — hai cột trên PC, trang con toàn màn trên điện thoại — được thay bằng cửa sổ này.)
 
 **Nội dung từng nhóm.**
 
@@ -552,7 +539,20 @@ Mỗi mục mở trang con toàn màn. Tablet: hai cột như PC.
 
 **Trạng thái.** Lưu thất bại (mất mạng) → giữ thay đổi cục bộ, đồng bộ lại khi có mạng; thiết lập bị trường khóa (ví dụ không nới phạm vi kết bạn) → hiển thị khóa + "Do nhà trường cài đặt".
 
-**Khác biệt grade band.** `g1_3`: chỉ hiện Ngôn ngữ, Âm thanh, Đồ họa (3 nút hình), Trợ năng cơ bản, Đăng xuất, Thông tin; các mục khác do mặc định an toàn. Lựa chọn đang chọn (ngôn ngữ, preset đồ họa) là `ChoiceChip` nền nhấn + dấu ✓ icon, không chỉ màu (F096). `g6_9`: đủ.
+**Bản hiện tại trong client (F114) [Confirmed].** Chỉ các thiết lập đã có trong `Settings`/`QualitySettings`, lưu cục bộ ngay khi đổi, không gửi server:
+
+| Tab | Nội dung |
+|---|---|
+| Ngôn ngữ | Tiêu đề song ngữ "Ngôn ngữ / Language"; 2 chip Tiếng Việt / English (đổi ngay, vẫn ở tab Ngôn ngữ) |
+| Đồ họa | 3 chip preset có hình (1/2/3 cột) Thấp / Trung bình / Cao; khối khác `g1_3` thêm công tắc Bóng đổ, Khử răng cưa và gợi ý hạ preset như F062 |
+| Âm thanh | 3 hàng Nhạc nền / Hiệu ứng / Giọng nói: icon + tên, nút "−", thanh trượt, nút "+", nhãn "70%". **Bước 10%** (hằng client `Settings.VOLUME_STEP` — sở hữu ở đây); kéo thanh vẫn được; ở 0% / 100% nút − / + mờ (vẫn có viền); nhãn cho trình đọc "Giảm/Tăng âm lượng {tên}" |
+| Trợ năng | Cỡ chữ 3 mức (chip Vừa / Lớn / Rất lớn), Tương phản cao và Giảm chuyển động (`ToggleSwitch` luôn kèm chữ Bật/Tắt) — áp ngay; Cài đặt dựng lại theo Theme mới và giữ tab đang mở |
+| Thông tin | Xem lại hướng dẫn của Mây, Giấy phép (trang trong vùng nội dung có nút Quay lại, nội dung F096), phiên bản game |
+| Đăng xuất (đáy cột) | Hộp xác nhận: lớp phủ lồng (thêm mực 35%), thanh tiêu đề vàng "ĐĂNG XUẤT?", "Bạn muốn đăng xuất khỏi EduWorld?" + "Tiến độ của bạn đã được lưu rồi nhé.", nút "Hủy" (phụ, icon ✕, **focus mặc định** — lựa chọn an toàn) và "Đăng xuất" (`DangerButton`, icon cửa ra); chỉ "Đăng xuất" chạy luồng đăng xuất hiện có (`endGameSession` → `gameLogout`) |
+
+Mở lần đầu trong phiên ở tab Ngôn ngữ (tiêu đề song ngữ giúp em lỡ đổi ngôn ngữ vẫn tìm lại được); lần sau ở tab dùng gần nhất. Bàn phím/tay cầm: Lên/Xuống giữa các tab, Phải vào nội dung, Trái về cột tab; `Esc`/Back đóng hộp xác nhận trước, rồi trang Giấy phép, rồi cửa sổ. Các nhóm Hồ sơ, Điều khiển, Riêng tư, Tài khoản đầy đủ, phụ đề/TTS ở bảng trên chưa có trong client (F114-1, F114-2 [Proposed]).
+
+**Khác biệt grade band.** `g1_3`: đủ 5 tab + Đăng xuất (các tab đều thuộc nhóm `g1_3` được thấy), tab Đồ họa chỉ có 3 nút preset có hình (ẩn bóng đổ, khử răng cưa), tab Trợ năng có cả 3 thiết lập; các mục khác do mặc định an toàn. Lựa chọn đang chọn (ngôn ngữ, preset, cỡ chữ) là `ChoiceChip` **nền vàng + chữ mực + dấu ✓ icon** (F114, thay "nền nhấn + ✓" của F096), không chỉ màu. Lớp 6–9 thấy cùng bố cục với nét viền mảnh hơn (DESIGN_SYSTEM §5.2). `g6_9`: đủ.
 
 **Song ngữ.** `ui.settings.language` ("Ngôn ngữ / Language" — luôn song ngữ để người không đọc được ngôn ngữ hiện tại vẫn tìm thấy), `ui.settings.graphics.preset.*`, `ui.settings.graphics.autodetect` ("Tự phát hiện lại" / "Re-detect"), `ui.settings.privacy.locked_by_school` ("Do nhà trường cài đặt" / "Set by your school"), `ui.settings.account.logout_all` ("Đăng xuất trên mọi thiết bị" / "Sign out on all devices") — chuỗi dài nhất.
 
