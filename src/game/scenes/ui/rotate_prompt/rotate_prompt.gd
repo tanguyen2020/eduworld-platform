@@ -5,7 +5,8 @@ extends Control
 ## OrientationGuard. Every touch on it is swallowed so nothing reaches the paused game behind. Sizes from tokens,
 ## texts as translation keys (auto-translated, AGENTS R32).
 
-## The phone icon is the picture of the screen: five icon sizes (UiTokens.COMPONENT_ICON_SIZE).
+## The phone icon is the picture of the screen: five icon sizes (UiTokens.COMPONENT_ICON_SIZE); its SVG is imported at
+## 6× (`svg/scale` in rotate_phone.svg.import) so it stays sharp at that size on a phone.
 const PHONE_ICON_SCALE: float = 5.0
 
 

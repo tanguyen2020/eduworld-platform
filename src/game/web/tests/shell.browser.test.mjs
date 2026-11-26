@@ -150,6 +150,10 @@ test('F113: Chromium phone upright — rotate prompt over the loading view, side
     await page.click('#ew-play');
     await page.waitForSelector('#ew-shell', { state: 'hidden', timeout: 60000 });
     await page.waitForTimeout(3000);
+    // F113-AC-07: on a touch device "Chơi" went full screen (then tried the landscape lock, refused or not: silent).
+    assert.equal(await page.evaluate(() => document.fullscreenElement !== null), true, 'full screen requested on "Chơi"');
+    await page.evaluate(() => document.exitFullscreen().catch(() => {}));
+    await page.waitForTimeout(500);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(2000);
     await page.setViewportSize({ width: 844, height: 390 });
