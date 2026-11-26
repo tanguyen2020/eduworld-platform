@@ -1,0 +1,4 @@
+# Public immutable CDN object probed by blackbox_exporter (MONITORING §5 CdnErrorRate, stand-in until the CDN provider
+# metrics are integrated). Staging placeholder domain (DEPLOYMENT §9).
+- targets: ["https://cdn.staging.eduworld.example/ew-game-bundles/health.txt"]
+  labels: { probe: cdn }

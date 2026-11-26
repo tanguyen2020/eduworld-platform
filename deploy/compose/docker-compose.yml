@@ -78,6 +78,10 @@ services:
       KC_PORTAL_CLIENT_SECRET: ${KC_PORTAL_CLIENT_SECRET:-change-me-local}
       KC_SIS_SYNC_SECRET: ${KC_SIS_SYNC_SECRET:-change-me-local}
       KC_SVC_IDENTITY_SECRET: ${KC_SVC_IDENTITY_SECRET:-change-me-local}
+      # F131: eduworld-ops-tools (Grafana/GlitchTip login; local values only — staging/production pass their own).
+      KC_OPS_TOOLS_CLIENT_SECRET: ${KC_OPS_TOOLS_CLIENT_SECRET:-change-me-local}
+      KC_OPS_GRAFANA_REDIRECT_URI: ${KC_OPS_GRAFANA_REDIRECT_URI:-http://localhost:3000/login/generic_oauth}
+      KC_OPS_GLITCHTIP_REDIRECT_URI: ${KC_OPS_GLITCHTIP_REDIRECT_URI:-http://localhost:8000/accounts/oidc/keycloak/login/callback/}
     volumes:
       - ../keycloak:/config:ro
     depends_on:

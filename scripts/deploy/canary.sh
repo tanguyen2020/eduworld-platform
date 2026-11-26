@@ -77,12 +77,21 @@ spec=$($DOCKER service inspect "${STACK}_core-api" --format '{{json .Spec}}') ||
 clone_service_args "$spec"
 audit_line canary_started service=core-api-canary tag="$VERSION" weight="$WEIGHT" duration="$DURATION"
 $DOCKER service create --detach=false --with-registry-auth --name "$canary" --replicas "$REPLICAS" \
-  --label ew.canary=true --env OTEL_SERVICE_NAME=core-api-canary "${CLONE_ARGS[@]}" \
+  --label ew.canary=true --label prometheus.scrape=true --label prometheus.port=9090 --label prometheus.network=app \
+  --label prometheus.job=backend --env OTEL_SERVICE_NAME=core-api-canary "${CLONE_ARGS[@]}" \
   --health-cmd "/app/core-api healthcheck --endpoint=/livez" --health-interval 10s --health-retries 3 --health-start-period 20s \
   "$image" >/dev/null || abort "canary service did not become healthy"
 apisix -X PUT "$ADMIN_URL/apisix/admin/upstreams/core-api-canary" \
   -d '{"type":"roundrobin","discovery_type":"dns","service_name":"tasks.core-api-canary:8100","checks":{"active":{"http_path":"/readyz","healthy":{"interval":5},"unhealthy":{"interval":5}}}}' >/dev/null \
   || abort "cannot create the APISIX upstream core-api-canary"
+# Fail closed when Prometheus does not scrape the canary (F131: Swarm service labels prometheus.*, relabelled to
+# service="core-api-canary"): without its metrics the alert watch below would pass blindly.
+scrape_deadline=$(( $(date +%s) + ${EW_CANARY_SCRAPE_TIMEOUT:-180} ))
+until up=$("$CURL" -fsS -G "$PROM/api/v1/query" --data-urlencode 'query=up{service="core-api-canary"} == 1' 2>/dev/null) \
+    && [ "$(jq '.data.result | length' <<< "$up")" -gt 0 ]; do
+  [ "$(date +%s)" -lt "$scrape_deadline" ] || abort "Prometheus does not scrape core-api-canary"
+  sleep "$INTERVAL"
+done
 set_split "$WEIGHT" || abort "cannot apply traffic-split"
 
 query='ALERTS{alertname=~"ModuleHighErrorRate|APILatencyP95High",service="core-api-canary",alertstate=~"pending|firing"}'

@@ -221,7 +221,7 @@ services:
   storage-volume-1:
     <<: *seaweed
     hostname: storage-volume-1
-    command: ["volume", "-dir=/data", "-max=0", "-ip=storage-volume-1", "-port=8080", "-dataCenter=dc1", "-rack=rack1",
+    command: ["volume", "-metricsPort=9327", "-dir=/data", "-max=0", "-ip=storage-volume-1", "-port=8080", "-dataCenter=dc1", "-rack=rack1",
       "-mserver=storage-master-1:9333"]
     volumes: ["storage-volume-1:/data"]
     healthcheck: &seaweed-volume-hc
@@ -230,6 +230,7 @@ services:
       timeout: 5s
       retries: 3
     deploy:
+      labels: { prometheus.scrape: "true", prometheus.port: "9327", prometheus.network: data, prometheus.job: seaweedfs-volume }
       placement: { constraints: [node.labels.role == storage, node.labels.name == storage-1] }
       resources: { limits: { cpus: "2", memory: 4G }, reservations: { cpus: "1", memory: 2G } }
       <<: *update-stateful
@@ -252,7 +253,7 @@ services:
   # S3 gateway (SigV4, path-style); identities = one credential per binary + backup (DEPLOYMENT §9b) from a secret.
   storage-s3:
     <<: *seaweed
-    command: ["s3", "-port=8333", "-filer=storage-filer-1:8888",
+    command: ["s3", "-metricsPort=9327", "-port=8333", "-filer=storage-filer-1:8888",
       "-config=/run/secrets/storage_s3_identities"]
     secrets: [storage_s3_identities]
     healthcheck:
@@ -261,6 +262,7 @@ services:
       timeout: 5s
       retries: 3
     deploy:
+      labels: { prometheus.scrape: "true", prometheus.port: "9327", prometheus.network: data, prometheus.job: seaweedfs-s3 }
       replicas: 1
       placement:
         constraints: [node.labels.role == storage]

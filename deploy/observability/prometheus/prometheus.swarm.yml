@@ -1,0 +1,278 @@
+# Prometheus of staging/production on Docker Swarm (F131 T014, F131-AC-01; MONITORING §1, §2; ADR-0023, ADR-0024).
+# Generated layout, kept explicit (Prometheus rejects unknown keys, so no YAML merge helpers). Started by obs.stack.yml
+# with --enable-feature=expand-external-labels (EW_ENV) and --web.enable-remote-write-receiver (Tempo metrics generator →
+# service graph). Discovery: dockerswarm_sd_configs (role tasks) through the read-only Docker API proxy
+# docker-api-proxy-ro (GET /services, /tasks, /nodes, /networks only). A Swarm service is scraped when it carries the
+# deploy labels:
+#   prometheus.scrape=true · prometheus.port=<admin port> · prometheus.network=app|admin|data (the overlay network
+#   Prometheus reaches it on) · prometheus.job=<job name> · optional prometheus.path
+# Labels attached at scrape (MONITORING §2): swarm_service (stack prefix stripped), service (= binary; worker-<p> →
+# worker) and profile (<p>). Exporters exposing their own `service` label (swarm-exporter, ops-scheduler) keep it
+# (honor_labels). sample_limit per job = prometheus_sample_limit (CONFIG_DEFAULTS §18, [Proposed]).
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 30s
+  external_labels:
+    env: ${EW_ENV}
+
+rule_files:
+  - /etc/prometheus/rules/*.yaml
+
+alerting:
+  alertmanagers:
+    - static_configs: [{ targets: ["alertmanager:9093"] }]
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs: [{ targets: ["localhost:9095"] }]
+  - job_name: alertmanager
+    static_configs: [{ targets: ["alertmanager:9093"] }]
+  - job_name: otel-collector
+    static_configs: [{ targets: ["otel-collector:8888"] }]
+  - job_name: loki
+    static_configs: [{ targets: ["loki:3100"] }]
+  - job_name: tempo
+    static_configs: [{ targets: ["tempo:3200"] }]
+
+  # Backend binaries (core-api, realtime, worker-*, core-api-canary) on `app`.
+  - job_name: swarm-app
+    sample_limit: 50000
+    dockerswarm_sd_configs:
+      - host: http://docker-api-proxy-ro:2375
+        role: tasks
+        port: 9090
+        refresh_interval: 30s
+    relabel_configs:
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_scrape, __meta_dockerswarm_service_label_prometheus_network, __meta_dockerswarm_network_name]
+        regex: 'true;app;app'
+        action: keep
+      - source_labels: [__meta_dockerswarm_task_desired_state]
+        regex: running
+        action: keep
+      - source_labels: [__address__, __meta_dockerswarm_service_label_prometheus_port]
+        regex: '([^:]+)(?::\d+)?;(\d+)'
+        replacement: '$1:$2'
+        target_label: __address__
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_job]
+        target_label: job
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_path]
+        regex: (.+)
+        target_label: __metrics_path__
+      - source_labels: [__meta_dockerswarm_service_name]
+        regex: '[a-z0-9]+_(.+)'
+        target_label: swarm_service
+      - source_labels: [swarm_service]
+        regex: (.+)
+        target_label: service
+      - source_labels: [swarm_service]
+        regex: 'worker-(.+)'
+        replacement: worker
+        target_label: service
+      - source_labels: [swarm_service]
+        regex: 'worker-(.+)'
+        replacement: '$1'
+        target_label: profile
+    metric_relabel_configs:
+      # eduworld_job_runs_total{job=<scheduled job>}: keep the job name in `job` (MONITORING §2).
+      - source_labels: [exported_job]
+        regex: (.+)
+        target_label: job
+      - regex: exported_job
+        action: labeldrop
+      # prometheus-nats-exporter → MONITORING names (nats_*, labels stream/consumer).
+      - source_labels: [__name__]
+        regex: 'jetstream_(stream_total_messages|stream_total_bytes|consumer_num_pending|consumer_num_redelivered)'
+        replacement: 'nats_$1'
+        target_label: __name__
+      - regex: '(stream|consumer)_name'
+        replacement: '$1'
+        action: labelmap
+
+  # Gateway, Keycloak, NATS exporter, datastore exporters, GlitchTip bridge on `admin`.
+  - job_name: swarm-admin
+    sample_limit: 50000
+    dockerswarm_sd_configs:
+      - host: http://docker-api-proxy-ro:2375
+        role: tasks
+        port: 9090
+        refresh_interval: 30s
+    relabel_configs:
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_scrape, __meta_dockerswarm_service_label_prometheus_network, __meta_dockerswarm_network_name]
+        regex: 'true;admin;admin'
+        action: keep
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_job]
+        regex: 'node-exporter|cadvisor|swarm-exporter|ops-scheduler'
+        action: drop
+      - source_labels: [__meta_dockerswarm_task_desired_state]
+        regex: running
+        action: keep
+      - source_labels: [__address__, __meta_dockerswarm_service_label_prometheus_port]
+        regex: '([^:]+)(?::\d+)?;(\d+)'
+        replacement: '$1:$2'
+        target_label: __address__
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_job]
+        target_label: job
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_path]
+        regex: (.+)
+        target_label: __metrics_path__
+      - source_labels: [__meta_dockerswarm_service_name]
+        regex: '[a-z0-9]+_(.+)'
+        target_label: swarm_service
+      - source_labels: [swarm_service]
+        regex: (.+)
+        target_label: service
+      - source_labels: [swarm_service]
+        regex: 'worker-(.+)'
+        replacement: worker
+        target_label: service
+      - source_labels: [swarm_service]
+        regex: 'worker-(.+)'
+        replacement: '$1'
+        target_label: profile
+    metric_relabel_configs:
+      # eduworld_job_runs_total{job=<scheduled job>}: keep the job name in `job` (MONITORING §2).
+      - source_labels: [exported_job]
+        regex: (.+)
+        target_label: job
+      - regex: exported_job
+        action: labeldrop
+      # prometheus-nats-exporter → MONITORING names (nats_*, labels stream/consumer).
+      - source_labels: [__name__]
+        regex: 'jetstream_(stream_total_messages|stream_total_bytes|consumer_num_pending|consumer_num_redelivered)'
+        replacement: 'nats_$1'
+        target_label: __name__
+      - regex: '(stream|consumer)_name'
+        replacement: '$1'
+        action: labelmap
+
+  # SeaweedFS (-metricsPort) on `data`.
+  - job_name: swarm-data
+    sample_limit: 20000
+    dockerswarm_sd_configs:
+      - host: http://docker-api-proxy-ro:2375
+        role: tasks
+        port: 9090
+        refresh_interval: 30s
+    relabel_configs:
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_scrape, __meta_dockerswarm_service_label_prometheus_network, __meta_dockerswarm_network_name]
+        regex: 'true;data;data'
+        action: keep
+      - source_labels: [__meta_dockerswarm_task_desired_state]
+        regex: running
+        action: keep
+      - source_labels: [__address__, __meta_dockerswarm_service_label_prometheus_port]
+        regex: '([^:]+)(?::\d+)?;(\d+)'
+        replacement: '$1:$2'
+        target_label: __address__
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_job]
+        target_label: job
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_path]
+        regex: (.+)
+        target_label: __metrics_path__
+      - source_labels: [__meta_dockerswarm_service_name]
+        regex: '[a-z0-9]+_(.+)'
+        target_label: swarm_service
+
+  # Exporters carrying their own `service` label: keep it.
+  - job_name: swarm-honor
+    honor_labels: true
+    sample_limit: 20000
+    dockerswarm_sd_configs:
+      - host: http://docker-api-proxy-ro:2375
+        role: tasks
+        port: 9090
+        refresh_interval: 30s
+    relabel_configs:
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_scrape, __meta_dockerswarm_service_label_prometheus_network, __meta_dockerswarm_network_name, __meta_dockerswarm_service_label_prometheus_job]
+        regex: 'true;admin;admin;(swarm-exporter|ops-scheduler)'
+        action: keep
+      - source_labels: [__meta_dockerswarm_task_desired_state]
+        regex: running
+        action: keep
+      - source_labels: [__address__, __meta_dockerswarm_service_label_prometheus_port]
+        regex: '([^:]+)(?::\d+)?;(\d+)'
+        replacement: '$1:$2'
+        target_label: __address__
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_job]
+        target_label: job
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_path]
+        regex: (.+)
+        target_label: __metrics_path__
+      - source_labels: [__meta_dockerswarm_service_name]
+        regex: '[a-z0-9]+_(.+)'
+        target_label: swarm_service
+
+  # node_exporter and cAdvisor (mode global): node/role of the task's node; cAdvisor series get swarm_service, service,
+  # profile from the Swarm container labels (MONITORING §2).
+  - job_name: swarm-nodes
+    sample_limit: 100000
+    dockerswarm_sd_configs:
+      - host: http://docker-api-proxy-ro:2375
+        role: tasks
+        port: 9090
+        refresh_interval: 30s
+    relabel_configs:
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_scrape, __meta_dockerswarm_service_label_prometheus_network, __meta_dockerswarm_network_name, __meta_dockerswarm_service_label_prometheus_job]
+        regex: 'true;admin;admin;(node-exporter|cadvisor)'
+        action: keep
+      - source_labels: [__meta_dockerswarm_task_desired_state]
+        regex: running
+        action: keep
+      - source_labels: [__address__, __meta_dockerswarm_service_label_prometheus_port]
+        regex: '([^:]+)(?::\d+)?;(\d+)'
+        replacement: '$1:$2'
+        target_label: __address__
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_job]
+        target_label: job
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_path]
+        regex: (.+)
+        target_label: __metrics_path__
+      - source_labels: [__meta_dockerswarm_service_name]
+        regex: '[a-z0-9]+_(.+)'
+        target_label: swarm_service
+      - source_labels: [__meta_dockerswarm_node_hostname]
+        target_label: node
+      - source_labels: [__meta_dockerswarm_node_label_role]
+        target_label: role
+    metric_relabel_configs:
+      - source_labels: [container_label_com_docker_swarm_service_name]
+        regex: '[a-z0-9]+_(.+)'
+        target_label: swarm_service
+      - source_labels: [swarm_service]
+        regex: (.+)
+        target_label: service
+      - source_labels: [swarm_service]
+        regex: 'worker-(.+)'
+        replacement: worker
+        target_label: service
+      - source_labels: [swarm_service]
+        regex: 'worker-(.+)'
+        replacement: '$1'
+        target_label: profile
+      - regex: 'container_label_.*|id|image'
+        action: labeldrop
+
+  # Blackbox probes (public CDN object, TLS endpoints): targets per environment (deploy/swarm/<env>/blackbox-*.yml).
+  - job_name: blackbox-cdn
+    metrics_path: /probe
+    params: { module: [http_2xx] }
+    file_sd_configs: [{ files: ["/etc/prometheus/targets/blackbox-cdn.yml"] }]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+  - job_name: blackbox-tls
+    metrics_path: /probe
+    params: { module: [tls_connect] }
+    file_sd_configs: [{ files: ["/etc/prometheus/targets/blackbox-tls.yml"] }]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115

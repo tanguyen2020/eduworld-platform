@@ -1,11 +1,14 @@
 # Synthetic probe alert (F131 T038, F131-AC-19, MONITORING §5, §6). The service synthetic-probe (k6, every 5 minutes,
-# QA tenant) remote-writes eduworld_synthetic_probe_success{probe,result}. Two failed cycles in a row = no success in
-# the last 11 minutes; rate_limited runs (429 LOGIN_QUEUE_BUSY / RATE_LIMITED) are neither success nor failure.
+# QA tenant) writes eduworld_synthetic_probe_*{probe} as a node_exporter textfile on the ops node. Two failed cycles in a row = no success in
+# the last 11 minutes; rate_limited runs (429 LOGIN_QUEUE_BUSY / RATE_LIMITED) are neither success nor failure. A probe
+# that stopped running (last run older than 15 minutes) fires too: a stale textfile would otherwise hide failures.
 groups:
   - name: synthetic
     rules:
       - alert: SyntheticProbeFailing
-        expr: max by (probe) (max_over_time(eduworld_synthetic_probe_success{result!="rate_limited"}[11m])) == 0
+        expr: |
+          max by (probe) (max_over_time(eduworld_synthetic_probe_success{result!="rate_limited"}[11m])) == 0
+          or time() - max by (probe) (eduworld_synthetic_probe_last_run_timestamp_seconds) > 900
         labels: { severity: critical }
         annotations:
           summary: "Synthetic probe {{ $labels.probe }} failed two cycles in a row"

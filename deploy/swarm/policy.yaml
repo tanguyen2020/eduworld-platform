@@ -7,7 +7,7 @@ version: 1
 
 stack: eduworld
 envs: [staging, production]
-stack_files: [infra.stack.yml, data.stack.yml, app.stack.yml, ops.stack.yml]
+stack_files: [infra.stack.yml, data.stack.yml, app.stack.yml, ops.stack.yml, obs.stack.yml]
 
 modules: [identity, learning, game, competition, chat]
 
@@ -50,32 +50,52 @@ networks:
     services: [apisix, apisix-internal, core-api, realtime, keycloak]
   app:
     encrypted: true
-    services: [core-api, realtime, worker-events, worker-chat, worker-jobs, nats-*, nats-exporter, clamav]
+    services: [core-api, realtime, worker-events, worker-chat, worker-jobs, nats-*, nats-exporter, clamav, otel-collector, prometheus]
   data:
     encrypted: true
     services: [core-api, realtime, worker-events, worker-chat, worker-jobs, keycloak, pg-*, pgbackrest-*, etcd-pg-*,
-      pgbouncer, valkey-*, sentinel-*, storage-*, backup-tools]
+      pgbouncer, valkey-*, sentinel-*, storage-*, backup-tools, prometheus, postgres-exporter]
   admin:
     encrypted: true
-    services: [apisix, apisix-internal, etcd-apisix-*, keycloak, nats-exporter, backup-tools, ops-scheduler]
+    services: [apisix, apisix-internal, etcd-apisix-*, keycloak, nats-exporter, backup-tools, ops-scheduler,
+      otel-collector, otel-agent, prometheus, alertmanager, loki, tempo, grafana, blackbox-exporter, node-exporter, cadvisor,
+      swarm-exporter, postgres-exporter, valkey-exporter-*, glitchtip-web, glitchtip-bridge, synthetic-probe]
   # Stack-local network of the ops stack: ops-scheduler ↔ Docker API proxy only (F130-AC-23).
   docker-api:
     encrypted: true
     stack_local: true
     services: [ops-scheduler, docker-api-proxy]
+  # Stack-local networks of the obs stack (F131): read-only Docker API proxy (Prometheus dockerswarm_sd, swarm-exporter)
+  # and the private network of GlitchTip and its datastores.
+  docker-api-ro:
+    encrypted: true
+    stack_local: true
+    services: [docker-api-proxy-ro, prometheus, swarm-exporter]
+  obs-internal:
+    encrypted: true
+    stack_local: true
+    services: [glitchtip-web, glitchtip-worker, glitchtip-db, glitchtip-valkey]
 
 # Stateful services: never publish ports, never on `edge`, pinned to a node (role + name constraint) or spread.
-datastores: [pg-*, pgbouncer, etcd-pg-*, etcd-apisix-*, valkey-*, sentinel-*, nats-1, nats-2, nats-3, storage-master-*,
-  storage-volume-*, storage-filer-1, storage-filer-2, storage-filer-3, storage-s3]
+datastores: [pg-*, pgbouncer, etcd-pg-*, etcd-apisix-*, valkey-cache*, valkey-ratelimit*, sentinel-*, nats-1, nats-2, nats-3,
+  storage-master-*, storage-volume-*, storage-filer-1, storage-filer-2, storage-filer-3, storage-s3,
+  prometheus, alertmanager, loki, tempo, grafana, glitchtip-db]
 
 # Services that may publish ports (mode host, behind the L4 load balancer / VPN).
 may_publish: [apisix, apisix-internal]
 
 # Services allowed to update stop-first besides datastores (single writers that must never run twice).
-stop_first_allowed: [ops-scheduler, backup-tools]
+stop_first_allowed: [ops-scheduler, backup-tools, synthetic-probe]
 
 # Services without a Docker healthcheck (scratch image without a probe binary); covered by Prometheus "up" (F131).
-healthcheck_exempt: [nats-exporter, storage-filer-sync]
+healthcheck_exempt: [nats-exporter, storage-filer-sync, otel-collector, otel-agent, loki, tempo, valkey-exporter-*]
+
+# Services deployed `mode: global` on every node (F131 exporters/agents): no node.labels.role constraint required.
+global_services: [node-exporter, cadvisor, otel-agent]
+
+# The only services allowed to mount the Docker socket (read-only): cAdvisor needs it for container names and Swarm labels
+# ([Proposed], MONITORING §1). Every other Docker API access goes through an allowlist proxy.
+docker_socket: [cadvisor]
 
 # Secret rules (DEPLOYMENT §13, ADR-0068, ADR-0074 mục 5, ADR-0033). Every secret referenced by a stack must match
 # exactly one rule; `services` lists who may mount it; `module_group` (regex group) must be a module loaded by the
@@ -136,7 +156,7 @@ secrets:
   - match: '^pgbouncer_(userlist|auth_password)$'
     services: [pgbouncer]
   - match: '^valkey_(acl|masterauth|sentinel_password)$'
-    services: [valkey-*, sentinel-*]
+    services: [valkey-cache*, valkey-ratelimit*, sentinel-*]
   # Read-only monitoring user of the Valkey ACL (deploy/valkey/users.acl.template, user exporter): redis_exporter (F131).
   - match: '^valkey_exporter_password$'
     services: [valkey-exporter*]
@@ -158,8 +178,26 @@ secrets:
     services: [backup-tools]
   - match: '^backup_restore_(access_key|secret_key)$'
     services: []
-  - match: '^ops_docker_api_(ca|client_cert)$'
+  - match: '^ops_docker_api_ca$'
+    services: [docker-api-proxy, docker-api-proxy-ro]
+  - match: '^ops_docker_api_client_cert$'
     services: [docker-api-proxy]
+  # Observability (F131): read-only Docker API proxy, on-call channels, Grafana/Keycloak client, exporters, GlitchTip,
+  # its ticket bridge and the QA probe.
+  - match: '^ops_docker_api_ro_client_cert$'
+    services: [docker-api-proxy-ro]
+  - match: '^ops_alert_(heartbeat_url|chat_webhook_url|sms_webhook_url|safety_webhook_url|smtp_password)$'
+    services: [alertmanager]
+  - match: '^ops_grafana_(admin_password|oauth_client_secret)$'
+    services: [grafana]
+  - match: '^ops_pg_exporter_password$'
+    services: [postgres-exporter]
+  - match: '^glitchtip_(secret_key|db_password)$'
+    services: [glitchtip-web, glitchtip-worker, glitchtip-db]
+  - match: '^ops_(glitchtip_bridge_token|glitchtip_api_token|github_issues_token)$'
+    services: [glitchtip-bridge]
+  - match: '^ops_probe_password$'
+    services: [synthetic-probe]
   # Admin access for RB-01/RB-03/RB-04, the switchover drill and consumer resets: one-off ops jobs only.
   - match: '^ops_(pg_admin_pgpass|drill_dsn|nats_creds|kc_admin_secret)$'
     services: []

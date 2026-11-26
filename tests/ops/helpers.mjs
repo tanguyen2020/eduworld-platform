@@ -35,7 +35,7 @@ export function run(script, args = [], { env = {}, stubs, cwd = ROOT, input } = 
 /** Copies the deploy/ tree needed by the Swarm checks into a temp root; returns {root, env(name)}. */
 export function copyDeploy() {
   const root = tmpdir('ew-f130-deploy-');
-  for (const d of ['deploy/swarm', 'deploy/postgres', 'deploy/backup', 'deploy/ops-scheduler']) {
+  for (const d of ['deploy/swarm', 'deploy/postgres', 'deploy/backup', 'deploy/ops-scheduler', 'deploy/observability']) {
     fs.cpSync(path.join(ROOT, d), path.join(root, d), { recursive: true });
   }
   return { root, env: (e) => path.join(root, 'deploy', 'swarm', e) };

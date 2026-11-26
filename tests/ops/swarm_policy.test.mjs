@@ -139,3 +139,17 @@ test('F130-AC-24: invalid scale schedule fails with file:line and JSON path', ()
   const peak = out.find((v) => v.path === '/services/2/peak');
   assert.match(fs.readFileSync(f, 'utf8').split(/\r?\n/)[peak.line - 1], /core-api/);
 });
+
+test('F131: Docker socket only for cAdvisor (read-only), mode global only for the per-node exporters/agents', () => {
+  const { env } = copyDeploy();
+  const dir = env('staging');
+  const obs = path.join(dir, 'obs.stack.yml');
+  mutate(obs, '      - /var/run/docker.sock:/var/run/docker.sock:ro\n', '      - /var/run/docker.sock:/var/run/docker.sock\n');
+  mutate(obs, '    volumes: ["prometheus-data:/prometheus"]', '    volumes: ["prometheus-data:/prometheus", "/var/run/docker.sock:/var/run/docker.sock:ro"]');
+  mutate(obs, '      replicas: 1\n      placement: { constraints: [node.labels.role == ops] }\n      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }\n      <<: *update\n\n  swarm-exporter:',
+    '      mode: global\n      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }\n      <<: *update\n\n  swarm-exporter:');
+  const msgs = stacks.checkEnv(dir, policy).map((v) => `${v.rule} ${v.message}`);
+  assert.ok(msgs.includes('docker-socket cadvisor: the Docker socket must be mounted read-only'), msgs.join('\n'));
+  assert.ok(msgs.includes('docker-socket prometheus: the Docker socket may only be mounted by cadvisor'), msgs.join('\n'));
+  assert.ok(msgs.some((m) => m.startsWith('global-mode docker-api-proxy-ro:')), msgs.join('\n'));
+});

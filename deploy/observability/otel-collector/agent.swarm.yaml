@@ -1,0 +1,48 @@
+# Per-node OpenTelemetry agent (F131 T013, mode global; MONITORING §1, §8): reads the json-file logs of the containers
+# of this node (read-only /var/lib/docker/containers), keeps the JSON lines of the backend binaries and Grafana (slog
+# fields service, module, profile, trace_id… become attributes), and forwards them over OTLP to the central collector
+# (redaction, Loki). It never reads other files of the node and has no Docker API access.
+receivers:
+  filelog:
+    include: [/var/lib/docker/containers/*/*-json.log]
+    start_at: end
+    include_file_path: false
+    operators:
+      - type: json_parser                     # Docker json-file envelope {log, stream, time}
+        timestamp: { parse_from: attributes.time, layout_type: gotime, layout: '2006-01-02T15:04:05.999999999Z07:00' }
+      - type: move
+        from: attributes.log
+        to: body
+      - type: json_parser                     # slog JSON of the binaries
+        parse_from: body
+        if: 'body matches "^\\{"'
+        on_error: send_quiet
+      - type: filter                          # only lines that carry a known service attribute
+        expr: 'attributes.service == nil'
+      - type: remove
+        field: attributes.stream
+      - type: remove
+        field: attributes.time
+
+processors:
+  memory_limiter: { check_interval: 1s, limit_percentage: 80, spike_limit_percentage: 20 }
+  batch: {}
+  resource:
+    attributes:
+      - { key: node, value: "${env:EW_NODE_NAME}", action: upsert }
+
+exporters:
+  otlp:
+    endpoint: otel-collector:4317
+    tls: { insecure: true }
+    sending_queue: { enabled: true, queue_size: 2000 }
+
+extensions:
+  health_check: { endpoint: 0.0.0.0:13133 }
+
+service:
+  extensions: [health_check]
+  telemetry:
+    metrics: { level: basic, readers: [{ pull: { exporter: { prometheus: { host: 0.0.0.0, port: 8888 } } } }] }
+  pipelines:
+    logs: { receivers: [filelog], processors: [memory_limiter, resource, batch], exporters: [otlp] }

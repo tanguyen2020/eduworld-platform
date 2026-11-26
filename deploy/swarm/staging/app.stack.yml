@@ -79,7 +79,7 @@ services:
     logging: *logging
     deploy:
       replicas: 2
-      labels: { ew.binary: core-api, ew.drain-seconds: "40" }
+      labels: { ew.binary: core-api, ew.drain-seconds: "40", prometheus.scrape: "true", prometheus.port: "9090", prometheus.network: app, prometheus.job: backend }
       placement:
         constraints: [node.labels.role == app]
         preferences: [{ spread: node.labels.zone }]
@@ -104,7 +104,7 @@ services:
     logging: *logging
     deploy:
       replicas: 2
-      labels: { ew.binary: realtime, ew.drain-seconds: "150" }
+      labels: { ew.binary: realtime, ew.drain-seconds: "150", prometheus.scrape: "true", prometheus.port: "9090", prometheus.network: app, prometheus.job: backend }
       placement:
         constraints: [node.labels.role == app]
         preferences: [{ spread: node.labels.zone }]
@@ -164,7 +164,7 @@ services:
     logging: *logging
     deploy:
       replicas: 2
-      labels: { ew.binary: worker, ew.profile: events }
+      labels: { ew.binary: worker, ew.profile: events, prometheus.scrape: "true", prometheus.port: "9090", prometheus.network: app, prometheus.job: backend }
       placement:
         constraints: [node.labels.role == app]
         preferences: [{ spread: node.labels.zone }]
@@ -199,7 +199,7 @@ services:
     logging: *logging
     deploy:
       replicas: 2
-      labels: { ew.binary: worker, ew.profile: chat }
+      labels: { ew.binary: worker, ew.profile: chat, prometheus.scrape: "true", prometheus.port: "9090", prometheus.network: app, prometheus.job: backend }
       placement:
         constraints: [node.labels.role == app]
         preferences: [{ spread: node.labels.zone }]
@@ -251,7 +251,7 @@ services:
     logging: *logging
     deploy:
       replicas: 2
-      labels: { ew.binary: worker, ew.profile: jobs }
+      labels: { ew.binary: worker, ew.profile: jobs, prometheus.scrape: "true", prometheus.port: "9090", prometheus.network: app, prometheus.job: backend }
       placement:
         constraints: [node.labels.role == app]
         preferences: [{ spread: node.labels.zone }]

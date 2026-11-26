@@ -1,0 +1,79 @@
+# Central OpenTelemetry Collector of staging/production (F131 T013, F131-AC-03/04/05; MONITORING §7, §8). One replica on
+# node `ops`, networks `app` (OTLP from the binaries) and `admin` (agents, Tempo, Loki).
+#  - traces: tail sampling = 100% of traces with an error, 100% of traces > 1 s, 10% of the rest (the 10% "head"
+#    budget of MONITORING §7 applied in the collector so error/slow traces are never lost); local/dev keep 100%
+#    (deploy/observability/otel-collector.yaml).
+#  - logs: from the per-node agents (otel-agent.swarm.yaml) and OTLP; redaction is the second line of defence of
+#    MONITORING §8 (the binaries already never log secrets): JWT, bearer tokens, emails, Vietnamese phone numbers and
+#    password=… are masked in attribute values (processor redaction) and in the body (transform); attributes named like a
+#    credential (authorization, cookie, password, token…) are dropped (transform) before Loki/Tempo.
+receivers:
+  otlp:
+    protocols:
+      grpc: { endpoint: 0.0.0.0:4317 }
+      http: { endpoint: 0.0.0.0:4318 }
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 80
+    spike_limit_percentage: 20
+  batch: {}
+  redaction:
+    allow_all_keys: true
+    blocked_values:
+      - 'eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}'          # JWT
+      - '(?i)bearer\s+[A-Za-z0-9._~+/=-]{10,}'                              # Authorization bearer
+      - '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'                     # email
+      - '(?:\+?84|0)(?:3|5|7|8|9)[0-9]{8}\b'                               # Vietnamese mobile number
+    summary: info
+  transform/redact_body:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - delete_matching_keys(attributes, "(?i)^(http[.]request[.]header[.])?(authorization|cookie|set-cookie|password|passwd|secret|token|access_token|refresh_token|id_token|ticket|client_secret)$")
+    log_statements:
+      - context: log
+        statements:
+          - delete_matching_keys(attributes, "(?i)^(authorization|cookie|set-cookie|password|passwd|secret|token|access_token|refresh_token|id_token|ticket|client_secret)$")
+          - replace_pattern(body, "eyJ[A-Za-z0-9_-]{5,}\\.[A-Za-z0-9_-]{5,}\\.[A-Za-z0-9_-]{5,}", "***JWT***")
+          - replace_pattern(body, "(?i)bearer\\s+[A-Za-z0-9._~+/=-]{10,}", "Bearer ***")
+          - replace_pattern(body, "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "***EMAIL***")
+          - replace_pattern(body, "(?:\\+?84|0)(?:3|5|7|8|9)[0-9]{8}\\b", "***PHONE***")
+          - replace_pattern(body, "(?i)((?:password|passwd|secret|token|refresh_token|access_token)[\\\\\"]*\\s*[:=]\\s*[\\\\\"]*)[^\\\\\",\\s}]+", "$$1***")
+          - replace_all_patterns(attributes, "value", "(?i)((?:password|passwd|secret|token|refresh_token|access_token)[\\\\\"]*\\s*[:=]\\s*[\\\\\"]*)[^\\\\\",\\s}]+", "$$1***")
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 100000
+    expected_new_traces_per_sec: 500
+    policies:
+      - name: errors
+        type: status_code
+        status_code: { status_codes: [ERROR] }
+      - name: slow
+        type: latency
+        latency: { threshold_ms: 1000 }
+      - name: baseline-10-percent
+        type: probabilistic
+        probabilistic: { sampling_percentage: 10 }
+
+exporters:
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls: { insecure: true }
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+    sending_queue: { enabled: true, queue_size: 5000 }
+    retry_on_failure: { enabled: true, max_elapsed_time: 300s }
+
+extensions:
+  health_check: { endpoint: 0.0.0.0:13133 }
+
+service:
+  extensions: [health_check]
+  telemetry:
+    metrics: { level: normal, readers: [{ pull: { exporter: { prometheus: { host: 0.0.0.0, port: 8888 } } } }] }
+  pipelines:
+    traces: { receivers: [otlp], processors: [memory_limiter, redaction, transform/redact_body, tail_sampling, batch], exporters: [otlp/tempo] }
+    logs: { receivers: [otlp], processors: [memory_limiter, redaction, transform/redact_body, batch], exporters: [otlphttp/loki] }

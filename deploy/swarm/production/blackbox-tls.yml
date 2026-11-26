@@ -1,0 +1,3 @@
+# Public TLS endpoints whose certificates are watched (MONITORING §5 CertificateExpiring). Production placeholder domains.
+- targets: ["api.eduworld.example:443", "auth.eduworld.example:443", "cdn.eduworld.example:443"]
+  labels: { probe: tls }

@@ -61,7 +61,21 @@
           }
         }
       }
-    ]
+    ],
+    "client": {
+      "eduworld-ops-tools": [
+        {
+          "name": "admin",
+          "description": "Grafana Admin / GlitchTip owner — System Admin on the platform (assigned by hand, audited)",
+          "clientRole": true
+        },
+        {
+          "name": "editor",
+          "description": "Grafana Editor — platform operations (DevOps on-call)",
+          "clientRole": true
+        }
+      ]
+    }
   },
   "clientScopes": [
     {
@@ -247,6 +261,39 @@
       "protocol": "openid-connect",
       "defaultClientScopes": [
         "basic"
+      ],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "eduworld-ops-tools",
+      "name": "EduWorld operations tools: Grafana, GlitchTip (F131, network admin only, no MFA — ADR-0094)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:KC_OPS_TOOLS_CLIENT_SECRET)",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "consentRequired": false,
+      "frontchannelLogout": true,
+      "fullScopeAllowed": false,
+      "redirectUris": [
+        "$(env:KC_OPS_GRAFANA_REDIRECT_URI)",
+        "$(env:KC_OPS_GLITCHTIP_REDIRECT_URI)"
+      ],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "oauth2.device.authorization.grant.enabled": "false",
+        "post.logout.redirect.uris": "+"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "eduworld-roles",
+        "eduworld-username"
       ],
       "optionalClientScopes": []
     },

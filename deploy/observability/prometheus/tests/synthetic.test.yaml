@@ -30,3 +30,24 @@ tests:
               summary: Synthetic probe client_config failed two cycles in a row
               runbook_url: docs/11-operations/runbooks/SyntheticProbeFailing.md
               source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: SyntheticProbeFailing probe stopped running
+    interval: 5m
+    input_series:
+      - series: eduworld_synthetic_probe_last_run_timestamp_seconds{probe="student_login"}
+        values: 0+300x3 900x8
+      - series: eduworld_synthetic_probe_success{probe="student_login",result="ok"}
+        values: 1x11
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: SyntheticProbeFailing
+        exp_alerts: []
+      - eval_time: 40m
+        alertname: SyntheticProbeFailing
+        exp_alerts:
+          - exp_labels:
+              probe: student_login
+              severity: critical
+            exp_annotations:
+              summary: Synthetic probe student_login failed two cycles in a row
+              runbook_url: docs/11-operations/runbooks/SyntheticProbeFailing.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

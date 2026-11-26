@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
-export const CLIENTS = ['eduworld-game-backend', 'eduworld-portal', 'eduworld-api', 'eduworld-sis-sync', 'svc-identity'];
+export const CLIENTS = ['eduworld-game-backend', 'eduworld-portal', 'eduworld-api', 'eduworld-sis-sync', 'eduworld-ops-tools', 'svc-identity'];
 const DIRECT_GRANT = ['eduworld-game-backend', 'eduworld-portal'];
 const SECRET_RE = /^\$\(env:KC_[A-Z0-9_]+\)$/;
 
@@ -34,6 +34,16 @@ export function check(realm) {
     if (c.attributes?.['pkce.code.challenge.method']) p.push(`client ${id}: no PKCE`);
     const want = id === 'eduworld-portal' ? 'eduworld-portal-direct-grant' : 'eduworld-game-direct-grant';
     if (c.authenticationFlowBindingOverrides?.direct_grant !== want) p.push(`client ${id}: direct grant flow must be ${want}`);
+  }
+  // F131 (MONITORING §8, SECURITY_ARCHITECTURE §8): operations tools log in with the authorization code flow + PKCE,
+  // confidential, redirect URIs from the environment only, no direct grant/service account, no realm-wide scope.
+  const ops = clients.find((c) => c.clientId === 'eduworld-ops-tools');
+  if (ops) {
+    if (ops.publicClient !== false || !ops.secret) p.push('client eduworld-ops-tools: must be confidential with a secret');
+    if (ops.standardFlowEnabled !== true || ops.implicitFlowEnabled || ops.directAccessGrantsEnabled || ops.serviceAccountsEnabled) p.push('client eduworld-ops-tools: authorization code flow only');
+    if (ops.attributes?.['pkce.code.challenge.method'] !== 'S256') p.push('client eduworld-ops-tools: PKCE S256 required');
+    if ((ops.redirectUris ?? []).some((u) => !/^\$\(env:KC_[A-Z0-9_]+\)$/.test(u)) || (ops.webOrigins ?? []).length) p.push('client eduworld-ops-tools: redirect URIs only as $(env:KC_…) placeholders, no web origin');
+    if (ops.fullScopeAllowed !== false) p.push('client eduworld-ops-tools: fullScopeAllowed must be false');
   }
   const svc = clients.find((c) => c.clientId === 'svc-identity');
   if (svc && (svc.serviceAccountsEnabled !== true || svc.standardFlowEnabled || svc.implicitFlowEnabled || svc.directAccessGrantsEnabled)) {

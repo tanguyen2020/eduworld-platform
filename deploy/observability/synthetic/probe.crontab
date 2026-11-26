@@ -1,0 +1,4 @@
+# Synthetic probes (F131 T038, F131-AC-19): every 5 minutes, run by supercronic in the service synthetic-probe (obs
+# stack). Each run writes a node_exporter textfile atomically (tmp then mv), even when the probe fails.
+*/5 * * * * k6 run --quiet --no-usage-report /probes/client_config.js; mv -f /textfile/.client_config.prom.tmp /textfile/eduworld_synthetic_probe_client_config.prom
+*/5 * * * * k6 run --quiet --no-usage-report /probes/student_login.js; mv -f /textfile/.student_login.prom.tmp /textfile/eduworld_synthetic_probe_student_login.prom

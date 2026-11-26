@@ -1,0 +1,16 @@
+# blackbox_exporter modules (F131 T023, MONITORING §5 CdnErrorRate stand-in and CertificateExpiring). Targets per
+# environment: deploy/swarm/<env>/blackbox-cdn.yml, blackbox-tls.yml (file_sd of Prometheus).
+modules:
+  http_2xx:
+    prober: http
+    timeout: 10s
+    http:
+      method: GET
+      valid_status_codes: [200]
+      preferred_ip_protocol: ip4
+  tls_connect:
+    prober: tcp
+    timeout: 10s
+    tcp:
+      tls: true
+      preferred_ip_protocol: ip4

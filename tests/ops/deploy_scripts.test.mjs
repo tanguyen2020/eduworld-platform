@@ -149,7 +149,7 @@ test('stack deploy exports SECRET_VER_* and CFG_* for every reference (infra sta
   assert.match(dumped, /^CFG_SENTINEL_CONF_TPL=[0-9a-f]{12}$/m);
 });
 
-function canaryRig({ alerts, rulesLoaded = true, routes = '{"list":[{"value":{"id":"r1","upstream_id":"core-api"}},{"value":{"id":"r2","upstream_id":"realtime"}}]}' }) {
+function canaryRig({ alerts, rulesLoaded = true, scraped = true, routes = '{"list":[{"value":{"id":"r1","upstream_id":"core-api"}},{"value":{"id":"r2","upstream_id":"realtime"}}]}' }) {
   const r = rig({ EW_APISIX_ADMIN_URL: 'http://apisix-admin:9180', EW_PROMETHEUS_URL: 'http://prometheus:9090' });
   const key = path.join(r.state, 'admin_key');
   fs.writeFileSync(key, 'test-admin-key');
@@ -158,6 +158,7 @@ function canaryRig({ alerts, rulesLoaded = true, routes = '{"list":[{"value":{"i
   const result = alerts ? '[{"metric":{"alertname":"ModuleHighErrorRate","module":"learning","service":"core-api-canary"}}]' : '[]';
   stub(r.stubs, 'curl', `case "$*" in
   *"/api/v1/rules"*) echo '${rules}' ;;
+  *"query=up{"*) echo '{"data":{"result":${scraped ? '[{"metric":{"service":"core-api-canary"},"value":[0,"1"]}]' : '[]'}}}' ;;
   *"/api/v1/query"*) echo '{"data":{"result":${result}}}' ;;
   *"/apisix/admin/routes"*"-X PATCH"*|*"-X PATCH"*) echo '{}' ;;
   *"/apisix/admin/upstreams/"*) echo '{}' ;;
@@ -189,6 +190,18 @@ test('F130-AC-04: canary without alerts promotes core-api then removes the canar
   const upd = c.findIndex((l) => /service update .*core-api:v1\.5\.0 eduworld_core-api$/.test(l));
   const rm = c.findIndex((l) => /service rm eduworld_core-api-canary/.test(l));
   assert.ok(upd >= 0 && rm > upd);
+});
+
+test('F131: canary not scraped by Prometheus → abort before any traffic split, canary removed', { skip }, () => {
+  const { stubs, env, calls } = canaryRig({ alerts: false, scraped: false });
+  env.EW_CANARY_SCRAPE_TIMEOUT = '0';
+  const r = run('scripts/deploy/canary.sh', ['--env=production', '--version=v1.5.0', '--duration=1', '--interval=1'], { env, stubs });
+  assert.equal(r.code, 1);
+  const c = calls(r);
+  assert.ok(c.some((l) => /--label prometheus\.scrape=true/.test(l)), 'canary carries the scrape labels');
+  assert.ok(!c.some((l) => /traffic-split.*weight/.test(l)), 'no split applied');
+  assert.ok(c.some((l) => /docker service rm eduworld_core-api-canary/.test(l)));
+  assert.match(`${r.stdout}${r.stderr ?? ''}`, /Prometheus does not scrape core-api-canary/);
 });
 
 test('F130-AC-04: no alert rule loaded → refuse a blind canary before creating anything', { skip }, () => {

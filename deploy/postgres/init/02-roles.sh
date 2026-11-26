@@ -13,12 +13,14 @@
 #   game_dashboard           Game Analytics reads on the replica: SELECT on analytics rollups only (F080, ADR-0062)
 #   learning_dashboard       School Learning Dashboard reads on the replica: SELECT on rollups/read models only (F043,
 #                            ADR-0062, DASHBOARD_DATA §7); statement_timeout 5 s, idle in transaction 10 s, work_mem 32 MB
+#   eduworld_monitor         postgres_exporter (F131): pg_monitor only (statistics views), connects to database postgres
 #
 # Each role may CONNECT only to its own module database (03-revoke.sql removes PUBLIC CONNECT).
 set -euo pipefail
 
 PW="${EW_DB_ROLE_PASSWORD:-change-me-local}"
 KC_PW="${KEYCLOAK_DB_PASSWORD:-change-me-local}"
+MON_PW="${EW_DB_MONITOR_PASSWORD:-change-me-local}"
 MODULES=(identity learning game competition chat)
 
 psql_su() { psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "${1:-postgres}"; }
@@ -101,4 +103,17 @@ BEGIN
 END
 \$\$;
 ALTER DATABASE keycloak OWNER TO keycloak;
+SQL
+
+# postgres_exporter (F131, MONITORING §3 "Database Performance"): read-only statistics, no data access.
+psql_su <<SQL
+DO \$\$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'eduworld_monitor') THEN
+    CREATE ROLE eduworld_monitor LOGIN PASSWORD '$MON_PW';
+  END IF;
+END
+\$\$;
+GRANT pg_monitor TO eduworld_monitor;
+ALTER ROLE eduworld_monitor SET statement_timeout = '10s';
 SQL

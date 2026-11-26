@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "k6 synthetic probes (F131). The node tests import lib/probe.js as an ES module."
+}

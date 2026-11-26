@@ -59,7 +59,18 @@ export function checkEnv(envDir, policy = loadPolicy()) {
 
       // placement
       const constraints = (deploy.placement?.constraints ?? []).map(String);
-      if (!constraints.some((c) => /^node\.labels\.role\s*==\s*\S+$/.test(c))) add(at, 'placement', `${name}: deploy.placement.constraints needs node.labels.role == <role>`);
+      // mode global (F131): only per-node exporters/agents of policy global_services, which need no role constraint.
+      const isGlobal = deploy.mode === 'global';
+      const globalOk = isGlobal && anyGlob(policy.global_services ?? [], name);
+      if (isGlobal && !globalOk) add(at, 'global-mode', `${name}: mode global is reserved to ${(policy.global_services ?? []).join(', ')}`);
+      if (!globalOk && !constraints.some((c) => /^node\.labels\.role\s*==\s*\S+$/.test(c))) add(at, 'placement', `${name}: deploy.placement.constraints needs node.labels.role == <role>`);
+      // Docker socket (F131): only the services of policy docker_socket, read-only; everything else uses an allowlist proxy.
+      for (const vol of asList(svc.volumes)) {
+        const spec = typeof vol === 'string' ? vol : `${vol?.source ?? ''}:${vol?.target ?? ''}${vol?.read_only ? ':ro' : ''}`;
+        if (!/docker\.sock/.test(spec)) continue;
+        if (!anyGlob(policy.docker_socket ?? [], name)) add(find(/docker\.sock/), 'docker-socket', `${name}: the Docker socket may only be mounted by ${(policy.docker_socket ?? []).join(', ') || 'nobody'}`);
+        else if (!/:ro$/.test(spec)) add(find(/docker\.sock/), 'docker-socket', `${name}: the Docker socket must be mounted read-only`);
+      }
       const role = constraints.map((c) => c.match(/^node\.labels\.role\s*==\s*(\S+)$/)?.[1]).find(Boolean);
       const pinned = constraints.map((c) => c.match(/^node\.labels\.name\s*==\s*(\S+)$/)?.[1]).find(Boolean);
       if (inventory && role && !inventory.some((n) => n.role === role)) add(at, 'placement-role', `${name}: no node with role ${role} in the inventory`);

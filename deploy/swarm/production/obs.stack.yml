@@ -1,0 +1,502 @@
+# Production observability stack (F131 T017, F131-AC-01; MONITORING §1, §7–§9; ADR-0023, ADR-0024). Node `ops`; tools
+# reachable only on network `admin` (VPN); login to Grafana only through Keycloak with a platform role (no MFA,
+# ADR-0094). Configuration is baked into versioned images (obs-prometheus: config + rules, obs-alertmanager: routing,
+# obs-grafana: provisioning + dashboards) or Docker configs named by content hash (CFG_*); endpoints and credentials of
+# the on-call channels, Keycloak client, GlitchTip and the QA probe are Docker secrets (deploy/secrets/<env>, SOPS).
+#  - collection: otel-agent (global, container json logs → OTLP) → otel-collector (redaction, tail sampling) → Loki,
+#    Tempo; Prometheus scrapes Swarm services with deploy labels prometheus.* (dockerswarm_sd through the read-only
+#    docker-api-proxy-ro), exporters (node_exporter, cAdvisor global; postgres/valkey/NATS exporters; blackbox);
+#  - alerting: Prometheus rules → Alertmanager → on-call channels, Watchdog heartbeat;
+#  - error tracking: GlitchTip (own PostgreSQL + Valkey, network obs-internal) + glitchtip-bridge → GitHub Issues;
+#  - synthetic-probe: k6 every 5 minutes with the QA tenant, results as node_exporter textfiles.
+version: "3.9"
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "50m", max-file: "5" }
+
+x-update: &update
+  update_config: { parallelism: 1, delay: 10s, order: start-first, failure_action: rollback, monitor: 30s }
+  rollback_config: { parallelism: 1, order: start-first }
+  restart_policy: { condition: any, delay: 5s, max_attempts: 10, window: 120s }
+
+x-update-single: &update-single              # one writer on a local volume (TSDB/chunks/sqlite lock)
+  update_config: { parallelism: 1, delay: 10s, order: stop-first, failure_action: rollback, monitor: 30s }
+  rollback_config: { parallelism: 1, order: stop-first }
+  restart_policy: { condition: any, delay: 10s, max_attempts: 10, window: 300s }
+
+services:
+  docker-api-proxy-ro:
+    image: haproxy:3.0.12-alpine
+    configs:
+      - { source: docker_api_proxy_ro_config, target: /usr/local/etc/haproxy/haproxy.cfg }
+    secrets:
+      - { source: ops_docker_api_ca, target: /run/secrets/docker-api/ca.pem }
+      - { source: ops_docker_api_ro_client_cert, target: /run/secrets/docker-api/client.pem }
+    environment:
+      DOCKER_API_ADDR: "swarm-manager.internal.eduworld.example:2376"
+    networks: [docker-api-ro]
+    healthcheck:
+      test: ["CMD", "haproxy", "-c", "-f", "/usr/local/etc/haproxy/haproxy.cfg"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }
+      <<: *update
+
+  swarm-exporter:
+    image: ghcr.io/${GHCR_ORG}/eduworld/swarm-exporter:${OPS_VERSION}
+    command: ["run"]
+    environment:
+      EW_SWARM_EXPORTER_DOCKER_API: http://docker-api-proxy-ro:2375
+      EW_SWARM_EXPORTER_INTERVAL: 15s
+      EW_SWARM_EXPORTER_STACK: eduworld
+      EW_ADMIN_ADDR: ":9090"
+    networks: [docker-api-ro, admin]
+    healthcheck:
+      test: ["CMD", "/app/swarm-exporter", "healthcheck"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    logging: *logging
+    deploy:
+      replicas: 1
+      labels: { prometheus.scrape: "true", prometheus.port: "9090", prometheus.network: admin, prometheus.job: swarm-exporter }
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }
+      <<: *update
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.120.0
+    command: ["--config=/etc/otel/config.yaml"]
+    configs:
+      - { source: otel_collector_config, target: /etc/otel/config.yaml }
+    networks: [app, admin]
+    healthcheck:
+      disable: true                          # distroless image without a probe binary; Prometheus `up` covers it
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "2", memory: 2G }, reservations: { cpus: "0.5", memory: 512M } }
+      <<: *update
+
+  otel-agent:
+    image: otel/opentelemetry-collector-contrib:0.120.0
+    command: ["--config=/etc/otel/config.yaml"]
+    user: "0"                                # reads the root-owned json-file logs, read-only mount
+    configs:
+      - { source: otel_agent_config, target: /etc/otel/config.yaml }
+    environment:
+      EW_NODE_NAME: "{{.Node.Hostname}}"
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    networks: [admin]
+    healthcheck:
+      disable: true
+    logging: *logging
+    deploy:
+      mode: global
+      resources: { limits: { cpus: "0.5", memory: 256M }, reservations: { cpus: "0.05", memory: 64M } }
+      <<: *update
+
+  prometheus:
+    image: ghcr.io/${GHCR_ORG}/eduworld/obs-prometheus:${OPS_VERSION}
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus",
+      "--storage.tsdb.retention.time=30d", "--web.listen-address=:9095", "--web.enable-remote-write-receiver",
+      "--enable-feature=expand-external-labels", "--web.external-url=https://prometheus.internal.eduworld.example"]
+    environment:
+      EW_ENV: production
+    configs:
+      - { source: blackbox_cdn_targets, target: /etc/prometheus/targets/blackbox-cdn.yml }
+      - { source: blackbox_tls_targets, target: /etc/prometheus/targets/blackbox-tls.yml }
+    volumes: ["prometheus-data:/prometheus"]
+    networks: [app, data, admin, docker-api-ro]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9095/-/ready | grep -qi ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "4", memory: 8G }, reservations: { cpus: "1", memory: 2G } }
+      <<: *update-single
+
+  alertmanager:
+    image: ghcr.io/${GHCR_ORG}/eduworld/obs-alertmanager:${OPS_VERSION}
+    env_file: [obs.env]
+    secrets: [ops_alert_heartbeat_url, ops_alert_chat_webhook_url, ops_alert_sms_webhook_url, ops_alert_safety_webhook_url,
+      ops_alert_smtp_password]
+    volumes: ["alertmanager-data:/alertmanager"]
+    networks: [admin]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9093/-/ready | grep -qi ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "0.5", memory: 256M }, reservations: { cpus: "0.05", memory: 64M } }
+      <<: *update-single
+
+  loki:
+    image: grafana/loki:3.4.2
+    command: ["-config.file=/etc/loki/config.yaml"]
+    configs:
+      - { source: loki_config, target: /etc/loki/config.yaml }
+    volumes: ["loki-data:/loki"]
+    networks: [admin]
+    healthcheck:
+      disable: true                          # distroless image; Prometheus `up` covers it
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "2", memory: 4G }, reservations: { cpus: "0.5", memory: 1G } }
+      <<: *update-single
+
+  tempo:
+    image: grafana/tempo:2.7.1
+    command: ["-config.file=/etc/tempo/config.yaml"]
+    configs:
+      - { source: tempo_config, target: /etc/tempo/config.yaml }
+    volumes: ["tempo-data:/var/tempo"]
+    networks: [admin]
+    healthcheck:
+      disable: true
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "2", memory: 4G }, reservations: { cpus: "0.5", memory: 1G } }
+      <<: *update-single
+
+  grafana:
+    image: ghcr.io/${GHCR_ORG}/eduworld/obs-grafana:${OPS_VERSION}
+    env_file: [obs.env]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/ops_grafana_admin_password
+      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET__FILE: /run/secrets/ops_grafana_oauth_client_secret
+    secrets: [ops_grafana_admin_password, ops_grafana_oauth_client_secret]
+    volumes: ["grafana-data:/var/lib/grafana"]
+    networks: [admin]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health | grep -q ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "1", memory: 1G }, reservations: { cpus: "0.1", memory: 256M } }
+      <<: *update-single
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    command: ["--config.file=/etc/blackbox/blackbox.yml"]
+    configs:
+      - { source: blackbox_config, target: /etc/blackbox/blackbox.yml }
+    networks: [admin]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9115/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }
+      <<: *update
+
+  node-exporter:
+    image: prom/node-exporter:v1.9.1
+    command: ["--path.procfs=/host/proc", "--path.sysfs=/host/sys", "--path.rootfs=/rootfs",
+      "--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+)($$|/)",
+      "--collector.textfile.directory=/textfile/backup", "--collector.textfile.directory=/textfile/synthetic"]
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - backup-metrics:/textfile/backup:ro         # backup-tools (ops stack) on ops-1, empty elsewhere
+      - synthetic-metrics:/textfile/synthetic:ro   # synthetic-probe on ops-1, empty elsewhere
+    networks: [admin]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9100/metrics > /dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+    deploy:
+      mode: global
+      labels: { prometheus.scrape: "true", prometheus.port: "9100", prometheus.network: admin, prometheus.job: node-exporter }
+      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }
+      <<: *update
+
+  # Only service with the Docker socket (read-only mount, policy docker_socket): container names and Swarm labels of
+  # the cgroups ([Proposed], MONITORING §1).
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
+    command: ["--docker_only=true", "--store_container_labels=false",
+      "--whitelisted_container_labels=com.docker.swarm.service.name,com.docker.swarm.task.name",
+      "--housekeeping_interval=15s", "--disable_metrics=percpu,sched,tcp,udp,disk,diskIO,hugetlb,referenced_memory,advtcp,process"]
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    networks: [admin]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz | grep -q ok"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+    deploy:
+      mode: global
+      labels: { prometheus.scrape: "true", prometheus.port: "8080", prometheus.network: admin, prometheus.job: cadvisor }
+      resources: { limits: { cpus: "0.5", memory: 256M }, reservations: { cpus: "0.05", memory: 64M } }
+      <<: *update
+
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.17.1
+    environment:
+      DATA_SOURCE_URI: "pg-router:5432/postgres?sslmode=require"
+      DATA_SOURCE_USER: eduworld_monitor
+      DATA_SOURCE_PASS_FILE: /run/secrets/ops_pg_exporter_password
+    secrets: [ops_pg_exporter_password]
+    networks: [data, admin]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9187/metrics > /dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+    deploy:
+      replicas: 1
+      labels: { prometheus.scrape: "true", prometheus.port: "9187", prometheus.network: admin, prometheus.job: postgres }
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }
+      <<: *update
+
+  valkey-exporter-cache:
+    image: oliver006/redis_exporter:v1.74.0
+    environment:
+      REDIS_ADDR: "redis://valkey-cache:6379"
+      REDIS_USER: exporter
+      REDIS_PASSWORD_FILE: /run/secrets/valkey_exporter_password
+    secrets: [valkey_exporter_password]
+    networks: [data, admin]
+    healthcheck:
+      disable: true                          # scratch image; Prometheus `up` covers it
+    logging: *logging
+    deploy:
+      replicas: 1
+      labels: { prometheus.scrape: "true", prometheus.port: "9121", prometheus.network: admin, prometheus.job: valkey }
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "0.25", memory: 64M }, reservations: { cpus: "0.05", memory: 16M } }
+      <<: *update
+
+  valkey-exporter-ratelimit:
+    image: oliver006/redis_exporter:v1.74.0
+    environment:
+      REDIS_ADDR: "redis://valkey-ratelimit:6379"
+      REDIS_USER: exporter
+      REDIS_PASSWORD_FILE: /run/secrets/valkey_exporter_password
+    secrets: [valkey_exporter_password]
+    networks: [data, admin]
+    healthcheck:
+      disable: true
+    logging: *logging
+    deploy:
+      replicas: 1
+      labels: { prometheus.scrape: "true", prometheus.port: "9121", prometheus.network: admin, prometheus.job: valkey }
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "0.25", memory: 64M }, reservations: { cpus: "0.05", memory: 16M } }
+      <<: *update
+
+  glitchtip-db:
+    image: postgres:17.12-trixie
+    environment:
+      POSTGRES_DB: glitchtip
+      POSTGRES_USER: glitchtip
+      POSTGRES_PASSWORD_FILE: /run/secrets/glitchtip_db_password
+    secrets: [glitchtip_db_password]
+    volumes: ["glitchtip-db-data:/var/lib/postgresql/data"]
+    networks: [obs-internal]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "glitchtip", "-d", "glitchtip"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    stop_grace_period: 60s
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "1", memory: 1G }, reservations: { cpus: "0.1", memory: 256M } }
+      <<: *update-single
+
+  glitchtip-valkey:
+    image: valkey/valkey:8.1.4
+    command: ["valkey-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    networks: [obs-internal]
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "0.25", memory: 192M }, reservations: { cpus: "0.05", memory: 64M } }
+      <<: *update
+
+  glitchtip-web:
+    image: glitchtip/glitchtip:v4.2.10
+    entrypoint: ["/bin/sh", "-c", "export SECRET_KEY=\"$$(cat /run/secrets/glitchtip_secret_key)\" DATABASE_URL=\"postgres://glitchtip:$$(cat /run/secrets/glitchtip_db_password)@glitchtip-db:5432/glitchtip\" && ./bin/run-migrate.sh && exec ./bin/start.sh"]
+    env_file: [glitchtip.env]
+    secrets: [glitchtip_secret_key, glitchtip_db_password]
+    networks: [obs-internal, admin]
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/_health/').status == 200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "1", memory: 1G }, reservations: { cpus: "0.1", memory: 256M } }
+      <<: *update
+
+  glitchtip-worker:
+    image: glitchtip/glitchtip:v4.2.10
+    entrypoint: ["/bin/sh", "-c", "export SECRET_KEY=\"$$(cat /run/secrets/glitchtip_secret_key)\" DATABASE_URL=\"postgres://glitchtip:$$(cat /run/secrets/glitchtip_db_password)@glitchtip-db:5432/glitchtip\" && exec ./bin/run-celery-with-beat.sh"]
+    env_file: [glitchtip.env]
+    secrets: [glitchtip_secret_key, glitchtip_db_password]
+    networks: [obs-internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f celery > /dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "1", memory: 1G }, reservations: { cpus: "0.1", memory: 256M } }
+      <<: *update
+
+  glitchtip-bridge:
+    image: ghcr.io/${GHCR_ORG}/eduworld/glitchtip-bridge:${OPS_VERSION}
+    command: ["run"]
+    env_file: [obs.env]
+    environment:
+      EW_GLITCHTIP_URL: http://glitchtip-web:8000
+      EW_GLITCHTIP_BRIDGE_TOKEN_FILE: /run/secrets/ops_glitchtip_bridge_token
+      EW_GLITCHTIP_API_TOKEN_FILE: /run/secrets/ops_glitchtip_api_token
+      EW_GITHUB_TOKEN_FILE: /run/secrets/ops_github_issues_token
+      EW_GLITCHTIP_BRIDGE_ENVIRONMENTS: production
+      EW_HTTP_ADDR: ":8080"
+      EW_ADMIN_ADDR: ":9090"
+    secrets: [ops_glitchtip_bridge_token, ops_glitchtip_api_token, ops_github_issues_token]
+    networks: [admin]
+    healthcheck:
+      test: ["CMD", "/app/glitchtip-bridge", "healthcheck"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    logging: *logging
+    deploy:
+      replicas: 1
+      labels: { prometheus.scrape: "true", prometheus.port: "9090", prometheus.network: admin, prometheus.job: glitchtip-bridge }
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }
+      <<: *update
+
+  synthetic-probe:
+    image: ghcr.io/${GHCR_ORG}/eduworld/synthetic-probe:${OPS_VERSION}
+    env_file: [obs.env]
+    environment:
+      EW_PROBE_PASSWORD_FILE: /run/secrets/ops_probe_password
+      EW_PROBE_TEXTFILE_DIR: /textfile
+    secrets: [{ source: ops_probe_password, uid: "12345", gid: "12345", mode: 0400 }]
+    volumes: ["synthetic-metrics:/textfile"]
+    networks: [admin]
+    healthcheck:
+      test: ["CMD", "pgrep", "-x", "supercronic"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "0.5", memory: 256M }, reservations: { cpus: "0.05", memory: 64M } }
+      <<: *update-single
+
+networks:
+  app: { external: true }
+  data: { external: true }
+  admin: { external: true }
+  docker-api-ro:
+    driver: overlay
+    internal: true
+    driver_opts: { encrypted: "true" }
+  obs-internal:
+    driver: overlay
+    internal: true
+    driver_opts: { encrypted: "true" }
+
+volumes:
+  prometheus-data: {}
+  alertmanager-data: {}
+  loki-data: {}
+  tempo-data: {}
+  grafana-data: {}
+  glitchtip-db-data: {}
+  backup-metrics: {}                         # same local volume as backup-tools of the ops stack (stack eduworld)
+  synthetic-metrics: {}
+
+configs:
+  docker_api_proxy_ro_config: { file: ../../observability/docker-api-proxy-ro.cfg, name: "eduworld_docker_api_proxy_ro_${CFG_DOCKER_API_PROXY_RO_CFG}" }
+  otel_collector_config: { file: ../../observability/otel-collector/collector.swarm.yaml, name: "eduworld_otel_collector_${CFG_COLLECTOR_SWARM_YAML}" }
+  otel_agent_config: { file: ../../observability/otel-collector/agent.swarm.yaml, name: "eduworld_otel_agent_${CFG_AGENT_SWARM_YAML}" }
+  loki_config: { file: ../../observability/loki/loki.swarm.yaml, name: "eduworld_loki_${CFG_LOKI_SWARM_YAML}" }
+  tempo_config: { file: ../../observability/tempo/tempo.swarm.yaml, name: "eduworld_tempo_${CFG_TEMPO_SWARM_YAML}" }
+  blackbox_config: { file: ../../observability/blackbox/blackbox.yml, name: "eduworld_blackbox_${CFG_BLACKBOX_YML}" }
+  blackbox_cdn_targets: { file: blackbox-cdn.yml, name: "eduworld_blackbox_cdn_${CFG_BLACKBOX_CDN_YML}" }
+  blackbox_tls_targets: { file: blackbox-tls.yml, name: "eduworld_blackbox_tls_${CFG_BLACKBOX_TLS_YML}" }
+
+secrets:
+  ops_docker_api_ca: { external: true, name: "ops_docker_api_ca_v${SECRET_VER_OPS_DOCKER_API_CA}" }
+  ops_docker_api_ro_client_cert: { external: true, name: "ops_docker_api_ro_client_cert_v${SECRET_VER_OPS_DOCKER_API_RO_CLIENT_CERT}" }
+  ops_alert_heartbeat_url: { external: true, name: "ops_alert_heartbeat_url_v${SECRET_VER_OPS_ALERT_HEARTBEAT_URL}" }
+  ops_alert_chat_webhook_url: { external: true, name: "ops_alert_chat_webhook_url_v${SECRET_VER_OPS_ALERT_CHAT_WEBHOOK_URL}" }
+  ops_alert_sms_webhook_url: { external: true, name: "ops_alert_sms_webhook_url_v${SECRET_VER_OPS_ALERT_SMS_WEBHOOK_URL}" }
+  ops_alert_safety_webhook_url: { external: true, name: "ops_alert_safety_webhook_url_v${SECRET_VER_OPS_ALERT_SAFETY_WEBHOOK_URL}" }
+  ops_alert_smtp_password: { external: true, name: "ops_alert_smtp_password_v${SECRET_VER_OPS_ALERT_SMTP_PASSWORD}" }
+  ops_grafana_admin_password: { external: true, name: "ops_grafana_admin_password_v${SECRET_VER_OPS_GRAFANA_ADMIN_PASSWORD}" }
+  ops_grafana_oauth_client_secret: { external: true, name: "ops_grafana_oauth_client_secret_v${SECRET_VER_OPS_GRAFANA_OAUTH_CLIENT_SECRET}" }
+  ops_pg_exporter_password: { external: true, name: "ops_pg_exporter_password_v${SECRET_VER_OPS_PG_EXPORTER_PASSWORD}" }
+  valkey_exporter_password: { external: true, name: "valkey_exporter_password_v${SECRET_VER_VALKEY_EXPORTER_PASSWORD}" }
+  glitchtip_secret_key: { external: true, name: "glitchtip_secret_key_v${SECRET_VER_GLITCHTIP_SECRET_KEY}" }
+  glitchtip_db_password: { external: true, name: "glitchtip_db_password_v${SECRET_VER_GLITCHTIP_DB_PASSWORD}" }
+  ops_glitchtip_bridge_token: { external: true, name: "ops_glitchtip_bridge_token_v${SECRET_VER_OPS_GLITCHTIP_BRIDGE_TOKEN}" }
+  ops_glitchtip_api_token: { external: true, name: "ops_glitchtip_api_token_v${SECRET_VER_OPS_GLITCHTIP_API_TOKEN}" }
+  ops_github_issues_token: { external: true, name: "ops_github_issues_token_v${SECRET_VER_OPS_GITHUB_ISSUES_TOKEN}" }
+  ops_probe_password: { external: true, name: "ops_probe_password_v${SECRET_VER_OPS_PROBE_PASSWORD}" }

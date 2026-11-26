@@ -1,6 +1,6 @@
 # Release lane (F001 T040, F001-AC-15, F001-AC-26): build the four images from one commit, scan,
 # SBOM, sign (keyless cosign), push to ghcr.io tagged with git sha (+ backend version on tags).
-# Never tags `latest`. F130: ops images (ops-scheduler, backup-tools, postgres-patroni; F131: swarm-exporter, glitchtip-bridge) and the Swarm deploy —
+# Never tags `latest`. F130: ops images (ops-scheduler, backup-tools, postgres-patroni; F131: swarm-exporter, glitchtip-bridge, synthetic-probe, obs-prometheus/alertmanager/grafana) and the Swarm deploy —
 # staging on a backend/vX.Y.Z tag (migrate jobs → stack deploy, digests recorded), production after the Release Manager
 # approval of Environment production (same digests, maintenance window unless [hotfix], migrate → core-api canary →
 # rest of the stack) and rollback of one Swarm service (workflow_dispatch). Deploy jobs need vars.DEPLOY_ENABLED.
@@ -131,6 +131,10 @@ jobs:
           - { image: ops-scheduler, file: deploy/docker/ops-scheduler.Dockerfile, hardened: true }
           - { image: swarm-exporter, file: deploy/docker/swarm-exporter.Dockerfile, hardened: true }
           - { image: glitchtip-bridge, file: deploy/docker/glitchtip-bridge.Dockerfile, hardened: true }
+          - { image: synthetic-probe, file: deploy/docker/synthetic-probe.Dockerfile, hardened: false }
+          - { image: obs-prometheus, file: deploy/docker/obs-prometheus.Dockerfile, hardened: false }
+          - { image: obs-alertmanager, file: deploy/docker/obs-alertmanager.Dockerfile, hardened: false }
+          - { image: obs-grafana, file: deploy/docker/obs-grafana.Dockerfile, hardened: false }
           - { image: backup-tools, file: deploy/backup/Dockerfile, hardened: false }
           - { image: postgres-patroni, file: deploy/postgres/patroni.Dockerfile, hardened: false }
     env:
@@ -166,7 +170,7 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: "1"
-      - name: check image hardening (distroless only; backup-tools and postgres-patroni need a shell for pgBackRest/Patroni)
+      - name: check image hardening (distroless only; backup-tools, postgres-patroni need a shell for pgBackRest/Patroni; obs-* and synthetic-probe keep their upstream base)
         if: matrix.hardened
         run: bash scripts/ci/check-image.sh "${{ env.IMAGE }}:${{ steps.v.outputs.sha }}"
       - name: push
@@ -231,6 +235,26 @@ jobs:
       - name: remove credentials
         if: always()
         run: rm -rf "$DOCKER_CERT_PATH"
+
+  # F131-AC-02: mandatory metrics of MONITORING §3 present on staging (binaries, profiles, exporters) after the deploy;
+  # the job fails and lists every missing metric/label. Prometheus is reached from the deploy runner (VPN, network admin).
+  obs-metric-catalog:
+    needs: deploy-staging
+    if: vars.DEPLOY_ENABLED == 'true' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/backend/v') && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: staging
+    env:
+      EW_PROMETHEUS_URL: ${{ vars.PROMETHEUS_URL }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: wait for scrapes of the new tasks (synthetic probe and sample traffic fill the counters)
+        run: sleep 600
+      - name: obs-metric-catalog (staging)
+        run: node scripts/obs/check-metric-catalog.mjs --prom="$EW_PROMETHEUS_URL"
 
   # F130-AC-04, AC-05: production — required reviewers of Environment production (Release Manager), the same digests as
   # staging, maintenance_window 22:00–06:00 ICT or weekend unless the tagged commit says [hotfix] (deploy-service.sh),

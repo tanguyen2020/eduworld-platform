@@ -31,6 +31,7 @@ services:
       start_period: 10s
     logging: *logging
     deploy:
+      labels: { prometheus.scrape: "true", prometheus.port: "9090", prometheus.network: admin, prometheus.job: ops-scheduler }
       replicas: 1                          # one writer: two schedulers would race on the same services
       placement: { constraints: [node.labels.role == ops] }
       resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }

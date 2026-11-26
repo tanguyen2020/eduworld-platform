@@ -2,7 +2,7 @@
 # Deploys one stack of an environment, or one backend Swarm service (F130-AC-02, AC-03, AC-05; DEPLOYMENT §10–§12).
 #   deploy-service.sh --env=<staging|production> --stack=app [--version=vX.Y.Z] [--service=<swarm-service>]
 #                     [--expect-digests=FILE] [--record-digests=FILE] [--hotfix] [--migrate-only|--skip-migrate] [--redeploy]
-#   deploy-service.sh --env=<env> --stack=infra|data|ops
+#   deploy-service.sh --env=<env> --stack=infra|data|ops|obs
 # Order for the app stack: manager quorum → (production) same digests as staging + maintenance window → migrate
 # job of every module database (run-migrate-job.sh; any failure stops here) → `docker stack deploy` (only services
 # whose spec changed are updated; rolling start-first, failure_action rollback). --service updates the image of
@@ -29,7 +29,7 @@ for arg in "$@"; do
   esac
 done
 check_env "$ENV"
-[[ "$STACK_NAME" =~ ^(app|infra|data|ops)$ ]] || die "--stack=app|infra|data|ops required"
+[[ "$STACK_NAME" =~ ^(app|infra|data|ops|obs)$ ]] || die "--stack=app|infra|data|ops|obs required"
 file="$REPO_ROOT/deploy/swarm/$ENV/$STACK_NAME.stack.yml"
 [ -f "$file" ] || die "missing $file"
 require_quorum

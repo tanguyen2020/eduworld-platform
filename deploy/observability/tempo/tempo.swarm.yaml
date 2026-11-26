@@ -1,0 +1,44 @@
+# Tempo of staging/production (F131 T015, F131-AC-03; MONITORING §7). Single binary on node `ops` (volume tempo-data),
+# network `admin`. The metrics generator builds the service graph (client/server, modcall facade spans, producer/
+# consumer) and span metrics, remote-written to Prometheus (dashboard Module Map). Retention = trace_retention
+# (CONFIG_DEFAULTS §18, [Proposed]: 7 days).
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc: { endpoint: 0.0.0.0:4317 }
+
+ingester:
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    block_retention: 168h         # 7 days — trace_retention [Proposed]
+
+metrics_generator:
+  registry:
+    external_labels: { source: tempo }
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9095/api/v1/write
+        send_exemplars: true
+  processor:
+    service_graphs:
+      dimensions: [module]
+    span_metrics:
+      dimensions: [module]
+
+storage:
+  trace:
+    backend: local
+    local: { path: /var/tempo/traces }
+    wal: { path: /var/tempo/wal }
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics]

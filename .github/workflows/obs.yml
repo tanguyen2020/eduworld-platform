@@ -1,0 +1,106 @@
+# Observability lane (F131 T018, T027, T032; F131-AC-02, AC-05, AC-06, AC-08, AC-09, AC-13, AC-14, AC-16; ADR-0088).
+# Rules, alert routing, runbooks, dashboards and label policy are checked on every change of their sources; the
+# mandatory-metric catalogue against the staging Prometheus runs after the staging deploy (release.yml,
+# job obs-metric-catalog). MONITORING.md is the single source the checks parse (AGENTS R33).
+name: obs
+
+on:
+  pull_request:
+    paths:
+      - "deploy/observability/**"
+      - "deploy/swarm/config/alertmanager-entrypoint.sh"
+      - "docs/11-operations/MONITORING.md"
+      - "docs/11-operations/runbooks/**"
+      - "scripts/obs/**"
+      - "tests/synthetic/**"
+      - ".github/workflows/obs.yml"
+  push:
+    branches: [main]
+    paths:
+      - "deploy/observability/**"
+      - "deploy/swarm/config/alertmanager-entrypoint.sh"
+      - "docs/11-operations/MONITORING.md"
+      - "docs/11-operations/runbooks/**"
+      - "scripts/obs/**"
+      - "tests/synthetic/**"
+      - ".github/workflows/obs.yml"
+
+permissions:
+  contents: read
+
+env:
+  PROM_IMAGE: prom/prometheus:v3.2.1
+
+jobs:
+  # F131-AC-08, AC-12: promtool check + unit tests (every alert fires once and stays quiet once), table ↔ rules ↔ tests.
+  obs-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: promtool check rules
+        run: docker run --rm -v "$PWD/deploy/observability/prometheus:/w" -w /w --entrypoint sh "$PROM_IMAGE" -c 'promtool check rules rules/*.yaml'
+      - name: promtool test rules
+        run: docker run --rm -v "$PWD/deploy/observability/prometheus:/w" -w /w/tests --entrypoint sh "$PROM_IMAGE" -c 'promtool test rules *.test.yaml'
+      - name: promtool check config (Swarm Prometheus)
+        run: |
+          mkdir -p "$RUNNER_TEMP/targets"
+          cp deploy/swarm/staging/blackbox-cdn.yml deploy/swarm/staging/blackbox-tls.yml "$RUNNER_TEMP/targets/"
+          docker run --rm -e EW_ENV=ci -v "$PWD/deploy/observability/prometheus:/etc/prometheus" -v "$RUNNER_TEMP/targets:/etc/prometheus/targets" \
+            --entrypoint promtool "$PROM_IMAGE" check config /etc/prometheus/prometheus.swarm.yml
+      - name: MONITORING §5 ↔ rules ↔ promtool cases
+        run: node scripts/obs/check-alerts.mjs --only=rules
+
+  # F131-AC-13: one runbook per alert with the mandatory sections.
+  obs-runbooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - run: node scripts/obs/check-alerts.mjs --only=runbooks
+
+  # F131-AC-06: forbidden labels / concrete routes in rules and dashboards.
+  obs-label-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - run: node scripts/obs/check-label-policy.mjs
+
+  # F131-AC-14, AC-16: dashboards as code are fresh, cover MONITORING §4, use catalogue metrics and known datasources.
+  obs-dashboards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - run: node scripts/obs/build-dashboards.mjs --check
+      - run: node scripts/obs/check-dashboards.mjs
+
+  # F131-AC-09, AC-10, AC-05: Alertmanager routing/inhibition and collector redaction against throwaway containers;
+  # unit tests of scripts/obs and of the synthetic probe logic.
+  obs-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: Alertmanager routes + inhibition (amtool, throwaway Alertmanager)
+        run: bash deploy/observability/alertmanager/tests/routes_test.sh --live
+      - name: collector redaction (throwaway otelcol-contrib)
+        run: bash deploy/observability/otel-collector/tests/redaction_test.sh
+      - name: unit tests (scripts/obs, synthetic probe)
+        run: node --test scripts/obs/ tests/synthetic/k6/
