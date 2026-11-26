@@ -147,11 +147,22 @@ func TestSchoolEventProgress(t *testing.T) {
 		}
 	}
 	// An event that does not show the grades (show_grade_contributions = false): no by_grade for the school either.
-	if res, err := e.migrator.ExecContext(ctx, `UPDATE game.community_goals SET show_grade_contributions = false WHERE goal_id = $1`,
-		goal["goal_id"]); err != nil {
+	tx, err := e.migrator.BeginTx(ctx, nil)
+	if err != nil {
 		t.Fatal(err)
-	} else if n, _ := res.RowsAffected(); n != 1 {
+	}
+	if _, err := tx.ExecContext(ctx, `SELECT set_config('app.tenant_id', $1, true)`, e.tenantA.String()); err != nil { // RLS of the tenant row
+		t.Fatal(err)
+	}
+	res, err := tx.ExecContext(ctx, `UPDATE game.community_goals SET show_grade_contributions = false WHERE goal_id = $1`, goal["goal_id"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n, _ := res.RowsAffected(); n != 1 {
 		t.Fatalf("show_grade_contributions off: %d rows", n)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
 	}
 	if q := progress(adminA, ha(), ""); q.status != http.StatusOK || len(q.body["by_grade"].([]any)) != 0 || q.body["community_goal"] == nil {
 		t.Fatalf("grades hidden by the event: %d %s", q.status, q.raw)

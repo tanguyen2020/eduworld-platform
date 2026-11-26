@@ -15,30 +15,29 @@ export function CancelSchoolEventDialog({ eventId, eventName, onClose, onDone }:
   const [form] = Form.useForm<{ reason: string }>();
   const [reason, setReason] = useState<string | null>(null);
   const cancel = useCancelSchoolEvent(eventId);
-  const k = (key: string) => t(`portal.school_lms.schoolEvents.cancel.${key}`);
   return (
     <Modal open title={t('portal.school_lms.schoolEvents.cancel.title', { name: eventName })} onCancel={onClose} footer={null} destroyOnHidden>
       {reason === null ? (
         <Form form={form} layout="vertical" name="school_event_cancel" onFinish={(v) => setReason(v.reason.trim())}>
-          <Form.Item name="reason" label={k('reason')} rules={[{ required: true, whitespace: true, message: k('reasonRequired') }, ...field.rules(FIELDS.eventCancelReason, true)]}>
+          <Form.Item name="reason" label={t('portal.school_lms.schoolEvents.cancel.reason')} rules={[{ required: true, whitespace: true, message: t('portal.school_lms.schoolEvents.cancel.reasonRequired') }, ...field.rules(FIELDS.eventCancelReason, true)]}>
             <Input.TextArea autoSize={{ minRows: 3, maxRows: 8 }} {...field.input(FIELDS.eventCancelReason)} />
           </Form.Item>
           <Flex gap="small">
             <Button type="primary" danger htmlType="submit">
-              {k('next')}
+              {t('portal.school_lms.schoolEvents.cancel.next')}
             </Button>
             <Button onClick={onClose}>{t('portal.school_lms.common.close')}</Button>
           </Flex>
         </Form>
       ) : (
         <Flex vertical gap="middle" data-testid="cancel-confirm">
-          <Typography.Text strong>{k('confirmTitle')}</Typography.Text>
-          <Alert type="warning" showIcon message={k('rewardsKept')} />
+          <Typography.Text strong>{t('portal.school_lms.schoolEvents.cancel.confirmTitle')}</Typography.Text>
+          <Alert type="warning" showIcon message={t('portal.school_lms.schoolEvents.cancel.rewardsKept')} />
           <Typography.Paragraph type="secondary">{t('portal.school_lms.schoolEvents.cancel.reasonShown', { reason })}</Typography.Paragraph>
           {cancel.error ? <ProblemMessage error={cancel.error} /> : null}
           <Flex gap="small">
             <Button type="primary" danger loading={cancel.isPending} onClick={() => cancel.mutate(reason, { onSuccess: onDone })}>
-              {k('confirm')}
+              {t('portal.school_lms.schoolEvents.cancel.confirm')}
             </Button>
             <Button onClick={() => setReason(null)}>{t('portal.school_lms.common.back')}</Button>
           </Flex>

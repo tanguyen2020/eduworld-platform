@@ -39,6 +39,9 @@ export function allows(template: Pick<EventTemplate, 'allowed_params'> | null | 
 
 const DATE_FORMAT = 'DD/MM/YYYY HH:mm';
 
+/** Codes of allowed_params (EVENT_SEASON_SYSTEM §10). */
+const P = { description: 'description', schools: 'audience.school_ids', grades: 'audience.grade_levels', goalTarget: 'community_goal_target', quests: 'quest_ids', challenges: 'challenge_ids', reward: 'reward_option_id' } as const;
+
 export interface SchoolEventFormProps {
   form: FormInstance<EventFormValues>;
   template: EventTemplate;
@@ -56,87 +59,86 @@ export interface SchoolEventFormProps {
 export function SchoolEventForm({ form, template, tenantHeaders, tenantKey, submitLabel, submitting, onSubmit, onBack, backLabel, banner }: SchoolEventFormProps) {
   const { t, i18n } = useTranslation();
   const field = useFieldRules();
-  const schools = useTenantSchools(tenantHeaders, tenantKey, allows(template, 'audience.school_ids'));
+  const schools = useTenantSchools(tenantHeaders, tenantKey, allows(template, P.schools));
   const starts = Form.useWatch('starts_at', form);
   const ends = Form.useWatch('ends_at', form);
   const days = durationDays(starts, ends);
-  const label = (k: string) => t(`portal.school_lms.schoolEvents.form.${k}`);
   const max = template.max_duration_days;
   return (
     <Form<EventFormValues> form={form} layout="vertical" name="school_event" onFinish={onSubmit} scrollToFirstError>
       <Typography.Title level={2}>{localizedName(template.name, i18n.language)}</Typography.Title>
       {template.description ? <Typography.Paragraph type="secondary">{localizedName(template.description, i18n.language)}</Typography.Paragraph> : null}
-      <Form.Item name={['name', 'vi']} label={label('nameVi')} rules={field.rules(FIELDS.eventNameVi, true)}>
+      <Form.Item name={['name', 'vi']} label={t('portal.school_lms.schoolEvents.form.nameVi')} rules={field.rules(FIELDS.eventNameVi, true)}>
         <Input {...field.input(FIELDS.eventNameVi)} />
       </Form.Item>
-      <Form.Item name={['name', 'en']} label={label('nameEn')} rules={field.rules(FIELDS.eventNameEn)}>
+      <Form.Item name={['name', 'en']} label={t('portal.school_lms.schoolEvents.form.nameEn')} rules={field.rules(FIELDS.eventNameEn)}>
         <Input {...field.input(FIELDS.eventNameEn)} />
       </Form.Item>
-      {allows(template, 'description') ? (
+      {allows(template, P.description) ? (
         <>
-          <Form.Item name={['description', 'vi']} label={label('descriptionVi')} rules={field.rules(FIELDS.eventDescriptionVi)}>
+          <Form.Item name={['description', 'vi']} label={t('portal.school_lms.schoolEvents.form.descriptionVi')} rules={field.rules(FIELDS.eventDescriptionVi)}>
             <Input.TextArea autoSize={{ minRows: 2, maxRows: 6 }} {...field.input(FIELDS.eventDescriptionVi)} />
           </Form.Item>
-          <Form.Item name={['description', 'en']} label={label('descriptionEn')} rules={field.rules(FIELDS.eventDescriptionEn)}>
+          <Form.Item name={['description', 'en']} label={t('portal.school_lms.schoolEvents.form.descriptionEn')} rules={field.rules(FIELDS.eventDescriptionEn)}>
             <Input.TextArea autoSize={{ minRows: 2, maxRows: 6 }} {...field.input(FIELDS.eventDescriptionEn)} />
           </Form.Item>
         </>
       ) : null}
       <Flex gap="middle" wrap>
-        <Form.Item name="starts_at" label={label('startsAt')} rules={[{ required: true, message: label('startsRequired') }]}>
-          <DatePicker aria-label={label('startsAt')} showTime={{ format: 'HH:mm' }} format={DATE_FORMAT} needConfirm={false} />
+        <Form.Item name="starts_at" label={t('portal.school_lms.schoolEvents.form.startsAt')} rules={[{ required: true, message: t('portal.school_lms.schoolEvents.form.startsRequired') }]}>
+          <DatePicker aria-label={t('portal.school_lms.schoolEvents.form.startsAt')} showTime={{ format: 'HH:mm' }} format={DATE_FORMAT} needConfirm={false} />
         </Form.Item>
-        <Form.Item name="ends_at" label={label('endsAt')} rules={[{ required: true, message: label('endsRequired') }]}>
-          <DatePicker aria-label={label('endsAt')} showTime={{ format: 'HH:mm' }} format={DATE_FORMAT} needConfirm={false} />
+        <Form.Item name="ends_at" label={t('portal.school_lms.schoolEvents.form.endsAt')} rules={[{ required: true, message: t('portal.school_lms.schoolEvents.form.endsRequired') }]}>
+          <DatePicker aria-label={t('portal.school_lms.schoolEvents.form.endsAt')} showTime={{ format: 'HH:mm' }} format={DATE_FORMAT} needConfirm={false} />
         </Form.Item>
       </Flex>
       <Typography.Paragraph type="secondary" data-testid="event-duration">
-        {t('portal.school_lms.schoolEvents.form.duration', { days, max })} · {label('ictHint')}
+        {t('portal.school_lms.schoolEvents.form.duration', { days, max })} · {t('portal.school_lms.schoolEvents.form.ictHint')}
       </Typography.Paragraph>
-      {allows(template, 'audience.school_ids') ? (
-        <Form.Item name={['audience', 'school_ids']} label={label('schools')} extra={label('schoolsHint')}>
+      {allows(template, P.schools) ? (
+        <Form.Item name={['audience', 'school_ids']} label={t('portal.school_lms.schoolEvents.form.schools')} extra={t('portal.school_lms.schoolEvents.form.schoolsHint')}>
           <SearchSelect<string[]>
             mode="multiple"
-            aria-label={label('schools')}
+            aria-label={t('portal.school_lms.schoolEvents.form.schools')}
             loading={schools.isFetching}
             optionFilterProp="label"
             options={schools.items.map((s) => ({ value: s.school_id, label: localizedName(s.name, i18n.language) }))}
           />
         </Form.Item>
       ) : null}
-      {allows(template, 'audience.grade_levels') ? (
-        <Form.Item name={['audience', 'grade_levels']} label={label('grades')} extra={label('gradesHint')}>
-          <Checkbox.Group aria-label={label('grades')} options={EVENT_GRADES.map((g) => ({ value: g, label: t('portal.school_lms.schoolEvents.form.grade', { grade: g }) }))} />
+      {allows(template, P.grades) ? (
+        <Form.Item name={['audience', 'grade_levels']} label={t('portal.school_lms.schoolEvents.form.grades')} extra={t('portal.school_lms.schoolEvents.form.gradesHint')}>
+          <Checkbox.Group aria-label={t('portal.school_lms.schoolEvents.form.grades')} options={EVENT_GRADES.map((g) => ({ value: g, label: t('portal.school_lms.schoolEvents.form.grade', { grade: g }) }))} />
         </Form.Item>
       ) : null}
-      {allows(template, 'community_goal_target') ? (
-        <Form.Item name="community_goal_target" label={label('goalTarget')} rules={[{ type: 'number', min: LIMITS.eventGoalTarget.minimum, message: label('goalTargetMin') }]}>
-          <InputNumber aria-label={label('goalTarget')} min={LIMITS.eventGoalTarget.minimum} precision={0} />
+      {allows(template, P.goalTarget) ? (
+        <Form.Item name="community_goal_target" label={t('portal.school_lms.schoolEvents.form.goalTarget')} rules={[{ type: 'number', min: LIMITS.eventGoalTarget.minimum, message: t('portal.school_lms.schoolEvents.form.goalTargetMin') }]}>
+          <InputNumber aria-label={t('portal.school_lms.schoolEvents.form.goalTarget')} min={LIMITS.eventGoalTarget.minimum} precision={0} />
         </Form.Item>
       ) : null}
-      {allows(template, 'quest_ids') ? (
-        <Form.Item name="quest_ids" label={label('quests')} rules={[{ type: 'array', max: LIMITS.eventQuests.maxItems }]}>
+      {allows(template, P.quests) ? (
+        <Form.Item name="quest_ids" label={t('portal.school_lms.schoolEvents.form.quests')} rules={[{ type: 'array', max: LIMITS.eventQuests.maxItems }]}>
           <SearchSelect<string[]>
             mode="multiple"
-            aria-label={label('quests')}
+            aria-label={t('portal.school_lms.schoolEvents.form.quests')}
             optionFilterProp="label"
             options={(template.quest_option_items ?? []).map((q) => ({ value: q.id, label: optionLabel(localizedName(q.title, i18n.language), q.grade_levels, t) }))}
           />
         </Form.Item>
       ) : null}
-      {allows(template, 'challenge_ids') ? (
-        <Form.Item name="challenge_ids" label={label('challenges')} rules={[{ type: 'array', max: LIMITS.eventChallenges.maxItems }]}>
+      {allows(template, P.challenges) ? (
+        <Form.Item name="challenge_ids" label={t('portal.school_lms.schoolEvents.form.challenges')} rules={[{ type: 'array', max: LIMITS.eventChallenges.maxItems }]}>
           <SearchSelect<string[]>
             mode="multiple"
-            aria-label={label('challenges')}
+            aria-label={t('portal.school_lms.schoolEvents.form.challenges')}
             optionFilterProp="label"
             options={(template.challenge_option_items ?? []).map((q) => ({ value: q.id, label: optionLabel(localizedName(q.title, i18n.language), q.grade_levels, t) }))}
           />
         </Form.Item>
       ) : null}
-      {allows(template, 'reward_option_id') && (template.reward_options ?? []).length ? (
-        <Form.Item name="reward_option_id" label={label('reward')}>
-          <Radio.Group aria-label={label('reward')}>
+      {allows(template, P.reward) && (template.reward_options ?? []).length ? (
+        <Form.Item name="reward_option_id" label={t('portal.school_lms.schoolEvents.form.reward')}>
+          <Radio.Group aria-label={t('portal.school_lms.schoolEvents.form.reward')}>
             <Flex vertical>
               {(template.reward_options ?? []).map((o) => (
                 <Radio key={o.reward_option_id} value={o.reward_option_id}>
@@ -148,7 +150,7 @@ export function SchoolEventForm({ form, template, tenantHeaders, tenantKey, subm
         </Form.Item>
       ) : null}
       <Form.Item>
-        <Alert type="info" showIcon message={label('rulesFromTemplate')} />
+        <Alert type="info" showIcon message={t('portal.school_lms.schoolEvents.form.rulesFromTemplate')} />
       </Form.Item>
       {banner}
       <Form.Item>
@@ -174,15 +176,15 @@ export function eventParams(v: EventFormValues, template: Pick<EventTemplate, 'a
   if (v.starts_at) out.starts_at = toIso(v.starts_at);
   if (v.ends_at) out.ends_at = toIso(v.ends_at);
   const audience: Record<string, unknown> = {};
-  if (allows(template, 'audience.school_ids') && v.audience?.school_ids?.length) audience.school_ids = v.audience.school_ids;
-  if (allows(template, 'audience.grade_levels') && v.audience?.grade_levels?.length) audience.grade_levels = [...v.audience.grade_levels].sort((a, b) => a - b);
+  if (allows(template, P.schools) && v.audience?.school_ids?.length) audience.school_ids = v.audience.school_ids;
+  if (allows(template, P.grades) && v.audience?.grade_levels?.length) audience.grade_levels = [...v.audience.grade_levels].sort((a, b) => a - b);
   out.audience = audience;
-  if (allows(template, 'description') && v.description?.vi?.trim()) {
+  if (allows(template, P.description) && v.description?.vi?.trim()) {
     out.description = { vi: v.description.vi.trim(), ...(v.description.en?.trim() ? { en: v.description.en.trim() } : {}) };
   }
-  if (allows(template, 'community_goal_target') && v.community_goal_target != null) out.community_goal_target = v.community_goal_target;
-  if (allows(template, 'quest_ids') && v.quest_ids?.length) out.quest_ids = v.quest_ids;
-  if (allows(template, 'challenge_ids') && v.challenge_ids?.length) out.challenge_ids = v.challenge_ids;
-  if (allows(template, 'reward_option_id') && v.reward_option_id) out.reward_option_id = v.reward_option_id;
+  if (allows(template, P.goalTarget) && v.community_goal_target != null) out.community_goal_target = v.community_goal_target;
+  if (allows(template, P.quests) && v.quest_ids?.length) out.quest_ids = v.quest_ids;
+  if (allows(template, P.challenges) && v.challenge_ids?.length) out.challenge_ids = v.challenge_ids;
+  if (allows(template, P.reward) && v.reward_option_id) out.reward_option_id = v.reward_option_id;
   return out;
 }
