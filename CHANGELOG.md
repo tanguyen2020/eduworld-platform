@@ -111,6 +111,7 @@ Nhóm mục: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`, `
 - 2026-11-24 — **ADR-0102** nguồn asset đồ họa theo license MIT (hoặc CC0, public domain), asset tự làm phát hành MIT; cấm share-alike, non-commercial, no-derivatives, GPL, pack trả phí; mỗi file asset một dòng trong `src/game/assets/LICENSES.md` — thay phần nguồn asset của OQ-16 (owner "làm theo hướng MIT License").
 
 ### Answered
+- 2026-11-26 — **F113-1: trình duyệt trên điện thoại được chơi, bắt buộc cầm ngang** (owner): [STUDENT_GAME_UX §2](docs/05-ux/STUDENT_GAME_UX.md#2-nền-tảng-và-hướng-màn-hình) thay "Không hỗ trợ — trang Hãy tải ứng dụng" bằng "Cho chơi"; cửa sổ dọc hiện màn "Xoay ngang" (F113), shell không chặn (giữ hành vi hiện có); trình duyệt theo NFR-COMP-004; cam kết FPS theo hạng thiết bị chỉ cho ứng dụng và Web PC.
 - 2026-11-24 — OQ-16 (phần nguồn asset) thay bởi ADR-0102; phong cách stylized low-poly giữ nguyên.
 
 ### Security

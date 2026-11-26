@@ -136,7 +136,7 @@ Học sinh lớp 2 mở bản Web trên điện thoại cầm dọc: màn chờ 
 ## Ngoài phạm vi
 
 - Canvas dọc, bố cục dọc mới, kiểm "dải trống" ở cửa sổ dọc (F099-1, F099-2 — superseded).
-- Chặn trình duyệt điện thoại hay trang "Hãy tải ứng dụng EduWorld" (xem Câu hỏi mở F113-1).
+- Chặn trình duyệt điện thoại hay trang "Hãy tải ứng dụng EduWorld" — owner chốt 2026-11-26: không chặn (xem F113-1).
 - Đổi contract API, luật nghiệp vụ, preset chất lượng.
 
 ## Assumptions
@@ -146,4 +146,4 @@ Học sinh lớp 2 mở bản Web trên điện thoại cầm dọc: màn chờ 
 
 ## Câu hỏi mở
 
-- F113-1 [Proposed]: `STUDENT_GAME_UX` §2 ghi "Trình duyệt trên điện thoại — Không hỗ trợ trong Release 1.0; trang báo 'Hãy tải ứng dụng EduWorld'", nhưng shell F133 chỉ có banner cho trình duyệt không chính thức, không chặn điện thoại. Lượt này không đổi chính sách đó (màn "Xoay ngang" làm cửa sổ dọc an toàn dù có chặn hay không); quyết định chặn/không chặn thuộc F133/F134.
+- F113-1 [Confirmed — owner 2026-11-26: "cho chơi trên trình duyệt điện thoại (bắt buộc cầm ngang)"; `STUDENT_GAME_UX` §2 đã sửa, shell không chặn — giữ nguyên hành vi hiện có]: `STUDENT_GAME_UX` §2 ghi "Trình duyệt trên điện thoại — Không hỗ trợ trong Release 1.0; trang báo 'Hãy tải ứng dụng EduWorld'", nhưng shell F133 chỉ có banner cho trình duyệt không chính thức, không chặn điện thoại. Lượt này không đổi chính sách đó (màn "Xoay ngang" làm cửa sổ dọc an toàn dù có chặn hay không); quyết định chặn/không chặn thuộc F133/F134.

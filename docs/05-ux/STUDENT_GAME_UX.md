@@ -22,7 +22,7 @@ Ngoài phạm vi: Admin Portal (xem [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORT
 | **Web/PC** (trình duyệt PC, gồm PC phòng máy — không có bản Windows, ADR-0101) | Cửa sổ tối thiểu 1280×720; tham chiếu 1920×1080 | Chuột + bàn phím; có phím tắt | Cửa sổ thay đổi kích thước được; UI co giãn theo `stretch_mode = canvas_items`, `aspect = expand` | [Confirmed] |
 | **Mobile — điện thoại** | Ngang, ≥ 6"; tham chiếu 2400×1080 (20:9) | Cảm ứng đa điểm | Tôn trọng safe area (notch, thanh điều hướng); khóa hướng **ngang** | [Confirmed] |
 | **Mobile — tablet** | Ngang; tham chiếu 2160×1620 (4:3) | Cảm ứng; bàn phím ngoài nếu có | Dùng bố cục mobile với lề rộng hơn; panel có thể hiển thị hai cột | [Confirmed] |
-| Trình duyệt trên điện thoại | — | — | **Không hỗ trợ** trong Release 1.0; trang báo "Hãy tải ứng dụng EduWorld" | [Confirmed] |
+| Trình duyệt trên điện thoại | Ngang, như dòng điện thoại | Cảm ứng | **Cho chơi**, bắt buộc cầm ngang (cửa sổ dọc → màn "Xoay ngang điện thoại để chơi nhé!" ở dưới); không chặn, không trang "Hãy tải ứng dụng"; trình duyệt theo NFR-COMP-004 (Chrome/Edge bắt buộc; Safari/Firefox — gồm mọi trình duyệt trên iOS — không kiểm thử, không chặn); hiệu năng nỗ lực tối đa, cam kết FPS theo hạng thiết bị chỉ cho ứng dụng Android/iOS và Web PC (NFR-COMP-001); ứng dụng vẫn là kênh chính trên điện thoại | [Confirmed — owner 2026-11-26, thay "Không hỗ trợ"; đóng F113-1] |
 
 - **Hướng màn hình: ngang (landscape) trên mọi nền tảng** [Confirmed]. Không thiết kế bố cục dọc.
   - Android/iOS: chỉ hiển thị ngang, xoay theo cảm biến giữa hai chiều ngang (sensor landscape) [Confirmed — F113, owner "chốt hết" 2026-11-26]; cài đặt ở [GODOT_ARCHITECTURE §10.2](../08-game-client/GODOT_ARCHITECTURE.md#102-hiển-thị-stretch-và-hướng-màn-hình-f113).
