@@ -145,6 +145,11 @@
     "service": "core-api"
   },
   {
+    "prefix": "/api/v1/notifications:read-all",
+    "gateway": "public",
+    "service": "core-api"
+  },
+  {
     "prefix": "/api/v1/schools/",
     "gateway": "public",
     "service": "core-api"
