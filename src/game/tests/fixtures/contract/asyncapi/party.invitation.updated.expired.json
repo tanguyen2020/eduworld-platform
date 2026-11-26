@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "party.invitation.updated",
+  "seq": 22,
+  "ts": 1763712022000,
+  "payload": {
+    "invitation_id": "0193b0a0-0000-7000-8000-000000000301",
+    "party_id": "0193b0a0-0000-7000-8000-000000000101",
+    "status": "expired"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "nickname": "sample",
+  "level": 1,
+  "avatar_config": {
+    "schema_version": 1,
+    "body_type": "sample1",
+    "skin_tone": "sample1",
+    "hair": {
+      "item_id": "sample1",
+      "color": "sample1"
+    },
+    "outfit": {
+      "item_id": "sample1"
+    },
+    "accessories": [
+      {
+        "slot": "head",
+        "item_id": "sample1"
+      }
+    ],
+    "emote_slots": [
+      "sample1"
+    ],
+    "pet": "sample1",
+    "title": "sample1",
+    "frame": "sample1",
+    "badge_showcase": [
+      "sample1"
+    ]
+  },
+  "presence": "offline"
+}

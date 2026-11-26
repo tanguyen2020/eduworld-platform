@@ -1,0 +1,81 @@
+{
+  "party_id": "0193b0a0-0000-7000-8000-000000000101",
+  "name": "Nhóm Sao Băng",
+  "leader_id": "0193b0a0-0000-7000-8000-0000000000a1",
+  "party_type": "friend",
+  "visibility": "private",
+  "invitation_policy": "leader_only",
+  "max_members": 4,
+  "status": "open",
+  "state_version": 7,
+  "current_activity": {
+    "activity_type": "quest",
+    "activity_ref": "math_g3_multiplication"
+  },
+  "leader_reconnecting": false,
+  "chat_channel_id": "0193b0a0-0000-7000-8000-000000000102",
+  "members": [
+    {
+      "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+      "nickname": "MeoXanh42",
+      "role": "leader",
+      "ready": true,
+      "presence": "online",
+      "joined_at": "2026-11-21T08:00:00Z",
+      "avatar_config": {
+        "schema_version": 1,
+        "body_type": "kid_a",
+        "skin_tone": "tone_02",
+        "hair": {
+          "item_id": "hair_bob_01",
+          "color": "hair_col_02"
+        },
+        "outfit": {
+          "item_id": "outfit_school_01"
+        }
+      }
+    },
+    {
+      "student_id": "0193b0a0-0000-7000-8000-0000000000a2",
+      "nickname": "CaHeoVui07",
+      "role": "member",
+      "ready": true,
+      "presence": "online",
+      "joined_at": "2026-11-21T08:01:00Z",
+      "avatar_config": {
+        "schema_version": 1,
+        "body_type": "kid_b",
+        "skin_tone": "tone_04",
+        "hair": {
+          "item_id": "hair_spiky_01",
+          "color": "hair_col_01"
+        },
+        "outfit": {
+          "item_id": "outfit_sport_01"
+        }
+      }
+    },
+    {
+      "student_id": "0193b0a0-0000-7000-8000-0000000000a3",
+      "nickname": "GauNau15",
+      "role": "member",
+      "ready": false,
+      "presence": "online",
+      "joined_at": "2026-11-21T08:02:00Z",
+      "avatar_config": {
+        "schema_version": 1,
+        "body_type": "kid_a",
+        "skin_tone": "tone_03",
+        "hair": {
+          "item_id": "hair_ponytail_01",
+          "color": "hair_col_06"
+        },
+        "outfit": {
+          "item_id": "outfit_explorer_01"
+        }
+      }
+    }
+  ],
+  "created_at": "2026-11-21T08:00:00Z",
+  "updated_at": "2026-11-21T08:02:00Z"
+}

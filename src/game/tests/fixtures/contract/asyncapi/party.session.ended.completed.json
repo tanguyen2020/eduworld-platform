@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "type": "party.session.ended",
+  "seq": 33,
+  "ts": 1763712033000,
+  "payload": {
+    "party_id": "0193b0a0-0000-7000-8000-000000000101",
+    "party_activity_id": "0193b0a0-0000-7000-8000-000000000202",
+    "outcome": "completed",
+    "reason": "completed",
+    "summary": {
+      "result": "completed"
+    }
+  }
+}

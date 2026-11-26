@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "type": "party.activity.selected",
+  "seq": 30,
+  "ts": 1763712030000,
+  "payload": {
+    "party_id": "0193b0a0-0000-7000-8000-000000000101",
+    "activity": {
+      "kind": "quest",
+      "id": "math_g3_multiplication",
+      "title": "Phép nhân ở Vương quốc Toán"
+    },
+    "state_version": 8,
+    "ineligible_members": []
+  }
+}

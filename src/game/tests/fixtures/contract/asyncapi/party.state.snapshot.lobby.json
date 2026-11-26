@@ -1,0 +1,94 @@
+{
+  "v": 1,
+  "type": "party.state.snapshot",
+  "seq": 20,
+  "ts": 1763712020000,
+  "payload": {
+    "party_id": "0193b0a0-0000-7000-8000-000000000101",
+    "state_version": 7,
+    "name": "Nhóm Sao Băng",
+    "party_type": "friend",
+    "visibility": "private",
+    "leader_id": "0193b0a0-0000-7000-8000-0000000000a1",
+    "max_members": 4,
+    "status": "open",
+    "members": [
+      {
+        "player": {
+          "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+          "nickname": "MeoXanh42",
+          "level": 12,
+          "avatar_config": {
+            "schema_version": 1,
+            "body_type": "kid_a",
+            "skin_tone": "tone_02",
+            "hair": {
+              "item_id": "hair_bob_01",
+              "color": "hair_col_02"
+            },
+            "outfit": {
+              "item_id": "outfit_school_01"
+            }
+          }
+        },
+        "role": "leader",
+        "status": "online",
+        "ready": true,
+        "joined_at": 1763711820000
+      },
+      {
+        "player": {
+          "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+          "nickname": "CaHeoVui07",
+          "level": 10,
+          "avatar_config": {
+            "schema_version": 1,
+            "body_type": "kid_b",
+            "skin_tone": "tone_04",
+            "hair": {
+              "item_id": "hair_spiky_01",
+              "color": "hair_col_01"
+            },
+            "outfit": {
+              "item_id": "outfit_sport_01"
+            }
+          }
+        },
+        "role": "member",
+        "status": "online",
+        "ready": true,
+        "joined_at": 1763711880000
+      },
+      {
+        "player": {
+          "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+          "nickname": "GauNau15",
+          "level": 11,
+          "avatar_config": {
+            "schema_version": 1,
+            "body_type": "kid_a",
+            "skin_tone": "tone_03",
+            "hair": {
+              "item_id": "hair_ponytail_01",
+              "color": "hair_col_06"
+            },
+            "outfit": {
+              "item_id": "outfit_explorer_01"
+            }
+          }
+        },
+        "role": "member",
+        "status": "online",
+        "ready": false,
+        "joined_at": 1763711940000
+      }
+    ],
+    "current_activity": {
+      "kind": "quest",
+      "id": "math_g3_multiplication",
+      "title": "Phép nhân ở Vương quốc Toán"
+    },
+    "leader_reconnecting": false,
+    "chat_channel_id": "0193b0a0-0000-7000-8000-000000000102"
+  }
+}

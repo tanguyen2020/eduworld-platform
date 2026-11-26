@@ -38,15 +38,20 @@ const SCHEMAS = [
   'GameChallengeSummary', 'GameChallengeDetail', 'GameChallengeAttempt', 'ChallengeNextActivity',
   // F123: in-game notifications (inbox item).
   'Notification',
+  // F102: party UI (party, invitation, eligible activity, session start, friend card of the invite picker).
+  'Party', 'PartyInvitation', 'PartyEligibleActivity', 'PartySessionStart', 'PlayerCard',
 ];
 // Response examples the client parses as a whole: [operationId, status] → openapi/<operationId>.<status>.json.
-const RESPONSES = [['listMyAssignments', '200'], ['listNotifications', '200']];
+const RESPONSES = [['listMyAssignments', '200'], ['listNotifications', '200'],
+  // F102: party lobby, invitations, eligible activities, friends of the invite picker, session start.
+  ['getMyParty', '200'], ['listMyInvitations', '200'], ['listPartyEligibleActivities', '200'], ['listFriends', '200'],
+  ['startPartySession', '201']];
 // specs/examples documents the game never receives: CMS-only curriculum, server-side chat policy and the
 // sensitive-term catalog (never sent to clients, AGENTS R15).
 const NOT_FOR_CLIENT = [/^curriculum\./, /^chat-policy\./, /^sensitive-term-catalog\./];
-// Realtime messages of the game client (F092): system, session, hub, presence; F123 notification.
+// Realtime messages of the game client (F092): system, session, hub, presence; F123 notification; F102 party.
 const ASYNCAPI = 'specs/asyncapi/eduworld-realtime.v1.yaml';
-const ASYNC_PREFIXES = ['system.', 'session.', 'hub.', 'presence.', 'notification.'];
+const ASYNC_PREFIXES = ['system.', 'session.', 'hub.', 'presence.', 'notification.', 'party.'];
 const Ajv = require(path.join(root, 'scripts', 'node_modules', 'ajv'));
 const addFormats = require(path.join(root, 'scripts', 'node_modules', 'ajv-formats'));
 

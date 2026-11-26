@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "type": "party.member.ready_changed",
+  "seq": 28,
+  "ts": 1763712028000,
+  "payload": {
+    "party_id": "0193b0a0-0000-7000-8000-000000000101",
+    "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+    "ready": true,
+    "all_ready": true
+  }
+}

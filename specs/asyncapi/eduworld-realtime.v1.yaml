@@ -1868,6 +1868,11 @@ components:
                   expected_version: { type: integer, minimum: 0, description: 'state_version client đang thấy (F101-AC-07)' }
     PartyStateSnapshot:
       name: party.state.snapshot
+      examples:
+        - name: lobby
+          payload: {"v":1,"type":"party.state.snapshot","seq":20,"ts":1763712020000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","state_version":7,"name":"Nhóm Sao Băng","party_type":"friend","visibility":"private","leader_id":"0193b0a0-0000-7000-8000-0000000000a1","max_members":4,"status":"open","members":[{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42","level":12,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_02","hair":{"item_id":"hair_bob_01","color":"hair_col_02"},"outfit":{"item_id":"outfit_school_01"}}},"role":"leader","status":"online","ready":true,"joined_at":1763711820000},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07","level":10,"avatar_config":{"schema_version":1,"body_type":"kid_b","skin_tone":"tone_04","hair":{"item_id":"hair_spiky_01","color":"hair_col_01"},"outfit":{"item_id":"outfit_sport_01"}}},"role":"member","status":"online","ready":true,"joined_at":1763711880000},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15","level":11,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_03","hair":{"item_id":"hair_ponytail_01","color":"hair_col_06"},"outfit":{"item_id":"outfit_explorer_01"}}},"role":"member","status":"online","ready":false,"joined_at":1763711940000}],"current_activity":{"kind":"quest","id":"math_g3_multiplication","title":"Phép nhân ở Vương quốc Toán"},"leader_reconnecting":false,"chat_channel_id":"0193b0a0-0000-7000-8000-000000000102"}}
+        - name: in_activity
+          payload: {"v":1,"type":"party.state.snapshot","seq":40,"ts":1763712040000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","state_version":9,"name":"Nhóm Sao Băng","party_type":"friend","visibility":"private","leader_id":"0193b0a0-0000-7000-8000-0000000000a1","max_members":4,"status":"in_activity","members":[{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42","level":12,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_02","hair":{"item_id":"hair_bob_01","color":"hair_col_02"},"outfit":{"item_id":"outfit_school_01"}}},"role":"leader","status":"in_activity","ready":false,"joined_at":1763711820000},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07","level":10,"avatar_config":{"schema_version":1,"body_type":"kid_b","skin_tone":"tone_04","hair":{"item_id":"hair_spiky_01","color":"hair_col_01"},"outfit":{"item_id":"outfit_sport_01"}}},"role":"member","status":"in_activity","ready":false,"joined_at":1763711880000},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15","level":11,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_03","hair":{"item_id":"hair_ponytail_01","color":"hair_col_06"},"outfit":{"item_id":"outfit_explorer_01"}}},"role":"member","status":"in_activity","ready":false,"joined_at":1763711940000}],"current_activity":{"kind":"quest","id":"math_g3_multiplication","title":"Phép nhân ở Vương quốc Toán"},"leader_reconnecting":false,"room_id":"0193b0a0-0000-7000-8000-000000000201"}}
       summary: Gửi khi kết nối/resume hoặc khi client lệch state_version.
       payload:
         allOf:
@@ -1894,6 +1899,9 @@ components:
                   chat_channel_id: { $ref: '#/components/schemas/Uuid' }
     PartyInvitationReceived:
       name: party.invitation.received
+      examples:
+        - name: friend
+          payload: {"v":1,"type":"party.invitation.received","seq":21,"ts":1763712021000,"payload":{"invitation_id":"0193b0a0-0000-7000-8000-000000000301","party_id":"0193b0a0-0000-7000-8000-000000000101","party_type":"friend","inviter":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42","level":12,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_02","hair":{"item_id":"hair_bob_01","color":"hair_col_02"},"outfit":{"item_id":"outfit_school_01"}}},"member_count":3,"expires_at":1763712300000}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1912,6 +1920,9 @@ components:
                   expires_at: { $ref: '#/components/schemas/EpochMs' }
     PartyInvitationUpdated:
       name: party.invitation.updated
+      examples:
+        - name: expired
+          payload: {"v":1,"type":"party.invitation.updated","seq":22,"ts":1763712022000,"payload":{"invitation_id":"0193b0a0-0000-7000-8000-000000000301","party_id":"0193b0a0-0000-7000-8000-000000000101","status":"expired"}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1927,6 +1938,9 @@ components:
                   status: { type: string, enum: [accepted, rejected, expired, cancelled] }
     PartyMemberJoined:
       name: party.member.joined
+      examples:
+        - name: joined
+          payload: {"v":1,"type":"party.member.joined","seq":23,"ts":1763712023000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","state_version":8,"member":{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a4","nickname":"SaoBang12","level":9,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_01","hair":{"item_id":"hair_braids_01","color":"hair_col_05"},"outfit":{"item_id":"outfit_star_01"}}},"role":"member","status":"online","ready":false,"joined_at":1763712000000}}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1942,6 +1956,11 @@ components:
                   member: { $ref: '#/components/schemas/PartyMemberState' }
     PartyMemberLeft:
       name: party.member.left
+      examples:
+        - name: left
+          payload: {"v":1,"type":"party.member.left","seq":24,"ts":1763712024000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","state_version":8,"user_id":"0193b0a0-0000-7000-8000-0000000000a3","reason":"left"}}
+        - name: kicked
+          payload: {"v":1,"type":"party.member.left","seq":25,"ts":1763712025000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","state_version":8,"user_id":"0193b0a0-0000-7000-8000-0000000000a3","reason":"kicked"}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1958,6 +1977,11 @@ components:
                   reason: { type: string, enum: [left, kicked, transferred_school, account_disabled, timeout] }
     PartyMemberStatusChanged:
       name: party.member.status_changed
+      examples:
+        - name: disconnected
+          payload: {"v":1,"type":"party.member.status_changed","seq":26,"ts":1763712026000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","user_id":"0193b0a0-0000-7000-8000-0000000000a2","status":"disconnected"}}
+        - name: online
+          payload: {"v":1,"type":"party.member.status_changed","seq":27,"ts":1763712027000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","user_id":"0193b0a0-0000-7000-8000-0000000000a2","status":"online"}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1973,6 +1997,9 @@ components:
                   status: { type: string, enum: [online, away, in_activity, disconnected] }
     PartyMemberReadyChanged:
       name: party.member.ready_changed
+      examples:
+        - name: ready
+          payload: {"v":1,"type":"party.member.ready_changed","seq":28,"ts":1763712028000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","user_id":"0193b0a0-0000-7000-8000-0000000000a3","ready":true,"all_ready":true}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1989,6 +2016,9 @@ components:
                   all_ready: { type: boolean }
     PartyLeaderTransferred:
       name: party.leader.transferred
+      examples:
+        - name: leader_disconnected
+          payload: {"v":1,"type":"party.leader.transferred","seq":29,"ts":1763712029000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","from_user_id":"0193b0a0-0000-7000-8000-0000000000a1","to_user_id":"0193b0a0-0000-7000-8000-0000000000a2","reason":"leader_disconnected"}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2005,6 +2035,11 @@ components:
                   reason: { type: string, enum: [manual, leader_left, leader_disconnected] }
     PartyActivitySelected:
       name: party.activity.selected
+      examples:
+        - name: quest
+          payload: {"v":1,"type":"party.activity.selected","seq":30,"ts":1763712030000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","activity":{"kind":"quest","id":"math_g3_multiplication","title":"Phép nhân ở Vương quốc Toán"},"state_version":8,"ineligible_members":[]}}
+        - name: boss_ineligible
+          payload: {"v":1,"type":"party.activity.selected","seq":31,"ts":1763712031000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","activity":{"kind":"boss","id":"math_fraction_dragon","title":"Rồng Phân Số"},"state_version":8,"ineligible_members":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","reason_code":"grade_not_allowed","requirement":"grade_levels:4"}]}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2026,6 +2061,9 @@ components:
                     items: { $ref: '#/components/schemas/PartyIneligibleMember' }
     PartySessionStarted:
       name: party.session.started
+      examples:
+        - name: quest
+          payload: {"v":1,"type":"party.session.started","seq":32,"ts":1763712032000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","room_id":"0193b0a0-0000-7000-8000-000000000201","room_type":"private_instance","party_activity_id":"0193b0a0-0000-7000-8000-000000000202","activity":{"kind":"quest","id":"math_g3_multiplication","title":"Phép nhân ở Vương quốc Toán"},"scene_ref":"res://scenes/world/zones/learning_zone_math/Zone.tscn","member_ids":["0193b0a0-0000-7000-8000-0000000000a1","0193b0a0-0000-7000-8000-0000000000a2","0193b0a0-0000-7000-8000-0000000000a3"]}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2045,6 +2083,9 @@ components:
                   member_ids: { type: array, items: { $ref: '#/components/schemas/Uuid' } }
     PartySessionEnded:
       name: party.session.ended
+      examples:
+        - name: completed
+          payload: {"v":1,"type":"party.session.ended","seq":33,"ts":1763712033000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","party_activity_id":"0193b0a0-0000-7000-8000-000000000202","outcome":"completed","reason":"completed","summary":{"result":"completed"}}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2062,6 +2103,9 @@ components:
                   summary: { type: object, maxProperties: 10, description: 'Tóm tắt tiến độ chung (vd. result, outcome); không bao giờ có điểm, kết quả hay mastery của từng người (FR-PTY-013) — kết quả học tập cá nhân lấy qua REST của chính học sinh.' }
     PartyDisbanded:
       name: party.party.disbanded
+      examples:
+        - name: leader_disbanded
+          payload: {"v":1,"type":"party.party.disbanded","seq":34,"ts":1763712034000,"payload":{"party_id":"0193b0a0-0000-7000-8000-000000000101","reason":"leader_disbanded"}}
       summary: Type theo mẫu 3 phần `party.party.disbanded`.
       payload:
         allOf:

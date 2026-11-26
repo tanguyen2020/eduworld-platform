@@ -1,0 +1,59 @@
+{
+  "party_id": "00000000-0000-4000-8000-000000000001",
+  "name": "sample",
+  "leader_id": "00000000-0000-4000-8000-000000000001",
+  "party_type": "friend",
+  "visibility": "private",
+  "invitation_policy": "leader_only",
+  "max_members": 2,
+  "status": "open",
+  "current_activity": {
+    "activity_type": "explore",
+    "activity_ref": "sample1",
+    "game_mode": "sample"
+  },
+  "current_game_session_ref": "00000000-0000-4000-8000-000000000001",
+  "members": [
+    {
+      "student_id": "00000000-0000-4000-8000-000000000001",
+      "nickname": "sample",
+      "avatar_config": {
+        "schema_version": 1,
+        "body_type": "sample1",
+        "skin_tone": "sample1",
+        "hair": {
+          "item_id": "sample1",
+          "color": "sample1"
+        },
+        "outfit": {
+          "item_id": "sample1"
+        },
+        "accessories": [
+          {
+            "slot": "head",
+            "item_id": "sample1"
+          }
+        ],
+        "emote_slots": [
+          "sample1"
+        ],
+        "pet": "sample1",
+        "title": "sample1",
+        "frame": "sample1",
+        "badge_showcase": [
+          "sample1"
+        ]
+      },
+      "role": "leader",
+      "ready": false,
+      "presence": "online",
+      "joined_at": "2026-11-15T07:30:00Z"
+    }
+  ],
+  "chat_channel_id": "00000000-0000-4000-8000-000000000001",
+  "leader_reconnecting": false,
+  "current_room_id": "00000000-0000-4000-8000-000000000001",
+  "state_version": 0,
+  "created_at": "2026-11-15T07:30:00Z",
+  "updated_at": "2026-11-15T07:30:00Z"
+}

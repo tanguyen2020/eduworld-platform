@@ -1,0 +1,19 @@
+{
+  "activity_type": "explore",
+  "activity_ref": "sample1",
+  "title": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "min_members": 1,
+  "max_members": 1,
+  "all_eligible": false,
+  "members": [
+    {
+      "student_id": "00000000-0000-4000-8000-000000000001",
+      "eligible": false,
+      "reason_code": "grade_not_allowed",
+      "requirement": "sample"
+    }
+  ]
+}

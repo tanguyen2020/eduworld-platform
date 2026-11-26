@@ -1,0 +1,18 @@
+{
+  "room_id": "00000000-0000-4000-8000-000000000001",
+  "room_type": "private_instance",
+  "party_activity_id": "00000000-0000-4000-8000-000000000001",
+  "activity_type": "explore",
+  "activity_ref": "sample1",
+  "scene_ref": "sample",
+  "game_session_ref": "00000000-0000-4000-8000-000000000001",
+  "members": [
+    "00000000-0000-4000-8000-000000000001"
+  ],
+  "excluded_members": [
+    {
+      "student_id": "00000000-0000-4000-8000-000000000001",
+      "reason": "sample"
+    }
+  ]
+}

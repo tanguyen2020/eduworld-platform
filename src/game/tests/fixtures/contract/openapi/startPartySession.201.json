@@ -1,0 +1,15 @@
+{
+  "room_id": "0193b0a0-0000-7000-8000-000000000201",
+  "room_type": "private_instance",
+  "party_activity_id": "0193b0a0-0000-7000-8000-000000000202",
+  "activity_type": "quest",
+  "activity_ref": "math_g3_multiplication",
+  "scene_ref": "res://scenes/world/zones/learning_zone_math/Zone.tscn",
+  "game_session_ref": "0193b0a0-0000-7000-8000-000000000203",
+  "members": [
+    "0193b0a0-0000-7000-8000-0000000000a1",
+    "0193b0a0-0000-7000-8000-0000000000a2",
+    "0193b0a0-0000-7000-8000-0000000000a3"
+  ],
+  "excluded_members": []
+}

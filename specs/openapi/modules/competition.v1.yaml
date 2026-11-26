@@ -104,6 +104,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Party'
+              example:
+                party_id: 0193b0a0-0000-7000-8000-000000000101
+                name: Nhóm Sao Băng
+                leader_id: 0193b0a0-0000-7000-8000-0000000000a1
+                party_type: friend
+                visibility: private
+                invitation_policy: leader_only
+                max_members: 4
+                status: open
+                state_version: 7
+                current_activity:
+                  activity_type: quest
+                  activity_ref: math_g3_multiplication
+                leader_reconnecting: false
+                chat_channel_id: 0193b0a0-0000-7000-8000-000000000102
+                members:
+                  - student_id: 0193b0a0-0000-7000-8000-0000000000a1
+                    nickname: MeoXanh42
+                    role: leader
+                    ready: true
+                    presence: online
+                    joined_at: '2026-11-21T08:00:00Z'
+                    avatar_config:
+                      schema_version: 1
+                      body_type: kid_a
+                      skin_tone: tone_02
+                      hair:
+                        item_id: hair_bob_01
+                        color: hair_col_02
+                      outfit:
+                        item_id: outfit_school_01
+                  - student_id: 0193b0a0-0000-7000-8000-0000000000a2
+                    nickname: CaHeoVui07
+                    role: member
+                    ready: true
+                    presence: online
+                    joined_at: '2026-11-21T08:01:00Z'
+                    avatar_config:
+                      schema_version: 1
+                      body_type: kid_b
+                      skin_tone: tone_04
+                      hair:
+                        item_id: hair_spiky_01
+                        color: hair_col_01
+                      outfit:
+                        item_id: outfit_sport_01
+                  - student_id: 0193b0a0-0000-7000-8000-0000000000a3
+                    nickname: GauNau15
+                    role: member
+                    ready: false
+                    presence: online
+                    joined_at: '2026-11-21T08:02:00Z'
+                    avatar_config:
+                      schema_version: 1
+                      body_type: kid_a
+                      skin_tone: tone_03
+                      hair:
+                        item_id: hair_ponytail_01
+                        color: hair_col_06
+                      outfit:
+                        item_id: outfit_explorer_01
+                created_at: '2026-11-21T08:00:00Z'
+                updated_at: '2026-11-21T08:02:00Z'
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
@@ -414,6 +477,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PartySessionStart'
+              example:
+                room_id: 0193b0a0-0000-7000-8000-000000000201
+                room_type: private_instance
+                party_activity_id: 0193b0a0-0000-7000-8000-000000000202
+                activity_type: quest
+                activity_ref: math_g3_multiplication
+                scene_ref: res://scenes/world/zones/learning_zone_math/Zone.tscn
+                game_session_ref: 0193b0a0-0000-7000-8000-000000000203
+                members:
+                  - 0193b0a0-0000-7000-8000-0000000000a1
+                  - 0193b0a0-0000-7000-8000-0000000000a2
+                  - 0193b0a0-0000-7000-8000-0000000000a3
+                excluded_members: []
           headers:
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
@@ -469,6 +545,55 @@ paths:
                     maxItems: 100
                     items:
                       $ref: '#/components/schemas/PartyEligibleActivity'
+              example:
+                data:
+                  - activity_type: quest
+                    activity_ref: math_g3_multiplication
+                    title:
+                      vi: Phép nhân ở Vương quốc Toán
+                      en: Multiplication in the Math Kingdom
+                    min_members: 2
+                    max_members: 4
+                    all_eligible: true
+                    members:
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a1
+                        eligible: true
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a2
+                        eligible: true
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a3
+                        eligible: true
+                  - activity_type: explore
+                    activity_ref: learning_zone.math
+                    title:
+                      vi: Cùng khám phá Vương quốc Toán
+                      en: Explore the Math Kingdom together
+                    min_members: 1
+                    max_members: 8
+                    all_eligible: true
+                    members:
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a1
+                        eligible: true
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a2
+                        eligible: true
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a3
+                        eligible: true
+                  - activity_type: boss
+                    activity_ref: math_fraction_dragon
+                    title:
+                      vi: Rồng Phân Số
+                      en: The Fraction Dragon
+                    min_members: 2
+                    max_members: 4
+                    all_eligible: false
+                    members:
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a1
+                        eligible: true
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a2
+                        eligible: true
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a3
+                        eligible: false
+                        reason_code: grade_not_allowed
+                        requirement: grade_levels:4
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
@@ -564,6 +689,28 @@ paths:
                     description: 'Danh sách có giới hạn theo nghiệp vụ (API_DESIGN §5.1): lời mời đang chờ ≤ party_pending_invites_max (20), hết hạn sau 5 phút; lịch sử theo status trả 100 mới nhất'
                     items:
                       $ref: '#/components/schemas/PartyInvitation'
+              example:
+                data:
+                  - invitation_id: 0193b0a0-0000-7000-8000-000000000301
+                    party_id: 0193b0a0-0000-7000-8000-000000000101
+                    party_name: Nhóm Sao Băng
+                    inviter:
+                      user_id: 0193b0a0-0000-7000-8000-0000000000a1
+                      nickname: MeoXanh42
+                      level: 12
+                      avatar_config:
+                        schema_version: 1
+                        body_type: kid_a
+                        skin_tone: tone_02
+                        hair:
+                          item_id: hair_bob_01
+                          color: hair_col_02
+                        outfit:
+                          item_id: outfit_school_01
+                    invitee_id: 0193b0a0-0000-7000-8000-0000000000a4
+                    status: pending
+                    created_at: '2026-11-21T08:03:00Z'
+                    expires_at: '2026-11-21T08:08:00Z'
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'

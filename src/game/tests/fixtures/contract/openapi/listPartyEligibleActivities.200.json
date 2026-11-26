@@ -1,0 +1,81 @@
+{
+  "data": [
+    {
+      "activity_type": "quest",
+      "activity_ref": "math_g3_multiplication",
+      "title": {
+        "vi": "Phép nhân ở Vương quốc Toán",
+        "en": "Multiplication in the Math Kingdom"
+      },
+      "min_members": 2,
+      "max_members": 4,
+      "all_eligible": true,
+      "members": [
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+          "eligible": true
+        },
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a2",
+          "eligible": true
+        },
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a3",
+          "eligible": true
+        }
+      ]
+    },
+    {
+      "activity_type": "explore",
+      "activity_ref": "learning_zone.math",
+      "title": {
+        "vi": "Cùng khám phá Vương quốc Toán",
+        "en": "Explore the Math Kingdom together"
+      },
+      "min_members": 1,
+      "max_members": 8,
+      "all_eligible": true,
+      "members": [
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+          "eligible": true
+        },
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a2",
+          "eligible": true
+        },
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a3",
+          "eligible": true
+        }
+      ]
+    },
+    {
+      "activity_type": "boss",
+      "activity_ref": "math_fraction_dragon",
+      "title": {
+        "vi": "Rồng Phân Số",
+        "en": "The Fraction Dragon"
+      },
+      "min_members": 2,
+      "max_members": 4,
+      "all_eligible": false,
+      "members": [
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+          "eligible": true
+        },
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a2",
+          "eligible": true
+        },
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a3",
+          "eligible": false,
+          "reason_code": "grade_not_allowed",
+          "requirement": "grade_levels:4"
+        }
+      ]
+    }
+  ]
+}

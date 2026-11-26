@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "party.member.status_changed",
+  "seq": 27,
+  "ts": 1763712027000,
+  "payload": {
+    "party_id": "0193b0a0-0000-7000-8000-000000000101",
+    "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+    "status": "online"
+  }
+}

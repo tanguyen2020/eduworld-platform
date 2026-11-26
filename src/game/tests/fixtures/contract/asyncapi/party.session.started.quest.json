@@ -1,0 +1,23 @@
+{
+  "v": 1,
+  "type": "party.session.started",
+  "seq": 32,
+  "ts": 1763712032000,
+  "payload": {
+    "party_id": "0193b0a0-0000-7000-8000-000000000101",
+    "room_id": "0193b0a0-0000-7000-8000-000000000201",
+    "room_type": "private_instance",
+    "party_activity_id": "0193b0a0-0000-7000-8000-000000000202",
+    "activity": {
+      "kind": "quest",
+      "id": "math_g3_multiplication",
+      "title": "Phép nhân ở Vương quốc Toán"
+    },
+    "scene_ref": "res://scenes/world/zones/learning_zone_math/Zone.tscn",
+    "member_ids": [
+      "0193b0a0-0000-7000-8000-0000000000a1",
+      "0193b0a0-0000-7000-8000-0000000000a2",
+      "0193b0a0-0000-7000-8000-0000000000a3"
+    ]
+  }
+}

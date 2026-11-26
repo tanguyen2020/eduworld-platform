@@ -1,0 +1,30 @@
+{
+  "v": 1,
+  "type": "party.invitation.received",
+  "seq": 21,
+  "ts": 1763712021000,
+  "payload": {
+    "invitation_id": "0193b0a0-0000-7000-8000-000000000301",
+    "party_id": "0193b0a0-0000-7000-8000-000000000101",
+    "party_type": "friend",
+    "inviter": {
+      "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+      "nickname": "MeoXanh42",
+      "level": 12,
+      "avatar_config": {
+        "schema_version": 1,
+        "body_type": "kid_a",
+        "skin_tone": "tone_02",
+        "hair": {
+          "item_id": "hair_bob_01",
+          "color": "hair_col_02"
+        },
+        "outfit": {
+          "item_id": "outfit_school_01"
+        }
+      }
+    },
+    "member_count": 3,
+    "expires_at": 1763712300000
+  }
+}

@@ -753,6 +753,51 @@ paths:
                       $ref: '#/components/schemas/PlayerCard'
                   page:
                     $ref: '#/components/schemas/PageInfo'
+              example:
+                data:
+                  - user_id: 0193b0a0-0000-7000-8000-0000000000a2
+                    nickname: CaHeoVui07
+                    level: 10
+                    presence: online
+                    avatar_config:
+                      schema_version: 1
+                      body_type: kid_b
+                      skin_tone: tone_04
+                      hair:
+                        item_id: hair_spiky_01
+                        color: hair_col_01
+                      outfit:
+                        item_id: outfit_sport_01
+                  - user_id: 0193b0a0-0000-7000-8000-0000000000a4
+                    nickname: SaoBang12
+                    level: 9
+                    presence: online
+                    avatar_config:
+                      schema_version: 1
+                      body_type: kid_a
+                      skin_tone: tone_01
+                      hair:
+                        item_id: hair_braids_01
+                        color: hair_col_05
+                      outfit:
+                        item_id: outfit_star_01
+                  - user_id: 0193b0a0-0000-7000-8000-0000000000a5
+                    nickname: ThoTrang03
+                    level: 11
+                    presence: offline
+                    avatar_config:
+                      schema_version: 1
+                      body_type: kid_b
+                      skin_tone: tone_05
+                      hair:
+                        item_id: hair_curly_01
+                        color: hair_col_03
+                      outfit:
+                        item_id: outfit_rain_01
+                page:
+                  next_cursor: null
+                  has_more: false
+                  limit: 100
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'

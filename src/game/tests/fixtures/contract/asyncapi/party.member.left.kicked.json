@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "type": "party.member.left",
+  "seq": 25,
+  "ts": 1763712025000,
+  "payload": {
+    "party_id": "0193b0a0-0000-7000-8000-000000000101",
+    "state_version": 8,
+    "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+    "reason": "kicked"
+  }
+}
