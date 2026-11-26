@@ -329,6 +329,9 @@ static func challenge_detail(grade_band: String = "g1_3", attempts: int = 3, coo
 			{"difficulty": "expert", "available": false, "locked_reason_code": "grade_not_allowed"},
 			{"difficulty": "legendary", "available": false},
 		]
+	else:
+		# No per-level delta: the board shows exactly `available_difficulties` (the generated sample carries one entry).
+		d.erase("difficulties")
 	return d
 
 
