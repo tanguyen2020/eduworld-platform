@@ -1,0 +1,28 @@
+{
+  "v": 1,
+  "type": "chat.receipt.updated",
+  "seq": 58,
+  "ts": 1763712118000,
+  "payload": {
+    "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+    "member": {
+      "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+      "nickname": "CaHeoVui07",
+      "level": 10,
+      "avatar_config": {
+        "schema_version": 1,
+        "body_type": "kid_b",
+        "skin_tone": "tone_04",
+        "hair": {
+          "item_id": "hair_spiky_01",
+          "color": "hair_col_01"
+        },
+        "outfit": {
+          "item_id": "outfit_sport_01"
+        }
+      }
+    },
+    "delivered_seq": 22,
+    "read_seq": 22
+  }
+}

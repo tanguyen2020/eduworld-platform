@@ -1,0 +1,14 @@
+{
+  "pack_id": "00000000-0000-4000-8000-000000000001",
+  "code": "sample",
+  "name": "sample",
+  "unlocked": false,
+  "unlock_hint": "sample",
+  "stickers": [
+    {
+      "sticker_id": "00000000-0000-4000-8000-000000000001",
+      "url": "https://example.invalid/resource",
+      "alt_text": "sample"
+    }
+  ]
+}

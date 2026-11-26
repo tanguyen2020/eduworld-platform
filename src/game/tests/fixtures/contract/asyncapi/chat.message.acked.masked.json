@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "type": "chat.message.acked",
+  "seq": 50,
+  "ts": 1763712110000,
+  "payload": {
+    "client_message_id": "0193b0a0-0000-7000-8000-000000000c02",
+    "message_id": "0193b0a0-0000-7000-8000-000000000623",
+    "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+    "seq": 23,
+    "moderation_state": "masked"
+  }
+}

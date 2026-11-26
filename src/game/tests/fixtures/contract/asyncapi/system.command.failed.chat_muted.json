@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "system.command.failed",
+  "seq": 73,
+  "ts": 1763712133000,
+  "ref": "0193b0a0-0000-7000-8000-000000000d09",
+  "payload": {
+    "code": "CHAT_MUTED",
+    "message": "Em tạm thời không gửi được tin."
+  }
+}

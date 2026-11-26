@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "type": "system.command.failed",
+  "seq": 67,
+  "ts": 1763712127000,
+  "ref": "0193b0a0-0000-7000-8000-000000000d03",
+  "payload": {
+    "code": "CHAT_CONTENT_BLOCKED",
+    "message": "Tin nhắn có từ chưa phù hợp, em thử viết lại nhé.",
+    "details": {
+      "category_code": "insult"
+    }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "message_id": "00000000-0000-4000-8000-000000000001",
+  "channel_id": "00000000-0000-4000-8000-000000000001",
+  "seq": 1,
+  "sender": {
+    "user_id": "00000000-0000-4000-8000-000000000001",
+    "nickname": "sample",
+    "level": 1,
+    "avatar_config": {
+      "schema_version": 1,
+      "body_type": "sample1",
+      "skin_tone": "sample1",
+      "hair": {
+        "item_id": "sample1",
+        "color": "sample1"
+      },
+      "outfit": {
+        "item_id": "sample1"
+      },
+      "accessories": [
+        {
+          "slot": "head",
+          "item_id": "sample1"
+        }
+      ],
+      "emote_slots": [
+        "sample1"
+      ],
+      "pet": "sample1",
+      "title": "sample1",
+      "frame": "sample1",
+      "badge_showcase": [
+        "sample1"
+      ]
+    },
+    "presence": "offline"
+  },
+  "kind": "text",
+  "body": "sample",
+  "quick_message_id": "sample",
+  "sticker_id": "00000000-0000-4000-8000-000000000001",
+  "gif_id": "00000000-0000-4000-8000-000000000001",
+  "reply_to_message_id": "00000000-0000-4000-8000-000000000001",
+  "reply_excerpt": "sample",
+  "quote": {
+    "message_id": "00000000-0000-4000-8000-000000000001",
+    "excerpt_start": 0,
+    "excerpt_end": 0,
+    "excerpt": "sample"
+  },
+  "forwarded_from": {
+    "message_id": "00000000-0000-4000-8000-000000000001",
+    "channel_type": "world",
+    "sender_nickname": "sample"
+  },
+  "mentions": [
+    {
+      "user_id": "00000000-0000-4000-8000-000000000001",
+      "nickname": "sample",
+      "level": 1,
+      "avatar_config": {
+        "schema_version": 1,
+        "body_type": "sample1",
+        "skin_tone": "sample1",
+        "hair": {
+          "item_id": "sample1",
+          "color": "sample1"
+        },
+        "outfit": {
+          "item_id": "sample1"
+        },
+        "accessories": [
+          {
+            "slot": "head",
+            "item_id": "sample1"
+          }
+        ],
+        "emote_slots": [
+          "sample1"
+        ],
+        "pet": "sample1",
+        "title": "sample1",
+        "frame": "sample1",
+        "badge_showcase": [
+          "sample1"
+        ]
+      },
+      "presence": "offline"
+    }
+  ],
+  "reactions": {
+    "counts": {},
+    "mine": [
+      "sample"
+    ]
+  },
+  "revision": 1,
+  "edited_at": "2026-11-15T07:30:00Z",
+  "recalled": false,
+  "pinned": false,
+  "moderation_state": "allowed",
+  "created_at": "2026-11-15T07:30:00Z",
+  "system_code": "sample",
+  "params": {}
+}

@@ -169,6 +169,30 @@
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/PlayerCard",
       "sha256": "b82989fb47130105590309c0e8330b48fd5a53e703525790607628f4485b0524"
     },
+    "openapi/Channel.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Channel",
+      "sha256": "8a8300b5e97b648130ec32a291116ec9ab2fba9d3dd6240fc2daa16594f2c7d0"
+    },
+    "openapi/Message.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Message",
+      "sha256": "bc2a124913ec13190fcbdcdae2338b5ee482bfbc3bd7dbac08a6edf6afbcc3f8"
+    },
+    "openapi/QuickMessage.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/QuickMessage",
+      "sha256": "595720332ea354219347403151d2a43a6c47a99e85fcfceff658370d8e3b39ba"
+    },
+    "openapi/StickerPack.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/StickerPack",
+      "sha256": "60bb9921aa92e2ddf99524e9e6a115f52ec100eaa19f4e5eb915e8983debbe9f"
+    },
+    "openapi/GifAsset.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GifAsset",
+      "sha256": "1f555ad15ba60b9f587d1ec6d8c169e5f9c1bc31b6e74453746cfb3b79f0f675"
+    },
+    "openapi/ReportCreate.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ReportCreate",
+      "sha256": "77df6425e87ab9b6f2dc30c8c0314706a6270a2041e57c3536c226bb09cd711f"
+    },
     "openapi/listMyAssignments.200.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#listMyAssignments/responses/200/example",
       "sha256": "054178f9c2cf3876d11cdfce9a71c88f7b85e1c243f62e040ebcc4ebb54d9fbd"
@@ -196,6 +220,30 @@
     "openapi/startPartySession.201.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#startPartySession/responses/201/example",
       "sha256": "d3e2cfdfbe198a19e6e8a7f86ee901a9b1e213c5faa064b00d604b726267dac2"
+    },
+    "openapi/listMyChannels.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listMyChannels/responses/200/example",
+      "sha256": "ad0fbf5c4c08fec0af121d8f4954506479297016c49a0b2f430df70c64fccf9e"
+    },
+    "openapi/listChannelMessages.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listChannelMessages/responses/200/example",
+      "sha256": "eda76a7645d6fe5d17b5464fc92a5e5f4d233ecc5031b80cbf2b2c7baad6e3fb"
+    },
+    "openapi/listQuickMessages.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listQuickMessages/responses/200/example",
+      "sha256": "d1069455b4d6c1173eb6aaf1a38bb0403101ce78db2ecec7ebf93241cac5516e"
+    },
+    "openapi/listStickerPacks.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listStickerPacks/responses/200/example",
+      "sha256": "19ee9e8dc1c0942e43add2133d7360756146849f843105832e975e015ad1866c"
+    },
+    "openapi/listGifs.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listGifs/responses/200/example",
+      "sha256": "aba0667ea0ef2d339ff2f2d41cc62f04272be7f29d31a4a05abd554aaa91e9cb"
+    },
+    "openapi/createReport.201.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#createReport/responses/201/example",
+      "sha256": "93cfe45bf6d28ecf13e05eb986c4b65eb5fe94e9b7818d857919b86ee517c12e"
     },
     "examples/achievement.explorer-math-zone.json": {
       "source": "specs/examples/achievement.explorer-math-zone.json",
@@ -260,6 +308,102 @@
     "examples/shop-item.explorer-hat.json": {
       "source": "specs/examples/shop-item.explorer-hat.json",
       "sha256": "a7f153f2d0b3da1670c9cdba4f7c5f1b08d2035b7e0afde672dfac97d2f3b3cc"
+    },
+    "asyncapi/chat.history.loaded.sync.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatHistoryLoaded/examples/sync",
+      "sha256": "5a229f06ec005db4bc32548e8431b43da4b94458b7f14a92d6b6d34672004147"
+    },
+    "asyncapi/chat.mention.created.mention.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMentionCreated/examples/mention",
+      "sha256": "8ec9408b6ec6930cf5684e85e76549453b6ad1b7e825f4c9815ca279063ef242"
+    },
+    "asyncapi/chat.message.acked.sent.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageAcked/examples/sent",
+      "sha256": "8e4f00327960d7602a3efd3f61f466f6f0035f71fa95d836c0012e31d6de26b0"
+    },
+    "asyncapi/chat.message.acked.masked.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageAcked/examples/masked",
+      "sha256": "9d9d7c6d525f8f07bdd2fbafe6582e11e8e5db6575507e404b954520237d7f8c"
+    },
+    "asyncapi/chat.message.created.text.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageCreated/examples/text",
+      "sha256": "dad2a37af05717c6b91ee5d723be5aebb640fb4908e940454061733a42b14ee1"
+    },
+    "asyncapi/chat.message.created.quick.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageCreated/examples/quick",
+      "sha256": "e162ce3e20521803c54a9c2aa77710104d2d7afc02621b6150224d2f404d6ed7"
+    },
+    "asyncapi/chat.message.created.masked.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageCreated/examples/masked",
+      "sha256": "7ab1837393f2b329a4f7bb5e8edb1c656a961104eb7ef2a7681f848a3b52ac24"
+    },
+    "asyncapi/chat.message.created.emoji.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageCreated/examples/emoji",
+      "sha256": "07653c5ece8a9d9911a01c26dc4793f7f6ad6daf715613a597fa7be73875c3b0"
+    },
+    "asyncapi/chat.message.created.sticker.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageCreated/examples/sticker",
+      "sha256": "42cd07cf0c6029f78e30734648d68deba0680962efab9213ff0c2ab868f6c928"
+    },
+    "asyncapi/chat.message.created.reply_forwarded.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageCreated/examples/reply_forwarded",
+      "sha256": "bf0bb1f39cdfc159b16fa16d3a18555d85c44ba5bd4a3576201b88c541963816"
+    },
+    "asyncapi/chat.message.created.team.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageCreated/examples/team",
+      "sha256": "335e825c597522e111542311fcceef6cf7f1187d543f45eecde80a5aa6d3c4a6"
+    },
+    "asyncapi/chat.message.created.match.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageCreated/examples/match",
+      "sha256": "3435edb2fe6beec635b8d45f7739a9b58f5e1066c56b4ffb57ba51e3d584d88d"
+    },
+    "asyncapi/chat.message.edited.edited.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageEdited/examples/edited",
+      "sha256": "60435d5a51c14f48ff10cc5a7521038e2858cc7e3eaa3e540fe7adf6ed25a872"
+    },
+    "asyncapi/chat.message.held.held.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageHeld/examples/held",
+      "sha256": "80066ce3e581b7df0f8d2f9642e19fe255442203517578e0e29c692b4fe3437a"
+    },
+    "asyncapi/chat.message.recalled.recalled.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageRecalled/examples/recalled",
+      "sha256": "1d391db696db4d62d01b2cb6fe4d4093f437dad989d4872d8874dea2da96950f"
+    },
+    "asyncapi/chat.message.removed.moderation.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatMessageRemoved/examples/moderation",
+      "sha256": "5bbed0e467f0919874f055aab18d932626344d382189e8692389468be242d0c7"
+    },
+    "asyncapi/chat.pin.updated.pinned.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatPinUpdated/examples/pinned",
+      "sha256": "53aaf9fa1d6e2151d858ecda5b1ef9baebd688c62e74359b3221a2a9414b4fb3"
+    },
+    "asyncapi/chat.reaction.updated.counts.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatReactionUpdated/examples/counts",
+      "sha256": "6eb3c7ee9938a5847022bfcd44c01d0f1f9ed49ceb66b0c972513773bc3937f6"
+    },
+    "asyncapi/chat.receipt.updated.read.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatReceiptUpdated/examples/read",
+      "sha256": "4a6d516548350154676f9b87baac9d5e562efe416c06355c8d918c47c9e6c72e"
+    },
+    "asyncapi/chat.receipt.updated.delivered.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatReceiptUpdated/examples/delivered",
+      "sha256": "a957d2c0f32eac9f725ad227020544d8a854f0e6c1489139a2811b5f59f3e3af"
+    },
+    "asyncapi/chat.sanction.applied.auto_mute.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatSanctionApplied/examples/auto_mute",
+      "sha256": "9583c5980b1b863375944796831f743d408cce3c373a3d8e5cd4ba35bda30245"
+    },
+    "asyncapi/chat.sanction.applied.block_and_alert.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatSanctionApplied/examples/block_and_alert",
+      "sha256": "182a7b05203a445f89bbb671d4729b975ce4f77f0bced501b83b5a431db64489"
+    },
+    "asyncapi/chat.typing.updated.two.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatTypingUpdated/examples/two",
+      "sha256": "d0055ae9dde52d0b35dabc7c688038a87ee9ef4460724ea271eb8b336e9e6244"
+    },
+    "asyncapi/chat.unread.updated.counts.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatUnreadUpdated/examples/counts",
+      "sha256": "7e2debb2d7fcf717b1dcf0e22634f6715c4d0ebc03821e06fece6ab59abd8aa5"
     },
     "asyncapi/hub.instance.assigned.main_hub.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/HubInstanceAssigned/examples/main_hub",
@@ -397,6 +541,10 @@
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SessionReplaced/examples/takeover",
       "sha256": "387450ef30ad1ae7372937f1685dc60e706ba9b06a02b84747c342b31a351748"
     },
+    "asyncapi/system.command.acked.chat_message_send.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemAck/examples/chat_message_send",
+      "sha256": "96f67d600b6e68513c5c869025d5d4a0a3fbff7ac77a3331970116d157c770ed"
+    },
     "asyncapi/system.command.acked.acked.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemAck/examples/acked",
       "sha256": "d82753c3ac864bf6e156ba75f87430c42560931647c84ce744092b3014d8c9c3"
@@ -404,6 +552,38 @@
     "asyncapi/system.service.degraded.chat_presence.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemDegraded/examples/chat_presence",
       "sha256": "b56a3ba06bda25b1e56d5731d5b341fd6985436bad12e168a46028566b7f710a"
+    },
+    "asyncapi/system.command.failed.chat_content_blocked_pii.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/chat_content_blocked_pii",
+      "sha256": "527261344a29e00ceb500c033051ddeb950ea6c9935e5d960b8fa1f509f0c7fa"
+    },
+    "asyncapi/system.command.failed.chat_content_blocked_term.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/chat_content_blocked_term",
+      "sha256": "6075703c52ae15c1128e42e2789d1881fbdbb951ee5d8aba25158807d74f3ec5"
+    },
+    "asyncapi/system.command.failed.chat_temporarily_unavailable.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/chat_temporarily_unavailable",
+      "sha256": "94ab346339bde127d5998ef30703ba5d66c326b23b5018dd8c9bc8f609d018bf"
+    },
+    "asyncapi/system.command.failed.chat_rate_limited.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/chat_rate_limited",
+      "sha256": "9b6b22fdab94c9155b76129447eb01a71a1a0e00d3a077d0c572e581e53e3685"
+    },
+    "asyncapi/system.command.failed.chat_channel_closed.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/chat_channel_closed",
+      "sha256": "07ed99ba1ffb639821decf791bac7ec56513d432c62473b36cacbdec7d2747cd"
+    },
+    "asyncapi/system.command.failed.chat_channel_not_found.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/chat_channel_not_found",
+      "sha256": "68fe687a9d26b3d4c16cccb22a79e053c952bda03545c215a36285ac4f76c563"
+    },
+    "asyncapi/system.command.failed.chat_reaction_limit.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/chat_reaction_limit",
+      "sha256": "0f2f748b50aeebad3ad22ef9da1f25ce4bf139695ab4924ba7c3d66479b9a11d"
+    },
+    "asyncapi/system.command.failed.chat_muted.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/chat_muted",
+      "sha256": "fba0af713ca68423b7740f62a51003f780289b734596ee3bf2c8dea4a00d38eb"
     },
     "asyncapi/system.command.failed.room_full.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/room_full",

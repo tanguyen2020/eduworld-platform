@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "system.command.failed",
+  "seq": 72,
+  "ts": 1763712132000,
+  "ref": "0193b0a0-0000-7000-8000-000000000d08",
+  "payload": {
+    "code": "CHAT_REACTION_LIMIT",
+    "message": "Em đã thả đủ cảm xúc cho tin này rồi."
+  }
+}

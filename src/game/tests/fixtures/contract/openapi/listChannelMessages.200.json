@@ -1,0 +1,153 @@
+{
+  "data": [
+    {
+      "message_id": "0193b0a0-0000-7000-8000-000000000611",
+      "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+      "seq": 11,
+      "sender": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+        "nickname": "CaHeoVui07",
+        "level": 10,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_b",
+          "skin_tone": "tone_04",
+          "hair": {
+            "item_id": "hair_spiky_01",
+            "color": "hair_col_01"
+          },
+          "outfit": {
+            "item_id": "outfit_sport_01"
+          }
+        }
+      },
+      "kind": "quick",
+      "quick_message_id": "qm_hello",
+      "revision": 1,
+      "moderation_state": "allowed",
+      "created_at": "2026-11-21T08:03:00Z"
+    },
+    {
+      "message_id": "0193b0a0-0000-7000-8000-000000000612",
+      "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+      "seq": 12,
+      "sender": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+        "nickname": "GauNau15",
+        "level": 11,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_a",
+          "skin_tone": "tone_03",
+          "hair": {
+            "item_id": "hair_ponytail_01",
+            "color": "hair_col_06"
+          },
+          "outfit": {
+            "item_id": "outfit_explorer_01"
+          }
+        }
+      },
+      "kind": "text",
+      "body": "Mình sẵn sàng rồi!",
+      "revision": 1,
+      "moderation_state": "allowed",
+      "created_at": "2026-11-21T08:03:20Z"
+    },
+    {
+      "message_id": "0193b0a0-0000-7000-8000-000000000613",
+      "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+      "seq": 13,
+      "sender": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+        "nickname": "MeoXanh42",
+        "level": 12,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_a",
+          "skin_tone": "tone_02",
+          "hair": {
+            "item_id": "hair_bob_01",
+            "color": "hair_col_02"
+          },
+          "outfit": {
+            "item_id": "outfit_school_01"
+          }
+        }
+      },
+      "kind": "text",
+      "body": "Đi thôi nào!",
+      "reactions": {
+        "counts": {
+          "thumbs_up": 2,
+          "heart": 1
+        },
+        "mine": []
+      },
+      "revision": 1,
+      "moderation_state": "allowed",
+      "created_at": "2026-11-21T08:03:40Z"
+    },
+    {
+      "message_id": "0193b0a0-0000-7000-8000-000000000614",
+      "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+      "seq": 14,
+      "sender": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+        "nickname": "CaHeoVui07",
+        "level": 10,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_b",
+          "skin_tone": "tone_04",
+          "hair": {
+            "item_id": "hair_spiky_01",
+            "color": "hair_col_01"
+          },
+          "outfit": {
+            "item_id": "outfit_sport_01"
+          }
+        }
+      },
+      "kind": "text",
+      "body": "Nhóm mình *** quá!",
+      "reply_to_message_id": "0193b0a0-0000-7000-8000-000000000613",
+      "reply_excerpt": "Đi thôi nào!",
+      "revision": 2,
+      "edited_at": "2026-11-21T08:04:30Z",
+      "moderation_state": "masked",
+      "created_at": "2026-11-21T08:04:00Z"
+    },
+    {
+      "message_id": "0193b0a0-0000-7000-8000-000000000615",
+      "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+      "seq": 15,
+      "sender": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+        "nickname": "GauNau15",
+        "level": 11,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_a",
+          "skin_tone": "tone_03",
+          "hair": {
+            "item_id": "hair_ponytail_01",
+            "color": "hair_col_06"
+          },
+          "outfit": {
+            "item_id": "outfit_explorer_01"
+          }
+        }
+      },
+      "kind": "emoji",
+      "body": "star",
+      "revision": 1,
+      "moderation_state": "allowed",
+      "created_at": "2026-11-21T08:04:10Z"
+    }
+  ],
+  "page": {
+    "has_more": false,
+    "limit": 50
+  }
+}

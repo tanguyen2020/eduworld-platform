@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "system.command.failed",
+  "seq": 71,
+  "ts": 1763712131000,
+  "ref": "0193b0a0-0000-7000-8000-000000000d07",
+  "payload": {
+    "code": "NOT_FOUND",
+    "message": "Kênh chat đang được tạo."
+  }
+}

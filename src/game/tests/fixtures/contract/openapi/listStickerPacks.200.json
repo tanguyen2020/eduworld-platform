@@ -1,0 +1,36 @@
+{
+  "data": [
+    {
+      "pack_id": "0193b0a0-0000-7000-8000-000000000701",
+      "code": "may_friends",
+      "name": "Mây và bạn bè",
+      "unlocked": true,
+      "stickers": [
+        {
+          "sticker_id": "0193b0a0-0000-7000-8000-000000000711",
+          "url": "https://cdn.example.invalid/media/1f6a9e3b5c2d4e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f/may_wave.png",
+          "alt_text": "Mây vẫy tay chào"
+        },
+        {
+          "sticker_id": "0193b0a0-0000-7000-8000-000000000712",
+          "url": "https://cdn.example.invalid/media/2a7b0f4c6d3e5f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a/may_cheer.png",
+          "alt_text": "Mây cổ vũ"
+        }
+      ]
+    },
+    {
+      "pack_id": "0193b0a0-0000-7000-8000-000000000702",
+      "code": "space_explorers",
+      "name": "Nhà thám hiểm vũ trụ",
+      "unlocked": false,
+      "unlock_hint": "Hoàn thành nhiệm vụ \"Bay tới Mặt Trăng\" để mở bộ này",
+      "stickers": [
+        {
+          "sticker_id": "0193b0a0-0000-7000-8000-000000000721",
+          "url": "https://cdn.example.invalid/media/3b8c1a5d7e4f6a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b/rocket.png",
+          "alt_text": "Tên lửa cất cánh"
+        }
+      ]
+    }
+  ]
+}

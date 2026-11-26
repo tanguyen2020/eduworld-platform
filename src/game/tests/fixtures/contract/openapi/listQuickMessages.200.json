@@ -1,0 +1,64 @@
+{
+  "data": [
+    {
+      "quick_message_id": "qm_hello",
+      "category": "greeting",
+      "text": {
+        "vi": "Xin chào!",
+        "en": "Hello!"
+      },
+      "emoji": "wave",
+      "sort_order": 10
+    },
+    {
+      "quick_message_id": "qm_go_for_it",
+      "category": "encouragement",
+      "text": {
+        "vi": "Cố lên!",
+        "en": "Go for it!"
+      },
+      "emoji": "muscle",
+      "sort_order": 30
+    },
+    {
+      "quick_message_id": "qm_great_job",
+      "category": "encouragement",
+      "text": {
+        "vi": "Giỏi quá!",
+        "en": "Great job!"
+      },
+      "emoji": "star",
+      "sort_order": 40
+    },
+    {
+      "quick_message_id": "qm_thanks",
+      "category": "thanks",
+      "text": {
+        "vi": "Cảm ơn bạn!",
+        "en": "Thank you!"
+      },
+      "emoji": "heart",
+      "sort_order": 50
+    },
+    {
+      "quick_message_id": "qm_together",
+      "category": "teamwork",
+      "text": {
+        "vi": "Mình cùng làm nhé!",
+        "en": "Let's do it together!"
+      },
+      "emoji": "handshake",
+      "sort_order": 60
+    },
+    {
+      "quick_message_id": "qm_good_luck",
+      "category": "encouragement",
+      "text": {
+        "vi": "Chúc may mắn!",
+        "en": "Good luck!"
+      },
+      "emoji": "sparkles",
+      "sort_order": 70
+    }
+  ]
+}

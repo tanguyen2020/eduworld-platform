@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "type": "chat.message.edited",
+  "seq": 52,
+  "ts": 1763712112000,
+  "payload": {
+    "message_id": "0193b0a0-0000-7000-8000-000000000613",
+    "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+    "seq": 13,
+    "body": "Đi thôi nào các bạn!",
+    "revision": 2,
+    "edited_at": 1763712112000
+  }
+}

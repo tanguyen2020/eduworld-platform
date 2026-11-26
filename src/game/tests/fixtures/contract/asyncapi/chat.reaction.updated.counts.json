@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "type": "chat.reaction.updated",
+  "seq": 55,
+  "ts": 1763712115000,
+  "payload": {
+    "message_id": "0193b0a0-0000-7000-8000-000000000613",
+    "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+    "reactions": {
+      "thumbs_up": 3,
+      "heart": 1
+    }
+  }
+}

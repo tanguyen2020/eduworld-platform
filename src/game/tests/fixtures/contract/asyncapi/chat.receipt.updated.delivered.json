@@ -1,0 +1,28 @@
+{
+  "v": 1,
+  "type": "chat.receipt.updated",
+  "seq": 59,
+  "ts": 1763712119000,
+  "payload": {
+    "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+    "member": {
+      "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+      "nickname": "GauNau15",
+      "level": 11,
+      "avatar_config": {
+        "schema_version": 1,
+        "body_type": "kid_a",
+        "skin_tone": "tone_03",
+        "hair": {
+          "item_id": "hair_ponytail_01",
+          "color": "hair_col_06"
+        },
+        "outfit": {
+          "item_id": "outfit_explorer_01"
+        }
+      }
+    },
+    "delivered_seq": 22,
+    "read_seq": 15
+  }
+}

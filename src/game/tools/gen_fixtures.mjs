@@ -40,18 +40,23 @@ const SCHEMAS = [
   'Notification',
   // F102: party UI (party, invitation, eligible activity, session start, friend card of the invite picker).
   'Party', 'PartyInvitation', 'PartyEligibleActivity', 'PartySessionStart', 'PlayerCard',
+  // F119: gameplay chat (channel, message, quick message, sticker pack, GIF, report body).
+  'Channel', 'Message', 'QuickMessage', 'StickerPack', 'GifAsset', 'ReportCreate',
 ];
 // Response examples the client parses as a whole: [operationId, status] → openapi/<operationId>.<status>.json.
 const RESPONSES = [['listMyAssignments', '200'], ['listNotifications', '200'],
   // F102: party lobby, invitations, eligible activities, friends of the invite picker, session start.
   ['getMyParty', '200'], ['listMyInvitations', '200'], ['listPartyEligibleActivities', '200'], ['listFriends', '200'],
-  ['startPartySession', '201']];
+  ['startPartySession', '201'],
+  // F119: chat panel (channels, history page, quick messages, stickers, GIFs, report answer).
+  ['listMyChannels', '200'], ['listChannelMessages', '200'], ['listQuickMessages', '200'], ['listStickerPacks', '200'],
+  ['listGifs', '200'], ['createReport', '201']];
 // specs/examples documents the game never receives: CMS-only curriculum, server-side chat policy and the
 // sensitive-term catalog (never sent to clients, AGENTS R15).
 const NOT_FOR_CLIENT = [/^curriculum\./, /^chat-policy\./, /^sensitive-term-catalog\./];
-// Realtime messages of the game client (F092): system, session, hub, presence; F123 notification; F102 party.
+// Realtime messages of the game client (F092): system, session, hub, presence; F123 notification; F102 party; F119 chat.
 const ASYNCAPI = 'specs/asyncapi/eduworld-realtime.v1.yaml';
-const ASYNC_PREFIXES = ['system.', 'session.', 'hub.', 'presence.', 'notification.', 'party.'];
+const ASYNC_PREFIXES = ['system.', 'session.', 'hub.', 'presence.', 'notification.', 'party.', 'chat.'];
 const Ajv = require(path.join(root, 'scripts', 'node_modules', 'ajv'));
 const addFormats = require(path.join(root, 'scripts', 'node_modules', 'ajv-formats'));
 

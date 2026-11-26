@@ -1,0 +1,10 @@
+{
+  "quick_message_id": "sample",
+  "category": "greeting",
+  "text": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "emoji": "sample",
+  "sort_order": 0
+}

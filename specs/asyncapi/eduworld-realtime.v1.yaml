@@ -990,6 +990,8 @@ components:
     SystemAck:
       name: system.command.acked
       examples:
+        - name: chat_message_send
+          payload: {"v":1,"type":"system.command.acked","seq":65,"ts":1763712125000,"ref":"0193b0a0-0000-7000-8000-000000000d01","payload":{"result":{"client_message_id":"0193b0a0-0000-7000-8000-000000000c01","message_id":"0193b0a0-0000-7000-8000-000000000622","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":22,"moderation_state":"allowed"}}}
         - name: acked
           payload: {"v":1,"type":"system.command.acked","seq":3,"ts":1763600000200,"ref":"0192f3a4-5b6c-7d8e-9f01-23456789abcd","payload":{"result":{}}}
       title: Xác nhận lệnh thành công
@@ -1008,6 +1010,22 @@ components:
     SystemError:
       name: system.command.failed
       examples:
+        - name: chat_content_blocked_pii
+          payload: {"v":1,"type":"system.command.failed","seq":66,"ts":1763712126000,"ref":"0193b0a0-0000-7000-8000-000000000d02","payload":{"code":"CHAT_CONTENT_BLOCKED","message":"Tin nhắn chưa gửi được: không chia sẻ thông tin cá nhân để giữ an toàn.","details":{"category_code":"pii"}}}
+        - name: chat_content_blocked_term
+          payload: {"v":1,"type":"system.command.failed","seq":67,"ts":1763712127000,"ref":"0193b0a0-0000-7000-8000-000000000d03","payload":{"code":"CHAT_CONTENT_BLOCKED","message":"Tin nhắn có từ chưa phù hợp, em thử viết lại nhé.","details":{"category_code":"insult"}}}
+        - name: chat_temporarily_unavailable
+          payload: {"v":1,"type":"system.command.failed","seq":68,"ts":1763712128000,"ref":"0193b0a0-0000-7000-8000-000000000d04","payload":{"code":"CHAT_TEMPORARILY_UNAVAILABLE","message":"Đang kết nối lại chat…","retry_after_ms":1000}}
+        - name: chat_rate_limited
+          payload: {"v":1,"type":"system.command.failed","seq":69,"ts":1763712129000,"ref":"0193b0a0-0000-7000-8000-000000000d05","payload":{"code":"CHAT_RATE_LIMITED","message":"Bạn gửi hơi nhanh, chờ chút nhé.","retry_after_ms":5000}}
+        - name: chat_channel_closed
+          payload: {"v":1,"type":"system.command.failed","seq":70,"ts":1763712130000,"ref":"0193b0a0-0000-7000-8000-000000000d06","payload":{"code":"CHAT_CHANNEL_CLOSED","message":"Trận đã kết thúc."}}
+        - name: chat_channel_not_found
+          payload: {"v":1,"type":"system.command.failed","seq":71,"ts":1763712131000,"ref":"0193b0a0-0000-7000-8000-000000000d07","payload":{"code":"NOT_FOUND","message":"Kênh chat đang được tạo."}}
+        - name: chat_reaction_limit
+          payload: {"v":1,"type":"system.command.failed","seq":72,"ts":1763712132000,"ref":"0193b0a0-0000-7000-8000-000000000d08","payload":{"code":"CHAT_REACTION_LIMIT","message":"Em đã thả đủ cảm xúc cho tin này rồi."}}
+        - name: chat_muted
+          payload: {"v":1,"type":"system.command.failed","seq":73,"ts":1763712133000,"ref":"0193b0a0-0000-7000-8000-000000000d09","payload":{"code":"CHAT_MUTED","message":"Em tạm thời không gửi được tin."}}
         - name: room_full
           payload: {"v":1,"type":"system.command.failed","seq":4,"ts":1763600000300,"ref":"0192f3a4-5b6c-7d8e-9f01-23456789abce","payload":{"code":"ROOM_FULL","message":"Khu này đang đông, em thử lại sau nhé."}}
       title: Lệnh thất bại / lỗi giao thức
@@ -1363,6 +1381,23 @@ components:
                   limit: { type: integer, minimum: 1, maximum: 50, default: 30 }
     ChatMessageCreated:
       name: chat.message.created
+      examples:
+        - name: text
+          payload: {"v":1,"type":"chat.message.created","seq":41,"ts":1763712101000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000616","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":16,"sender":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07","level":10,"avatar_config":{"schema_version":1,"body_type":"kid_b","skin_tone":"tone_04","hair":{"item_id":"hair_spiky_01","color":"hair_col_01"},"outfit":{"item_id":"outfit_sport_01"}}},"kind":"text","body":"Chúc cả nhóm chơi vui nhé!","revision":1,"moderation_state":"allowed","created_at":1763712100000}}
+        - name: quick
+          payload: {"v":1,"type":"chat.message.created","seq":42,"ts":1763712102000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000617","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":17,"sender":{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15","level":11,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_03","hair":{"item_id":"hair_ponytail_01","color":"hair_col_06"},"outfit":{"item_id":"outfit_explorer_01"}}},"kind":"quick","quick_message_id":"qm_good_luck","revision":1,"moderation_state":"allowed","created_at":1763712101000}}
+        - name: masked
+          payload: {"v":1,"type":"chat.message.created","seq":43,"ts":1763712103000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000618","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":18,"sender":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07","level":10,"avatar_config":{"schema_version":1,"body_type":"kid_b","skin_tone":"tone_04","hair":{"item_id":"hair_spiky_01","color":"hair_col_01"},"outfit":{"item_id":"outfit_sport_01"}}},"kind":"text","body":"Bạn *** quá!","moderation_state":"masked","revision":1,"created_at":1763712102000}}
+        - name: emoji
+          payload: {"v":1,"type":"chat.message.created","seq":44,"ts":1763712104000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000619","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":19,"sender":{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15","level":11,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_03","hair":{"item_id":"hair_ponytail_01","color":"hair_col_06"},"outfit":{"item_id":"outfit_explorer_01"}}},"kind":"emoji","emoji":"clap","revision":1,"moderation_state":"allowed","created_at":1763712103000}}
+        - name: sticker
+          payload: {"v":1,"type":"chat.message.created","seq":45,"ts":1763712105000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000620","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":20,"sender":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07","level":10,"avatar_config":{"schema_version":1,"body_type":"kid_b","skin_tone":"tone_04","hair":{"item_id":"hair_spiky_01","color":"hair_col_01"},"outfit":{"item_id":"outfit_sport_01"}}},"kind":"sticker","sticker_id":"0193b0a0-0000-7000-8000-000000000711","revision":1,"moderation_state":"allowed","created_at":1763712104000}}
+        - name: reply_forwarded
+          payload: {"v":1,"type":"chat.message.created","seq":46,"ts":1763712106000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000621","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":21,"sender":{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15","level":11,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_03","hair":{"item_id":"hair_ponytail_01","color":"hair_col_06"},"outfit":{"item_id":"outfit_explorer_01"}}},"kind":"text","body":"Hẹn gặp ở cổng thành nhé!","reply_to_message_id":"0193b0a0-0000-7000-8000-000000000613","reply_excerpt":"Đi thôi nào!","forwarded_from":{"message_id":"0193b0a0-0000-7000-8000-000000000590","channel_type":"team","sender_nickname":"CaHeoVui07"},"revision":1,"moderation_state":"allowed","created_at":1763712105000}}
+        - name: team
+          payload: {"v":1,"type":"chat.message.created","seq":47,"ts":1763712107000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000631","channel_id":"0193b0a0-0000-7000-8000-000000000502","seq":6,"sender":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07","level":10,"avatar_config":{"schema_version":1,"body_type":"kid_b","skin_tone":"tone_04","hair":{"item_id":"hair_spiky_01","color":"hair_col_01"},"outfit":{"item_id":"outfit_sport_01"}}},"kind":"text","body":"Đội mình cố lên!","revision":1,"moderation_state":"allowed","created_at":1763712106000}}
+        - name: match
+          payload: {"v":1,"type":"chat.message.created","seq":48,"ts":1763712108000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000641","channel_id":"0193b0a0-0000-7000-8000-000000000501","seq":9,"sender":{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15","level":11,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_03","hair":{"item_id":"hair_ponytail_01","color":"hair_col_06"},"outfit":{"item_id":"outfit_explorer_01"}}},"kind":"quick","quick_message_id":"qm_great_job","revision":1,"moderation_state":"allowed","created_at":1763712107000}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1372,6 +1407,9 @@ components:
               payload: { $ref: '#/components/schemas/ChatMessage' }
     ChatMessageHeld:
       name: chat.message.held
+      examples:
+        - name: held
+          payload: {"v":1,"type":"chat.message.held","seq":51,"ts":1763712111000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000624","channel_id":"0193b0a0-0000-7000-8000-000000000102"}}
       summary: Chỉ gửi cho người gửi — tin đang chờ kiểm duyệt, chưa phát tới người khác.
       payload:
         allOf:
@@ -1388,6 +1426,9 @@ components:
                   notice: { type: string, maxLength: 1000, description: 'Thông điệp thân thiện, vd. "Tin nhắn đang được kiểm tra an toàn".' }
     ChatMessageRemoved:
       name: chat.message.removed
+      examples:
+        - name: moderation
+          payload: {"v":1,"type":"chat.message.removed","seq":54,"ts":1763712114000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000614","channel_id":"0193b0a0-0000-7000-8000-000000000102","reason":"moderation"}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1403,6 +1444,9 @@ components:
                   reason: { type: string, enum: [moderation, sender_deleted, retention] }
     ChatReactionUpdated:
       name: chat.reaction.updated
+      examples:
+        - name: counts
+          payload: {"v":1,"type":"chat.reaction.updated","seq":55,"ts":1763712115000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000613","channel_id":"0193b0a0-0000-7000-8000-000000000102","reactions":{"thumbs_up":3,"heart":1}}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1420,6 +1464,9 @@ components:
                     additionalProperties: { type: integer }
     ChatUnreadUpdated:
       name: chat.unread.updated
+      examples:
+        - name: counts
+          payload: {"v":1,"type":"chat.unread.updated","seq":60,"ts":1763712120000,"payload":{"counts":{"0193b0a0-0000-7000-8000-000000000102":3,"0193b0a0-0000-7000-8000-000000000502":1},"mentions":{"0193b0a0-0000-7000-8000-000000000102":1}}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1460,6 +1507,9 @@ components:
                   status: { type: string, enum: [open, read_only, frozen, closed] }
     ChatHistoryLoaded:
       name: chat.history.loaded
+      examples:
+        - name: sync
+          payload: {"v":1,"type":"chat.history.loaded","seq":64,"ts":1763712124000,"payload":{"channel_id":"0193b0a0-0000-7000-8000-000000000102","has_more":false,"messages":[{"message_id":"0193b0a0-0000-7000-8000-000000000616","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":16,"sender":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07","level":10,"avatar_config":{"schema_version":1,"body_type":"kid_b","skin_tone":"tone_04","hair":{"item_id":"hair_spiky_01","color":"hair_col_01"},"outfit":{"item_id":"outfit_sport_01"}}},"kind":"text","body":"Chúc cả nhóm chơi vui nhé!","revision":1,"moderation_state":"allowed","created_at":1763712123000},{"message_id":"0193b0a0-0000-7000-8000-000000000617","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":17,"sender":{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15","level":11,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_03","hair":{"item_id":"hair_ponytail_01","color":"hair_col_06"},"outfit":{"item_id":"outfit_explorer_01"}}},"kind":"quick","quick_message_id":"qm_good_luck","revision":1,"moderation_state":"allowed","created_at":1763712123000}]}}
       summary: |
         Tin bù/lịch sử cho đúng kết nối đã gửi chat.history.fetch, chat.channel.sync hoặc chat.channel.join có since_seq (F115-AC-18, AC-19).
         Module chat đẩy qua Valkey Pub/Sub ew:rt:user:<user_id> với target.conn_id nên không mang ref; system.command.acked của lệnh gốc có
@@ -1627,6 +1677,11 @@ components:
                     additionalProperties: { type: integer, minimum: 0 }
     ChatMessageAcked:
       name: chat.message.acked
+      examples:
+        - name: sent
+          payload: {"v":1,"type":"chat.message.acked","seq":49,"ts":1763712109000,"payload":{"client_message_id":"0193b0a0-0000-7000-8000-000000000c01","message_id":"0193b0a0-0000-7000-8000-000000000622","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":22,"moderation_state":"allowed"}}
+        - name: masked
+          payload: {"v":1,"type":"chat.message.acked","seq":50,"ts":1763712110000,"payload":{"client_message_id":"0193b0a0-0000-7000-8000-000000000c02","message_id":"0193b0a0-0000-7000-8000-000000000623","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":23,"moderation_state":"masked"}}
       summary: Trạng thái "Sent" — chỉ gửi đúng kết nối của người gửi (ew:rt:user:<id>, target.conn_id), sau khi NATS JetStream đã ack (ADR-0035); system.command.acked của chat.message.send mang cùng payload trong result.
       payload:
         allOf:
@@ -1645,6 +1700,9 @@ components:
                   moderation_state: { type: string, enum: [allowed, masked, unchecked, held] }
     ChatMessageEdited:
       name: chat.message.edited
+      examples:
+        - name: edited
+          payload: {"v":1,"type":"chat.message.edited","seq":52,"ts":1763712112000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000613","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":13,"body":"Đi thôi nào các bạn!","revision":2,"edited_at":1763712112000}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1664,6 +1722,9 @@ components:
                   edited_at: { $ref: '#/components/schemas/EpochMs' }
     ChatMessageRecalled:
       name: chat.message.recalled
+      examples:
+        - name: recalled
+          payload: {"v":1,"type":"chat.message.recalled","seq":53,"ts":1763712113000,"payload":{"message_id":"0193b0a0-0000-7000-8000-000000000612","channel_id":"0193b0a0-0000-7000-8000-000000000102","seq":12,"recalled_at":1763712113000}}
       summary: Mọi thành viên hiển thị placeholder "Tin nhắn đã được thu hồi"; không có nội dung.
       payload:
         allOf:
@@ -1681,6 +1742,9 @@ components:
                   recalled_at: { $ref: '#/components/schemas/EpochMs' }
     ChatPinUpdated:
       name: chat.pin.updated
+      examples:
+        - name: pinned
+          payload: {"v":1,"type":"chat.pin.updated","seq":56,"ts":1763712116000,"payload":{"channel_id":"0193b0a0-0000-7000-8000-000000000102","pinned_message_ids":["0193b0a0-0000-7000-8000-000000000613"],"actor":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42","level":12,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_02","hair":{"item_id":"hair_bob_01","color":"hair_col_02"},"outfit":{"item_id":"outfit_school_01"}}}}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1696,6 +1760,9 @@ components:
                   actor: { $ref: '#/components/schemas/PublicPlayer' }
     ChatTypingUpdated:
       name: chat.typing.updated
+      examples:
+        - name: two
+          payload: {"v":1,"type":"chat.typing.updated","seq":57,"ts":1763712117000,"payload":{"channel_id":"0193b0a0-0000-7000-8000-000000000102","typing":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07","level":10,"avatar_config":{"schema_version":1,"body_type":"kid_b","skin_tone":"tone_04","hair":{"item_id":"hair_spiky_01","color":"hair_col_01"},"outfit":{"item_id":"outfit_sport_01"}}},{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15","level":11,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_03","hair":{"item_id":"hair_ponytail_01","color":"hair_col_06"},"outfit":{"item_id":"outfit_explorer_01"}}}]}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1710,6 +1777,11 @@ components:
                   typing: { type: array, maxItems: 10, items: { $ref: '#/components/schemas/PublicPlayer' } }
     ChatReceiptUpdated:
       name: chat.receipt.updated
+      examples:
+        - name: read
+          payload: {"v":1,"type":"chat.receipt.updated","seq":58,"ts":1763712118000,"payload":{"channel_id":"0193b0a0-0000-7000-8000-000000000102","member":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07","level":10,"avatar_config":{"schema_version":1,"body_type":"kid_b","skin_tone":"tone_04","hair":{"item_id":"hair_spiky_01","color":"hair_col_01"},"outfit":{"item_id":"outfit_sport_01"}}},"delivered_seq":22,"read_seq":22}}
+        - name: delivered
+          payload: {"v":1,"type":"chat.receipt.updated","seq":59,"ts":1763712119000,"payload":{"channel_id":"0193b0a0-0000-7000-8000-000000000102","member":{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15","level":11,"avatar_config":{"schema_version":1,"body_type":"kid_a","skin_tone":"tone_03","hair":{"item_id":"hair_ponytail_01","color":"hair_col_06"},"outfit":{"item_id":"outfit_explorer_01"}}},"delivered_seq":22,"read_seq":15}}
       summary: Con trỏ delivered/read của một thành viên (chỉ channel có receipts; không gửi giữa người đã block nhau).
       payload:
         allOf:
@@ -1731,6 +1803,9 @@ components:
                     additionalProperties: { type: integer }
     ChatMentionCreated:
       name: chat.mention.created
+      examples:
+        - name: mention
+          payload: {"v":1,"type":"chat.mention.created","seq":61,"ts":1763712121000,"payload":{"channel_id":"0193b0a0-0000-7000-8000-000000000102","message_id":"0193b0a0-0000-7000-8000-000000000625","seq":25,"by":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07","level":10,"avatar_config":{"schema_version":1,"body_type":"kid_b","skin_tone":"tone_04","hair":{"item_id":"hair_spiky_01","color":"hair_col_01"},"outfit":{"item_id":"outfit_sport_01"}}},"preview":"@MeoXanh42 đi cùng mình nhé"}}
       summary: Gửi riêng người được mention (badge @, thông báo).
       payload:
         allOf:
@@ -1749,6 +1824,11 @@ components:
                   preview: { type: string, maxLength: 80, description: Trích ngắn từ nội dung đã che }
     ChatSanctionApplied:
       name: chat.sanction.applied
+      examples:
+        - name: auto_mute
+          payload: {"v":1,"type":"chat.sanction.applied","seq":62,"ts":1763712122000,"payload":{"sanction_type":"mute","reason_code":"auto_spam","until":1763712721000}}
+        - name: block_and_alert
+          payload: {"v":1,"type":"chat.sanction.applied","seq":63,"ts":1763712123000,"payload":{"sanction_type":"mute","reason_code":"block_and_alert_hold"}}
       summary: Gửi cho người bị áp dụng biện pháp (mute/hạn chế) để UI khóa ô nhập.
       payload:
         allOf:

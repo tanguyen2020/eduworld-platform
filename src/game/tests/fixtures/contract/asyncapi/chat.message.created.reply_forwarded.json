@@ -1,0 +1,40 @@
+{
+  "v": 1,
+  "type": "chat.message.created",
+  "seq": 46,
+  "ts": 1763712106000,
+  "payload": {
+    "message_id": "0193b0a0-0000-7000-8000-000000000621",
+    "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+    "seq": 21,
+    "sender": {
+      "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+      "nickname": "GauNau15",
+      "level": 11,
+      "avatar_config": {
+        "schema_version": 1,
+        "body_type": "kid_a",
+        "skin_tone": "tone_03",
+        "hair": {
+          "item_id": "hair_ponytail_01",
+          "color": "hair_col_06"
+        },
+        "outfit": {
+          "item_id": "outfit_explorer_01"
+        }
+      }
+    },
+    "kind": "text",
+    "body": "Hẹn gặp ở cổng thành nhé!",
+    "reply_to_message_id": "0193b0a0-0000-7000-8000-000000000613",
+    "reply_excerpt": "Đi thôi nào!",
+    "forwarded_from": {
+      "message_id": "0193b0a0-0000-7000-8000-000000000590",
+      "channel_type": "team",
+      "sender_nickname": "CaHeoVui07"
+    },
+    "revision": 1,
+    "moderation_state": "allowed",
+    "created_at": 1763712105000
+  }
+}

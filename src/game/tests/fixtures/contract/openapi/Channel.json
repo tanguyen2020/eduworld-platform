@@ -1,0 +1,34 @@
+{
+  "channel_id": "00000000-0000-4000-8000-000000000001",
+  "channel_type": "world",
+  "title": "sample",
+  "allowed_kinds": [
+    "text"
+  ],
+  "features": {
+    "edit": false,
+    "recall": false,
+    "reply": false,
+    "quote": false,
+    "forward": false,
+    "sticker": false,
+    "gif": false,
+    "reaction": false,
+    "mention": false,
+    "pin": false,
+    "typing": false,
+    "receipts": "none",
+    "search": false
+  },
+  "unread_count": 1,
+  "unread_mentions": 1,
+  "last_seq": 1,
+  "my_read_seq": 1,
+  "pinned_count": 1,
+  "status": "open",
+  "capabilities": {
+    "voice": false
+  },
+  "purge_after": "2026-11-15T07:30:00Z",
+  "muted": false
+}

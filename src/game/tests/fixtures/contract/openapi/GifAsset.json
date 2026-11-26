@@ -1,0 +1,10 @@
+{
+  "gif_id": "00000000-0000-4000-8000-000000000001",
+  "url": "https://example.invalid/resource",
+  "preview_url": "https://example.invalid/resource",
+  "width": 1,
+  "height": 1,
+  "tags": [
+    "sample"
+  ]
+}

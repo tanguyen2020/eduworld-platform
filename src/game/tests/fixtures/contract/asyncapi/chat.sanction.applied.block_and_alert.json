@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "type": "chat.sanction.applied",
+  "seq": 63,
+  "ts": 1763712123000,
+  "payload": {
+    "sanction_type": "mute",
+    "reason_code": "block_and_alert_hold"
+  }
+}

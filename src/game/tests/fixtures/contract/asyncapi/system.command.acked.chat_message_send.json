@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "type": "system.command.acked",
+  "seq": 65,
+  "ts": 1763712125000,
+  "ref": "0193b0a0-0000-7000-8000-000000000d01",
+  "payload": {
+    "result": {
+      "client_message_id": "0193b0a0-0000-7000-8000-000000000c01",
+      "message_id": "0193b0a0-0000-7000-8000-000000000622",
+      "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+      "seq": 22,
+      "moderation_state": "allowed"
+    }
+  }
+}

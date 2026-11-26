@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "chat.sanction.applied",
+  "seq": 62,
+  "ts": 1763712122000,
+  "payload": {
+    "sanction_type": "mute",
+    "reason_code": "auto_spam",
+    "until": 1763712721000
+  }
+}

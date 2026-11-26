@@ -1,0 +1,29 @@
+{
+  "v": 1,
+  "type": "chat.mention.created",
+  "seq": 61,
+  "ts": 1763712121000,
+  "payload": {
+    "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+    "message_id": "0193b0a0-0000-7000-8000-000000000625",
+    "seq": 25,
+    "by": {
+      "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+      "nickname": "CaHeoVui07",
+      "level": 10,
+      "avatar_config": {
+        "schema_version": 1,
+        "body_type": "kid_b",
+        "skin_tone": "tone_04",
+        "hair": {
+          "item_id": "hair_spiky_01",
+          "color": "hair_col_01"
+        },
+        "outfit": {
+          "item_id": "outfit_sport_01"
+        }
+      }
+    },
+    "preview": "@MeoXanh42 đi cùng mình nhé"
+  }
+}
