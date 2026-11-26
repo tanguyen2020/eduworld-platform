@@ -1305,8 +1305,26 @@ msgstr "Account"
 msgid "ui.settings.back"
 msgstr "Back to Settings"
 
+msgid "ui.settings.display"
+msgstr "Display"
+
+msgid "ui.settings.font_scale"
+msgstr "Text size"
+
+msgid "ui.settings.font_scale.large"
+msgstr "Large"
+
+msgid "ui.settings.font_scale.larger"
+msgstr "Extra large"
+
+msgid "ui.settings.font_scale.normal"
+msgstr "Normal"
+
+msgid "ui.settings.high_contrast"
+msgstr "High contrast"
+
 msgid "ui.settings.language"
-msgstr "Language"
+msgstr "Language / Ngôn ngữ"
 
 msgid "ui.settings.licenses"
 msgstr "Licences"
@@ -1327,16 +1345,64 @@ msgid "ui.settings.logout"
 msgstr "Sign out"
 
 msgid "ui.settings.logout_cancel"
-msgstr "Stay"
+msgstr "Cancel"
 
 msgid "ui.settings.logout_confirm"
-msgstr "Do you want to sign out? Next time you will need your password."
+msgstr "Do you want to sign out of EduWorld?"
+
+msgid "ui.settings.logout_saved"
+msgstr "Your progress is already saved."
+
+msgid "ui.settings.logout_title"
+msgstr "Sign out?"
+
+msgid "ui.settings.off"
+msgstr "Off"
+
+msgid "ui.settings.on"
+msgstr "On"
+
+msgid "ui.settings.reduce_motion"
+msgstr "Reduce motion"
 
 msgid "ui.settings.replay_guide"
 msgstr "Show Cloudy's guide again"
 
+msgid "ui.settings.tab.access"
+msgstr "Accessibility"
+
+msgid "ui.settings.tab.graphics"
+msgstr "Graphics"
+
+msgid "ui.settings.tab.info"
+msgstr "About"
+
+msgid "ui.settings.tab.language"
+msgstr "Language"
+
+msgid "ui.settings.tab.sound"
+msgstr "Sound"
+
 msgid "ui.settings.title"
 msgstr "Settings"
+
+msgid "ui.settings.volume.down"
+msgstr "Turn {name} down"
+
+msgid "ui.settings.volume.music"
+msgstr "Music"
+
+msgid "ui.settings.volume.sfx"
+msgstr "Sound effects"
+
+msgid "ui.settings.volume.title"
+msgstr "Volume"
+
+msgid "ui.settings.volume.up"
+msgstr "Turn {name} up"
+
+msgid "ui.settings.volume.voice"
+msgstr "Voices"
 
 msgid "ui.simulation.checking"
 msgstr "Checking the result…"

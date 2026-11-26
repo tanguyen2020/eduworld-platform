@@ -1,45 +1,77 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/settings/quality_settings.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/quality_low.svg" id="2_low"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/quality_medium.svg" id="3_medium"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/quality_high.svg" id="4_high"]
+[ext_resource type="Script" path="res://scenes/ui/components/toggle_switch.gd" id="5_toggle"]
 
 [node name="QualitySettings" type="VBoxContainer"]
+theme_type_variation = &"FormBox"
 script = ExtResource("1_script")
 
-[node name="Title" type="Label" parent="."]
+[node name="Presets" type="HFlowContainer" parent="."]
 layout_mode = 2
-theme_type_variation = &"HeadingLabel"
-text = "ui.quality.title"
-
-[node name="Presets" type="HBoxContainer" parent="."]
-layout_mode = 2
+theme_type_variation = &"AnswerFlow"
 
 [node name="PresetLow" type="Button" parent="Presets"]
 layout_mode = 2
-size_flags_horizontal = 3
 theme_type_variation = &"ChoiceChip"
 text = "ui.quality.preset.low"
+icon = ExtResource("2_low")
 
 [node name="PresetMedium" type="Button" parent="Presets"]
 layout_mode = 2
-size_flags_horizontal = 3
 theme_type_variation = &"ChoiceChip"
 text = "ui.quality.preset.medium"
+icon = ExtResource("3_medium")
 
 [node name="PresetHigh" type="Button" parent="Presets"]
 layout_mode = 2
-size_flags_horizontal = 3
 theme_type_variation = &"ChoiceChip"
 text = "ui.quality.preset.high"
+icon = ExtResource("4_high")
 
-[node name="Shadows" type="CheckButton" parent="."]
+[node name="Toggles" type="VBoxContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="ShadowsRow" type="HBoxContainer" parent="Toggles"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="ShadowsName" type="Label" parent="Toggles/ShadowsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "ui.quality.shadows"
+autowrap_mode = 3
 
-[node name="Antialiasing" type="CheckButton" parent="."]
+[node name="Shadows" type="CheckButton" parent="Toggles/ShadowsRow"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"ToggleSwitch"
+text = "ui.settings.off"
+script = ExtResource("5_toggle")
+setting_key = "ui.quality.shadows"
+
+[node name="AntialiasingRow" type="HBoxContainer" parent="Toggles"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="AntialiasingName" type="Label" parent="Toggles/AntialiasingRow"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "ui.quality.antialiasing"
+autowrap_mode = 3
+
+[node name="Antialiasing" type="CheckButton" parent="Toggles/AntialiasingRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ToggleSwitch"
+text = "ui.settings.off"
+script = ExtResource("5_toggle")
+setting_key = "ui.quality.antialiasing"
 
 [node name="Suggestion" type="Label" parent="."]
 unique_name_in_owner = true

@@ -20,6 +20,8 @@ const SECTION_QUALITY: String = "quality"
 ## `GameLoginRequest.username` maxLength (specs/openapi).
 const USERNAME_MAX_LENGTH: int = 128
 const FONT_SCALE_MAX: int = 2
+## F114: one press of − / + beside a volume slider (STUDENT_GAME_UX_SOCIAL §10: step 10%).
+const VOLUME_STEP: float = 0.1
 const AUDIO_KEYS: PackedStringArray = ["music", "sfx", "voice"]
 ## Allowed keys per section; anything else in the file is ignored and never written back.
 const SCHEMA: Dictionary = {
@@ -203,6 +205,11 @@ func set_login_memory(remember: bool, username: String) -> void:
 
 func get_volume(bus_key: String) -> float:
 	return float(volumes.get(bus_key, 1.0))
+
+
+## F114-AC-09: − / + beside a volume slider move it by `steps` × VOLUME_STEP, snapped to the step (0…100%).
+func nudge_volume(bus_key: String, steps: int) -> void:
+	set_volume(bus_key, snappedf(get_volume(bus_key) + VOLUME_STEP * steps, VOLUME_STEP))
 
 
 func _reset() -> void:

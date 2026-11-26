@@ -1,40 +1,89 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/dialogs/logout_confirm.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/cancel.svg" id="2_cancel"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/exit_light.svg" id="3_exit"]
 
-[node name="LogoutConfirm" type="PanelContainer"]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
+[node name="LogoutConfirm" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-custom_minimum_size = Vector2(420, 0)
 script = ExtResource("1_script")
 
-[node name="Box" type="VBoxContainer" parent="."]
+[node name="ScrimNested" type="Panel" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"ScrimNested"
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Dialog" type="PanelContainer" parent="Center"]
+unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Body" type="Label" parent="Box"]
+[node name="Box" type="VBoxContainer" parent="Center/Dialog"]
+unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="TitleBar" type="PanelContainer" parent="Center/Dialog/Box"]
+layout_mode = 2
+theme_type_variation = &"ConfirmTitleBar"
+
+[node name="Title" type="Label" parent="Center/Dialog/Box/TitleBar"]
+layout_mode = 2
+theme_type_variation = &"ConfirmTitleLabel"
+text = "ui.settings.logout_title"
+horizontal_alignment = 1
+uppercase = true
+
+[node name="Body" type="Label" parent="Center/Dialog/Box"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
 text = "ui.settings.logout_confirm"
+horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Actions" type="HBoxContainer" parent="Box"]
+[node name="Saved" type="Label" parent="Center/Dialog/Box"]
 layout_mode = 2
+text = "ui.settings.logout_saved"
+horizontal_alignment = 1
+autowrap_mode = 3
 
-[node name="Cancel" type="Button" parent="Box/Actions"]
+[node name="Actions" type="HBoxContainer" parent="Center/Dialog/Box"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="Cancel" type="Button" parent="Center/Dialog/Box/Actions"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"SecondaryButton"
 text = "ui.settings.logout_cancel"
+icon = ExtResource("2_cancel")
 autowrap_mode = 3
 
-[node name="Confirm" type="Button" parent="Box/Actions"]
+[node name="Confirm" type="Button" parent="Center/Dialog/Box/Actions"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"DangerButton"
 text = "ui.settings.logout"
+icon = ExtResource("3_exit")
 autowrap_mode = 3

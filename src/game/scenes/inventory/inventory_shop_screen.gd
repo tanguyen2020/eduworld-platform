@@ -711,10 +711,7 @@ func _build_dialog() -> void:
 	_dialog.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_dialog.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_dialog)
-	var dim: ColorRect = ColorRect.new()
-	dim.color = Color(UiTokens.COLOR_TEXT_PRIMARY, 0.4)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_dialog.add_child(dim)
+	_dialog.add_child(UiBuild.scrim(true)) # F114-AC-07: a dialog over the window adds the nested scrim
 	var center: CenterContainer = CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_dialog.add_child(center)

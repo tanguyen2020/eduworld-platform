@@ -339,6 +339,48 @@ func test_rotate_prompt_fits_every_band() -> void:
 	assert_array(covers).override_failure_message("\n".join(covers)).is_empty()
 
 
+## F114-AC-14: S15 Cài đặt — every tab, the licences page and the logout confirmation fit every band × window
+## (controls ≥ the band's touch target, text ≥ its smallest font, nothing cut or outside the window).
+func _settings(vp: SubViewport, view: String) -> Node:
+	var panel: Control = _mount(vp, _scene("res://scenes/ui/settings/SettingsPanel.tscn")) as Control
+	panel.call("open")
+	match view:
+		"licenses":
+			panel.call("show_tab", "info")
+			panel.call("show_licenses")
+		"logout":
+			(panel.find_child("Logout", true, false) as Button).pressed.emit()
+		_:
+			panel.call("show_tab", view)
+	return panel
+
+
+func test_settings_fits_every_band() -> void:
+	for view: String in ["language", "graphics", "sound", "access", "info", "licenses", "logout"]:
+		var failures: PackedStringArray = await _matrix("settings_" + view, func(vp: SubViewport, _band: String) -> Node:
+			return _settings(vp, view))
+		# The engine's licence texts are shown verbatim (F096-AC-04): their separator rules (80 '*' / '-' / '=') are
+		# longer than a line and wrap; every other check of the page still applies.
+		var kept: PackedStringArray = []
+		for line: String in failures:
+			var word: String = line.get_slice("\"", 1)
+			if not (line.contains("LicenseText: word cut across lines")
+					and word.replace("*", "").replace("-", "").replace("=", "").is_empty()):
+				kept.append(line)
+		_assert_none(kept)
+
+
+## F114 edge case: the largest text size (+2) still fits; long pages scroll inside the window, the tab column is not cut.
+func test_settings_fits_every_band_with_the_largest_text() -> void:
+	AppState.theme_service.set_font_scale(2)
+	var failures: PackedStringArray = []
+	for view: String in ["language", "sound", "access", "logout"]:
+		failures.append_array(await _matrix("settings_text+2_" + view, func(vp: SubViewport, _band: String) -> Node:
+			return _settings(vp, view)))
+	AppState.theme_service.set_font_scale(0)
+	_assert_none(failures)
+
+
 ## The probe itself catches what it must (a guard against a silent matrix).
 func test_probe_flags_small_buttons_small_fonts_and_overflow() -> void:
 	AppState.set_grade_band("g1_3")

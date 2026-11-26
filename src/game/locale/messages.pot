@@ -1950,10 +1950,25 @@ msgstr ""
 msgid "ui.settings.about"
 msgstr ""
 
-msgid "ui.settings.account"
+msgid "ui.settings.back"
 msgstr ""
 
-msgid "ui.settings.back"
+msgid "ui.settings.display"
+msgstr ""
+
+msgid "ui.settings.font_scale"
+msgstr ""
+
+msgid "ui.settings.font_scale.large"
+msgstr ""
+
+msgid "ui.settings.font_scale.larger"
+msgstr ""
+
+msgid "ui.settings.font_scale.normal"
+msgstr ""
+
+msgid "ui.settings.high_contrast"
 msgstr ""
 
 msgid "ui.settings.language"
@@ -1983,10 +1998,58 @@ msgstr ""
 msgid "ui.settings.logout_confirm"
 msgstr ""
 
+msgid "ui.settings.logout_saved"
+msgstr ""
+
+msgid "ui.settings.logout_title"
+msgstr ""
+
+msgid "ui.settings.off"
+msgstr ""
+
+msgid "ui.settings.on"
+msgstr ""
+
+msgid "ui.settings.reduce_motion"
+msgstr ""
+
 msgid "ui.settings.replay_guide"
 msgstr ""
 
+msgid "ui.settings.tab.access"
+msgstr ""
+
+msgid "ui.settings.tab.graphics"
+msgstr ""
+
+msgid "ui.settings.tab.info"
+msgstr ""
+
+msgid "ui.settings.tab.language"
+msgstr ""
+
+msgid "ui.settings.tab.sound"
+msgstr ""
+
 msgid "ui.settings.title"
+msgstr ""
+
+msgid "ui.settings.volume.down"
+msgstr ""
+
+msgid "ui.settings.volume.music"
+msgstr ""
+
+msgid "ui.settings.volume.sfx"
+msgstr ""
+
+msgid "ui.settings.volume.title"
+msgstr ""
+
+msgid "ui.settings.volume.up"
+msgstr ""
+
+msgid "ui.settings.volume.voice"
 msgstr ""
 
 msgid "ui.shop.available_to"

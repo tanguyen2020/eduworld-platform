@@ -1982,8 +1982,26 @@ msgstr "[!! Åççöüñţ ~~~ !!]"
 msgid "ui.settings.back"
 msgstr "[!! Ɓáçķ ţö Šëţţïñğš ~~~~~~~ !!]"
 
+msgid "ui.settings.display"
+msgstr "[!! Đïšþĺáý ~~~ !!]"
+
+msgid "ui.settings.font_scale"
+msgstr "[!! Ţëxţ šïžë ~~~~ !!]"
+
+msgid "ui.settings.font_scale.large"
+msgstr "[!! Ĺáŕğë ~~ !!]"
+
+msgid "ui.settings.font_scale.larger"
+msgstr "[!! Ẹxţŕá ĺáŕğë ~~~~~ !!]"
+
+msgid "ui.settings.font_scale.normal"
+msgstr "[!! Ñöŕɱáĺ ~~~ !!]"
+
+msgid "ui.settings.high_contrast"
+msgstr "[!! Ĥïğĥ çöñţŕášţ ~~~~~~ !!]"
+
 msgid "ui.settings.language"
-msgstr "[!! Ĺáñğüáğë ~~~~ !!]"
+msgstr "[!! Ĺáñğüáğë / Ñğôñ ñğữ ~~~~~~~~ !!]"
 
 msgid "ui.settings.licenses"
 msgstr "[!! Ĺïçëñçëš ~~~~ !!]"
@@ -2004,16 +2022,64 @@ msgid "ui.settings.logout"
 msgstr "[!! Šïğñ öüţ ~~~~ !!]"
 
 msgid "ui.settings.logout_cancel"
-msgstr "[!! Šţáý ~~ !!]"
+msgstr "[!! Çáñçëĺ ~~~ !!]"
 
 msgid "ui.settings.logout_confirm"
-msgstr "[!! Đö ýöü ŵáñţ ţö šïğñ öüţ? Ñëxţ ţïɱë ýöü ŵïĺĺ ñëëđ ýöüŕ þáššŵöŕđ. ~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+msgstr "[!! Đö ýöü ŵáñţ ţö šïğñ öüţ öƒ ẸđüŴöŕĺđ? ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.settings.logout_saved"
+msgstr "[!! Ýöüŕ þŕöğŕëšš ïš áĺŕëáđý šávëđ. ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.settings.logout_title"
+msgstr "[!! Šïğñ öüţ? ~~~~ !!]"
+
+msgid "ui.settings.off"
+msgstr "[!! Öƒƒ ~~ !!]"
+
+msgid "ui.settings.on"
+msgstr "[!! Öñ ~ !!]"
+
+msgid "ui.settings.reduce_motion"
+msgstr "[!! Ŕëđüçë ɱöţïöñ ~~~~~~ !!]"
 
 msgid "ui.settings.replay_guide"
 msgstr "[!! Šĥöŵ Çĺöüđý'š ğüïđë áğáïñ ~~~~~~~~~~ !!]"
 
+msgid "ui.settings.tab.access"
+msgstr "[!! Åççëššïƀïĺïţý ~~~~~~ !!]"
+
+msgid "ui.settings.tab.graphics"
+msgstr "[!! Ğŕáþĥïçš ~~~~ !!]"
+
+msgid "ui.settings.tab.info"
+msgstr "[!! Åƀöüţ ~~ !!]"
+
+msgid "ui.settings.tab.language"
+msgstr "[!! Ĺáñğüáğë ~~~~ !!]"
+
+msgid "ui.settings.tab.sound"
+msgstr "[!! Šöüñđ ~~ !!]"
+
 msgid "ui.settings.title"
 msgstr "[!! Šëţţïñğš ~~~~ !!]"
+
+msgid "ui.settings.volume.down"
+msgstr "[!! Ţüŕñ {name} đöŵñ ~~~~~~~ !!]"
+
+msgid "ui.settings.volume.music"
+msgstr "[!! Müšïç ~~ !!]"
+
+msgid "ui.settings.volume.sfx"
+msgstr "[!! Šöüñđ ëƒƒëçţš ~~~~~~ !!]"
+
+msgid "ui.settings.volume.title"
+msgstr "[!! Vöĺüɱë ~~~ !!]"
+
+msgid "ui.settings.volume.up"
+msgstr "[!! Ţüŕñ {name} üþ ~~~~~~ !!]"
+
+msgid "ui.settings.volume.voice"
+msgstr "[!! Vöïçëš ~~~ !!]"
 
 msgid "ui.shop.available_to"
 msgstr "[!! Öñ šáĺë üñţïĺ {date} ~~~~~~~~ !!]"

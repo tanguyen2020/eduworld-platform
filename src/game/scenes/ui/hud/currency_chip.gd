@@ -5,13 +5,14 @@ extends Button
 ## values); updated by its signal, never in `_process` (F069-AC-27). Hidden until the first `getWallet`.
 ## F098 (grade-band matrix): the chip keeps its label on one line (UiBuild.fit_wrapping) — in the right-aligned SideBar
 ## an autowrapping chip reported only its icon as minimum width and was laid out as a tall, icon-only column.
+## F114: an information chip (tier 2) — thin ink outline, no bottom edge (Theme variant `HudChip`).
 
 var store: WalletStore = null
 
 
 func _init() -> void:
 	name = "CurrencyChip"
-	theme_type_variation = &"SecondaryButton"
+	theme_type_variation = &"HudChip"
 	icon = UiBuild.icon("coin")
 	autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED

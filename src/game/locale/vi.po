@@ -1305,8 +1305,26 @@ msgstr "Tài khoản"
 msgid "ui.settings.back"
 msgstr "Quay lại Cài đặt"
 
+msgid "ui.settings.display"
+msgstr "Hiển thị"
+
+msgid "ui.settings.font_scale"
+msgstr "Cỡ chữ"
+
+msgid "ui.settings.font_scale.large"
+msgstr "Lớn"
+
+msgid "ui.settings.font_scale.larger"
+msgstr "Rất lớn"
+
+msgid "ui.settings.font_scale.normal"
+msgstr "Vừa"
+
+msgid "ui.settings.high_contrast"
+msgstr "Tương phản cao"
+
 msgid "ui.settings.language"
-msgstr "Ngôn ngữ"
+msgstr "Ngôn ngữ / Language"
 
 msgid "ui.settings.licenses"
 msgstr "Giấy phép"
@@ -1327,16 +1345,64 @@ msgid "ui.settings.logout"
 msgstr "Đăng xuất"
 
 msgid "ui.settings.logout_cancel"
-msgstr "Ở lại"
+msgstr "Hủy"
 
 msgid "ui.settings.logout_confirm"
-msgstr "Em muốn đăng xuất? Lần sau em sẽ cần nhập mật khẩu."
+msgstr "Bạn muốn đăng xuất khỏi EduWorld?"
+
+msgid "ui.settings.logout_saved"
+msgstr "Tiến độ của bạn đã được lưu rồi nhé."
+
+msgid "ui.settings.logout_title"
+msgstr "Đăng xuất?"
+
+msgid "ui.settings.off"
+msgstr "Tắt"
+
+msgid "ui.settings.on"
+msgstr "Bật"
+
+msgid "ui.settings.reduce_motion"
+msgstr "Giảm chuyển động"
 
 msgid "ui.settings.replay_guide"
 msgstr "Xem lại hướng dẫn của Mây"
 
+msgid "ui.settings.tab.access"
+msgstr "Trợ năng"
+
+msgid "ui.settings.tab.graphics"
+msgstr "Đồ họa"
+
+msgid "ui.settings.tab.info"
+msgstr "Thông tin"
+
+msgid "ui.settings.tab.language"
+msgstr "Ngôn ngữ"
+
+msgid "ui.settings.tab.sound"
+msgstr "Âm thanh"
+
 msgid "ui.settings.title"
 msgstr "Cài đặt"
+
+msgid "ui.settings.volume.down"
+msgstr "Giảm âm lượng {name}"
+
+msgid "ui.settings.volume.music"
+msgstr "Nhạc nền"
+
+msgid "ui.settings.volume.sfx"
+msgstr "Hiệu ứng"
+
+msgid "ui.settings.volume.title"
+msgstr "Âm lượng"
+
+msgid "ui.settings.volume.up"
+msgstr "Tăng âm lượng {name}"
+
+msgid "ui.settings.volume.voice"
+msgstr "Giọng nói"
 
 msgid "ui.simulation.checking"
 msgstr "Đang kiểm tra kết quả…"

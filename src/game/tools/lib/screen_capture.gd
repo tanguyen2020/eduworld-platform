@@ -20,6 +20,8 @@ const SCREENS: PackedStringArray = [
 	"activity_feedback", "activity_incorrect", "activity_hint", "activity_multiple", "activity_true_false",
 	"activity_fill_blank", "activity_numeric", "activity_matching", "activity_ordering", "activity_drag_drop",
 	"result", "world_map", "settings", "about",
+	# F114: the Settings window per tab, the logout confirmation over it.
+	"settings_graphics", "settings_sound", "settings_access", "settings_info", "settings_logout",
 	# F069: progression, economy, achievements, solo challenge.
 	"hub_progress", "game_menu", "level_up", "level_up_multi", "journey", "inventory", "shop", "shop_confirm", "shop_need_more",
 	"history", "achievements", "collection", "showcase", "challenge_board", "challenge_locked", "challenge_no_tries",
@@ -254,6 +256,44 @@ func _screen_world_map() -> Node:
 func _screen_settings() -> Node:
 	var world: Node = await _world()
 	await _open_panel(world, &"settings")
+	return world
+
+
+## F114: the Settings window on one tab (older panels without tabs show their only page).
+func _settings_tab(tab: String) -> Node:
+	var world: Node = await _world()
+	await _open_panel(world, &"settings")
+	var panel: Node = world.find_child("SettingsPanel", true, false)
+	if panel != null and panel.has_method("show_tab"):
+		panel.call("show_tab", tab)
+	return world
+
+
+func _screen_settings_graphics() -> Node:
+	return await _settings_tab("graphics")
+
+
+func _screen_settings_sound() -> Node:
+	return await _settings_tab("sound")
+
+
+func _screen_settings_access() -> Node:
+	return await _settings_tab("access")
+
+
+func _screen_settings_info() -> Node:
+	return await _settings_tab("info")
+
+
+## F114: "Đăng xuất" pressed → the confirmation over the Settings window (nested scrim).
+func _screen_settings_logout() -> Node:
+	var world: Node = await _world()
+	await _open_panel(world, &"settings")
+	var logout: Button = world.find_child("Logout", true, false) as Button
+	if logout != null:
+		logout.pressed.emit()
+	for i: int in 20:
+		await get_tree().process_frame
 	return world
 
 

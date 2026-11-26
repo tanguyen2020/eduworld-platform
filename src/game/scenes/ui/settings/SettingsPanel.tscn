@@ -1,9 +1,19 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/settings/settings_panel.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/ui/settings/QualitySettings.tscn" id="2_quality"]
 [ext_resource type="PackedScene" path="res://scenes/ui/dialogs/LogoutConfirm.tscn" id="3_logout"]
 [ext_resource type="Texture2D" path="res://resources/ui/icons/info.svg" id="4_info"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/cross.svg" id="5_cross"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/tab_language.svg" id="6_tab_language"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/tab_graphics.svg" id="7_tab_graphics"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/tab_sound.svg" id="8_tab_sound"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/tab_access.svg" id="9_tab_access"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/tab_info.svg" id="10_tab_info"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/exit_light.svg" id="11_exit_light"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/help.svg" id="12_help"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/arrow_left.svg" id="13_arrow_left"]
+[ext_resource type="Script" path="res://scenes/ui/components/toggle_switch.gd" id="14_toggle"]
 
 [node name="SettingsPanel" type="Control"]
 layout_mode = 3
@@ -14,146 +24,360 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
+[node name="Scrim" type="Panel" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"Scrim"
+
 [node name="Window" type="PanelContainer" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.15
-anchor_top = 0.08
-anchor_right = 0.85
-anchor_bottom = 0.92
+anchor_left = 0.07
+anchor_top = 0.04
+anchor_right = 0.93
+anchor_bottom = 0.96
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Main" type="ScrollContainer" parent="Window"]
+[node name="Box" type="VBoxContainer" parent="Window"]
+layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="TitleBar" type="PanelContainer" parent="Window/Box"]
+layout_mode = 2
+theme_type_variation = &"WindowTitleBar"
+
+[node name="Row" type="HBoxContainer" parent="Window/Box/TitleBar"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="Title" type="Label" parent="Window/Box/TitleBar/Row"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"WindowTitleLabel"
+text = "ui.settings.title"
+vertical_alignment = 1
+uppercase = true
+
+[node name="Close" type="Button" parent="Window/Box/TitleBar/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DangerButton"
+text = "ui.common.close"
+icon = ExtResource("5_cross")
+
+[node name="Body" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"ToolbarBox"
+
+[node name="TabColumn" type="PanelContainer" parent="Window/Box/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SettingsTabColumn"
+
+[node name="TabBox" type="VBoxContainer" parent="Window/Box/Body/TabColumn"]
+layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="TabScroll" type="ScrollContainer" parent="Window/Box/Body/TabColumn/TabBox"]
+layout_mode = 2
+size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Box" type="VBoxContainer" parent="Window/Main"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Header" type="HBoxContainer" parent="Window/Main/Box"]
-layout_mode = 2
-
-[node name="Title" type="Label" parent="Window/Main/Box/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"HeadingLabel"
-text = "ui.settings.title"
-
-[node name="Close" type="Button" parent="Window/Main/Box/Header"]
+[node name="Tabs" type="VBoxContainer" parent="Window/Box/Body/TabColumn/TabBox/TabScroll"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"SecondaryButton"
-text = "ui.common.close"
+size_flags_horizontal = 3
+theme_type_variation = &"FormBox"
 
-[node name="LanguageTitle" type="Label" parent="Window/Main/Box"]
+[node name="TabLanguage" type="Button" parent="Window/Box/Body/TabColumn/TabBox/TabScroll/Tabs"]
 layout_mode = 2
-theme_type_variation = &"HeadingLabel"
+theme_type_variation = &"TabButton"
+text = "ui.settings.tab.language"
+icon = ExtResource("6_tab_language")
+alignment = 0
+autowrap_mode = 3
+
+[node name="TabGraphics" type="Button" parent="Window/Box/Body/TabColumn/TabBox/TabScroll/Tabs"]
+layout_mode = 2
+theme_type_variation = &"TabButton"
+text = "ui.settings.tab.graphics"
+icon = ExtResource("7_tab_graphics")
+alignment = 0
+autowrap_mode = 3
+
+[node name="TabSound" type="Button" parent="Window/Box/Body/TabColumn/TabBox/TabScroll/Tabs"]
+layout_mode = 2
+theme_type_variation = &"TabButton"
+text = "ui.settings.tab.sound"
+icon = ExtResource("8_tab_sound")
+alignment = 0
+autowrap_mode = 3
+
+[node name="TabAccess" type="Button" parent="Window/Box/Body/TabColumn/TabBox/TabScroll/Tabs"]
+layout_mode = 2
+theme_type_variation = &"TabButton"
+text = "ui.settings.tab.access"
+icon = ExtResource("9_tab_access")
+alignment = 0
+autowrap_mode = 3
+
+[node name="TabInfo" type="Button" parent="Window/Box/Body/TabColumn/TabBox/TabScroll/Tabs"]
+layout_mode = 2
+theme_type_variation = &"TabButton"
+text = "ui.settings.tab.info"
+icon = ExtResource("10_tab_info")
+alignment = 0
+autowrap_mode = 3
+
+[node name="Logout" type="Button" parent="Window/Box/Body/TabColumn/TabBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DangerButton"
+text = "ui.settings.logout"
+icon = ExtResource("11_exit_light")
+alignment = 0
+autowrap_mode = 3
+
+[node name="Content" type="ScrollContainer" parent="Window/Box/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_scroll_mode = 0
+
+[node name="Pages" type="VBoxContainer" parent="Window/Box/Body/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PageLanguage" type="VBoxContainer" parent="Window/Box/Body/Content/Pages"]
+layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="LanguageTag" type="Label" parent="Window/Box/Body/Content/Pages/PageLanguage"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SectionTag"
 text = "ui.settings.language"
+uppercase = true
 
-[node name="Languages" type="HBoxContainer" parent="Window/Main/Box"]
+[node name="Languages" type="HFlowContainer" parent="Window/Box/Body/Content/Pages/PageLanguage"]
 layout_mode = 2
+theme_type_variation = &"AnswerFlow"
 
-[node name="LangVi" type="Button" parent="Window/Main/Box/Languages"]
+[node name="LangVi" type="Button" parent="Window/Box/Body/Content/Pages/PageLanguage/Languages"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ChoiceChip"
 text = "ui.login.language_vi"
 
-[node name="LangEn" type="Button" parent="Window/Main/Box/Languages"]
+[node name="LangEn" type="Button" parent="Window/Box/Body/Content/Pages/PageLanguage/Languages"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ChoiceChip"
 text = "ui.login.language_en"
 
-[node name="QualitySettings" parent="Window/Main/Box" instance=ExtResource("2_quality")]
-layout_mode = 2
-
-[node name="AccountTitle" type="Label" parent="Window/Main/Box"]
-layout_mode = 2
-theme_type_variation = &"HeadingLabel"
-text = "ui.settings.account"
-
-[node name="Logout" type="Button" parent="Window/Main/Box"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 0
-theme_type_variation = &"SecondaryButton"
-text = "ui.settings.logout"
-
-[node name="AboutTitle" type="Label" parent="Window/Main/Box"]
-layout_mode = 2
-theme_type_variation = &"HeadingLabel"
-text = "ui.settings.about"
-
-[node name="About" type="HFlowContainer" parent="Window/Main/Box"]
-layout_mode = 2
-
-[node name="ReplayGuide" type="Button" parent="Window/Main/Box/About"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SecondaryButton"
-text = "ui.settings.replay_guide"
-
-[node name="OpenLicenses" type="Button" parent="Window/Main/Box/About"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SecondaryButton"
-icon = ExtResource("4_info")
-text = "ui.settings.licenses"
-
-[node name="LicensesPage" type="VBoxContainer" parent="Window"]
-unique_name_in_owner = true
+[node name="PageGraphics" type="VBoxContainer" parent="Window/Box/Body/Content/Pages"]
 visible = false
 layout_mode = 2
 theme_type_variation = &"FormBox"
 
-[node name="Header" type="HBoxContainer" parent="Window/LicensesPage"]
+[node name="GraphicsTag" type="Label" parent="Window/Box/Body/Content/Pages/PageGraphics"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SectionTag"
+text = "ui.quality.title"
+uppercase = true
+
+[node name="QualitySettings" parent="Window/Box/Body/Content/Pages/PageGraphics" instance=ExtResource("2_quality")]
+layout_mode = 2
+
+[node name="PageSound" type="VBoxContainer" parent="Window/Box/Body/Content/Pages"]
+visible = false
+layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="SoundTag" type="Label" parent="Window/Box/Body/Content/Pages/PageSound"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SectionTag"
+text = "ui.settings.volume.title"
+uppercase = true
+
+[node name="Volumes" type="VBoxContainer" parent="Window/Box/Body/Content/Pages/PageSound"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="PageAccess" type="VBoxContainer" parent="Window/Box/Body/Content/Pages"]
+visible = false
+layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="FontTag" type="Label" parent="Window/Box/Body/Content/Pages/PageAccess"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SectionTag"
+text = "ui.settings.font_scale"
+uppercase = true
+
+[node name="FontScales" type="HFlowContainer" parent="Window/Box/Body/Content/Pages/PageAccess"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"AnswerFlow"
+
+[node name="FontScale0" type="Button" parent="Window/Box/Body/Content/Pages/PageAccess/FontScales"]
+layout_mode = 2
+theme_type_variation = &"ChoiceChip"
+text = "ui.settings.font_scale.normal"
+
+[node name="FontScale1" type="Button" parent="Window/Box/Body/Content/Pages/PageAccess/FontScales"]
+layout_mode = 2
+theme_type_variation = &"ChoiceChip"
+text = "ui.settings.font_scale.large"
+
+[node name="FontScale2" type="Button" parent="Window/Box/Body/Content/Pages/PageAccess/FontScales"]
+layout_mode = 2
+theme_type_variation = &"ChoiceChip"
+text = "ui.settings.font_scale.larger"
+
+[node name="DisplayTag" type="Label" parent="Window/Box/Body/Content/Pages/PageAccess"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SectionTag"
+text = "ui.settings.display"
+uppercase = true
+
+[node name="ContrastRow" type="HBoxContainer" parent="Window/Box/Body/Content/Pages/PageAccess"]
 layout_mode = 2
 theme_type_variation = &"ToolbarBox"
 
-[node name="Back" type="Button" parent="Window/LicensesPage/Header"]
+[node name="ContrastName" type="Label" parent="Window/Box/Body/Content/Pages/PageAccess/ContrastRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui.settings.high_contrast"
+autowrap_mode = 3
+
+[node name="HighContrast" type="CheckButton" parent="Window/Box/Body/Content/Pages/PageAccess/ContrastRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ToggleSwitch"
+text = "ui.settings.off"
+script = ExtResource("14_toggle")
+setting_key = "ui.settings.high_contrast"
+
+[node name="MotionRow" type="HBoxContainer" parent="Window/Box/Body/Content/Pages/PageAccess"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="MotionName" type="Label" parent="Window/Box/Body/Content/Pages/PageAccess/MotionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui.settings.reduce_motion"
+autowrap_mode = 3
+
+[node name="ReduceMotion" type="CheckButton" parent="Window/Box/Body/Content/Pages/PageAccess/MotionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ToggleSwitch"
+text = "ui.settings.off"
+script = ExtResource("14_toggle")
+setting_key = "ui.settings.reduce_motion"
+
+[node name="PageInfo" type="VBoxContainer" parent="Window/Box/Body/Content/Pages"]
+visible = false
+layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="InfoTag" type="Label" parent="Window/Box/Body/Content/Pages/PageInfo"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SectionTag"
+text = "ui.settings.about"
+uppercase = true
+
+[node name="ReplayGuide" type="Button" parent="Window/Box/Body/Content/Pages/PageInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SecondaryButton"
+text = "ui.settings.replay_guide"
+icon = ExtResource("12_help")
+
+[node name="OpenLicenses" type="Button" parent="Window/Box/Body/Content/Pages/PageInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SecondaryButton"
+text = "ui.settings.licenses"
+icon = ExtResource("4_info")
+
+[node name="InfoVersion" type="Label" parent="Window/Box/Body/Content/Pages/PageInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+auto_translate_mode = 2
+
+[node name="LicensesPage" type="VBoxContainer" parent="Window/Box/Body"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"FormBox"
+
+[node name="Header" type="HBoxContainer" parent="Window/Box/Body/LicensesPage"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="Back" type="Button" parent="Window/Box/Body/LicensesPage/Header"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SecondaryButton"
 text = "ui.settings.back"
+icon = ExtResource("13_arrow_left")
 
-[node name="Title" type="Label" parent="Window/LicensesPage/Header"]
+[node name="Title" type="Label" parent="Window/Box/Body/LicensesPage/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"HeadingLabel"
 text = "ui.settings.licenses_title"
 autowrap_mode = 3
 
-[node name="AboutVersion" type="Label" parent="Window/LicensesPage"]
+[node name="AboutVersion" type="Label" parent="Window/Box/Body/LicensesPage"]
 unique_name_in_owner = true
 layout_mode = 2
 auto_translate_mode = 2
 
-[node name="Intro" type="Label" parent="Window/LicensesPage"]
+[node name="Intro" type="Label" parent="Window/Box/Body/LicensesPage"]
 layout_mode = 2
 text = "ui.settings.licenses_intro"
 autowrap_mode = 3
 
-[node name="Project" type="Label" parent="Window/LicensesPage"]
+[node name="Project" type="Label" parent="Window/Box/Body/LicensesPage"]
 layout_mode = 2
 text = "ui.settings.licenses_project"
 autowrap_mode = 3
 
-[node name="EngineTitle" type="Label" parent="Window/LicensesPage"]
+[node name="EngineTitle" type="Label" parent="Window/Box/Body/LicensesPage"]
 layout_mode = 2
 theme_type_variation = &"HeadingLabel"
 text = "ui.settings.licenses_engine"
 autowrap_mode = 3
 
-[node name="Scroll" type="ScrollContainer" parent="Window/LicensesPage"]
+[node name="Scroll" type="ScrollContainer" parent="Window/Box/Body/LicensesPage"]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="LicenseText" type="Label" parent="Window/LicensesPage/Scroll"]
+[node name="LicenseText" type="Label" parent="Window/Box/Body/LicensesPage/Scroll"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -165,3 +389,8 @@ autowrap_mode = 3
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

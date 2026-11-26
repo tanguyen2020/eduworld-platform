@@ -106,9 +106,21 @@ static func expand(control: Control, horizontal: bool = true, vertical: bool = f
 	return control
 
 
+## F114-AC-07: the scrim behind a modal window (ink 50%) or, `nested`, behind a dialog opened over a window (ink 35%
+## more, ≈ 70% in total). Visual only: the screen root already takes the clicks.
+static func scrim(nested: bool = false) -> Panel:
+	var p: Panel = Panel.new()
+	p.name = "ScrimNested" if nested else "Scrim"
+	p.theme_type_variation = &"ScrimNested" if nested else &"Scrim"
+	p.set_anchors_preset(Control.PRESET_FULL_RECT)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return p
+
+
 ## The standard F069 window: a centred PanelContainer (like the quest journal) with a header (icon + title + Close)
-## and a body box. Returns `{window, body, title, close}`.
+## and a body box, over the modal scrim (F114). Returns `{window, body, title, close}`.
 static func window(root: Control, title_key: String, title_icon: String) -> Dictionary:
+	root.add_child(scrim())
 	var win: PanelContainer = panel()
 	win.name = "Window"
 	win.set_anchors_preset(Control.PRESET_FULL_RECT)
