@@ -99,8 +99,8 @@ func TestDevSeedIsIdempotent(t *testing.T) {
 	if c := n(`SELECT count(*) FROM identity.users u JOIN identity.external_identities x ON x.user_id = u.user_id AND x.issuer = $1
 		AND x.subject = 'kc-' || u.username AND x.deleted_at IS NULL
 		JOIN org.students st ON st.student_id = u.user_id AND st.status = 'active' AND st.deleted_at IS NULL
-		WHERE u.user_type = 'student' AND u.deleted_at IS NULL`, issuer); c != 14 {
-		t.Fatalf("linked and placed students = %d, want 14", c)
+		WHERE u.user_type = 'student' AND u.deleted_at IS NULL`, issuer); c != 19 {
+		t.Fatalf("linked and placed students = %d, want 19 (every grade 1–9 has a demo student)", c)
 	}
 	if len(kc.roles["kc-hs.an.3a"]) == 0 {
 		t.Fatal("the provisioning did not give the realm role student")

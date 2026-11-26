@@ -1,2 +1,4 @@
 student_external_id,school_external_id,student_code,full_name,grade_level,status,login_username
 DEMOC1-HS001,DEMOC1,C001,Lý Hải Em,4,active,hs.em.4a
+DEMOC1-HS002,DEMOC1,C002,Tạ Kim Oanh,1,active,hs.oanh.1
+DEMOC1-HS003,DEMOC1,C003,Mạc Đình Sơn,5,active,hs.son.5

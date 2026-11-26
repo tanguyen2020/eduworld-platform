@@ -122,6 +122,51 @@
       ]
     },
     {
+      "username": "hs.mai.1",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.nam.2",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.phuc.5",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
       "username": "hs.dung.7a",
       "enabled": true,
       "emailVerified": false,
@@ -198,6 +243,36 @@
     },
     {
       "username": "hs.em.4a",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.oanh.1",
+      "enabled": true,
+      "emailVerified": false,
+      "realmRoles": [
+        "student"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@12345",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "hs.son.5",
       "enabled": true,
       "emailVerified": false,
       "realmRoles": [
@@ -561,6 +636,18 @@
           "membershipType": "MANAGED"
         },
         {
+          "username": "hs.mai.1",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.nam.2",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.phuc.5",
+          "membershipType": "MANAGED"
+        },
+        {
           "username": "ad.truong.a",
           "membershipType": "MANAGED"
         },
@@ -603,6 +690,14 @@
         },
         {
           "username": "hs.em.4a",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.oanh.1",
+          "membershipType": "MANAGED"
+        },
+        {
+          "username": "hs.son.5",
           "membershipType": "MANAGED"
         },
         {

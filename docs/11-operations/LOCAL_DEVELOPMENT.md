@@ -261,6 +261,8 @@ Tài khoản demo (mật khẩu chung `Demo@12345`, **chỉ local**):
 |---|---|---|
 | `hs.an.3a`, `hs.binh.3a` | student | `th-demo-a` / TH Demo A / 3A |
 | `hs.chi.3b` | student | `th-demo-a` / 3B |
+| `hs.mai.1`, `hs.nam.2`, `hs.phuc.5` | student | `th-demo-a` / TH Demo A / khối 1, 2, 5 (username không còn chữ lớp, ADR-0095); dùng cho ma trận khối 1–9 ([TEST_STRATEGY §6.10](../12-project/TEST_STRATEGY.md#610-ma-trận-khối-19-backend)) |
+| `hs.oanh.1`, `hs.son.5` | student | `pgd-demo` / TH Demo C / khối 1, 5; cùng khối với `hs.mai.1`, `hs.phuc.5` nhưng khác tenant (thử cô lập tenant theo khối) |
 | `hs.dung.7a` | student | `pgd-demo` / THCS Demo B / 7A |
 | `hs.giang.6a`, `hs.hoa.6a` | student | `pgd-demo` / THCS Demo B / 6A; trận đội, party `competition_team` lớp 6–7, ghép ±1 khối với `hs.dung.7a` |
 | `hs.khanh.8a`, `hs.lan.9a` | student | `pgd-demo` / THCS Demo B / 8A, 9A; leaderboard `g6_9` (top 50 + ±3 quanh mình), bonus tốc độ từ lớp 6 |

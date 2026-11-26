@@ -12,8 +12,9 @@ const orgs = [
   { alias: 'qa-probe', name: 'QA probe' },
 ];
 const students = {
-  'th-demo-a': ['hs.an.3a', 'hs.binh.3a', 'hs.chi.3b', 'hs.trung.a1', 'hs.trung.a2', 'hs.locked', 'hs.lau.khongvao', 'hs.sapbidon'],
-  'pgd-demo': ['hs.dung.7a', 'hs.giang.6a', 'hs.hoa.6a', 'hs.khanh.8a', 'hs.lan.9a', 'hs.em.4a'],
+  'th-demo-a': ['hs.an.3a', 'hs.binh.3a', 'hs.chi.3b', 'hs.trung.a1', 'hs.trung.a2', 'hs.locked', 'hs.lau.khongvao', 'hs.sapbidon',
+    'hs.mai.1', 'hs.nam.2', 'hs.phuc.5'],
+  'pgd-demo': ['hs.dung.7a', 'hs.giang.6a', 'hs.hoa.6a', 'hs.khanh.8a', 'hs.lan.9a', 'hs.em.4a', 'hs.oanh.1', 'hs.son.5'],
   common: ['hs.tudo'],
   'qa-probe': ['hs.qa.probe'],
   '': ['hs.nosis'], // no organization: ACCOUNT_NOT_PROVISIONED (ADR-0063)
