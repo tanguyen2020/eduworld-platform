@@ -398,5 +398,139 @@
       "challenge": "Challenge",
       "student": "Student"
     }
+  },
+  "schoolEvents": {
+    "create": "Create event",
+    "createTitle": "Create a school event",
+    "list": {
+      "hint": "School events are created from EduWorld templates assigned to your unit; the template sets the rules, scoring and rewards.",
+      "name": "Event name",
+      "template": "Template",
+      "schedule": "Time (Vietnam time)",
+      "audience": "Audience",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "empty": "No event yet."
+    },
+    "status": {
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "live": "Live",
+      "suspended": "Paused by EduWorld",
+      "ended": "Ended",
+      "cancelled": "Cancelled",
+      "archived": "Archived"
+    },
+    "audience": {
+      "allSchools": "Whole unit",
+      "schools": "{{count}} school(s)",
+      "allGrades": "Every grade",
+      "grades": "Grade {{list}}"
+    },
+    "templates": {
+      "title": "Pick an event template",
+      "empty": "No event template is assigned to your unit yet.",
+      "emptyHelp": "Contact EduWorld to get event templates assigned. Units never set game rules or rewards themselves.",
+      "maxDuration": "At most {{days}} days",
+      "choose": "Use this template",
+      "chooseNamed": "Use template {{name}}",
+      "pickTenant": "Pick the target tenant before the template.",
+      "kind": {
+        "school": "School event",
+        "community_goal": "Community goal",
+        "learning_campaign": "Learning campaign"
+      }
+    },
+    "form": {
+      "nameVi": "Event name (Vietnamese)",
+      "nameEn": "Event name (English, optional)",
+      "descriptionVi": "Description (Vietnamese)",
+      "descriptionEn": "Description (English, optional)",
+      "startsAt": "Starts",
+      "endsAt": "Ends",
+      "startsRequired": "Pick the start time.",
+      "endsRequired": "Pick the end time.",
+      "duration": "Duration: {{days}} day(s) (the template allows at most {{max}} days)",
+      "ictHint": "Vietnam time (UTC+7)",
+      "schools": "Schools",
+      "schoolsHint": "Empty: the schools of your scope.",
+      "grades": "Grades",
+      "gradesHint": "Empty: every grade the template allows.",
+      "grade": "Grade {{grade}}",
+      "goalTarget": "Shared goal",
+      "goalTargetMin": "The goal must be 1 or more.",
+      "quests": "Quests of the event",
+      "challenges": "Challenges of the event",
+      "reward": "Reward at the last milestone",
+      "rulesFromTemplate": "Rules, scoring and rewards follow the event template; you only choose among the options it allows.",
+      "submit": "Create event",
+      "save": "Save changes",
+      "changeTemplate": "Pick another template"
+    },
+    "detail": {
+      "status": "Status",
+      "template": "Template",
+      "templateUnassigned": "Template no longer assigned (the event keeps its pinned version)",
+      "schedule": "Time",
+      "ict": "Vietnam time",
+      "audience": "Audience",
+      "goalTarget": "Shared goal",
+      "description": "Description",
+      "edit": "Edit",
+      "cancel": "Cancel event",
+      "suspended": "EduWorld has paused this event. The unit cannot edit or cancel it meanwhile."
+    },
+    "edit": {
+      "title": "Edit: {{name}}",
+      "notEditable": "Only an event that has not started can be edited."
+    },
+    "cancel": {
+      "title": "Cancel event: {{name}}",
+      "reason": "Reason",
+      "reasonRequired": "Enter the reason.",
+      "next": "Continue",
+      "confirmTitle": "Cancel this event?",
+      "rewardsKept": "Rewards students already reached are kept.",
+      "reasonShown": "Reason: {{reason}}",
+      "confirm": "Cancel event"
+    },
+    "progress": {
+      "title": "Event progress",
+      "participants": "Participating students",
+      "asOf": "Updated at {{at}}",
+      "delayHint": "Figures may lag by a few seconds.",
+      "refresh": "Refresh",
+      "goal": "Shared goal",
+      "total": "{{total}} / {{target}}",
+      "milestone": "Milestone {{pct}}%",
+      "reached": "Reached",
+      "notReached": "Not reached",
+      "byGrade": "Contributions by grade",
+      "grade": "Grade",
+      "contributionTotal": "Total contribution",
+      "contributors": "Contributing students",
+      "noGrades": "No grade has enough students to show yet.",
+      "gradeNote": "Only grades 4–9 with at least 5 contributing students are shown; no student name or ranking.",
+      "noGoal": "This event has no shared goal.",
+      "school": "School",
+      "pickSchool": "Pick a school to see its progress.",
+      "metric": {
+        "correct_answers": "Correct answers",
+        "activities_completed": "Activities completed",
+        "quests_completed": "Quests completed",
+        "discoveries_found": "Discoveries",
+        "boss_phases_cleared": "Boss phases cleared",
+        "coop_sessions": "Co-op sessions"
+      }
+    },
+    "errors": {
+      "fieldInvalid": "This text is not valid or contains words that are not allowed. Please change it.",
+      "paramNotAllowed": "The event template does not allow this value.",
+      "tooMany": "Your unit already runs the maximum number of events at once. Wait for one to end or cancel one.",
+      "changed": "The event was changed elsewhere. Reload to see the new data.",
+      "unavailable": "The text could not be checked right now. Your input is kept; please try again.",
+      "reload": "Reload",
+      "code": "Error code: {{code}} · trace_id: {{traceId}}"
+    }
   }
 }

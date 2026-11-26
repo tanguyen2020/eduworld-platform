@@ -6,6 +6,7 @@
 // study groups were removed by ADR-0095);
 // F056 (School Learning Dashboard and reports): school_dashboard, results, reports.
 // F122 (chat safety of the school): safety_notifications, chat_safety (school chat policy, tenant categories), clubs.
+// F081: school_events (school events from an assigned template, their progress).
 import { lazy } from 'react';
 import { placeholderScreen, WorkspaceRoutes, type MenuScreens } from '../../permissions/RequirePermission';
 import { AuditScreen } from './audit/AuditScreen';
@@ -26,6 +27,8 @@ import { AccessControlScreen } from './users/AccessControlScreen';
 const ChatSafetyScreen = lazy(() => import('./safety/ChatSafetyScreen').then((m) => ({ default: m.ChatSafetyScreen })));
 const ClubsScreen = lazy(() => import('./safety/ClubsScreen').then((m) => ({ default: m.ClubsScreen })));
 const SafetyNotificationsScreen = lazy(() => import('./safety/SafetyNotificationsScreen').then((m) => ({ default: m.SafetyNotificationsScreen })));
+// F081 screen loads on first use (own chunk), like the F122 screens.
+const SchoolEventsScreen = lazy(() => import('./school-events/SchoolEventsScreen').then((m) => ({ default: m.SchoolEventsScreen })));
 
 export const screens = {
   'menu.school_lms.schools': SchoolsScreen,
@@ -35,7 +38,7 @@ export const screens = {
   'menu.school_lms.game_activities': GameActivitiesScreen, // F055-AC-22
   'menu.school_lms.challenges': placeholderScreen,
   'menu.school_lms.clubs': ClubsScreen, // F122 US9
-  'menu.school_lms.school_events': placeholderScreen,
+  'menu.school_lms.school_events': SchoolEventsScreen, // F081 US1–US4
   'menu.school_lms.school_dashboard': SchoolDashboardScreen, // F056 US1, US2, US6
   'menu.school_lms.results': ResultsScreen, // F056 US3
   'menu.school_lms.reports': ReportsScreen, // F056 US4, US5

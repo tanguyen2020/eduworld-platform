@@ -5445,7 +5445,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Trạng thái encounter (dự phòng khi mất WebSocket) */
+        /**
+         * Trạng thái encounter (dự phòng khi mất WebSocket)
+         * @description Snapshot đầy đủ cho thành viên (F103-AC-11), kể cả khi quay lại từ thiết bị khác: phase, năng lượng, hạn theo giờ server,
+         *     `my_questions` (câu hỏi của chính người gọi trong lượt phase hiện tại, không đáp án — ADR-0016). Không có đúng/sai hay số
+         *     câu đúng của người khác, chỉ `contribution_met` (F103-AC-09). Không phải thành viên hoặc tenant khác → `404`.
+         */
         get: operations["getBossEncounter"];
         put?: never;
         post?: never;
@@ -5464,7 +5469,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Rời encounter (đóng góp và learning attempt đã ghi giữ nguyên) */
+        /**
+         * Rời encounter (đóng góp và learning attempt đã ghi giữ nguyên)
+         * @description F103-AC-12: người gọi rời encounter, đóng góp và learning record giữ nguyên; còn ít hơn `party_size.min` người → encounter
+         *     `abandoned`, không thưởng. Rời lần hai trả cùng kết quả.
+         */
         post: operations["leaveBossEncounter"];
         delete?: never;
         options?: never;
@@ -5479,7 +5488,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Boss khả dụng (theo khu vực, khối, mở khóa) */
+        /**
+         * Boss khả dụng (theo khu vực, khối, mở khóa)
+         * @description Boss đã publish, gán cho tenant (ADR-0029), có khối của học sinh trong `grade_levels` (F103-AC-01). Phân trang keyset theo
+         *     `boss_id` trong truy vấn (`page.next_cursor`). `modes` cho biết boss chơi được một mình (`solo`) hay theo party
+         *     (`party`, chỉ qua Party Lobby — F101).
+         */
         get: operations["listBosses"];
         put?: never;
         post?: never;
@@ -5498,7 +5512,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Tạo encounter solo hoặc cho party (chỉ leader) — trạng thái realtime qua WS boss.* */
+        /**
+         * Tạo encounter solo — encounter party chỉ tạo qua Party Lobby (startPartyActivity, F101)
+         * @description F103-AC-01: boss khả dụng (khối thuộc `grade_levels`, khu đã mở, boss không `party_required`, còn lượt trong ngày) →
+         *     encounter `lobby` ghim `boss_version_id`, hạn tổng theo giờ server; không đủ điều kiện → `403 CHALLENGE_NOT_ELIGIBLE`;
+         *     hết lượt → `409 CHALLENGE_ATTEMPT_LIMIT`. `mode = party` qua route này → `422 VALIDATION_FAILED` (party vào boss chỉ qua
+         *     Party Lobby, research R2); `party_id` bị bỏ qua (giữ để tương thích). Trạng thái realtime qua WS `boss.*`.
+         */
         post: operations["createBossEncounter"];
         delete?: never;
         options?: never;
@@ -6124,6 +6144,71 @@ export interface paths {
          *     learning lỗi/timeout → `503 UNAVAILABLE` có `Retry-After`, tiến độ không đổi (F072-AC-14, AC-17, AC-18).
          */
         post: operations["startQuestActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game/quests/{quest_id}/steps/{step_id}/clues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Thẻ dữ kiện của bước interdependent — chỉ role của người gọi và thẻ đã chia sẻ (F103-AC-21)
+         * @description Bước `interdependent` đang `active`/`completed` trong tiến độ của người gọi. Chơi theo party: chỉ dữ kiện đã render của các
+         *     role người gọi đang giữ và các thẻ đã được chia sẻ lên bảng chung; quest `party_optional` chơi solo: mọi role (F103-AC-24).
+         *     Dữ kiện không chứa đáp án (ADR-0016); thẻ chưa chia sẻ của người khác không bao giờ có trong response. Không có tiến độ
+         *     quest hoặc không phải bước interdependent → `404`.
+         */
+        get: operations["getQuestStepClues"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game/quests/{quest_id}/steps/{step_id}/clues/{role}:share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chia sẻ thẻ dữ kiện của role mình giữ lên bảng chung của party (F103-AC-22)
+         * @description Người giữ role đưa thẻ lên bảng chung và mọi thành viên phiên nhận `quest.clue.shared`. Người không giữ role → `403
+         *     PERMISSION_DENIED`; gọi lặp không tạo thẻ trùng (`Idempotency-Key` bắt buộc).
+         */
+        post: operations["shareQuestStepClue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game/quests/{quest_id}/steps/{step_id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Leader party gán role của bước interdependent (role_assignment = leader_assigns, F103-AC-20)
+         * @description Chỉ leader của phiên quest chung (`403 PARTY_NOT_LEADER` cho thành viên khác). Mỗi role của bước có đúng một người giữ là
+         *     thành viên phiên; một người nhiều role chỉ khi `allow_multi_role`. Mọi thành viên nhận `quest.roles.assigned`.
+         */
+        put: operations["assignQuestStepRoles"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -7326,7 +7411,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Sự kiện trường của tenant — route ngoại lệ trong /lms/* → module game (lms.school_event.write) */
+        /**
+         * Sự kiện trường của tenant — route ngoại lệ trong /lms/* → module game (lms.school_event.write)
+         * @description Người dùng tenant: tenant của phiên (`X-Tenant-Id`); nhân sự giới hạn trường chỉ thấy sự kiện của trường mình.
+         *     System Admin (F081-AC-06): không gửi `X-Tenant-Id`, lọc `tenant_ids` (vắng mặt = mọi tenant, audit
+         *     `cross_tenant.accessed`); mỗi dòng có `tenant_id`. Trang keyset (`created_at`, `event_id`) trong SQL.
+         */
         get: operations["listSchoolEvents"];
         put?: never;
         /** Tạo sự kiện trường từ template (chỉ allowed_params; tên qua kiểm tra từ nhạy cảm) — route ngoại lệ trong /lms/* → module game (lms.school_event.write) */
@@ -7366,6 +7456,31 @@ export interface paths {
         put?: never;
         /** Hủy sự kiện trường (lý do bắt buộc) — route ngoại lệ trong /lms/* → module game (lms.school_event.write) */
         post: operations["cancelSchoolEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lms/school-events/{event_id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tiến độ sự kiện trường (chỉ số tổng hợp, không định danh học sinh) — route ngoại lệ trong /lms/* → module game (lms.school_event.write)
+         * @description F081-AC-10, AC-12 (FR-EVT-004): trạng thái run, số học sinh tham gia, tổng và mốc community goal của phạm vi trường,
+         *     đóng góp theo khối (`by_grade`, chỉ khối 4–9 — EVENT_SEASON_SYSTEM §6; khối có < `analytics_min_cell_size` học sinh
+         *     đóng góp không trả dòng — ADR-0095 mục 4, FR-ANL-016). Đọc PostgreSQL (`community_goal_progress`), không đọc bộ đếm
+         *     Valkey. Không có `student_id`, tên, nickname hay thứ hạng. Sự kiện của trường ngoài scope UserRole hoặc tenant khác → 404.
+         *     `school_id`: trường được xem khi sự kiện gồm nhiều trường hoặc cả đơn vị (mặc định = trường duy nhất của sự kiện; thiếu
+         *     khi sự kiện có nhiều trường → 422 `VALIDATION_FAILED` trên `school_id`; trường ngoài đối tượng hoặc ngoài scope → 404).
+         */
+        get: operations["getSchoolEventProgress"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -10978,6 +11093,8 @@ export interface components {
             boss_id: components["schemas"]["Uuid"];
             boss_version: number;
             current_phase?: number;
+            /** @description Hạn tổng theo giờ server */
+            deadline_at?: components["schemas"]["Timestamp"];
             encounter_id: components["schemas"]["Uuid"];
             ended_at?: components["schemas"]["Timestamp"];
             energy_remaining_pct?: number;
@@ -10985,16 +11102,40 @@ export interface components {
                 /** @description Đạt min_contribution của phase hiện tại (không công bố xếp hạng trong nhóm) */
                 contribution_met?: boolean;
                 nickname: string;
+                /** @description Còn trong encounter (chưa rời, chưa quá grace) */
+                present?: boolean;
                 ready?: boolean;
                 student_id: components["schemas"]["Uuid"];
             }[];
             /** @enum {string} */
             mode: "solo" | "party";
+            /** @description Câu hỏi của người gọi trong lượt phase hiện tại (khôi phục sau mất kết nối); không đáp án */
+            my_questions?: components["schemas"]["BossQuestion"][];
+            /** @enum {string} */
+            outcome?: "defeated" | "time_up" | "abandoned";
             party_id?: components["schemas"]["Uuid"];
+            phase_count?: number;
             phase_deadline_at?: components["schemas"]["Timestamp"];
+            phase_id?: string;
+            /** @description Tiến độ chung của phase hiện tại */
+            phase_progress?: number;
+            phase_retries_left?: number;
+            phases_cleared?: number;
+            server_time?: components["schemas"]["Timestamp"];
             started_at?: components["schemas"]["Timestamp"];
+            state_version?: number;
             /** @enum {string} */
             status: "lobby" | "phase_active" | "phase_transition" | "phase_retry" | "defeated" | "ended";
+        };
+        BossQuestion: {
+            /** @description Người gọi đã trả lời câu này */
+            answered?: boolean;
+            question_instance_id: string;
+            question_type: string;
+            /** @description Render payload của module learning (không đáp án, ADR-0016) */
+            render: Record<string, never>;
+            requirement_id: string;
+            time_limit_seconds?: number;
         };
         BossSummary: {
             area_id?: string;
@@ -12465,18 +12606,27 @@ export interface components {
         EventRunStatus: "scheduled" | "live" | "suspended" | "ended" | "cancelled" | "archived";
         EventTemplate: {
             allowed_params: string[];
+            /** @description Thử thách của `challenge_options` kèm tiêu đề và khối của version đang phát hành (F081-AC-02) */
+            challenge_option_items?: components["schemas"]["EventTemplateOptionItem"][];
             challenge_options?: components["schemas"]["Uuid"][];
             code: string;
             description?: components["schemas"]["LocalizedText"];
             event_kind: components["schemas"]["EventKind"];
             max_duration_days?: number;
             name: components["schemas"]["LocalizedName"];
+            /** @description Quest của `quest_options` kèm tiêu đề và khối của version đang phát hành (F081-AC-02; quest chưa phát hành không có dòng) */
+            quest_option_items?: components["schemas"]["EventTemplateOptionItem"][];
             quest_options?: components["schemas"]["Uuid"][];
             reward_options?: {
                 label?: components["schemas"]["LocalizedName"];
                 reward_option_id?: string;
             }[];
             template_id: components["schemas"]["Uuid"];
+        };
+        EventTemplateOptionItem: {
+            grade_levels: number[];
+            id: components["schemas"]["Uuid"];
+            title: components["schemas"]["LocalizedName"];
         };
         ExamAccommodation: {
             extra_time_percent: number;
@@ -15460,6 +15610,13 @@ export interface components {
                 widget_version: string;
             }[];
         };
+        QuestPartyStepProgress: {
+            collective_progress?: number;
+            my_contribution_met?: boolean;
+            /** @description Bước khung đã hoàn thành cho cả party */
+            shared_completed?: boolean;
+            step_id: string;
+        };
         QuestProgress: {
             completed_at?: components["schemas"]["Timestamp"];
             completion_no?: number;
@@ -15468,6 +15625,11 @@ export interface components {
             expires_at?: components["schemas"]["Timestamp"];
             failed_at?: components["schemas"]["Timestamp"];
             party_id?: components["schemas"]["Uuid"];
+            /**
+             * @description Tiến độ chung của phiên quest party (F103-AC-15): chỉ tỷ lệ chung và việc chính người gọi đã đạt `min_contribution`
+             *     — không có số câu đúng hay xếp hạng của thành viên khác (R19).
+             */
+            party_progress?: components["schemas"]["QuestPartyStepProgress"][];
             period_key?: string;
             quest_id: components["schemas"]["Uuid"];
             quest_progress_id: components["schemas"]["Uuid"];
@@ -15500,11 +15662,42 @@ export interface components {
          * @enum {string}
          */
         QuestStatus: "available" | "active" | "completed" | "expired" | "abandoned" | "failed";
+        QuestStepClue: {
+            /** @description Bản render của learning material (block hiển thị, không đáp án — ADR-0016) */
+            content?: Record<string, never>;
+            icon_key?: string;
+            role: string;
+            /** @description Thẻ đã lên bảng chung */
+            shared: boolean;
+            shared_by_nickname?: string;
+            title: components["schemas"]["LocalizedText"];
+        };
+        QuestStepClues: {
+            clues: components["schemas"]["QuestStepClue"][];
+            my_roles: string[];
+            quest_id: components["schemas"]["Uuid"];
+            step_id: string;
+        };
         QuestStepReport: {
             area_id?: string;
             game_session_id: components["schemas"]["Uuid"];
             interactable_id?: string;
             npc_id?: string;
+        };
+        QuestStepRoleAssignment: {
+            assignments: {
+                role: string;
+                student_id: components["schemas"]["Uuid"];
+            }[];
+        };
+        QuestStepRoles: {
+            assignments: {
+                nickname: string;
+                role: string;
+                student_id: components["schemas"]["Uuid"];
+            }[];
+            quest_id: components["schemas"]["Uuid"];
+            step_id: string;
         };
         QuestStepState: {
             /** @description Số attempt học tập đã mở cho bước */
@@ -16064,8 +16257,7 @@ export interface components {
             created_at?: components["schemas"]["Timestamp"];
             created_by?: components["schemas"]["Uuid"];
             event_id: components["schemas"]["Uuid"];
-            /** @enum {string} */
-            status: "draft" | "scheduled" | "live" | "ended" | "cancelled";
+            status: components["schemas"]["SchoolEventStatus"];
             tenant_id?: components["schemas"]["Uuid"];
             version: number;
         };
@@ -16085,6 +16277,41 @@ export interface components {
             starts_at: components["schemas"]["Timestamp"];
             template_id: components["schemas"]["Uuid"];
         };
+        SchoolEventGoalProgress: {
+            goal_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            metric: "correct_answers" | "activities_completed" | "quests_completed" | "discoveries_found" | "boss_phases_cleared" | "coop_sessions";
+            milestones: {
+                pct: number;
+                reached: boolean;
+            }[];
+            target: number;
+            total: number;
+        };
+        /** @description Chỉ số tổng hợp — không `student_id`, tên, nickname hay thứ hạng (AGENTS R16, F081-AC-10) */
+        SchoolEventProgress: {
+            /** @description Sắp theo khối tăng dần; chỉ khối 4–9 và có ≥ `analytics_min_cell_size` học sinh đóng góp (ADR-0095) */
+            by_grade: {
+                contribution_total: number;
+                contributors_count: number;
+                grade_level: number;
+            }[];
+            /** @description null khi sự kiện không có community goal */
+            community_goal: components["schemas"]["SchoolEventGoalProgress"] | null;
+            data_as_of: components["schemas"]["Timestamp"];
+            event_id: components["schemas"]["Uuid"];
+            event_run_id: components["schemas"]["Uuid"];
+            participants_count: number;
+            /** @description Trường của phạm vi đang xem (null = cả đơn vị khi mục tiêu tính theo tenant và sự kiện không gắn một trường) */
+            school_id?: components["schemas"]["Uuid"] | null;
+            status: components["schemas"]["EventRunStatus"];
+        };
+        /**
+         * @description Trạng thái sự kiện trường (F081): `suspended` = EduWorld dừng khẩn cấp (tenant không sửa/hủy); run đã lưu trữ hiển thị
+         *     `ended` hoặc `cancelled` (giữ trạng thái kết thúc mà trường biết); `archived` giữ cho khớp `EventRunStatus`.
+         * @enum {string}
+         */
+        SchoolEventStatus: "draft" | "scheduled" | "live" | "suspended" | "ended" | "cancelled" | "archived";
         SchoolEventUpdate: {
             audience?: {
                 grade_levels?: number[];
@@ -17777,6 +18004,8 @@ export interface components {
         QuestId: components["schemas"]["Uuid"];
         QuestionIdPath: components["schemas"]["Uuid"];
         QuestionSetIdPath: components["schemas"]["Uuid"];
+        /** @description role của bước interdependent (quest.schema.json `roles[].role`) */
+        QuestRole: string;
         /** @description Lý do (ghi audit) — bắt buộc khi xóa/thu hồi */
         ReasonQuery: string;
         ReconciliationIssueIdPath: components["schemas"]["Uuid"];
@@ -31504,6 +31733,8 @@ export interface operations {
                     "application/json": components["schemas"]["BossEncounter"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -31541,14 +31772,20 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     listBosses: {
         parameters: {
             query?: {
                 area_id?: string;
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
             };
             header?: {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
@@ -31574,10 +31811,13 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["BossSummary"][];
+                        page?: components["schemas"]["PageInfo"];
                     };
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     createBossEncounter: {
@@ -31607,9 +31847,17 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @enum {string} */
+                    /**
+                     * @description Chỉ `solo`; `party` → 422 (F103 research R2)
+                     * @enum {string}
+                     */
                     mode: "solo" | "party";
-                    party_id?: components["schemas"]["Uuid"];
+                    /**
+                     * Format: uuid
+                     * @deprecated
+                     * @description Không dùng — encounter party tạo qua Party Lobby
+                     */
+                    party_id?: string;
                 };
             };
         };
@@ -31625,8 +31873,12 @@ export interface operations {
                     "application/json": components["schemas"]["BossEncounter"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     getGameChallengeAttempt: {
@@ -33056,6 +33308,151 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+        };
+    };
+    getQuestStepClues: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                quest_id: components["parameters"]["QuestId"];
+                step_id: components["parameters"]["StepId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thẻ dữ kiện người gọi được xem */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestStepClues"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            /** @description UNAVAILABLE — module learning chưa trả bản render dữ kiện; thử lại theo Retry-After */
+            503: {
+                headers: {
+                    "Retry-After": components["headers"]["RetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    shareQuestStepClue: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                quest_id: components["parameters"]["QuestId"];
+                /** @description role của bước interdependent (quest.schema.json `roles[].role`) */
+                role: components["parameters"]["QuestRole"];
+                step_id: components["parameters"]["StepId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bảng thẻ đã chia sẻ sau thao tác */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestStepClues"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    assignQuestStepRoles: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                quest_id: components["parameters"]["QuestId"];
+                step_id: components["parameters"]["StepId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestStepRoleAssignment"];
+            };
+        };
+        responses: {
+            /** @description Phân vai sau thao tác */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestStepRoles"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     getSeasonTrack: {
@@ -35903,7 +36300,7 @@ export interface operations {
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 limit?: components["parameters"]["Limit"];
-                status?: string;
+                status?: components["schemas"]["SchoolEventStatus"];
                 /**
                  * @description Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
                  *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
@@ -35912,11 +36309,11 @@ export interface operations {
             };
             header?: {
                 /**
-                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
-                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
-                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
                  */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
             };
             path?: never;
             cookie?: never;
@@ -36101,6 +36498,41 @@ export interface operations {
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    getSchoolEventProgress: {
+        parameters: {
+            query?: {
+                school_id?: components["schemas"]["Uuid"];
+            };
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                event_id: components["parameters"]["EventIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolEventProgress"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     getSchoolAnalyticsSeries: {

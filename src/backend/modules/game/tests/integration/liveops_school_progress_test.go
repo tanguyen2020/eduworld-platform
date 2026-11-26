@@ -146,6 +146,16 @@ func TestSchoolEventProgress(t *testing.T) {
 			t.Fatalf("no %s in the progress: %s", k, p.raw)
 		}
 	}
+	// An event that does not show the grades (show_grade_contributions = false): no by_grade for the school either.
+	if res, err := e.migrator.ExecContext(ctx, `UPDATE game.community_goals SET show_grade_contributions = false WHERE goal_id = $1`,
+		goal["goal_id"]); err != nil {
+		t.Fatal(err)
+	} else if n, _ := res.RowsAffected(); n != 1 {
+		t.Fatalf("show_grade_contributions off: %d rows", n)
+	}
+	if q := progress(adminA, ha(), ""); q.status != http.StatusOK || len(q.body["by_grade"].([]any)) != 0 || q.body["community_goal"] == nil {
+		t.Fatalf("grades hidden by the event: %d %s", q.status, q.raw)
+	}
 	// A tenant admin sees the same event; the school is the event's school.
 	if q := progress(tenantAdminA, ha(), ""); q.status != http.StatusOK || q.body["school_id"] != e.schoolA.String() {
 		t.Fatalf("tenant admin: %d %s", q.status, q.raw)

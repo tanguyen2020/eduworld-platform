@@ -398,5 +398,139 @@
       "challenge": "Thử thách",
       "student": "Học sinh"
     }
+  },
+  "schoolEvents": {
+    "create": "Tạo sự kiện",
+    "createTitle": "Tạo sự kiện trường",
+    "list": {
+      "hint": "Sự kiện của trường được tạo từ mẫu EduWorld đã gán cho đơn vị; luật chơi, cách tính điểm và phần thưởng do mẫu quy định.",
+      "name": "Tên sự kiện",
+      "template": "Mẫu",
+      "schedule": "Thời gian (giờ Việt Nam)",
+      "audience": "Đối tượng",
+      "status": "Trạng thái",
+      "allStatuses": "Mọi trạng thái",
+      "empty": "Chưa có sự kiện nào."
+    },
+    "status": {
+      "draft": "Nháp",
+      "scheduled": "Đã lên lịch",
+      "live": "Đang diễn ra",
+      "suspended": "Tạm dừng bởi EduWorld",
+      "ended": "Đã kết thúc",
+      "cancelled": "Đã hủy",
+      "archived": "Đã lưu trữ"
+    },
+    "audience": {
+      "allSchools": "Cả đơn vị",
+      "schools": "{{count}} trường",
+      "allGrades": "Mọi khối",
+      "grades": "Khối {{list}}"
+    },
+    "templates": {
+      "title": "Chọn mẫu sự kiện",
+      "empty": "Chưa có mẫu sự kiện nào được gán cho đơn vị của bạn.",
+      "emptyHelp": "Hãy liên hệ EduWorld để được gán mẫu sự kiện. Đơn vị không tự đặt luật chơi hay phần thưởng.",
+      "maxDuration": "Tối đa {{days}} ngày",
+      "choose": "Dùng mẫu này",
+      "chooseNamed": "Dùng mẫu {{name}}",
+      "pickTenant": "Chọn tenant đích trước khi chọn mẫu.",
+      "kind": {
+        "school": "Sự kiện trường",
+        "community_goal": "Mục tiêu cộng đồng",
+        "learning_campaign": "Chiến dịch học tập"
+      }
+    },
+    "form": {
+      "nameVi": "Tên sự kiện (tiếng Việt)",
+      "nameEn": "Tên sự kiện (tiếng Anh, không bắt buộc)",
+      "descriptionVi": "Mô tả (tiếng Việt)",
+      "descriptionEn": "Mô tả (tiếng Anh, không bắt buộc)",
+      "startsAt": "Bắt đầu",
+      "endsAt": "Kết thúc",
+      "startsRequired": "Chọn thời điểm bắt đầu.",
+      "endsRequired": "Chọn thời điểm kết thúc.",
+      "duration": "Thời lượng: {{days}} ngày (mẫu cho phép tối đa {{max}} ngày)",
+      "ictHint": "Giờ Việt Nam (UTC+7)",
+      "schools": "Trường",
+      "schoolsHint": "Để trống: trường trong phạm vi của bạn.",
+      "grades": "Khối",
+      "gradesHint": "Để trống: mọi khối mà mẫu cho phép.",
+      "grade": "Khối {{grade}}",
+      "goalTarget": "Mục tiêu chung",
+      "goalTargetMin": "Mục tiêu phải từ 1 trở lên.",
+      "quests": "Nhiệm vụ trong sự kiện",
+      "challenges": "Thử thách trong sự kiện",
+      "reward": "Phần thưởng ở mốc cuối",
+      "rulesFromTemplate": "Luật chơi, cách tính điểm và phần thưởng theo mẫu sự kiện; bạn chỉ chọn trong các lựa chọn mẫu cho phép.",
+      "submit": "Tạo sự kiện",
+      "save": "Lưu thay đổi",
+      "changeTemplate": "Chọn mẫu khác"
+    },
+    "detail": {
+      "status": "Trạng thái",
+      "template": "Mẫu",
+      "templateUnassigned": "Mẫu không còn được gán (sự kiện vẫn chạy theo phiên bản đã ghim)",
+      "schedule": "Thời gian",
+      "ict": "giờ Việt Nam",
+      "audience": "Đối tượng",
+      "goalTarget": "Mục tiêu chung",
+      "description": "Mô tả",
+      "edit": "Sửa",
+      "cancel": "Hủy sự kiện",
+      "suspended": "Sự kiện đang tạm dừng bởi EduWorld. Đơn vị không sửa hay hủy được trong lúc này."
+    },
+    "edit": {
+      "title": "Sửa: {{name}}",
+      "notEditable": "Chỉ sửa được sự kiện chưa bắt đầu."
+    },
+    "cancel": {
+      "title": "Hủy sự kiện: {{name}}",
+      "reason": "Lý do hủy",
+      "reasonRequired": "Nhập lý do hủy.",
+      "next": "Tiếp tục",
+      "confirmTitle": "Xác nhận hủy sự kiện?",
+      "rewardsKept": "Phần thưởng học sinh đã đạt được giữ nguyên.",
+      "reasonShown": "Lý do: {{reason}}",
+      "confirm": "Hủy sự kiện"
+    },
+    "progress": {
+      "title": "Tiến độ sự kiện",
+      "participants": "Học sinh tham gia",
+      "asOf": "Cập nhật lúc {{at}}",
+      "delayHint": "Số liệu có thể trễ vài giây.",
+      "refresh": "Làm mới",
+      "goal": "Mục tiêu chung",
+      "total": "{{total}} / {{target}}",
+      "milestone": "Mốc {{pct}}%",
+      "reached": "Đã đạt",
+      "notReached": "Chưa đạt",
+      "byGrade": "Đóng góp theo khối",
+      "grade": "Khối",
+      "contributionTotal": "Tổng đóng góp",
+      "contributors": "Số học sinh đóng góp",
+      "noGrades": "Chưa có khối nào đủ số học sinh để hiển thị.",
+      "gradeNote": "Chỉ hiện khối 4–9 có từ 5 học sinh đóng góp trở lên; không có tên hay xếp hạng học sinh.",
+      "noGoal": "Sự kiện không có mục tiêu chung.",
+      "school": "Trường",
+      "pickSchool": "Chọn trường để xem tiến độ.",
+      "metric": {
+        "correct_answers": "Câu trả lời đúng",
+        "activities_completed": "Hoạt động hoàn thành",
+        "quests_completed": "Nhiệm vụ hoàn thành",
+        "discoveries_found": "Khám phá",
+        "boss_phases_cleared": "Giai đoạn boss đã vượt",
+        "coop_sessions": "Lượt chơi hợp tác"
+      }
+    },
+    "errors": {
+      "fieldInvalid": "Nội dung chưa hợp lệ hoặc có từ ngữ không phù hợp. Hãy sửa lại.",
+      "paramNotAllowed": "Giá trị này không được mẫu sự kiện cho phép.",
+      "tooMany": "Đơn vị đã có số sự kiện diễn ra đồng thời tối đa. Hãy chờ một sự kiện kết thúc hoặc hủy bớt.",
+      "changed": "Sự kiện đã được thay đổi ở nơi khác. Tải lại để xem dữ liệu mới.",
+      "unavailable": "Chưa kiểm tra được nội dung lúc này. Dữ liệu đã nhập được giữ nguyên, hãy thử lại.",
+      "reload": "Tải lại",
+      "code": "Mã lỗi: {{code}} · trace_id: {{traceId}}"
+    }
   }
 }

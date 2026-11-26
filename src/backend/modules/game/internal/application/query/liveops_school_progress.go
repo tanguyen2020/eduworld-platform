@@ -54,7 +54,8 @@ type SchoolEventProgressView struct {
 // (403 + authz.denied without it); an event of another school or tenant, or a school outside the audience or the scope of
 // the caller, is 404. The school viewed is `school` or the only school of the event; a school-scoped goal of an event of
 // several schools needs one (422 on school_id). Totals and milestones come from community_goal_progress (PostgreSQL),
-// the grades from the contributions through liveops.VisibleGrades (grades 4–9, ≥ analytics_min_cell_size students).
+// the grades from the contributions through liveops.VisibleGrades (grades 4–9, ≥ analytics_min_cell_size students) when
+// the event shows them (show_grade_contributions, EVENT_SEASON_SYSTEM §6).
 func (h LiveOps) GetSchoolEventProgress(ctx context.Context, event uuid.UUID, school *uuid.UUID) (out SchoolEventProgressView, err error) {
 	ctx, done := observability.UseCase(ctx, "game.query.GetSchoolEventProgress")
 	defer func() { done(err) }()
@@ -113,6 +114,9 @@ func (h LiveOps) GetSchoolEventProgress(ctx context.Context, event uuid.UUID, sc
 			}
 			slices.SortFunc(v.Milestones, func(a, b SchoolGoalMilestoneView) int { return a.Pct - b.Pct })
 			out.CommunityGoal = &v
+		}
+		if g == nil || !g.ShowGrades {
+			return nil // grades only when the event shows them (show_grade_contributions — EVENT_SEASON_SYSTEM §6)
 		}
 		for _, gr := range liveops.VisibleGrades(row.Grades, minCell) {
 			out.ByGrade = append(out.ByGrade, GradeContributionView{GradeLevel: gr.Grade, ContributionTotal: gr.Progress, ContributorsCount: gr.Contributors})

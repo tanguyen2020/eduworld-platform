@@ -28,6 +28,12 @@ export const FIELDS = {
   schoolSettingsReason: { source: 'schemas/SchoolSettings/properties/reason', minLength: 3, maxLength: 500 },
   auditAction: { source: 'paths/listTenantAuditLogs/action', maxLength: 128 },
   sisFileName: { source: 'schemas/SisImportCreate/properties/file_name', maxLength: 200, pattern: '\\.csv$' },
+  // F081 school events (TenantLocalizedName / TenantLocalizedText — vi required, en optional; EventRunOperation.reason)
+  eventNameVi: { source: 'schemas/TenantLocalizedName/properties/vi', minLength: 1, maxLength: 255 },
+  eventNameEn: { source: 'schemas/TenantLocalizedName/properties/en', minLength: 1, maxLength: 255 },
+  eventDescriptionVi: { source: 'schemas/TenantLocalizedText/properties/vi', minLength: 1, maxLength: 4000 },
+  eventDescriptionEn: { source: 'schemas/TenantLocalizedText/properties/en', minLength: 1, maxLength: 4000 },
+  eventCancelReason: { source: 'schemas/EventRunOperation/properties/reason', minLength: 3, maxLength: 1000 },
 } as const satisfies Record<string, FieldSchema>;
 
 /** Numeric limits mirrored from the spec (same check). */
@@ -42,4 +48,9 @@ export const LIMITS = {
   chatRetentionDays: { source: 'schemas/TenantSettings/properties/gameplay_chat_retention_days', minimum: 3, maximum: 365 },
   /** `SchoolSettings.daily_play_limit_minutes` (null = off, OQ-17). */
   dailyPlayLimit: { source: 'schemas/SchoolSettings/properties/daily_play_limit_minutes', minimum: 15, maximum: 300 },
+  /** `SchoolEventCreate.community_goal_target.minimum` (F081). */
+  eventGoalTarget: { source: 'schemas/SchoolEventCreate/properties/community_goal_target', minimum: 1 },
+  /** `SchoolEventCreate.quest_ids.maxItems` / `challenge_ids.maxItems` (F081). */
+  eventQuests: { source: 'schemas/SchoolEventCreate/properties/quest_ids', maxItems: 50 },
+  eventChallenges: { source: 'schemas/SchoolEventCreate/properties/challenge_ids', maxItems: 50 },
 } as const;

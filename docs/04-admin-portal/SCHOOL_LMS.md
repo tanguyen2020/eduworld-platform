@@ -1,6 +1,6 @@
 # School & Learning Management (LMS + School Learning Dashboard)
 
-> Trạng thái: Draft · Phiên bản: 0.5 (học sinh tự học, nhà trường quản trị — ADR-0072) · Owner: Product Manager + EdTech Specialist + Backend Architect · Cập nhật: 2026-11-21 (ADR-0095 WP-L1: §2–§4, §11, §12 viết lại — giao bài theo khối ± học sinh, bỏ Course/Learning Path/lịch/nhóm học tập; §8, §10 dashboard/báo cáo theo khối ở WP-L2) · 2026-11-16
+> Trạng thái: Draft · Phiên bản: 0.5 (học sinh tự học, nhà trường quản trị — ADR-0072) · Owner: Product Manager + EdTech Specialist + Backend Architect · Cập nhật: 2026-11-25 (F081: trỏ sự kiện trường ở §7) · 2026-11-21 (ADR-0095 WP-L1: §2–§4, §11, §12 viết lại — giao bài theo khối ± học sinh, bỏ Course/Learning Path/lịch/nhóm học tập; §8, §10 dashboard/báo cáo theo khối ở WP-L2) · 2026-11-16
 > Liên quan: [ADMIN_PORTAL](ADMIN_PORTAL.md) · [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md) · [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [MODERATION](../03-social-multiplayer/MODERATION.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [DOMAIN_MODEL §9](../06-architecture/DOMAIN_MODEL.md#9-lms) · [ADR-0027](../adr/ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) · [ADR-0043](../adr/ADR-0043-phat-hanh-noi-dung-draft-publish-con-tro-phien-ban-giu-phien.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md)
 
 > [!IMPORTANT]
@@ -115,6 +115,8 @@ Người tạo: **School Admin** (trường mình) hoặc **Academic Manager** (
 ## 7. Thử thách lớp và giải trường
 
 **School Admin** tạo **thử thách khối** (`grade_challenge` — thay Class Challenge, ADR-0095) hoặc **giải trường** (`school_tournament`) từ **challenge/tournament template** platform đã publish **và được gán cho tenant** (ADR-0029); chưa gán → `403 RESOURCE_NOT_ASSIGNED`. Đối tượng trong một trường: khối ± danh sách học sinh cùng trường, trừ danh sách loại trừ (loại trừ thắng); ngoài tên, trường, đối tượng, lịch và question set chỉ điền `allowed_params` của template; tham số khác → `422` (hiện thực [F107](../../specs/107-tournament-challenges/spec.md)). Thực thi ở module competition ([COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md)); LMS chỉ là điểm tạo và xem kết quả. Permission `lms.challenge.write` (chỉ role `school_admin`; System Admin trên tenant đích). Kết quả **không** vào báo cáo kết quả học tập.
+
+**Sự kiện trường (F081):** Tenant Admin/School Admin tạo sự kiện game của trường từ **template sự kiện** platform đã gán và theo dõi tiến độ community goal tổng hợp theo **khối** (không tên, không xếp hạng) ở menu "Giao bài & lịch → Sự kiện trường" (`menu.school_lms.school_events`, `lms.school_event.write`; route ngoại lệ `/lms/event-templates`, `/lms/school-events*` → module game). Quy tắc nghiệp vụ: [EVENT_SEASON_SYSTEM §10](../01-game-design/EVENT_SEASON_SYSTEM.md#10-sự-kiện-của-trường-tenant); màn hình: [ADMIN_PORTAL §3.15](ADMIN_PORTAL.md). Sự kiện không vào báo cáo kết quả học tập.
 
 ## 8. School Learning Dashboard
 

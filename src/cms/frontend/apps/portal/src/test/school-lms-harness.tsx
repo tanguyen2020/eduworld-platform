@@ -18,6 +18,8 @@ export interface RenderSchoolLmsOptions {
   disabledMenus?: string[];
   disabledActions?: string[];
   width?: number;
+  /** Installs more MOCK handlers (e.g. school events of F081) before the portal renders. */
+  beforeRender?: (backend: MockPortalBackend) => void;
 }
 
 export async function renderSchoolLms(url: string, opts: RenderSchoolLmsOptions = {}) {
@@ -26,6 +28,7 @@ export async function renderSchoolLms(url: string, opts: RenderSchoolLmsOptions 
   backend.disabledMenus = opts.disabledMenus ?? [];
   backend.disabledActions = opts.disabledActions ?? [];
   const state = installSchoolLmsMock(backend);
+  opts.beforeRender?.(backend);
   if (opts.width) setViewportWidth(opts.width);
   const r = await renderPortal({ url, backend });
   return { ...r, state };
