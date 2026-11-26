@@ -436,6 +436,8 @@ postman collection run specs/postman/eduworld-api.postman_collection.json \
 | `make specs-lint` | Spectral (+ rule `maxLength`), AsyncAPI, ajv JSON Schema, oasdiff, `check-enums`, `check-problem-codes`, `check-portal-catalog` (danh mục menu/action portal ↔ `x-portal-action`, ADR-0090) |
 | `make portal-catalog` | Sinh `src/cms/frontend/apps/portal/src/generated/menu-catalog.ts` (`menuRegistry`/`workspaceRegistry`) từ `specs/portal/menu-catalog.yaml`; `make gen` sinh bảng route → action cho `featuregate` từ `x-portal-action` (ADR-0090) |
 | `make docs-lint` | markdownlint + kiểm tra link |
+| `make swarm-validate [ENV=staging\|production]` / `make test-ops` / `make test-ops-integration` | Stack Swarm staging/production: `docker stack config` + chính sách `deploy/swarm/policy.yaml` + secret + `scale-schedule` (không cần swarm) / unit test script deploy, backup, runbook (CLI giả lập; cần `jq`) / backup, PITR, restore test, RB-01, RB-05, Docker API proxy trên container dùng một lần (Docker; máy dùng chung chạy qua khóa testcontainers) — F130, [DEPLOYMENT §4.5](DEPLOYMENT.md#45-stack-file-mẫu), [BACKUP_RECOVERY §10](BACKUP_RECOVERY.md#10-script-backup-và-khôi-phục) |
+| `make swarm-up ENV=<env>` / `make deploy-service ENV=<env> VERSION=vX.Y.Z [SERVICE=…]` / `make deploy-rollback SERVICE=… ENV=<env>` / `make secrets-sync ENV=<env>` / `make restore-test ENV=<env> MODE=full\|module` / `make ops-job …` | Chỉ trên runner `deploy` (`DOCKER_HOST` = manager qua TLS), không chạy trên máy dev (F130) |
 
 ## 8. Troubleshooting
 

@@ -1,6 +1,6 @@
 # Feature Specification: F130 — Staging/production Docker Swarm, secret, backup PITR và DR drill
 
-**Feature Branch**: `130-swarm-secrets-backup-dr` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: hạ tầng (`deploy/swarm`, `deploy/secrets`, `deploy/backup`, `scripts/deploy`, `scripts/backup`, `src/backend/tools/ops-scheduler`, workflow deploy GitHub Actions) · **Mốc**: M6 · **Phụ thuộc**: F001
+**Feature Branch**: `130-swarm-secrets-backup-dr` · **Created**: 2026-11-16 · **Status**: In progress · **Module**: hạ tầng (`deploy/swarm`, `deploy/secrets`, `deploy/backup`, `scripts/deploy`, `scripts/backup`, `src/backend/tools/ops-scheduler`, workflow deploy GitHub Actions) · **Mốc**: M6 · **Phụ thuộc**: F001
 **Input**: Dựng staging/production trên Docker Swarm (ADR-0024), phân phối secret qua Docker secrets, deploy/rollback/scale độc lập từng Swarm service backend theo [ADR-0074](../../docs/adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) (`core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs`), backup PITR cụm PostgreSQL (khôi phục được từng database module) + object storage, diễn tập khôi phục và DR — FR-OPS-002, FR-OPS-004, NFR-DEPL-001.
 
 ## Clarifications

@@ -13,7 +13,7 @@ Viết stack file Docker Swarm cho staging/production theo DEPLOYMENT §4 (node 
 | Language/Version | YAML (Compose spec 3.9 cho Swarm), Bash (POSIX + `set -euo pipefail`), Go ≥ 1.24 (`src/backend/tools/ops-scheduler`) |
 | Primary Dependencies | Docker Engine Swarm ≥ 25, pgBackRest 2.5x (TLS server), Patroni + etcd riêng, SOPS + age, `aws` CLI (S3 sync tới đích backup), HAProxy (socket proxy), APISIX Admin API (`traffic-split`), `keycloak-config-cli` |
 | Storage | PostgreSQL 17 (Patroni, một cụm, 5 database module + `keycloak`), object storage theo `object_storage_backend` (ADR-0093: SeaweedFS tự host 3 node replication 3 bản, chuyển S3 managed bằng cấu hình; floci chỉ local/CI), repo S3 ngoài hạ tầng chính |
-| Testing | Bats (`tests/ops/*.bats`) cho script; `go test` cho `ops-scheduler`; diễn tập trên staging (bằng chứng ở `restore-tests/`) |
+| Testing | `node --test tests/ops/` (thay Bats — repo chuẩn hóa `node:test`, Bats không có trong CI): kiểm chính sách stack + logic script với CLI giả lập (docker/pgbackrest/rclone/nats/curl); `tests/ops/integration/run.sh` chạy thật backup/PITR/restore/RB-01/RB-05/Docker API proxy trên container dùng một lần (S3, site thứ hai, cụm mới, manager là stand-in); `go test` cho `ops-scheduler`, `pkg/config`, `pkg/module`, `pkg/bootstrap`, `pkg/outbox` (integration NATS); kịch bản staging `tests/ops/staging/*.sh`; diễn tập trên staging (bằng chứng ở `restore-tests/`) |
 | Target Platform | VM Linux amd64, Docker Swarm 3 manager |
 | Project Type | Hạ tầng + công cụ vận hành |
 | Performance Goals | Rollback ≤ 15 phút; RPO/RTO theo `rpo_rto`; restore test trong ngưỡng BACKUP_RECOVERY §8 |
@@ -69,13 +69,14 @@ deploy/backup/{pgbackrest.conf,pgbackrest-server.conf,Dockerfile}  # image eduwo
 deploy/apisix/canary/traffic-split.tpl.yaml
 deploy/ops-scheduler/socket-proxy.cfg   # HAProxy allowlist
 src/backend/tools/ops-scheduler/{cmd/ops-scheduler/main.go,internal/{schedule,capacity,dockerapi,metrics}/}   # thuộc Go module src/backend (go.mod duy nhất, ADR-0074, ADR-0092)
-scripts/deploy/{validate-stacks.sh,check-secret-refs.sh,deploy-service.sh,run-migrate-job.sh,canary.sh,rollback.sh,secrets-sync.sh}
-scripts/backup/{pg_backup.sh,pg_logical_dump.sh,object_storage_backup.sh,etcd_snapshot.sh,keycloak_export.sh,restore_test.sh,lib-metrics.sh}
-scripts/ops/{rb01-pitr-restore.sh,rb03-cluster-restore.sh,rb04-keycloak-restore.sh,rb05-object-storage-restore.sh,reset-consumers.sh,patroni-switchover.sh}
+scripts/deploy/{validate-stacks.sh,check-stacks.mjs,check-secret-refs.mjs,check-scale-schedule.mjs,lib-policy.mjs,lib-deploy.sh,deploy-service.sh,run-migrate-job.sh,canary.sh,rollback.sh,secrets-sync.sh,label-nodes.mjs,list-secrets.mjs,write-docker-tls.sh}
+scripts/backup/{lib-backup.sh,pg_backup.sh,pg_check.sh,pg_logical_dump.sh,object_storage_backup.sh,object_storage_replication_check.sh,object_storage_setup.sh,etcd_snapshot.sh,keycloak_export.sh,restore_test.sh}
+scripts/ops/{rb01-pitr-restore.sh,rb03-cluster-restore.sh,rb04-keycloak-restore.sh,rb05-object-storage-restore.sh,reset-consumers.sh,patroni-switchover.sh,run-ops-job.sh}
+deploy/swarm/{policy.yaml,config/,nodes/}   deploy/postgres/{patroni.Dockerfile,patroni.yml,bin/}   deploy/backup/s3-policies/
 .github/workflows/deploy-config.yml     # validate stack/secret refs/scale-schedule (PR theo path deploy/**)
 .github/workflows/release.yml           # migrate → deploy dev/staging/production (environment), canary, rollback (workflow_dispatch)
 .github/workflows/secrets-sync.yml      # workflow_dispatch, environment staging/production, self-hosted runner `deploy`
-tests/ops/*.bats
+tests/ops/*.test.mjs   tests/ops/integration/{run.sh,compose.yml}   tests/ops/staging/*.sh
 docs/11-operations/restore-tests/README.md
 ```
 

@@ -1,6 +1,6 @@
 # Deployment
 
-> Trạng thái: Draft · Phiên bản: 0.6 · Owner: DevOps Engineer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (modular monolith theo ADR-0074: 3 binary `core-api`/`realtime`/`worker` + profile worker, một cụm PostgreSQL, sizing tính lại, CI ma trận theo module theo ADR-0088; object storage staging/production theo ADR-0075 thay ADR-0071; CI/CD GitHub Actions; nền tảng client từ pilot; cổng quản trị `EW_ADMIN_ADDR`, secret đọc replica, SMTP, thư mục vận hành)
+> Trạng thái: Draft · Phiên bản: 0.7 · Owner: DevOps Engineer · Cập nhật: 2026-11-27 (F130: stack Swarm staging/production trong `deploy/swarm/`, chính sách máy đọc `deploy/swarm/policy.yaml`, SOPS → Docker secret có version, script deploy/migrate/canary/rollback, `ops-scheduler` + Docker API proxy, healthcheck `--endpoint=/livez`) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (modular monolith theo ADR-0074: 3 binary `core-api`/`realtime`/`worker` + profile worker, một cụm PostgreSQL, sizing tính lại, CI ma trận theo module theo ADR-0088; object storage staging/production theo ADR-0075 thay ADR-0071; CI/CD GitHub Actions; nền tảng client từ pilot; cổng quản trị `EW_ADMIN_ADDR`, secret đọc replica, SMTP, thư mục vận hành)
 > Liên quan: [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md) · [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · [ADR-0088](../adr/ADR-0088-ci-cd-bang-github-actions.md) · [ADR-0009, ADR-0023, ADR-0024, ADR-0037…0042, ADR-0089](../adr/README.md) · [LOCAL_DEVELOPMENT](LOCAL_DEVELOPMENT.md) · [MONITORING](MONITORING.md) · [BACKUP_RECOVERY](BACKUP_RECOVERY.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md)
 
 **Mục đích & phạm vi.** Nguồn duy nhất về môi trường, topology, **sizing**, mạng, CI/CD, release/rollback, migration khi deploy, phân phối secret, health check. Không thuộc phạm vi: compose/Makefile local → [LOCAL_DEVELOPMENT](LOCAL_DEVELOPMENT.md); metric/alert/SLO → [MONITORING](MONITORING.md); backup/khôi phục → [BACKUP_RECOVERY](BACKUP_RECOVERY.md); chính sách secret → [SECURITY_ARCHITECTURE §6](../10-security/SECURITY_ARCHITECTURE.md).
@@ -198,13 +198,15 @@ Outbound Internet: chỉ Swarm service chạy adapter SIS của module `identity
 ### 4.4. Scale theo lịch học (thay autoscale, ADR-0024 mục 4, ADR-0045)
 
 - Lịch scale khai báo trong Git: `deploy/swarm/<env>/scale-schedule.yaml` (mỗi Swarm service `core-api`, `realtime`, `worker-*`, Keycloak: `baseline`, `peak`, các khung giờ). Mặc định khung cao điểm 06:45–08:00, 13:15–14:30, 19:00–21:00 ICT [Confirmed]; có thể sinh thêm từ lịch học/lịch kiểm tra trong module learning.
-- Container `ops-scheduler` (chạy trên node `ops`, có quyền Docker API của manager qua socket proxy chỉ cho phép `service update`) chạy `docker service scale <stack>_<service>=<n>` **15 phút trước** khung cao điểm và thu nhỏ sau đó; ghi log + metric `eduworld_ops_scale_actions_total`.
+- Container `ops-scheduler` (`src/backend/tools/ops-scheduler`, image `eduworld/ops-scheduler`, stack `ops.stack.yml` trên node `ops`) đưa replica lên `peak` **15 phút trước** khung cao điểm và về `baseline` sau đó (vòng 30 s); ghi log JSON + metric `eduworld_ops_scale_actions_total{service,action,result}` (`result` = `ok`/`rejected`/`error`) trên cổng quản trị `:9090`. Nó **không** mount Docker socket: gọi Docker API qua service `docker-api-proxy` (HAProxy, `deploy/ops-scheduler/socket-proxy.cfg`) chỉ cho phép `GET /services`, `GET /nodes`, `GET /tasks`, `POST /services/{id}/update` (mọi lời gọi khác trả 403), proxy nối tới Engine API của manager qua TLS bằng client certificate riêng (secret `ops_docker_api_*`), nên manager vẫn `drain`. File lịch sai schema → `ops-scheduler` không khởi động; CI kiểm bằng `ops-scheduler validate` và `scripts/deploy/check-scale-schedule.mjs` (schema `deploy/swarm/schema/scale-schedule.schema.json`).
 - Ngoài lịch: alert `NodeCapacityHigh`, `EventConsumerLag`, `ScheduledScaleFailed` và alert số WS/replica (định nghĩa và ngưỡng: [MONITORING §5](MONITORING.md)) báo người trực scale thủ công theo runbook; không có scale tự động theo tải.
-- Không scale vượt năng lực node vai trò; scheduler từ chối nếu tổng `resources.reservations` vượt dung lượng còn lại.
+- Không scale vượt năng lực node vai trò; scheduler từ chối (`result="rejected"`) nếu tổng `resources.reservations` thêm vào vượt dung lượng còn lại của các node `ready`/`active` mang nhãn `role` của service. Staging: peak chưa có trong sizing pilot nên `deploy/swarm/staging/scale-schedule.yaml` dùng `core-api` 2 → 3, còn lại peak = baseline [Proposed].
 
 ### 4.5. Stack file mẫu
 
-Mỗi môi trường có `deploy/swarm/<env>/` gồm `infra.stack.yml` (APISIX, Keycloak, NATS, Valkey, observability), `data.stack.yml` (PostgreSQL/Patroni, PgBouncer; object storage tự host nếu chọn — ADR-0075) và `app.stack.yml` chứa 5 Swarm service backend (`core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs`); `docker stack deploy` chỉ cập nhật service có spec đổi.
+Mỗi môi trường có `deploy/swarm/<env>/` (F130) gồm `infra.stack.yml` (APISIX public + internal, etcd APISIX, Keycloak, NATS ×3 + exporter, Valkey `cache`/`ratelimit` + replica + Sentinel, ClamAV; observability do F131 thêm), `data.stack.yml` (một cụm PostgreSQL/Patroni + etcd Patroni, `pg-router` (HAProxy theo REST Patroni: `:5432` leader, `:5433` replica), PgBouncer, `pgbackrest-N` TLS server cạnh mỗi node, SeaweedFS theo ADR-0093), `app.stack.yml` chứa 5 Swarm service backend (`core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs`) và `ops.stack.yml` (`ops-scheduler`, `docker-api-proxy`, `backup-tools`); kèm `<service>.env` (không secret), `stack.env` (biến deploy không secret: `GHCR_ORG`, `OPS_VERSION`), `scale-schedule.yaml`, `ops-jobs.crontab`. Nhãn node theo `deploy/swarm/nodes/<env>.yaml` (`role`, `zone`, `name`, `storage`; gắn bằng `scripts/deploy/label-nodes.mjs`), thành phần có trạng thái ghim bằng `node.labels.role` + `node.labels.name`. Overlay network tạo bằng `deploy/swarm/networks.sh`. `docker stack deploy` chỉ cập nhật service có spec đổi.
+
+Quy tắc của mục này, §4.3 và §13 có dạng máy đọc ở `deploy/swarm/policy.yaml`; job `swarm` của `deploy-config.yml` (`scripts/deploy/validate-stacks.sh` = `make swarm-validate`) chạy `docker stack config`, `check-stacks.mjs` (image bất biến, `placement` theo `node.labels.role`, `resources.limits/reservations`, `update_config` start-first + `failure_action: rollback` + `monitor` — service có trạng thái stop-first —, `rollback_config`, healthcheck, drain, network theo §4.3, datastore không publish cổng/không gắn `edge`, nhãn node có trong inventory) và `check-secret-refs.mjs` (§13). Docker secret và config là bất biến: tên ngoài mang version — secret `<name>_v${SECRET_VER_<NAME>}` (bản mới nhất trong swarm), config `eduworld_<name>_${CFG_<FILE>}` (12 ký tự đầu SHA-256 nội dung) do `scripts/deploy/deploy-service.sh` tính; secret mount tại `/run/secrets/<name>`, binary đọc qua biến `*_URL_FILE`/`*_FILE` (LOCAL_DEVELOPMENT §4).
 
 ```yaml
 # deploy/swarm/production/app.stack.yml (trích core-api)
@@ -213,10 +215,10 @@ services:
   core-api:
     image: ghcr.io/${GHCR_ORG}/eduworld/core-api:${BACKEND_VERSION}      # tag bất biến (ADR-0088)
     env_file: [core-api.env]                                             # không chứa secret
-    secrets: [identity_db_url, learning_db_url, learning_db_read_url, game_db_url, game_db_read_url, competition_db_url, chat_db_url, identity_valkey_password, learning_valkey_password, game_valkey_password, competition_valkey_password, chat_valkey_password, kc_game_backend, kc_portal, kc_svc_identity, core_nats_creds]   # mỗi module một DSN/ACL user của module đó; đọc qua biến `*_FILE` (LOCAL_DEVELOPMENT §4)
+    secrets: [identity_db_dsn, identity_db_read_dsn, identity_platform_dsn, learning_db_dsn, learning_db_read_dsn, …, kc_svc_identity, kc_portal, kc_game_backend, core_nats_creds, core_valkey_password, s3_core_access_key, s3_core_secret_key]   # mỗi module một DSN theo role; đọc qua EW_DB_<MODULE>[_<ROLE>]_URL_FILE (LOCAL_DEVELOPMENT §4); danh sách đầy đủ: deploy/swarm/production/app.stack.yml
     networks: [edge, app, data]
     healthcheck:
-      test: ["CMD", "/app/core-api", "healthcheck", "--endpoint=/livez"] # binary tự kiểm tra, image không có curl
+      test: ["CMD", "/app/core-api", "healthcheck", "--endpoint=/livez"] # binary tự kiểm tra (/livez), image không có curl
       interval: 10s
       timeout: 2s
       retries: 3
@@ -236,7 +238,7 @@ services:
   worker-chat:
     image: ghcr.io/${GHCR_ORG}/eduworld/worker:${BACKEND_VERSION}
     command: ["--profile=chat"]                   # chat-persister, notifier, moderation async, stats, purge
-    secrets: [chat_db_url, chat_db_purger_url, chat_valkey_password, worker_nats_creds]
+    secrets: [chat_db_dsn, chat_platform_dsn, chat_purger_dsn, shared_page_cursor_key, shared_cdn_signing_key, worker_nats_creds, worker_valkey_password, s3_worker_access_key, s3_worker_secret_key]
     networks: [app, data]                         # không gắn edge: không inbound
     deploy:
       replicas: 2
@@ -247,19 +249,19 @@ networks:
   app: { external: true }
   data: { external: true }
 secrets:
-  learning_db_url: { external: true }             # role learning_app
-  learning_db_read_url: { external: true }        # read context (ADR-0087), trỏ replica
-  kc_svc_identity: { external: true }             # chỉ cho Keycloak Admin API (ADR-0074 mục 5)
-  core_nats_creds: { external: true }             # NATS user của binary core-api
-  # … các secret còn lại khai báo tương tự
+  learning_db_dsn: { external: true, name: "learning_db_dsn_v${SECRET_VER_LEARNING_DB_DSN}" }            # role learning_app
+  learning_db_read_dsn: { external: true, name: "learning_db_read_dsn_v${SECRET_VER_LEARNING_DB_READ_DSN}" }  # read context (ADR-0087), trỏ replica
+  kc_svc_identity: { external: true, name: "kc_svc_identity_v${SECRET_VER_KC_SVC_IDENTITY}" }            # chỉ Keycloak Admin API (ADR-0074 mục 5)
+  core_nats_creds: { external: true, name: "core_nats_creds_v${SECRET_VER_CORE_NATS_CREDS}" }            # NATS user của binary core-api
+  # … các secret còn lại khai báo tương tự (versioned, scripts/deploy/secrets-sync.sh)
 ```
 
 ```yaml
 # deploy/swarm/production/infra.stack.yml (trích APISIX)
   apisix:
-    image: apache/apisix:3.x-debian        # pin phiên bản cụ thể khi triển khai
+    image: apache/apisix:3.13.0-debian     # phiên bản cố định (không latest, không 3.x)
     configs:
-      - { source: apisix_config_v12, target: /usr/local/apisix/conf/config.yaml }
+      - { source: apisix_config, target: /usr/local/apisix/conf/config.yaml }   # name: eduworld_apisix_config_${CFG_APISIX_YAML}
     ports:
       - { target: 9443, published: 443, protocol: tcp, mode: host }   # mode host: LB L4 trỏ thẳng node edge
     networks: [edge, admin]
@@ -269,7 +271,7 @@ secrets:
       update_config: { parallelism: 1, order: start-first, failure_action: rollback }
 ```
 
-Docker configs/secrets là bất biến: đổi nội dung = tạo config/secret mới có hậu tố version (`apisix_config_v13`) rồi cập nhật stack.
+Docker configs/secrets là bất biến: đổi nội dung = tạo config/secret mới có hậu tố version (config theo hash nội dung, secret `_v<N+1>`) rồi cập nhật stack.
 
 ## 5. APISIX
 
@@ -367,6 +369,7 @@ Không có prefix `/internal/v1/*`: module gọi nhau trong tiến trình (ADR-0
 - Persistence AOF `everysec`, **không** phải nguồn sự thật (ADR-0004). Không còn dùng Valkey Streams cho domain event (ADR-0042).
 - Key của từng module có prefix riêng (`ew:<module>:...`) và Valkey ACL user theo module (`identity`, `learning`, `game`, `competition`, `chat`, `realtime`) chỉ được truy cập prefix của mình + channel Pub/Sub được phép ([VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md)). `core-api` và `worker` mở một client Valkey cho mỗi module nạp, mỗi client dùng ACL user của module đó (giống pool database), nên key nhạy cảm như answer key chỉ module `learning` đọc được.
 - Mất Valkey → realtime suy giảm (presence, queue, fan-out chat mất); client tự reconnect, re-queue, bù tin qua lịch sử (seq gap). REST vẫn hoạt động ở chế độ không cache.
+- Stack F130 (`infra.stack.yml`) chạy `valkey-cache` (+ replica) cho mọi binary backend — binary hiện mở **một** địa chỉ Valkey (`EW_VALKEY_ADDR`, Pub/Sub realtime ↔ `core-api` dùng chung) — và `valkey-ratelimit` (+ replica) cho APISIX; Sentinel ×3 giám sát cả hai. Tách `valkey-realtime` (cluster mode, sharded Pub/Sub) và client theo Sentinel trong binary chờ mã hỗ trợ nhiều địa chỉ/Sentinel [Proposed] — tới lúc đó failover Sentinel cần redeploy binary trỏ primary mới.
 
 ## 8b. NATS JetStream (ADR-0035, ADR-0042)
 
@@ -471,12 +474,13 @@ flowchart LR
 |---|---|---|
 | `specs.yml` | `specs/**`, `scripts/specs/**`, `scripts/openapi/**`, `scripts/ci/**`, `scripts/package*.json`, `.github/**` | `make specs-lint`, `make specs-breaking` (oasdiff public + internal), `check-features`, `check-cross-features`, `check-portal-catalog` (ADR-0090) (trong `specs-lint`); quy tắc workflow (`check-workflows.mjs` + test), path filter (`test-path-filters.sh`), cổng quản trị (`check-admin-ports.sh`) |
 | `go.yml` | `src/backend/**`, `tools/**`, `Makefile`, `specs/openapi/modules/**`, `specs/events/**`, `specs/asyncapi/**`, `deploy/postgres/**` | `changes` (paths-filter + `.github/module-filters.yml` → danh sách module; nhóm `shared` — `src/backend/pkg/**`, `cmd/**`, `go.mod`, `tools/**`, `test/**`, `Makefile`, `deploy/postgres/**`, spec event/AsyncAPI — bật mọi module) → matrix `test (<module>)` (`make gen-check`, `make lint`, `make test`, `make test-integration`, `make migrate-lint` với `MOD=<module>`) → `arch` (`go -C src/backend build ./cmd/...`, `make arch-check`, `test-arch-fixtures.sh`, `make test-contract`, integration test của `cmd/`, `pkg/`) → `db-privileges` (test cô lập database + `make migrate` + `make db-privileges`) |
-| `release.yml` | `push` lên `main` có thay đổi `src/backend/**`, `deploy/docker/**`; tag `backend/vX.Y.Z` | `build-image` (matrix 4 image `core-api`, `realtime`, `worker`, `migrate`: build → Trivy image chặn Critical/High có bản vá → `check-image.sh` → push GHCR tag `git sha` + version, không `latest` → SBOM (Syft) → ký cosign keyless) → `deploy-staging` (khung, chỉ khi `vars.DEPLOY_ENABLED == 'true'`, runner `[self-hosted, deploy]`, environment `staging`, chặn fork); bước deploy thật và `deploy-production` do F130 |
+| `release.yml` | `push` lên `main` có thay đổi `src/backend/**`, `deploy/docker/**`; tag `backend/vX.Y.Z` | `build-image` (matrix 4 image `core-api`, `realtime`, `worker`, `migrate`: build → Trivy image chặn Critical/High có bản vá → `check-image.sh` → push GHCR tag `git sha` + version, không `latest` → SBOM (Syft) → ký cosign keyless) ; `build-ops-image` (F130: `ops-scheduler`, `backup-tools`, `postgres-patroni`, tag `ops/vX.Y.Z` → `OPS_VERSION`) → `deploy-staging` (tag `backend/vX.Y.Z`: job migrate từng module → `docker stack deploy`, ghi digest) → `deploy-production` (environment `production` có required reviewers, cùng digest staging, `maintenance_window` trừ commit `[hotfix]`, migrate → canary `core-api` → phần còn lại) và `rollback` (`workflow_dispatch`, một Swarm service); mọi job deploy chỉ khi `vars.DEPLOY_ENABLED == 'true'`, runner `[self-hosted, deploy]`, chặn fork |
 | `design.yml` | `design/**` | `make design-tokens-check` rồi gọi lại `godot.yml` và `web.yml` (`workflow_call`) (ADR-0047) |
 | `godot.yml` | `src/game/**`, `specs/**`, `design/game-tokens/**`, `design/shared-tokens/**` | lint, GdUnit4 headless, benchmark TC-PERF-018, export 3 target (Android, Web trên Linux; iOS trên macOS runner); không có export Windows (ADR-0101) |
 | `web.yml` | `src/cms/frontend/**`, `specs/openapi/**`, `design/admin-tokens/**`, `design/shared-tokens/**` | ESLint + stylelint, test, build portal, Storybook (`src/cms/frontend/packages/ops-ui`), visual regression Playwright |
 | `render-thumbnails.yml` | Asset 3D mới/đổi trong `src/game/assets/models/**` hoặc `workflow_dispatch` từ job publish | Godot headless render thumbnail/turntable → object storage (WORLD_RENDERING §8.3) |
-| `deploy-config.yml` | `deploy/**` | APISIX diff, Keycloak config diff, NATS config, compose validate |
+| `deploy-config.yml` | `deploy/**`, `scripts/deploy/**`, `scripts/backup/**`, `scripts/ops/**`, `tests/ops/**`, `src/backend/tools/ops-scheduler/**` | compose validate, APISIX, Keycloak; `swarm` (F130: `validate-stacks.sh` — `docker stack config` + chính sách `deploy/swarm/policy.yaml` + secret + `scale-schedule`, `go test` ops-scheduler, `node --test tests/ops/`, shellcheck); `backup-restore` (F130: backup/PITR/restore test/RB-01/RB-05/Docker API proxy trên container dùng một lần, `tests/ops/integration/run.sh`) |
+| `secrets-sync.yml` | `workflow_dispatch` (environment `staging`/`production`) | SOPS → Docker secret `_v<N+1>` (`scripts/deploy/secrets-sync.sh`), redeploy rolling các stack; runner `[self-hosted, deploy]` cần `sops` |
 | `docs.yml` | `docs/**`, `*.md`, `specs/**/*.md`, `scripts/docs/**`, `specs/openapi/eduworld-api.v1.yaml` | `make docs-check`: `check-mermaid.mjs` → `check-links.mjs` → `build-rtm.mjs --check` ([TRACEABILITY_MATRIX](../12-project/TRACEABILITY_MATRIX.md)) |
 | `security.yml` | **Luôn chạy** (mọi PR và push) | `gitleaks` (`.gitleaks.toml`), `govulncheck` (`src/backend`), `osv-scanner` (đệ quy, gồm npm lockfile), `trivy-fs` (vuln + misconfig, Critical/High có bản vá) |
 
@@ -536,7 +540,7 @@ jobs:
     environment: staging                     # secret của environment, có thể yêu cầu reviewer
     steps:
       # job migrate --module=<module> (one-off Swarm service, §12) chạy trước rollout; thất bại thì dừng
-      - run: docker stack deploy --with-registry-auth -c deploy/swarm/staging/app.stack.yml eduworld
+      - run: bash scripts/deploy/deploy-service.sh --env=staging --stack=app --version="${GITHUB_REF#refs/tags/backend/}"   # migrate → docker stack deploy
 ```
 
 ### 10.3. Quy tắc
@@ -568,7 +572,7 @@ jobs:
 Một tính năng chạm nhiều module domain được phát hành trong cùng image `core-api`/`worker`, không cần thứ tự giữa module. Thứ tự chỉ cần khi đổi hợp đồng **giữa binary** (lệnh NATS realtime ↔ `core-api`, event outbox ↔ consumer): (1) bên nhận (tương thích ngược) → (2) bên gửi → (3) bật feature flag.
 
 ### 11.3. Rollback
-- Ứng dụng: `docker service rollback eduworld_<swarm-service>` (về spec trước đó) hoặc `docker stack deploy` lại với image tag trước của Swarm service bị lỗi. Rollback `core-api` lùi cả 5 module domain cùng lúc; muốn tắt riêng một tính năng lỗi thì dùng feature flag thay vì rollback. `failure_action: rollback` tự lùi khi task mới không healthy trong thời gian `monitor`. Mục tiêu < 15 phút.
+- Ứng dụng: `make deploy-rollback SERVICE=<swarm-service> ENV=<env>` / workflow `release.yml` (`workflow_dispatch`, action `rollback`) = `scripts/deploy/rollback.sh` → `docker service rollback eduworld_<swarm-service>` (về spec trước đó, chỉ service đó, thất bại nếu quá 15 phút) hoặc `docker stack deploy` lại với image tag trước của Swarm service bị lỗi. Rollback `core-api` lùi cả 5 module domain cùng lúc; muốn tắt riêng một tính năng lỗi thì dùng feature flag thay vì rollback. `failure_action: rollback` tự lùi khi task mới không healthy trong thời gian `monitor`. Mục tiêu < 15 phút.
 - **Migration không rollback tự động** (expand → migrate → contract):
   1. *Expand*: thêm cột/bảng mới, nullable, tương thích code cũ.
   2. Deploy code dùng cả hai.
@@ -579,7 +583,7 @@ Một tính năng chạm nhiều module domain được phát hành trong cùng 
 ## 12. Migration trong deploy (ADR-0039)
 
 1. Mỗi module có thư mục `src/backend/modules/<module>/migrations/` do **Atlas** sinh từ ent schema (versioned migrations), review SQL trong merge request; CI chạy `atlas migrate lint` (chặn thao tác phá hủy, cột string thiếu giới hạn độ dài theo ADR-0041, thiếu `tenant_id`/`deleted_at`).
-2. Job migrate chạy **trước** rollout `core-api`/`worker`, mỗi database module một **one-off Swarm service** (`docker service create --mode replicated-job --restart-condition none --network data --secret <module>_migrator_dsn ghcr.io/<org>/eduworld/migrate:<tag> --module=<module>`), lần lượt 5 module; CI chờ mọi task `Complete` rồi mới `docker stack deploy`; credential `<module>_migrator`, timeout 10 phút, `lock_timeout` 5 s.
+2. Job migrate (`scripts/deploy/run-migrate-job.sh`, gọi từ `deploy-service.sh`) chạy **trước** rollout `core-api`/`worker`, mỗi database module một **one-off Swarm service** (`docker service create --mode replicated-job --restart-condition none --network data --secret <module>_migrator_dsn ghcr.io/<org>/eduworld/migrate:<tag> --module=<module>`), lần lượt 5 module; CI chờ mọi task `Complete` rồi mới `docker stack deploy`; credential `<module>_migrator`, timeout 10 phút, `lock_timeout` 5 s.
 3. Migration nặng dùng `CREATE INDEX CONCURRENTLY` trong file không-transaction riêng.
 4. Partition theo tháng/ngày được tạo trước bởi job `partition-maintainer` của từng module (profile `worker-jobs`).
 5. Thất bại migration của bất kỳ module nào → dừng pipeline, không rollout code mới (cả 5 module nằm chung image).
@@ -602,6 +606,8 @@ Một tính năng chạm nhiều module domain được phát hành trong cùng 
 | SMTP credential (`smtp_password`, biến `EW_SMTP_PASSWORD_FILE`) | Docker secret như DB credential | Swarm service gửi email nghiệp vụ của module identity (`core-api`, `worker-events`) |
 | Khóa giả danh bộ dữ liệu nghiên cứu hiệu quả (`efficacy_pseudonym_key`, biến `EW_EFFICACY_PSEUDONYM_KEY_FILE`, F035) | Docker secret như DB credential; mỗi môi trường một khóa, không xoay giữa chừng một nghiên cứu (mã giả danh phải ổn định trong study) | Chỉ Swarm service chạy report worker của module learning (`worker-jobs`) |
 
+**Triển khai (F130).** Nguồn: `deploy/secrets/<env>/<owner>.sops.yaml` (SOPS + age, chỉ giá trị được mã hóa; khóa = tên Docker secret; quy tắc người nhận `deploy/secrets/.sops.yaml`, mẫu khóa `deploy/secrets/secrets.template.yaml`, danh sách bắt buộc `node scripts/deploy/list-secrets.mjs <env>`; mọi file khác dưới `deploy/secrets/` bị `.gitignore`). Workflow `secrets-sync.yml` / `make secrets-sync` (`scripts/deploy/secrets-sync.sh`) giải mã bằng `SOPS_AGE_KEY` của GitHub Environment, so SHA-256 giá trị với nhãn `ew.sha256` của `<name>_v<N>` mới nhất, chỉ khi khác mới tạo `<name>_v<N+1>` (giá trị qua stdin, không argv/log) và **giữ** `_v<N>` tới khi rollout xong (không tự xóa); deploy kế tiếp trỏ bản mới nhất nên chỉ service tham chiếu secret đổi được rolling update. Client secret Keycloak (`kc_*`) chỉ đổi khi có `--keycloak-rotated`: giá trị mới phải đã hợp lệ trong Keycloak trong khi giá trị cũ còn hiệu lực (client secret rotation). Tên secret theo chủ sở hữu: credential module `<module>_<db|db_read|platform|relay|partition_admin|dashboard…>_dsn`, theo binary `<core|worker|realtime>_<nats_creds|valkey_password>`, `s3_<core|worker>_*`, dùng chung `shared_page_cursor_key`, `shared_cdn_signing_key`; secret chỉ dùng cho job một lần (không bao giờ trong stack): `<module>_migrator_dsn` (job migrate), `backup_restore_*` (credential đọc/khôi phục backup), `ops_*` (runbook) — `scripts/ops/run-ops-job.sh` gắn chúng vào job. Ma trận service ↔ secret đầy đủ: `deploy/swarm/policy.yaml`, CI chặn mount sai chủ.
+
 Bảng trên mô tả **cách phân phối** secret khi triển khai. Chính sách (phân loại, chu kỳ xoay vòng, quy tắc không commit, audit truy cập): nguồn duy nhất ở [SECURITY_ARCHITECTURE §6](../10-security/SECURITY_ARCHITECTURE.md).
 
 ## 14. Health, readiness, liveness
@@ -618,7 +624,7 @@ Mỗi binary mở **một cổng quản trị** `EW_ADMIN_ADDR`, cố định `:
 - `core-api` **không** fail readiness khi chỉ một database module tạm lỗi: module đó trả `503` cho route của nó, các module khác vẫn phục vụ (tránh một database kéo cả binary ra khỏi APISIX) [Confirmed]. Tích hợp bên ngoài (Keycloak Admin, SIS, object storage) có timeout, retry cho thao tác idempotent và circuit breaker trong adapter riêng (ADR-0074 mục 5), không ảnh hưởng readiness.
 - Readiness không fail khi Keycloak tạm không truy cập được nếu JWKS còn trong cache.
 - Graceful shutdown: SIGTERM → readiness false → chờ LB rút (5 s) → đóng HTTP server (30 s), drain consumer NATS, drain WS (120 s) → đóng pool.
-- Swarm `healthcheck` dùng `/livez` (binary tự kiểm tra bằng lệnh con `healthcheck`, interval 10 s, retries 3) để Swarm khởi động lại task chết và quyết định rolling update. `/readyz` dùng cho health check chủ động của APISIX tới từng task (`tasks.core-api`, `tasks.realtime`, 5 s), không dùng làm Swarm healthcheck để tránh restart dây chuyền khi phụ thuộc tạm lỗi. `stop_grace_period` ≥ thời gian drain (`core-api`/`worker` 40 s, `realtime` 150 s). Recover middleware bắt panic trong handler HTTP, consumer và job để một lỗi không làm sập cả binary (ADR-0074 hệ quả).
+- Swarm `healthcheck` dùng `/livez` (binary tự kiểm tra bằng lệnh con `healthcheck --endpoint=/livez`, interval 10 s, retries 3; không tham số = `/readyz` cho `depends_on` của compose local) để Swarm khởi động lại task chết và quyết định rolling update. `/readyz` dùng cho health check chủ động của APISIX tới từng task (`tasks.core-api`, `tasks.realtime`, 5 s), không dùng làm Swarm healthcheck để tránh restart dây chuyền khi phụ thuộc tạm lỗi. `stop_grace_period` ≥ thời gian drain (`core-api`/`worker` 40 s, `realtime` 150 s). Recover middleware bắt panic trong handler HTTP, consumer và job để một lỗi không làm sập cả binary (ADR-0074 hệ quả).
 
 ## 15. Checklist trước khi lên production (Phase 6)
 
@@ -631,5 +637,5 @@ Mỗi binary mở **một cổng quản trị** `EW_ADMIN_ADDR`, cố định `:
 - [ ] Runbook sự cố, rollback từng Swarm service (`core-api`, `realtime`, `worker-*`) đã diễn tập.
 - [ ] SMTP relay cho email nghiệp vụ của module identity đã cấu hình (`EW_SMTP_HOST`, `EW_SMTP_PORT`, `EW_SMTP_FROM`, secret `smtp_password`; TLS bắt buộc ở staging/production) và gửi thử thành công.
 
-**Nơi lưu bằng chứng vận hành** (tạo thư mục khi feature tương ứng triển khai, F130–F132): runbook sự cố `docs/11-operations/runbooks/`, biên bản diễn tập alert `docs/11-operations/alert-drills/`, biên bản restore test `docs/11-operations/restore-tests/`, báo cáo chaos test `docs/12-project/chaos-reports/`, báo cáo pentest `docs/10-security/pentest/` (chỉ bản đã loại thông tin khai thác được).
+**Nơi lưu bằng chứng vận hành** (tạo thư mục khi feature tương ứng triển khai, F130–F132): runbook sự cố `docs/11-operations/runbooks/`, biên bản diễn tập alert `docs/11-operations/alert-drills/`, biên bản restore test [`docs/11-operations/restore-tests/`](restore-tests/README.md) (F130, mẫu biên bản), báo cáo chaos test `docs/12-project/chaos-reports/`, báo cáo pentest `docs/10-security/pentest/` (chỉ bản đã loại thông tin khai thác được).
 - [ ] Tài liệu này cập nhật theo topology thực tế; stack file `deploy/swarm/production/` khớp sizing đã hiệu chỉnh bằng load test.

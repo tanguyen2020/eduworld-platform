@@ -10,6 +10,7 @@ Không áp dụng — F130 không tạo hay sửa bảng trong database của mo
 
 | Trường | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
+| `version`, `stack`, `timezone` | `1`, chuỗi ≤ 32, `Asia/Ho_Chi_Minh` | bắt buộc / bắt buộc / tùy chọn | — |
 | `windows[]` | mảng `{name, start, end}` | `name` maxLength 32; `start`/`end` `HH:MM` (pattern) | Giá trị mặc định lấy từ `warm_up_windows`; giờ ICT |
 | `lead_minutes` | integer | 0–60 | Mặc định theo DEPLOYMENT §4.4 (15) |
 | `services[]` | mảng `{name, baseline, peak}` | `name` maxLength 64, phải khớp tên Swarm service trong stack (`core-api`, `realtime`, `worker-events`, `worker-chat`, `worker-jobs`, `keycloak`, `apisix`…); `peak ≥ baseline ≥ 1` | Số replica theo DEPLOYMENT §4.2 |
@@ -18,7 +19,7 @@ Không áp dụng — F130 không tạo hay sửa bảng trong database của mo
 
 | Thuộc tính | Ràng buộc |
 |---|---|
-| `owner` | một trong `identity`, `learning`, `game`, `competition`, `chat` (credential theo module), `core`, `worker`, `realtime` (NATS creds theo binary), `chat_purger`, `kc_game_backend`, `kc_svc_identity`, `backup`, `ops`, `apisix`, `keycloak`, `s3_<binary>` (credential object storage theo binary, [DEPLOYMENT §9b](../../docs/11-operations/DEPLOYMENT.md) [Confirmed]) (theo [DEPLOYMENT §13](../../docs/11-operations/DEPLOYMENT.md)) |
+| `owner` | ma trận đầy đủ: `deploy/swarm/policy.yaml` (2026-11-27). Một trong `identity`, `learning`, `game`, `competition`, `chat` (credential theo module), `core`, `worker`, `realtime` (NATS creds, mật khẩu Valkey theo binary), `shared` (khóa dùng chung mọi binary nạp module: `shared_page_cursor_key`, `shared_cdn_signing_key`), `pg`, `pgbouncer`, `valkey`, `nats`, `storage` (hạ tầng), `chat_purger`, `kc_game_backend`, `kc_svc_identity`, `backup`, `ops`, `apisix`, `keycloak`, `s3_<binary>` (credential object storage theo binary, [DEPLOYMENT §9b](../../docs/11-operations/DEPLOYMENT.md) [Confirmed]) (theo [DEPLOYMENT §13](../../docs/11-operations/DEPLOYMENT.md)) |
 | label `ew.sha256` | hash giá trị (phát hiện đổi khi đồng bộ) |
 | Bất biến | Đổi giá trị = tạo `_v<N+1>`; xóa bản cũ chỉ sau khi không Swarm service nào tham chiếu |
 
@@ -28,7 +29,7 @@ Không áp dụng — F130 không tạo hay sửa bảng trong database của mo
 |---|---|---|
 | `/pgbackrest/<stanza>/` | WAL + full/diff pgBackRest của cụm (mã hóa), khôi phục được từng database (`--db-include`) | BACKUP_RECOVERY §3.2 |
 | `/logical/<database>/<YYYY-MM-DD>.dump` | `pg_dump -Fc` theo database module | BACKUP_RECOVERY §3.2 |
-| `/object-storage/<YYYY-MM-DD>/` | Bản sao ngoài cụm/ngoài nhà cung cấp của mọi bucket (trừ quarantine) + `manifest.sha256` | `object_storage_backup` |
+| `/object-storage/current/<bucket>/`, `/object-storage/history/<YYYY-MM-DD>/<bucket>/`, `/object-storage/manifests/<YYYY-MM-DD>/<bucket>.sha256` (bucket ngoài cụm riêng) | Bản sao ngoài cụm mã hóa (rclone crypt) của mọi bucket trừ quarantine; object bị thay/xóa ở nguồn chuyển sang `history/` (không xóa); manifest sha256 các original đã kiểm | `object_storage_backup` (lifecycle của `history/`) |
 | `/etcd/<YYYY-MM-DD>.db`, `/keycloak/<YYYY-MM-DD>.json` | Snapshot etcd APISIX, realm export không secret | 30 ngày |
 
 ### Báo cáo khôi phục — `docs/11-operations/restore-tests/<YYYY-MM>.md` (Mới)

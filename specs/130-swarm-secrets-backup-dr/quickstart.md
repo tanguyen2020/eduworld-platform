@@ -37,10 +37,14 @@
 ## 3. Lệnh test tự động
 
 ```bash
-make swarm-validate ENV=staging && make swarm-validate ENV=production
-bats tests/ops
-go -C src/backend test ./tools/ops-scheduler/...
+make swarm-validate                      # docker stack config + policy + secrets + scale schedule, both envs
+make test-ops                            # node --test tests/ops/ (needs bash + jq)
+make test-ops-integration                # backup/PITR/restore/RB-01/RB-05/proxy on throwaway containers
+go -C src/backend test ./tools/ops-scheduler/... ./pkg/config/ ./pkg/module/ ./pkg/bootstrap/
+go -C src/backend test -tags integration -run TestNewConsumerKeepsResetStartPosition ./pkg/outbox/
 ```
+
+Kịch bản staging (bằng chứng nghiệm thu, chạy từ runner `deploy`): `tests/ops/staging/{rollback_isolation,network_isolation,backup_repo,restore_one_module,patroni_switchover,rb04_rb05_dr,warmup}.sh`.
 
 ## 4. Bằng chứng cần nộp
 
