@@ -23,7 +23,7 @@ Audio đọc đề và hướng dẫn cho lớp 1–3 (không phải hoạt đ�
 | `questions[]` | `{at_ms? , question_version_id}`, có thể chèn giữa bài như video; mọi câu là loại tự chấm ([QUESTION_BANK](QUESTION_BANK.md)) |
 | `interaction` | `max_plays` (giới hạn số lần nghe cho bài luyện thi, mặc định không giới hạn), `allow_speed_change`, `show_transcript: never/after_complete/always` |
 
-Tiến độ, resume, câu chèn, quy tắc hoàn thành dùng chung cơ chế với [VIDEO_LEARNING §4–§7](VIDEO_LEARNING.md#4-tiến-độ-và-resume) (thay video bằng audio). Phát trong Godot bằng `AudioStreamPlayer` (Ogg Vorbis).
+Tiến độ, resume, câu chèn, quy tắc hoàn thành dùng chung cơ chế với [VIDEO_LEARNING §4–§7](VIDEO_LEARNING.md#4-tiến-độ-và-resume) (thay video bằng audio). Phát trong Godot bằng `AudioStreamPlayer` (Ogg Vorbis); nút, thanh tiến độ có dấu câu hỏi và lời gợi ý của Mây là hiển thị phía client, không đổi luật lượt nghe ([STUDENT_GAME_UX_LEARNING §6](../05-ux/STUDENT_GAME_UX_LEARNING.md#6-bài-nghe-audio_lesson), F099).
 
 **Lượt nghe và timeline (F066):** một lượt nghe = phát từ đầu hoặc phát lại sau khi hết bài; client gửi `play_started = true` trong `reportActivityProgress`, server tăng `plays_used` (cột của `assessment.video_progress`) một lần cho mỗi `client_seq` mới, đủ `max_plays` → `422 AUDIO_PLAY_LIMIT_REACHED` và tiến độ không đổi; tạm dừng/tua trong lượt không tính. Câu hỏi là item theo `at_ms` (câu không có `at_ms` hỏi sau khi nghe hết), **không** bắt buộc như câu chèn video: câu bỏ trống được 0 điểm, không chặn nộp. Tốc độ 0,75×/1× khi `allow_speed_change`. Biến thể phát là `ogg` (thiếu → `422 MEDIA_NOT_READY` khi bắt đầu). Transcript là `media[]` `kind = transcript` (signed URL) khi `show_transcript = always`, hoặc `after_complete` sau khi nộp.
 

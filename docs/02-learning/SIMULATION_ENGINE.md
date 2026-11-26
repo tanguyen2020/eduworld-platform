@@ -1,6 +1,6 @@
 # Simulation Engine
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Senior Godot Developer + Senior Golang Developer + EdTech Specialist (Khoa học, Toán) · Cập nhật: 2026-11-16
+> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Senior Godot Developer + Senior Golang Developer + EdTech Specialist (Khoa học, Toán) · Cập nhật: 2026-11-26 (F099: khung client thân thiện — mục tiêu ✓/trống + chữ, bước đánh số, chỉ hiển thị; [STUDENT_GAME_UX_LEARNING §8](../05-ux/STUDENT_GAME_UX_LEARNING.md#8-mô-phỏng)) · 2026-11-16
 > Liên quan: [ADR-0052](../adr/ADR-0052-thuc-thi-mo-phong-simulation-execution.md) · [ADR-0048](../adr/ADR-0048-learning-activity-registry-mo-rong-loai-hoat-dong-hoc-tap-kh.md) · [ACTIVITY_ENGINE](ACTIVITY_ENGINE.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · Schema: [`simulation.schema.json`](../../specs/schemas/activities/simulation.schema.json)
 
 ## 1. Mục đích và phạm vi

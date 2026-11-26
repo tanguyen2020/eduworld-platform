@@ -7,8 +7,9 @@
 Ba phần, chỉ phía client, trên khung làm bài F097/F098:
 
 - **Màu trạng thái (US1)**: token `tokens@0.16.0` đổi bộ màu kẹo (xanh dương, tím, hồng, xanh biển, mận, chàm — primitive mới `palette.{cyan,plum,indigo}.{50,700}`), thêm `component.answer_tile.{rest_bg,rest_border,rest_accent}` + Theme `AnswerTileRest`. `AnswerBadge.Verdict.REST` vẽ đĩa trung tính có số. `QuestionRendererBase.show_verdict()` đặt `REST` cho mọi thẻ không phải thẻ chọn/thẻ đáp án đúng khi có `is_correct`. Test scene so màu StyleBox/huy hiệu của thẻ nghỉ với màu trạng thái; test unit đo khoảng cách sắc độ trên `UiTokens`.
-- **Bố cục cân (US2)**: `QuestionRendererBase.fit_height(available, tall)` (thẻ cao lên trong trần `grow_max`/`grow_max_tall`, một cột khi dọc cho câu ≤ 4 lựa chọn), `QuizActivityRenderer.fit_layout()` (căn giữa khối câu hỏi trong vùng cuộn), `ActivityHost._balance()` (dọc: `Body` cao bằng nội dung, hai spacer chia phần trống trên/dưới cụm câu hỏi + hàng Mây). `BandLayoutProbe.empty_bands()` đo dải trống dọc trong `ActivityBoard`; ma trận gọi cho màn một bước.
-- **Media (US3)**: thành phần `MediaTrack` (Range tự vẽ: rãnh, đã xem, đã phát, vạch chương, dấu "?"/✓, kéo/chạm = tua qua luật cũ). Video/bài nghe: nút chính icon + chữ đổi theo trạng thái, nút "Lùi 10 giây", nút lớn giữa khung video khi dừng, `CaptionCard` + tên người nói (`VttParser.voice_at`), thẻ bài nghe (loa + tên đoạn). Mô phỏng: thẻ mục tiêu ✓/○, bước đánh số, nút icon + chữ, "Lượt thử: n/m". `ActivityRendererBase.coach_hint()` + `coach_hint_changed` → bong bóng Mây của host. Overlay câu hỏi: `ActivityBoard`; `show_result` gọi `show_verdict`. Icon mới `play_light`, `pause_light`, `rewind`, `captions`.
+- **Bố cục cân (US2)**: `QuestionRendererBase.fit_height(available, tall)` (thẻ cao lên trong trần `grow_max`/`grow_max_tall`, khối thẻ tham chiếu câu bốn lựa chọn — 2 hàng ngang, 4 hàng dọc; một cột khi dọc cho câu ≤ 4 lựa chọn và đúng/sai), `QuizActivityRenderer.fit_layout()` (căn giữa khối câu hỏi trong vùng cuộn), `ActivityHost.balance()` (dọc: `Body` cao bằng nội dung, hai spacer chia phần trống trên/dưới cụm câu hỏi + hàng Mây). `BandLayoutProbe.empty_bands()` đo dải trống dọc trong `ActivityBoard`; ma trận gọi cho màn một bước.
+- **Media (US3)**: thành phần `MediaTrack` (Range tự vẽ: rãnh, đã xem, đã phát, vạch chương, dấu "?"/✓, kéo/chạm = tua qua luật cũ). Video/bài nghe: nút chính icon + chữ đổi theo trạng thái, nút "Lùi 10 giây", nút lớn giữa khung video khi dừng, `CaptionCard` + tên người nói (`VttParser.caption_at`), thẻ bài nghe (loa + tên đoạn). Mô phỏng: thẻ mục tiêu ✓/○, bước đánh số, nút icon + chữ, "Lượt thử: n/m". `ActivityRendererBase.coach_hint()` + `coach_hint_changed` → bong bóng Mây của host. Overlay câu hỏi: `ActivityBoard`; `show_result` gọi `show_verdict`. Icon mới `play_light`, `pause_light`, `rewind`, `captions`.
+- **Chip lọc (P3)**: `ChipScroller` thay `ScrollContainer` trần trong `UiBuild.chip_scroller` — mũi tên hai bên chỉ khi hàng tràn.
 - **Bằng chứng (US4)**: `tools/lib/screen_capture.gd` thêm `activity_video`, `activity_video_cue`, `activity_audio`, `activity_simulation` (playback giả TEST-ONLY); chụp trước (mã cũ) và sau, 4 khối.
 
 ## Technical Context
@@ -46,13 +47,13 @@ Ba phần, chỉ phía client, trên khung làm bài F097/F098:
 ```text
 design/game-tokens/{primitive,component}.json, design/sd/formats/godot-tres.mjs, design/icons/game/{play_light,pause_light,rewind,captions}.svg, design/package.json (0.16.0), design/CHANGELOG.md
 src/game/resources/ui/theme/* + resources/ui/icons/* (sinh), src/game/scripts/core/ui_tokens.gd (sinh)
-src/game/scenes/ui/components/{answer_badge,media_track}.gd
+src/game/scenes/ui/components/{answer_badge,media_track,chip_scroller,ui_build}.gd
 src/game/scripts/learning/{question_renderer_base,activity_renderer_base,vtt_parser}.gd
 src/game/scenes/learning/{activity_host.gd,ActivityHost.tscn}, questions/{single_choice,multiple_choice,true_false}_question.gd
 src/game/scenes/learning/activity_renderers/{quiz,video_lesson,audio_lesson,simulation}/*
 src/game/locale/{vi,en}.po, messages.pot, xx_PS.po
 src/game/tools/lib/screen_capture.gd
-src/game/tests/{unit/learning/test_answer_palette.gd,scene/learning/test_answer_state_colours.gd,scene/learning/test_balanced_layout.gd,scene/video/test_media_player_ux.gd,scene/test_grade_band_matrix.gd,fakes/band_layout_probe.gd} + test cập nhật
+src/game/tests/{unit/learning/test_answer_palette.gd,scene/learning/test_answer_state_colours.gd,scene/learning/test_balanced_layout.gd,scene/video/test_media_player_ux.gd,scene/test_grade_band_matrix.gd,scene/test_chip_scroller.gd,fakes/band_layout_probe.gd} + test cập nhật
 ```
 
 ## Phase 0: Research
