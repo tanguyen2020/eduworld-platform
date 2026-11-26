@@ -1,0 +1,122 @@
+# Throwaway environment of tests/ops/integration/run.sh (F130 US3/US4, AC-23). Started with a unique project name
+# (`-p ew-f130-it-<random>`), no published port, removed with its volumes at the end. STAND-INS (R17), never deployed:
+#   s3-repo      floci   — off-site S3 of the backup repo and of the object storage copy (other account/site in prod)
+#   s3-tls       nginx   — TLS in front of s3-repo (pgBackRest talks S3 over TLS only)
+#   s3-primary   floci   — the primary object storage (SeaweedFS in staging/production, ADR-0093)
+#   s3-replica   floci   — the second-site replica of the private bucket (SeaweedFS filer.sync in production)
+#   s3-new       floci   — the new cluster of RB-05
+#   replicator   rclone loop — stand-in for SeaweedFS filer.sync (continuous copy of ew-media-private)
+#   fake-manager python TLS server — stand-in for the Swarm manager Engine API behind the HAProxy allowlist
+# The PostgreSQL node, the pgBackRest TLS server and the repo host run the REAL images of F130
+# (deploy/postgres/patroni.Dockerfile, deploy/backup/Dockerfile) with the committed pgBackRest configuration.
+name: ew-f130-it
+
+x-floci: &floci
+  image: floci/floci:2.5.0
+  environment:
+    FLOCI_STORAGE_MODE: memory
+
+services:
+  s3-repo: *floci
+  s3-primary: *floci
+  s3-replica: *floci
+  s3-new: *floci
+
+  s3-tls:
+    image: nginx:1.27-alpine
+    volumes: ["certs-server:/certs:ro"]
+    depends_on: [s3-repo]
+
+  pg:
+    image: ew-f130/postgres-patroni:test
+    user: "0"                                     # docker-entrypoint switches to postgres (uid 999)
+    command: ["docker-entrypoint.sh", "postgres", "-c", "wal_level=replica", "-c", "archive_mode=on", "-c", "archive_timeout=5",
+      "-c", "archive_command=pgbackrest --stanza=eduworld archive-push %p", "-c", "max_wal_senders=4", "-c", "unix_socket_directories=/var/run/postgresql"]
+    environment:
+      POSTGRES_PASSWORD: it-only-superuser       # TEST VALUE of a throwaway container
+      PGDATA: /var/lib/postgresql/data/pgdata
+      PGBACKREST_REPO1_S3_ENDPOINT: s3-tls
+      PGBACKREST_REPO1_S3_BUCKET: eduworld-backups
+      PGBACKREST_REPO1_S3_REGION: us-east-1
+      PGBACKREST_REPO1_STORAGE_VERIFY_TLS: "n"    # self-signed stand-in TLS
+      PGBACKREST_REPO1_S3_KEY: test               # floci default account (stand-in)
+      PGBACKREST_REPO1_S3_KEY_SECRET: test
+      PGBACKREST_REPO1_CIPHER_PASS: it-only-cipher-passphrase
+    volumes: ["pgdata:/var/lib/postgresql/data", "pgrun:/var/run/postgresql"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "/var/run/postgresql", "-U", "postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+  pgbackrest-1:
+    image: ew-f130/postgres-patroni:test
+    command: ["pgbackrest-server"]
+    volumes: ["pgdata:/var/lib/postgresql/data", "pgrun:/var/run/postgresql", "certs-server:/run/secrets:ro"]
+    depends_on: [pg]
+
+  backup-tools:
+    image: ew-f130/backup-tools:test
+    command: ["sleep", "infinity"]
+    environment:
+      EW_BACKUP_ENV: integration
+      PGBACKREST_STANZA: eduworld
+      PGBACKREST_REPO1_S3_ENDPOINT: s3-tls
+      PGBACKREST_REPO1_S3_BUCKET: eduworld-backups
+      PGBACKREST_REPO1_S3_REGION: us-east-1
+      PGBACKREST_REPO1_STORAGE_VERIFY_TLS: "n"
+      PGBACKREST_BACKUP_STANDBY: "n"              # one PostgreSQL node in this stand-in
+      EW_BACKUP_REPO_URL: http://s3-repo:4566
+      EW_BACKUP_PG_HOST: pg
+      EW_BACKUP_PG_PORT: "5432"
+      EW_BACKUP_SOURCE_URL: http://s3-primary:4566
+      EW_BACKUP_OFFSITE_URL: http://s3-repo:4566
+      EW_BACKUP_OFFSITE_BUCKET: eduworld-objects-offsite
+      EW_REPLICA_URL: http://s3-replica:4566
+      EW_RESTORE_CREDENTIALS_DIR: /run/restore-credentials
+      EW_RESTORE_WORK_DIR: /restore
+      EW_RESTORE_REPORT_DIR: /restore/reports
+      EW_PG_ADMIN_HOST: pg
+      EW_PG_ADMIN_PORT: "5432"
+    volumes: ["certs-client:/run/secrets:ro", "restore-creds:/run/restore-credentials:ro", "restore:/restore"]
+    depends_on: [pg, pgbackrest-1, s3-tls]
+
+  replicator:
+    image: ew-f130/backup-tools:test
+    command: ["sh", "-c", "while :; do rclone copy primary:ew-media-private replica:ew-media-private --quiet 2>/dev/null; sleep 2; done"]
+    environment:
+      RCLONE_CONFIG_PRIMARY_TYPE: s3
+      RCLONE_CONFIG_PRIMARY_PROVIDER: Other
+      RCLONE_CONFIG_PRIMARY_ENDPOINT: http://s3-primary:4566
+      RCLONE_CONFIG_PRIMARY_ACCESS_KEY_ID: test
+      RCLONE_CONFIG_PRIMARY_SECRET_ACCESS_KEY: test
+      RCLONE_CONFIG_PRIMARY_FORCE_PATH_STYLE: "true"
+      RCLONE_CONFIG_REPLICA_TYPE: s3
+      RCLONE_CONFIG_REPLICA_PROVIDER: Other
+      RCLONE_CONFIG_REPLICA_ENDPOINT: http://s3-replica:4566
+      RCLONE_CONFIG_REPLICA_ACCESS_KEY_ID: test
+      RCLONE_CONFIG_REPLICA_SECRET_ACCESS_KEY: test
+      RCLONE_CONFIG_REPLICA_FORCE_PATH_STYLE: "true"
+    depends_on: [s3-primary, s3-replica]
+
+  fake-manager:
+    image: python:3.12-alpine
+    command: ["python3", "/certs/fake_manager.py"]
+    volumes: ["certs-manager:/certs:ro"]
+
+  docker-api-proxy:
+    image: haproxy:3.0.12-alpine
+    environment:
+      DOCKER_API_ADDR: fake-manager:2376
+    volumes: ["certs-proxy:/run/secrets/docker-api:ro"]
+    depends_on: [fake-manager]
+
+volumes:
+  pgdata: {}
+  pgrun: {}
+  certs-server: {}
+  certs-client: {}
+  certs-manager: {}
+  certs-proxy: {}
+  restore-creds: {}
+  restore: {}
