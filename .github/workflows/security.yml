@@ -58,3 +58,13 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: "1"
+
+  # F123-AC-14 (FR-NTF-003, AGENTS R19): no push SDK in the backend module graph nor in the Godot build.
+  no-push-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Self-test of the push SDK scan
+        run: bash scripts/ci/check-no-push-sdk.sh --self-test
+      - name: No push SDK (FCM, APNs, OneSignal, Web Push)
+        run: bash scripts/ci/check-no-push-sdk.sh

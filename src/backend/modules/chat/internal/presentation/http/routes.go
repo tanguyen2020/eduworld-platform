@@ -66,6 +66,8 @@ type Handlers struct {
 	Persistent *PersistentHandlers
 	// Clubs serves the clubs (F120 US4; nil: unmounted).
 	Clubs *ClubHandlers
+	// Notifications serves the in-game notification inbox (F123, core-api; nil leaves it unmounted).
+	Notifications *NotificationHandlers
 }
 
 func op(id, method, pattern string, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -165,6 +167,11 @@ func Register(s *httpx.Server, h Handlers) error {
 	}
 	if h.Clubs != nil {
 		if err := registerClubs(s, h.Clubs); err != nil {
+			return err
+		}
+	}
+	if h.Notifications != nil {
+		if err := registerNotifications(s, h.Notifications); err != nil {
 			return err
 		}
 	}

@@ -47,3 +47,21 @@ groups:
           summary: "No live on-call shift of role {{ $labels.oncall_role }} covers now"
           description: "p1 cases page the next level with people (MODERATION §6.3). The team lead creates the missing shift (createModerationOncallShift). Runbook: MONITORING §5."
           runbook_url: "docs/11-operations/MONITORING.md#runbook-moderation-oncall-gap"
+  # In-game notifications (F123 T030, CHAT_SYSTEM §10): the chat.notify_* consumers fall behind (learning slow or down
+  # keeps chat.notify_assignment from acking, F123-AC-07) or the push misses SC-001 (p95 ≤ 2 s from the source event).
+  - name: chat-notifications
+    rules:
+      - alert: NotificationConsumerBacklog
+        expr: max by (consumer) (eduworld_consumer_pending{consumer=~"chat\.notify_.*"}) > 1000
+        for: 10m
+        labels: { severity: warning, module: chat }
+        annotations:
+          summary: "Notification consumer {{ $labels.consumer }} has more than 1000 pending events for 10 minutes"
+          description: "Students see their notifications late. chat.notify_assignment waits for module learning (listAssignmentRecipients); check DLQ_CHAT and the modcall errors of chat→learning."
+      - alert: NotificationDeliverySlow
+        expr: histogram_quantile(0.95, sum by (le) (rate(eduworld_notification_delivery_latency_seconds_bucket[10m]))) > 2
+        for: 15m
+        labels: { severity: warning, module: chat }
+        annotations:
+          summary: "p95 from the source event to notification.item.created above 2 s (SC-001 of F123)"
+          description: "Check the lag of the chat.notify_* consumers and the Valkey publish of ew:rt:user:<id>."

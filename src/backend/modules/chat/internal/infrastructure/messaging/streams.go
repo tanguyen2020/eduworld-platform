@@ -52,3 +52,29 @@ const GameplayChannelsName = "chat.gameplay_channels"
 // GameplayChannelsEvents are the competition events it consumes (party.created v1 and v2 accepted).
 var GameplayChannelsEvents = []string{"party.created", "party.member_joined", "party.member_left", "party.member_kicked", "party.leader_transferred",
 	"party.disbanded", "match.started", "match.completed", "match.aborted"}
+
+// Durable consumers of the in-game notifications (F123 T001, EVENT_DESIGN §3.2): one per producer stream, plus the
+// moderation notices of F121 on the chat stream. They run with the other domain consumers (worker events).
+const (
+	NotifyFriendRequestName   = "chat.notify_friend_request"
+	NotifyModerationName      = "chat.notify_moderation"
+	NotifyPartyInvitationName = "chat.notify_party_invitation"
+	NotifyAssignmentName      = "chat.notify_assignment"
+	NotifyProgressionName     = "chat.notify_progression"
+)
+
+// NotifierRoute is the stream, producer and events of one notifier consumer.
+type NotifierRoute struct {
+	Stream   string
+	Producer string
+	Events   []string
+}
+
+// Notifiers maps each notifier consumer to what it reads (owners: F095, F121, F100, F041, F074/F075).
+var Notifiers = map[string]NotifierRoute{
+	NotifyFriendRequestName:   {Stream: ChatStream, Producer: "chat", Events: []string{"friend_request.sent"}},
+	NotifyModerationName:      {Stream: ChatStream, Producer: "chat", Events: []string{"report.resolved"}},
+	NotifyPartyInvitationName: {Stream: CompetitionStream, Producer: "competition", Events: []string{"party.invitation_sent"}},
+	NotifyAssignmentName:      {Stream: LearningStream, Producer: "learning", Events: []string{"assignment.published", "assignment.results_released"}},
+	NotifyProgressionName:     {Stream: GameStream, Producer: "game", Events: []string{"level.reached", "achievement.unlocked"}},
+}

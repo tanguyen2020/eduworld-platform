@@ -195,6 +195,19 @@ func schema(rel string) (*jsonschema.Schema, error) {
 	}
 	c := jsonschema.NewCompiler()
 	c.AssertFormat()
+	// Payload schemas $ref the shared enums by their $id: served from specs/schemas/common, never fetched.
+	f, err := os.Open(filepath.Join(root, "specs", "schemas", "common", "enums.schema.json"))
+	if err != nil {
+		return nil, fmt.Errorf("contract: shared enums: %w", err)
+	}
+	enums, err := jsonschema.UnmarshalJSON(f)
+	_ = f.Close()
+	if err != nil {
+		return nil, fmt.Errorf("contract: shared enums: %w", err)
+	}
+	if err := c.AddResource(SharedEnumsID, enums); err != nil {
+		return nil, fmt.Errorf("contract: shared enums: %w", err)
+	}
 	s, err := c.Compile(filepath.Join(root, rel))
 	if err != nil {
 		return nil, fmt.Errorf("contract: schema %s: %w", rel, err)
@@ -202,6 +215,9 @@ func schema(rel string) (*jsonschema.Schema, error) {
 	schemas[rel] = s
 	return s, nil
 }
+
+// SharedEnumsID is the $id of specs/schemas/common/enums.schema.json.
+const SharedEnumsID = "https://schemas.eduworld.vn/common/enums.schema.json"
 
 func validate(rel string, v any) error {
 	s, err := schema(rel)

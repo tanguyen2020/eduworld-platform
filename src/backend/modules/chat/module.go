@@ -70,18 +70,27 @@ type Facade interface {
 type Module struct {
 	facade     Facade
 	principals *chatmodules.LatePrincipals // F124: resolvePrincipal of the identity facade (on-call moderators)
+	learning   *chatmodules.LateLearning   // F123: listAssignmentRecipients of the learning facade (notifications)
 }
 
 // Imports are the facades of other modules called by module chat: resolvePrincipal of identity (F124-AC-12, the on-call
-// moderator holds moderation.case.act).
+// moderator holds moderation.case.act) and listAssignmentRecipients of learning (F123, recipients of the notifications
+// of bài giao).
 type Imports struct {
 	Identity chatmodules.IdentityPrincipals
+	Learning chatmodules.LearningRecipients
 }
 
 // Wire sets the facades of the other modules once they are built (cmd/internal/wiring.Compose).
 func (m *Module) Wire(in Imports) {
-	if m != nil && m.principals != nil {
+	if m == nil {
+		return
+	}
+	if m.principals != nil && in.Identity != nil {
 		m.principals.Set(in.Identity)
+	}
+	if m.learning != nil && in.Learning != nil {
+		m.learning.Set(in.Learning)
 	}
 }
 
@@ -151,12 +160,19 @@ func Register(r *module.Registry) (*Module, error) {
 		return nil, fmt.Errorf("chat: %w", err)
 	}
 	var validator port.ContentValidator = pipe.Validator
-	mod := &Module{facade: chatfacade.Facade{Moderation: pipe.Validator}, principals: &chatmodules.LatePrincipals{}}
+	learning := &chatmodules.LateLearning{}
+	mod := &Module{facade: chatfacade.Facade{Moderation: pipe.Validator}, principals: &chatmodules.LatePrincipals{}, learning: learning}
 	opsCfg, err := chatconfig.SafetyOpsFrom(r.Config())
 	if err != nil {
 		return nil, fmt.Errorf("chat: %w", err)
 	}
 	observability.RegisterSafetyOps(r.Metrics())
+	// In-game notifications (F123): stored in PostgreSQL, pushed after the commit on ew:rt:user:<id>, unread count cached
+	// in Valkey; never a push outside the game (FR-NTF-003).
+	observability.RegisterNotifications(r.Metrics())
+	unread := cache.Unread{C: vk, TTL: cache.UnreadTTL}
+	notifications := command.Notifications{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: persistence.Notifications{},
+		Push: realtime.Notifications{P: rt.Publisher{C: vk}}, Unread: unread, Recipients: learning, Metrics: observability.Notifications{}}
 	if r.ServesHTTP() || runsChat {
 		if err := command.RequireValidator(chatCfg.Env, validator); err != nil {
 			return nil, err
@@ -300,7 +316,9 @@ func Register(r *module.Registry) (*Module, error) {
 			Persistent: &chathttp.PersistentHandlers{Direct: persistentCmd, Search: query.Search{Read: core.ReadSession, Reader: persistence.Search{},
 				Cursors: cursors}, Kinds: reads.Kinds},
 			Clubs: &chathttp.ClubHandlers{Commands: clubCmd, Queries: query.Clubs{Read: core.ReadSession, Reader: persistence.ClubReads{},
-				Directory: persistence.Directory{}, Cursors: cursors}, WeekLoc: chatCfg.CurfewLocation}}
+				Directory: persistence.Directory{}, Cursors: cursors}, WeekLoc: chatCfg.CurfewLocation},
+			Notifications: &chathttp.NotificationHandlers{Commands: notifications, Queries: query.Notifications{Read: core.ReadSession,
+				Reader: persistence.NotificationReader{}, Unread: unread, Cursors: cursors}}}
 		r.HTTP(Name, func(s *httpx.Server) error { return chathttp.Register(s, h) })
 		// Chat commands of the gateway (F115): ew.cmd.chat.message.send, channel.join/leave, history.fetch, channel.sync.
 		if nc := r.NATS(); nc != nil {
@@ -310,6 +328,8 @@ func Register(r *module.Registry) (*Module, error) {
 				}
 				return natscmd.Serve(ctx, nc, send, reads)
 			})
+			// notification.item.mark_read of the gateway (F123-AC-09).
+			r.Go("chat.notification_commands", func(ctx context.Context) error { return natscmd.ServeNotifications(ctx, nc, notifications) })
 		}
 		// chat.receipt.read (F117-AC-13): the read cursor of a member, coalesced ≤ 1 durable write per 2 s, then
 		// chat.unread.updated to every device of the member.
@@ -424,6 +444,13 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("chat.moderation_cases", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.MessageHeldOptions(consumer.MessageHeld{H: safetyCmd}, core.UoW, core.App, js)
 	})
+	// In-game notifications (F123 T001): one durable consumer per producer stream, with the other domain consumers
+	// (worker events, where every module is composed and the learning facade is wired — Clarifications 2026-11-21).
+	for _, name := range consumer.NotifierNames {
+		r.Consumer(name, func(js jetstream.JetStream) outbox.ConsumerOptions {
+			return consumer.NotifierOptions(name, consumer.Notifier{H: notifications}, consumer.NotifierConfig{}, core.UoW, core.App, js)
+		})
+	}
 	expiry := command.Expiry{UoW: core.UoW, Repo: persistence.Expiry{}}
 	r.Job(Name, job.ExpireFriendRequests, cfg.ExpiryInterval, module.JobFunc(job.ExpireFriendRequestsJob(expiry)))
 	// moderation-switch-expirer (F116-AC-25, AC-32): switches back on at expires_at, pending requests expired after 24 h.

@@ -92,16 +92,17 @@ type env struct {
 	tenantA, tenantB, tenantU  uuid.UUID
 	schoolA, schoolA2, schoolB uuid.UUID
 	schoolU1, schoolU2         uuid.UUID
-	chatHandlers               *chathttp.ChatHandlers       // F115 routes (setupChat)
-	catalogHandlers            *chathttp.CatalogHandlers    // F116 US2 routes (setupChat with the real pipeline)
-	switchHandlers             *chathttp.SwitchHandlers     // F116 US3 routes (setupChat with the real pipeline)
-	safetyHandlers             *chathttp.SafetyHandlers     // F121 routes (setupSafety)
-	safetyOpsHandlers          *chathttp.SafetyOpsHandlers  // F124 routes (setupSafetyOps)
-	featureHandlers            *chathttp.FeatureHandlers    // F118 routes (setupFeatures)
-	assetHandlers              *chathttp.AssetHandlers      // F118 Game Studio routes
-	policyHandlers             *chathttp.PolicyHandlers     // F120 chat policy routes (setupPersistent)
-	persistentHandlers         *chathttp.PersistentHandlers // F120 direct channels + search
-	clubHandlers               *chathttp.ClubHandlers       // F120 clubs
+	chatHandlers               *chathttp.ChatHandlers         // F115 routes (setupChat)
+	catalogHandlers            *chathttp.CatalogHandlers      // F116 US2 routes (setupChat with the real pipeline)
+	switchHandlers             *chathttp.SwitchHandlers       // F116 US3 routes (setupChat with the real pipeline)
+	safetyHandlers             *chathttp.SafetyHandlers       // F121 routes (setupSafety)
+	safetyOpsHandlers          *chathttp.SafetyOpsHandlers    // F124 routes (setupSafetyOps)
+	featureHandlers            *chathttp.FeatureHandlers      // F118 routes (setupFeatures)
+	assetHandlers              *chathttp.AssetHandlers        // F118 Game Studio routes
+	policyHandlers             *chathttp.PolicyHandlers       // F120 chat policy routes (setupPersistent)
+	persistentHandlers         *chathttp.PersistentHandlers   // F120 direct channels + search
+	clubHandlers               *chathttp.ClubHandlers         // F120 clubs
+	notificationHandlers       *chathttp.NotificationHandlers // F123 routes (setupNotify)
 }
 
 func open(t *testing.T, dsn string) *sql.DB {
@@ -184,7 +185,7 @@ func (e *env) server(ctx context.Context) {
 	}
 	if err := chathttp.Register(s, chathttp.Handlers{Commands: e.social, Queries: e.queries, Chat: e.chatHandlers,
 		Catalog: e.catalogHandlers, Switches: e.switchHandlers, Safety: e.safetyHandlers, SafetyOps: e.safetyOpsHandlers, Features: e.featureHandlers, Assets: e.assetHandlers,
-		Policies: e.policyHandlers, Persistent: e.persistentHandlers, Clubs: e.clubHandlers}); err != nil {
+		Policies: e.policyHandlers, Persistent: e.persistentHandlers, Clubs: e.clubHandlers, Notifications: e.notificationHandlers}); err != nil {
 		e.t.Fatal(err)
 	}
 	e.srv = httptest.NewServer(s)

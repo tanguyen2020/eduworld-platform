@@ -29,7 +29,7 @@ type Composition struct {
 // F010-2): learning, game and competition first, then identity, whose sagas and platform operations call them through their
 // generated api packages (pkg/modcall). Each module declares its own routes, relay, consumers and jobs; the role
 // of the binary decides which of them run. Competition calls the chat facade (moderateDisplayText, F116) for
-// party names.
+// party names; chat calls the learning facade (listAssignmentRecipients, F123) for the notifications of bài giao.
 func Compose(r *module.Registry) (*Composition, error) {
 	ConfigureHooks(r)
 	idm, err := identity.Register(r)
@@ -96,10 +96,16 @@ func Compose(r *module.Registry) (*Composition, error) {
 	if err := idm.Wire(in); err != nil {
 		return nil, err
 	}
-	// The on-call rotation of module chat checks the moderator through resolvePrincipal of identity (F124-AC-12).
+	// The on-call rotation of module chat checks the moderator through resolvePrincipal of identity (F124-AC-12); the
+	// in-game notifications of bài giao read their recipients from module learning (listAssignmentRecipients, F123).
+	chi := chat.Imports{}
 	if f := idm.Facade(); f != nil {
-		cht.Wire(chat.Imports{Identity: f})
+		chi.Identity = f
 	}
+	if f := lrn.Facade(); f != nil {
+		chi.Learning = f
+	}
+	cht.Wire(chi)
 	return &Composition{Identity: idm, Learning: lrn, Game: gam}, nil
 }
 
