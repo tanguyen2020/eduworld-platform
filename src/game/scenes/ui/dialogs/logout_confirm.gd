@@ -1,6 +1,6 @@
 extends Control
 ## LogoutConfirm (F061-AC-23, S01 §9; look F114-AC-13): a dialog over the Settings window with the nested scrim —
-## yellow title bar "ĐĂNG XUẤT?", "Bạn muốn đăng xuất khỏi EduWorld?" + "Tiến độ của bạn đã được lưu rồi nhé.", a neutral
+## yellow title bar "ĐĂNG XUẤT?", "Em muốn đăng xuất khỏi EduWorld?" + "Tiến độ của em đã được lưu rồi nhé.", a neutral
 ## "Hủy" (icon ✕, focused by default: the safe choice, AGENTS R19) and the red "Đăng xuất" (DangerButton, door icon).
 ## Confirm → AuthService.logout() (`endGameSession` → `gameLogout` → erase the stored session); Cancel hides the dialog.
 

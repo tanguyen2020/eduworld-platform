@@ -1348,10 +1348,10 @@ msgid "ui.settings.logout_cancel"
 msgstr "Hủy"
 
 msgid "ui.settings.logout_confirm"
-msgstr "Bạn muốn đăng xuất khỏi EduWorld?"
+msgstr "Em muốn đăng xuất khỏi EduWorld?"
 
 msgid "ui.settings.logout_saved"
-msgstr "Tiến độ của bạn đã được lưu rồi nhé."
+msgstr "Tiến độ của em đã được lưu rồi nhé."
 
 msgid "ui.settings.logout_title"
 msgstr "Đăng xuất?"
