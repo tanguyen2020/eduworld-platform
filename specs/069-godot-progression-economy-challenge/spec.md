@@ -35,7 +35,7 @@ Owner có lệnh thường trực "thiết kế game thật dễ dùng và thu h
 
 **Câu hỏi mở**
 
-- F069-1: `active_attempt_id` (`GameChallengeSummary`) và `difficulties[]` (`GameChallengeDetail`) của delta F076 ([contracts §6](contracts/README.md)) chưa có trong OpenAPI — client đã đọc khi có; tới khi có, tiếp tục challenge sau khi mở lại app/đổi thiết bị chỉ qua thông báo `409 CONFLICT` và mức khóa có lý do không hiện [Proposed: owner F076 bổ sung delta T004; không cần đổi client].
+- F069-1: ~~`active_attempt_id` và `difficulties[]` chưa có trong OpenAPI~~ — **Đã giải quyết 2026-11-26** (delta F076 T040, [F076 Clarifications 2026-11-26](../076-challenge-engine-solo/spec.md)): cả hai có trên `listGameChallenges`/`getGameChallenge`; khối 1–3 không nhận expert/legendary trong `difficulties[]` (AC-UX-0601). Còn mở: mô tả `LocalizedText` (F076-3).
 - F069-2: Cổng/NPC "Núi Thử Thách" trong vùng `challenge_mountain` và NPC Thợ may Bông ở Thị trấn Trung Tâm mở thẳng S06/S08 [Proposed: khi có seed NPC/interactable (WORLD_DESIGN), gắn intent `challenge_board` / `inventory {tab: shop}` — nay mở qua HUD "Thêm" và chip Xu].
 - F069-3: Ảnh thumbnail vật phẩm render sẵn trong atlas (`thumbnail_url`, `tools/thumbnail_renderer`) [Proposed: `ItemThumb` vector theo loại + màu art palette tới khi pipeline xuất atlas cho client].
 

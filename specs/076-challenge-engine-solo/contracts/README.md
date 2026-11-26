@@ -8,8 +8,8 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → `specs/openapi/modules/ga
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
-| `listGameChallenges` | `GET /api/v1/game/challenges?type=&area_id=&difficulty=` → `GameChallengeSummary[]` | game.v1.yaml | `game_player` | Có sẵn |
-| `getGameChallenge` | `GET /api/v1/game/challenges/{challenge_id}` → `GameChallengeDetail` | game.v1.yaml | `game_player` | Có sẵn |
+| `listGameChallenges` | `GET /api/v1/game/challenges?type=&area_id=&difficulty=` → `GameChallengeSummary[]` | game.v1.yaml | `game_player` | Đã sửa 2026-11-26: `active_attempt_id` (delta F069 T004) |
+| `getGameChallenge` | `GET /api/v1/game/challenges/{challenge_id}` → `GameChallengeDetail` | game.v1.yaml | `game_player` | Đã sửa 2026-11-26: `active_attempt_id`, `difficulties[]` (`ChallengeDifficultyOption`, delta F069 T004) |
 | `startGameChallenge` | `POST /api/v1/game/challenges/{challenge_id}:start` (`Idempotency-Key`, body `difficulty`) → `201 GameChallengeAttempt` | game.v1.yaml | `game_player` | Cần sửa (khai báo `422`, `428`) |
 | `getGameChallengeAttempt` | `GET /api/v1/game/challenge-attempts/{challenge_attempt_id}` | game.v1.yaml | `game_player` (self) | Có sẵn |
 | `nextChallengeActivity` | `POST /api/v1/game/challenge-attempts/{challenge_attempt_id}/activities:next` (`Idempotency-Key`) → `ChallengeNextActivity` | game.v1.yaml | `game_player` (self) | Cần sửa (khai báo `503`, `428`) |
@@ -51,4 +51,5 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → `specs/openapi/modules/ga
 - `game.v1.yaml`: `startGameChallenge` khai báo `422 VALIDATION_FAILED`, `428 PRECONDITION_REQUIRED`; `nextChallengeActivity` khai báo `428`, `503 UNAVAILABLE`.
 - `reward-rule.schema.json`: `trigger.event_type` thêm `challenge.completed`; `conditions` thêm `challenge_statuses` (enum `succeeded`/`failed`) và `grants[].scale_by` (enum `reward_multiplier`).
 - Payload mới `challenge.started.v1`, `challenge.completed.v1` (§4).
+- `game.v1.yaml` (delta F069 T004, làm 2026-11-26, additive): `GameChallengeSummary.active_attempt_id` (`Uuid` | null); schema mới `ChallengeDifficultyOption` (`difficulty`, `available`, `locked_reason_code` enum `grade_not_allowed`/`not_unlocked`/`school_disabled`/null, `time_limit_seconds`, `time_per_activity_seconds`, `lives`, `reward_multiplier`); `GameChallengeDetail.difficulties` (`maxItems: 5`). Chưa làm: `description`/`rules_summary` → `LocalizedText` (breaking — Câu hỏi mở F076-3).
 - Kiểm: `make specs-lint`, `make specs-breaking`, `make gen MOD=game`, `make gen MOD=learning`, `make test-contract`.

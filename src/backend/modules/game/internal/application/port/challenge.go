@@ -34,8 +34,9 @@ type ChallengeFilter struct {
 type ChallengeUsage struct {
 	Attempts     int
 	LastFailedAt *time.Time
-	LastFailedOn string // difficulty of the last failed attempt
-	Cleared      bool   // a succeeded attempt exists (any version, any period)
+	LastFailedOn string     // difficulty of the last failed attempt
+	Cleared      bool       // a succeeded attempt exists (any version, any period)
+	Active       *uuid.UUID // the in_progress attempt of the student for this challenge (active_attempt_id, delta F076)
 }
 
 // ChallengeContent reads the published challenges, their tenant assignment and the attempts of a student in the

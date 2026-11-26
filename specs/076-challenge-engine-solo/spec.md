@@ -31,10 +31,20 @@ Quyết định khi triển khai, lấy phương án an toàn nhất; tất cả
 - Q: F077 chờ F076 kiểm challenge trong sự kiện? → A: Publish sự kiện có `components.challenge_ids` không phải challenge đã publish (hoặc trong cùng lô) → `422 ITEM_REF_INVALID`. [Confirmed]
 - Q: Seed challenge (T004)? → A: Dời: activity của learning dev seed sinh id lúc chạy nên chưa tham chiếu cố định được; test tích hợp dùng nội dung test (Câu hỏi mở F076-2). [Confirmed]
 
+### Session 2026-11-26 (delta đọc cho F069, ma trận khối 1–9)
+
+Quyết định khi triển khai delta F069 T004 và ma trận khối ([TEST_STRATEGY §6.10](../../docs/12-project/TEST_STRATEGY.md#610-ma-trận-khối-19-backend)); tất cả [Confirmed] theo lệnh thường trực "chốt hết" của owner.
+
+- Q: `active_attempt_id` của `GameChallengeSummary` lấy ở đâu? → A: Attempt `in_progress` của chính học sinh cho challenge đó (tối đa một nhờ `challenge_attempts_one_active_uq`), đọc cùng truy vấn lượt đã dùng; `null` khi không có (khóa luôn có mặt). Có trên `listGameChallenges` và `getGameChallenge`. [Confirmed]
+- Q: `difficulties[]` của `GameChallengeDetail` gồm những mức nào? → A: Mọi mức có profile trong version, dễ trước: mức chọn được (`available = true`, `locked_reason_code = null`, trùng `available_difficulties`) và mức khóa vì khối (`available = false`, `locked_reason_code = grade_not_allowed`). Khối 1–3 **không** nhận mức trên `g1_3_challenge_rules` (expert, legendary), kể cả dạng khóa — AC-UX-0601 "g1_3 không thấy expert/legendary" thắng mô tả "mức khóa hiện lý do" của S06 §6a (phương án an toàn hơn cho trẻ). `time_limit_seconds`, `time_per_activity_seconds` đã nhân hệ số khối 1–3 (`time_per_activity_seconds` tối thiểu 10 s như lượt survival), `lives` chỉ loại survival, `reward_multiplier` của profile. [Confirmed]
+- Q: `not_unlocked`, `school_disabled`? → A: Có trong enum của contract nhưng F076 không có mở khóa theo mức hay công tắc trường theo mức, nên không bao giờ trả; chỉ `grade_not_allowed`. [Confirmed]
+- Q: `description`, `rules_summary` đổi sang `LocalizedText`? → A: Không làm trong delta này: đổi kiểu `string` → object là thay đổi phá vỡ (oasdiff); `description` vẫn trả chuỗi theo `Accept-Language` — Câu hỏi mở F076-3. [Confirmed]
+
 ### Câu hỏi mở
 
 - F076-1: Bước quest `challenge` (QUEST_SYSTEM) và QST tiêu thụ `challenge.completed` — ngoài AC của F076, chờ feature quest kế tiếp.
 - F076-2: Seed challenge cho quickstart (T004, T039) — cần learning dev seed có id activity cố định.
+- F076-3: `description`/`rules_summary` song ngữ (`LocalizedText`, F069 contracts §6) cần một field mới hoặc version API mới (đổi kiểu là breaking) — chờ owner chọn [Proposed: thêm `description_i18n` additive].
 
 ## User Scenarios & Testing *(bắt buộc)*
 

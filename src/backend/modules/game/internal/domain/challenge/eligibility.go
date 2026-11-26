@@ -53,6 +53,50 @@ func (r Rules) Difficulties(v Version, grade int) []string {
 	return out
 }
 
+// LockedGrade is the lock reason of a level whose profile (or challenge) does not admit the grade of the student
+// (ChallengeDifficultyOption.locked_reason_code). The contract also lists not_unlocked and school_disabled; F076 has no
+// per-level unlock or school switch, so they are never returned [Confirmed — F076 Clarifications 2026-11-26].
+const LockedGrade = "grade_not_allowed"
+
+// MinItemSeconds is the floor of the time of one activity (survival: one item per activity, F076 Clarifications
+// 2026-11-24 "tối thiểu 10 s").
+const MinItemSeconds = 10
+
+// Option is one level of a version for a student of grade (ChallengeDifficultyOption, delta F076).
+type Option struct {
+	Level            string
+	Available        bool
+	LockedReason     string // "" when available
+	TimeLimitSeconds *int   // whole challenge × the grade 1–3 factor; nil = no time limit
+	ItemSeconds      int    // seconds per activity × the grade 1–3 factor, at least MinItemSeconds
+	Lives            *int   // survival only
+	RewardMultiplier float64
+}
+
+// Options are the levels of a version for the student of grade, easiest first (getGameChallenge difficulties[]): the
+// levels it may choose (Available, same as Difficulties) and the levels locked for its grade with their reason. Grades
+// 1–3 never receive a level above g1_3_challenge_rules (expert, legendary), not even locked (AC-UX-0601).
+func (r Rules) Options(v Version, grade int) []Option {
+	out := []Option{}
+	for _, l := range Levels {
+		p, ok := v.Profile(l)
+		if !ok || (grade >= 1 && grade <= 3 && Rank(l) > Rank(r.g13Max())) {
+			continue
+		}
+		o := Option{Level: l, Available: r.Allowed(v, p, grade), ItemSeconds: max(MinItemSeconds, r.ItemSeconds(p, grade)), Lives: r.Lives(v, p),
+			RewardMultiplier: p.RewardMultiplier}
+		if !o.Available {
+			o.LockedReason = LockedGrade
+		}
+		if v.TimeLimitSeconds > 0 {
+			n := max(1, int(math.Floor(float64(v.TimeLimitSeconds)*r.g13Factor(grade))))
+			o.TimeLimitSeconds = &n
+		}
+		out = append(out, o)
+	}
+	return out
+}
+
 func (r Rules) g13Factor(grade int) float64 {
 	if grade >= 1 && grade <= 3 && r.G13TimeFactor > 0 {
 		return r.G13TimeFactor

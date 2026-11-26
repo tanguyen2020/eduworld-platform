@@ -58,16 +58,29 @@ type ChallengeSummary struct {
 	PartyRequired         bool           `json:"party_required"`
 	AvailableTo           *time.Time     `json:"available_to,omitempty"`
 	AttemptsLeft          int            `json:"attempts_left"`
+	ActiveAttemptID       *uuid.UUID     `json:"active_attempt_id"` // delta F076: the in_progress attempt (null when none)
+}
+
+// ChallengeDifficultyOption is ChallengeDifficultyOption (delta F076): one level for the student, locked with its reason.
+type ChallengeDifficultyOption struct {
+	Difficulty             string  `json:"difficulty"`
+	Available              bool    `json:"available"`
+	LockedReasonCode       *string `json:"locked_reason_code"`
+	TimeLimitSeconds       *int    `json:"time_limit_seconds"`
+	TimePerActivitySeconds int     `json:"time_per_activity_seconds"`
+	Lives                  *int    `json:"lives"`
+	RewardMultiplier       float64 `json:"reward_multiplier"`
 }
 
 // ChallengeDetail is GameChallengeDetail.
 type ChallengeDetail struct {
 	ChallengeSummary
-	Description       string                   `json:"description,omitempty"`
-	Version           int                      `json:"version"`
-	TimeLimitSeconds  *int                     `json:"time_limit_seconds,omitempty"`
-	CooldownUntil     *time.Time               `json:"cooldown_until,omitempty"`
-	FirstClearRewards []ChallengeRewardSummary `json:"first_clear_rewards"`
+	Description       string                      `json:"description,omitempty"`
+	Version           int                         `json:"version"`
+	TimeLimitSeconds  *int                        `json:"time_limit_seconds,omitempty"`
+	CooldownUntil     *time.Time                  `json:"cooldown_until,omitempty"`
+	FirstClearRewards []ChallengeRewardSummary    `json:"first_clear_rewards"`
+	Difficulties      []ChallengeDifficultyOption `json:"difficulties"`
 }
 
 // ChallengeListInput is the filter of listGameChallenges.
@@ -150,7 +163,7 @@ func (h Challenges) summary(ctx context.Context, f *facts, row port.ChallengeRow
 	_, to := v.Window()
 	s := &ChallengeSummary{ChallengeID: row.ChallengeID, ChallengeType: v.Type, Title: v.Name, AreaID: v.AreaID, SubjectID: v.SubjectID,
 		AvailableDifficulties: levels, PartyRequired: v.Mode == challenge.ModePartyRequired, AvailableTo: to,
-		AttemptsLeft: max(0, h.Rules.MaxAttempts(v)-use.Attempts)}
+		AttemptsLeft: max(0, h.Rules.MaxAttempts(v)-use.Attempts), ActiveAttemptID: use.Active}
 	return s, &use, nil
 }
 
@@ -263,6 +276,7 @@ func (h Challenges) GetChallenge(ctx context.Context, challengeID uuid.UUID) (ou
 		}
 		v := row.Version
 		out = ChallengeDetail{ChallengeSummary: *s, Version: row.VersionNo, FirstClearRewards: []ChallengeRewardSummary{}}
+		out.Difficulties = difficultyOptions(h.Rules.Options(v, st.Grade))
 		if v.Description != nil {
 			out.Description = v.Description.VI
 			if lang, _ := ctx.Value(langKey{}).(string); lang == "en" {
@@ -335,4 +349,19 @@ func (h Challenges) GetChallengeAttempt(ctx context.Context, attemptID uuid.UUID
 		return nil
 	})
 	return out, err
+}
+
+// difficultyOptions maps the domain options to ChallengeDifficultyOption (never nil: an empty array, not null).
+func difficultyOptions(opts []challenge.Option) []ChallengeDifficultyOption {
+	out := make([]ChallengeDifficultyOption, 0, len(opts))
+	for _, o := range opts {
+		d := ChallengeDifficultyOption{Difficulty: o.Level, Available: o.Available, TimeLimitSeconds: o.TimeLimitSeconds,
+			TimePerActivitySeconds: o.ItemSeconds, Lives: o.Lives, RewardMultiplier: o.RewardMultiplier}
+		if o.LockedReason != "" {
+			r := o.LockedReason
+			d.LockedReasonCode = &r
+		}
+		out = append(out, d)
+	}
+	return out
 }

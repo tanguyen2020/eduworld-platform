@@ -11438,6 +11438,23 @@ export interface components {
         };
         /** @enum {string} */
         ChallengeDifficulty: "easy" | "normal" | "hard" | "expert" | "legendary";
+        /**
+         * @description Một mức khó của challenge với học sinh đang gọi (delta F076, F069 contracts §6). `available = false` luôn kèm
+         *     `locked_reason_code`; khối 1–3 không nhận mức trên `g1_3_challenge_rules` (expert, legendary) — AC-UX-0601.
+         *     Thời gian đã nhân hệ số khối 1–3; client không tự suy luật khối (R1).
+         */
+        ChallengeDifficultyOption: {
+            available: boolean;
+            difficulty: components["schemas"]["ChallengeDifficulty"];
+            /** @description Sức bền (chỉ loại survival); null với các loại khác */
+            lives?: number | null;
+            /** @enum {string|null} */
+            locked_reason_code: "grade_not_allowed" | "not_unlocked" | "school_disabled" | null;
+            reward_multiplier: number;
+            /** @description Thời gian cả challenge (đã nhân hệ số khối 1–3); null = không giới hạn thời gian */
+            time_limit_seconds?: number | null;
+            time_per_activity_seconds?: number;
+        };
         ChallengeJoinResult: {
             challenge_id: components["schemas"]["Uuid"];
             match_id: components["schemas"]["Uuid"];
@@ -13117,6 +13134,8 @@ export interface components {
         GameChallengeDetail: components["schemas"]["GameChallengeSummary"] & {
             cooldown_until?: components["schemas"]["Timestamp"];
             description?: string;
+            /** @description Mọi mức khó của version, dễ trước (mức khả dụng và mức khóa có lý do) — delta F076 */
+            difficulties?: components["schemas"]["ChallengeDifficultyOption"][];
             first_clear_rewards?: components["schemas"]["RewardGrantSummary"][];
             lives?: number;
             rules_summary?: string;
@@ -13124,6 +13143,11 @@ export interface components {
             version?: number;
         };
         GameChallengeSummary: {
+            /**
+             * @description Attempt `in_progress` của học sinh cho challenge này (null khi không có): client đề nghị "Tiếp tục" sau mất kết nối,
+             *     mở lại game hoặc takeover và đọc trạng thái bằng `getGameChallengeAttempt` (F069-AC-20, delta F076).
+             */
+            active_attempt_id?: components["schemas"]["Uuid"] | null;
             area_id?: string;
             attempts_left?: number;
             available_difficulties: components["schemas"]["ChallengeDifficulty"][];

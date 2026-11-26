@@ -291,7 +291,7 @@ func (h Challenges) Next(ctx context.Context, attemptID uuid.UUID) (out NextView
 		req = port.ChallengeLearningAttempt{StudentID: student, ActivityID: activity, ChallengeAttemptID: a.ID, DifficultyMin: p.Min,
 			DifficultyMax: p.Max, GradeLevel: st.Grade, ObjectiveIDs: objectives}
 		if v.Type == challenge.TypeSurvival {
-			one, secs := 1, max(r.ItemSeconds(p, st.Grade), 10)
+			one, secs := 1, max(r.ItemSeconds(p, st.Grade), challenge.MinItemSeconds)
 			req.QuestionCount, req.TimeLimitSeconds = &one, &secs
 		}
 		return nil

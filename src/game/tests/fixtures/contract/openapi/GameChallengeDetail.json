@@ -13,6 +13,7 @@
   "party_required": false,
   "available_to": "2026-11-15T07:30:00Z",
   "attempts_left": 0,
+  "active_attempt_id": "00000000-0000-4000-8000-000000000001",
   "description": "sample",
   "version": 1,
   "rules_summary": "sample",
@@ -29,6 +30,17 @@
         "vi": "sample",
         "en": "sample"
       }
+    }
+  ],
+  "difficulties": [
+    {
+      "difficulty": "easy",
+      "available": false,
+      "locked_reason_code": "grade_not_allowed",
+      "time_limit_seconds": 1,
+      "time_per_activity_seconds": 1,
+      "lives": 1,
+      "reward_multiplier": 0
     }
   ]
 }

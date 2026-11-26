@@ -170,7 +170,8 @@ func (Content) KnownChallenges(ctx context.Context, ids []uuid.UUID) (map[uuid.U
 }
 
 // Usage implements port.ChallengeContent: attempts of the period (every status: an abandoned attempt counts), the last
-// failure (any period, for the cooldown) and whether the challenge was ever cleared.
+// failure (any period, for the cooldown), whether the challenge was ever cleared and its in_progress attempt (at most one
+// per student: challenge_attempts_one_active_uq).
 func (Content) Usage(ctx context.Context, tenant, student, challengeID uuid.UUID, period string) (port.ChallengeUsage, error) {
 	var u port.ChallengeUsage
 	t, err := q(ctx)
@@ -179,6 +180,7 @@ func (Content) Usage(ctx context.Context, tenant, student, challengeID uuid.UUID
 	}
 	var failedAt sql.NullTime
 	var failedOn sql.NullString
+	var active uuid.NullUUID
 	// tenancyguard:ok tenant table game.challenge_attempts: explicit tenant_id + deleted_at IS NULL (RLS as well)
 	err = t.QueryRowContext(ctx, `SELECT
 			count(*) FILTER (WHERE period_key = $4),
@@ -186,15 +188,19 @@ func (Content) Usage(ctx context.Context, tenant, student, challengeID uuid.UUID
 			(SELECT ended_at FROM game.challenge_attempts f WHERE f.tenant_id = $1 AND f.student_id = $2 AND f.challenge_id = $3
 				AND f.status = 'failed' AND f.deleted_at IS NULL ORDER BY f.ended_at DESC LIMIT 1),
 			(SELECT difficulty FROM game.challenge_attempts f WHERE f.tenant_id = $1 AND f.student_id = $2 AND f.challenge_id = $3
-				AND f.status = 'failed' AND f.deleted_at IS NULL ORDER BY f.ended_at DESC LIMIT 1)
+				AND f.status = 'failed' AND f.deleted_at IS NULL ORDER BY f.ended_at DESC LIMIT 1),
+			(array_agg(challenge_attempt_id) FILTER (WHERE status = 'in_progress'))[1]
 		FROM game.challenge_attempts WHERE tenant_id = $1 AND student_id = $2 AND challenge_id = $3 AND deleted_at IS NULL`,
-		tenant, student, challengeID, period).Scan(&u.Attempts, new(sql.NullBool), &failedAt, &failedOn)
+		tenant, student, challengeID, period).Scan(&u.Attempts, new(sql.NullBool), &failedAt, &failedOn, &active)
 	if err != nil {
 		return u, fmt.Errorf("challenge usage: %w", err)
 	}
 	if failedAt.Valid {
 		at := failedAt.Time.UTC()
 		u.LastFailedAt, u.LastFailedOn = &at, failedOn.String
+	}
+	if active.Valid {
+		u.Active = &active.UUID
 	}
 	return u, nil
 }

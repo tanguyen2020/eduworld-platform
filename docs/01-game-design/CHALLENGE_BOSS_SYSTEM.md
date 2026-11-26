@@ -1,6 +1,6 @@
 # Challenge & Boss System
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Systems Designer + EdTech Specialist · Cập nhật: 2026-11-26 (F069: client §2.5) · 2026-11-24 (F076: challenge solo, room host dùng chung) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Systems Designer + EdTech Specialist · Cập nhật: 2026-11-26 (F076 delta đọc: `active_attempt_id`, `difficulties[]` §2.5) · 2026-11-26 (F069: client §2.5) · 2026-11-24 (F076: challenge solo, room host dùng chung) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [ADR-0016, ADR-0043, ADR-0048, ADR-0049](../adr/README.md)
 
 ## 1. Mục đích và phạm vi
@@ -91,6 +91,8 @@ stateDiagram-v2
 | Phần thưởng lần đầu | `first_clear_rewards` chỉ một lần; lần sau theo giảm dần của reward rule |
 
 ### 2.5. Client (F069)
+
+Đọc của server (delta F076, 2026-11-26 [Confirmed]): `listGameChallenges`/`getGameChallenge` trả `active_attempt_id` = attempt `in_progress` của học sinh cho challenge đó (null khi không có) để tiếp tục sau mất kết nối/takeover; `getGameChallenge` trả `difficulties[]` — mọi mức có profile, dễ trước, mỗi mức `available` + `locked_reason_code` (chỉ `grade_not_allowed` được trả), thời gian đã nhân hệ số khối 1–3, `lives` (survival), `reward_multiplier`. Khối 1–3 không bao giờ nhận `expert`/`legendary` trong `difficulties[]`, kể cả dạng khóa (AC-UX-0601).
 
 Godot `ChallengeClient` ([STUDENT_GAME_UX_CORE](../05-ux/STUDENT_GAME_UX_CORE.md) S06 §6a): chỉ hiện mức trong `available_difficulties` (mức khóa chỉ khi server gửi lý do); `startGameChallenge` một `Idempotency-Key` cho mỗi ý định (giữ khi thử lại), `nextChallengeActivity` một khóa cho mỗi lượt (thử lại `503` cùng khóa theo backoff `client_reconnect_backoff`), mở trình làm bài trên attempt học tập server tạo (không tự chọn câu), gọi lượt kế khi attempt nộp xong; đồng hồ = `deadline_at − giờ server` (độ lệch realtime hoặc header `Date`, sau đó đồng hồ đơn điệu — đổi giờ máy không ảnh hưởng, AC-CHL-001); điểm/sức bền/tiến độ chỉ từ `challenge.attempt.updated` hoặc `getGameChallengeAttempt` của attempt hiện tại; `422 INVALID_STATE_TRANSITION` → đọc lại và hiện kết quả server; bỏ cuộc qua hộp xác nhận; kết quả `failed` không có chữ "Thất bại". Trong lúc chạy `AppState.blocking_activity = challenge` (tới khi đóng màn kết quả) giữ hiệu ứng lên cấp.
 

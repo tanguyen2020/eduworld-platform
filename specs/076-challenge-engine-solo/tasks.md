@@ -99,6 +99,7 @@
 - [x] T037 (kết quả: DATABASE_DESIGN, CHALLENGE_BOSS_SYSTEM, VALKEY_DESIGN, EVENT_DESIGN, PROGRESSION_SYSTEM, ACTIVITY_ENGINE, CONFIG_DEFAULTS, CHANGELOG) [P] Cập nhật DATABASE_DESIGN §2.8a (cột thêm `challenge_attempts`), CHALLENGE_BOSS_SYSTEM §2.4 (resume challenge solo theo `attempt_resume_window`), VALKEY_DESIGN (room `challenge_solo` của module game), EVENT_DESIGN §4.6, CHANGELOG — file: `docs/07-backend/DATABASE_DESIGN.md`, `docs/01-game-design/CHALLENGE_BOSS_SYSTEM.md`, `docs/07-backend/VALKEY_DESIGN.md`, `CHANGELOG.md`
 - [x] T038 (kết quả: `observability/challenge_metrics.go`, `pkg/roomhost/metrics.go`) [P] Metric `eduworld_game_challenge_*`, `eduworld_roomhost_*` — file: `src/backend/modules/game/internal/infrastructure/observability/metrics.go`, `src/backend/pkg/roomhost/metrics.go`
 - [x] T039 (kết quả: kịch bản quickstart phủ bằng test tích hợp (bảng dưới); chạy tay trên stack local chưa làm — cần seed (Câu hỏi mở F076-2)) Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
+- [x] T040 (kết quả: domain `challenge.Rules.Options`, `port.ChallengeUsage.Active`, `query.ChallengeDifficultyOption`; test `tests/unit` `TestGradeMatrixChallengeLevels`, tích hợp `TestGradeMatrixChallengeRead`) Delta đọc cho F069 T004 (2026-11-26): `active_attempt_id` trên `listGameChallenges`/`getGameChallenge`, `difficulties[]` có lý do khóa trên `getGameChallenge` — file: `specs/openapi/eduworld-api.v1.yaml`, `src/backend/modules/game/internal/{domain/challenge,application/query,infrastructure/persistence/challengesql}`
 
 ## Dependencies & Execution Order
 
@@ -119,7 +120,7 @@ Test tích hợp chạy trên PostgreSQL thật (testcontainers, cụm chung) �
 
 | Tiêu chí | Test |
 |---|---|
-| F076-AC-01 | `challenge_us1_test.go` `TestChallengeList` (gán tenant, khối, mở khóa, cửa sổ, `party_required` loại, mức theo khối — khối 3 tới Hard, `attempts_left`, keyset `limit`/`cursor`, lọc `type`/`difficulty`); domain `TestDifficultiesForGrade`, `TestVisible` |
+| F076-AC-01 | `grade_matrix_test.go` `TestGradeMatrixChallengeRead` (khối 1–9: chỉ challenge của khối, mức theo khối, `difficulties[]`, `active_attempt_id`); `challenge_us1_test.go` `TestChallengeList` (gán tenant, khối, mở khóa, cửa sổ, `party_required` loại, mức theo khối — khối 3 tới Hard, `attempts_left`, keyset `limit`/`cursor`, lọc `type`/`difficulty`); domain `TestDifficultiesForGrade`, `TestVisible` |
 | F076-AC-02 | `TestChallengeList` (`404` khác khối/khóa/chưa mở/`party_required`/chưa gán/không tồn tại; chi tiết `attempts_left`, `time_limit_seconds` 450 khối 3) |
 | F076-AC-03 | `TestChallengeAuthz` (6 route × `X-Tenant-Id` khác → `403 TENANT_MISMATCH`; attempt học sinh khác → `404` ở đọc/next/abandon); `player_routes_authz_test.go` `TestPlayerRoutesStaffDenied` (staff 5 role → `403 GAME_ACCESS_STUDENT_ONLY` trên 6 route mới) |
 | F076-AC-04 | `challenge_us2_test.go` `TestChallengeStart` (ghim version, `deadline_at` = giờ server + 300 s × 1,5, `lives_left` survival Hard = 3, `challenge.started`, publish version mới khi đang chơi vẫn ghim v1); domain `TestDeadlineAndLives` |

@@ -131,11 +131,11 @@
     },
     "openapi/GameChallengeSummary.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameChallengeSummary",
-      "sha256": "69e049bb01b7c4ec1da719953fa8b2acc933f26719ee89bca57082b651f70c0e"
+      "sha256": "7149b934adb5deef781b30c35e77c5fa5bf37b7dd8e017e1c9080857e2b31b20"
     },
     "openapi/GameChallengeDetail.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameChallengeDetail",
-      "sha256": "39a00c425a0e7f083c385469de0a02cdd4246678101c488c8fe7ecab1c60f71f"
+      "sha256": "e3bca9fa3d3f4128c6af2db995951e78cd657bd53612ef36f88b25ef270df1d3"
     },
     "openapi/GameChallengeAttempt.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameChallengeAttempt",

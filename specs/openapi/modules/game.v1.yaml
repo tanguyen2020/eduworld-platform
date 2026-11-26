@@ -10490,6 +10490,13 @@ components:
         attempts_left:
           type: integer
           minimum: 0
+        active_attempt_id:
+          description: |
+            Attempt `in_progress` của học sinh cho challenge này (null khi không có): client đề nghị "Tiếp tục" sau mất kết nối,
+            mở lại game hoặc takeover và đọc trạng thái bằng `getGameChallengeAttempt` (F069-AC-20, delta F076).
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
     GameChallengeDetail:
       allOf:
         - $ref: '#/components/schemas/GameChallengeSummary'
@@ -10517,6 +10524,56 @@ components:
               maxItems: 20
               items:
                 $ref: '#/components/schemas/RewardGrantSummary'
+            difficulties:
+              type: array
+              maxItems: 5
+              description: Mọi mức khó của version, dễ trước (mức khả dụng và mức khóa có lý do) — delta F076
+              items:
+                $ref: '#/components/schemas/ChallengeDifficultyOption'
+    ChallengeDifficultyOption:
+      type: object
+      description: |
+        Một mức khó của challenge với học sinh đang gọi (delta F076, F069 contracts §6). `available = false` luôn kèm
+        `locked_reason_code`; khối 1–3 không nhận mức trên `g1_3_challenge_rules` (expert, legendary) — AC-UX-0601.
+        Thời gian đã nhân hệ số khối 1–3; client không tự suy luật khối (R1).
+      required:
+        - difficulty
+        - available
+        - locked_reason_code
+        - reward_multiplier
+      properties:
+        difficulty:
+          $ref: '#/components/schemas/ChallengeDifficulty'
+        available:
+          type: boolean
+        locked_reason_code:
+          type:
+            - string
+            - 'null'
+          enum:
+            - grade_not_allowed
+            - not_unlocked
+            - school_disabled
+            - null
+        time_limit_seconds:
+          type:
+            - integer
+            - 'null'
+          minimum: 1
+          description: Thời gian cả challenge (đã nhân hệ số khối 1–3); null = không giới hạn thời gian
+        time_per_activity_seconds:
+          type: integer
+          minimum: 1
+        lives:
+          type:
+            - integer
+            - 'null'
+          minimum: 1
+          description: Sức bền (chỉ loại survival); null với các loại khác
+        reward_multiplier:
+          type: number
+          minimum: 0
+          maximum: 10
     GameChallengeAttempt:
       type: object
       required:
