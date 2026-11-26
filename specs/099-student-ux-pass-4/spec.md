@@ -177,5 +177,5 @@ Học sinh lớp 3 mở video "Phép nhân": giữa khung có nút lớn "▶ Ph
 
 ## Câu hỏi mở
 
-- F099-1 [Proposed]: Điện thoại cầm dọc trên Web dùng canvas logic 1280×2276 (stretch `canvas_items`/`expand` trên cơ sở 1280×720) nên chữ về vật lý chỉ ≈ 56% cỡ token. Đề xuất feature riêng: đổi cơ sở canvas sang 720×1280 khi cửa sổ dọc và rà lại mọi màn ở bề ngang logic 720.
-- F099-2 [Proposed]: Dạng nhiều bước (ghép cặp, nhập số, sắp xếp…) ở cửa sổ dọc chỉ được căn giữa, vẫn còn khoảng trống trên/dưới; chưa kiểm "dải trống" cho các màn này.
+- F099-1 [Proposed]: Điện thoại cầm dọc trên Web dùng canvas logic 1280×2276 (stretch `canvas_items`/`expand` trên cơ sở 1280×720) nên chữ về vật lý chỉ ≈ 56% cỡ token. Đề xuất feature riêng: đổi cơ sở canvas sang 720×1280 khi cửa sổ dọc và rà lại mọi màn ở bề ngang logic 720. → **Superseded (2026-11-26, [F113](../113-student-ux-pass-5/spec.md))**: không làm canvas dọc — quy tắc ngang trên mọi nền tảng của [STUDENT_GAME_UX §2](../../docs/05-ux/STUDENT_GAME_UX.md#2-nền-tảng-và-hướng-màn-hình) ("Không thiết kế bố cục dọc"); cửa sổ dọc hiện màn "Xoay ngang" [Confirmed].
+- F099-2 [Proposed]: Dạng nhiều bước (ghép cặp, nhập số, sắp xếp…) ở cửa sổ dọc chỉ được căn giữa, vẫn còn khoảng trống trên/dưới; chưa kiểm "dải trống" cho các màn này. → **Superseded (2026-11-26, [F113](../113-student-ux-pass-5/spec.md))**: không kiểm "dải trống" ở cửa sổ dọc — game chỉ chơi ngang, cửa sổ dọc bị màn "Xoay ngang" che; ma trận khối dùng cửa sổ ngang 1280×720, 1024×600, 844×390 [Confirmed].

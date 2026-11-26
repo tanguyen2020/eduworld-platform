@@ -1,6 +1,6 @@
 # UX màn hình học sinh trong game — quy ước chung và chỉ mục
 
-> Trạng thái: Draft · Phiên bản: 1.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-26 (F069: bảng XP dưới PlayerBadge, chip Xu + menu "Thêm" ở cột phải) · 2026-11-26 (F096: nút có icon kèm chữ ở mọi khối, thẻ "Việc tiếp theo", hướng dẫn lần đầu của Mây, không emoji/glyph ngoài font) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 1.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-26 (F113: §2 khóa ngang Android/iOS theo cảm biến, màn "Xoay ngang" khi cửa sổ dọc) · 2026-11-26 (F069: bảng XP dưới PlayerBadge, chip Xu + menu "Thêm" ở cột phải) · 2026-11-26 (F096: nút có icon kèm chữ ở mọi khối, thẻ "Việc tiếp theo", hướng dẫn lần đầu của Mây, không emoji/glyph ngoài font) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-15
 > Liên quan: [DESIGN_SYSTEM](DESIGN_SYSTEM.md) · [ADR-0056 song ngữ](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057 máy tầm trung](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md)
 
 ## 1. Mục đích và phạm vi
@@ -25,6 +25,8 @@ Ngoài phạm vi: Admin Portal (xem [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORT
 | Trình duyệt trên điện thoại | — | — | **Không hỗ trợ** trong Release 1.0; trang báo "Hãy tải ứng dụng EduWorld" | [Confirmed] |
 
 - **Hướng màn hình: ngang (landscape) trên mọi nền tảng** [Confirmed]. Không thiết kế bố cục dọc.
+  - Android/iOS: chỉ hiển thị ngang, xoay theo cảm biến giữa hai chiều ngang (sensor landscape) [Confirmed — F113, owner "chốt hết" 2026-11-26]; cài đặt ở [GODOT_ARCHITECTURE §10.2](../08-game-client/GODOT_ARCHITECTURE.md#102-hiển-thị-stretch-và-hướng-màn-hình-f113).
+  - Cửa sổ dọc (cao > rộng — trình duyệt không ép xoay được ở mọi nơi: điện thoại cầm dọc, cửa sổ trình duyệt kéo hẹp): game **không** đổi sang bố cục dọc mà hiện màn toàn màn hình **"Xoay ngang điện thoại để chơi nhé!"** (nền trời S01, Mây trong bong bóng lời, icon điện thoại xoay, dòng "Trên máy tính, em kéo cửa sổ rộng ra nhé."); game tạm dừng phía sau và chạy tiếp đúng chỗ khi xoay lại; màn chờ Web hiện cùng lời nhắc; thiết bị cảm ứng thử khóa ngang qua trình duyệt, không được thì bỏ qua im lặng [Confirmed — F113]. Bố cục dọc F097–F099 đã có chỉ còn là dự phòng (không làm thêm).
 - **Breakpoint UI** (tính theo kích thước logic sau khi scale): `compact` (điện thoại, chiều cao logic < 800), `regular` (tablet, PC 1280×720), `wide` (PC ≥ 1600 chiều rộng). Mỗi màn ghi rõ khác biệt giữa **Web/PC** và **Mobile**; tablet dùng bố cục Mobile với lề rộng (`regular`).
 - Tỉ lệ khác 16:9: phần thế giới 3D mở rộng theo chiều ngang; HUD bám góc theo anchor, không kéo giãn panel.
 

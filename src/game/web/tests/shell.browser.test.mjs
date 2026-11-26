@@ -4,6 +4,9 @@
 //     the first click, and after "Chơi" the engine boots (Godot prints its banner) without a page error;
 //   - Chromium with WebGL disabled: the notice page, and index.wasm is never requested;
 //   - WebKit (Safari engine, not officially supported): never blocked when it has WebGL 2 — banner instead.
+//   - Chromium as a phone held upright (390×844, F113-AC-06/07): the rotate prompt covers the loading view; turned
+//     sideways the "Chơi" button shows, the engine boots, and turning upright again raises no page error (the game
+//     shows its own prompt, OrientationGuard).
 // Firefox is not installed with the repository's Playwright browsers; Gecko is covered by the jsdom UA tests.
 // Skips (with the reason) when the export or Playwright is missing. Playwright comes from the web workspace
 // (src/cms/frontend, pnpm install) or from EW_PLAYWRIGHT_FROM=<path to a package.json that depends on it>.
@@ -124,6 +127,34 @@ test('WebKit (not officially supported): banner when WebGL 2 works, notice other
       assert.ok(['loading', 'ready'].includes(state), state);
       await page.waitForSelector('#ew-shell[data-state="ready"]', { timeout: 180000 });
     }
+  } finally {
+    await browser.close();
+  }
+});
+
+test('F113: Chromium phone upright — rotate prompt over the loading view, sideways to play, upright again without error', { skip: skip || false, timeout: 240000 }, async (t) => {
+  const browser = await launch('chromium', SWIFTSHADER);
+  if (browser.skip) return t.skip(browser.skip);
+  try {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.goto(base);
+    await page.waitForSelector('#ew-shell[data-state="ready"]', { timeout: 180000 });
+    assert.equal(await page.getAttribute('#ew-shell', 'data-portrait'), 'true');
+    assert.equal(await page.isVisible('#ew-rotate'), true, 'rotate prompt shown in portrait');
+    assert.match(await page.textContent('#ew-rotate-title'), /Xoay ngang|sideways/);
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.waitForSelector('#ew-rotate', { state: 'hidden', timeout: 5000 });
+    assert.equal(await page.isVisible('#ew-play'), true, '"Chơi" reachable once sideways');
+    await page.click('#ew-play');
+    await page.waitForSelector('#ew-shell', { state: 'hidden', timeout: 60000 });
+    await page.waitForTimeout(3000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(2000);
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.waitForTimeout(1000);
+    assert.deepEqual(errors, []);
   } finally {
     await browser.close();
   }
