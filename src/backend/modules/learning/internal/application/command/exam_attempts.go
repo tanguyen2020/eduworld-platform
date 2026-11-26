@@ -391,6 +391,21 @@ type SubmitExamInput struct {
 func (h Exams) SubmitExamAttempt(ctx context.Context, in SubmitExamInput) (out dto.ExamSubmitView, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.command.SubmitExamAttempt")
 	defer func() { done(err) }()
+	// MONITORING §3: every student submit with a known exam type by result, the duration of an accepted one.
+	started, examType, late := time.Now(), "", false
+	defer func() {
+		r := submitResult(err)
+		if h.Metrics == nil || examType == "" || r == "" {
+			return
+		}
+		if r == SubmitOK && late {
+			r = SubmitLate
+		}
+		h.Metrics.Submitted(examType, r)
+		if err == nil {
+			h.Metrics.SubmitDuration(examType, time.Since(started))
+		}
+	}()
 	p, err := student(ctx)
 	if err != nil {
 		return out, err
@@ -401,6 +416,9 @@ func (h Exams) SubmitExamAttempt(ctx context.Context, in SubmitExamInput) (out d
 			return err
 		}
 		if a.Status != attempt.StatusInProgress {
+			if s, serr := h.Store.Session(ctx, a.ContextID, false); serr == nil && s != nil {
+				examType = s.Type // the duplicate is counted under its exam type
+			}
 			return problem.New(problem.ExamAlreadySubmitted, "")
 		}
 		if err := h.checkDevice(ctx, a.ID, in.DeviceToken); err != nil {
@@ -410,7 +428,11 @@ func (h Exams) SubmitExamAttempt(ctx context.Context, in SubmitExamInput) (out d
 		if a.DeadlineAt != nil && h.now().After(a.DeadlineAt.Add(h.config().SyncGrace)) {
 			reason = exam.ReasonAutoTimeout
 		}
-		ok, err := h.submitAttempt(ctx, a.ID, reason, &p.UserID)
+		late = reason == exam.ReasonAutoTimeout
+		typ, ok, err := h.submitAttempt(ctx, a.ID, reason, &p.UserID)
+		if typ != "" {
+			examType = typ
+		}
 		if err != nil {
 			return err
 		}
@@ -432,13 +454,13 @@ func (h Exams) SubmitExamAttempt(ctx context.Context, in SubmitExamInput) (out d
 // submitAttempt moves an in-progress (or expired) exam attempt to submitted in the transaction of ctx: submitted_at
 // capped at deadline_at for a timeout, the participation submitted, exam.submitted for the grading worker. It reports
 // false when the attempt was already submitted (a concurrent submit or the auto-submit won).
-func (h Exams) submitAttempt(ctx context.Context, id uuid.UUID, reason string, _ *uuid.UUID) (bool, error) {
+func (h Exams) submitAttempt(ctx context.Context, id uuid.UUID, reason string, _ *uuid.UUID) (string, bool, error) {
 	a, err := h.Att.Store.Attempt(ctx, id)
 	if err != nil {
-		return false, err
+		return "", false, err
 	}
 	if a.Status != attempt.StatusInProgress && a.Status != attempt.StatusExpired {
-		return false, nil
+		return "", false, nil
 	}
 	now := h.now()
 	end := now
@@ -450,36 +472,36 @@ func (h Exams) submitAttempt(ctx context.Context, id uuid.UUID, reason string, _
 	a.Status, a.SubmittedAt, a.SubmitReason, a.DurationMS, a.PausedAt, a.LastActivityAt = attempt.StatusSubmitted, &end, &reason, &d, nil, now
 	if err := h.Att.Store.UpdateAttempt(ctx, a, row); err != nil {
 		if pe, ok := problemOf(err); ok && pe.Code == problem.VersionMismatch {
-			return false, nil
+			return "", false, nil
 		}
-		return false, err
+		return "", false, err
 	}
 	part, err := h.Store.Participation(ctx, a.ContextID, a.StudentID, true)
 	if err != nil {
-		return false, err
+		return "", false, err
 	}
 	if part != nil {
 		part.Status = exam.ParticipationSubmitted
 		if err := h.Store.UpdateParticipation(ctx, *part); err != nil {
-			return false, err
+			return "", false, err
 		}
 	}
 	s, err := h.Store.Session(ctx, a.ContextID, false)
 	if err != nil || s == nil {
-		return false, err
+		return "", false, err
 	}
 	latest, err := h.Store.LatestAnswers(ctx, a.ID)
 	if err != nil {
-		return false, err
+		return "", false, err
 	}
 	if reason != exam.ReasonManual && h.Metrics != nil {
 		h.Metrics.AutoSubmitted(reason)
 	}
 	if s.EfficacyWaveID != nil {
 		// F035-AC-15: no exam.submitted (no outbox event at all): the attempt is graded in the submit transaction.
-		return true, h.gradeAttempt(ctx, a.ID)
+		return s.Type, true, h.gradeAttempt(ctx, a.ID)
 	}
-	return true, h.publishExam(ctx, s.EfficacyWaveID, EventExamSubmitted, "attempt", a.ID, a.TenantID, map[string]any{"attempt_id": a.ID, "exam_session_id": s.ID,
+	return s.Type, true, h.publishExam(ctx, s.EfficacyWaveID, EventExamSubmitted, "attempt", a.ID, a.TenantID, map[string]any{"attempt_id": a.ID, "exam_session_id": s.ID,
 		"school_id": s.SchoolID, "student_id": a.StudentID, "exam_type": s.Type, "is_official": s.IsOfficial,
 		"assignment_id": nullableID(s.AssignmentID), "submit_reason": reason, "submitted_at": end, "answered_count": len(latest)})
 }
@@ -510,14 +532,20 @@ func (h Exams) AutoSubmitExpired(ctx context.Context, limit int) (rep AutoSubmit
 		return rep, err
 	}
 	for _, d := range due {
+		var typ string
+		var ok bool
 		if err := h.Asg.inTenant(ctx, d.TenantID, func(ctx context.Context) error {
-			ok, err := h.submitAttempt(ctx, d.AttemptID, exam.ReasonAutoTimeout, nil)
-			if ok {
-				rep.Submitted++
-			}
+			var err error
+			typ, ok, err = h.submitAttempt(ctx, d.AttemptID, exam.ReasonAutoTimeout, nil)
 			return err
 		}); err != nil {
 			return rep, err
+		}
+		if ok {
+			rep.Submitted++
+			if h.Metrics != nil {
+				h.Metrics.Submitted(typ, ExamAutoSubmitted)
+			}
 		}
 	}
 	return rep, nil

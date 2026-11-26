@@ -31,6 +31,12 @@ const (
 	AuditRestrictionCreate = "competition_restriction.created"
 )
 
+// Results of eduworld_match_results_total (MONITORING §3).
+const (
+	MatchResultRecorded  = "recorded"
+	MatchResultDuplicate = "duplicate_rejected"
+)
+
 // Errors of the battle engine.
 var (
 	// ErrMatchUnknown: no match of the tenant with this id.
@@ -328,9 +334,13 @@ func (h Battles) Finish(ctx context.Context, info BattleInfo, room *battle.Room)
 		return h.abandonPenalties(ctx, info, res, at)
 	})
 	if errors.Is(err, write.ErrResultRecorded) {
+		if h.Metrics != nil {
+			h.Metrics.MatchResult(info.Mode, MatchResultDuplicate)
+		}
 		return problem.New(problem.MatchResultAlreadyRecorded, "").Wrap(err)
 	}
 	if err == nil && h.Metrics != nil {
+		h.Metrics.MatchResult(info.Mode, MatchResultRecorded)
 		h.Metrics.Rooms(info.RoomType, -1)
 		for _, p := range res.Players {
 			if p.Outcome == battle.OutcomeAbandoned || p.Outcome == battle.OutcomeForfeit {

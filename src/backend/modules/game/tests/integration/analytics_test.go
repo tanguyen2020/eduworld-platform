@@ -11,10 +11,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/analytics"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/consumer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
@@ -317,9 +319,17 @@ func TestAnalyticsTelemetry(t *testing.T) {
 	k := e.setupAnalytics(t, func(c *analytics.Config) { c.TelemetryRatePerMin = 6 })
 	s := e.newStudent(ctx, t, e.tenantA, e.schoolA, "active")
 	d := e.device(s)
+	sessions0 := testutil.ToFloat64(observability.ClientSessions().WithLabelValues("web", "1.2.3"))
 	if r := e.start(t, s, d, newKey(), map[string]any{"client_platform": "web", "client_version": "1.2.3"}); r.status != http.StatusCreated {
 		t.Fatalf("start: %d %s", r.status, r.raw)
 	}
+	// MONITORING §3/§5: the created game session is the client session of ClientCrashRateHigh.
+	if d := testutil.ToFloat64(observability.ClientSessions().WithLabelValues("web", "1.2.3")) - sessions0; d != 1 {
+		t.Fatalf("client_sessions_total delta %v", d)
+	}
+	crashes0 := testutil.ToFloat64(observability.ClientCrashes().WithLabelValues("web", "1.2.3"))
+	gaps0 := testutil.ToFloat64(observability.ChatSeqGaps().WithLabelValues("party"))
+	bytes0 := testutil.ToFloat64(observability.ContentDownloadBytes().WithLabelValues("lan_cache"))
 	now := e.clock.Now()
 	ts := now.Add(-time.Minute).Format(time.RFC3339)
 	rem := uuid.NewString()
@@ -333,13 +343,25 @@ func TestAnalyticsTelemetry(t *testing.T) {
 		map[string]any{"type": "screen_view", "occurred_at": ts, "client_event_id": uuid.NewString(), "screen_code": "home", "duration_ms": 1200},
 		map[string]any{"type": "break_reminder_shown", "occurred_at": ts, "client_event_id": rem, "reminder_no": 1, "minutes_played": 45},
 		map[string]any{"type": "crash", "occurred_at": ts, "client_event_id": uuid.NewString(), "error_code": "E42", "fatal": true,
-			"crash_signature": "sig-abc"})
+			"crash_signature": "sig-abc"},
+		map[string]any{"type": "chat_seq_gap", "occurred_at": ts, "client_event_id": uuid.NewString(), "channel_type": "party", "gap_count": 3},
+		map[string]any{"type": "content_download", "occurred_at": ts, "client_event_id": uuid.NewString(), "source": "lan_cache", "bytes": 4096})
 	if r := post(good); r.status != http.StatusAccepted {
 		t.Fatalf("telemetry: %d %s", r.status, r.raw)
 	}
 	pk := analytics.Pseudonym(anaKey, s.id)
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM analytics.events_raw WHERE player_key = $1 AND source = 'client'`, pk); n != 4 {
 		t.Fatalf("stored %d client events", n)
+	}
+	// MONITORING §3: crash, chat_seq_gap and content_download feed the client metrics; the last two are metric-only (not stored).
+	for name, c := range map[string]struct{ got, want float64 }{
+		"client_crashes_total":                           {testutil.ToFloat64(observability.ClientCrashes().WithLabelValues("web", "1.2.3")) - crashes0, 1},
+		"chat_seq_gaps_total":                            {testutil.ToFloat64(observability.ChatSeqGaps().WithLabelValues("party")) - gaps0, 3},
+		"client_content_download_bytes_total{lan_cache}": {testutil.ToFloat64(observability.ContentDownloadBytes().WithLabelValues("lan_cache")) - bytes0, 4096},
+	} {
+		if c.got != c.want {
+			t.Fatalf("%s delta %v, want %v", name, c.got, c.want)
+		}
 	}
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM analytics.events_raw WHERE player_key = $1 AND event_name = 'break_reminder_shown'
 		AND session_key IS NOT NULL AND props->>'reminder_no' = '1'`, pk); n != 1 {
@@ -679,7 +701,7 @@ func TestLiveOpsOverview(t *testing.T) {
 	ctx := context.Background()
 	e := setup(ctx, t, envOpts{})
 	k := e.setupAnalytics(t, nil)
-	k.prom.vals["eduworld_rt_connections"] = []map[string]any{promSample(nil, "9500")}
+	k.prom.vals["eduworld_players_online"] = []map[string]any{promSample(nil, "9500")}
 	k.prom.vals["eduworld_mm_queue_size"] = []map[string]any{promSample(map[string]string{"mode": "duel"}, "12"),
 		promSample(map[string]string{"mode": "team_battle"}, "30")}
 	lo := e.staffToken(e.platformStaff("liveops"))

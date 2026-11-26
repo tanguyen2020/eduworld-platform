@@ -28032,7 +28032,7 @@ components:
       properties:
         type:
           type: string
-          enum: [screen_view, tutorial_step, perf_sample, load_time, client_error, crash, network_sample, break_reminder_shown]
+          enum: [screen_view, tutorial_step, perf_sample, load_time, client_error, crash, network_sample, break_reminder_shown, chat_seq_gap, content_download]
         client_event_id: { $ref: '#/components/schemas/Uuid', description: Khử trùng phía server }
         occurred_at: { $ref: '#/components/schemas/Timestamp' }
         screen_code: { type: string, maxLength: 64 }
@@ -28055,6 +28055,10 @@ components:
         reconnects: { type: integer, minimum: 0 }
         reminder_no: { type: integer, minimum: 1, maximum: 20, description: "break_reminder_shown: lần nhắc nghỉ thứ mấy trong phiên (GAME_ANALYTICS §3.2)" }
         minutes_played: { type: integer, minimum: 0, maximum: 1440, description: "break_reminder_shown: số phút chơi liên tục client đếm lúc nhắc; chỉ dùng cho thống kê chơi lành mạnh" }
+        channel_type: { $ref: '#/components/schemas/ChannelType', description: "chat_seq_gap: loại channel có khoảng trống seq (MONITORING §3 eduworld_chat_seq_gaps_total)" }
+        gap_count: { type: integer, minimum: 1, maximum: 1000, description: "chat_seq_gap: số tin bị thiếu client phát hiện (seq nhảy), chỉ dùng cho metric" }
+        source: { type: string, enum: [preinstalled, lan_cache, cdn], description: "content_download: nguồn tải gói nội dung (PERFORMANCE_BUDGET §10.1)" }
+        bytes: { type: integer, minimum: 0, maximum: 10737418240, description: "content_download: số byte tải từ nguồn, chỉ dùng cho metric eduworld_client_content_download_bytes_total" }
     NicknameSuggestion:
       type: object
       required: [nickname_option_id, nickname]

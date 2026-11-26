@@ -1,9 +1,13 @@
 package observability
 
 import (
+	"strconv"
+
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/analytics"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/gamesession"
 )
 
 // Metrics of Game Analytics (F080, GAME_ANALYTICS §10, MONITORING). Labels never carry a user id, a tenant or content
@@ -41,7 +45,7 @@ var (
 // RegisterAnalytics registers the F080 metrics.
 func RegisterAnalytics(r prometheus.Registerer) {
 	for _, c := range []prometheus.Collector{telemetryEvents, analyticsDropped, rollupLate, rawRows, rollupDuration, queryDuration, dashRejected,
-		matchDuration} {
+		matchDuration, clientCrashes, chatSeqGaps, contentDownload} {
 		_ = r.Register(c)
 	}
 }
@@ -91,4 +95,55 @@ func (AnalyticsMetrics) MatchDuration(mode string, seconds float64) {
 		mode = "unknown"
 	}
 	matchDuration.WithLabelValues(mode).Observe(seconds)
+}
+
+// Client metrics of MONITORING §3 fed by client telemetry (F080) and by createGameSession (sessions).
+var (
+	clientCrashes = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_client_crashes_total", Help: "Client crash telemetry events by platform and client version (ClientCrashRateHigh).",
+	}, []string{"platform", "client_version"})
+	chatSeqGaps = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_chat_seq_gaps_total", Help: "Chat messages the client found missing (seq gaps), by channel type (client telemetry).",
+	}, []string{"channel_type"})
+	contentDownload = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_client_content_download_bytes_total", Help: "Content bytes downloaded by game clients, by source (preinstalled, lan_cache, cdn).",
+	}, []string{"source"})
+)
+
+// ClientCrashes exposes eduworld_client_crashes_total (tests; registered by RegisterAnalytics).
+func ClientCrashes() *prometheus.CounterVec { return clientCrashes }
+
+// ChatSeqGaps exposes eduworld_chat_seq_gaps_total (tests).
+func ChatSeqGaps() *prometheus.CounterVec { return chatSeqGaps }
+
+// ContentDownloadBytes exposes eduworld_client_content_download_bytes_total (tests).
+func ContentDownloadBytes() *prometheus.CounterVec { return contentDownload }
+
+// ClientSessions exposes eduworld_client_sessions_total (tests).
+func ClientSessions() *prometheus.CounterVec { return clientSessions }
+
+// Client implements port.AnalyticsMetrics: the label values come from closed lists validated by the domain
+// (channel_type, source) or are bounded by ClientLabels (platform, client_version).
+func (AnalyticsMetrics) Client(m analytics.ClientMetric, platform, clientVersion string) {
+	switch m.Kind {
+	case "crash":
+		clientCrashes.WithLabelValues(ClientLabels(platform, clientVersion)).Add(m.Value)
+	case "chat_seq_gap":
+		chatSeqGaps.WithLabelValues(m.Label).Add(m.Value)
+	case "content_download":
+		contentDownload.WithLabelValues(m.Label).Add(m.Value)
+	}
+}
+
+// ClientLabels bounds (platform, client_version): a platform outside the contract list and a version that is not
+// major.minor.patch read "unknown"; a pre-release or build suffix is dropped so a client can never create free series.
+func ClientLabels(platform, clientVersion string) (string, string) {
+	if !gamesession.ValidPlatform(platform) {
+		platform = analytics.Unknown
+	}
+	v, err := gamesession.ParseVersion(clientVersion)
+	if err != nil {
+		return platform, analytics.Unknown
+	}
+	return platform, strconv.Itoa(v.Major) + "." + strconv.Itoa(v.Minor) + "." + strconv.Itoa(v.Patch)
 }

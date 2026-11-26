@@ -233,7 +233,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	delivery := query.Delivery{Session: e.read, Reader: read.Delivery{}, Registry: question.Full(), Schema: schema}
 	att := command.Attempts{UoW: e.uow, Store: write.AttemptRepo{}, Learning: write.LearningEventWriter{}, Events: write.Publisher{W: e.writer},
 		Docs: write.DocRepo{}, Questions: write.QuestionRepo{}, Delivery: delivery, Students: read.SchoolSettings{}, Registry: registry,
-		Clock: clk.Now, Metrics: observability.AttemptCounter{}, Rate: o.rate, AnswerRate: o.answerRate,
+		Clock: clk.Now, Metrics: observability.AttemptCounter{}, Subjects: write.NewSubjectCodes(), Rate: o.rate, AnswerRate: o.answerRate,
 		// F065: media activities — progress, branch choices, ready check and signed URLs (TEST signer key).
 		Progress: write.MediaProgressRepo{}, Media: write.MediaRepo{}, Signer: testSigner, MediaMetrics: observability.VideoCounter{},
 		Runs: write.SimulationRunRepo{}, SimMetrics: observability.SimulationCounter{}, Minigames: write.MinigameConfigRepo{}}
@@ -244,7 +244,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	// F032: review list, rapid_guess, adaptive selection, diagnostics and recommendations with the test clock.
 	self, practice := write.SelfStudyRepo{}, command.DefaultPracticeConfig()
 	att.Self = &command.SelfStudy{Wrong: self, Recommendations: self, Reader: self, Masteries: write.MasteryRepo{}, Config: practice,
-		Metrics: observability.SelfStudyCounter{}}
+		Metrics: observability.SelfStudyCounter{}, Subjects: write.NewSubjectCodes()}
 	recs := command.Recommendations{UoW: e.uow, Store: self, Wrong: self, Reader: self, Masteries: write.MasteryRepo{}, Delivery: delivery,
 		Students: read.SchoolSettings{}, Events: write.Publisher{W: e.writer}, Engine: recommendation.Default(), Config: practice, Clock: clk.Now,
 		Metrics: observability.SelfStudyCounter{}}

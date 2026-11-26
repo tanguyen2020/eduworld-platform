@@ -22,6 +22,9 @@ const (
 type SessionMetrics interface {
 	Started(result string, d time.Duration)
 	Login(tenant, platform string)
+	// ClientSession counts one client session (game session created, takeover included): eduworld_client_sessions_total
+	// {platform,client_version}, the denominator of ClientCrashRateHigh (MONITORING §3, §5).
+	ClientSession(platform, clientVersion string)
 	Takeover(platform string)
 	Ended(reason string)
 	Denied(reason string)

@@ -9,9 +9,13 @@ var (
 		Help: "Attempts started by activity type and mode.",
 	}, []string{"activity_type", "mode"})
 	attemptSubmitted = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "eduworld_attempt_submitted_total",
-		Help: "Attempts submitted and graded by submit reason (manual, timeout).",
-	}, []string{"result"})
+		Name: "eduworld_attempts_submitted_total",
+		Help: "Student submits of activity attempts by mode and result (ok, duplicate, late, rejected).",
+	}, []string{"mode", "result"})
+	activitiesCompleted = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_learning_activities_completed_total",
+		Help: "Activities completed (graded) by a student submit, by activity type, context, subject code and grade band.",
+	}, []string{"activity_type", "context", "subject", "grade_band"})
 	attemptExpired = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "eduworld_attempt_expired_total",
 		Help: "Attempts closed by the attempt-lifecycle job (deadline, abandoned).",
@@ -28,7 +32,7 @@ var (
 
 // RegisterAttempts adds the attempt metrics to r; already registered collectors are ignored.
 func RegisterAttempts(r prometheus.Registerer) {
-	for _, c := range []prometheus.Collector{attemptStarted, attemptSubmitted, attemptExpired, answerRateLimited, answerRateFailures} {
+	for _, c := range []prometheus.Collector{attemptStarted, attemptSubmitted, activitiesCompleted, attemptExpired, answerRateLimited, answerRateFailures} {
 		_ = r.Register(c)
 	}
 }
@@ -41,8 +45,21 @@ func (AttemptCounter) Started(activityType, mode string) {
 	attemptStarted.WithLabelValues(activityType, mode).Inc()
 }
 
-// Submitted counts one graded submit.
-func (AttemptCounter) Submitted(result string) { attemptSubmitted.WithLabelValues(result).Inc() }
+// Submitted counts one student submit.
+func (AttemptCounter) Submitted(mode, result string) {
+	attemptSubmitted.WithLabelValues(mode, result).Inc()
+}
+
+// Completed counts one completed activity.
+func (AttemptCounter) Completed(activityType, context, subject, gradeBand string) {
+	activitiesCompleted.WithLabelValues(activityType, context, subject, gradeBand).Inc()
+}
+
+// AttemptsSubmitted exposes eduworld_attempts_submitted_total (tests).
+func AttemptsSubmitted() *prometheus.CounterVec { return attemptSubmitted }
+
+// ActivitiesCompleted exposes eduworld_learning_activities_completed_total (tests).
+func ActivitiesCompleted() *prometheus.CounterVec { return activitiesCompleted }
 
 // Expired counts one attempt closed by the job.
 func (AttemptCounter) Expired(kind string) { attemptExpired.WithLabelValues(kind).Inc() }

@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
@@ -30,6 +31,9 @@ func TestExamResultRelease(t *testing.T) {
 	a := must(t, c.startExam(t, hsAn, session, devA, nil), http.StatusCreated, "start An")
 	id := a.str("attempt_id")
 	// AC-18: submit once; the same key replays; another key is 409.
+	examOK := metricSum(t, observability.ExamSubmissions(), map[string]string{"exam_type": "chapter", "result": "ok"})
+	examDup := metricSum(t, observability.ExamSubmissions(), map[string]string{"exam_type": "chapter", "result": "duplicate"})
+	examDur := metricSum(t, observability.ExamSubmitDuration(), map[string]string{"exam_type": "chapter"})
 	key := idem()
 	sub := must(t, c.answerExam(t, hsAn, a, devA, false, key), http.StatusOK, "submit")
 	if sub.str("status") != "submitted" || sub.str("score") != "" {
@@ -43,6 +47,16 @@ func TestExamResultRelease(t *testing.T) {
 	if x := c.do(t, http.MethodPost, "/exams/attempts/"+id+":submit", hsAn, merge(idem(), hdr{"X-Exam-Device-Token": devA}), nil); x.status !=
 		http.StatusConflict || x.str("code") != "EXAM_ALREADY_SUBMITTED" {
 		t.Fatalf("second key: %d %s", x.status, x.raw)
+	}
+	// MONITORING §3: one ok submit with its duration, one duplicate, both under the exam type; the replay counts nothing.
+	if got := metricSum(t, observability.ExamSubmissions(), map[string]string{"exam_type": "chapter", "result": "ok"}) - examOK; got != 1 {
+		t.Fatalf("exam_submissions_total{ok} delta %v", got)
+	}
+	if got := metricSum(t, observability.ExamSubmissions(), map[string]string{"exam_type": "chapter", "result": "duplicate"}) - examDup; got != 1 {
+		t.Fatalf("exam_submissions_total{duplicate} delta %v", got)
+	}
+	if got := metricSum(t, observability.ExamSubmitDuration(), map[string]string{"exam_type": "chapter"}) - examDur; got != 1 {
+		t.Fatalf("exam_submit_duration_seconds count delta %v", got)
 	}
 	// AC-19: graded once by the worker from the pinned versions; every item wrong → 0 of 4.
 	c.gradeExams(ctx, t, id, 2)

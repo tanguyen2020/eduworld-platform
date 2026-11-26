@@ -69,4 +69,6 @@ type BattleMetrics interface {
 	Aborted(reason string)
 	Reconnect(result string)
 	Signal(kind string)
+	// MatchResult counts one RecordMatchResult by result: recorded, duplicate_rejected (eduworld_match_results_total, MONITORING §3).
+	MatchResult(mode, result string)
 }

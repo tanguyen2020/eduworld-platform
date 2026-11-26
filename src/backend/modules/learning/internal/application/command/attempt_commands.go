@@ -347,7 +347,7 @@ func (h Attempts) Respond(ctx context.Context, in RespondInput) (out dto.Respons
 				return err
 			}
 		}
-		rapid := h.Self.rapidGuess(a, *it, qv, ans, grade)
+		rapid := h.Self.rapidGuess(ctx, a, *it, qv, ans, grade)
 		a.Record(ans, g.IsCorrect, score)
 		// F073-AC-08, AC-09: game points from the server interval, the streak and the grade only — never a score,
 		// correctness, game score or elapsed time sent by the client.
@@ -465,6 +465,20 @@ func (h Attempts) Pause(ctx context.Context, id uuid.UUID) (out dto.AttemptView,
 func (h Attempts) Submit(ctx context.Context, id uuid.UUID) (out dto.AttemptView, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.command.SubmitActivityAttempt")
 	defer func() { done(err) }()
+	// MONITORING §3: every student submit by mode and result; a completion once the transaction committed.
+	mode := labelUnknown
+	var completion *[4]string
+	defer func() {
+		if h.Metrics == nil {
+			return
+		}
+		if r := submitResult(err); r != "" {
+			h.Metrics.Submitted(mode, r)
+		}
+		if err == nil && completion != nil {
+			h.Metrics.Completed(completion[0], completion[1], completion[2], completion[3])
+		}
+	}()
 	p, err := student(ctx)
 	if err != nil {
 		return out, err
@@ -477,6 +491,7 @@ func (h Attempts) Submit(ctx context.Context, id uuid.UUID) (out dto.AttemptView
 		if err != nil {
 			return err
 		}
+		mode = string(a.Mode)
 		if a.Status == attempt.StatusSubmitted || a.Status == attempt.StatusGraded {
 			return problem.New(problem.AttemptAlreadySubmitted, "")
 		}
@@ -500,6 +515,9 @@ func (h Attempts) Submit(ctx context.Context, id uuid.UUID) (out dto.AttemptView
 			return err
 		}
 		if err := h.simulationCompleted(ctx, a); err != nil {
+			return err
+		}
+		if completion, err = h.completionLabels(ctx, a, src); err != nil {
 			return err
 		}
 		if _, visibleAt, err := h.resultRelease(ctx, a, h.now()); err != nil {

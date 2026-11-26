@@ -26,6 +26,9 @@ var (
 		Help: "battle.state.request (join or reconnect) by result."}, []string{"result"})
 	btSignals = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_integrity_signals_total",
 		Help: "Integrity signals recorded by the battle engine, by type."}, []string{"type"})
+	btResults = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_match_results_total",
+		Help: "RecordMatchResult calls by mode and result (recorded, duplicate_rejected — alert DuplicateMatchResults)."},
+		[]string{"mode", "result"})
 )
 
 // RegisterBattle registers the battle metrics once.
@@ -34,7 +37,7 @@ func RegisterBattle(reg prometheus.Registerer) {
 		if reg == nil {
 			return
 		}
-		for _, c := range []prometheus.Collector{btRejected, btScore, btAbandon, btAborted, btReconnect, btSignals} {
+		for _, c := range []prometheus.Collector{btRejected, btScore, btAbandon, btAborted, btReconnect, btSignals, btResults} {
 			_ = reg.Register(c)
 		}
 	})
@@ -68,3 +71,9 @@ func (Battle) Reconnect(result string) { btReconnect.WithLabelValues(result).Inc
 
 // Signal implements port.BattleMetrics.
 func (Battle) Signal(kind string) { btSignals.WithLabelValues(kind).Inc() }
+
+// MatchResult implements port.BattleMetrics.
+func (Battle) MatchResult(mode, result string) { btResults.WithLabelValues(mode, result).Inc() }
+
+// MatchResults exposes eduworld_match_results_total (tests).
+func MatchResults() *prometheus.CounterVec { return btResults }

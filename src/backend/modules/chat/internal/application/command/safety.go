@@ -61,7 +61,10 @@ type RecentDropper interface {
 
 // SafetyMetrics are the metrics of the Safety Team (labels without user or content, R14).
 type SafetyMetrics interface {
-	Report(reason string)
+	Report(targetType, reason string)
+	// SchoolNotification counts one school safety notification by status: sent, acknowledged, overdue (first reminder)
+	// — eduworld_moderation_school_notifications_total (MONITORING §3).
+	SchoolNotification(status string)
 	FirstResponse(severity string, d time.Duration)
 }
 

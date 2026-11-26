@@ -85,7 +85,9 @@ type DecisionLog interface {
 
 // ModerationMetrics are the metrics of the pipeline (labels without user or content, R14).
 type ModerationMetrics interface {
-	FilterLatency(d time.Duration)
+	// FilterDuration observes one stage of the synchronous pipeline (sanctions, catalog, spam, evaluate) and the whole
+	// pipeline (total): eduworld_chat_filter_duration_seconds{stage} (MONITORING §3).
+	FilterDuration(stage string, d time.Duration)
 	Match(category, action string)
 	Unchecked(tenant uuid.UUID)
 	RE2Timeouts(n int)

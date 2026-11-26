@@ -266,7 +266,7 @@ func (h Safety) CreateReport(ctx context.Context, in ReportInput) (res ReportRes
 		return res, err
 	}
 	if h.Metrics != nil {
-		h.Metrics.Report(in.Reason)
+		h.Metrics.Report(in.TargetType, in.Reason)
 	}
 	return res, nil
 }

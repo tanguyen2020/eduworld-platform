@@ -12,9 +12,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/battle"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 	rt "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/realtime"
 )
@@ -169,6 +171,10 @@ func TestBattleRecordOnce(t *testing.T) {
 		t.Fatal(err)
 	}
 	room.EndReason, room.EndedAt = battle.EndFinished, b.clock.Now()
+	results := func(r string) float64 {
+		return testutil.ToFloat64(observability.MatchResults().WithLabelValues(info.Mode, r))
+	}
+	recorded0, dup0 := results(command.MatchResultRecorded), results(command.MatchResultDuplicate)
 	var wg sync.WaitGroup
 	errs := make([]error, 4)
 	for i := range errs {
@@ -193,6 +199,13 @@ func TestBattleRecordOnce(t *testing.T) {
 	}
 	if ok != 1 || dup != 3 {
 		t.Fatalf("%d recorded, %d duplicates", ok, dup)
+	}
+	// MONITORING §3 (alert DuplicateMatchResults): eduworld_match_results_total{mode,result} follows the outcome of each call.
+	if d := results(command.MatchResultRecorded) - recorded0; d != 1 {
+		t.Fatalf("match_results_total{recorded} delta %v", d)
+	}
+	if d := results(command.MatchResultDuplicate) - dup0; d != 3 {
+		t.Fatalf("match_results_total{duplicate_rejected} delta %v", d)
 	}
 	if b.count(`SELECT count(*) FROM competition.match_results WHERE match_id = $1`, match) != 1 || len(b.eventsOf("match.completed", match)) != 1 ||
 		len(b.audits(command.AuditResultRecorded)) != 1 {

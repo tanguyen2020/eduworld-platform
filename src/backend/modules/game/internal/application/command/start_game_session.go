@@ -189,6 +189,7 @@ func (h Sessions) Start(ctx context.Context, in StartInput) (res StartResult, er
 		h.afterCommit(ctx, func(context.Context) {
 			if h.Metrics != nil {
 				h.Metrics.Login(tenant.String(), in.Platform)
+				h.Metrics.ClientSession(in.Platform, in.ClientVersion)
 				if replaced {
 					h.Metrics.Takeover(in.Platform)
 				}

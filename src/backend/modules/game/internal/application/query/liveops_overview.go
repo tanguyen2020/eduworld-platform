@@ -51,7 +51,7 @@ func fp(v float64) *float64 { return &v }
 
 // KPICatalog is the PromQL catalog (metric names of MONITORING; labels never carry a user id or content — F080-AC-18).
 var KPICatalog = []KPIDef{
-	{Code: "ccu", Unit: "players", Query: `sum(eduworld_rt_connections)`,
+	{Code: "ccu", Unit: "players", Query: `sum(eduworld_players_online)`,
 		Warn: func(t KPIThresholds) *float64 { return fp(t.TargetCCU * t.CCUWarnRatio) }, Incident: func(t KPIThresholds) *float64 { return fp(t.TargetCCU) }},
 	{Code: "game_sessions_active", Unit: "sessions", Query: `sum(eduworld_game_sessions_active)`},
 	{Code: "matches_started_per_minute", Unit: "per_minute", Query: `sum(rate(eduworld_mm_matches_created_total[5m])) * 60`},
@@ -62,7 +62,7 @@ var KPICatalog = []KPIDef{
 	{Code: "logins_per_minute", Unit: "per_minute", Query: `sum(rate(eduworld_auth_game_login_total[5m])) * 60`},
 	{Code: "chat_messages_per_minute", Unit: "per_minute", Query: `sum(rate(eduworld_chat_messages_total[5m])) * 60`},
 	{Code: "chat_blocked_per_minute", Unit: "per_minute", Query: `sum(rate(eduworld_chat_rejected_total[5m])) * 60`},
-	{Code: "reports_pending", Unit: "reports", Query: `sum(increase(eduworld_chat_reports_total[1h]))`,
+	{Code: "reports_pending", Unit: "reports", Query: `sum(increase(eduworld_reports_total[1h]))`,
 		Warn: func(t KPIThresholds) *float64 { return fp(t.ReportsWarn) }, Incident: func(t KPIThresholds) *float64 { return fp(t.ReportsIncident) }},
 	{Code: "http_5xx_rate", Unit: "ratio", Query: `sum by (module) (rate(eduworld_http_server_requests_total{status_class="5xx"}[5m])) / sum by (module) (rate(eduworld_http_server_requests_total[5m]))`,
 		Breakdown: "module", Warn: func(t KPIThresholds) *float64 { return fp(t.Error5xxWarn) }, Incident: func(t KPIThresholds) *float64 { return fp(t.Error5xxIncident) }},
@@ -72,7 +72,7 @@ var KPICatalog = []KPIDef{
 		Warn: func(t KPIThresholds) *float64 { return fp(t.RollbacksWarn) }},
 	{Code: "sis_last_success_age_hours", Unit: "hours", Query: `(time() - min(eduworld_sis_last_success_timestamp)) / 3600`,
 		Warn: func(t KPIThresholds) *float64 { return fp(t.SISAgeWarnHours) }, Incident: func(t KPIThresholds) *float64 { return fp(t.SISAgeIncidentHours) }},
-	{Code: "attempts_submitted_per_minute", Unit: "per_minute", Query: `sum(rate(eduworld_attempt_submitted_total[5m])) * 60`},
+	{Code: "attempts_submitted_per_minute", Unit: "per_minute", Query: `sum(rate(eduworld_attempts_submitted_total[5m])) * 60`},
 	{Code: "exam_attempts_per_minute", Unit: "per_minute", Query: `sum(rate(eduworld_exam_attempts_started_total[5m])) * 60`},
 	{Code: "db_wait_seconds_per_minute", Unit: "seconds", Query: `sum(rate(go_sql_wait_duration_seconds_total[5m])) * 60`},
 }

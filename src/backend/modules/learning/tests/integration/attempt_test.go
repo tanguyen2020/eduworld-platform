@@ -12,6 +12,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
@@ -167,6 +168,11 @@ func TestAttemptRespondSubmitReview(t *testing.T) {
 	if r := c.do(t, http.MethodGet, "/learning/activity-attempts/"+id+"/review", hsAn, nil, nil); r.status != http.StatusConflict {
 		t.Fatalf("review before grading: %d", r.status)
 	}
+	submits := map[string]float64{}
+	for _, r := range []string{"ok", "duplicate"} {
+		submits[r] = metricSum(t, observability.AttemptsSubmitted(), map[string]string{"mode": "practice", "result": r})
+	}
+	completed := metricSum(t, observability.ActivitiesCompleted(), map[string]string{"context": "practice"})
 	// AC-12, AC-13: one submit; the same key replays, another key is refused; the score never moves.
 	key := idem()
 	sub := must(t, c.do(t, http.MethodPost, "/learning/activity-attempts/"+id+":submit", hsAn, key, nil), http.StatusOK, "submit")
@@ -179,6 +185,21 @@ func TestAttemptRespondSubmitReview(t *testing.T) {
 	}
 	if r := c.do(t, http.MethodPost, "/learning/activity-attempts/"+id+":submit", hsAn, idem(), nil); r.status != 409 || r.str("code") != "ATTEMPT_ALREADY_SUBMITTED" {
 		t.Fatalf("second submit: %d %s", r.status, r.raw)
+	}
+	// MONITORING §3: the replay is not a submit (pkg/httpx); one ok, one duplicate, one practice completion whose subject is a
+	// catalog code or "unknown" (never an id) and grade band a band.
+	for r, want := range map[string]float64{"ok": 1, "duplicate": 1} {
+		if got := metricSum(t, observability.AttemptsSubmitted(), map[string]string{"mode": "practice", "result": r}) - submits[r]; got != want {
+			t.Fatalf("attempts_submitted_total{result=%s} delta %v, want %v", r, got, want)
+		}
+	}
+	if got := metricSum(t, observability.ActivitiesCompleted(), map[string]string{"context": "practice"}) - completed; got != 1 {
+		t.Fatalf("activities_completed_total delta %v", got)
+	}
+	for _, s := range metricLabelValues(t, observability.ActivitiesCompleted(), "subject", nil) {
+		if _, err := uuid.Parse(s); err == nil {
+			t.Fatalf("subject label is an id: %s", s)
+		}
 	}
 	// AC-11: no response nor pause after the submit.
 	if r := c.answer(t, hsAn, id, 3, map[string]any{"option_id": right}, nil); r.status != 409 || r.str("code") != "ATTEMPT_NOT_IN_PROGRESS" {

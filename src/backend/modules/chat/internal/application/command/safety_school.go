@@ -144,6 +144,7 @@ func (h Safety) NotifySchool(ctx context.Context, id uuid.UUID, in NotifyInput) 
 	if common {
 		return out, problem.Invalid("school_id", problem.SubInvalid, "a case of the common tenant has no school: contact_path platform_direct")
 	}
+	h.notificationMetric(NotificationSent)
 	return out, nil
 }
 
@@ -276,6 +277,9 @@ func (h Safety) AcknowledgeSchoolNotification(ctx context.Context, id uuid.UUID,
 		}
 		return idempotency.SetResult(ctx, service.NotificationBody(out))
 	})
+	if err == nil {
+		h.notificationMetric(NotificationAcknowledged)
+	}
 	return out, err
 }
 
@@ -303,12 +307,14 @@ func (h Safety) RemindOverdueNotifications(ctx context.Context) (n int, err erro
 		if err != nil {
 			continue
 		}
+		first := false
 		err = h.UoW.InTenantTx(ctx, sc, func(ctx context.Context) error {
 			cur, err := h.Store.LockNotification(ctx, d.TenantID, d.ID)
 			if err != nil || cur == nil || cur.SchoolAckAt != nil || !reminderDue(*cur, now) {
 				return err
 			}
 			cur.ReminderCount++
+			first = cur.ReminderCount == 1
 			t := now
 			cur.LastRemindedAt = &t
 			cur.Version++
@@ -339,6 +345,9 @@ func (h Safety) RemindOverdueNotifications(ctx context.Context) (n int, err erro
 		if err != nil {
 			return n, err
 		}
+		if first {
+			h.notificationMetric(NotificationOverdue) // once per notification: the first reminder past ack_due_at
+		}
 	}
 	return n, nil
 }
@@ -352,4 +361,18 @@ func reminderDue(n read.NotificationRow, now time.Time) bool {
 		return !now.Before(n.AckDueAt.Add(n.AckDueAt.Sub(n.SchoolNotifiedAt)))
 	}
 	return false
+}
+
+// Statuses of eduworld_moderation_school_notifications_total (MONITORING §3).
+const (
+	NotificationSent         = "sent"
+	NotificationAcknowledged = "acknowledged"
+	NotificationOverdue      = "overdue"
+)
+
+// notificationMetric counts one status of a committed school notification (nil Metrics: not counted).
+func (h Safety) notificationMetric(status string) {
+	if h.Metrics != nil {
+		h.Metrics.SchoolNotification(status)
+	}
 }

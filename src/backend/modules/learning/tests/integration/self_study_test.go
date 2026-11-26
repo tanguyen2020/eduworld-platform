@@ -5,6 +5,7 @@ package integration
 import (
 	"context"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/ids"
 )
@@ -66,6 +68,7 @@ func TestSelfStudyPracticeHintsRapidGuess(t *testing.T) {
 	}
 
 	// US2: hints of position 1 in order, replay with the same key, exhausted, other students.
+	hints := metricSum(t, observability.HintRequests(), nil)
 	hk := idem()
 	h1 := must(t, c.do(t, http.MethodPost, hintPath(id, 1), hsAn, hk, nil), http.StatusOK, "hint 1")
 	if h1.str("level") != "1" || h1.str("total_levels") != "2" || h1.str("hint", "text") != "Em đã thuộc 7 × 7 chưa?" {
@@ -83,6 +86,16 @@ func TestSelfStudyPracticeHintsRapidGuess(t *testing.T) {
 	}
 	if n := count(ctx, t, c.platform, `SELECT hints_revealed FROM assessment.attempt_items WHERE attempt_id = $1 AND position = 1`, id); n != 2 {
 		t.Fatalf("hints_revealed %d", n)
+	}
+	// MONITORING §3: eduworld_hint_requests_total{subject,grade_band} moves once per opened level (not on the replay nor
+	// the exhausted call); labels are a catalog code/"unknown" and a band.
+	if got := metricSum(t, observability.HintRequests(), nil) - hints; got != 2 {
+		t.Fatalf("hint_requests_total delta %v", got)
+	}
+	for _, b := range metricLabelValues(t, observability.HintRequests(), "grade_band", nil) {
+		if !slices.Contains([]string{"g1_3", "g4_5", "g6_7", "g8_9", "unknown"}, b) {
+			t.Fatalf("grade_band label %q", b)
+		}
 	}
 	for _, sub := range []string{hsBinh, hsDung} {
 		if r := c.do(t, http.MethodPost, hintPath(id, 1), sub, idem(), nil); r.status != 404 {

@@ -60,10 +60,15 @@ type ExamConfig struct {
 }
 
 // ExamMetrics counts eduworld_exam_attempts_started_total, eduworld_exam_autosubmit_total{reason},
-// eduworld_exam_answer_rejected_total{code} and eduworld_exam_regrade_attempts_total{action}; nil = not counted.
+// eduworld_exam_answer_rejected_total{code}, eduworld_exam_regrade_attempts_total{action} and (MONITORING §3)
+// eduworld_exam_submissions_total{exam_type,result}, eduworld_exam_submit_duration_seconds{exam_type}; nil = not counted.
 type ExamMetrics interface {
 	Started()
 	AutoSubmitted(reason string)
+	// Submitted counts one exam submission: ok, late, duplicate, rejected (student) or auto_submitted (job exam.autosubmit).
+	Submitted(examType, result string)
+	// SubmitDuration observes one accepted student submit (submitExamAttempt on the server).
+	SubmitDuration(examType string, d time.Duration)
 	AnswerRejected(code string)
 	Regraded(action string)
 }
@@ -774,12 +779,15 @@ func (h Exams) close(ctx context.Context, id uuid.UUID, now time.Time, rep *Exam
 	}
 	submitted := 0
 	for _, a := range open {
-		done, err := h.submitAttempt(ctx, a, exam.ReasonWindowClosed, nil)
+		_, done, err := h.submitAttempt(ctx, a, exam.ReasonWindowClosed, nil)
 		if err != nil {
 			return err
 		}
 		if done {
 			submitted++
+			if h.Metrics != nil {
+				h.Metrics.Submitted(s.Type, ExamAutoSubmitted)
+			}
 		}
 	}
 	absent, err := h.Store.MarkAbsent(ctx, s.ID)

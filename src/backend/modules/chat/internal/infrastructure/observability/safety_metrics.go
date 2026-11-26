@@ -22,8 +22,10 @@ var (
 	firstResponse = prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "eduworld_moderation_case_first_response_seconds",
 		Help:    "Time from case creation to the first response (assignment) by severity (report_sla).",
 		Buckets: []float64{60, 300, 900, 1800, 3600, 4 * 3600, 24 * 3600, 3 * 24 * 3600}}, []string{"severity"})
-	reportsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_chat_reports_total",
-		Help: "Reports created by students, by reason (MODERATION §5)."}, []string{"reason"})
+	reportsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_reports_total",
+		Help: "Reports created by students, by target type (message, user) and reason (MODERATION §5)."}, []string{"target_type", "reason"})
+	schoolNotifications = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_moderation_school_notifications_total",
+		Help: "School safety notifications by status: sent, acknowledged, overdue (first reminder past ack_due_at)."}, []string{"status"})
 	notificationsOverdue = prometheus.NewGauge(prometheus.GaugeOpts{Name: "eduworld_moderation_school_notifications_overdue",
 		Help: "School safety notifications past ack_due_at without acknowledgement (school_notification_ack_sla_hours)."})
 )
@@ -34,7 +36,7 @@ func RegisterSafety(reg prometheus.Registerer) {
 		if reg == nil {
 			return
 		}
-		for _, c := range []prometheus.Collector{casesOpen, unclaimedAge, firstResponse, reportsTotal, notificationsOverdue} {
+		for _, c := range []prometheus.Collector{casesOpen, unclaimedAge, firstResponse, reportsTotal, schoolNotifications, notificationsOverdue} {
 			_ = reg.Register(c)
 		}
 	})
@@ -44,7 +46,18 @@ func RegisterSafety(reg prometheus.Registerer) {
 type Safety struct{}
 
 // Report counts one report.
-func (Safety) Report(reason string) { reportsTotal.WithLabelValues(reason).Inc() }
+func (Safety) Report(targetType, reason string) {
+	reportsTotal.WithLabelValues(targetType, reason).Inc()
+}
+
+// SchoolNotification counts one school safety notification status change.
+func (Safety) SchoolNotification(status string) { schoolNotifications.WithLabelValues(status).Inc() }
+
+// Reports exposes eduworld_reports_total (tests).
+func Reports() *prometheus.CounterVec { return reportsTotal }
+
+// SchoolNotifications exposes eduworld_moderation_school_notifications_total (tests).
+func SchoolNotifications() *prometheus.CounterVec { return schoolNotifications }
 
 // FirstResponse observes the first response of a case.
 func (Safety) FirstResponse(severity string, d time.Duration) {

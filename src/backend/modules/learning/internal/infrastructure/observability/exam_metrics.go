@@ -1,6 +1,10 @@
 package observability
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 // Exam engine metrics (plan F042 "Quan sát"). Labels never carry ids, answers or names (R14).
 var (
@@ -20,11 +24,20 @@ var (
 		Name: "eduworld_exam_regrade_attempts_total",
 		Help: "Exam attempts regraded by action (accept_all, use_new_key, drop_item).",
 	}, []string{"action"})
+	examSubmissions = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_exam_submissions_total",
+		Help: "Exam submissions by exam type and result (ok, late, duplicate, rejected, auto_submitted).",
+	}, []string{"exam_type", "result"})
+	examSubmitDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "eduworld_exam_submit_duration_seconds",
+		Help:    "Server duration of an accepted student exam submit, by exam type (SLO latency submit: bucket 0.4 s).",
+		Buckets: []float64{.025, .05, .1, .2, .3, .4, .6, 1, 2.5, 5},
+	}, []string{"exam_type"})
 )
 
 // RegisterExams adds the exam engine metrics to r; already registered collectors are ignored.
 func RegisterExams(r prometheus.Registerer) {
-	for _, c := range []prometheus.Collector{examStarted, examAutoSubmit, examAnswerRejected, examRegraded} {
+	for _, c := range []prometheus.Collector{examStarted, examAutoSubmit, examAnswerRejected, examRegraded, examSubmissions, examSubmitDuration} {
 		_ = r.Register(c)
 	}
 }
@@ -43,3 +56,19 @@ func (ExamCounter) AnswerRejected(code string) { examAnswerRejected.WithLabelVal
 
 // Regraded counts one regraded attempt.
 func (ExamCounter) Regraded(action string) { examRegraded.WithLabelValues(action).Inc() }
+
+// Submitted counts one exam submission.
+func (ExamCounter) Submitted(examType, result string) {
+	examSubmissions.WithLabelValues(examType, result).Inc()
+}
+
+// SubmitDuration observes one accepted student submit.
+func (ExamCounter) SubmitDuration(examType string, d time.Duration) {
+	examSubmitDuration.WithLabelValues(examType).Observe(d.Seconds())
+}
+
+// ExamSubmissions exposes eduworld_exam_submissions_total (tests).
+func ExamSubmissions() *prometheus.CounterVec { return examSubmissions }
+
+// ExamSubmitDuration exposes eduworld_exam_submit_duration_seconds (tests).
+func ExamSubmitDuration() *prometheus.HistogramVec { return examSubmitDuration }

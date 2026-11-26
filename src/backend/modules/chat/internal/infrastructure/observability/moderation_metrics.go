@@ -15,9 +15,9 @@ import (
 var (
 	moderationOnce sync.Once
 
-	filterLatency = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "eduworld_chat_filter_latency_seconds",
-		Help:    "Synchronous moderation pipeline latency per message (moderation_pipeline_latency: p95 < 20 ms, ceiling 50 ms).",
-		Buckets: []float64{0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1}})
+	filterDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "eduworld_chat_filter_duration_seconds",
+		Help:    "Synchronous moderation pipeline latency per message by stage; stage total = moderation_pipeline_latency (p95 < 20 ms, ceiling 50 ms).",
+		Buckets: []float64{0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1}}, []string{"stage"})
 	sensitiveMatches = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_chat_sensitive_matches_total",
 		Help: "Catalogue matches by category code and action (never the term)."}, []string{"category", "action"})
 	uncheckedMessages = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_chat_unchecked_messages_total",
@@ -41,7 +41,7 @@ func RegisterModeration(reg prometheus.Registerer) {
 		if reg == nil {
 			return
 		}
-		for _, c := range []prometheus.Collector{filterLatency, sensitiveMatches, uncheckedMessages, policyDisabled, catalogVersion,
+		for _, c := range []prometheus.Collector{filterDuration, sensitiveMatches, uncheckedMessages, policyDisabled, catalogVersion,
 			re2Timeouts, decisionsDropped, invalidPatterns} {
 			_ = reg.Register(c)
 		}
@@ -53,8 +53,13 @@ type Moderation struct{}
 
 var _ port.ModerationMetrics = Moderation{}
 
-// FilterLatency implements port.ModerationMetrics.
-func (Moderation) FilterLatency(d time.Duration) { filterLatency.Observe(d.Seconds()) }
+// FilterDuration implements port.ModerationMetrics.
+func (Moderation) FilterDuration(stage string, d time.Duration) {
+	filterDuration.WithLabelValues(stage).Observe(d.Seconds())
+}
+
+// FilterDurations exposes eduworld_chat_filter_duration_seconds (tests).
+func FilterDurations() *prometheus.HistogramVec { return filterDuration }
 
 // Match implements port.ModerationMetrics.
 func (Moderation) Match(category, action string) {

@@ -53,6 +53,10 @@ var (
 		Name: "eduworld_game_consumer_rejected_total",
 		Help: "Events refused by a consumer of module game (sent to DLQ_GAME) by reason.",
 	}, []string{"consumer", "reason"})
+	clientSessions = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "eduworld_client_sessions_total",
+		Help: "Client sessions (game sessions created) by platform and client version major.minor.patch (ClientCrashRateHigh).",
+	}, []string{"platform", "client_version"})
 )
 
 // ProjectionLag is eduworld_game_projection_lag_seconds{table}.
@@ -73,7 +77,7 @@ func ActiveSessions() *prometheus.GaugeVec { return active }
 // Register adds the metrics to r (composition root); already registered collectors are ignored.
 func Register(r prometheus.Registerer) {
 	for _, c := range []prometheus.Collector{logins, active, takeovers, ended, denied, sessionStart, sessionStartDuration,
-		projectionLag, consumerRejected} {
+		projectionLag, consumerRejected, clientSessions} {
 		_ = r.Register(c)
 	}
 }
@@ -91,6 +95,11 @@ func (SessionMetrics) Started(result string, d time.Duration) {
 
 // Login records one entry into the game.
 func (SessionMetrics) Login(tenant, platform string) { logins.WithLabelValues(tenant, platform).Inc() }
+
+// ClientSession records one client session (labels bounded by ClientLabels).
+func (SessionMetrics) ClientSession(platform, clientVersion string) {
+	clientSessions.WithLabelValues(ClientLabels(platform, clientVersion)).Inc()
+}
 
 // Takeover records one takeover.
 func (SessionMetrics) Takeover(platform string) { takeovers.WithLabelValues(platform).Inc() }

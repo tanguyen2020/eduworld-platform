@@ -67,13 +67,15 @@ type SelfStudy struct {
 	Masteries       write.MasteryStore
 	Config          PracticeConfig
 	Metrics         SelfStudyMetrics
+	// Subjects resolves the subject label of the metrics (nil = "unknown").
+	Subjects SubjectCodes
 }
 
-// SelfStudyMetrics counts eduworld_learning_hints_revealed_total{mode}, eduworld_learning_rapid_guess_total{question_type}
-// and eduworld_learning_recommendations_generated_total{rule_code}; nil = not counted.
+// SelfStudyMetrics counts eduworld_hint_requests_total{subject,grade_band}, eduworld_rapid_guess_responses_total{subject,grade_band}
+// (MONITORING §3) and eduworld_learning_recommendations_generated_total{rule_code}; nil = not counted.
 type SelfStudyMetrics interface {
-	HintRevealed(mode string)
-	RapidGuess(questionType string)
+	HintRevealed(subject, gradeBand string)
+	RapidGuess(subject, gradeBand string)
 	RecommendationGenerated(ruleCode string)
 }
 
@@ -138,14 +140,14 @@ func (s *SelfStudy) recordAnswer(ctx context.Context, a attempt.Attempt, it atte
 }
 
 // rapidGuess flags a scored answer answered too fast to read the stem (F032-AC-16, AC-19); nil SelfStudy flags nothing.
-func (s *SelfStudy) rapidGuess(a attempt.Attempt, it attempt.Item, qv dto.QuestionVersion, ans attempt.Answer, grade *int) bool {
+func (s *SelfStudy) rapidGuess(ctx context.Context, a attempt.Attempt, it attempt.Item, qv dto.QuestionVersion, ans attempt.Answer, grade *int) bool {
 	if s == nil {
 		return false
 	}
 	rapid := s.Config.RapidGuess.Flag(attempt.GuessInput{Mode: a.Mode, QuestionType: it.QuestionType, ItemMinMS: qv.MinResponseMS, Grade: grade,
 		ResponseMS: ans.ResponseMS, Scored: ans.IsScored})
 	if rapid && s.Metrics != nil {
-		s.Metrics.RapidGuess(it.QuestionType)
+		s.Metrics.RapidGuess(subjectLabel(ctx, s.Subjects, nonNilSubject(qv.SubjectID)), gradeBandLabel(grade))
 	}
 	return rapid
 }
@@ -202,7 +204,13 @@ func (h Attempts) RevealHint(ctx context.Context, in RevealHintInput) (out dto.H
 			return err
 		}
 		if h.Self != nil && h.Self.Metrics != nil {
-			h.Self.Metrics.HintRevealed(string(a.Mode))
+			var grade *int
+			if h.Students != nil {
+				if _, grade, err = h.Students.StudentSchool(ctx, a.StudentID); err != nil {
+					return err
+				}
+			}
+			h.Self.Metrics.HintRevealed(subjectLabel(ctx, h.Self.Subjects, nonNilSubject(qv.SubjectID)), gradeBandLabel(grade))
 		}
 		out = dto.HintView{Position: in.Position, Level: level, TotalLevels: total,
 			Hint: dto.HintTextView{Text: attemptview.Truncate(attemptview.RichText(hints[level-1], a.DisplayLanguage), 2000)}}

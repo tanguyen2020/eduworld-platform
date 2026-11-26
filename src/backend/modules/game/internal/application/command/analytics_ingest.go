@@ -190,6 +190,15 @@ func (h AnalyticsIngest) PostTelemetry(ctx context.Context, b TelemetryBatch) (a
 		h.metric(func(m port.AnalyticsMetrics) { m.RawInserted(n) })
 		return err
 	})
+	if err == nil {
+		// Client metrics of MONITORING §3 from the valid events of a stored batch (whatever the analytics drop reason): a
+		// failed batch is resent by the client and must not count twice. Values are statistics only (ADR-0016).
+		for _, e := range events {
+			if cm := analytics.MetricOf(e.typ, e.attrs); cm.Kind != "" {
+				h.metric(func(m port.AnalyticsMetrics) { m.Client(cm, b.Platform, b.ClientVersion) })
+			}
+		}
+	}
 	return accepted, err
 }
 

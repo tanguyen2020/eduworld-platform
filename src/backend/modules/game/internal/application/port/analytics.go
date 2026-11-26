@@ -244,6 +244,9 @@ type AnalyticsMetrics interface {
 	Query(queryID string, seconds float64, cache string)
 	Rejected(reason string)
 	MatchDuration(mode string, seconds float64)
+	// Client counts a client metric of a valid telemetry event (eduworld_client_crashes_total{platform,client_version},
+	// eduworld_chat_seq_gaps_total{channel_type}, eduworld_client_content_download_bytes_total{source} — MONITORING §3).
+	Client(m analytics.ClientMetric, platform, clientVersion string)
 }
 
 // MetricsSource is the Prometheus HTTP API (instant queries of a fixed catalog only — F080-AC-17).

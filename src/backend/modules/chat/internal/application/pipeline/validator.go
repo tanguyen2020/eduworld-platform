@@ -128,6 +128,8 @@ func (v *Validator) Validate(ctx context.Context, in port.ValidationInput) (verd
 	}()
 	start := time.Now()
 	now := v.now()
+	var stages stageTimes
+	mark := start
 	// Technical gate: sanctions always apply, whatever the switches (F116-AC-08, F116-AC-24).
 	sanctions, err := v.Sanctions.Active(ctx, in.TenantID, in.SenderID, now)
 	if err != nil {
@@ -138,6 +140,7 @@ func (v *Validator) Validate(ctx context.Context, in port.ValidationInput) (verd
 			return port.Verdict{}, problem.New(problem.Code(code), "")
 		}
 	}
+	mark = stages.lap(StageSanctions, mark)
 	text := in.Text
 	if in.Kind == message.KindQuick {
 		if text, err = v.quickText(ctx, in); err != nil {
@@ -149,6 +152,7 @@ func (v *Validator) Validate(ctx context.Context, in port.ValidationInput) (verd
 	if err != nil {
 		return port.Verdict{}, err
 	}
+	mark = stages.lap(StageCatalog, mark)
 	view := v.Engine.View(text)
 	var spam *moderation.SpamCounts
 	if sw.On(moderation.StepSpam) && !in.Derived && strings.TrimSpace(text) != "" {
@@ -157,9 +161,11 @@ func (v *Validator) Validate(ctx context.Context, in port.ValidationInput) (verd
 			return port.Verdict{}, fmt.Errorf("%w: spam window: %w", port.ErrUnavailable, err)
 		}
 		spam = &c
+		mark = stages.lap(StageSpam, mark)
 	}
 	out := v.Engine.Evaluate(moderation.Input{View: view, Quick: in.Kind == message.KindQuick, Mentions: in.Mentions,
 		Strictness: in.Strictness, Switches: sw, Categories: cat.Categories, Catalog: cat.Parts, Spam: spam})
+	stages.lap(StageEvaluate, mark)
 	latency := time.Since(start)
 	pv, tv := cat.PlatformVersion, cat.TenantVersion
 	verdict = port.Verdict{Decision: message.Decision(out.Decision), CategoryCodes: out.Codes, StepsRun: out.StepsRun,
@@ -170,7 +176,7 @@ func (v *Validator) Validate(ctx context.Context, in port.ValidationInput) (verd
 	if in.Kind == message.KindText || in.Kind == message.KindEmoji {
 		verdict.Display = out.Display
 	}
-	v.observe(in, out, latency)
+	v.observe(in, out, latency, stages)
 	switch verdict.Decision {
 	case message.Block:
 		v.blocked(ctx, in, verdict, now)
@@ -205,11 +211,14 @@ func (v *Validator) blocked(ctx context.Context, in port.ValidationInput, verdic
 	}
 }
 
-func (v *Validator) observe(in port.ValidationInput, out moderation.Outcome, latency time.Duration) {
+func (v *Validator) observe(in port.ValidationInput, out moderation.Outcome, latency time.Duration, stages stageTimes) {
 	if v.Metrics == nil {
 		return
 	}
-	v.Metrics.FilterLatency(latency)
+	for _, s := range stages {
+		v.Metrics.FilterDuration(s.stage, s.d)
+	}
+	v.Metrics.FilterDuration(StageTotal, latency)
 	for _, h := range out.Hits {
 		v.Metrics.Match(h.CategoryCode, moderation.Bump(h.Action, in.Strictness))
 	}
@@ -219,4 +228,29 @@ func (v *Validator) observe(in port.ValidationInput, out moderation.Outcome, lat
 	if out.SlowPatterns > 0 {
 		v.Metrics.RE2Timeouts(out.SlowPatterns)
 	}
+}
+
+// Stages of eduworld_chat_filter_duration_seconds{stage} (MONITORING §3), in pipeline order: the technical gate (sanctions),
+// the quick message, effective switches and catalogue (catalog), the spam window when the step runs (spam, with the text
+// normalisation), the content steps (evaluate) and the whole synchronous pipeline (total, moderation_pipeline_latency).
+const (
+	StageSanctions = "sanctions"
+	StageCatalog   = "catalog"
+	StageSpam      = "spam"
+	StageEvaluate  = "evaluate"
+	StageTotal     = "total"
+)
+
+type stageTime struct {
+	stage string
+	d     time.Duration
+}
+
+type stageTimes []stageTime
+
+// lap records the time since mark for stage and returns the new mark.
+func (s *stageTimes) lap(stage string, mark time.Time) time.Time {
+	now := time.Now()
+	*s = append(*s, stageTime{stage: stage, d: now.Sub(mark)})
+	return now
 }

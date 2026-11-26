@@ -62,6 +62,7 @@ func TestSafetySchoolNotifications(t *testing.T) {
 	authztest.Cover(t, "acknowledgeSchoolSafetyNotification", authztest.CrossTenant, authztest.RoleDenied)
 	authztest.Cover(t, "listSchoolSafetyNotificationsPlatform", authztest.CrossTenant, authztest.RoleDenied)
 	s := setupSafety(t)
+	sent0, ack0 := schoolNotifications("sent"), schoolNotifications("acknowledged")
 	caseID, an, binh, chi := s.multiCase()
 	sm := s.moderator("safety_moderator", false)
 	path := "/admin/moderation/cases/" + caseID.String() + ":notify-school"
@@ -162,6 +163,13 @@ func TestSafetySchoolNotifications(t *testing.T) {
 	if r := s.tenantPost(adA, s.tenantA, ack, map[string]any{"contact_outcome": "not_needed"}); r.status != http.StatusConflict {
 		t.Fatalf("acknowledge twice: %d %s", r.status, r.raw)
 	}
+	// MONITORING §3: two notifications sent (the 409 duplicate and the refusals count nothing), one acknowledged.
+	if d := schoolNotifications("sent") - sent0; d != 2 {
+		t.Fatalf("school_notifications_total{sent} delta %v", d)
+	}
+	if d := schoolNotifications("acknowledged") - ack0; d != 1 {
+		t.Fatalf("school_notifications_total{acknowledged} delta %v", d)
+	}
 	if c := s.caseRow(caseID); c["status"] == "" {
 		t.Fatal("case")
 	}
@@ -182,6 +190,7 @@ func TestSafetySchoolNotifications(t *testing.T) {
 // lead) one SLA period later; the platform list filters overdue and acknowledged.
 func TestSafetySchoolReminder(t *testing.T) {
 	s := setupSafety(t)
+	overdue0 := schoolNotifications("overdue")
 	caseID, an, _, _ := s.multiCase()
 	sm := s.moderator("safety_moderator", false)
 	n := sm.post(s.tenantA, "/admin/moderation/cases/"+caseID.String()+":notify-school", map[string]any{"school_id": s.schoolA,
@@ -222,6 +231,14 @@ func TestSafetySchoolReminder(t *testing.T) {
 	if k, _ := s.cmd.RemindOverdueNotifications(ctx); k != 0 {
 		t.Fatalf("no third reminder: %d", k)
 	}
+	// MONITORING §3: overdue is counted once per notification (first reminder), not again for the team lead reminder.
+	if d := schoolNotifications("overdue") - overdue0; d != 1 {
+		t.Fatalf("school_notifications_total{overdue} delta %v", d)
+	}
+}
+
+func schoolNotifications(status string) float64 {
+	return testutil.ToFloat64(observability.SchoolNotifications().WithLabelValues(status))
 }
 
 // T035 / F121-AC-21: a case of the tenant common has no school — contact_path platform_direct, notifySchoolForCase 422,
@@ -233,9 +250,20 @@ func TestSafetyCommonTenant(t *testing.T) {
 	an, binh := s.student(common, school), s.student(common, school)
 	ch := s.open(channel.Party, an, binh)
 	target := s.msg(ch, true, an, 1, "zqhen gap")
+	reports0 := testutil.ToFloat64(observability.Reports().WithLabelValues("message", "asked_personal_info"))
+	sent0 := schoolNotifications("sent")
 	if r := s.report(binh, newKey(), "vi", map[string]any{"target_type": "message", "target_id": target, "reason": "asked_personal_info"}); r.status != http.StatusCreated {
 		t.Fatalf("report: %d %s", r.status, r.raw)
 	}
+	// MONITORING §3: eduworld_reports_total{target_type,reason}.
+	if d := testutil.ToFloat64(observability.Reports().WithLabelValues("message", "asked_personal_info")) - reports0; d != 1 {
+		t.Fatalf("reports_total delta %v", d)
+	}
+	defer func() {
+		if d := schoolNotifications("sent") - sent0; d != 0 { // the common tenant has no school notification
+			t.Errorf("school_notifications_total{sent} delta %v", d)
+		}
+	}()
 	caseID := s.caseOf(target)
 	if c := s.caseRow(caseID); c["contact_path"] != "platform_direct" || c["hold"] == "" {
 		t.Fatalf("common case: %v", c)

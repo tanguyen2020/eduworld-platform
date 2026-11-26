@@ -2,6 +2,7 @@ package analytics
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"time"
 )
@@ -18,6 +19,10 @@ var telemetryProps = map[string][]string{
 	"crash":                {"error_code", "scene_code", "fatal", "crash_signature"},
 	"network_sample":       {"rtt_p50_ms", "rtt_p95_ms", "reconnects"},
 	"break_reminder_shown": {"reminder_no", "minutes_played"},
+	// Metric-only types (MONITORING §3, not in the analytics catalog): eduworld_chat_seq_gaps_total{channel_type} and
+	// eduworld_client_content_download_bytes_total{source}.
+	"chat_seq_gap":     {"channel_type", "gap_count"},
+	"content_download": {"source", "bytes"},
 }
 
 // analyticsProps are the attributes written to events_raw (crash_signature goes to error tracking only, F080-AC-04).
@@ -71,7 +76,59 @@ func ValidateTelemetry(i int, typ string, attrs map[string]any) error {
 			return FieldError{Pointer: fmt.Sprintf("/events/%d/minutes_played", i), Reason: "integer 0–1440 required"}
 		}
 	}
+	switch typ {
+	case "chat_seq_gap":
+		if c, _ := attrs["channel_type"].(string); !slices.Contains(ChatChannelTypes, c) {
+			return FieldError{Pointer: fmt.Sprintf("/events/%d/channel_type", i), Reason: "known channel type required"}
+		}
+		if n, ok := attrs["gap_count"].(float64); !ok || n != float64(int(n)) || n < 1 || n > 1000 {
+			return FieldError{Pointer: fmt.Sprintf("/events/%d/gap_count", i), Reason: "integer 1–1000 required"}
+		}
+	case "content_download":
+		if s, _ := attrs["source"].(string); !slices.Contains(DownloadSources, s) {
+			return FieldError{Pointer: fmt.Sprintf("/events/%d/source", i), Reason: "preinstalled, lan_cache or cdn required"}
+		}
+		if n, ok := attrs["bytes"].(float64); !ok || n != float64(int64(n)) || n < 0 || n > MaxDownloadBytes {
+			return FieldError{Pointer: fmt.Sprintf("/events/%d/bytes", i), Reason: "integer 0–10737418240 required"}
+		}
+	}
 	return nil
+}
+
+// Closed values of the metric-only telemetry types (labels of MONITORING §3, never free text).
+var (
+	// ChatChannelTypes is ChannelType of the contract (ADR-0095: no class, no study_group).
+	ChatChannelTypes = []string{"world", "area", "match", "party", "team", "direct"}
+	// DownloadSources is the source of a content package (PERFORMANCE_BUDGET §10.1).
+	DownloadSources = []string{"preinstalled", "lan_cache", "cdn"}
+)
+
+// MaxDownloadBytes caps one content_download event (10 GiB).
+const MaxDownloadBytes = 10 << 30
+
+// ClientMetric is what a valid telemetry event adds to the client metrics of MONITORING §3; Kind "" = nothing.
+type ClientMetric struct {
+	Kind  string // crash, chat_seq_gap, content_download
+	Label string // channel_type or source
+	Value float64
+}
+
+// MetricOf returns the client metric of a validated telemetry event (crash → crash count, chat_seq_gap → gap_count,
+// content_download → bytes).
+func MetricOf(typ string, attrs map[string]any) ClientMetric {
+	switch typ {
+	case "crash":
+		return ClientMetric{Kind: typ, Value: 1}
+	case "chat_seq_gap":
+		c, _ := attrs["channel_type"].(string)
+		n, _ := attrs["gap_count"].(float64)
+		return ClientMetric{Kind: typ, Label: c, Value: n}
+	case "content_download":
+		s, _ := attrs["source"].(string)
+		n, _ := attrs["bytes"].(float64)
+		return ClientMetric{Kind: typ, Label: s, Value: n}
+	}
+	return ClientMetric{}
 }
 
 // TelemetryProps keeps the attributes of typ that go to analytics.

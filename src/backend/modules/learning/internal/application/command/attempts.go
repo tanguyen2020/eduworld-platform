@@ -42,11 +42,15 @@ const (
 // reads platform settings.
 const AttemptStartRate = 20
 
-// AttemptMetrics counts the engine (eduworld_attempt_started_total{activity_type,mode}, eduworld_attempt_submitted_total{result},
-// eduworld_attempt_expired_total); nil = not counted.
+// AttemptMetrics counts the engine (eduworld_attempt_started_total{activity_type,mode}, eduworld_attempt_expired_total; MONITORING §3:
+// eduworld_attempts_submitted_total{mode,result}, eduworld_learning_activities_completed_total{activity_type,context,subject,
+// grade_band}); nil = not counted.
 type AttemptMetrics interface {
 	Started(activityType, mode string)
-	Submitted(result string)
+	// Submitted counts one student submit by mode and result (ok, duplicate, late, rejected).
+	Submitted(mode, result string)
+	// Completed counts one activity completed by a student submit (graded).
+	Completed(activityType, context, subject, gradeBand string)
 	Expired(kind string)
 }
 
@@ -65,6 +69,8 @@ type Attempts struct {
 	StartRate int // attempt_start_rate per hour (0 = AttemptStartRate)
 	Clock     func() time.Time
 	Metrics   AttemptMetrics
+	// Subjects resolves the subject label of the learning metrics (nil = "unknown").
+	Subjects SubjectCodes
 	// Lessons pins the lesson session of an attempt started with context_type lesson (F031 US6); nil = no session.
 	Lessons LessonPinner
 	// Self are the self-study stores of F032 (review list, recommendations, rapid_guess); nil = F030 behaviour.
@@ -526,9 +532,6 @@ func (h Attempts) graded(ctx context.Context, a attempt.Attempt, r activity.Resu
 	// F073-AC-10, AC-18: the game result for module game; the learning event above and the mastery evidence never carry it.
 	if mg != nil {
 		ev["minigame"] = mg.payload(a)
-	}
-	if h.Metrics != nil {
-		h.Metrics.Submitted(*a.SubmitReason)
 	}
 	return h.publish(ctx, a, EventActivityGraded, ev)
 }

@@ -378,9 +378,10 @@ func build(r *module.Registry) (*wiring, error) {
 	docQueries := query.Docs{Session: core.ReadSession, Model: read.DocModel{}, Pool: read.Delivery{}, Cursors: cursors}
 	delivery := query.Delivery{Session: core.ReadSession, Reader: read.Delivery{}, Cache: cache.Pool{C: vk}, Registry: registry, Schema: schema,
 		Metrics: observability.QuestionCounter{}}
+	subjectCodes := write.NewSubjectCodes() // subject label of the learning metrics (MONITORING §3)
 	att := command.Attempts{UoW: core.UoW, Store: write.AttemptRepo{}, Learning: write.LearningEventWriter{}, Events: events,
 		Docs: write.DocRepo{}, Questions: write.QuestionRepo{}, Delivery: delivery, Students: read.SchoolSettings{}, Registry: activities,
-		Metrics: observability.AttemptCounter{}, Rate: cache.Rate{C: vk, Metrics: observability.RateCounter{}},
+		Metrics: observability.AttemptCounter{}, Subjects: subjectCodes, Rate: cache.Rate{C: vk, Metrics: observability.RateCounter{}},
 		Progress: write.MediaProgressRepo{}, Media: write.MediaRepo{}, Signer: signer, MediaMetrics: observability.VideoCounter{},
 		Runs: write.SimulationRunRepo{}, SimMetrics: observability.SimulationCounter{}, Minigames: write.MinigameConfigRepo{}}
 	lessons := command.Lessons{Store: write.LessonRepo{}, Docs: write.DocRepo{}, Learning: write.LearningEventWriter{}, Events: events,
@@ -389,7 +390,7 @@ func build(r *module.Registry) (*wiring, error) {
 	// F032: review list, rapid_guess, adaptive selection, diagnostics and recommendations.
 	selfRepo, practice := write.SelfStudyRepo{}, command.DefaultPracticeConfig()
 	att.Self = &command.SelfStudy{Wrong: selfRepo, Recommendations: selfRepo, Reader: selfRepo, Masteries: write.MasteryRepo{}, Config: practice,
-		Metrics: observability.SelfStudyCounter{}}
+		Metrics: observability.SelfStudyCounter{}, Subjects: subjectCodes}
 	recs := command.Recommendations{UoW: core.UoW, Store: selfRepo, Wrong: selfRepo, Reader: selfRepo, Masteries: write.MasteryRepo{},
 		Delivery: delivery, Students: read.SchoolSettings{}, Events: events, Engine: recommendation.Default(), Config: practice,
 		Metrics: observability.SelfStudyCounter{}}

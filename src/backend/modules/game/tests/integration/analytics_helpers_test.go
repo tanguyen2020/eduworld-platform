@@ -23,6 +23,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/analytics"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/cache"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/analyticssql"
 	promsource "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/prometheus"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -161,7 +162,7 @@ func (e *env) setupAnalytics(t *testing.T, edit func(c *analytics.Config)) *anaK
 	k := &anaKit{cfg: cfg, files: &memExportFiles{files: map[string][]byte{}}, versions: &memVersions{bumps: map[uuid.UUID]int{}},
 		prom: &promAnswers{vals: map[string][]map[string]any{}}, logs: &bytes.Buffer{}}
 	k.ingest = command.AnalyticsIngest{UoW: e.uow, Store: analyticssql.Store{}, Keys: keys, Rate: &memRate{n: map[string]int{}}, Config: cfg,
-		Clock: e.clock.Now, Log: slog.New(slog.NewJSONHandler(k.logs, nil))}
+		Clock: e.clock.Now, Log: slog.New(slog.NewJSONHandler(k.logs, nil)), Metrics: observability.AnalyticsMetrics{}}
 	k.queries = query.GameAnalytics{Session: dash, Model: analyticssql.Dashboard{}, Limiter: cache.NewDashLimiter(nil), Config: cfg, Cursors: codec,
 		Clock: e.clock.Now}
 	k.exports = command.AnalyticsExports{UoW: e.uow, Store: analyticssql.Exports{}, Files: k.files, Renderer: k.queries, Audit: e.rec, Config: cfg,
