@@ -1,0 +1,60 @@
+# APISIX traditional mode (etcd) for staging/production gateways (F130, DEPLOYMENT §5). Routes are not here: the CI
+# job apisix:sync applies the ADC configuration rendered from deploy/apisix/routes/routes.yaml (F130 T052). Same
+# plugin list and access-log policy as the local standalone config (deploy/apisix/config.yaml, F004).
+deployment:
+  role: traditional
+  role_traditional:
+    config_provider: etcd
+  admin:
+    admin_listen: { ip: 0.0.0.0, port: 9180 }      # admin network only (no published port); key from env below
+    admin_key_required: true
+    admin_key:
+      - name: admin
+        key: ${{APISIX_ADMIN_KEY}}
+        role: admin
+    allow_admin: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16]
+  etcd:
+    host: ["http://etcd-apisix-1:2379", "http://etcd-apisix-2:2379", "http://etcd-apisix-3:2379"]
+    prefix: /apisix
+    timeout: 30
+    user: apisix
+    password: ${{APISIX_ETCD_PASSWORD}}
+
+apisix:
+  node_listen: 9080
+  ssl:
+    enable: true
+    listen:
+      - port: 9443
+    ssl_protocols: TLSv1.2 TLSv1.3
+  extra_lua_path: /usr/local/apisix/custom/?.lua
+
+nginx_config:
+  envs:
+    - EW_APISIX_LOGIN_KEY_SECRET
+    - EW_APISIX_VALKEY_PASSWORD
+  http:
+    custom_lua_shared_dict:
+      ew-login-limit: 10m
+    access_log_format: '$remote_addr - [$time_local] "$request_method $uri $server_protocol" $status $body_bytes_sent $request_time "$http_user_agent" $upstream_addr $http_x_request_id'
+    access_log_format_escape: json
+
+plugins:
+  - request-id
+  - prometheus
+  - opentelemetry
+  - cors
+  - ip-restriction
+  - client-control
+  - openid-connect
+  - limit-conn
+  - redirect
+  - response-rewrite
+  - traffic-split            # canary core-api-canary (scripts/deploy/canary.sh, DEPLOYMENT §11.2)
+  - ew-tenant-header
+  - ew-api-rate
+  - ew-login-key
+
+plugin_attr:
+  prometheus:
+    export_addr: { ip: 0.0.0.0, port: 9091 }

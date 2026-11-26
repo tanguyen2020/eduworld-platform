@@ -1,0 +1,369 @@
+# Staging infra stack (F130 T013, topology pilot DEPLOYMENT §4.1 on 9 VMs — §4.3, §5, §6, §8, §8b; ADR-0024): gateways, Keycloak, NATS
+# JetStream, Valkey + Sentinel, ClamAV. Observability (otel-collector, Prometheus, Grafana, Loki, Tempo, node_exporter)
+# is added here by F131. Stateful services are pinned to a node (node.labels.role + node.labels.name, inventory
+# deploy/swarm/nodes/staging.yaml) with a local volume; no datastore publishes a port (F130-AC-07).
+# Deploy: scripts/deploy/deploy-service.sh --env=staging --stack=infra (computes CFG_* config versions).
+version: "3.9"
+
+x-update: &update
+  update_config: { parallelism: 1, delay: 10s, order: start-first, failure_action: rollback, monitor: 30s }
+  rollback_config: { parallelism: 1, order: start-first }
+  restart_policy: { condition: any, delay: 5s, max_attempts: 10, window: 120s }
+
+# Stateful services cannot run two copies on one volume: stop-first.
+x-update-stateful: &update-stateful
+  update_config: { parallelism: 1, delay: 30s, order: stop-first, failure_action: rollback, monitor: 30s }
+  rollback_config: { parallelism: 1, order: stop-first }
+  restart_policy: { condition: any, delay: 5s, max_attempts: 10, window: 120s }
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "50m", max-file: "5" }
+
+x-apisix: &apisix
+  image: apache/apisix:3.13.0-debian
+  entrypoint: ["/bin/sh", "/usr/local/bin/ew-entrypoint.sh"]
+  configs:
+    - { source: apisix_config, target: /usr/local/apisix/conf/config.yaml }
+    - { source: apisix_entrypoint, target: /usr/local/bin/ew-entrypoint.sh, mode: 0555 }
+  healthcheck:
+    test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:9091/apisix/prometheus/metrics || exit 1"]
+    interval: 10s
+    timeout: 3s
+    retries: 3
+    start_period: 20s
+  logging: *logging
+
+x-etcd: &etcd
+  image: quay.io/coreos/etcd:v3.5.21
+  networks: [admin]
+  healthcheck:
+    test: ["CMD", "etcdctl", "endpoint", "health", "--endpoints=http://127.0.0.1:2379"]
+    interval: 10s
+    timeout: 3s
+    retries: 3
+    start_period: 20s
+  logging: *logging
+
+x-nats: &nats
+  image: nats:2.10.29-alpine
+  entrypoint: ["/bin/sh", "/usr/local/bin/ew-entrypoint.sh"]
+  configs:
+    - { source: nats_config, target: /etc/nats/nats.conf }
+    - { source: nats_entrypoint, target: /usr/local/bin/ew-entrypoint.sh, mode: 0555 }
+  secrets:
+    - nats_cluster_password
+    - { source: nats_accounts, target: /etc/nats/accounts.conf }
+  networks: [app]
+  healthcheck:
+    test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8222/healthz?js-enabled-only=true"]
+    interval: 10s
+    timeout: 3s
+    retries: 3
+    start_period: 20s
+  stop_grace_period: 60s
+  logging: *logging
+
+x-valkey: &valkey
+  image: valkey/valkey:8.1.4
+  command: ["valkey-server", "/usr/local/etc/valkey/valkey.conf"]
+  configs:
+    - { source: valkey_config, target: /usr/local/etc/valkey/valkey.conf }
+  secrets: [valkey_acl, valkey_masterauth]
+  networks: [data]
+  healthcheck:
+    test: ["CMD-SHELL", "valkey-cli --no-auth-warning -h 127.0.0.1 ping | grep -qE 'PONG|NOAUTH'"]
+    interval: 10s
+    timeout: 3s
+    retries: 3
+    start_period: 10s
+  logging: *logging
+
+x-sentinel: &sentinel
+  image: valkey/valkey:8.1.4
+  entrypoint: ["/bin/sh", "-c", "cp /etc/valkey/sentinel.conf.tpl /data/sentinel.conf && printf 'sentinel auth-user cache sentinel\\nsentinel auth-pass cache %s\\nsentinel auth-user ratelimit sentinel\\nsentinel auth-pass ratelimit %s\\n' \"$$(cat /run/secrets/valkey_sentinel_password)\" \"$$(cat /run/secrets/valkey_sentinel_password)\" >> /data/sentinel.conf && exec valkey-sentinel /data/sentinel.conf"]
+  configs:
+    - { source: sentinel_config, target: /etc/valkey/sentinel.conf.tpl }
+  secrets: [valkey_sentinel_password]
+  networks: [data]
+  healthcheck:
+    test: ["CMD", "valkey-cli", "-p", "26379", "ping"]
+    interval: 10s
+    timeout: 3s
+    retries: 3
+  logging: *logging
+
+services:
+  apisix:
+    <<: *apisix
+    secrets: [apisix_etcd_password, apisix_admin_key, apisix_login_key_secret, apisix_valkey_password]
+    ports:
+      - { target: 9443, published: 443, protocol: tcp, mode: host }   # L4 load balancer → node app
+    networks: [edge, admin]
+    deploy:
+      replicas: 2
+      placement:
+        constraints: [node.labels.role == app]          # pilot: APISIX public on the 2 app VMs
+        preferences: [{ spread: node.labels.zone }]
+        max_replicas_per_node: 1
+      resources:
+        limits: { cpus: "2", memory: 2G }
+        reservations: { cpus: "1", memory: 1G }
+      <<: *update
+
+  apisix-internal:
+    <<: *apisix
+    secrets: [apisix_etcd_password, apisix_admin_key]
+    ports:
+      - { target: 9443, published: 8443, protocol: tcp, mode: host }  # VPN quản trị only (security group)
+    networks: [admin, edge]
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == ops]
+        max_replicas_per_node: 1
+      resources:
+        limits: { cpus: "1", memory: 1G }
+        reservations: { cpus: "0.25", memory: 256M }
+      <<: *update
+
+  etcd-apisix-1:
+    <<: *etcd
+    hostname: etcd-apisix-1
+    environment: &etcd-apisix-env
+      ETCD_NAME: etcd-apisix-1
+      ETCD_DATA_DIR: /etcd-data
+      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd-apisix-1:2379
+      ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd-apisix-1:2380
+      ETCD_INITIAL_CLUSTER: etcd-apisix-1=http://etcd-apisix-1:2380,etcd-apisix-2=http://etcd-apisix-2:2380,etcd-apisix-3=http://etcd-apisix-3:2380
+      ETCD_INITIAL_CLUSTER_STATE: new
+      ETCD_INITIAL_CLUSTER_TOKEN: eduworld-apisix
+    volumes: ["etcd-apisix-1:/etcd-data"]
+    deploy:
+      placement: { constraints: [node.labels.role == app, node.labels.name == app-1] }
+      resources: { limits: { cpus: "1", memory: 1G }, reservations: { cpus: "0.25", memory: 256M } }
+      <<: *update-stateful
+  etcd-apisix-2:
+    <<: *etcd
+    hostname: etcd-apisix-2
+    environment:
+      <<: *etcd-apisix-env
+      ETCD_NAME: etcd-apisix-2
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd-apisix-2:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd-apisix-2:2380
+    volumes: ["etcd-apisix-2:/etcd-data"]
+    deploy:
+      placement: { constraints: [node.labels.role == app, node.labels.name == app-2] }
+      resources: { limits: { cpus: "1", memory: 1G }, reservations: { cpus: "0.25", memory: 256M } }
+      <<: *update-stateful
+  etcd-apisix-3:
+    <<: *etcd
+    hostname: etcd-apisix-3
+    environment:
+      <<: *etcd-apisix-env
+      ETCD_NAME: etcd-apisix-3
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd-apisix-3:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd-apisix-3:2380
+    volumes: ["etcd-apisix-3:/etcd-data"]
+    deploy:
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "1", memory: 1G }, reservations: { cpus: "0.25", memory: 256M } }
+      <<: *update-stateful
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.2
+    entrypoint: ["/bin/bash", "-c", "export KC_DB_PASSWORD=\"$$(cat /run/secrets/keycloak_db_password)\" KC_BOOTSTRAP_ADMIN_PASSWORD=\"$$(cat /run/secrets/keycloak_admin_password)\" && exec /opt/keycloak/bin/kc.sh start"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://pgbouncer:6432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_BOOTSTRAP_ADMIN_USERNAME: kc-bootstrap
+      KC_HOSTNAME: https://auth.staging.eduworld.example
+      KC_HOSTNAME_ADMIN: https://auth-admin.internal.staging.eduworld.example
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      KC_CACHE: ispn
+      KC_CACHE_STACK: jdbc-ping            # Infinispan discovery through the keycloak database (DEPLOYMENT §4.2)
+      JAVA_OPTS_KC_HEAP: "-XX:MaxRAMPercentage=70"
+    secrets: [keycloak_db_password, keycloak_admin_password]
+    networks: [edge, admin, data]
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q '200 OK' <&3"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+    stop_grace_period: 40s
+    logging: *logging
+    deploy:
+      replicas: 2
+      placement:
+        constraints: [node.labels.role == idp]
+        preferences: [{ spread: node.labels.zone }]
+      resources:
+        limits: { cpus: "4", memory: 8G }
+        reservations: { cpus: "2", memory: 4G }
+      <<: *update
+
+  nats-1:
+    <<: *nats
+    hostname: nats-1
+    environment: { NATS_SERVER_NAME: nats-1 }
+    volumes: ["nats-1:/data"]
+    deploy:
+      placement: { constraints: [node.labels.role == data-cache, node.labels.name == cache-1] }
+      resources: { limits: { cpus: "2", memory: 2G }, reservations: { cpus: "0.5", memory: 1G } }
+      <<: *update-stateful
+  nats-2:
+    <<: *nats
+    hostname: nats-2
+    environment: { NATS_SERVER_NAME: nats-2 }
+    volumes: ["nats-2:/data"]
+    deploy:
+      placement: { constraints: [node.labels.role == data-pg, node.labels.name == db-2] }
+      resources: { limits: { cpus: "2", memory: 2G }, reservations: { cpus: "0.5", memory: 1G } }
+      <<: *update-stateful
+  nats-3:
+    <<: *nats
+    hostname: nats-3
+    environment: { NATS_SERVER_NAME: nats-3 }
+    volumes: ["nats-3:/data"]
+    deploy:
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "2", memory: 2G }, reservations: { cpus: "0.5", memory: 1G } }
+      <<: *update-stateful
+
+  nats-exporter:
+    image: natsio/prometheus-nats-exporter:0.17.3
+    command: ["-varz", "-jsz=all", "-connz", "-routez", "http://nats-1:8222"]
+    networks: [app, admin]
+    healthcheck:
+      disable: true                        # scratch image without a probe binary; Prometheus `up` covers it (F131)
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }
+      <<: *update
+
+  valkey-cache:
+    <<: *valkey
+    hostname: valkey-cache
+    volumes: ["valkey-cache:/data"]
+    deploy:
+      placement: { constraints: [node.labels.role == data-cache, node.labels.name == cache-1] }
+      resources: { limits: { cpus: "2", memory: 4G }, reservations: { cpus: "0.5", memory: 2G } }
+      <<: *update-stateful
+  valkey-cache-replica:
+    <<: *valkey
+    command: ["valkey-server", "/usr/local/etc/valkey/valkey.conf", "--replicaof", "valkey-cache", "6379"]
+    hostname: valkey-cache-replica
+    volumes: ["valkey-cache-replica:/data"]
+    deploy:
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "2", memory: 4G }, reservations: { cpus: "0.5", memory: 2G } }
+      <<: *update-stateful
+  valkey-ratelimit:
+    <<: *valkey
+    hostname: valkey-ratelimit
+    volumes: ["valkey-ratelimit:/data"]
+    deploy:
+      placement: { constraints: [node.labels.role == data-cache, node.labels.name == cache-1] }
+      resources: { limits: { cpus: "2", memory: 4G }, reservations: { cpus: "1", memory: 2G } }
+      <<: *update-stateful
+  valkey-ratelimit-replica:
+    <<: *valkey
+    command: ["valkey-server", "/usr/local/etc/valkey/valkey.conf", "--replicaof", "valkey-ratelimit", "6379"]
+    hostname: valkey-ratelimit-replica
+    volumes: ["valkey-ratelimit-replica:/data"]
+    deploy:
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "2", memory: 4G }, reservations: { cpus: "1", memory: 2G } }
+      <<: *update-stateful
+
+  sentinel-1:
+    <<: *sentinel
+    volumes: ["sentinel-1:/data"]
+    deploy:
+      placement: { constraints: [node.labels.role == app, node.labels.name == app-1] }
+      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }
+      <<: *update-stateful
+  sentinel-2:
+    <<: *sentinel
+    volumes: ["sentinel-2:/data"]
+    deploy:
+      placement: { constraints: [node.labels.role == app, node.labels.name == app-2] }
+      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }
+      <<: *update-stateful
+  sentinel-3:
+    <<: *sentinel
+    volumes: ["sentinel-3:/data"]
+    deploy:
+      placement: { constraints: [node.labels.role == data-cache, node.labels.name == cache-1] }
+      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }
+      <<: *update-stateful
+
+  clamav:
+    image: clamav/clamav:1.4.3
+    networks: [app]
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s                  # signature download on first start
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == app]
+        preferences: [{ spread: node.labels.zone }]
+      resources: { limits: { cpus: "1", memory: 3G }, reservations: { cpus: "0.25", memory: 1500M } }
+      <<: *update
+
+networks:
+  edge: { external: true }
+  app: { external: true }
+  data: { external: true }
+  admin: { external: true }
+
+volumes:
+  etcd-apisix-1: {}
+  etcd-apisix-2: {}
+  etcd-apisix-3: {}
+  nats-1: {}
+  nats-2: {}
+  nats-3: {}
+  valkey-cache: {}
+  valkey-cache-replica: {}
+  valkey-ratelimit: {}
+  valkey-ratelimit-replica: {}
+  sentinel-1: {}
+  sentinel-2: {}
+  sentinel-3: {}
+
+# Configs are immutable: the name carries the content hash computed by scripts/deploy/deploy-service.sh (CFG_*).
+configs:
+  apisix_config: { file: ../config/apisix.yaml, name: "eduworld_apisix_config_${CFG_APISIX_YAML}" }
+  apisix_entrypoint: { file: ../config/apisix-entrypoint.sh, name: "eduworld_apisix_entrypoint_${CFG_APISIX_ENTRYPOINT_SH}" }
+  nats_config: { file: ../config/nats.conf, name: "eduworld_nats_config_${CFG_NATS_CONF}" }
+  nats_entrypoint: { file: ../config/nats-entrypoint.sh, name: "eduworld_nats_entrypoint_${CFG_NATS_ENTRYPOINT_SH}" }
+  valkey_config: { file: ../config/valkey.conf, name: "eduworld_valkey_config_${CFG_VALKEY_CONF}" }
+  sentinel_config: { file: ../config/sentinel.conf.tpl, name: "eduworld_sentinel_config_${CFG_SENTINEL_CONF_TPL}" }
+
+secrets:
+  apisix_etcd_password: { external: true, name: "apisix_etcd_password_v${SECRET_VER_APISIX_ETCD_PASSWORD}" }
+  apisix_admin_key: { external: true, name: "apisix_admin_key_v${SECRET_VER_APISIX_ADMIN_KEY}" }
+  apisix_login_key_secret: { external: true, name: "apisix_login_key_secret_v${SECRET_VER_APISIX_LOGIN_KEY_SECRET}" }
+  apisix_valkey_password: { external: true, name: "apisix_valkey_password_v${SECRET_VER_APISIX_VALKEY_PASSWORD}" }
+  keycloak_db_password: { external: true, name: "keycloak_db_password_v${SECRET_VER_KEYCLOAK_DB_PASSWORD}" }
+  keycloak_admin_password: { external: true, name: "keycloak_admin_password_v${SECRET_VER_KEYCLOAK_ADMIN_PASSWORD}" }
+  nats_cluster_password: { external: true, name: "nats_cluster_password_v${SECRET_VER_NATS_CLUSTER_PASSWORD}" }
+  nats_accounts: { external: true, name: "nats_accounts_v${SECRET_VER_NATS_ACCOUNTS}" }
+  valkey_acl: { external: true, name: "valkey_acl_v${SECRET_VER_VALKEY_ACL}" }
+  valkey_masterauth: { external: true, name: "valkey_masterauth_v${SECRET_VER_VALKEY_MASTERAUTH}" }
+  valkey_sentinel_password: { external: true, name: "valkey_sentinel_password_v${SECRET_VER_VALKEY_SENTINEL_PASSWORD}" }

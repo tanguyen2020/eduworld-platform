@@ -1,0 +1,140 @@
+# Production ops stack (F130 T033, T047, T048; DEPLOYMENT §4.4; BACKUP_RECOVERY §3, §10; research R3):
+#  - ops-scheduler: scales Swarm services on the school timetable (scale-schedule.yaml) through docker-api-proxy;
+#  - docker-api-proxy: HAProxy allowlist (GET /services, /nodes, /tasks; POST /services/{id}/update) in front of the
+#    manager Engine API over TLS with its own client certificate (managers stay drained; no Docker socket mounted);
+#  - backup-tools: pgBackRest repo host + backup jobs run by supercronic (ops-jobs.crontab), writing Prometheus
+#    textfile metrics for node_exporter (F131); no Docker API access.
+# Observability (Prometheus scrapes ops-scheduler :9090/metrics on `admin`) is F131.
+version: "3.9"
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "50m", max-file: "5" }
+
+services:
+  ops-scheduler:
+    image: ghcr.io/${GHCR_ORG}/eduworld/ops-scheduler:${OPS_VERSION}
+    command: ["run"]
+    environment:
+      EW_OPS_SCHEDULE_FILE: /etc/eduworld/scale-schedule.yaml
+      EW_OPS_DOCKER_API: http://docker-api-proxy:2375
+      EW_OPS_TICK: 30s
+      EW_ADMIN_ADDR: ":9090"
+    configs:
+      - { source: scale_schedule, target: /etc/eduworld/scale-schedule.yaml }
+    networks: [docker-api, admin]
+    healthcheck:
+      test: ["CMD", "/app/ops-scheduler", "healthcheck"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    logging: *logging
+    deploy:
+      replicas: 1                          # one writer: two schedulers would race on the same services
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }
+      update_config: { parallelism: 1, order: stop-first, failure_action: rollback, monitor: 30s }
+      rollback_config: { parallelism: 1, order: stop-first }
+      restart_policy: { condition: any, delay: 5s, max_attempts: 10, window: 120s }
+
+  docker-api-proxy:
+    image: haproxy:3.0.12-alpine
+    configs:
+      - { source: docker_api_proxy_config, target: /usr/local/etc/haproxy/haproxy.cfg }
+    secrets:
+      - { source: ops_docker_api_ca, target: /run/secrets/docker-api/ca.pem }
+      - { source: ops_docker_api_client_cert, target: /run/secrets/docker-api/client.pem }
+    environment:
+      DOCKER_API_ADDR: "swarm-manager.internal.eduworld.example:2376"
+    networks: [docker-api]
+    healthcheck:
+      test: ["CMD", "haproxy", "-c", "-f", "/usr/local/etc/haproxy/haproxy.cfg"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops] }
+      resources: { limits: { cpus: "0.25", memory: 128M }, reservations: { cpus: "0.05", memory: 32M } }
+      update_config: { parallelism: 1, order: start-first, failure_action: rollback, monitor: 30s }
+      rollback_config: { parallelism: 1, order: start-first }
+      restart_policy: { condition: any, delay: 5s, max_attempts: 10, window: 120s }
+
+  backup-tools:
+    image: ghcr.io/${GHCR_ORG}/eduworld/backup-tools:${OPS_VERSION}
+    command: ["supercronic", "-json", "/etc/eduworld/ops-jobs.crontab"]
+    env_file: [backup.env]
+    configs:
+      - { source: ops_jobs_crontab, target: /etc/eduworld/ops-jobs.crontab }
+      - { source: pgbackrest_repo_config, target: /etc/pgbackrest/pgbackrest.conf }
+    secrets:
+      - backup_repo_write_access_key
+      - backup_repo_write_secret_key
+      - backup_repo_cipher_pass
+      - backup_pgbackrest_client_cert
+      - { source: backup_pgbackrest_client_key, uid: "10001", gid: "10001", mode: 0400 }
+      - backup_pgbackrest_ca_client
+      - backup_offsite_access_key
+      - backup_offsite_secret_key
+      - backup_offsite_crypt_password
+      - backup_source_access_key
+      - backup_source_secret_key
+      - backup_keycloak_export_secret
+      - backup_etcd_password
+      - { source: backup_pgpass, uid: "10001", gid: "10001", mode: 0400 }
+    volumes:
+      - backup-metrics:/var/lib/node_exporter/textfile   # read by node_exporter on this node (F131)
+      - restore-work:/restore                             # isolated scratch cluster of restore_test.sh
+    networks: [data, admin]
+    healthcheck:
+      test: ["CMD", "pgrep", "-x", "supercronic"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    stop_grace_period: 300s                               # let a running backup finish its step
+    logging: *logging
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "4", memory: 8G }, reservations: { cpus: "1", memory: 2G } }
+      update_config: { parallelism: 1, order: stop-first, failure_action: rollback, monitor: 30s }
+      rollback_config: { parallelism: 1, order: stop-first }
+      restart_policy: { condition: any, delay: 30s, max_attempts: 10, window: 600s }
+
+networks:
+  admin: { external: true }
+  data: { external: true }
+  docker-api:
+    driver: overlay
+    internal: true
+    driver_opts: { encrypted: "true" }
+
+volumes:
+  backup-metrics: {}
+  restore-work: {}
+
+configs:
+  scale_schedule: { file: scale-schedule.yaml, name: "eduworld_scale_schedule_${CFG_SCALE_SCHEDULE_YAML}" }
+  docker_api_proxy_config: { file: ../../ops-scheduler/socket-proxy.cfg, name: "eduworld_docker_api_proxy_${CFG_SOCKET_PROXY_CFG}" }
+  ops_jobs_crontab: { file: ops-jobs.crontab, name: "eduworld_ops_jobs_${CFG_OPS_JOBS_CRONTAB}" }
+  pgbackrest_repo_config: { file: ../../backup/pgbackrest.conf, name: "eduworld_pgbackrest_repo_${CFG_PGBACKREST_CONF}" }
+
+secrets:
+  ops_docker_api_ca: { external: true, name: "ops_docker_api_ca_v${SECRET_VER_OPS_DOCKER_API_CA}" }
+  ops_docker_api_client_cert: { external: true, name: "ops_docker_api_client_cert_v${SECRET_VER_OPS_DOCKER_API_CLIENT_CERT}" }
+  backup_repo_write_access_key: { external: true, name: "backup_repo_write_access_key_v${SECRET_VER_BACKUP_REPO_WRITE_ACCESS_KEY}" }
+  backup_repo_write_secret_key: { external: true, name: "backup_repo_write_secret_key_v${SECRET_VER_BACKUP_REPO_WRITE_SECRET_KEY}" }
+  backup_repo_cipher_pass: { external: true, name: "backup_repo_cipher_pass_v${SECRET_VER_BACKUP_REPO_CIPHER_PASS}" }
+  backup_pgbackrest_client_cert: { external: true, name: "backup_pgbackrest_client_cert_v${SECRET_VER_BACKUP_PGBACKREST_CLIENT_CERT}" }
+  backup_pgbackrest_client_key: { external: true, name: "backup_pgbackrest_client_key_v${SECRET_VER_BACKUP_PGBACKREST_CLIENT_KEY}" }
+  backup_pgbackrest_ca_client: { external: true, name: "backup_pgbackrest_ca_client_v${SECRET_VER_BACKUP_PGBACKREST_CA_CLIENT}" }
+  backup_offsite_access_key: { external: true, name: "backup_offsite_access_key_v${SECRET_VER_BACKUP_OFFSITE_ACCESS_KEY}" }
+  backup_offsite_secret_key: { external: true, name: "backup_offsite_secret_key_v${SECRET_VER_BACKUP_OFFSITE_SECRET_KEY}" }
+  backup_offsite_crypt_password: { external: true, name: "backup_offsite_crypt_password_v${SECRET_VER_BACKUP_OFFSITE_CRYPT_PASSWORD}" }
+  backup_source_access_key: { external: true, name: "backup_source_access_key_v${SECRET_VER_BACKUP_SOURCE_ACCESS_KEY}" }
+  backup_source_secret_key: { external: true, name: "backup_source_secret_key_v${SECRET_VER_BACKUP_SOURCE_SECRET_KEY}" }
+  backup_keycloak_export_secret: { external: true, name: "backup_keycloak_export_secret_v${SECRET_VER_BACKUP_KEYCLOAK_EXPORT_SECRET}" }
+  backup_etcd_password: { external: true, name: "backup_etcd_password_v${SECRET_VER_BACKUP_ETCD_PASSWORD}" }
+  backup_pgpass: { external: true, name: "backup_pgpass_v${SECRET_VER_BACKUP_PGPASS}" }

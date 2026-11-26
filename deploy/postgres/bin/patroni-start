@@ -1,0 +1,19 @@
+#!/bin/sh
+# Starts Patroni for one PostgreSQL node of the single cluster (F130, DEPLOYMENT §7). Passwords and backup
+# credentials come from Docker secrets; pgBackRest reads PGBACKREST_* from the environment of PostgreSQL.
+set -eu
+. /usr/local/bin/ew-secrets.sh
+load_secret PATRONI_SUPERUSER_PASSWORD /run/secrets/pg_superuser_password
+load_secret PATRONI_REPLICATION_PASSWORD /run/secrets/pg_replication_password
+load_secret PATRONI_REWIND_PASSWORD /run/secrets/pg_rewind_password
+load_secret PATRONI_RESTAPI_PASSWORD /run/secrets/pg_patroni_api_password
+load_secret PGBACKREST_REPO1_S3_KEY /run/secrets/backup_repo_write_access_key
+load_secret PGBACKREST_REPO1_S3_KEY_SECRET /run/secrets/backup_repo_write_secret_key
+load_secret PGBACKREST_REPO1_CIPHER_PASS /run/secrets/backup_repo_cipher_pass
+export PATRONI_SUPERUSER_USERNAME="${PATRONI_SUPERUSER_USERNAME:-postgres}"
+export PATRONI_REPLICATION_USERNAME="${PATRONI_REPLICATION_USERNAME:-replicator}"
+export PATRONI_REWIND_USERNAME="${PATRONI_REWIND_USERNAME:-rewind_user}"
+export PATRONI_RESTAPI_USERNAME="${PATRONI_RESTAPI_USERNAME:-patroni}"
+mkdir -p "${PGDATA:-/var/lib/postgresql/data/pgdata}"
+chmod 0700 "${PGDATA:-/var/lib/postgresql/data/pgdata}"
+exec patroni /etc/patroni/patroni.yml

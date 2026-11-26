@@ -1,0 +1,60 @@
+# Patroni configuration of the single PostgreSQL cluster (F130 T014, DEPLOYMENT §7, ADR-0074 mục 4). Node name,
+# addresses and passwords come from PATRONI_* environment variables (stack + patroni-start); nothing secret here.
+scope: eduworld
+namespace: /service/
+etcd3:
+  hosts: etcd-pg-1:2379,etcd-pg-2:2379,etcd-pg-3:2379
+restapi:
+  listen: 0.0.0.0:8008
+  authentication: {}                        # username/password from PATRONI_RESTAPI_* (unsafe endpoints only)
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    synchronous_mode: false
+    postgresql:
+      use_pg_rewind: true
+      use_slots: true
+      parameters:
+        max_connections: 300
+        shared_buffers: 32GB                 # 25 % RAM of a data-pg node (DEPLOYMENT §4.2, §7)
+        wal_level: replica
+        hot_standby: "on"
+        hot_standby_feedback: "on"
+        max_standby_streaming_delay: 30s     # dashboard replica (ADR-0062)
+        max_wal_senders: 10
+        max_replication_slots: 10
+        wal_keep_size: 4GB
+        archive_mode: "on"
+        archive_timeout: 60s                 # RPO ≤ 5 minutes (BACKUP_RECOVERY §3.2)
+        archive_command: "pgbackrest --stanza=eduworld archive-push %p"
+        shared_preload_libraries: pg_stat_statements
+        password_encryption: scram-sha-256
+      recovery_conf:
+        restore_command: "pgbackrest --stanza=eduworld archive-get %f \"%p\""
+  initdb:
+    - encoding: UTF8
+    - data-checksums
+  pg_hba:
+    - local all all peer
+    - host replication replicator 0.0.0.0/0 scram-sha-256
+    - host all all 0.0.0.0/0 scram-sha-256   # per database/user rules: deploy/postgres/init (ADR-0037)
+postgresql:
+  listen: 0.0.0.0:5432
+  data_dir: /var/lib/postgresql/data/pgdata
+  bin_dir: /usr/lib/postgresql/17/bin
+  pgpass: /tmp/pgpass
+  unix_socket_directories: /var/run/postgresql
+  create_replica_methods: [pgbackrest, basebackup]
+  pgbackrest:
+    command: pgbackrest --stanza=eduworld --delta restore
+    keep_data: true
+    no_params: true
+  basebackup:
+    checkpoint: fast
+tags:
+  nofailover: false
+  noloadbalance: false
+  clonefrom: false

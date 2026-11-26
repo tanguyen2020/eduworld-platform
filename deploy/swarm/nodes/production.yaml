@@ -1,0 +1,39 @@
+# Production node inventory (F130 T001, DEPLOYMENT §4.2): logical name → labels applied by scripts/deploy/label-nodes.mjs
+# (docker node update --label-add role=… zone=… name=… [storage=…]). Stateful services pin on node.labels.name; all
+# services place on node.labels.role. Hostnames are placeholders until the VMs are provisioned (OQ-10: cloud VMs in
+# Việt Nam); managers are drained (availability: drain) and run no workload.
+env: production
+nodes:
+  - { name: mgr-1, hostname: ew-prod-mgr-1, role: manager, zone: z1, availability: drain }
+  - { name: mgr-2, hostname: ew-prod-mgr-2, role: manager, zone: z2, availability: drain }
+  - { name: mgr-3, hostname: ew-prod-mgr-3, role: manager, zone: z3, availability: drain }
+  - { name: edge-1, hostname: ew-prod-edge-1, role: edge, zone: z1 }
+  - { name: edge-2, hostname: ew-prod-edge-2, role: edge, zone: z2 }
+  - { name: edge-3, hostname: ew-prod-edge-3, role: edge, zone: z3 }
+  - { name: rt-1, hostname: ew-prod-rt-1, role: realtime, zone: z1 }
+  - { name: rt-2, hostname: ew-prod-rt-2, role: realtime, zone: z2 }
+  - { name: rt-3, hostname: ew-prod-rt-3, role: realtime, zone: z3 }
+  - { name: idp-1, hostname: ew-prod-idp-1, role: idp, zone: z1 }
+  - { name: idp-2, hostname: ew-prod-idp-2, role: idp, zone: z2 }
+  - { name: idp-3, hostname: ew-prod-idp-3, role: idp, zone: z3 }
+  - { name: idp-4, hostname: ew-prod-idp-4, role: idp, zone: z1 }
+  - { name: app-1, hostname: ew-prod-app-1, role: app, zone: z1 }
+  - { name: app-2, hostname: ew-prod-app-2, role: app, zone: z2 }
+  - { name: app-3, hostname: ew-prod-app-3, role: app, zone: z3 }
+  - { name: app-4, hostname: ew-prod-app-4, role: app, zone: z1 }
+  - { name: app-5, hostname: ew-prod-app-5, role: app, zone: z2 }
+  - { name: app-6, hostname: ew-prod-app-6, role: app, zone: z3 }
+  - { name: pg-1, hostname: ew-prod-pg-1, role: data-pg, zone: z1, storage: nvme }
+  - { name: pg-2, hostname: ew-prod-pg-2, role: data-pg, zone: z2, storage: nvme }
+  - { name: pg-3, hostname: ew-prod-pg-3, role: data-pg, zone: z3, storage: nvme }
+  - { name: cache-1, hostname: ew-prod-cache-1, role: data-cache, zone: z1 }
+  - { name: cache-2, hostname: ew-prod-cache-2, role: data-cache, zone: z2 }
+  - { name: cache-3, hostname: ew-prod-cache-3, role: data-cache, zone: z3 }
+  - { name: nats-1, hostname: ew-prod-nats-1, role: data-nats, zone: z1, storage: ssd }
+  - { name: nats-2, hostname: ew-prod-nats-2, role: data-nats, zone: z2, storage: ssd }
+  - { name: nats-3, hostname: ew-prod-nats-3, role: data-nats, zone: z3, storage: ssd }
+  - { name: storage-1, hostname: ew-prod-storage-1, role: storage, zone: z1, storage: hdd-data }
+  - { name: storage-2, hostname: ew-prod-storage-2, role: storage, zone: z2, storage: hdd-data }
+  - { name: storage-3, hostname: ew-prod-storage-3, role: storage, zone: z3, storage: hdd-data }
+  - { name: ops-1, hostname: ew-prod-ops-1, role: ops, zone: z1 }
+  - { name: ops-2, hostname: ew-prod-ops-2, role: ops, zone: z2 }

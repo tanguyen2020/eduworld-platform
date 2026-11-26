@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "F130AC15WriteBackupsNoDelete",
+      "Comment": "Write credential of the backup repo (pg nodes archive-push, backup-tools jobs): put new objects and read only the pgBackRest metadata it needs (backup.info, archive.info, manifests) - never backup data files; no delete (object lock 14 days, BACKUP_RECOVERY §3.1/§3.3). Expiry runs with the restore credential through the restore runbook (pgbackrest expire).",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::${BACKUP_BUCKET}", "arn:aws:s3:::${BACKUP_BUCKET}/*"]
+    },
+    {
+      "Sid": "F130AC15ReadRepoMetadataOnly",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": [
+        "arn:aws:s3:::${BACKUP_BUCKET}/pgbackrest/backup/eduworld/backup.info*",
+        "arn:aws:s3:::${BACKUP_BUCKET}/pgbackrest/backup/eduworld/*/backup.manifest*",
+        "arn:aws:s3:::${BACKUP_BUCKET}/pgbackrest/archive/eduworld/archive.info*"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,322 @@
+# Staging data stack (F130 T014, topology pilot DEPLOYMENT §4.1: db-1/db-2 + storage-1; DEPLOYMENT §7, §9b; BACKUP_RECOVERY §3, §6; ADR-0024, ADR-0074 mục 4,
+# ADR-0093): ONE PostgreSQL cluster (Patroni, 2 nodes + etcd quorum on ops-1) holding the 5 module databases + keycloak, its etcd, a
+# Patroni-aware router + PgBouncer, a pgBackRest TLS server next to each PostgreSQL node (backups are driven by the
+# repo host `backup-tools` of the ops stack), and SeaweedFS on ONE node `storage` (ADR-0093: staging 1 node, no
+# intra-cluster copies; the off-cluster copy and the second-site replication are the same as production).
+# Everything is on the encrypted `data` network only; nothing publishes a port (F130-AC-07).
+# Moving object storage to a managed S3 (RB-05b) = change the s3_* secrets and EW_S3_ENDPOINT, then remove the
+# storage-* services; code only uses the standard S3 API.
+version: "3.9"
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "50m", max-file: "5" }
+
+x-update-stateful: &update-stateful
+  update_config: { parallelism: 1, delay: 60s, order: stop-first, failure_action: pause, monitor: 60s }
+  rollback_config: { parallelism: 1, order: stop-first }
+  restart_policy: { condition: any, delay: 10s, max_attempts: 10, window: 300s }
+
+x-update: &update
+  update_config: { parallelism: 1, delay: 10s, order: start-first, failure_action: rollback, monitor: 30s }
+  rollback_config: { parallelism: 1, order: start-first }
+  restart_policy: { condition: any, delay: 5s, max_attempts: 10, window: 120s }
+
+x-etcd-pg: &etcd-pg
+  image: quay.io/coreos/etcd:v3.5.21
+  networks: [data]
+  healthcheck:
+    test: ["CMD", "etcdctl", "endpoint", "health", "--endpoints=http://127.0.0.1:2379"]
+    interval: 10s
+    timeout: 3s
+    retries: 3
+    start_period: 20s
+  logging: *logging
+
+x-etcd-pg-env: &etcd-pg-env
+  ETCD_DATA_DIR: /etcd-data
+  ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+  ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+  ETCD_INITIAL_CLUSTER: etcd-pg-1=http://etcd-pg-1:2380,etcd-pg-2=http://etcd-pg-2:2380,etcd-pg-3=http://etcd-pg-3:2380
+  ETCD_INITIAL_CLUSTER_STATE: new
+  ETCD_INITIAL_CLUSTER_TOKEN: eduworld-patroni
+
+# PostgreSQL 17 + Patroni + pgBackRest (deploy/postgres/patroni.Dockerfile). archive_command pushes WAL to the S3
+# repo with the write-only backup credential (BACKUP_RECOVERY §3.3); the cipher passphrase encrypts client-side.
+x-pg: &pg
+  image: ghcr.io/${GHCR_ORG}/eduworld/postgres-patroni:${OPS_VERSION}
+  env_file: [postgres.env]
+  configs:
+    - { source: patroni_config, target: /etc/patroni/patroni.yml }
+    - { source: pgbackrest_db_config, target: /etc/pgbackrest/pgbackrest.conf }
+  secrets: [pg_superuser_password, pg_replication_password, pg_rewind_password, pg_patroni_api_password,
+    backup_repo_write_access_key, backup_repo_write_secret_key, backup_repo_cipher_pass]
+  networks: [data]
+  healthcheck:
+    test: ["CMD", "pg-healthcheck"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+    start_period: 60s
+  stop_grace_period: 120s
+  shm_size: 4g
+  logging: *logging
+
+# pgBackRest TLS server of one PostgreSQL node (research R2): the repo host connects with a client certificate.
+x-pgbackrest: &pgbackrest
+  image: ghcr.io/${GHCR_ORG}/eduworld/postgres-patroni:${OPS_VERSION}
+  command: ["pgbackrest-server"]
+  configs:
+    - { source: pgbackrest_server_config, target: /etc/pgbackrest/pgbackrest.conf }
+  secrets:                                 # readable by the postgres user only (pgBackRest refuses group/other access to keys)
+    - { source: backup_pgbackrest_ca, uid: "999", gid: "999", mode: 0444 }
+    - { source: backup_pgbackrest_server_cert, uid: "999", gid: "999", mode: 0444 }
+    - { source: backup_pgbackrest_server_key, uid: "999", gid: "999", mode: 0400 }
+  networks: [data]
+  healthcheck:
+    test: ["CMD", "pgbackrest", "server-ping", "--tls-server-address=127.0.0.1"]
+    interval: 30s
+    timeout: 5s
+    retries: 3
+  logging: *logging
+
+x-seaweed: &seaweed
+  image: chrislusf/seaweedfs:3.97
+  networks: [data]
+  logging: *logging
+
+services:
+  etcd-pg-1:
+    <<: *etcd-pg
+    hostname: etcd-pg-1
+    environment:
+      <<: *etcd-pg-env
+      ETCD_NAME: etcd-pg-1
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd-pg-1:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd-pg-1:2380
+    volumes: ["etcd-pg-1:/etcd-data"]
+    deploy:
+      placement: { constraints: [node.labels.role == data-pg, node.labels.name == db-1] }
+      resources: { limits: { cpus: "1", memory: 1G }, reservations: { cpus: "0.25", memory: 256M } }
+      <<: *update-stateful
+  etcd-pg-2:
+    <<: *etcd-pg
+    hostname: etcd-pg-2
+    environment:
+      <<: *etcd-pg-env
+      ETCD_NAME: etcd-pg-2
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd-pg-2:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd-pg-2:2380
+    volumes: ["etcd-pg-2:/etcd-data"]
+    deploy:
+      placement: { constraints: [node.labels.role == data-pg, node.labels.name == db-2] }
+      resources: { limits: { cpus: "1", memory: 1G }, reservations: { cpus: "0.25", memory: 256M } }
+      <<: *update-stateful
+  etcd-pg-3:
+    <<: *etcd-pg
+    hostname: etcd-pg-3
+    environment:
+      <<: *etcd-pg-env
+      ETCD_NAME: etcd-pg-3
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd-pg-3:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd-pg-3:2380
+    volumes: ["etcd-pg-3:/etcd-data"]
+    deploy:
+      placement: { constraints: [node.labels.role == ops, node.labels.name == ops-1] }
+      resources: { limits: { cpus: "1", memory: 1G }, reservations: { cpus: "0.25", memory: 256M } }
+      <<: *update-stateful
+
+  pg-1:
+    <<: *pg
+    hostname: pg-1
+    environment: { PATRONI_NAME: pg-1, PATRONI_RESTAPI_CONNECT_ADDRESS: "pg-1:8008", PATRONI_POSTGRESQL_CONNECT_ADDRESS: "pg-1:5432" }
+    volumes: ["pg-1-data:/var/lib/postgresql/data", "pg-1-run:/var/run/postgresql"]
+    deploy:
+      placement: { constraints: [node.labels.role == data-pg, node.labels.name == db-1] }
+      resources: { limits: { cpus: "7", memory: 28G }, reservations: { cpus: "4", memory: 16G } }
+      <<: *update-stateful
+  pg-2:
+    <<: *pg
+    hostname: pg-2
+    environment: { PATRONI_NAME: pg-2, PATRONI_RESTAPI_CONNECT_ADDRESS: "pg-2:8008", PATRONI_POSTGRESQL_CONNECT_ADDRESS: "pg-2:5432" }
+    volumes: ["pg-2-data:/var/lib/postgresql/data", "pg-2-run:/var/run/postgresql"]
+    deploy:
+      placement: { constraints: [node.labels.role == data-pg, node.labels.name == db-2] }
+      resources: { limits: { cpus: "7", memory: 28G }, reservations: { cpus: "4", memory: 16G } }
+      <<: *update-stateful
+  pgbackrest-1:
+    <<: *pgbackrest
+    hostname: pgbackrest-1
+    volumes: ["pg-1-data:/var/lib/postgresql/data", "pg-1-run:/var/run/postgresql"]
+    deploy:
+      placement: { constraints: [node.labels.role == data-pg, node.labels.name == db-1] }
+      resources: { limits: { cpus: "2", memory: 1G }, reservations: { cpus: "0.25", memory: 128M } }
+      <<: *update
+  pgbackrest-2:
+    <<: *pgbackrest
+    hostname: pgbackrest-2
+    volumes: ["pg-2-data:/var/lib/postgresql/data", "pg-2-run:/var/run/postgresql"]
+    deploy:
+      placement: { constraints: [node.labels.role == data-pg, node.labels.name == db-2] }
+      resources: { limits: { cpus: "2", memory: 1G }, reservations: { cpus: "0.25", memory: 128M } }
+      <<: *update
+  # Routes to the Patroni leader (:5432) and to replicas (:5433, read context ADR-0087 and dashboards ADR-0062) by
+  # the Patroni REST health endpoints; PgBouncer connects through it, so a switchover needs no task restart (RB-02).
+  pg-router:
+    image: haproxy:3.0.12-alpine
+    configs:
+      - { source: pg_router_config, target: /usr/local/etc/haproxy/haproxy.cfg }
+    networks: [data]
+    healthcheck:
+      test: ["CMD", "haproxy", "-c", "-f", "/usr/local/etc/haproxy/haproxy.cfg"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+    deploy:
+      replicas: 2
+      placement:
+        constraints: [node.labels.role == data-pg]
+        max_replicas_per_node: 1
+      resources: { limits: { cpus: "1", memory: 256M }, reservations: { cpus: "0.25", memory: 64M } }
+      <<: *update
+
+  pgbouncer:
+    image: ghcr.io/${GHCR_ORG}/eduworld/postgres-patroni:${OPS_VERSION}
+    command: ["pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
+    configs:
+      - { source: pgbouncer_config, target: /etc/pgbouncer/pgbouncer.ini }
+    secrets:
+      - { source: pgbouncer_userlist, target: /etc/pgbouncer/userlist.txt, mode: 0400 }
+    networks: [data]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "6432"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    logging: *logging
+    deploy:
+      replicas: 2
+      placement:
+        constraints: [node.labels.role == data-pg]
+        max_replicas_per_node: 1
+      resources: { limits: { cpus: "1", memory: 512M }, reservations: { cpus: "0.5", memory: 128M } }
+      <<: *update
+
+  storage-master-1:
+    <<: *seaweed
+    hostname: storage-master-1
+    command: ["master", "-mdir=/data", "-ip=storage-master-1", "-port=9333", "-defaultReplication=000",
+      "-volumeSizeLimitMB=8192"]
+    volumes: ["storage-master-1:/data"]
+    healthcheck: &seaweed-master-hc
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9333/cluster/status"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      placement: { constraints: [node.labels.role == storage, node.labels.name == storage-1] }
+      resources: { limits: { cpus: "1", memory: 1G }, reservations: { cpus: "0.25", memory: 256M } }
+      <<: *update-stateful
+  storage-volume-1:
+    <<: *seaweed
+    hostname: storage-volume-1
+    command: ["volume", "-dir=/data", "-max=0", "-ip=storage-volume-1", "-port=8080", "-dataCenter=dc1", "-rack=rack1",
+      "-mserver=storage-master-1:9333"]
+    volumes: ["storage-volume-1:/data"]
+    healthcheck: &seaweed-volume-hc
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/status"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      placement: { constraints: [node.labels.role == storage, node.labels.name == storage-1] }
+      resources: { limits: { cpus: "2", memory: 4G }, reservations: { cpus: "1", memory: 2G } }
+      <<: *update-stateful
+  # One filer (staging has one storage node).
+  storage-filer-1:
+    <<: *seaweed
+    hostname: storage-filer-1
+    command: ["filer", "-ip=storage-filer-1", "-port=8888", "-master=storage-master-1:9333",
+      "-defaultStoreDir=/data"]
+    volumes: ["storage-filer-1:/data"]
+    healthcheck: &seaweed-filer-hc
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8888/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      placement: { constraints: [node.labels.role == storage, node.labels.name == storage-1] }
+      resources: { limits: { cpus: "1", memory: 2G }, reservations: { cpus: "0.5", memory: 512M } }
+      <<: *update-stateful
+  # S3 gateway (SigV4, path-style); identities = one credential per binary + backup (DEPLOYMENT §9b) from a secret.
+  storage-s3:
+    <<: *seaweed
+    command: ["s3", "-port=8333", "-filer=storage-filer-1:8888",
+      "-config=/run/secrets/storage_s3_identities"]
+    secrets: [storage_s3_identities]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/status"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == storage]
+        max_replicas_per_node: 1
+      resources: { limits: { cpus: "2", memory: 2G }, reservations: { cpus: "0.5", memory: 512M } }
+      <<: *update
+
+  # Continuous asynchronous replication of the private bucket(s) to the second site in Việt Nam (RPO of learning
+  # data, BACKUP_RECOVERY §6, F130-AC-14 b). Target filer and its mTLS material come from configuration/secrets.
+  storage-filer-sync:
+    <<: *seaweed
+    command: ["filer.sync", "-a=storage-filer-1:8888", "-b=${EW_STORAGE_REPLICA_FILER}", "-isActivePassive",
+      "-a.path=/buckets/ew-media-private", "-b.path=/buckets/ew-media-private"]
+    secrets:
+      - { source: storage_replica_security, target: /etc/seaweedfs/security.toml }
+    healthcheck:
+      disable: true                       # replication lag is probed end to end by backup-tools (object_storage_replication_check.sh)
+    deploy:
+      replicas: 1
+      placement: { constraints: [node.labels.role == storage] }
+      resources: { limits: { cpus: "1", memory: 1G }, reservations: { cpus: "0.25", memory: 256M } }
+      <<: *update
+
+networks:
+  data: { external: true }
+
+volumes:
+  etcd-pg-1: {}
+  etcd-pg-2: {}
+  etcd-pg-3: {}
+  pg-1-data: {}
+  pg-2-data: {}
+  pg-1-run: {}
+  pg-2-run: {}
+  storage-master-1: {}
+  storage-volume-1: {}
+  storage-filer-1: {}
+
+configs:
+  patroni_config: { file: ../../postgres/patroni.yml, name: "eduworld_patroni_config_${CFG_PATRONI_YML}" }
+  pgbackrest_db_config: { file: ../../backup/pgbackrest-db.conf, name: "eduworld_pgbackrest_db_${CFG_PGBACKREST_DB_CONF}" }
+  pgbackrest_server_config: { file: ../../backup/pgbackrest-server.conf, name: "eduworld_pgbackrest_server_${CFG_PGBACKREST_SERVER_CONF}" }
+  pg_router_config: { file: ../config/pg-router.cfg, name: "eduworld_pg_router_${CFG_PG_ROUTER_CFG}" }
+  pgbouncer_config: { file: ../config/pgbouncer.ini, name: "eduworld_pgbouncer_${CFG_PGBOUNCER_INI}" }
+
+secrets:
+  pg_superuser_password: { external: true, name: "pg_superuser_password_v${SECRET_VER_PG_SUPERUSER_PASSWORD}" }
+  pg_replication_password: { external: true, name: "pg_replication_password_v${SECRET_VER_PG_REPLICATION_PASSWORD}" }
+  pg_rewind_password: { external: true, name: "pg_rewind_password_v${SECRET_VER_PG_REWIND_PASSWORD}" }
+  pg_patroni_api_password: { external: true, name: "pg_patroni_api_password_v${SECRET_VER_PG_PATRONI_API_PASSWORD}" }
+  pgbouncer_userlist: { external: true, name: "pgbouncer_userlist_v${SECRET_VER_PGBOUNCER_USERLIST}" }
+  backup_repo_write_access_key: { external: true, name: "backup_repo_write_access_key_v${SECRET_VER_BACKUP_REPO_WRITE_ACCESS_KEY}" }
+  backup_repo_write_secret_key: { external: true, name: "backup_repo_write_secret_key_v${SECRET_VER_BACKUP_REPO_WRITE_SECRET_KEY}" }
+  backup_repo_cipher_pass: { external: true, name: "backup_repo_cipher_pass_v${SECRET_VER_BACKUP_REPO_CIPHER_PASS}" }
+  backup_pgbackrest_ca: { external: true, name: "backup_pgbackrest_ca_v${SECRET_VER_BACKUP_PGBACKREST_CA}" }
+  backup_pgbackrest_server_cert: { external: true, name: "backup_pgbackrest_server_cert_v${SECRET_VER_BACKUP_PGBACKREST_SERVER_CERT}" }
+  backup_pgbackrest_server_key: { external: true, name: "backup_pgbackrest_server_key_v${SECRET_VER_BACKUP_PGBACKREST_SERVER_KEY}" }
+  storage_s3_identities: { external: true, name: "storage_s3_identities_v${SECRET_VER_STORAGE_S3_IDENTITIES}" }
+  storage_replica_security: { external: true, name: "storage_replica_security_v${SECRET_VER_STORAGE_REPLICA_SECURITY}" }

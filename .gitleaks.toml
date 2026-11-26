@@ -8,6 +8,7 @@ useDefault = true
 [allowlist]
 description = "Local-only placeholder secret used in .env.example, compose and the dev realm"
 regexTarget = "match"
-regexes = ['''change-me-local''']
+# F130: SOPS ciphertext (deploy/secrets/<env>/*.sops.yaml) is encrypted with age, not a secret in clear.
+regexes = ['''change-me-local''', '''ENC\[AES256_GCM,data:[A-Za-z0-9+/=]+,iv:[A-Za-z0-9+/=]+,tag:[A-Za-z0-9+/=]+,type:[a-z]+\]''']
 # Third-party and local data directories are never committed (.gitignore) — skip them in `gitleaks dir`.
 paths = ['''(^|/)node_modules/''', '''^data/''', '''^bin/''']

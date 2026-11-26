@@ -1,0 +1,317 @@
+# Staging app stack (F130 T016, topology pilot DEPLOYMENT §4.1 — same structure as production, smaller sizing; DEPLOYMENT §3.1, §4.2, §4.5, §11, §13, §14; ADR-0074, ADR-0088): the five backend
+# Swarm services of the 3 binaries. Deployed by scripts/deploy/deploy-service.sh (never by hand):
+#   docker stack deploy --with-registry-auth -c deploy/swarm/staging/app.stack.yml eduworld
+# - Image: ghcr.io/${GHCR_ORG}/eduworld/<image>:${BACKEND_VERSION} — immutable tag backend/vX.Y.Z (never latest).
+# - Secrets: only Docker secrets mounted at /run/secrets/<name>, read through EW_*_FILE / EW_*_URL_FILE; the external
+#   name carries the version (<name>_v<N>, scripts/deploy/secrets-sync.sh). Which service may mount which secret:
+#   deploy/swarm/policy.yaml (checked by scripts/deploy/check-secret-refs.mjs).
+# - <service>.env files hold non-secret configuration only.
+# Replica counts here are the off-peak baseline; ops-scheduler moves them to `peak` on the timetable
+# (scale-schedule.yaml, DEPLOYMENT §4.4). Sizing: pilot DEPLOYMENT §4.1 (2 VM app: one replica of each service per node).
+version: "3.9"
+
+x-backend-update: &backend-update
+  update_config: { parallelism: 1, delay: 10s, order: start-first, failure_action: rollback, monitor: 60s, max_failure_ratio: 0 }
+  rollback_config: { parallelism: 2, delay: 0s, order: start-first, failure_action: pause, monitor: 30s }
+  restart_policy: { condition: any, delay: 5s, max_attempts: 5, window: 120s }
+
+x-healthcheck: &healthcheck
+  interval: 10s
+  timeout: 2s
+  retries: 3
+  start_period: 20s
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "50m", max-file: "5" }
+
+services:
+  core-api:
+    image: ghcr.io/${GHCR_ORG}/eduworld/core-api:${BACKEND_VERSION}
+    env_file: [core-api.env]
+    environment:
+      OTEL_SERVICE_NAME: core-api
+      EW_DB_IDENTITY_URL_FILE: /run/secrets/identity_db_dsn
+      EW_DB_IDENTITY_READ_URL_FILE: /run/secrets/identity_db_read_dsn
+      EW_DB_IDENTITY_PLATFORM_URL_FILE: /run/secrets/identity_platform_dsn
+      EW_DB_LEARNING_URL_FILE: /run/secrets/learning_db_dsn
+      EW_DB_LEARNING_READ_URL_FILE: /run/secrets/learning_db_read_dsn
+      EW_DB_LEARNING_PLATFORM_URL_FILE: /run/secrets/learning_platform_dsn
+      EW_DB_LEARNING_DASHBOARD_URL_FILE: /run/secrets/learning_dashboard_dsn
+      EW_DB_LEARNING_DASHBOARD_PLATFORM_URL_FILE: /run/secrets/learning_dashboard_platform_dsn
+      EW_DB_GAME_URL_FILE: /run/secrets/game_db_dsn
+      EW_DB_GAME_READ_URL_FILE: /run/secrets/game_db_read_dsn
+      EW_DB_GAME_PLATFORM_URL_FILE: /run/secrets/game_platform_dsn
+      EW_DB_GAME_DASHBOARD_URL_FILE: /run/secrets/game_dashboard_dsn
+      EW_DB_GAME_DASHBOARD_PLATFORM_URL_FILE: /run/secrets/game_dashboard_platform_dsn
+      EW_DB_COMPETITION_URL_FILE: /run/secrets/competition_db_dsn
+      EW_DB_COMPETITION_READ_URL_FILE: /run/secrets/competition_db_read_dsn
+      EW_DB_COMPETITION_PLATFORM_URL_FILE: /run/secrets/competition_platform_dsn
+      EW_DB_CHAT_URL_FILE: /run/secrets/chat_db_dsn
+      EW_DB_CHAT_READ_URL_FILE: /run/secrets/chat_db_read_dsn
+      EW_DB_CHAT_PLATFORM_URL_FILE: /run/secrets/chat_platform_dsn
+      EW_KC_ADMIN_CLIENT_SECRET_FILE: /run/secrets/kc_svc_identity
+      EW_KC_PORTAL_CLIENT_SECRET_FILE: /run/secrets/kc_portal
+      EW_KC_GAME_CLIENT_SECRET_FILE: /run/secrets/kc_game_backend
+      EW_SMTP_PASSWORD_FILE: /run/secrets/identity_smtp_password
+      EW_GAME_LOGIN_TICKET_KEY_FILE: /run/secrets/identity_login_ticket_key
+      EW_LOGIN_IP_HASH_KEY_FILE: /run/secrets/identity_login_ip_hash_key
+      EW_GAME_IP_HASH_KEY_FILE: /run/secrets/game_ip_hash_key
+      EW_ANALYTICS_PLAYER_KEYS_FILE: /run/secrets/game_analytics_player_keys
+      EW_PAGE_CURSOR_KEY_FILE: /run/secrets/shared_page_cursor_key
+      EW_CDN_SIGNING_KEY_FILE: /run/secrets/shared_cdn_signing_key
+      EW_NATS_CREDS_FILE: /run/secrets/core_nats_creds
+      EW_VALKEY_PASSWORD_FILE: /run/secrets/core_valkey_password
+      EW_S3_ACCESS_KEY_FILE: /run/secrets/s3_core_access_key
+      EW_S3_SECRET_KEY_FILE: /run/secrets/s3_core_secret_key
+    secrets:
+      [identity_db_dsn, identity_db_read_dsn, identity_platform_dsn, learning_db_dsn, learning_db_read_dsn, learning_platform_dsn,
+       learning_dashboard_dsn, learning_dashboard_platform_dsn, game_db_dsn, game_db_read_dsn, game_platform_dsn, game_dashboard_dsn,
+       game_dashboard_platform_dsn, competition_db_dsn, competition_db_read_dsn, competition_platform_dsn, chat_db_dsn, chat_db_read_dsn,
+       chat_platform_dsn, kc_svc_identity, kc_portal, kc_game_backend, identity_smtp_password, identity_login_ticket_key,
+       identity_login_ip_hash_key, game_ip_hash_key, game_analytics_player_keys, shared_page_cursor_key, shared_cdn_signing_key,
+       core_nats_creds, core_valkey_password, s3_core_access_key, s3_core_secret_key]
+    networks: [edge, app, data]
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "/app/core-api", "healthcheck", "--endpoint=/livez"]
+    stop_grace_period: 40s
+    logging: *logging
+    deploy:
+      replicas: 2
+      labels: { ew.binary: core-api, ew.drain-seconds: "40" }
+      placement:
+        constraints: [node.labels.role == app]
+        preferences: [{ spread: node.labels.zone }]
+      resources:
+        limits: { cpus: "4", memory: 4G }
+        reservations: { cpus: "1.5", memory: 2G }
+      <<: *backend-update
+
+  realtime:
+    image: ghcr.io/${GHCR_ORG}/eduworld/realtime:${BACKEND_VERSION}
+    env_file: [realtime.env]
+    environment:
+      OTEL_SERVICE_NAME: realtime
+      EW_NATS_CREDS_FILE: /run/secrets/realtime_nats_creds
+      EW_VALKEY_PASSWORD_FILE: /run/secrets/realtime_valkey_password
+    secrets: [realtime_nats_creds, realtime_valkey_password]   # never a database credential (DEPLOYMENT §13)
+    networks: [edge, app, data]                                  # data: Valkey only
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "/app/realtime", "healthcheck", "--endpoint=/livez"]
+    stop_grace_period: 150s                                      # drain: system.server.draining then ≤ 120 s (§11.2)
+    logging: *logging
+    deploy:
+      replicas: 2
+      labels: { ew.binary: realtime, ew.drain-seconds: "150" }
+      placement:
+        constraints: [node.labels.role == app]
+        preferences: [{ spread: node.labels.zone }]
+        max_replicas_per_node: 1
+      resources:
+        limits: { cpus: "2", memory: 2G }
+        reservations: { cpus: "1", memory: 1G }
+      <<: *backend-update
+
+  worker-events:
+    image: ghcr.io/${GHCR_ORG}/eduworld/worker:${BACKEND_VERSION}
+    command: ["--profile=events"]
+    env_file: [worker.env]
+    environment:
+      OTEL_SERVICE_NAME: worker-events
+      EW_WORKER_PROFILE: events
+      EW_DB_IDENTITY_URL_FILE: /run/secrets/identity_db_dsn
+      EW_DB_IDENTITY_PLATFORM_URL_FILE: /run/secrets/identity_platform_dsn
+      EW_DB_IDENTITY_RELAY_URL_FILE: /run/secrets/identity_relay_dsn
+      EW_DB_LEARNING_URL_FILE: /run/secrets/learning_db_dsn
+      EW_DB_LEARNING_PLATFORM_URL_FILE: /run/secrets/learning_platform_dsn
+      EW_DB_LEARNING_RELAY_URL_FILE: /run/secrets/learning_relay_dsn
+      EW_DB_LEARNING_DASHBOARD_URL_FILE: /run/secrets/learning_dashboard_dsn
+      EW_DB_LEARNING_DASHBOARD_PLATFORM_URL_FILE: /run/secrets/learning_dashboard_platform_dsn
+      EW_DB_GAME_URL_FILE: /run/secrets/game_db_dsn
+      EW_DB_GAME_PLATFORM_URL_FILE: /run/secrets/game_platform_dsn
+      EW_DB_GAME_RELAY_URL_FILE: /run/secrets/game_relay_dsn
+      EW_DB_GAME_DASHBOARD_URL_FILE: /run/secrets/game_dashboard_dsn
+      EW_DB_GAME_DASHBOARD_PLATFORM_URL_FILE: /run/secrets/game_dashboard_platform_dsn
+      EW_DB_COMPETITION_URL_FILE: /run/secrets/competition_db_dsn
+      EW_DB_COMPETITION_PLATFORM_URL_FILE: /run/secrets/competition_platform_dsn
+      EW_DB_COMPETITION_RELAY_URL_FILE: /run/secrets/competition_relay_dsn
+      EW_DB_CHAT_URL_FILE: /run/secrets/chat_db_dsn
+      EW_DB_CHAT_PLATFORM_URL_FILE: /run/secrets/chat_platform_dsn
+      EW_DB_CHAT_RELAY_URL_FILE: /run/secrets/chat_relay_dsn
+      EW_KC_ADMIN_CLIENT_SECRET_FILE: /run/secrets/kc_svc_identity
+      EW_SMTP_PASSWORD_FILE: /run/secrets/identity_smtp_password
+      EW_ANALYTICS_PLAYER_KEYS_FILE: /run/secrets/game_analytics_player_keys
+      EW_PAGE_CURSOR_KEY_FILE: /run/secrets/shared_page_cursor_key
+      EW_CDN_SIGNING_KEY_FILE: /run/secrets/shared_cdn_signing_key
+      EW_NATS_CREDS_FILE: /run/secrets/worker_nats_creds
+      EW_VALKEY_PASSWORD_FILE: /run/secrets/worker_valkey_password
+      EW_S3_ACCESS_KEY_FILE: /run/secrets/s3_worker_access_key
+      EW_S3_SECRET_KEY_FILE: /run/secrets/s3_worker_secret_key
+    secrets:
+      [identity_db_dsn, identity_platform_dsn, identity_relay_dsn, learning_db_dsn, learning_platform_dsn, learning_relay_dsn,
+       learning_dashboard_dsn, learning_dashboard_platform_dsn, game_db_dsn, game_platform_dsn, game_relay_dsn, game_dashboard_dsn,
+       game_dashboard_platform_dsn, competition_db_dsn, competition_platform_dsn, competition_relay_dsn, chat_db_dsn,
+       chat_platform_dsn, chat_relay_dsn, kc_svc_identity, identity_smtp_password, game_analytics_player_keys,
+       shared_page_cursor_key, shared_cdn_signing_key, worker_nats_creds, worker_valkey_password, s3_worker_access_key,
+       s3_worker_secret_key]
+    networks: [app, data]                                        # no edge: no inbound
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "/app/worker", "healthcheck", "--endpoint=/livez"]
+    stop_grace_period: 40s
+    logging: *logging
+    deploy:
+      replicas: 2
+      labels: { ew.binary: worker, ew.profile: events }
+      placement:
+        constraints: [node.labels.role == app]
+        preferences: [{ spread: node.labels.zone }]
+      resources:
+        limits: { cpus: "2", memory: 2G }
+        reservations: { cpus: "1", memory: 1G }
+      <<: *backend-update
+
+  worker-chat:
+    image: ghcr.io/${GHCR_ORG}/eduworld/worker:${BACKEND_VERSION}
+    command: ["--profile=chat"]
+    env_file: [worker.env]
+    environment:
+      OTEL_SERVICE_NAME: worker-chat
+      EW_WORKER_PROFILE: chat
+      EW_DB_CHAT_URL_FILE: /run/secrets/chat_db_dsn
+      EW_DB_CHAT_PLATFORM_URL_FILE: /run/secrets/chat_platform_dsn
+      EW_DB_CHAT_PURGER_URL_FILE: /run/secrets/chat_purger_dsn     # gameplay-chat-purge only (ADR-0033)
+      EW_PAGE_CURSOR_KEY_FILE: /run/secrets/shared_page_cursor_key
+      EW_CDN_SIGNING_KEY_FILE: /run/secrets/shared_cdn_signing_key
+      EW_NATS_CREDS_FILE: /run/secrets/worker_nats_creds
+      EW_VALKEY_PASSWORD_FILE: /run/secrets/worker_valkey_password
+      EW_S3_ACCESS_KEY_FILE: /run/secrets/s3_worker_access_key
+      EW_S3_SECRET_KEY_FILE: /run/secrets/s3_worker_secret_key
+    secrets: [chat_db_dsn, chat_platform_dsn, chat_purger_dsn, shared_page_cursor_key, shared_cdn_signing_key, worker_nats_creds,
+      worker_valkey_password, s3_worker_access_key, s3_worker_secret_key]
+    networks: [app, data]
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "/app/worker", "healthcheck", "--endpoint=/livez"]
+    stop_grace_period: 40s
+    logging: *logging
+    deploy:
+      replicas: 2
+      labels: { ew.binary: worker, ew.profile: chat }
+      placement:
+        constraints: [node.labels.role == app]
+        preferences: [{ spread: node.labels.zone }]
+      resources:
+        limits: { cpus: "2", memory: 2G }
+        reservations: { cpus: "1", memory: 1G }
+      <<: *backend-update
+
+  worker-jobs:
+    image: ghcr.io/${GHCR_ORG}/eduworld/worker:${BACKEND_VERSION}
+    command: ["--profile=jobs"]
+    env_file: [worker.env]
+    environment:
+      OTEL_SERVICE_NAME: worker-jobs
+      EW_WORKER_PROFILE: jobs
+      EW_DB_IDENTITY_URL_FILE: /run/secrets/identity_db_dsn
+      EW_DB_IDENTITY_PLATFORM_URL_FILE: /run/secrets/identity_platform_dsn
+      EW_DB_IDENTITY_PARTITION_ADMIN_URL_FILE: /run/secrets/identity_partition_admin_dsn
+      EW_DB_LEARNING_URL_FILE: /run/secrets/learning_db_dsn
+      EW_DB_LEARNING_PLATFORM_URL_FILE: /run/secrets/learning_platform_dsn
+      EW_DB_LEARNING_PARTITION_ADMIN_URL_FILE: /run/secrets/learning_partition_admin_dsn
+      EW_DB_GAME_URL_FILE: /run/secrets/game_db_dsn
+      EW_DB_GAME_PLATFORM_URL_FILE: /run/secrets/game_platform_dsn
+      EW_DB_COMPETITION_URL_FILE: /run/secrets/competition_db_dsn
+      EW_DB_COMPETITION_PLATFORM_URL_FILE: /run/secrets/competition_platform_dsn
+      EW_DB_CHAT_URL_FILE: /run/secrets/chat_db_dsn
+      EW_DB_CHAT_PLATFORM_URL_FILE: /run/secrets/chat_platform_dsn
+      EW_KC_ADMIN_CLIENT_SECRET_FILE: /run/secrets/kc_svc_identity
+      EW_SMTP_PASSWORD_FILE: /run/secrets/identity_smtp_password
+      EW_ANALYTICS_PLAYER_KEYS_FILE: /run/secrets/game_analytics_player_keys
+      EW_EFFICACY_PSEUDONYM_KEY_FILE: /run/secrets/learning_efficacy_pseudonym_key
+      EW_PAGE_CURSOR_KEY_FILE: /run/secrets/shared_page_cursor_key
+      EW_CDN_SIGNING_KEY_FILE: /run/secrets/shared_cdn_signing_key
+      EW_NATS_CREDS_FILE: /run/secrets/worker_nats_creds
+      EW_VALKEY_PASSWORD_FILE: /run/secrets/worker_valkey_password
+      EW_S3_ACCESS_KEY_FILE: /run/secrets/s3_worker_access_key
+      EW_S3_SECRET_KEY_FILE: /run/secrets/s3_worker_secret_key
+    secrets:
+      [identity_db_dsn, identity_platform_dsn, identity_partition_admin_dsn, learning_db_dsn, learning_platform_dsn,
+       learning_partition_admin_dsn, game_db_dsn, game_platform_dsn, competition_db_dsn, competition_platform_dsn, chat_db_dsn,
+       chat_platform_dsn, kc_svc_identity, identity_smtp_password, game_analytics_player_keys, learning_efficacy_pseudonym_key,
+       shared_page_cursor_key, shared_cdn_signing_key, worker_nats_creds, worker_valkey_password, s3_worker_access_key,
+       s3_worker_secret_key]
+    networks: [app, data]
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "/app/worker", "healthcheck", "--endpoint=/livez"]
+    stop_grace_period: 40s                                       # releases the leader lock on SIGTERM (§11.2)
+    logging: *logging
+    deploy:
+      replicas: 2
+      labels: { ew.binary: worker, ew.profile: jobs }
+      placement:
+        constraints: [node.labels.role == app]
+        preferences: [{ spread: node.labels.zone }]
+      resources:
+        limits: { cpus: "1", memory: 1G }
+        reservations: { cpus: "0.5", memory: 512M }
+      <<: *backend-update
+
+networks:
+  edge: { external: true }
+  app: { external: true }
+  data: { external: true }
+
+# External, versioned secrets (<name>_v<N>, created by scripts/deploy/secrets-sync.sh from deploy/secrets/staging/*.sops.yaml).
+secrets:
+  identity_db_dsn: { external: true, name: "identity_db_dsn_v${SECRET_VER_IDENTITY_DB_DSN}" }
+  identity_db_read_dsn: { external: true, name: "identity_db_read_dsn_v${SECRET_VER_IDENTITY_DB_READ_DSN}" }
+  identity_platform_dsn: { external: true, name: "identity_platform_dsn_v${SECRET_VER_IDENTITY_PLATFORM_DSN}" }
+  identity_relay_dsn: { external: true, name: "identity_relay_dsn_v${SECRET_VER_IDENTITY_RELAY_DSN}" }
+  identity_partition_admin_dsn: { external: true, name: "identity_partition_admin_dsn_v${SECRET_VER_IDENTITY_PARTITION_ADMIN_DSN}" }
+  learning_db_dsn: { external: true, name: "learning_db_dsn_v${SECRET_VER_LEARNING_DB_DSN}" }
+  learning_db_read_dsn: { external: true, name: "learning_db_read_dsn_v${SECRET_VER_LEARNING_DB_READ_DSN}" }
+  learning_platform_dsn: { external: true, name: "learning_platform_dsn_v${SECRET_VER_LEARNING_PLATFORM_DSN}" }
+  learning_relay_dsn: { external: true, name: "learning_relay_dsn_v${SECRET_VER_LEARNING_RELAY_DSN}" }
+  learning_partition_admin_dsn: { external: true, name: "learning_partition_admin_dsn_v${SECRET_VER_LEARNING_PARTITION_ADMIN_DSN}" }
+  learning_dashboard_dsn: { external: true, name: "learning_dashboard_dsn_v${SECRET_VER_LEARNING_DASHBOARD_DSN}" }
+  learning_dashboard_platform_dsn: { external: true, name: "learning_dashboard_platform_dsn_v${SECRET_VER_LEARNING_DASHBOARD_PLATFORM_DSN}" }
+  game_db_dsn: { external: true, name: "game_db_dsn_v${SECRET_VER_GAME_DB_DSN}" }
+  game_db_read_dsn: { external: true, name: "game_db_read_dsn_v${SECRET_VER_GAME_DB_READ_DSN}" }
+  game_platform_dsn: { external: true, name: "game_platform_dsn_v${SECRET_VER_GAME_PLATFORM_DSN}" }
+  game_relay_dsn: { external: true, name: "game_relay_dsn_v${SECRET_VER_GAME_RELAY_DSN}" }
+  game_dashboard_dsn: { external: true, name: "game_dashboard_dsn_v${SECRET_VER_GAME_DASHBOARD_DSN}" }
+  game_dashboard_platform_dsn: { external: true, name: "game_dashboard_platform_dsn_v${SECRET_VER_GAME_DASHBOARD_PLATFORM_DSN}" }
+  competition_db_dsn: { external: true, name: "competition_db_dsn_v${SECRET_VER_COMPETITION_DB_DSN}" }
+  competition_db_read_dsn: { external: true, name: "competition_db_read_dsn_v${SECRET_VER_COMPETITION_DB_READ_DSN}" }
+  competition_platform_dsn: { external: true, name: "competition_platform_dsn_v${SECRET_VER_COMPETITION_PLATFORM_DSN}" }
+  competition_relay_dsn: { external: true, name: "competition_relay_dsn_v${SECRET_VER_COMPETITION_RELAY_DSN}" }
+  chat_db_dsn: { external: true, name: "chat_db_dsn_v${SECRET_VER_CHAT_DB_DSN}" }
+  chat_db_read_dsn: { external: true, name: "chat_db_read_dsn_v${SECRET_VER_CHAT_DB_READ_DSN}" }
+  chat_platform_dsn: { external: true, name: "chat_platform_dsn_v${SECRET_VER_CHAT_PLATFORM_DSN}" }
+  chat_relay_dsn: { external: true, name: "chat_relay_dsn_v${SECRET_VER_CHAT_RELAY_DSN}" }
+  chat_purger_dsn: { external: true, name: "chat_purger_dsn_v${SECRET_VER_CHAT_PURGER_DSN}" }
+  kc_svc_identity: { external: true, name: "kc_svc_identity_v${SECRET_VER_KC_SVC_IDENTITY}" }
+  kc_portal: { external: true, name: "kc_portal_v${SECRET_VER_KC_PORTAL}" }
+  kc_game_backend: { external: true, name: "kc_game_backend_v${SECRET_VER_KC_GAME_BACKEND}" }
+  identity_smtp_password: { external: true, name: "identity_smtp_password_v${SECRET_VER_IDENTITY_SMTP_PASSWORD}" }
+  identity_login_ticket_key: { external: true, name: "identity_login_ticket_key_v${SECRET_VER_IDENTITY_LOGIN_TICKET_KEY}" }
+  identity_login_ip_hash_key: { external: true, name: "identity_login_ip_hash_key_v${SECRET_VER_IDENTITY_LOGIN_IP_HASH_KEY}" }
+  game_ip_hash_key: { external: true, name: "game_ip_hash_key_v${SECRET_VER_GAME_IP_HASH_KEY}" }
+  game_analytics_player_keys: { external: true, name: "game_analytics_player_keys_v${SECRET_VER_GAME_ANALYTICS_PLAYER_KEYS}" }
+  learning_efficacy_pseudonym_key: { external: true, name: "learning_efficacy_pseudonym_key_v${SECRET_VER_LEARNING_EFFICACY_PSEUDONYM_KEY}" }
+  shared_page_cursor_key: { external: true, name: "shared_page_cursor_key_v${SECRET_VER_SHARED_PAGE_CURSOR_KEY}" }
+  shared_cdn_signing_key: { external: true, name: "shared_cdn_signing_key_v${SECRET_VER_SHARED_CDN_SIGNING_KEY}" }
+  core_nats_creds: { external: true, name: "core_nats_creds_v${SECRET_VER_CORE_NATS_CREDS}" }
+  worker_nats_creds: { external: true, name: "worker_nats_creds_v${SECRET_VER_WORKER_NATS_CREDS}" }
+  realtime_nats_creds: { external: true, name: "realtime_nats_creds_v${SECRET_VER_REALTIME_NATS_CREDS}" }
+  core_valkey_password: { external: true, name: "core_valkey_password_v${SECRET_VER_CORE_VALKEY_PASSWORD}" }
+  worker_valkey_password: { external: true, name: "worker_valkey_password_v${SECRET_VER_WORKER_VALKEY_PASSWORD}" }
+  realtime_valkey_password: { external: true, name: "realtime_valkey_password_v${SECRET_VER_REALTIME_VALKEY_PASSWORD}" }
+  s3_core_access_key: { external: true, name: "s3_core_access_key_v${SECRET_VER_S3_CORE_ACCESS_KEY}" }
+  s3_core_secret_key: { external: true, name: "s3_core_secret_key_v${SECRET_VER_S3_CORE_SECRET_KEY}" }
+  s3_worker_access_key: { external: true, name: "s3_worker_access_key_v${SECRET_VER_S3_WORKER_ACCESS_KEY}" }
+  s3_worker_secret_key: { external: true, name: "s3_worker_secret_key_v${SECRET_VER_S3_WORKER_SECRET_KEY}" }

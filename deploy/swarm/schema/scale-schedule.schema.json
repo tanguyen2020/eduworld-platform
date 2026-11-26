@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://eduworld.example/deploy/swarm/scale-schedule.schema.json",
+  "title": "Scale schedule of one environment (F130 US5, DEPLOYMENT §4.4)",
+  "description": "deploy/swarm/<env>/scale-schedule.yaml: baseline/peak replicas of Swarm services and the warm-up windows (warm_up_windows, CONFIG_DEFAULTS). Cross-field rules (peak >= baseline, windows not overlapping, service present in the stacks) are checked by scripts/deploy/check-scale-schedule.mjs and `ops-scheduler validate`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "stack", "lead_minutes", "windows", "services"],
+  "properties": {
+    "version": { "const": 1 },
+    "stack": { "type": "string", "maxLength": 32, "pattern": "^[a-z][a-z0-9-]*$" },
+    "timezone": { "const": "Asia/Ho_Chi_Minh" },
+    "lead_minutes": { "type": "integer", "minimum": 0, "maximum": 60 },
+    "windows": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "start", "end"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 32, "pattern": "^[a-z][a-z0-9-]*$" },
+          "start": { "type": "string", "maxLength": 5, "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+          "end": { "type": "string", "maxLength": 5, "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+        }
+      }
+    },
+    "services": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "baseline", "peak"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9-]*$" },
+          "baseline": { "type": "integer", "minimum": 1, "maximum": 64 },
+          "peak": { "type": "integer", "minimum": 1, "maximum": 64 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+#!/bin/sh
+# pgBackRest TLS server next to a PostgreSQL node (research R2): the repo host (backup-tools) connects with its
+# client certificate; certificates come from Docker secrets (deploy/backup/pgbackrest-server.conf).
+set -eu
+exec pgbackrest server --config=/etc/pgbackrest/pgbackrest.conf

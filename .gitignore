@@ -5,6 +5,13 @@
 *.pem
 *.key
 secrets/
+# F130: SOPS-encrypted secrets of staging/production are committed; nothing else under deploy/secrets/ is.
+!deploy/secrets/
+deploy/secrets/**
+!deploy/secrets/*/
+!deploy/secrets/.sops.yaml
+!deploy/secrets/secrets.template.yaml
+!deploy/secrets/*/*.sops.yaml
 
 # Go
 /bin/

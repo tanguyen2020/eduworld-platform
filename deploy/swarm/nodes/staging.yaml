@@ -1,0 +1,13 @@
+# Staging node inventory (F130 T001, topology pilot DEPLOYMENT §4.1 + 1 storage node ADR-0093): 9 VMs. The three
+# managers (app-1, app-2, ops-1) also run workloads in the pilot (not drained). Hostnames are placeholders.
+env: staging
+nodes:
+  - { name: app-1, hostname: ew-stg-app-1, role: app, zone: z1, manager: true }
+  - { name: app-2, hostname: ew-stg-app-2, role: app, zone: z2, manager: true }
+  - { name: idp-1, hostname: ew-stg-idp-1, role: idp, zone: z1 }
+  - { name: idp-2, hostname: ew-stg-idp-2, role: idp, zone: z2 }
+  - { name: db-1, hostname: ew-stg-db-1, role: data-pg, zone: z1, storage: nvme }
+  - { name: db-2, hostname: ew-stg-db-2, role: data-pg, zone: z2, storage: nvme }
+  - { name: cache-1, hostname: ew-stg-cache-1, role: data-cache, zone: z1 }
+  - { name: ops-1, hostname: ew-stg-ops-1, role: ops, zone: z2, manager: true }
+  - { name: storage-1, hostname: ew-stg-storage-1, role: storage, zone: z1, storage: hdd-data }

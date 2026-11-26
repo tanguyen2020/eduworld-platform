@@ -1,0 +1,3 @@
+#!/bin/sh
+# Liveness of a PostgreSQL node: the local server accepts connections (leader or replica).
+exec pg_isready -q -h /var/run/postgresql -p 5432

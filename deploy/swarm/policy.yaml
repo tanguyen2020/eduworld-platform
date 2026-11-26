@@ -1,0 +1,167 @@
+# Swarm deployment policy (F130): machine-readable form of the rules owned by DEPLOYMENT — §3.1 (binary, profile and
+# modules of each backend Swarm service), §4.3 (overlay networks), §13 (which service may mount which secret), §14
+# (healthcheck, drain). scripts/deploy/check-stacks.mjs and scripts/deploy/check-secret-refs.mjs enforce it on every
+# stack file in deploy/swarm/<env>/ (job `swarm` of .github/workflows/deploy-config.yml). Change a rule in
+# DEPLOYMENT first, then here, in the same MR (AGENTS R33).
+version: 1
+
+stack: eduworld
+envs: [staging, production]
+stack_files: [infra.stack.yml, data.stack.yml, app.stack.yml, ops.stack.yml]
+
+modules: [identity, learning, game, competition, chat]
+
+# The five backend Swarm services (ADR-0074). image = ghcr.io/${GHCR_ORG}/eduworld/<image>:${BACKEND_VERSION}.
+backend_services:
+  core-api:
+    image: core-api
+    modules: [identity, learning, game, competition, chat]
+    networks: [edge, app, data]
+    stop_grace_period_min: 40s
+  realtime:
+    image: realtime
+    modules: []
+    networks: [edge, app, data]
+    stop_grace_period_min: 150s
+  worker-events:
+    image: worker
+    profile: events
+    modules: [identity, learning, game, competition, chat]
+    networks: [app, data]
+    stop_grace_period_min: 40s
+  worker-chat:
+    image: worker
+    profile: chat
+    modules: [chat]
+    networks: [app, data]
+    stop_grace_period_min: 40s
+  worker-jobs:
+    image: worker
+    profile: jobs
+    modules: [identity, learning, game, competition, chat]
+    networks: [app, data]
+    stop_grace_period_min: 40s
+
+# Overlay networks (DEPLOYMENT §4.3) and the services allowed on each (glob on the service name). `encrypted`
+# networks are created with --opt encrypted by deploy/swarm/networks.sh.
+networks:
+  edge:
+    encrypted: false
+    services: [apisix, apisix-internal, core-api, realtime, keycloak]
+  app:
+    encrypted: true
+    services: [core-api, realtime, worker-events, worker-chat, worker-jobs, nats-*, nats-exporter, clamav]
+  data:
+    encrypted: true
+    services: [core-api, realtime, worker-events, worker-chat, worker-jobs, keycloak, pg-*, pgbackrest-*, etcd-pg-*,
+      pgbouncer, valkey-*, sentinel-*, storage-*, backup-tools]
+  admin:
+    encrypted: true
+    services: [apisix, apisix-internal, etcd-apisix-*, keycloak, nats-exporter, backup-tools, ops-scheduler]
+  # Stack-local network of the ops stack: ops-scheduler ↔ Docker API proxy only (F130-AC-23).
+  docker-api:
+    encrypted: true
+    stack_local: true
+    services: [ops-scheduler, docker-api-proxy]
+
+# Stateful services: never publish ports, never on `edge`, pinned to a node (role + name constraint) or spread.
+datastores: [pg-*, pgbouncer, etcd-pg-*, etcd-apisix-*, valkey-*, sentinel-*, nats-1, nats-2, nats-3, storage-master-*,
+  storage-volume-*, storage-filer-1, storage-filer-2, storage-filer-3, storage-s3]
+
+# Services that may publish ports (mode host, behind the L4 load balancer / VPN).
+may_publish: [apisix, apisix-internal]
+
+# Services allowed to update stop-first besides datastores (single writers that must never run twice).
+stop_first_allowed: [ops-scheduler, backup-tools]
+
+# Services without a Docker healthcheck (scratch image without a probe binary); covered by Prometheus "up" (F131).
+healthcheck_exempt: [nats-exporter, storage-filer-sync]
+
+# Secret rules (DEPLOYMENT §13, ADR-0068, ADR-0074 mục 5, ADR-0033). Every secret referenced by a stack must match
+# exactly one rule; `services` lists who may mount it; `module_group` (regex group) must be a module loaded by the
+# service; `binary_group` must be the binary of the service (core → core-api, worker → worker-*, realtime).
+# An empty `services` list means "never in a stack" (one-off jobs only: run-migrate-job.sh, run-ops-job.sh).
+secrets:
+  - match: '^(identity|learning|game|competition|chat)_(db|db_read|platform)_dsn$'
+    module_group: 1
+    services: [core-api, worker-events, worker-chat, worker-jobs]
+  - match: '^(identity|learning|game|competition|chat)_relay_dsn$'
+    module_group: 1
+    services: [worker-events]
+  - match: '^(identity|learning|game|competition|chat)_partition_admin_dsn$'
+    module_group: 1
+    services: [worker-jobs]
+  - match: '^(learning|game)_dashboard(_platform)?_dsn$'
+    module_group: 1
+    services: [core-api, worker-events]
+  - match: '^(identity|learning|game|competition|chat)_migrator_dsn$'
+    services: []
+  - match: '^chat_purger_dsn$'
+    services: [worker-chat]
+  - match: '^kc_game_backend$'
+    services: [core-api]
+  - match: '^kc_portal$'
+    services: [core-api]
+  - match: '^kc_svc_identity$'
+    services: [core-api, worker-events, worker-jobs]
+  - match: '^identity_(smtp_password|sis_[a-z0-9_]{1,48})$'
+    services: [core-api, worker-events, worker-jobs]
+  - match: '^identity_(login_ticket_key|login_ip_hash_key)$'
+    services: [core-api]
+  - match: '^game_ip_hash_key$'
+    services: [core-api]
+  - match: '^game_analytics_player_keys$'
+    services: [core-api, worker-events, worker-jobs]
+  - match: '^learning_efficacy_pseudonym_key$'
+    services: [worker-jobs]
+  - match: '^shared_page_cursor_key$'
+    services: [core-api, worker-events, worker-chat, worker-jobs]
+  - match: '^shared_cdn_signing_key$'
+    services: [core-api, worker-events, worker-chat, worker-jobs]
+  - match: '^(core|worker|realtime)_(nats_creds|valkey_password)$'
+    binary_group: 1
+    services: [core-api, realtime, worker-events, worker-chat, worker-jobs]
+  - match: '^s3_(core|worker)_(access_key|secret_key)$'
+    binary_group: 1
+    services: [core-api, worker-events, worker-chat, worker-jobs]
+  # Infrastructure (not module credentials).
+  - match: '^apisix_(valkey_password|login_key_secret)$'
+    services: [apisix]
+  - match: '^apisix_(etcd_password|admin_key)$'
+    services: [apisix, apisix-internal]
+  - match: '^keycloak_(db_password|admin_password)$'
+    services: [keycloak]
+  - match: '^pg_(superuser_password|replication_password|rewind_password|patroni_api_password)$'
+    services: [pg-*]
+  - match: '^pgbouncer_(userlist|auth_password)$'
+    services: [pgbouncer]
+  - match: '^valkey_(acl|masterauth|sentinel_password)$'
+    services: [valkey-*, sentinel-*]
+  - match: '^nats_(cluster_password|accounts)$'
+    services: [nats-*]
+  - match: '^storage_s3_identities$'
+    services: [storage-s3]
+  - match: '^storage_replica_security$'
+    services: [storage-filer-sync]
+  # Backups: the write credential (archive-push from PostgreSQL, scheduled backups) and the repo cipher; the
+  # restore/read credential is never in a stack: it is issued only when a runbook runs (F130-AC-15).
+  - match: '^backup_(repo_write_access_key|repo_write_secret_key|repo_cipher_pass)$'
+    services: [pg-*, backup-tools]
+  - match: '^backup_(pgbackrest_ca|pgbackrest_server_cert|pgbackrest_server_key)$'
+    services: [pgbackrest-*]
+  - match: '^backup_(pgbackrest_client_cert|pgbackrest_client_key|pgbackrest_ca_client)$'
+    services: [backup-tools]
+  - match: '^backup_(offsite_access_key|offsite_secret_key|offsite_crypt_password|source_access_key|source_secret_key|keycloak_export_secret|etcd_password|pgpass)$'
+    services: [backup-tools]
+  - match: '^backup_restore_(access_key|secret_key)$'
+    services: []
+  - match: '^ops_docker_api_(ca|client_cert)$'
+    services: [docker-api-proxy]
+  # Admin access for RB-01/RB-03/RB-04, the switchover drill and consumer resets: one-off ops jobs only.
+  - match: '^ops_(pg_admin_pgpass|drill_dsn|nats_creds|kc_admin_secret)$'
+    services: []
+
+# Environment keys that must never carry a value in a stack or <service>.env (only <KEY>_FILE=/run/secrets/<name>).
+secret_env_key: '(PASSWORD|PASSWD|SECRET|TOKEN|PRIVATE|_DSN|_KEY|_KEYS|CREDS|CREDENTIAL)$'
+# Keys matching secret_env_key that are not secrets (etcd bootstrap token: identifies the cluster, grants nothing).
+secret_env_key_allow: ["^ETCD_INITIAL_CLUSTER_TOKEN$"]

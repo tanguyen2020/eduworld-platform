@@ -1,0 +1,12 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "F130AC15RestoreReadOnDemand",
+      "Comment": "Restore/read credential of the backup repo: issued only for a runbook run (restore test, RB-01/03/04/05) and attached to that one-off job (scripts/ops/run-ops-job.sh --restore); never mounted by a stack service (deploy/swarm/policy.yaml). Every use is recorded in the restore report (actor, time, purpose).",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:ListBucket", "s3:GetObjectVersion"],
+      "Resource": ["arn:aws:s3:::${BACKUP_BUCKET}", "arn:aws:s3:::${BACKUP_BUCKET}/*"]
+    }
+  ]
+}
