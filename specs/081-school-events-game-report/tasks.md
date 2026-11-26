@@ -111,7 +111,7 @@
 ## Definition of Done
 
 - [x] Mọi tiêu chí F081-AC-* có test pass (ghi mã test/TC)
-- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration` (module game) và `make web-lint`, `make web-test` xanh
+- [x] `make gen-check`, `make lint`, `make test`, `make test-integration` (module game) và `make web-lint`, `make web-test` xanh
 - [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
 - [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
 - [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
