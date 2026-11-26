@@ -1646,6 +1646,15 @@ msgstr "[!! Öþëñ ţĥë Máþ ţö ëxþĺöŕë ~~~~~~~~~~ !!]"
 msgid "ui.next_step.title"
 msgstr "[!! Ŵĥáţ'š ñëxţ ~~~~~ !!]"
 
+msgid "ui.notification.achievement.unlocked"
+msgstr "[!! Ýöü üñĺöçķëđ á ñëŵ áçĥïëvëɱëñţ! ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.assignment.new"
+msgstr "[!! Ýöüŕ šçĥööĺ ğávë ýöü á ñëŵ ţášķ: {title} ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.assignment.results_released"
+msgstr "[!! Ŕëšüĺţš áŕë ŕëáđý: {title} ~~~~~~~~~~~ !!]"
+
 msgid "ui.notification.assignment_new"
 msgstr "[!! Ñëŵ ŵöŕķ: {title} ~~~~~~~ !!]"
 
@@ -1653,13 +1662,58 @@ msgid "ui.notification.assignments_new_count"
 msgstr "[!! Ýöü ĥávë {count} ñëŵ šçĥööĺ ţášķš ~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.notification.assignments_pending"
-msgstr "[!! Ýöü ĥávë {count} šçĥööĺ ţášķš ţö đö ~~~~~~~~~~~~~~ !!]"
+msgstr "[!! Šçĥööĺ ţášķš ŵáïţïñğ ƒöŕ ýöü: {count} ~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.notification.bell_count"
 msgstr "[!! {count} ~~~ !!]"
 
 msgid "ui.notification.bell_tooltip"
-msgstr "[!! Ñëŵ ŵöŕķ ~~~~ !!]"
+msgstr "[!! Ñöţïƒïçáţïöñš ~~~~~~ !!]"
+
+msgid "ui.notification.bell_unread"
+msgstr "[!! Ýöü ĥávë {count} ñëŵ ñöţïƒïçáţïöñš ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.friend.request_received"
+msgstr "[!! {nickname} ŵáñţš ţö ƀë ýöüŕ ƒŕïëñđ ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.generic"
+msgstr "[!! Ýöü ĥávë á ñëŵ ñöţïƒïçáţïöñ ~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.inbox.empty"
+msgstr "[!! Ñö ñöţïƒïçáţïöñš ýëţ. Ŵĥëñ á ƒŕïëñđ ïñvïţëš ýöü öŕ ýöüŕ šçĥööĺ ğïvëš ýöü á ţášķ, ïţ ŵïĺĺ šĥöŵ üþ ĥëŕë. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.inbox.load_failed"
+msgstr "[!! Çöüĺđñ'ţ ĺöáđ ýöüŕ ñöţïƒïçáţïöñš. Ţáþ Ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.inbox.loading"
+msgstr "[!! Ĺöáđïñğ ñöţïƒïçáţïöñš… ~~~~~~~~~ !!]"
+
+msgid "ui.notification.inbox.more"
+msgstr "[!! Šĥöŵ ɱöŕë ~~~~ !!]"
+
+msgid "ui.notification.inbox.new"
+msgstr "[!! Ñëŵ ~~ !!]"
+
+msgid "ui.notification.inbox.open"
+msgstr "[!! Öþëñ ~~ !!]"
+
+msgid "ui.notification.inbox.read_all"
+msgstr "[!! Máŕķ áĺĺ ŕëáđ ~~~~~~ !!]"
+
+msgid "ui.notification.inbox.title"
+msgstr "[!! Ñöţïƒïçáţïöñš ~~~~~~ !!]"
+
+msgid "ui.notification.inbox.when"
+msgstr "[!! {date} áţ {time} ~~~~~~~ !!]"
+
+msgid "ui.notification.moderation.report_handled"
+msgstr "[!! Ýöüŕ ŕëþöŕţ ĥáš ƀëëñ ĥáñđĺëđ. Ţĥáñķ ýöü! ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.party.invitation_received"
+msgstr "[!! {nickname} ïñvïţëđ ýöü ţö þĺáý ţöğëţĥëŕ ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.progression.level_reached"
+msgstr "[!! Ŵëĺĺ đöñë! Ýöü ŕëáçĥëđ ĺëvëĺ {level}! ~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.onboarding.next"
 msgstr "[!! Ñëxţ ~~ !!]"
@@ -2033,6 +2087,15 @@ msgstr "[!! Ýöüŕ þŕöğŕëšš ïš áĺŕëáđý šávëđ. ~~~~~~~~~~~
 msgid "ui.settings.logout_title"
 msgstr "[!! Šïğñ öüţ? ~~~~ !!]"
 
+msgid "ui.settings.notification_popups"
+msgstr "[!! Šĥöŵ þöþ-üþ ñöţïçëš ŵĥïĺë þĺáýïñğ ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.settings.notification_popups_hint"
+msgstr "[!! Ẹvëñ ŵĥëñ ţĥïš ïš öƒƒ, ýöü çáñ šëë ëvëŕý ñöţïçë ƀý ţáþþïñğ ţĥë ƀëĺĺ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.settings.notifications"
+msgstr "[!! Ïñ-ğáɱë ñöţïƒïçáţïöñš ~~~~~~~~~ !!]"
+
 msgid "ui.settings.off"
 msgstr "[!! Öƒƒ ~~ !!]"
 
@@ -2056,6 +2119,9 @@ msgstr "[!! Åƀöüţ ~~ !!]"
 
 msgid "ui.settings.tab.language"
 msgstr "[!! Ĺáñğüáğë ~~~~ !!]"
+
+msgid "ui.settings.tab.notifications"
+msgstr "[!! Ñöţïƒïçáţïöñš ~~~~~~ !!]"
 
 msgid "ui.settings.tab.sound"
 msgstr "[!! Šöüñđ ~~ !!]"

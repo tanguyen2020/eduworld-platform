@@ -1071,6 +1071,15 @@ msgstr "Mở Bản đồ để khám phá"
 msgid "ui.next_step.title"
 msgstr "Việc tiếp theo"
 
+msgid "ui.notification.achievement.unlocked"
+msgstr "Em vừa mở khóa một thành tựu mới!"
+
+msgid "ui.notification.assignment.new"
+msgstr "Nhà trường vừa giao bài mới: {title}"
+
+msgid "ui.notification.assignment.results_released"
+msgstr "Đã có kết quả bài: {title}"
+
 msgid "ui.notification.assignment_new"
 msgstr "Em có bài mới: {title}"
 
@@ -1084,7 +1093,52 @@ msgid "ui.notification.bell_count"
 msgstr "{count}"
 
 msgid "ui.notification.bell_tooltip"
-msgstr "Thông báo bài mới"
+msgstr "Thông báo"
+
+msgid "ui.notification.bell_unread"
+msgstr "Em có {count} thông báo mới"
+
+msgid "ui.notification.friend.request_received"
+msgstr "{nickname} muốn kết bạn với em"
+
+msgid "ui.notification.generic"
+msgstr "Em có một thông báo mới"
+
+msgid "ui.notification.inbox.empty"
+msgstr "Chưa có thông báo nào. Khi bạn bè mời em hoặc nhà trường giao bài, thông báo sẽ hiện ở đây."
+
+msgid "ui.notification.inbox.load_failed"
+msgstr "Chưa tải được thông báo. Em bấm Thử lại nhé."
+
+msgid "ui.notification.inbox.loading"
+msgstr "Đang tải thông báo…"
+
+msgid "ui.notification.inbox.more"
+msgstr "Xem thêm"
+
+msgid "ui.notification.inbox.new"
+msgstr "Mới"
+
+msgid "ui.notification.inbox.open"
+msgstr "Xem"
+
+msgid "ui.notification.inbox.read_all"
+msgstr "Đã xem hết"
+
+msgid "ui.notification.inbox.title"
+msgstr "Thông báo"
+
+msgid "ui.notification.inbox.when"
+msgstr "{date} lúc {time}"
+
+msgid "ui.notification.moderation.report_handled"
+msgstr "Báo cáo của em đã được xử lý. Cảm ơn em nhé!"
+
+msgid "ui.notification.party.invitation_received"
+msgstr "{nickname} mời em vào nhóm chơi cùng"
+
+msgid "ui.notification.progression.level_reached"
+msgstr "Chúc mừng em đã lên cấp {level}!"
 
 msgid "ui.onboarding.next"
 msgstr "Tiếp"
@@ -1356,6 +1410,15 @@ msgstr "Tiến độ của em đã được lưu rồi nhé."
 msgid "ui.settings.logout_title"
 msgstr "Đăng xuất?"
 
+msgid "ui.settings.notification_popups"
+msgstr "Hiện thông báo nhỏ khi đang chơi"
+
+msgid "ui.settings.notification_popups_hint"
+msgstr "Dù tắt, em vẫn xem được mọi thông báo khi bấm vào chuông."
+
+msgid "ui.settings.notifications"
+msgstr "Thông báo trong game"
+
 msgid "ui.settings.off"
 msgstr "Tắt"
 
@@ -1379,6 +1442,9 @@ msgstr "Thông tin"
 
 msgid "ui.settings.tab.language"
 msgstr "Ngôn ngữ"
+
+msgid "ui.settings.tab.notifications"
+msgstr "Thông báo"
 
 msgid "ui.settings.tab.sound"
 msgstr "Âm thanh"

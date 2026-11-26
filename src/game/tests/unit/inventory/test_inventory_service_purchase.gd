@@ -135,8 +135,8 @@ func test_inventory_by_kind_and_ledgers_by_cursor() -> void:
 
 func test_reward_notification_refreshes_the_wallet() -> void:
 	var before: int = h.http.count(F069Fixtures.ROUTE_WALLET)
-	service.handle_message("notification.item.created", {"notification_id": Uuid.v7(), "category": "reward", "title": {}})
-	service.handle_message("notification.item.created", {"notification_id": Uuid.v7(), "category": "friend", "title": {}})
+	service.handle_message("notification.item.created", {"notification_id": Uuid.v7(), "kind": "reward_granted", "title": {}})
+	service.handle_message("notification.item.created", {"notification_id": Uuid.v7(), "kind": "friend_request", "title": {}})
 	for i: int in 3:
 		await get_tree().process_frame
 	assert_int(h.http.count(F069Fixtures.ROUTE_WALLET)).is_equal(before + 1)

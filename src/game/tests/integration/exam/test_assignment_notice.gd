@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## T026 (F064-AC-20, F064-AC-21, TC-LMS-002) — partial: against the backend compose, `hs.an.3a` refreshes "Nhà trường
+## T026 (F064-AC-21, TC-LMS-002; F064-AC-20 is now the server `assignment_new` notification of F123) — partial: against the backend compose, `hs.an.3a` refreshes "Nhà trường
 ## giao" twice; the first refresh of the session gives at most one grouped toast (the count of `not_started` work), an
 ## unchanged second refresh gives none. The step "`ad.truong.a` assigns new work while the student is in the Hub" is
 ## run by hand from quickstart.md #1 (the portal LMS flow) until a staff API helper exists for Godot tests.
@@ -13,14 +13,14 @@ func test_first_refresh_is_grouped_and_an_unchanged_refresh_is_silent(
 	var live: LiveBackend = LiveBackend.create(self, Uuid.v4())
 	await live.auth.login("hs.an.3a", LiveBackend.student_password())
 	var assignments: AssignmentService = AssignmentService.new(live.api)
-	var notes: NotificationService = NotificationService.new()
+	var notes: NotificationService = NotificationService.new(live.api)
 	notes.bind(assignments)
 	var toasts: Array[String] = []
-	notes.toast_requested.connect(func(key: String, _args: Dictionary) -> void: toasts.append(key))
+	notes.toast_requested.connect(func(item: NotificationModel) -> void: toasts.append(item.message_code))
 	assert_bool(await assignments.refresh()).is_true()
 	assert_int(toasts.size()).is_less_equal(1)
 	if not toasts.is_empty():
-		assert_str(toasts[0]).is_equal(NotificationService.KEY_PENDING)
+		assert_str(toasts[0]).is_equal(NotificationService.CODE_PENDING)
 	toasts.clear()
 	assert_bool(await assignments.refresh()).is_true()
 	assert_array(toasts).is_empty()

@@ -1638,19 +1638,64 @@ msgstr ""
 msgid "ui.next_step.title"
 msgstr ""
 
-msgid "ui.notification.assignment_new"
+msgid "ui.notification.achievement.unlocked"
 msgstr ""
 
-msgid "ui.notification.assignments_new_count"
+msgid "ui.notification.assignment.new"
+msgstr ""
+
+msgid "ui.notification.assignment.results_released"
 msgstr ""
 
 msgid "ui.notification.assignments_pending"
 msgstr ""
 
-msgid "ui.notification.bell_count"
+msgid "ui.notification.bell_tooltip"
 msgstr ""
 
-msgid "ui.notification.bell_tooltip"
+msgid "ui.notification.bell_unread"
+msgstr ""
+
+msgid "ui.notification.friend.request_received"
+msgstr ""
+
+msgid "ui.notification.generic"
+msgstr ""
+
+msgid "ui.notification.inbox.empty"
+msgstr ""
+
+msgid "ui.notification.inbox.load_failed"
+msgstr ""
+
+msgid "ui.notification.inbox.loading"
+msgstr ""
+
+msgid "ui.notification.inbox.more"
+msgstr ""
+
+msgid "ui.notification.inbox.new"
+msgstr ""
+
+msgid "ui.notification.inbox.open"
+msgstr ""
+
+msgid "ui.notification.inbox.read_all"
+msgstr ""
+
+msgid "ui.notification.inbox.title"
+msgstr ""
+
+msgid "ui.notification.inbox.when"
+msgstr ""
+
+msgid "ui.notification.moderation.report_handled"
+msgstr ""
+
+msgid "ui.notification.party.invitation_received"
+msgstr ""
+
+msgid "ui.notification.progression.level_reached"
 msgstr ""
 
 msgid "ui.onboarding.next"
@@ -2004,6 +2049,15 @@ msgstr ""
 msgid "ui.settings.logout_title"
 msgstr ""
 
+msgid "ui.settings.notification_popups"
+msgstr ""
+
+msgid "ui.settings.notification_popups_hint"
+msgstr ""
+
+msgid "ui.settings.notifications"
+msgstr ""
+
 msgid "ui.settings.off"
 msgstr ""
 
@@ -2026,6 +2080,9 @@ msgid "ui.settings.tab.info"
 msgstr ""
 
 msgid "ui.settings.tab.language"
+msgstr ""
+
+msgid "ui.settings.tab.notifications"
 msgstr ""
 
 msgid "ui.settings.tab.sound"

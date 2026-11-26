@@ -33,6 +33,11 @@ const SCHEMAS: Dictionary = {
 	"hub.player.appearance_changed": {"room_id": "s64", "eid": "int", "appearance": "obj"},
 	"hub.player.corrected": {"room_id": "s64", "client_seq": "int", "p": "vec3", "?reason": "s32"},
 	"hub.instance.migrated": {"old_room_id": "s64", "room_id": "s64", "?reason": "s32"},
+	# F123: the student's own notification (NotificationItemCreated; nested params/action checked by NotificationModel).
+	"notification.item.created": {
+		"notification_id": "s64", "kind": "s64", "message_code": "s128", "created_at": "int", "?params": "obj",
+		"?title": "obj", "?body": "obj", "?ref_type": "s64", "?ref_id": "s64", "?action": "obj",
+	},
 }
 
 

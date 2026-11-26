@@ -5,12 +5,14 @@ extends Node
 ## in SCHEMA are ever written — never business data, tokens or passwords. F062: the device quality profile
 ## `[quality]` (preset, renderer, renderer boot marker, shadow/anti-aliasing overrides — PERFORMANCE_BUDGET §4–§6),
 ## kept per device and never sent to the server. F096: `onboarding_hub_seen` — the Hub guide of Mây was shown on this device
-## (a UI convenience flag, not business data, no PII).
+## (a UI convenience flag, not business data, no PII). F123: `notification_popups` — short notification toasts while
+## playing (on by default; off = badge and inbox only, F123-AC-16), a device-local choice never sent to the server.
 
 signal font_scale_changed(level: int)
 signal high_contrast_changed(enabled: bool)
 signal reduce_motion_changed(enabled: bool)
 signal volume_changed(bus_name: String, value: float)
+signal notification_popups_changed(enabled: bool)
 
 const DEFAULT_PATH: String = "user://settings.cfg"
 const SECTION_UI: String = "ui"
@@ -25,7 +27,7 @@ const VOLUME_STEP: float = 0.1
 const AUDIO_KEYS: PackedStringArray = ["music", "sfx", "voice"]
 ## Allowed keys per section; anything else in the file is ignored and never written back.
 const SCHEMA: Dictionary = {
-	"ui": ["locale", "font_scale", "high_contrast", "reduce_motion", "onboarding_hub_seen"],
+	"ui": ["locale", "font_scale", "high_contrast", "reduce_motion", "onboarding_hub_seen", "notification_popups"],
 	"audio": ["music", "sfx", "voice"],
 	"login": ["remember_username", "last_username"],
 	"quality": ["preset", "renderer", "renderer_boot_pending", "shadows", "antialiasing"],
@@ -38,6 +40,8 @@ var high_contrast: bool = false
 var reduce_motion: bool = false
 ## F096: Mây's Hub guide was already shown on this device (STUDENT_GAME_UX_CORE S03 "Hướng dẫn lần đầu").
 var onboarding_hub_seen: bool = false
+## F123: show short notification toasts while playing (SOCIAL_SYSTEM §8 "Popup trong game (tắt được)").
+var notification_popups: bool = true
 var volumes: Dictionary = {"music": 1.0, "sfx": 1.0, "voice": 1.0}
 ## "Nhớ tên đăng nhập" (CONFIG_DEFAULTS `game_remember_username`: on; AuthService never stores it on a shared device).
 var remember_username: bool = true
@@ -89,6 +93,8 @@ func load_from(file_path: String) -> void:
 	reduce_motion = motion is bool and (motion as bool)
 	var seen: Variant = cfg.get_value(SECTION_UI, "onboarding_hub_seen", false)
 	onboarding_hub_seen = seen is bool and (seen as bool)
+	var popups: Variant = cfg.get_value(SECTION_UI, "notification_popups", true)
+	notification_popups = not (popups is bool) or (popups as bool)
 	for bus_key: String in AUDIO_KEYS:
 		var value: Variant = cfg.get_value(SECTION_AUDIO, bus_key, 1.0)
 		if value is float or value is int:
@@ -116,6 +122,7 @@ func save() -> Error:
 	cfg.set_value(SECTION_UI, "high_contrast", high_contrast)
 	cfg.set_value(SECTION_UI, "reduce_motion", reduce_motion)
 	cfg.set_value(SECTION_UI, "onboarding_hub_seen", onboarding_hub_seen)
+	cfg.set_value(SECTION_UI, "notification_popups", notification_popups)
 	for bus_key: String in AUDIO_KEYS:
 		cfg.set_value(SECTION_AUDIO, bus_key, float(volumes[bus_key]))
 	cfg.set_value(SECTION_LOGIN, "remember_username", remember_username)
@@ -188,6 +195,15 @@ func set_onboarding_hub_seen(seen: bool) -> void:
 	save()
 
 
+## F123-AC-16: turns the notification toasts on/off on this device (the badge and the inbox stay).
+func set_notification_popups(enabled: bool) -> void:
+	if notification_popups == enabled:
+		return
+	notification_popups = enabled
+	save()
+	notification_popups_changed.emit(notification_popups)
+
+
 func set_volume(bus_key: String, value: float) -> void:
 	if not bus_key in AUDIO_KEYS:
 		return
@@ -218,6 +234,7 @@ func _reset() -> void:
 	high_contrast = false
 	reduce_motion = false
 	onboarding_hub_seen = false
+	notification_popups = true
 	volumes = {"music": 1.0, "sfx": 1.0, "voice": 1.0}
 	remember_username = true
 	last_username = ""

@@ -145,9 +145,17 @@
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ChallengeNextActivity",
       "sha256": "d97b18b0c6092f6aa7e162588a468d645d952c3eb67e4895cf7766b533e7e803"
     },
+    "openapi/Notification.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Notification",
+      "sha256": "95d2cf21927917574b7071f5bd5d21a48c77426c28b02e3f4d588c5dfa301c9a"
+    },
     "openapi/listMyAssignments.200.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#listMyAssignments/responses/200/example",
       "sha256": "054178f9c2cf3876d11cdfce9a71c88f7b85e1c243f62e040ebcc4ebb54d9fbd"
+    },
+    "openapi/listNotifications.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listNotifications/responses/200/example",
+      "sha256": "2773eda2f3a343df5ccb5071400752f715386b22fe504aa77b341686aa67ebb7"
     },
     "examples/achievement.explorer-math-zone.json": {
       "source": "specs/examples/achievement.explorer-math-zone.json",
@@ -256,6 +264,18 @@
     "asyncapi/hub.snapshot.updated.delta.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/HubSnapshotUpdated/examples/delta",
       "sha256": "761ebfd97b5d310550bba35aeb2b06ec6828f0447c4dd4df40b447be4e0c782b"
+    },
+    "asyncapi/notification.item.created.friend_request.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/NotificationItemCreated/examples/friend_request",
+      "sha256": "5c588ef278f29e8562ecc61d041ff18ffb64b0148e3a6a84d844f0aa7ffd53b2"
+    },
+    "asyncapi/notification.item.created.assignment_new.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/NotificationItemCreated/examples/assignment_new",
+      "sha256": "259626cde4e1141ee86870a9502937634b5a8ce54b6c6aa0356da7c6f1f0f55d"
+    },
+    "asyncapi/notification.item.mark_read.mark_read.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/NotificationItemMarkRead/examples/mark_read",
+      "sha256": "a7dea3b553b4af9e8d1c6cd6aa83f62c5b66761a9c7cd07933c60d2e32ac82d5"
     },
     "asyncapi/presence.status.set.in_activity.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/PresenceStatusSet/examples/in_activity",

@@ -1,0 +1,21 @@
+{
+  "v": 1,
+  "type": "notification.item.created",
+  "seq": 8,
+  "ts": 1763712000000,
+  "payload": {
+    "notification_id": "0193b0a0-0000-7000-8000-000000000003",
+    "kind": "assignment_new",
+    "message_code": "assignment.new",
+    "params": {
+      "title": "Phép nhân trong phạm vi 100"
+    },
+    "ref_type": "assignment",
+    "ref_id": "0193b0a0-0000-7000-8000-000000000004",
+    "action": {
+      "kind": "open_assignment",
+      "id": "0193b0a0-0000-7000-8000-000000000004"
+    },
+    "created_at": 1763712000000
+  }
+}

@@ -36,15 +36,17 @@ const SCHEMAS = [
   'ProgressionStatus', 'XpLedgerEntry', 'ProgressionLevel', 'Wallet', 'CurrencyLedgerEntry', 'ItemLedgerEntry',
   'InventoryItem', 'ShopItem', 'PurchaseResult', 'AchievementProgress', 'CollectionProgress', 'CollectionDetail',
   'GameChallengeSummary', 'GameChallengeDetail', 'GameChallengeAttempt', 'ChallengeNextActivity',
+  // F123: in-game notifications (inbox item).
+  'Notification',
 ];
 // Response examples the client parses as a whole: [operationId, status] → openapi/<operationId>.<status>.json.
-const RESPONSES = [['listMyAssignments', '200']];
+const RESPONSES = [['listMyAssignments', '200'], ['listNotifications', '200']];
 // specs/examples documents the game never receives: CMS-only curriculum, server-side chat policy and the
 // sensitive-term catalog (never sent to clients, AGENTS R15).
 const NOT_FOR_CLIENT = [/^curriculum\./, /^chat-policy\./, /^sensitive-term-catalog\./];
-// Realtime messages of the game client (F092): system, session, hub, presence.
+// Realtime messages of the game client (F092): system, session, hub, presence; F123 notification.
 const ASYNCAPI = 'specs/asyncapi/eduworld-realtime.v1.yaml';
-const ASYNC_PREFIXES = ['system.', 'session.', 'hub.', 'presence.'];
+const ASYNC_PREFIXES = ['system.', 'session.', 'hub.', 'presence.', 'notification.'];
 const Ajv = require(path.join(root, 'scripts', 'node_modules', 'ajv'));
 const addFormats = require(path.join(root, 'scripts', 'node_modules', 'ajv-formats'));
 

@@ -14,7 +14,8 @@ var media: MediaLoader = null
 var video_files: VideoFileCache = null
 ## Timed exams of the Exam Zone (F064): sessions, attempt, server countdown, answers queued in RAM.
 var exam: ExamService = null
-## In-game notices of new school work (F064 US4): toast + 🔔 badge from the refreshes of `assignments`.
+## In-game notifications (F123): REST inbox + realtime `notification.*`, bell badge, toasts (and the F064 grouped
+## "pending school work" toast of the first assignments refresh).
 var notifications: NotificationService = null
 ## Player profile, nickname, avatar and saved outfits (F070); character catalog cache + ownership view (F070/F075).
 var profile: ProfileService = null
@@ -42,8 +43,6 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	play_time = PlayTimeService.new()
 	play_time.break_reminder_shown.connect(_on_break_reminder_shown)
 	assignments.access_denied.connect(_on_access_denied)
-	notifications = NotificationService.new()
-	notifications.bind(assignments)
 	learning = LearningService.new(rest, telemetry, clock)
 	learning.access_denied.connect(_on_access_denied)
 	exam = ExamService.new(rest, clock)
@@ -73,6 +72,11 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	world.access_denied.connect(_on_access_denied)
 	quest = QuestService.new(rest, app_state, realtime)
 	quest.access_denied.connect(_on_access_denied)
+	notifications = NotificationService.new(rest, realtime, _autoload("Settings"), telemetry)
+	notifications.bind(assignments)
+	notifications.access_denied.connect(_on_access_denied)
+	# F123-AC-16: badge only (no toast) during a timed exam or a solo challenge.
+	notifications.quiet_check = func() -> bool: return exam.in_progress() or challenge.is_running()
 	if realtime != null:
 		realtime.resync_required.connect(resync)
 		if app_state != null:
@@ -115,6 +119,7 @@ func resync() -> void:
 	await profile.fetch_profile()
 	progression.refresh()
 	inventory.load_wallet()
+	notifications.load_unread()
 	if challenge.is_running():
 		challenge.resume(challenge.attempt().challenge_attempt_id)
 	if not hub.desired_area.is_empty():
@@ -126,6 +131,11 @@ func resync() -> void:
 static func _realtime_autoload() -> GameRealtimeClient:
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	return tree.root.get_node_or_null("RealtimeClient") as GameRealtimeClient if tree != null else null
+
+
+static func _autoload(node_name: String) -> Node:
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	return tree.root.get_node_or_null(node_name) if tree != null else null
 
 
 static func _cdn_base_url() -> String:

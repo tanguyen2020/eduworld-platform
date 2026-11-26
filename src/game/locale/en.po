@@ -1071,6 +1071,15 @@ msgstr "Open the Map to explore"
 msgid "ui.next_step.title"
 msgstr "What's next"
 
+msgid "ui.notification.achievement.unlocked"
+msgstr "You unlocked a new achievement!"
+
+msgid "ui.notification.assignment.new"
+msgstr "Your school gave you a new task: {title}"
+
+msgid "ui.notification.assignment.results_released"
+msgstr "Results are ready: {title}"
+
 msgid "ui.notification.assignment_new"
 msgstr "New work: {title}"
 
@@ -1078,13 +1087,58 @@ msgid "ui.notification.assignments_new_count"
 msgstr "You have {count} new school tasks"
 
 msgid "ui.notification.assignments_pending"
-msgstr "You have {count} school tasks to do"
+msgstr "School tasks waiting for you: {count}"
 
 msgid "ui.notification.bell_count"
 msgstr "{count}"
 
 msgid "ui.notification.bell_tooltip"
-msgstr "New work"
+msgstr "Notifications"
+
+msgid "ui.notification.bell_unread"
+msgstr "You have {count} new notifications"
+
+msgid "ui.notification.friend.request_received"
+msgstr "{nickname} wants to be your friend"
+
+msgid "ui.notification.generic"
+msgstr "You have a new notification"
+
+msgid "ui.notification.inbox.empty"
+msgstr "No notifications yet. When a friend invites you or your school gives you a task, it will show up here."
+
+msgid "ui.notification.inbox.load_failed"
+msgstr "Couldn't load your notifications. Tap Try again."
+
+msgid "ui.notification.inbox.loading"
+msgstr "Loading notifications…"
+
+msgid "ui.notification.inbox.more"
+msgstr "Show more"
+
+msgid "ui.notification.inbox.new"
+msgstr "New"
+
+msgid "ui.notification.inbox.open"
+msgstr "Open"
+
+msgid "ui.notification.inbox.read_all"
+msgstr "Mark all read"
+
+msgid "ui.notification.inbox.title"
+msgstr "Notifications"
+
+msgid "ui.notification.inbox.when"
+msgstr "{date} at {time}"
+
+msgid "ui.notification.moderation.report_handled"
+msgstr "Your report has been handled. Thank you!"
+
+msgid "ui.notification.party.invitation_received"
+msgstr "{nickname} invited you to play together"
+
+msgid "ui.notification.progression.level_reached"
+msgstr "Well done! You reached level {level}!"
 
 msgid "ui.onboarding.next"
 msgstr "Next"
@@ -1356,6 +1410,15 @@ msgstr "Your progress is already saved."
 msgid "ui.settings.logout_title"
 msgstr "Sign out?"
 
+msgid "ui.settings.notification_popups"
+msgstr "Show pop-up notices while playing"
+
+msgid "ui.settings.notification_popups_hint"
+msgstr "Even when this is off, you can see every notice by tapping the bell."
+
+msgid "ui.settings.notifications"
+msgstr "In-game notifications"
+
 msgid "ui.settings.off"
 msgstr "Off"
 
@@ -1379,6 +1442,9 @@ msgstr "About"
 
 msgid "ui.settings.tab.language"
 msgstr "Language"
+
+msgid "ui.settings.tab.notifications"
+msgstr "Notifications"
 
 msgid "ui.settings.tab.sound"
 msgstr "Sound"

@@ -261,6 +261,11 @@ func tick() -> void:
 		flush_pending()
 
 
+## F123-AC-16: an attempt is open and not submitted yet (notification toasts wait; only the badge changes).
+func in_progress() -> bool:
+	return attempt != null and not submitted
+
+
 func remaining_ms() -> int:
 	return countdown.remaining_ms(clock.now_msec())
 

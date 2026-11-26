@@ -35,8 +35,9 @@ const REFRESH_CODES: PackedStringArray = [
 	"INSUFFICIENT_BALANCE", "PURCHASE_LIMIT_REACHED", "ITEM_ALREADY_OWNED", "SHOP_ITEM_UNAVAILABLE", "CONFLICT",
 	"NOT_FOUND",
 ]
-## Notification categories after which the balance may have changed (Clarifications 2026-11-16, F123 messages).
-const WALLET_NOTIFICATION_CATEGORIES: PackedStringArray = ["reward", "achievement"]
+## Notification kinds after which the balance may have changed (Clarifications 2026-11-16; F123 one enum `kind` for
+## REST and WS, RB-513 — the former `category` field is gone). Level-ups already reload the wallet (ProgressionService).
+const WALLET_NOTIFICATION_KINDS: PackedStringArray = ["reward_granted", "achievement_unlocked"]
 const MSG_NOTIFICATION_CREATED: String = "notification.item.created"
 
 var catalog: CharacterCatalogModel = null
@@ -271,7 +272,7 @@ func is_equipped(item_id: String) -> bool:
 
 ## Realtime dispatcher handler (`notification.*`): a reward/achievement notice may change the balance.
 func handle_message(type: String, payload: Dictionary, _envelope: Variant = null) -> void:
-	if type == MSG_NOTIFICATION_CREATED and DataRead.str_of(payload, "category") in WALLET_NOTIFICATION_CATEGORIES:
+	if type == MSG_NOTIFICATION_CREATED and DataRead.str_of(payload, "kind") in WALLET_NOTIFICATION_KINDS:
 		load_wallet()
 
 
