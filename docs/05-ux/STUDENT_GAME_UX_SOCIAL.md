@@ -1,6 +1,6 @@
 # Student Game UX — Kinh tế, xã hội, thi đấu, sự kiện, cài đặt
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-26 (F096: nhóm Thông tin trong Cài đặt — Giấy phép có thông báo MIT của Godot, Xem lại hướng dẫn của Mây; lựa chọn đang chọn là chip có dấu ✓) · 2026-11-21 (ADR-0095 — WP-S: bỏ lớp: không nhóm "Bạn cùng lớp", không tab chat Lớp, hồ sơ hiện khối, mục tiêu khối thay mục tiêu lớp) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-26 (F069: lát cắt client §3 Tủ đồ · Cửa hàng · Lịch sử, §4 Thành tựu · Bộ sưu tập · Trưng bày) · 2026-11-26 (F096: nhóm Thông tin trong Cài đặt — Giấy phép có thông báo MIT của Godot, Xem lại hướng dẫn của Mây; lựa chọn đang chọn là chip có dấu ✓) · 2026-11-21 (ADR-0095 — WP-S: bỏ lớp: không nhóm "Bạn cùng lớp", không tab chat Lớp, hồ sơ hiện khối, mục tiêu khối thay mục tiêu lớp) · 2026-11-15
 > Liên quan: [STUDENT_GAME_UX](STUDENT_GAME_UX.md) (quy ước chung, màn lõi) · [DESIGN_SYSTEM](DESIGN_SYSTEM.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [ADR-0056 song ngữ](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057 máy tầm trung](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md)
 
 > [!IMPORTANT]
@@ -108,6 +108,8 @@ Tablet: 6 cột, danh sách slot hiển thị đầy đủ như PC thay cho nút
 
 **An toàn/riêng tư.** Không có trading, tặng quà hay xem tủ đồ người khác ngoài phần trang bị đang mặc. Không có quảng cáo hay gợi ý mua bằng tiền thật.
 
+**Lát cắt F069 [Confirmed — F069 Clarifications 2026-11-26].** Một cửa sổ S08 ba tab chip (`g1_3`: Tủ đồ, Cửa hàng; lớp 4–9 thêm Lịch sử), ví "🪙 150 Xu" ở tiêu đề (icon đồng Xu, không emoji). Cột trái: **một** xem trước 3D (render một lần mỗi lần đổi đồ/kéo xoay) + Xoay trái/phải + "Phối đồ" (mở CustomizationStudio F070: ngoại hình, bộ phối, vòng biểu cảm). Cột phải: chip lọc loại (`g1_3` 4 chip icon + chữ: Tất cả, Trang phục, Tóc, Phụ kiện) → lưới ô hình (`PictureTile`: hình loại vật phẩm, dấu độ hiếm màu + hình, tên, dòng phụ giá Xu / "Đã sở hữu", ✓ xanh khi đang mặc) → thanh chi tiết (dấu độ hiếm, tên, chữ độ hiếm lớp 4–9, mô tả, giá, "Đã mua 1/2", "Có bán đến 30/11"; "Trang bị" hoặc "Xem trước" + "Mua"; thiếu Xu: "Mua" xám + "Cần thêm 40 Xu"). Mua → hộp xác nhận (đồng Xu lớn, "Mua Cờ nhỏ với 120 Xu?", "Số dư sau khi mua: 30 Xu", Hủy / Mua); mạng lỗi → hộp ở lại "Mạng đang chập chờn… em sẽ không bị trừ Xu hai lần". Trang bị gọi `updateAvatar` ngay, xem trước chỉ đổi theo phản hồi; mất mạng: xem được, Mua/Trang bị khóa với lời giải thích.
+
 ## 4. Achievement / Collection
 
 **Mục đích.** Xem thành tựu, huy hiệu, danh hiệu, bộ sưu tập (pet, thẻ kiến thức, vật khám phá, sự kiện) và cách nhận. Nghiệp vụ: [INVENTORY_ECONOMY §6–§7](../01-game-design/INVENTORY_ECONOMY.md).
@@ -161,6 +163,8 @@ Chạm một dòng mở bảng chi tiết trượt từ dưới lên (điều ki
 **Hiệu năng.** Thumbnail atlas, không mô hình 3D; danh sách ảo hóa; ảnh pet chưa sở hữu dùng cùng texture với hiệu ứng shader xám (không tạo texture riêng).
 
 **An toàn/riêng tư.** Thành tựu học tập dựa trên mastery/hoàn thành, không hiển thị điểm số; người khác chỉ thấy huy hiệu trưng bày và danh hiệu.
+
+**Lát cắt F069 [Confirmed — F069 Clarifications 2026-11-26].** Mở từ HUD "Thêm" → "Thành tựu & Bộ sưu tập". Tab Thành tựu: dòng thẻ (icon huy chương/sao, tên, mô tả lớp 4–9, thanh "7/10", bậc lớp 4–9, ✓ "Đã nhận" + chip phần thưởng); thành tựu ẩn chỉ "?" + "Tiếp tục khám phá để mở khóa". Tab Bộ sưu tập: danh sách bộ "Thú cưng các vùng · 3/10 món" → trang bộ: thanh tiến độ, "Thưởng khi đủ bộ", lưới ô (`g1_3` ô lớn kiểu sổ dán): đã có = hình màu + ✓ "Đã có"; chưa có = cùng hình xám + khóa "Chưa có" + "Cách nhận: …". Tab Huy hiệu trưng bày (lớp 4–9): 3 ô + huy hiệu đang sở hữu, chạm để thêm/bỏ, "Lưu trưng bày".
 
 ## 5. Party lobby
 

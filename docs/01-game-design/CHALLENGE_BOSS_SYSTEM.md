@@ -1,6 +1,6 @@
 # Challenge & Boss System
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Systems Designer + EdTech Specialist · Cập nhật: 2026-11-24 (F076: challenge solo, room host dùng chung) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Systems Designer + EdTech Specialist · Cập nhật: 2026-11-26 (F069: client §2.5) · 2026-11-24 (F076: challenge solo, room host dùng chung) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [ADR-0016, ADR-0043, ADR-0048, ADR-0049](../adr/README.md)
 
 ## 1. Mục đích và phạm vi
@@ -89,6 +89,10 @@ stateDiagram-v2
 | `retry_policy` | Câu hỏi mới mỗi lần thử (`new_questions`) |
 | `cooldown_seconds` sau `failed` | 0 cho easy/normal, 60 cho hard trở lên |
 | Phần thưởng lần đầu | `first_clear_rewards` chỉ một lần; lần sau theo giảm dần của reward rule |
+
+### 2.5. Client (F069)
+
+Godot `ChallengeClient` ([STUDENT_GAME_UX_CORE](../05-ux/STUDENT_GAME_UX_CORE.md) S06 §6a): chỉ hiện mức trong `available_difficulties` (mức khóa chỉ khi server gửi lý do); `startGameChallenge` một `Idempotency-Key` cho mỗi ý định (giữ khi thử lại), `nextChallengeActivity` một khóa cho mỗi lượt (thử lại `503` cùng khóa theo backoff `client_reconnect_backoff`), mở trình làm bài trên attempt học tập server tạo (không tự chọn câu), gọi lượt kế khi attempt nộp xong; đồng hồ = `deadline_at − giờ server` (độ lệch realtime hoặc header `Date`, sau đó đồng hồ đơn điệu — đổi giờ máy không ảnh hưởng, AC-CHL-001); điểm/sức bền/tiến độ chỉ từ `challenge.attempt.updated` hoặc `getGameChallengeAttempt` của attempt hiện tại; `422 INVALID_STATE_TRANSITION` → đọc lại và hiện kết quả server; bỏ cuộc qua hộp xác nhận; kết quả `failed` không có chữ "Thất bại". Trong lúc chạy `AppState.blocking_activity = challenge` (tới khi đóng màn kết quả) giữ hiệu ứng lên cấp.
 
 ## 3. Boss Battle
 

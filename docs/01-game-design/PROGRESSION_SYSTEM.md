@@ -1,6 +1,6 @@
 # Progression System — XP, Level, phần thưởng lên cấp
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Director + Game Systems Designer · Cập nhật: 2026-11-24 (F079: mô phỏng tiến độ ở server, `xp_simulation_minute_rate`) · 2026-11-23 (F074: ngày cap theo lịch ICT, đếm giảm dần, `curve-rollout`, `progression-levels`, `reward.granted`) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Director + Game Systems Designer · Cập nhật: 2026-11-26 (F069: hành vi client §4.6) · 2026-11-24 (F079: mô phỏng tiến độ ở server, `xp_simulation_minute_rate`) · 2026-11-23 (F074: ngày cap theo lịch ICT, đếm giảm dần, `curve-rollout`, `progression-levels`, `reward.granted`) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [GAME_DESIGN](GAME_DESIGN.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [ADR-0018, ADR-0043, ADR-0049](../adr/README.md)
 
 ## 1. Mục đích và phạm vi
@@ -164,6 +164,7 @@ sequenceDiagram
 - HUD hiển thị level, danh hiệu, thanh tiến độ `xp_in_level / xp_to_next`, XP còn lại có thể nhận hôm nay (cap).
 - `level_history`: `student_id`, `from_level`, `to_level`, `curve_version`, `reached_at`, `trigger_xp_entry_id`.
 - Màn "Hành trình của tôi": 20 giao dịch XP gần nhất (nguồn thân thiện, không lộ id kỹ thuật), mốc level, phần thưởng đã nhận.
+- Client (F069): `ProgressionService` đọc `getProgression` khi vào thế giới; `progression.xp.updated` **thay** giá trị (không cộng `delta`, chỉ dùng `delta` cho số bay), khi tổng `xp_in_level + xp_to_next` đổi (lên cấp hoặc curve publish lại) thì đọc lại `getProgression`; `progression.level.reached` vào hàng chờ S07 (gộp nhiều cấp, hoãn trong hoạt động có giờ). Nhãn nguồn theo khóa `ui.journey.source.<source_code>` của catalog §3.1, thiếu khóa thì dùng `source_label`. Client không giữ bảng ngưỡng, đường cong hay danh sách danh hiệu; không gửi XP/level ([STUDENT_GAME_UX_CORE](../05-ux/STUDENT_GAME_UX_CORE.md) S03 §6b, S07 §6a).
 
 ## 5. Quan hệ với tiến trình thế giới
 

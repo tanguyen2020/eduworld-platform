@@ -1,6 +1,6 @@
 # Godot Client Architecture
 
-> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Senior Godot Developer · Cập nhật: 2026-11-26 (F096: boot splash, icon ứng dụng và màn chờ Web mang nhận diện EduWorld, không còn logo/icon Godot; trang Giấy phép trong Cài đặt) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (máy dùng chung, màn "Tiếp tục là…" khi Resume, giờ giới nghiêm ADR-0078, CI GitHub Actions, nền tảng từ pilot theo ADR-0013/ADR-0073) · 2026-11-16 (ADR-0083: tạo game session sau đăng nhập; gỡ dấu vết OIDC game theo ADR-0068; ADR-0086: lưu refresh token bằng SecureStorage, tự vào lại khi phiên còn hạn)
+> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Senior Godot Developer · Cập nhật: 2026-11-26 (F069: thư mục progression/inventory/achievement/challenge, `AppState.blocking_activity`, `GameApiService`) · 2026-11-26 (F096: boot splash, icon ứng dụng và màn chờ Web mang nhận diện EduWorld, không còn logo/icon Godot; trang Giấy phép trong Cài đặt) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (máy dùng chung, màn "Tiếp tục là…" khi Resume, giờ giới nghiêm ADR-0078, CI GitHub Actions, nền tảng từ pilot theo ADR-0013/ADR-0073) · 2026-11-16 (ADR-0083: tạo game session sau đăng nhập; gỡ dấu vết OIDC game theo ADR-0068; ADR-0086: lưu refresh token bằng SecureStorage, tự vào lại khi phiên còn hạn)
 > Liên quan: [ADR-0007, ADR-0011, ADR-0013, ADR-0014, ADR-0016](../adr/README.md) · [ADR-0068](../adr/ADR-0068-dang-nhap-game-bang-form-trong-game-qua-backend.md) · [ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md) · [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) · [GAME_NETWORKING](GAME_NETWORKING.md) · [WORLD_RENDERING](WORLD_RENDERING.md) · [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) · [MINIGAME_ENGINE](MINIGAME_ENGINE.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md)
 
 **Mục đích & phạm vi.** Điểm vào kiến trúc client Godot: cấu trúc dự án, autoload, vòng đời ứng dụng, tách UI/gameplay/service, renderer hoạt động học tập, nạp nội dung theo manifest, xử lý lỗi, build/export, kiểm thử. Mạng ở GAME_NETWORKING; thế giới 3D ở WORLD_RENDERING; mini-game ở MINIGAME_ENGINE.
@@ -68,9 +68,9 @@ src/game/
 │   ├── quest/       QuestTracker.tscn, QuestJournal.tscn, QuestMarker3D.tscn, AssignmentRow.tscn,
 │   │                co-op: SharedClueBoard.tscn, ClueCard.tscn, RoleAssignDialog.tscn, PartyProgressStrip.tscn, InterdependentStepPanel.tscn
 │   ├── progression/ JourneyScreen.tscn, LevelUpModal.tscn
-│   ├── inventory/   InventoryShopScreen.tscn (tab Túi đồ/Cửa hàng/Lịch sử), VirtualItemGrid.tscn, ItemDetailBar.tscn, PurchaseConfirmDialog.tscn
-│   ├── achievement/ màn thành tựu, sưu tầm
-│   ├── challenge/   ChallengeBoard.tscn, ChallengeHud.tscn, ChallengeResult.tscn, DifficultySelector.tscn, boss/ (BossArena, BossHud)
+│   ├── inventory/   InventoryShopScreen.tscn (F069: tab Tủ đồ/Cửa hàng/Lịch sử, một AvatarPreview3D, hộp xác nhận mua dựng trong màn)
+│   ├── achievement/ AchievementCollectionScreen.tscn (F069: thành tựu, bộ sưu tập, huy hiệu trưng bày)
+│   ├── challenge/   ChallengeBoard.tscn, ChallengeHud.tscn (dải trên cùng khi chạy), ChallengeResult.tscn (F069), boss/ (BossArena, BossHud — F110)
 │   ├── liveops/     EventCenter, SeasonTrack (sự kiện, community goal)
 │   ├── learning/    LessonViewer.tscn, ExerciseHost.tscn, ActivityHost.tscn, questions/{SingleChoice,FillBlank,...}.tscn,
 │   │                activity_renderers/{quiz,interactive_exercise,minigame,video_lesson,audio_lesson,simulation}/<Type>Renderer.tscn,
@@ -87,7 +87,8 @@ src/game/
 │   │                PinnedBar.tscn, TypingIndicator.tscn, ReceiptBadge.tscn, ChatSearch.tscn, QuickMessageWheel.tscn
 │   ├── social/      FriendList.tscn, FriendProfilePanel.tscn, FindFriendsTab.tscn, JoinFriendButton.tscn, ClubInvitePicker.tscn, ClubRequestsTab.tscn,
 │   │                PartyLobby.tscn, PartyMemberCard.tscn, ActivitySelector.tscn, InviteFriendPicker.tscn, InvitationToast.tscn
-│   └── ui/          components/{Button,Card,Dialog,Toast,ProgressBar,...}.tscn, hud/{MainHud,XpBar,CurrencyChip,PartyHud,NetworkBanner,BreakReminderDialog}.tscn,
+│   └── ui/          components/{Button,Card,Dialog,Toast,ProgressBar,...}.tscn, hud/{MainHud,PartyHud,NetworkBanner,BreakReminderDialog,GameMenu}.tscn + xp_bar.gd, currency_chip.gd (F069),
+│                    components/{virtual_item_grid,item_thumb,rarity_mark,reward_row,filter_chips,ui_build}.gd (F069),
 │                    settings/, debug/UiGallery.tscn
 ├── scripts/
 │   ├── core/            app_state.gd, event_bus.gd, scene_router.gd, service_locator.gd, config.gd, logger.gd, result.gd, play_time_service.gd,
@@ -98,7 +99,7 @@ src/game/
 │   │                    backoff.gd, realtime_client.gd, ws_envelope.gd
 │   ├── authentication/  auth_service.gd, game_session_service.gd (game session, takeover, heartbeat — ADR-0083), login_form.gd,
 │   │                    token_store.gd, session_store.gd (SecureStorage `eduworld.game.session`), password_buffer.gd
-│   ├── services/        curfew_watcher.gd (cảnh báo giờ giới nghiêm từ bootstrap, ADR-0078)
+│   ├── services/        curfew_watcher.gd (cảnh báo giờ giới nghiêm từ bootstrap, ADR-0078), game_api_service.gd (F069: lớp gốc REST — access_denied, client_bug, offline)
 │   ├── platform/        secure_storage.gd (interface), secure_storage_factory.gd, adapters/{file_cipher,android_keystore,ios_keychain,memory_only}_secure_storage.gd (ADR-0086; không có adapter DPAPI — ADR-0101)
 │   ├── player/          player_controller.gd, camera_rig.gd, avatar_builder.gd, anim_driver.gd
 │   ├── world/           zone_loader.gd, spawn_point.gd, interactable.gd, area_portal.gd, remote_player_sync.gd
@@ -106,9 +107,9 @@ src/game/
 │   │                    answer_models/*.gd, video_progress_reporter.gd, vtt_parser.gd, audio_play_tracker.gd,
 │   │                    simulation_action_log.gd, simulation_template_loader.gd, math_svg_cache.gd (không có ghi âm — ADR-0072)
 │   ├── quest/           quest_service.gd (QuestService: quest.* từ REST và realtime), quest_tracker.gd, coop_quest_service.gd
-│   ├── progression/     progression_service.gd, progression_store.gd, level_up_queue.gd
-│   ├── achievement/     achievement_service.gd
-│   ├── challenge/       challenge_client.gd, challenge_store.gd, boss_client.gd, boss_store.gd
+│   ├── progression/     progression_service.gd, progression_store.gd, level_up_queue.gd, models/ (F069)
+│   ├── achievement/     achievement_service.gd, models/ (F069)
+│   ├── challenge/       challenge_client.gd, challenge_store.gd, models/ (F069), boss_client.gd, boss_store.gd (F110)
 │   ├── liveops/         live_event_service.gd, season_track_service.gd
 │   ├── social/          social_service.gd (bạn bè, chặn, tắt tiếng — tạo ở F110, dùng lại ở chat/club), friends_store.gd, club_service.gd
 │   ├── multiplayer/     party_service.gd, party_store.gd, presence_service.gd, hub_sync.gd, matchmaking_service.gd, battle_client.gd
@@ -147,7 +148,7 @@ Thứ tự khai báo trong `project.godot` (phụ thuộc từ trên xuống):
 | 1 | `Config` | Node | Đọc cấu hình môi trường từ `res://config/env/<env>.json` (đường dẫn duy nhất, sinh lúc build) + override `user://` (debug build): `api_base_url`, `realtime_url`, `cdn_base_url`, feature flag mặc định (không có cấu hình OIDC/issuer/client id — game không gọi Keycloak, ADR-0068); **cấu hình thiết bị** `device.cfg` (`shared_device` cho máy phòng tin học: không lưu refresh token, không nhớ username, tự đăng xuất — xem §5.2) | Chứa secret (không có secret nào trong client) |
 | 2 | `Log` | Node | Structured log, ring buffer 500 dòng gửi kèm crash report, lọc PII | Gửi log liên tục lên server |
 | 3 | `EventBus` | Node | Signal toàn cục cho sự kiện cắt ngang (`session_expired`, `network_state_changed`, `notification_received`, `zone_changed`, `locale_changed`, `density_changed`, `ui_requested(screen_id, args)`, `ui_closed(screen_id)` — F062: đóng panel = quay lại Hub) | Truyền dữ liệu lớn, thay thế signal cục bộ |
-| 4 | `AppState` | Node | Store trạng thái phiên: `player` (bootstrap), `school_policies`, `feature_flags`, `party`, `current_zone`, `connectivity` | Gọi mạng |
+| 4 | `AppState` | Node | Store trạng thái phiên: `player` (bootstrap), `school_policies`, `feature_flags`, `party`, `current_zone`, `connectivity`, `blocking_activity` (F069: hoạt động có giờ đang chạy — `challenge`, `exam`, sau này `boss` — giữ hiệu ứng lên cấp S07; `begin_blocking`/`end_blocking`) | Gọi mạng |
 | 5 | `AuthService` | Node | Đăng nhập username/password bằng form trong game, gọi `POST /auth/game/login` của module identity (ADR-0068; không trình duyệt, không PKCE/loopback), không chọn trường (ADR-0063); chọn tenant bằng `login_ticket` khi thuộc nhiều tenant; refresh qua `/auth/game/token:refresh`, logout qua `/auth/game/logout`; lưu `tenant_id` của phiên cho `ApiClient` gắn `X-Tenant-Id` (ADR-0065); khi khởi động, nếu `SecureStorage` có refresh token thì tự vào lại bằng `token:refresh` `mode=resume` (ADR-0086); access token chỉ trong RAM, refresh token + `tenant_id` lưu qua `SecureStorage` (thiết bị cá nhân) hoặc chỉ RAM (Web, `shared_device`); refresh single-flight (rotation, ghi đè token đã lưu), reconnect, Đăng xuất + revoke; đọc token từ `GameLoginResponse.tokens` hoặc trực tiếp từ `GameTokenRefreshResponse` (cùng trường `GameTokenSet`, thêm `bootstrap` khi `resume`); cung cấp access token hợp lệ cho `ApiClient`. Game session do `GameSessionService` tạo sau đăng nhập (§5, ADR-0083) | Lưu mật khẩu hoặc access token xuống đĩa; lưu refresh token ngoài `SecureStorage` (file rõ, `user://`, localStorage); dùng embedded WebView, tạo game session, giữ mật khẩu sau lời gọi login |
 | 6 | `ApiClient` | Node | HTTP REST: pool `HTTPRequest`, header chuẩn (`Authorization`, **`X-Tenant-Id`** — tenant của phiên từ bootstrap, gửi ở mọi request trừ `client-config` và `/auth/game/login`, `tenant:select` (ADR-0065), `Idempotency-Key`, `X-Client-Version`, `X-Device-Id` — UUID sinh lần đầu cài, lưu `user://device_id`, ADR-0031, `traceparent`), parse Problem Details, retry/backoff | Logic nghiệp vụ |
 | 7 | `RealtimeClient` | Node | WebSocket `/realtime/v1`, ticket, heartbeat, reconnect/resume, phân phối message theo `type` | Quyết định kết quả trận |

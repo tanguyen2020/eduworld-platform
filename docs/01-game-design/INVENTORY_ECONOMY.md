@@ -1,6 +1,6 @@
 # Inventory, Economy, Achievement & Collection
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Systems Designer + Product Manager · Cập nhật: 2026-11-23 (F075: ví Xu, Shop, inventory, collection, achievement, bút toán bù đã hiện thực trong module `game`; `item_id` là mã — ADR-0100) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Systems Designer + Product Manager · Cập nhật: 2026-11-26 (F069: hành vi client §5.1) · 2026-11-23 (F075: ví Xu, Shop, inventory, collection, achievement, bút toán bù đã hiện thực trong module `game`; `item_id` là mã — ADR-0100) · 2026-11-15
 > Liên quan: [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [CHARACTER_SYSTEM](CHARACTER_SYSTEM.md) · [GAME_DESIGN](GAME_DESIGN.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [ADR-0028, ADR-0043, ADR-0049](../adr/README.md) · OQ-14
 
 ## 1. Mục đích và phạm vi
@@ -107,6 +107,8 @@ sequenceDiagram
     G-->>C: 409 INSUFFICIENT_BALANCE hoặc PURCHASE_LIMIT_REACHED
   end
 ```
+
+Client (F069, [STUDENT_GAME_UX_SOCIAL](../05-ux/STUDENT_GAME_UX_SOCIAL.md) §3): luôn hiện hộp xác nhận với giá và số dư sau mua (không "Mua nhanh"); một `Idempotency-Key` cho mỗi ý định mua, **giữ nguyên** khi mạng lỗi/5xx và khi học sinh bấm Mua lại cùng món cho tới khi server trả lời dứt khoát (không bao giờ bị trừ hai lần); số dư chỉ lấy từ `getWallet` hoặc `balance_after`, không trừ cục bộ; "Cần thêm n Xu" chỉ là gợi ý hiển thị; lỗi `INSUFFICIENT_BALANCE`, `PURCHASE_LIMIT_REACHED`, `ITEM_ALREADY_OWNED`, `SHOP_ITEM_UNAVAILABLE` ("sẽ quay lại mùa sau") hiện bằng lời thân thiện rồi đọc lại ví và danh sách; `available_to` là ngày yên lặng, không đếm ngược. Tab Lịch sử (lớp 4–9) đọc `listWalletLedger` / `listInventoryHistory`, quy đổi trùng ghi "Đã quy đổi thành n Xu". Thành tựu ẩn chưa mở: client bỏ tên/mô tả/tiến độ kể cả khi response có; không có nút "nhận thưởng".
 
 ### 5.2. Reward catalog và cấp thưởng
 

@@ -45,3 +45,9 @@ make design-tokens-check
 ## 4. Bằng chứng cần nộp
 
 - Kết quả `make godot-test` (pass/fail), ảnh S07/S08/S09/S06 ở `vi`, `en`, PC và mobile, video kịch bản 3, 6, 12–13, số đo FPS kịch bản 17, trace_id của `purchaseShopItem` ở kịch bản 6.
+
+## 5. Bằng chứng (2026-11-26, local, Godot 4.7.2)
+
+- Kịch bản 1–20 chạy tự động trên `FakeHttp` + fixture sinh từ OpenAPI (nhãn MOCK, chỉ trong `tests/`) — bảng AC → test ở [tasks.md](tasks.md); integration với stack compose có ở `tests/integration/test_progression_shop_challenge_headless.gd` (bỏ qua khi không có `EDUWORLD_IT_API_BASE_URL`, chưa chạy trên máy dùng chung).
+- Ảnh renderer Compatibility (= bản Web) ở [screenshots/](screenshots/): `<màn>-after-<cỡ>-<vi|en>-<g1_3|g6_7>.png` cho 19 màn (`hub_progress`, `game_menu`, `level_up`, `level_up_multi`, `journey`, `inventory`, `shop`, `shop_confirm`, `shop_need_more`, `history`, `achievements`, `collection`, `showcase`, `challenge_board`, `challenge_locked`, `challenge_no_tries`, `challenge_hud`, `challenge_result_failed`, `challenge_result_succeeded`) ở 1280×720, 1024×600, 720×1280; `hub_progress-before-*` là HUD trước F069 (ảnh "after" của F097/F096 trên main e258c27f; các màn khác chưa có trước F069). Chụp lại: `godot --path src/game --rendering-method gl_compatibility --rendering-driver opengl3 -s res://tools/capture_screens.gd -- --out=<dir> --screens=<màn> --sizes=1280x720,1024x600,720x1280 --locales=vi-VN,en-US --band=g1_3`.
+- `history` và `showcase` không có ở `g1_3` (màn tự chuyển về tab Tủ đồ / Bộ sưu tập), nên ảnh `g1_3` của hai màn này cho thấy tab mặc định.
