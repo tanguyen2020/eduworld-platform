@@ -1736,6 +1736,420 @@ msgstr "[!! Öþëñ ţĥë Máþ öŕ ŵáĺķ ţĥŕöüğĥ á ŵïñđ ğá�
 msgid "ui.onboarding.step_welcome"
 msgstr "[!! Ĥï! Ï'ɱ Çĺöüđý. Ŵëĺçöɱë ţö Šþáŕķ Šqüáŕë! ~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.party.activity.change"
+msgstr "[!! Çĥáñğë ~~~ !!]"
+
+msgid "ui.party.activity.choose"
+msgstr "[!! Çĥööšë ~~~ !!]"
+
+msgid "ui.party.activity.choose_hint"
+msgstr "[!! Çĥööšë šöɱëţĥïñğ ţö þĺáý ţöğëţĥëŕ ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.activity.confirm"
+msgstr "[!! Çĥööšë ţĥïš öñë ~~~~~~ !!]"
+
+msgid "ui.party.activity.kind.boss"
+msgstr "[!! Páŕţý çĥáĺĺëñğë ~~~~~~ !!]"
+
+msgid "ui.party.activity.kind.explore"
+msgstr "[!! Ẹxþĺöŕë ţöğëţĥëŕ ~~~~~~~ !!]"
+
+msgid "ui.party.activity.kind.other"
+msgstr "[!! Páŕţý áçţïvïţý ~~~~~~ !!]"
+
+msgid "ui.party.activity.kind.quest"
+msgstr "[!! Páŕţý qüëšţ ~~~~~ !!]"
+
+msgid "ui.party.activity.leader_choosing"
+msgstr "[!! Ţĥë ĺëáđëŕ ïš çĥööšïñğ áñ áçţïvïţý ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.activity.load_failed"
+msgstr "[!! Çöüĺđñ'ţ ĺöáđ ţĥë áçţïvïţïëš. Pĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.activity.loading"
+msgstr "[!! Ĺöáđïñğ áçţïvïţïëš… ~~~~~~~~ !!]"
+
+msgid "ui.party.activity.members_exact"
+msgstr "[!! {count} þĺáýëŕš ~~~~~~ !!]"
+
+msgid "ui.party.activity.members_range"
+msgstr "[!! {min}–{max} þĺáýëŕš ~~~~~~~~ !!]"
+
+msgid "ui.party.activity.none"
+msgstr "[!! Ñö áçţïvïţý ýëţ ~~~~~~ !!]"
+
+msgid "ui.party.activity.pick"
+msgstr "[!! Pïçķ áñ áçţïvïţý ~~~~~~~ !!]"
+
+msgid "ui.party.activity.section"
+msgstr "[!! Åçţïvïţý ~~~~ !!]"
+
+msgid "ui.party.activity.title"
+msgstr "[!! Çĥööšë áñ áçţïvïţý ~~~~~~~~ !!]"
+
+msgid "ui.party.activity_changed"
+msgstr "[!! Ţĥë áçţïvïţý çĥáñğëđ, ëvëŕýöñë ğëţš ŕëáđý áğáïñ ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.alone"
+msgstr "[!! Ïñvïţë ýöüŕ ƒŕïëñđš ţö þĺáý ţöğëţĥëŕ! Pĺáýïñğ ţöğëţĥëŕ ïš ɱöŕë ƒüñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.countdown"
+msgstr "[!! Ğëţ ŕëáđý, ëvëŕýöñë! ~~~~~~~~ !!]"
+
+msgid "ui.party.create_and_invite"
+msgstr "[!! Máķë á þáŕţý áñđ ïñvïţë ~~~~~~~~~~ !!]"
+
+msgid "ui.party.default_name"
+msgstr "[!! {nickname}'š þáŕţý ~~~~~~~~ !!]"
+
+msgid "ui.party.disband"
+msgstr "[!! Çĺöšë ţĥë þáŕţý ~~~~~~ !!]"
+
+msgid "ui.party.disband.title"
+msgstr "[!! Çĺöšë ţĥë þáŕţý? ~~~~~~~ !!]"
+
+msgid "ui.party.disband_confirm"
+msgstr "[!! Ẹvëŕýöñë ŵïĺĺ ĺëávë ţĥë þáŕţý. Åŕë ýöü šüŕë? ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.disbanded"
+msgstr "[!! Ţĥë þáŕţý ŵáš çĺöšëđ ~~~~~~~~ !!]"
+
+msgid "ui.party.error.NETWORK_ERROR"
+msgstr "[!! Ţĥë çöññëçţïöñ ïš ŵëáķ. Ţŕý áğáïñ ŵĥëñ ýöü áŕë öñĺïñë. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.PARTY_ACTIVITY_NOT_ELIGIBLE"
+msgstr "[!! Å ƒŕïëñđ ïšñ'ţ ëĺïğïƀĺë ƒöŕ ţĥïš áçţïvïţý. Çĥööšë áñöţĥëŕ öñë. ~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.PARTY_ALREADY_IN_PARTY"
+msgstr "[!! Ýöü'ŕë áĺŕëáđý ïñ á þáŕţý ~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.PARTY_FULL"
+msgstr "[!! Ţĥë þáŕţý ïš ƒüĺĺ ~~~~~~~ !!]"
+
+msgid "ui.party.error.PARTY_INVITATION_EXPIRED"
+msgstr "[!! Ţĥë ïñvïţáţïöñ ĥáš ëxþïŕëđ ~~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.PARTY_INVITE_NOT_ALLOWED"
+msgstr "[!! Ýöü çáñ'ţ ïñvïţë ţĥïš ƒŕïëñđ ŕïğĥţ ñöŵ ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.PARTY_INVITE_RATE_LIMITED"
+msgstr "[!! Ýöü'vë šëñţ ĺöţš öƒ ïñvïţáţïöñš. Ŵáïţ á ĺïţţĺë, ţĥëñ ïñvïţë áğáïñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.PARTY_MEMBER_NOT_ONLINE"
+msgstr "[!! Ţĥáţ ƒŕïëñđ ïšñ'ţ öñĺïñë ~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.PARTY_NOT_FOUND"
+msgstr "[!! Ţĥïš þáŕţý ïš ğöñë ~~~~~~~~ !!]"
+
+msgid "ui.party.error.PARTY_NOT_LEADER"
+msgstr "[!! Öñĺý ţĥë ĺëáđëŕ çáñ đö ţĥïš ~~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.PARTY_NOT_READY"
+msgstr "[!! Ñöţ ëvëŕýöñë ïš ŕëáđý ýëţ ~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.PARTY_POLICY_VIOLATION"
+msgstr "[!! Ţĥïš ƒŕïëñđ çáñ'ţ ĵöïñ ýöüŕ þáŕţý ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.RATE_LIMITED"
+msgstr "[!! Šĺöŵ đöŵñ á ĺïţţĺë, ţĥëñ ţŕý áğáïñ. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.UNAVAILABLE"
+msgstr "[!! Ţĥë ğáɱë ïš á ĺïţţĺë ƀüšý. Pĺëášë ţŕý áğáïñ šööñ. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.VERSION_MISMATCH"
+msgstr "[!! Ţĥë þáŕţý ĵüšţ çĥáñğëđ. Çĥëçķ ïţ áñđ þŕëšš áğáïñ. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.error.generic"
+msgstr "[!! Ţĥáţ đïđñ'ţ ŵöŕķ ŕïğĥţ ñöŵ. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.hud.button"
+msgstr "[!! Páŕţý ~~ !!]"
+
+msgid "ui.party.hud.button_in_party"
+msgstr "[!! Mý þáŕţý ~~~~ !!]"
+
+msgid "ui.party.hud.member_away"
+msgstr "[!! {nickname}: ŕëçöññëçţïñğ ~~~~~~~~~~ !!]"
+
+msgid "ui.party.hud.member_ready"
+msgstr "[!! {nickname}: ŕëáđý ~~~~~~~ !!]"
+
+msgid "ui.party.hud.member_waiting"
+msgstr "[!! {nickname}: ñöţ ŕëáđý ~~~~~~~~~ !!]"
+
+msgid "ui.party.hud.tooltip"
+msgstr "[!! Pĺáý ŵïţĥ ƒŕïëñđš (P ķëý) ~~~~~~~~~~ !!]"
+
+msgid "ui.party.invitations"
+msgstr "[!! Ïñvïţáţïöñš ƒöŕ ýöü ~~~~~~~~ !!]"
+
+msgid "ui.party.invite"
+msgstr "[!! Ïñvïţë ~~~ !!]"
+
+msgid "ui.party.invite.accept"
+msgstr "[!! Ĵöïñ ~~ !!]"
+
+msgid "ui.party.invite.decline"
+msgstr "[!! Máýƀë ĺáţëŕ ~~~~~ !!]"
+
+msgid "ui.party.invite.empty"
+msgstr "[!! Ñö ƒŕïëñđš öñ ýöüŕ ĺïšţ ýëţ. Máķë ƒŕïëñđš ïñ ţĥë Šöçïáĺ Žöñë, ţĥëñ ïñvïţë ţĥëɱ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.invite.hint"
+msgstr "[!! Ţáþ ţĥë ƒŕïëñđ ýöü ŵáñţ ţö ïñvïţë. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.invite.in_party"
+msgstr "[!! Ïñ ýöüŕ þáŕţý ~~~~~~ !!]"
+
+msgid "ui.party.invite.invited"
+msgstr "[!! Ïñvïţëđ ~~~ !!]"
+
+msgid "ui.party.invite.load_failed"
+msgstr "[!! Çöüĺđñ'ţ ĺöáđ ýöüŕ ƒŕïëñđš. Pĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.invite.loading"
+msgstr "[!! Ĺöáđïñğ ýöüŕ ƒŕïëñđš… ~~~~~~~~~ !!]"
+
+msgid "ui.party.invite.member_count"
+msgstr "[!! {count} ƒŕïëñđš ïñ ţĥë þáŕţý ~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.invite.received"
+msgstr "[!! {nickname} ïñvïţëđ ýöü ţö á þáŕţý! ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.invite.time_left"
+msgstr "[!! Ïñvïţáţïöñ öþëñ ƒöŕ {time} ~~~~~~~~~~~ !!]"
+
+msgid "ui.party.invite.title"
+msgstr "[!! Ïñvïţë ƒŕïëñđš ~~~~~~ !!]"
+
+msgid "ui.party.kick"
+msgstr "[!! Ŕëɱövë ~~~ !!]"
+
+msgid "ui.party.kick.title"
+msgstr "[!! Ŕëɱövë ƒŕöɱ ţĥë þáŕţý? ~~~~~~~~~ !!]"
+
+msgid "ui.party.kick_confirm"
+msgstr "[!! {nickname} ŵïĺĺ ĺëávë ţĥïš þáŕţý. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.kicked"
+msgstr "[!! Ýöü'ŕë ñö ĺöñğëŕ ïñ ţĥáţ þáŕţý. Ýöü çáñ ɱáķë á ñëŵ öñë. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.leader"
+msgstr "[!! Ĺëáđëŕ ~~~ !!]"
+
+msgid "ui.party.leader_reconnecting"
+msgstr "[!! Ţĥë ĺëáđëŕ ïš ŕëçöññëçţïñğ… ~~~~~~~~~~~ !!]"
+
+msgid "ui.party.leave"
+msgstr "[!! Ĺëávë ~~ !!]"
+
+msgid "ui.party.leave.title"
+msgstr "[!! Ĺëávë ţĥë þáŕţý? ~~~~~~~ !!]"
+
+msgid "ui.party.leave_confirm"
+msgstr "[!! Đö ýöü ŵáñţ ţö ĺëávë ţĥïš þáŕţý? ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.level"
+msgstr "[!! Ĺëvëĺ {level} ~~~~~~ !!]"
+
+msgid "ui.party.load_failed"
+msgstr "[!! Çöüĺđñ'ţ ĺöáđ ýöüŕ þáŕţý. Pĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.loading"
+msgstr "[!! Ĺöáđïñğ ýöüŕ þáŕţý… ~~~~~~~~ !!]"
+
+msgid "ui.party.member_joined"
+msgstr "[!! {nickname} ĵöïñëđ ţĥë þáŕţý ~~~~~~~~~~~ !!]"
+
+msgid "ui.party.member_left_notice"
+msgstr "[!! Å ƒŕïëñđ ĺëƒţ ţĥë þáŕţý ~~~~~~~~~~ !!]"
+
+msgid "ui.party.member_menu"
+msgstr "[!! Páŕţý ƒŕïëñđ ~~~~~ !!]"
+
+msgid "ui.party.member_self"
+msgstr "[!! {nickname} (ýöü) ~~~~~~~ !!]"
+
+msgid "ui.party.members"
+msgstr "[!! Mëɱƀëŕš ({count}/{max}) ~~~~~~~~~~ !!]"
+
+msgid "ui.party.minimize"
+msgstr "[!! Mïñïɱïšë ~~~~ !!]"
+
+msgid "ui.party.minimize_tooltip"
+msgstr "[!! Ýöüŕ þáŕţý šţáýš, öþëñ ïţ áğáïñ ŵïţĥ ţĥë Páŕţý ƀüţţöñ ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.new_leader"
+msgstr "[!! {nickname} ïš ţĥë ñëŵ ĺëáđëŕ ~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.not_eligible"
+msgstr "[!! {nickname} ïšñ'ţ ëĺïğïƀĺë ýëţ: {reason} ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.presence.away"
+msgstr "[!! Åŵáý ~~ !!]"
+
+msgid "ui.party.presence.disconnected"
+msgstr "[!! Ŕëçöññëçţïñğ… ~~~~~~ !!]"
+
+msgid "ui.party.presence.in_activity"
+msgstr "[!! Pĺáýïñğ ~~~ !!]"
+
+msgid "ui.party.presence.offline"
+msgstr "[!! Öƒƒĺïñë ~~~ !!]"
+
+msgid "ui.party.presence.online"
+msgstr "[!! Öñĺïñë ~~~ !!]"
+
+msgid "ui.party.ready"
+msgstr "[!! Ï'ɱ ŕëáđý! ~~~~ !!]"
+
+msgid "ui.party.ready_done"
+msgstr "[!! Ýöü'ŕë ŕëáđý ~~~~~ !!]"
+
+msgid "ui.party.ready_off"
+msgstr "[!! Ñöţ ŕëáđý ~~~~ !!]"
+
+msgid "ui.party.ready_on"
+msgstr "[!! Ŕëáđý ~~ !!]"
+
+msgid "ui.party.ready_tooltip"
+msgstr "[!! Pŕëšš ŵĥëñ ýöü áŕë ŕëáđý ţö þĺáý ŵïţĥ ýöüŕ þáŕţý ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.ready_undo"
+msgstr "[!! Pŕëšš áğáïñ ïƒ ýöü áŕë ñöţ ŕëáđý ýëţ ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.reason.area_locked"
+msgstr "[!! ĥášñ'ţ öþëñëđ ţĥïš áŕëá ýëţ ~~~~~~~~~~~ !!]"
+
+msgid "ui.party.reason.attempt_limit"
+msgstr "[!! ĥáš ñö ţŕïëš ĺëƒţ ţöđáý ~~~~~~~~~~ !!]"
+
+msgid "ui.party.reason.generic"
+msgstr "[!! çáñ'ţ ĵöïñ ţĥïš áçţïvïţý ýëţ ~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.reason.grade_band_mismatch"
+msgstr "[!! ţĥïš áçţïvïţý ïš ƒöŕ öţĥëŕ ğŕáđëš ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.reason.grade_not_allowed"
+msgstr "[!! ţĥïš áçţïvïţý ïš ƒöŕ ğŕáđë {grades} ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.reason.grade_other"
+msgstr "[!! ţĥïš áçţïvïţý ïš ƒöŕ áñöţĥëŕ ğŕáđë ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.reason.not_online"
+msgstr "[!! ïš ñöţ öñĺïñë ~~~~~~ !!]"
+
+msgid "ui.party.reason.prerequisite_missing"
+msgstr "[!! ñëëđš áñ ëáŕĺïëŕ qüëšţ ƒïŕšţ ~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.reason.sanctioned"
+msgstr "[!! çáñ'ţ ĵöïñ ŕïğĥţ ñöŵ ~~~~~~~~ !!]"
+
+msgid "ui.party.reconnecting"
+msgstr "[!! Ŕëçöññëçţïñğ… Ýöü çáñ šţïĺĺ šëë ýöüŕ þáŕţý, ĵüšţ á ɱöɱëñţ. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.session.abandoned"
+msgstr "[!! Ţĥë áçţïvïţý šţöþþëđ. Ýöüŕ þáŕţý çáñ þĺáý áğáïñ ŵĥëñ ŕëáđý. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.session.aborted"
+msgstr "[!! Ţĥë áçţïvïţý ëñđëđ. ~~~~~~~~ !!]"
+
+msgid "ui.party.session.completed"
+msgstr "[!! Ýöüŕ þáŕţý ƒïñïšĥëđ ţĥë áçţïvïţý! Ŵëĺĺ đöñë. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.session.ended"
+msgstr "[!! Ţĥë áçţïvïţý ëñđëđ. Ŵëĺçöɱë ƀáçķ ţö ýöüŕ þáŕţý! ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.session.failed"
+msgstr "[!! Šöɱëţĥïñğ ŵëñţ ŵŕöñğ. Ýöüŕ þŕöğŕëšš ïš ķëþţ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.session_waiting"
+msgstr "[!! Ýöüŕ þáŕţý šţáŕţëđ! Öþëñ Páŕţý ţö ĵöïñ ýöüŕ ƒŕïëñđš. ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.settings.hint"
+msgstr "[!! Öñĺý ţĥë ĺëáđëŕ çáñ çĥáñğë ţĥëšë. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.settings.policy"
+msgstr "[!! Ŵĥö çáñ ïñvïţë ~~~~~~ !!]"
+
+msgid "ui.party.settings.policy_leader"
+msgstr "[!! Öñĺý ţĥë ĺëáđëŕ ~~~~~~ !!]"
+
+msgid "ui.party.settings.policy_members"
+msgstr "[!! Ẹvëŕý ɱëɱƀëŕ ~~~~~ !!]"
+
+msgid "ui.party.settings.save"
+msgstr "[!! Šávë ~~ !!]"
+
+msgid "ui.party.settings.title"
+msgstr "[!! Páŕţý šëţţïñğš ~~~~~~ !!]"
+
+msgid "ui.party.settings.visibility"
+msgstr "[!! Ŵĥö çáñ ĵöïñ ~~~~~ !!]"
+
+msgid "ui.party.settings.visibility_friends"
+msgstr "[!! Ţĥë ĺëáđëŕ'š ƒŕïëñđš ~~~~~~~~ !!]"
+
+msgid "ui.party.settings.visibility_private"
+msgstr "[!! Öñĺý ïñvïţëđ ƒŕïëñđš ~~~~~~~~ !!]"
+
+msgid "ui.party.someone"
+msgstr "[!! Å ƒŕïëñđ ~~~~ !!]"
+
+msgid "ui.party.start"
+msgstr "[!! Šţáŕţ ~~ !!]"
+
+msgid "ui.party.start_block.no_activity"
+msgstr "[!! Çĥööšë áñ áçţïvïţý ƒïŕšţ ~~~~~~~~~~ !!]"
+
+msgid "ui.party.start_block.not_ready"
+msgstr "[!! {count} ƒŕïëñđš áŕë ñöţ ŕëáđý ýëţ ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.start_block.one_not_ready"
+msgstr "[!! 1 ƒŕïëñđ ïš ñöţ ŕëáđý ýëţ ~~~~~~~~~~ !!]"
+
+msgid "ui.party.switch.confirm"
+msgstr "[!! Ĺëávë áñđ ĵöïñ ~~~~~~ !!]"
+
+msgid "ui.party.switch.title"
+msgstr "[!! Šŵïţçĥ þáŕţý? ~~~~~~ !!]"
+
+msgid "ui.party.switch_party_confirm"
+msgstr "[!! Ĺëávë ýöüŕ çüŕŕëñţ þáŕţý áñđ ĵöïñ? ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.title"
+msgstr "[!! Páŕţý: {name} ~~~~~~ !!]"
+
+msgid "ui.party.title_alone"
+msgstr "[!! Ýöüŕ þáŕţý ~~~~ !!]"
+
+msgid "ui.party.transfer"
+msgstr "[!! Máķë ĺëáđëŕ ~~~~~ !!]"
+
+msgid "ui.party.transfer.title"
+msgstr "[!! Máķë ţĥëɱ ĺëáđëŕ? ~~~~~~~ !!]"
+
+msgid "ui.party.transfer_confirm"
+msgstr "[!! {nickname} ŵïĺĺ ƀë ţĥë ñëŵ ĺëáđëŕ. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.type.competition_team"
+msgstr "[!! Ţëáɱ ~~ !!]"
+
+msgid "ui.party.type.custom"
+msgstr "[!! Çüšţöɱ þáŕţý ~~~~~ !!]"
+
+msgid "ui.party.type.friend"
+msgstr "[!! Fŕïëñđš þáŕţý ~~~~~~ !!]"
+
+msgid "ui.party.type.quest"
+msgstr "[!! Qüëšţ þáŕţý ~~~~~ !!]"
+
+msgid "ui.party.type.study_party"
+msgstr "[!! Šţüđý þáŕţý ~~~~~ !!]"
+
+msgid "ui.party.wait_leader"
+msgstr "[!! Ţĥë ĺëáđëŕ šţáŕţš ŵĥëñ ëvëŕýöñë ïš ŕëáđý ~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.progression.level"
 msgstr "[!! Ĺëvëĺ {level} ~~~~~~ !!]"
 

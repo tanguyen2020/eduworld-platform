@@ -1719,6 +1719,420 @@ msgstr ""
 msgid "ui.onboarding.step_welcome"
 msgstr ""
 
+msgid "ui.party.activity.change"
+msgstr ""
+
+msgid "ui.party.activity.choose"
+msgstr ""
+
+msgid "ui.party.activity.choose_hint"
+msgstr ""
+
+msgid "ui.party.activity.confirm"
+msgstr ""
+
+msgid "ui.party.activity.kind.boss"
+msgstr ""
+
+msgid "ui.party.activity.kind.explore"
+msgstr ""
+
+msgid "ui.party.activity.kind.other"
+msgstr ""
+
+msgid "ui.party.activity.kind.quest"
+msgstr ""
+
+msgid "ui.party.activity.leader_choosing"
+msgstr ""
+
+msgid "ui.party.activity.load_failed"
+msgstr ""
+
+msgid "ui.party.activity.loading"
+msgstr ""
+
+msgid "ui.party.activity.members_exact"
+msgstr ""
+
+msgid "ui.party.activity.members_range"
+msgstr ""
+
+msgid "ui.party.activity.none"
+msgstr ""
+
+msgid "ui.party.activity.pick"
+msgstr ""
+
+msgid "ui.party.activity.section"
+msgstr ""
+
+msgid "ui.party.activity.title"
+msgstr ""
+
+msgid "ui.party.activity_changed"
+msgstr ""
+
+msgid "ui.party.alone"
+msgstr ""
+
+msgid "ui.party.countdown"
+msgstr ""
+
+msgid "ui.party.create_and_invite"
+msgstr ""
+
+msgid "ui.party.default_name"
+msgstr ""
+
+msgid "ui.party.disband"
+msgstr ""
+
+msgid "ui.party.disband.title"
+msgstr ""
+
+msgid "ui.party.disband_confirm"
+msgstr ""
+
+msgid "ui.party.disbanded"
+msgstr ""
+
+msgid "ui.party.error.NETWORK_ERROR"
+msgstr ""
+
+msgid "ui.party.error.PARTY_ACTIVITY_NOT_ELIGIBLE"
+msgstr ""
+
+msgid "ui.party.error.PARTY_ALREADY_IN_PARTY"
+msgstr ""
+
+msgid "ui.party.error.PARTY_FULL"
+msgstr ""
+
+msgid "ui.party.error.PARTY_INVITATION_EXPIRED"
+msgstr ""
+
+msgid "ui.party.error.PARTY_INVITE_NOT_ALLOWED"
+msgstr ""
+
+msgid "ui.party.error.PARTY_INVITE_RATE_LIMITED"
+msgstr ""
+
+msgid "ui.party.error.PARTY_MEMBER_NOT_ONLINE"
+msgstr ""
+
+msgid "ui.party.error.PARTY_NOT_FOUND"
+msgstr ""
+
+msgid "ui.party.error.PARTY_NOT_LEADER"
+msgstr ""
+
+msgid "ui.party.error.PARTY_NOT_READY"
+msgstr ""
+
+msgid "ui.party.error.PARTY_POLICY_VIOLATION"
+msgstr ""
+
+msgid "ui.party.error.RATE_LIMITED"
+msgstr ""
+
+msgid "ui.party.error.UNAVAILABLE"
+msgstr ""
+
+msgid "ui.party.error.VERSION_MISMATCH"
+msgstr ""
+
+msgid "ui.party.error.generic"
+msgstr ""
+
+msgid "ui.party.hud.button"
+msgstr ""
+
+msgid "ui.party.hud.button_in_party"
+msgstr ""
+
+msgid "ui.party.hud.member_away"
+msgstr ""
+
+msgid "ui.party.hud.member_ready"
+msgstr ""
+
+msgid "ui.party.hud.member_waiting"
+msgstr ""
+
+msgid "ui.party.hud.tooltip"
+msgstr ""
+
+msgid "ui.party.invitations"
+msgstr ""
+
+msgid "ui.party.invite"
+msgstr ""
+
+msgid "ui.party.invite.accept"
+msgstr ""
+
+msgid "ui.party.invite.decline"
+msgstr ""
+
+msgid "ui.party.invite.empty"
+msgstr ""
+
+msgid "ui.party.invite.hint"
+msgstr ""
+
+msgid "ui.party.invite.in_party"
+msgstr ""
+
+msgid "ui.party.invite.invited"
+msgstr ""
+
+msgid "ui.party.invite.load_failed"
+msgstr ""
+
+msgid "ui.party.invite.loading"
+msgstr ""
+
+msgid "ui.party.invite.member_count"
+msgstr ""
+
+msgid "ui.party.invite.received"
+msgstr ""
+
+msgid "ui.party.invite.time_left"
+msgstr ""
+
+msgid "ui.party.invite.title"
+msgstr ""
+
+msgid "ui.party.kick"
+msgstr ""
+
+msgid "ui.party.kick.title"
+msgstr ""
+
+msgid "ui.party.kick_confirm"
+msgstr ""
+
+msgid "ui.party.kicked"
+msgstr ""
+
+msgid "ui.party.leader"
+msgstr ""
+
+msgid "ui.party.leader_reconnecting"
+msgstr ""
+
+msgid "ui.party.leave"
+msgstr ""
+
+msgid "ui.party.leave.title"
+msgstr ""
+
+msgid "ui.party.leave_confirm"
+msgstr ""
+
+msgid "ui.party.level"
+msgstr ""
+
+msgid "ui.party.load_failed"
+msgstr ""
+
+msgid "ui.party.loading"
+msgstr ""
+
+msgid "ui.party.member_joined"
+msgstr ""
+
+msgid "ui.party.member_left_notice"
+msgstr ""
+
+msgid "ui.party.member_menu"
+msgstr ""
+
+msgid "ui.party.member_self"
+msgstr ""
+
+msgid "ui.party.members"
+msgstr ""
+
+msgid "ui.party.minimize"
+msgstr ""
+
+msgid "ui.party.minimize_tooltip"
+msgstr ""
+
+msgid "ui.party.new_leader"
+msgstr ""
+
+msgid "ui.party.not_eligible"
+msgstr ""
+
+msgid "ui.party.presence.away"
+msgstr ""
+
+msgid "ui.party.presence.disconnected"
+msgstr ""
+
+msgid "ui.party.presence.in_activity"
+msgstr ""
+
+msgid "ui.party.presence.offline"
+msgstr ""
+
+msgid "ui.party.presence.online"
+msgstr ""
+
+msgid "ui.party.ready"
+msgstr ""
+
+msgid "ui.party.ready_done"
+msgstr ""
+
+msgid "ui.party.ready_off"
+msgstr ""
+
+msgid "ui.party.ready_on"
+msgstr ""
+
+msgid "ui.party.ready_tooltip"
+msgstr ""
+
+msgid "ui.party.ready_undo"
+msgstr ""
+
+msgid "ui.party.reason.area_locked"
+msgstr ""
+
+msgid "ui.party.reason.attempt_limit"
+msgstr ""
+
+msgid "ui.party.reason.generic"
+msgstr ""
+
+msgid "ui.party.reason.grade_band_mismatch"
+msgstr ""
+
+msgid "ui.party.reason.grade_not_allowed"
+msgstr ""
+
+msgid "ui.party.reason.grade_other"
+msgstr ""
+
+msgid "ui.party.reason.not_online"
+msgstr ""
+
+msgid "ui.party.reason.prerequisite_missing"
+msgstr ""
+
+msgid "ui.party.reason.sanctioned"
+msgstr ""
+
+msgid "ui.party.reconnecting"
+msgstr ""
+
+msgid "ui.party.session.abandoned"
+msgstr ""
+
+msgid "ui.party.session.aborted"
+msgstr ""
+
+msgid "ui.party.session.completed"
+msgstr ""
+
+msgid "ui.party.session.ended"
+msgstr ""
+
+msgid "ui.party.session.failed"
+msgstr ""
+
+msgid "ui.party.session_waiting"
+msgstr ""
+
+msgid "ui.party.settings.hint"
+msgstr ""
+
+msgid "ui.party.settings.policy"
+msgstr ""
+
+msgid "ui.party.settings.policy_leader"
+msgstr ""
+
+msgid "ui.party.settings.policy_members"
+msgstr ""
+
+msgid "ui.party.settings.save"
+msgstr ""
+
+msgid "ui.party.settings.title"
+msgstr ""
+
+msgid "ui.party.settings.visibility"
+msgstr ""
+
+msgid "ui.party.settings.visibility_friends"
+msgstr ""
+
+msgid "ui.party.settings.visibility_private"
+msgstr ""
+
+msgid "ui.party.someone"
+msgstr ""
+
+msgid "ui.party.start"
+msgstr ""
+
+msgid "ui.party.start_block.no_activity"
+msgstr ""
+
+msgid "ui.party.start_block.not_ready"
+msgstr ""
+
+msgid "ui.party.start_block.one_not_ready"
+msgstr ""
+
+msgid "ui.party.switch.confirm"
+msgstr ""
+
+msgid "ui.party.switch.title"
+msgstr ""
+
+msgid "ui.party.switch_party_confirm"
+msgstr ""
+
+msgid "ui.party.title"
+msgstr ""
+
+msgid "ui.party.title_alone"
+msgstr ""
+
+msgid "ui.party.transfer"
+msgstr ""
+
+msgid "ui.party.transfer.title"
+msgstr ""
+
+msgid "ui.party.transfer_confirm"
+msgstr ""
+
+msgid "ui.party.type.competition_team"
+msgstr ""
+
+msgid "ui.party.type.custom"
+msgstr ""
+
+msgid "ui.party.type.friend"
+msgstr ""
+
+msgid "ui.party.type.quest"
+msgstr ""
+
+msgid "ui.party.type.study_party"
+msgstr ""
+
+msgid "ui.party.wait_leader"
+msgstr ""
+
 msgid "ui.progression.level"
 msgstr ""
 

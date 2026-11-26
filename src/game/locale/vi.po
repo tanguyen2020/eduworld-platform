@@ -2415,3 +2415,417 @@ msgstr "Trò chơi đang chờ em. Xoay ngang là chơi tiếp ngay."
 msgid "ui.rotate.desktop"
 msgstr "Trên máy tính, em kéo cửa sổ rộng ra nhé."
 
+
+msgid "ui.party.title"
+msgstr "Nhóm: {name}"
+
+msgid "ui.party.title_alone"
+msgstr "Nhóm của em"
+
+msgid "ui.party.alone"
+msgstr "Mời bạn bè để cùng chơi nhé! Chơi cùng nhau vui hơn nhiều."
+
+msgid "ui.party.create_and_invite"
+msgstr "Tạo nhóm và mời bạn"
+
+msgid "ui.party.default_name"
+msgstr "Nhóm của {nickname}"
+
+msgid "ui.party.loading"
+msgstr "Đang tải nhóm…"
+
+msgid "ui.party.load_failed"
+msgstr "Chưa tải được nhóm. Em thử lại nhé."
+
+msgid "ui.party.invitations"
+msgstr "Lời mời cho em"
+
+msgid "ui.party.members"
+msgstr "Thành viên ({count}/{max})"
+
+msgid "ui.party.member_self"
+msgstr "{nickname} (em)"
+
+msgid "ui.party.leader"
+msgstr "Trưởng nhóm"
+
+msgid "ui.party.level"
+msgstr "Cấp {level}"
+
+msgid "ui.party.presence.online"
+msgstr "Đang trực tuyến"
+
+msgid "ui.party.presence.away"
+msgstr "Đang vắng mặt"
+
+msgid "ui.party.presence.in_activity"
+msgstr "Đang chơi"
+
+msgid "ui.party.presence.disconnected"
+msgstr "Đang kết nối lại…"
+
+msgid "ui.party.ready_on"
+msgstr "Sẵn sàng"
+
+msgid "ui.party.ready_off"
+msgstr "Chưa sẵn sàng"
+
+msgid "ui.party.ready"
+msgstr "Em sẵn sàng!"
+
+msgid "ui.party.ready_done"
+msgstr "Em đã sẵn sàng"
+
+msgid "ui.party.ready_tooltip"
+msgstr "Bấm khi em sẵn sàng chơi cùng nhóm"
+
+msgid "ui.party.ready_undo"
+msgstr "Bấm lần nữa nếu em chưa sẵn sàng"
+
+msgid "ui.party.start"
+msgstr "Bắt đầu"
+
+msgid "ui.party.start_block.no_activity"
+msgstr "Hãy chọn một hoạt động trước nhé"
+
+msgid "ui.party.start_block.one_not_ready"
+msgstr "Còn 1 bạn chưa sẵn sàng"
+
+msgid "ui.party.start_block.not_ready"
+msgstr "Còn {count} bạn chưa sẵn sàng"
+
+msgid "ui.party.wait_leader"
+msgstr "Trưởng nhóm sẽ bấm Bắt đầu khi cả nhóm sẵn sàng"
+
+msgid "ui.party.invite"
+msgstr "Mời bạn"
+
+msgid "ui.party.minimize"
+msgstr "Thu nhỏ"
+
+msgid "ui.party.minimize_tooltip"
+msgstr "Nhóm vẫn còn, em mở lại bằng nút Nhóm"
+
+msgid "ui.party.leave"
+msgstr "Rời nhóm"
+
+msgid "ui.party.leave.title"
+msgstr "Rời nhóm?"
+
+msgid "ui.party.leave_confirm"
+msgstr "Em muốn rời nhóm này?"
+
+msgid "ui.party.disband"
+msgstr "Giải tán nhóm"
+
+msgid "ui.party.disband.title"
+msgstr "Giải tán nhóm?"
+
+msgid "ui.party.disband_confirm"
+msgstr "Mọi bạn sẽ rời nhóm. Em chắc chứ?"
+
+msgid "ui.party.disbanded"
+msgstr "Nhóm đã giải tán"
+
+msgid "ui.party.kicked"
+msgstr "Em không còn ở trong nhóm đó nữa. Em có thể tạo nhóm mới nhé."
+
+msgid "ui.party.member_menu"
+msgstr "Bạn trong nhóm"
+
+msgid "ui.party.transfer"
+msgstr "Chuyển trưởng nhóm"
+
+msgid "ui.party.transfer.title"
+msgstr "Chuyển trưởng nhóm?"
+
+msgid "ui.party.transfer_confirm"
+msgstr "{nickname} sẽ là trưởng nhóm mới."
+
+msgid "ui.party.kick"
+msgstr "Mời rời nhóm"
+
+msgid "ui.party.kick.title"
+msgstr "Mời bạn rời nhóm?"
+
+msgid "ui.party.kick_confirm"
+msgstr "{nickname} sẽ rời nhóm này."
+
+msgid "ui.party.switch.title"
+msgstr "Đổi nhóm?"
+
+msgid "ui.party.switch_party_confirm"
+msgstr "Rời nhóm hiện tại và tham gia?"
+
+msgid "ui.party.switch.confirm"
+msgstr "Rời và tham gia"
+
+msgid "ui.party.new_leader"
+msgstr "{nickname} là trưởng nhóm mới"
+
+msgid "ui.party.leader_reconnecting"
+msgstr "Trưởng nhóm đang kết nối lại…"
+
+msgid "ui.party.reconnecting"
+msgstr "Đang kết nối lại… Em vẫn xem được nhóm, chờ chút nhé."
+
+msgid "ui.party.activity_changed"
+msgstr "Đã đổi hoạt động, mọi người sẵn sàng lại nhé"
+
+msgid "ui.party.member_joined"
+msgstr "{nickname} đã vào nhóm"
+
+msgid "ui.party.member_left_notice"
+msgstr "Một bạn đã rời nhóm"
+
+msgid "ui.party.not_eligible"
+msgstr "{nickname} chưa đủ điều kiện: {reason}"
+
+msgid "ui.party.someone"
+msgstr "Một bạn"
+
+msgid "ui.party.countdown"
+msgstr "Cả nhóm chuẩn bị nhé!"
+
+msgid "ui.party.session_waiting"
+msgstr "Nhóm của em đã bắt đầu! Mở Nhóm để vào cùng các bạn nhé."
+
+msgid "ui.party.session.completed"
+msgstr "Cả nhóm đã hoàn thành hoạt động! Làm tốt lắm."
+
+msgid "ui.party.session.abandoned"
+msgstr "Hoạt động đã dừng. Cả nhóm có thể chơi lại khi sẵn sàng."
+
+msgid "ui.party.session.failed"
+msgstr "Hoạt động gặp sự cố. Tiến độ của em vẫn được giữ."
+
+msgid "ui.party.session.aborted"
+msgstr "Hoạt động đã kết thúc."
+
+msgid "ui.party.session.ended"
+msgstr "Hoạt động đã kết thúc. Chào mừng em trở lại nhóm!"
+
+msgid "ui.party.activity.section"
+msgstr "Hoạt động"
+
+msgid "ui.party.activity.none"
+msgstr "Chưa chọn hoạt động"
+
+msgid "ui.party.activity.leader_choosing"
+msgstr "Trưởng nhóm đang chọn hoạt động"
+
+msgid "ui.party.activity.choose_hint"
+msgstr "Chọn một hoạt động để cả nhóm cùng chơi"
+
+msgid "ui.party.activity.choose"
+msgstr "Chọn hoạt động"
+
+msgid "ui.party.activity.change"
+msgstr "Đổi hoạt động"
+
+msgid "ui.party.activity.kind.explore"
+msgstr "Cùng khám phá"
+
+msgid "ui.party.activity.kind.quest"
+msgstr "Nhiệm vụ chung"
+
+msgid "ui.party.activity.kind.boss"
+msgstr "Thử thách nhóm"
+
+msgid "ui.party.activity.kind.other"
+msgstr "Hoạt động nhóm"
+
+msgid "ui.party.activity.title"
+msgstr "Chọn hoạt động"
+
+msgid "ui.party.activity.loading"
+msgstr "Đang tải hoạt động…"
+
+msgid "ui.party.activity.load_failed"
+msgstr "Chưa tải được hoạt động. Em thử lại nhé."
+
+msgid "ui.party.activity.pick"
+msgstr "Chọn một hoạt động"
+
+msgid "ui.party.activity.confirm"
+msgstr "Chọn hoạt động này"
+
+msgid "ui.party.activity.members_exact"
+msgstr "{count} bạn"
+
+msgid "ui.party.activity.members_range"
+msgstr "{min}–{max} bạn"
+
+msgid "ui.party.reason.grade_not_allowed"
+msgstr "hoạt động dành cho khối {grades}"
+
+msgid "ui.party.reason.grade_other"
+msgstr "hoạt động dành cho khối khác"
+
+msgid "ui.party.reason.grade_band_mismatch"
+msgstr "hoạt động dành cho nhóm khối khác"
+
+msgid "ui.party.reason.prerequisite_missing"
+msgstr "cần làm xong nhiệm vụ trước đó"
+
+msgid "ui.party.reason.area_locked"
+msgstr "chưa mở khu vực này"
+
+msgid "ui.party.reason.attempt_limit"
+msgstr "đã hết lượt chơi hôm nay"
+
+msgid "ui.party.reason.sanctioned"
+msgstr "chưa tham gia được lúc này"
+
+msgid "ui.party.reason.not_online"
+msgstr "đang không trực tuyến"
+
+msgid "ui.party.reason.generic"
+msgstr "chưa tham gia được hoạt động này"
+
+msgid "ui.party.invite.title"
+msgstr "Mời bạn vào nhóm"
+
+msgid "ui.party.invite.hint"
+msgstr "Chạm vào bạn em muốn mời."
+
+msgid "ui.party.invite.loading"
+msgstr "Đang tải danh sách bạn…"
+
+msgid "ui.party.invite.load_failed"
+msgstr "Chưa tải được danh sách bạn. Em thử lại nhé."
+
+msgid "ui.party.invite.empty"
+msgstr "Em chưa có bạn trong danh sách. Hãy kết bạn ở Khu Giao Lưu rồi mời bạn nhé!"
+
+msgid "ui.party.invite.invited"
+msgstr "Đã mời"
+
+msgid "ui.party.invite.in_party"
+msgstr "Đã ở trong nhóm"
+
+msgid "ui.party.invite.received"
+msgstr "{nickname} mời em vào nhóm!"
+
+msgid "ui.party.invite.member_count"
+msgstr "Nhóm có {count} bạn"
+
+msgid "ui.party.invite.time_left"
+msgstr "Lời mời còn {time}"
+
+msgid "ui.party.invite.accept"
+msgstr "Vào nhóm"
+
+msgid "ui.party.invite.decline"
+msgstr "Lần sau nhé"
+
+msgid "ui.party.hud.button"
+msgstr "Nhóm"
+
+msgid "ui.party.hud.button_in_party"
+msgstr "Nhóm của em"
+
+msgid "ui.party.hud.tooltip"
+msgstr "Chơi cùng bạn bè (phím P)"
+
+msgid "ui.party.hud.member_ready"
+msgstr "{nickname}: sẵn sàng"
+
+msgid "ui.party.hud.member_waiting"
+msgstr "{nickname}: chưa sẵn sàng"
+
+msgid "ui.party.hud.member_away"
+msgstr "{nickname}: đang kết nối lại"
+
+msgid "ui.party.settings.title"
+msgstr "Cài đặt nhóm"
+
+msgid "ui.party.settings.hint"
+msgstr "Chỉ trưởng nhóm thay đổi được."
+
+msgid "ui.party.settings.visibility"
+msgstr "Ai được vào nhóm"
+
+msgid "ui.party.settings.visibility_private"
+msgstr "Chỉ bạn được mời"
+
+msgid "ui.party.settings.visibility_friends"
+msgstr "Bạn bè của trưởng nhóm"
+
+msgid "ui.party.settings.policy"
+msgstr "Ai được mời bạn"
+
+msgid "ui.party.settings.policy_leader"
+msgstr "Chỉ trưởng nhóm"
+
+msgid "ui.party.settings.policy_members"
+msgstr "Mọi thành viên"
+
+msgid "ui.party.settings.save"
+msgstr "Lưu"
+
+msgid "ui.party.type.friend"
+msgstr "Nhóm bạn bè"
+
+msgid "ui.party.type.study_party"
+msgstr "Nhóm cùng học"
+
+msgid "ui.party.type.quest"
+msgstr "Nhóm nhiệm vụ"
+
+msgid "ui.party.type.competition_team"
+msgstr "Đội thi đấu"
+
+msgid "ui.party.type.custom"
+msgstr "Nhóm tự chọn"
+
+msgid "ui.party.error.generic"
+msgstr "Chưa làm được lúc này. Em thử lại sau nhé."
+
+msgid "ui.party.error.PARTY_FULL"
+msgstr "Nhóm đã đủ người"
+
+msgid "ui.party.error.PARTY_INVITATION_EXPIRED"
+msgstr "Lời mời đã hết hạn"
+
+msgid "ui.party.error.PARTY_INVITE_RATE_LIMITED"
+msgstr "Em đã mời nhiều bạn rồi. Chờ một chút rồi mời tiếp nhé."
+
+msgid "ui.party.error.PARTY_INVITE_NOT_ALLOWED"
+msgstr "Chưa mời được bạn này lúc này"
+
+msgid "ui.party.error.PARTY_POLICY_VIOLATION"
+msgstr "Bạn này chưa thể vào nhóm của em"
+
+msgid "ui.party.error.PARTY_NOT_LEADER"
+msgstr "Chỉ trưởng nhóm làm được việc này"
+
+msgid "ui.party.error.PARTY_ACTIVITY_NOT_ELIGIBLE"
+msgstr "Có bạn chưa đủ điều kiện cho hoạt động này. Hãy chọn hoạt động khác nhé."
+
+msgid "ui.party.error.PARTY_NOT_READY"
+msgstr "Cả nhóm chưa sẵn sàng hết"
+
+msgid "ui.party.error.PARTY_ALREADY_IN_PARTY"
+msgstr "Em đang ở một nhóm khác"
+
+msgid "ui.party.error.PARTY_NOT_FOUND"
+msgstr "Nhóm này không còn nữa"
+
+msgid "ui.party.error.PARTY_MEMBER_NOT_ONLINE"
+msgstr "Bạn ấy đang không trực tuyến"
+
+msgid "ui.party.error.VERSION_MISMATCH"
+msgstr "Nhóm vừa thay đổi. Em xem lại rồi bấm lần nữa nhé."
+
+msgid "ui.party.error.RATE_LIMITED"
+msgstr "Chậm lại một chút nhé, rồi thử lại."
+
+msgid "ui.party.error.UNAVAILABLE"
+msgstr "Trò chơi đang bận một chút. Em thử lại sau nhé."
+
+msgid "ui.party.error.NETWORK_ERROR"
+msgstr "Mạng đang chập chờn. Em thử lại khi có mạng nhé."
+
+msgid "ui.party.presence.offline"
+msgstr "Không trực tuyến"

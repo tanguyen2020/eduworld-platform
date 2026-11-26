@@ -2415,3 +2415,417 @@ msgstr "Your game is waiting. Turn sideways to keep playing."
 msgid "ui.rotate.desktop"
 msgstr "On a computer, make the window wider."
 
+
+msgid "ui.party.title"
+msgstr "Party: {name}"
+
+msgid "ui.party.title_alone"
+msgstr "Your party"
+
+msgid "ui.party.alone"
+msgstr "Invite your friends to play together! Playing together is more fun."
+
+msgid "ui.party.create_and_invite"
+msgstr "Make a party and invite"
+
+msgid "ui.party.default_name"
+msgstr "{nickname}'s party"
+
+msgid "ui.party.loading"
+msgstr "Loading your party…"
+
+msgid "ui.party.load_failed"
+msgstr "Couldn't load your party. Please try again."
+
+msgid "ui.party.invitations"
+msgstr "Invitations for you"
+
+msgid "ui.party.members"
+msgstr "Members ({count}/{max})"
+
+msgid "ui.party.member_self"
+msgstr "{nickname} (you)"
+
+msgid "ui.party.leader"
+msgstr "Leader"
+
+msgid "ui.party.level"
+msgstr "Level {level}"
+
+msgid "ui.party.presence.online"
+msgstr "Online"
+
+msgid "ui.party.presence.away"
+msgstr "Away"
+
+msgid "ui.party.presence.in_activity"
+msgstr "Playing"
+
+msgid "ui.party.presence.disconnected"
+msgstr "Reconnecting…"
+
+msgid "ui.party.ready_on"
+msgstr "Ready"
+
+msgid "ui.party.ready_off"
+msgstr "Not ready"
+
+msgid "ui.party.ready"
+msgstr "I'm ready!"
+
+msgid "ui.party.ready_done"
+msgstr "You're ready"
+
+msgid "ui.party.ready_tooltip"
+msgstr "Press when you are ready to play with your party"
+
+msgid "ui.party.ready_undo"
+msgstr "Press again if you are not ready yet"
+
+msgid "ui.party.start"
+msgstr "Start"
+
+msgid "ui.party.start_block.no_activity"
+msgstr "Choose an activity first"
+
+msgid "ui.party.start_block.one_not_ready"
+msgstr "1 friend is not ready yet"
+
+msgid "ui.party.start_block.not_ready"
+msgstr "{count} friends are not ready yet"
+
+msgid "ui.party.wait_leader"
+msgstr "The leader starts when everyone is ready"
+
+msgid "ui.party.invite"
+msgstr "Invite"
+
+msgid "ui.party.minimize"
+msgstr "Minimise"
+
+msgid "ui.party.minimize_tooltip"
+msgstr "Your party stays, open it again with the Party button"
+
+msgid "ui.party.leave"
+msgstr "Leave"
+
+msgid "ui.party.leave.title"
+msgstr "Leave the party?"
+
+msgid "ui.party.leave_confirm"
+msgstr "Do you want to leave this party?"
+
+msgid "ui.party.disband"
+msgstr "Close the party"
+
+msgid "ui.party.disband.title"
+msgstr "Close the party?"
+
+msgid "ui.party.disband_confirm"
+msgstr "Everyone will leave the party. Are you sure?"
+
+msgid "ui.party.disbanded"
+msgstr "The party was closed"
+
+msgid "ui.party.kicked"
+msgstr "You're no longer in that party. You can make a new one."
+
+msgid "ui.party.member_menu"
+msgstr "Party friend"
+
+msgid "ui.party.transfer"
+msgstr "Make leader"
+
+msgid "ui.party.transfer.title"
+msgstr "Make them leader?"
+
+msgid "ui.party.transfer_confirm"
+msgstr "{nickname} will be the new leader."
+
+msgid "ui.party.kick"
+msgstr "Remove"
+
+msgid "ui.party.kick.title"
+msgstr "Remove from the party?"
+
+msgid "ui.party.kick_confirm"
+msgstr "{nickname} will leave this party."
+
+msgid "ui.party.switch.title"
+msgstr "Switch party?"
+
+msgid "ui.party.switch_party_confirm"
+msgstr "Leave your current party and join?"
+
+msgid "ui.party.switch.confirm"
+msgstr "Leave and join"
+
+msgid "ui.party.new_leader"
+msgstr "{nickname} is the new leader"
+
+msgid "ui.party.leader_reconnecting"
+msgstr "The leader is reconnecting…"
+
+msgid "ui.party.reconnecting"
+msgstr "Reconnecting… You can still see your party, just a moment."
+
+msgid "ui.party.activity_changed"
+msgstr "The activity changed, everyone gets ready again"
+
+msgid "ui.party.member_joined"
+msgstr "{nickname} joined the party"
+
+msgid "ui.party.member_left_notice"
+msgstr "A friend left the party"
+
+msgid "ui.party.not_eligible"
+msgstr "{nickname} isn't eligible yet: {reason}"
+
+msgid "ui.party.someone"
+msgstr "A friend"
+
+msgid "ui.party.countdown"
+msgstr "Get ready, everyone!"
+
+msgid "ui.party.session_waiting"
+msgstr "Your party started! Open Party to join your friends."
+
+msgid "ui.party.session.completed"
+msgstr "Your party finished the activity! Well done."
+
+msgid "ui.party.session.abandoned"
+msgstr "The activity stopped. Your party can play again when ready."
+
+msgid "ui.party.session.failed"
+msgstr "Something went wrong. Your progress is kept."
+
+msgid "ui.party.session.aborted"
+msgstr "The activity ended."
+
+msgid "ui.party.session.ended"
+msgstr "The activity ended. Welcome back to your party!"
+
+msgid "ui.party.activity.section"
+msgstr "Activity"
+
+msgid "ui.party.activity.none"
+msgstr "No activity yet"
+
+msgid "ui.party.activity.leader_choosing"
+msgstr "The leader is choosing an activity"
+
+msgid "ui.party.activity.choose_hint"
+msgstr "Choose something to play together"
+
+msgid "ui.party.activity.choose"
+msgstr "Choose"
+
+msgid "ui.party.activity.change"
+msgstr "Change"
+
+msgid "ui.party.activity.kind.explore"
+msgstr "Explore together"
+
+msgid "ui.party.activity.kind.quest"
+msgstr "Party quest"
+
+msgid "ui.party.activity.kind.boss"
+msgstr "Party challenge"
+
+msgid "ui.party.activity.kind.other"
+msgstr "Party activity"
+
+msgid "ui.party.activity.title"
+msgstr "Choose an activity"
+
+msgid "ui.party.activity.loading"
+msgstr "Loading activities…"
+
+msgid "ui.party.activity.load_failed"
+msgstr "Couldn't load the activities. Please try again."
+
+msgid "ui.party.activity.pick"
+msgstr "Pick an activity"
+
+msgid "ui.party.activity.confirm"
+msgstr "Choose this one"
+
+msgid "ui.party.activity.members_exact"
+msgstr "{count} players"
+
+msgid "ui.party.activity.members_range"
+msgstr "{min}–{max} players"
+
+msgid "ui.party.reason.grade_not_allowed"
+msgstr "this activity is for grade {grades}"
+
+msgid "ui.party.reason.grade_other"
+msgstr "this activity is for another grade"
+
+msgid "ui.party.reason.grade_band_mismatch"
+msgstr "this activity is for other grades"
+
+msgid "ui.party.reason.prerequisite_missing"
+msgstr "needs an earlier quest first"
+
+msgid "ui.party.reason.area_locked"
+msgstr "hasn't opened this area yet"
+
+msgid "ui.party.reason.attempt_limit"
+msgstr "has no tries left today"
+
+msgid "ui.party.reason.sanctioned"
+msgstr "can't join right now"
+
+msgid "ui.party.reason.not_online"
+msgstr "is not online"
+
+msgid "ui.party.reason.generic"
+msgstr "can't join this activity yet"
+
+msgid "ui.party.invite.title"
+msgstr "Invite friends"
+
+msgid "ui.party.invite.hint"
+msgstr "Tap the friend you want to invite."
+
+msgid "ui.party.invite.loading"
+msgstr "Loading your friends…"
+
+msgid "ui.party.invite.load_failed"
+msgstr "Couldn't load your friends. Please try again."
+
+msgid "ui.party.invite.empty"
+msgstr "No friends on your list yet. Make friends in the Social Zone, then invite them!"
+
+msgid "ui.party.invite.invited"
+msgstr "Invited"
+
+msgid "ui.party.invite.in_party"
+msgstr "In your party"
+
+msgid "ui.party.invite.received"
+msgstr "{nickname} invited you to a party!"
+
+msgid "ui.party.invite.member_count"
+msgstr "{count} friends in the party"
+
+msgid "ui.party.invite.time_left"
+msgstr "Invitation open for {time}"
+
+msgid "ui.party.invite.accept"
+msgstr "Join"
+
+msgid "ui.party.invite.decline"
+msgstr "Maybe later"
+
+msgid "ui.party.hud.button"
+msgstr "Party"
+
+msgid "ui.party.hud.button_in_party"
+msgstr "My party"
+
+msgid "ui.party.hud.tooltip"
+msgstr "Play with friends (P key)"
+
+msgid "ui.party.hud.member_ready"
+msgstr "{nickname}: ready"
+
+msgid "ui.party.hud.member_waiting"
+msgstr "{nickname}: not ready"
+
+msgid "ui.party.hud.member_away"
+msgstr "{nickname}: reconnecting"
+
+msgid "ui.party.settings.title"
+msgstr "Party settings"
+
+msgid "ui.party.settings.hint"
+msgstr "Only the leader can change these."
+
+msgid "ui.party.settings.visibility"
+msgstr "Who can join"
+
+msgid "ui.party.settings.visibility_private"
+msgstr "Only invited friends"
+
+msgid "ui.party.settings.visibility_friends"
+msgstr "The leader's friends"
+
+msgid "ui.party.settings.policy"
+msgstr "Who can invite"
+
+msgid "ui.party.settings.policy_leader"
+msgstr "Only the leader"
+
+msgid "ui.party.settings.policy_members"
+msgstr "Every member"
+
+msgid "ui.party.settings.save"
+msgstr "Save"
+
+msgid "ui.party.type.friend"
+msgstr "Friends party"
+
+msgid "ui.party.type.study_party"
+msgstr "Study party"
+
+msgid "ui.party.type.quest"
+msgstr "Quest party"
+
+msgid "ui.party.type.competition_team"
+msgstr "Team"
+
+msgid "ui.party.type.custom"
+msgstr "Custom party"
+
+msgid "ui.party.error.generic"
+msgstr "That didn't work right now. Please try again later."
+
+msgid "ui.party.error.PARTY_FULL"
+msgstr "The party is full"
+
+msgid "ui.party.error.PARTY_INVITATION_EXPIRED"
+msgstr "The invitation has expired"
+
+msgid "ui.party.error.PARTY_INVITE_RATE_LIMITED"
+msgstr "You've sent lots of invitations. Wait a little, then invite again."
+
+msgid "ui.party.error.PARTY_INVITE_NOT_ALLOWED"
+msgstr "You can't invite this friend right now"
+
+msgid "ui.party.error.PARTY_POLICY_VIOLATION"
+msgstr "This friend can't join your party"
+
+msgid "ui.party.error.PARTY_NOT_LEADER"
+msgstr "Only the leader can do this"
+
+msgid "ui.party.error.PARTY_ACTIVITY_NOT_ELIGIBLE"
+msgstr "A friend isn't eligible for this activity. Choose another one."
+
+msgid "ui.party.error.PARTY_NOT_READY"
+msgstr "Not everyone is ready yet"
+
+msgid "ui.party.error.PARTY_ALREADY_IN_PARTY"
+msgstr "You're already in a party"
+
+msgid "ui.party.error.PARTY_NOT_FOUND"
+msgstr "This party is gone"
+
+msgid "ui.party.error.PARTY_MEMBER_NOT_ONLINE"
+msgstr "That friend isn't online"
+
+msgid "ui.party.error.VERSION_MISMATCH"
+msgstr "The party just changed. Check it and press again."
+
+msgid "ui.party.error.RATE_LIMITED"
+msgstr "Slow down a little, then try again."
+
+msgid "ui.party.error.UNAVAILABLE"
+msgstr "The game is a little busy. Please try again soon."
+
+msgid "ui.party.error.NETWORK_ERROR"
+msgstr "The connection is weak. Try again when you are online."
+
+msgid "ui.party.presence.offline"
+msgstr "Offline"

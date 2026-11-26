@@ -120,3 +120,30 @@ func request_area(area_id: String, portal_id: String = "", world: WorldService =
 ## client, so a bundle is "ready" when its scene exists; downloading PCK bundles by url/sha256 comes with the real art.
 static func ensure_bundle(scene_ref: String) -> bool:
 	return not scene_ref.is_empty() and ResourceLoader.exists(scene_ref)
+
+
+# ---------- F102: party session room ----------
+
+## Room of the party session the world is showing ("" = not in a party session). Kept to come back to the same room
+## after a reconnect (F102-AC-15).
+var party_room_id: String = ""
+
+
+## F102-AC-11: the party session started (after the 3-2-1 countdown): the zone of `scene_ref` is loaded like an area
+## change (`area_entered` with `enter.room_id`); the server places the members in the session instance when the hub
+## joins (PARTY_SYSTEM §6.1 step 6). A scene that is not in this build is refused (`area_change_failed`).
+func enter_party_session(scene_ref: String, room_id: String) -> Error:
+	if room_id.is_empty() or room_id.length() > 64:
+		return ERR_INVALID_PARAMETER
+	if not ensure_bundle(scene_ref):
+		area_change_failed.emit("", CODE_BUNDLE_MISSING, [])
+		return ERR_FILE_NOT_FOUND
+	party_room_id = room_id
+	AppState.spawn_point_id = ""
+	area_entered.emit("", scene_ref, "", {"room_id": room_id, "party_session": true})
+	return OK
+
+
+## The party session ended or the party is gone: the next zone change is an ordinary one.
+func leave_party_session() -> void:
+	party_room_id = ""

@@ -46,15 +46,18 @@ const CODE_PENDING: String = "assignments_pending"
 const KIND_LOCAL_PENDING: String = "assignment_new"
 const ACTION_OPEN_ASSIGNMENT: String = "open_assignment"
 ## `action.kind` (NotificationAction) → [screen id, args] of UiScreenRegistry. Screens this client does not have yet
-## (friend requests F095, party invitation F102) are skipped by `can_open` — the item stays readable in the inbox.
+## (friend requests F095) are skipped by `can_open` — the item stays readable in the inbox. F102: a party invitation
+## opens the Party screen on its pending invitations (the action id is passed as `id`).
 const ACTION_SCREENS: Dictionary = {
 	"open_assignment": [&"quest_journal", {"tab": "assigned"}],
 	"open_assignment_result": [&"quest_journal", {"tab": "assigned"}],
 	"open_achievements": [&"achievements", {}],
 	"open_profile": [&"journey", {}],
 	"open_friend_requests": [&"friend_requests", {}],
-	"open_party_invitation": [&"party_invitation", {}],
+	"open_party_invitation": [&"party", {"view": "invitations"}],
 }
+## Actions whose target screen needs the action id (F102: the invitation to show, or "Lời mời đã hết hạn").
+const ACTION_WITH_ID: PackedStringArray = ["open_party_invitation"]
 
 var realtime: GameRealtimeClient = null
 ## Settings autoload (or a test stub) holding the local popup switch `notification_popups` (spec Assumptions:
@@ -62,6 +65,9 @@ var realtime: GameRealtimeClient = null
 var settings: Object = null
 ## `() -> bool`: true while the student is in a timed exam or a solo challenge (ServiceLocator) — badge only.
 var quiet_check: Callable = Callable()
+## Kinds whose popup another screen shows (F102: `party_invitation` → the InvitationToast with accept / decline): the
+## badge and the inbox row stay, only the generic toast is skipped.
+var delegated_popup_kinds: PackedStringArray = []
 ## Inbox items, newest first (unread entry load + realtime + inbox pages).
 var items: Array[NotificationModel] = []
 ## Server `unread_count` (all pages), kept in step with local reads and realtime items.
@@ -212,6 +218,8 @@ func open(item: NotificationModel) -> bool:
 	if screen.is_empty():
 		return false
 	var args: Dictionary = ((ACTION_SCREENS[item.action_kind] as Array)[1] as Dictionary).duplicate()
+	if item.action_kind in ACTION_WITH_ID and not item.action_id.is_empty():
+		args["id"] = item.action_id
 	_emit_ui(screen, args)
 	return true
 
@@ -234,7 +242,7 @@ func handle_message(type: String, payload: Dictionary, _envelope: Variant = null
 
 ## F123-AC-16: a toast only for invitation / school-work kinds, with popups on and outside an exam or a challenge.
 func should_popup(item: NotificationModel) -> bool:
-	return item.kind in POPUP_KINDS and popups_enabled() and not is_quiet()
+	return item.kind in POPUP_KINDS and not item.kind in delegated_popup_kinds and popups_enabled() and not is_quiet()
 
 
 func popups_enabled() -> bool:

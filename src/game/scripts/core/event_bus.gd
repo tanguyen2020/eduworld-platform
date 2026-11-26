@@ -21,6 +21,9 @@ signal ui_requested(screen_id: StringName, args: Dictionary)
 signal ui_closed(screen_id: StringName)
 ## F096: "Xem lại hướng dẫn của Mây" in Cài đặt — the world host opens the Hub guide again.
 signal onboarding_requested()
+## F102: a party invitation arrived (realtime `party.invitation.received`) — the HUD shows the InvitationToast.
+@warning_ignore("unused_signal")
+signal party_invitation_received(invitation: InvitationModel)
 ## F069: the S07 level-up modal was shown (accessibility announce, analytics without PII).
 @warning_ignore("unused_signal")
 signal level_up_shown(to_level: int)

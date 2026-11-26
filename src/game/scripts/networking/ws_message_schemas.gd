@@ -38,6 +38,33 @@ const SCHEMAS: Dictionary = {
 		"notification_id": "s64", "kind": "s64", "message_code": "s128", "created_at": "int", "?params": "obj",
 		"?title": "obj", "?body": "obj", "?ref_type": "s64", "?ref_id": "s64", "?action": "obj",
 	},
+	# F102: party lobby (members / activity / invitation payloads checked again by the party models).
+	"party.state.snapshot": {
+		"party_id": "s64", "state_version": "int", "party_type": "s32", "leader_id": "s64", "max_members": "int",
+		"members": "arr", "status": "s32", "?name": "s255", "?visibility": "s32", "?current_activity": "obj",
+		"?leader_reconnecting": "bool", "?room_id": "s64", "?chat_channel_id": "s64",
+	},
+	"party.invitation.received": {
+		"invitation_id": "s64", "party_id": "s64", "inviter": "obj", "expires_at": "int", "?party_type": "s64",
+		"?member_count": "int",
+	},
+	"party.invitation.updated": {"invitation_id": "s64", "status": "s32", "?party_id": "s64"},
+	"party.member.joined": {"party_id": "s64", "state_version": "int", "member": "obj"},
+	"party.member.left": {"party_id": "s64", "state_version": "int", "user_id": "s64", "reason": "s32"},
+	"party.member.status_changed": {"party_id": "s64", "user_id": "s64", "status": "s32"},
+	"party.member.ready_changed": {"party_id": "s64", "user_id": "s64", "ready": "bool", "?all_ready": "bool"},
+	"party.leader.transferred": {"party_id": "s64", "from_user_id": "s64", "to_user_id": "s64", "reason": "s32"},
+	"party.activity.selected": {
+		"party_id": "s64", "activity": "obj", "?game_mode": "s64", "?state_version": "int", "?ineligible_members": "arr",
+	},
+	"party.session.started": {
+		"party_id": "s64", "room_id": "s64", "activity": "obj", "?room_type": "s32", "?party_activity_id": "s64",
+		"?scene_ref": "s255", "?member_ids": "arr",
+	},
+	"party.session.ended": {
+		"party_id": "s64", "outcome": "s32", "?party_activity_id": "s64", "?reason": "s32", "?summary": "obj",
+	},
+	"party.party.disbanded": {"party_id": "s64", "reason": "s32"},
 }
 
 

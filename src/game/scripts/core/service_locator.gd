@@ -24,6 +24,8 @@ var inventory: InventoryService = null
 var realtime: GameRealtimeClient = null
 var hub: HubSync = null
 var presence: PresenceService = null
+## The student's party (F102): REST + realtime `party.*`, PartyStore read by the lobby, the HUD and the invitation toast.
+var party: PartyService = null
 ## World of the student: areas, exploration, chapters, level sessions, discoveries, NPC dialogues (F071).
 var world: WorldService = null
 ## Quests of the student: list, delivery, accept/abandon, step reports, learning steps, realtime progress (F072).
@@ -77,6 +79,12 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	notifications.access_denied.connect(_on_access_denied)
 	# F123-AC-16: badge only (no toast) during a timed exam or a solo challenge.
 	notifications.quiet_check = func() -> bool: return exam.in_progress() or challenge.is_running()
+	# F102: the party invitation popup is the InvitationToast (accept / decline in place); the inbox keeps the row.
+	notifications.delegated_popup_kinds = PackedStringArray(["party_invitation"])
+	party = PartyService.new(rest, realtime, app_state, _autoload("Settings"), telemetry)
+	party.access_denied.connect(_on_access_denied)
+	# F102 edge case: an invitation during an exam, a challenge or the activity player only raises the bell count.
+	party.quiet_check = func() -> bool: return exam.in_progress() or challenge.is_running() or presence.activity_status == PresenceService.IN_ACTIVITY
 	if realtime != null:
 		realtime.resync_required.connect(resync)
 		if app_state != null:
@@ -87,6 +95,7 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 func start_session(bootstrap: Dictionary) -> void:
 	assignments.clear()
 	notifications.reset()
+	party.clear()
 	play_time.configure(bootstrap.get("policies", {}) as Dictionary)
 	var flags: Variant = bootstrap.get("feature_flags", {})
 	# CONFIG_DEFAULTS `analytics_product_telemetry_enabled` (default on) as published in the bootstrap feature flags.
@@ -100,6 +109,7 @@ func start_session(bootstrap: Dictionary) -> void:
 func end_session() -> void:
 	assignments.clear()
 	notifications.reset()
+	party.clear()
 	learning.clear()
 	exam.clear()
 	media.clear()
@@ -120,6 +130,7 @@ func resync() -> void:
 	progression.refresh()
 	inventory.load_wallet()
 	notifications.load_unread()
+	party.resync()
 	if challenge.is_running():
 		challenge.resume(challenge.attempt().challenge_attempt_id)
 	if not hub.desired_area.is_empty():
