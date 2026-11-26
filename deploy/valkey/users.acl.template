@@ -1,0 +1,47 @@
+# Valkey ACL users of staging/production (F130 T053, OQ F090-2; DEPLOYMENT §8, §13; VALKEY_DESIGN §2 "Bảo mật").
+# TEMPLATE, no secret: every password is a placeholder {{sha256:<sops key>}} that scripts/deploy/render-acl.mjs
+# replaces with the SHA-256 of the value (ACL "#<hex>": the rendered file never holds a plaintext password) when
+# scripts/deploy/secrets-sync.sh builds the Docker secret `valkey_acl` (derived: never written by hand in SOPS).
+# {{sha256:<key>@<directive>}} hashes the value of a config-line secret ("<directive> <password>", valkey_masterauth).
+# Comment lines are removed by the renderer. Checked by scripts/deploy/check-acl-templates.mjs (every key prefix and
+# Pub/Sub channel the Go code uses is covered for the binary that loads the code; no allkeys/allchannels, no
+# +@all/+@dangerous/+@admin, no KEYS/FLUSHALL/DEBUG/CONFIG for an application user).
+#
+# One user per binary (EW_VALKEY_USERNAME of deploy/swarm/<env>/<binary>.env, password secret
+# <core|worker|realtime>_valkey_password); per-module users (VALKEY_DESIGN) need one client per module in the
+# binaries [Proposed, DEPLOYMENT §8]. core-api and worker load the same five domain modules, so they share one key
+# space; realtime (module realtime only) gets its own prefix, read + GETDEL of the realtime tickets, and the Pub/Sub
+# channels it subscribes. The same file is loaded by valkey-cache and valkey-ratelimit (one Docker secret).
+#
+# Application users: categories granted, then -@dangerous -@admin last (removes KEYS, FLUSHALL, FLUSHDB, DEBUG,
+# CONFIG, SHUTDOWN, MONITOR, CLIENT LIST/KILL, SORT, MIGRATE, RESTORE…). Lua (valkey-go NewLuaScript: EVALSHA, EVAL
+# fallback) runs with the same key/channel permissions as the caller.
+
+# The default user is disabled: every client authenticates with its own user.
+user default off resetkeys resetchannels -@all
+
+# core-api: HTTP handlers + NATS command handlers of identity, learning, game, competition, chat.
+user core-api on #{{sha256:core_valkey_password}} resetkeys resetchannels ~ew:identity:* ~ew:fg:* ~ew:learning:* ~ew:game:* ~ew:competition:* ~ew:chat:* ~ew:lb:* ~ew:party:* ~ew:rl:party_lobby:* ~ew:lock:job:* ~ew:rt:room:* ~ew:rt:rooms:game &ew:rt:user:* &ew:rt:room:* &ew:chat:fanout:* &ew:chat:sensitive:version &ew:chat:switches:changed -@all +@read +@write +@keyspace +@connection +@pubsub +eval +evalsha +eval_ro +evalsha_ro +script|load +script|exists -@dangerous -@admin
+
+# worker (profiles events, chat, jobs: one user for the three Swarm services): relays, consumers, jobs of the same
+# five modules — same key space and channels as core-api.
+user worker on #{{sha256:worker_valkey_password}} resetkeys resetchannels ~ew:identity:* ~ew:fg:* ~ew:learning:* ~ew:game:* ~ew:competition:* ~ew:chat:* ~ew:lb:* ~ew:party:* ~ew:rl:party_lobby:* ~ew:lock:job:* ~ew:rt:room:* ~ew:rt:rooms:game &ew:rt:user:* &ew:rt:room:* &ew:chat:fanout:* &ew:chat:sensitive:version &ew:chat:switches:changed -@all +@read +@write +@keyspace +@connection +@pubsub +eval +evalsha +eval_ro +evalsha_ro +script|load +script|exists -@dangerous -@admin
+
+# realtime: its own state (ew:gateway:*: connections, nodes, resume buffers, presence, command dedupe), the delivery
+# channels it subscribes (users, parties, rooms, chat fan-out, broadcast) and its node channel (takeover publish).
+# Selector: the realtime tickets written by module game are only read and consumed (GET, GETDEL), never written.
+user realtime on #{{sha256:realtime_valkey_password}} resetkeys resetchannels ~ew:gateway:* &ew:rt:user:* &ew:rt:party:* &ew:rt:room:* &ew:rt:node:* &ew:rt:broadcast &ew:chat:fanout:* -@all +@read +@write +@keyspace +@connection +@pubsub +eval +evalsha +eval_ro +evalsha_ro +script|load +script|exists -@dangerous -@admin (~ew:game:rt:ticket:* -@all +get +getdel)
+
+# apisix: api_rate_default counters of plugin ew-api-rate (deploy/apisix/plugins/ew-api-rate.lua: INCR + EXPIRE),
+# user name EW_RATELIMIT_VALKEY_USERNAME of the routes env (DEPLOYMENT §5).
+user apisix on #{{sha256:apisix_valkey_password}} resetkeys resetchannels ~ew:rl:api:* -@all +incr +expire +ping
+
+# replicator: replication of valkey-*-replica (valkey.conf: masteruser replicator, masterauth from valkey_masterauth).
+user replicator on #{{sha256:valkey_masterauth@masterauth}} resetkeys resetchannels -@all +psync +replconf +ping
+
+# sentinel: monitoring and failover by Sentinel (sentinel auth-user, password valkey_sentinel_password); the command
+# list of the Valkey Sentinel documentation, hello channel only.
+user sentinel on #{{sha256:valkey_sentinel_password}} resetkeys resetchannels &__sentinel__:hello -@all +multi +exec +slaveof +replicaof +ping +info +role +publish +subscribe +client|setname +client|kill +config|rewrite +script|kill
+
+# exporter: read-only metrics of redis_exporter (F131, MONITORING): no key, no channel, no write.
+user exporter on #{{sha256:valkey_exporter_password}} resetkeys resetchannels -@all +ping +info +config|get +slowlog|get +slowlog|len +latency|latest +dbsize +client|setname

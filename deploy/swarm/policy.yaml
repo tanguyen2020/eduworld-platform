@@ -137,6 +137,9 @@ secrets:
     services: [pgbouncer]
   - match: '^valkey_(acl|masterauth|sentinel_password)$'
     services: [valkey-*, sentinel-*]
+  # Read-only monitoring user of the Valkey ACL (deploy/valkey/users.acl.template, user exporter): redis_exporter (F131).
+  - match: '^valkey_exporter_password$'
+    services: [valkey-exporter*]
   - match: '^nats_(cluster_password|accounts)$'
     services: [nats-*]
   - match: '^storage_s3_identities$'

@@ -100,6 +100,15 @@ jobs:
       - run: make arch-check
       - run: bash scripts/ci/test-arch-fixtures.sh
       - run: make test-contract
+      # F130 T053: a new Valkey key/channel or NATS subject in the code must be granted to its binary in
+      # deploy/valkey/users.acl.template / deploy/nats/permissions.yaml (and no grant may stay unused).
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - name: datastore ACL templates vs code
+        run: |
+          npm ci --prefix scripts --silent
+          node scripts/deploy/check-acl-templates.mjs
       - name: integration (binaries, health)
         run: go -C src/backend test -count=1 -tags integration ./cmd/... ./pkg/...
 

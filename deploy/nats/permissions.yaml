@@ -1,0 +1,93 @@
+# NATS users and subject permissions of staging/production (F130 T053, OQ F090-2; DEPLOYMENT §8b, §13;
+# SECURITY_ARCHITECTURE §8.1 owns the rule "least privilege per user", this file is its configuration).
+# TEMPLATE, no secret. The servers run in operator/JWT mode (the binaries authenticate with a .creds file:
+# EW_NATS_CREDS_FILE, nats.UserCredentials): the permissions below are written into each user JWT by
+# scripts/deploy/nats-accounts.sh (nsc, offline, operator + account keys never in Git or CI), which also renders the
+# server resolver config from deploy/nats/accounts.template.conf (Docker secret nats_accounts). secrets-sync.sh
+# refuses a <binary>_nats_creds whose JWT permissions differ from this file (drift after an edit here).
+# Checked by scripts/deploy/check-acl-templates.mjs: every subject/stream the Go code uses is granted to the binary
+# that runs the code, only realtime publishes ew.cmd.> / ew.in.> / ew.rt.presence.*, only worker publishes the
+# domain events, no ">" wildcard for a whole space, $JS.API.> only for ops.
+#
+# Grammar: publish/subscribe = NATS subjects; allow_responses = may answer requests received on its subscriptions
+# (nsc --allow-pub-response, one reply per request); jetstream.<STREAM> = list of
+#   manage  → $JS.API.STREAM.{CREATE,UPDATE,INFO}.<STREAM> (the binary creates/updates the stream at start-up),
+#   consume → $JS.API.STREAM.INFO.<STREAM>, $JS.API.CONSUMER.{CREATE,DURABLE.CREATE,INFO,MSG.NEXT,DELETE}.<STREAM>.>,
+#             $JS.ACK.<STREAM>.> (durable or ordered pull consumers of pkg/outbox, chat persister, SIS/render jobs);
+# publishing into a stream needs the stream subjects under publish (+ _INBOX.> for the publish ack).
+# Every user subscribes _INBOX.> (replies, JetStream acks); a per-binary inbox prefix needs a code change [Proposed].
+account: EDUWORLD
+users:
+  realtime:
+    secret: realtime_nats_creds
+    publish:
+      - ew.cmd.>              # commands of the gateway → owner module in core-api (request/reply), only realtime
+      - ew.in.room.>          # room input (fire-and-forget) → room host of module competition
+      - ew.rt.presence.*      # presence signal per tenant (pkg/realtime/presence.go) → chat, competition
+      - ew.evt.realtime.>     # audit.recorded straight into EVT_REALTIME (module realtime has no database/outbox)
+    subscribe:
+      - _INBOX.>
+    jetstream:
+      EVT_REALTIME: [manage]  # modules/realtime/internal/audit EnsureStream (EVT_REALTIME + DLQ_REALTIME)
+      DLQ_REALTIME: [manage]
+
+  core-api:
+    secret: core_nats_creds
+    allow_responses: true     # replies to ew.cmd.* (realtime) and ew.int.competition.* (other replicas, worker)
+    publish:
+      - ew.int.competition.>  # room/battle host operations between core-api replicas (roomhost, battlehost)
+      - ew.chat.*.msg.*       # chat send path (F115): CHAT_MESSAGES before fan-out (R25)
+      - ew.chat.*.evt.*       # message changes: edit, recall, reactions, pins (F118)
+      - ew.job.identity.sis.> # SIS jobs: login refresh, CSV import, webhook batch (module identity JobQueue)
+      - ew.job.game.render.request  # thumbnail render requests (module game render queue)
+    subscribe:
+      - ew.cmd.>              # handlers of the five modules, queue group per module
+      - ew.in.room.>          # room host input (replica holding the room lease)
+      - ew.rt.presence.*      # chat presence fan-out, competition party/room/battle presence
+      - ew.int.competition.>  # room/battle operations and battle.open requests
+      - _INBOX.>
+    jetstream:
+      CHAT_MESSAGES: [manage] # natsstream.EnsureStream on the send path
+      DLQ_CHAT: [manage]
+      EVT_IDENTITY: [consume] # principal cache invalidator (ordered consumer, pkg/natsx)
+      GAME_RENDER_JOBS: [manage]  # render queue creates the work queue when missing
+
+  worker:
+    secret: worker_nats_creds
+    publish:
+      - ew.evt.identity.>     # outbox relays (worker-events), one stream per module
+      - ew.evt.learning.>
+      - ew.evt.game.>
+      - ew.evt.competition.>
+      - ew.evt.chat.>
+      - ew.dlq.identity.>     # dead letters of the consumers of each module (pkg/outbox, SIS jobs, chat persister)
+      - ew.dlq.learning.>
+      - ew.dlq.game.>
+      - ew.dlq.competition.>
+      - ew.dlq.chat.>
+      - ew.int.competition.battle.open  # consumer competition.battle_open → battle host in core-api (request)
+      - ew.job.identity.sis.> # scheduled/fallback SIS sync runs (worker-jobs)
+      - ew.job.game.render.request
+    subscribe:
+      - _INBOX.>
+    jetstream:
+      EVT_IDENTITY: [manage, consume]
+      EVT_LEARNING: [manage, consume]
+      EVT_GAME: [manage, consume]
+      EVT_COMPETITION: [manage, consume]
+      EVT_CHAT: [manage, consume]
+      DLQ_IDENTITY: [manage]
+      DLQ_LEARNING: [manage]
+      DLQ_GAME: [manage]
+      DLQ_COMPETITION: [manage]
+      DLQ_CHAT: [manage]
+      CHAT_MESSAGES: [manage, consume]  # chat-persister and persister-evt (worker-chat, R25)
+      IDENTITY_SIS_JOBS: [manage, consume]
+      GAME_RENDER_JOBS: [manage, consume]  # render results consumer
+
+  ops:
+    secret: ops_nats_creds    # one-off ops jobs only (scripts/ops/reset-consumers.sh, RB-03), never in a stack
+    publish:
+      - $JS.API.>             # stream/consumer administration (SECURITY_ARCHITECTURE §8.1)
+    subscribe:
+      - _INBOX.>

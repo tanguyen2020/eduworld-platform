@@ -155,7 +155,7 @@ db-restore: ## Restore one module database locally: MOD=<module> FILE=<dump>
 
 # ---------- staging/production on Docker Swarm (F130, DEPLOYMENT §4–§13, BACKUP_RECOVERY) ----------
 # Run on the self-hosted runner `deploy` (DOCKER_HOST = Swarm manager over TLS); swarm-validate and test-ops need no swarm.
-.PHONY: swarm-validate swarm-up deploy-service deploy-rollback secrets-sync restore-test ops-job test-ops test-ops-integration
+.PHONY: swarm-validate swarm-up deploy-service deploy-rollback secrets-sync restore-test ops-job test-ops test-ops-integration acl-check acl-validate nats-accounts
 ENV ?= staging
 SERVICE ?=
 VERSION ?=
@@ -191,6 +191,15 @@ test-ops: ## Unit tests of the deploy/backup/runbook scripts and the Swarm polic
 
 test-ops-integration: ## Backup, PITR, restore test, object storage copy/restore, Docker API proxy against throwaway containers
 	bash tests/ops/integration/run.sh
+
+acl-check: ## Valkey ACL / NATS permission templates vs the Go code, least privilege (F130 T053)
+	node scripts/deploy/check-acl-templates.mjs
+
+acl-validate: ## Rendered Valkey ACL (valkey:8 ACL DRYRUN) and NATS creds (nats-server -t + probes) in throwaway containers
+	bash scripts/deploy/validate-acl.sh
+
+nats-accounts: ## OFFLINE: user creds + nats_accounts from deploy/nats/permissions.yaml: STORE=<nsc store> OUT=<dir> [INIT=1]
+	bash scripts/deploy/nats-accounts.sh --store=$(STORE) --out=$(OUT) $(if $(INIT),--init)
 
 # ---------- code generation / checks ----------
 .PHONY: gen gen-check arch-check lint test test-integration test-contract

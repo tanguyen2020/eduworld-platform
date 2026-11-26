@@ -221,6 +221,61 @@ test('F130-AC-10: secrets-sync creates _v<N+1> only when the value changes and k
   assert.ok(!r.log.includes('secret rm'));
 });
 
+test('F130 T052: canary selects the ADC routes by label ew-upstream=core-api (service_id routes) and fails closed without one', { skip }, () => {
+  const adc = '{"list":[{"value":{"id":"a1","service_id":"s1","labels":{"ew-upstream":"core-api","ew-gateway":"public"}}},{"value":{"id":"a2","service_id":"s2","labels":{"ew-upstream":"realtime"}}}]}';
+  const { stubs, env, calls } = canaryRig({ alerts: false, routes: adc });
+  const r = run('scripts/deploy/canary.sh', ['--env=production', '--version=v1.5.0', '--duration=1', '--interval=1'], { env, stubs });
+  assert.equal(r.code, 0, r.stderr);
+  assert.ok(calls(r).some((l) => /-X PATCH .*routes\/a1 .*"weight":10/.test(l)), 'labelled core-api route split');
+  assert.ok(!calls(r).some((l) => /routes\/a2/.test(l)), 'realtime route untouched');
+  const none = canaryRig({ alerts: false, routes: '{"list":[]}' });
+  const r2 = run('scripts/deploy/canary.sh', ['--env=production', '--version=v1.5.0', '--duration=1', '--interval=1'], { env: none.env, stubs: none.stubs });
+  assert.equal(r2.code, 1, 'no core-api route: a canary without traffic would pass blindly');
+  assert.match(r2.stderr, /no APISIX route of upstream core-api/);
+  assert.ok(!none.calls(r2).some((l) => /service update .*eduworld_core-api$/.test(l)));
+});
+
+const ACL_INPUTS = { core_valkey_password: 'plain-pw-c', worker_valkey_password: 'plain-pw-w', realtime_valkey_password: 'plain-pw-r',
+  apisix_valkey_password: 'plain-pw-a', valkey_masterauth: 'masterauth plain-pw-m', valkey_sentinel_password: 'plain-pw-s',
+  valkey_exporter_password: 'plain-pw-e' };
+
+test('F130 T053: secrets-sync renders valkey_acl (hashes only) from the template; refuses it in SOPS and partial inputs', { skip }, () => {
+  const { stubs, state, env, calls } = rig();
+  fs.writeFileSync(path.join(state, 'secrets'), '');
+  const input = path.join(tmpdir(), 'acl.json');
+  fs.writeFileSync(input, JSON.stringify(ACL_INPUTS));
+  const r = run('scripts/deploy/secrets-sync.sh', ['--env=staging', input], { env, stubs });
+  assert.equal(r.code, 0, r.stderr);
+  assert.ok(calls(r).some((l) => /secret create .*ew\.secret=valkey_acl .*valkey_acl_v1 -/.test(l)));
+  const acl = fs.readFileSync(path.join(state, 'values', 'valkey_acl_v1'), 'utf8');
+  assert.match(acl, /^user core-api on #[0-9a-f]{64} /m);
+  assert.doesNotMatch(acl, /\{\{|plain-pw|masterauth/, 'no placeholder, no plaintext password');
+  const withAcl = path.join(tmpdir(), 'acl2.json');
+  fs.writeFileSync(withAcl, JSON.stringify({ ...ACL_INPUTS, valkey_acl: 'user x on >y' }));
+  const r2 = run('scripts/deploy/secrets-sync.sh', ['--env=staging', withAcl], { env, stubs });
+  assert.equal(r2.code, 1); assert.match(r2.stderr, /valkey_acl is derived/);
+  const partial = path.join(tmpdir(), 'acl3.json');
+  fs.writeFileSync(partial, JSON.stringify({ core_valkey_password: 'c2' }));
+  const r3 = run('scripts/deploy/secrets-sync.sh', ['--env=staging', partial], { env, stubs });
+  assert.equal(r3.code, 1); assert.match(r3.stderr, /cannot be rendered without/);
+});
+
+test('F130 T053: secrets-sync refuses NATS creds whose JWT permissions differ from deploy/nats/permissions.yaml', { skip }, () => {
+  const { stubs, state, env, calls } = rig();
+  fs.writeFileSync(path.join(state, 'secrets'), '');
+  const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+  const creds = `-----BEGIN NATS USER JWT-----
+${b64({ alg: 'ed25519-nkey' })}.${b64({ name: 'realtime', nats: { pub: { allow: ['>'] }, sub: { allow: ['>'] } } })}.sig
+------END NATS USER JWT------
+`;
+  const input = path.join(tmpdir(), 'nats.json');
+  fs.writeFileSync(input, JSON.stringify({ realtime_nats_creds: creds }));
+  const r = run('scripts/deploy/secrets-sync.sh', ['--env=staging', input], { env, stubs });
+  assert.equal(r.code, 1);
+  assert.match(r.stderr, /realtime: publish permissions differ/);
+  assert.ok(!calls(r).some((l) => /secret create/.test(l)));
+});
+
 test('F130-AC-10: Keycloak client secret change needs --keycloak-rotated (old and new valid during rollout)', { skip }, () => {
   const { stubs, state, env, calls } = rig();
   fs.writeFileSync(path.join(state, 'secrets'), 'kc_game_backend_v1\n');
