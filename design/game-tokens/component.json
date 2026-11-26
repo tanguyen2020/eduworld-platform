@@ -183,6 +183,35 @@
       },
       "border": { "$type": "color", "$value": "{color.outline}", "$description": "Count badge thin ink outline (tier 2, F123)." }
     },
+    "party_card": {
+      "bg": { "$type": "color", "$value": "{palette.white}", "$description": "Party member card (PartyMemberCard, tier 2 info card, F102): white on the cream window so each friend stands out." },
+      "border": { "$type": "color", "$value": "{color.outline}", "$description": "Party member card thin ink outline (tier 2, F102)." },
+      "away_bg": { "$type": "color", "$value": "{palette.ink.200}", "$description": "Card of a member who lost the connection (PartyMemberCardAway, F102-AC-13): faded grey, always with the words \"Đang kết nối lại…\" and the wifi-off icon — never the colour alone." },
+      "away_border": { "$type": "color", "$value": "{palette.ink.600}", "$description": "Outline of the faded card of a member who lost the connection (F102)." },
+      "away_text": {
+        "$type": "color",
+        "$value": "{palette.ink.700}",
+        "$description": "Words on the faded card of a member who lost the connection (PartyAwayLabel, F102).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.party_card.away_bg", "level": "normal" }
+        ] } }
+      }
+    },
+    "warning_banner": {
+      "bg": { "$type": "color", "$value": "{palette.yellow.100}", "$description": "Yellow banner of a temporary state (WarningBannerPanel, tier 2, F102): \"Đang kết nối lại…\" while offline, \"Trưởng nhóm đang kết nối lại…\" in the party lobby. Always with an icon and words." },
+      "border": { "$type": "color", "$value": "{color.outline}", "$description": "Warning banner thin ink outline (tier 2, F102)." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Warning banner words (WarningBannerLabel, F102).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.warning_banner.bg", "level": "normal" }
+        ] } }
+      }
+    },
+    "countdown": {
+      "font_size": { "$type": "dimension", "$value": "{size.font.96}", "$description": "Party start countdown 3-2-1 (CountdownLabel, F102-AC-11), the wordmark colours and white sticker outline (component.logo.*)." }
+    },
     "toggle": {
       "track_on": {
         "$type": "color",

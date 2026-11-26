@@ -2,6 +2,10 @@
 
 Phiên bản token theo semver (`design/package.json`, DESIGN_SYSTEM §3, §8). Đổi tên hoặc xóa token cần tăng MAJOR; token bị xóa phải mang `$deprecated` ít nhất một phiên bản trước (kiểm bởi `design/checks/semver.mjs`).
 
+## tokens@0.19.0
+
+- 2026-11-27 — Nhóm (party) trong game (F102, DESIGN_SYSTEM §5.1, STUDENT_GAME_UX_SOCIAL §5): component `component.party_card.{bg,border,away_bg,away_border,away_text}` (`away_text` có `contrastWith` `away_bg` mức AA), `component.warning_banner.{bg,border,text}` (`text` có `contrastWith` `bg`), `component.countdown.font_size` và primitive `size.font.96` — Theme sinh thêm biến thể `PartyMemberCard`, `PartyMemberCardAway` (PanelContainer tầng 2: viền mực mảnh, không cạnh dưới), `PartyAwayLabel`, `WarningBannerPanel`/`WarningBannerLabel` (băng vàng tầng 2) và `CountdownLabel` (đếm ngược 3‑2‑1, màu + viền wordmark). Icon game mới `group`, `crown`, `invite`, `invite_light`, `presence_online`, `wifi_off`. MINOR vì chỉ thêm token/biến thể/icon.
+
 ## tokens@0.18.0
 
 - 2026-11-27 — Thông báo trong game (F123, DESIGN_SYSTEM §5.1, STUDENT_GAME_UX_CORE S03 §6c): component `component.count_badge.{bg,text,border}` (viên thuốc màu nhấn chữ trắng, viền mực; `text` có `contrastWith` `bg` mức AA) — Theme sinh thêm biến thể `CountBadge` (Label tầng 2: viền mực mảnh `outline.info`, không cạnh dưới, chữ đậm cỡ `density.<band>.font.small`) cho số chưa đọc cạnh chuông HUD và nhãn "MỚI" trong hộp thông báo. Icon game mới `tab_notifications` (chuông trắng cho tab "Thông báo" của Cài đặt và toast thông báo). MINOR vì chỉ thêm token/biến thể/icon.

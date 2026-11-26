@@ -48,8 +48,9 @@ func _box(theme: Theme, type_name: String, box_name: String) -> StyleBoxFlat:
 
 
 func test_tokens_hold_the_confirmed_values() -> void:
-	# F123 bumped the tokens to 0.18.0 (CountBadge, count_badge.*): MINOR, the F114 values below are unchanged.
-	assert_str(UiTokens.TOKENS_VERSION).is_equal("0.18.0")
+	# F123 bumped the tokens to 0.18.0 (CountBadge), F102 to 0.19.0 (party card, warning banner, countdown): MINOR, the
+	# F114 values below are unchanged.
+	assert_str(UiTokens.TOKENS_VERSION).is_equal("0.19.0")
 	_assert_color(UiTokens.COLOR_OUTLINE, Color("#1E2A44"))
 	_assert_color(UiTokens.COLOR_OUTLINE, UiTokens.COLOR_TEXT_PRIMARY)
 	var scrim: Color = UiTokens.COLOR_OVERLAY_SCRIM

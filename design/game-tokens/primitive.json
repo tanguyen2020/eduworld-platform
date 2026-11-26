@@ -191,7 +191,8 @@
       "28": { "$value": "28px", "$description": "Font 28." },
       "32": { "$value": "32px", "$description": "Font 32." },
       "36": { "$value": "36px", "$description": "Font 36." },
-      "48": { "$value": "48px", "$description": "Font 48 (logo wordmark)." }
+      "48": { "$value": "48px", "$description": "Font 48 (logo wordmark)." },
+      "96": { "$value": "96px", "$description": "Font 96 (party start countdown 3-2-1, F102)." }
     },
     "space": {
       "4": { "$value": "4px", "$description": "Spacing 4." },
