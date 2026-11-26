@@ -15,6 +15,7 @@
 [ext_resource type="Material" path="res://resources/art/generated/mat_toon.tres" id="9_toon"]
 [ext_resource type="Material" path="res://resources/art/generated/mat_toon_no_outline.tres" id="10_toon_flat"]
 [ext_resource type="ArrayMesh" path="res://assets/models/env/env_hub_terrain_a.res" id="11_terrain"]
+[ext_resource type="ArrayMesh" path="res://assets/models/env/env_hub_far_a.res" id="29_far"]
 [ext_resource type="ArrayMesh" path="res://assets/models/bld/bld_hub_set_a.res" id="12_buildings"]
 [ext_resource type="ArrayMesh" path="res://assets/models/prop/prop_hub_set_a.res" id="13_props"]
 [ext_resource type="ArrayMesh" path="res://assets/models/veg/veg_banyan_spark_s3_a.res" id="14_banyan"]
@@ -101,6 +102,11 @@ shape = SubResource("BoxShape3D_ground")
 cast_shadow = 0
 material_override = ExtResource("9_toon")
 mesh = ExtResource("11_terrain")
+
+[node name="Far" type="MeshInstance3D" parent="Terrain"]
+cast_shadow = 0
+material_override = ExtResource("10_toon_flat")
+mesh = ExtResource("29_far")
 
 [node name="Static" type="StaticBody3D" parent="."]
 
@@ -423,5 +429,23 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6)
 interactable_id = "discovery.hub.spark_tree"
 kind = "discovery"
 prompt_key = "ui.world.action.inspect"
+
+[node name="QuestHubLanternEast" parent="Interactables" instance=ExtResource("8_anchor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, -2)
+interactable_id = "quest.hub.lantern_east"
+kind = "quest_object"
+prompt_key = "ui.world.action.interact"
+
+[node name="QuestHubLanternWest" parent="Interactables" instance=ExtResource("8_anchor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0, -2)
+interactable_id = "quest.hub.lantern_west"
+kind = "quest_object"
+prompt_key = "ui.world.action.interact"
+
+[node name="QuestHubWelcomeSign" parent="Interactables" instance=ExtResource("8_anchor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
+interactable_id = "quest.hub.welcome_sign"
+kind = "quest_object"
+prompt_key = "ui.world.action.interact"
 
 ; END F071 generated anchors

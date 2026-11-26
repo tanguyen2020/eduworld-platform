@@ -53,9 +53,15 @@ describe('DomainTag', () => {
     }
   });
 
-  it('an unknown code still renders its text without a color dot', async () => {
+  it('subject history (F094): reddish-brown shared colour + Vietnamese label', async () => {
     await renderTag('subject', 'history');
-    expect(screen.getByText('history')).toBeInTheDocument();
+    expect(screen.getByText('Lịch sử & Địa lý')).toBeInTheDocument();
+    expect(screen.getByTestId('domain-tag-dot').style.backgroundColor).toBe(rgb(domainColors['color.subject.history']!.light));
+  });
+
+  it('an unknown code still renders its text without a color dot', async () => {
+    await renderTag('subject', 'music');
+    expect(screen.getByText('music')).toBeInTheDocument();
     expect(screen.queryByTestId('domain-tag-dot')).toBeNull();
   });
 });

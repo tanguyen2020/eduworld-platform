@@ -39,6 +39,10 @@
     "science": {
       "primary": { "$value": "{color.subject.science}", "$description": "Science zone primary." },
       "accent": { "$value": "{palette.zone.sky-day}", "$description": "Science zone accent." }
+    },
+    "history": {
+      "primary": { "$value": "{color.subject.history}", "$description": "History kingdom primary (F094)." },
+      "accent": { "$value": "{palette.zone.gold}", "$description": "History kingdom accent (F094)." }
     }
   },
   "art": {
@@ -104,7 +108,8 @@
       "bronze_patina": { "$value": "{palette.art.bronze-patina}", "$description": "Bronze patina, drum pattern (F093).", "$extensions": { "eduworld": { "index": 56 } } },
       "metal": { "$value": "{palette.art.metal}", "$description": "Steel of machines and instruments (F093).", "$extensions": { "eduworld": { "index": 57 } } },
       "metal_dark": { "$value": "{palette.art.metal-dark}", "$description": "Dark steel, gear shade (F093).", "$extensions": { "eduworld": { "index": 58 } } },
-      "blossom_violet": { "$value": "{palette.art.blossom-violet}", "$description": "Lilac bằng lăng blossoms (F093).", "$extensions": { "eduworld": { "index": 59 } } }
+      "blossom_violet": { "$value": "{palette.art.blossom-violet}", "$description": "Lilac bằng lăng blossoms (F093).", "$extensions": { "eduworld": { "index": 59 } } },
+      "subject_history": { "$value": "{color.subject.history}", "$description": "Subject colour (history, shared-tokens game variant): wind-gate icon, banners of the History Kingdom (F094).", "$extensions": { "eduworld": { "index": 60 } } }
     }
   },
   "toon": {
@@ -159,6 +164,36 @@
       "sky_horizon": { "$value": "{palette.zone.fog-green}", "$description": "Science sky horizon." },
       "ground_horizon": { "$value": "{palette.zone.ground-horizon}", "$description": "Science ground horizon." },
       "fog_color": { "$value": "{palette.zone.fog-green}", "$description": "Science fog." }
+    },
+    "history": {
+      "sky_top": { "$value": "{palette.zone.sky-day}", "$description": "History Kingdom (F094) sky top." },
+      "sky_horizon": { "$value": "{palette.zone.fog-rose}", "$description": "History Kingdom (F094) sky horizon." },
+      "ground_horizon": { "$value": "{palette.zone.ground-horizon}", "$description": "History Kingdom (F094) ground horizon." },
+      "fog_color": { "$value": "{palette.zone.fog-rose}", "$description": "History Kingdom (F094) fog." }
+    },
+    "ocean": {
+      "sky_top": { "$value": "{palette.zone.sky-day}", "$description": "Discovery Ocean (F094) sky top." },
+      "sky_horizon": { "$value": "{palette.zone.fog-sea}", "$description": "Discovery Ocean (F094) sky horizon." },
+      "ground_horizon": { "$value": "{palette.zone.sea-horizon}", "$description": "Discovery Ocean (F094) ground horizon." },
+      "fog_color": { "$value": "{palette.zone.fog-sea}", "$description": "Discovery Ocean (F094) fog." }
+    },
+    "mountain": {
+      "sky_top": { "$value": "{palette.zone.sky-day}", "$description": "Challenge Mountain (F094) sky top." },
+      "sky_horizon": { "$value": "{palette.zone.fog-cool}", "$description": "Challenge Mountain (F094) sky horizon." },
+      "ground_horizon": { "$value": "{palette.zone.ground-horizon}", "$description": "Challenge Mountain (F094) ground horizon." },
+      "fog_color": { "$value": "{palette.zone.fog-cool}", "$description": "Challenge Mountain (F094) fog." }
+    },
+    "exam": {
+      "sky_top": { "$value": "{palette.zone.sky-day}", "$description": "Trial Tower, calm (F094) sky top." },
+      "sky_horizon": { "$value": "{palette.zone.fog-violet}", "$description": "Trial Tower, calm (F094) sky horizon." },
+      "ground_horizon": { "$value": "{palette.zone.ground-horizon}", "$description": "Trial Tower, calm (F094) ground horizon." },
+      "fog_color": { "$value": "{palette.zone.fog-violet}", "$description": "Trial Tower, calm (F094) fog." }
+    },
+    "arena": {
+      "sky_top": { "$value": "{palette.zone.sky-day}", "$description": "Champion Arena, festive (F094) sky top." },
+      "sky_horizon": { "$value": "{palette.zone.fog-warm}", "$description": "Champion Arena, festive (F094) sky horizon." },
+      "ground_horizon": { "$value": "{palette.zone.ground-horizon}", "$description": "Champion Arena, festive (F094) ground horizon." },
+      "fog_color": { "$value": "{palette.zone.fog-warm}", "$description": "Champion Arena, festive (F094) fog." }
     }
   },
   "vfx": {

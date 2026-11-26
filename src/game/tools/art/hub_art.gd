@@ -46,8 +46,6 @@ static func terrain() -> ArrayMesh:
 	m.blob_detail = 0  # far hills: smooth shading at base detail (F068 budget)
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 6701
-	# Far ground disk under everything.
-	_disk(m, Vector3(0, -0.04, 0), 170.0, 20, "hill")
 	# Central lawn grid (4 m cells, flat), soft two-tone patches.
 	var cell: float = 4.0
 	for ix: int in range(-8, 8):
@@ -82,8 +80,21 @@ static func terrain() -> ArrayMesh:
 		_terraces(m, side)
 	# Lake south (raised bank), with a soil rim.
 	_lake(m, rng)
-	# Gentle slope north behind the hall, then hills and the far mountain.
+	# Gentle slope north behind the hall (the hills and the far mountain are the Far mesh).
 	m.quad(Vector3(32, 0, -32), Vector3(60, 3.5, -64), Vector3(-60, 3.5, -64), Vector3(-32, 0, -32), "grass_dark")
+	return m.build()
+
+
+## Far scenery of the Hub (F094, as the zones of F093): the far ground disk, the hills and Challenge Mountain on the
+## horizon, drawn with the no-outline preset and without shadows (every pass counts in PERFORMANCE_BUDGET §7). Same
+## hills as before: the random sequence of the terrain is replayed up to the lake.
+static func far() -> ArrayMesh:
+	var m: LowPoly = _builder()
+	m.blob_detail = 0
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 6701
+	_lake(_builder(), rng)
+	_disk(m, Vector3(0, -0.04, 0), 170.0, 20, "hill")
 	_hills(m, rng)
 	return m.build()
 
@@ -366,13 +377,23 @@ static func _pond(m: LowPoly) -> void:
 	m.pop()
 
 
+## Lotus flower: six petals, each a closed tetrahedron (no two-sided plane under the ink outline, F094 / F093-3).
 static func _lotus(m: LowPoly, c: Vector3) -> void:
 	for i: int in 6:
 		var a: float = TAU * float(i) / 6.0
 		var d: Vector3 = Vector3(cos(a), 0, sin(a))
-		m.tri(c + d * 0.05, c + d.rotated(Vector3.UP, 0.5) * 0.16 + Vector3.UP * 0.12, c + d.rotated(Vector3.UP, -0.5) * 0.16 + Vector3.UP * 0.12, "flower_pink")
-		m.tri(c + d * 0.05, c + d.rotated(Vector3.UP, -0.5) * 0.16 + Vector3.UP * 0.12, c + d.rotated(Vector3.UP, 0.5) * 0.16 + Vector3.UP * 0.12, "flower_pink")
+		_tetra(m, [c + d * 0.05, c + d.rotated(Vector3.UP, 0.5) * 0.16 + Vector3.UP * 0.12,
+			c + d.rotated(Vector3.UP, -0.5) * 0.16 + Vector3.UP * 0.12, c + d * 0.15 + Vector3.UP * 0.03], "flower_pink", "flower_pink")
 	m.blob(c + Vector3.UP * 0.08, Vector3(0.05, 0.04, 0.05), "lantern_glow", 0)
+
+
+## Closed tetrahedron of the corners `p` (4 points); the face opposite p[3] gets `top`, the other three `side`.
+static func _tetra(m: LowPoly, p: Array, top: String, side: String) -> void:
+	var center: Vector3 = ((p[0] as Vector3) + (p[1] as Vector3) + (p[2] as Vector3) + (p[3] as Vector3)) * 0.25
+	m.tri_out(p[0] as Vector3, p[1] as Vector3, p[2] as Vector3, top, center)
+	m.tri_out(p[0] as Vector3, p[1] as Vector3, p[3] as Vector3, side, center)
+	m.tri_out(p[1] as Vector3, p[2] as Vector3, p[3] as Vector3, side, center)
+	m.tri_out(p[2] as Vector3, p[0] as Vector3, p[3] as Vector3, side, center)
 
 
 ## Thuyền thúng: a round woven basket boat with a rim and a little paddle.
@@ -381,7 +402,11 @@ static func _basket_boat(m: LowPoly, r: float) -> void:
 		Vector2(0.15 * r, -0.12 * r), Vector2(0.65 * r, -0.08 * r), Vector2(0.95 * r, 0.08 * r), Vector2(r, 0.24 * r),
 	])
 	m.lathe(Vector3.ZERO, profile, 12, "basket")
-	m.lathe(Vector3.ZERO, profile, 12, "wood_dark", true)
+	# inner wall a little inside the outer one: a closed shell, not a two-sided plane under the outline (F094, F093-3)
+	var inner: PackedVector2Array = PackedVector2Array()
+	for p: Vector2 in profile:
+		inner.append(Vector2(p.x * 0.93, p.y + 0.02 * r))
+	m.lathe(Vector3.ZERO, inner, 12, "wood_dark", true)
 	_ring(m, Vector3(0, 0.22 * r, 0), 0.94 * r, 1.04 * r, 0.06 * r, 12, "wood_dark")
 	m.box(Vector3(0.1 * r, 0.12 * r, 0.0), Vector3(0.12 * r, 0.06 * r, 1.4 * r), "wood")
 
@@ -607,7 +632,7 @@ static func _icon_color(target_area_id: String) -> String:
 		"learning_zone.science":
 			return "subject_science"
 		"learning_zone.history":
-			return "roof_dark"
+			return "subject_history"
 		"quest_zone.discovery_ocean":
 			return "water_deep"
 		"challenge_mountain":
@@ -660,15 +685,27 @@ static func notice_board() -> ArrayMesh:
 	return m.build()
 
 
-## Generic quest / discovery marker of a WorldAnchor: a floating spark gem over a small stone base.
+## Generic quest / discovery marker of a WorldAnchor (F094 "dễ dùng, thu hút"): a big floating spark gem (closed
+## bipyramid) with a gold halo ring over a stone base with a glowing top — readable from across a
+## zone, inviting the student to walk up and interact.
 static func spark_marker() -> ArrayMesh:
 	var m: LowPoly = _builder()
-	m.cylinder(Vector3.ZERO, 0.32, 0.26, 0.16, 6, "stone")
-	m.cylinder(Vector3(0, 0.55, 0), 0.0, 0.26, 0.3, 4, "lantern_glow", "", false, 0.5)
-	m.push(Transform3D(Basis.IDENTITY.scaled(Vector3(1, -1, 1)), Vector3(0, 1.1, 0)))
-	m.cylinder(Vector3.ZERO, 0.0, 0.26, 0.25, 4, "spark", "", false, 0.5)
+	m.blob_detail = 0
+	m.min_sides = 6  # one marker per anchor, many in the Hub (PERFORMANCE_BUDGET §7)
+	m.cylinder(Vector3.ZERO, 0.42, 0.36, 0.16, 6, "stone", "lantern_glow")
+	var c: Vector3 = Vector3(0, 1.4, 0)
+	var top: Vector3 = c + Vector3.UP * 0.5
+	var bottom: Vector3 = c + Vector3.DOWN * 0.42
+	for i: int in 6:
+		var a0: float = TAU * float(i) / 6.0
+		var a1: float = TAU * float(i + 1) / 6.0
+		var p0: Vector3 = c + Vector3(cos(a0), 0, sin(a0)) * 0.32
+		var p1: Vector3 = c + Vector3(cos(a1), 0, sin(a1)) * 0.32
+		m.tri(p0, top, p1, "spark")
+		m.tri(p1, bottom, p0, "lantern_glow")
+	m.push(Transform3D(Basis(Vector3.RIGHT, PI * 0.5), c))
+	_torus_ring(m, Vector3.ZERO, 0.58, 0.035, 10, 3, "lantern_glow")
 	m.pop()
-	m.cylinder(Vector3(0, 0.85, 0), 0.26, 0.26, 0.0, 4, "spark", "", false, 0.5)
 	return m.build()
 
 
@@ -686,7 +723,9 @@ static func tree_round() -> ArrayMesh:
 	return m.build()
 
 
-## Areca palm (cây cau): slim ringed trunk and drooping fronds.
+## Areca palm (cây cau): slim ringed trunk and drooping fronds. Each frond is a closed tetrahedron folded along its
+## spine (leaf on one half, darker other half and underside; same 4 triangles as before) — not a two-sided plane, which the inverted-hull outline drew black from
+## behind (F093-3, fixed in F094).
 static func palm() -> ArrayMesh:
 	var m: LowPoly = _builder()
 	m.cylinder(Vector3.ZERO, 0.14, 0.1, 4.6, 5, "trunk")
@@ -697,8 +736,7 @@ static func palm() -> ArrayMesh:
 		var tip: Vector3 = top + d * 1.7 + Vector3.DOWN * 0.7
 		var mid: Vector3 = top + d * 0.9 + Vector3.UP * 0.25
 		var side: Vector3 = Vector3(-d.z, 0, d.x) * 0.28
-		m.quad(top, mid - side, tip, mid + side, "leaf")
-		m.quad(top, mid + side, tip, mid - side, "leaf_dark")
+		_tetra(m, [top, mid + side, tip, mid - side + Vector3.DOWN * 0.12], "leaf", "leaf_dark")
 	return m.build()
 
 

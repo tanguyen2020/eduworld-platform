@@ -18,7 +18,7 @@ const game = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const repo = path.resolve(game, '..', '..');
 const areas = JSON.parse(fs.readFileSync(path.join(repo, 'src/backend/modules/game/seed/world/areas.v1.json'), 'utf8'));
 const check = process.argv.includes('--check');
-const ENV = { math: 'env_math', vietnamese: 'env_vietnamese', english: 'env_english', science: 'env_science' };
+const ENV = { math: 'env_math', vietnamese: 'env_vietnamese', english: 'env_english', science: 'env_science', history: 'env_history' };
 const BEGIN = '; BEGIN F071 generated anchors (tools/gen_greybox_zones.mjs)';
 const END = '; END F071 generated anchors';
 

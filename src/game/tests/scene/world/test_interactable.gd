@@ -6,6 +6,8 @@ extends GdUnitTestSuite
 
 const ZONE: String = "res://scenes/world/zones/main_hub/Zone.tscn"
 const INTERACTABLE_SCRIPT: String = "res://scripts/world/interactable.gd"
+## Free point of the Main Hub: farther than the WorldAnchor reach (2 m) plus the player from every anchor (F094-AC-10).
+const WALK_OFF: Vector3 = Vector3(0.0, 0.2, 18.0)
 
 var _intents: Array[Array] = []
 
@@ -28,6 +30,9 @@ func test_entering_the_area_focuses_and_interacting_emits_only_the_id() -> void:
 	var runner: GdUnitSceneRunner = scene_runner(ZONE)
 	await runner.simulate_frames(2)
 	var zone: ZoneRoot = runner.scene() as ZoneRoot
+	# Start from a free point: the default spawn (radius 1.5) can overlap the reach of quest.hub.welcome_sign (F094, F093-1).
+	zone.player.global_position = WALK_OFF
+	await runner.simulate_frames(5)
 	var board: Interactable = zone.get_node("Interactables/SchoolAssignmentsBoard") as Interactable
 	var focus: Array[Array] = []
 	zone.interaction_focus_changed.connect(func(id: String, key: String) -> void: focus.append([id, key]))
@@ -44,11 +49,14 @@ func test_entering_the_area_focuses_and_interacting_emits_only_the_id() -> void:
 	assert_int(_intents.size()).is_equal(1)
 	assert_str(String(_intents[0][0])).is_equal("quest_journal")
 	assert_str(String((_intents[0][1] as Dictionary).get("tab", ""))).is_equal("assigned")
-	# Leaving clears the focus (the HUD hides the button).
-	zone.player.global_position = Vector3(0.0, 0.2, 12.0)
+	# Leaving clears the focus (the HUD hides the button). The walk-off point is on the south lane, out of reach of every
+	# anchor: (0, 0, 12) is the F072 quest object quest.hub.welcome_sign of the world seed (F094, F093-1).
+	zone.player.global_position = WALK_OFF
 	await runner.simulate_frames(10)
 	assert_bool(board.player_inside).is_false()
 	assert_array(focus.back() as Array).is_equal(["", ""])
+	for node: Node in zone.find_children("*", "Interactable", true, false):
+		assert_float((node as Node3D).global_position.distance_to(WALK_OFF)).override_failure_message(String(node.name)).is_greater(3.0)
 	assert_bool(zone.interact_focused()).is_false()
 
 

@@ -15,5 +15,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("SphereShape3D_reach")
 
 [node name="Marker" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 material_override = ExtResource("3_toon")
 mesh = ExtResource("2_marker")

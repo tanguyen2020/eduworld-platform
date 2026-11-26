@@ -22,6 +22,11 @@
         "$value": "#15803D",
         "$description": "Khoa học — green.",
         "$extensions": { "eduworld": { "variants": { "light": "#15803D", "dark": "#4ADE80", "game": "#33C26B" } } }
+      },
+      "history": {
+        "$value": "#9A3B26",
+        "$description": "Lịch sử & Địa lý — reddish brown (nâu đỏ, WORLD_DESIGN §11; F094).",
+        "$extensions": { "eduworld": { "variants": { "light": "#9A3B26", "dark": "#E8A48C", "game": "#A0522D" } } }
       }
     },
     "rarity": {

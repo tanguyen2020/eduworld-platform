@@ -2,6 +2,10 @@
 
 Phiên bản token theo semver (`design/package.json`, DESIGN_SYSTEM §3, §8). Đổi tên hoặc xóa token cần tăng MAJOR; token bị xóa phải mang `$deprecated` ít nhất một phiên bản trước (kiểm bởi `design/checks/semver.mjs`).
 
+## tokens@0.12.0
+
+- 2026-11-25 — Art pass 4 (F094, ADR-0103, ADR-0047, DESIGN_SYSTEM §5.3, §6, WORLD_DESIGN §11) và Câu hỏi mở F093-2: màu nghiệp vụ dùng chung `color.subject.history` (Lịch sử & Địa lý, nâu đỏ: light `#9A3B26`, dark `#E8A48C`, game `#A0522D`) — portal (`domainColors`, `tokens.css`) và game (`Art3dTokens`); art3d `art.palette.subject_history` (slot 60; còn trống 61–63 trong mảng 64 slot), `zone.history.{primary,accent}`, `env.{history,ocean,mountain,exam,arena}` (sinh `env_<zone>.tres`); primitive `palette.zone.{fog-rose,fog-sea,sea-horizon}`. MINOR vì chỉ thêm token.
+
 ## tokens@0.11.0
 
 - 2026-11-25 — Art pass 3 "chibi anime cartoon 3D" cho năm vùng môn học (F093, ADR-0103, DESIGN_SYSTEM §5.3, WORLD_DESIGN §4.2): primitive `palette.art.{tile-blue,tile-blue-dark,leaf-autumn,bronze,bronze-patina,metal,metal-dark,blossom-violet}`; art3d `art.palette.{tile_blue,tile_blue_dark,leaf_autumn,bronze,bronze_patina,metal,metal_dark,blossom_violet}` (slot 52–59: ngói men xanh Vương quốc Số, lá thu Rừng Ngôn Ngữ, đồng/đồng xanh của trống đồng và bánh răng, thép của xưởng robot/trạm thời tiết, hoa bằng lăng). Mọi preset toon sinh lại với bảng màu 60 slot. MINOR vì chỉ thêm token.

@@ -78,7 +78,9 @@ func test_every_mesh_uses_a_generated_toon_preset() -> void:
 		assert_object(material).override_failure_message(str(node.get_path())).is_not_null()
 		assert_str(material.resource_path).override_failure_message(str(node.get_path())).starts_with(GENERATED)
 		var decor: bool = node.is_in_group(ZoneArtQuality.DECOR_GROUP) and material.next_pass == null
-		if not decor:
+		# far scenery (F094, as in the F093 zones): no outline, no shadow
+		var far: bool = node.name == &"Far" and geo.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if not (decor or far):
 			assert_object(material.next_pass).override_failure_message(str(node.get_path())).is_not_null()
 		checked += 1
 	assert_int(checked).is_greater(15)

@@ -325,10 +325,10 @@ static func props() -> ArrayMesh:
 		ZoneKit.lamp(m, p + Vector3.UP * 0.08, "wood_dark", "lantern")
 	for b: Array in [[Vector3(-4.6, 0.08, 6.6), 50.0], [Vector3(4.6, 0.08, 6.6), -50.0]]:
 		ZoneKit.bench(m, b[0] as Vector3, float(b[1]))
-	# banners along the lane (cờ đuôi nheo)
+	# banners along the lane (cờ đuôi nheo) in gold and the subject colour (F094, F093-2)
 	for z: float in [-9.0, -18.0]:
 		for s: float in [-1.0, 1.0]:
-			_banner(m, Vector3(s * 3.2, 0, z), "wall_yellow" if s < 0.0 else "lantern")
+			_banner(m, Vector3(s * 3.2, 0, z), "wall_yellow" if s < 0.0 else "subject_history")
 	_hourglass(m, Vector3(5.8, 0, -2.2))
 	for p: Vector3 in [Vector3(-3.6, 0, -21.8), Vector3(3.6, 0, -21.8)]:
 		HubArt._stone_lantern(m, p)
