@@ -3,13 +3,16 @@ package entx
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
@@ -174,10 +177,11 @@ func (u *UnitOfWork) run(ctx context.Context, d DBs, readOnly bool, fn func(ctx 
 			return err
 		}
 	}
-	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: readOnly})
+	conn, tx, err := begin(ctx, db, u.o.Module, readOnly)
 	if err != nil {
 		return fmt.Errorf("entx: begin: %w", err)
 	}
+	defer func() { _ = conn.Close() }() // back to the pool after commit/rollback (deferred calls run last-in first-out)
 	st := &txState{tx: tx, readOnly: readOnly, uow: u}
 	ctx = context.WithValue(ctx, txKey{}, st)
 	defer func() {
@@ -209,6 +213,31 @@ func (u *UnitOfWork) run(ctx context.Context, d DBs, readOnly bool, fn func(ctx 
 		a(ctx)
 	}
 	return nil
+}
+
+// begin takes a connection of db (timed: eduworld_db_pool_acquire_duration_seconds, MONITORING §3) and starts the
+// transaction on it. Like db.BeginTx, a connection found broken (driver.ErrBadConn) is dropped and another is taken.
+func begin(ctx context.Context, db *sql.DB, module string, readOnly bool) (*sql.Conn, *sql.Tx, error) {
+	var err error
+	for attempt := 0; attempt < 3; attempt++ {
+		start := time.Now()
+		var conn *sql.Conn
+		conn, err = db.Conn(ctx)
+		observability.ObserveAcquire(db, module, time.Since(start))
+		if err != nil {
+			return nil, nil, err
+		}
+		var tx *sql.Tx
+		tx, err = conn.BeginTx(ctx, &sql.TxOptions{ReadOnly: readOnly})
+		if err == nil {
+			return conn, tx, nil
+		}
+		_ = conn.Close()
+		if !errors.Is(err, driver.ErrBadConn) {
+			return nil, nil, err
+		}
+	}
+	return nil, nil, err
 }
 
 // ReadSession is the read-context transaction (ADR-0087): READ ONLY, read pool when configured.

@@ -19,6 +19,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
 
 // Registry is created once per binary by its composition root (cmd/<binary>).
@@ -39,8 +40,12 @@ func NewRegistry(binary, profile string, h *health.Registry, getenv func(string)
 	if getenv == nil {
 		getenv = os.Getenv
 	}
-	return &Registry{binary: binary, profile: profile, health: h, getenv: getenv, pools: map[string]*pgxpool.Pool{},
+	r := &Registry{binary: binary, profile: profile, health: h, getenv: getenv, pools: map[string]*pgxpool.Pool{},
 		res: resources{sqls: map[string]*sql.DB{}, cores: map[string]*Core{}}}
+	if h != nil {
+		r.registerDBMetrics(h.Metrics())
+	}
+	return r
 }
 
 // Binary is the running binary name (core-api, realtime, worker).
@@ -73,6 +78,7 @@ func (r *Registry) Database(module string) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("parse %s database config: %w", module, err)
 	}
 	cfg.ConnConfig.RuntimeParams["application_name"] = r.binary + "/" + module
+	cfg.ConnConfig.Tracer = observability.QueryTracer{Module: module} // eduworld_db_query_duration_seconds (MONITORING §3)
 	pool, err := pgxpool.NewWithConfig(context.Background(), cfg)
 	if err != nil {
 		return nil, fmt.Errorf("create %s pool: %w", module, err)

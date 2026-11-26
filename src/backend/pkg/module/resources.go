@@ -10,13 +10,15 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/jackc/pgx/v5/stdlib" // database/sql driver "pgx" of the role pools
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib" // database/sql over pgx for the role pools
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/valkey-io/valkey-go"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 )
 
@@ -84,10 +86,13 @@ func (r *Registry) SQL(module, role string) (*sql.DB, error) {
 	if dsn == "" {
 		return nil, fmt.Errorf("%s %s: %w (set %s_DSN or %s_URL_FILE)", module, role, ErrDatabaseNotConfigured, prefix, prefix)
 	}
-	db, err := sql.Open("pgx", dsn)
+	cc, err := pgx.ParseConfig(dsn)
 	if err != nil {
-		return nil, fmt.Errorf("open %s %s pool: %w", module, role, err)
+		return nil, fmt.Errorf("open %s %s pool: parse config: %w", module, role, err)
 	}
+	cc.Tracer = observability.QueryTracer{Module: module} // eduworld_db_query_duration_seconds (MONITORING §3)
+	db := stdlib.OpenDB(*cc)                              // lazy: no connection until first use (F001-AC-05)
+	observability.NamePool(db, module, role)
 	r.res.sqls[key] = db
 	return db, nil
 }
