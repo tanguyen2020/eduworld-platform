@@ -179,6 +179,18 @@ msgstr "[!! Ţĥïš áçţïvïţý ñëëđš á ñëŵëŕ vëŕšïöñ öƒ
 msgid "ui.activity_player.waiting"
 msgstr "[!! Šëñđïñğ… ~~~~ !!]"
 
+msgid "ui.audio.coach_again"
+msgstr "[!! Pŕëšš Ĺïšţëñ áğáïñ ţö ĥëáŕ ïţ öñçë ɱöŕë! ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.audio.coach_listen"
+msgstr "[!! Ĺïšţëñ çáŕëƒüĺĺý! ~~~~~~~ !!]"
+
+msgid "ui.audio.coach_plays_done"
+msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ ĺïšţëñš. Ĺëţ üš áñšŵëŕ ţĥë qüëšţïöñš! ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.audio.coach_start"
+msgstr "[!! Pŕëšš Ĺïšţëñ ţö šţáŕţ! ~~~~~~~~~ !!]"
+
 msgid "ui.audio.not_ready"
 msgstr "[!! Ţĥë ĺïšţëñïñğ ĺëššöñ ïš šţïĺĺ ƀëïñğ þŕëþáŕëđ. Pĺëášë çöɱë ƀáçķ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -553,6 +565,12 @@ msgstr "[!! ẸđüŴöŕĺđ ïš çĺöšëđ ŕïğĥţ ñöŵ. Ýöü çáñ
 
 msgid "ui.common.retry"
 msgstr "[!! Ţŕý áğáïñ ~~~~ !!]"
+
+msgid "ui.common.scroll_back"
+msgstr "[!! Šĥöŵ ţĥë ëáŕĺïëŕ ïţëɱš ~~~~~~~~~ !!]"
+
+msgid "ui.common.scroll_more"
+msgstr "[!! Šĥöŵ ɱöŕë ïţëɱš ~~~~~~ !!]"
 
 msgid "ui.common.timed"
 msgstr "[!! Ţïɱëđ ~~ !!]"
@@ -1544,6 +1562,27 @@ msgstr "[!! Ïƒ ýöü ğöţ ïţ ŵŕöñğ šëvëŕáĺ ţïɱëš, ŵáï�
 msgid "ui.login.wordmark"
 msgstr "[!! ẸđüŴöŕĺđ ~~~~ !!]"
 
+msgid "ui.media.back10"
+msgstr "[!! Ɓáçķ 10 š ~~~~ !!]"
+
+msgid "ui.media.listen"
+msgstr "[!! Ĺïšţëñ ~~~ !!]"
+
+msgid "ui.media.listen_again"
+msgstr "[!! Ĺïšţëñ áğáïñ ~~~~~ !!]"
+
+msgid "ui.media.off"
+msgstr "[!! Öƒƒ ~~ !!]"
+
+msgid "ui.media.pause"
+msgstr "[!! Páüšë ~~ !!]"
+
+msgid "ui.media.play"
+msgstr "[!! Pĺáý ~~ !!]"
+
+msgid "ui.media.replay"
+msgstr "[!! Ŵáţçĥ áğáïñ ~~~~~ !!]"
+
 msgid "ui.menu.achievements"
 msgstr "[!! Åçĥïëvëɱëñţš & Çöĺĺëçţïöñš ~~~~~~~~~~~ !!]"
 
@@ -2018,11 +2057,29 @@ msgstr "[!! Ţŕý öñ ~~~ !!]"
 msgid "ui.simulation.checking"
 msgstr "[!! Çĥëçķïñğ ţĥë ŕëšüĺţ… ~~~~~~~~ !!]"
 
+msgid "ui.simulation.coach_checking"
+msgstr "[!! Mâý ïš çĥëçķïñğ ţĥë ŕëšüĺţ… ~~~~~~~~~~~ !!]"
+
+msgid "ui.simulation.coach_not_reached"
+msgstr "[!! Ñöţ ýëţ. Ĺëţ üš ţŕý áğáïñ! ~~~~~~~~~~~ !!]"
+
+msgid "ui.simulation.coach_reached"
+msgstr "[!! Ýöü đïđ ïţ! ~~~~~ !!]"
+
+msgid "ui.simulation.coach_runs_done"
+msgstr "[!! Ñö ţŕïëš ĺëƒţ. Ĺëţ üš áñšŵëŕ ţĥë qüëšţïöñš! ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.simulation.coach_start"
+msgstr "[!! Föĺĺöŵ ţĥë šţëþš, ţĥëñ þŕëšš Ŕëĺëášë! ~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.simulation.goal_not_reached"
 msgstr "[!! Ñöţ ýëţ — ţŕý áğáïñ. ~~~~~~~~ !!]"
 
 msgid "ui.simulation.goal_reached"
 msgstr "[!! Ğöáĺ ŕëáçĥëđ! ~~~~~~ !!]"
+
+msgid "ui.simulation.goals"
+msgstr "[!! Ğöáĺš ~~ !!]"
 
 msgid "ui.simulation.left"
 msgstr "[!! Ĺëƒţ ~~ !!]"
@@ -2051,8 +2108,32 @@ msgstr "[!! Ţŕý áğáïñ ~~~~ !!]"
 msgid "ui.simulation.right"
 msgstr "[!! Ŕïğĥţ ~~ !!]"
 
+msgid "ui.simulation.runs"
+msgstr "[!! Ţŕïëš: {used}/{max} ~~~~~~~~ !!]"
+
 msgid "ui.simulation.runs_exhausted"
 msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ ŕüñš. Åñšŵëŕ ţĥë çöñçĺüšïöñ qüëšţïöñš. ~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.simulation.steps"
+msgstr "[!! Šţëþš ~~ !!]"
+
+msgid "ui.video.coach_branch"
+msgstr "[!! Ĥöŵ šĥöüĺđ ţĥë šţöŕý ğö öñ? ~~~~~~~~~~~ !!]"
+
+msgid "ui.video.coach_done"
+msgstr "[!! Ýöü ŵáţçĥëđ ïţ áĺĺ, ğŕëáţ ĵöƀ! ~~~~~~~~~~~~ !!]"
+
+msgid "ui.video.coach_seek_locked"
+msgstr "[!! Ŵáţçĥ üþ ţö ĥëŕë ƒïŕšţ, ţĥëñ ýöü çáñ šķïþ áĥëáđ! ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.video.coach_start"
+msgstr "[!! Pŕëšš Pĺáý ţö ŵáţçĥ ţĥë vïđëö! ~~~~~~~~~~~~ !!]"
+
+msgid "ui.video.coach_watch"
+msgstr "[!! Ŵáţçĥ çáŕëƒüĺĺý! ~~~~~~~ !!]"
+
+msgid "ui.video.coach_watch_questions"
+msgstr "[!! Ŵáţçĥ çáŕëƒüĺĺý! Å ? öñ ţĥë ƀáŕ ɱáŕķš á qüëšţïöñ. ~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.video.not_ready"
 msgstr "[!! Ţĥë vïđëö ïš šţïĺĺ ƀëïñğ þŕëþáŕëđ. Pĺëášë çöɱë ƀáçķ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"

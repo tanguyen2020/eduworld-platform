@@ -190,13 +190,9 @@ static func progress_bar(value: float = 0.0) -> ProgressBar:
 
 ## A one-line horizontal scroller for a long chip row (STUDENT_GAME_UX_SOCIAL §3 "cuộn ngang"): the row never wraps
 ## into several lines that would push the content down.
-static func chip_scroller(row: Control) -> ScrollContainer:
-	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(row)
-	return scroll
+static func chip_scroller(row: Control) -> Control:
+	# F099: arrows on both sides appear when the chips do not fit (the hidden chips are never a surprise).
+	return ChipScroller.new(row)
 
 
 ## F098 (grade-band matrix): the minimum width of a wrapping button — its whole label on one line up to `cap` px, never

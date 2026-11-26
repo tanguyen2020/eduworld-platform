@@ -177,10 +177,19 @@ msgstr ""
 msgid "ui.activity_player.waiting"
 msgstr ""
 
-msgid "ui.audio.not_ready"
+msgid "ui.audio.coach_again"
 msgstr ""
 
-msgid "ui.audio.play"
+msgid "ui.audio.coach_listen"
+msgstr ""
+
+msgid "ui.audio.coach_plays_done"
+msgstr ""
+
+msgid "ui.audio.coach_start"
+msgstr ""
+
+msgid "ui.audio.not_ready"
 msgstr ""
 
 msgid "ui.audio.plays_exhausted"
@@ -547,6 +556,12 @@ msgid "ui.common.outside_access_window"
 msgstr ""
 
 msgid "ui.common.retry"
+msgstr ""
+
+msgid "ui.common.scroll_back"
+msgstr ""
+
+msgid "ui.common.scroll_more"
 msgstr ""
 
 msgid "ui.common.timed"
@@ -1539,6 +1554,27 @@ msgstr ""
 msgid "ui.login.wordmark"
 msgstr ""
 
+msgid "ui.media.back10"
+msgstr ""
+
+msgid "ui.media.listen"
+msgstr ""
+
+msgid "ui.media.listen_again"
+msgstr ""
+
+msgid "ui.media.off"
+msgstr ""
+
+msgid "ui.media.pause"
+msgstr ""
+
+msgid "ui.media.play"
+msgstr ""
+
+msgid "ui.media.replay"
+msgstr ""
+
 msgid "ui.menu.achievements"
 msgstr ""
 
@@ -1995,10 +2031,28 @@ msgstr ""
 msgid "ui.simulation.checking"
 msgstr ""
 
+msgid "ui.simulation.coach_checking"
+msgstr ""
+
+msgid "ui.simulation.coach_not_reached"
+msgstr ""
+
+msgid "ui.simulation.coach_reached"
+msgstr ""
+
+msgid "ui.simulation.coach_runs_done"
+msgstr ""
+
+msgid "ui.simulation.coach_start"
+msgstr ""
+
 msgid "ui.simulation.goal_not_reached"
 msgstr ""
 
 msgid "ui.simulation.goal_reached"
+msgstr ""
+
+msgid "ui.simulation.goals"
 msgstr ""
 
 msgid "ui.simulation.log_invalid"
@@ -2016,13 +2070,34 @@ msgstr ""
 msgid "ui.simulation.retry"
 msgstr ""
 
+msgid "ui.simulation.runs"
+msgstr ""
+
 msgid "ui.simulation.runs_exhausted"
 msgstr ""
 
-msgid "ui.video.not_ready"
+msgid "ui.simulation.steps"
 msgstr ""
 
-msgid "ui.video.play_pause"
+msgid "ui.video.coach_branch"
+msgstr ""
+
+msgid "ui.video.coach_done"
+msgstr ""
+
+msgid "ui.video.coach_seek_locked"
+msgstr ""
+
+msgid "ui.video.coach_start"
+msgstr ""
+
+msgid "ui.video.coach_watch"
+msgstr ""
+
+msgid "ui.video.coach_watch_questions"
+msgstr ""
+
+msgid "ui.video.not_ready"
 msgstr ""
 
 msgid "ui.video.restart"

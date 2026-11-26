@@ -246,6 +246,12 @@ msgstr "Bây giờ ngoài giờ chơi EduWorld. Em có thể vào trong khung gi
 msgid "ui.common.retry"
 msgstr "Thử lại"
 
+msgid "ui.common.scroll_back"
+msgstr "Xem các mục phía trước"
+
+msgid "ui.common.scroll_more"
+msgstr "Xem thêm các mục"
+
 msgid "ui.common.timed"
 msgstr "Có tính giờ"
 
@@ -2267,3 +2273,4 @@ msgstr "Thưởng khi đủ bộ:"
 
 msgid "ui.challenge.minutes"
 msgstr "{m} phút"
+

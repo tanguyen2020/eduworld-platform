@@ -50,6 +50,8 @@ func setup(attempt_model: AttemptModel, ctx: RendererContext) -> void:
 ## Prepares a question scene before its `setup` (F097): its "Đọc to" button reports to the host.
 func wire_question(q: QuestionRendererBase) -> void:
 	q.read_aloud_enabled = true
+	# F099: the question keeps its own height so a centred box (media question overlay) centres it.
+	q.size_flags_vertical = Control.SIZE_FILL
 	q.read_aloud_requested.connect(func() -> void: read_aloud_requested.emit())
 
 
