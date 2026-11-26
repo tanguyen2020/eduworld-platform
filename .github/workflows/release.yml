@@ -1,6 +1,9 @@
 # Release lane (F001 T040, F001-AC-15, F001-AC-26): build the four images from one commit, scan,
 # SBOM, sign (keyless cosign), push to ghcr.io tagged with git sha (+ backend version on tags).
-# Never tags `latest`. The deploy job is a skeleton for F130 and is gated by vars.DEPLOY_ENABLED.
+# Never tags `latest`. F130: ops images (ops-scheduler, backup-tools, postgres-patroni) and the Swarm deploy —
+# staging on a backend/vX.Y.Z tag (migrate jobs → stack deploy, digests recorded), production after the Release Manager
+# approval of Environment production (same digests, maintenance window unless [hotfix], migrate → core-api canary →
+# rest of the stack) and rollback of one Swarm service (workflow_dispatch). Deploy jobs need vars.DEPLOY_ENABLED.
 name: release
 
 on:
@@ -9,8 +12,28 @@ on:
     paths:
       - "src/backend/**"
       - "deploy/docker/**"
+      - "deploy/backup/**"
+      - "deploy/postgres/**"
       - ".github/workflows/release.yml"
-    tags: ["backend/v*"]
+    tags: ["backend/v*", "ops/v*"]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "rollback = docker service rollback of one Swarm service (DEPLOYMENT §11.3)"
+        type: choice
+        options: [rollback]
+        default: rollback
+      environment:
+        type: choice
+        options: [staging, production]
+        default: staging
+      service:
+        type: choice
+        options: [core-api, realtime, worker-events, worker-chat, worker-jobs]
+        default: core-api
+      reason:
+        type: string
+        default: incident
 
 permissions:
   contents: read
@@ -21,6 +44,7 @@ concurrency:
 
 jobs:
   build-image:
+    if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/ops/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -92,10 +116,180 @@ jobs:
       - name: sign
         run: cosign sign --yes "${{ env.IMAGE }}@${{ steps.push.outputs.digest }}"
 
+  # F130: images of the ops and data stacks (own version: tag ops/vX.Y.Z → OPS_VERSION of deploy/swarm/<env>/stack.env).
+  build-ops-image:
+    if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/backend/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { image: ops-scheduler, file: deploy/docker/ops-scheduler.Dockerfile, hardened: true }
+          - { image: backup-tools, file: deploy/backup/Dockerfile, hardened: false }
+          - { image: postgres-patroni, file: deploy/postgres/patroni.Dockerfile, hardened: false }
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/eduworld/${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: version
+        id: v
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/ops/v* ]]; then v="${GITHUB_REF#refs/tags/ops/}"; else v="sha-$(git rev-parse --short=12 HEAD)"; fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse --short=12 HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+      - uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: build (load for scanning)
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          load: true
+          tags: ${{ env.IMAGE }}:${{ steps.v.outputs.sha }}
+          build-args: |
+            VERSION=${{ steps.v.outputs.version }}
+            COMMIT=${{ steps.v.outputs.sha }}
+      - name: trivy image (block Critical/High with a fix)
+        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # v0.32.0
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ steps.v.outputs.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: check image hardening (distroless only; backup-tools and postgres-patroni need a shell for pgBackRest/Patroni)
+        if: matrix.hardened
+        run: bash scripts/ci/check-image.sh "${{ env.IMAGE }}:${{ steps.v.outputs.sha }}"
+      - name: push
+        id: push
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.v.outputs.sha }}
+            ${{ env.IMAGE }}:${{ steps.v.outputs.version }}
+          build-args: |
+            VERSION=${{ steps.v.outputs.version }}
+            COMMIT=${{ steps.v.outputs.sha }}
+      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
+      - name: sign
+        run: cosign sign --yes "${{ env.IMAGE }}@${{ steps.push.outputs.digest }}"
+
+  # F130-AC-02, AC-03: staging on every backend/vX.Y.Z tag — migrate job per module database, then docker stack deploy
+  # (only changed services are updated); the digests that ran are recorded for production (F130-AC-05).
   deploy-staging:
     needs: build-image
-    if: vars.DEPLOY_ENABLED == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.pull_request.head.repo.fork != true
+    if: vars.DEPLOY_ENABLED == 'true' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/backend/v') && github.event.pull_request.head.repo.fork != true
     runs-on: [self-hosted, deploy]
     environment: staging
+    concurrency: { group: deploy-staging, cancel-in-progress: false }
+    env:
+      DOCKER_HOST: ${{ vars.SWARM_MANAGER_HOST }}
+      DOCKER_TLS_VERIFY: "1"
+      DOCKER_CERT_PATH: ${{ github.workspace }}/.docker-tls
+      EW_DEPLOY_REASON: release
     steps:
-      - run: echo "Swarm deploy steps are added by F130 (DEPLOYMENT §11)."
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: Docker API client certificate (manager over TLS, DEPLOYMENT §10.3)
+        env:
+          CA: ${{ secrets.SWARM_TLS_CA }}
+          CERT: ${{ secrets.SWARM_TLS_CERT }}
+          KEY: ${{ secrets.SWARM_TLS_KEY }}
+        run: bash scripts/deploy/write-docker-tls.sh
+      - name: validate stacks
+        run: EW_SKIP_GO=1 bash scripts/deploy/validate-stacks.sh --env=staging
+      - name: migrate jobs, then stack deploy
+        run: bash scripts/deploy/deploy-service.sh --env=staging --stack=app --version="${GITHUB_REF#refs/tags/backend/}" --record-digests="$RUNNER_TEMP/staging-digests.txt"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: staging-digests
+          path: ${{ runner.temp }}/staging-digests.txt
+      - name: remove credentials
+        if: always()
+        run: rm -rf "$DOCKER_CERT_PATH"
+
+  # F130-AC-04, AC-05: production — required reviewers of Environment production (Release Manager), the same digests as
+  # staging, maintenance_window 22:00–06:00 ICT or weekend unless the tagged commit says [hotfix] (deploy-service.sh),
+  # then migrate → core-api canary 10 % for 30 minutes → rest of the stack.
+  deploy-production:
+    needs: deploy-staging
+    if: vars.DEPLOY_ENABLED == 'true' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/backend/v') && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: production
+    concurrency: { group: deploy-production, cancel-in-progress: false }
+    env:
+      DOCKER_HOST: ${{ vars.SWARM_MANAGER_HOST }}
+      DOCKER_TLS_VERIFY: "1"
+      DOCKER_CERT_PATH: ${{ github.workspace }}/.docker-tls
+      EW_APISIX_ADMIN_URL: ${{ vars.APISIX_ADMIN_URL }}
+      EW_PROMETHEUS_URL: ${{ vars.PROMETHEUS_URL }}
+      EW_APISIX_ADMIN_KEY_FILE: ${{ github.workspace }}/.docker-tls/apisix-admin-key
+      EW_DEPLOY_REASON: release
+      HOTFIX_FLAG: ${{ contains(github.event.head_commit.message, '[hotfix]') && '--hotfix' || '' }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: staging-digests
+          path: ${{ runner.temp }}
+      - name: Docker API client certificate and APISIX admin key
+        env:
+          CA: ${{ secrets.SWARM_TLS_CA }}
+          CERT: ${{ secrets.SWARM_TLS_CERT }}
+          KEY: ${{ secrets.SWARM_TLS_KEY }}
+          APISIX_ADMIN_KEY: ${{ secrets.APISIX_ADMIN_KEY }}
+        run: bash scripts/deploy/write-docker-tls.sh
+      - name: migrate jobs (same digests as staging, maintenance window)
+        run: bash scripts/deploy/deploy-service.sh --env=production --stack=app --version="${GITHUB_REF#refs/tags/backend/}" --expect-digests="$RUNNER_TEMP/staging-digests.txt" --migrate-only $HOTFIX_FLAG
+      - name: canary core-api 10 % for 30 minutes
+        run: bash scripts/deploy/canary.sh --env=production --version="${GITHUB_REF#refs/tags/backend/}"
+      - name: rest of the stack (realtime, worker-*)
+        run: bash scripts/deploy/deploy-service.sh --env=production --stack=app --version="${GITHUB_REF#refs/tags/backend/}" --expect-digests="$RUNNER_TEMP/staging-digests.txt" --skip-migrate $HOTFIX_FLAG
+      - name: remove credentials
+        if: always()
+        run: rm -rf "$DOCKER_CERT_PATH"
+
+  # F130-AC-03: rollback of ONE Swarm service on demand (≤ 15 minutes), the other services untouched.
+  rollback:
+    if: vars.DEPLOY_ENABLED == 'true' && github.event_name == 'workflow_dispatch' && inputs.action == 'rollback' && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 20
+    env:
+      DOCKER_HOST: ${{ vars.SWARM_MANAGER_HOST }}
+      DOCKER_TLS_VERIFY: "1"
+      DOCKER_CERT_PATH: ${{ github.workspace }}/.docker-tls
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Docker API client certificate
+        env:
+          CA: ${{ secrets.SWARM_TLS_CA }}
+          CERT: ${{ secrets.SWARM_TLS_CERT }}
+          KEY: ${{ secrets.SWARM_TLS_KEY }}
+        run: bash scripts/deploy/write-docker-tls.sh
+      - name: docker service rollback
+        env:
+          SERVICE: ${{ inputs.service }}
+          TARGET_ENV: ${{ inputs.environment }}
+          REASON: ${{ inputs.reason }}
+        run: bash scripts/deploy/rollback.sh --env="$TARGET_ENV" --service="$SERVICE" --reason="$REASON"
+      - name: remove credentials
+        if: always()
+        run: rm -rf "$DOCKER_CERT_PATH"

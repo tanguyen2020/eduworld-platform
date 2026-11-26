@@ -153,6 +153,45 @@ db-backup: ## Dump one module database: MOD=<module>
 db-restore: ## Restore one module database locally: MOD=<module> FILE=<dump>
 	bash scripts/ops/db-restore.sh $(MOD) $(FILE)
 
+# ---------- staging/production on Docker Swarm (F130, DEPLOYMENT §4–§13, BACKUP_RECOVERY) ----------
+# Run on the self-hosted runner `deploy` (DOCKER_HOST = Swarm manager over TLS); swarm-validate and test-ops need no swarm.
+.PHONY: swarm-validate swarm-up deploy-service deploy-rollback secrets-sync restore-test ops-job test-ops test-ops-integration
+ENV ?= staging
+SERVICE ?=
+VERSION ?=
+MODE ?= full
+DB ?= eduworld_learning
+swarm-validate: ## Static checks of deploy/swarm/<env>: docker stack config, policy (placement, networks, secrets), scale schedule (ENV=staging|production; default both)
+	bash scripts/deploy/validate-stacks.sh $(if $(filter command line,$(origin ENV)),--env=$(ENV))
+
+swarm-up: ## First setup of an environment: node labels, overlay networks, then the infra, data and ops stacks (ENV=<env>)
+	node scripts/deploy/label-nodes.mjs deploy/swarm/nodes/$(ENV).yaml
+	bash deploy/swarm/networks.sh
+	bash scripts/deploy/deploy-service.sh --env=$(ENV) --stack=infra
+	bash scripts/deploy/deploy-service.sh --env=$(ENV) --stack=data
+	bash scripts/deploy/deploy-service.sh --env=$(ENV) --stack=ops
+
+deploy-service: ## Migrate jobs then deploy the app stack, or one service: ENV=<env> VERSION=vX.Y.Z [SERVICE=<swarm-service>]
+	bash scripts/deploy/deploy-service.sh --env=$(ENV) --stack=app --version=$(VERSION) $(if $(SERVICE),--service=$(SERVICE))
+
+deploy-rollback: ## Roll one backend Swarm service back to its previous spec (≤ 15 min): SERVICE=<swarm-service> ENV=<env>
+	bash scripts/deploy/rollback.sh --env=$(ENV) --service=$(SERVICE)
+
+secrets-sync: ## SOPS → versioned Docker secrets (<name>_v<N>, previous version kept): ENV=<env>
+	bash scripts/deploy/secrets-sync.sh --env=$(ENV)
+
+restore-test: ## Restore test in an isolated scratch cluster with the restore credential: ENV=<env> MODE=full|module [DB=eduworld_<module>]
+	bash scripts/ops/run-ops-job.sh --env=$(ENV) --like=backup-tools --restore -- restore_test.sh --mode=$(MODE) $(if $(filter module,$(MODE)),--db=$(DB)) --actor="$(or $(EW_ACTOR),$(USER))" --purpose="$(or $(EW_PURPOSE),monthly restore test)"
+
+ops-job: ## One-off runbook job copying a service: ENV=<env> LIKE=<swarm-service> CMD="…" [RESTORE=1] [SECRET=<name>]
+	bash scripts/ops/run-ops-job.sh --env=$(ENV) --like=$(LIKE) $(if $(RESTORE),--restore) $(if $(SECRET),--secret=$(SECRET)) -- $(CMD)
+
+test-ops: ## Unit tests of the deploy/backup/runbook scripts and the Swarm policy checks (stubbed docker, pgbackrest, rclone, nats)
+	node --test tests/ops/
+
+test-ops-integration: ## Backup, PITR, restore test, object storage copy/restore, Docker API proxy against throwaway containers
+	bash tests/ops/integration/run.sh
+
 # ---------- code generation / checks ----------
 .PHONY: gen gen-check arch-check lint test test-integration test-contract
 gen: ## Generate code: architecture rules from x-allowed-callers, problem codes from ProblemCode (later: ent, oapi-codegen)

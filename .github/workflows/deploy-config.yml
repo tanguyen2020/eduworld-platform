@@ -1,5 +1,6 @@
 # Deploy-config lane (F001 T041): validate every compose file and the admin-port rule (F001-AC-06).
-# F004 adds APISIX/Keycloak checks; F130 adds the Swarm stack diff.
+# F004 adds APISIX/Keycloak checks; F130 adds the Swarm stacks (policy, secrets, scale schedule), the unit tests of the
+# deploy/backup/runbook scripts and the backup/PITR/restore integration test against throwaway containers.
 name: deploy-config
 
 on:
@@ -7,12 +8,22 @@ on:
     paths:
       - "deploy/**"
       - "specs/openapi/eduworld-api.v1.yaml"
+      - "scripts/deploy/**"
+      - "scripts/backup/**"
+      - "scripts/ops/**"
+      - "tests/ops/**"
+      - "src/backend/tools/ops-scheduler/**"
       - ".github/workflows/deploy-config.yml"
   push:
     branches: [main]
     paths:
       - "deploy/**"
       - "specs/openapi/eduworld-api.v1.yaml"
+      - "scripts/deploy/**"
+      - "scripts/backup/**"
+      - "scripts/ops/**"
+      - "tests/ops/**"
+      - "src/backend/tools/ops-scheduler/**"
       - ".github/workflows/deploy-config.yml"
 
 permissions:
@@ -88,3 +99,40 @@ jobs:
       - run: npm ci --prefix scripts --silent
       - run: node deploy/keycloak/scripts/check-realm.mjs
       - run: node --test deploy/keycloak/scripts/check-realm.test.mjs
+
+  # F130 (F130-AC-01, AC-06..AC-09, AC-24): Swarm stacks of staging/production — docker stack config, placement/resources/
+  # update/healthcheck/network rules, secret ownership per module/binary, versioned external secrets, no secret value,
+  # scale schedule (schema + ops-scheduler validate); unit tests of the scripts; shellcheck.
+  swarm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: stable
+          check-latest: true
+          cache-dependency-path: src/backend/go.sum
+      - run: npm ci --prefix scripts --silent
+      - name: validate stacks (validate)
+        run: bash scripts/deploy/validate-stacks.sh
+      - name: ops-scheduler unit tests
+        run: go -C src/backend test ./tools/ops-scheduler/...
+      - name: unit tests of the deploy/backup/runbook scripts
+        run: node --test tests/ops/
+      - name: shellcheck
+        run: |
+          shellcheck -x -S warning -e SC1091 scripts/deploy/*.sh scripts/backup/*.sh scripts/ops/rb0*.sh scripts/ops/reset-consumers.sh             scripts/ops/patroni-switchover.sh scripts/ops/run-ops-job.sh deploy/swarm/networks.sh deploy/swarm/config/*.sh             deploy/postgres/bin/* tests/ops/integration/run.sh tests/ops/docker-stub.sh tests/ops/staging/*.sh
+
+  # F130 (F130-AC-12..AC-17, AC-20, AC-23): backups, PITR restore tests, RB-01 module restore, object storage copy and
+  # RB-05 restore, Docker API allowlist proxy — real F130 images against throwaway containers (stand-ins for S3, second
+  # site, new cluster and manager are labelled in tests/ops/integration/compose.yml).
+  backup-restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: integration
+        run: bash tests/ops/integration/run.sh
