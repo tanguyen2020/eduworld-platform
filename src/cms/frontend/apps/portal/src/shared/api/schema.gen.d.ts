@@ -11540,14 +11540,31 @@ export interface components {
             };
             channel_id: components["schemas"]["Uuid"];
             channel_type: components["schemas"]["ChannelType"];
+            /**
+             * @description Tính năng người gọi dùng được lúc này ở channel (delta F119, CHAT_SYSTEM §7.1): features của chat policy hiệu lực
+             *     (chỉ cấp platform; mục "✓ luôn" của match/party/team luôn bật), thu hẹp theo sendable_kinds (sticker/GIF cần loại
+             *     tương ứng; sửa và mention cần text; trả lời, trích dẫn, chuyển tiếp cần ít nhất một loại gửi được). Vắng khi policy
+             *     không cho channel. Server vẫn kiểm mỗi lệnh.
+             */
             features?: components["schemas"]["ChatFeatures"];
             /** Format: int64 */
             last_seq?: number;
+            /**
+             * @description Số ký tự tối đa của tin text theo chat policy hiệu lực của channel (min các cấp, CHAT_SYSTEM §3.1) — delta F119;
+             *     client không dùng hằng số. Vắng khi policy không cho channel.
+             */
+            max_text_length?: number;
             muted?: boolean;
             /** Format: int64 */
             my_read_seq?: number;
             pinned_count?: number;
             purge_after?: components["schemas"]["Timestamp"];
+            /**
+             * @description Loại tin người gọi gửi được lúc này (delta F119): allowed_kinds thu hẹp theo sanction đang hiệu lực của người gọi
+             *     (mute → rỗng; restrict_text → chỉ quick; restrict_dm → rỗng ở direct — MODERATION §7). Không tính giờ giới
+             *     nghiêm/khung giờ (kiểm khi gửi).
+             */
+            sendable_kinds?: components["schemas"]["MessageKind"][];
             /**
              * @description closed: channel gameplay đã đóng; read_only: club bị khóa/lưu trữ; frozen: DM bị đóng băng do block (F120)
              * @enum {string}
@@ -11585,6 +11602,8 @@ export interface components {
         /** @description Tính năng hiệu lực của channel (ADR-0034, cấu hình platform) */
         ChatFeatures: {
             edit?: boolean;
+            /** @description Thời hạn sửa tin của mình tính từ created_at (chat_edit_window, CHAT_SYSTEM §7.2) — delta F119, additive */
+            edit_window_minutes?: number;
             forward?: boolean;
             gif?: boolean;
             mention?: boolean;
@@ -11592,6 +11611,8 @@ export interface components {
             quote?: boolean;
             reaction?: boolean;
             recall?: boolean;
+            /** @description Thời hạn thu hồi tin của mình (chat_recall_window, CHAT_SYSTEM §7.3) — delta F119, additive */
+            recall_window_hours?: number;
             /** @enum {string} */
             receipts?: "none" | "count" | "per_member";
             reply?: boolean;
@@ -13175,11 +13196,22 @@ export interface components {
         GameChallengeDetail: components["schemas"]["GameChallengeSummary"] & {
             cooldown_until?: components["schemas"]["Timestamp"];
             description?: string;
+            /**
+             * @description Mô tả song ngữ vi + en của version (văn bản game, CONTENT_MODEL §8 — publish đã bắt buộc đủ hai bản) để client
+             *     đổi ngôn ngữ không tải lại — delta F076-3, additive; description (chuỗi theo Accept-Language) giữ nguyên cho
+             *     client cũ. Vắng khi version không có mô tả.
+             */
+            description_i18n?: components["schemas"]["LocalizedText"];
             /** @description Mọi mức khó của version, dễ trước (mức khả dụng và mức khóa có lý do) — delta F076 */
             difficulties?: components["schemas"]["ChallengeDifficultyOption"][];
             first_clear_rewards?: components["schemas"]["RewardGrantSummary"][];
             lives?: number;
             rules_summary?: string;
+            /**
+             * @description Tóm tắt luật song ngữ (delta F076-3, additive). Chỉ có khi cấu hình challenge có nguồn văn bản này; schema
+             *     challenge hiện chưa có trường đó nên server chưa trả (giống rules_summary).
+             */
+            rules_summary_i18n?: components["schemas"]["LocalizedText"];
             time_limit_seconds?: number;
             version?: number;
         };
@@ -15169,6 +15201,11 @@ export interface components {
         PartyMember: {
             avatar_config?: components["schemas"]["AvatarConfig"];
             joined_at: components["schemas"]["Timestamp"];
+            /**
+             * @description Level XP của người chơi (delta F102, PARTY_SYSTEM) từ projection ref.player_profiles (game_profile.updated,
+             *     level.reached của module game). Vắng khi chưa có dữ liệu — client không hiện level, không coi là lỗi.
+             */
+            level?: number;
             nickname: string;
             /** @enum {string} */
             presence?: "online" | "in_activity" | "disconnected" | "offline";
@@ -17291,6 +17328,10 @@ export interface components {
         };
         /** @description Không PII (GAME_ANALYTICS §3.2). Thuộc tính dùng theo type. */
         TelemetryEvent: {
+            /** @description content_download: số byte tải từ nguồn, chỉ dùng cho metric eduworld_client_content_download_bytes_total */
+            bytes?: number;
+            /** @description chat_seq_gap: loại channel có khoảng trống seq (MONITORING §3 eduworld_chat_seq_gaps_total) */
+            channel_type?: components["schemas"]["ChannelType"];
             /** @description Khử trùng phía server */
             client_event_id?: components["schemas"]["Uuid"];
             crash_signature?: string;
@@ -17300,6 +17341,8 @@ export interface components {
             fps_p10?: number;
             fps_p50?: number;
             frame_ms_p95?: number;
+            /** @description chat_seq_gap: số tin bị thiếu client phát hiện (seq nhảy), chỉ dùng cho metric */
+            gap_count?: number;
             /** @enum {string} */
             kind?: "cold_start" | "area_transition" | "activity_open";
             mem_mb?: number;
@@ -17317,9 +17360,14 @@ export interface components {
             rtt_p95_ms?: number;
             scene_code?: string;
             screen_code?: string;
+            /**
+             * @description content_download: nguồn tải gói nội dung (PERFORMANCE_BUDGET §10.1)
+             * @enum {string}
+             */
+            source?: "preinstalled" | "lan_cache" | "cdn";
             step_code?: string;
             /** @enum {string} */
-            type: "screen_view" | "tutorial_step" | "perf_sample" | "load_time" | "client_error" | "crash" | "network_sample" | "break_reminder_shown";
+            type: "screen_view" | "tutorial_step" | "perf_sample" | "load_time" | "client_error" | "crash" | "network_sample" | "break_reminder_shown" | "chat_seq_gap" | "content_download";
         };
         TenantAssignment: {
             assigned_at: components["schemas"]["Timestamp"];
@@ -24340,6 +24388,92 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+                     *           "channel_type": "party",
+                     *           "allowed_kinds": [
+                     *             "text",
+                     *             "emoji",
+                     *             "quick",
+                     *             "sticker",
+                     *             "gif"
+                     *           ],
+                     *           "sendable_kinds": [
+                     *             "text",
+                     *             "emoji",
+                     *             "quick",
+                     *             "sticker",
+                     *             "gif"
+                     *           ],
+                     *           "max_text_length": 200,
+                     *           "features": {
+                     *             "edit": true,
+                     *             "recall": true,
+                     *             "reply": true,
+                     *             "quote": true,
+                     *             "forward": true,
+                     *             "sticker": true,
+                     *             "gif": true,
+                     *             "reaction": true,
+                     *             "mention": true,
+                     *             "pin": true,
+                     *             "typing": true,
+                     *             "receipts": "per_member",
+                     *             "search": true,
+                     *             "edit_window_minutes": 15,
+                     *             "recall_window_hours": 24
+                     *           },
+                     *           "unread_count": 2,
+                     *           "last_seq": 15,
+                     *           "my_read_seq": 13,
+                     *           "status": "open",
+                     *           "capabilities": {
+                     *             "voice": false
+                     *           }
+                     *         },
+                     *         {
+                     *           "channel_id": "0193b0a0-0000-7000-8000-000000000501",
+                     *           "channel_type": "match",
+                     *           "allowed_kinds": [
+                     *             "text",
+                     *             "emoji",
+                     *             "quick",
+                     *             "sticker",
+                     *             "gif"
+                     *           ],
+                     *           "unread_count": 0,
+                     *           "last_seq": 8,
+                     *           "my_read_seq": 8,
+                     *           "status": "closed",
+                     *           "purge_after": "2026-11-28T08:30:00Z",
+                     *           "capabilities": {
+                     *             "voice": false
+                     *           }
+                     *         },
+                     *         {
+                     *           "channel_id": "0193b0a0-0000-7000-8000-000000000502",
+                     *           "channel_type": "team",
+                     *           "allowed_kinds": [
+                     *             "text",
+                     *             "emoji",
+                     *             "quick",
+                     *             "sticker",
+                     *             "gif"
+                     *           ],
+                     *           "unread_count": 1,
+                     *           "last_seq": 5,
+                     *           "my_read_seq": 4,
+                     *           "status": "open",
+                     *           "capabilities": {
+                     *             "voice": false
+                     *           }
+                     *         }
+                     *       ]
+                     *     }
+                     */
                     "application/json": {
                         /** @description Danh sách có giới hạn theo nghiệp vụ (API_DESIGN §5.1): kênh DM ≤ friend_limits (100 bạn) + club ≤ 5 + kênh party/trận/khu vực đang tham gia; không phân trang */
                         data: components["schemas"]["Channel"][];
@@ -24381,6 +24515,161 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "message_id": "0193b0a0-0000-7000-8000-000000000611",
+                     *           "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+                     *           "seq": 11,
+                     *           "sender": {
+                     *             "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *             "nickname": "CaHeoVui07",
+                     *             "level": 10,
+                     *             "avatar_config": {
+                     *               "schema_version": 1,
+                     *               "body_type": "kid_b",
+                     *               "skin_tone": "tone_04",
+                     *               "hair": {
+                     *                 "item_id": "hair_spiky_01",
+                     *                 "color": "hair_col_01"
+                     *               },
+                     *               "outfit": {
+                     *                 "item_id": "outfit_sport_01"
+                     *               }
+                     *             }
+                     *           },
+                     *           "kind": "quick",
+                     *           "quick_message_id": "qm_hello",
+                     *           "revision": 1,
+                     *           "moderation_state": "allowed",
+                     *           "created_at": "2026-11-21T08:03:00Z"
+                     *         },
+                     *         {
+                     *           "message_id": "0193b0a0-0000-7000-8000-000000000612",
+                     *           "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+                     *           "seq": 12,
+                     *           "sender": {
+                     *             "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+                     *             "nickname": "GauNau15",
+                     *             "level": 11,
+                     *             "avatar_config": {
+                     *               "schema_version": 1,
+                     *               "body_type": "kid_a",
+                     *               "skin_tone": "tone_03",
+                     *               "hair": {
+                     *                 "item_id": "hair_ponytail_01",
+                     *                 "color": "hair_col_06"
+                     *               },
+                     *               "outfit": {
+                     *                 "item_id": "outfit_explorer_01"
+                     *               }
+                     *             }
+                     *           },
+                     *           "kind": "text",
+                     *           "body": "Mình sẵn sàng rồi!",
+                     *           "revision": 1,
+                     *           "moderation_state": "allowed",
+                     *           "created_at": "2026-11-21T08:03:20Z"
+                     *         },
+                     *         {
+                     *           "message_id": "0193b0a0-0000-7000-8000-000000000613",
+                     *           "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+                     *           "seq": 13,
+                     *           "sender": {
+                     *             "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *             "nickname": "MeoXanh42",
+                     *             "level": 12,
+                     *             "avatar_config": {
+                     *               "schema_version": 1,
+                     *               "body_type": "kid_a",
+                     *               "skin_tone": "tone_02",
+                     *               "hair": {
+                     *                 "item_id": "hair_bob_01",
+                     *                 "color": "hair_col_02"
+                     *               },
+                     *               "outfit": {
+                     *                 "item_id": "outfit_school_01"
+                     *               }
+                     *             }
+                     *           },
+                     *           "kind": "text",
+                     *           "body": "Đi thôi nào!",
+                     *           "reactions": {
+                     *             "counts": {
+                     *               "thumbs_up": 2,
+                     *               "heart": 1
+                     *             },
+                     *             "mine": []
+                     *           },
+                     *           "revision": 1,
+                     *           "moderation_state": "allowed",
+                     *           "created_at": "2026-11-21T08:03:40Z"
+                     *         },
+                     *         {
+                     *           "message_id": "0193b0a0-0000-7000-8000-000000000614",
+                     *           "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+                     *           "seq": 14,
+                     *           "sender": {
+                     *             "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *             "nickname": "CaHeoVui07",
+                     *             "level": 10,
+                     *             "avatar_config": {
+                     *               "schema_version": 1,
+                     *               "body_type": "kid_b",
+                     *               "skin_tone": "tone_04",
+                     *               "hair": {
+                     *                 "item_id": "hair_spiky_01",
+                     *                 "color": "hair_col_01"
+                     *               },
+                     *               "outfit": {
+                     *                 "item_id": "outfit_sport_01"
+                     *               }
+                     *             }
+                     *           },
+                     *           "kind": "text",
+                     *           "body": "Nhóm mình *** quá!",
+                     *           "reply_to_message_id": "0193b0a0-0000-7000-8000-000000000613",
+                     *           "reply_excerpt": "Đi thôi nào!",
+                     *           "revision": 2,
+                     *           "edited_at": "2026-11-21T08:04:30Z",
+                     *           "moderation_state": "masked",
+                     *           "created_at": "2026-11-21T08:04:00Z"
+                     *         },
+                     *         {
+                     *           "message_id": "0193b0a0-0000-7000-8000-000000000615",
+                     *           "channel_id": "0193b0a0-0000-7000-8000-000000000102",
+                     *           "seq": 15,
+                     *           "sender": {
+                     *             "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+                     *             "nickname": "GauNau15",
+                     *             "level": 11,
+                     *             "avatar_config": {
+                     *               "schema_version": 1,
+                     *               "body_type": "kid_a",
+                     *               "skin_tone": "tone_03",
+                     *               "hair": {
+                     *                 "item_id": "hair_ponytail_01",
+                     *                 "color": "hair_col_06"
+                     *               },
+                     *               "outfit": {
+                     *                 "item_id": "outfit_explorer_01"
+                     *               }
+                     *             }
+                     *           },
+                     *           "kind": "emoji",
+                     *           "body": "star",
+                     *           "revision": 1,
+                     *           "moderation_state": "allowed",
+                     *           "created_at": "2026-11-21T08:04:10Z"
+                     *         }
+                     *       ],
+                     *       "page": {
+                     *         "has_more": false,
+                     *         "limit": 50
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["Message"][];
                         page: components["schemas"]["PageInfo"];
@@ -24659,6 +24948,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "gif_id": "0193b0a0-0000-7000-8000-000000000801",
+                     *           "url": "https://cdn.example.invalid/media/4c9d2b6e8f5a7b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c/clap.gif",
+                     *           "preview_url": "https://cdn.example.invalid/media/4c9d2b6e8f5a7b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c/clap_preview.png",
+                     *           "width": 320,
+                     *           "height": 240,
+                     *           "tags": [
+                     *             "cổ vũ",
+                     *             "cheer"
+                     *           ]
+                     *         },
+                     *         {
+                     *           "gif_id": "0193b0a0-0000-7000-8000-000000000802",
+                     *           "url": "https://cdn.example.invalid/media/5d0e3c7f9a6b8c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d/wave.gif",
+                     *           "preview_url": "https://cdn.example.invalid/media/5d0e3c7f9a6b8c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d/wave_preview.png",
+                     *           "width": 320,
+                     *           "height": 240,
+                     *           "tags": [
+                     *             "chào hỏi",
+                     *             "hello"
+                     *           ]
+                     *         }
+                     *       ],
+                     *       "page": {
+                     *         "has_more": false,
+                     *         "limit": 50
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["GifAsset"][];
                         page: components["schemas"]["PageInfo"];
@@ -24878,6 +25199,72 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "quick_message_id": "qm_hello",
+                     *           "category": "greeting",
+                     *           "text": {
+                     *             "vi": "Xin chào!",
+                     *             "en": "Hello!"
+                     *           },
+                     *           "emoji": "wave",
+                     *           "sort_order": 10
+                     *         },
+                     *         {
+                     *           "quick_message_id": "qm_go_for_it",
+                     *           "category": "encouragement",
+                     *           "text": {
+                     *             "vi": "Cố lên!",
+                     *             "en": "Go for it!"
+                     *           },
+                     *           "emoji": "muscle",
+                     *           "sort_order": 30
+                     *         },
+                     *         {
+                     *           "quick_message_id": "qm_great_job",
+                     *           "category": "encouragement",
+                     *           "text": {
+                     *             "vi": "Giỏi quá!",
+                     *             "en": "Great job!"
+                     *           },
+                     *           "emoji": "star",
+                     *           "sort_order": 40
+                     *         },
+                     *         {
+                     *           "quick_message_id": "qm_thanks",
+                     *           "category": "thanks",
+                     *           "text": {
+                     *             "vi": "Cảm ơn bạn!",
+                     *             "en": "Thank you!"
+                     *           },
+                     *           "emoji": "heart",
+                     *           "sort_order": 50
+                     *         },
+                     *         {
+                     *           "quick_message_id": "qm_together",
+                     *           "category": "teamwork",
+                     *           "text": {
+                     *             "vi": "Mình cùng làm nhé!",
+                     *             "en": "Let's do it together!"
+                     *           },
+                     *           "emoji": "handshake",
+                     *           "sort_order": 60
+                     *         },
+                     *         {
+                     *           "quick_message_id": "qm_good_luck",
+                     *           "category": "encouragement",
+                     *           "text": {
+                     *             "vi": "Chúc may mắn!",
+                     *             "en": "Good luck!"
+                     *           },
+                     *           "emoji": "sparkles",
+                     *           "sort_order": 70
+                     *         }
+                     *       ]
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["QuickMessage"][];
                     };
@@ -24922,6 +25309,13 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "report_id": "0193b0a0-0000-7000-8000-000000000901",
+                     *       "status": "open",
+                     *       "message": "Cảm ơn em đã báo. Đội an toàn EduWorld sẽ xem xét."
+                     *     }
+                     */
                     "application/json": {
                         /** @description Lời cảm ơn theo Accept-Language (không tiết lộ danh tính người báo cáo) */
                         message: string;
@@ -25007,6 +25401,44 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "pack_id": "0193b0a0-0000-7000-8000-000000000701",
+                     *           "code": "may_friends",
+                     *           "name": "Mây và bạn bè",
+                     *           "unlocked": true,
+                     *           "stickers": [
+                     *             {
+                     *               "sticker_id": "0193b0a0-0000-7000-8000-000000000711",
+                     *               "url": "https://cdn.example.invalid/media/1f6a9e3b5c2d4e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f/may_wave.png",
+                     *               "alt_text": "Mây vẫy tay chào"
+                     *             },
+                     *             {
+                     *               "sticker_id": "0193b0a0-0000-7000-8000-000000000712",
+                     *               "url": "https://cdn.example.invalid/media/2a7b0f4c6d3e5f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a/may_cheer.png",
+                     *               "alt_text": "Mây cổ vũ"
+                     *             }
+                     *           ]
+                     *         },
+                     *         {
+                     *           "pack_id": "0193b0a0-0000-7000-8000-000000000702",
+                     *           "code": "space_explorers",
+                     *           "name": "Nhà thám hiểm vũ trụ",
+                     *           "unlocked": false,
+                     *           "unlock_hint": "Hoàn thành nhiệm vụ \"Bay tới Mặt Trăng\" để mở bộ này",
+                     *           "stickers": [
+                     *             {
+                     *               "sticker_id": "0193b0a0-0000-7000-8000-000000000721",
+                     *               "url": "https://cdn.example.invalid/media/3b8c1a5d7e4f6a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b/rocket.png",
+                     *               "alt_text": "Tên lửa cất cánh"
+                     *             }
+                     *           ]
+                     *         }
+                     *       ]
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["StickerPack"][];
                     };
@@ -37259,6 +37691,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "invitation_id": "0193b0a0-0000-7000-8000-000000000301",
+                     *           "party_id": "0193b0a0-0000-7000-8000-000000000101",
+                     *           "party_name": "Nhóm Sao Băng",
+                     *           "inviter": {
+                     *             "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *             "nickname": "MeoXanh42",
+                     *             "level": 12,
+                     *             "avatar_config": {
+                     *               "schema_version": 1,
+                     *               "body_type": "kid_a",
+                     *               "skin_tone": "tone_02",
+                     *               "hair": {
+                     *                 "item_id": "hair_bob_01",
+                     *                 "color": "hair_col_02"
+                     *               },
+                     *               "outfit": {
+                     *                 "item_id": "outfit_school_01"
+                     *               }
+                     *             }
+                     *           },
+                     *           "invitee_id": "0193b0a0-0000-7000-8000-0000000000a4",
+                     *           "status": "pending",
+                     *           "created_at": "2026-11-21T08:03:00Z",
+                     *           "expires_at": "2026-11-21T08:08:00Z"
+                     *         }
+                     *       ]
+                     *     }
+                     */
                     "application/json": {
                         /** @description Danh sách có giới hạn theo nghiệp vụ (API_DESIGN §5.1): lời mời đang chờ ≤ party_pending_invites_max (20), hết hạn sau 5 phút; lịch sử theo status trả 100 mới nhất */
                         data: components["schemas"]["PartyInvitation"][];
@@ -37646,6 +38110,23 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "room_id": "0193b0a0-0000-7000-8000-000000000201",
+                     *       "room_type": "private_instance",
+                     *       "party_activity_id": "0193b0a0-0000-7000-8000-000000000202",
+                     *       "activity_type": "quest",
+                     *       "activity_ref": "math_g3_multiplication",
+                     *       "scene_ref": "res://scenes/world/zones/learning_zone_math/Zone.tscn",
+                     *       "game_session_ref": "0193b0a0-0000-7000-8000-000000000203",
+                     *       "members": [
+                     *         "0193b0a0-0000-7000-8000-0000000000a1",
+                     *         "0193b0a0-0000-7000-8000-0000000000a2",
+                     *         "0193b0a0-0000-7000-8000-0000000000a3"
+                     *       ],
+                     *       "excluded_members": []
+                     *     }
+                     */
                     "application/json": components["schemas"]["PartySessionStart"];
                 };
             };
@@ -37787,6 +38268,89 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "activity_type": "quest",
+                     *           "activity_ref": "math_g3_multiplication",
+                     *           "title": {
+                     *             "vi": "Phép nhân ở Vương quốc Toán",
+                     *             "en": "Multiplication in the Math Kingdom"
+                     *           },
+                     *           "min_members": 2,
+                     *           "max_members": 4,
+                     *           "all_eligible": true,
+                     *           "members": [
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *               "eligible": true
+                     *             },
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *               "eligible": true
+                     *             },
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a3",
+                     *               "eligible": true
+                     *             }
+                     *           ]
+                     *         },
+                     *         {
+                     *           "activity_type": "explore",
+                     *           "activity_ref": "learning_zone.math",
+                     *           "title": {
+                     *             "vi": "Cùng khám phá Vương quốc Toán",
+                     *             "en": "Explore the Math Kingdom together"
+                     *           },
+                     *           "min_members": 1,
+                     *           "max_members": 8,
+                     *           "all_eligible": true,
+                     *           "members": [
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *               "eligible": true
+                     *             },
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *               "eligible": true
+                     *             },
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a3",
+                     *               "eligible": true
+                     *             }
+                     *           ]
+                     *         },
+                     *         {
+                     *           "activity_type": "boss",
+                     *           "activity_ref": "math_fraction_dragon",
+                     *           "title": {
+                     *             "vi": "Rồng Phân Số",
+                     *             "en": "The Fraction Dragon"
+                     *           },
+                     *           "min_members": 2,
+                     *           "max_members": 4,
+                     *           "all_eligible": false,
+                     *           "members": [
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *               "eligible": true
+                     *             },
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *               "eligible": true
+                     *             },
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a3",
+                     *               "eligible": false,
+                     *               "reason_code": "grade_not_allowed",
+                     *               "requirement": "grade_levels:4"
+                     *             }
+                     *           ]
+                     *         }
+                     *       ]
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["PartyEligibleActivity"][];
                     };
@@ -37949,6 +38513,89 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "party_id": "0193b0a0-0000-7000-8000-000000000101",
+                     *       "name": "Nhóm Sao Băng",
+                     *       "leader_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *       "party_type": "friend",
+                     *       "visibility": "private",
+                     *       "invitation_policy": "leader_only",
+                     *       "max_members": 4,
+                     *       "status": "open",
+                     *       "state_version": 7,
+                     *       "current_activity": {
+                     *         "activity_type": "quest",
+                     *         "activity_ref": "math_g3_multiplication"
+                     *       },
+                     *       "leader_reconnecting": false,
+                     *       "chat_channel_id": "0193b0a0-0000-7000-8000-000000000102",
+                     *       "members": [
+                     *         {
+                     *           "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *           "nickname": "MeoXanh42",
+                     *           "role": "leader",
+                     *           "ready": true,
+                     *           "presence": "online",
+                     *           "joined_at": "2026-11-21T08:00:00Z",
+                     *           "avatar_config": {
+                     *             "schema_version": 1,
+                     *             "body_type": "kid_a",
+                     *             "skin_tone": "tone_02",
+                     *             "hair": {
+                     *               "item_id": "hair_bob_01",
+                     *               "color": "hair_col_02"
+                     *             },
+                     *             "outfit": {
+                     *               "item_id": "outfit_school_01"
+                     *             }
+                     *           }
+                     *         },
+                     *         {
+                     *           "student_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *           "nickname": "CaHeoVui07",
+                     *           "role": "member",
+                     *           "ready": true,
+                     *           "presence": "online",
+                     *           "joined_at": "2026-11-21T08:01:00Z",
+                     *           "avatar_config": {
+                     *             "schema_version": 1,
+                     *             "body_type": "kid_b",
+                     *             "skin_tone": "tone_04",
+                     *             "hair": {
+                     *               "item_id": "hair_spiky_01",
+                     *               "color": "hair_col_01"
+                     *             },
+                     *             "outfit": {
+                     *               "item_id": "outfit_sport_01"
+                     *             }
+                     *           }
+                     *         },
+                     *         {
+                     *           "student_id": "0193b0a0-0000-7000-8000-0000000000a3",
+                     *           "nickname": "GauNau15",
+                     *           "role": "member",
+                     *           "ready": false,
+                     *           "presence": "online",
+                     *           "joined_at": "2026-11-21T08:02:00Z",
+                     *           "avatar_config": {
+                     *             "schema_version": 1,
+                     *             "body_type": "kid_a",
+                     *             "skin_tone": "tone_03",
+                     *             "hair": {
+                     *               "item_id": "hair_ponytail_01",
+                     *               "color": "hair_col_06"
+                     *             },
+                     *             "outfit": {
+                     *               "item_id": "outfit_explorer_01"
+                     *             }
+                     *           }
+                     *         }
+                     *       ],
+                     *       "created_at": "2026-11-21T08:00:00Z",
+                     *       "updated_at": "2026-11-21T08:02:00Z"
+                     *     }
+                     */
                     "application/json": components["schemas"]["Party"];
                 };
             };
@@ -40136,6 +40783,71 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *           "nickname": "CaHeoVui07",
+                     *           "level": 10,
+                     *           "presence": "online",
+                     *           "avatar_config": {
+                     *             "schema_version": 1,
+                     *             "body_type": "kid_b",
+                     *             "skin_tone": "tone_04",
+                     *             "hair": {
+                     *               "item_id": "hair_spiky_01",
+                     *               "color": "hair_col_01"
+                     *             },
+                     *             "outfit": {
+                     *               "item_id": "outfit_sport_01"
+                     *             }
+                     *           }
+                     *         },
+                     *         {
+                     *           "user_id": "0193b0a0-0000-7000-8000-0000000000a4",
+                     *           "nickname": "SaoBang12",
+                     *           "level": 9,
+                     *           "presence": "online",
+                     *           "avatar_config": {
+                     *             "schema_version": 1,
+                     *             "body_type": "kid_a",
+                     *             "skin_tone": "tone_01",
+                     *             "hair": {
+                     *               "item_id": "hair_braids_01",
+                     *               "color": "hair_col_05"
+                     *             },
+                     *             "outfit": {
+                     *               "item_id": "outfit_star_01"
+                     *             }
+                     *           }
+                     *         },
+                     *         {
+                     *           "user_id": "0193b0a0-0000-7000-8000-0000000000a5",
+                     *           "nickname": "ThoTrang03",
+                     *           "level": 11,
+                     *           "presence": "offline",
+                     *           "avatar_config": {
+                     *             "schema_version": 1,
+                     *             "body_type": "kid_b",
+                     *             "skin_tone": "tone_05",
+                     *             "hair": {
+                     *               "item_id": "hair_curly_01",
+                     *               "color": "hair_col_03"
+                     *             },
+                     *             "outfit": {
+                     *               "item_id": "outfit_rain_01"
+                     *             }
+                     *           }
+                     *         }
+                     *       ],
+                     *       "page": {
+                     *         "next_cursor": null,
+                     *         "has_more": false,
+                     *         "limit": 100
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["PlayerCard"][];
                         page: components["schemas"]["PageInfo"];

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/game/level.reached.v1.schema.json",
   "title": "Payload level.reached v1 (module game, owner F074)",
-  "description": "Học sinh đạt một level theo progression curve hiện hành (một event cho mỗi cấp, kể cả lên nhiều cấp một lần hoặc do job curve-rollout). Không phát tại max_level. Envelope subject = {type: student, id: student_id}. Consumer: game.unlock_on_events (mở khóa vùng theo level), RT, NTF, achievement (F075), ANA.",
+  "description": "Học sinh đạt một level theo progression curve hiện hành (một event cho mỗi cấp, kể cả lên nhiều cấp một lần hoặc do job curve-rollout). Không phát tại max_level. Envelope subject = {type: student, id: student_id}. Consumer: game.unlock_on_events (mở khóa vùng theo level), RT, NTF, achievement (F075), ANA, competition.projection_game (ref.player_profiles.level — PartyMember.level, delta F102).",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -54,5 +54,17 @@
       "type": "string",
       "format": "date-time"
     }
-  }
+  },
+  "examples": [
+    {
+      "student_id": "0193b0a0-0000-7000-8000-000000000201",
+      "from_level": 4,
+      "to_level": 5,
+      "curve_id": "0193b0a0-0000-7000-8000-000000000901",
+      "curve_version": 2,
+      "title_code": null,
+      "trigger_xp_entry_id": "0193b0a0-0000-7000-8000-000000000301",
+      "reached_at": "2026-11-27T08:30:00Z"
+    }
+  ]
 }

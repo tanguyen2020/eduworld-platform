@@ -18,8 +18,14 @@
     "pin": false,
     "typing": false,
     "receipts": "none",
-    "search": false
+    "search": false,
+    "edit_window_minutes": 1,
+    "recall_window_hours": 1
   },
+  "max_text_length": 1,
+  "sendable_kinds": [
+    "text"
+  ],
   "unread_count": 1,
   "unread_mentions": 1,
   "last_seq": 1,

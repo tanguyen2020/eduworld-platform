@@ -10543,6 +10543,17 @@ components:
             rules_summary:
               type: string
               maxLength: 1000
+            description_i18n:
+              $ref: '#/components/schemas/LocalizedText'
+              description: |
+                Mô tả song ngữ vi + en của version (văn bản game, CONTENT_MODEL §8 — publish đã bắt buộc đủ hai bản) để client
+                đổi ngôn ngữ không tải lại — delta F076-3, additive; description (chuỗi theo Accept-Language) giữ nguyên cho
+                client cũ. Vắng khi version không có mô tả.
+            rules_summary_i18n:
+              $ref: '#/components/schemas/LocalizedText'
+              description: |
+                Tóm tắt luật song ngữ (delta F076-3, additive). Chỉ có khi cấu hình challenge có nguồn văn bản này; schema
+                challenge hiện chưa có trường đó nên server chưa trả (giống rules_summary).
             time_limit_seconds:
               type: integer
               minimum: 1

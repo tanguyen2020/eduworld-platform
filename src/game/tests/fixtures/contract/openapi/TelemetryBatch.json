@@ -29,7 +29,11 @@
       "rtt_p95_ms": 0,
       "reconnects": 0,
       "reminder_no": 1,
-      "minutes_played": 0
+      "minutes_played": 0,
+      "channel_type": "world",
+      "gap_count": 1,
+      "source": "preinstalled",
+      "bytes": 0
     }
   ]
 }

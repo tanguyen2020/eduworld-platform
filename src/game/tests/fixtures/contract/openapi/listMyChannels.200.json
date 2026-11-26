@@ -10,6 +10,31 @@
         "sticker",
         "gif"
       ],
+      "sendable_kinds": [
+        "text",
+        "emoji",
+        "quick",
+        "sticker",
+        "gif"
+      ],
+      "max_text_length": 200,
+      "features": {
+        "edit": true,
+        "recall": true,
+        "reply": true,
+        "quote": true,
+        "forward": true,
+        "sticker": true,
+        "gif": true,
+        "reaction": true,
+        "mention": true,
+        "pin": true,
+        "typing": true,
+        "receipts": "per_member",
+        "search": true,
+        "edit_window_minutes": 15,
+        "recall_window_hours": 24
+      },
       "unread_count": 2,
       "last_seq": 15,
       "my_read_seq": 13,

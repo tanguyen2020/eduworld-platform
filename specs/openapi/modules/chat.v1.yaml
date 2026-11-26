@@ -79,6 +79,29 @@ paths:
                       - quick
                       - sticker
                       - gif
+                    sendable_kinds:
+                      - text
+                      - emoji
+                      - quick
+                      - sticker
+                      - gif
+                    max_text_length: 200
+                    features:
+                      edit: true
+                      recall: true
+                      reply: true
+                      quote: true
+                      forward: true
+                      sticker: true
+                      gif: true
+                      reaction: true
+                      mention: true
+                      pin: true
+                      typing: true
+                      receipts: per_member
+                      search: true
+                      edit_window_minutes: 15
+                      recall_window_hours: 24
                     unread_count: 2
                     last_seq: 15
                     my_read_seq: 13
@@ -5722,6 +5745,26 @@ components:
             $ref: '#/components/schemas/MessageKind'
         features:
           $ref: '#/components/schemas/ChatFeatures'
+          description: |
+            Tính năng người gọi dùng được lúc này ở channel (delta F119, CHAT_SYSTEM §7.1): features của chat policy hiệu lực
+            (chỉ cấp platform; mục "✓ luôn" của match/party/team luôn bật), thu hẹp theo sendable_kinds (sticker/GIF cần loại
+            tương ứng; sửa và mention cần text; trả lời, trích dẫn, chuyển tiếp cần ít nhất một loại gửi được). Vắng khi policy
+            không cho channel. Server vẫn kiểm mỗi lệnh.
+        max_text_length:
+          type: integer
+          minimum: 1
+          description: |
+            Số ký tự tối đa của tin text theo chat policy hiệu lực của channel (min các cấp, CHAT_SYSTEM §3.1) — delta F119;
+            client không dùng hằng số. Vắng khi policy không cho channel.
+        sendable_kinds:
+          type: array
+          maxItems: 6
+          description: |
+            Loại tin người gọi gửi được lúc này (delta F119): allowed_kinds thu hẹp theo sanction đang hiệu lực của người gọi
+            (mute → rỗng; restrict_text → chỉ quick; restrict_dm → rỗng ở direct — MODERATION §7). Không tính giờ giới
+            nghiêm/khung giờ (kiểm khi gửi).
+          items:
+            $ref: '#/components/schemas/MessageKind'
         unread_count:
           type: integer
         unread_mentions:
@@ -5808,6 +5851,16 @@ components:
             - per_member
         search:
           type: boolean
+        edit_window_minutes:
+          type: integer
+          minimum: 1
+          maximum: 15
+          description: Thời hạn sửa tin của mình tính từ created_at (chat_edit_window, CHAT_SYSTEM §7.2) — delta F119, additive
+        recall_window_hours:
+          type: integer
+          minimum: 1
+          maximum: 24
+          description: Thời hạn thu hồi tin của mình (chat_recall_window, CHAT_SYSTEM §7.3) — delta F119, additive
     Timestamp:
       type: string
       format: date-time

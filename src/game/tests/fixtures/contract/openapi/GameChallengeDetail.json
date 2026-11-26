@@ -17,6 +17,14 @@
   "description": "sample",
   "version": 1,
   "rules_summary": "sample",
+  "description_i18n": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "rules_summary_i18n": {
+    "vi": "sample",
+    "en": "sample"
+  },
   "time_limit_seconds": 1,
   "lives": 1,
   "cooldown_until": "2026-11-15T07:30:00Z",

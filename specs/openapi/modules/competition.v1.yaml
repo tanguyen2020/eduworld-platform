@@ -3512,6 +3512,12 @@ components:
             - offline
         joined_at:
           $ref: '#/components/schemas/Timestamp'
+        level:
+          type: integer
+          minimum: 1
+          description: |
+            Level XP của người chơi (delta F102, PARTY_SYSTEM) từ projection ref.player_profiles (game_profile.updated,
+            level.reached của module game). Vắng khi chưa có dữ liệu — client không hiện level, không coi là lỗi.
     AvatarConfig:
       type: object
       description: Cấu trúc theo CHARACTER_SYSTEM §5.1 — bản JSON Schema dùng chung specs/schemas/avatar-config.schema.json (phải giữ khớp). item_id là mã (varchar 64), không phải UUID; server kiểm danh mục, sở hữu (ITEM_NOT_OWNED) và slot (EQUIP_SLOT_INVALID); ≤ 16 KB.

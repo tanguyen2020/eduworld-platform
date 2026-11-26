@@ -39,7 +39,7 @@
     },
     "openapi/TelemetryBatch.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/TelemetryBatch",
-      "sha256": "ae571d131fe2f63c1ed8cc58c0240a6b618f8001d643a2dbf9f524c600e1792f"
+      "sha256": "9a1aaeb6ca7103fcfba0bac407b9f14446ab8a5b87b991f6fc492d3daa55076a"
     },
     "openapi/Attempt.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Attempt",
@@ -135,7 +135,7 @@
     },
     "openapi/GameChallengeDetail.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameChallengeDetail",
-      "sha256": "e3bca9fa3d3f4128c6af2db995951e78cd657bd53612ef36f88b25ef270df1d3"
+      "sha256": "da4a501a435faaf40e50a35ba519ff40eb10ec73a6e6027c569e1e1821ea2763"
     },
     "openapi/GameChallengeAttempt.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameChallengeAttempt",
@@ -151,7 +151,7 @@
     },
     "openapi/Party.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Party",
-      "sha256": "24fefc87bba29714ef1be22f3d95eb5a08562bc9f49c0a3945dd6707725e6ad5"
+      "sha256": "9c5014c011707ae97ed9f482a8567aebd76897e01e5e2b96c8d0613861cb0e03"
     },
     "openapi/PartyInvitation.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/PartyInvitation",
@@ -171,7 +171,7 @@
     },
     "openapi/Channel.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Channel",
-      "sha256": "8a8300b5e97b648130ec32a291116ec9ab2fba9d3dd6240fc2daa16594f2c7d0"
+      "sha256": "4132090f7d6e50b35af707a01ddfd893876e169eb270999ba75dd1295a10398c"
     },
     "openapi/Message.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Message",
@@ -223,7 +223,7 @@
     },
     "openapi/listMyChannels.200.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#listMyChannels/responses/200/example",
-      "sha256": "ad0fbf5c4c08fec0af121d8f4954506479297016c49a0b2f430df70c64fccf9e"
+      "sha256": "e3057211bef64707ac3be2599f103db2ef24b160578e2fcdfe372b6d228615e8"
     },
     "openapi/listChannelMessages.200.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#listChannelMessages/responses/200/example",

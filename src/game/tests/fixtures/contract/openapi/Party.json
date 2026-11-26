@@ -47,7 +47,8 @@
       "role": "leader",
       "ready": false,
       "presence": "online",
-      "joined_at": "2026-11-15T07:30:00Z"
+      "joined_at": "2026-11-15T07:30:00Z",
+      "level": 1
     }
   ],
   "chat_channel_id": "00000000-0000-4000-8000-000000000001",
