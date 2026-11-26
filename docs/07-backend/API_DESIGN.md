@@ -860,13 +860,13 @@ Vùng **Learning Management** (ADR-0027): dùng được bởi vận hành tenan
 | `collections` | module `game` | Bộ sưu tập (pet, knowledge card, cosmetic, badge, exploration, event) | `game.collection.write` | — | P2 |
 | `shop-items` | module `game` | Mặt hàng Shop (cosmetic, giá Xu) | `game.shop.write` | `shop-item.schema.json` | P2 |
 | `currencies` | module `game` | Loại tiền trong game, cap ngày | `game.economy.write` | — | P2 |
-| `matchmaking-configs` | module `competition` | Queue, grade band, cửa sổ rating | `competition.config.matchmaking.write` | — | P4 |
-| `ranking-rules` | module `competition` | Tham số Glicko-2, soft reset | `competition.config.ranking.write` | — | P4 |
-| `seasons` | module `competition` | Mùa giải | `competition.config.season.write` | — | P4 |
-| `tournament-templates` | module `competition` | Template giải đấu (tenant tạo giải từ đây) | `competition.config.tournament_template.write` | — | P4 |
-| `challenge-templates` | module `competition` | Template thử thách lớp | `competition.config.tournament_template.write` | — | P4 |
-| `leaderboard-definitions` | module `competition` | Định nghĩa bảng xếp hạng | `competition.config.leaderboard.write` | — | P4 |
-| `competition-rewards` | module `competition` | Phần thưởng thi đấu (mùa, giải, thử thách) | `competition.config.reward.write` | — | P4 |
+| `matchmaking-configs` | module `competition` | Queue, grade band, cửa sổ rating (singleton `default`, không gỡ) | `competition.config.matchmaking.write` | `matchmaking-config.schema.json` | P4 |
+| `ranking-rules` | module `competition` | Tham số Glicko-2, soft reset (singleton, không gỡ) | `competition.config.ranking.write` | `ranking-rules.schema.json` | P4 |
+| `seasons` | module `competition` | Mùa giải (singleton, không gỡ) | `competition.config.season.write` | `season.schema.json` | P4 |
+| `tournament-templates` | module `competition` | Template giải trường (tenant tạo giải từ đây) | `competition.config.tournament_template.write` | `tournament-template.schema.json` | P4 |
+| `challenge-templates` | module `competition` | Template thử thách khối (ADR-0095) | `competition.config.tournament_template.write` | `challenge-template.schema.json` | P4 |
+| `leaderboard-definitions` | module `competition` | Định nghĩa bảng xếp hạng (singleton, không gỡ) | `competition.config.leaderboard.write` | `leaderboard-definition.schema.json` | P4 |
+| `competition-rewards` | module `competition` | Phần thưởng thi đấu (mùa, bảng, giải, thử thách — chỉ cosmetic/badge/title) | `competition.config.reward.write` | `competition-reward.schema.json` | P4 |
 | `sticker-packs` | module `chat` | Sticker pack + sticker (upload qua presigned URL, `unlock_rule`, publish, gán tenant) | `game.chat_assets.write` | — | P4 |
 | `gifs` | module `chat` | Thư viện GIF nội bộ (upload presigned, tag, duyệt, publish) | `game.chat_assets.write` | — | P4 |
 
@@ -878,6 +878,8 @@ Vùng **Learning Management** (ADR-0027): dùng được bởi vận hành tenan
 | GET | `/game-admin/{config_type}/{config_id}/versions` (+ `/versions/{version}:diff?with=`) | Lịch sử version, diff (ADR-0043) | T | P2 |
 | POST | `/game-admin/{config_type}/{config_id}/versions/{version}:publish` | Xuất bản ngay/hẹn giờ; cập nhật content manifest các tenant liên quan; cần `game.content.publish` | B | P2 |
 | POST | `/game-admin/{config_type}/{config_id}/versions` | Version nháp mới sao chép từ `based_on_version` (mặc định version con trỏ); version đã publish giữ bất biến — `createGameConfigVersion` (F078, chỉ module `game`) | B | P2 |
+
+**Module competition (F108).** Bản nháp mới từ version đã publish = `createGameConfig` với `GameConfigInput.config_id` + `based_on_version_id`; `updateGameConfigDraft` trên version không phải `draft`/`rejected` → `409 CONTENT_NOT_EDITABLE`, thiếu `If-Match` → `428`, lệch → `412 VERSION_MISMATCH`. Publish nhận `PublishRequest.effective_from` (≥ hiện tại; vắng = ngay) — `publish_at` → `422`; trả `ContentRelease` có `effective_from`. Rollback/unpublish bắt buộc lý do; unpublish chỉ `tournament-templates`, `challenge-templates`, `competition-rewards`. Invariant theo loại: [COMPETITION_SYSTEM §13](../01-game-design/COMPETITION_SYSTEM.md#13-cấu-hình-platform-only-adr-0027).
 | POST | `/game-admin/{config_type}/{config_id}:rollback` / `:unpublish` | Đổi con trỏ về version đã publish khác / gỡ (lý do bắt buộc; `game.content.publish` — F078 Clarifications 2026-11-16); unpublish trả `usages[]` (nội dung game còn tham chiếu, tenant đang được gán) | B | P2 |
 | POST | `/game-admin/{config_type}/{config_id}/releases/{release_id}:cancel` | Hủy lịch xuất bản hẹn giờ trước giờ chạy (audit) — `cancelScheduledGameConfigPublish` (F078) | B | P2 |
 | GET | `/game-admin/{config_type}/{config_id}/releases` | Lịch sử release | T | P2 |

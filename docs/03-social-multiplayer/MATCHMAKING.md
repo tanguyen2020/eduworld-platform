@@ -1,6 +1,6 @@
 # Matchmaking
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Multiplayer Engineer · Cập nhật: 2026-11-21 (triển khai [F104](../../specs/104-matchmaking/spec.md): quyết định ở Clarifications 2026-11-21) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Multiplayer Engineer · Cập nhật: 2026-11-26 (F108: §5.1 đọc version hiệu lực theo dòng thời gian release, invariant khối) · 2026-11-21 (triển khai [F104](../../specs/104-matchmaking/spec.md): quyết định ở Clarifications 2026-11-21) · 2026-11-15
 > Liên quan: [MULTIPLAYER_GAMEPLAY](MULTIPLAYER_GAMEPLAY.md) · [PARTY_SYSTEM](PARTY_SYSTEM.md) · [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) · [RANKING](../01-game-design/COMPETITION_SYSTEM.md) · [TOURNAMENT](../01-game-design/COMPETITION_SYSTEM.md) · [ADR-0018](../adr/ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)
 
 > [!IMPORTANT]
@@ -136,7 +136,7 @@ Ví dụ: `ew:mm:queue:battle_1v1:s:018f…:g3:math`.
 
 ### 5.1. Cấu hình matchmaking — platform-only
 
-Queue, mode, grade band, cửa sổ rating nới dần, timeout ready check là **cấu hình phiên bản hóa** (`competition.matchmaking_config_versions`, `effective_from`) soạn trong **Game Operations Console** (workspace A, `/api/v1/game-admin/matchmaking-configs`, permission `competition.config.matchmaking.write`, chỉ `eduworld-portal` + role platform qua gateway nội bộ — ADR-0027). Vận hành tenant không thay đổi được; phạm vi ghép liên trường trong một tenant `unit` bật/tắt qua cài đặt tenant (an toàn), không qua cấu hình matchmaking.
+Queue, mode, grade band, cửa sổ rating nới dần, timeout ready check là **cấu hình phiên bản hóa** (`competition.game_configs`/`game_config_versions`, `config_type = matchmaking-configs`, code `default`, `effective_from`) soạn trong **Game Operations Console** (workspace A, `/api/v1/game-admin/matchmaking-configs`, permission `competition.config.matchmaking.write`, chỉ `eduworld-portal` + role platform qua gateway nội bộ — ADR-0027). Matchmaker đọc version **hiệu lực theo dòng thời gian release** (publish từ `effective_from`, rollback ngay — [F108](../../specs/108-competition-config-portal/spec.md), [COMPETITION_SYSTEM §13](../01-game-design/COMPETITION_SYSTEM.md#13-cấu-hình-platform-only-adr-0027)); ràng buộc khối không nới được: lớp 1–5 cùng khối, lớp 6–9 tối đa ±1 khối sau ≥ 30 s (invariant của F108, payload theo `specs/schemas/matchmaking-config.schema.json`).. Vận hành tenant không thay đổi được; phạm vi ghép liên trường trong một tenant `unit` bật/tắt qua cài đặt tenant (an toàn), không qua cấu hình matchmaking.
 
 ## 6. Matchmaker (worker)
 

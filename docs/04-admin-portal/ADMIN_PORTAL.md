@@ -1,6 +1,6 @@
 # Admin Portal — CMS/LMS cho vận hành game
 
-> Trạng thái: Draft · Phiên bản: 0.8 (một Admin Portal, 5 workspace; nhà trường quản trị, kiểm duyệt tập trung — ADR-0072) · Owner: Product Manager + Backend Architect + UX Architect · Cập nhật: 2026-11-25 (F081: §3.15 "Sự kiện của trường" workspace C hiện thực — tạo từ template, tiến độ theo khối, System Admin nhiều tenant) · 2026-11-24 (F079: màn hình workspace A — §3.12 "Hiện thực", §3.15 lịch chỉ cảnh báo trang trí cùng vùng, §5 portal chuyển snapshot preview vào `GamePreviewFrame`) · 2026-11-23 (§1.3b: `/login` luôn tiếng Anh, không chọn ngôn ngữ; §1.6: shell dùng `SearchSelect`, trang của bảng do truy vấn cắt — owner) · 2026-11-22 (ADR-0097: bỏ menu "Yêu cầu dữ liệu" và "Bản dịch" nội dung học tập khỏi Release 1; §1.6 quy tắc bảng/dropdown phân trang) · 2026-11-20 (owner chốt: Game Dashboard tối thiểu của workspace A thuộc F079; audit action `student_profile.viewed`) · 2026-11-17 (màn đăng nhập riêng qua backend — ADR-0091; danh mục menu/action và bật/tắt trong DB — ADR-0090)
+> Trạng thái: Draft · Phiên bản: 0.8 (một Admin Portal, 5 workspace; nhà trường quản trị, kiểm duyệt tập trung — ADR-0072) · Owner: Product Manager + Backend Architect + UX Architect · Cập nhật: 2026-11-26 (F108: §3.4 màn "Thi đấu" workspace A — 5 nhóm, quyền theo loại, publish theo `effective_from`, gỡ chỉ template/phần thưởng; §2.3 "Thử thách khối / giải trường") · 2026-11-25 (F081: §3.15 "Sự kiện của trường" workspace C hiện thực — tạo từ template, tiến độ theo khối, System Admin nhiều tenant) · 2026-11-24 (F079: màn hình workspace A — §3.12 "Hiện thực", §3.15 lịch chỉ cảnh báo trang trí cùng vùng, §5 portal chuyển snapshot preview vào `GamePreviewFrame`) · 2026-11-23 (§1.3b: `/login` luôn tiếng Anh, không chọn ngôn ngữ; §1.6: shell dùng `SearchSelect`, trang của bảng do truy vấn cắt — owner) · 2026-11-22 (ADR-0097: bỏ menu "Yêu cầu dữ liệu" và "Bản dịch" nội dung học tập khỏi Release 1; §1.6 quy tắc bảng/dropdown phân trang) · 2026-11-20 (owner chốt: Game Dashboard tối thiểu của workspace A thuộc F079; audit action `student_profile.viewed`) · 2026-11-17 (màn đăng nhập riêng qua backend — ADR-0091; danh mục menu/action và bật/tắt trong DB — ADR-0090)
 > Liên quan: [ADR-0027](../adr/ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) · [ADR-0005](../adr/ADR-0005-mo-hinh-multi-tenancy-shared-database-tenant-id-rls.md) · [ADR-0026](../adr/ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) · [ADR-0028](../adr/ADR-0028-chi-soft-delete-khong-hard-delete-mac-dinh-khong-doc-du-lieu.md) · [ADR-0029](../adr/ADR-0029-system-admin-gan-du-lieu-cho-tenant-va-clone-du-lieu-giua-te.md) · [ADR-0022](../adr/ADR-0022-cms-lms-web-la-react-typescript-spa.md) · [ADR-0015](../adr/ADR-0015-content-versioning-bat-bien-sau-publish.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [SCHOOL_LMS](SCHOOL_LMS.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0090](../adr/ADR-0090-danh-muc-menu-action-portal-bat-tat-trong-db.md) · [ADR-0091](../adr/ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · [OQ-07](../12-project/OPEN_QUESTIONS.md)
 
 ## 1. Định vị
@@ -431,7 +431,7 @@ Không có role `platform_admin`/`trust_safety` riêng: quản trị tenant do `
 | Nội dung platform được gán: xem/dùng | ✔ (chỉ đọc) | ✔ | ✔ | ✔ | ✔ | ✔ | ✘ | — | — |
 | Hệ thống chấm lại (re-evaluate) khi nội dung lỗi | ✘ | ✘ | ✔ (scope) | ✘ | ✔ | ✔ (platform) | ✘ | ✘ | ✘ |
 | Course, lộ trình, giao bài, lịch, đề theo blueprint, nhóm học tập | chỉ xem | ✔ (trường mình) | ✔ (scope) | ✘ | ✔ (tenant đích) | ✘ | ✘ | ✘ | ✘ |
-| Thử thách lớp / giải trường từ template | ✘ | ✔ (trường mình) | ✘ | ✘ | ✔ (tenant đích) | ✘ | ✘ | ✘ | ✘ |
+| Thử thách khối / giải trường từ template (F108, ADR-0095) | ✘ | ✔ (trường mình) | ✘ | ✘ | ✔ (tenant đích) | ✘ | ✘ | ✘ | ✘ |
 | School Learning Dashboard, báo cáo/analytics | tenant (tổng hợp) | trường | scope | ✘ | mọi tenant (lọc) | ✘ | ✘ | ✘ | ✘ |
 | Cài đặt tenant / trường (gồm khung giờ truy cập, chat policy trường), SIS import | ✔ / ✔ | – / ✔ | ✘ | ✘ | ✔ | ✘ | ✘ | ✘ | ✘ |
 | Gán/thu hồi UserRole trong tenant | ✔ | trong trường | ✘ | ✘ | ✔ | ✘ | ✘ | ✘ | ✘ |
@@ -555,6 +555,16 @@ Game content là dữ liệu platform (`tenant_id = NULL`). Quest/mini-game mu�
 
 Matchmaking configuration (queue, grade band, mở rộng cửa sổ rating), ranking rules (Glicko-2 tham số, season reset), season, **tournament/challenge template**, leaderboard definition, competition reward. Chi tiết: [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md), [RANKING](../01-game-design/COMPETITION_SYSTEM.md), [TOURNAMENT](../01-game-design/COMPETITION_SYSTEM.md), [LEADERBOARD](../01-game-design/COMPETITION_SYSTEM.md). Cấu hình có version và hiệu lực từ thời điểm (`effective_from`), không áp hồi tố lên trận đã kết thúc. Permission `competition.config.*`. Template được gán cho tenant để tenant tạo thử thách/giải.
 
+Màn **"Thi đấu"** (`menu.game_ops.competition`, hiện thực [F108](../../specs/108-competition-config-portal/spec.md)) dùng lại khung Game Operations Console của F079 (danh sách → `ContentEditorShell` + form sinh từ JSON Schema → phiên bản/so sánh/lịch sử phát hành): 5 nhóm **Matchmaking** (`matchmaking-configs`), **Ranking** (`ranking-rules`, `competition-rewards`), **Mùa giải** (`seasons`), **Template** (`tournament-templates`, `challenge-templates`), **Bảng xếp hạng** (`leaderboard-definitions`); route `/game-ops/competition/<config_type>`.
+
+| Quyền | Thao tác |
+|---|---|
+| `competition.config.matchmaking.write` / `.ranking.write` / `.season.write` / `.tournament_template.write` (template giải và thử thách) / `.leaderboard.write` / `.reward.write` (`competition-rewards`, RB-415) | Tạo, sửa bản nháp, gửi duyệt, lưu trữ loại tương ứng |
+| `game.content.review` | Duyệt/từ chối (người duyệt ≠ tác giả) |
+| `game.content.publish` | Publish (có hiệu lực ngay hoặc từ `effective_from` — không hẹn giờ publish), rollback (lý do bắt buộc), gỡ (chỉ template và phần thưởng; danh mục runtime matchmaking/ranking/mùa/bảng xếp hạng không gỡ được, sửa bằng rollback hoặc version mới) |
+
+Bản nháp mới từ version đã publish = `createGameConfig` với `config_id` + `based_on_version_id`. Template hiển thị "Tenant được gán" chỉ đọc (`listTenantAssignments`); gán/gỡ ở workspace D (§3.7). Mọi quy tắc nghiệp vụ (ràng buộc khối, bonus tốc độ, tier tăng dần, scope bảng, `allowed_params`, phần thưởng chỉ cosmetic/badge/title) do module competition kiểm ([COMPETITION_SYSTEM §13](../01-game-design/COMPETITION_SYSTEM.md#13-cấu-hình-platform-only-adr-0027)); portal chỉ hiện lỗi trường của `422 VALIDATION_FAILED`.
+
 ### 3.5. Content Workflow (§8.5)
 
 Draft → Review → Approved → Published → Archived (state machine trong [CONTENT_MODEL §6](../02-learning/CONTENT_MODEL.md#6-workflow-trạng-thái)), áp dụng thống nhất cho mọi loại nội dung có version. Archive khác soft-delete: archive là trạng thái workflow (vẫn hiển thị khi lọc "Đã lưu trữ"), soft-delete đưa vào Thùng rác (§3.8).
@@ -569,7 +579,7 @@ System Admin có thể duyệt thay trong lane `tenant` của một tenant đíc
 
 ### 3.6. Tenant dùng nội dung game (không cấu hình)
 
-Tenant chỉ **chọn** quest/mini-game đã publish và được gán (ADR-0029) để giao bài, và tạo thử thách lớp/giải trường từ **template** platform với `allowed_params`. Quy trình, API và nghiệm thu: [SCHOOL_LMS §4.1, §7](SCHOOL_LMS.md#7-thử-thách-lớp-và-giải-trường). Không có màn hình nào trong workspace B/C cho phép sửa cấu hình game.
+Tenant chỉ **chọn** quest/mini-game đã publish và được gán (ADR-0029) để giao bài, và tạo thử thách khối/giải trường từ **template** platform với `allowed_params` (màn "Thử thách khối / giải trường" của workspace C — F108 US3). Quy trình, API và nghiệm thu: [SCHOOL_LMS §4.1, §7](SCHOOL_LMS.md#7-thử-thách-lớp-và-giải-trường). Không có màn hình nào trong workspace B/C cho phép sửa cấu hình game.
 
 ### 3.7. Gán dữ liệu cho tenant và clone giữa tenant (ADR-0029) — chỉ System Admin, workspace D
 
