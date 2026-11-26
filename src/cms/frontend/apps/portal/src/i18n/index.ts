@@ -4,7 +4,8 @@
 // workspace screens add their own file under locales/<lang>/portal.<workspace>.json (F052: `portal.school_lms.*`);
 // the LMS screens of workspace C (F055) use lms.{vi,en}.json under `lms.*`; the dashboards and reports (F056) use
 // dashboard.{vi,en}.json under `dashboard.*`; the chat-safety screens and the moderation banner (F122) use
-// chat-safety.{vi,en}.json under `chatSafety.*`.
+// chat-safety.{vi,en}.json under `chatSafety.*`; the Live dashboard and Game Analytics of workspace E (F080) use
+// live-ops.{vi,en}.json under `liveOps.*`.
 import i18next, { type i18n as I18n } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { OPS_UI_NS, opsUiResources } from '@eduworld/ops-ui';
@@ -24,6 +25,8 @@ import chatSafetyVi from './chat-safety.vi.json';
 import chatSafetyEn from './chat-safety.en.json';
 import gameOpsVi from './game-ops.vi.json';
 import gameOpsEn from './game-ops.en.json';
+import liveOpsVi from './live-ops.vi.json';
+import liveOpsEn from './live-ops.en.json';
 
 export const LOCALES = ['vi-VN', 'en-US'] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -31,8 +34,8 @@ export const DEFAULT_LOCALE: Locale = 'vi-VN';
 export const PORTAL_NS = 'portal';
 
 export const resources = {
-  'vi-VN': { [PORTAL_NS]: { ...vi, ...contentStudioVi, ...lmsVi, ...dashboardVi, ...chatSafetyVi, ...gameOpsVi, error: { ...vi.error, ...contentStudioVi.error }, portal: { ...catalogVi, school_lms: schoolLmsVi } }, [OPS_UI_NS]: opsUiResources.vi },
-  'en-US': { [PORTAL_NS]: { ...en, ...contentStudioEn, ...lmsEn, ...dashboardEn, ...chatSafetyEn, ...gameOpsEn, error: { ...en.error, ...contentStudioEn.error }, portal: { ...catalogEn, school_lms: schoolLmsEn } }, [OPS_UI_NS]: opsUiResources.en },
+  'vi-VN': { [PORTAL_NS]: { ...vi, ...contentStudioVi, ...lmsVi, ...dashboardVi, ...chatSafetyVi, ...gameOpsVi, ...liveOpsVi, error: { ...vi.error, ...contentStudioVi.error }, portal: { ...catalogVi, school_lms: schoolLmsVi } }, [OPS_UI_NS]: opsUiResources.vi },
+  'en-US': { [PORTAL_NS]: { ...en, ...contentStudioEn, ...lmsEn, ...dashboardEn, ...chatSafetyEn, ...gameOpsEn, ...liveOpsEn, error: { ...en.error, ...contentStudioEn.error }, portal: { ...catalogEn, school_lms: schoolLmsEn } }, [OPS_UI_NS]: opsUiResources.en },
 } as const;
 
 export function isLocale(v: unknown): v is Locale {

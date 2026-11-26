@@ -1,0 +1,264 @@
+{
+  "liveOps": {
+    "common": {
+      "loadMore": "Load more",
+      "next": "Next page",
+      "previous": "Previous page"
+    },
+    "status": {
+      "normal": "Normal",
+      "warning": "Warning",
+      "incident": "Incident",
+      "unknown": "Unknown"
+    },
+    "unit": {
+      "per_minute": "{{value}}/min",
+      "seconds": "{{value}} s",
+      "hours": "{{value}} h",
+      "percent": "{{value}}%"
+    },
+    "kpi": {
+      "ccu": "Concurrent players (CCU)",
+      "game_sessions_active": "Active game sessions",
+      "matches_live": "Live matches",
+      "matchmaking_queue": "Matchmaking queue",
+      "logins_per_minute": "Logins per minute",
+      "chat_messages_per_minute": "Messages per minute",
+      "chat_blocked_per_minute": "Blocked/masked messages per minute",
+      "reports_pending": "Pending reports",
+      "http_5xx_rate": "5xx error rate",
+      "content_releases_24h": "Publishes in the last 24 h",
+      "content_rollbacks_24h": "Rollbacks in the last 24 h",
+      "sis_last_success_age_hours": "Hours since the last successful SIS sync",
+      "attempts_submitted_per_minute": "Submissions per minute",
+      "api_latency_p95_seconds": "API latency p95"
+    },
+    "dashboard": {
+      "tab": "Overview",
+      "updatedAt": "Updated at {{time}}",
+      "refreshEvery": "Refreshes every {{seconds}} seconds",
+      "noValue": "No data",
+      "empty": "No KPI yet.",
+      "thresholds": "Warning threshold {{warning}} · incident {{incident}}",
+      "breakdown": "{{kpi}} details",
+      "openModeration": "Open the moderation queue"
+    },
+    "events": {
+      "tab": "Event monitoring",
+      "statusFilter": "Run status",
+      "empty": "No run.",
+      "col": {
+        "name": "Event",
+        "kind": "Kind",
+        "status": "Status",
+        "starts": "Starts",
+        "ends": "Ends"
+      },
+      "status": {
+        "scheduled": "Scheduled",
+        "live": "Live",
+        "suspended": "Suspended",
+        "ended": "Ended",
+        "cancelled": "Cancelled",
+        "archived": "Archived"
+      },
+      "kind": {
+        "world_festival": "World festival",
+        "weekend": "Weekend",
+        "school": "School event",
+        "community_goal": "Community goal",
+        "learning_campaign": "Learning campaign",
+        "special_boss": "Special boss",
+        "limited_quest": "Limited quest"
+      },
+      "suspendedReason": "Suspension reason: {{reason}}",
+      "stats": {
+        "participants": "Participating students",
+        "participationRate": "Participation rate",
+        "rewardsGranted": "Rewards granted",
+        "updatedAt": "Updated at",
+        "communityGoal": "Community goal progress",
+        "goalProgress": "{{progress}} / {{target}}",
+        "claims": "Claims per milestone",
+        "claimRow": "Milestone {{milestone}}: {{claims}} claims"
+      },
+      "reason": "Reason",
+      "reasonRequired": "Enter a reason.",
+      "reasonMin": "The reason needs at least {{min}} characters.",
+      "reasonShown": "Reason: {{reason}}",
+      "next": "Continue",
+      "back": "Back",
+      "close": "Close",
+      "conflict": "The event status just changed. The new status was reloaded.",
+      "op": {
+        "suspend": {
+          "button": "Emergency suspend",
+          "title": "Suspend event {{name}}",
+          "confirmTitle": "Confirm suspending event {{name}}?",
+          "consequence": "Students cannot join until it resumes; plays in progress are not cut.",
+          "confirm": "Confirm suspend",
+          "done": "Event suspended."
+        },
+        "resume": {
+          "button": "Resume",
+          "title": "Resume event {{name}}",
+          "confirmTitle": "Confirm resuming event {{name}}?",
+          "consequence": "The event runs again on its current schedule.",
+          "confirm": "Confirm resume",
+          "done": "Event resumed."
+        },
+        "cancel": {
+          "button": "Cancel event",
+          "title": "Cancel event {{name}}",
+          "confirmTitle": "Confirm cancelling event {{name}}?",
+          "consequence": "This cannot be undone. Rewards students already earned are kept.",
+          "confirm": "Confirm cancel",
+          "done": "Event cancelled."
+        }
+      }
+    },
+    "analytics": {
+      "empty": "No data for this scope yet.",
+      "previous": "Previous period",
+      "minutes": "{{value}} min",
+      "seconds": "{{value}} s",
+      "panel": {
+        "overview": "Overview",
+        "retention": "Retention",
+        "onboarding": "Onboarding",
+        "quests": "Quests & story",
+        "challenges": "Challenges & bosses",
+        "progression": "Progression & exploration",
+        "economy": "Coin economy",
+        "social": "Social & competition",
+        "events": "Events",
+        "wellbeing": "Healthy play",
+        "performance": "Device performance"
+      },
+      "filter": {
+        "dimension": "Break down by",
+        "noDimension": "Whole scope",
+        "values": "Values",
+        "allValues": "All",
+        "pickTenantFirst": "Pick a tenant first",
+        "clientVersions": "Client versions (Performance)",
+        "clientVersionsHint": "Type a version",
+        "compare": "Compare with previous period",
+        "dimensions": {
+          "school": "School",
+          "grade_band": "Grade band",
+          "platform": "Platform",
+          "locale": "Language",
+          "device_tier": "Device tier"
+        }
+      },
+      "dim": {
+        "grade_band": {
+          "g1_3": "Grades 1–3",
+          "g4_5": "Grades 4–5",
+          "g6_7": "Grades 6–7",
+          "g8_9": "Grades 8–9"
+        },
+        "platform": {
+          "web": "Web",
+          "android": "Android",
+          "ios": "iOS"
+        },
+        "locale": {
+          "vi-VN": "Vietnamese",
+          "en-US": "English"
+        },
+        "device_tier": {
+          "minimum": "Minimum",
+          "mid": "Mid",
+          "high": "High"
+        }
+      },
+      "retention": {
+        "cohort": "Cohort",
+        "size": "Players",
+        "day": "Day {{n}}"
+      },
+      "funnel": {
+        "step": "Step",
+        "count": "Players",
+        "conversion": "Conversion"
+      },
+      "funnelStep": {
+        "first_login": "First login",
+        "avatar_created": "Avatar created",
+        "tutorial_completed": "Tutorial completed",
+        "first_quest_accepted": "First quest accepted",
+        "first_quest_completed": "First quest completed",
+        "chapter0_completed": "Chapter 0 completed"
+      },
+      "content": {
+        "title": "Content",
+        "starts": "Starts",
+        "completion": "Completion rate",
+        "abandon": "Abandon rate",
+        "success": "Success rate",
+        "flag": "Hint",
+        "flagged": "Review the balance",
+        "open": "Open {{name}} in the Game Operations Console",
+        "openFailed": "The content could not be opened.",
+        "kind": {
+          "quest": "Quest",
+          "challenge": "Challenge",
+          "boss": "Boss"
+        }
+      },
+      "perf": {
+        "platform": "Platform",
+        "tier": "Device tier",
+        "preset": "Preset",
+        "renderer": "Renderer",
+        "version": "Version",
+        "sessions": "Sessions",
+        "fpsP50": "FPS p50",
+        "fpsP10": "FPS p10",
+        "budget": "FPS budget met",
+        "load": "Load time p50",
+        "crashFree": "Crash-free sessions"
+      },
+      "export": {
+        "panel": "Panel to export",
+        "button": "Export CSV",
+        "ready": "The analytics report is ready to download.",
+        "limit": "The limit of running exports is reached. Please try again later."
+      }
+    },
+    "metric": {
+      "dau": "Daily active players (DAU)",
+      "wau": "Weekly active players (WAU)",
+      "mau": "Monthly active players (MAU)",
+      "stickiness": "Stickiness (DAU/MAU)",
+      "session_duration_p50": "Session length (median)",
+      "active_days_per_week": "Back ≥ 3 days a week",
+      "chapter0_completion": "Chapter 0 completed within 7 days",
+      "quest_completion_rate": "Quest completion rate",
+      "chapter_completion_rate": "Chapter completion rate",
+      "challenge_success_rate": "Challenge success rate",
+      "boss_defeat_rate": "Boss defeat rate",
+      "level_distribution": "Level distribution",
+      "days_to_level_p50": "Active days to reach a level (median)",
+      "region_unlock_rate": "Region unlock rate",
+      "xp_cap_hit_rate": "Daily XP cap hit rate",
+      "currency_sources": "Coins earned",
+      "currency_sinks": "Coins spent",
+      "currency_net_flow": "Net coin flow",
+      "currency_cap_hit_rate": "Daily coin cap hit rate",
+      "shop_conversion": "Shop conversion",
+      "social_play_rate": "Played together ≥ once a week",
+      "match_participation_rate": "Match participation",
+      "match_completion_rate": "Completed matches",
+      "party_size_avg": "Average party size",
+      "chat_activity": "Chat activity",
+      "event_participation_rate": "Event participation rate",
+      "sessions_over_reminder": "Sessions with a break reminder",
+      "sessions_over_second_reminder": "Sessions with a second break reminder",
+      "late_night_play_rate": "Play between 22:00 and 06:00",
+      "daily_playtime_p90": "Daily play time (90th percentile)"
+    }
+  }
+}

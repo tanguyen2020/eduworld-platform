@@ -454,9 +454,9 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
         path: "/school-lms/reports",
         labelKey: "portal.menu.school_lms.reports",
         order: 150,
-        requiredPermissions: ["lms.report.read", "analytics.tenant.read", "report.export"],
+        requiredPermissions: ["lms.report.read", "analytics.tenant.read", "analytics.school.read", "report.export"],
         actions: [
-          { key: "action.school_lms.reports.view", labelKey: "portal.action.school_lms.reports.view", requiredPermissions: ["analytics.tenant.read"] },
+          { key: "action.school_lms.reports.view", labelKey: "portal.action.school_lms.reports.view", requiredPermissions: ["analytics.tenant.read", "analytics.school.read"] },
           { key: "action.school_lms.reports.export", labelKey: "portal.action.school_lms.reports.export", requiredPermissions: ["report.export", "lms.report.read"] },
         ],
       },

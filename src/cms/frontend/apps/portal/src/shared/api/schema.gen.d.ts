@@ -34,6 +34,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/analytics/game/exports/{export_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Trạng thái job xuất CSV Game Analytics + link ký hạn dashboard_export_link_ttl_minutes (game.analytics.read, chỉ người tạo) */
+        get: operations["getGameAnalyticsExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/analytics/game/funnels/{funnel_code}": {
         parameters: {
             query?: never;
@@ -1191,6 +1208,23 @@ export interface paths {
         put?: never;
         /** Thu hồi thỏa thuận — rút mọi participant của tenant khỏi study đang chạy và đưa học sinh về nhánh control của mọi thử nghiệm (F035-AC-20) */
         post: operations["revokeResearchAgreement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/liveops/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** KPI Live dashboard thời gian thực từ Prometheus (game.liveops.read; truy vấn định nghĩa sẵn, không truy vấn tự do — DESIGN_SYSTEM §4.3) */
+        get: operations["getLiveOpsOverview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5170,6 +5204,23 @@ export interface paths {
          *     kiểm (F078). Quyền: bất kỳ `game.*.write` của console, `game.content.review` hoặc `game.content.publish` (F079-AC-07).
          */
         get: operations["getGameClientManifest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game-admin/event-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lượt chạy sự kiện platform để giám sát (game.liveops.read; keyset theo starts_at giảm dần — F080-AC-19) */
+        get: operations["listEventRuns"];
         put?: never;
         post?: never;
         delete?: never;
@@ -9957,10 +10008,16 @@ export interface components {
             }[];
         };
         AnalyticsExportJob: {
+            created_at?: components["schemas"]["Timestamp"];
             /** Format: uri */
             download_url?: string;
+            /** @description EXPORT_TOO_LARGE (vượt dashboard_export_max_rows), EXPORT_EXPIRED, INTERNAL */
+            error_code?: string;
             expires_at?: components["schemas"]["Timestamp"];
             job_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            report?: "metrics" | "retention" | "funnel" | "content_stats" | "performance";
+            row_count?: number;
             /** @enum {string} */
             status: "queued" | "running" | "succeeded" | "failed";
         };
@@ -11562,6 +11619,8 @@ export interface components {
                 until?: components["schemas"]["Timestamp"];
             };
             min_client_version: string;
+            /** @description false = client không gửi `screen_view`/`tutorial_step` (analytics_product_telemetry_enabled của platform, và của tenant khi có `tenant_id`); perf/crash/`break_reminder_shown` vẫn gửi — GAME_ANALYTICS §3.2, F080-AC-03. Server vẫn tự bỏ hai loại này khi tắt. */
+            product_telemetry_enabled?: boolean;
             /** Format: uri */
             realtime_url?: string;
             supported_locales?: components["schemas"]["Locale"][];
@@ -12598,6 +12657,10 @@ export interface components {
         EventRunOperation: {
             reason: string;
         };
+        EventRunPage: {
+            data: components["schemas"]["EventRunSummary"][];
+            page: components["schemas"]["PageInfo"];
+        };
         EventRunStats: {
             community_goal?: components["schemas"]["CommunityGoalProgress"];
             event_run_id: components["schemas"]["Uuid"];
@@ -12613,6 +12676,17 @@ export interface components {
         };
         /** @enum {string} */
         EventRunStatus: "scheduled" | "live" | "suspended" | "ended" | "cancelled" | "archived";
+        EventRunSummary: {
+            code?: string;
+            ends_at: components["schemas"]["Timestamp"];
+            event_id: components["schemas"]["Uuid"];
+            event_kind: components["schemas"]["EventKind"];
+            event_run_id: components["schemas"]["Uuid"];
+            name?: components["schemas"]["TenantLocalizedName"];
+            starts_at: components["schemas"]["Timestamp"];
+            status: components["schemas"]["EventRunStatus"];
+            suspended_reason?: string | null;
+        };
         EventTemplate: {
             allowed_params: string[];
             /** @description Thử thách của `challenge_options` kèm tiêu đề và khối của version đang phát hành (F081-AC-02) */
@@ -13283,6 +13357,10 @@ export interface components {
             refresh_token?: string;
         };
         GameMetricSeries: {
+            /** @description Giá trị chiều của chuỗi khi lọc theo một chiều (school_id, grade_band, platform, locale, device_tier); vắng mặt = toàn phạm vi */
+            dims?: {
+                [key: string]: string;
+            };
             granularity: components["schemas"]["DashboardGrain"];
             /** @description Mã chỉ số — định nghĩa tại GAME_ANALYTICS §4 */
             metric_code: string;
@@ -13296,6 +13374,11 @@ export interface components {
             unit?: string;
         };
         GameMetricsResponse: {
+            /**
+             * Format: date
+             * @description Ngày đầu tiên có số liệu của các chỉ số yêu cầu
+             */
+            available_from?: string | null;
             data: components["schemas"]["GameMetricSeries"][];
             /** @description `computed_at` cũ nhất trong kết quả (DASHBOARD_DATA §8) */
             data_as_of: components["schemas"]["Timestamp"];
@@ -14100,6 +14183,25 @@ export interface components {
         LevelTitle: {
             code: string;
             label: components["schemas"]["LocalizedName"];
+        };
+        LiveOpsKpi: {
+            breakdown?: {
+                label: string;
+                value?: number | null;
+            }[];
+            /** @description Mã KPI trong catalog cố định (DESIGN_SYSTEM §4.3, MONITORING) */
+            code: string;
+            /** @enum {string} */
+            status: "normal" | "warning" | "incident" | "unknown";
+            threshold_incident?: number | null;
+            threshold_warning?: number | null;
+            unit?: string;
+            /** @description null khi Prometheus không có chuỗi cho KPI (không trả 0 giả) */
+            value?: number | null;
+        };
+        LiveOpsOverview: {
+            as_of: components["schemas"]["Timestamp"];
+            kpis: components["schemas"]["LiveOpsKpi"][];
         };
         LmsReportRequest: {
             /** @description Năm bắt đầu năm học của period (mặc định năm học hiện tại) */
@@ -17186,24 +17288,56 @@ export interface components {
         };
         /** @description Báo cáo tổng hợp tenant; ô < 5 học sinh bị ẩn (null) */
         TenantGameSummary: {
+            /** @description % người chơi hoạt động trong tuần có ≥ 3 ngày hoạt động (active_days_per_week) */
+            active_days_3plus_rate?: number | null;
             active_students?: number | null;
+            /** @description Học sinh hoạt động theo kỳ của `grain` (dau / wau / mau tại cuối kỳ — GAME_ANALYTICS §4.1) */
+            active_students_series?: {
+                /** Format: date */
+                t: string;
+                value?: number | null;
+            }[];
+            /**
+             * Format: date
+             * @description Ngày đầu tiên có số liệu; trước đó UI hiển thị "Chưa có số liệu trước ngày …"
+             */
+            available_from?: string | null;
+            by_grade_band?: {
+                active_students?: number | null;
+                grade_band: components["schemas"]["GradeBand"];
+                quest_completion_rate?: number | null;
+            }[];
             by_school?: {
                 active_students?: number | null;
                 quest_completion_rate?: number | null;
                 school_id?: components["schemas"]["Uuid"];
             }[];
+            chapter0_completion_rate?: number | null;
             /** @description `computed_at` cũ nhất trong kết quả (DASHBOARD_DATA §8) */
             data_as_of: components["schemas"]["Timestamp"];
             dau_avg?: number | null;
+            device_tier_distribution?: {
+                key: string;
+                share?: number | null;
+            }[];
             event_participation_rate?: number | null;
             /** Format: date */
             from: string;
             grain: components["schemas"]["DashboardGrain"];
             /** @description true nếu có dòng chưa chốt (hôm nay) */
             is_partial: boolean;
+            late_night_play_rate?: number | null;
+            platform_distribution?: {
+                /** @enum {string} */
+                key: "windows" | "android" | "ios" | "web" | "macos" | "linux";
+                share?: number | null;
+            }[];
             quest_completion_rate?: number | null;
             retention_d7?: number | null;
+            session_duration_p50_seconds?: number | null;
             sessions_over_reminder_rate?: number | null;
+            sessions_over_second_reminder_rate?: number | null;
+            social_play_rate?: number | null;
             suppressed_cells?: number;
             tenant_id?: components["schemas"]["Uuid"];
             /** Format: date */
@@ -18204,6 +18338,31 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             422: components["responses"]["ValidationFailed"];
             429: components["responses"]["DashboardBusy"];
+        };
+    };
+    getGameAnalyticsExport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                export_id: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsExportJob"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     getGameFunnel: {
@@ -21133,6 +21292,36 @@ export interface operations {
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    getLiveOpsOverview: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
+                 *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
+                 */
+                tenant_ids?: components["parameters"]["TenantIds"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveOpsOverview"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     listLoginEventsCrossTenant: {
@@ -31210,6 +31399,34 @@ export interface operations {
             403: components["responses"]["Forbidden"];
         };
     };
+    listEventRuns: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+                status?: components["schemas"]["EventRunStatus"][];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRunPage"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     cancelEventRun: {
         parameters: {
             query?: never;
@@ -32220,6 +32437,8 @@ export interface operations {
         parameters: {
             query: {
                 platform: "windows" | "android" | "ios" | "web" | "macos" | "linux";
+                /** @description Tenant của học sinh (biết sau lần đăng nhập đầu) để trả `product_telemetry_enabled` hiệu lực của tenant (F080-AC-03); vắng mặt = giá trị platform */
+                tenant_id?: components["schemas"]["Uuid"];
                 version: string;
             };
             header?: {
@@ -39973,6 +40192,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["ValidationFailed"];
             429: components["responses"]["DashboardBusy"];
             504: components["responses"]["DashboardTimeout"];

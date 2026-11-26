@@ -532,5 +532,65 @@
       "reload": "Tải lại",
       "code": "Mã lỗi: {{code}} · trace_id: {{traceId}}"
     }
+  },
+  "game_report": {
+    "tab": "Hoạt động game",
+    "suppressedNote": "{{count}} ô có dưới 5 học sinh đã được ẩn (hiển thị \"< 5\"); các tổng không được tính lại từ những ô còn lại.",
+    "filter": {
+      "schools": "Trường",
+      "allSchools": "Tất cả trường",
+      "gradeBand": "Nhóm khối",
+      "allGradeBands": "Tất cả nhóm khối"
+    },
+    "gradeBand": {
+      "g1_3": "Khối 1–3",
+      "g4_5": "Khối 4–5",
+      "g6_7": "Khối 6–7",
+      "g8_9": "Khối 8–9"
+    },
+    "overview": {
+      "title": "Tổng quan",
+      "activeStudents": "Học sinh hoạt động",
+      "dauAvg": "Học sinh hoạt động/ngày (trung bình)",
+      "retentionD7": "Quay lại sau 7 ngày",
+      "activeDays3": "Chơi ≥ 3 ngày/tuần",
+      "sessionMedian": "Thời lượng phiên (trung vị)",
+      "chapter0": "Hoàn thành chương 0",
+      "seriesSuppressed": "Có kỳ dưới 5 học sinh được ẩn:"
+    },
+    "progression": {
+      "title": "Tiến trình",
+      "questCompletion": "Tỷ lệ hoàn thành quest",
+      "eventParticipation": "Tỷ lệ tham gia sự kiện"
+    },
+    "social": {
+      "title": "Xã hội",
+      "socialPlay": "Chơi cùng bạn ≥ 1 lần/tuần"
+    },
+    "wellbeing": {
+      "title": "Chơi lành mạnh",
+      "overReminder": "Phiên có nhắc nghỉ",
+      "overSecondReminder": "Phiên có nhắc nghỉ lần 2",
+      "lateNight": "Chơi khung 22:00–06:00"
+    },
+    "device": {
+      "title": "Thiết bị",
+      "platform": "Nền tảng",
+      "tier": "Hạng thiết bị",
+      "noData": "Không có dữ liệu"
+    },
+    "platform": {
+      "windows": "Windows",
+      "android": "Android",
+      "ios": "iOS",
+      "web": "Web",
+      "macos": "macOS",
+      "linux": "Linux"
+    },
+    "tier": {
+      "minimum": "Tối thiểu",
+      "mid": "Trung bình",
+      "high": "Cao"
+    }
   }
 }

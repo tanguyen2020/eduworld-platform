@@ -4,9 +4,16 @@
 // vị" (Tenant Admin: getTenantLearningSummary by school × grade × subject, "< 5" for suppressed cells, export through
 // createTenantReport). Numbers are the server's; cells are never recomputed. ADR-0095: no course or class — the skill map
 // is per school, grade and subject; reference levels per school and subject, optionally one grade.
+// F080 (T055, F080-AC-27, AC-33): third tab "Hoạt động game" at `game-activity` (route /school-lms/reports/game-activity,
+// lazy chunk) for analytics.tenant.read or analytics.school.read while `action.school_lms.reports.view` is on.
 import { DashboardMetric, DashboardQueueProvider, DashboardRangePicker, DashboardWidget, SuppressedCell, type DashboardRange } from '@eduworld/ops-ui/dashboard';
 import { Col, Flex, Form, Row, Table, Tabs } from 'antd';
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { menuByKey } from '../../../../permissions/menuRegistry';
+import { Loading } from '../../../../permissions/RequirePermission';
+import { usePermissions } from '../../../../permissions/usePermissions';
+import { FeatureDisabledPage, ForbiddenPage } from '../../../../shell/StatusPages';
 import { useTranslation } from 'react-i18next';
 import { localizedName } from '../../common/format';
 import { SchoolSelect } from '../../common/SchoolSelect';
@@ -219,19 +226,66 @@ function TenantSummaryTab() {
   );
 }
 
+const GameActivityReportPage = lazy(() => import('../../game-report/GameActivityReportPage'));
+
+/** Permissions that open "Hoạt động game" (getTenantGameSummary: Tenant Admin, School Admin / Academic Manager of their scope). */
+export const GAME_REPORT_PERMISSIONS = ['analytics.tenant.read', 'analytics.school.read'];
+const GAME_REPORT_ACTION = 'action.school_lms.reports.view';
+const REPORTS_MENU = 'menu.school_lms.reports';
+
+/** "Hoạt động game" status: forbidden without analytics read, disabled while its catalog action (or the menu) is off. */
+export function useGameReportStatus(): 'enabled' | 'disabled' | 'forbidden' {
+  const { view } = usePermissions();
+  if (!view || !GAME_REPORT_PERMISSIONS.some((p) => view.permissions.includes(p))) return 'forbidden';
+  if ((view.disabled_actions ?? []).includes(GAME_REPORT_ACTION) || (view.disabled_menus ?? []).includes(REPORTS_MENU)) return 'disabled';
+  return 'enabled';
+}
+
 export function ReportsScreen({ title }: { title: string }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const base = menuByKey(REPORTS_MENU)!.path;
+  const onGame = pathname === `${base}/game-activity` || pathname.startsWith(`${base}/game-activity/`);
   const canExport = useActionEnabled('action.school_lms.reports.export');
   const canSummary = useActionEnabled('action.school_lms.reports.view');
+  const game = useGameReportStatus();
+  const [tab, setTab] = useState<string | undefined>();
   const items = [
     ...(canExport ? [{ key: 'export', label: t('dashboard.reports.exportTab'), children: <ExportTab /> }] : []),
     ...(canSummary ? [{ key: 'summary', label: t('dashboard.reports.summaryTab'), children: <TenantSummaryTab /> }] : []),
+    ...(game === 'enabled'
+      ? [
+          {
+            key: 'game',
+            label: t('portal.school_lms.game_report.tab'),
+            children: (
+              <Suspense fallback={<Loading />}>
+                <GameActivityReportPage />
+              </Suspense>
+            ),
+          },
+        ]
+      : []),
   ];
+  if (onGame && game !== 'enabled') return game === 'disabled' ? <FeatureDisabledPage featureKey={GAME_REPORT_ACTION} /> : <ForbiddenPage />;
+  const active = onGame ? 'game' : (tab && tab !== 'game' ? tab : items.find((i) => i.key !== 'game')?.key ?? items[0]?.key);
+  const change = (key: string) => {
+    if (key === 'game') navigate(`${base}/game-activity`);
+    else {
+      setTab(key);
+      if (onGame) navigate(base);
+    }
+  };
   return (
     <section aria-labelledby="ew-menu-title">
       <PageTitle title={title} />
       <SingleTenantGate>
-        {() => <DashboardQueueProvider limit={DASHBOARD_CONFIG.dashboard_max_concurrent_per_user}>{items.length ? <Tabs items={items} destroyInactiveTabPane /> : null}</DashboardQueueProvider>}
+        {() => (
+          <DashboardQueueProvider limit={DASHBOARD_CONFIG.dashboard_max_concurrent_per_user}>
+            {items.length ? <Tabs items={items} activeKey={active} onChange={change} destroyInactiveTabPane /> : null}
+          </DashboardQueueProvider>
+        )}
       </SingleTenantGate>
     </section>
   );

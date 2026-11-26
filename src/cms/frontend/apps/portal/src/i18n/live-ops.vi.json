@@ -1,0 +1,264 @@
+{
+  "liveOps": {
+    "common": {
+      "loadMore": "Tải thêm",
+      "next": "Trang sau",
+      "previous": "Trang trước"
+    },
+    "status": {
+      "normal": "Bình thường",
+      "warning": "Cảnh báo",
+      "incident": "Sự cố",
+      "unknown": "Không rõ"
+    },
+    "unit": {
+      "per_minute": "{{value}}/phút",
+      "seconds": "{{value}} giây",
+      "hours": "{{value}} giờ",
+      "percent": "{{value}}%"
+    },
+    "kpi": {
+      "ccu": "Người chơi đồng thời (CCU)",
+      "game_sessions_active": "Phiên game đang chạy",
+      "matches_live": "Trận đang diễn ra",
+      "matchmaking_queue": "Hàng chờ ghép trận",
+      "logins_per_minute": "Đăng nhập/phút",
+      "chat_messages_per_minute": "Tin nhắn/phút",
+      "chat_blocked_per_minute": "Tin bị chặn/che mỗi phút",
+      "reports_pending": "Báo cáo chờ xử lý",
+      "http_5xx_rate": "Tỷ lệ lỗi 5xx",
+      "content_releases_24h": "Lượt publish 24 giờ qua",
+      "content_rollbacks_24h": "Lượt rollback 24 giờ qua",
+      "sis_last_success_age_hours": "Giờ từ lần đồng bộ SIS thành công cuối",
+      "attempts_submitted_per_minute": "Lượt nộp bài/phút",
+      "api_latency_p95_seconds": "Độ trễ API p95"
+    },
+    "dashboard": {
+      "tab": "Tổng quan",
+      "updatedAt": "Cập nhật lúc {{time}}",
+      "refreshEvery": "Tự làm mới mỗi {{seconds}} giây",
+      "noValue": "Không có dữ liệu",
+      "empty": "Chưa có KPI nào.",
+      "thresholds": "Ngưỡng cảnh báo {{warning}} · sự cố {{incident}}",
+      "breakdown": "Chi tiết {{kpi}}",
+      "openModeration": "Mở hàng đợi Kiểm duyệt"
+    },
+    "events": {
+      "tab": "Giám sát sự kiện",
+      "statusFilter": "Trạng thái lượt chạy",
+      "empty": "Không có lượt chạy nào.",
+      "col": {
+        "name": "Sự kiện",
+        "kind": "Loại",
+        "status": "Trạng thái",
+        "starts": "Bắt đầu",
+        "ends": "Kết thúc"
+      },
+      "status": {
+        "scheduled": "Đã lên lịch",
+        "live": "Đang chạy",
+        "suspended": "Tạm dừng",
+        "ended": "Đã kết thúc",
+        "cancelled": "Đã hủy",
+        "archived": "Lưu trữ"
+      },
+      "kind": {
+        "world_festival": "Lễ hội thế giới",
+        "weekend": "Cuối tuần",
+        "school": "Sự kiện trường",
+        "community_goal": "Mục tiêu cộng đồng",
+        "learning_campaign": "Chiến dịch học tập",
+        "special_boss": "Boss đặc biệt",
+        "limited_quest": "Quest giới hạn"
+      },
+      "suspendedReason": "Lý do tạm dừng: {{reason}}",
+      "stats": {
+        "participants": "Học sinh tham gia",
+        "participationRate": "Tỷ lệ tham gia",
+        "rewardsGranted": "Phần thưởng đã trao",
+        "updatedAt": "Cập nhật lúc",
+        "communityGoal": "Tiến độ mục tiêu cộng đồng",
+        "goalProgress": "{{progress}} / {{target}}",
+        "claims": "Lượt nhận thưởng theo mốc",
+        "claimRow": "Mốc {{milestone}}: {{claims}} lượt"
+      },
+      "reason": "Lý do",
+      "reasonRequired": "Nhập lý do.",
+      "reasonMin": "Lý do tối thiểu {{min}} ký tự.",
+      "reasonShown": "Lý do: {{reason}}",
+      "next": "Tiếp tục",
+      "back": "Quay lại",
+      "close": "Đóng",
+      "conflict": "Trạng thái sự kiện vừa thay đổi. Đã tải lại trạng thái mới.",
+      "op": {
+        "suspend": {
+          "button": "Tạm dừng khẩn cấp",
+          "title": "Tạm dừng sự kiện {{name}}",
+          "confirmTitle": "Xác nhận tạm dừng sự kiện {{name}}?",
+          "consequence": "Học sinh không tham gia thêm được cho tới khi tiếp tục; lượt chơi đang dở không bị cắt.",
+          "confirm": "Xác nhận tạm dừng",
+          "done": "Đã tạm dừng sự kiện."
+        },
+        "resume": {
+          "button": "Tiếp tục",
+          "title": "Tiếp tục sự kiện {{name}}",
+          "confirmTitle": "Xác nhận tiếp tục sự kiện {{name}}?",
+          "consequence": "Sự kiện chạy lại theo lịch hiện tại.",
+          "confirm": "Xác nhận tiếp tục",
+          "done": "Đã tiếp tục sự kiện."
+        },
+        "cancel": {
+          "button": "Hủy sự kiện",
+          "title": "Hủy sự kiện {{name}}",
+          "confirmTitle": "Xác nhận hủy sự kiện {{name}}?",
+          "consequence": "Không thể hoàn tác. Phần thưởng học sinh đã đạt được giữ nguyên.",
+          "confirm": "Xác nhận hủy",
+          "done": "Đã hủy sự kiện."
+        }
+      }
+    },
+    "analytics": {
+      "empty": "Chưa có số liệu cho phạm vi này.",
+      "previous": "Kỳ trước",
+      "minutes": "{{value}} phút",
+      "seconds": "{{value}} giây",
+      "panel": {
+        "overview": "Tổng quan",
+        "retention": "Retention",
+        "onboarding": "Onboarding",
+        "quests": "Quest & cốt truyện",
+        "challenges": "Challenge & boss",
+        "progression": "Tiến trình & khám phá",
+        "economy": "Kinh tế Xu",
+        "social": "Xã hội & thi đấu",
+        "events": "Sự kiện",
+        "wellbeing": "Chơi lành mạnh",
+        "performance": "Hiệu năng thiết bị"
+      },
+      "filter": {
+        "dimension": "Cắt theo",
+        "noDimension": "Toàn phạm vi",
+        "values": "Giá trị",
+        "allValues": "Tất cả",
+        "pickTenantFirst": "Chọn tenant trước",
+        "clientVersions": "Phiên bản client (Hiệu năng)",
+        "clientVersionsHint": "Nhập phiên bản",
+        "compare": "So sánh kỳ trước",
+        "dimensions": {
+          "school": "Trường",
+          "grade_band": "Nhóm khối",
+          "platform": "Nền tảng",
+          "locale": "Ngôn ngữ",
+          "device_tier": "Hạng thiết bị"
+        }
+      },
+      "dim": {
+        "grade_band": {
+          "g1_3": "Khối 1–3",
+          "g4_5": "Khối 4–5",
+          "g6_7": "Khối 6–7",
+          "g8_9": "Khối 8–9"
+        },
+        "platform": {
+          "web": "Web",
+          "android": "Android",
+          "ios": "iOS"
+        },
+        "locale": {
+          "vi-VN": "Tiếng Việt",
+          "en-US": "Tiếng Anh"
+        },
+        "device_tier": {
+          "minimum": "Tối thiểu",
+          "mid": "Trung bình",
+          "high": "Cao"
+        }
+      },
+      "retention": {
+        "cohort": "Cohort",
+        "size": "Số người chơi",
+        "day": "Ngày {{n}}"
+      },
+      "funnel": {
+        "step": "Bước",
+        "count": "Số người chơi",
+        "conversion": "Tỷ lệ chuyển đổi"
+      },
+      "funnelStep": {
+        "first_login": "Đăng nhập lần đầu",
+        "avatar_created": "Tạo nhân vật",
+        "tutorial_completed": "Hoàn tất hướng dẫn",
+        "first_quest_accepted": "Nhận quest đầu",
+        "first_quest_completed": "Hoàn thành quest đầu",
+        "chapter0_completed": "Hoàn thành chương 0"
+      },
+      "content": {
+        "title": "Nội dung",
+        "starts": "Lượt bắt đầu",
+        "completion": "Tỷ lệ hoàn thành",
+        "abandon": "Tỷ lệ bỏ dở",
+        "success": "Tỷ lệ thành công",
+        "flag": "Gợi ý",
+        "flagged": "Cần xem lại cân bằng",
+        "open": "Mở {{name}} trong Game Operations Console",
+        "openFailed": "Không mở được nội dung.",
+        "kind": {
+          "quest": "Quest",
+          "challenge": "Challenge",
+          "boss": "Boss"
+        }
+      },
+      "perf": {
+        "platform": "Nền tảng",
+        "tier": "Hạng thiết bị",
+        "preset": "Preset",
+        "renderer": "Renderer",
+        "version": "Phiên bản",
+        "sessions": "Số phiên",
+        "fpsP50": "FPS p50",
+        "fpsP10": "FPS p10",
+        "budget": "Đạt ngân sách FPS",
+        "load": "Thời gian tải p50",
+        "crashFree": "Phiên không crash"
+      },
+      "export": {
+        "panel": "Panel cần xuất",
+        "button": "Xuất CSV",
+        "ready": "Báo cáo analytics đã sẵn sàng để tải.",
+        "limit": "Đã đạt giới hạn số báo cáo đang xuất. Vui lòng thử lại sau."
+      }
+    },
+    "metric": {
+      "dau": "Người chơi hoạt động/ngày (DAU)",
+      "wau": "Người chơi hoạt động/tuần (WAU)",
+      "mau": "Người chơi hoạt động/tháng (MAU)",
+      "stickiness": "Độ gắn bó (DAU/MAU)",
+      "session_duration_p50": "Thời lượng phiên (trung vị)",
+      "active_days_per_week": "Quay lại ≥ 3 ngày/tuần",
+      "chapter0_completion": "Hoàn thành chương 0 trong 7 ngày",
+      "quest_completion_rate": "Tỷ lệ hoàn thành quest",
+      "chapter_completion_rate": "Tỷ lệ hoàn thành chương",
+      "challenge_success_rate": "Tỷ lệ thành công challenge",
+      "boss_defeat_rate": "Tỷ lệ hạ boss",
+      "level_distribution": "Phân bố level",
+      "days_to_level_p50": "Số ngày hoạt động để lên mốc (trung vị)",
+      "region_unlock_rate": "Tỷ lệ mở vùng",
+      "xp_cap_hit_rate": "Tỷ lệ chạm trần XP ngày",
+      "currency_sources": "Xu cộng",
+      "currency_sinks": "Xu tiêu",
+      "currency_net_flow": "Dòng Xu ròng",
+      "currency_cap_hit_rate": "Tỷ lệ chạm trần Xu ngày",
+      "shop_conversion": "Tỷ lệ mua ở cửa hàng",
+      "social_play_rate": "Chơi cùng bạn ≥ 1 lần/tuần",
+      "match_participation_rate": "Tham gia trận",
+      "match_completion_rate": "Trận hoàn thành",
+      "party_size_avg": "Cỡ party trung bình",
+      "chat_activity": "Hoạt động chat",
+      "event_participation_rate": "Tỷ lệ tham gia sự kiện",
+      "sessions_over_reminder": "Phiên có nhắc nghỉ",
+      "sessions_over_second_reminder": "Phiên có nhắc nghỉ lần 2",
+      "late_night_play_rate": "Chơi khung 22:00–06:00",
+      "daily_playtime_p90": "Thời gian chơi/ngày (phân vị 90)"
+    }
+  }
+}

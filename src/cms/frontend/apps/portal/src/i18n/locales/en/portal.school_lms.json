@@ -532,5 +532,65 @@
       "reload": "Reload",
       "code": "Error code: {{code}} · trace_id: {{traceId}}"
     }
+  },
+  "game_report": {
+    "tab": "Game activity",
+    "suppressedNote": "{{count}} cells with fewer than 5 students are hidden (shown as \"< 5\"); totals are never recomputed from the other cells.",
+    "filter": {
+      "schools": "Schools",
+      "allSchools": "All schools",
+      "gradeBand": "Grade band",
+      "allGradeBands": "All grade bands"
+    },
+    "gradeBand": {
+      "g1_3": "Grades 1–3",
+      "g4_5": "Grades 4–5",
+      "g6_7": "Grades 6–7",
+      "g8_9": "Grades 8–9"
+    },
+    "overview": {
+      "title": "Overview",
+      "activeStudents": "Active students",
+      "dauAvg": "Daily active students (average)",
+      "retentionD7": "Back after 7 days",
+      "activeDays3": "Played ≥ 3 days a week",
+      "sessionMedian": "Session length (median)",
+      "chapter0": "Chapter 0 completed",
+      "seriesSuppressed": "Some periods with fewer than 5 students are hidden:"
+    },
+    "progression": {
+      "title": "Progression",
+      "questCompletion": "Quest completion rate",
+      "eventParticipation": "Event participation rate"
+    },
+    "social": {
+      "title": "Social",
+      "socialPlay": "Played together ≥ once a week"
+    },
+    "wellbeing": {
+      "title": "Healthy play",
+      "overReminder": "Sessions with a break reminder",
+      "overSecondReminder": "Sessions with a second break reminder",
+      "lateNight": "Play between 22:00 and 06:00"
+    },
+    "device": {
+      "title": "Devices",
+      "platform": "Platform",
+      "tier": "Device tier",
+      "noData": "No data"
+    },
+    "platform": {
+      "windows": "Windows",
+      "android": "Android",
+      "ios": "iOS",
+      "web": "Web",
+      "macos": "macOS",
+      "linux": "Linux"
+    },
+    "tier": {
+      "minimum": "Minimum",
+      "mid": "Mid",
+      "high": "High"
+    }
   }
 }
