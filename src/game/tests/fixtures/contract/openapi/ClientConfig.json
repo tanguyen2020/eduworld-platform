@@ -34,5 +34,6 @@
   ],
   "supported_locales": [
     "vi-VN"
-  ]
+  ],
+  "product_telemetry_enabled": false
 }

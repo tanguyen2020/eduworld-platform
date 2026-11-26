@@ -194,6 +194,10 @@ func assignments_chip_text() -> String:
 func _render() -> void:
 	if _nickname == null:
 		return
+	# F098: the SideBar buttons keep their label whole (wrap only past a long translation, never letter by letter).
+	UiBuild.fit_wrapping(_menu, float(UiTokens.SIZE_LAYOUT_280))
+	if _currency.visible:
+		UiBuild.fit_wrapping(_currency, float(UiTokens.SIZE_LAYOUT_280))
 	var nickname: String = LoginFormModel.nickname_of(AppState.player)
 	_nickname.text = nickname if not nickname.is_empty() else tr("ui.hub.player_default")
 	_nickname.tooltip_text = _nickname.text

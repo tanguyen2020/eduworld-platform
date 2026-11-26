@@ -197,3 +197,27 @@ static func chip_scroller(row: Control) -> ScrollContainer:
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(row)
 	return scroll
+
+
+## F098 (grade-band matrix): the minimum width of a wrapping button — its whole label on one line up to `cap` px, never
+## narrower than its longest word, plus icon and padding, at least the band touch target. In a shrinking container
+## (the HUD SideBar) an autowrapping button otherwise reports only its icon and is laid out as a tall column that cuts
+## its words; a longer label (pseudo-locale, a long translation) still wraps between words past `cap`.
+static func fit_wrapping(b: Button, cap: float) -> void:
+	var font: Font = b.get_theme_font(&"font")
+	if font == null:
+		return
+	var font_px: int = b.get_theme_font_size(&"font_size")
+	var text: String = b.tr(b.text) if b.can_auto_translate() else b.text
+	var widest: float = 0.0
+	for word: String in text.replace("\n", " ").split(" ", false):
+		widest = maxf(widest, font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_px).x)
+	var whole: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_px).x
+	var extra: float = 0.0
+	var box: StyleBox = b.get_theme_stylebox(&"normal")
+	if box != null:
+		extra += box.get_margin(SIDE_LEFT) + box.get_margin(SIDE_RIGHT)
+	if b.icon != null:
+		extra += minf(float(b.get_theme_constant(&"icon_max_width")), float(b.icon.get_width())) \
+				+ float(b.get_theme_constant(&"h_separation"))
+	b.custom_minimum_size.x = ceilf(maxf(target(), maxf(minf(whole, cap), widest) + extra))

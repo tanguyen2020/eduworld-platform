@@ -11,8 +11,10 @@ signal entry_selected(index: int)
 
 ## Rows created beyond the visible ones (scrolling never shows an empty row).
 const BUFFER_ROWS: int = 1
-## Text lines under the picture (name + second line).
-const TEXT_LINES: float = 3.3
+## Text lines under the picture (name + second line) at least / at most (F098: the cell grows with the longest
+## wrapped text of the list so a long name never spills over the next row; past the cap the text is clipped).
+const TEXT_LINES_MIN: int = 2
+const TEXT_LINES_MAX: int = 5
 
 ## `{item_id, kind, rarity, name, sub, greyed, equipped, word_rarity}` per cell.
 var entries: Array[Dictionary] = []
@@ -22,6 +24,8 @@ var columns: int = 1
 var cell_size: Vector2 = Vector2.ZERO
 var _content: Control = null
 var _group: ButtonGroup = ButtonGroup.new()
+## F098: tallest cell the bound texts really needed (the estimate can be a line short); never shrinks for a list.
+var _measured_height: float = 0.0
 
 
 func _ready() -> void:
@@ -38,6 +42,7 @@ func _ready() -> void:
 
 func set_entries(list: Array[Dictionary], keep_selection: bool = false) -> void:
 	entries = list
+	_measured_height = 0.0
 	if not keep_selection or selected_index >= entries.size():
 		selected_index = -1
 	relayout()
@@ -66,7 +71,8 @@ func relayout() -> void:
 	var gap: float = float(UiTokens.SIZE_SPACE_8)
 	# Wide enough for one long word ("Celebrate", "Xu") on a line: never a break inside a word.
 	var min_width: float = float(UiTokens.SIZE_LAYOUT_120) + float(UiTokens.SIZE_SPACE_12) * 2.0
-	cell_size = Vector2(maxf(maxf(top + target * 0.6, target * 2.0), min_width), top + font_px * 1.3 * TEXT_LINES)
+	var width_cell: float = maxf(maxf(top + target * 0.6, target * 2.0), min_width)
+	cell_size = Vector2(width_cell, maxf(top + _text_height(box, width_cell, font_px), _measured_height))
 	var width: float = maxf(size.x - float(UiTokens.SIZE_SPACE_12), cell_size.x)
 	columns = maxi(1, int((width + gap) / (cell_size.x + gap)))
 	var rows: int = ceili(float(entries.size()) / float(columns))
@@ -79,6 +85,25 @@ func relayout() -> void:
 		var c: Button = cells.pop_back() as Button
 		c.queue_free()
 	_layout()
+
+
+## Height of the text block of a cell (F098): the tallest wrapped name + second line of the entries at the cell's
+## text width, between TEXT_LINES_MIN and TEXT_LINES_MAX lines, plus the bottom padding — measured with the cell font.
+func _text_height(box: StyleBox, cell_width: float, font_px: float) -> float:
+	var font: Font = get_theme_font(&"font", &"PictureTile")
+	var line: float = font.get_height(int(font_px)) if font != null else font_px * 1.4
+	var bottom: float = box.content_margin_bottom if box != null else 0.0
+	var text_width: float = cell_width - (box.content_margin_left + box.content_margin_right if box != null else 0.0)
+	var tallest: float = line * float(TEXT_LINES_MIN)
+	if font != null and text_width > 0.0:
+		for e: Dictionary in entries:
+			var name_text: String = String(e.get("name", ""))
+			var sub: String = String(e.get("sub", ""))
+			var text: String = name_text if sub.is_empty() else "%s\n%s" % [name_text, sub]
+			var h: float = font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, text_width, int(font_px), -1,
+					TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND).y
+			tallest = maxf(tallest, h)
+	return minf(tallest, line * float(TEXT_LINES_MAX)) + bottom
 
 
 func _layout() -> void:
@@ -97,6 +122,16 @@ func _layout() -> void:
 		cell.size = cell_size
 		cell.custom_minimum_size = cell_size
 		_bind(cell, index)
+	# F098: a bound text taller than the estimate grows every cell (rows never overlap), then lays out again.
+	var tallest: float = cell_size.y
+	for cell: Button in cells:
+		if cell.visible:
+			cell.custom_minimum_size = Vector2.ZERO
+			tallest = maxf(tallest, cell.get_combined_minimum_size().y)
+			cell.custom_minimum_size = cell_size
+	if tallest > cell_size.y + 0.5:
+		_measured_height = ceilf(tallest)
+		relayout.call_deferred()
 
 
 func _make_cell(slot: int) -> Button:

@@ -3,7 +3,7 @@
   "fixtures": {
     "openapi/ClientConfig.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ClientConfig",
-      "sha256": "53e275394ab05c51d60141465a2f3a4b584ffd0622c5a5364693f9a333b8d818"
+      "sha256": "8d6ebb34867d6392830e985ceda2b52212a79fcc8b92988537abffa82e979479"
     },
     "openapi/Problem.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Problem",
