@@ -17,6 +17,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
 )
 
@@ -87,11 +88,7 @@ func (r *Registry) dsn(module string) (string, error) {
 		return v, nil
 	}
 	if f := strings.TrimSpace(r.getenv(key + "_URL_FILE")); f != "" {
-		b, err := os.ReadFile(f)
-		if err != nil {
-			return "", fmt.Errorf("read %s_URL_FILE: %w", key, err)
-		}
-		return strings.TrimSpace(string(b)), nil
+		return config.ReadSecretFile(key+"_URL_FILE", f) // F130-AC-11: missing/empty file names the variable only
 	}
 	return "", fmt.Errorf("%s: %w (set %s_DSN or %s_URL_FILE)", module, ErrDatabaseNotConfigured, key, key)
 }

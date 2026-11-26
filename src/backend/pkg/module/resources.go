@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -98,11 +97,7 @@ func (r *Registry) secret(direct, file string) (string, error) {
 		return v, nil
 	}
 	if f := strings.TrimSpace(r.getenv(file)); f != "" {
-		b, err := os.ReadFile(f)
-		if err != nil {
-			return "", fmt.Errorf("read %s: %w", file, err)
-		}
-		return strings.TrimSpace(string(b)), nil
+		return config.ReadSecretFile(file, f) // missing or empty secret file: start-up error naming the variable (F130-AC-11)
 	}
 	return "", nil
 }

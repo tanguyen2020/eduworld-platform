@@ -27,6 +27,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib" // database/sql driver "pgx"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
 )
 
 // Modules with a database, in apply order.
@@ -145,11 +146,7 @@ func migratorDSN(module string, getenv func(string) string) (string, error) {
 		return v, nil
 	}
 	if f := strings.TrimSpace(getenv(key + "_URL_FILE")); f != "" {
-		b, err := os.ReadFile(f)
-		if err != nil {
-			return "", fmt.Errorf("read %s_URL_FILE: %w", key, err)
-		}
-		return strings.TrimSpace(string(b)), nil
+		return config.ReadSecretFile(key+"_URL_FILE", f) // F130-AC-11: missing/empty file names the variable only
 	}
 	return "", fmt.Errorf("%s: set %s_DSN or %s_URL_FILE", module, key, key)
 }

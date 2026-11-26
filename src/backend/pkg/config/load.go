@@ -5,8 +5,6 @@
 package config
 
 import (
-	"fmt"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -53,11 +51,11 @@ func (c *Config) lookup(key string) (string, bool, error) {
 		return v, true, nil
 	}
 	if f := strings.TrimSpace(c.raw(key + "_FILE")); f != "" {
-		b, err := os.ReadFile(f)
+		v, err := ReadSecretFile(key+"_FILE", f)
 		if err != nil {
-			return "", false, fmt.Errorf("%s_FILE: cannot read secret file", key)
+			return "", false, err
 		}
-		return strings.TrimSpace(string(b)), true, nil
+		return v, true, nil
 	}
 	return "", false, nil
 }

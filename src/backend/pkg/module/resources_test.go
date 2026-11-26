@@ -3,6 +3,7 @@ package module_test
 import (
 	"context"
 	"errors"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -110,5 +111,21 @@ func TestCursorsKey(t *testing.T) {
 	}
 	if _, err := newRegistry(t, "core-api", "", map[string]string{"EW_PAGE_CURSOR_KEY": strings.Repeat("k", 32)}).Cursors(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// F130-AC-11: a Docker secret file mounted empty (or missing) is a start-up error naming the variable only.
+func TestSQLRejectsEmptySecretFile(t *testing.T) {
+	dir := t.TempDir()
+	empty := dir + "/learning_db_dsn"
+	if err := os.WriteFile(empty, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	r := newRegistry(t, "core-api", "", map[string]string{"EW_DB_LEARNING_URL_FILE": empty, "EW_DB_GAME_URL_FILE": dir + "/absent"})
+	for mod, want := range map[string]string{"learning": "EW_DB_LEARNING_URL_FILE: secret file is empty", "game": "EW_DB_GAME_URL_FILE: cannot read secret file"} {
+		_, err := r.SQL(mod, module.RoleApp)
+		if err == nil || !strings.Contains(err.Error(), want) || strings.Contains(err.Error(), dir) {
+			t.Fatalf("%s: err = %v, want %q without the path", mod, err, want)
+		}
 	}
 }
