@@ -8,7 +8,9 @@ extends GdUnitTestSuite
 ## numeric), feedback (grading, right, not yet right), result, S02 character creation, wardrobe and shop (F069), level
 ## up, world map; F123: the HUD with the bell count and toasts, the notification inbox (rows, empty) and the Settings
 ## tab Thông báo; F102: the Party screen (lobby, alone + invitation, invite picker, activity choice, leave, countdown) and
-## the HUD with the party strip + invitation popup. FakeHttp + contract fixtures (TEST-ONLY).
+## the HUD with the party strip + invitation popup; F119: the party lobby with its chat (PC column, phone overlay) and
+## the chat dock of a match (team tabs, message menu, report + thanks, smile board, moderation notice, mute lock, closed
+## match with the retention days, care message, 2-line strip). FakeHttp + contract fixtures (TEST-ONLY).
 
 const HOST: String = "res://scenes/learning/ActivityHost.tscn"
 const SETTLE_FRAMES: int = 6
@@ -428,6 +430,7 @@ func _party_lobby(vp: SubViewport, band: String, view: String) -> Node:
 	party.clear()
 	party._refresh_self()
 	PartyFixtures.script(s.h.http, party.store.self_id, view == "alone")
+	ChatScreens.prepare(s.services, s.h.http)
 	if view == "alone":
 		s.h.http.clear(PartyFixtures.ROUTE_INVITATIONS).reply(PartyFixtures.ROUTE_INVITATIONS, 200,
 				PartyFixtures.invitations(party.now_ms()))
@@ -486,6 +489,49 @@ func test_hub_with_party_fits_every_band() -> void:
 		await party.load_my_party()
 		hud.call("show_invitation", InvitationModel.from_dict(PartyFixtures.invitation_ws(party.now_ms())))
 		return hud))
+
+
+## F119 (F119-AC-01…AC-03, AC-06…AC-13, AC-16, AC-22): the chat dock of a match on the right of the screen (where
+## F109 / F110 embed it) in every state of ChatScreens, and the party lobby with its chat opened on a phone.
+func _chat(vp: SubViewport, view: String) -> Node:
+	var root: Control = Control.new()
+	root.name = "ChatScreen"
+	_mount(vp, root)
+	root.position = Vector2.ZERO
+	root.size = Vector2(vp.size)
+	await ChatScreens.build(view, root, s.services, s.h.http)
+	return root
+
+
+func test_chat_dock_fits_every_band() -> void:
+	var failures: PackedStringArray = []
+	for view: String in ChatScreens.VIEWS:
+		failures.append_array(await _matrix("chat_" + view, func(vp: SubViewport, _band: String) -> Node:
+			return await _chat(vp, view)))
+	_assert_none(failures)
+
+
+## F119-AC-22: the pseudo-locale (+35% text) still fits the chat — wraps, nothing cut or outside.
+func test_chat_dock_fits_every_band_with_long_text() -> void:
+	var locale: String = String(Settings.locale)
+	Settings.set_locale(L10n.pseudo_locale(), false)
+	var failures: PackedStringArray = []
+	for view: String in ["team", "menu", "report", "muted"]:
+		failures.append_array(await _matrix("chat_pseudo_" + view, func(vp: SubViewport, _band: String) -> Node:
+			return await _chat(vp, view)))
+	Settings.set_locale(locale, false)
+	_assert_none(failures)
+
+
+## F119-AC-01 (phone): the party lobby with the chat overlay opened from "Chat nhóm".
+func test_party_lobby_with_chat_open_fits_every_band() -> void:
+	_assert_none(await _matrix("party_chat", func(vp: SubViewport, band: String) -> Node:
+		var lobby: PartyLobby = await _party_lobby(vp, band, "lobby") as PartyLobby
+		if lobby.chat_button().visible:
+			lobby.chat_button().pressed.emit()
+		for i: int in 6:
+			await await_idle_frame()
+		return lobby))
 
 
 ## The probe itself catches what it must (a guard against a silent matrix).

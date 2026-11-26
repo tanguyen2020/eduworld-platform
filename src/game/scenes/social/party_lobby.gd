@@ -8,7 +8,9 @@ extends Control
 ##   "+ Mời bạn" (InviteFriendPicker), the activity the leader chose (ActivitySelector for the leader, "Trưởng nhóm đang
 ##   chọn" for the others), the Ready toggle and — for the leader only — "Bắt đầu", grey with the reason in words while
 ##   something is missing (F102-AC-06…AC-10). PC: two columns; a wide phone: the cards in one row, the big buttons at the
-##   bottom (F102-AC-18). The chat slot `EmbeddedChat` stays hidden until F119 brings the party chat panel.
+##   bottom (F102-AC-18). The party chat (F119 ChatDock, channel `party` of the snapshot `chat_channel_id`, always-on —
+##   ADR-0020 §6) sits under the activity on a PC; on a phone it slides in from the right over 45% of the window from the
+##   "Chat nhóm" button of the bottom bar (with the unread badge), the Ready / Start buttons stay visible.
 ## - Leader menu on a card ("Chuyển trưởng nhóm", "Mời rời nhóm"), "Rời nhóm" (red) and the settings ("Giải tán nhóm")
 ##   always through a confirmation (F102-AC-12); "Thu nhỏ" closes the window and keeps the party (PartyHud on the HUD).
 ## - Banners: yellow "Đang kết nối lại…" while offline (writes locked, the party stays readable, AC-15) and "Trưởng nhóm
@@ -82,6 +84,10 @@ var _activity_hint: Label = null
 var _choose: Button = null
 var _ineligible: VBoxContainer = null
 var _chat_slot: Control = null
+var _chat_dock: ChatDock = null
+var _chat_overlay: Control = null
+var _chat_button: Button = null
+var _chat_badge: Label = null
 var _bottom: HBoxContainer = null
 var _ready_toggle: Button = null
 var _start_hint: Label = null
@@ -132,6 +138,7 @@ func open(args: Dictionary = {}) -> void:
 func close() -> void:
 	if _dialog.visible:
 		_dialog.dismiss()
+	_chat_dock.clear_context()
 	_picker.hide()
 	_selector.hide()
 	hide()
@@ -245,6 +252,14 @@ func chat_slot() -> Control:
 	return _chat_slot
 
 
+func chat_dock() -> ChatDock:
+	return _chat_dock
+
+
+func chat_button() -> Button:
+	return _chat_button
+
+
 func invitation_rows() -> int:
 	return _invitations.get_child_count() if _invitations_box.visible else 0
 
@@ -294,6 +309,8 @@ func advance(delta: float) -> void:
 func _process(delta: float) -> void:
 	if visible:
 		advance(delta)
+		if _chat_overlay.visible:
+			_place_chat_overlay()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -348,6 +365,7 @@ func _render_all() -> void:
 	_render_controls()
 	_render_invitations()
 	_render_banner()
+	_render_chat()
 	UiBuild.size_buttons(self)
 
 
@@ -653,6 +671,78 @@ func _on_dialogs_finished(action: StringName, ok: bool) -> void:
 		_render_all()
 
 
+# ---------- party chat (F119) ----------
+
+## The dock follows the party: the `party` channel of the snapshot and the other members (mentions, players list).
+func _render_chat() -> void:
+	var p: PartyModel = _party()
+	var has_chat: bool = p != null and Uuid.is_valid(p.chat_channel_id)
+	if not has_chat:
+		_chat_dock.clear_context()
+	else:
+		var others: Array[Dictionary] = []
+		for m: PartyMemberModel in p.members:
+			if m.student_id != service.store.self_id:
+				others.append({"user_id": m.student_id, "nickname": m.nickname, "avatar_config": m.avatar_config})
+		_chat_dock.show_party(p.party_id, p.chat_channel_id, others)
+	_arrange_columns(has_chat and not _phone)
+	_chat_slot.visible = has_chat and not _phone
+	_chat_button.visible = has_chat and _phone
+	_chat_overlay.visible = has_chat and _phone and _chat_dock.mode != ChatDock.Mode.COLLAPSED
+
+
+## PC with a party chat: members + activity on the left, the chat on the whole right column (STUDENT_GAME_UX_SOCIAL
+## §5 wireframe); without chat (or on a phone) the F102 two columns members | activity.
+func _arrange_columns(chat_column: bool) -> void:
+	var target: Control = _members_column if chat_column else _lobby
+	if _activity_column.get_parent() != target:
+		_activity_column.get_parent().remove_child(_activity_column)
+		target.add_child(_activity_column)
+		if not chat_column:
+			_lobby.move_child(_activity_column, _members_column.get_index() + 1)
+	_activity_column.size_flags_vertical = Control.SIZE_FILL if chat_column else Control.SIZE_EXPAND_FILL
+
+
+## PC: the dock in the right column, open. Phone: the dock in the right overlay, closed until "Chat nhóm".
+func _place_chat() -> void:
+	var target: Control = _chat_overlay if _phone else _chat_slot
+	if _chat_dock.get_parent() != target:
+		_chat_dock.get_parent().remove_child(_chat_dock)
+		target.add_child(_chat_dock)
+	_chat_dock.external_toggle = _phone
+	_chat_dock.set_mode(ChatDock.Mode.COLLAPSED if _phone else ChatDock.Mode.EXPANDED)
+	_chat_dock._apply_mode()
+	if _party() != null:
+		_render_chat()
+
+
+## The phone overlay: right 45% of the window, between the title bar and the Ready / Start bar.
+func _place_chat_overlay() -> void:
+	var win: Rect2 = _window.get_global_rect()
+	var top: float = (_window.find_child("TitleBar", true, false) as Control).get_global_rect().end.y
+	var bottom: float = _bottom.get_global_rect().position.y if _bottom.visible else win.end.y
+	var pad: float = float(UiTokens.SIZE_SPACE_12)
+	var w: float = win.size.x * 0.45
+	var origin: Vector2 = get_global_rect().position
+	_chat_overlay.position = Vector2(win.end.x - w - pad * 2.0, top + pad) - origin
+	_chat_overlay.size = Vector2(w, maxf(bottom - top - pad * 2.0, UiBuild.target() * 2.0))
+
+
+func _on_chat_mode_changed(_mode: int) -> void:
+	if _chat_button == null:
+		return
+	_chat_overlay.visible = _phone and _chat_dock.mode != ChatDock.Mode.COLLAPSED and _chat_button.visible
+	if _chat_overlay.visible:
+		_place_chat_overlay()
+
+
+func _on_chat_unread(count: int, mentions: int) -> void:
+	if _chat_badge == null:
+		return
+	_chat_badge.text = ("@ " if mentions > 0 else "") + (str(count) if count <= 99 else tr("ui.chat.unread_many"))
+	_chat_badge.visible = count > 0 or mentions > 0
+
+
 # ---------- layout ----------
 
 ## PC / tablet: two columns. Wide phone (F113 landscape, aspect > 1.9): one row of cards, big buttons at the bottom.
@@ -663,6 +753,7 @@ func _apply_layout() -> void:
 		return
 	_phone = phone
 	_lobby.set_meta("built", true)
+	_place_chat()
 	_lobby.vertical = phone
 	_members.vertical = not phone
 	_members_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO if phone else ScrollContainer.SCROLL_MODE_DISABLED
@@ -752,6 +843,11 @@ func _build() -> void:
 	_build_alone(body)
 	_build_lobby(body)
 	_build_bottom(box)
+	_chat_overlay = Control.new()
+	_chat_overlay.name = "ChatOverlay"
+	_chat_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_chat_overlay.visible = false
+	add_child(_chat_overlay)
 	_build_countdown()
 	_dialog = PartyDialog.new()
 	add_child(_dialog)
@@ -915,11 +1011,20 @@ func _build_lobby(body: VBoxContainer) -> void:
 	_ineligible = UiBuild.vbox(&"FieldBox")
 	_ineligible.name = "Ineligible"
 	right.add_child(_ineligible)
-	# F119 brings the party chat panel (always-on channel `party`, ADR-0020 §6); the slot stays hidden until then.
+	# F119: the party chat panel (always-on channel `party`, ADR-0020 §6) under the activity on a PC.
 	_chat_slot = Control.new()
 	_chat_slot.name = "EmbeddedChat"
 	_chat_slot.visible = false
-	right.add_child(_chat_slot)
+	_chat_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_chat_slot.custom_minimum_size.y = UiBuild.target() * 4.0
+	UiBuild.expand(_chat_slot, true, true)
+	# The chat column is as wide as the members column (the smile board keeps its tabs on one line).
+	_chat_slot.size_flags_stretch_ratio = 1.3
+	_lobby.add_child(_chat_slot)
+	_chat_dock = (load("res://scenes/chat/ChatDock.tscn") as PackedScene).instantiate() as ChatDock
+	_chat_dock.mode_changed.connect(_on_chat_mode_changed)
+	_chat_dock.unread_changed.connect(_on_chat_unread)
+	_chat_slot.add_child(_chat_dock)
 
 
 func _build_bottom(box: VBoxContainer) -> void:
@@ -930,6 +1035,19 @@ func _build_bottom(box: VBoxContainer) -> void:
 	_ready_toggle.name = "ReadyToggle"
 	_ready_toggle.pressed.connect(_on_ready_pressed)
 	_bottom.add_child(_ready_toggle)
+	# F119 phone layout: "Chat nhóm" opens the chat overlay (the badge counts what arrived meanwhile).
+	_chat_button = UiBuild.button("ui.party.chat", "chat", &"SecondaryButton")
+	_chat_button.name = "ChatButton"
+	_chat_button.visible = false
+	_chat_button.pressed.connect(func() -> void:
+		_chat_dock.expand()
+		_place_chat_overlay())
+	_bottom.add_child(_chat_button)
+	_chat_badge = UiBuild.data_label("", &"CountBadge", false)
+	_chat_badge.name = "ChatBadge"
+	_chat_badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_chat_badge.visible = false
+	_bottom.add_child(_chat_badge)
 	_start_hint = UiBuild.data_label("", &"MutedLabel")
 	_start_hint.name = "StartHint"
 	_start_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

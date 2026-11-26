@@ -369,3 +369,25 @@ func test_older_bands_change_who_may_join_from_the_settings() -> void:
 	assert_int(s.h.http.count(PartyFixtures.ROUTE_SETTINGS)).is_equal(1)
 	assert_dict(s.h.http.last(PartyFixtures.ROUTE_SETTINGS).body).is_equal({"visibility": "friends"})
 	AppState.set_grade_band(band)
+
+
+# ---------- F119-AC-01 (party chat in the lobby) ----------
+
+## F119-AC-01, TC-CHAT-017: the lobby mounts the always-on party chat at once (channel of the snapshot), with the other
+## members for mentions / the players list; nothing in it turns the chat off.
+func test_lobby_shows_the_party_chat_under_the_activity() -> void:
+	await s.start()
+	var lobby: PartyLobby = await _lobby()
+	await _frames(10)
+	var dock: ChatDock = lobby.chat_dock()
+	assert_object(dock).is_not_null()
+	assert_bool(lobby.chat_slot().visible).is_true()
+	assert_bool(dock.is_visible_in_tree()).is_true()
+	assert_str(dock.context_id).is_equal(PartyFixtures.PARTY_ID)
+	assert_str(dock.current_channel).is_equal(ChatFixtures.PARTY_CHANNEL)
+	assert_int(dock.members.size()).is_equal(2)
+	for m: Dictionary in dock.members:
+		assert_str(String(m["user_id"])).is_not_equal(s.self_id)
+	assert_int(dock.list().entries.size()).is_equal(5)
+	lobby.close()
+	assert_str(dock.current_channel).is_empty()

@@ -38,6 +38,9 @@ const SCREENS: PackedStringArray = [
 	# activity choice, the leave confirmation, the 3-2-1 countdown and the HUD party strip + invitation popup.
 	"party", "party_member", "party_alone", "party_invite", "party_activity", "party_confirm", "party_countdown",
 	"hub_party",
+	# F119: the party lobby with its chat open (phone overlay / PC column) and the chat dock of a team battle in each state.
+	"party_chat", "chat_team", "chat_menu", "chat_report", "chat_thanks", "chat_picker", "chat_blocked", "chat_muted",
+	"chat_closed", "chat_care", "chat_mini",
 ]
 ## Sample look of the local player (catalog codes of the F070 fixture; display only).
 const SAMPLE_AVATAR: Dictionary = {
@@ -146,6 +149,8 @@ func _sign_in(first_time: bool = false) -> void:
 	AppState.services = ServiceLocator.new(_harness.api, AppState, _harness.clock)
 	AppState.player = AuthHarness.bootstrap()
 	AppState.set_grade_band(_band)
+	# F119: the chat fixtures (party channel history, quick messages, stickers on the fixture CDN).
+	ChatScreens.prepare(AppState.get_services(), _harness.http)
 
 
 func _add(path: String) -> Node:
@@ -429,6 +434,76 @@ func _screen_hub_party() -> Node:
 	(invitation["inviter"] as Dictionary)["nickname"] = "SaoBang12"
 	hud.call("show_invitation", InvitationModel.from_dict(invitation))
 	return world
+
+
+# ---------- F119 chat ----------
+
+## The party lobby with the party chat: open in the activity column on a PC, opened from "Chat nhóm" on a phone.
+func _screen_party_chat() -> Node:
+	var world: Node = await _party_world()
+	var lobby: PartyLobby = await _party_lobby(world)
+	if lobby.chat_button().visible:
+		lobby.chat_button().pressed.emit()
+	for i: int in 20:
+		await get_tree().process_frame
+	return world
+
+
+## The world with the chat dock of a team battle in one state (where the match / boss screens embed it).
+func _chat_world(view: String) -> Node:
+	var world: Node = await _world()
+	var layer: CanvasLayer = CanvasLayer.new()
+	layer.name = "ChatLayer"
+	layer.layer = 20
+	world.add_child(layer)
+	var screen: Control = Control.new()
+	screen.set_anchors_preset(Control.PRESET_FULL_RECT)
+	screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(screen)
+	await ChatScreens.build(view, screen, AppState.get_services(), _harness.http)
+	for i: int in 20:
+		await get_tree().process_frame
+	return world
+
+
+func _screen_chat_team() -> Node:
+	return await _chat_world("team")
+
+
+func _screen_chat_menu() -> Node:
+	return await _chat_world("menu")
+
+
+func _screen_chat_report() -> Node:
+	return await _chat_world("report")
+
+
+func _screen_chat_thanks() -> Node:
+	return await _chat_world("thanks")
+
+
+func _screen_chat_picker() -> Node:
+	return await _chat_world("picker")
+
+
+func _screen_chat_blocked() -> Node:
+	return await _chat_world("blocked")
+
+
+func _screen_chat_muted() -> Node:
+	return await _chat_world("muted")
+
+
+func _screen_chat_closed() -> Node:
+	return await _chat_world("closed")
+
+
+func _screen_chat_care() -> Node:
+	return await _chat_world("care")
+
+
+func _screen_chat_mini() -> Node:
+	return await _chat_world("mini")
 
 
 func _screen_about() -> Node:

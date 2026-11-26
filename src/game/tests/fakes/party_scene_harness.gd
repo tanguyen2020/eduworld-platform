@@ -26,6 +26,10 @@ func start(alone: bool = false) -> void:
 		entered.append("%s|%s" % [scene_ref, room_id])
 		return OK
 	PartyFixtures.script(h.http, self_id, alone)
+	# F119: the party chat panel of the lobby reads the chat fixtures (CDN of the fixtures, no disk cache).
+	services.chat.assets.cdn_base_url = ChatFixtures.CDN
+	services.chat.assets.use_disk = false
+	ChatFixtures.script(h.http, self_id)
 
 
 ## The sample party with the signed-in student as a plain member (CaHeoVui07's place); MeoXanh42 leads.
@@ -46,6 +50,10 @@ func push(type: String, payload: Dictionary) -> void:
 func dispose() -> void:
 	if party != null:
 		party.clear()
+	if services != null:
+		services.chat.clear()
+		if services.realtime != null:
+			services.realtime.unregister_handler(ChatService.PREFIX, services.chat.handle_message)
 	if services != null and services.realtime != null:
 		services.realtime.unregister_handler(PartyService.PREFIX, party.handle_message)
 	AppState.services = null
