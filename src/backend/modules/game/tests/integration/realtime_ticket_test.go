@@ -77,6 +77,11 @@ func TestRealtimeTicket(t *testing.T) {
 		c.GameSessionID.String() != session || c.DeviceID != d.id {
 		t.Fatalf("claims %+v", c)
 	}
+	// MONITORING §3: the labels of eduworld_players_online travel in the ticket — the platform of the session and the grade
+	// band (grade 3 → g1_3), never the grade itself.
+	if c.Platform != "windows" || c.GradeBand != "g1_3" || strings.Contains(raw, "grade_level") {
+		t.Fatalf("ticket labels %+v: %s", c, raw)
+	}
 	if ttl, _ := vk.Do(ctx, vk.B().Ttl().Key(key).Build()).AsInt64(); ttl <= 0 || ttl > 60 {
 		t.Fatalf("ttl %d", ttl)
 	}

@@ -106,7 +106,9 @@ func HashTicket(ticket string) string {
 	return hex.EncodeToString(h[:])
 }
 
-// TicketClaims is the value stored under TicketKey: ids only, no PII (F090-AC-01).
+// TicketClaims is the value stored under TicketKey: ids only, no PII (F090-AC-01). Platform (client platform of the
+// game session) and GradeBand (g1_3…g8_9 of the student) are the bounded labels of eduworld_players_online
+// (MONITORING §3); empty when unknown (tickets of an older core-api).
 type TicketClaims struct {
 	UserID        uuid.UUID `json:"user_id"`
 	TenantID      uuid.UUID `json:"tenant_id"`
@@ -114,6 +116,8 @@ type TicketClaims struct {
 	GameSessionID uuid.UUID `json:"game_session_id"`
 	DeviceID      uuid.UUID `json:"device_id"`
 	IssuedAt      int64     `json:"iat"` // epoch ms
+	Platform      string    `json:"platform,omitempty"`
+	GradeBand     string    `json:"grade_band,omitempty"`
 }
 
 // Valid reports claims with every id set.

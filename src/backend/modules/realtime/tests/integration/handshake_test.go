@@ -29,6 +29,13 @@ func TestHandshake(t *testing.T) {
 	if w.Seq != 1 || w.V != 1 {
 		t.Fatalf("welcome envelope: %+v", w)
 	}
+	// MONITORING §3: one ok handshake, the student online with the platform and grade band of the ticket.
+	if v := n.counter("eduworld_ws_connect_total", map[string]string{"result": "ok"}); v != 1 {
+		t.Fatalf("ws_connect_total{ok} = %v", v)
+	}
+	if v := n.counter("eduworld_players_online", map[string]string{"platform": "windows", "grade_band": "g4_5"}); v != 1 {
+		t.Fatalf("players_online = %v", v)
+	}
 	for _, k := range []string{"conn_id", "server_time", "heartbeat_s", "timeout_s", "resume_token", "resume_window_s", "protocol_version", "limits"} {
 		if w.field(k) == nil {
 			t.Fatalf("welcome without %s: %s", k, w.Payload)
@@ -75,6 +82,13 @@ func TestHandshake(t *testing.T) {
 	}
 	if _, err := dialRaw(t, n, "", dialOpts{rawQuery: "access_token=eyJhbGciOiJSUzI1NiJ9.e30.x"}); err == nil {
 		t.Fatal("JWT in query accepted")
+	}
+	// ws_connect_total: reused, unknown, JWT-shaped ticket and JWT in the URL are ticket_invalid; subprotocol and Origin rejected.
+	if v := n.counter("eduworld_ws_connect_total", map[string]string{"result": "ticket_invalid"}); v != 4 {
+		t.Fatalf("ws_connect_total{ticket_invalid} = %v", v)
+	}
+	if v := n.counter("eduworld_ws_connect_total", map[string]string{"result": "rejected"}); v != 2 {
+		t.Fatalf("ws_connect_total{rejected} = %v", v)
 	}
 	web := newStudent()
 	if ws, err := dialRaw(t, n, e.ticket(web), dialOpts{origin: "https://portal.test.example"}); err != nil {

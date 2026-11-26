@@ -173,7 +173,7 @@ func (e *env) ticket(s student) string {
 	e.t.Helper()
 	tk := strings.ReplaceAll(uuid.NewString()+uuid.NewString(), "-", "")
 	b, _ := json.Marshal(rt.TicketClaims{UserID: s.user, TenantID: s.tenant, SchoolID: s.school, GameSessionID: s.session,
-		DeviceID: s.device, IssuedAt: time.Now().UnixMilli()})
+		DeviceID: s.device, IssuedAt: time.Now().UnixMilli(), Platform: "windows", GradeBand: "g4_5"})
 	if err := e.vk.Do(context.Background(), e.vk.B().Set().Key(rt.TicketKey(rt.HashTicket(tk))).Value(string(b)).Nx().ExSeconds(60).Build()).Error(); err != nil {
 		e.t.Fatal(err)
 	}

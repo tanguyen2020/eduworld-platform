@@ -92,6 +92,9 @@ type LoginEvent struct {
 	IPHash          []byte
 	LoginAt         time.Time
 	SISConnectionID *uuid.UUID
+	// GradeLevel is the grade of the student (ref.students.grade_level, nil when unknown); only its band leaves the module
+	// (realtime ticket label of eduworld_players_online, MONITORING §3).
+	GradeLevel *int
 }
 
 // LoginEventRepository appends login events and records their end once.
@@ -110,6 +113,9 @@ type Student struct {
 	Deleted   bool
 	// SISConnectionID is the SIS connection of the student (OQ F014-1), nil when unknown or not synced from a SIS.
 	SISConnectionID *uuid.UUID
+	// GradeLevel is the grade of the student (ref.students.grade_level, nil when unknown); only its band leaves the module
+	// (label of eduworld_players_online in the realtime ticket, MONITORING §3).
+	GradeLevel *int
 }
 
 // Playable reports a student who may enter the game (active, not cleaned up).

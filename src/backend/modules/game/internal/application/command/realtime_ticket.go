@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/analytics"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/gamesession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
@@ -105,7 +106,7 @@ func (h RealtimeTickets) Issue(ctx context.Context, sessionID uuid.UUID) (res Ti
 			return problem.New(problem.CurfewActive, "").With("reopen_at", reopen.UTC())
 		}
 		claims = rt.TicketClaims{UserID: s.StudentID, TenantID: s.TenantID, SchoolID: st.SchoolID, GameSessionID: s.ID,
-			DeviceID: s.DeviceID, IssuedAt: h.Sessions.now().UnixMilli()}
+			DeviceID: s.DeviceID, IssuedAt: h.Sessions.now().UnixMilli(), Platform: s.Platform, GradeBand: ticketGradeBand(st.GradeLevel)}
 		return nil
 	})
 	if err != nil {
@@ -119,6 +120,18 @@ func (h RealtimeTickets) Issue(ctx context.Context, sessionID uuid.UUID) (res Ti
 		return res, RetryAfter{Err: problem.New(problem.Unavailable, "realtime ticket store unavailable").Retry(), After: 5 * time.Second}
 	}
 	return TicketResult{Ticket: ticket, ExpiresAt: h.Sessions.now().Add(h.Config.TTL), URL: h.Config.URL, ProtocolVersion: ProtocolVersion}, nil
+}
+
+// ticketGradeBand is the grade band of the ticket (label of eduworld_players_online, MONITORING §3): the band only, never
+// the grade itself; "" when the grade is not projected.
+func ticketGradeBand(grade *int) string {
+	if grade == nil {
+		return ""
+	}
+	if b := analytics.GradeBand(*grade); b != analytics.Unknown {
+		return b
+	}
+	return ""
 }
 
 func (h RealtimeTickets) newTicket() (string, error) {

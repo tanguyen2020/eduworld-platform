@@ -74,9 +74,10 @@ func (Directory) Student(ctx context.Context, tenant, student uuid.UUID) (*write
 	s := write.Student{StudentID: student}
 	var deleted sql.NullTime
 	var sis uuid.NullUUID
+	var grade sql.NullInt32
 	// tenancyguard:ok projection ref.students (RLS + explicit tenant_id); deleted_at is read as the projected source state
-	err = t.QueryRowContext(ctx, `SELECT tenant_id, school_id, status, deleted_at, sis_connection_id FROM ref.students
-		WHERE student_id = $1 AND tenant_id = $2`, student, tenant).Scan(&s.TenantID, &s.SchoolID, &s.Status, &deleted, &sis)
+	err = t.QueryRowContext(ctx, `SELECT tenant_id, school_id, status, deleted_at, sis_connection_id, grade_level FROM ref.students
+		WHERE student_id = $1 AND tenant_id = $2`, student, tenant).Scan(&s.TenantID, &s.SchoolID, &s.Status, &deleted, &sis, &grade)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -86,6 +87,10 @@ func (Directory) Student(ctx context.Context, tenant, student uuid.UUID) (*write
 	s.Deleted = deleted.Valid
 	if sis.Valid {
 		s.SISConnectionID = &sis.UUID
+	}
+	if grade.Valid {
+		g := int(grade.Int32)
+		s.GradeLevel = &g
 	}
 	return &s, nil
 }

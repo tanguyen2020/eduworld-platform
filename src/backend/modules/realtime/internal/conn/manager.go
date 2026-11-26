@@ -285,6 +285,7 @@ func (m *Manager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if m.draining.Load() || !m.hub.Healthy() {
+		m.metrics.Connect.WithLabelValues(observability.ConnectRejected).Inc()
 		w.Header().Set("Retry-After", "2")
 		http.Error(w, "unavailable", http.StatusServiceUnavailable)
 		return
@@ -292,14 +293,17 @@ func (m *Manager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	if q.Has("access_token") || q.Has("token") || q.Has("jwt") || r.Header.Get("Authorization") != "" {
 		m.metrics.TicketRejected.WithLabelValues("credential_in_request").Inc()
+		m.metrics.Connect.WithLabelValues(observability.ConnectTicketInvalid).Inc()
 		http.Error(w, "use a realtime ticket", http.StatusBadRequest) // never a JWT in the URL (ADR-0008)
 		return
 	}
 	if !offers(r.Header.Values("Sec-WebSocket-Protocol"), protocol.Subprotocol) {
+		m.metrics.Connect.WithLabelValues(observability.ConnectRejected).Inc()
 		http.Error(w, "subprotocol eduworld.v1 required", http.StatusBadRequest)
 		return
 	}
 	if o := r.Header.Get("Origin"); o != "" && !slices.Contains(m.cfg.AllowedOrigins, o) {
+		m.metrics.Connect.WithLabelValues(observability.ConnectRejected).Inc()
 		http.Error(w, "origin not allowed", http.StatusForbidden)
 		return
 	}
@@ -314,6 +318,7 @@ func (m *Manager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if wait < time.Second {
 			wait = time.Second
 		}
+		m.metrics.Connect.WithLabelValues(observability.ConnectRejected).Inc()
 		m.metrics.Closed.WithLabelValues("4429").Inc()
 		_ = ws.Close(protocol.CloseRateLimited, "retry_after_ms="+strconv.FormatInt(wait.Milliseconds(), 10)) // F090-AC-29
 		return
@@ -326,6 +331,7 @@ func (m *Manager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			reason = rej.Reason
 		}
 		m.metrics.TicketRejected.WithLabelValues(reason).Inc()
+		m.metrics.Connect.WithLabelValues(observability.ConnectResult(reason)).Inc()
 		m.metrics.Closed.WithLabelValues("4401").Inc()
 		_ = ws.Close(protocol.CloseTicket, "ticket_invalid")
 		return
@@ -359,9 +365,15 @@ func (m *Manager) serve(ws *websocket.Conn, c rt.TicketClaims) {
 		GameSessionID: c.GameSessionID.String()}, m.now())
 	if err != nil {
 		slog.Warn("realtime: register failed", "error", err)
+		m.metrics.Connect.WithLabelValues(observability.ConnectRejected).Inc()
 		_ = ws.Close(websocket.StatusTryAgainLater, "unavailable")
 		return
 	}
+	m.metrics.Connect.WithLabelValues(observability.ConnectOK).Inc()
+	// eduworld_players_online (MONITORING §3): the connected student until the connection ends, labels from the ticket.
+	online := m.metrics.PlayersOnline.WithLabelValues(observability.PlayerLabels(c.Platform, c.GradeBand))
+	online.Inc()
+	defer online.Dec()
 	if prev != nil && prev.ConnID != caller.ConnID { // F090-AC-08: the later connection wins, the earlier closes 4409
 		if prev.Node == m.cfg.NodeID {
 			if old := m.get(prev.ConnID); old != nil {
