@@ -8,3 +8,20 @@ tooltip_text = "ui.notification.bell_tooltip"
 theme_type_variation = &"SecondaryButton"
 auto_translate_mode = 2
 script = ExtResource("1_script")
+
+[node name="Count" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"CountBadge"
+auto_translate_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1

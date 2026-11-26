@@ -6,7 +6,8 @@ extends GdUnitTestSuite
 ## SubViewport of that size with the band's Theme, and BandLayoutProbe checks touch targets, the smallest font, answer tiles and that
 ## nothing is cut off or outside the view. Screens: S01 login, Hub HUD, activity (single choice, true/false, matching,
 ## numeric), feedback (grading, right, not yet right), result, S02 character creation, wardrobe and shop (F069), level
-## up, world map. FakeHttp + contract fixtures (TEST-ONLY).
+## up, world map; F123: the HUD with the bell count and toasts, the notification inbox (rows, empty) and the Settings
+## tab Thông báo. FakeHttp + contract fixtures (TEST-ONLY).
 
 const HOST: String = "res://scenes/learning/ActivityHost.tscn"
 const SETTLE_FRAMES: int = 6
@@ -356,7 +357,7 @@ func _settings(vp: SubViewport, view: String) -> Node:
 
 
 func test_settings_fits_every_band() -> void:
-	for view: String in ["language", "graphics", "sound", "access", "info", "licenses", "logout"]:
+	for view: String in ["language", "graphics", "sound", "access", "notifications", "info", "licenses", "logout"]:
 		var failures: PackedStringArray = await _matrix("settings_" + view, func(vp: SubViewport, _band: String) -> Node:
 			return _settings(vp, view))
 		# The engine's licence texts are shown verbatim (F096-AC-04): their separator rules (80 '*' / '-' / '=') are
@@ -374,11 +375,48 @@ func test_settings_fits_every_band() -> void:
 func test_settings_fits_every_band_with_the_largest_text() -> void:
 	AppState.theme_service.set_font_scale(2)
 	var failures: PackedStringArray = []
-	for view: String in ["language", "sound", "access", "logout"]:
+	for view: String in ["language", "sound", "access", "notifications", "logout"]:
 		failures.append_array(await _matrix("settings_text+2_" + view, func(vp: SubViewport, _band: String) -> Node:
 			return _settings(vp, view)))
 	AppState.theme_service.set_font_scale(0)
 	_assert_none(failures)
+
+
+## F123-AC-19: the HUD with a two-digit bell count and three toasts (an invitation, school work, results).
+func test_hub_with_notifications_fits_every_band() -> void:
+	await s.services.progression.refresh()
+	await s.services.inventory.load_wallet()
+	_assert_none(await _matrix("hud_notifications", func(vp: SubViewport, _band: String) -> Node:
+		s.services.notifications.reset()
+		s.h.http.reply(NotificationFixtures.ROUTE_LIST, 200, NotificationFixtures.page(NotificationFixtures.sample_items(),
+				12))
+		var hud: Node = _mount(vp, _scene("res://scenes/ui/hud/MainHud.tscn"))
+		await s.services.notifications.load_unread()
+		for name: String in ["friend_request", "assignment_new", "assignment_new"]:
+			s.services.notifications.handle_message(NotificationService.MSG_CREATED, NotificationFixtures.created(name))
+		return hud))
+
+
+## F123-AC-19: the notification inbox with its five sample rows ("Mới", "Xem") and empty (Mây's bubble).
+func _inbox(vp: SubViewport, empty: bool) -> Node:
+	s.services.notifications.reset()
+	NotificationFixtures.script(s.h.http, empty)
+	var inbox: Control = _mount(vp, _scene("res://scenes/ui/notifications/NotificationInbox.tscn")) as Control
+	inbox.set("service", s.services.notifications)
+	inbox.call("open")
+	for i: int in 6:
+		await await_idle_frame()
+	return inbox
+
+
+func test_notification_inbox_fits_every_band() -> void:
+	_assert_none(await _matrix("notification_inbox", func(vp: SubViewport, _band: String) -> Node:
+		return await _inbox(vp, false)))
+
+
+func test_notification_inbox_empty_fits_every_band() -> void:
+	_assert_none(await _matrix("notification_inbox_empty", func(vp: SubViewport, _band: String) -> Node:
+		return await _inbox(vp, true)))
 
 
 ## The probe itself catches what it must (a guard against a silent matrix).

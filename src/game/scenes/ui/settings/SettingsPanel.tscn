@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/settings/settings_panel.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/ui/settings/QualitySettings.tscn" id="2_quality"]
@@ -14,6 +14,7 @@
 [ext_resource type="Texture2D" path="res://resources/ui/icons/help.svg" id="12_help"]
 [ext_resource type="Texture2D" path="res://resources/ui/icons/arrow_left.svg" id="13_arrow_left"]
 [ext_resource type="Script" path="res://scenes/ui/components/toggle_switch.gd" id="14_toggle"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/tab_notifications.svg" id="15_tab_notifications"]
 
 [node name="SettingsPanel" type="Control"]
 layout_mode = 3
@@ -97,7 +98,7 @@ horizontal_scroll_mode = 0
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"FormBox"
+theme_type_variation = &"FieldBox"
 
 [node name="TabLanguage" type="Button" parent="Window/Box/Body/TabColumn/TabBox/TabScroll/Tabs"]
 layout_mode = 2
@@ -128,6 +129,14 @@ layout_mode = 2
 theme_type_variation = &"TabButton"
 text = "ui.settings.tab.access"
 icon = ExtResource("9_tab_access")
+alignment = 0
+autowrap_mode = 3
+
+[node name="TabNotifications" type="Button" parent="Window/Box/Body/TabColumn/TabBox/TabScroll/Tabs"]
+layout_mode = 2
+theme_type_variation = &"TabButton"
+text = "ui.settings.tab.notifications"
+icon = ExtResource("15_tab_notifications")
 alignment = 0
 autowrap_mode = 3
 
@@ -291,6 +300,42 @@ theme_type_variation = &"ToggleSwitch"
 text = "ui.settings.off"
 script = ExtResource("14_toggle")
 setting_key = "ui.settings.reduce_motion"
+
+[node name="PageNotifications" type="VBoxContainer" parent="Window/Box/Body/Content/Pages"]
+visible = false
+layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="NotificationsTag" type="Label" parent="Window/Box/Body/Content/Pages/PageNotifications"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SectionTag"
+text = "ui.settings.notifications"
+uppercase = true
+
+[node name="PopupsRow" type="HBoxContainer" parent="Window/Box/Body/Content/Pages/PageNotifications"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="PopupsName" type="Label" parent="Window/Box/Body/Content/Pages/PageNotifications/PopupsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui.settings.notification_popups"
+autowrap_mode = 3
+
+[node name="NotificationPopups" type="CheckButton" parent="Window/Box/Body/Content/Pages/PageNotifications/PopupsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ToggleSwitch"
+text = "ui.settings.on"
+script = ExtResource("14_toggle")
+setting_key = "ui.settings.notification_popups"
+
+[node name="PopupsHint" type="Label" parent="Window/Box/Body/Content/Pages/PageNotifications"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "ui.settings.notification_popups_hint"
+autowrap_mode = 3
 
 [node name="PageInfo" type="VBoxContainer" parent="Window/Box/Body/Content/Pages"]
 visible = false

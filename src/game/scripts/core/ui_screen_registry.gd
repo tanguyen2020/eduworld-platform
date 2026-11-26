@@ -6,7 +6,7 @@ extends RefCounted
 ## (F062-AC-10). Features register their screen here when they ship it.
 ## F069: `inventory` (S08 Tủ đồ · Cửa hàng · Lịch sử; HUD Tủ đồ / I / B / Xu chip), `achievements` (S09), `journey`
 ## ("Hành trình của tôi"), `challenge_board` / `challenge_result` (S06 solo), `game_menu` (HUD "Thêm"). `wardrobe`
-## stays the F070 CustomizationStudio ("Phối đồ" in S08).
+## stays the F070 CustomizationStudio ("Phối đồ" in S08). F123: `notification_inbox` (HUD bell, a toast without a screen).
 
 const SCREENS: Dictionary = {
 	&"achievements": "res://scenes/achievement/AchievementCollectionScreen.tscn",
@@ -18,6 +18,7 @@ const SCREENS: Dictionary = {
 	&"inventory": "res://scenes/inventory/InventoryShopScreen.tscn",
 	&"journey": "res://scenes/progression/JourneyScreen.tscn",
 	&"minigame_host": "res://scenes/minigames/MiniGameHost.tscn",
+	&"notification_inbox": "res://scenes/ui/notifications/NotificationInbox.tscn",
 	&"npc_dialogue": "res://scenes/npc/DialogueBubble.tscn",
 	&"quest_journal": "res://scenes/quest/QuestJournal.tscn",
 	&"settings": "res://scenes/ui/settings/SettingsPanel.tscn",

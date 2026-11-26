@@ -15,6 +15,8 @@ extends Node
 const HOLD_PROPERTY: StringName = &"blocks_break_reminder"
 const BENCHMARK_HOLD: StringName = &"quality_benchmark"
 const UPDATE_REQUIRED_KEY: String = "ui.activity_player.update_required"
+## F123: the notification inbox (UiScreenRegistry).
+const INBOX_SCREEN: StringName = &"notification_inbox"
 ## Stable area_id of Quảng trường Tia Sáng (WORLD_DESIGN §3, the spawn of a first entry).
 const HUB_AREA_ID: String = "main_hub"
 const QUEST_TRACKER_SCENE: PackedScene = preload("res://scenes/quest/QuestTracker.tscn")
@@ -51,6 +53,7 @@ func _ready() -> void:
 	_hud.connect("map_pressed", _on_map_pressed)
 	_hud.connect("joystick_moved", _on_joystick_moved)
 	_hud.connect("notifications_pressed", _on_notifications_pressed)
+	_hud.connect("notification_pressed", _on_notification_pressed)
 	_hud.connect("next_step_pressed", _on_next_step_pressed)
 	_hud.connect("shop_pressed", _on_shop_pressed)
 	_hud.connect("menu_pressed", _on_menu_pressed)
@@ -71,6 +74,8 @@ func _ready() -> void:
 	_apply_avatar(services.profile.avatar_config())
 	_emotes.emote_selected.connect(_on_emote_selected)
 	_bind_progression(services)
+	# F123-AC-15: the unread notifications of the student (bell badge) on entering the world.
+	services.notifications.load_unread()
 	_start_hub(services)
 	_benchmark.connect("finished", _on_benchmark_finished)
 	_start_quality()
@@ -213,9 +218,16 @@ func _on_settings_pressed() -> void:
 	EventBus.ui_requested.emit(&"settings", {})
 
 
-## F064-AC-22: 🔔 or a toast → badge cleared, "Nhà trường giao" tab (which refreshes the list).
+## F123-AC-18: the bell opens the notification inbox.
 func _on_notifications_pressed() -> void:
-	AppState.get_services().notifications.open_assigned()
+	EventBus.ui_requested.emit(INBOX_SCREEN, {})
+
+
+## F123-AC-18: a toast opens the screen of its notification (marked read); without a screen in this client yet (friend
+## requests, party invitation) the inbox opens instead.
+func _on_notification_pressed(item: NotificationModel) -> void:
+	if not AppState.get_services().notifications.open(item):
+		EventBus.ui_requested.emit(INBOX_SCREEN, {})
 
 
 ## F069: Tủ đồ (S08) — HUD button or `open_wardrobe` (I); the F070 studio is "Phối đồ" inside it.

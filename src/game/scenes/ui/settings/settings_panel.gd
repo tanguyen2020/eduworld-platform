@@ -2,7 +2,7 @@ extends Control
 ## S15 Cài đặt (F114, STUDENT_GAME_UX_SOCIAL §10): a centred window over the modal scrim — blue title bar "CÀI ĐẶT"
 ## with a red Close button (DangerButton, icon ✕), a tab column on the left (Ngôn ngữ, Đồ họa, Âm thanh, Trợ năng,
 ## Thông tin; each tab icon + words) with the red "Đăng xuất" at its foot, and the open tab's page on the right
-## (scrolls when long). Only the client settings that Settings / QualitySettings already hold (AGENTS R1, R34):
+## (scrolls when long); F123 adds the tab Thông báo (the popup switch of in-game notifications). Only the client settings that Settings / QualitySettings already hold (AGENTS R1, R34):
 ## language chips (F062-AC-06), graphics presets and toggles (F062 T027), three volume rows with − / + (step 10%),
 ## text size chips, high contrast and reduce motion switches, Mây's guide again (F096-AC-10), licences (F096-AC-04) and
 ## the game version. Every change applies at once through Settings and is saved locally. The first opening in a session
@@ -14,13 +14,14 @@ signal closed()
 
 const LOCALE_VI: String = "vi-VN"
 const LOCALE_EN: String = "en-US"
-const TABS: PackedStringArray = ["language", "graphics", "sound", "access", "info"]
+const TABS: PackedStringArray = ["language", "graphics", "sound", "access", "notifications", "info"]
 const TAB_NODES: Dictionary = {
-	"language": "TabLanguage", "graphics": "TabGraphics", "sound": "TabSound", "access": "TabAccess", "info": "TabInfo",
+	"language": "TabLanguage", "graphics": "TabGraphics", "sound": "TabSound", "access": "TabAccess",
+	"notifications": "TabNotifications", "info": "TabInfo",
 }
 const PAGE_NODES: Dictionary = {
 	"language": "PageLanguage", "graphics": "PageGraphics", "sound": "PageSound", "access": "PageAccess",
-	"info": "PageInfo",
+	"notifications": "PageNotifications", "info": "PageInfo",
 }
 const FIRST_TAB: String = "language"
 
@@ -43,6 +44,8 @@ var _volume_rows: Array[VolumeRow] = []
 @onready var _font_scales: Container = %FontScales
 @onready var _high_contrast: ToggleSwitch = %HighContrast
 @onready var _reduce_motion: ToggleSwitch = %ReduceMotion
+## F123-AC-16: short notification toasts while playing (on by default; off = bell badge and inbox only).
+@onready var _notification_popups: ToggleSwitch = %NotificationPopups
 @onready var _volumes: VBoxContainer = %Volumes
 @onready var _logout: Button = %Logout
 @onready var _logout_confirm: Control = %LogoutConfirm
@@ -76,6 +79,7 @@ func _ready() -> void:
 		chips[level].pressed.connect(_on_font_scale_pressed.bind(level))
 	_high_contrast.toggled.connect(_on_high_contrast_toggled)
 	_reduce_motion.toggled.connect(_on_reduce_motion_toggled)
+	_notification_popups.toggled.connect(_on_notification_popups_toggled)
 	for key: String in Settings.AUDIO_KEYS:
 		var row: VolumeRow = VolumeRow.new()
 		row.setup(key, Settings)
@@ -254,6 +258,7 @@ func _render() -> void:
 	_render_font_scale()
 	_high_contrast.show_state(Settings.high_contrast)
 	_reduce_motion.show_state(Settings.reduce_motion)
+	_notification_popups.show_state(Settings.notification_popups)
 	for row: VolumeRow in _volume_rows:
 		row.render()
 	_info_version.text = _version_text()
@@ -294,6 +299,10 @@ func _on_high_contrast_toggled(on: bool) -> void:
 
 func _on_reduce_motion_toggled(on: bool) -> void:
 	Settings.set_reduce_motion(on)
+
+
+func _on_notification_popups_toggled(on: bool) -> void:
+	Settings.set_notification_popups(on)
 
 
 ## Text size / contrast / motion changed (here or elsewhere): ThemeService rebuilds the Theme of the window; the open

@@ -32,6 +32,8 @@ const SCREENS: PackedStringArray = [
 	"activity_video", "activity_video_cue", "activity_audio", "activity_simulation",
 	# F113: a window taller than wide (capture with --sizes=390x844): the rotate prompt covers the game.
 	"rotate_prompt",
+	# F123: in-game notifications — bell count + toasts on the HUD, the inbox (rows / empty), the Settings tab.
+	"hub_notifications", "notifications", "notifications_empty", "settings_notifications",
 ]
 ## Sample look of the local player (catalog codes of the F070 fixture; display only).
 const SAMPLE_AVATAR: Dictionary = {
@@ -133,6 +135,8 @@ func _sign_in(first_time: bool = false) -> void:
 	_harness.http.reply("GET /learning/my-assignments", 200, AssignmentFixtures.two())
 	_harness.http.reply("GET /game/quests", 200, {"data": [], "page": {"has_more": false}})
 	F069Fixtures.script_all(_harness.http, _band)
+	# F123: two unread notifications (bell count) and the inbox sample.
+	NotificationFixtures.script(_harness.http)
 	AppState.services = ServiceLocator.new(_harness.api, AppState, _harness.clock)
 	AppState.player = AuthHarness.bootstrap()
 	AppState.set_grade_band(_band)
@@ -295,6 +299,35 @@ func _screen_settings_logout() -> Node:
 	for i: int in 20:
 		await get_tree().process_frame
 	return world
+
+
+## F123: two notifications arrive while the student plays — an invitation and new school work (toasts + bell count).
+func _screen_hub_notifications() -> Node:
+	var world: Node = await _world()
+	var notes: NotificationService = AppState.get_services().notifications
+	notes.handle_message(NotificationService.MSG_CREATED, NotificationFixtures.created("friend_request"))
+	notes.handle_message(NotificationService.MSG_CREATED, NotificationFixtures.created("assignment_new"))
+	return world
+
+
+## F123: the inbox from the bell (rows newest first, "Mới" on the unread ones).
+func _screen_notifications() -> Node:
+	var world: Node = await _world()
+	await _open_panel(world, &"notification_inbox")
+	return world
+
+
+## F123: the inbox without any notification (Mây explains where they come from).
+func _screen_notifications_empty() -> Node:
+	var world: Node = await _world()
+	NotificationFixtures.script(_harness.http, true)
+	AppState.get_services().notifications.reset()
+	await _open_panel(world, &"notification_inbox")
+	return world
+
+
+func _screen_settings_notifications() -> Node:
+	return await _settings_tab("notifications")
 
 
 func _screen_about() -> Node:

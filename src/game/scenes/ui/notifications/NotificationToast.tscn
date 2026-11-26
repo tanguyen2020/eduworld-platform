@@ -1,0 +1,41 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/components/ui_component.gd" id="1_component"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/tab_notifications.svg" id="2_bell"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/next_light.svg" id="3_next"]
+
+[node name="NotificationToast" type="PanelContainer"]
+size_flags_horizontal = 3
+theme_type_variation = &"HudPanel"
+script = ExtResource("1_component")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="Icon" type="TextureRect" parent="Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("2_bell")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Body" type="Label" parent="Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudLabel"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Open" type="TextureRect" parent="Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_next")
+expand_mode = 1
+stretch_mode = 5

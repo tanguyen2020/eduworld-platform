@@ -17,8 +17,10 @@ signal wardrobe_pressed()
 ## F071: World Map S04.
 signal map_pressed()
 signal home_pressed()
-## F064: 🔔 or a toast touched — the owner opens "Nhà trường giao" through NotificationService.
+## F123: the bell was pressed — the owner opens the notification inbox.
 signal notifications_pressed()
+## F123: a notification toast was touched — the owner opens its screen through NotificationService (or the inbox).
+signal notification_pressed(item: NotificationModel)
 signal joystick_moved(vector: Vector2)
 ## F096: the "Việc tiếp theo" card was pressed — the owner opens `screen_id` with `args` (EventBus.ui_requested).
 signal next_step_pressed(screen_id: StringName, args: Dictionary)
@@ -75,7 +77,7 @@ var banner_args: Dictionary = {}
 ## F096: the current "Việc tiếp theo" suggestion (NextStepHint.for_assignments).
 var next_step: Dictionary = {}
 
-## F064: notices of new school work (AppState.services; null in previews and unit tests of the HUD alone).
+## F123: in-game notifications (AppState.services; null in previews and unit tests of the HUD alone).
 var notifications: NotificationService = null
 
 
@@ -92,7 +94,7 @@ func _ready() -> void:
 	_context_action.pressed.connect(context_action_pressed.emit)
 	_joystick.connect("moved", joystick_moved.emit)
 	_bell.pressed.connect(notifications_pressed.emit)
-	_toasts.connect("toast_pressed", notifications_pressed.emit)
+	_toasts.connect("toast_pressed", _on_toast_pressed)
 	_next_step_button.pressed.connect(_on_next_step_pressed)
 	_badge.resized.connect(_layout_left_column)
 	_xp_panel.resized.connect(_layout_left_column)
@@ -133,10 +135,12 @@ func apply_band(value: String) -> void:
 		button.custom_minimum_size = Vector2(target, target)
 	_badge.custom_minimum_size = Vector2(target * BADGE_WIDTH_FACTOR, target)
 	_next_step_button.custom_minimum_size.x = maxf(target * NEXT_STEP_WIDTH_FACTOR, float(UiTokens.SIZE_LAYOUT_280))
+	# F123: the bell widens again to hold its count pill at the new touch target.
+	_bell.call("set_count", notifications.badge if notifications != null else 0)
 	_render()
 
 
-## F064-AC-20…22: follows the badge and the toasts of `service` (null unbinds).
+## F123-AC-15/16: follows the unread badge and the toasts of `service` (null unbinds).
 func bind_notifications(service: NotificationService) -> void:
 	if notifications != null:
 		if notifications.toast_requested.is_connected(_on_toast_requested):
@@ -217,8 +221,13 @@ func _on_next_step_pressed() -> void:
 	next_step_pressed.emit(next_step["screen_id"] as StringName, next_step["screen_args"] as Dictionary)
 
 
-func _on_toast_requested(key: String, args: Dictionary) -> void:
-	_toasts.call("push", tr(key).format(args))
+## F123-AC-16/17: the text of the notification in the current language (message code + params, else title/body).
+func _on_toast_requested(item: NotificationModel) -> void:
+	_toasts.call("push", item.display_text(), item)
+
+
+func _on_toast_pressed(tag: Object) -> void:
+	notification_pressed.emit(tag as NotificationModel)
 
 
 func _on_badge_changed(count: int) -> void:
