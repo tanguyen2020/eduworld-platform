@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <path d="M6 22L42 8 30 42l-7-14z" fill="{component.icon.on_accent}" stroke="{component.icon.on_accent}" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M23 28l19-20" fill="none" stroke="{palette.ink.900}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

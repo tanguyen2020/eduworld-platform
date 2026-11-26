@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <path d="M10 38l2-9 20-20 7 7-20 20z" fill="{color.accent.reward}" stroke="{palette.ink.900}" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M28 13l7 7" fill="none" stroke="{palette.ink.900}" stroke-width="3"/>
+  <path d="M10 38l2-9 7 7z" fill="{component.icon.on_accent}" stroke="{palette.ink.900}" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M32 9l3-3 7 7-3 3z" fill="{palette.pink.200}" stroke="{palette.ink.900}" stroke-width="3" stroke-linejoin="round"/>
+</svg>

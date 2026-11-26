@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <path d="M8 22q0-10 10-12v5q-5 1-5 6h5v11H8zM26 22q0-10 10-12v5q-5 1-5 6h5v11H26z" fill="{component.icon.primary}" stroke="{component.icon.primary}" stroke-width="2" stroke-linejoin="round"/>
+</svg>

@@ -212,6 +212,58 @@
     "countdown": {
       "font_size": { "$type": "dimension", "$value": "{size.font.96}", "$description": "Party start countdown 3-2-1 (CountdownLabel, F102-AC-11), the wordmark colours and white sticker outline (component.logo.*)." }
     },
+    "chat": {
+      "panel_bg": { "$type": "color", "$value": "{color.surface.panel_alt}", "$description": "Chat panel surface behind the bubbles (ChatPanel, tier 2 info surface, F119): light blue-grey so white bubbles stand out on the cream window." },
+      "panel_border": { "$type": "color", "$value": "{color.outline}", "$description": "Chat panel thin ink outline (tier 2, F119)." },
+      "bubble_other_bg": { "$type": "color", "$value": "{palette.white}", "$description": "Bubble of another player (ChatBubbleOther, tier 2, F119), on the left." },
+      "bubble_mine_bg": { "$type": "color", "$value": "{palette.sky.200}", "$description": "Bubble of the student's own message (ChatBubbleMine, F119), on the right; the side and the state words also tell it apart." },
+      "bubble_mention_bg": { "$type": "color", "$value": "{palette.yellow.100}", "$description": "Bubble that mentions the student (ChatBubbleMention, F119), always with the words 'Nhắc tới em' — never the colour alone." },
+      "bubble_border": { "$type": "color", "$value": "{color.outline}", "$description": "Chat bubble thin ink outline (tier 2, F119)." },
+      "quote_bg": { "$type": "color", "$value": "{palette.white}", "$description": "Reply / quote excerpt box inside a bubble (ChatQuoteBox, F119)." },
+      "quote_border": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Left bar of the reply / quote excerpt box (F119)." },
+      "reaction_bg": { "$type": "color", "$value": "{palette.white}", "$description": "Reaction count pill (ReactionPill, tier 2, F119)." },
+      "reaction_mine_bg": { "$type": "color", "$value": "{palette.yellow.400}", "$description": "Pill of a reaction the student gave (ReactionPillMine, F119): yellow like a chosen chip, with a tick." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Message words in a bubble (ChatTextLabel, F119).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.chat.bubble_other_bg", "level": "normal" },
+          { "token": "component.chat.bubble_mine_bg", "level": "normal" },
+          { "token": "component.chat.bubble_mention_bg", "level": "normal" }
+        ] } }
+      },
+      "meta_text": {
+        "$type": "color",
+        "$value": "{color.text.secondary}",
+        "$description": "Time, state words, edited / forwarded labels, typing line, reply excerpt (ChatMetaLabel, F119).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.chat.bubble_other_bg", "level": "normal" },
+          { "token": "component.chat.bubble_mine_bg", "level": "normal" },
+          { "token": "component.chat.bubble_mention_bg", "level": "normal" },
+          { "token": "component.chat.panel_bg", "level": "normal" },
+          { "token": "component.chat.quote_bg", "level": "normal" }
+        ] } }
+      },
+      "name_text": {
+        "$type": "color",
+        "$value": "{palette.blue.700}",
+        "$description": "Nickname of the sender above a bubble (ChatNameLabel, F119).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.chat.bubble_other_bg", "level": "normal" },
+          { "token": "component.chat.bubble_mention_bg", "level": "normal" }
+        ] } }
+      },
+      "reaction_text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Count in a reaction pill (ReactionLabel, F119).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.chat.reaction_bg", "level": "normal" },
+          { "token": "component.chat.reaction_mine_bg", "level": "normal" }
+        ] } }
+      }
+    },
     "toggle": {
       "track_on": {
         "$type": "color",
