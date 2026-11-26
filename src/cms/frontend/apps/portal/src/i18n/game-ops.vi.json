@@ -10,7 +10,8 @@
       "remove": "Xóa",
       "loadMore": "Tải thêm",
       "untitled": "(chưa đặt tên)",
-      "v": "v{{version}}"
+      "v": "v{{version}}",
+      "close": "Đóng"
     },
     "type": {
       "quests": "Quest",
@@ -37,7 +38,9 @@
       "tournament-templates": "Template giải trường",
       "challenge-templates": "Template thử thách khối",
       "leaderboard-definitions": "Định nghĩa bảng xếp hạng",
-      "competition-rewards": "Phần thưởng thi đấu"
+      "competition-rewards": "Phần thưởng thi đấu",
+      "sticker-packs": "Sticker pack",
+      "gifs": "Thư viện GIF"
     },
     "status": {
       "draft": "Bản nháp",
@@ -337,6 +340,106 @@
       "none": "Chưa gán cho tenant nào.",
       "tenant": "Tenant",
       "assignedAt": "Gán lúc"
+    },
+    "chatAssets": {
+      "assign": "Gán tenant",
+      "unpublishImpact": "Học sinh không còn chọn được pack/GIF này. Tin nhắn cũ vẫn hiển thị sticker/GIF đã gửi (tệp bất biến).",
+      "list": {
+        "cover": "Ảnh đại diện",
+        "count": "Số sticker",
+        "unlock": "Mở khóa"
+      },
+      "unlock": {
+        "default": "Mặc định",
+        "reward_rule": "Phần thưởng",
+        "item": "Vật phẩm",
+        "defaultLong": "Mặc định — mọi học sinh của tenant được gán",
+        "rewardRuleLong": "Phần thưởng (reward rule)",
+        "itemLong": "Vật phẩm"
+      },
+      "pack": {
+        "code": "Mã pack",
+        "name": "Tên pack",
+        "unlock": "Cách mở khóa",
+        "rewardRule": "Reward rule đã xuất bản",
+        "item": "Vật phẩm đã xuất bản",
+        "hint": "Gợi ý cách mở khóa",
+        "stickers": "Sticker ({{count}})",
+        "noStickers": "Chưa có sticker nào.",
+        "sticker": "Sticker {{n}}",
+        "moveUp": "Lên sticker {{n}}",
+        "moveDown": "Xuống sticker {{n}}",
+        "up": "Lên",
+        "down": "Xuống",
+        "remove": "Xóa sticker {{n}}",
+        "removeShort": "Xóa",
+        "previewAfterSave": "Ảnh xem trước có sau khi lưu",
+        "stickerAlt": "Alt text sticker {{n}}",
+        "upload": "Tải sticker lên",
+        "uploadHint": "WebP hoặc PNG; server kiểm tra định dạng, kích thước và mã kiểm tra của từng tệp.",
+        "saveFirst": "Lưu bản nháp trước rồi mới tải sticker lên.",
+        "missingEn": "Thiếu bản tiếng Anh: {{field}}"
+      },
+      "gif": {
+        "alt": "GIF: {{tags}}",
+        "untagged": "chưa gắn tag",
+        "noFile": "Chưa có tệp GIF",
+        "play": "Phát GIF",
+        "stop": "Dừng",
+        "tagFilter": "Lọc theo tag",
+        "uploader": "Người upload",
+        "uploaderAll": "Tất cả",
+        "uploaderMe": "Của tôi",
+        "upload": "Tải GIF lên",
+        "uploadHint": "Chỉ GIF nội bộ. Ảnh tĩnh xem trước được tạo từ khung đầu; server kiểm tra lại cả hai tệp trước khi duyệt.",
+        "files": "Chọn tệp GIF",
+        "empty": "Chưa có GIF nào khớp bộ lọc.",
+        "tagsVi": "Tag tiếng Việt",
+        "tagsEn": "Tag tiếng Anh",
+        "addTagVi": "Thêm tag tiếng Việt",
+        "addTagEn": "Thêm tag tiếng Anh",
+        "addTag": "Thêm",
+        "noTags": "Chưa có tag.",
+        "tagPattern": "Tag chỉ gồm chữ thường không dấu, số, khoảng trắng, dấu gạch dưới hoặc gạch ngang.",
+        "tagCount": "{{count}}/{{max}} tag"
+      },
+      "preview": {
+        "title": "Xem trước như học sinh thấy",
+        "language": "Ngôn ngữ xem trước",
+        "open": "Mở cho mọi học sinh",
+        "locked": {
+          "reward_rule": "Đang khóa — mở bằng phần thưởng",
+          "item": "Đang khóa — mở bằng vật phẩm"
+        }
+      }
+    },
+    "translations": {
+      "column": "Bản dịch",
+      "filter": "Trạng thái bản dịch",
+      "filters": {
+        "partial": "Cần dịch",
+        "outdated": "Bản dịch lỗi thời",
+        "complete": "Đủ bản dịch"
+      },
+      "status": "Bản dịch:",
+      "missing": "Thiếu bản dịch: {{field}}",
+      "outdatedTitle": "Bản gốc đã đổi sau lần dịch",
+      "translatedIn": "dịch ở v{{version}}",
+      "showDiff": "Xem thay đổi bản gốc",
+      "showDiffOf": "Xem thay đổi bản gốc: {{field}}",
+      "outdatedWarning": "Có {{count}} bản dịch lỗi thời — vẫn gửi duyệt được, người duyệt sẽ thấy cảnh báo.",
+      "confirmTitle": "Bản dịch lỗi thời",
+      "confirmBody": "Bản gốc của các trường sau đã đổi sau lần dịch: {{fields}}. Vẫn gửi duyệt?",
+      "confirmOk": "Vẫn gửi duyệt",
+      "diffTitle": "Bản gốc đã đổi: {{field}}",
+      "diffRange": "v{{from}} → v{{to}}",
+      "diffSameVersion": "Bản dịch được ghi ở chính phiên bản này: không có thay đổi để so sánh.",
+      "pageHint": "Xuất các trường văn bản game cần dịch ra XLIFF 2.1 hoặc CSV cho người dịch, rồi nhập lại: mỗi nội dung khớp khóa có bản nháp mới, phiên bản đã xuất bản không bao giờ bị sửa. Không có dịch máy.",
+      "exportButton": "Xuất file dịch",
+      "importButton": "Nhập file dịch",
+      "shortcuts": "Nội dung cần dịch theo loại",
+      "badFormat": "Chỉ nhận file .xlf, .xliff hoặc .csv.",
+      "fileRejected": "File bị từ chối khi kiểm tra ({{reason}})."
     }
   }
 }

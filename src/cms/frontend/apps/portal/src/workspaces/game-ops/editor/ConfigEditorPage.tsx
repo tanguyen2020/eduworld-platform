@@ -5,9 +5,12 @@
 // or scheduled, new draft from a published version) each inside ActionGate, `422` field errors on their field and as
 // blockers of "Gửi duyệt", tabs Phiên bản / Lịch sử phát hành, thumbnail / turntable of THIS version and the Godot Web
 // preview. Below 1024 px the version is read only ("Tác vụ này cần màn hình lớn hơn").
-import { ContentEditorShell, ThumbnailImage, TurntableViewer, useAutosave, type WorkflowAction } from '@eduworld/ops-ui/game-console';
+// F082: the server translation state of a game type (badge, missing_fields as blockers, outdated_fields as a warning in
+// the submit confirmation and the diff of the original); for module chat types the sticker pack missing `en` texts as
+// blockers, the student preview instead of the Godot preview and "Gán tenant" of a sticker pack.
+import { ContentEditorShell, textKey, ThumbnailImage, TurntableViewer, useAutosave, type WorkflowAction } from '@eduworld/ops-ui/game-console';
 import { Alert, App as AntApp, Card, Flex, Form, Input, Skeleton, Tabs } from 'antd';
-import { useState, type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { usePortalRuntime } from '../../../app/runtime';
@@ -17,7 +20,12 @@ import { ReasonDialog } from '../../../shell/ReasonDialog';
 import { useMediaQuery } from '../../../shell/useMediaQuery';
 import { isConflict, saveDraft, useConfigVersion, useConfigWrites, type GameConfigVersion, type ItemRef, type Loaded } from '../api/gameConfigs';
 import { ConfigBuilder } from '../builders/ConfigBuilder';
-import { actionOf, CONFIG_TYPES, isConfigType, nameOf, type ConfigTypeDef } from '../registry/configTypes';
+import { AssignTenantButton } from '../chat-assets/AssignTenantButton';
+import { ChatAssetPreview } from '../chat-assets/ChatAssetPreview';
+import { missingEnglish, type StickerPack } from '../chat-assets/stickerPack';
+import { missingBlockers, TranslationState, type TranslationInfo } from '../translations/BilingualConfigFields';
+import { OutdatedDiffDrawer, type OutdatedField } from '../translations/OutdatedDiffDrawer';
+import { actionOf, CONFIG_TYPES, isConfigType, nameOf, type ChatAssetType, type ConfigTypeDef } from '../registry/configTypes';
 import { useGameAccess } from '../shared/access';
 import { fieldErrorsOf, GameOpsError, hasFieldErrors } from '../shared/errors';
 import { AssignmentsPanel } from './AssignmentsPanel';
@@ -53,7 +61,7 @@ function LoadedEditor({ def, item, version, onReload }: { def: ConfigTypeDef; it
 
 function EditorBody({ def, item, version, loaded, onReload }: { def: ConfigTypeDef; item: ItemRef; version: number; loaded: Loaded<GameConfigVersion>; onReload: () => void }) {
   const { t, i18n } = useTranslation();
-  const { message } = AntApp.useApp();
+  const { message, modal } = AntApp.useApp();
   const { api } = usePortalRuntime();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -69,6 +77,8 @@ function EditorBody({ def, item, version, loaded, onReload }: { def: ConfigTypeD
   const [rejecting, setRejecting] = useState(false);
   const [publishing, setPublishing] = useState<number | null>(null);
   const [busy, setBusy] = useState<WorkflowAction | null>(null);
+  const [translation, setTranslation] = useState<TranslationInfo>({ translation_status: v.translation_status, missing_fields: v.missing_fields, outdated_fields: v.outdated_fields });
+  const [diffOf, setDiffOf] = useState<OutdatedField | null>(null);
   const status = v.status;
   const editable = (status === 'draft' || status === 'rejected') && access.write && wide;
   const exists = (k: string) => i18n.exists(k);
@@ -77,6 +87,7 @@ function EditorBody({ def, item, version, loaded, onReload }: { def: ConfigTypeD
     save: async (value, etag) => {
       try {
         const r = await saveDraft(api, item, version, value, etag);
+        if (def.translatable) setTranslation({ translation_status: r.data.translation_status, missing_fields: r.data.missing_fields, outdated_fields: r.data.outdated_fields });
         setErrors({});
         setLastError(null);
         setRevision(r.etag);
@@ -120,6 +131,18 @@ function EditorBody({ def, item, version, loaded, onReload }: { def: ConfigTypeD
       const s = autosave.current();
       setBusy(null);
       if (s.state === 'error' || s.state === 'conflict' || s.dirty) return;
+      const outdated = translation.outdated_fields ?? [];
+      if (outdated.length > 0) {
+        // outdated translations only warn (CONTENT_MODEL §8): the author confirms and the version is still sent
+        modal.confirm({
+          title: t('gameOps.translations.confirmTitle'),
+          content: t('gameOps.translations.confirmBody', { fields: outdated.map((o) => textKey(o.pointer)).join(', ') }),
+          okText: t('gameOps.translations.confirmOk'),
+          cancelText: t('gameOps.common.cancel'),
+          onOk: () => transition('submit_review'),
+        });
+        return;
+      }
       return transition('submit_review');
     }
     if (a === 'approve') return transition('approve');
@@ -141,7 +164,20 @@ function EditorBody({ def, item, version, loaded, onReload }: { def: ConfigTypeD
       {button}
     </ActionGate>
   );
-  const blockers = Object.entries(errors).map(([field, msg]) => ({ field, message: t('gameOps.editor.blocker', { field, message: msg }) }));
+  const translationBlockers = useMemo(
+    () =>
+      def.builder === 'sticker-pack'
+        ? missingEnglish(draft.payload as StickerPack).map((m) => ({ field: m.field, message: t('gameOps.chatAssets.pack.missingEn', { field: t(m.labelKey, m.params) }) }))
+        : def.translatable
+          ? missingBlockers(translation, t)
+          : [],
+    [def, draft.payload, translation, t],
+  );
+  const blockers = [...Object.entries(errors).map(([field, msg]) => ({ field, message: t('gameOps.editor.blocker', { field, message: msg }) })), ...translationBlockers];
+  const warnings = (translation.outdated_fields ?? []).length > 0 ? [t('gameOps.translations.outdatedWarning', { count: translation.outdated_fields!.length })] : [];
+  const jumpTo = (field: string) =>
+    (document.getElementById(field) ?? document.getElementById(`gf-${def.type}-${field.replace(/[./]/g, '-')}`) ?? document.getElementById(`gf-${def.type}-${field.replace(/[./]/g, '-')}-en`))?.scrollIntoView?.();
+  const chatType = def.menu === 'chat_assets' ? (def.type as ChatAssetType) : null;
   const displayName = draft.title || nameOf(def, draft.payload, lang) || t('gameOps.common.untitled');
 
   return (
@@ -157,9 +193,10 @@ function EditorBody({ def, item, version, loaded, onReload }: { def: ConfigTypeD
           can: { write: access.write && wide, review: access.review, publish: access.publish },
           isAuthor: !!v.author_id && v.author_id === access.userId,
           blockers,
+          warnings,
           busy,
           onAction: (a) => void onAction(a),
-          onJumpTo: (field) => document.getElementById(`gf-${def.type}-${field.replace(/[./]/g, '-')}`)?.scrollIntoView?.(),
+          onJumpTo: jumpTo,
           wrapAction,
         }}
         conflict={autosave.state === 'conflict' ? { onReload } : null}
@@ -174,14 +211,16 @@ function EditorBody({ def, item, version, loaded, onReload }: { def: ConfigTypeD
                 </Flex>
               </Card>
             )}
-            {def.preview !== false && <PreviewPanel configType={item.configType} configId={item.configId} version={version} />}
+            {chatType ? <ChatAssetPreview type={chatType} payload={draft.payload} /> : def.preview !== false && <PreviewPanel configType={item.configType as never} configId={item.configId} version={version} />}
             {def.assignable && <AssignmentsPanel resourceType={def.assignable} resourceId={item.configId} />}
+            {def.assignResource && status === 'published' && <AssignTenantButton resourceType={def.assignResource} resourceId={item.configId} />}
           </Flex>
         }
       >
         <Flex vertical gap="middle">
           {lastError && !isConflict(lastError) ? <GameOpsError error={lastError} /> : null}
           {v.review_note && status === 'rejected' && <Alert type="warning" showIcon message={t('gameOps.editor.reviewNote', { note: v.review_note })} />}
+          {def.translatable && <TranslationState info={translation} onShowDiff={setDiffOf} />}
           <Tabs
             items={[
               {
@@ -201,6 +240,14 @@ function EditorBody({ def, item, version, loaded, onReload }: { def: ConfigTypeD
                       readOnly={!editable}
                       errors={errors}
                       item={{ configId: item.configId, version, revision }}
+                      translation={
+                        def.translatable
+                          ? {
+                              outdated: (translation.outdated_fields ?? []).map((o) => o.pointer),
+                              onShowDiff: (p) => setDiffOf((translation.outdated_fields ?? []).find((o) => o.pointer === p) ?? null),
+                            }
+                          : undefined
+                      }
                     />
                   </Flex>
                 ),
@@ -223,6 +270,7 @@ function EditorBody({ def, item, version, loaded, onReload }: { def: ConfigTypeD
         }}
       />
       <PublishDialog item={item} version={publishing} onClose={() => (setPublishing(null), onReload())} />
+      <OutdatedDiffDrawer item={item} version={version} field={diffOf} onClose={() => setDiffOf(null)} />
     </>
   );
 }

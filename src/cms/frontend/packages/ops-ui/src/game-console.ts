@@ -20,3 +20,20 @@ export { TurntableViewer, framePosition, TURNTABLE_FRAMES } from './game-console
 export { GamePreviewFrame, PREVIEW_MESSAGE_TYPE } from './game-console/GamePreviewFrame';
 export { ManifestRefPicker } from './game-console/ManifestRefPicker';
 export type { ManifestRefPickerProps, RefOption } from './game-console/ManifestRefPicker';
+export { textKey } from './game-console/SchemaForm';
+// F082: checksum upload queue (chat assets, translation files) and the presentational pieces of the game translations.
+export { useChecksumUpload, sha256Hex, safeFileName } from './upload/useChecksumUpload';
+export type { UploadItem, UploadError, UploadStatus, PresignInput, PresignOutput, UseChecksumUploadOptions } from './upload/useChecksumUpload';
+export { UploadQueue } from './upload/UploadQueue';
+export type { UploadQueueProps } from './upload/UploadQueue';
+export { TranslationStatusBadge } from './translations/TranslationStatusBadge';
+export type { TranslationStatusValue, TranslationStatusBadgeProps } from './translations/TranslationStatusBadge';
+export { TranslationJobProgress } from './translations/TranslationJobProgress';
+export type { TranslationJobView, TranslationReportError, TranslationJobProgressProps } from './translations/TranslationJobProgress';
+export { TranslationExportDialog } from './translations/TranslationExportDialog';
+export type { TranslationExportValues, TranslationExportDialogProps } from './translations/TranslationExportDialog';
+export { TranslationImportDialog } from './translations/TranslationImportDialog';
+export type { TranslationImportDialogProps, ImportUploadState } from './translations/TranslationImportDialog';
+// Bilingual vi/en text (no MathJax: F053 BilingualField is presentational) — sticker pack names and alt texts (F082-AC-02).
+export { BilingualField } from './i18n-field/BilingualField';
+export type { BilingualFieldProps } from './i18n-field/BilingualField';

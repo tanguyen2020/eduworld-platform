@@ -30,6 +30,8 @@ export interface PortalRuntime {
   readCsrf: () => string | null;
   /** Cross-tab channel (sign-out only; never a token). Null when BroadcastChannel is unavailable. */
   channel: BroadcastChannel | null;
+  /** Plain fetch for presigned object-storage URLs (F082): never carries the token or the API middleware. */
+  upload?: typeof fetch;
 }
 
 export interface RuntimeOverrides {
@@ -58,7 +60,8 @@ export function createPortalRuntime(config: RuntimeConfig, i18n: I18n, o: Runtim
   const tenant = new WorkingTenant();
   const api = createApiClient({ config, tokenProvider: scheduler, tenant, getLocale, hasTranslation, fetch: o.fetch, now });
   const channel = o.channel !== undefined ? o.channel : typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(SESSION_CHANNEL);
-  return { config, i18n, tokens, authApi, scheduler, tenant, api, queryClient: createQueryClient(), idle, readCsrf, channel };
+  const upload: typeof fetch = (input, init) => (o.fetch ?? globalThis.fetch)(input, init);
+  return { config, i18n, tokens, authApi, scheduler, tenant, api, queryClient: createQueryClient(), idle, readCsrf, channel, upload };
 }
 
 export const PortalRuntimeContext = createContext<PortalRuntime | null>(null);

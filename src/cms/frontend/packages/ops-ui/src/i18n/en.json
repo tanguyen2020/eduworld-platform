@@ -437,7 +437,8 @@
       "jsonInvalid": "Invalid JSON, this change is not saved",
       "up": "Up",
       "down": "Down",
-      "remove": "Remove"
+      "remove": "Remove",
+      "showOriginalDiff": "Show original changes"
     },
     "render": {
       "ready": "Rendered",
@@ -454,6 +455,92 @@
     },
     "ref": {
       "missing": "Value not in the current list: {{values}}"
+    }
+  },
+  "upload": {
+    "queue": "Files being uploaded",
+    "progress": "Upload progress of {{name}}",
+    "status": {
+      "hashing": "Computing checksum",
+      "presigning": "Requesting upload",
+      "uploading": "Uploading",
+      "done": "Uploaded",
+      "error": "Error"
+    },
+    "retry": "Retry",
+    "remove": "Remove",
+    "retryFile": "Retry {{name}}",
+    "removeFile": "Remove {{name}}",
+    "traceId": "Trace id: {{traceId}}"
+  },
+  "translations": {
+    "status": {
+      "complete": "Complete",
+      "partial": "Missing",
+      "outdated": "Outdated"
+    },
+    "cancel": "Cancel",
+    "close": "Close",
+    "target": "Target language",
+    "format": "Format",
+    "lang": {
+      "vi": "Vietnamese (vi)",
+      "en": "English (en)"
+    },
+    "export": {
+      "title": "Export translation file",
+      "submit": "Export",
+      "types": "Content types",
+      "typesHint": "Empty = every type with game text",
+      "items": "Items (at most {{max}})",
+      "itemsHint": "Empty = every item of the chosen types",
+      "onlyMissing": "Only missing or outdated fields"
+    },
+    "import": {
+      "title": "Import translation file",
+      "file": "Translation file (XLIFF 2.1 or CSV)",
+      "hint": "Run a dry run first to read the report; the real import creates new drafts and never changes a published version.",
+      "dryRun": "Dry run",
+      "confirm": "Confirm import",
+      "uploading": "Uploading the file",
+      "dryRunReport": "Dry run report",
+      "importReport": "Import report",
+      "upload": {
+        "idle": "",
+        "uploading": "Uploading and checking",
+        "ready": "File ready",
+        "error": "File refused"
+      }
+    },
+    "job": {
+      "kind": {
+        "export": "Export job",
+        "import": "Import job"
+      },
+      "status": {
+        "queued": "Queued",
+        "running": "Running",
+        "succeeded": "Done",
+        "failed": "Failed"
+      },
+      "waiting": "Working",
+      "dryRun": "Dry run — nothing written",
+      "failed": "The job failed",
+      "download": "Download file",
+      "expiresAt": "Link expires at {{at}}",
+      "report": "Result",
+      "counts": "Total {{total}} · updated {{updated}} · skipped {{skipped}}",
+      "ref": "Key",
+      "code": "Reason",
+      "message": "Details"
+    },
+    "errorCode": {
+      "key_not_found": "Unknown key",
+      "stale_version": "Older than the newest version",
+      "version_in_review": "Newest version is in review",
+      "unsupported_type": "Not a game module type",
+      "too_long": "Text longer than allowed",
+      "invalid_language": "Invalid language"
     }
   }
 }

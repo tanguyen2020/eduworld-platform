@@ -3,19 +3,23 @@
 // never loaded whole) with code, title, status Tag (shared-tokens colors), version, author, update time (ICT) and the
 // thumbnail of THAT version (placeholder + status while the render is pending / failed). The menu's other types are tabs.
 // "Tạo mới" is inside ActionGate. A type module game does not serve yet says so (no API call).
+// F082: module game types show the server `translation_status` (Đủ / Thiếu / Lỗi thời) and filter on it ("Cần dịch",
+// "Bản dịch lỗi thời" — sent to the server); sticker packs show their sticker count, cover and unlock kind.
 import { DomainTag, SearchSelect } from '@eduworld/ops-ui';
-import { ThumbnailImage } from '@eduworld/ops-ui/game-console';
-import { Alert, Button, Flex, Segmented, Table, Tabs, Tag, Typography } from 'antd';
+import { ThumbnailImage, TranslationStatusBadge } from '@eduworld/ops-ui/game-console';
+import { Alert, Button, Flex, Image, Segmented, Table, Tabs, Tag, theme, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ActionGate } from '../../../permissions/ActionGate';
 import { formatIct } from '../../../shared/release/ict';
-import { useConfigPages, type ContentStatus, type GameConfigVersion } from '../api/gameConfigs';
+import { useConfigPages, type ContentStatus, type GameConfigVersion, type TranslationStatus } from '../api/gameConfigs';
+import { unlockKindOf, type StickerPack } from '../chat-assets/stickerPack';
 import { actionOf, codeOf, COMPETITION_GROUPS, CONFIG_TYPES, isConfigType, nameOf, typesOfGroup, typesOfMenu, type GameOpsMenu } from '../registry/configTypes';
 import { GameOpsError } from '../shared/errors';
 
 const STATUSES: ContentStatus[] = ['draft', 'in_review', 'approved', 'published', 'archived', 'rejected'];
+const TRANSLATION_FILTERS: TranslationStatus[] = ['partial', 'outdated', 'complete'];
 
 export function ConfigListPage({ title, menu, extraTabs = [] }: { title: string; menu: GameOpsMenu; extraTabs?: { key: string; label: string }[] }) {
   const { t, i18n } = useTranslation();
@@ -27,8 +31,17 @@ export function ConfigListPage({ title, menu, extraTabs = [] }: { title: string;
   const def = isConfigType(configType) ? CONFIG_TYPES[configType] : menuTypes[0]!;
   // "Thi đấu" (F108 US2): the 5 groups first, then the types of the group as tabs.
   const types = def.group ? typesOfGroup(def.group) : menuTypes;
+  const { token } = theme.useToken();
   const status = (params.get('status') ?? undefined) as ContentStatus | undefined;
-  const q = useConfigPages(def.type, status, def.served);
+  const translationStatus = def.translatable ? ((params.get('translation_status') ?? undefined) as TranslationStatus | undefined) : undefined;
+  const q = useConfigPages(def.type, { status, translation_status: translationStatus }, def.served);
+  const setParam = (k: string, v: string | undefined) => {
+    const next = new URLSearchParams(params);
+    if (v) next.set(k, v);
+    else next.delete(k);
+    setParams(next, { replace: true });
+  };
+  const pack = (v: GameConfigVersion) => v.payload as StickerPack;
 
   const columns: ColumnsType<GameConfigVersion> = [
     ...(def.has3D
@@ -36,7 +49,22 @@ export function ConfigListPage({ title, menu, extraTabs = [] }: { title: string;
       : []),
     { key: 'code', title: t('gameOps.list.code'), render: (_, v) => <Typography.Text code>{codeOf(def, v.payload) || v.config_id.slice(-8)}</Typography.Text> },
     { key: 'title', title: t('gameOps.list.title'), render: (_, v) => v.title || nameOf(def, v.payload, lang) || '—' },
+    ...(def.builder === 'sticker-pack'
+      ? [
+          {
+            key: 'cover',
+            title: t('gameOps.chatAssets.list.cover'),
+            render: (_: unknown, v: GameConfigVersion) => {
+              const first = pack(v).stickers?.[0];
+              return first?.preview_url ? <Image src={first.preview_url} alt={first.alt_text_vi ?? ''} width={token.controlHeightLG} preview={false} /> : '—';
+            },
+          },
+          { key: 'count', title: t('gameOps.chatAssets.list.count'), render: (_: unknown, v: GameConfigVersion) => String(pack(v).stickers?.length ?? 0) },
+          { key: 'unlock', title: t('gameOps.chatAssets.list.unlock'), render: (_: unknown, v: GameConfigVersion) => t(`gameOps.chatAssets.unlock.${unlockKindOf(pack(v))}`) },
+        ]
+      : []),
     { key: 'status', title: t('gameOps.list.status'), render: (_, v) => <DomainTag kind="content_status" value={v.status} /> },
+    ...(def.translatable ? [{ key: 'translation', title: t('gameOps.translations.column'), render: (_: unknown, v: GameConfigVersion) => <TranslationStatusBadge status={v.translation_status} /> }] : []),
     { key: 'version', title: t('gameOps.list.version'), render: (_, v) => <span>{t('gameOps.common.v', { version: v.version })} {v.is_current ? <Tag color="green">{t('gameOps.versions.current')}</Tag> : null}</span> },
     { key: 'author', title: t('gameOps.list.author'), render: (_, v) => <Typography.Text code>{v.author_id ? v.author_id.slice(-8) : '—'}</Typography.Text> },
     { key: 'updated', title: t('gameOps.list.updatedAt'), render: (_, v) => formatIct(v.updated_at) },
@@ -71,14 +99,19 @@ export function ConfigListPage({ title, menu, extraTabs = [] }: { title: string;
               aria-label={t('gameOps.list.status')}
               placeholder={t('gameOps.list.statusFilter')}
               value={status}
-              onChange={(v) => {
-                const next = new URLSearchParams(params);
-                if (v) next.set('status', String(v));
-                else next.delete('status');
-                setParams(next, { replace: true });
-              }}
+              onChange={(v) => setParam('status', v ? String(v) : undefined)}
               options={STATUSES.map((s) => ({ value: s, label: t(`gameOps.status.${s}`) }))}
             />
+            {def.translatable && (
+              <SearchSelect
+                allowClear
+                aria-label={t('gameOps.translations.filter')}
+                placeholder={t('gameOps.translations.filter')}
+                value={translationStatus}
+                onChange={(v) => setParam('translation_status', v ? String(v) : undefined)}
+                options={TRANSLATION_FILTERS.map((s) => ({ value: s, label: t(`gameOps.translations.filters.${s}`) }))}
+              />
+            )}
             <ActionGate actionKey={actionOf(def, 'edit')}>
               <Button type="primary" onClick={() => navigate('new')}>
                 {t('gameOps.list.create', { type: t(`gameOps.type.${def.type}`) })}

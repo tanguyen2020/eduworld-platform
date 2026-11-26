@@ -1,4 +1,4 @@
-// Config type registry of workspace A (F079 T001, T022, plan "registry/configTypes.ts"): display metadata only — which
+// Config type registry of workspace A (F079 T001, T022, F082 T001, plan "registry/configTypes.ts"): display metadata only — which
 // menu shows a `config_type`, its catalog action keys (ADR-0090), the JSON Schema copy the form is generated from
 // (pnpm gen:schemas, single source specs/schemas), the builder, the payload fields the server fills, and what the
 // release API offers for it (F078 Clarifications 2026-11-24: `events` has no rollback/unpublish; `reward-rules` no
@@ -22,6 +22,8 @@ import quest from '../../../shared/api/schemas/game/quest.schema.json';
 import rewardRule from '../../../shared/api/schemas/game/reward-rule.schema.json';
 import seasonTrack from '../../../shared/api/schemas/game/season-track.schema.json';
 import shopItem from '../../../shared/api/schemas/game/shop-item.schema.json';
+import stickerPack from '../../../shared/api/schemas/game/sticker-pack.schema.json';
+import gif from '../../../shared/api/schemas/game/gif.schema.json';
 import storyChapter from '../../../shared/api/schemas/game/story-chapter.schema.json';
 import worldArea from '../../../shared/api/schemas/game/world-area.schema.json';
 // Thi đấu (F108): the competition config types served by module competition on the same /game-admin routes.
@@ -33,14 +35,18 @@ import rankingRules from '../../../shared/api/schemas/game/ranking-rules.schema.
 import season from '../../../shared/api/schemas/game/season.schema.json';
 import tournamentTemplate from '../../../shared/api/schemas/game/tournament-template.schema.json';
 
+/** Config types of module game (the translation filters and files only take these, F082). */
+export type GameModuleType = components['schemas']['GameModuleConfigType'];
+/** Sticker packs / GIFs of module chat served on the same /game-admin/{config_type} routes (F082, F118). */
+export type ChatAssetType = Extract<components['schemas']['GameConfigType'], 'sticker-packs' | 'gifs'>;
 /** Competition config types (module competition, F108). */
 export type CompetitionConfigType = 'matchmaking-configs' | 'ranking-rules' | 'seasons' | 'tournament-templates' | 'challenge-templates' | 'leaderboard-definitions' | 'competition-rewards';
-export type ConfigType = components['schemas']['GameModuleConfigType'] | CompetitionConfigType;
-export type GameOpsMenu = 'world' | 'npcs' | 'quests' | 'minigames' | 'challenges' | 'bosses' | 'progression' | 'achievements' | 'items' | 'shop' | 'rewards' | 'events' | 'competition';
+export type ConfigType = GameModuleType | CompetitionConfigType | ChatAssetType;
+export type GameOpsMenu = 'world' | 'npcs' | 'quests' | 'minigames' | 'challenges' | 'bosses' | 'progression' | 'achievements' | 'items' | 'shop' | 'rewards' | 'events' | 'competition' | 'chat_assets';
 /** The 5 groups of the "Thi đấu" screen (F108 US2): matchmaking, ranking (+ rewards), seasons, templates, leaderboards. */
 export type CompetitionGroup = 'matchmaking' | 'ranking' | 'seasons' | 'templates' | 'leaderboards';
 export const COMPETITION_GROUPS: CompetitionGroup[] = ['matchmaking', 'ranking', 'seasons', 'templates', 'leaderboards'];
-export type BuilderKind = 'generic' | 'quest' | 'npc' | 'progression' | 'event' | 'season' | 'event-template';
+export type BuilderKind = 'generic' | 'quest' | 'npc' | 'progression' | 'event' | 'season' | 'event-template' | 'sticker-pack' | 'gif';
 
 export interface ConfigTypeDef {
   type: ConfigType;
@@ -78,13 +84,19 @@ export interface ConfigTypeDef {
   preview?: boolean;
   /** resource_type of the tenant assignments shown read only (templates, F108-AC-10). */
   assignable?: 'tournament_template' | 'challenge_template';
+  /** Module game type: carries translation_status / missing_fields / outdated_fields and goes into translation files. */
+  translatable?: boolean;
+  /** Rollback targets are the versions published before, now archived (module chat keeps one published version). */
+  rollbackArchived?: boolean;
+  /** resource_type of the shared tenant assignment dialog (F057; "Gán tenant" — F082-AC-04). */
+  assignResource?: string;
 }
 
 const MANAGED = ['version', 'status', 'owner_scope', 'tenant_id'];
 
 const def = (d: Omit<ConfigTypeDef, 'managedKeys'> & { versionIdField?: string }): ConfigTypeDef => {
   const { versionIdField, ...rest } = d;
-  return { ...rest, managedKeys: [...(d.uuidKey ? [d.idField] : []), ...(versionIdField ? [versionIdField] : []), ...MANAGED] };
+  return { translatable: true, ...rest, managedKeys: [...(d.uuidKey ? [d.idField] : []), ...(versionIdField ? [versionIdField] : []), ...MANAGED] };
 };
 
 const competition = (d: Pick<ConfigTypeDef, 'type' | 'group' | 'schema' | 'writePermission' | 'unpublish' | 'assignable'> & { nameField?: string; multi?: boolean }): ConfigTypeDef => ({
@@ -107,6 +119,22 @@ const competition = (d: Pick<ConfigTypeDef, 'type' | 'group' | 'schema' | 'write
   publishMode: 'effective',
   preview: false,
   assignable: d.assignable,
+});
+
+/** Module chat types: no server-managed keys in their payload, no translation status, write = game.chat_assets.write. */
+const chatDef = (d: Pick<ConfigTypeDef, 'type' | 'builder' | 'schema' | 'codeField' | 'nameField' | 'assignResource'>): ConfigTypeDef => ({
+  ...d,
+  menu: 'chat_assets',
+  served: true,
+  idField: '',
+  uuidKey: true,
+  managedKeys: [],
+  rollback: true,
+  unpublish: true,
+  has3D: false,
+  writePermission: 'game.chat_assets.write',
+  translatable: false,
+  rollbackArchived: true,
 });
 
 export const CONFIG_TYPES: Record<ConfigType, ConfigTypeDef> = {
@@ -135,6 +163,9 @@ export const CONFIG_TYPES: Record<ConfigType, ConfigTypeDef> = {
   'tournament-templates': competition({ type: 'tournament-templates', group: 'templates', schema: tournamentTemplate as unknown as JsonSchema, writePermission: 'competition.config.tournament_template.write', unpublish: true, nameField: 'name', assignable: 'tournament_template' }),
   'challenge-templates': competition({ type: 'challenge-templates', group: 'templates', schema: challengeTemplate as unknown as JsonSchema, writePermission: 'competition.config.tournament_template.write', unpublish: true, nameField: 'name', assignable: 'challenge_template' }),
   'leaderboard-definitions': competition({ type: 'leaderboard-definitions', group: 'leaderboards', schema: leaderboardDefinition as unknown as JsonSchema, writePermission: 'competition.config.leaderboard.write', unpublish: false }),
+  // F082: the sticker/GIF library of module chat (Game Studio "Tài nguyên chat").
+  'sticker-packs': chatDef({ type: 'sticker-packs', builder: 'sticker-pack', schema: stickerPack as unknown as JsonSchema, codeField: 'code', nameField: 'name_vi', assignResource: 'sticker_pack' }),
+  gifs: chatDef({ type: 'gifs', builder: 'gif', schema: gif as unknown as JsonSchema, codeField: '' }),
   'season-tracks': def({ type: 'season-tracks', menu: 'events', builder: 'season', schema: seasonTrack as unknown as JsonSchema, served: true, idField: 'season_track_id', uuidKey: true, versionIdField: 'season_track_version_id', codeField: 'code', nameField: 'name', rollback: true, unpublish: true, has3D: false, writePermission: 'game.season_track.write' }),
 };
 
@@ -162,6 +193,8 @@ export function codeOf(def: ConfigTypeDef, payload: Record<string, unknown> | un
 }
 
 export function nameOf(def: ConfigTypeDef, payload: Record<string, unknown> | undefined, lang: 'vi' | 'en'): string {
+  // sticker packs keep the two languages in name_vi / name_en (module chat payload)
+  if (def.nameField === 'name_vi') return String((lang === 'en' ? payload?.name_en : undefined) || payload?.name_vi || '');
   const v = def.nameField ? payload?.[def.nameField] : undefined;
   if (typeof v === 'string') return v;
   if (v && typeof v === 'object') return String((v as Record<string, unknown>)[lang] ?? (v as Record<string, unknown>).vi ?? '');
@@ -169,6 +202,9 @@ export function nameOf(def: ConfigTypeDef, payload: Record<string, unknown> | un
 }
 
 export const isConfigType = (v: string | undefined): v is ConfigType => !!v && v in CONFIG_TYPES;
+
+/** Module game types with a type module (translation filters, export dialog — F082). */
+export const translatableTypes = (): ConfigTypeDef[] => Object.values(CONFIG_TYPES).filter((d) => d.translatable && d.served);
 
 /** Route of a menu of workspace A (path of the generated catalog, ADR-0090). */
 export function menuPathOf(menu: GameOpsMenu): string {

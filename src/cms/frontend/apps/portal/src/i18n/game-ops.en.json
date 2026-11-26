@@ -10,7 +10,8 @@
       "remove": "Remove",
       "loadMore": "Load more",
       "untitled": "(untitled)",
-      "v": "v{{version}}"
+      "v": "v{{version}}",
+      "close": "Close"
     },
     "type": {
       "quests": "Quests",
@@ -37,7 +38,9 @@
       "tournament-templates": "School tournament templates",
       "challenge-templates": "Grade challenge templates",
       "leaderboard-definitions": "Leaderboard definitions",
-      "competition-rewards": "Competition rewards"
+      "competition-rewards": "Competition rewards",
+      "sticker-packs": "Sticker pack",
+      "gifs": "GIF library"
     },
     "status": {
       "draft": "Draft",
@@ -337,6 +340,106 @@
       "none": "Not assigned to any tenant.",
       "tenant": "Tenant",
       "assignedAt": "Assigned at"
+    },
+    "chatAssets": {
+      "assign": "Assign tenants",
+      "unpublishImpact": "Students can no longer pick this pack/GIF. Old messages still show the sticker/GIF already sent (files are immutable).",
+      "list": {
+        "cover": "Cover",
+        "count": "Stickers",
+        "unlock": "Unlock"
+      },
+      "unlock": {
+        "default": "Default",
+        "reward_rule": "Reward",
+        "item": "Item",
+        "defaultLong": "Default — every student of the assigned tenants",
+        "rewardRuleLong": "Reward (reward rule)",
+        "itemLong": "Item"
+      },
+      "pack": {
+        "code": "Pack code",
+        "name": "Pack name",
+        "unlock": "Unlock rule",
+        "rewardRule": "Published reward rule",
+        "item": "Published item",
+        "hint": "Unlock hint",
+        "stickers": "Stickers ({{count}})",
+        "noStickers": "No sticker yet.",
+        "sticker": "Sticker {{n}}",
+        "moveUp": "Move sticker {{n}} up",
+        "moveDown": "Move sticker {{n}} down",
+        "up": "Up",
+        "down": "Down",
+        "remove": "Remove sticker {{n}}",
+        "removeShort": "Remove",
+        "previewAfterSave": "Preview available after saving",
+        "stickerAlt": "Alt text of sticker {{n}}",
+        "upload": "Upload stickers",
+        "uploadHint": "WebP or PNG; the server checks the format, size and checksum of each file.",
+        "saveFirst": "Save the draft first, then upload stickers.",
+        "missingEn": "Missing English text: {{field}}"
+      },
+      "gif": {
+        "alt": "GIF: {{tags}}",
+        "untagged": "no tag",
+        "noFile": "No GIF file yet",
+        "play": "Play GIF",
+        "stop": "Stop",
+        "tagFilter": "Filter by tag",
+        "uploader": "Uploader",
+        "uploaderAll": "Everyone",
+        "uploaderMe": "Mine",
+        "upload": "Upload GIFs",
+        "uploadHint": "Internal GIFs only. The static preview is drawn from the first frame; the server checks both files again before review.",
+        "files": "Choose GIF files",
+        "empty": "No GIF matches the filters.",
+        "tagsVi": "Vietnamese tags",
+        "tagsEn": "English tags",
+        "addTagVi": "Add Vietnamese tag",
+        "addTagEn": "Add English tag",
+        "addTag": "Add",
+        "noTags": "No tag.",
+        "tagPattern": "A tag only holds lowercase letters without diacritics, digits, spaces, underscores or hyphens.",
+        "tagCount": "{{count}}/{{max}} tags"
+      },
+      "preview": {
+        "title": "Preview as a student sees it",
+        "language": "Preview language",
+        "open": "Open to every student",
+        "locked": {
+          "reward_rule": "Locked — unlocked by a reward",
+          "item": "Locked — unlocked by an item"
+        }
+      }
+    },
+    "translations": {
+      "column": "Translation",
+      "filter": "Translation status",
+      "filters": {
+        "partial": "To translate",
+        "outdated": "Outdated translation",
+        "complete": "Fully translated"
+      },
+      "status": "Translation:",
+      "missing": "Missing translation: {{field}}",
+      "outdatedTitle": "Original changed since the translation",
+      "translatedIn": "translated in v{{version}}",
+      "showDiff": "Show original changes",
+      "showDiffOf": "Show original changes: {{field}}",
+      "outdatedWarning": "{{count}} outdated translation(s) — you can still submit, the reviewer sees a warning.",
+      "confirmTitle": "Outdated translation",
+      "confirmBody": "The original of these fields changed after the translation: {{fields}}. Submit anyway?",
+      "confirmOk": "Submit anyway",
+      "diffTitle": "Original changed: {{field}}",
+      "diffRange": "v{{from}} → v{{to}}",
+      "diffSameVersion": "The translation was written in this very version: nothing to compare.",
+      "pageHint": "Export the game texts to translate to XLIFF 2.1 or CSV for translators, then import them back: each item matching its key gets a new draft, a published version is never changed. No machine translation.",
+      "exportButton": "Export translation file",
+      "importButton": "Import translation file",
+      "shortcuts": "Items to translate by type",
+      "badFormat": "Only .xlf, .xliff or .csv files.",
+      "fileRejected": "The file was refused by the check ({{reason}})."
     }
   }
 }

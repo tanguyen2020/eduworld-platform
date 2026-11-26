@@ -119,6 +119,8 @@ export interface RecordedRequest {
   gateway: 'public' | 'internal';
   headers: Record<string, string>;
   body: unknown;
+  /** Absolute URL of the request (presigned uploads go to another origin). */
+  url?: string;
 }
 
 const json = (status: number, body: unknown, headers: Record<string, string> = {}) =>
@@ -214,6 +216,7 @@ export class MockPortalBackend {
       gateway: internal ? 'internal' : 'public',
       headers,
       body: parseBody(text, headers['content-type']),
+      url: request.url,
     };
     this.requests.push(rec);
     for (const o of this.overrides) {

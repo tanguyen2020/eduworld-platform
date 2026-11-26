@@ -12,7 +12,7 @@ import { useFieldLabel } from './labels';
 
 const FREE_FORM: JsonSchema = { type: 'object', properties: {} };
 
-export function GenericSchemaBuilder({ def, value, onChange, readOnly, errors, omitKeys = [] }: BuilderProps & { omitKeys?: readonly string[] }) {
+export function GenericSchemaBuilder({ def, value, onChange, readOnly, errors, omitKeys = [], translation }: BuilderProps & { omitKeys?: readonly string[] }) {
   const { t } = useTranslation();
   const label = useFieldLabel();
   if (!def.schema) {
@@ -35,6 +35,7 @@ export function GenericSchemaBuilder({ def, value, onChange, readOnly, errors, o
       readOnly={readOnly}
       renderOverride={gameOverrides(def.idField)}
       idPrefix={`gf-${def.type}`}
+      translation={translation}
     />
   );
 }

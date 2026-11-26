@@ -46,6 +46,9 @@ export const SCHEMAS = {
   'specs/schemas/challenge-template.schema.json': 'game/challenge-template.schema.json',
   'specs/schemas/leaderboard-definition.schema.json': 'game/leaderboard-definition.schema.json',
   'specs/schemas/competition-reward.schema.json': 'game/competition-reward.schema.json',
+  // Game Studio chat assets (F082-AC-02, AC-05): sticker pack / GIF payloads of module chat.
+  'specs/schemas/sticker-pack.schema.json': 'game/sticker-pack.schema.json',
+  'specs/schemas/gif.schema.json': 'game/gif.schema.json',
 };
 
 const norm = (s) => s.replace(/\r\n/g, '\n');

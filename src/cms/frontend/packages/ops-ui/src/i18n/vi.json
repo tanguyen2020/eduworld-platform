@@ -437,7 +437,8 @@
       "jsonInvalid": "JSON không hợp lệ, chưa lưu thay đổi này",
       "up": "Lên",
       "down": "Xuống",
-      "remove": "Xóa"
+      "remove": "Xóa",
+      "showOriginalDiff": "Xem thay đổi bản gốc"
     },
     "render": {
       "ready": "Đã render",
@@ -454,6 +455,92 @@
     },
     "ref": {
       "missing": "Giá trị không có trong danh sách hiện hành: {{values}}"
+    }
+  },
+  "upload": {
+    "queue": "Tệp đang tải lên",
+    "progress": "Tiến trình tải {{name}}",
+    "status": {
+      "hashing": "Đang tính mã kiểm tra",
+      "presigning": "Đang xin quyền tải lên",
+      "uploading": "Đang tải lên",
+      "done": "Đã tải lên",
+      "error": "Lỗi"
+    },
+    "retry": "Thử lại",
+    "remove": "Bỏ",
+    "retryFile": "Thử lại {{name}}",
+    "removeFile": "Bỏ {{name}}",
+    "traceId": "Mã truy vết: {{traceId}}"
+  },
+  "translations": {
+    "status": {
+      "complete": "Đủ",
+      "partial": "Thiếu",
+      "outdated": "Lỗi thời"
+    },
+    "cancel": "Hủy",
+    "close": "Đóng",
+    "target": "Ngôn ngữ đích",
+    "format": "Định dạng",
+    "lang": {
+      "vi": "Tiếng Việt (vi)",
+      "en": "Tiếng Anh (en)"
+    },
+    "export": {
+      "title": "Xuất file dịch",
+      "submit": "Xuất file",
+      "types": "Loại nội dung",
+      "typesHint": "Bỏ trống = mọi loại có văn bản game",
+      "items": "Nội dung (tối đa {{max}})",
+      "itemsHint": "Bỏ trống = mọi nội dung của các loại đã chọn",
+      "onlyMissing": "Chỉ trường thiếu hoặc lỗi thời"
+    },
+    "import": {
+      "title": "Nhập file dịch",
+      "file": "File dịch (XLIFF 2.1 hoặc CSV)",
+      "hint": "Chạy thử trước để xem báo cáo; nhập thật tạo bản nháp mới, không bao giờ sửa phiên bản đã xuất bản.",
+      "dryRun": "Chạy thử",
+      "confirm": "Xác nhận nhập",
+      "uploading": "Đang tải file lên",
+      "dryRunReport": "Báo cáo chạy thử",
+      "importReport": "Báo cáo nhập",
+      "upload": {
+        "idle": "",
+        "uploading": "Đang tải lên và kiểm tra",
+        "ready": "File đã sẵn sàng",
+        "error": "File bị từ chối"
+      }
+    },
+    "job": {
+      "kind": {
+        "export": "Job xuất",
+        "import": "Job nhập"
+      },
+      "status": {
+        "queued": "Đang chờ",
+        "running": "Đang chạy",
+        "succeeded": "Hoàn tất",
+        "failed": "Thất bại"
+      },
+      "waiting": "Đang xử lý",
+      "dryRun": "Chạy thử — chưa ghi gì",
+      "failed": "Job thất bại",
+      "download": "Tải file",
+      "expiresAt": "Link hết hạn lúc {{at}}",
+      "report": "Kết quả",
+      "counts": "Tổng {{total}} · cập nhật {{updated}} · bỏ qua {{skipped}}",
+      "ref": "Khóa",
+      "code": "Lý do",
+      "message": "Chi tiết"
+    },
+    "errorCode": {
+      "key_not_found": "Khóa không tồn tại",
+      "stale_version": "Version cũ hơn version mới nhất",
+      "version_in_review": "Version mới nhất đang duyệt",
+      "unsupported_type": "Loại không thuộc module game",
+      "too_long": "Chuỗi vượt độ dài cho phép",
+      "invalid_language": "Ngôn ngữ không hợp lệ"
     }
   }
 }

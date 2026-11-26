@@ -31,6 +31,9 @@ const platformAccount = (username: string, sub: string, displayName: string, per
 export const GAME_ACCOUNTS: Record<string, MockAccount> = {
   'gd.thietke': platformAccount('gd.thietke', '0193a4d2-7000-7000-8000-0000000000d1', 'Game Designer', GAME_PERMS.filter((p) => p !== 'game.content.publish' && p !== 'game.economy.adjust')),
   'cm.duyet': platformAccount('cm.duyet', '0193a4d2-7000-7000-8000-0000000000d2', 'Content Reviewer', ['learning_content.read', 'learning_content.review', 'learning_content.publish', 'game.content.review']),
+  // F082: a translator (game.content.translate only) and a sticker/GIF designer (game.chat_assets.write only).
+  'tr.dich': platformAccount('tr.dich', '0193a4d2-7000-7000-8000-0000000000d4', 'Translator', ['game.content.translate']),
+  'gd.sticker': platformAccount('gd.sticker', '0193a4d2-7000-7000-8000-0000000000d5', 'Sticker designer', ['game.chat_assets.write']),
   'lo.vanhanh': platformAccount('lo.vanhanh', '0193a4d2-7000-7000-8000-0000000000d3', 'Live-ops', [
     'game.event.write', 'game.event.operate', 'game.season_track.write', 'game.content.publish', 'content.release.rollback', 'game.liveops.read', 'game.analytics.read', 'competition.config.season.write',
   ]),
@@ -55,7 +58,16 @@ export interface MockVersion {
   turntable_url?: string;
   render_status?: string;
   calendar_warnings?: unknown[];
+  translation_status?: string;
+  missing_fields?: string[];
+  outdated_fields?: { pointer: string; translated_in_version: number }[];
   updated_at: string;
+}
+
+/** A translation job of the MOCK: each GET advances queued → running → its final state. */
+export interface MockJob {
+  job: Record<string, unknown>;
+  steps: Record<string, unknown>[];
 }
 
 export interface MockConfig {
@@ -70,10 +82,19 @@ export class GameOpsMock {
   readonly configs: MockConfig[] = [];
   manifest: Record<string, unknown> = { registered: false, platforms: [], areas: [], npcs: [], scene_refs: [], interactables: [] };
   counts: { config_type: string; status: string; count: number }[] = [];
+  readonly jobs = new Map<string, MockJob>();
+  /** Final state of the next translation job (export: download link; import: report). */
+  nextJobResult: (kind: 'export' | 'import', body: Record<string, unknown>) => Record<string, unknown> = (kind, body) =>
+    kind === 'export'
+      ? { status: 'succeeded', download_url: 'https://exports.test/translations/job.xlf?sig=MOCK', expires_at: '2026-11-26T03:15:00Z' }
+      : { status: 'succeeded', report: { total: 2, updated: body.dry_run ? 0 : 2, skipped: 0, errors: [] } };
   private n = 0;
+  private readonly mediaKinds = new Map<string, string>();
 
   constructor(private readonly backend: MockPortalBackend) {
     backend.overrides.push((r) => this.route(r));
+    // presigned PUTs of the MOCK object storage (another origin, never the API)
+    backend.overrides.unshift((r) => (r.url?.startsWith('https://upload.test/') ? new Response(null, { status: 200 }) : undefined));
   }
 
   newId(): string {
@@ -111,6 +132,9 @@ export class GameOpsMock {
       turntable_url: v.turntable_url,
       render_status: v.render_status,
       calendar_warnings: v.calendar_warnings,
+      translation_status: v.translation_status,
+      missing_fields: v.missing_fields,
+      outdated_fields: v.outdated_fields,
     };
   }
 
@@ -132,19 +156,60 @@ export class GameOpsMock {
       if (!c || !v || r.headers['x-preview-token'] !== 'preview-token-MOCK-0123456789') return problem(403, 'PERMISSION_DENIED');
       return json(200, { config_type: c.type, config_id: c.config_id, version: v.version, status: v.status, payload: v.payload, expires_at: '2026-11-24T02:00:00Z' });
     }
-    if (r.method === 'POST' && r.path === '/game-media:presign-upload') return json(201, { asset_id: this.newId(), status: 'quarantined', upload_url: 'https://upload.test/put', upload_headers: {} });
+    if (r.method === 'POST' && r.path === '/game-media:presign-upload') {
+      const kind = (r.body as { kind?: string } | null)?.kind ?? 'image';
+      const id = this.newId();
+      this.mediaKinds.set(id, kind);
+      return json(201, { asset_id: id, status: 'quarantined', upload_url: `https://upload.test/media/${id}`, upload_headers: { 'x-amz-checksum-sha256': 'MOCK' } });
+    }
     let m = /^\/game-media\/([^/]+)$/.exec(r.path);
-    if (m && r.method === 'GET') return json(200, { asset_id: m[1], kind: 'image', status: 'ready', sha256: 'a'.repeat(64), original_filename: 'banner.png' });
+    if (m && r.method === 'GET') return json(200, { asset_id: m[1], kind: this.mediaKinds.get(m[1]!) ?? 'image', status: 'ready', sha256: 'a'.repeat(64), original_filename: 'banner.png' });
+    // translations (F082): export/import create a job (202); the job advances one step on each read
+    m = /^\/game-admin\/translations:(export|import)$/.exec(r.path);
+    if (m && r.method === 'POST') {
+      const kind = m[1] as 'export' | 'import';
+      const body = (r.body ?? {}) as Record<string, unknown>;
+      const job: Record<string, unknown> = {
+        job_id: this.newId(),
+        kind,
+        status: 'queued',
+        format: body.format,
+        target_language: body.target_language,
+        ...(kind === 'import' ? { dry_run: !!body.dry_run } : {}),
+        created_at: '2026-11-26T03:00:00Z',
+      };
+      this.jobs.set(job.job_id as string, { job, steps: [{ status: 'running' }, this.nextJobResult(kind, body)] });
+      return json(202, job);
+    }
+    m = /^\/game-admin\/translations\/jobs\/([^/]+)$/.exec(r.path);
+    if (m && r.method === 'GET') {
+      const j = this.jobs.get(m[1]!);
+      if (!j) return problem(404, 'NOT_FOUND');
+      const step = j.steps.shift();
+      if (step) Object.assign(j.job, step);
+      return json(200, j.job);
+    }
 
     m = /^\/game-admin\/([^/]+)$/.exec(r.path);
     if (m) {
       const type = m[1]!;
       if (r.method === 'GET') {
         const status = q.get('status');
-        // newest version of each config (of the status when filtered), keyset by config_id in the real backend
+        const tr = q.get('translation_status');
+        const tag = q.get('tag');
+        const author = q.get('author_id');
+        const keep = (v: MockVersion) =>
+          (!status || v.status === status) &&
+          (!tr || v.translation_status === tr) &&
+          (!author || v.author_id === author) &&
+          (!tag || [...((v.payload.tags_vi as string[] | undefined) ?? []), ...((v.payload.tags_en as string[] | undefined) ?? [])].includes(tag));
+        // newest version of each config (of the filters when given), keyset by config_id in the real backend
         const rows = this.configs
           .filter((c) => c.type === type)
-          .map((c) => [...c.versions].reverse().find((v) => !status || v.status === status) && this.view(c, [...c.versions].reverse().find((v) => !status || v.status === status)!))
+          .map((c) => {
+            const v = [...c.versions].reverse().find(keep);
+            return v && this.view(c, v);
+          })
           .filter(Boolean);
         return json(200, cursorPage(rows, q, 'data'));
       }
@@ -168,6 +233,10 @@ export class GameOpsMock {
     const c = this.configs.find((x) => x.config_id === id && x.type === type);
     if (!c) return problem(404, 'NOT_FOUND');
     const byNo = (no: number) => c.versions.find((v) => v.version === no);
+    if (rest === '/assets:presign' && r.method === 'POST') {
+      const b = r.body as { file_name: string; sha256: string };
+      return json(201, { asset_key: `media/${b.sha256}/${b.file_name}`, upload_url: `https://upload.test/chat/${b.sha256}`, expires_at: '2026-11-26T03:15:00Z' });
+    }
     let vm = /^\/versions\/(\d+)$/.exec(rest!);
     if (vm) {
       const v = byNo(Number(vm[1]));

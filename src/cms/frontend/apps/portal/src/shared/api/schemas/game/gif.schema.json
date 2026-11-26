@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:gif:1",
+  "title": "GifAsset",
+  "description": "Payload một version GIF của thư viện nội bộ (module chat, owner F118; form Game Studio F082). Chỉ GIF nội bộ, không dịch vụ bên thứ ba (ADR-0034); người duyệt khác người upload. `asset_key` là GIF, `preview_key` ảnh tĩnh WebP/PNG; kích thước và định dạng do server đọc lại từ bucket khi gửi duyệt (chat_asset_file_max). Tag chữ thường không dấu, ≤ 20 mỗi ngôn ngữ. `preview_url`/`url` là URL ký ngắn hạn do server thêm vào phản hồi, chỉ đọc, không lưu. Xem docs/03-social-multiplayer/CHAT_SYSTEM.md §7.5.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "asset_key": { "type": "string", "maxLength": 512, "pattern": "^media/[0-9a-f]{64}/[A-Za-z0-9._-]{1,200}$" },
+    "preview_key": { "type": "string", "maxLength": 512, "pattern": "^media/[0-9a-f]{64}/[A-Za-z0-9._-]{1,200}$" },
+    "size_bytes": { "type": "integer", "minimum": 1, "maximum": 2097152 },
+    "width": { "type": "integer", "minimum": 1, "maximum": 480 },
+    "height": { "type": "integer", "minimum": 1, "maximum": 480 },
+    "tags_vi": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64, "pattern": "^[a-z0-9 _-]{1,64}$" } },
+    "tags_en": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64, "pattern": "^[a-z0-9 _-]{1,64}$" } },
+    "preview_url": { "type": "string", "format": "uri", "maxLength": 2048, "readOnly": true },
+    "url": { "type": "string", "format": "uri", "maxLength": 2048, "readOnly": true }
+  }
+}

@@ -17,4 +17,6 @@ export interface BuilderProps {
   /** Server field errors by field path. */
   errors: Record<string, string>;
   item?: SavedVersion;
+  /** Server translation state of the version (F082-AC-10): outdated pointers and the diff of their original. */
+  translation?: { outdated?: readonly string[]; onShowDiff?: (pointer: string) => void };
 }

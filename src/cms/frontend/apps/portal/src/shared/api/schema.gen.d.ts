@@ -5418,7 +5418,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Xin presigned PUT để upload media nội dung game (ADR-0044) */
+        /**
+         * Xin presigned PUT để upload media nội dung game (ADR-0044)
+         * @description `kind` `image`/`audio`/`model3d` cần một permission ghi cấu hình game. `kind = document` (file dịch XLIFF
+         *     `application/xliff+xml` hoặc CSV `text/csv`, F082) cần `game.content.translate`: file được kiểm (kích thước, sha256,
+         *     quét virus) rồi giữ ở bucket riêng tư, không gắn `media_usages`, không bao giờ phát hành CDN.
+         */
         post: operations["presignGameMediaUpload"];
         delete?: never;
         options?: never;
@@ -13240,6 +13245,18 @@ export interface components {
             effective_from?: components["schemas"]["Timestamp"];
             /** @description true nếu là con trỏ release hiện hành */
             is_current?: boolean;
+            /** @description JSON pointer (trong `payload`) của văn bản game còn thiếu một ngôn ngữ bắt buộc (`game_text_required_languages`) */
+            readonly missing_fields?: string[];
+            /** @description Văn bản game có bản gốc `vi` đổi sau lần dịch gần nhất; diff bản gốc qua `diffGameConfigVersions` với `translated_in_version` */
+            readonly outdated_fields?: {
+                pointer: string;
+                translated_in_version: number;
+            }[];
+            /**
+             * @description Nội dung theo JSON Schema của loại (`specs/schemas/<loại>.schema.json`). Với `sticker-packs`/`gifs` (module chat), phản hồi
+             *     thêm URL ký ngắn hạn để xem trước bản chưa phát hành (F082-AC-07): `stickers[].preview_url`, `preview_url`, `url` — chỉ đọc,
+             *     không bao giờ được lưu (server bỏ qua khi nhận lại).
+             */
             payload: {
                 [key: string]: unknown;
             };
@@ -13261,6 +13278,11 @@ export interface components {
              */
             thumbnail_url?: string;
             title?: string;
+            /**
+             * @description Trạng thái bản dịch văn bản game của version (F082-AC-08, CONTENT_MODEL §8), tính khi lưu draft; vắng với loại của
+             *     module chat/competition.
+             */
+            readonly translation_status?: components["schemas"]["TranslationStatus"];
             /**
              * Format: uri
              * @description Sprite sheet render_turntable 24 khung khi asset ready
@@ -16133,7 +16155,7 @@ export interface components {
          * @description Loại tài nguyên dùng cho Thùng rác, gán và clone (ADR-0028, ADR-0029)
          * @enum {string}
          */
-        ResourceType: "curriculum" | "lesson" | "learning_material" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "activity" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "shop_item" | "event_template" | "school_settings" | "tenant_settings" | "user" | "student";
+        ResourceType: "curriculum" | "lesson" | "learning_material" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "activity" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "shop_item" | "event_template" | "sticker_pack" | "school_settings" | "tenant_settings" | "user" | "student";
         /** @description Lý do khôi phục bản ghi từ Thùng rác (F045-AC-20) */
         RestoreRequest: {
             reason: string;
@@ -17623,8 +17645,12 @@ export interface components {
          */
         TournamentStatus: "draft" | "published" | "registration_open" | "registration_closed" | "seeding" | "scheduled" | "in_progress" | "completed" | "rewarded" | "archived" | "cancelled";
         TranslationExportRequest: {
+            /** @description `config_id` cần xuất (vắng = mọi item của các loại); id không phải cấu hình platform của module game bị bỏ như không tồn tại */
             content_ids?: components["schemas"]["Uuid"][];
-            /** @description CMS: loại nội dung học tập; Game Studio: config_type của module game */
+            /**
+             * @description Game Studio: chỉ `config_type` của module game (`GameModuleConfigType`); loại khác → `422 VALIDATION_FAILED`.
+             *     Vắng = mọi loại có văn bản game.
+             */
             content_types?: string[];
             /** @enum {string} */
             format: "xliff" | "csv";
@@ -17634,7 +17660,7 @@ export interface components {
             target_language: components["schemas"]["ContentLanguage"];
         };
         TranslationImportRequest: {
-            /** @description File đã upload qua presign media */
+            /** @description File đã upload qua presignGameMediaUpload (kind document) và ở trạng thái ready */
             asset_id: components["schemas"]["Uuid"];
             /** @default false */
             dry_run: boolean;
@@ -17643,16 +17669,29 @@ export interface components {
             target_language: components["schemas"]["ContentLanguage"];
         };
         TranslationJob: {
-            /** Format: uri */
+            created_at?: components["schemas"]["Timestamp"];
+            /**
+             * Format: uri
+             * @description Link tải file xuất ký có hạn (report_link_ttl)
+             */
             download_url?: string;
+            /** @description Job nhập chạy thử: chỉ báo cáo, không ghi (F082-AC-13) */
+            dry_run?: boolean;
+            /** @description Lý do khi status = failed (file sai định dạng, lỗi hạ tầng) */
+            error_message?: string;
             expires_at?: components["schemas"]["Timestamp"];
+            finished_at?: components["schemas"]["Timestamp"];
+            /** @enum {string} */
+            format?: "xliff" | "csv";
             job_id: components["schemas"]["Uuid"];
             /** @enum {string} */
             kind: "export" | "import";
             report?: {
                 errors?: {
-                    message?: string;
-                    ref?: string;
+                    /** @enum {string} */
+                    code?: "key_not_found" | "stale_version" | "version_in_review" | "unsupported_type" | "too_long" | "invalid_language";
+                    message: string;
+                    ref: string;
                 }[];
                 skipped?: number;
                 total?: number;
@@ -17660,6 +17699,7 @@ export interface components {
             };
             /** @enum {string} */
             status: "queued" | "running" | "succeeded" | "failed";
+            target_language?: components["schemas"]["ContentLanguage"];
         };
         /** @enum {string} */
         TranslationStatus: "complete" | "partial" | "outdated";
@@ -30791,6 +30831,8 @@ export interface operations {
     listGameConfigs: {
         parameters: {
             query?: {
+                /** @description Chỉ `config_type` `sticker-packs`/`gifs` (F082-AC-05) — version mới nhất do người này tạo/upload. */
+                author_id?: components["schemas"]["Uuid"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 /**
@@ -30801,8 +30843,15 @@ export interface operations {
                 from?: string;
                 limit?: components["parameters"]["Limit"];
                 status?: components["schemas"]["ContentStatus"];
+                /** @description Chỉ `config_type = gifs` (F082-AC-05) — GIF có tag (vi hoặc en) bằng giá trị này ở version mới nhất. */
+                tag?: string;
                 /** @description Ngày cuối (ICT, gồm cả ngày này) của khoảng lọc `from` */
                 to?: string;
+                /**
+                 * @description Chỉ `config_type` của module game (F082-AC-09): giữ item có `translation_status` của version mới nhất bằng giá trị này
+                 *     ("Cần dịch" = `partial`, "Bản dịch lỗi thời" = `outdated`). Loại của module chat/competition → `422 VALIDATION_FAILED`.
+                 */
+                translation_status?: components["schemas"]["TranslationStatus"];
             };
             header?: never;
             path: {
@@ -31713,7 +31762,9 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     importGameTranslations: {
@@ -31748,7 +31799,9 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     getGameTranslationJob: {

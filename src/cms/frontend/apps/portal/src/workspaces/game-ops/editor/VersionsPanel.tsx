@@ -3,7 +3,9 @@
 // read only: no edit action, "Tạo bản nháp từ phiên bản này" (createGameConfigVersion) instead; compare two versions
 // (diffGameConfigVersions, field by field); publish an approved version; rollback to another published version and
 // unpublish with a mandatory reason (rollbackGameConfig / unpublishGameConfig, Idempotency-Key) when the type offers them
-// (F078: no rollback for reward rules and events, no unpublish for events). Buttons inside ActionGate; the server decides.
+// (F078: no rollback for reward rules and events, no unpublish for events; F082: a sticker pack / GIF of module chat rolls
+// back to a version published before — now archived — and its unpublish warns that old messages keep the asset). Buttons
+// inside ActionGate; the server decides.
 import { DomainTag } from '@eduworld/ops-ui';
 import { App as AntApp, Button, Flex, Skeleton, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -91,7 +93,7 @@ export function VersionsPanel({ item, editorPath }: { item: ItemRef; editorPath:
               </Button>
             </ActionGate>
           )}
-          {def.rollback && v.status === 'published' && current !== undefined && v.version !== current && access.publish && (
+          {def.rollback && (v.status === 'published' || (def.rollbackArchived && v.status === 'archived' && !!v.published_at)) && current !== undefined && v.version !== current && access.publish && (
             <ActionGate actionKey={actionOf(def, 'rollback')} mode="disable">
               <Button size="small" danger onClick={() => setRollbackTo(v.version)}>
                 {t('gameOps.versions.rollbackTo', { version: v.version })}
@@ -174,7 +176,7 @@ export function VersionsPanel({ item, editorPath }: { item: ItemRef; editorPath:
       <ReasonDialog
         open={unpublishing}
         title={t('gameOps.versions.unpublishTitle')}
-        description={t('gameOps.versions.unpublishImpact')}
+        description={t(def.menu === 'chat_assets' ? 'gameOps.chatAssets.unpublishImpact' : 'gameOps.versions.unpublishImpact')}
         maxLength={RELEASE_REASON_MAX}
         confirmLoading={writes.unpublish.isPending}
         error={writes.unpublish.error ? <GameOpsError error={writes.unpublish.error} /> : null}

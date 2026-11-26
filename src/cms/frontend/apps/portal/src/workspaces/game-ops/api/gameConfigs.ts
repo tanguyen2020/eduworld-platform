@@ -12,6 +12,7 @@ import { useAllPages, type PageQuery } from '../../../shared/api/fetchAllPages';
 import { ApiError } from '../../../shared/api/middleware/problem';
 import type { components } from '../../../shared/api/schema.gen';
 import { useCursorPages } from '../../../shared/api/useCursorPages';
+import { INTENT_HEADER } from '../../../shared/api/middleware/idempotency';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { CONFIG_TYPES, type ConfigType } from '../registry/configTypes';
 
@@ -22,6 +23,17 @@ export type VersionHistory = components['schemas']['ContentVersionHistory'];
 export type VersionDiff = components['schemas']['ContentVersionDiff'];
 export type ContentRelease = components['schemas']['ContentRelease'];
 export type PageInfo = components['schemas']['PageInfo'];
+export type TranslationStatus = components['schemas']['TranslationStatus'];
+
+/** Server filters of listGameConfigs (F079 status; F082 translation_status for game types, tag / author_id for GIFs). */
+export interface ConfigListFilters {
+  status?: ContentStatus;
+  translation_status?: TranslationStatus;
+  tag?: string;
+  author_id?: string;
+}
+
+const filterQuery = (f: ConfigListFilters): Record<string, string> => Object.fromEntries(Object.entries(f).filter(([, v]) => v !== undefined && v !== '')) as Record<string, string>;
 export interface ConfigPage {
   data: GameConfigVersion[];
   page: PageInfo;
@@ -58,12 +70,12 @@ async function withEtag<T>(api: ApiClient, p: Promise<{ data?: T; error?: unknow
 const listPage = (api: ApiClient, t: ConfigType, query: Record<string, unknown>) =>
   api.call<ConfigPage>(api.client.GET(GA, { params: { path: { config_type: t }, query: query as never } }));
 
-/** Table rows of a type: cursor pages ("Tải thêm"), optional status filter (F079-AC-01). */
-export function useConfigPages(t: ConfigType, status: ContentStatus | undefined, enabled = true) {
+/** Table / grid rows of a type: cursor pages ("Tải thêm") paged by the server, with its filters (F079-AC-01, F082-AC-05, AC-09). */
+export function useConfigPages(t: ConfigType, filters: ContentStatus | ConfigListFilters | undefined, enabled = true) {
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
-  return useCursorPages<GameConfigVersion, ConfigPage>(gameKeys.list(scopeKey, t, { status: status ?? null, pages: true }), (cursor) =>
-    listPage(api, t, { ...(status ? { status } : {}), ...(cursor ? { cursor } : {}) }), { enabled });
+  const f = filterQuery(typeof filters === 'string' ? { status: filters } : (filters ?? {}));
+  return useCursorPages<GameConfigVersion, ConfigPage>(gameKeys.list(scopeKey, t, { ...f, pages: true }), (cursor) => listPage(api, t, { ...f, ...(cursor ? { cursor } : {}) }), { enabled });
 }
 
 /** Every config of a type (dropdowns / reference pickers): all cursor pages (ADMIN_PORTAL §1.6). */
@@ -259,4 +271,20 @@ export function useConfigWrites() {
   }, opts);
 
   return { create, transition, publish, cancelSchedule, rollback, unpublish, newVersion };
+}
+
+export type ChatAssetPresignResponse = { asset_key: string; upload_url: string; expires_at: string };
+
+/**
+ * presignChatAssetUpload (module chat, F082-AC-03): one sticker/GIF file of a draft. `intent` is the per-file intent of the
+ * upload queue (Idempotency-Key kept on retry).
+ */
+export function presignChatAsset(api: ApiClient, r: ItemRef, input: { fileName: string; contentType: string; size: number; sha256: string; intent: string }) {
+  return api.call<ChatAssetPresignResponse>(
+    api.client.POST('/game-admin/{config_type}/{config_id}/assets:presign', {
+      params: { path: { config_type: r.configType as 'sticker-packs' | 'gifs', config_id: r.configId } },
+      body: { file_name: input.fileName, content_type: input.contentType as 'image/webp', size_bytes: input.size, sha256: input.sha256 },
+      headers: { [INTENT_HEADER]: input.intent } as never,
+    }),
+  );
 }

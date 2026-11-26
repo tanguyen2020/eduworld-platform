@@ -6,7 +6,7 @@
 // fills) are hidden. `renderOverride` lets a builder replace one field (reference pickers from the client manifest,
 // F079-AC-07). Server field errors (`errors[].field`, any separator) are shown under their field. Presentational and
 // controlled: no API call, no business rule — the server validates the payload again (AGENTS R1).
-import { DatePicker, Flex, Form, Input, InputNumber, Switch, Button, Card, Typography, theme, Row, Col } from 'antd';
+import { DatePicker, Flex, Form, Input, InputNumber, Switch, Button, Card, Typography, theme, Row, Col, Tabs, Tag } from 'antd';
 import dayjs from 'dayjs';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -49,6 +49,18 @@ export interface SchemaFormProps {
   idPrefix?: string;
   /** Path of `value` inside the payload (a builder rendering a sub-object, e.g. one quest step). */
   basePath?: PathSegment[];
+  /**
+   * Translation state of the game texts from the server (F082-AC-10): `outdated` = JSON pointers of `outdated_fields`
+   * (any separator, `/vi`/`/en` suffix ignored); `onShowDiff` opens the diff of the original of that pointer.
+   */
+  translation?: { outdated?: readonly string[]; onShowDiff?: (pointer: string) => void };
+  /** Layout of the bilingual texts: two columns or VI | EN tabs (default: columns on large screens). */
+  layout?: 'columns' | 'tabs';
+}
+
+/** Canonical key of a game-text pointer: `/steps/0/title/en` → `steps/0/title`. */
+export function textKey(pointer: string): string {
+  return canonicalPath(pointer).replace(/\/(vi|en)$/, '');
 }
 
 interface Ctx {
@@ -61,15 +73,32 @@ interface Ctx {
   managed: Set<string>;
   omit: Set<string>;
   basePath: PathSegment[];
+  outdated: Map<string, string>;
+  onShowDiff?: (pointer: string) => void;
+  layout?: 'columns' | 'tabs';
 }
 
 const LONG_TEXT = 255;
 const LANGS = ['vi', 'en'] as const;
 const ERROR_STATUS = 'error' as const;
 
-export function SchemaForm({ schema, value, onChange, label, managedKeys = [], omitKeys = [], errors = {}, readOnly = false, renderOverride, idPrefix = 'field', basePath = [] }: SchemaFormProps) {
+export function SchemaForm({ schema, value, onChange, label, managedKeys = [], omitKeys = [], errors = {}, readOnly = false, renderOverride, idPrefix = 'field', basePath = [], translation, layout }: SchemaFormProps) {
   const errorMap = useMemo(() => Object.fromEntries(Object.entries(errors).map(([k, v]) => [canonicalPath(k), v])), [errors]);
-  const ctx: Ctx = { root: schema, label, errors: errorMap, readOnly, override: renderOverride, idPrefix, managed: new Set(managedKeys), omit: new Set(omitKeys), basePath };
+  const outdated = useMemo(() => new Map((translation?.outdated ?? []).map((p) => [textKey(p), p])), [translation?.outdated]);
+  const ctx: Ctx = {
+    root: schema,
+    label,
+    errors: errorMap,
+    readOnly,
+    override: renderOverride,
+    idPrefix,
+    managed: new Set(managedKeys),
+    omit: new Set(omitKeys),
+    basePath,
+    outdated,
+    onShowDiff: translation?.onShowDiff,
+    layout,
+  };
   const s = effective(schema, schema);
   return (
     <Form layout="vertical" component="div" disabled={readOnly}>
@@ -204,13 +233,45 @@ function Field({ ctx, name, schema, path, required, value, onChange }: { ctx: Ct
 }
 
 function LocalizedInput({ ctx, id, label, schema, path, required, value, onChange, error }: { ctx: Ctx; id: string; label: string; schema: JsonSchema; path: PathSegment[]; required: boolean; value: unknown; onChange: (v: unknown) => void; error?: string }) {
+  const { t } = useTranslation(OPS_UI_NS);
   const { token } = theme.useToken();
+  const layout = ctx.layout ?? 'columns';
   const v = (value && typeof value === 'object' ? value : {}) as Record<string, string | undefined>;
   const filled = ['vi', 'en'].filter((l) => (v[l] ?? '').trim() !== '').length;
-  const status = filled === 2 ? 'complete' : filled === 1 ? 'partial' : 'empty';
+  const outdatedPointer = ctx.outdated.get(pathKey(path));
+  const status = filled === 2 ? (outdatedPointer ? 'outdated' : 'complete') : filled === 1 ? 'partial' : 'empty';
   const set = (lang: 'vi' | 'en', text: string) => {
     const next = { ...v, [lang]: text === '' ? undefined : text };
     onChange(next.vi === undefined && next.en === undefined ? undefined : next);
+  };
+  const editor = (lang: 'vi' | 'en') => {
+    const ls = effective(languageSchema(schema, lang), ctx.root);
+    const langError = ctx.errors[pathKey([...path, lang])];
+    const long = (ls.maxLength ?? 0) > LONG_TEXT;
+    const common = {
+      id: `${id}-${lang}`,
+      'aria-label': `${label} (${lang.toUpperCase()})`,
+      value: v[lang] ?? '',
+      status: langError ? ERROR_STATUS : undefined,
+      onChange: (e: { target: { value: string } }) => set(lang, e.target.value),
+      ...openapiInputProps(ls as never),
+    };
+    return (
+      <Flex vertical gap="small">
+        {layout === 'columns' && (
+          <Flex gap="small" align="center">
+            <Typography.Text type="secondary">{lang.toUpperCase()}</Typography.Text>
+            {lang === 'vi' && (
+              <Tag bordered={false} color="processing">
+                {t('bilingual.original')}
+              </Tag>
+            )}
+          </Flex>
+        )}
+        {long ? <Input.TextArea {...common} autoSize={{ minRows: 2, maxRows: 6 }} /> : <Input {...common} />}
+        {langError && <Typography.Text type="danger">{langError}</Typography.Text>}
+      </Flex>
+    );
   };
   return (
     <Form.Item
@@ -220,35 +281,32 @@ function LocalizedInput({ ctx, id, label, schema, path, required, value, onChang
           <TranslationBadge status={status} />
         </Flex>
       }
+      extra={
+        outdatedPointer && ctx.onShowDiff ? (
+          <Button size="small" type="link" onClick={() => ctx.onShowDiff?.(outdatedPointer)}>
+            {t('game.form.showOriginalDiff')}
+          </Button>
+        ) : undefined
+      }
       required={required}
       validateStatus={error ? 'error' : undefined}
       help={error}
       data-testid={`field-${path.join('-')}`}
     >
-      <Row gutter={[token.marginXS, token.marginXS]}>
-        {LANGS.map((lang) => {
-          const ls = effective(languageSchema(schema, lang), ctx.root);
-          const langError = ctx.errors[pathKey([...path, lang])];
-          const long = (ls.maxLength ?? 0) > LONG_TEXT;
-          const common = {
-            id: `${id}-${lang}`,
-            'aria-label': `${label} (${lang.toUpperCase()})`,
-            value: v[lang] ?? '',
-            status: langError ? ERROR_STATUS : undefined,
-            onChange: (e: { target: { value: string } }) => set(lang, e.target.value),
-            ...openapiInputProps(ls as never),
-          };
-          return (
+      {layout === 'columns' ? (
+        <Row gutter={[token.marginXS, token.marginXS]}>
+          {LANGS.map((lang) => (
             <Col xs={24} lg={12} key={lang}>
-              <Flex vertical gap="small">
-                <Typography.Text type="secondary">{lang.toUpperCase()}</Typography.Text>
-                {long ? <Input.TextArea {...common} autoSize={{ minRows: 2, maxRows: 6 }} /> : <Input {...common} />}
-                {langError && <Typography.Text type="danger">{langError}</Typography.Text>}
-              </Flex>
+              {editor(lang)}
             </Col>
-          );
-        })}
-      </Row>
+          ))}
+        </Row>
+      ) : (
+        <Tabs
+          size="small"
+          items={LANGS.map((lang) => ({ key: lang, label: lang.toUpperCase(), children: editor(lang) }))}
+        />
+      )}
     </Form.Item>
   );
 }
