@@ -17,6 +17,15 @@
       "primary": { "$value": "{palette.blue.800}", "$description": "Primary accent (high contrast)." },
       "primary_pressed": { "$value": "{palette.black}", "$description": "Primary accent pressed (high contrast)." }
     },
-    "focus": { "$value": "{palette.black}", "$description": "Focus ring (high contrast)." }
+    "focus": { "$value": "{palette.black}", "$description": "Focus ring (high contrast)." },
+    "outline": { "$value": "{palette.black}", "$description": "Cartoon outline and bottom edge (high contrast, F114)." }
+  },
+  "density": {
+    "$type": "dimension",
+    "$description": "High contrast: tier 1 and tier 2 outlines are 3 px in every band; the bottom edge keeps the band value (F114-AC-06).",
+    "g1_3": { "outline": { "interactive": { "$value": "{size.border.3}", "$description": "Tier 1 outline (high contrast, g1_3)." }, "info": { "$value": "{size.border.3}", "$description": "Tier 2 outline (high contrast, g1_3)." } } },
+    "g4_5": { "outline": { "interactive": { "$value": "{size.border.3}", "$description": "Tier 1 outline (high contrast, g4_5)." }, "info": { "$value": "{size.border.3}", "$description": "Tier 2 outline (high contrast, g4_5)." } } },
+    "g6_7": { "outline": { "interactive": { "$value": "{size.border.3}", "$description": "Tier 1 outline (high contrast, g6_7)." }, "info": { "$value": "{size.border.3}", "$description": "Tier 2 outline (high contrast, g6_7)." } } },
+    "g8_9": { "outline": { "interactive": { "$value": "{size.border.3}", "$description": "Tier 1 outline (high contrast, g8_9)." }, "info": { "$value": "{size.border.3}", "$description": "Tier 2 outline (high contrast, g8_9)." } } }
   }
 }

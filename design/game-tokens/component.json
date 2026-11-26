@@ -16,7 +16,7 @@
         "radius": { "$type": "dimension", "$value": "{size.radius.16}", "$description": "Primary button corner radius." }
       },
       "secondary": {
-        "bg": { "$type": "color", "$value": "{color.surface.panel_alt}", "$description": "Secondary button background." },
+        "bg": { "$type": "color", "$value": "{palette.sky.100}", "$description": "Secondary button and IconButton background: light blue, ink outline and bottom edge (F114)." },
         "border": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Secondary button border." },
         "text": {
           "$type": "color",
@@ -31,11 +31,24 @@
         "bg_hover": { "$type": "color", "$value": "{palette.sky.100}", "$description": "Outlined button (IconButton, ChoiceChip, TextButton) background on hover." },
         "bg_pressed": { "$type": "color", "$value": "{palette.sky.200}", "$description": "Outlined button background while pressed / toggled on." }
       },
-      "border_width": { "$type": "dimension", "$value": "{size.border.3}", "$description": "Button border width." }
+      "border_width": { "$type": "dimension", "$value": "{size.border.3}", "$description": "Button border width." },
+      "danger": {
+        "bg": { "$type": "color", "$value": "{palette.red.700}", "$description": "DangerButton background: only to leave or end (window close, Đăng xuất), never for learning feedback or Cancel (F114)." },
+        "bg_pressed": { "$type": "color", "$value": "{palette.red.800}", "$description": "DangerButton background on hover / while pressed (F114)." },
+        "text": {
+          "$type": "color",
+          "$value": "{color.text.on_accent}",
+          "$description": "DangerButton label and icon (F114).",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "component.button.danger.bg", "level": "normal" },
+            { "token": "component.button.danger.bg_pressed", "level": "normal" }
+          ] } }
+        }
+      }
     },
     "panel": {
       "bg": { "$type": "color", "$value": "{color.surface.panel}", "$description": "Panel background." },
-      "border": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Panel border." },
+      "border": { "$type": "color", "$value": "{color.outline}", "$description": "Window frame outline and bottom edge (tier 1, F114)." },
       "radius": { "$type": "dimension", "$value": "{size.radius.24}", "$description": "Panel corner radius." },
       "padding": { "$type": "dimension", "$value": "{size.space.24}", "$description": "Panel inner padding." }
     },
@@ -125,6 +138,142 @@
         "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.chip.selected_bg", "level": "normal" }] } }
       }
     },
+    "choice_chip": {
+      "bg": { "$type": "color", "$value": "{palette.white}", "$description": "ChoiceChip not chosen: white with ink words, no tick (F114)." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "ChoiceChip label when not chosen (F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.choice_chip.bg", "level": "normal" },
+          { "token": "component.button.secondary.bg_hover", "level": "normal" }
+        ] } }
+      },
+      "selected_bg": { "$type": "color", "$value": "{palette.yellow.400}", "$description": "ChoiceChip chosen: bright yellow, ink words and a tick icon. Yellow = chosen value, blue = action / place (F114, replaces the F096 accent fill)." },
+      "selected_text": {
+        "$type": "color",
+        "$value": "{palette.ink.900}",
+        "$description": "ChoiceChip label and tick when chosen (F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.choice_chip.selected_bg", "level": "normal" }
+        ] } }
+      }
+    },
+    "section_tag": {
+      "bg": { "$type": "color", "$value": "{palette.yellow.100}", "$description": "Section tag pill in a panel (SectionTag, F114)." },
+      "text": {
+        "$type": "color",
+        "$value": "{palette.yellow.900}",
+        "$description": "Section tag words: capitals, bold, the band small font (F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.section_tag.bg", "level": "normal" }
+        ] } }
+      },
+      "border": { "$type": "color", "$value": "{color.outline}", "$description": "Section tag ink outline (F114)." }
+    },
+    "toggle": {
+      "track_on": {
+        "$type": "color",
+        "$value": "{color.accent.primary}",
+        "$description": "ToggleSwitch track when on; the knob sits on the right and the word Bật is written beside it (F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.toggle.knob", "level": "graphic" }
+        ] } }
+      },
+      "track_off": { "$type": "color", "$value": "{palette.ink.200}", "$description": "ToggleSwitch track when off; knob on the left, word Tắt beside it (F114)." },
+      "knob": { "$type": "color", "$value": "{palette.white}", "$description": "ToggleSwitch knob, ink outline (F114)." },
+      "border": {
+        "$type": "color",
+        "$value": "{color.outline}",
+        "$description": "ToggleSwitch track and knob outline (F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.toggle.track_off", "level": "graphic" },
+          { "token": "color.surface.panel", "level": "graphic" }
+        ] } }
+      },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Words Bật / Tắt beside a ToggleSwitch (F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "color.surface.panel", "level": "normal" },
+          { "token": "component.button.secondary.bg_hover", "level": "normal" }
+        ] } }
+      }
+    },
+    "slider": {
+      "track": { "$type": "color", "$value": "{palette.white}", "$description": "HSlider groove (volume), ink outline and bottom edge (F114)." },
+      "fill": {
+        "$type": "color",
+        "$value": "{color.accent.primary}",
+        "$description": "HSlider filled part up to the knob (F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.slider.track", "level": "graphic" }
+        ] } }
+      }
+    },
+    "settings": {
+      "tab_column_bg": { "$type": "color", "$value": "{palette.sky.100}", "$description": "Settings tab column: light tint of the accent, ink right border (F114)." },
+      "tab_column_width": { "$type": "dimension", "$value": "{size.layout.280}", "$description": "Settings tab column width (F114); long words wrap inside it." },
+      "tab_text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Words of a Settings tab that is not open (transparent tab, F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.settings.tab_column_bg", "level": "normal" },
+          { "token": "component.settings.tab_hover_bg", "level": "normal" }
+        ] } }
+      },
+      "tab_hover_bg": { "$type": "color", "$value": "{palette.sky.200}", "$description": "Settings tab under the pointer (F114)." },
+      "tab_icon": {
+        "$type": "color",
+        "$value": "{color.accent.primary}",
+        "$description": "Icon of a Settings tab that is not open (modulates the white tab icon, F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.settings.tab_column_bg", "level": "graphic" }
+        ] } }
+      },
+      "tab_selected_bg": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Open Settings tab: accent fill, ink outline and bottom edge (blue = place, F114)." },
+      "tab_selected_text": {
+        "$type": "color",
+        "$value": "{color.text.on_accent}",
+        "$description": "Words and icon of the open Settings tab (F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.settings.tab_selected_bg", "level": "normal" }
+        ] } }
+      },
+      "title_bg": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Window title bar (CÀI ĐẶT), ink outline and hard bottom edge (F114)." },
+      "title_text": {
+        "$type": "color",
+        "$value": "{color.text.on_accent}",
+        "$description": "Window title in capitals (F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.settings.title_bg", "level": "normal" }
+        ] } }
+      },
+      "confirm_title_bg": { "$type": "color", "$value": "{palette.yellow.400}", "$description": "Confirmation dialog title bar (ĐĂNG XUẤT?), F114." },
+      "confirm_title_text": {
+        "$type": "color",
+        "$value": "{palette.ink.900}",
+        "$description": "Confirmation dialog title in capitals (F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.settings.confirm_title_bg", "level": "normal" }
+        ] } }
+      },
+      "value_bg": { "$type": "color", "$value": "{palette.white}", "$description": "Value chip beside a slider (70%), thin ink outline (F114)." },
+      "value_text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Value chip words (F114).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "component.settings.value_bg", "level": "normal" }
+        ] } }
+      }
+    },
+    "window": {
+      "pop_scale": { "$type": "number", "$value": "{number.ratio.096}", "$description": "Start scale of a window opening (0.96 to 1); no animation while Giảm chuyển động is on (F114)." },
+      "pop_duration": { "$type": "duration", "$value": "{duration.base}", "$description": "Window opening duration, at most 0.2 s (F114)." }
+    },
     "text_button": {
       "text": {
         "$type": "color",
@@ -139,7 +288,7 @@
     },
     "inline_error": {
       "bg": { "$type": "color", "$value": "{palette.red.50}", "$description": "InlineError panel background." },
-      "border": { "$type": "color", "$value": "{color.feedback.incorrect}", "$description": "InlineError panel border." },
+      "border": { "$type": "color", "$value": "{color.outline}", "$description": "InlineError panel thin ink outline (tier 2, F114); the alert icon tells it is an error." },
       "text": {
         "$type": "color",
         "$value": "{color.text.primary}",
@@ -149,7 +298,7 @@
     },
     "info_banner": {
       "bg": { "$type": "color", "$value": "{palette.sky.100}", "$description": "InfoBanner panel background (session expired…)." },
-      "border": { "$type": "color", "$value": "{color.accent.primary}", "$description": "InfoBanner panel border." },
+      "border": { "$type": "color", "$value": "{color.outline}", "$description": "InfoBanner panel thin ink outline (tier 2, F114)." },
       "text": {
         "$type": "color",
         "$value": "{color.text.primary}",
@@ -159,7 +308,7 @@
     },
     "form_card": {
       "bg": { "$type": "color", "$value": "{color.surface.panel}", "$description": "Form card (LoginCard) background." },
-      "border": { "$type": "color", "$value": "{palette.white}", "$description": "Form card soft border." },
+      "border": { "$type": "color", "$value": "{color.outline}", "$description": "Form card / dialog frame outline and bottom edge (tier 1, F114)." },
       "shadow": { "$type": "color", "$value": "{palette.shadow.soft}", "$description": "Form card drop shadow." },
       "shadow_size": { "$type": "dimension", "$value": "{size.space.16}", "$description": "Form card drop shadow blur size." },
       "padding": { "$type": "dimension", "$value": "{size.space.20}", "$description": "Form card inner padding." },
@@ -168,7 +317,7 @@
     },
     "speech_bubble": {
       "bg": { "$type": "color", "$value": "{palette.white}", "$description": "Speech bubble of the guide Mây (NpcHint)." },
-      "border": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Speech bubble border." },
+      "border": { "$type": "color", "$value": "{color.outline}", "$description": "Speech bubble thin ink outline (tier 2, F114)." },
       "text": {
         "$type": "color",
         "$value": "{color.text.primary}",

@@ -54,7 +54,19 @@
       "incorrect": { "$value": "{palette.red.700}", "$description": "Incorrect answer feedback strip (gentle, no punishment)." },
       "hint": { "$value": "{palette.violet.700}", "$description": "Hint feedback / hint button." }
     },
-    "focus": { "$value": "{palette.blue.600}", "$description": "Keyboard/gamepad focus ring." }
+    "focus": { "$value": "{palette.blue.600}", "$description": "Keyboard/gamepad focus ring." },
+    "outline": {
+      "$value": "{palette.ink.900}",
+      "$description": "Single ink colour of the cartoon outline and hard bottom edge of interactive controls, window frames and information surfaces (F114, DESIGN_SYSTEM §5.1).",
+      "$extensions": { "eduworld": { "contrastWith": [
+        { "token": "color.surface.panel", "level": "graphic" },
+        { "token": "color.surface.panel_alt", "level": "graphic" }
+      ] } }
+    },
+    "overlay": {
+      "scrim": { "$value": "{palette.shadow.scrim}", "$description": "Scrim behind every modal window (ink 50%, no blur, F114)." },
+      "scrim_nested": { "$value": "{palette.shadow.scrim-nested}", "$description": "Extra scrim behind a dialog opened over a window (ink 35%, F114)." }
+    }
   },
   "text": {
     "expansion_allowance": {

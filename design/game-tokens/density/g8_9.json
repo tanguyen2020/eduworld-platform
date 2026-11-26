@@ -17,6 +17,16 @@
         "$type": "dimension",
         "min_height": { "$value": "{size.control.64}", "$description": "Minimum answer tile height (g8_9, F097)." }
       },
+      "outline": {
+        "$type": "dimension",
+        "interactive": { "$value": "{size.border.2}", "$description": "Ink outline of interactive controls and window frames, tier 1 (g8_9, F114, DESIGN_SYSTEM §5.2)." },
+        "info": { "$value": "{size.border.2}", "$description": "Thin ink outline of information surfaces, tier 2 (g8_9, F114)." }
+      },
+      "depth": {
+        "$type": "dimension",
+        "rest": { "$value": "{size.border.3}", "$description": "Hard ink bottom edge of interactive controls at rest, hover and focus (g8_9, F114)." },
+        "pressed": { "$value": "{size.border.1}", "$description": "Bottom edge while pressed; the face sinks by rest − pressed (g8_9, F114)." }
+      },
       "spacing": {
         "$type": "dimension",
         "base": { "$value": "{size.space.12}", "$description": "Base spacing (g8_9)." }

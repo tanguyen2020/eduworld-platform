@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="76" height="46" viewBox="0 0 76 46">
+  <rect x="2" y="6.5" width="72" height="37.5" rx="18.75" fill="{component.toggle.border}"/>
+  <rect x="3.5" y="3.5" width="69" height="35" rx="17.5" fill="{component.toggle.track_on}" stroke="{component.toggle.border}" stroke-width="3"/>
+  <circle cx="54" cy="21" r="12" fill="{component.toggle.knob}" stroke="{component.toggle.border}" stroke-width="3"/>
+</svg>

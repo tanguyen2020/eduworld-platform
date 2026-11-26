@@ -33,7 +33,8 @@
     },
     "red": {
       "50": { "$value": "#FDECEC", "$description": "Soft error background (InlineError panel)." },
-      "700": { "$value": "#C62828", "$description": "Incorrect feedback background." }
+      "700": { "$value": "#C62828", "$description": "Incorrect feedback background; DangerButton background (leave / end only, F114)." },
+      "800": { "$value": "#A31F1F", "$description": "DangerButton background on hover / while pressed (F114)." }
     },
     "pink": {
       "50": { "$value": "#FDECF3", "$description": "Pink answer tile background (F097)." },
@@ -57,7 +58,9 @@
       "400": { "$value": "#D9A866", "$description": "Floating island rock, shade side." }
     },
     "shadow": {
-      "soft": { "$value": "#1E2A4429", "$description": "Soft drop shadow under cards (ink 900 at 16% alpha)." }
+      "soft": { "$value": "#1E2A4429", "$description": "Soft drop shadow under cards (ink 900 at 16% alpha)." },
+      "scrim": { "$value": "#1E2A4480", "$description": "Scrim behind a modal window (ink 900 at 50% alpha, F114)." },
+      "scrim-nested": { "$value": "#1E2A4459", "$description": "Extra scrim behind a dialog opened over a window (ink 900 at 35% alpha; ≈ 70% in total, F114)." }
     },
     "amber": {
       "400": { "$value": "#FFD43B", "$description": "XP badge, reward accent." },
@@ -76,7 +79,10 @@
       "700": { "$value": "#6D28D9", "$description": "Hint button background." }
     },
     "yellow": {
-      "hc": { "$value": "#FFFF00", "$description": "High contrast focus / accent." }
+      "hc": { "$value": "#FFFF00", "$description": "High contrast focus / accent." },
+      "100": { "$value": "#FFF1B8", "$description": "Section tag pill background in panels (F114)." },
+      "400": { "$value": "#FFC93C", "$description": "Selected value: ChoiceChip background, confirmation title bar (F114: blue = action / place, yellow = chosen value)." },
+      "900": { "$value": "#6B4E00", "$description": "Section tag words on the pale yellow pill (F114)." }
     },
     "zone": {
       "$description": "3D zone secondary tones (sky, fog, accents).",
@@ -212,9 +218,11 @@
       "88": { "$value": "88px", "$description": "Control height 88 (answer tile g1_3, F097)." }
     },
     "border": {
+      "1": { "$value": "1px", "$description": "Border 1 (pressed depth edge of interactive controls, F114)." },
       "2": { "$value": "2px", "$description": "Border 2." },
       "3": { "$value": "3px", "$description": "Border 3." },
       "4": { "$value": "4px", "$description": "Border 4 (focus, high contrast)." },
+      "5": { "$value": "5px", "$description": "Border 5 (resting depth edge of interactive controls g1_3, F114)." },
       "6": { "$value": "6px", "$description": "Border 6 (bottom depth edge of answer tiles, F097)." },
       "8": { "$value": "8px", "$description": "Border 8 (sticker outline of the logo wordmark)." }
     },
@@ -246,6 +254,7 @@
     "$type": "number",
     "ratio": {
       "085": { "$value": 0.85, "$description": "0.85×." },
+      "096": { "$value": 0.96, "$description": "0.96× (start scale of a window opening, F114)." },
       "100": { "$value": 1, "$description": "1.0×." },
       "135": { "$value": 1.35, "$description": "1.35× (text_expansion_allowance, CONFIG_DEFAULTS)." },
       "150": { "$value": 1.5, "$description": "1.5× (answer tile growth cap in a landscape window, F099)." },

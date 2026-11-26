@@ -70,6 +70,10 @@ ${dict('DENSITY_BUTTON_MIN_HEIGHT', DENSITY_BANDS.map((b) => [b, String(Math.rou
 ${dict('DENSITY_FONT_STEM', DENSITY_BANDS.map((b) => [b, String(Math.round(px(map.get(`density.${b}.font.stem`).value)))]))}
 ${dict('DENSITY_ANSWER_MIN_HEIGHT', DENSITY_BANDS.map((b) => [b, String(Math.round(px(map.get(`density.${b}.answer.min_height`).value)))]))}
 ${dict('DENSITY_FONT_SMALL', DENSITY_BANDS.map((b) => [b, String(Math.round(px(map.get(`density.${b}.font.small`).value)))]))}
+${dict('DENSITY_OUTLINE_INTERACTIVE', DENSITY_BANDS.map((b) => [b, String(Math.round(px(map.get(`density.${b}.outline.interactive`).value)))]))}
+${dict('DENSITY_OUTLINE_INFO', DENSITY_BANDS.map((b) => [b, String(Math.round(px(map.get(`density.${b}.outline.info`).value)))]))}
+${dict('DENSITY_DEPTH_REST', DENSITY_BANDS.map((b) => [b, String(Math.round(px(map.get(`density.${b}.depth.rest`).value)))]))}
+${dict('DENSITY_DEPTH_PRESSED', DENSITY_BANDS.map((b) => [b, String(Math.round(px(map.get(`density.${b}.depth.pressed`).value)))]))}
 
 # generated Theme resources
 const BASE_THEME_PATH: String = "${themeDir}/${themeFile()}"

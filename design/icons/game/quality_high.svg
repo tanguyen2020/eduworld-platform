@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <g stroke="{component.icon.primary}" stroke-width="3" stroke-linejoin="round">
+    <rect x="7" y="28" width="9" height="12" rx="2" fill="{component.icon.primary}"/>
+    <rect x="19.5" y="18" width="9" height="22" rx="2" fill="{component.icon.primary}"/>
+    <rect x="32" y="8" width="9" height="32" rx="2" fill="{component.icon.primary}"/>
+  </g>
+</svg>

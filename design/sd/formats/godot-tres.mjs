@@ -35,22 +35,29 @@ function resource(type, subs, ext, props, comment) {
  * soft drop shadow (cards); `expand` draws the box that far outside the control (focus ring with a gap).
  * `borderBottom` thickens the bottom edge (F097 answer tiles: candy depth); `padL` widens the left content margin
  * (room for the number badge of an answer tile); `padT` a tall top margin (picture tiles: picture above the label).
+ * F114 cartoon outline: `padB` a bottom margin of its own (room for the hard bottom edge), `sides` border widths per
+ * side (tab column: right border only), `expandTop` a negative value draws the box lower than the control — the face
+ * of a pressed control sinks while the control keeps its height.
  */
-function styleBox(id, { bg, border, borderWidth = 0, borderBottom, radius = 0, padH = 0, padV = 0, padL, padT, shadow, shadowSize = 0, expand = 0 }) {
+function styleBox(id, { bg, border, borderWidth = 0, borderBottom, sides, radius = 0, padH = 0, padV = 0, padL, padT, padB, shadow, shadowSize = 0, expand = 0, expandTop }) {
   const props = [
     ['content_margin_left', gdFloat(padL ?? padH)],
     ['content_margin_top', gdFloat(padT ?? padV)],
     ['content_margin_right', gdFloat(padH)],
-    ['content_margin_bottom', gdFloat(padV)],
+    ['content_margin_bottom', gdFloat(padB ?? padV)],
   ];
   if (bg === undefined) props.push(['draw_center', 'false']);
   else props.push(['bg_color', godotColor(bg)]);
-  if (borderWidth > 0) {
+  if (sides) {
+    for (const side of ['left', 'top', 'right', 'bottom']) if (sides[side] > 0) props.push([`border_width_${side}`, String(sides[side])]);
+    props.push(['border_color', godotColor(border)]);
+  } else if (borderWidth > 0) {
     for (const side of ['left', 'top', 'right', 'bottom']) props.push([`border_width_${side}`, String(side === 'bottom' && borderBottom !== undefined ? borderBottom : borderWidth)]);
     props.push(['border_color', godotColor(border)]);
   }
   for (const c of ['top_left', 'top_right', 'bottom_right', 'bottom_left']) props.push([`corner_radius_${c}`, String(radius)]);
   if (expand > 0) for (const side of ['left', 'top', 'right', 'bottom']) props.push([`expand_margin_${side}`, gdFloat(expand)]);
+  if (expandTop !== undefined && expandTop !== 0) props.push(['expand_margin_top', gdFloat(expandTop)]);
   if (shadow !== undefined && shadowSize > 0) {
     props.push(['shadow_color', godotColor(shadow)], ['shadow_size', String(shadowSize)], ['shadow_offset', `Vector2(0, ${gdFloat(Math.round(shadowSize / 2))})`]);
   }
@@ -58,7 +65,7 @@ function styleBox(id, { bg, border, borderWidth = 0, borderBottom, radius = 0, p
 }
 
 /** Game icons written by the pipeline (formatIcon) and referenced by the Theme (CheckBox boxes). */
-export const THEME_ICONS = { checked: 'checkbox_on', unchecked: 'checkbox_off' };
+export const THEME_ICONS = { checked: 'checkbox_on', unchecked: 'checkbox_off', sliderKnob: 'slider_knob', toggleOn: 'toggle_on', toggleOff: 'toggle_off' };
 
 const sub = (id) => `SubResource("StyleBoxFlat_${id}")`;
 
@@ -115,12 +122,40 @@ export function formatTheme(map, band, version, label) {
     { type: 'FontFile', path: fonts.heading.res, id: '3_heading' },
     { type: 'Texture2D', path: iconRes(THEME_ICONS.checked), id: '4_checkbox_on' },
     { type: 'Texture2D', path: iconRes(THEME_ICONS.unchecked), id: '5_checkbox_off' },
+    { type: 'Texture2D', path: iconRes(THEME_ICONS.sliderKnob), id: '6_slider_knob' },
+    { type: 'Texture2D', path: iconRes(THEME_ICONS.toggleOn), id: '7_toggle_on' },
+    { type: 'Texture2D', path: iconRes(THEME_ICONS.toggleOff), id: '8_toggle_off' },
   ];
   const btn = { radius: btnRadius, padH: space, padV };
-  const outlined = { ...btn, border: v('component.button.secondary.border'), borderWidth: border };
-  const iconBtn = { ...outlined, padH: padIcon, padV: padIcon };
-  const chip = { ...outlined, padV: padIcon };
-  const message = { radius: btnRadius, borderWidth: border, padH: space, padV: halfSpace };
+  // F114 tiered cartoon outline (DESIGN_SYSTEM §5.1, §5.2): one ink colour; tier 1 (interactive controls, window
+  // frames) = outline + hard bottom edge, tier 2 (information surfaces) = thin outline only, tier 3 (stem, question
+  // card, answer tiles, TextButton) unchanged.
+  const ink = v('color.outline');
+  const o = n(`density.${band}.outline.interactive`);
+  const oi = n(`density.${band}.outline.info`);
+  const d = n(`density.${band}.depth.rest`);
+  const dp = n(`density.${band}.depth.pressed`);
+  const sink = d - dp;
+  const lineH = bodyLineHeight(font);
+  /**
+   * Rest and pressed geometry of a tier 1 control whose content line is `inner` px tall: the content stays centred
+   * on the face above the bottom edge and the control keeps the band's minimum height; pressed, the edge shrinks to
+   * `depth.pressed`, the face is drawn `sink` px lower and the content moves down by the same amount.
+   */
+  const raised = (base, inner, minTop = 4) => {
+    const room = Math.max(minH - inner, 2 * minTop + d);
+    const top = Math.max(Math.floor((room - d) / 2), minTop);
+    const bottom = Math.max(room - top, top + d);
+    return {
+      rest: { ...base, border: ink, borderWidth: o, borderBottom: o + d, padT: top, padB: bottom },
+      pressed: { ...base, border: ink, borderWidth: o, borderBottom: o + dp, padT: top + sink, padB: bottom - sink, expandTop: -sink },
+    };
+  };
+  const tb = raised(btn, lineH);
+  const iconLine = Math.max(icon, lineH);
+  const ib = raised({ radius: btnRadius, padH: padIcon }, iconLine);
+  const cb = raised({ radius: btnRadius, padH: space }, iconLine);
+  const message = { radius: btnRadius, borderWidth: oi, padH: space, padV: halfSpace };
   // F097 activity player: answer tiles (6 colour sets), question card, drop zones, soft verdict panels.
   const stem = n(`density.${band}.font.stem`);
   const tileH = n(`density.${band}.answer.min_height`);
@@ -135,17 +170,31 @@ export function formatTheme(map, band, version, label) {
   const zone = { radius: tileR, borderWidth: border, borderBottom: edge, padH: space, padV: tilePadV };
   const shadow = { shadow: v('component.form_card.shadow'), shadowSize: n('component.form_card.shadow_size') };
   // Picture tile (S02 presets): the picture fills the top margin (1.5 × the band's touch target), the label below.
-  const picture = { ...chip, padH: halfSpace, padV: halfSpace, padT: Math.round(minH * 1.5) + halfSpace };
+  const picTop = Math.round(minH * 1.5) + halfSpace;
+  const picture = { radius: btnRadius, padH: halfSpace, border: ink, borderWidth: o };
+  const pictureRest = { ...picture, borderBottom: o + d, padT: picTop - d, padB: halfSpace + d };
+  const picturePressed = { ...picture, borderBottom: o + dp, padT: picTop - d + sink, padB: halfSpace + d - sink, expandTop: -sink };
+  // Window frames (panel, dialog, title bar): outline and bottom edge, never pressed.
+  const frame = { border: ink, borderWidth: o, borderBottom: o + d };
+  const titleBar = { ...frame, radius: btnRadius, padH: space, padT: halfSpace, padB: halfSpace + d };
+  // Slider groove and filled part: outline + edge; the groove height comes from the content margins.
+  const groove = { ...frame, radius: btnRadius, padH: 0, padT: halfSpace, padB: halfSpace + d };
   const subs = [
-    styleBox('button_normal', { ...btn, bg: v('component.button.primary.bg') }),
-    styleBox('button_hover', { ...btn, bg: v('component.button.primary.bg_pressed') }),
-    styleBox('button_pressed', { ...btn, bg: v('component.button.primary.bg_pressed') }),
-    styleBox('button_disabled', { ...btn, bg: v('component.progress.track') }),
-    styleBox('secondary_normal', { ...btn, bg: v('component.button.secondary.bg'), border: v('component.button.secondary.border'), borderWidth: border }),
-    styleBox('hint_normal', { ...btn, bg: v('component.hint_button.bg') }),
-    styleBox('panel', { bg: v('component.panel.bg'), border: v('component.panel.border'), borderWidth: border, radius: n('component.panel.radius'), padH: n('component.panel.padding'), padV: n('component.panel.padding') }),
+    styleBox('button_normal', { ...tb.rest, bg: v('component.button.primary.bg') }),
+    styleBox('button_hover', { ...tb.rest, bg: v('component.button.primary.bg_pressed') }),
+    styleBox('button_pressed', { ...tb.pressed, bg: v('component.button.primary.bg_pressed') }),
+    styleBox('button_disabled', { ...tb.rest, bg: v('component.progress.track') }),
+    styleBox('secondary_normal', { ...tb.rest, bg: v('component.button.secondary.bg') }),
+    styleBox('secondary_hover', { ...tb.rest, bg: v('component.button.secondary.bg_pressed') }),
+    styleBox('secondary_pressed', { ...tb.pressed, bg: v('component.button.secondary.bg_pressed') }),
+    styleBox('danger_normal', { ...tb.rest, bg: v('component.button.danger.bg') }),
+    styleBox('danger_hover', { ...tb.rest, bg: v('component.button.danger.bg_pressed') }),
+    styleBox('danger_pressed', { ...tb.pressed, bg: v('component.button.danger.bg_pressed') }),
+    styleBox('hint_normal', { ...tb.rest, bg: v('component.hint_button.bg') }),
+    styleBox('hint_pressed', { ...tb.pressed, bg: v('component.hint_button.bg') }),
+    styleBox('panel', { ...frame, bg: v('component.panel.bg'), border: v('component.panel.border'), radius: n('component.panel.radius'), padH: n('component.panel.padding'), padV: n('component.panel.padding') }),
     styleBox('quest_card', { bg: v('component.quest_card.bg'), radius: n('component.quest_card.radius'), padH: space, padV: space }),
-    styleBox('hud', { bg: v('component.hud.bg'), radius: btnRadius, padH: space, padV: Math.round(space / 2) }),
+    styleBox('hud', { bg: v('component.hud.bg'), border: ink, borderWidth: oi, radius: btnRadius, padH: space, padV: Math.round(space / 2) }),
     styleBox('voice_caption', { bg: v('component.voice_caption.bg'), radius: btnRadius, padH: space, padV: Math.round(space / 2) }),
     styleBox('feedback_correct', { bg: v('component.feedback.correct_bg'), border: v('component.feedback.correct_border'), borderWidth: border, radius: btnRadius, padH: space, padV: Math.round(space / 2) }),
     styleBox('feedback_incorrect', { bg: v('component.feedback.try_bg'), border: v('component.feedback.try_border'), borderWidth: border, radius: btnRadius, padH: space, padV: Math.round(space / 2) }),
@@ -164,28 +213,29 @@ export function formatTheme(map, band, version, label) {
     styleBox('tag_correct', { ...tag, bg: v('component.answer_tile.tag_correct_bg') }),
     styleBox('tag_try', { ...tag, bg: v('component.answer_tile.tag_try_bg') }),
     styleBox('tag_pending', { ...tag, borderWidth: border, bg: v('component.answer_tile.tag_pending_bg'), border: v('component.answer_tile.tag_pending_border') }),
-    styleBox('picture_normal', { ...picture, bg: v('component.button.secondary.bg') }),
-    styleBox('picture_hover', { ...picture, bg: v('component.button.secondary.bg_hover') }),
-    styleBox('picture_selected', { ...picture, bg: v('component.chip.selected_bg'), border: v('component.chip.selected_bg') }),
+    styleBox('picture_normal', { ...pictureRest, bg: v('component.choice_chip.bg') }),
+    styleBox('picture_hover', { ...pictureRest, bg: v('component.button.secondary.bg_hover') }),
+    styleBox('picture_selected', { ...picturePressed, bg: v('component.choice_chip.selected_bg') }),
     styleBox('question_card', { bg: v('component.question_card.bg'), border: v('component.question_card.border'), borderWidth: border, radius: tileR, padH: space, padV: space, ...shadow }),
     styleBox('drop_zone', { ...zone, bg: v('component.drop_zone.bg'), border: v('component.drop_zone.border') }),
     styleBox('drop_zone_hover', { ...zone, bg: v('component.drop_zone.bg_hover'), border: v('component.drop_zone.border') }),
     styleBox('drop_zone_pressed', { ...zone, bg: v('component.drop_zone.bg_hover'), border: v('color.accent.primary') }),
     styleBox('activity_board', { bg: v('component.activity_board.bg'), border: v('component.activity_board.border'), borderWidth: border, radius: n('component.panel.radius'), padH: space, padV: space, ...shadow }),
-    styleBox('progress_bg', { bg: v('component.progress.track'), radius: btnRadius }),
-    styleBox('progress_fill', { bg: v('component.progress.fill'), radius: btnRadius }),
+    styleBox('progress_bg', { bg: v('component.progress.track'), border: ink, borderWidth: oi, radius: btnRadius }),
+    styleBox('progress_fill', { bg: v('component.progress.fill'), border: ink, borderWidth: oi, radius: btnRadius }),
     // Single-line fields are as tall as the band's minimum control height (S01: ≥ 48 px, g1_3 ≥ 64 px).
     styleBox('line_edit', { bg: v('color.surface.panel_alt'), border: v('component.button.secondary.border'), borderWidth: border, radius: btnRadius, padH: space, padV }),
     styleBox('line_edit_focus', { bg: v('color.surface.panel_alt'), border: v('component.focus_ring.color'), borderWidth: focusW, radius: btnRadius, padH: space, padV }),
     styleBox('line_edit_read_only', { bg: v('color.surface.panel_alt'), border: v('component.progress.track'), borderWidth: border, radius: btnRadius, padH: space, padV }),
     // Keyboard/gamepad focus: an outline drawn just outside the control (visible on filled and outlined buttons).
     styleBox('focus_ring', { border: v('component.focus_ring.color'), borderWidth: focusW, radius: btnRadius + focusW, expand: focusW + Math.round(space4 / 2) }),
-    styleBox('icon_normal', { ...iconBtn, bg: v('component.button.secondary.bg') }),
-    styleBox('icon_hover', { ...iconBtn, bg: v('component.button.secondary.bg_hover') }),
-    styleBox('icon_pressed', { ...iconBtn, bg: v('component.button.secondary.bg_pressed') }),
-    styleBox('chip_normal', { ...chip, bg: v('component.button.secondary.bg') }),
-    styleBox('chip_hover', { ...chip, bg: v('component.button.secondary.bg_hover') }),
-    styleBox('chip_selected', { ...chip, bg: v('component.chip.selected_bg'), border: v('component.chip.selected_bg') }),
+    styleBox('icon_normal', { ...ib.rest, bg: v('component.button.secondary.bg') }),
+    styleBox('icon_hover', { ...ib.rest, bg: v('component.button.secondary.bg_pressed') }),
+    styleBox('icon_pressed', { ...ib.pressed, bg: v('component.button.secondary.bg_pressed') }),
+    // F114: a chosen chip is pressed in (yellow, sunk face, short edge) with a tick; not chosen = white, raised.
+    styleBox('chip_normal', { ...cb.rest, bg: v('component.choice_chip.bg') }),
+    styleBox('chip_hover', { ...cb.rest, bg: v('component.button.secondary.bg_hover') }),
+    styleBox('chip_selected', { ...cb.pressed, bg: v('component.choice_chip.selected_bg') }),
     styleBox('text_normal', { ...btn }),
     styleBox('text_hover', { ...btn, bg: v('component.button.secondary.bg_hover') }),
     styleBox('text_pressed', { ...btn, bg: v('component.button.secondary.bg_pressed') }),
@@ -193,10 +243,45 @@ export function formatTheme(map, band, version, label) {
     styleBox('checkbox_hover', { radius: btnRadius, padH: space4, padV: padBox, bg: v('component.button.secondary.bg_hover') }),
     styleBox('inline_error', { ...message, bg: v('component.inline_error.bg'), border: v('component.inline_error.border') }),
     styleBox('info_banner', { ...message, bg: v('component.info_banner.bg'), border: v('component.info_banner.border') }),
-    styleBox('form_card', { bg: v('component.form_card.bg'), border: v('component.form_card.border'), borderWidth: border, radius: n('component.panel.radius'), padH: n('component.form_card.padding'), padV: n('component.form_card.padding'), shadow: v('component.form_card.shadow'), shadowSize: n('component.form_card.shadow_size') }),
-    styleBox('speech_bubble', { bg: v('component.speech_bubble.bg'), border: v('component.speech_bubble.border'), borderWidth: border, radius: n('component.panel.radius'), padH: space, padV: space }),
+    styleBox('form_card', { ...frame, bg: v('component.form_card.bg'), border: v('component.form_card.border'), radius: n('component.panel.radius'), padH: n('component.form_card.padding'), padV: n('component.form_card.padding') }),
+    styleBox('speech_bubble', { bg: v('component.speech_bubble.bg'), border: v('component.speech_bubble.border'), borderWidth: oi, radius: n('component.panel.radius'), padH: space, padV: space }),
+    // F114 new variants: HUD chip (tier 2 button), section tag, value chip, scrims, title bars, tab column, tabs, slider.
+    styleBox('hud_chip', { ...btn, bg: v('component.button.secondary.bg'), border: ink, borderWidth: oi }),
+    styleBox('hud_chip_hover', { ...btn, bg: v('component.button.secondary.bg_pressed'), border: ink, borderWidth: oi }),
+    styleBox('section_tag', { bg: v('component.section_tag.bg'), border: v('component.section_tag.border'), borderWidth: oi, radius: tileR, padH: space, padV: space4 }),
+    styleBox('value_chip', { bg: v('component.settings.value_bg'), border: ink, borderWidth: oi, radius: btnRadius, padH: halfSpace, padV: Math.round(space4 / 2) }),
+    styleBox('scrim', { bg: v('color.overlay.scrim') }),
+    styleBox('scrim_nested', { bg: v('color.overlay.scrim_nested') }),
+    styleBox('title_bar', { ...titleBar, bg: v('component.settings.title_bg') }),
+    styleBox('confirm_title_bar', { ...titleBar, bg: v('component.settings.confirm_title_bg') }),
+    styleBox('tab_column', { bg: v('component.settings.tab_column_bg'), border: ink, sides: { right: o }, radius: btnRadius, padH: halfSpace, padV: halfSpace }),
+    styleBox('tab_idle', { ...tb.rest, border: undefined, borderWidth: 0, borderBottom: undefined }),
+    styleBox('tab_hover', { ...tb.rest, border: undefined, borderWidth: 0, borderBottom: undefined, bg: v('component.settings.tab_hover_bg') }),
+    styleBox('tab_idle_pressed', { ...tb.pressed, border: undefined, borderWidth: 0, borderBottom: undefined, expandTop: undefined, bg: v('component.settings.tab_hover_bg') }),
+    styleBox('tab_selected', { ...tb.rest, bg: v('component.settings.tab_selected_bg') }),
+    styleBox('tab_selected_pressed', { ...tb.pressed, bg: v('component.settings.tab_selected_bg') }),
+    styleBox('slider', { ...groove, bg: v('component.slider.track') }),
+    styleBox('slider_fill', { ...groove, bg: v('component.slider.fill') }),
   ];
   const c = (p) => godotColor(v(p));
+  // Icons keep their own colours (white modulate) unless a variant tints a white icon (chosen chip tick, tabs).
+  const white = godotColor(v('palette.white'));
+  const iconColors = (type, idle, chosen = idle) => [
+    [`${type}/colors/icon_disabled_color`, idle],
+    [`${type}/colors/icon_focus_color`, idle],
+    [`${type}/colors/icon_hover_color`, idle],
+    [`${type}/colors/icon_hover_pressed_color`, chosen],
+    [`${type}/colors/icon_normal_color`, idle],
+    [`${type}/colors/icon_pressed_color`, chosen],
+  ];
+  const fontColors = (type, color, pressed = color) => [
+    [`${type}/colors/font_color`, color],
+    [`${type}/colors/font_disabled_color`, color],
+    [`${type}/colors/font_focus_color`, color],
+    [`${type}/colors/font_hover_color`, color],
+    [`${type}/colors/font_hover_pressed_color`, pressed],
+    [`${type}/colors/font_pressed_color`, pressed],
+  ];
   const props = [
     ['default_font', 'ExtResource("1_body")'],
     ['default_font_size', String(font)],
@@ -228,11 +313,12 @@ export function formatTheme(map, band, version, label) {
     ['CheckBox/styles/normal', sub('checkbox')],
     ['CheckBox/styles/pressed', sub('checkbox')],
     ['ChoiceChip/base_type', '&"Button"'],
-    ['ChoiceChip/colors/font_color', c('component.button.secondary.text')],
-    ['ChoiceChip/colors/font_focus_color', c('component.button.secondary.text')],
-    ['ChoiceChip/colors/font_hover_color', c('component.button.secondary.text')],
-    ['ChoiceChip/colors/font_hover_pressed_color', c('component.chip.selected_text')],
-    ['ChoiceChip/colors/font_pressed_color', c('component.chip.selected_text')],
+    ['ChoiceChip/colors/font_color', c('component.choice_chip.text')],
+    ['ChoiceChip/colors/font_focus_color', c('component.choice_chip.text')],
+    ['ChoiceChip/colors/font_hover_color', c('component.choice_chip.text')],
+    ['ChoiceChip/colors/font_hover_pressed_color', c('component.choice_chip.selected_text')],
+    ['ChoiceChip/colors/font_pressed_color', c('component.choice_chip.selected_text')],
+    ...iconColors('ChoiceChip', white, c('component.choice_chip.selected_text')),
     ['ChoiceChip/constants/h_separation', String(halfSpace)],
     ['ChoiceChip/constants/icon_max_width', String(icon)],
     ['ChoiceChip/styles/disabled', sub('chip_normal')],
@@ -372,8 +458,8 @@ export function formatTheme(map, band, version, label) {
     ['PictureTile/colors/font_color', c('component.button.secondary.text')],
     ['PictureTile/colors/font_focus_color', c('component.button.secondary.text')],
     ['PictureTile/colors/font_hover_color', c('component.button.secondary.text')],
-    ['PictureTile/colors/font_hover_pressed_color', c('component.chip.selected_text')],
-    ['PictureTile/colors/font_pressed_color', c('component.chip.selected_text')],
+    ['PictureTile/colors/font_hover_pressed_color', c('component.choice_chip.selected_text')],
+    ['PictureTile/colors/font_pressed_color', c('component.choice_chip.selected_text')],
     ['PictureTile/styles/disabled', sub('picture_normal')],
     ['PictureTile/styles/focus', sub('focus_ring')],
     ['PictureTile/styles/hover', sub('picture_hover')],
@@ -398,7 +484,12 @@ export function formatTheme(map, band, version, label) {
     ['HeadingLabel/fonts/font', 'ExtResource("3_heading")'],
     ['HintButton/base_type', '&"Button"'],
     ['HintButton/colors/font_color', c('component.hint_button.text')],
+    ['HintButton/colors/font_focus_color', c('component.hint_button.text')],
+    ['HintButton/colors/font_hover_color', c('component.hint_button.text')],
+    ['HintButton/colors/font_pressed_color', c('component.hint_button.text')],
+    ['HintButton/styles/hover', sub('hint_normal')],
     ['HintButton/styles/normal', sub('hint_normal')],
+    ['HintButton/styles/pressed', sub('hint_pressed')],
     ['HudLabel/base_type', '&"Label"'],
     ['HudLabel/colors/font_color', c('component.hud.text')],
     ['HudPanel/base_type', '&"PanelContainer"'],
@@ -460,7 +551,10 @@ export function formatTheme(map, band, version, label) {
     ['SecondaryButton/colors/font_focus_color', c('component.button.secondary.text')],
     ['SecondaryButton/colors/font_hover_color', c('component.button.secondary.text')],
     ['SecondaryButton/colors/font_pressed_color', c('component.button.secondary.text')],
+    ['SecondaryButton/styles/disabled', sub('secondary_normal')],
+    ['SecondaryButton/styles/hover', sub('secondary_hover')],
     ['SecondaryButton/styles/normal', sub('secondary_normal')],
+    ['SecondaryButton/styles/pressed', sub('secondary_pressed')],
     ['SpeechBubble/base_type', '&"PanelContainer"'],
     ['SpeechBubble/styles/panel', sub('speech_bubble')],
     ['SpeechBubbleLabel/base_type', '&"Label"'],
@@ -489,6 +583,95 @@ export function formatTheme(map, band, version, label) {
     ['CaptionLabel/fonts/font', 'ExtResource("2_body_bold")'],
     ['MediaStage/base_type', '&"PanelContainer"'],
     ['MediaStage/styles/panel', sub('media_stage')],
+    // F114 (DESIGN_SYSTEM §5.1): danger button (leave / end only), HUD chip (tier 2 button), section tag, value chip,
+    // scrims, window title bars, Settings tab column and tabs, toggle switch, slider.
+    ['DangerButton/base_type', '&"Button"'],
+    ...fontColors('DangerButton', c('component.button.danger.text')),
+    ['DangerButton/styles/disabled', sub('danger_normal')],
+    ['DangerButton/styles/focus', sub('focus_ring')],
+    ['DangerButton/styles/hover', sub('danger_hover')],
+    ['DangerButton/styles/hover_pressed', sub('danger_pressed')],
+    ['DangerButton/styles/normal', sub('danger_normal')],
+    ['DangerButton/styles/pressed', sub('danger_pressed')],
+    ['HudChip/base_type', '&"Button"'],
+    ...fontColors('HudChip', c('component.button.secondary.text')),
+    ['HudChip/styles/disabled', sub('hud_chip')],
+    ['HudChip/styles/focus', sub('focus_ring')],
+    ['HudChip/styles/hover', sub('hud_chip_hover')],
+    ['HudChip/styles/hover_pressed', sub('hud_chip_hover')],
+    ['HudChip/styles/normal', sub('hud_chip')],
+    ['HudChip/styles/pressed', sub('hud_chip_hover')],
+    ['SectionTag/base_type', '&"Label"'],
+    ['SectionTag/colors/font_color', c('component.section_tag.text')],
+    ['SectionTag/font_sizes/font_size', String(small)],
+    ['SectionTag/fonts/font', 'ExtResource("2_body_bold")'],
+    ['SectionTag/styles/normal', sub('section_tag')],
+    ['ValueChip/base_type', '&"Label"'],
+    ['ValueChip/colors/font_color', c('component.settings.value_text')],
+    ['ValueChip/fonts/font', 'ExtResource("2_body_bold")'],
+    ['ValueChip/styles/normal', sub('value_chip')],
+    ['Scrim/base_type', '&"Panel"'],
+    ['Scrim/styles/panel', sub('scrim')],
+    ['ScrimNested/base_type', '&"Panel"'],
+    ['ScrimNested/styles/panel', sub('scrim_nested')],
+    ['WindowTitleBar/base_type', '&"PanelContainer"'],
+    ['WindowTitleBar/styles/panel', sub('title_bar')],
+    ['WindowTitleLabel/base_type', '&"Label"'],
+    ['WindowTitleLabel/colors/font_color', c('component.settings.title_text')],
+    ['WindowTitleLabel/font_sizes/font_size', String(heading)],
+    ['WindowTitleLabel/fonts/font', 'ExtResource("3_heading")'],
+    ['ConfirmTitleBar/base_type', '&"PanelContainer"'],
+    ['ConfirmTitleBar/styles/panel', sub('confirm_title_bar')],
+    ['ConfirmTitleLabel/base_type', '&"Label"'],
+    ['ConfirmTitleLabel/colors/font_color', c('component.settings.confirm_title_text')],
+    ['ConfirmTitleLabel/font_sizes/font_size', String(heading)],
+    ['ConfirmTitleLabel/fonts/font', 'ExtResource("3_heading")'],
+    ['SettingsTabColumn/base_type', '&"PanelContainer"'],
+    ['SettingsTabColumn/styles/panel', sub('tab_column')],
+    ['TabButton/base_type', '&"Button"'],
+    ...fontColors('TabButton', c('component.settings.tab_text')),
+    ...iconColors('TabButton', c('component.settings.tab_icon')),
+    ['TabButton/constants/h_separation', String(halfSpace)],
+    ['TabButton/constants/icon_max_width', String(icon)],
+    ['TabButton/styles/disabled', sub('tab_idle')],
+    ['TabButton/styles/focus', sub('focus_ring')],
+    ['TabButton/styles/hover', sub('tab_hover')],
+    ['TabButton/styles/hover_pressed', sub('tab_idle_pressed')],
+    ['TabButton/styles/normal', sub('tab_idle')],
+    ['TabButton/styles/pressed', sub('tab_idle_pressed')],
+    ['TabButtonSelected/base_type', '&"Button"'],
+    ...fontColors('TabButtonSelected', c('component.settings.tab_selected_text')),
+    ...iconColors('TabButtonSelected', c('component.settings.tab_selected_text')),
+    ['TabButtonSelected/constants/h_separation', String(halfSpace)],
+    ['TabButtonSelected/constants/icon_max_width', String(icon)],
+    ['TabButtonSelected/styles/disabled', sub('tab_selected')],
+    ['TabButtonSelected/styles/focus', sub('focus_ring')],
+    ['TabButtonSelected/styles/hover', sub('tab_selected')],
+    ['TabButtonSelected/styles/hover_pressed', sub('tab_selected_pressed')],
+    ['TabButtonSelected/styles/normal', sub('tab_selected')],
+    ['TabButtonSelected/styles/pressed', sub('tab_selected_pressed')],
+    ['ToggleSwitch/base_type', '&"CheckButton"'],
+    ...fontColors('ToggleSwitch', c('component.toggle.text')),
+    ['ToggleSwitch/constants/h_separation', String(halfSpace)],
+    // The switch icon keeps its own size (Button's icon_max_width would shrink it to the button icon size).
+    ['ToggleSwitch/constants/icon_max_width', '0'],
+    ['ToggleSwitch/icons/checked', 'ExtResource("7_toggle_on")'],
+    ['ToggleSwitch/icons/checked_disabled', 'ExtResource("7_toggle_on")'],
+    ['ToggleSwitch/icons/checked_mirrored', 'ExtResource("7_toggle_on")'],
+    ['ToggleSwitch/icons/unchecked', 'ExtResource("8_toggle_off")'],
+    ['ToggleSwitch/icons/unchecked_disabled', 'ExtResource("8_toggle_off")'],
+    ['ToggleSwitch/icons/unchecked_mirrored', 'ExtResource("8_toggle_off")'],
+    ['ToggleSwitch/styles/focus', sub('focus_ring')],
+    ['ToggleSwitch/styles/hover', sub('checkbox_hover')],
+    ['ToggleSwitch/styles/hover_pressed', sub('checkbox_hover')],
+    ['ToggleSwitch/styles/normal', sub('checkbox')],
+    ['ToggleSwitch/styles/pressed', sub('checkbox')],
+    ['HSlider/icons/grabber', 'ExtResource("6_slider_knob")'],
+    ['HSlider/icons/grabber_disabled', 'ExtResource("6_slider_knob")'],
+    ['HSlider/icons/grabber_highlight', 'ExtResource("6_slider_knob")'],
+    ['HSlider/styles/grabber_area', sub('slider_fill')],
+    ['HSlider/styles/grabber_area_highlight', sub('slider_fill')],
+    ['HSlider/styles/slider', sub('slider')],
     ['VoiceCaption/base_type', '&"PanelContainer"'],
     ['VoiceCaption/styles/panel', sub('voice_caption')],
     ['VoiceCaptionLabel/base_type', '&"Label"'],

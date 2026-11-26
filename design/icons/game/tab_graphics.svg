@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <g fill="none" stroke="{component.icon.on_accent}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="9" width="38" height="30" rx="5"/>
+    <path d="M9 35l10-11 7 7 5-5 9 9"/>
+  </g>
+  <circle cx="32" cy="18" r="4" fill="{component.icon.on_accent}"/>
+</svg>
