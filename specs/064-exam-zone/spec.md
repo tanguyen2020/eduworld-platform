@@ -109,6 +109,8 @@ Khi nhà trường giao bài/đề mới, học sinh thấy toast và badge 🔔
 | F064-AC-22 | KHI học sinh chạm toast/badge, game client PHẢI mở tab "Nhà trường giao" và xóa badge; thông báo PHẢI không chứa tên học sinh khác hay điểm | FR-NTF-001 · AGENTS R16 | — |
 | F064-AC-23 | game client PHẢI không gửi push ngoài game và không tự làm mới định kỳ khi app ở nền | FR-NTF-001 · [PERFORMANCE_BUDGET §12](../../docs/08-game-client/PERFORMANCE_BUDGET.md) | — |
 
+> **F123 (2026-11-27):** thông báo trong game có server (realtime + hộp thông báo) thay cơ chế tạm của F064: toast từng bài mới (F064-AC-20) nay là thông báo `assignment_new` của server; số trên chuông là `unread_count` của server; chạm chuông mở hộp thông báo, chạm toast bài giao vẫn mở tab "Nhà trường giao" (F064-AC-22). Toast gộp đầu phiên (F064-AC-21) và F064-AC-23 giữ nguyên. Chi tiết: [F123 spec](../123-in-game-notifications/spec.md), [STUDENT_GAME_UX_CORE S03 §6c](../../docs/05-ux/STUDENT_GAME_UX_CORE.md#s03--main-hub-hud).
+
 ### Edge Cases
 
 - NẾU học sinh có `accommodations[]`, THÌ `deadline_at` server đã tính; client chỉ hiển thị (FR-EXM-009 phía server).

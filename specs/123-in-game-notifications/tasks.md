@@ -6,7 +6,7 @@
 
 - [x] T001 Durable consumer `chat.notify_friend_request`, `chat.notify_party_invitation`, `chat.notify_assignment`, `chat.notify_progression` (FilterSubjects, DLQ `DLQ_CHAT`) trong consumer `chat-notifier` (profile `worker-chat`) — file: `src/backend/modules/chat/internal/presentation/consumer/notifier.go` — một handler `Notifier` trong `notifier.go` cho cả năm consumer (thêm `chat.notify_moderation` cho `report.resolved` của F121), chạy profile `worker-events`
 - [x] T002 [P] Adapter facade `learning` qua `src/backend/pkg/modcall` (TenantScope, deadline, ánh xạ lỗi) — file: `src/backend/modules/chat/internal/infrastructure/modules/learning.go`
-- [ ] T003 [P] Khóa dịch `ui.notification.*` (mọi `message_code` của `MessageCatalog`, nhãn inbox, toast, cài đặt popup) — file: `src/game/locale/vi.po`, `src/game/locale/en.po`
+- [x] T003 [P] Khóa dịch `ui.notification.*` (mọi `message_code` của `MessageCatalog`, nhãn inbox, toast, cài đặt popup) — file: `src/game/locale/vi.po`, `src/game/locale/en.po` — 7 `message_code` (`friend.request_received`, `party.invitation_received`, `assignment.new`, `assignment.results_released`, `progression.level_reached`, `achievement.unlocked`, `moderation.report_handled`) + `generic`, `bell_unread`, `inbox.*`, `ui.settings.notification*`, `ui.settings.tab.notifications`; `messages.pot` + `xx_PS.po` sinh lại; `extract_pot --check`, `pseudo_locale --check` OK; test `test_every_catalog_message_code_has_vi_and_en_texts`
 
 ## Phase 2: Foundational (chặn mọi user story)
 
@@ -58,20 +58,20 @@
 
 ### Tests cho User Story 4
 
-- [ ] T024 [P] [US4] Unit F123-AC-15, F123-AC-18: `NotificationService` tải `listNotifications?unread=true` khi vào game/resync; `notification.item.created` → badge; mở inbox → `notification.item.mark_read`; bấm → `EventBus.ui_requested` theo `action` (FakeApiClient, FakeRealtime) — file: `src/game/tests/unit/notifications/test_notification_service.gd` — phải FAIL trước khi code
-- [ ] T025 [P] [US4] Scene test F123-AC-16, F123-AC-17, F123-AC-19: toast theo `kind` (lời mời, bài giao), tắt popup/đang trong trận hoặc bài kiểm tra → chỉ badge, âm thanh tắt mặc định; nội dung theo `message_code` + `params`, fallback `title`/`body`; Theme token, lint override — file: `src/game/tests/scene/notifications/test_notification_ui.gd`
-- [ ] T026 [US4] Integration headless: lời mời kết bạn thật → toast + badge trên client nhận — file: `src/game/tests/integration/test_notifications_e2e.gd`
+- [x] T024 [P] [US4] Unit F123-AC-15, F123-AC-18: `NotificationService` tải `listNotifications?unread=true` khi vào game/resync; `notification.item.created` → badge; mở inbox → `notification.item.mark_read`; bấm → `EventBus.ui_requested` theo `action` (FakeApiClient, FakeRealtime) — file: `src/game/tests/unit/notifications/test_notification_service.gd` — phải FAIL trước khi code — 24/24 pass (RealtimeHarness: FakeHttp + FakeWebSocketPeer, fixture sinh `openapi/listNotifications.200.json`, `asyncapi/notification.item.created.*`)
+- [x] T025 [P] [US4] Scene test F123-AC-16, F123-AC-17, F123-AC-19: toast theo `kind` (lời mời, bài giao), tắt popup/đang trong trận hoặc bài kiểm tra → chỉ badge, âm thanh tắt mặc định; nội dung theo `message_code` + `params`, fallback `title`/`body`; Theme token, lint override — file: `src/game/tests/scene/notifications/test_notification_ui.gd` — 12/12 pass (thay `test_notification_bell.gd` của F064); ma trận khối `test_grade_band_matrix.gd` thêm 3 test + tab Cài đặt (27/27 pass); `lint_theme_overrides` OK
+- [x] T026 [US4] Integration headless: lời mời kết bạn thật → toast + badge trên client nhận — file: `src/game/tests/integration/test_notifications_e2e.gd` — viết xong (realtime thật + `sendFriendRequest` + từ chối lại để chạy lặp), bỏ qua khi thiếu `EDUWORLD_IT_API_BASE_URL` như các test live khác; chưa chạy với backend (xem T031)
 
 ### Implementation cho User Story 4
 
-- [ ] T027 [P] [US4] `NotificationService` + `NotificationModel` (đăng ký dispatcher `notification.*` của `RealtimeClient`) — file: `src/game/scripts/notifications/notification_service.gd`, `src/game/scripts/notifications/models/notification_model.gd`
-- [ ] T028 [US4] `NotificationBadge` (HUD), `NotificationToast`, `NotificationInbox`, tùy chọn popup trong Cài đặt — file: `src/game/scenes/ui/notifications/`, `src/game/scripts/core/settings.gd`
+- [x] T027 [P] [US4] `NotificationService` + `NotificationModel` (đăng ký dispatcher `notification.*` của `RealtimeClient`) — file: `src/game/scripts/notifications/notification_service.gd`, `src/game/scripts/notifications/models/notification_model.gd` — cùng `WsMessageSchemas` (`notification.item.created`), `ServiceLocator` (resync, `quiet_check` bài kiểm tra/thử thách), `ExamService.in_progress()`, `InventoryService` đọc `kind`; fixture sinh bằng `node src/game/tools/gen_fixtures.mjs` (không sửa tay, `--check` OK)
+- [x] T028 [US4] `NotificationBadge` (HUD), `NotificationToast`, `NotificationInbox`, tùy chọn popup trong Cài đặt — file: `src/game/scenes/ui/notifications/`, `src/game/scripts/core/settings.gd` — badge = `NotificationBell` + viên thuốc `CountBadge` (token mới `tokens@0.18.0`), `ToastStack` dùng `NotificationToast`, `NotificationInbox` (màn `notification_inbox` của `UiScreenRegistry`), tab Cài đặt "Thông báo" (`Settings.notification_popups`); ảnh trước/sau + bảng khối ở [quickstart §5](quickstart.md)
 
 ## Phase 7: Polish & Cross-Cutting
 
 - [x] T029 [P] DATABASE_DESIGN §2.11 thêm `social.notifications`; VALKEY_DESIGN §3.1 `ew:chat:ntf:unread:*`; EVENT_DESIGN §3.2 consumer chat cho `party.invitation_sent`, `level.reached`, `achievement.unlocked`, `assignment.results_released`; CHANGELOG — file: `docs/07-backend/DATABASE_DESIGN.md`, `docs/07-backend/VALKEY_DESIGN.md`, `docs/07-backend/EVENT_DESIGN.md`, `CHANGELOG.md` — thêm CHAT_SYSTEM §10, SOCIAL_SYSTEM §8, API_DESIGN §9.11, MONITORING
 - [x] T030 [P] Metric `eduworld_notifications_*` + alert consumer pending — file: `src/backend/modules/chat/internal/infrastructure/observability/metrics.go` — `observability/notification_metrics.go`, alert `deploy/observability/prometheus/alerts/chat.yml`
-- [ ] T031 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
+- [ ] T031 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — backend: bằng chứng test ở T011–T023; Godot: test + ảnh ở [quickstart §4–§5](quickstart.md). Kịch bản end-to-end với full stack chưa chạy (không làm xáo trộn stack local đang chạy của owner)
 
 ## Dependencies & Execution Order
 
@@ -80,8 +80,8 @@
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F123-AC-* có test pass (ghi mã test/TC)
-- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration`, `make test-contract` xanh cho module `chat` (và phần module `learning`); `make godot-test` xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F123-AC-* có test pass (ghi mã test/TC) — AC-01…14: T011–T023; AC-15…19: `test_notification_service.gd`, `test_notification_ui.gd`, `test_grade_band_matrix.gd`
+- [x] `make gen-check`, `make lint`, `make test`, `make test-integration`, `make test-contract` xanh cho module `chat` (và phần module `learning`); `make godot-test` xanh — Godot: 1135 test case — 1123 pass, 0 lỗi, 0 fail, 12 bỏ qua (test live cần backend); `scan_artifact_test` 22/22; export Web + `check_web_export` + `scan_artifact` OK
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — fake chỉ trong `tests/` và `tools/` (capture)
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi — STUDENT_GAME_UX_CORE S03 §6c, STUDENT_GAME_UX_SOCIAL §10, DESIGN_SYSTEM §5.1, GODOT_ARCHITECTURE, CONFIG_DEFAULTS `game_notification_popups`, CHANGELOG, design/CHANGELOG
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
