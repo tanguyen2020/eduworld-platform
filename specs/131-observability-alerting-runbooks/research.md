@@ -22,6 +22,6 @@
 
 ## R4. Synthetic monitoring
 
-- **Decision**: Service `synthetic-probe` (image `grafana/k6` + supercronic) chạy 2 script mỗi 5 phút; xuất metric qua Prometheus remote write (`k6 run -o experimental-prometheus-rw`) với tên `eduworld_synthetic_probe_success{probe}` và `eduworld_synthetic_probe_duration_seconds{probe}` (mapping trong script); credential QA qua Docker secret.
+- **Decision**: Service `synthetic-probe` (image `grafana/k6` + supercronic) chạy 2 script mỗi 5 phút; credential QA qua Docker secret. **Cập nhật khi triển khai (2026-11-27):** kết quả ghi thành textfile cho node_exporter (`handleSummary` → `eduworld_synthetic_probe_success{probe,result}`, `_duration_seconds`, `_last_run_timestamp_seconds`, `_next_allowed_timestamp_seconds`) thay vì remote write — output remote write của k6 thêm tiền tố `k6_` vào tên metric và không giữ được trạng thái `Retry-After` giữa các lượt; textfile dùng lại collector đã có của backup-tools.
 - **Rationale**: Dùng lại k6 của F132; kiểm luồng có xác thực (blackbox exporter không làm được).
 - **Alternatives**: blackbox_exporter (chỉ HTTP đơn, không đăng nhập); dịch vụ SaaS (dữ liệu ra ngoài vùng, MONITORING §9).

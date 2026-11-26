@@ -509,6 +509,10 @@ Giá trị do [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) sở
 | `event_stream_retention` / `outbox_retention` | 7 ngày / 30 ngày | code | [Confirmed] (ADR-0042) | [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md), [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) |
 | `jetstream_duplicate_window` | 2 phút | code | [Confirmed] | [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) |
 | `app_log_retention` | 14 ngày | code | [Confirmed] | [MONITORING](../11-operations/MONITORING.md) |
+| `metrics_retention` | Prometheus staging 15 ngày, production 30 ngày (`--storage.tsdb.retention.time` trong `obs.stack.yml`) | code | [Proposed] (F131) | [MONITORING](../11-operations/MONITORING.md) §1 |
+| `trace_retention` | Tempo 7 ngày (`block_retention` của `tempo.swarm.yaml`) | code | [Proposed] (F131) | [MONITORING](../11-operations/MONITORING.md) §7 |
+| `prometheus_scrape` | scrape mỗi 15 s; `sample_limit` theo job: backend/admin 50.000, data/exporter tự gắn nhãn 20.000, node_exporter/cAdvisor 100.000 | code | [Proposed] (F131) | [MONITORING](../11-operations/MONITORING.md) §2 |
+| `synthetic_probe_interval` | 5 phút (`deploy/observability/synthetic/probe.crontab`); `SyntheticProbeFailing` sau 2 chu kỳ lỗi hoặc lượt cuối > 15 phút | code | [Confirmed] (F131 research R4) | [MONITORING](../11-operations/MONITORING.md) §5 |
 
 ## 19. Mâu thuẫn đã xử lý (2026-11-15, 2026-11-16)
 

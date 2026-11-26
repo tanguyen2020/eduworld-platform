@@ -5,7 +5,7 @@
 ## Triệu chứng
 
 - Thông báo: _A tenant day of the Game Analytics rollup takes more than 2 hours (p95)_
-- Điều kiện (MONITORING §5): p95 rollup một ngày-tenant của Game Analytics > 2 giờ trong 1 giờ (§10, [GAME_ANALYTICS §10](GAME_ANALYTICS.md))
+- Điều kiện (MONITORING §5): p95 rollup một ngày-tenant của Game Analytics > 2 giờ trong 1 giờ (§10, [GAME_ANALYTICS §10](../GAME_ANALYTICS.md))
 
 ## Tác động
 

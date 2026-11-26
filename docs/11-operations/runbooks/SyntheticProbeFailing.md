@@ -5,7 +5,7 @@
 ## Triệu chứng
 
 - Thông báo: _Synthetic probe <probe> failed two cycles in a row_
-- Điều kiện (MONITORING §5): Probe synthetic (`eduworld_synthetic_probe_success`, chu kỳ 5 phút) không thành công 2 chu kỳ liên tiếp (không mẫu thành công trong 11 phút; lượt `rate_limited` không tính)
+- Điều kiện (MONITORING §5): Probe synthetic (`eduworld_synthetic_probe_success`, chu kỳ 5 phút) không thành công 2 chu kỳ liên tiếp (không mẫu thành công trong 11 phút; lượt `rate_limited` không tính) hoặc probe ngừng chạy (lượt cuối > 15 phút)
 
 ## Tác động
 

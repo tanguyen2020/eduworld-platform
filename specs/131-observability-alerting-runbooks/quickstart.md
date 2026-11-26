@@ -18,13 +18,13 @@
 | 4 | Gửi 100 request thường + 5 request lỗi | Tempo giữ đủ 5 trace lỗi, ~10% trace thường | F131-AC-04 |
 | 5 | Ghi log thử chứa JWT/email/SĐT giả từ endpoint test của `core-api` | Loki chỉ thấy giá trị đã che; retention Loki = `app_log_retention` | F131-AC-05 |
 | 6 | Thêm label `school_id` vào rule thử | `obs-label-policy` đỏ | F131-AC-06 |
-| 7 | Đăng nhập Grafana bằng `ad.truong.a`; bằng nhân sự vận hành không MFA | Cả hai bị từ chối; `sa.admin` (MFA) vào được; truy vấn Loki có nhật ký | F131-AC-07 |
+| 7 | Đăng nhập Grafana bằng `ad.truong.a` (nhân sự trường); bằng nhân sự vận hành platform (`platform_staff`) | `ad.truong.a` bị từ chối (`role_attribute_strict`); nhân sự platform vào được (không MFA — ADR-0094); truy vấn Loki có nhật ký (router log Grafana) | F131-AC-07 |
 | 8 | `make obs-rules` | `promtool test rules` pass mọi alert; xóa một rule → job báo thiếu so với MONITORING §5 | F131-AC-08, F131-AC-12 |
 | 9 | Dừng mọi replica `worker-chat` trên staging | Một thông báo `ServiceDown{service="worker",profile="chat"}` tới kênh trực; alert con bị inhibit | F131-AC-09 |
 | 10 | Dừng Alertmanager 15 phút | Kênh ngoài báo mất heartbeat `Watchdog` | F131-AC-10 |
 | 11 | `make alert-drill ENV=staging` | Mọi alert critical tới kênh trực ≤ 2 phút; báo cáo `alert-drills/<YYYY-MM>.md` | F131-AC-11 |
 | 12 | `make obs-runbooks`; xóa mục "Leo thang" của một runbook | Job đỏ | F131-AC-13 |
-| 13 | Mở 13 dashboard sau 10 phút lưu lượng mẫu | Panel có dữ liệu; `obs-dashboards` pass | F131-AC-14 |
+| 13 | Mở 14 dashboard (MONITORING §4) sau 10 phút lưu lượng mẫu | Panel có dữ liệu; `obs-dashboards` pass | F131-AC-14 |
 | 14 | Truy vấn recording rule SLO; tạo 5xx giả lập vượt burn rate | Giá trị SLI hợp lệ; `SLOBurnRateFast` bắn | F131-AC-15 |
 | 15 | Mở dashboard Chat Safety | Chỉ số đếm/tỷ lệ, không nội dung, không tên học sinh | F131-AC-16 |
 | 16 | Gây panic có recover ở endpoint test staging | Issue GlitchTip có `trace_id`, `service`, `module`, không body; một GitHub Issue | F131-AC-17, F131-AC-18 |
@@ -39,6 +39,20 @@ node --test scripts/obs/*.test.mjs
 go -C src/backend test ./tools/swarm-exporter/...
 make obs-metric-catalog ENV=staging
 ```
+
+## 3b. Bằng chứng local (2026-11-27, F131)
+
+| Lệnh | Kết quả |
+|---|---|
+| `promtool check rules` + `promtool test rules` (prom/prometheus v3.2.1) | 19 file rule, 19/19 file test SUCCESS (102 alert, mỗi alert ca bắn + ca không bắn) |
+| `node scripts/obs/check-alerts.mjs` | 102 alert §5 ↔ 107 rule ↔ 102 runbook ↔ test: 0 vi phạm |
+| `routes_test.sh --live` (Alertmanager v0.28.1) | 14/14 |
+| `redaction_test.sh` (otelcol-contrib 0.120.0) | 10/10 |
+| `node --test scripts/obs/ tests/synthetic/k6/` | 36/36 |
+| `promtool check config prometheus.swarm.yml`, `otelcol validate`, `loki -verify-config`, `haproxy -c`, `blackbox --config.check` | hợp lệ |
+| `make swarm-validate` (`validate-stacks.sh`) | staging + production OK |
+
+Kịch bản §2 (bước 1–18) cần staging thật: **chờ môi trường**.
 
 ## 4. Bằng chứng cần nộp
 

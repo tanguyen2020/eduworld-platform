@@ -5,7 +5,7 @@
 ## Triệu chứng
 
 - Thông báo: _Matchmaker pass p95 > 1 s_
-- Điều kiện (MONITORING §5): p95 một lượt matchmaker > 1 s trong 10 phút ([MATCHMAKING §10](../03-social-multiplayer/MATCHMAKING.md))
+- Điều kiện (MONITORING §5): p95 một lượt matchmaker > 1 s trong 10 phút ([MATCHMAKING §10](../../03-social-multiplayer/MATCHMAKING.md))
 
 ## Tác động
 

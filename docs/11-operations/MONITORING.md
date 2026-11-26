@@ -50,6 +50,7 @@ flowchart LR
 Nguyên tắc:
 - Metric qua Prometheus (pull `/metrics` trên cổng admin `:909x`); trace qua OTLP; log JSON ra stdout, collector đẩy Loki.
 - Prometheus đánh giá rule (`deploy/observability/prometheus/rules/*.yaml`); **Alertmanager** định tuyến, gom nhóm, inhibit, silence (`deploy/observability/alertmanager/alertmanager.yml`); Grafana chỉ hiển thị (F131, không dùng Grafana Alerting). Alert `Watchdog` luôn bắn tới dịch vụ heartbeat ngoài; mất heartbeat 10 phút thì dịch vụ đó báo người trực (Prometheus/Alertmanager chết).
+- cAdvisor là service duy nhất mount Docker socket (chỉ đọc) để có tên container và nhãn Swarm — policy `docker_socket` [Proposed, chờ owner xác nhận]; mọi truy cập Docker API khác qua proxy allowlist (`docker-api-proxy-ro` chỉ `GET /services|/tasks|/nodes|/networks`).
 - Stack staging/production: `deploy/swarm/<env>/obs.stack.yml` trên node `ops` (OTel Collector, Prometheus, Alertmanager, Loki, Tempo, Grafana, GlitchTip, blackbox_exporter, probe synthetic) + exporter `mode: global` (node_exporter, cAdvisor); `swarm-exporter` nằm trong `ops.stack.yml` (dùng chung `docker-api-proxy` chỉ `GET`). Truy cập công cụ chỉ qua network `admin` (VPN) — [DEPLOYMENT §4.3](DEPLOYMENT.md).
 - Mỗi request có `trace_id` từ APISIX (W3C `traceparent`) xuyên **mọi binary và module** tham gia (NFR-OBS-001): lời gọi facade trong tiến trình (span con do `src/backend/pkg/modcall` mở, ADR-0074 mục 3), NATS request/reply và JetStream (header `traceparent` trong message), rồi tới PostgreSQL (comment SQL `/* trace_id=... */` qua pgx tracer).
 - Mọi metric, log, span có thuộc tính `service` (= `OTEL_SERVICE_NAME` = binary: `core-api`, `realtime`, `worker`), `module` (`identity`, `learning`, `game`, `competition`, `chat`, `realtime`; gắn theo route, handler, consumer, job) và với `worker` thêm `profile` (`events`, `chat`, `jobs`). Dashboard và alert tách theo module bằng nhãn `module`, theo tiến trình bằng `service`/`profile`.
@@ -341,7 +342,7 @@ SLI là recording rule trong `deploy/observability/prometheus/rules/slo.yaml` (F
 - OTel SDK Go (qua `src/backend/pkg/otel`): span cho HTTP handler, command/query handler (`<module>.command.<Name>`, `<module>.query.<Name>`, ADR-0038), truy vấn DB (pgx tracer dưới ent), Valkey, lời gọi facade sang module khác (span `<caller>→<callee>.<operationId>` do `src/backend/pkg/modcall` mở, cùng trace, ADR-0074), NATS request/reply và publish/consume JetStream (`traceparent` trong header message; consumer tạo span con hoặc link tới span publish), lời gọi SIS/Keycloak.
 - Tempo bật **service graph** (từ span client/server, span `modcall` và producer/consumer) để vẽ dashboard Module Map.
 - Saga liên module có một trace gốc; mỗi bước gắn thuộc tính `saga.id`, `saga.step`.
-- Sampling: 100% ở local/dev; staging/prod: head sampling 10% + tail sampling ở collector giữ 100% trace lỗi và trace > 1s [Confirmed].
+- Sampling: 100% ở local/dev; staging/prod: head sampling 10% + tail sampling ở collector giữ 100% trace lỗi và trace > 1s [Confirmed]. Triển khai (F131): SDK giữ mọi trace, collector `tail_sampling` với 3 policy (lỗi, > 1 s, xác suất 10% cho phần còn lại) — ngân sách 10% áp ở collector để không mất trace lỗi/chậm (`collector.swarm.yaml`).
 - Realtime: span cho `ws.connect`, mỗi message type quan trọng (`battle.answer.submit`, `party.start`), **không** span cho từng gói position sync (chỉ metric).
 - Thuộc tính span không chứa PII: dùng `enduser.pseudo_id` (hash có salt của user_id) thay vì user_id khi cần tương quan; nội dung tin nhắn/câu trả lời không bao giờ vào span.
 
@@ -355,6 +356,8 @@ SLI là recording rule trong `deploy/observability/prometheus/rules/slo.yaml` (F
 | Redaction | Middleware loại bỏ header nhạy cảm; collector có processor `redaction` chặn pattern token/JWT/email/SĐT như lớp phòng thủ thứ hai |
 | Định danh | Dùng `user_id` (UUID nội bộ) trong log ứng dụng khi cần điều tra; Loki giới hạn quyền truy cập theo vai trò vận hành, truy vấn production được audit |
 | Retention | App log 14 ngày (pilot) / 30 ngày; audit log nghiệp vụ nằm trong PostgreSQL (`audit.audit_logs`), không phụ thuộc Loki |
+| Thu thập (F131) | `otel-agent` (`mode: global`) đọc log json-file của container trên node (chỉ đọc), giữ dòng JSON của binary (trường `service`) và Grafana, gửi OTLP tới `otel-collector`: processor `redaction` che giá trị dạng JWT/bearer/email/SĐT, `transform` xóa thuộc tính tên credential (`authorization`, `cookie`, `password`, `token`…) và che các mẫu đó trong body; test `deploy/observability/otel-collector/tests/redaction_test.sh` (TC-AUTH-060) |
+| Truy cập | Grafana/Prometheus/Alertmanager/Loki/Tempo/GlitchTip chỉ trong network `admin` (VPN); Grafana đăng nhập Keycloak client `eduworld-ops-tools` (không MFA — ADR-0094), chỉ realm role `platform_staff` (client role `admin`/`editor` → Admin/Editor, còn lại Viewer, `role_attribute_strict`); router log của Grafana (mọi truy vấn qua datasource) và log truy vấn của Loki được thu lại vào Loki làm nhật ký truy cập |
 | APISIX access log | Bỏ query string của `/realtime/v1` (chứa ticket), IP lưu dạng rút gọn /24 sau 7 ngày [Confirmed] |
 
 ## 9. Error tracking

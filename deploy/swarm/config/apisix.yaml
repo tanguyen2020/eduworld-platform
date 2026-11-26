@@ -64,3 +64,9 @@ plugins:
 plugin_attr:
   prometheus:
     export_addr: { ip: 0.0.0.0, port: 9091 }
+    # F131 (MONITORING §6): SLI "Latency REST đọc" counts GET only → request method as an extra label of the latency
+    # histogram (bounded: HTTP methods).
+    metrics:
+      http_latency:
+        extra_labels:
+          - method: $request_method

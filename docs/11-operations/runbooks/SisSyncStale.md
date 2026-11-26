@@ -5,7 +5,7 @@
 ## Triệu chứng
 
 - Thông báo: _SIS connection <connection> has no successful sync for 26 hours_
-- Điều kiện (MONITORING §5): `time() - eduworld_sis_last_success_timestamp` > 26 giờ theo connection ([SIS_INTEGRATION §8](../09-identity/SIS_INTEGRATION.md))
+- Điều kiện (MONITORING §5): `time() - eduworld_sis_last_success_timestamp` > 26 giờ theo connection ([SIS_INTEGRATION §8](../../09-identity/SIS_INTEGRATION.md))
 
 ## Tác động
 

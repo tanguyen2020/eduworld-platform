@@ -5,7 +5,7 @@
 ## Triệu chứng
 
 - Thông báo: _Room tick p99 > 20 ms (<room_type>)_
-- Điều kiện (MONITORING §5): p99 tick phòng > 20 ms trong 10 phút ([REALTIME_ARCHITECTURE §8](../06-architecture/REALTIME_ARCHITECTURE.md))
+- Điều kiện (MONITORING §5): p99 tick phòng > 20 ms trong 10 phút ([REALTIME_ARCHITECTURE §8](../../06-architecture/REALTIME_ARCHITECTURE.md))
 
 ## Tác động
 

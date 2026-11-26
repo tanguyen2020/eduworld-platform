@@ -5,7 +5,7 @@
 ## Triệu chứng
 
 - Thông báo: _More than 5% of blocking login syncs time out_
-- Điều kiện (MONITORING §5): `eduworld_sis_login_sync_total{branch="blocking",result="timeout"}` > 5% nhánh B trong 10 phút ([SIS_INTEGRATION §4.5](../09-identity/SIS_INTEGRATION.md))
+- Điều kiện (MONITORING §5): `eduworld_sis_login_sync_total{branch="blocking",result="timeout"}` > 5% nhánh B trong 10 phút ([SIS_INTEGRATION §4.5](../../09-identity/SIS_INTEGRATION.md))
 
 ## Tác động
 

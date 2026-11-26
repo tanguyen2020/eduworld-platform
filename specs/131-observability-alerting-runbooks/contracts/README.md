@@ -9,6 +9,7 @@
 | `getClientConfig` | `GET /api/v1/game/client-config` | `specs/openapi/eduworld-api.v1.yaml` | Không xác thực (probe `client_config`) | Có sẵn |
 | `gameLogin` | `POST /api/v1/auth/game/login` | `specs/openapi/eduworld-api.v1.yaml` | Học sinh QA (probe `student_login`) | Có sẵn |
 | `createGameSession` | `POST /api/v1/game/sessions` | `specs/openapi/eduworld-api.v1.yaml` | `game_player` (học sinh QA) | Có sẵn |
+| `endGameSession` | `POST /api/v1/game/sessions/{game_session_id}:end` | `specs/openapi/eduworld-api.v1.yaml` | `game_player` (học sinh QA; kết thúc phiên của probe, không để lại phiên active) | Có sẵn |
 | `gameLogout` | `POST /api/v1/auth/game/logout` | `specs/openapi/eduworld-api.v1.yaml` | Học sinh QA (dọn phiên sau probe) | Có sẵn |
 | — | `/metrics` trên cổng quản trị mọi binary | Không thuộc OpenAPI (DEPLOYMENT §14) | Chỉ mạng nội bộ | Không áp dụng |
 

@@ -83,7 +83,7 @@ Không có cổng internal API: module gọi nhau trong tiến trình qua facade
 
 ### 3.3. Observability (profile `obs`)
 
-`otel-collector` (4317/4318), `prometheus` (9095), `grafana` (3000, dashboard theo binary và module), `loki` (3100), `tempo` (3200).
+`otel-collector` (4317/4318), `prometheus` (9095, rule `deploy/observability/prometheus/rules/`), `grafana` (3000, 14 dashboard của [MONITORING §4](MONITORING.md#4-dashboard-grafana) provision từ `deploy/observability/grafana/dashboards/`), `loki` (3100), `tempo` (3200). Local không chạy Alertmanager/GlitchTip/probe synthetic (chỉ staging/production, `obs.stack.yml`); kiểm cấu hình bằng `make obs-check` (promtool, amtool, `scripts/obs/*` trong container dùng một lần).
 
 **Luồng mạng local:** Godot/web → `http://localhost:9080` (APISIX) → `/api/v1/*` tới `core-api`, `/realtime/v1` tới `realtime` (DEPLOYMENT §5). `realtime` gửi lệnh tới `core-api` qua NATS request/reply; event đi qua NATS JetStream. Keycloak truy cập trực tiếp `http://localhost:8180`.
 
@@ -99,6 +99,11 @@ Quy ước tên: tiền tố `EW_`; kết nối database theo module `EW_DB_<MOD
 |---|---|---|
 | `EW_HTTP_ADDR` | như local (`:8100` cho `core-api`, `:8106` cho `realtime`) | API public / WebSocket; `worker` không mở cổng HTTP public |
 | `EW_WORKER_PROFILE` | như local (`events`, `chat`, `jobs`; local `all`) | Nhóm việc của binary `worker`, tương đương cờ `--profile` (ADR-0074 mục 2) |
+| `EW_ERROR_TRACKING_DSN_FILE` | như local (Docker secret DSN GlitchTip) | Error tracking (F131, `src/backend/pkg/observability`): không đặt = tắt; gửi panic đã recover và 5xx không mong đợi, không PII |
+| `EW_SWARM_EXPORTER_DOCKER_API`, `EW_SWARM_EXPORTER_INTERVAL` (15s), `EW_SWARM_EXPORTER_STACK` (`eduworld`) | như local | `swarm-exporter` (F131) — chỉ staging/production |
+| `EW_GLITCHTIP_URL`, `EW_GITHUB_REPO`, `EW_GLITCHTIP_BRIDGE_ENVIRONMENTS` (`production`) | token qua `EW_GLITCHTIP_BRIDGE_TOKEN_FILE`, `EW_GLITCHTIP_API_TOKEN_FILE`, `EW_GITHUB_TOKEN_FILE` | `glitchtip-bridge` (F131) — chỉ staging/production |
+| `EW_PROBE_BASE_URL`, `EW_PROBE_USERNAME`, `EW_PROBE_DEVICE_ID`, `EW_PROBE_CLIENT_VERSION`, `EW_PROBE_PLATFORM` | mật khẩu qua `EW_PROBE_PASSWORD_FILE` | Probe synthetic k6 (F131, tenant QA) — chỉ staging/production |
+| `EW_DB_MONITOR_PASSWORD` | Docker secret `ops_pg_exporter_password` | Role `eduworld_monitor` (`pg_monitor`) của postgres_exporter (F131), tạo trong `deploy/postgres/init/02-roles.sh` |
 | `EW_ADMIN_ADDR` | như local, cố định `:9090` trong container | Một cổng quản trị: `/livez`, `/readyz`, `/healthz`, `/metrics`, `/version`; không publish, không route qua APISIX. Chạy native dùng cổng host 9100/9106/9200 ở §3.2 để không trùng |
 | `EW_DB_<MODULE>_DSN` | `EW_DB_<MODULE>_URL_FILE` | Role `<module>_app` của từng module (không BYPASSRLS, không DELETE); write context và read context khi chưa có replica |
 | `EW_DB_<MODULE>_READ_DSN` | `EW_DB_<MODULE>_READ_URL_FILE` | Read context của CQRS (query handler, `port/read`, ADR-0087): kết nối chỉ đọc tới replica; để trống → dùng primary |
@@ -406,6 +411,9 @@ postman collection run specs/postman/eduworld-api.postman_collection.json \
 | `make apisix-render [ENV=local]` / `make apisix-check` / `make apisix-smoke` | Render file standalone hai gateway từ `routes.yaml` / kiểm file render mới, route ↔ spec gộp, không log body, không hardcode / smoke trên stack đang chạy (F004) |
 | `make up-app [EXCEPT=<binary>]` | Chạy 3 binary `core-api`, `realtime`, `worker` trong container (trừ binary chỉ định) |
 | `make up-obs` | Bật stack observability |
+| `make obs-check` / `make obs-rules` / `make obs-runbooks` / `make obs-dashboards` / `make obs-label-policy` / `make obs-alertmanager` / `make obs-redaction` / `make test-obs` | Kiểm cấu hình quan sát (F131): promtool check/test rules, MONITORING §5 ↔ rule ↔ runbook ↔ test, dashboard as code, nhãn cấm, định tuyến/inhibit Alertmanager (amtool + Alertmanager dùng một lần), redaction của collector (otelcol-contrib dùng một lần), unit test `scripts/obs` + probe |
+| `make obs-metric-catalog [STATIC=1]` | Metric bắt buộc của MONITORING §3 trên Prometheus (`EW_PROMETHEUS_URL`) hoặc tên có trong mã Go |
+| `make alert-drill ENV=staging [ALERT=<tên>]` | Diễn tập alert critical, ghi `docs/11-operations/alert-drills/<YYYY-MM>.md` |
 | `make run-core-api` / `make run-realtime` / `make run-worker [PROFILE=events\|chat\|jobs\|all]` | Chạy native một binary (`go -C src/backend run ./cmd/<binary>`) |
 | `make dev` | Chạy native cả 3 binary trong một lệnh (worker `--profile=all`), hạ tầng chạy container |
 | `make seed-identity` / `make seed-learning` / `make seed-game` | Chạy riêng seed của một module (idempotent) |

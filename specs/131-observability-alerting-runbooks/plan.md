@@ -4,7 +4,7 @@
 
 ## Summary
 
-Thêm stack quan sát vào `deploy/swarm/<env>/infra.stack.yml` (node `ops`): OTel Collector (redaction, head/tail sampling), Prometheus (`dockerswarm_sd_configs`, rule), Alertmanager (định tuyến, inhibit, Watchdog), Loki, Tempo (metrics generator service graph), Grafana (provision dashboard JSON, đăng nhập Keycloak, không MFA — ADR-0094 mục 2b), exporter (node, cAdvisor global; postgres, redis, nats; `swarm-exporter` Go chỉ đọc), GlitchTip. Ba script kiểm CI đọc thẳng bảng trong MONITORING (nguồn duy nhất): catalog metric, rule ↔ bảng alert ↔ runbook, label policy. Runbook mỗi alert trong `docs/11-operations/runbooks/`. Probe synthetic k6 chạy trong service `synthetic-probe` (k6 + supercronic, remote write về Prometheus) trên node `ops`.
+Thêm stack quan sát `deploy/swarm/<env>/obs.stack.yml` (node `ops`; cập nhật khi triển khai: stack riêng thay vì `infra.stack.yml` để deploy/rollback độc lập): OTel Collector (redaction, head/tail sampling), Prometheus (`dockerswarm_sd_configs`, rule), Alertmanager (định tuyến, inhibit, Watchdog), Loki, Tempo (metrics generator service graph), Grafana (provision dashboard JSON, đăng nhập Keycloak, không MFA — ADR-0094 mục 2b), exporter (node, cAdvisor global; postgres, redis, nats; `swarm-exporter` Go chỉ đọc), GlitchTip. Ba script kiểm CI đọc thẳng bảng trong MONITORING (nguồn duy nhất): catalog metric, rule ↔ bảng alert ↔ runbook, label policy. Runbook mỗi alert trong `docs/11-operations/runbooks/`. Probe synthetic k6 chạy trong service `synthetic-probe` (k6 + supercronic, remote write về Prometheus) trên node `ops`.
 
 ## Technical Context
 
@@ -76,6 +76,8 @@ docs/11-operations/alert-drills/README.md
 .github/workflows/obs.yml                                # obs-rules, obs-runbooks, obs-label-policy, obs-dashboards (path filter deploy/observability/**, docs/11-operations/runbooks/**, scripts/obs/**); obs-metric-catalog chạy sau deploy staging trong release.yml
 ```
 
+**Cập nhật khi triển khai (2026-11-27)**: stack `obs.stack.yml`; cấu hình nướng vào image `obs-prometheus` (config + rule), `obs-alertmanager` (routing + entrypoint render SMTP), `obs-grafana` (provisioning + dashboard) theo `OPS_VERSION`; rule ở `prometheus/rules/*.yaml` (chuyển từ `prometheus/alerts/*.yml`); Prometheus một file `prometheus.swarm.yml` (`expand-external-labels`), collector một file `collector.swarm.yaml` + agent `agent.swarm.yaml` cho cả staging/production; error tracking ở `src/backend/pkg/observability` (gói F002 thực tế); `swarm-exporter` và Prometheus dùng proxy Docker API chỉ đọc riêng `docker-api-proxy-ro`; dashboard sinh bởi `scripts/obs/build-dashboards.mjs` (14 dashboard theo §4).
+
 **Structure Decision**: Cấu hình theo `deploy/observability/` ([MONITORING §4–§5](../../docs/11-operations/MONITORING.md), F001 đã tạo bản local). Script kiểm parse Markdown MONITORING (R33) thay vì nhân bản danh sách. GlitchTip và Grafana mỗi thứ một database riêng trên node `ops`, không dùng cụm PostgreSQL nghiệp vụ (ADR-0037).
 
 ## Phase 0: Research
@@ -104,7 +106,7 @@ docs/11-operations/alert-drills/README.md
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Grafana OAuth Keycloak (không MFA — ADR-0094 mục 2b), role map: `platform_ops` → Editor, `system_admin` → Admin, còn lại Viewer chỉ khi có `platform_staff`; tài khoản tenant bị từ chối (`role_attribute_strict`).
+- Grafana OAuth Keycloak (không MFA — ADR-0094 mục 2b), role map: client role `admin` của `eduworld-ops-tools` (System Admin) → Admin, `editor` (DevOps trực) → Editor, còn lại Viewer chỉ khi có realm role `platform_staff`; tài khoản tenant bị từ chối (`role_attribute_strict`). (Realm chỉ có `student`/`tenant_staff`/`platform_staff`: role nghiệp vụ `system_admin`/`platform_ops` nằm ở module identity nên dùng client role.)
 - Loki production: bật query audit log của Grafana (`[log] filters` + audit) và lưu trong Loki tenant riêng `audit-ops`.
 - Không idempotency nghiệp vụ; ticket GlitchTip khử trùng theo `issue_id`.
 
