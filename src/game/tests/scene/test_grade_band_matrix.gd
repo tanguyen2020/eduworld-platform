@@ -1,8 +1,9 @@
 extends GdUnitTestSuite
 ## F098-AC-09 (owner "ma trận test khối 1–9"; STUDENT_GAME_UX §4.3, DESIGN_SYSTEM §5.2, LEARNING_EXPERIENCE §8,
 ## NFR-A11Y-001): every student screen of the matrix is built for EVERY grade band (g1_3, g4_5, g6_7, g8_9) at the three
-## reference windows (1280×720, 1024×600, 720×1280 → logical 1280×720, 1280×750, 1280×2276) inside a SubViewport of
-## that size with the band's Theme, and BandLayoutProbe checks touch targets, the smallest font, answer tiles and that
+## reference landscape windows (1280×720, 1024×600, 844×390 → logical 1280×720, 1280×750, 1558×720 — F113:
+## landscape only, STUDENT_GAME_UX §2; windows taller than wide show the rotate prompt, checked alone) inside a
+## SubViewport of that size with the band's Theme, and BandLayoutProbe checks touch targets, the smallest font, answer tiles and that
 ## nothing is cut off or outside the view. Screens: S01 login, Hub HUD, activity (single choice, true/false, matching,
 ## numeric), feedback (grading, right, not yet right), result, S02 character creation, wardrobe and shop (F069), level
 ## up, world map. FakeHttp + contract fixtures (TEST-ONLY).
@@ -41,13 +42,15 @@ func after_test() -> void:
 ## Builds `build` (a Callable returning the screen root, coroutine allowed) for every band × window, probes it and
 ## returns every problem found.
 ## F099-AC-07: `empty` also checks that the activity board has no empty band taller than 25% of the view.
-func _matrix(label: String, build: Callable, empty: bool = false) -> PackedStringArray:
+## F113: `sizes` defaults to the landscape windows (BandLayoutProbe.SIZES); the rotate prompt passes PORTRAIT_SIZES.
+func _matrix(label: String, build: Callable, empty: bool = false, sizes: Dictionary = BandLayoutProbe.SIZES
+		) -> PackedStringArray:
 	var failures: PackedStringArray = []
 	for band: String in UiTokens.DENSITY_BANDS:
-		for window: String in BandLayoutProbe.SIZES.keys():
+		for window: String in sizes.keys():
 			AppState.set_grade_band(band)
 			var vp: SubViewport = SubViewport.new()
-			vp.size = BandLayoutProbe.SIZES[window] as Vector2i
+			vp.size = sizes[window] as Vector2i
 			vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
 			add_child(vp)
 			var root: Node = await build.call(vp, band)
@@ -309,6 +312,27 @@ func test_world_map_fits_every_band() -> void:
 		map.show()
 		map.call("render", WorldMapModel.build(WorldFixtures.area_models(), WorldFixtures.exploration(), band, "main_hub"))
 		return map))
+
+
+## F113-AC-05: a window taller than wide (720×1280, 390×844) shows only the rotate prompt; it covers the view and its
+## texts keep the band sizes (scaled on the short side of the base canvas).
+func test_rotate_prompt_fits_every_band() -> void:
+	var covers: PackedStringArray = []
+	var build: Callable = func(vp: SubViewport, _band: String) -> Node:
+		var guard: Node = (load("res://scripts/core/orientation_guard.gd") as GDScript).new() as Node
+		guard.set("follow_window", false)
+		guard.set("set_paused", func(_value: bool) -> void: pass)
+		guard.set("is_paused", func() -> bool: return false)
+		guard.set("lock_landscape", func() -> void: pass)
+		vp.add_child(guard)
+		guard.call("apply", Vector2(vp.size))
+		var prompt: Control = guard.call("prompt") as Control
+		var layer: CanvasLayer = guard.call("layer") as CanvasLayer
+		if not (prompt.size * layer.scale).is_equal_approx(Vector2(vp.size)):
+			covers.append("prompt %s × %s does not cover %s" % [prompt.size, layer.scale, vp.size])
+		return guard
+	_assert_none(await _matrix("rotate_prompt", build, false, BandLayoutProbe.PORTRAIT_SIZES))
+	assert_array(covers).override_failure_message("\n".join(covers)).is_empty()
 
 
 ## The probe itself catches what it must (a guard against a silent matrix).

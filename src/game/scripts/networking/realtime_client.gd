@@ -117,6 +117,8 @@ var _offset_samples: Array[Array] = []
 
 
 func _ready() -> void:
+	# F113-AC-04: the socket keeps polling (heartbeat, messages) behind the rotate prompt, which pauses the tree.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process(auto_poll)
 	if not OS.has_feature("web"):
 		tls_options = load_tls_options(CA_BUNDLE_PATH)

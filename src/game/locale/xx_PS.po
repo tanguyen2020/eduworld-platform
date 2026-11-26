@@ -1964,6 +1964,15 @@ msgstr "[!! Ţïţĺë ~~ !!]"
 msgid "ui.reward.xp"
 msgstr "[!! {amount} XP ~~~~~ !!]"
 
+msgid "ui.rotate.desktop"
+msgstr "[!! Öñ á çöɱþüţëŕ, ɱáķë ţĥë ŵïñđöŵ ŵïđëŕ. ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.rotate.hint"
+msgstr "[!! Ýöüŕ ğáɱë ïš ŵáïţïñğ. Ţüŕñ šïđëŵáýš ţö çáŕŕý öñ ŕïğĥţ áŵáý. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.rotate.title"
+msgstr "[!! Ţüŕñ ýöüŕ þĥöñë šïđëŵáýš ţö þĺáý! ~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.settings.about"
 msgstr "[!! Åƀöüţ ~~ !!]"
 

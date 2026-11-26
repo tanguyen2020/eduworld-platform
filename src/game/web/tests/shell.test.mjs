@@ -217,3 +217,96 @@ test('F096-AC-02: the notice page (no WebGL 2) keeps the logo and Mây', async (
   assert.equal(p.$('ew-title').textContent, 'EduWorld');
   assert.ok(p.win.document.querySelector('#ew-shell .ew-mascot'));
 });
+
+// ---------- F113: rotate prompt (STUDENT_GAME_UX §2 landscape only) ----------
+
+function resize(win, width, height) {
+  Object.defineProperty(win, 'innerWidth', { configurable: true, get: () => width });
+  Object.defineProperty(win, 'innerHeight', { configurable: true, get: () => height });
+  win.dispatchEvent(new win.Event('resize'));
+}
+
+test('F113-AC-06: a portrait window marks the loading view, which shows the rotate prompt; landscape clears it', async () => {
+  const p = page({ languages: ['vi-VN'] });
+  resize(p.win, 390, 844);
+  p.win.EduWorldShell.run(p.win, p.deps);
+  await tick();
+  await tick();
+  assert.equal(p.$('ew-shell').dataset.state, 'ready');
+  assert.equal(p.$('ew-shell').dataset.portrait, 'true');
+  assert.equal(p.$('ew-rotate-title').textContent, 'Xoay ngang điện thoại để chơi nhé!');
+  assert.match(p.$('ew-rotate-hint').textContent, /máy tính/);
+  assert.ok(p.win.document.querySelector('#ew-rotate .ew-mascot use'), 'Mây');
+  assert.ok(p.win.document.querySelector('#ew-rotate .ew-rotate-phone .ew-rotate-arrow'), 'rotate-phone picture');
+  assert.ok(p.$('ew-shell').contains(p.$('ew-rotate')), 'inside the loading view: gone once the engine runs');
+  resize(p.win, 844, 390);
+  assert.equal(p.$('ew-shell').dataset.portrait, 'false');
+  resize(p.win, 800, 800);
+  assert.equal(p.$('ew-shell').dataset.portrait, 'false', 'a square window is landscape');
+  const en = page({ languages: ['en-US'] });
+  en.win.EduWorldShell.run(en.win, en.deps);
+  assert.equal(en.$('ew-rotate-title').textContent, 'Turn your phone sideways to play!');
+});
+
+test('F113-AC-06: the prompt rule covers checking/loading/ready/starting only — never the notice or error page', () => {
+  const css = /<style>([\s\S]*?)<\/style>/.exec(SHELL)[1];
+  const rule = /([^{}]*)#ew-rotate\s*\{\s*display:\s*flex;/.exec(css);
+  assert.ok(rule, 'display rule of the prompt');
+  const selector = rule[1];
+  assert.match(selector, /data-portrait="true"/);
+  for (const state of ['checking', 'loading', 'ready', 'starting']) assert.match(selector, new RegExp(`data-state="${state}"`));
+  assert.doesNotMatch(selector, /unsupported|error/);
+  assert.match(css, /#ew-rotate\s*\{[^}]*display:\s*none;/, 'hidden by default');
+});
+
+test('F113-AC-06: without WebGL 2 in portrait the notice page is shown, not the prompt state', async () => {
+  const p = page({ webgl2: false });
+  resize(p.win, 390, 844);
+  await p.win.EduWorldShell.run(p.win, p.deps);
+  assert.equal(p.$('ew-shell').dataset.state, 'unsupported');
+  assert.match(p.$('ew-message').textContent, /WebGL 2/);
+});
+
+test('F113-AC-07: "Chơi" tries the landscape lock first and starts the engine even when it is refused', async () => {
+  const p = page();
+  const calls = [];
+  p.deps.lockLandscape = () => { calls.push('lock'); throw new Error('not allowed'); };
+  const done = p.win.EduWorldShell.run(p.win, p.deps);
+  await tick();
+  await tick();
+  p.$('ew-play').click();
+  assert.equal(await done, 'started');
+  assert.deepEqual(calls, ['lock']);
+  assert.equal(p.engine.start.length, 1);
+});
+
+test('F113-AC-07: tryLockLandscape — touch device: full screen then lock; desktop or no API: nothing, silently', async () => {
+  const s = page().win.EduWorldShell;
+  const fakeWin = ({ coarse, lock, fullscreen = true, already = false }) => {
+    const log = [];
+    const root = fullscreen ? { requestFullscreen: (o) => { log.push(['fullscreen', o.navigationUI]); return Promise.resolve(); } } : {};
+    return {
+      log,
+      matchMedia: (q) => ({ matches: q === '(pointer: coarse)' && coarse }),
+      screen: lock === undefined ? {} : { orientation: { lock: (o) => { log.push(['lock', o]); return lock ? Promise.resolve() : Promise.reject(new Error('refused')); } } },
+      document: { documentElement: root, fullscreenElement: already ? {} : null },
+    };
+  };
+  let w = fakeWin({ coarse: true, lock: true });
+  assert.equal(await s.tryLockLandscape(w), true);
+  assert.deepEqual(w.log, [['fullscreen', 'hide'], ['lock', 'landscape']]);
+  w = fakeWin({ coarse: true, lock: false });
+  assert.equal(await s.tryLockLandscape(w), false, 'refused lock is silent');
+  w = fakeWin({ coarse: true, lock: true, already: true });
+  assert.equal(await s.tryLockLandscape(w), true);
+  assert.deepEqual(w.log, [['lock', 'landscape']], 'already full screen: lock only');
+  w = fakeWin({ coarse: false, lock: true });
+  assert.equal(await s.tryLockLandscape(w), false);
+  assert.deepEqual(w.log, [], 'desktop: no full screen, no lock');
+  w = fakeWin({ coarse: true });
+  assert.equal(await s.tryLockLandscape(w), false, 'no Screen Orientation API');
+  assert.equal(await s.tryLockLandscape({}), false, 'nothing at all');
+  assert.equal(s.isPortrait(390, 844), true);
+  assert.equal(s.isPortrait(844, 390), false);
+  assert.equal(s.isPortrait(800, 800), false);
+});

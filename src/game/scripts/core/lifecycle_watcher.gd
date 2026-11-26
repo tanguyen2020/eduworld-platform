@@ -23,6 +23,8 @@ var _since_check: float = 0.0
 
 
 func _ready() -> void:
+	# F113: idle logout of a shared device still runs while the rotate prompt pauses the tree.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	touch()
 	# The close request is handled (end session / log out) before the app quits.
 	get_tree().set_auto_accept_quit(false)

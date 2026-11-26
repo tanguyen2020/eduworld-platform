@@ -13,6 +13,10 @@
   (make design-tokens, AGENTS R32) and copied next to index.html by make godot-export-web.
   EduWorld loading view (F096-AC-02): the S01 sky, the logo (Knowledge Spark + wordmark), the guide Mây speaking the
   status in a bubble and a rounded progress bar — no Godot logo; the shapes are inline SVG painted with token variables.
+  Rotate prompt (F113-AC-06, F113-AC-07, STUDENT_GAME_UX §2 landscape only): while the loading view is up and the window
+  is taller than wide, Mây asks to turn the phone sideways (the notice and error pages are never covered); the game
+  shows its own prompt once running (OrientationGuard). "Chơi" on a touch device also tries full screen +
+  screen.orientation.lock('landscape'); any refusal is ignored silently.
   The exporter replaces the GODOT_URL, GODOT_CONFIG, ... placeholders (dollar sign + name). Tests: src/game/web/tests/.
 -->
 <html lang="vi">
@@ -269,6 +273,63 @@ body {
 	outline-offset: var(--ew-size-border-2);
 }
 
+/* Rotate prompt (F113-AC-06): covers the loading view while the window is portrait; never the notice/error pages. */
+#ew-rotate {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	display: none;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--ew-size-space-16);
+	padding: var(--ew-size-space-24);
+	text-align: center;
+	background: linear-gradient(var(--ew-component-backdrop-sky-top), var(--ew-component-backdrop-sky-bottom));
+}
+
+#ew-shell[data-portrait="true"]:is([data-state="checking"], [data-state="loading"], [data-state="ready"], [data-state="starting"]) #ew-rotate {
+	display: flex;
+}
+
+#ew-rotate .ew-bubble {
+	max-width: var(--ew-size-layout-660);
+}
+
+#ew-rotate .ew-rotate-title {
+	font-family: var(--ew-font-family-heading);
+	font-weight: bold;
+}
+
+#ew-rotate .ew-rotate-hint {
+	margin-top: var(--ew-size-space-8);
+	font-size: var(--ew-density-font-base);
+}
+
+.ew-rotate-phone {
+	width: var(--ew-size-layout-120);
+	height: var(--ew-size-layout-120);
+}
+
+.ew-rotate-upright {
+	fill: var(--ew-color-surface-panel-alt);
+	stroke: var(--ew-color-accent-primary);
+}
+
+.ew-rotate-sideways {
+	fill: var(--ew-color-accent-primary);
+	stroke: var(--ew-color-accent-primary);
+}
+
+.ew-rotate-button {
+	fill: var(--ew-color-text-on-accent);
+}
+
+.ew-rotate-arrow {
+	fill: none;
+	stroke: var(--ew-color-accent-reward);
+}
+
 #ew-banner {
 	position: absolute;
 	top: 0;
@@ -323,16 +384,27 @@ body {
 				</div>
 				<div class="ew-bubble"><p id="ew-message" role="status" aria-live="polite"></p></div>
 				<!-- Mây (Cloudy), the guide: the puffs and face of CloudyMascot (scenes/ui/components/cloudy_mascot.gd), side = 100. -->
-				<svg class="ew-mascot" viewBox="0 0 100 100" aria-hidden="true">
+				<svg class="ew-mascot" viewBox="0 0 100 100" aria-hidden="true"><g id="ew-mascot-art">
 					<g class="ew-puff-line"><circle cx="50" cy="56" r="27"/><circle cx="27" cy="64" r="19"/><circle cx="73" cy="64" r="19"/><circle cx="38" cy="43" r="18"/><circle cx="62" cy="40" r="21"/><circle cx="36" cy="74" r="14"/><circle cx="64" cy="74" r="14"/><circle cx="87" cy="42" r="9.5"/></g>
 					<g class="ew-puff"><circle cx="50" cy="56" r="25"/><circle cx="27" cy="64" r="17"/><circle cx="73" cy="64" r="17"/><circle cx="38" cy="43" r="16"/><circle cx="62" cy="40" r="19"/><circle cx="36" cy="74" r="12"/><circle cx="64" cy="74" r="12"/><circle cx="87" cy="42" r="7.5"/></g>
 					<circle class="ew-eye" cx="42" cy="54" r="3.6"/><circle class="ew-eye" cx="58" cy="54" r="3.6"/>
 					<circle class="ew-eye-light" cx="43.2" cy="52.8" r="1.2"/><circle class="ew-eye-light" cx="59.2" cy="52.8" r="1.2"/>
 					<circle class="ew-cheek" cx="34" cy="62" r="4.2"/><circle class="ew-cheek" cx="66" cy="62" r="4.2"/>
 					<path class="ew-smile" stroke-width="2.4" stroke-linecap="round" d="M44.9 61.8 A6 6 0 0 0 55.1 61.8"/>
-				</svg>
+				</g></svg>
 				<div id="ew-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" data-indeterminate="true" hidden><div id="ew-progress-fill"></div></div>
 				<button id="ew-play" type="button" hidden></button>
+			</div>
+			<!-- F113: rotate prompt (the phone of design/icons/game/rotate_phone.svg, Mây reused from the loading view). -->
+			<div id="ew-rotate">
+				<svg class="ew-rotate-phone" viewBox="0 0 48 48" aria-hidden="true">
+					<rect class="ew-rotate-upright" x="5" y="4" width="15" height="25" rx="3" stroke-width="3"/>
+					<rect class="ew-rotate-sideways" x="17" y="27" width="27" height="16" rx="3" stroke-width="3"/>
+					<circle class="ew-rotate-button" cx="40" cy="35" r="1.6"/>
+					<g class="ew-rotate-arrow" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M26 6a15 15 0 0 1 15 15"/><path d="M44 16l-3 6-5-4"/></g>
+				</svg>
+				<div class="ew-bubble"><p id="ew-rotate-title" class="ew-rotate-title" aria-live="polite"></p><p id="ew-rotate-hint" class="ew-rotate-hint"></p></div>
+				<svg class="ew-mascot" viewBox="0 0 100 100" aria-hidden="true"><use href="#ew-mascot-art"/></svg>
 			</div>
 		</div>
 
@@ -359,6 +431,8 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 			unofficial: 'EduWorld chỉ hỗ trợ chính thức Chrome và Edge. Trình duyệt này vẫn chơi được nhưng có thể gặp lỗi.',
 			dismiss: 'Đã hiểu',
 			error: 'Không khởi động được trò chơi. Hãy tải lại trang; nếu vẫn lỗi, hãy đóng bớt thẻ khác hoặc dùng Chrome, Edge bản mới.',
+			rotate_title: 'Xoay ngang điện thoại để chơi nhé!',
+			rotate_hint: 'EduWorld chơi theo chiều ngang. Trên máy tính, em kéo cửa sổ rộng ra nhé.',
 		},
 		en: {
 			title: 'EduWorld',
@@ -372,6 +446,8 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 			unofficial: 'EduWorld officially supports Chrome and Edge only. This browser can still play but may show errors.',
 			dismiss: 'Got it',
 			error: 'The game could not start. Reload the page; if it still fails, close other tabs or use a recent Chrome or Edge.',
+			rotate_title: 'Turn your phone sideways to play!',
+			rotate_hint: 'EduWorld plays in landscape. On a computer, make the window wider.',
 		},
 	};
 
@@ -469,6 +545,42 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 		}
 	}
 
+	// F113 (STUDENT_GAME_UX §2): a window taller than wide is portrait; a square one counts as landscape (same rule as
+	// OrientationPolicy in the game).
+	function isPortrait(width, height) {
+		return Number(height) > Number(width);
+	}
+
+	// Keeps #ew-shell[data-portrait] in step with the window (CSS shows the rotate prompt from it).
+	function watchOrientation(win, shell) {
+		const update = () => {
+			shell.dataset.portrait = isPortrait(win.innerWidth, win.innerHeight) ? 'true' : 'false';
+		};
+		update();
+		win.addEventListener('resize', update);
+		win.addEventListener('orientationchange', update);
+		return update;
+	}
+
+	// F113-AC-07: on a touch device, inside the "Chơi" click (user gesture), try full screen then the landscape lock
+	// (Android Chrome); every refusal or missing API resolves to false silently. Never delays the engine start.
+	function tryLockLandscape(win) {
+		try {
+			const coarse = typeof win.matchMedia === 'function' && win.matchMedia('(pointer: coarse)').matches;
+			const orientation = win.screen && win.screen.orientation;
+			if (!coarse || !orientation || typeof orientation.lock !== 'function') {
+				return Promise.resolve(false);
+			}
+			const doc = win.document;
+			const root = doc.documentElement;
+			const full = doc.fullscreenElement || typeof root.requestFullscreen !== 'function'
+				? Promise.resolve() : root.requestFullscreen({ navigationUI: 'hide' });
+			return Promise.resolve(full).then(() => orientation.lock('landscape')).then(() => true, () => false);
+		} catch (e) {
+			return Promise.resolve(false);
+		}
+	}
+
 	function loadScript(doc, src) {
 		return new Promise((resolve, reject) => {
 			const s = doc.createElement('script');
@@ -481,7 +593,7 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 
 	function run(win, deps) {
 		const doc = win.document;
-		const d = Object.assign({ loadScript: (src) => loadScript(doc, src) }, deps || {});
+		const d = Object.assign({ loadScript: (src) => loadScript(doc, src), lockLandscape: tryLockLandscape }, deps || {});
 		const t = STRINGS[pickLocale(win.navigator.languages || [win.navigator.language])];
 		const shell = doc.getElementById('ew-shell');
 		const message = doc.getElementById('ew-message');
@@ -490,6 +602,9 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 		doc.documentElement.lang = t === STRINGS.en ? 'en' : 'vi';
 		doc.getElementById('ew-title').textContent = t.title;
 		play.textContent = t.play;
+		doc.getElementById('ew-rotate-title').textContent = t.rotate_title;
+		doc.getElementById('ew-rotate-hint').textContent = t.rotate_hint;
+		watchOrientation(win, shell);
 
 		function state(name, text) {
 			shell.dataset.state = name;
@@ -549,6 +664,11 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 				return new Promise((resolve) => {
 					play.addEventListener('click', function onPlay() {
 						play.removeEventListener('click', onPlay);
+						try {
+							d.lockLandscape(win);
+						} catch (e) {
+							// F113-AC-07: a refused or missing lock never stops the start.
+						}
 						state('starting', t.starting);
 						const args = ['--main-pack', pack].concat(config.args || []);
 						engine.start({ args: args }).then(() => {
@@ -573,6 +693,9 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 		HEAP_POLICY: HEAP_POLICY,
 		pickLocale: pickLocale,
 		setProgress: setProgress,
+		isPortrait: isPortrait,
+		watchOrientation: watchOrientation,
+		tryLockLandscape: tryLockLandscape,
 		browserSupport: browserSupport,
 		hasWebGL2: hasWebGL2,
 		installHeapPolicy: installHeapPolicy,

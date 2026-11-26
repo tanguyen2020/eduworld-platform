@@ -8,10 +8,13 @@ extends RefCounted
 ## box), no wrapped text taller than its button/label (it would spill over the next control), and no trimmed
 ## single-line text, no two buttons of the same parent overlapping. Returns one line per problem.
 
-## Reference windows → logical size with `stretch canvas_items` + `aspect expand` on the 1280×720 base.
+## Reference windows → logical size with `stretch canvas_items` + `aspect expand` on the 1280×720 base. Landscape only
+## (F113, STUDENT_GAME_UX §2): 1280×720, 1024×600 and a phone held sideways (844×390 → 1558×720).
 const SIZES: Dictionary = {
-	"1280x720": Vector2i(1280, 720), "1024x600": Vector2i(1280, 750), "720x1280": Vector2i(1280, 2276),
+	"1280x720": Vector2i(1280, 720), "1024x600": Vector2i(1280, 750), "844x390": Vector2i(1558, 720),
 }
+## F113-AC-05: windows taller than wide (720×1280, a phone held upright 390×844) — only the rotate prompt is checked.
+const PORTRAIT_SIZES: Dictionary = {"720x1280": Vector2i(1280, 2276), "390x844": Vector2i(1280, 2770)}
 const TOLERANCE_PX: float = 1.0
 
 ## Controls checked by the last `check` (buttons, texts) — a screen that checks nothing is a broken probe.

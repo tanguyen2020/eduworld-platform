@@ -2274,3 +2274,12 @@ msgstr "Thưởng khi đủ bộ:"
 msgid "ui.challenge.minutes"
 msgstr "{m} phút"
 
+msgid "ui.rotate.title"
+msgstr "Xoay ngang điện thoại để chơi nhé!"
+
+msgid "ui.rotate.hint"
+msgstr "Trò chơi đang chờ em. Xoay ngang là chơi tiếp ngay."
+
+msgid "ui.rotate.desktop"
+msgstr "Trên máy tính, em kéo cửa sổ rộng ra nhé."
+

@@ -36,6 +36,8 @@ var allow_insecure: bool = OS.is_debug_build()
 
 
 func _ready() -> void:
+	# F113-AC-04: requests finish behind the rotate prompt (OrientationGuard pauses the tree, not the network).
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	if transport == null:
 		transport = HttpRequestPool.new(self)
 	if clock == null:

@@ -37,6 +37,8 @@ AudioDirector="*res://scripts/core/audio_director.gd"
 Settings="*res://scripts/core/settings.gd"
 QualityManager="*res://scripts/core/quality_manager.gd"
 ActivityRendererRegistry="*res://scripts/learning/activity_renderer_registry.gd"
+; F113: rotate prompt while the window is taller than wide (STUDENT_GAME_UX §2, GODOT_ARCHITECTURE §10.2).
+OrientationGuard="*res://scripts/core/orientation_guard.gd"
 
 [debug]
 
@@ -53,6 +55,9 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+; F113 (STUDENT_GAME_UX §2 landscape on every platform): Android/iOS show landscape only and follow the sensor between
+; the two landscape sides (4 = DisplayServer.SCREEN_SENSOR_LANDSCAPE). The export presets never override it.
+window/handheld/orientation=4
 
 [editor_plugins]
 

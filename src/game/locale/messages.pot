@@ -1938,6 +1938,15 @@ msgstr ""
 msgid "ui.reward.xp"
 msgstr ""
 
+msgid "ui.rotate.desktop"
+msgstr ""
+
+msgid "ui.rotate.hint"
+msgstr ""
+
+msgid "ui.rotate.title"
+msgstr ""
+
 msgid "ui.settings.about"
 msgstr ""
 

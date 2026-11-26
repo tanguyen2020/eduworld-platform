@@ -28,6 +28,8 @@ const SCREENS: PackedStringArray = [
 	"activity_tap_grading", "activity_tap_correct", "activity_tap_incorrect", "activity_tap_confirm",
 	# F099: media players (video playing with a caption, video question, audio lesson, simulation).
 	"activity_video", "activity_video_cue", "activity_audio", "activity_simulation",
+	# F113: a window taller than wide (capture with --sizes=390x844): the rotate prompt covers the game.
+	"rotate_prompt",
 ]
 ## Sample look of the local player (catalog codes of the F070 fixture; display only).
 const SAMPLE_AVATAR: Dictionary = {
@@ -693,3 +695,9 @@ func _screen_activity_simulation() -> Node:
 	for i: int in 20:
 		await get_tree().process_frame
 	return host
+
+
+## F113: the rotate prompt of OrientationGuard over the hub HUD of a signed-in student (the guard reacts to the window
+## size by itself; capture with --sizes=390x844).
+func _screen_rotate_prompt() -> Node:
+	return await _world()
