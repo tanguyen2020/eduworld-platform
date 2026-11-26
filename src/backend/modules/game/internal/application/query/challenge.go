@@ -75,7 +75,12 @@ type ChallengeDifficultyOption struct {
 // ChallengeDetail is GameChallengeDetail.
 type ChallengeDetail struct {
 	ChallengeSummary
-	Description       string                      `json:"description,omitempty"`
+	Description string `json:"description,omitempty"`
+	// DescriptionI18n is the description in vi and en (delta F076-3, additive; Description stays for old clients).
+	DescriptionI18n *challenge.Text `json:"description_i18n,omitempty"`
+	// RulesSummaryI18n is the rules summary in vi and en (delta F076-3): challenge.schema.json has no such text yet, so it
+	// stays absent like rules_summary until the configuration carries one.
+	RulesSummaryI18n  *challenge.Text             `json:"rules_summary_i18n,omitempty"`
 	Version           int                         `json:"version"`
 	TimeLimitSeconds  *int                        `json:"time_limit_seconds,omitempty"`
 	CooldownUntil     *time.Time                  `json:"cooldown_until,omitempty"`
@@ -281,6 +286,11 @@ func (h Challenges) GetChallenge(ctx context.Context, challengeID uuid.UUID) (ou
 			out.Description = v.Description.VI
 			if lang, _ := ctx.Value(langKey{}).(string); lang == "en" {
 				out.Description = v.Description.EN
+			}
+			// Both languages or nothing: a published version always has both (TRANSLATION_INCOMPLETE, CONTENT_MODEL §8).
+			if v.Description.VI != "" && v.Description.EN != "" {
+				d := *v.Description
+				out.DescriptionI18n = &d
 			}
 		}
 		if d := h.Rules.Deadline(v, st.Grade, now); d != nil {
