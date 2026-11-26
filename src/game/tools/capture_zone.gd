@@ -1,7 +1,7 @@
 extends SceneTree
-## Review capture of a subject zone (F093 T004, DESIGN_SYSTEM §9, WORLD_DESIGN §4.2, §11): renders the zone of
-## `--area` from fixed camera shots of the shared subject-zone layout (tools/art/zone_kit.gd) to JPEG/PNG, before and
-## after the art pass, on the renderer of the run. Needs a renderer (not --headless):
+## Review capture of a zone (F093 T004, F094; DESIGN_SYSTEM §9, WORLD_DESIGN §4, §11): renders the zone of `--area` from
+## fixed camera shots (the shared subject-zone layout of tools/art/zone_kit.gd, or the shots of `AREA_SHOTS` for a zone
+## with its own layout) to JPEG/PNG, before and after the art pass, on the renderer of the run. Needs a renderer (not --headless):
 ##   godot --path src/game --rendering-method mobile -s res://tools/capture_zone.gd -- --area=learning_zone.math \
 ##         --out=<dir> [--tag=after] [--preset=medium] [--shots=a,b] [--format=jpg]
 ## Display only: the zone runs non-interactive data (a sample avatar on the local player), no network, no server state.
@@ -15,6 +15,35 @@ const SHOTS: Dictionary = {
 	"east": [Vector3(4, 4.5, 2), Vector3(14, 1.0, -7), 60.0],
 	"west": [Vector3(-4, 4.5, 2), Vector3(-14, 1.0, -7), 60.0],
 	"north": [Vector3(5, 4, -3), Vector3(0, 3.0, -26), 60.0],
+}
+## Shots of the zones with their own anchor layout (F094): replace the subject-zone shot of the same name.
+const AREA_SHOTS: Dictionary = {
+	"practice_zone": {
+		"east": [Vector3(1, 4.5, 6), Vector3(8, 1.0, -1), 60.0],
+		"west": [Vector3(-3, 4.5, 1), Vector3(-12, 1.0, -7), 60.0],
+	},
+	"social_zone": {
+		"east": [Vector3(2, 4.5, 4), Vector3(10, 1.0, -5), 60.0],
+		"west": [Vector3(-3, 4.5, 2), Vector3(-13, 0.5, -8), 60.0],
+	},
+	"quest_zone.discovery_ocean": {
+		"east": [Vector3(4, 4.5, 0), Vector3(16, 1.0, -9), 60.0],
+		"west": [Vector3(-4, 4.5, 0), Vector3(-16, 1.0, -9), 60.0],
+		"north": [Vector3(5, 4, -6), Vector3(0, 3.0, -28), 60.0],
+	},
+	"challenge_mountain": {
+		"east": [Vector3(3, 4.5, -1), Vector3(12, 1.0, -11), 60.0],
+		"west": [Vector3(-3, 4.5, -1), Vector3(-11, 1.0, -10), 60.0],
+		"north": [Vector3(6, 4, -8), Vector3(0, 4.0, -30), 60.0],
+	},
+	"exam_zone": {
+		"east": [Vector3(-1, 4, 7), Vector3(6, 1.5, -1), 60.0],
+		"west": [Vector3(-3, 4.5, 1), Vector3(-11, 1.0, -7), 60.0],
+	},
+	"arena": {
+		"east": [Vector3(1, 4, 8), Vector3(10, 1.5, 0), 60.0],
+		"west": [Vector3(-1, 4, 8), Vector3(-9, 1.5, -2), 60.0],
+	},
 }
 ## Sample look of the local player (catalog codes of the F070 fixture; display only).
 const SAMPLE_AVATAR: Dictionary = {
@@ -68,7 +97,7 @@ func _run() -> void:
 	for shot: String in SHOTS:
 		if not only.is_empty() and not shot in only:
 			continue
-		var spec: Array = SHOTS[shot] as Array
+		var spec: Array = ((AREA_SHOTS.get(area, {}) as Dictionary).get(shot, SHOTS[shot])) as Array
 		camera.fov = float(spec[2])
 		camera.global_position = spec[0] as Vector3
 		camera.look_at(spec[1] as Vector3, Vector3.UP)

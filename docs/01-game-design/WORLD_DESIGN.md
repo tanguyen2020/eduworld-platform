@@ -130,6 +130,7 @@ flowchart TB
 | Điểm nhấn | **Quảng trường Tia Sáng**: bảng nhiệm vụ, bảng tin trường, cổng gió đi các vùng, Cây Tia Sáng lớn lên theo tổng mastery của **khối trong trường** (hợp tác, không xếp hạng cá nhân, không tên — ADR-0095). **Thư viện Gió** (Practice Zone): bàn học cá nhân, góc học cùng nhau, luyện theo chủ đề/mức/LO, ôn câu sai. **Vườn Bạn Bè** (Social Zone): danh sách bạn, lập party, emote, mini-game vui chơi nhẹ, góc club |
 | Hoạt động | Nhận daily/weekly quest, bài được giao, tủ đồ, Shop Xu, bảng xếp hạng (cá nhân trường/khối; khối 1–3 xem mục tiêu tập thể `grade_goal`), lập party |
 | An toàn | Mọi tương tác xã hội theo ADR-0020/ADR-0054 và [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
+| Hình ảnh ([F094](../../specs/094-art-pass-4-remaining-zones/spec.md)) [Proposed — set piece; owner duyệt qua ảnh] | **Thư viện Gió**: thư viện gió tường vàng mái ngói có chong chóng gió, trạm luyện tập (bảng đá, bục sách), góc học cùng nhau (bàn tròn, ô che), dãy bàn học cá nhân, vòm sách trên lối chính. **Vườn Bạn Bè**: nhà tổ ong của Chú Ong Kết Nối, chậu hạt giống hoa hướng dương, vòm hoa trái tim, sân chơi (xích đu, bập bênh), chỗ picnic, góc club (ba mái che có cờ). Mọi vùng có biển chỉ đường biểu tượng hình gần điểm spawn (cổng gió về Thị trấn = ngôi nhà) và vòng sáng quanh điểm tương tác |
 
 ### 4.2. Các vùng môn học (B)
 
@@ -143,7 +144,7 @@ flowchart TB
 
 ### 4.3. Đại dương Khám Phá (G)
 
-Vùng phiêu lưu: các đảo nhỏ, hang động, xác tàu cổ; quest khám phá nhiều bước, liên môn, secret quest, vật sưu tầm hiếm. Quest co-op mở `private_instance` cho party. NPC theo chủ đề cấu hình qua `npc_dialogue` (ví dụ Bác Thợ Cầu cần tính độ dài để sửa cầu; Cô Bé Hoa cần ghép từ thành câu).
+Vùng phiêu lưu: các đảo nhỏ, hang động, xác tàu cổ (hình ảnh F094 [Proposed]: đảo cát giữa biển, hải đăng sọc đỏ trắng, xác tàu gỗ có rương — không đại bác, hang san hô, vòm vỏ sò, tượng Bạch Tuộc Câu Đố hiền, thuyền thúng); quest khám phá nhiều bước, liên môn, secret quest, vật sưu tầm hiếm. Quest co-op mở `private_instance` cho party. NPC theo chủ đề cấu hình qua `npc_dialogue` (ví dụ Bác Thợ Cầu cần tính độ dài để sửa cầu; Cô Bé Hoa cần ghép từ thành câu).
 
 ### 4.4. Núi Thử Thách (D + challenge)
 
@@ -151,11 +152,12 @@ Vùng phiêu lưu: các đảo nhỏ, hang động, xác tàu cổ; quest khám 
 |---|---|
 | Tháp Thử Thách (Exam Zone) | Practice Test, Mock Exam, Chapter/Semester/Subject Test, Custom Assessment, Timed Exam ([EXAM_ENGINE](../02-learning/EXAM_ENGINE.md)). Vào phòng thi: UI tối giản, ẩn người chơi khác, khung chat ẩn trong khi làm bài (tin nhắn xem lại sau khi nộp). Sau khi nộp: phòng "Gương Phản Chiếu" phân tích câu sai + gợi ý ôn |
 | Sườn núi | Challenge các loại và boss tổng hợp nhiều LO ([CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md)) |
+| Hình ảnh ([F094](../../specs/094-art-pass-4-remaining-zones/spec.md)) [Proposed — set piece] | **Núi Thử Thách**: đỉnh núi đá có Tinh Thể Tri Thức lơ lửng trong vòng sáng, núi tuyết xa, đài ngắm cảnh có ống nhòm, cụm tinh thể, vòng thử thách bằng đá có trụ tinh thể, thông, ụ đá xếp. **Tháp Thử Thách**: yên tĩnh, tập trung — tháp bốn tầng mái ngói men xanh dịu, bảng kỳ thi (mặt đồng hồ, lịch trống), hồ Gương Phản Chiếu, vườn sỏi cào, đình học; không màu đỏ/cam rực |
 | Instance | Sảnh: `hub_instance`; phòng thi: màn hình đơn người (không realtime); boss party: `private_instance` |
 
 ### 4.5. Đấu trường Nhà Vô Địch (E)
 
-Sảnh có bảng xếp hạng 3D (chỉ nickname), xếp hàng 1v1/Team Battle/Timed Quiz/Co-op Challenge, đăng ký tournament, lịch sử trận. Trận diễn ra trong `battle` room riêng (sân khấu trả lời câu hỏi). Luật thi đấu: [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md).
+Sảnh có bảng xếp hạng 3D (chỉ nickname), xếp hàng 1v1/Team Battle/Timed Quiz/Co-op Challenge, đăng ký tournament, lịch sử trận. Trận diễn ra trong `battle` room riêng (sân khấu trả lời câu hỏi). Hình ảnh sảnh ([F094](../../specs/094-art-pass-4-remaining-zones/spec.md), [Proposed — set piece]): lễ hội, thân thiện, không vũ khí — sân vận động tròn mái bạt sọc màu có ngôi sao, bốn cổng xếp hàng có biểu tượng hình (1v1, đội, tính giờ, co-op), bảng lịch giải đấu, bục vinh danh 1-2-3 với bảng ô trống (không tên trong scene), tượng cúp, quầy lễ hội, bóng bay, dây cờ. Luật thi đấu: [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md).
 
 ## 5. Cấu trúc thế giới
 
@@ -247,7 +249,7 @@ Sự kiện thế giới là sự kiện live-ops loại `world_festival` (lễ 
 | Mastery visualization | Đất xám → có màu → nở hoa/cây lớn theo `beginning/developing/proficient/mastered`. **Cây Tia Sáng** của Quảng trường có 5 cấp hình: 0 cây non xám (`not_started`), 1 cây non xanh (`beginning`), 2 cây đa đang lớn có vài tia sáng (`developing`), 3 cây đa đầy đủ rễ phụ và quả tia sáng (`proficient`), 4 cây đa nở hoa, nhiều tia sáng (`mastered`); cấp = trung bình các mức `MasteryLevel` làm tròn; chưa có dữ liệu → cấp 3 [Proposed — Câu hỏi mở F068-1: chưa có API tổng mastery của khối trong trường]. Chỉ hiển thị (client `SparkTreeModel`), không luật phía server | [Confirmed] · cấp mặc định [Proposed] |
 | Trợ năng | Không chỉ dùng màu (thêm biểu tượng); chế độ tương phản cao | [Confirmed] |
 | Ngân sách hiệu năng | Theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) (nơi sở hữu, máy tầm trung — ADR-0057); áp dụng trong pipeline dựng ở [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) §6 | — |
-| Nguồn asset | Chỉ license MIT, CC0 hoặc public domain; asset tự làm phát hành MIT; cấm share-alike, non-commercial, GPL, pack trả phí — [ADR-0102](../adr/ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md) (thay phần nguồn asset của OQ-16; phong cách thay bởi ADR-0103, license không đổi). Lượt đầu: Main Hub + nhân vật chibi tự làm bằng code ([F067](../../specs/067-art-pass-hub-chibi/spec.md)); art pass 2 theo hướng Chibi anime cartoon 3D: [F068](../../specs/068-art-pass-2-chibi-anime/spec.md); năm vùng môn học: [F093](../../specs/093-art-pass-3-subject-zones/spec.md); sáu vùng còn lại: F094 | [Confirmed — owner 2026-11-24] |
+| Nguồn asset | Chỉ license MIT, CC0 hoặc public domain; asset tự làm phát hành MIT; cấm share-alike, non-commercial, GPL, pack trả phí — [ADR-0102](../adr/ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md) (thay phần nguồn asset của OQ-16; phong cách thay bởi ADR-0103, license không đổi). Lượt đầu: Main Hub + nhân vật chibi tự làm bằng code ([F067](../../specs/067-art-pass-hub-chibi/spec.md)); art pass 2 theo hướng Chibi anime cartoon 3D: [F068](../../specs/068-art-pass-2-chibi-anime/spec.md); năm vùng môn học: [F093](../../specs/093-art-pass-3-subject-zones/spec.md); sáu vùng còn lại: [F094](../../specs/094-art-pass-4-remaining-zones/spec.md) | [Confirmed — owner 2026-11-24] |
 | Design system | Màu, font, UI, toon/outline, ánh sáng, VFX từ game design system ([DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) §5) | [Confirmed — ADR-0047] |
 
 ## 12. Dữ liệu, API, event, lỗi

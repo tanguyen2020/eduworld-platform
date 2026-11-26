@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## F093-AC-03 (NFR-COMP-001, TC-PERF-018): every subject zone of art pass 3 stays inside `scene_budget_zone`
+## F093-AC-03, F094-AC-04 (NFR-COMP-001, TC-PERF-018): every zone of art passes 3 and 4 stays inside `scene_budget_zone`
 ## (PERFORMANCE_BUDGET §7 row "Vùng môn học / khám phá": ≤ 120k triangles, ≤ 90 draw calls, ≤ 50 dynamic bodies,
 ## Mobile/Web column) with the CI tolerance `perf_budget_tolerance_ci`, measured headless by the static proxy of the
 ## benchmark (tests/perf/zone_benchmark.gd); the per-frame primitives / draw calls on the Mobile and Compatibility
@@ -8,7 +8,8 @@ extends GdUnitTestSuite
 const Bench := preload("res://tests/perf/zone_benchmark.gd")
 const HubBench := preload("res://tests/perf/main_hub_benchmark.gd")
 const ZONES: PackedStringArray = ["learning_zone.math", "learning_zone.vietnamese", "learning_zone.english",
-	"learning_zone.science", "learning_zone.history"]
+	"learning_zone.science", "learning_zone.history", "practice_zone", "social_zone", "quest_zone.discovery_ocean",
+	"challenge_mountain", "exam_zone", "arena"]
 ## CONFIG_DEFAULTS `load_time`: ≤ 20 s.
 const LOAD_TIME_MS: int = 20000
 
@@ -26,7 +27,7 @@ func test_subject_zones_stay_in_the_zone_budget() -> void:
 		assert_int(int(stats["triangles"])).override_failure_message(area).is_less_equal(int(Bench.BUDGET_TRIANGLES * Bench.TOLERANCE))
 		assert_int(int(stats["draw_calls"])).override_failure_message(area).is_less_equal(int(Bench.BUDGET_DRAW_CALLS * Bench.TOLERANCE))
 		assert_int(int(stats["dynamic_bodies"])).override_failure_message(area).is_less_equal(Bench.BUDGET_DYNAMIC_BODIES)
-		assert_int(int(stats["triangles"])).is_greater(20000)
+		assert_int(int(stats["triangles"])).is_greater(12000)  # real art, not the F071 greybox (a dozen triangles)
 		assert_int(load_ms).is_less_equal(LOAD_TIME_MS)
 		zone.free()
 

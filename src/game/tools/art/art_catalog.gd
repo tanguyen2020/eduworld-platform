@@ -13,6 +13,12 @@ const ZoneVietnameseArt := preload("res://tools/art/zone_vietnamese_art.gd")
 const ZoneEnglishArt := preload("res://tools/art/zone_english_art.gd")
 const ZoneScienceArt := preload("res://tools/art/zone_science_art.gd")
 const ZoneHistoryArt := preload("res://tools/art/zone_history_art.gd")
+const ZonePracticeArt := preload("res://tools/art/zone_practice_art.gd")
+const ZoneSocialArt := preload("res://tools/art/zone_social_art.gd")
+const ZoneOceanArt := preload("res://tools/art/zone_ocean_art.gd")
+const ZoneMountainArt := preload("res://tools/art/zone_mountain_art.gd")
+const ZoneExamArt := preload("res://tools/art/zone_exam_art.gd")
+const ZoneArenaArt := preload("res://tools/art/zone_arena_art.gd")
 
 const MODELS_DIR: String = "res://assets/models"
 const TOLERANCE: float = 0.002
@@ -29,9 +35,13 @@ const VEG_KINDS: Dictionary = {
 	"tuft": "veg_tuft_a", "flower": "veg_flower_a", "rice": "veg_rice_a",
 }
 const ACCESSORIES: PackedStringArray = ["acc_cap_star", "acc_glasses_round", "acc_backpack_owl", "acc_flag_small"]
-## Subject zones of art pass 3 (F093, WORLD_DESIGN §4.2): zone slug → recipe script (meshes(), SCATTER, placements()).
+## Zones of art pass 3 (F093 subject zones, WORLD_DESIGN §4.2) and art pass 4 (F094, the six remaining zones): zone slug →
+## recipe script (meshes(), SCATTER, placements()).
 const ZONES: Dictionary = {"math": ZoneMathArt, "vietnamese": ZoneVietnameseArt, "english": ZoneEnglishArt,
-	"science": ZoneScienceArt, "history": ZoneHistoryArt}
+	"science": ZoneScienceArt, "history": ZoneHistoryArt, "practice": ZonePracticeArt,
+	"social": ZoneSocialArt, "ocean": ZoneOceanArt,
+	"mountain": ZoneMountainArt, "exam": ZoneExamArt,
+	"arena": ZoneArenaArt}
 ## Growth stages of the Spark Tree (F068, WORLD_DESIGN §11 mastery visualization): 0 grey … 4 in bloom.
 const SPARK_TREE_STAGES: int = 5
 
@@ -91,6 +101,7 @@ static func zone_scatters() -> Dictionary:
 static func meshes() -> Dictionary:
 	var out: Dictionary = {
 		MODELS_DIR + "/env/env_hub_terrain_a.res": HubArt.terrain,
+		MODELS_DIR + "/env/env_hub_far_a.res": HubArt.far,
 		MODELS_DIR + "/bld/bld_hub_set_a.res": HubArt.buildings,
 		MODELS_DIR + "/prop/prop_hub_set_a.res": HubArt.props,
 		MODELS_DIR + "/prop/prop_notice_board_a.res": HubArt.notice_board,
