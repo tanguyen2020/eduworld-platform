@@ -73,6 +73,14 @@ func (p Projection) PlayerProfile(ctx context.Context, tenant, student uuid.UUID
 	return p.Refs.PlayerProfile(ctx, student, tenant, nickname, level, avatar, version)
 }
 
+// PlayerLevel applies level.reached (to_level) to the public card (delta F102: PartyMember.level).
+func (p Projection) PlayerLevel(ctx context.Context, tenant, student uuid.UUID, level int) (bool, error) {
+	if err := p.owned(ctx, tenant, "player_profiles", student); err != nil {
+		return false, err
+	}
+	return p.Refs.PlayerLevel(ctx, student, tenant, level)
+}
+
 // Friendship applies friend.added (active) and friend.removed (inactive) of module chat (owner F095, spec F091 A-1).
 func (p Projection) Friendship(ctx context.Context, tenant, low, high uuid.UUID, active bool, version int64) (bool, error) {
 	return p.Refs.Friendship(ctx, tenant, low, high, active, version)

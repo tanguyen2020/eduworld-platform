@@ -196,6 +196,9 @@ type ProjectionWriter interface {
 	Placement(ctx context.Context, student, tenant, school uuid.UUID, grade int, active bool, version int64) (bool, error)
 	StudentDeleted(ctx context.Context, student, tenant uuid.UUID, deleted bool, at time.Time) (bool, error)
 	PlayerProfile(ctx context.Context, student, tenant uuid.UUID, nickname *string, level int, avatar []byte, version int64) (bool, error)
+	// PlayerLevel raises the level of an existing ref.player_profiles row from level.reached of module game (delta F102;
+	// levels never decrease — PROGRESSION_SYSTEM level_floor_protection — so the highest value wins whatever the order).
+	PlayerLevel(ctx context.Context, student, tenant uuid.UUID, level int) (bool, error)
 	// Friendship and Block apply friend.added/removed and user.blocked/unblocked of module chat (owner F095).
 	Friendship(ctx context.Context, tenant, low, high uuid.UUID, active bool, version int64) (bool, error)
 	Block(ctx context.Context, tenant, blocker, blocked uuid.UUID, active bool, version int64) (bool, error)

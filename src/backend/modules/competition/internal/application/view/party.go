@@ -68,6 +68,11 @@ func (v Party) Body() map[string]any {
 		if len(c.Avatar) > 0 && string(c.Avatar) != "null" {
 			mb["avatar_config"] = c.Avatar
 		}
+		// XP level of the projection ref.player_profiles (delta F102): absent while game has projected nothing for the
+		// student — the party read never fails for it.
+		if known, ok := v.Cards[m.StudentID]; ok && known.Level >= 1 {
+			mb["level"] = known.Level
+		}
 		if v.present {
 			mb["presence"] = PresenceOffline
 			if v.Online[m.StudentID] {

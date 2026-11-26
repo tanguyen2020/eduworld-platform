@@ -101,8 +101,17 @@ func (Refs) PlayerProfile(ctx context.Context, student, tenant uuid.UUID, nickna
 	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); ref.* has no deleted_at (rule 2)
 	return exec(ctx, `INSERT INTO ref.player_profiles AS p (student_id, tenant_id, nickname, level, avatar_config, source_version)
 		VALUES ($1, $2, $3::varchar, $4, $5::jsonb, $6)
-		ON CONFLICT (student_id) DO UPDATE SET nickname = $3, level = $4, avatar_config = $5::jsonb, source_version = $6
+		ON CONFLICT (student_id) DO UPDATE SET nickname = $3, level = GREATEST(p.level, $4), avatar_config = $5::jsonb, source_version = $6
 		WHERE p.source_version < $6 AND p.tenant_id = $2`, student, tenant, nickname, level, a, version)
+}
+
+// PlayerLevel raises ref.player_profiles.level from level.reached (delta F102). Only an existing row of the tenant is
+// updated: the card (nickname, avatar) comes from game_profile.updated, which carries the level too; a level never
+// decreases (level_floor_protection), so GREATEST makes the order of the two events irrelevant.
+func (Refs) PlayerLevel(ctx context.Context, student, tenant uuid.UUID, level int) (bool, error) {
+	// tenancyguard:ok projection update under the event TenantScope (RLS on tenant_id); ref.* has no deleted_at (rule 2)
+	return exec(ctx, `UPDATE ref.player_profiles SET level = $3 WHERE student_id = $1 AND tenant_id = $2 AND level < $3`,
+		student, tenant, level)
 }
 
 // Friendship upserts ref.friendships from friend.added / friend.removed (newer source_version only; a pair never moves

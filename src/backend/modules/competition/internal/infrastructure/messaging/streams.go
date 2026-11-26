@@ -27,9 +27,10 @@ var HubAccessRevokedEvents = []string{"user.access_revoked"}
 // ProjectionGameName keeps ref.player_profiles and pushes appearance changes to the hub (F091-AC-19).
 const ProjectionGameName = "competition.projection_game"
 
-// ProjectionGameEvents are the game events it projects (owner F070). content.published (item_type = world_area) and
-// world.area_unlocked join this consumer when F071 defines their payload (F091 T005: not created here).
-var ProjectionGameEvents = []string{"game_profile.updated"}
+// ProjectionGameEvents are the game events it projects: game_profile.updated (owner F070) and level.reached (owner
+// F074, the level of PartyMember — delta F102). content.published (item_type = world_area) and world.area_unlocked join
+// this consumer when F071 defines their payload (F091 T005: not created here).
+var ProjectionGameEvents = []string{"game_profile.updated", "level.reached"}
 
 // ChatStream is the stream of the producer chat.
 var ChatStream = natsx.EventStream("chat")

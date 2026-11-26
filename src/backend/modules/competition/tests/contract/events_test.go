@@ -43,6 +43,10 @@ func (f *fakeRefs) PlayerProfile(context.Context, uuid.UUID, uuid.UUID, *string,
 	f.calls = append(f.calls, "profile")
 	return true, nil
 }
+func (f *fakeRefs) PlayerLevel(context.Context, uuid.UUID, uuid.UUID, int) (bool, error) {
+	f.calls = append(f.calls, "level")
+	return true, nil
+}
 
 func (f *fakeRefs) Friendship(_ context.Context, _, _, _ uuid.UUID, active bool, _ int64) (bool, error) {
 	f.calls = append(f.calls, map[bool]string{true: "friend+", false: "friend-"}[active])
@@ -118,6 +122,8 @@ func TestConsumersAcceptOwnerExamples(t *testing.T) {
 		// ADR-0095: student.placement_changed carries school and grade level (owner F010).
 		{"identity", "student.placement_changed", "placement", id.Handle},
 		{"game", "game_profile.updated", "profile", game.Handle},
+		// Delta F102: level.reached (owner F074) keeps ref.player_profiles.level (PartyMember.level).
+		{"game", "level.reached", "level", game.Handle},
 		// F095 T021: the relation events of module chat (spec F091 A-1).
 		{"chat", "friend.added", "friend+", socialP.Handle},
 		{"chat", "friend.removed", "friend-", socialP.Handle},
@@ -147,6 +153,10 @@ func TestConsumersAcceptOwnerExamples(t *testing.T) {
 	bad := outbox.Envelope{EventType: "game_profile.updated", TenantID: tenant, Payload: json.RawMessage(`{"student_id":"x"}`)}
 	if err := game.Handle(context.Background(), bad); err == nil || !errors.Is(err, outbox.ErrPermanent) {
 		t.Fatalf("invalid payload not refused: %v", err)
+	}
+	badLevel := outbox.Envelope{EventType: "level.reached", TenantID: tenant, Payload: json.RawMessage(`{"student_id":"` + uuid.NewString() + `","to_level":1}`)}
+	if err := game.Handle(context.Background(), badLevel); err == nil || !errors.Is(err, outbox.ErrPermanent) {
+		t.Fatalf("invalid level.reached not refused: %v", err)
 	}
 }
 

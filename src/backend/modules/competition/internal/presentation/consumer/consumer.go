@@ -245,8 +245,8 @@ type HubPresence interface {
 	RemoveStudent(ctx context.Context, user uuid.UUID, reason string) error
 }
 
-// GameProjection is the consumer competition.projection_game: ref.player_profiles from game_profile.updated, then
-// hub.player.appearance_changed for the instance of the student (F091-AC-19).
+// GameProjection is the consumer competition.projection_game: ref.player_profiles from game_profile.updated (then
+// hub.player.appearance_changed for the instance of the student, F091-AC-19) and level.reached (delta F102).
 type GameProjection struct {
 	P   command.Projection
 	Hub HubPresence
@@ -260,6 +260,9 @@ func GameProjectionOptions(h GameProjection, uow *entx.UnitOfWork, dlq *sql.DB, 
 
 // Handle implements outbox.Handler.
 func (c GameProjection) Handle(ctx context.Context, e outbox.Envelope) error {
+	if e.EventType == "level.reached" {
+		return c.levelReached(ctx, e)
+	}
 	if e.EventType != "game_profile.updated" {
 		return nil
 	}
@@ -302,6 +305,27 @@ func (c GameProjection) Handle(ctx context.Context, e outbox.Envelope) error {
 			slog.WarnContext(ctx, "competition: appearance not pushed", "error", err)
 		}
 	})
+}
+
+// levelReached applies level.reached (owner F074) to ref.player_profiles.level: the level of PartyMember (delta F102)
+// and of every public card stays current between two game_profile.updated. Public data only (R16).
+func (c GameProjection) levelReached(ctx context.Context, e outbox.Envelope) error {
+	var p struct {
+		StudentID uuid.UUID `json:"student_id"`
+		ToLevel   int       `json:"to_level"`
+	}
+	if err := decode(e, &p); err != nil {
+		return outbox.Permanent(err)
+	}
+	tenant, err := envTenant(e)
+	switch {
+	case err != nil:
+		return outbox.Permanent(err)
+	case p.StudentID == uuid.Nil || p.ToLevel < 2 || p.ToLevel > 200:
+		return outbox.Permanent(invalid(e.EventType, "student_id/to_level"))
+	}
+	ok, err := c.P.PlayerLevel(ctx, tenant, p.StudentID, p.ToLevel)
+	return classify("player_profiles", e, ok, err)
 }
 
 // HubAccessRevoked is the consumer competition.hub_access_revoked: a revoked student leaves the hub at once, without

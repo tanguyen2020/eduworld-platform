@@ -10,7 +10,7 @@ import (
 )
 
 // T016 — F100-AC-06 (TC-TEN-001, R16): getMyParty / getParty return the members with student_id, nickname, avatar,
-// role, joined_at only (no real name, school, class); a non-member, a party of another school or tenant → 404
+// role, joined_at, level only (no real name, school, class); a non-member, a party of another school or tenant → 404
 // PARTY_NOT_FOUND.
 func TestGetParty(t *testing.T) {
 	e := setupParty(t, popts{})
@@ -31,10 +31,13 @@ func TestGetParty(t *testing.T) {
 			for _, m := range ms {
 				for k := range m {
 					switch k {
-					case "student_id", "nickname", "avatar_config", "role", "joined_at", "presence":
+					case "student_id", "nickname", "avatar_config", "role", "joined_at", "presence", "level": // level: delta F102
 					default:
 						t.Fatalf("member field %s: %s", k, r.raw)
 					}
+				}
+				if m["level"] != float64(4) { // projected level of the public card (delta F102)
+					t.Fatalf("level: %v", m)
 				}
 				if m["student_id"] == binh.id.String() && m["presence"] != "online" {
 					t.Fatalf("presence: %v", m)
