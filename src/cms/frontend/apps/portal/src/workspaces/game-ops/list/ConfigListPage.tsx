@@ -5,14 +5,14 @@
 // "Tạo mới" is inside ActionGate. A type module game does not serve yet says so (no API call).
 import { DomainTag, SearchSelect } from '@eduworld/ops-ui';
 import { ThumbnailImage } from '@eduworld/ops-ui/game-console';
-import { Alert, Button, Flex, Table, Tabs, Tag, Typography } from 'antd';
+import { Alert, Button, Flex, Segmented, Table, Tabs, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ActionGate } from '../../../permissions/ActionGate';
 import { formatIct } from '../../../shared/release/ict';
 import { useConfigPages, type ContentStatus, type GameConfigVersion } from '../api/gameConfigs';
-import { actionOf, codeOf, CONFIG_TYPES, isConfigType, nameOf, typesOfMenu, type GameOpsMenu } from '../registry/configTypes';
+import { actionOf, codeOf, COMPETITION_GROUPS, CONFIG_TYPES, isConfigType, nameOf, typesOfGroup, typesOfMenu, type GameOpsMenu } from '../registry/configTypes';
 import { GameOpsError } from '../shared/errors';
 
 const STATUSES: ContentStatus[] = ['draft', 'in_review', 'approved', 'published', 'archived', 'rejected'];
@@ -23,8 +23,10 @@ export function ConfigListPage({ title, menu, extraTabs = [] }: { title: string;
   const { configType } = useParams();
   const [params, setParams] = useSearchParams();
   const lang = i18n.language.startsWith('en') ? 'en' : 'vi';
-  const types = typesOfMenu(menu);
-  const def = isConfigType(configType) ? CONFIG_TYPES[configType] : types[0]!;
+  const menuTypes = typesOfMenu(menu);
+  const def = isConfigType(configType) ? CONFIG_TYPES[configType] : menuTypes[0]!;
+  // "Thi đấu" (F108 US2): the 5 groups first, then the types of the group as tabs.
+  const types = def.group ? typesOfGroup(def.group) : menuTypes;
   const status = (params.get('status') ?? undefined) as ContentStatus | undefined;
   const q = useConfigPages(def.type, status, def.served);
 
@@ -43,6 +45,15 @@ export function ConfigListPage({ title, menu, extraTabs = [] }: { title: string;
   return (
     <Flex vertical gap="middle" data-testid="config-list">
       <Typography.Title level={1}>{title}</Typography.Title>
+      {def.group && (
+        <Segmented
+          aria-label={t('gameOps.competition.groups')}
+          value={def.group}
+          onChange={(g) => navigate(`../${typesOfGroup(g as never)[0]!.type}`, { relative: 'path' })}
+          options={COMPETITION_GROUPS.map((g) => ({ value: g, label: t(`gameOps.competition.group.${g}`) }))}
+          data-testid="competition-groups"
+        />
+      )}
       {(types.length > 1 || extraTabs.length > 0) && (
         <Tabs
           activeKey={def.type}

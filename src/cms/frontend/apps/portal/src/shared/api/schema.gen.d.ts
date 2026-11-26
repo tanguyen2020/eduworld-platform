@@ -5075,7 +5075,12 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Sửa version cấu hình game ở trạng thái draft */
+        /**
+         * Sửa version cấu hình game ở trạng thái draft
+         * @description Thiếu `If-Match` → `428 PRECONDITION_REQUIRED`; ETag cũ → `412 VERSION_MISMATCH`. Version không phải `draft`/`rejected`
+         *     (đã publish, đang duyệt…) → `409 CONTENT_NOT_EDITABLE`; muốn sửa cấu hình đã publish thì tạo bản nháp mới (module game:
+         *     `createGameConfigVersion`; module competition: `createGameConfig` với `config_id` + `based_on_version_id` — F108).
+         */
         patch: operations["updateGameConfigDraft"];
         trace?: never;
     };
@@ -11922,6 +11927,8 @@ export interface components {
         ContentRelease: {
             /** @enum {string} */
             action: "publish" | "rollback" | "unpublish";
+            /** @description Chỉ module competition (F108) — thời điểm release có hiệu lực ở runtime (publish theo `effective_from`; rollback/unpublish = lúc thao tác) */
+            effective_from?: components["schemas"]["Timestamp"];
             /** @description Mã lỗi guard khi lịch hẹn không áp dụng được */
             failure_code?: string;
             from_version?: number;
@@ -12059,6 +12066,8 @@ export interface components {
             author_id?: components["schemas"]["Uuid"];
             change_note?: string;
             content_version_id?: components["schemas"]["Uuid"];
+            /** @description Chỉ module competition (F108) — thời điểm version đã publish có hiệu lực */
+            effective_from?: components["schemas"]["Timestamp"];
             /** @description Nhận xét theo trường của lần từ chối gần nhất của version (F025 T046) */
             field_comments?: components["schemas"]["ReviewFieldComment"][];
             /** @description true nếu là con trỏ release hiện hành */
@@ -13080,7 +13089,21 @@ export interface components {
             generated_at: components["schemas"]["Timestamp"];
         };
         GameConfigInput: {
-            /** @description Nội dung cấu hình theo schema của loại (vd. specs/schemas/quest.schema.json, minigame-config.schema.json, reward-rule.schema.json) */
+            /**
+             * @description Chỉ module competition, đi cùng `config_id`: version nguồn (thường là version đã publish); `payload`/`title` gửi kèm là nội dung
+             *     của bản nháp mới, version nguồn không đổi (R11). Version không thuộc `config_id` → `422 VALIDATION_FAILED`.
+             */
+            based_on_version_id?: components["schemas"]["Uuid"];
+            /**
+             * @description Chỉ module competition (createGameConfig, F108): tạo **version nháp mới** cho cấu hình đã có thay vì cấu hình mới;
+             *     vắng → cấu hình mới (version 1). Cấu hình không tồn tại → `404 NOT_FOUND`.
+             */
+            config_id?: components["schemas"]["Uuid"];
+            /**
+             * @description Nội dung cấu hình theo schema của loại (vd. specs/schemas/quest.schema.json, minigame-config.schema.json, reward-rule.schema.json;
+             *     thi đấu — F108: matchmaking-config, ranking-rules, season, tournament-template, challenge-template, leaderboard-definition,
+             *     competition-reward `.schema.json`). Sai schema hoặc invariant nghiệp vụ → `422 VALIDATION_FAILED` chỉ rõ trường.
+             */
             payload: {
                 [key: string]: unknown;
             };
@@ -13126,7 +13149,7 @@ export interface components {
          * @description Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
          * @enum {string}
          */
-        GameConfigType: "quests" | "minigame-configs" | "npc-dialogues" | "world-areas" | "story-chapters" | "items" | "reward-rules" | "progression-levels" | "progression-curves" | "challenges" | "bosses" | "achievements" | "collections" | "shop-items" | "currencies" | "matchmaking-configs" | "ranking-rules" | "seasons" | "tournament-templates" | "challenge-templates" | "leaderboard-definitions" | "sticker-packs" | "gifs" | "events" | "event-templates" | "season-tracks";
+        GameConfigType: "quests" | "minigame-configs" | "npc-dialogues" | "world-areas" | "story-chapters" | "items" | "reward-rules" | "progression-levels" | "progression-curves" | "challenges" | "bosses" | "achievements" | "collections" | "shop-items" | "currencies" | "matchmaking-configs" | "ranking-rules" | "seasons" | "tournament-templates" | "challenge-templates" | "leaderboard-definitions" | "competition-rewards" | "sticker-packs" | "gifs" | "events" | "event-templates" | "season-tracks";
         GameConfigVersion: {
             author_id?: components["schemas"]["Uuid"];
             /** @description Version nguồn khi tạo bằng createGameConfigVersion (F078) */
@@ -15418,7 +15441,12 @@ export interface components {
         };
         PublishRequest: {
             change_note?: string;
-            /** @description Hẹn giờ xuất bản (UTC); bỏ trống = xuất bản ngay */
+            /**
+             * @description Chỉ module competition (F108-AC-05): thời điểm cấu hình có hiệu lực cho trận/giải tạo sau đó (UTC, ≥ hiện tại — không hồi tố);
+             *     bỏ trống = ngay lúc publish. Con trỏ release đổi ngay; runtime áp đúng `effective_from` (F108-AC-08).
+             */
+            effective_from?: components["schemas"]["Timestamp"];
+            /** @description Hẹn giờ xuất bản (UTC); bỏ trống = xuất bản ngay. Module competition không hẹn giờ publish (dùng `effective_from`) → `422 VALIDATION_FAILED`. */
             publish_at?: components["schemas"]["Timestamp"];
         };
         PurchaseResult: {

@@ -7,9 +7,11 @@
 // F056 (School Learning Dashboard and reports): school_dashboard, results, reports.
 // F122 (chat safety of the school): safety_notifications, chat_safety (school chat policy, tenant categories), clubs.
 // F081: school_events (school events from an assigned template, their progress).
+// F108 (US3): challenges — grade challenges / school tournaments from assigned templates (backend F107).
 import { lazy } from 'react';
 import { placeholderScreen, WorkspaceRoutes, type MenuScreens } from '../../permissions/RequirePermission';
 import { AuditScreen } from './audit/AuditScreen';
+import { ChallengesScreen } from './challenges/routes';
 import { ReportsScreen } from './dashboard/reports/ReportsScreen';
 import { ResultsScreen } from './dashboard/results/ResultsScreen';
 import { SchoolDashboardScreen } from './dashboard/SchoolDashboardScreen';
@@ -36,7 +38,7 @@ export const screens = {
   'menu.school_lms.sis_sync': SisScreen,
   'menu.school_lms.assignments': AssignmentsScreen, // F055 US1, US2, US5
   'menu.school_lms.game_activities': GameActivitiesScreen, // F055-AC-22
-  'menu.school_lms.challenges': placeholderScreen,
+  'menu.school_lms.challenges': ChallengesScreen, // F108 US3 (thử thách khối / giải trường)
   'menu.school_lms.clubs': ClubsScreen, // F122 US9
   'menu.school_lms.school_events': SchoolEventsScreen, // F081 US1–US4
   'menu.school_lms.school_dashboard': SchoolDashboardScreen, // F056 US1, US2, US6

@@ -1,0 +1,310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:tournament-template:1",
+  "title": "TournamentTemplate",
+  "description": "Template giải trường (config_type tournament-templates — F107, F108; COMPETITION_SYSTEM §10.2): kind school_tournament, format tournament, bracket (single/double elim, round robin, vòng bảng → knockout), cá nhân hoặc đội. Nhà trường chỉ điền allowed_params; luật, chấm điểm, phần thưởng, chat không là tham số (R15, R19); không có seeding separate_class (ADR-0095). reward_ref chỉ cosmetic/badge/title (R19). Thời gian mặc định: CONFIG_DEFAULTS tournament_timers. code do server giữ sau khi tạo.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "format",
+    "name",
+    "description",
+    "grade_levels",
+    "mode",
+    "tournament",
+    "schedule",
+    "allowed_params",
+    "reward_rule_refs",
+    "reward_summary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_]{2,63}$",
+      "description": "Mã template (dùng khi tạo; server giữ mã của cấu hình)",
+      "maxLength": 64
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "school_tournament"
+      ]
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "tournament"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "subject_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "grade_levels": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9
+      }
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "battle_1v1",
+        "team_battle"
+      ]
+    },
+    "tournament": {
+      "$ref": "#/$defs/tournament"
+    },
+    "schedule": {
+      "$ref": "#/$defs/schedule"
+    },
+    "timers": {
+      "$ref": "#/$defs/timers"
+    },
+    "allowed_params": {
+      "$ref": "#/$defs/allowedParams"
+    },
+    "reward_rule_refs": {
+      "$ref": "#/$defs/rewardRules"
+    },
+    "reward_summary": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "$defs": {
+    "tournament": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "participant_type",
+        "team_size",
+        "max_entries",
+        "min_entries",
+        "seeding_policy",
+        "auto_confirm",
+        "round_gap_minutes",
+        "bracket_reset"
+      ],
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "single_elim",
+            "double_elim",
+            "round_robin",
+            "groups_then_single_elim"
+          ]
+        },
+        "participant_type": {
+          "type": "string",
+          "enum": [
+            "individual",
+            "team"
+          ]
+        },
+        "team_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 2,
+          "maximum": 8
+        },
+        "max_entries": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 256
+        },
+        "min_entries": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 256
+        },
+        "seeding_policy": {
+          "type": "string",
+          "enum": [
+            "rating",
+            "random",
+            "manual"
+          ],
+          "description": "Không có separate_class (ADR-0095)"
+        },
+        "auto_confirm": {
+          "type": "boolean"
+        },
+        "round_gap_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10080
+        },
+        "bracket_reset": {
+          "type": "boolean"
+        }
+      }
+    },
+    "schedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min_lead_minutes",
+        "max_lead_days",
+        "max_duration_minutes"
+      ],
+      "properties": {
+        "min_lead_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10080
+        },
+        "max_lead_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365
+        },
+        "max_duration_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 43200
+        }
+      }
+    },
+    "timers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_in_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "no_show_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "complaint_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1440
+        },
+        "reschedule_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "reschedule_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        }
+      }
+    },
+    "allowedParams": {
+      "type": "array",
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "subject_id",
+          "topic_ids",
+          "max_entries",
+          "seeding_policy",
+          "registration_open_at",
+          "registration_close_at",
+          "auto_confirm"
+        ]
+      }
+    },
+    "rewardRules": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rule_id",
+          "points",
+          "reward_ref"
+        ],
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_]{0,63}$",
+            "maxLength": 64
+          },
+          "rank_min": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          },
+          "rank_max": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          },
+          "min_matches": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "points": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000,
+            "description": "Competition Points source_type tournament (không phải điểm học tập)"
+          },
+          "reward_ref": {
+            "$ref": "#/$defs/rewardRef"
+          }
+        }
+      }
+    },
+    "rewardRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 3,
+      "description": "Chỉ cosmetic/badge/title của module game (không tiền tệ, không vật phẩm trả phí — R19)",
+      "properties": {
+        "badge_code": {
+          "type": "string",
+          "pattern": "^badge\\.[a-z0-9_.]{1,59}$",
+          "maxLength": 64
+        },
+        "title_code": {
+          "type": "string",
+          "pattern": "^title\\.[a-z0-9_.]{1,59}$",
+          "maxLength": 64
+        },
+        "cosmetic_code": {
+          "type": "string",
+          "pattern": "^cosmetic\\.[a-z0-9_.]{1,56}$",
+          "maxLength": 64
+        }
+      }
+    }
+  }
+}

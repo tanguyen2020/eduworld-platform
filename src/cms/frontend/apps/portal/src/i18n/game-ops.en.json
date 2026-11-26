@@ -30,7 +30,14 @@
       "currencies": "Currencies",
       "events": "Events",
       "event-templates": "Event templates",
-      "season-tracks": "Season tracks"
+      "season-tracks": "Season tracks",
+      "matchmaking-configs": "Matchmaking configuration",
+      "ranking-rules": "Ranking rules",
+      "seasons": "Seasons",
+      "tournament-templates": "School tournament templates",
+      "challenge-templates": "Grade challenge templates",
+      "leaderboard-definitions": "Leaderboard definitions",
+      "competition-rewards": "Competition rewards"
     },
     "status": {
       "draft": "Draft",
@@ -120,7 +127,12 @@
       "changeNote": "Change note",
       "scheduled": "Publication scheduled at {{at}} (ICT).",
       "done": "v{{version}} published.",
-      "curveNotice": "The new curve applies from the publication time (effective_from): no one loses a level, no granted XP is taken back."
+      "curveNotice": "The new curve applies from the publication time (effective_from): no one loses a level, no granted XP is taken back.",
+      "effectiveNow": "Effective now",
+      "effectiveAt": "Effective from (ICT)",
+      "effectiveHint": "Vietnam time (ICT). Matches and tournaments created after this time use the new configuration; started ones keep theirs.",
+      "effectiveRequired": "Pick the effective time.",
+      "effectiveDone": "Published v{{version}}, effective from {{at}} (ICT)."
     },
     "preview": {
       "title": "Preview (Godot Web)",
@@ -308,6 +320,23 @@
         "rejected": "Rejected"
       },
       "rejectReason": "Reject reason"
+    },
+    "competition": {
+      "groups": "Competition configuration groups",
+      "group": {
+        "matchmaking": "Matchmaking",
+        "ranking": "Ranking",
+        "seasons": "Seasons",
+        "templates": "Templates",
+        "leaderboards": "Leaderboards"
+      }
+    },
+    "assignments": {
+      "title": "Assigned tenants",
+      "readOnly": "Read only — assign templates in the Platform administration workspace.",
+      "none": "Not assigned to any tenant.",
+      "tenant": "Tenant",
+      "assignedAt": "Assigned at"
     }
   }
 }

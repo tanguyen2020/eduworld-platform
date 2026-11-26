@@ -20,6 +20,7 @@ import { ConfigBuilder } from '../builders/ConfigBuilder';
 import { actionOf, CONFIG_TYPES, isConfigType, nameOf, type ConfigTypeDef } from '../registry/configTypes';
 import { useGameAccess } from '../shared/access';
 import { fieldErrorsOf, GameOpsError, hasFieldErrors } from '../shared/errors';
+import { AssignmentsPanel } from './AssignmentsPanel';
 import { PreviewPanel } from './PreviewPanel';
 import { PublishDialog } from './PublishDialog';
 import { ReleasesPanel } from './ReleasesPanel';
@@ -173,7 +174,8 @@ function EditorBody({ def, item, version, loaded, onReload }: { def: ConfigTypeD
                 </Flex>
               </Card>
             )}
-            <PreviewPanel configType={item.configType} configId={item.configId} version={version} />
+            {def.preview !== false && <PreviewPanel configType={item.configType} configId={item.configId} version={version} />}
+            {def.assignable && <AssignmentsPanel resourceType={def.assignable} resourceId={item.configId} />}
           </Flex>
         }
       >

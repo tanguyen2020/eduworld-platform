@@ -24,9 +24,22 @@ import seasonTrack from '../../../shared/api/schemas/game/season-track.schema.js
 import shopItem from '../../../shared/api/schemas/game/shop-item.schema.json';
 import storyChapter from '../../../shared/api/schemas/game/story-chapter.schema.json';
 import worldArea from '../../../shared/api/schemas/game/world-area.schema.json';
+// Thi đấu (F108): the competition config types served by module competition on the same /game-admin routes.
+import challengeTemplate from '../../../shared/api/schemas/game/challenge-template.schema.json';
+import competitionReward from '../../../shared/api/schemas/game/competition-reward.schema.json';
+import leaderboardDefinition from '../../../shared/api/schemas/game/leaderboard-definition.schema.json';
+import matchmakingConfig from '../../../shared/api/schemas/game/matchmaking-config.schema.json';
+import rankingRules from '../../../shared/api/schemas/game/ranking-rules.schema.json';
+import season from '../../../shared/api/schemas/game/season.schema.json';
+import tournamentTemplate from '../../../shared/api/schemas/game/tournament-template.schema.json';
 
-export type ConfigType = components['schemas']['GameModuleConfigType'];
-export type GameOpsMenu = 'world' | 'npcs' | 'quests' | 'minigames' | 'challenges' | 'bosses' | 'progression' | 'achievements' | 'items' | 'shop' | 'rewards' | 'events';
+/** Competition config types (module competition, F108). */
+export type CompetitionConfigType = 'matchmaking-configs' | 'ranking-rules' | 'seasons' | 'tournament-templates' | 'challenge-templates' | 'leaderboard-definitions' | 'competition-rewards';
+export type ConfigType = components['schemas']['GameModuleConfigType'] | CompetitionConfigType;
+export type GameOpsMenu = 'world' | 'npcs' | 'quests' | 'minigames' | 'challenges' | 'bosses' | 'progression' | 'achievements' | 'items' | 'shop' | 'rewards' | 'events' | 'competition';
+/** The 5 groups of the "Thi đấu" screen (F108 US2): matchmaking, ranking (+ rewards), seasons, templates, leaderboards. */
+export type CompetitionGroup = 'matchmaking' | 'ranking' | 'seasons' | 'templates' | 'leaderboards';
+export const COMPETITION_GROUPS: CompetitionGroup[] = ['matchmaking', 'ranking', 'seasons', 'templates', 'leaderboards'];
 export type BuilderKind = 'generic' | 'quest' | 'npc' | 'progression' | 'event' | 'season' | 'event-template';
 
 export interface ConfigTypeDef {
@@ -52,6 +65,19 @@ export interface ConfigTypeDef {
   has3D: boolean;
   /** Permission to write the type (display only, ADMIN_PORTAL §2.2). */
   writePermission: string;
+  /** F108: group of a competition type on the "Thi đấu" screen. */
+  group?: CompetitionGroup;
+  /**
+   * How a new draft of a published version is made: 'version' = createGameConfigVersion (module game); 'create' =
+   * createGameConfig with config_id + based_on_version_id (module competition, F108 Clarifications 2026-11-16).
+   */
+  newDraft?: 'version' | 'create';
+  /** Publish: 'schedule' = now or publish_at (module game); 'effective' = effective_from ≥ now (module competition). */
+  publishMode?: 'schedule' | 'effective';
+  /** Godot Web preview of the version (module game only). */
+  preview?: boolean;
+  /** resource_type of the tenant assignments shown read only (templates, F108-AC-10). */
+  assignable?: 'tournament_template' | 'challenge_template';
 }
 
 const MANAGED = ['version', 'status', 'owner_scope', 'tenant_id'];
@@ -60,6 +86,28 @@ const def = (d: Omit<ConfigTypeDef, 'managedKeys'> & { versionIdField?: string }
   const { versionIdField, ...rest } = d;
   return { ...rest, managedKeys: [...(d.uuidKey ? [d.idField] : []), ...(versionIdField ? [versionIdField] : []), ...MANAGED] };
 };
+
+const competition = (d: Pick<ConfigTypeDef, 'type' | 'group' | 'schema' | 'writePermission' | 'unpublish' | 'assignable'> & { nameField?: string; multi?: boolean }): ConfigTypeDef => ({
+  type: d.type,
+  menu: 'competition',
+  builder: 'generic',
+  schema: d.schema,
+  served: true,
+  idField: 'code',
+  uuidKey: false,
+  managedKeys: [],
+  codeField: 'code',
+  nameField: d.nameField,
+  rollback: true,
+  unpublish: d.unpublish,
+  has3D: false,
+  writePermission: d.writePermission,
+  group: d.group,
+  newDraft: 'create',
+  publishMode: 'effective',
+  preview: false,
+  assignable: d.assignable,
+});
 
 export const CONFIG_TYPES: Record<ConfigType, ConfigTypeDef> = {
   'world-areas': def({ type: 'world-areas', menu: 'world', builder: 'generic', schema: worldArea as unknown as JsonSchema, served: true, idField: 'area_id', uuidKey: false, codeField: 'area_id', nameField: 'name', rollback: true, unpublish: true, has3D: true, writePermission: 'game.world.write' }),
@@ -79,8 +127,21 @@ export const CONFIG_TYPES: Record<ConfigType, ConfigTypeDef> = {
   'reward-rules': def({ type: 'reward-rules', menu: 'rewards', builder: 'generic', schema: rewardRule as unknown as JsonSchema, served: true, idField: 'reward_rule_id', uuidKey: true, codeField: 'code', rollback: false, unpublish: true, has3D: false, writePermission: 'game.reward_rule.write' }),
   events: def({ type: 'events', menu: 'events', builder: 'event', schema: event as unknown as JsonSchema, served: true, idField: 'event_id', uuidKey: true, versionIdField: 'event_version_id', codeField: 'code', nameField: 'name', rollback: false, unpublish: false, has3D: false, writePermission: 'game.event.write' }),
   'event-templates': def({ type: 'event-templates', menu: 'events', builder: 'event-template', schema: eventTemplate as unknown as JsonSchema, served: true, idField: 'template_id', uuidKey: true, versionIdField: 'template_version_id', codeField: 'code', nameField: 'name', rollback: true, unpublish: true, has3D: false, writePermission: 'game.event.write' }),
+  // Thi đấu (F108): singleton catalogs cannot be unpublished (rollback or a new version instead); templates and rewards can.
+  'matchmaking-configs': competition({ type: 'matchmaking-configs', group: 'matchmaking', schema: matchmakingConfig as unknown as JsonSchema, writePermission: 'competition.config.matchmaking.write', unpublish: false }),
+  'ranking-rules': competition({ type: 'ranking-rules', group: 'ranking', schema: rankingRules as unknown as JsonSchema, writePermission: 'competition.config.ranking.write', unpublish: false }),
+  'competition-rewards': competition({ type: 'competition-rewards', group: 'ranking', schema: competitionReward as unknown as JsonSchema, writePermission: 'competition.config.reward.write', unpublish: true, nameField: 'name' }),
+  seasons: competition({ type: 'seasons', group: 'seasons', schema: season as unknown as JsonSchema, writePermission: 'competition.config.season.write', unpublish: false }),
+  'tournament-templates': competition({ type: 'tournament-templates', group: 'templates', schema: tournamentTemplate as unknown as JsonSchema, writePermission: 'competition.config.tournament_template.write', unpublish: true, nameField: 'name', assignable: 'tournament_template' }),
+  'challenge-templates': competition({ type: 'challenge-templates', group: 'templates', schema: challengeTemplate as unknown as JsonSchema, writePermission: 'competition.config.tournament_template.write', unpublish: true, nameField: 'name', assignable: 'challenge_template' }),
+  'leaderboard-definitions': competition({ type: 'leaderboard-definitions', group: 'leaderboards', schema: leaderboardDefinition as unknown as JsonSchema, writePermission: 'competition.config.leaderboard.write', unpublish: false }),
   'season-tracks': def({ type: 'season-tracks', menu: 'events', builder: 'season', schema: seasonTrack as unknown as JsonSchema, served: true, idField: 'season_track_id', uuidKey: true, versionIdField: 'season_track_version_id', codeField: 'code', nameField: 'name', rollback: true, unpublish: true, has3D: false, writePermission: 'game.season_track.write' }),
 };
+
+/** Competition config types of a group of the "Thi đấu" screen. */
+export function typesOfGroup(group: CompetitionGroup): ConfigTypeDef[] {
+  return Object.values(CONFIG_TYPES).filter((d) => d.group === group);
+}
 
 /** Config types of a menu in display order. */
 export function typesOfMenu(menu: GameOpsMenu): ConfigTypeDef[] {

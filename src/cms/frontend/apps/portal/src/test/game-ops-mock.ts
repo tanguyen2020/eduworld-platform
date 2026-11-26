@@ -34,6 +34,11 @@ export const GAME_ACCOUNTS: Record<string, MockAccount> = {
   'lo.vanhanh': platformAccount('lo.vanhanh', '0193a4d2-7000-7000-8000-0000000000d3', 'Live-ops', [
     'game.event.write', 'game.event.operate', 'game.season_track.write', 'game.content.publish', 'content.release.rollback', 'game.liveops.read', 'game.analytics.read', 'competition.config.season.write',
   ]),
+  // F108: Competition Admin (competition.config.*) — review/publish come from game.content.review / game.content.publish.
+  'tq.thidau': platformAccount('tq.thidau', '0193a4d2-7000-7000-8000-0000000000d4', 'Competition Admin', [
+    'competition.config.matchmaking.write', 'competition.config.ranking.write', 'competition.config.season.write', 'competition.config.tournament_template.write',
+    'competition.config.leaderboard.write', 'competition.config.reward.write',
+  ]),
 };
 
 export interface MockVersion {
@@ -144,7 +149,15 @@ export class GameOpsMock {
         return json(200, cursorPage(rows, q, 'data'));
       }
       if (r.method === 'POST') {
-        const body = r.body as { title?: string; payload: Record<string, unknown> };
+        const body = r.body as { title?: string; payload: Record<string, unknown>; config_id?: string; based_on_version_id?: string };
+        if (body.config_id) {
+          // module competition (F108): a new draft version of an existing configuration
+          const ex = this.configs.find((x) => x.config_id === body.config_id && x.type === type);
+          if (!ex) return problem(404, 'NOT_FOUND');
+          const nv: MockVersion = { version: ex.versions.length + 1, status: 'draft', title: body.title, payload: body.payload, author_id: this.user()!.sub, revision: 1, updated_at: '2026-11-25T03:00:00Z' };
+          ex.versions.push(nv);
+          return json(201, this.view(ex, nv), etag(nv));
+        }
         const c = this.add(type, [{ title: body.title, payload: body.payload, author_id: this.user()!.sub, status: 'draft' }]);
         return json(201, this.view(c, c.versions[0]!), etag(c.versions[0]!));
       }
@@ -200,7 +213,7 @@ export class GameOpsMock {
         v.revision++;
         return json(200, this.view(c, v));
       }
-      const body = (r.body ?? {}) as { publish_at?: string };
+      const body = (r.body ?? {}) as { publish_at?: string; effective_from?: string };
       const release = { release_id: this.newId(), item_type: type, item_id: c.config_id, action: 'publish', to_version: v.version, from_version: c.current, released_by: this.user()!.sub, released_at: '2026-11-24T01:00:00Z' };
       if (body.publish_at) {
         v.publish_at = body.publish_at;
@@ -209,6 +222,7 @@ export class GameOpsMock {
       }
       v.status = 'published';
       v.published_at = '2026-11-24T01:00:00Z';
+      if (body.effective_from) Object.assign(release, { effective_from: body.effective_from });
       v.revision++;
       c.current = v.version;
       c.releases.unshift({ ...release, status: 'applied' });

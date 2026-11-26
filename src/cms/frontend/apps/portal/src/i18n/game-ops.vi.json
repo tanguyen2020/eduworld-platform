@@ -30,7 +30,14 @@
       "currencies": "Tiền tệ",
       "events": "Sự kiện",
       "event-templates": "Template sự kiện",
-      "season-tracks": "Season track"
+      "season-tracks": "Season track",
+      "matchmaking-configs": "Cấu hình ghép trận",
+      "ranking-rules": "Luật xếp hạng",
+      "seasons": "Mùa giải",
+      "tournament-templates": "Template giải trường",
+      "challenge-templates": "Template thử thách khối",
+      "leaderboard-definitions": "Định nghĩa bảng xếp hạng",
+      "competition-rewards": "Phần thưởng thi đấu"
     },
     "status": {
       "draft": "Bản nháp",
@@ -120,7 +127,12 @@
       "changeNote": "Ghi chú thay đổi",
       "scheduled": "Đã hẹn xuất bản lúc {{at}} (ICT).",
       "done": "Đã xuất bản v{{version}}.",
-      "curveNotice": "Đường cong mới áp dụng từ thời điểm xuất bản (effective_from): không giảm level của ai, không thu hồi XP đã cấp."
+      "curveNotice": "Đường cong mới áp dụng từ thời điểm xuất bản (effective_from): không giảm level của ai, không thu hồi XP đã cấp.",
+      "effectiveNow": "Có hiệu lực ngay",
+      "effectiveAt": "Có hiệu lực từ (ICT)",
+      "effectiveHint": "Giờ Việt Nam (ICT). Trận/giải tạo sau thời điểm này dùng cấu hình mới; trận đã bắt đầu giữ cấu hình cũ.",
+      "effectiveRequired": "Chọn thời điểm có hiệu lực.",
+      "effectiveDone": "Đã xuất bản v{{version}}, có hiệu lực từ {{at}} (ICT)."
     },
     "preview": {
       "title": "Xem trước (Godot Web)",
@@ -308,6 +320,23 @@
         "rejected": "Bị từ chối"
       },
       "rejectReason": "Lý do từ chối"
+    },
+    "competition": {
+      "groups": "Nhóm cấu hình thi đấu",
+      "group": {
+        "matchmaking": "Matchmaking",
+        "ranking": "Ranking",
+        "seasons": "Mùa giải",
+        "templates": "Template",
+        "leaderboards": "Bảng xếp hạng"
+      }
+    },
+    "assignments": {
+      "title": "Tenant được gán",
+      "readOnly": "Chỉ xem — gán/gỡ template ở workspace Quản trị nền tảng.",
+      "none": "Chưa gán cho tenant nào.",
+      "tenant": "Tenant",
+      "assignedAt": "Gán lúc"
     }
   }
 }

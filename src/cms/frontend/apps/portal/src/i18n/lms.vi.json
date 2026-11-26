@@ -147,6 +147,230 @@
     },
     "games": {
       "help": "Quest và mini-game đã xuất bản có thể giao cho học sinh. Cấu hình game do đội vận hành game quản lý."
+    },
+    "challenges": {
+      "new": "Tạo thử thách",
+      "gradeN": "Khối {{n}}",
+      "schedule": "{{from}} → {{to}}",
+      "list": {
+        "name": "Tên",
+        "template": "Template",
+        "kind": "Loại",
+        "grade": "Khối",
+        "status": "Trạng thái",
+        "schedule": "Lịch",
+        "audience": "Số học sinh"
+      },
+      "kind": {
+        "grade_challenge": "Thử thách khối",
+        "school_tournament": "Giải trường"
+      },
+      "format": {
+        "timed_quiz": "Timed Quiz",
+        "tournament": "Giải đấu"
+      },
+      "tournamentFormat": {
+        "single_elim": "Loại trực tiếp",
+        "double_elim": "Loại kép",
+        "round_robin": "Vòng tròn",
+        "groups_then_single_elim": "Vòng bảng rồi loại trực tiếp"
+      },
+      "status": {
+        "scheduled": "Đã lên lịch",
+        "running": "Đang diễn ra",
+        "completed": "Đã kết thúc",
+        "cancelled": "Đã hủy"
+      },
+      "tournamentStatus": {
+        "draft": "Nháp",
+        "published": "Đã công bố",
+        "registration_open": "Đang mở đăng ký",
+        "registration_closed": "Đã đóng đăng ký",
+        "seeding": "Đang xếp hạt giống",
+        "scheduled": "Đã xếp lịch",
+        "in_progress": "Đang thi đấu",
+        "completed": "Đã kết thúc",
+        "rewarded": "Đã trao thưởng",
+        "archived": "Đã lưu trữ",
+        "cancelled": "Đã hủy"
+      },
+      "entryStatus": {
+        "registered": "Đã đăng ký",
+        "confirmed": "Đã xác nhận",
+        "checked_in": "Đã check-in",
+        "withdrawn": "Đã rút",
+        "disqualified": "Bị truất quyền",
+        "eliminated": "Đã bị loại",
+        "champion": "Vô địch"
+      },
+      "nodeStatus": {
+        "pending": "Chờ",
+        "scheduled": "Đã xếp lịch",
+        "in_match": "Đang đấu",
+        "awaiting_confirm": "Chờ xác nhận",
+        "confirmed": "Đã xác nhận",
+        "bye": "Miễn đấu",
+        "overridden": "Đã điều chỉnh",
+        "void": "Hủy trận"
+      },
+      "bracketSide": {
+        "winners": "Nhánh thắng",
+        "losers": "Nhánh thua",
+        "grand_final": "Chung kết tổng",
+        "group": "Vòng bảng"
+      },
+      "seedingPolicy": {
+        "rating": "Theo xếp hạng",
+        "random": "Ngẫu nhiên",
+        "manual": "Thủ công"
+      },
+      "participantType": {
+        "individual": "Cá nhân",
+        "team": "Đội"
+      },
+      "params": {
+        "max_entries": "Số người tham gia tối đa",
+        "seeding_policy": "Cách xếp hạt giống",
+        "registration_open_at": "Mở đăng ký lúc",
+        "registration_close_at": "Đóng đăng ký lúc",
+        "auto_confirm": "Tự động xác nhận đăng ký",
+        "subject_id": "Môn học"
+      },
+      "form": {
+        "required": "Trường này bắt buộc.",
+        "tooLong": "Tối đa {{max}} ký tự.",
+        "tooMany": "Chọn tối đa {{max}} mục."
+      },
+      "errors": {
+        "RESOURCE_NOT_ASSIGNED": "Template này không được gán (hoặc vừa bị gỡ) cho đơn vị. Hãy chọn template khác.",
+        "INVALID_STATE_TRANSITION": "Không thể thực hiện thao tác này ở trạng thái hiện tại của thử thách hoặc giải.",
+        "CONFLICT": "Dữ liệu đã thay đổi. Đã tải lại bản mới.",
+        "field": "Máy chủ không chấp nhận giá trị này ({{code}})."
+      },
+      "wizard": {
+        "heading": "Tạo thử thách khối / giải trường",
+        "desktopOnly": "Trình tạo thử thách chỉ dùng trên máy tính hoặc máy tính bảng.",
+        "steps": {
+          "template": "Template",
+          "details": "Thông tin",
+          "targets": "Đối tượng",
+          "review": "Xem lại"
+        },
+        "template": "Template",
+        "pickTemplate": "Chọn template được gán cho đơn vị",
+        "noTemplate": "Chưa có template nào được gán cho đơn vị.",
+        "reward": "Phần thưởng (cố định theo template)",
+        "grades": "Khối áp dụng",
+        "description": "Mô tả",
+        "name": "Tên thử thách",
+        "startsAt": "Bắt đầu lúc",
+        "endsAt": "Kết thúc lúc",
+        "params": "Tham số của template",
+        "noParams": "Template không có tham số tùy chỉnh.",
+        "grade": "Khối",
+        "include": "Thêm học sinh (cùng trường)",
+        "exclude": "Loại trừ học sinh",
+        "pickerGrade": "{{label}} — khối",
+        "searchStudent": "Chọn học sinh (gõ ít nhất 2 ký tự để tìm)",
+        "noStudent": "Không có học sinh phù hợp.",
+        "pickedStudent": "Học sinh đã chọn",
+        "excludeWins": "{{n}} học sinh vừa được thêm vừa bị loại trừ: học sinh bị loại trừ không tham gia.",
+        "preview": "Khối {{grade}} · thêm {{include}} học sinh · loại trừ {{exclude}} học sinh",
+        "previewNoGrade": "Chưa chọn khối · thêm {{include}} học sinh · loại trừ {{exclude}} học sinh",
+        "previewServer": "Số học sinh hiệu lực (cả khối, cộng danh sách thêm, trừ danh sách loại trừ) do hệ thống tính khi tạo và hiển thị ở trang chi tiết.",
+        "audience": "Đối tượng",
+        "back": "Quay lại",
+        "next": "Tiếp",
+        "create": "Tạo thử thách"
+      },
+      "detail": {
+        "status": "Trạng thái",
+        "kind": "Loại",
+        "format": "Hình thức",
+        "grade": "Khối",
+        "include": "Học sinh thêm",
+        "exclude": "Học sinh loại trừ",
+        "audience": "Số học sinh hiệu lực",
+        "participants": "Số học sinh đã tham gia",
+        "startsAt": "Bắt đầu",
+        "endsAt": "Kết thúc",
+        "cancelReason": "Lý do hủy",
+        "cancel": "Hủy thử thách",
+        "cancelTitle": "Hủy thử thách",
+        "cancelHelp": "Học sinh sẽ không tham gia được thử thách này nữa."
+      },
+      "tournament": {
+        "heading": "Giải đấu",
+        "status": "Trạng thái giải",
+        "format": "Thể thức",
+        "seeding": "Xếp hạt giống",
+        "entries": "Số đăng ký",
+        "registrationOpen": "Mở đăng ký",
+        "registrationClose": "Đóng đăng ký",
+        "checkIn": "Mở check-in",
+        "reward": "Phần thưởng",
+        "publish": "Công bố giải",
+        "register": "Đăng ký hộ theo đối tượng",
+        "registered": "Đã đăng ký {{n}} học sinh; bỏ qua {{m}} học sinh không đủ điều kiện.",
+        "confirmEntries": "Xác nhận danh sách",
+        "generate": "Tạo bracket",
+        "cancel": "Hủy giải",
+        "cancelTitle": "Hủy giải đấu",
+        "cancelHelp": "Giải bị hủy với mọi học sinh đã đăng ký.",
+        "tabs": {
+          "entries": "Đăng ký & check-in",
+          "bracket": "Bracket",
+          "results": "Kết quả"
+        },
+        "noBracket": "Chưa tạo bracket."
+      },
+      "entries": {
+        "student": "Học sinh",
+        "nickname": "Biệt danh",
+        "status": "Trạng thái",
+        "checkedIn": "Check-in",
+        "seed": "Hạt giống",
+        "rank": "Hạng",
+        "group": "Bảng",
+        "withdraw": "Rút",
+        "withdrawConfirm": "Rút đăng ký này khỏi giải?",
+        "yes": "Đồng ý",
+        "no": "Không",
+        "empty": "Chưa có đăng ký.",
+        "noResult": "Chưa có kết quả.",
+        "unknownStudent": "Học sinh khối khác"
+      },
+      "bracket": {
+        "match": "Vòng {{round}} · Trận {{position}}",
+        "bye": "Miễn đấu",
+        "tbd": "Chờ xác định",
+        "winner": "Thắng",
+        "decision": "Cần người tổ chức quyết định",
+        "confirmAfter": "Hết hạn khiếu nại: {{at}}",
+        "confirm": "Xác nhận kết quả",
+        "override": "Điều chỉnh kết quả",
+        "group": "Bảng {{code}}",
+        "standings": {
+          "entry": "Học sinh",
+          "wins": "Thắng",
+          "draws": "Hòa",
+          "losses": "Thua",
+          "points": "Điểm",
+          "rank": "Hạng"
+        }
+      },
+      "override": {
+        "title": "Điều chỉnh kết quả trận",
+        "winner": "Người thắng",
+        "reason": "Lý do",
+        "next": "Tiếp",
+        "back": "Quay lại",
+        "cancel": "Hủy",
+        "confirmText": "Đổi người thắng của trận thành {{name}}.",
+        "reasonText": "Lý do: {{reason}}",
+        "warning": "Thao tác được ghi nhật ký kiểm toán và cập nhật bracket ngay.",
+        "submit": "Xác nhận đổi kết quả"
+      }
     }
   }
 }

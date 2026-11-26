@@ -880,13 +880,13 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
         path: "/game-ops/competition",
         labelKey: "portal.menu.game_ops.competition",
         order: 140,
-        requiredPermissions: ["competition.config.matchmaking.write", "competition.config.ranking.write", "competition.config.season.write", "competition.config.tournament_template.write", "competition.config.leaderboard.write", "game.content.review", "game.content.publish"],
+        requiredPermissions: ["competition.config.matchmaking.write", "competition.config.ranking.write", "competition.config.season.write", "competition.config.tournament_template.write", "competition.config.leaderboard.write", "competition.config.reward.write", "game.content.review", "game.content.publish"],
         actions: [
-          { key: "action.game_ops.competition.view", labelKey: "portal.action.game_ops.competition.view", requiredPermissions: ["competition.config.matchmaking.write", "competition.config.ranking.write", "competition.config.season.write", "competition.config.tournament_template.write", "competition.config.leaderboard.write", "game.content.review", "game.content.publish"] },
-          { key: "action.game_ops.competition.edit", labelKey: "portal.action.game_ops.competition.edit", requiredPermissions: ["competition.config.matchmaking.write", "competition.config.ranking.write", "competition.config.season.write", "competition.config.tournament_template.write", "competition.config.leaderboard.write"] },
-          { key: "action.game_ops.competition.workflow", labelKey: "portal.action.game_ops.competition.workflow", requiredPermissions: ["competition.config.matchmaking.write", "competition.config.ranking.write", "competition.config.season.write", "competition.config.tournament_template.write", "competition.config.leaderboard.write", "game.content.review"] },
+          { key: "action.game_ops.competition.view", labelKey: "portal.action.game_ops.competition.view", requiredPermissions: ["competition.config.matchmaking.write", "competition.config.ranking.write", "competition.config.season.write", "competition.config.tournament_template.write", "competition.config.leaderboard.write", "competition.config.reward.write", "game.content.review", "game.content.publish"] },
+          { key: "action.game_ops.competition.edit", labelKey: "portal.action.game_ops.competition.edit", requiredPermissions: ["competition.config.matchmaking.write", "competition.config.ranking.write", "competition.config.season.write", "competition.config.tournament_template.write", "competition.config.leaderboard.write", "competition.config.reward.write"] },
+          { key: "action.game_ops.competition.workflow", labelKey: "portal.action.game_ops.competition.workflow", requiredPermissions: ["competition.config.matchmaking.write", "competition.config.ranking.write", "competition.config.season.write", "competition.config.tournament_template.write", "competition.config.leaderboard.write", "competition.config.reward.write", "game.content.review"] },
           { key: "action.game_ops.competition.publish", labelKey: "portal.action.game_ops.competition.publish", requiredPermissions: ["game.content.publish"] },
-          { key: "action.game_ops.competition.rollback", labelKey: "portal.action.game_ops.competition.rollback", requiredPermissions: ["content.release.rollback"] },
+          { key: "action.game_ops.competition.rollback", labelKey: "portal.action.game_ops.competition.rollback", requiredPermissions: ["game.content.publish"] },
         ],
       },
       {

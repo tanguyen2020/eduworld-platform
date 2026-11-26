@@ -1,7 +1,8 @@
 // Workspace game_ops (A. Game Operations Console) — lazy chunk (F050-AC-02, F051-AC-10, F079-AC-18). Menus, paths and
 // permissions come from the generated catalog (ADR-0090); this file only attaches a screen to each menu key. The chunk
 // is never a security layer: module game authorizes every request (AGENTS R20). Menus of other features keep the
-// placeholder: competition (F108), chat assets and translations (F082), players and parties (F080).
+// placeholder: chat assets and translations (F082), players and parties (F080). Thi đấu (F108) reuses the console screens
+// with the competition config types of module competition.
 import { placeholderScreen, WorkspaceRoutes, type MenuScreens } from '../../permissions/RequirePermission';
 import { configMenuScreen } from './ConfigMenuScreen';
 import { GameDashboard } from './dashboard/GameDashboard';
@@ -22,7 +23,7 @@ export const screens = {
   'menu.game_ops.shop': configMenuScreen('shop'),
   'menu.game_ops.rewards': configMenuScreen('rewards'),
   'menu.game_ops.events': configMenuScreen('events'),
-  'menu.game_ops.competition': placeholderScreen,
+  'menu.game_ops.competition': configMenuScreen('competition'), // F108 US2 (module competition)
   'menu.game_ops.chat_assets': placeholderScreen,
   'menu.game_ops.media': GameMediaPage,
   'menu.game_ops.translations': placeholderScreen,

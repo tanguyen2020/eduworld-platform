@@ -147,6 +147,230 @@
     },
     "games": {
       "help": "Published quests and mini-games that can be assigned to students. Game configuration is managed by the game operations team."
+    },
+    "challenges": {
+      "new": "Create challenge",
+      "gradeN": "Grade {{n}}",
+      "schedule": "{{from}} → {{to}}",
+      "list": {
+        "name": "Name",
+        "template": "Template",
+        "kind": "Type",
+        "grade": "Grade",
+        "status": "Status",
+        "schedule": "Schedule",
+        "audience": "Students"
+      },
+      "kind": {
+        "grade_challenge": "Grade challenge",
+        "school_tournament": "School tournament"
+      },
+      "format": {
+        "timed_quiz": "Timed Quiz",
+        "tournament": "Tournament"
+      },
+      "tournamentFormat": {
+        "single_elim": "Single elimination",
+        "double_elim": "Double elimination",
+        "round_robin": "Round robin",
+        "groups_then_single_elim": "Groups then single elimination"
+      },
+      "status": {
+        "scheduled": "Scheduled",
+        "running": "Running",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "tournamentStatus": {
+        "draft": "Draft",
+        "published": "Published",
+        "registration_open": "Registration open",
+        "registration_closed": "Registration closed",
+        "seeding": "Seeding",
+        "scheduled": "Scheduled",
+        "in_progress": "In progress",
+        "completed": "Completed",
+        "rewarded": "Rewarded",
+        "archived": "Archived",
+        "cancelled": "Cancelled"
+      },
+      "entryStatus": {
+        "registered": "Registered",
+        "confirmed": "Confirmed",
+        "checked_in": "Checked in",
+        "withdrawn": "Withdrawn",
+        "disqualified": "Disqualified",
+        "eliminated": "Eliminated",
+        "champion": "Champion"
+      },
+      "nodeStatus": {
+        "pending": "Pending",
+        "scheduled": "Scheduled",
+        "in_match": "In match",
+        "awaiting_confirm": "Awaiting confirmation",
+        "confirmed": "Confirmed",
+        "bye": "Bye",
+        "overridden": "Overridden",
+        "void": "Void"
+      },
+      "bracketSide": {
+        "winners": "Winners bracket",
+        "losers": "Losers bracket",
+        "grand_final": "Grand final",
+        "group": "Group stage"
+      },
+      "seedingPolicy": {
+        "rating": "By rating",
+        "random": "Random",
+        "manual": "Manual"
+      },
+      "participantType": {
+        "individual": "Individual",
+        "team": "Team"
+      },
+      "params": {
+        "max_entries": "Maximum participants",
+        "seeding_policy": "Seeding policy",
+        "registration_open_at": "Registration opens at",
+        "registration_close_at": "Registration closes at",
+        "auto_confirm": "Confirm registrations automatically",
+        "subject_id": "Subject"
+      },
+      "form": {
+        "required": "This field is required.",
+        "tooLong": "At most {{max}} characters.",
+        "tooMany": "Pick at most {{max}} items."
+      },
+      "errors": {
+        "RESOURCE_NOT_ASSIGNED": "This template is not (or no longer) assigned to your unit. Pick another template.",
+        "INVALID_STATE_TRANSITION": "This action is not possible in the current state of the challenge or tournament.",
+        "CONFLICT": "The data changed. The latest version was reloaded.",
+        "field": "The server did not accept this value ({{code}})."
+      },
+      "wizard": {
+        "heading": "Create a grade challenge / school tournament",
+        "desktopOnly": "The challenge wizard is available on a computer or tablet only.",
+        "steps": {
+          "template": "Template",
+          "details": "Details",
+          "targets": "Audience",
+          "review": "Review"
+        },
+        "template": "Template",
+        "pickTemplate": "Pick a template assigned to your unit",
+        "noTemplate": "No template is assigned to your unit yet.",
+        "reward": "Reward (fixed by the template)",
+        "grades": "Grades",
+        "description": "Description",
+        "name": "Challenge name",
+        "startsAt": "Starts at",
+        "endsAt": "Ends at",
+        "params": "Template parameters",
+        "noParams": "This template has no custom parameter.",
+        "grade": "Grade",
+        "include": "Add students (same school)",
+        "exclude": "Leave out students",
+        "pickerGrade": "{{label}} — grade",
+        "searchStudent": "Pick students (type at least 2 characters to search)",
+        "noStudent": "No matching student.",
+        "pickedStudent": "Selected student",
+        "excludeWins": "{{n}} students are both added and left out: left-out students do not take part.",
+        "preview": "Grade {{grade}} · add {{include}} students · leave out {{exclude}} students",
+        "previewNoGrade": "No grade yet · add {{include}} students · leave out {{exclude}} students",
+        "previewServer": "The effective students (the whole grade, plus added, minus left out) are computed by the system on creation and shown on the detail page.",
+        "audience": "Audience",
+        "back": "Back",
+        "next": "Next",
+        "create": "Create challenge"
+      },
+      "detail": {
+        "status": "Status",
+        "kind": "Type",
+        "format": "Format",
+        "grade": "Grade",
+        "include": "Added students",
+        "exclude": "Left-out students",
+        "audience": "Effective students",
+        "participants": "Students who took part",
+        "startsAt": "Starts",
+        "endsAt": "Ends",
+        "cancelReason": "Cancellation reason",
+        "cancel": "Cancel challenge",
+        "cancelTitle": "Cancel challenge",
+        "cancelHelp": "Students will no longer be able to take part in this challenge."
+      },
+      "tournament": {
+        "heading": "Tournament",
+        "status": "Tournament status",
+        "format": "Format",
+        "seeding": "Seeding",
+        "entries": "Registrations",
+        "registrationOpen": "Registration opens",
+        "registrationClose": "Registration closes",
+        "checkIn": "Check-in opens",
+        "reward": "Reward",
+        "publish": "Publish tournament",
+        "register": "Register the audience",
+        "registered": "Registered {{n}} students; skipped {{m}} ineligible students.",
+        "confirmEntries": "Confirm the list",
+        "generate": "Generate bracket",
+        "cancel": "Cancel tournament",
+        "cancelTitle": "Cancel the tournament",
+        "cancelHelp": "The tournament is cancelled for every registered student.",
+        "tabs": {
+          "entries": "Registrations & check-in",
+          "bracket": "Bracket",
+          "results": "Results"
+        },
+        "noBracket": "No bracket yet."
+      },
+      "entries": {
+        "student": "Student",
+        "nickname": "Nickname",
+        "status": "Status",
+        "checkedIn": "Check-in",
+        "seed": "Seed",
+        "rank": "Rank",
+        "group": "Group",
+        "withdraw": "Withdraw",
+        "withdrawConfirm": "Withdraw this entry from the tournament?",
+        "yes": "Yes",
+        "no": "No",
+        "empty": "No registration yet.",
+        "noResult": "No result yet.",
+        "unknownStudent": "Student of another grade"
+      },
+      "bracket": {
+        "match": "Round {{round}} · Match {{position}}",
+        "bye": "Bye",
+        "tbd": "To be decided",
+        "winner": "Winner",
+        "decision": "Organiser decision required",
+        "confirmAfter": "Dispute window ends: {{at}}",
+        "confirm": "Confirm result",
+        "override": "Adjust result",
+        "group": "Group {{code}}",
+        "standings": {
+          "entry": "Student",
+          "wins": "Wins",
+          "draws": "Draws",
+          "losses": "Losses",
+          "points": "Points",
+          "rank": "Rank"
+        }
+      },
+      "override": {
+        "title": "Adjust match result",
+        "winner": "Winner",
+        "reason": "Reason",
+        "next": "Next",
+        "back": "Back",
+        "cancel": "Cancel",
+        "confirmText": "Change the winner of the match to {{name}}.",
+        "reasonText": "Reason: {{reason}}",
+        "warning": "The action is audit-logged and updates the bracket immediately.",
+        "submit": "Confirm the new result"
+      }
     }
   }
 }

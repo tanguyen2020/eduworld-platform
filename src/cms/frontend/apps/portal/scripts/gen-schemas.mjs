@@ -38,6 +38,14 @@ export const SCHEMAS = {
   'specs/schemas/event.schema.json': 'game/event.schema.json',
   'specs/schemas/event-template.schema.json': 'game/event-template.schema.json',
   'specs/schemas/season-track.schema.json': 'game/season-track.schema.json',
+  // Thi đấu (F108-AC-10): payload schema of each competition config type.
+  'specs/schemas/matchmaking-config.schema.json': 'game/matchmaking-config.schema.json',
+  'specs/schemas/ranking-rules.schema.json': 'game/ranking-rules.schema.json',
+  'specs/schemas/season.schema.json': 'game/season.schema.json',
+  'specs/schemas/tournament-template.schema.json': 'game/tournament-template.schema.json',
+  'specs/schemas/challenge-template.schema.json': 'game/challenge-template.schema.json',
+  'specs/schemas/leaderboard-definition.schema.json': 'game/leaderboard-definition.schema.json',
+  'specs/schemas/competition-reward.schema.json': 'game/competition-reward.schema.json',
 };
 
 const norm = (s) => s.replace(/\r\n/g, '\n');

@@ -13,7 +13,7 @@ import { ApiError } from '../../../shared/api/middleware/problem';
 import type { components } from '../../../shared/api/schema.gen';
 import { useCursorPages } from '../../../shared/api/useCursorPages';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
-import type { ConfigType } from '../registry/configTypes';
+import { CONFIG_TYPES, type ConfigType } from '../registry/configTypes';
 
 export type GameConfigVersion = components['schemas']['GameConfigVersion'];
 export type ContentStatus = components['schemas']['ContentStatus'];
@@ -193,12 +193,12 @@ export function useConfigWrites() {
     );
   }, opts);
 
-  const publish = useIdempotentMutation(async (v: ItemRef & { version: number; publishAt?: string; changeNote?: string }, intent) => {
+  const publish = useIdempotentMutation(async (v: ItemRef & { version: number; publishAt?: string; effectiveFrom?: string; changeNote?: string }, intent) => {
     const etag = await versionEtag(api, v, v.version);
     return api.call<ContentRelease>(
       api.client.POST('/game-admin/{config_type}/{config_id}/versions/{version}:publish', {
         params: { path: { config_type: v.configType, config_id: v.configId, version: v.version } },
-        body: { ...(v.publishAt ? { publish_at: v.publishAt } : {}), ...(v.changeNote ? { change_note: v.changeNote } : {}) },
+        body: { ...(v.publishAt ? { publish_at: v.publishAt } : {}), ...(v.effectiveFrom ? { effective_from: v.effectiveFrom } : {}), ...(v.changeNote ? { change_note: v.changeNote } : {}) },
         headers: { ...intent, ...ifMatch(etag) } as never,
       }),
     );
@@ -208,7 +208,7 @@ export function useConfigWrites() {
     (v: ItemRef & { releaseId: string; reason?: string }, intent) =>
       api.call<ContentRelease>(
         api.client.POST('/game-admin/{config_type}/{config_id}/releases/{release_id}:cancel', {
-          params: { path: { config_type: v.configType, config_id: v.configId, release_id: v.releaseId } },
+          params: { path: { config_type: v.configType as never, config_id: v.configId, release_id: v.releaseId } },
           body: v.reason ? { reason: v.reason } : {},
           headers: intent as never,
         }),
@@ -236,17 +236,27 @@ export function useConfigWrites() {
     opts,
   );
 
-  const newVersion = useIdempotentMutation(
-    (v: ItemRef & { basedOn: number }, intent) =>
-      api.call<GameConfigVersion>(
-        api.client.POST('/game-admin/{config_type}/{config_id}/versions', {
-          params: { path: { config_type: v.configType as never, config_id: v.configId } },
-          body: { based_on_version: v.basedOn },
+  const newVersion = useIdempotentMutation(async (v: ItemRef & { basedOn: number }, intent) => {
+    if (CONFIG_TYPES[v.configType].newDraft === 'create') {
+      // Module competition (F108, Clarifications 2026-11-16): createGameConfig with config_id + based_on_version_id; the
+      // new draft starts from the source content, the source version never changes.
+      const src = await withEtag<GameConfigVersion>(api, api.client.GET(ITEM, { params: { path: { config_type: v.configType, config_id: v.configId, version: v.basedOn } } }));
+      return api.call<GameConfigVersion>(
+        api.client.POST(GA, {
+          params: { path: { config_type: v.configType } },
+          body: { config_id: v.configId, based_on_version_id: src.data.config_version_id, payload: src.data.payload, ...(src.data.title ? { title: src.data.title } : {}) },
           headers: intent as never,
         }),
-      ),
-    opts,
-  );
+      );
+    }
+    return api.call<GameConfigVersion>(
+      api.client.POST('/game-admin/{config_type}/{config_id}/versions', {
+        params: { path: { config_type: v.configType as never, config_id: v.configId } },
+        body: { based_on_version: v.basedOn },
+        headers: intent as never,
+      }),
+    );
+  }, opts);
 
   return { create, transition, publish, cancelSchedule, rollback, unpublish, newVersion };
 }

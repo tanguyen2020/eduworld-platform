@@ -1,0 +1,651 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:matchmaking-config:1",
+  "title": "MatchmakingConfig",
+  "description": "Cấu hình matchmaking (config_type matchmaking-configs, code default — F104, F108). Platform-only (ADR-0027). Giá trị khởi tạo: CONFIG_DEFAULTS mm_rating_window, mm_ready_check, mm_bot_after, mm_ticket_ttl, mm_tickets_per_user, grade_window_g6_9 (MATCHMAKING §5.1). Ràng buộc khối không nới được (COMPETITION_SYSTEM §5, F108-AC-04): lớp 1–5 chỉ cùng khối (không có cửa sổ khối), lớp 6–9 tối đa ±1 khối sau ≥ 30 s; không có trọng số lớp (ADR-0095). Mục battle/bot_profiles ghi đè CONFIG_DEFAULTS battle_1v1_format, team_battle_format, speed_bonus_min_grade (không hạ dưới mặc định).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "rating_window",
+    "ready_check_s",
+    "bot_after_s",
+    "ticket_ttl_s",
+    "tickets_per_user",
+    "ticket_rate",
+    "grade_window_g6_9",
+    "disconnect_cancel_s",
+    "bucket_threshold",
+    "batch",
+    "cost_weights",
+    "recent_opponent_window_s",
+    "default_rating",
+    "modes",
+    "subjects"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "rating_window": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "description": "Bậc nới cửa sổ rating theo thời gian chờ; bậc đầu after_s = 0; width null = không giới hạn",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "after_s",
+          "width"
+        ],
+        "properties": {
+          "after_s": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 600
+          },
+          "width": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "maximum": 2000
+          }
+        }
+      }
+    },
+    "ready_check_s": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 60
+    },
+    "bot_after_s": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 600
+    },
+    "ticket_ttl_s": {
+      "type": "integer",
+      "minimum": 30,
+      "maximum": 1800
+    },
+    "tickets_per_user": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "ticket_rate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "per_hour",
+        "decline_limit",
+        "decline_window_s",
+        "cooldown_s"
+      ],
+      "properties": {
+        "per_hour": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600
+        },
+        "decline_limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "decline_window_s": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 86400
+        },
+        "cooldown_s": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400
+        }
+      }
+    },
+    "grade_window_g6_9": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after_s",
+        "levels"
+      ],
+      "description": "Lớp 6–9: nới ±levels khối sau after_s giây chờ (levels ≤ 1, after_s ≥ 30 — COMPETITION_SYSTEM §5)",
+      "properties": {
+        "after_s": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 600
+        },
+        "levels": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "disconnect_cancel_s": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 300
+    },
+    "bucket_threshold": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000
+    },
+    "batch": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000
+    },
+    "cost_weights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rating",
+        "rd",
+        "recent_opponent"
+      ],
+      "description": "Trọng số chi phí ghép (không có trọng số cùng lớp — ADR-0095)",
+      "properties": {
+        "rating": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "rd": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "recent_opponent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "recent_opponent_window_s": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 86400
+    },
+    "default_rating": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mu",
+        "rd"
+      ],
+      "properties": {
+        "mu": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4000
+        },
+        "rd": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        }
+      }
+    },
+    "modes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "min_grade",
+          "matchmaking_types",
+          "ranked_types"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "battle_1v1",
+              "team_battle"
+            ]
+          },
+          "min_grade": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          },
+          "matchmaking_types": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/$defs/matchmakingType"
+            }
+          },
+          "ranked_types": {
+            "type": "array",
+            "maxItems": 8,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/$defs/matchmakingType"
+            }
+          },
+          "team_size": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 4
+          },
+          "min_team_size": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 4
+          },
+          "max_team_size": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 4
+          }
+        }
+      }
+    },
+    "subjects": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subject_id",
+          "grade_levels"
+        ],
+        "properties": {
+          "subject_id": {
+            "$ref": "#/$defs/uuid"
+          },
+          "grade_levels": {
+            "$ref": "#/$defs/gradeLevels"
+          },
+          "topic_ids": {
+            "type": "array",
+            "maxItems": 200,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/$defs/uuid"
+            }
+          }
+        }
+      }
+    },
+    "battle": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Ghi đè luật trận (CONFIG_DEFAULTS battle_1v1_format, team_battle_format, speed_bonus_min_grade, disconnect_grace…); khóa vắng = mặc định",
+      "properties": {
+        "speed_bonus_min_grade": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Khối nhỏ nhất có bonus tốc độ — không hạ dưới CONFIG_DEFAULTS speed_bonus_min_grade (lớp 1–5 không có bonus tốc độ)"
+        },
+        "battle_1v1": {
+          "$ref": "#/$defs/format"
+        },
+        "team_battle": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "questions": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30
+            },
+            "time_s": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 120
+            },
+            "time_g1_3_s": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 180
+            },
+            "points": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "speed_bonus_max": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "last_multiplier": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "support_percent": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "min_grade": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 9
+            }
+          }
+        },
+        "timed_quiz": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "questions": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "time_s": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 120
+            },
+            "time_g1_3_s": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 180
+            },
+            "points": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "speed_bonus_max": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "last_multiplier": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "max_players": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 40
+            },
+            "top": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "grade_goal_percent": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "rank_min_grade": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 10
+            }
+          }
+        },
+        "coop_challenge": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "questions": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "time_s": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 180
+            },
+            "target": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "disconnect_grace": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "battle_1v1_s": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 300
+            },
+            "team_battle_s": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 300
+            },
+            "coop_challenge_s": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 600
+            },
+            "tournament_s": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 600
+            },
+            "tournament_max": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            }
+          }
+        },
+        "timing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "answer_grace_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5000
+            },
+            "rtt_allowance_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5000
+            },
+            "countdown_s": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 30
+            },
+            "reveal_s": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 30
+            },
+            "lobby_wait_s": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 120
+            },
+            "score_wait_s": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60
+            },
+            "reveal_wait_s": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60
+            },
+            "max_replays": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            }
+          }
+        },
+        "fast_answer": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "g1_5_ms": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 5000
+            },
+            "g6_9_ms": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 5000
+            },
+            "run": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20
+            }
+          }
+        },
+        "abandon_penalty": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20
+            },
+            "window_h": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 168
+            },
+            "restrict_min": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1440
+            }
+          }
+        }
+      }
+    },
+    "bot_profiles": {
+      "type": "array",
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "accuracy",
+          "min_ms",
+          "max_ms"
+        ],
+        "properties": {
+          "min_grade": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          },
+          "max_grade": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          },
+          "accuracy": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "min_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120000
+          },
+          "max_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120000
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "gradeLevels": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9
+      }
+    },
+    "matchmakingType": {
+      "type": "string",
+      "enum": [
+        "random",
+        "skill",
+        "grade",
+        "subject",
+        "topic",
+        "team"
+      ]
+    },
+    "format": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "questions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30
+        },
+        "time_s": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 120
+        },
+        "time_g1_3_s": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 180
+        },
+        "points": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "speed_bonus_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 500
+        },
+        "last_multiplier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        }
+      }
+    }
+  }
+}
