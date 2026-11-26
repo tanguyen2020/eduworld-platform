@@ -106,7 +106,7 @@ func _refresh() -> void:
 			child.queue_free()
 		for p: Vector2 in model.points:
 			var mark: Label = Label.new()
-			mark.text = "◎"
+			mark.text = "•"
 			mark.position = p * scale
 			markers.add_child(mark)
 		return

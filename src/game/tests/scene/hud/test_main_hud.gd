@@ -116,3 +116,79 @@ func test_f062_scenes_use_keys_and_no_theme_override() -> void:
 		for locale: String in ["vi-VN", "en-US"]:
 			var message: String = String(TranslationServer.get_translation_object(locale).get_message(key))
 			assert_str(message).override_failure_message("%s %s" % [locale, key]).is_not_empty()
+
+
+## F096-AC-09: every HUD button has an icon of design/icons/game beside a translated label, no PC key hint in the label.
+func test_buttons_have_icons_and_plain_labels() -> void:
+	var r: Array = await _hud()
+	var hud: CanvasLayer = r[1] as CanvasLayer
+	for name: String in ["AssignmentsChip", "JournalButton", "NotificationBell", "SettingsButton", "WardrobeButton",
+			"MapButton", "HomeButton", "NextStepButton"]:
+		var button: Button = hud.find_child(name, true, false) as Button
+		assert_object(button.icon).override_failure_message(name).is_not_null()
+		assert_str(button.icon.resource_path).override_failure_message(name).starts_with("res://resources/ui/icons/")
+	for locale: String in ["vi-VN", "en-US"]:
+		Settings.set_locale(locale, false)
+		await (r[0] as GdUnitSceneRunner).simulate_frames(1)
+		var journal: Button = hud.find_child("JournalButton", true, false) as Button
+		assert_str(tr(journal.text)).not_contains("(")
+		assert_str(tr(journal.text)).not_contains("ui.")
+
+
+## F096-AC-11: "Việc tiếp theo" points at school work when there is some, else at the World Map, and asks the owner to
+## open it.
+func test_next_step_card_suggests_and_opens() -> void:
+	var r: Array = await _hud()
+	var runner: GdUnitSceneRunner = r[0] as GdUnitSceneRunner
+	var hud: CanvasLayer = r[1] as CanvasLayer
+	var card: Button = hud.find_child("NextStepButton", true, false) as Button
+	assert_bool(card.is_visible_in_tree()).is_true()
+	assert_str(card.text).is_equal(tr("ui.next_step.explore"))
+	var asked: Array = []
+	hud.connect("next_step_pressed", func(id: StringName, args: Dictionary) -> void: asked.append([id, args]))
+	card.pressed.emit()
+	assert_str(String((asked[0] as Array)[0])).is_equal("world_map")
+	var list: Array[MyAssignmentModel] = []
+	for item: Variant in AssignmentFixtures.two()["data"] as Array:
+		list.append(MyAssignmentModel.from_dict(item as Dictionary))
+	AppState.set_assignments(list)
+	await runner.simulate_frames(1)
+	assert_str(card.text).is_equal(tr("ui.next_step.assignments").format({"count": list.size()}))
+	card.pressed.emit()
+	assert_str(String((asked[1] as Array)[0])).is_equal("quest_journal")
+	assert_str(String(((asked[1] as Array)[1] as Dictionary)["tab"])).is_equal("assigned")
+
+
+## F096-AC-10: Mây's guide opens on demand, rings the HUD control of each step, "Bỏ qua" closes it and remembers the
+## device; the ring does not pulse with reduced motion.
+func test_onboarding_guides_skips_and_remembers() -> void:
+	var seen: bool = Settings.onboarding_hub_seen
+	var reduce: bool = Settings.reduce_motion
+	Settings.reduce_motion = false
+	var r: Array = await _hud()
+	var runner: GdUnitSceneRunner = r[0] as GdUnitSceneRunner
+	var hud: CanvasLayer = r[1] as CanvasLayer
+	var hint: OnboardingHint = hud.call("onboarding") as OnboardingHint
+	assert_bool(hint.visible).is_false()
+	hud.call("start_onboarding")
+	await runner.simulate_frames(2)
+	assert_bool(hint.visible).is_true()
+	assert_str((hint.find_child("StepText", true, false) as Label).text).is_equal(tr("ui.onboarding.step_welcome"))
+	assert_object((hint.find_child("StepIcon", true, false) as TextureRect).texture).is_not_null()
+	(hint.find_child("Next", true, false) as Button).pressed.emit()
+	await runner.simulate_frames(2)
+	var chip: Control = hud.find_child("AssignmentsChip", true, false) as Control
+	var ring: Rect2 = hint.target_rect()
+	ring.position += hint.get_global_rect().position
+	assert_bool(ring.encloses(chip.get_global_rect())).is_true()
+	assert_bool(hint.pulsing()).is_true()
+	Settings.reduce_motion = true
+	(hint.find_child("Next", true, false) as Button).pressed.emit()
+	await runner.simulate_frames(1)
+	assert_bool(hint.pulsing()).is_false()
+	assert_str((hint.find_child("Next", true, false) as Button).text).is_equal(tr("ui.onboarding.start"))
+	hint.skip()
+	assert_bool(hint.visible).is_false()
+	assert_bool(Settings.onboarding_hub_seen).is_true()
+	Settings.onboarding_hub_seen = seen
+	Settings.reduce_motion = reduce

@@ -175,3 +175,33 @@ func test_icon_toggles_have_names_and_non_colour_state() -> void:
 	assert_object(vi.icon).is_not_null()
 	assert_object(en.icon).is_null()
 	Settings.set_locale(locale, false)
+
+
+## F096-AC-16 (STUDENT_GAME_UX_CORE S01 §8): "Đang vào…" can be cancelled after 10 s — the "Hủy" button is hidden
+## before, appears at 10 s (touch target of the grade band), and pressing it ends the sign-in (form usable again).
+func test_slow_sign_in_offers_cancel_after_ten_seconds() -> void:
+	var states: Array[int] = []
+	var navigator: Callable = AuthService.navigator
+	AuthService.navigator = func(state: int) -> void: states.append(state)
+	AuthService.form.begin_submit("hs.an.3a")
+	var runner: GdUnitSceneRunner = scene_runner(SCENE)
+	await runner.simulate_frames(2)
+	var scene: Node = runner.scene()
+	var cancel: Button = scene.find_child("CancelSignIn", true, false) as Button
+	assert_bool(cancel.visible).is_false()
+	scene.set("busy_since_msec", int(scene.get("busy_since_msec")) - 9000)
+	await runner.simulate_frames(2)
+	assert_bool(cancel.visible).override_failure_message("not before 10 s").is_false()
+	scene.set("busy_since_msec", int(scene.get("busy_since_msec")) - 2000)
+	await runner.simulate_frames(2)
+	assert_bool(cancel.visible).is_true()
+	assert_str(tr(cancel.text)).is_equal(tr("ui.login.cancel"))
+	var band: String = AppState.grade_band if ThemeService.is_valid_band(AppState.grade_band) else ThemeService.default_band()
+	assert_float(cancel.get_combined_minimum_size().y).is_greater_equal(float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[band]))
+	cancel.pressed.emit()
+	await runner.simulate_frames(2)
+	assert_bool(AuthService.form.busy).is_false()
+	assert_bool(AuthService.holds_password()).is_false()
+	assert_bool(cancel.visible).is_false()
+	assert_array(states).contains([GameStateMachine.State.LOGIN])
+	AuthService.navigator = navigator

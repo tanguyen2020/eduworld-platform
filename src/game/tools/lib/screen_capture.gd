@@ -1,0 +1,278 @@
+extends Node
+## Worker of tools/capture_screens.gd (F096): builds each student screen of the journey on the contract fixtures and
+## fakes of res://tests/fakes (FakeHttp, FakeClock — TEST-ONLY data, AGENTS R17: no network, no server state) and
+## saves the window to `<screen>-<tag>-<size>-<lang>-<band>.png`. Loaded at run time so the autoloads exist when it
+## compiles. Nothing here ships (tools/* is excluded from every export preset).
+
+const SETTLE_FRAMES: int = 10
+const SettingsScript := preload("res://scripts/core/settings.gd")
+const SETTINGS_PATH: String = "user://capture_screens_settings.cfg"
+const SIZES: Dictionary = {
+	"1280x720": Vector2i(1280, 720), "1024x600": Vector2i(1024, 600), "720x1280": Vector2i(720, 1280),
+}
+## Screen name → builder method. Order follows the student journey (STUDENT_GAME_UX §11).
+const SCREENS: PackedStringArray = [
+	"splash", "login", "login_busy", "login_busy_cancel", "login_error_busy", "resume", "curfew", "character",
+	"hub", "hub_onboarding", "hub_onboarding_step2", "hub_offline", "journal", "activity", "activity_feedback",
+	"result", "world_map", "settings", "about",
+]
+## Sample look of the local player (catalog codes of the F070 fixture; display only).
+const SAMPLE_AVATAR: Dictionary = {
+	"body_type": "kid_a", "skin_tone": "tone_03", "hair": {"item_id": "hair_bob_01", "color": "hair_col_02"},
+	"outfit": {"item_id": "outfit_school_01"}, "accessories": [{"slot": "back", "item_id": "acc_backpack_owl"}],
+}
+
+var _harness: AuthHarness = null
+var _settings: Node = null
+var _band: String = "g1_3"
+
+
+var _args: PackedStringArray = []
+
+
+func _arg(name: String, fallback: String) -> String:
+	for arg: String in _args:
+		if arg.begins_with("--%s=" % name):
+			return arg.trim_prefix("--%s=" % name)
+	return fallback
+
+
+## Coroutine: captures the screens selected by `args` (see tools/capture_screens.gd); returns the exit code.
+func run(args: PackedStringArray) -> int:
+	_args = args
+	var out_dir: String = _arg("out", ProjectSettings.globalize_path("user://capture_screens"))
+	var tag: String = _arg("tag", "after")
+	_band = _arg("band", "g1_3")
+	var only: PackedStringArray = _arg("screens", "").split(",", false)
+	var sizes: PackedStringArray = _arg("sizes", "1280x720").split(",", false)
+	var locales: PackedStringArray = _arg("locales", "vi-VN").split(",", false)
+	DirAccess.make_dir_recursive_absolute(out_dir)
+	DirAccess.remove_absolute(SETTINGS_PATH)
+	_settings = SettingsScript.new() as Node
+	_settings.call("load_from", SETTINGS_PATH)
+	_settings.set("quality_preset", QualityPolicy.MEDIUM)
+	QualityManager.settings = _settings
+	QualityManager.apply_preset(QualityPolicy.MEDIUM, false)
+	AuthService.autostart = false
+	var count: int = 0
+	for screen: String in SCREENS:
+		if not only.is_empty() and not screen in only:
+			continue
+		for size_name: String in sizes:
+			for locale: String in locales:
+				var size: Vector2i = SIZES.get(size_name, Vector2i(1280, 720)) as Vector2i
+				DisplayServer.window_set_size(size)
+				get_tree().root.size = size
+				AppState.set_grade_band(_band)
+				Settings.set_locale(locale, false)
+				var node: Node = await call("_screen_" + screen) as Node
+				if node == null:
+					printerr("capture_screens: %s could not be built" % screen)
+					continue
+				for i: int in SETTLE_FRAMES:
+					await get_tree().process_frame
+				await RenderingServer.frame_post_draw
+				var image: Image = get_tree().root.get_texture().get_image()
+				var file: String = "%s-%s-%s-%s-%s.png" % [screen, tag, size_name, locale.substr(0, 2), _band]
+				image.save_png(out_dir.path_join(file))
+				count += 1
+				node.queue_free()
+				await _reset()
+	print("capture_screens: %d images (%s, %s) in %s" % [count, tag, RenderingServer.get_current_rendering_method(),
+			out_dir])
+	_settings.free()
+	DirAccess.remove_absolute(SETTINGS_PATH)
+	return 0
+
+
+func _reset() -> void:
+	await get_tree().process_frame
+	if _harness != null:
+		_harness.dispose()
+		_harness = null
+	AppState.player = {}
+	AuthService.form.reset_for_new_user()
+	await get_tree().process_frame
+
+
+## A signed-in student on FakeHttp with the services wired to it (AppState.services).
+func _sign_in(first_time: bool = false) -> void:
+	_harness = AuthHarness.create()
+	await _harness.sign_in()
+	if first_time:
+		ProfileFixtures.script_first_time(_harness.http)
+	else:
+		ProfileFixtures.script_ready(_harness.http)
+	_harness.http.reply(WorldFixtures.ROUTE_AREAS, 200, WorldFixtures.areas())
+	_harness.http.reply(WorldFixtures.ROUTE_EXPLORATION, 200, WorldFixtures.exploration())
+	_harness.http.reply("GET /learning/my-assignments", 200, AssignmentFixtures.two())
+	_harness.http.reply("GET /game/quests", 200, {"data": [], "page": {"has_more": false}})
+	AppState.services = ServiceLocator.new(_harness.api, AppState, _harness.clock)
+	AppState.player = AuthHarness.bootstrap()
+	AppState.set_grade_band(_band)
+
+
+func _add(path: String) -> Node:
+	var node: Node = (load(path) as PackedScene).instantiate()
+	get_tree().root.add_child(node)
+	return node
+
+
+func _screen_splash() -> Node:
+	return _add("res://scenes/bootstrap/Splash.tscn")
+
+
+func _screen_login() -> Node:
+	return _add("res://scenes/auth/Login.tscn")
+
+
+func _screen_login_busy() -> Node:
+	AuthService.form.begin_submit("hs.an.3a")
+	return _add("res://scenes/auth/Login.tscn")
+
+
+## S01 §8 "hủy được sau 10 s": the cancel button of a slow sign-in.
+func _screen_login_busy_cancel() -> Node:
+	# Pretends the sign-in started 11 s ago (the button appears after 10 s).
+	AuthService.form.begin_submit("hs.an.3a")
+	var node: Node = _add("res://scenes/auth/Login.tscn")
+	await get_tree().process_frame
+	node.set("busy_since_msec", int(node.get("busy_since_msec")) - 11000)
+	return node
+
+
+func _screen_login_error_busy() -> Node:
+	AuthService.form.begin_submit("hs.an.3a")
+	AuthService.form.end_submit("UNAVAILABLE")
+	return _add("res://scenes/auth/Login.tscn")
+
+
+func _screen_resume() -> Node:
+	return _add("res://scenes/auth/ResumeSplash.tscn")
+
+
+func _screen_curfew() -> Node:
+	AuthService.reopen_text = "06:00"
+	return _add("res://scenes/auth/CurfewNotice.tscn")
+
+
+func _screen_character() -> Node:
+	await _sign_in(true)
+	var node: Node = _add("res://scenes/character/CharacterCreation.tscn")
+	for i: int in 60:
+		await get_tree().process_frame
+		var model: CharacterCreationModel = node.get("model") as CharacterCreationModel
+		if model != null and model.state != CharacterCreationModel.State.LOADING:
+			break
+	return node
+
+
+func _world(onboarding: bool = false) -> Node:
+	await _sign_in()
+	# Device flag of Mây's guide in RAM only (never saved by the capture).
+	Settings.onboarding_hub_seen = not onboarding
+	var world: Node = _add("res://scenes/world/WorldRoot.tscn")
+	for i: int in 30:
+		await get_tree().process_frame
+	var zone: ZoneRoot = world.get("zone") as ZoneRoot
+	if zone != null and zone.player != null:
+		var rig: AvatarBuilder = zone.player.get_node_or_null("AvatarRig") as AvatarBuilder
+		if rig != null:
+			rig.apply(AvatarConfigModel.from_dict(SAMPLE_AVATAR))
+	return world
+
+
+func _screen_hub() -> Node:
+	return await _world()
+
+
+func _screen_hub_onboarding() -> Node:
+	return await _world(true)
+
+
+func _screen_hub_onboarding_step2() -> Node:
+	var world: Node = await _world(true)
+	var hud: CanvasLayer = world.find_child("MainHud", true, false) as CanvasLayer
+	(hud.call("onboarding") as OnboardingHint).next()
+	return world
+
+
+func _screen_hub_offline() -> Node:
+	var world: Node = await _world()
+	var hud: CanvasLayer = world.find_child("MainHud", true, false) as CanvasLayer
+	hud.call("show_hub_notice", "ui.realtime.reconnecting")
+	return world
+
+
+func _open_panel(world: Node, screen_id: StringName, args: Dictionary = {}) -> void:
+	EventBus.ui_requested.emit(screen_id, args)
+	for i: int in 40:
+		await get_tree().process_frame
+
+
+func _screen_journal() -> Node:
+	var world: Node = await _world()
+	await _open_panel(world, &"quest_journal", {"tab": "assigned"})
+	return world
+
+
+func _screen_world_map() -> Node:
+	var world: Node = await _world()
+	await _open_panel(world, &"world_map")
+	return world
+
+
+func _screen_settings() -> Node:
+	var world: Node = await _world()
+	await _open_panel(world, &"settings")
+	return world
+
+
+func _screen_about() -> Node:
+	var world: Node = await _world()
+	await _open_panel(world, &"settings")
+	var panel: Node = world.find_child("SettingsPanel", true, false)
+	if panel != null:
+		panel.call("show_licenses")
+	return world
+
+
+func _activity_host() -> Control:
+	await _sign_in()
+	var host: Control = (load("res://scenes/learning/ActivityHost.tscn") as PackedScene).instantiate() as Control
+	host.set("services", AppState.services)
+	host.set("client_version", AuthHarness.VERSION)
+	host.set("grade_band", _band)
+	get_tree().root.add_child(host)
+	_harness.http.reply(LearningFixtures.ROUTE_START, 201, LearningFixtures.fresh_attempt())
+	_harness.http.reply(LearningFixtures.ROUTE_RESPOND, 200, LearningFixtures.response_result_correct())
+	_harness.http.reply(LearningFixtures.ROUTE_REVIEW, 200, LearningFixtures.review())
+	_harness.http.reply(LearningFixtures.ROUTE_SUBMIT, 200, LearningFixtures.submitted())
+	host.call("open", {"activity_id": LearningFixtures.ACTIVITY_ID, "mode": "practice", "context_type": "free_play"})
+	for i: int in 60:
+		await get_tree().process_frame
+	return host
+
+
+func _screen_activity() -> Node:
+	return await _activity_host()
+
+
+func _screen_activity_feedback() -> Node:
+	var host: Control = await _activity_host()
+	var service: LearningService = host.get("service") as LearningService
+	if service != null:
+		host.call("_apply_result", ResponseResultModel.from_dict(LearningFixtures.response_result_correct()))
+	return host
+
+
+func _screen_result() -> Node:
+	var host: Control = await _activity_host()
+	var service: LearningService = host.get("service") as LearningService
+	service.last_rewards = [{"kind": "xp", "amount": 40}, {"kind": "badge"}]
+	host.call("_show_results", false)
+	for i: int in 60:
+		await get_tree().process_frame
+	# Let the celebration finish (≤ CelebrationBanner.ANIMATION_MAX_SEC) so the stars are drawn.
+	await get_tree().create_timer(CelebrationBanner.ANIMATION_MAX_SEC + 0.2).timeout
+	return host

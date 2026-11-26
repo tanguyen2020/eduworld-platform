@@ -19,3 +19,5 @@ signal density_changed(band: String)
 signal ui_requested(screen_id: StringName, args: Dictionary)
 @warning_ignore("unused_signal")
 signal ui_closed(screen_id: StringName)
+## F096: "Xem lại hướng dẫn của Mây" in Cài đặt — the world host opens the Hub guide again.
+signal onboarding_requested()

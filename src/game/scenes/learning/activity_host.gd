@@ -23,7 +23,8 @@ const LOAD_RETRY_AFTER_SEC: float = 8.0
 ## Re-send of queued answers while offline (ApiClient already backs off inside one attempt).
 const OFFLINE_RETRY_SEC: float = 5.0
 const BAND_NO_CLOCK: String = "g1_3"
-const HOURGLASS: String = "⏳"
+## F096-AC-15: the timed indicator is words, not the ⏳ glyph (missing from the shipped fonts; empty box on the Web build).
+const TIMED_KEY: String = "ui.common.timed"
 ## Codes after which the attempt can no longer be answered: the player goes to the result flow.
 const CLOSED_CODES: PackedStringArray = ["ATTEMPT_EXPIRED", "ATTEMPT_NOT_IN_PROGRESS", "ATTEMPT_ALREADY_SUBMITTED"]
 
@@ -253,6 +254,8 @@ func _submit() -> void:
 func _show_results(after_submit: bool) -> void:
 	var attempt: AttemptModel = service.attempt
 	_clear_body()
+	# F096: the result screen has no question position ("1/11" belonged to the questions).
+	_progress.text = ""
 	result_view = RESULT_SCENE.instantiate() as Control
 	_body.add_child(result_view)
 	result_view.connect("practice_requested", _on_practice_requested)
@@ -632,7 +635,7 @@ func _tick_clock() -> void:
 	_clock.visible = left >= 0
 	if left < 0:
 		return
-	_clock.text = HOURGLASS if grade_band == BAND_NO_CLOCK else "%s %02d:%02d" % [HOURGLASS, left / 60, left % 60]
+	_clock.text = tr(TIMED_KEY) if grade_band == BAND_NO_CLOCK else "%02d:%02d" % [left / 60, left % 60]
 	if left == 0:
 		_time_up()
 

@@ -22,7 +22,7 @@ var cues: Array[Cue] = []
 func parse(source: String) -> bool:
 	cues.clear()
 	var text: String = source.replace("\r\n", "\n").replace("\r", "\n")
-	if text.begins_with("﻿"):
+	if not text.is_empty() and text.unicode_at(0) == 0xFEFF:
 		text = text.substr(1)
 	if not text.begins_with("WEBVTT"):
 		return false

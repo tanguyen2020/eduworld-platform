@@ -195,9 +195,6 @@ msgstr ""
 msgid "ui.boot.loading"
 msgstr ""
 
-msgid "ui.boot.title"
-msgstr ""
-
 msgid "ui.common.break_reminder"
 msgstr ""
 
@@ -217,6 +214,9 @@ msgid "ui.common.outside_access_window"
 msgstr ""
 
 msgid "ui.common.retry"
+msgstr ""
+
+msgid "ui.common.timed"
 msgstr ""
 
 msgid "ui.config_error.body"
@@ -978,6 +978,15 @@ msgstr ""
 msgid "ui.minigame.game_score"
 msgstr ""
 
+msgid "ui.minigame.mark_correct"
+msgstr ""
+
+msgid "ui.minigame.mark_incorrect"
+msgstr ""
+
+msgid "ui.minigame.mark_saved"
+msgstr ""
+
 msgid "ui.minigame.not_completed"
 msgstr ""
 
@@ -996,6 +1005,15 @@ msgstr ""
 msgid "ui.minigame.time_up"
 msgstr ""
 
+msgid "ui.next_step.assignments"
+msgstr ""
+
+msgid "ui.next_step.explore"
+msgstr ""
+
+msgid "ui.next_step.title"
+msgstr ""
+
 msgid "ui.notification.assignment_new"
 msgstr ""
 
@@ -1005,13 +1023,31 @@ msgstr ""
 msgid "ui.notification.assignments_pending"
 msgstr ""
 
-msgid "ui.notification.bell"
-msgstr ""
-
 msgid "ui.notification.bell_count"
 msgstr ""
 
 msgid "ui.notification.bell_tooltip"
+msgstr ""
+
+msgid "ui.onboarding.next"
+msgstr ""
+
+msgid "ui.onboarding.progress"
+msgstr ""
+
+msgid "ui.onboarding.skip"
+msgstr ""
+
+msgid "ui.onboarding.start"
+msgstr ""
+
+msgid "ui.onboarding.step_assignments"
+msgstr ""
+
+msgid "ui.onboarding.step_explore"
+msgstr ""
+
+msgid "ui.onboarding.step_welcome"
 msgstr ""
 
 msgid "ui.quality.antialiasing"
@@ -1197,6 +1233,9 @@ msgstr ""
 msgid "ui.result.back_to_quest"
 msgstr ""
 
+msgid "ui.result.celebrate"
+msgstr ""
+
 msgid "ui.result.correct_count"
 msgstr ""
 
@@ -1224,13 +1263,37 @@ msgstr ""
 msgid "ui.result.score"
 msgstr ""
 
+msgid "ui.result.stars_tooltip"
+msgstr ""
+
 msgid "ui.result.weak_count"
+msgstr ""
+
+msgid "ui.settings.about"
 msgstr ""
 
 msgid "ui.settings.account"
 msgstr ""
 
+msgid "ui.settings.back"
+msgstr ""
+
 msgid "ui.settings.language"
+msgstr ""
+
+msgid "ui.settings.licenses"
+msgstr ""
+
+msgid "ui.settings.licenses_engine"
+msgstr ""
+
+msgid "ui.settings.licenses_intro"
+msgstr ""
+
+msgid "ui.settings.licenses_project"
+msgstr ""
+
+msgid "ui.settings.licenses_title"
 msgstr ""
 
 msgid "ui.settings.logout"
@@ -1240,6 +1303,9 @@ msgid "ui.settings.logout_cancel"
 msgstr ""
 
 msgid "ui.settings.logout_confirm"
+msgstr ""
+
+msgid "ui.settings.replay_guide"
 msgstr ""
 
 msgid "ui.settings.title"

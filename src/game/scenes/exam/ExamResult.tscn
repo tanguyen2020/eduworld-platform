@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/exam/exam_result.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/star.svg" id="2_star"]
 
 [node name="ExamResult" type="VBoxContainer"]
 size_flags_horizontal = 3
@@ -25,7 +26,20 @@ visible = false
 layout_mode = 2
 auto_translate_mode = 2
 
-[node name="Correct" type="Label" parent="."]
+[node name="CorrectRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="StarIcon" type="TextureRect" parent="CorrectRow"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("2_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Correct" type="Label" parent="CorrectRow"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2

@@ -46,15 +46,19 @@ func test_server_rewards_are_listed_apart_from_the_score() -> void:
 			[{"kind": "xp", "amount": 40}, {"kind": "badge"}])
 	assert_bool(bool(view.call("rewards_visible"))).is_true()
 	var list: VBoxContainer = view.get_node("%RewardList") as VBoxContainer
-	assert_str((list.get_child(0) as Label).text).is_equal(tr("ui.result.reward_xp").format({"amount": 40}))
+	var first: Label = list.get_child(0).get_child(1) as Label
+	assert_str(first.text).is_equal(tr("ui.result.reward_xp").format({"amount": 40}))
+	assert_object((list.get_child(0).get_child(0) as TextureRect).texture).is_not_null()
 	assert_bool(list.is_ancestor_of(view.get_node("%Score"))).is_false()
 
 
 func test_g1_3_sees_a_count_with_a_star_and_no_ten_point_scale() -> void:
 	var view: VBoxContainer = _view()
 	view.call("show_review", AttemptReviewModel.from_dict(LearningFixtures.review()), "g1_3", [])
-	assert_str(String(view.call("score_text"))).starts_with("⭐")
 	assert_str(String(view.call("score_text"))).contains("1/2")
+	# F096-AC-14/15: the star is an icon — one per right answer — not an emoji in the text.
+	assert_int((view.call("celebration") as CelebrationBanner).star_count()).is_equal(1)
+	assert_str(String(view.call("score_text"))).not_contains("⭐")
 	assert_bool(bool(view.call("points_visible"))).is_false()
 	assert_str(String(view.call("score_text"))).not_contains("/10")
 
@@ -175,3 +179,29 @@ func test_immediate_release_shows_the_review_and_practice_starts_with_the_recomm
 	assert_str(String((body["source"] as Dictionary)["question_set_id"])).is_equal(LearningFixtures.QUESTION_SET_ID)
 	assert_bool(Uuid.is_v7(String(h.http.last(LearningFixtures.ROUTE_ADHOC).headers["idempotency-key"]))).is_true()
 	host.call("close")
+
+
+## F096-AC-14 (NFR-SAFE-003, AGENTS R19): the result opens with a celebration — Mây, "Hoàn thành!", stars for g1_3 — whose
+## effect plays once within 2.5 s and not at all with reduced motion; it never pressures (no timer, streak, comeback or
+## comparison words) and older bands get no stars.
+func test_celebration_is_short_kind_and_respects_reduced_motion() -> void:
+	var reduce: bool = Settings.reduce_motion
+	Settings.reduce_motion = false
+	var view: VBoxContainer = _view()
+	var data: Dictionary = LearningFixtures.review()
+	view.call("show_review", AttemptReviewModel.from_dict(data), "g1_3", [{"kind": "xp", "amount": 10}])
+	var banner: CelebrationBanner = view.call("celebration") as CelebrationBanner
+	assert_bool(banner.visible).is_true()
+	assert_bool(banner.animating()).is_true()
+	for stars: int in [0, 1, 5, CelebrationBanner.MAX_STARS, 40]:
+		assert_float(CelebrationBanner.effect_sec(stars)).is_less_equal(CelebrationBanner.ANIMATION_MAX_SEC)
+	var text: String = _texts(view)
+	for word: String in ["ngày mai", "chuỗi", "streak", "tomorrow", "còn lại", "hết hạn", "bạn khác", "thua", "lost"]:
+		assert_str(text).override_failure_message(word).not_contains(word)
+	Settings.reduce_motion = true
+	view.call("show_review", AttemptReviewModel.from_dict(data), "g1_3", [])
+	assert_bool(banner.animating()).is_false()
+	assert_int(banner.star_count()).is_equal(1)
+	view.call("show_review", AttemptReviewModel.from_dict(data), "g6_7", [])
+	assert_int(banner.star_count()).is_equal(0)
+	Settings.reduce_motion = reduce

@@ -6,10 +6,15 @@ extends PanelContainer
 
 signal start_pressed(assignment: MyAssignmentModel)
 
-## Icon glyph per status (shown with the status text, never colour alone; neutral style for `overdue`).
+## Icon per status (shown with the status text, never colour alone; neutral style for `overdue`). F096-AC-15: icons of
+## design/icons/game, not glyphs the shipped fonts lack (✓ was an empty box on the Web build).
 const STATUS_ICONS: Dictionary = {
-	"not_started": "•", "in_progress": "»", "submitted": "✓", "graded": "✓", "overdue": "!", "excused": "–",
+	"not_started": preload("res://resources/ui/icons/assignments.svg"),
+	"in_progress": preload("res://resources/ui/icons/next.svg"),
+	"submitted": preload("res://resources/ui/icons/tick.svg"), "graded": preload("res://resources/ui/icons/tick.svg"),
+	"overdue": preload("res://resources/ui/icons/alert.svg"), "excused": preload("res://resources/ui/icons/info.svg"),
 }
+const STATUS_ICON_UNKNOWN: Texture2D = preload("res://resources/ui/icons/help.svg")
 const STATUS_KEYS: Dictionary = {
 	"not_started": "ui.quest.status.not_started", "in_progress": "ui.quest.status.in_progress",
 	"submitted": "ui.quest.status.submitted", "graded": "ui.quest.status.graded",
@@ -21,7 +26,7 @@ const NO_START_STATUSES: PackedStringArray = ["excused"]
 
 var assignment: MyAssignmentModel = null
 
-@onready var _icon: Label = %StatusIcon
+@onready var _icon: TextureRect = %StatusIcon
 @onready var _title: Label = %Title
 @onready var _subject: Label = %Subject
 @onready var _due: Label = %Due
@@ -30,6 +35,7 @@ var assignment: MyAssignmentModel = null
 
 
 func _ready() -> void:
+	_icon.custom_minimum_size = Vector2.ONE * UiTokens.COMPONENT_ICON_SIZE
 	_start.pressed.connect(_on_start_pressed)
 
 
@@ -45,7 +51,7 @@ func render() -> void:
 	_title.tooltip_text = assignment.title
 	_subject.text = assignment.subject_text()
 	_subject.visible = not _subject.text.is_empty()
-	_icon.text = String(STATUS_ICONS.get(assignment.status, "?"))
+	_icon.texture = STATUS_ICONS.get(assignment.status, STATUS_ICON_UNKNOWN) as Texture2D
 	var status_text: String = tr(String(STATUS_KEYS.get(assignment.status, UNKNOWN_STATUS_KEY)))
 	if assignment.status == MyAssignmentModel.STATUS_OVERDUE and assignment.allow_late:
 		status_text += " · " + tr("ui.quest.late_allowed")

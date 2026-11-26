@@ -61,8 +61,13 @@ func test_scene_picture_board_one_tap() -> void:
 	map.call("render", _model("g1_3"))
 	var tiles: Array[Node] = map.find_children("Tile_*", "Button", true, false)
 	assert_int(tiles.size()).is_equal(_model("g1_3").entries.size())
+	# F096-AC-12: each picture tile shows the area icon and its short name (a blank square was unusable for g1_3).
 	for t: Node in tiles:
-		assert_str((t as Button).text).is_empty()
+		assert_str((t as Button).text).is_not_empty()
+		assert_object((t as Button).icon).is_not_null()
+		assert_float((t as Button).get_combined_minimum_size().y).is_greater_equal(float(UiTokens.DENSITY_G1_3_BUTTON_MIN_HEIGHT))
+	assert_str((map.find_child("Tile_learning_zone_math", true, false) as Button).icon.resource_path).ends_with(
+			"area_math_kingdom.svg")
 	var travelled: Array[String] = []
 	map.connect("travel_requested", func(id: String) -> void: travelled.append(id))
 	(map.find_child("Tile_learning_zone_math", true, false) as Button).pressed.emit()

@@ -31,7 +31,7 @@ msgid "ui.activity_player.finish"
 msgstr "Hoàn thành"
 
 msgid "ui.activity_player.hint"
-msgstr "💡 Gợi ý"
+msgstr "Gợi ý"
 
 msgid "ui.activity_player.hint_error"
 msgstr "Chưa lấy được gợi ý, em thử lại nhé."
@@ -61,7 +61,7 @@ msgid "ui.activity_player.pause_confirm"
 msgstr "Em muốn tạm dừng? Tiến độ được giữ lại."
 
 msgid "ui.activity_player.read_aloud"
-msgstr "🔊 Đọc to"
+msgstr "Đọc to"
 
 msgid "ui.activity_player.results_later"
 msgstr "Bài đã nộp! Kết quả sẽ có khi nhà trường công bố."
@@ -82,7 +82,7 @@ msgid "ui.audio.not_ready"
 msgstr "Bài nghe đang được chuẩn bị, em quay lại sau nhé."
 
 msgid "ui.audio.play"
-msgstr "▶ / ❚❚ Nghe"
+msgstr "Nghe / Tạm dừng"
 
 msgid "ui.audio.plays_exhausted"
 msgstr "Em đã nghe đủ số lượt. Em vẫn trả lời được câu hỏi."
@@ -124,7 +124,7 @@ msgid "ui.avatar.name_hint"
 msgstr "Tên được tạo sẵn để giữ an toàn cho em."
 
 msgid "ui.avatar.next"
-msgstr "Tiếp ▶"
+msgstr "Tiếp"
 
 msgid "ui.avatar.next_option"
 msgstr "Mẫu sau"
@@ -222,6 +222,9 @@ msgstr "Bây giờ ngoài giờ chơi EduWorld. Em có thể vào trong khung gi
 msgid "ui.common.retry"
 msgstr "Thử lại"
 
+msgid "ui.common.timed"
+msgstr "Có tính giờ"
+
 msgid "ui.config_error.body"
 msgstr "Cấu hình của bản cài đặt này bị lỗi. Em hãy nhờ thầy cô hoặc bố mẹ cài lại trò chơi nhé."
 
@@ -241,7 +244,7 @@ msgid "ui.emote.close.tooltip"
 msgstr "Đóng vòng emote"
 
 msgid "ui.emote.open"
-msgstr "Emote"
+msgstr "Biểu cảm"
 
 msgid "ui.emote.open.tooltip"
 msgstr "Vòng emote (T)"
@@ -382,7 +385,7 @@ msgid "ui.error.TENANT_NOT_SELECTED"
 msgstr "Em hãy chọn trường để tiếp tục."
 
 msgid "ui.error.UNAVAILABLE"
-msgstr "Máy chủ đang bận, em thử lại sau nhé."
+msgstr "Hệ thống đang bận, em thử lại sau ít phút nhé."
 
 msgid "ui.error.VALIDATION_FAILED"
 msgstr "Thông tin chưa hợp lệ. Em kiểm tra lại nhé."
@@ -421,10 +424,10 @@ msgid "ui.exam.exit_confirm"
 msgstr "Thời gian vẫn chạy khi em rời phòng thi. Em có muốn rời đi không?"
 
 msgid "ui.exam.flag"
-msgstr "🚩 Đánh dấu"
+msgstr "Đánh dấu"
 
 msgid "ui.exam.grid_legend"
-msgstr "● đã làm · ○ chưa làm · 🚩 đánh dấu"
+msgstr "Dấu tích: đã làm · Lá cờ: đánh dấu để xem lại"
 
 msgid "ui.exam.leave"
 msgstr "Rời đi"
@@ -436,7 +439,7 @@ msgid "ui.exam.loading"
 msgstr "Đang tải bài kiểm tra…"
 
 msgid "ui.exam.next"
-msgstr "Câu sau ▶"
+msgstr "Câu sau"
 
 msgid "ui.exam.offline"
 msgstr "Đang mất kết nối — câu trả lời được lưu tạm trên máy"
@@ -445,7 +448,7 @@ msgid "ui.exam.practice_objective"
 msgstr "Luyện LO này"
 
 msgid "ui.exam.prev"
-msgstr "◀ Câu trước"
+msgstr "Câu trước"
 
 msgid "ui.exam.question_of"
 msgstr "Câu {n}/{total}"
@@ -529,7 +532,7 @@ msgid "ui.exam.take_over"
 msgstr "Chuyển sang thiết bị này"
 
 msgid "ui.exam.time_left"
-msgstr "⏱ {time}"
+msgstr "Còn {time}"
 
 msgid "ui.exam.time_warning_1"
 msgstr "Còn 1 phút nữa."
@@ -541,7 +544,7 @@ msgid "ui.exam.title"
 msgstr "Phòng thi"
 
 msgid "ui.exam.unflag"
-msgstr "🚩 Bỏ đánh dấu"
+msgstr "Bỏ đánh dấu"
 
 msgid "ui.exam.view_result"
 msgstr "Xem kết quả"
@@ -745,10 +748,10 @@ msgid "ui.hub.join_denied"
 msgstr "Em chưa vào được khu đó. Em ở lại đây nhé!"
 
 msgid "ui.hub.journal"
-msgstr "Nhiệm vụ (J)"
+msgstr "Nhiệm vụ"
 
 msgid "ui.hub.journal.tooltip"
-msgstr "Mở Nhật ký nhiệm vụ"
+msgstr "Mở Nhật ký nhiệm vụ (phím J)"
 
 msgid "ui.hub.map"
 msgstr "Bản đồ"
@@ -981,14 +984,23 @@ msgstr "Xong"
 msgid "ui.minigame.game_score"
 msgstr "Điểm trò chơi: {points}"
 
+msgid "ui.minigame.mark_correct"
+msgstr "đúng"
+
+msgid "ui.minigame.mark_incorrect"
+msgstr "chưa đúng"
+
+msgid "ui.minigame.mark_saved"
+msgstr "đã lưu"
+
 msgid "ui.minigame.not_completed"
 msgstr "Chưa hoàn thành, em chơi lại nhé!"
 
 msgid "ui.minigame.points"
-msgstr "⭐ {points}"
+msgstr "{points} điểm"
 
 msgid "ui.minigame.streak"
-msgstr "🔥 {streak}"
+msgstr "Đúng liền {streak} câu"
 
 msgid "ui.minigame.submit_state"
 msgstr "Nộp kết quả thí nghiệm"
@@ -999,6 +1011,15 @@ msgstr "Kết thúc trò chơi"
 msgid "ui.minigame.time_up"
 msgstr "Hết giờ rồi!"
 
+msgid "ui.next_step.assignments"
+msgstr "Làm bài nhà trường giao ({count})"
+
+msgid "ui.next_step.explore"
+msgstr "Mở Bản đồ để khám phá"
+
+msgid "ui.next_step.title"
+msgstr "Việc tiếp theo"
+
 msgid "ui.notification.assignment_new"
 msgstr "Em có bài mới: {title}"
 
@@ -1008,14 +1029,32 @@ msgstr "Em có {count} bài mới được giao"
 msgid "ui.notification.assignments_pending"
 msgstr "Em có {count} bài nhà trường giao chưa làm"
 
-msgid "ui.notification.bell"
-msgstr "🔔"
-
 msgid "ui.notification.bell_count"
-msgstr "🔔 {count}"
+msgstr "{count}"
 
 msgid "ui.notification.bell_tooltip"
 msgstr "Thông báo bài mới"
+
+msgid "ui.onboarding.next"
+msgstr "Tiếp"
+
+msgid "ui.onboarding.progress"
+msgstr "Bước {n}/{total}"
+
+msgid "ui.onboarding.skip"
+msgstr "Bỏ qua"
+
+msgid "ui.onboarding.start"
+msgstr "Bắt đầu chơi"
+
+msgid "ui.onboarding.step_assignments"
+msgstr "Bài nhà trường giao ở đây. Chạm vào để làm bài nhé!"
+
+msgid "ui.onboarding.step_explore"
+msgstr "Mở Bản đồ hoặc đi qua cổng gió để khám phá các vùng đất."
+
+msgid "ui.onboarding.step_welcome"
+msgstr "Chào em! Mình là Mây. Đây là Quảng trường Tia Sáng."
 
 msgid "ui.quality.antialiasing"
 msgstr "Khử răng cưa"
@@ -1152,11 +1191,14 @@ msgstr "Đang kết nối lại…"
 msgid "ui.result.back_to_quest"
 msgstr "Về nhiệm vụ"
 
+msgid "ui.result.celebrate"
+msgstr "Em làm xong rồi, giỏi quá!"
+
 msgid "ui.result.correct_count"
 msgstr "Đúng {correct}/{total} câu"
 
 msgid "ui.result.done"
-msgstr "🎉 Hoàn thành!"
+msgstr "Hoàn thành!"
 
 msgid "ui.result.learning"
 msgstr "Kết quả học tập"
@@ -1165,7 +1207,7 @@ msgid "ui.result.recommendation"
 msgstr "Mây gợi ý em luyện thêm:"
 
 msgid "ui.result.reward_badge"
-msgstr "🏅 Huy hiệu mới"
+msgstr "Huy hiệu mới"
 
 msgid "ui.result.reward_item"
 msgstr "+{amount} vật phẩm"
@@ -1179,14 +1221,38 @@ msgstr "Phần thưởng trong game"
 msgid "ui.result.score"
 msgstr "Điểm: {score}/{max}"
 
+msgid "ui.result.stars_tooltip"
+msgstr "Mỗi ngôi sao là một câu em làm đúng"
+
 msgid "ui.result.weak_count"
 msgstr "Cần ôn thêm: {n} mục tiêu"
+
+msgid "ui.settings.about"
+msgstr "Thông tin"
 
 msgid "ui.settings.account"
 msgstr "Tài khoản"
 
+msgid "ui.settings.back"
+msgstr "Quay lại Cài đặt"
+
 msgid "ui.settings.language"
 msgstr "Ngôn ngữ"
+
+msgid "ui.settings.licenses"
+msgstr "Giấy phép"
+
+msgid "ui.settings.licenses_engine"
+msgstr "Godot Engine (giấy phép MIT)"
+
+msgid "ui.settings.licenses_intro"
+msgstr "EduWorld được làm bằng Godot Engine và các phần mềm mã nguồn mở dưới đây. Văn bản giấy phép giữ nguyên tiếng Anh."
+
+msgid "ui.settings.licenses_project"
+msgstr "Hình ảnh, mô hình 3D và icon của EduWorld: giấy phép MIT. Font Baloo 2 và Be Vietnam Pro: SIL Open Font License 1.1."
+
+msgid "ui.settings.licenses_title"
+msgstr "Giấy phép phần mềm"
 
 msgid "ui.settings.logout"
 msgstr "Đăng xuất"
@@ -1196,6 +1262,9 @@ msgstr "Ở lại"
 
 msgid "ui.settings.logout_confirm"
 msgstr "Em muốn đăng xuất? Lần sau em sẽ cần nhập mật khẩu."
+
+msgid "ui.settings.replay_guide"
+msgstr "Xem lại hướng dẫn của Mây"
 
 msgid "ui.settings.title"
 msgstr "Cài đặt"
@@ -1243,7 +1312,7 @@ msgid "ui.video.not_ready"
 msgstr "Video đang được chuẩn bị, em quay lại sau nhé."
 
 msgid "ui.video.play_pause"
-msgstr "▶ / ❚❚"
+msgstr "Phát / Tạm dừng"
 
 msgid "ui.video.restart"
 msgstr "Xem từ đầu"

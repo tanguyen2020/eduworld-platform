@@ -1,6 +1,6 @@
 # UX màn hình học sinh — Core (S01–S07)
 
-> Trạng thái: Draft · Phiên bản: 1.4 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-24 (S01: bố cục ba cột cụ thể của form, kích thước theo token, ngôn ngữ dạng chip VI/EN, hiện/ẩn mật khẩu bằng icon, thông báo có icon, Mây chào — owner báo giao diện vỡ) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (S01: màn "Tiếp tục là <nickname>?" khi tự vào lại, máy dùng chung, màn giờ giới nghiêm ADR-0078; bỏ đăng nhập QR/PIN — ADR-0076 Rejected) · 2026-11-16 (ADR-0083, ADR-0086)
+> Trạng thái: Draft · Phiên bản: 1.5 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-26 (F096 student UX pass 1: màn chờ/thông báo trước thế giới mang nhận diện EduWorld, S01 nút "Hủy" sau 10 s + thông điệp 503, S03 camera, nút HUD icon + chữ, Mây hướng dẫn lần đầu, thẻ "Việc tiếp theo", S04 bảng hình có icon + tên) · 2026-11-24 (S01: bố cục ba cột cụ thể của form, kích thước theo token, ngôn ngữ dạng chip VI/EN, hiện/ẩn mật khẩu bằng icon, thông báo có icon, Mây chào — owner báo giao diện vỡ) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (S01: màn "Tiếp tục là <nickname>?" khi tự vào lại, máy dùng chung, màn giờ giới nghiêm ADR-0078; bỏ đăng nhập QR/PIN — ADR-0076 Rejected) · 2026-11-16 (ADR-0083, ADR-0086)
 > Liên quan: [STUDENT_GAME_UX (quy ước chung)](STUDENT_GAME_UX.md) · [ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md) · [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) · [DESIGN_SYSTEM §5](DESIGN_SYSTEM.md#5-game-design-system-godot-3d) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md)
 
 ## Mục đích và phạm vi
@@ -121,7 +121,7 @@ Khi bàn phím ảo mở: form cuộn lên, ẩn minh họa và Mây, nút Đăn
 
 | Trạng thái | Hiển thị |
 |---|---|
-| Đang kiểm tra phiên bản | Logo + thanh tiến độ mảnh; có phiên đã lưu → `ResumeSplash`, không có → form |
+| Đang kiểm tra phiên bản | Màn splash EduWorld: nền trời S01, logo Tia Sáng + chữ "EduWorld", Mây nói "Đang tải…" trong bong bóng (cùng bố cục boot splash, F096); có phiên đã lưu → `ResumeSplash`, không có → form. `ResumeSplash`, `CurfewNotice` và `QueueIndicator` dùng cùng bố cục (nền trời, logo, Mây nói nội dung, nút bên dưới) |
 | Đang tự vào lại (`ResumingSession`, ADR-0086) | `ResumeSplash` "Đang vào lớp…"; không hiện form; sau 5 s hiện nút phụ "Đăng nhập bằng tài khoản khác" (= Đăng xuất rồi về form) |
 | Tự vào lại thành công (S01b) | "Tiếp tục là <nickname>?" với avatar; focus mặc định ở "Tiếp tục"; không tự chuyển sau thời gian chờ; "Không phải tôi" → đăng xuất, xóa phiên đã lưu, về form trống (không điền sẵn tên của người trước) |
 | Giờ giới nghiêm (đăng nhập hoặc tự vào lại) | `CurfewNotice` "Đã đến giờ nghỉ rồi! EduWorld mở lại lúc {giờ}."; không hiện form; phiên đã lưu được giữ. Đang chơi: cảnh báo trước 10 phút "Còn 10 phút nữa là giờ nghỉ", tới giờ lưu tiến độ và về màn này |
@@ -129,7 +129,8 @@ Khi bàn phím ảo mở: form cuộn lên, ẩn minh họa và Mây, nút Đăn
 | Tự vào lại gặp lỗi tài khoản (`403 ACCOUNT_LOCKED`, `NO_ACTIVE_ENROLLMENT`, `TENANT_ACCESS_DISABLED`…) | Thông điệp theo mã như khi đăng nhập, rồi về form |
 | Tự vào lại mất mạng/máy chủ bận | Giữ `ResumeSplash` với "Đang kết nối…", tự thử lại; không xóa phiên đã lưu |
 | Form trống / điền sẵn tên | Ô mật khẩu luôn trống; nút Đăng nhập tắt khi một trong hai ô trống |
-| Đang đăng nhập | Nút chuyển "Đang vào…" + spinner, khóa form; hủy được sau 10 s |
+| Đang đăng nhập | Nút chuyển "Đang vào…" + spinner, khóa form; sau **10 s** hiện nút phụ "Hủy" (vùng chạm theo khối) → bỏ yêu cầu đang chờ, xóa mật khẩu khỏi bộ nhớ, form dùng lại được (F096-AC-16) |
+| Máy chủ bận (`503 UNAVAILABLE`, hoặc HTTP 502/503/504 không có Problem) | `InlineError` "Hệ thống đang bận, em thử lại sau ít phút nhé." (`ui.error.UNAVAILABLE`, F096-AC-17); ô mật khẩu được xóa, nút Đăng nhập dùng lại được |
 | Hàng chờ (`429 LOGIN_QUEUE_BUSY`) | `QueueIndicator` "Đang vào lớp… nhiều bạn đang vào cùng lúc", tự thử lại theo `Retry-After` + jitter, nút "Hủy" |
 | Thử quá nhiều (`429 RATE_LIMITED`) | "Em thử nhiều lần quá. Hãy đợi 1 phút rồi thử lại nhé." + đếm ngược |
 | Sai username/password hoặc khóa tạm (`401 INVALID_CREDENTIALS`) | `InlineError` "Tên đăng nhập hoặc mật khẩu chưa đúng" (+ "Nếu nhập sai nhiều lần, hãy đợi vài phút" từ lần sai thứ 3 trên thiết bị); không tiết lộ tài khoản có tồn tại hay đang bị khóa; xóa ô mật khẩu, focus về ô mật khẩu |
@@ -300,7 +301,14 @@ Bước Tên:  Chọn tên của em  ( Cú Mèo Chăm Chỉ 27 )( Rồng Xanh Vu
 └──────────────────────────────────────────────────────────────┘
 ```
 
-**6. Thành phần.** `PlayerBadge` (avatar, nickname, danh hiệu, level), `XpBar`, `CurrencyChip`, `NotificationBell`, `QuestTracker` (≤ 3 quest), `AreaTitle`, `EventChip`, `Minimap` (ảnh 2D + marker), `ContextActionButton`, `Joystick` (mobile), `ChatDock`, `PartyChip`, `HomeButton`, `ToastStack` (≤ 3 toast).
+**6. Thành phần.** `PlayerBadge` (avatar, nickname, danh hiệu, level), `XpBar`, `CurrencyChip`, `NotificationBell`, `QuestTracker` (≤ 3 quest), `AreaTitle`, `EventChip`, `Minimap` (ảnh 2D + marker), `ContextActionButton`, `Joystick` (mobile), `ChatDock`, `PartyChip`, `HomeButton`, `ToastStack` (≤ 3 toast), `NextStepCard`, `OnboardingHint`.
+
+**6a. Nút, "Việc tiếp theo", hướng dẫn lần đầu, camera (F096, [Confirmed — owner 2026-11-26 "thiết kế game thật dễ dùng và thu hút học sinh", F096 Clarifications Session 2026-11-26]).**
+
+- **Nút HUD:** mỗi nút có **icon SVG kèm chữ** ([DESIGN_SYSTEM §5.1](DESIGN_SYSTEM.md#51-token-ui)): Nhà trường giao, Nhiệm vụ, chuông (chỉ số khi có), Cài đặt, Tủ đồ, Bản đồ, Về Quảng trường, Biểu cảm. Nhãn không chứa phím PC — phím tắt nằm trong tooltip ("Mở Nhật ký nhiệm vụ (phím J)"). Toast hiện đúng nội dung chữ.
+- **Thẻ "Việc tiếp theo"** (`NextStepCard`, trái, dưới `PlayerBadge`): luôn hiện trong thế giới, một gợi ý duy nhất — có bài nhà trường giao → "Làm bài nhà trường giao (n)" mở S05 tab Nhà trường giao; không có → "Mở Bản đồ để khám phá" mở S04. Chọn gợi ý bằng model thuần `NextStepHint` (số bài lấy từ `listMyAssignments` đã có; không gọi mạng thêm, không quyết định nghiệp vụ).
+- **Hướng dẫn lần đầu của Mây** (`OnboardingHint`): hiện khi học sinh vừa tạo nhân vật S02 trong phiên này **hoặc** thiết bị chưa từng hiện hướng dẫn (cờ cục bộ `onboarding_hub_seen` trong `user://settings.cfg` — không phải dữ liệu nghiệp vụ). Tối đa **3 bước**, mỗi bước một câu ngắn + icon: (1) chào và giới thiệu Quảng trường Tia Sáng, (2) "Bài nhà trường giao ở đây" (vòng sáng quanh nút Nhà trường giao), (3) "Mở Bản đồ hoặc đi qua cổng gió" (vòng sáng quanh nút Bản đồ). Có "Bỏ qua" ở mọi bước trừ bước cuối, "Tiếp" / "Bắt đầu chơi"; vòng sáng nhấp nháy nhẹ, đứng yên khi "Giảm chuyển động". Đóng → không hiện lại trên thiết bị đó; mở lại bằng Cài đặt → Thông tin → "Xem lại hướng dẫn của Mây". Lồng tiếng cho `g1_3` khi có asset (F096-2).
+- **Camera khi vào thế giới:** camera góc ba đặt sau lưng và cao hơn nhân vật, nhìn xuống (góc nghiêng ban đầu −20°, trong khoảng xoay của `CameraRig`) — học sinh thấy nhân vật của mình và Quảng trường ngay khi vào.
 
 **7. Dữ liệu & API.** Khi vào: `getGameProfile`, `getProgression`, `listQuests?status=active`, `listWorldAreas`, `getWorldExploration`, ví Xu (`getWallet`). Cập nhật realtime (không polling): `progression.xp.updated`, `progression.level.reached` (mở S07), `quest.progress.updated`, `world.area.unlocked`, `notification.item.created`, `hub.instance.assigned`, chat theo [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md). Vào vùng: `enterWorldArea`. Bài nhà trường giao: `listMyAssignments` (`GET /api/v1/learning/my-assignments`, đã có trong OpenAPI; [SCHOOL_LMS §11](../04-admin-portal/SCHOOL_LMS.md#11-api)) hoặc quest nguồn `assignment` trong `listQuests` [Confirmed].
 
@@ -386,7 +394,7 @@ Vùng khóa → panel phải: "Mở khi: hoàn thành ≥ 1 chương môn học 
 
 **9. Tương tác & phản hồi.** Chạm/nhấp vùng → panel chi tiết; nhấp đúp → dịch chuyển (PC). Mở khóa vùng mới: đám mây tan dần trên vùng + âm thanh, Mây giới thiệu một câu. Không có hiệu ứng mất tiến độ.
 
-**10. Khác biệt theo grade band.** `g1_3`: bản đồ dạng "bảng chọn hình" — 8 thẻ hình lớn, chạm là dịch chuyển (không cần đi bộ, theo WORLD_DESIGN §6), không hiện %, chỉ hiện ngôi sao; `g4_5`: bản đồ + % khám phá; `g6_9`: thêm chi tiết điểm khám phá/vật sưu tầm.
+**10. Khác biệt theo grade band.** `g1_3`: bản đồ dạng "bảng chọn hình" — mỗi vùng đã mở là một thẻ lớn có **icon vùng** (`area_<icon_key>`, DESIGN_SYSTEM §5.1) **phía trên tên ngắn** của vùng (F096: thẻ trống không chữ không dùng được), chạm là dịch chuyển (không cần đi bộ, theo WORLD_DESIGN §6), không hiện %; vùng đang đứng hiện nhưng không chọn được; danh sách cho khối lớn hơn: icon, tên trên tiến độ/điều kiện (xuống dòng trong cột riêng), nút "Đến đây" có chữ; `g4_5`: bản đồ + % khám phá; `g6_9`: thêm chi tiết điểm khám phá/vật sưu tầm.
 
 **11. Song ngữ.** Khóa: `ui.worldmap.title`, `ui.worldmap.explored_percent`, `ui.worldmap.you_are_here`, `ui.worldmap.locked`, `ui.worldmap.unlock_when`, `ui.worldmap.teleport`, `ui.worldmap.friends_here`, `ui.worldmap.legend.*`. Tên vùng là dữ liệu `i18nText` theo [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) (vi "Đại dương Khám Phá" / en "Discovery Ocean"); bật hiển thị song song thì `RegionPin` hiện tên phụ cỡ nhỏ. Ảnh bản đồ **không chứa chữ** (chữ vẽ bằng UI để dịch được). Chuỗi dài nhất: điều kiện mở khóa.
 

@@ -9,7 +9,8 @@ extends MiniGameBase
 
 const UNSUPPORTED_KEY: String = "ui.activity_player.update_required"
 const AUTO_TYPES: PackedStringArray = ["single_choice", "true_false"]
-const HOURGLASS: String = "⏳"
+## F096-AC-15: the timed indicator is words, not the ⏳ glyph (missing from the shipped fonts; empty box on the Web build).
+const TIMED_KEY: String = "ui.common.timed"
 const BAND_NO_CLOCK: String = "g1_3"
 
 ## Tap = answer for single-choice / single true-false items.
@@ -22,7 +23,7 @@ var unsupported: bool = false
 @onready var _content: VBoxContainer = %Content
 @onready var _done: Button = %Done
 @onready var _effect: PanelContainer = %Effect
-@onready var _effect_icon: Label = %EffectIcon
+@onready var _effect_icon: TextureRect = %EffectIcon
 @onready var _effect_text: Label = %EffectText
 @onready var _effect_points: Label = %EffectPoints
 @onready var _explanation: Label = %Explanation
@@ -120,7 +121,8 @@ func _show_effect(kind: String, result: ResponseResultModel) -> void:
 		_:
 			_effect.theme_type_variation = &""
 			_effect_text.text = "ui.feedback.saved"
-	_effect_icon.text = MiniGameBase.icon_of(kind)
+	_effect_icon.custom_minimum_size = Vector2.ONE * UiTokens.COMPONENT_ICON_SIZE
+	_effect_icon.texture = MiniGameBase.icon_of(kind)
 	_effect_points.text = ("+%d" % result.game_points) if result.has_game_points and result.game_points > 0 else ""
 	_explanation.text = result.explanation
 	_explanation.visible = not result.explanation.is_empty()
@@ -129,7 +131,7 @@ func _show_effect(kind: String, result: ResponseResultModel) -> void:
 func _on_deferred(_result: ResponseResultModel) -> void:
 	_effect.visible = true
 	_effect.theme_type_variation = &""
-	_effect_icon.text = MiniGameBase.ICON_SAVED
+	_effect_icon.texture = MiniGameBase.ICON_SAVED
 	_effect_text.text = "ui.feedback.saved"
 	_effect_points.text = ""
 	_explanation.visible = false
@@ -140,8 +142,8 @@ func _on_timer(ms: int) -> void:
 	if ms < 0:
 		return
 	var left: int = int(ceil(ms / 1000.0))
-	_timer.text = HOURGLASS if context != null and context.grade_band == BAND_NO_CLOCK \
-			else "%s %02d:%02d" % [HOURGLASS, left / 60, left % 60]
+	_timer.text = tr(TIMED_KEY) if context != null and context.grade_band == BAND_NO_CLOCK \
+			else "%02d:%02d" % [left / 60, left % 60]
 
 
 func _on_finish(summary: MiniGameSummaryModel, marks: Array[ResponseResultModel]) -> void:
@@ -156,11 +158,10 @@ func _on_finish(summary: MiniGameSummaryModel, marks: Array[ResponseResultModel]
 		_summary_score.text = tr("ui.minigame.game_score").format({"points": summary.game_score})
 	_summary_completion.visible = summary != null and summary.has_completion
 	if _summary_completion.visible:
-		_summary_completion.text = "%s %s" % [MiniGameBase.ICON_CORRECT if summary.completion_met else MiniGameBase.ICON_SAVED,
-				tr("ui.minigame.completed" if summary.completion_met else "ui.minigame.not_completed")]
+		_summary_completion.text = tr("ui.minigame.completed" if summary.completion_met else "ui.minigame.not_completed")
 	var parts: PackedStringArray = []
 	for r: ResponseResultModel in marks:
-		parts.append("%d %s" % [r.position, MiniGameBase.icon_of(MiniGameBase.kind_of(r))])
+		parts.append("%d %s" % [r.position, tr(MiniGameBase.mark_key(MiniGameBase.kind_of(r)))])
 	_summary_marks.text = "  ".join(parts)
 	_summary_marks.visible = not parts.is_empty()
 

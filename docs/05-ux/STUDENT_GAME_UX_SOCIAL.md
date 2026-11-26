@@ -1,6 +1,6 @@
 # Student Game UX — Kinh tế, xã hội, thi đấu, sự kiện, cài đặt
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-21 (ADR-0095 — WP-S: bỏ lớp: không nhóm "Bạn cùng lớp", không tab chat Lớp, hồ sơ hiện khối, mục tiêu khối thay mục tiêu lớp) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-26 (F096: nhóm Thông tin trong Cài đặt — Giấy phép có thông báo MIT của Godot, Xem lại hướng dẫn của Mây; lựa chọn đang chọn là chip có dấu ✓) · 2026-11-21 (ADR-0095 — WP-S: bỏ lớp: không nhóm "Bạn cùng lớp", không tab chat Lớp, hồ sơ hiện khối, mục tiêu khối thay mục tiêu lớp) · 2026-11-15
 > Liên quan: [STUDENT_GAME_UX](STUDENT_GAME_UX.md) (quy ước chung, màn lõi) · [DESIGN_SYSTEM](DESIGN_SYSTEM.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [ADR-0056 song ngữ](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057 máy tầm trung](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md)
 
 > [!IMPORTANT]
@@ -542,12 +542,13 @@ Mỗi mục mở trang con toàn màn. Tablet: hai cột như PC.
 | Trợ năng | Cỡ chữ (+0/+1/+2 bậc theo density), tương phản cao, giảm chuyển động, phụ đề hội thoại NPC (luôn bật mặc định), chế độ màu cho người mù màu | Áp dụng toàn bộ UI game |
 | Riêng tư | Ẩn nickname khỏi bảng xếp hạng ngoài trường (bảng toàn platform) [Proposed — ADR-0095 bỏ bảng lớp]; ai được gửi lời mời kết bạn (theo phạm vi cho phép, chỉ siết chặt hơn); hiển thị "đã xem" ở tin nhắn riêng; danh sách đã chặn | Không cho nới quá chính sách trường |
 | Tài khoản | Nickname (chỉ xem), trường (chỉ xem), thời gian chơi hôm nay (thông tin, kèm nhắc nghỉ), **Đăng xuất**, Đăng xuất trên mọi thiết bị | Đăng xuất hỏi xác nhận; trên máy dùng chung luôn hiện nút Đăng xuất to |
+| Thông tin (F096) | **Xem lại hướng dẫn của Mây** (mở lại hướng dẫn lần đầu của S03); **Giấy phép**: trang cuộn trong panel Cài đặt — phiên bản game, câu giới thiệu, giấy phép của EduWorld (hình ảnh/mô hình/icon MIT; font Baloo 2, Be Vietnam Pro OFL-1.1), văn bản giấy phép MIT của Godot Engine và danh sách thành phần bên thứ ba kèm văn bản giấy phép, đọc từ engine (`Engine.get_license_text()`, `get_copyright_info()`, `get_license_info()`); nút "Quay lại Cài đặt" | Văn bản pháp lý giữ nguyên tiếng Anh (không dịch), tiêu đề/nút qua `.po` (`ui.settings.about`, `ui.settings.licenses*`, `ui.settings.replay_guide`, `ui.settings.back`); có ở mọi khối; [Confirmed — F096 Clarifications Session 2026-11-26: cách nhỏ nhất để giữ thông báo MIT của Godot] |
 
 **Dữ liệu & API.** `getGameProfile`, `updateGameProfile` (ngôn ngữ, cài đặt đồng bộ như trợ năng/riêng tư), `logout`, `endGameSession`, `postTelemetry` (kết quả tự phát hiện preset, FPS trung bình — không chứa PII). Đăng xuất mọi thiết bị: **đề xuất** `POST /api/v1/auth/sessions:revoke-all` nếu chưa có (cần fork spec xác nhận).
 
 **Trạng thái.** Lưu thất bại (mất mạng) → giữ thay đổi cục bộ, đồng bộ lại khi có mạng; thiết lập bị trường khóa (ví dụ không nới phạm vi kết bạn) → hiển thị khóa + "Do nhà trường cài đặt".
 
-**Khác biệt grade band.** `g1_3`: chỉ hiện Ngôn ngữ, Âm thanh, Đồ họa (3 nút hình), Trợ năng cơ bản, Đăng xuất; các mục khác do mặc định an toàn. `g6_9`: đủ.
+**Khác biệt grade band.** `g1_3`: chỉ hiện Ngôn ngữ, Âm thanh, Đồ họa (3 nút hình), Trợ năng cơ bản, Đăng xuất, Thông tin; các mục khác do mặc định an toàn. Lựa chọn đang chọn (ngôn ngữ, preset đồ họa) là `ChoiceChip` nền nhấn + dấu ✓ icon, không chỉ màu (F096). `g6_9`: đủ.
 
 **Song ngữ.** `ui.settings.language` ("Ngôn ngữ / Language" — luôn song ngữ để người không đọc được ngôn ngữ hiện tại vẫn tìm thấy), `ui.settings.graphics.preset.*`, `ui.settings.graphics.autodetect` ("Tự phát hiện lại" / "Re-detect"), `ui.settings.privacy.locked_by_school` ("Do nhà trường cài đặt" / "Set by your school"), `ui.settings.account.logout_all` ("Đăng xuất trên mọi thiết bị" / "Sign out on all devices") — chuỗi dài nhất.
 

@@ -27,7 +27,8 @@ const UPDATE_SCENE: PackedScene = preload("res://scenes/learning/UpdateRequired.
 ## Re-send of queued answers / of the submit while offline (ApiClient already backs off inside one request).
 const OFFLINE_RETRY_SEC: float = 5.0
 const BAND_NO_CLOCK: String = "g1_3"
-const HOURGLASS: String = "⏳"
+## F096-AC-15: the timed indicator is words, not the ⏳ glyph (missing from the shipped fonts; empty box on the Web build).
+const TIMED_KEY: String = "ui.common.timed"
 ## Codes after which the attempt can no longer be answered: the host reloads it and shows the summary.
 const CLOSED_CODES: PackedStringArray = ["ATTEMPT_EXPIRED", "ATTEMPT_NOT_IN_PROGRESS", "ATTEMPT_ALREADY_SUBMITTED",
 	"ATTEMPT_DEADLINE_PASSED"]
@@ -237,7 +238,7 @@ func tick_clock() -> void:
 	if ms < 0:
 		return
 	var left: int = int(ceil(ms / 1000.0))
-	_clock.text = HOURGLASS if grade_band == BAND_NO_CLOCK else "%s %02d:%02d" % [HOURGLASS, left / 60, left % 60]
+	_clock.text = tr(TIMED_KEY) if grade_band == BAND_NO_CLOCK else "%02d:%02d" % [left / 60, left % 60]
 	if ms == 0 and state in PLAY_STATES:
 		await _time_up()
 

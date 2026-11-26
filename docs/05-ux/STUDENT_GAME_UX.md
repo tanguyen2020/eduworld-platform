@@ -1,6 +1,6 @@
 # UX màn hình học sinh trong game — quy ước chung và chỉ mục
 
-> Trạng thái: Draft · Phiên bản: 1.1 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 1.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-26 (F096: nút có icon kèm chữ ở mọi khối, thẻ "Việc tiếp theo", hướng dẫn lần đầu của Mây, không emoji/glyph ngoài font) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-15
 > Liên quan: [DESIGN_SYSTEM](DESIGN_SYSTEM.md) · [ADR-0056 song ngữ](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057 máy tầm trung](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md)
 
 ## 1. Mục đích và phạm vi
@@ -36,7 +36,7 @@ Mọi màn trong thế giới (Hub, vùng đất, boss) đặt HUD theo cùng v�
 |---|---|---|---|
 | Trên-trái | Avatar, nickname, level + danh hiệu, thanh XP | Đầy đủ | Rút gọn: avatar + level + thanh XP mảnh |
 | Trên-phải | Ví Xu, chuông thông báo (badge), nút Cài đặt/menu | Đủ 3 nút | Ví Xu + chuông + menu (☰) |
-| Trái | Theo dõi quest (tối đa 3 quest, bước hiện tại) | Panel mở sẵn, thu gọn được | Thu gọn mặc định thành 1 dòng; chạm để mở |
+| Trái | Thẻ **Việc tiếp theo** (một gợi ý: bài nhà trường giao, hoặc mở Bản đồ — F096, [CORE S03 §6a](STUDENT_GAME_UX_CORE.md#s03--main-hub-hud)); theo dõi quest (tối đa 3 quest, bước hiện tại) | Panel mở sẵn, thu gọn được | Thu gọn mặc định thành 1 dòng; chạm để mở |
 | Dưới-trái | Chat | Khung chat trong suốt 360×180, mở rộng khi bấm Enter | Nút chat (badge chưa đọc); chạm mở panel chat nửa màn |
 | Dưới-phải | Nút hành động/tương tác theo ngữ cảnh (Nói chuyện, Nhặt, Vào cổng…), emote | Gợi ý phím (E, T) | Nút tròn lớn: Tương tác, Nhảy, Emote; joystick ảo ở **dưới-trái** (chat dời lên trên joystick) |
 | Giữa | **Để trống** cho thế giới 3D; chỉ hiện toast ngắn và gợi ý tương tác nổi trên đối tượng | | |
@@ -104,7 +104,9 @@ Chuột: mọi chức năng đều bấm được bằng chuột (học sinh nh�
 
 - Vùng chạm/bấm tối thiểu **48 dp**; **lớp 1–3 ≥ 64 dp**; khoảng cách giữa hai vùng chạm ≥ 8 dp.
 - Cỡ chữ cơ sở và chiều cao nút theo grade band: [DESIGN_SYSTEM §5.2](DESIGN_SYSTEM.md#52-mật-độ-theo-grade-band). Cỡ chữ đề bài: [LEARNING_EXPERIENCE §8](../02-learning/LEARNING_EXPERIENCE.md#8-ux-học-tập-theo-grade-band). Tài liệu màn **không chép số**, chỉ tham chiếu.
-- Lớp 1–3: mọi nút có icon kèm chữ; có nút loa đọc to nội dung chính.
+- Lớp 1–3: mọi nút có icon kèm chữ; có nút loa đọc to nội dung chính. Từ F096 mọi khối dùng nút HUD có icon SVG kèm chữ (icon cùng cỡ token, không làm nút cao hơn vùng chạm); nhãn nút không chứa phím PC (phím tắt ở tooltip).
+- Biểu tượng là icon SVG của bộ icon game, không phải emoji hay ký tự ký hiệu: bản Web chỉ có font đóng gói nên ký tự ngoài font hiện thành ô vuông ([DESIGN_SYSTEM §5.1](DESIGN_SYSTEM.md#51-token-ui)).
+- Lần đầu vào Hub, Mây hướng dẫn tối đa 3 bước, luôn bỏ qua được ([CORE S03 §6a](STUDENT_GAME_UX_CORE.md#s03--main-hub-hud)).
 
 ## 5. Song ngữ (ADR-0056)
 

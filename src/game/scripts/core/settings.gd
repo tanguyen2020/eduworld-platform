@@ -4,7 +4,8 @@ extends Node
 ## motion, volumes, and (F061) the remembered login username `last_username` (F061-AC-12, ADR-0086). Only the keys
 ## in SCHEMA are ever written — never business data, tokens or passwords. F062: the device quality profile
 ## `[quality]` (preset, renderer, renderer boot marker, shadow/anti-aliasing overrides — PERFORMANCE_BUDGET §4–§6),
-## kept per device and never sent to the server.
+## kept per device and never sent to the server. F096: `onboarding_hub_seen` — the Hub guide of Mây was shown on this device
+## (a UI convenience flag, not business data, no PII).
 
 signal font_scale_changed(level: int)
 signal high_contrast_changed(enabled: bool)
@@ -22,7 +23,7 @@ const FONT_SCALE_MAX: int = 2
 const AUDIO_KEYS: PackedStringArray = ["music", "sfx", "voice"]
 ## Allowed keys per section; anything else in the file is ignored and never written back.
 const SCHEMA: Dictionary = {
-	"ui": ["locale", "font_scale", "high_contrast", "reduce_motion"],
+	"ui": ["locale", "font_scale", "high_contrast", "reduce_motion", "onboarding_hub_seen"],
 	"audio": ["music", "sfx", "voice"],
 	"login": ["remember_username", "last_username"],
 	"quality": ["preset", "renderer", "renderer_boot_pending", "shadows", "antialiasing"],
@@ -33,6 +34,8 @@ var locale: String = ""
 var font_scale: int = 0
 var high_contrast: bool = false
 var reduce_motion: bool = false
+## F096: Mây's Hub guide was already shown on this device (STUDENT_GAME_UX_CORE S03 "Hướng dẫn lần đầu").
+var onboarding_hub_seen: bool = false
 var volumes: Dictionary = {"music": 1.0, "sfx": 1.0, "voice": 1.0}
 ## "Nhớ tên đăng nhập" (CONFIG_DEFAULTS `game_remember_username`: on; AuthService never stores it on a shared device).
 var remember_username: bool = true
@@ -82,6 +85,8 @@ func load_from(file_path: String) -> void:
 	high_contrast = contrast is bool and (contrast as bool)
 	var motion: Variant = cfg.get_value(SECTION_UI, "reduce_motion", false)
 	reduce_motion = motion is bool and (motion as bool)
+	var seen: Variant = cfg.get_value(SECTION_UI, "onboarding_hub_seen", false)
+	onboarding_hub_seen = seen is bool and (seen as bool)
 	for bus_key: String in AUDIO_KEYS:
 		var value: Variant = cfg.get_value(SECTION_AUDIO, bus_key, 1.0)
 		if value is float or value is int:
@@ -108,6 +113,7 @@ func save() -> Error:
 	cfg.set_value(SECTION_UI, "font_scale", font_scale)
 	cfg.set_value(SECTION_UI, "high_contrast", high_contrast)
 	cfg.set_value(SECTION_UI, "reduce_motion", reduce_motion)
+	cfg.set_value(SECTION_UI, "onboarding_hub_seen", onboarding_hub_seen)
 	for bus_key: String in AUDIO_KEYS:
 		cfg.set_value(SECTION_AUDIO, bus_key, float(volumes[bus_key]))
 	cfg.set_value(SECTION_LOGIN, "remember_username", remember_username)
@@ -172,6 +178,14 @@ func set_reduce_motion(enabled: bool) -> void:
 	reduce_motion_changed.emit(reduce_motion)
 
 
+## F096: remembers (true) or forgets ("Xem lại hướng dẫn", false) that the Hub guide was shown on this device.
+func set_onboarding_hub_seen(seen: bool) -> void:
+	if onboarding_hub_seen == seen:
+		return
+	onboarding_hub_seen = seen
+	save()
+
+
 func set_volume(bus_key: String, value: float) -> void:
 	if not bus_key in AUDIO_KEYS:
 		return
@@ -196,6 +210,7 @@ func _reset() -> void:
 	font_scale = 0
 	high_contrast = false
 	reduce_motion = false
+	onboarding_hub_seen = false
 	volumes = {"music": 1.0, "sfx": 1.0, "voice": 1.0}
 	remember_username = true
 	last_username = ""

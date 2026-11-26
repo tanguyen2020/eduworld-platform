@@ -19,10 +19,11 @@ func push(text: String) -> void:
 		_remove_at(0)
 	var toast: Control = TOAST_SCENE.instantiate() as Control
 	toast.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(toast)
+	# F096-AC-08: UiComponent shows Body from `body_key` in _ready (an empty key hides it), so the text is set first.
 	var body: Label = toast.find_child("Body", true, false) as Label
 	body.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
-	body.text = text
+	toast.set("body_key", text)
+	add_child(toast)
 	toast.gui_input.connect(_on_toast_input.bind(toast))
 	_ages.append(0.0)
 

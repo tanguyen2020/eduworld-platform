@@ -31,7 +31,7 @@ msgid "ui.activity_player.finish"
 msgstr "Finish"
 
 msgid "ui.activity_player.hint"
-msgstr "💡 Hint"
+msgstr "Hint"
 
 msgid "ui.activity_player.hint_error"
 msgstr "Couldn't get a hint. Please try again."
@@ -61,7 +61,7 @@ msgid "ui.activity_player.pause_confirm"
 msgstr "Take a break? Your progress is saved."
 
 msgid "ui.activity_player.read_aloud"
-msgstr "🔊 Read aloud"
+msgstr "Read aloud"
 
 msgid "ui.activity_player.results_later"
 msgstr "Submitted! Results will appear when your school releases them."
@@ -82,7 +82,7 @@ msgid "ui.audio.not_ready"
 msgstr "The listening lesson is still being prepared. Please come back later."
 
 msgid "ui.audio.play"
-msgstr "▶ / ❚❚ Listen"
+msgstr "Listen / Pause"
 
 msgid "ui.audio.plays_exhausted"
 msgstr "You have used all your plays. You can still answer the questions."
@@ -124,7 +124,7 @@ msgid "ui.avatar.name_hint"
 msgstr "Names are made for you to keep you safe."
 
 msgid "ui.avatar.next"
-msgstr "Next ▶"
+msgstr "Next"
 
 msgid "ui.avatar.next_option"
 msgstr "Next"
@@ -222,6 +222,9 @@ msgstr "EduWorld is closed right now. You can play during {window}."
 msgid "ui.common.retry"
 msgstr "Try again"
 
+msgid "ui.common.timed"
+msgstr "Timed"
+
 msgid "ui.config_error.body"
 msgstr "The configuration of this installation is broken. Please ask a teacher or a parent to reinstall the game."
 
@@ -241,7 +244,7 @@ msgid "ui.emote.close.tooltip"
 msgstr "Close the emote wheel"
 
 msgid "ui.emote.open"
-msgstr "Emote"
+msgstr "Emotes"
 
 msgid "ui.emote.open.tooltip"
 msgstr "Emote wheel (T)"
@@ -382,7 +385,7 @@ msgid "ui.error.TENANT_NOT_SELECTED"
 msgstr "Please choose your school to continue."
 
 msgid "ui.error.UNAVAILABLE"
-msgstr "The server is busy. Please try again later."
+msgstr "The system is busy. Please try again in a few minutes."
 
 msgid "ui.error.VALIDATION_FAILED"
 msgstr "Some information is not valid. Please check it."
@@ -421,10 +424,10 @@ msgid "ui.exam.exit_confirm"
 msgstr "Time keeps running while you are away. Leave the test?"
 
 msgid "ui.exam.flag"
-msgstr "🚩 Flag"
+msgstr "Flag"
 
 msgid "ui.exam.grid_legend"
-msgstr "● answered · ○ not answered · 🚩 flagged"
+msgstr "Tick: answered · Flag: marked to review"
 
 msgid "ui.exam.leave"
 msgstr "Leave"
@@ -436,7 +439,7 @@ msgid "ui.exam.loading"
 msgstr "Loading the test…"
 
 msgid "ui.exam.next"
-msgstr "Next ▶"
+msgstr "Next question"
 
 msgid "ui.exam.offline"
 msgstr "Offline — your answers are kept on this device for now"
@@ -445,7 +448,7 @@ msgid "ui.exam.practice_objective"
 msgstr "Practise this goal"
 
 msgid "ui.exam.prev"
-msgstr "◀ Previous"
+msgstr "Previous question"
 
 msgid "ui.exam.question_of"
 msgstr "Question {n}/{total}"
@@ -529,7 +532,7 @@ msgid "ui.exam.take_over"
 msgstr "Continue on this device"
 
 msgid "ui.exam.time_left"
-msgstr "⏱ {time}"
+msgstr "{time} left"
 
 msgid "ui.exam.time_warning_1"
 msgstr "1 minute left."
@@ -541,7 +544,7 @@ msgid "ui.exam.title"
 msgstr "Exam room"
 
 msgid "ui.exam.unflag"
-msgstr "🚩 Unflag"
+msgstr "Unflag"
 
 msgid "ui.exam.view_result"
 msgstr "See result"
@@ -745,10 +748,10 @@ msgid "ui.hub.join_denied"
 msgstr "You can't go there right now. Stay here for now!"
 
 msgid "ui.hub.journal"
-msgstr "Quests (J)"
+msgstr "Quests"
 
 msgid "ui.hub.journal.tooltip"
-msgstr "Open the quest journal"
+msgstr "Open the quest journal (J key)"
 
 msgid "ui.hub.map"
 msgstr "Map"
@@ -981,14 +984,23 @@ msgstr "Done"
 msgid "ui.minigame.game_score"
 msgstr "Game score: {points}"
 
+msgid "ui.minigame.mark_correct"
+msgstr "right"
+
+msgid "ui.minigame.mark_incorrect"
+msgstr "not yet"
+
+msgid "ui.minigame.mark_saved"
+msgstr "saved"
+
 msgid "ui.minigame.not_completed"
 msgstr "Not completed yet, play again!"
 
 msgid "ui.minigame.points"
-msgstr "⭐ {points}"
+msgstr "{points} points"
 
 msgid "ui.minigame.streak"
-msgstr "🔥 {streak}"
+msgstr "{streak} in a row"
 
 msgid "ui.minigame.submit_state"
 msgstr "Submit the experiment"
@@ -999,6 +1011,15 @@ msgstr "Game over"
 msgid "ui.minigame.time_up"
 msgstr "Time is up!"
 
+msgid "ui.next_step.assignments"
+msgstr "Do your school work ({count})"
+
+msgid "ui.next_step.explore"
+msgstr "Open the Map to explore"
+
+msgid "ui.next_step.title"
+msgstr "What's next"
+
 msgid "ui.notification.assignment_new"
 msgstr "New work: {title}"
 
@@ -1008,14 +1029,32 @@ msgstr "You have {count} new school tasks"
 msgid "ui.notification.assignments_pending"
 msgstr "You have {count} school tasks to do"
 
-msgid "ui.notification.bell"
-msgstr "🔔"
-
 msgid "ui.notification.bell_count"
-msgstr "🔔 {count}"
+msgstr "{count}"
 
 msgid "ui.notification.bell_tooltip"
 msgstr "New work"
+
+msgid "ui.onboarding.next"
+msgstr "Next"
+
+msgid "ui.onboarding.progress"
+msgstr "Step {n} of {total}"
+
+msgid "ui.onboarding.skip"
+msgstr "Skip"
+
+msgid "ui.onboarding.start"
+msgstr "Let's play"
+
+msgid "ui.onboarding.step_assignments"
+msgstr "Your school work is here. Tap it to start!"
+
+msgid "ui.onboarding.step_explore"
+msgstr "Open the Map or walk through a wind gate to explore new lands."
+
+msgid "ui.onboarding.step_welcome"
+msgstr "Hi! I'm Cloudy. Welcome to Spark Square!"
 
 msgid "ui.quality.antialiasing"
 msgstr "Anti-aliasing"
@@ -1152,11 +1191,14 @@ msgstr "Reconnecting…"
 msgid "ui.result.back_to_quest"
 msgstr "Back to quest"
 
+msgid "ui.result.celebrate"
+msgstr "You did it — great job!"
+
 msgid "ui.result.correct_count"
 msgstr "{correct}/{total} correct"
 
 msgid "ui.result.done"
-msgstr "🎉 All done!"
+msgstr "All done!"
 
 msgid "ui.result.learning"
 msgstr "Learning results"
@@ -1165,7 +1207,7 @@ msgid "ui.result.recommendation"
 msgstr "Mây suggests some practice:"
 
 msgid "ui.result.reward_badge"
-msgstr "🏅 New badge"
+msgstr "New badge"
 
 msgid "ui.result.reward_item"
 msgstr "+{amount} item(s)"
@@ -1179,14 +1221,38 @@ msgstr "Game rewards"
 msgid "ui.result.score"
 msgstr "Score: {score}/{max}"
 
+msgid "ui.result.stars_tooltip"
+msgstr "One star for each right answer"
+
 msgid "ui.result.weak_count"
 msgstr "To review: {n} goals"
+
+msgid "ui.settings.about"
+msgstr "About"
 
 msgid "ui.settings.account"
 msgstr "Account"
 
+msgid "ui.settings.back"
+msgstr "Back to Settings"
+
 msgid "ui.settings.language"
 msgstr "Language"
+
+msgid "ui.settings.licenses"
+msgstr "Licences"
+
+msgid "ui.settings.licenses_engine"
+msgstr "Godot Engine (MIT licence)"
+
+msgid "ui.settings.licenses_intro"
+msgstr "EduWorld is made with Godot Engine and the open-source software below. Licence texts are kept in English."
+
+msgid "ui.settings.licenses_project"
+msgstr "EduWorld pictures, 3D models and icons: MIT licence. Fonts Baloo 2 and Be Vietnam Pro: SIL Open Font License 1.1."
+
+msgid "ui.settings.licenses_title"
+msgstr "Software licences"
 
 msgid "ui.settings.logout"
 msgstr "Sign out"
@@ -1196,6 +1262,9 @@ msgstr "Stay"
 
 msgid "ui.settings.logout_confirm"
 msgstr "Do you want to sign out? Next time you will need your password."
+
+msgid "ui.settings.replay_guide"
+msgstr "Show Cloudy's guide again"
 
 msgid "ui.settings.title"
 msgstr "Settings"
@@ -1243,7 +1312,7 @@ msgid "ui.video.not_ready"
 msgstr "The video is still being prepared. Please come back later."
 
 msgid "ui.video.play_pause"
-msgstr "▶ / ❚❚"
+msgstr "Play / Pause"
 
 msgid "ui.video.restart"
 msgstr "Start over"

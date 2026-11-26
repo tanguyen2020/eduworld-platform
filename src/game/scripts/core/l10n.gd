@@ -64,6 +64,12 @@ const ERROR_KEYS: PackedStringArray = [
 ]
 
 
+## F096-AC-17: a gateway/service outage without a Problem body (ApiResult code `HTTP_<status>`) reads like
+## `UNAVAILABLE` — "Hệ thống đang bận, em thử lại sau ít phút nhé." — instead of the generic message.
+const CODE_ALIASES: Dictionary = {"HTTP_502": "UNAVAILABLE", "HTTP_503": "UNAVAILABLE", "HTTP_504": "UNAVAILABLE",
+	"SERVICE_UNAVAILABLE": "UNAVAILABLE"}
+
+
 ## Supported locales (CONFIG_DEFAULTS `supported_locales`).
 static func supported_locales() -> PackedStringArray:
 	return ProjectSettings.get_setting("eduworld/i18n/supported_locales", PackedStringArray()) as PackedStringArray
@@ -126,7 +132,7 @@ static func pick_language(text: Dictionary, locale: String = "", content_languag
 
 ## Translated message for an API problem code (F060-AC-12).
 static func error_text(code: String) -> String:
-	var key: String = ERROR_PREFIX + code
+	var key: String = ERROR_PREFIX + String(CODE_ALIASES.get(code, code))
 	if has_key(key):
 		return TranslationServer.translate(key)
 	queue_missing_key(key)

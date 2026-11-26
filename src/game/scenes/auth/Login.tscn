@@ -250,6 +250,14 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("10_spinner")
 
+[node name="CancelSignIn" type="Button" parent="Safe/Columns/Scroll/Center/Card/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.login.cancel"
+autowrap_mode = 3
+
 [node name="Remember" type="CheckBox" parent="Safe/Columns/Scroll/Center/Card/Box"]
 unique_name_in_owner = true
 layout_mode = 2

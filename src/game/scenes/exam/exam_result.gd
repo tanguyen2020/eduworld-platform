@@ -10,13 +10,14 @@ extends VBoxContainer
 signal practice_requested(args: Dictionary)
 
 const BAND_COUNT_ONLY: String = "g1_3"
-const STAR: String = "⭐"
 
 var result: ExamResultModel = null
 
 @onready var _pending: Label = %Pending
 @onready var _score: Label = %Score
 @onready var _correct: Label = %Correct
+## F096-AC-15: the `g1_3` star is an icon of design/icons/game (no emoji on the Web build).
+@onready var _star: TextureRect = %StarIcon
 @onready var _sections: VBoxContainer = %Sections
 @onready var _objectives: VBoxContainer = %Objectives
 @onready var _wrong: VBoxContainer = %WrongList
@@ -45,8 +46,10 @@ func show_result(model: ExamResultModel, grade_band: String, context: RendererCo
 			"max": _number(model.review.max_score)})
 	var total: int = model.review.graded_count()
 	var correct_text: String = tr("ui.exam.result_correct").format({"correct": model.review.correct_count(), "total": total})
-	_correct.text = ("%s %s" % [STAR, correct_text]) if count_only else correct_text
+	_correct.text = correct_text
 	_correct.visible = total > 0
+	_star.custom_minimum_size = Vector2.ONE * UiTokens.COMPONENT_ICON_SIZE
+	_star.visible = count_only and total > 0
 	if not count_only:
 		for s: Dictionary in model.sections:
 			_add_label(_sections, tr("ui.exam.result_section").format({"title": String(s["title"]),

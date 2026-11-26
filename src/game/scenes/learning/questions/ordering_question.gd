@@ -29,11 +29,11 @@ func _build() -> void:
 		card.dropped.connect(_on_dropped)
 		card.gui_input.connect(_on_card_input.bind(id))
 		var up: Button = Button.new()
-		up.text = "▲"
+		up.text = "ui.question.move_up"
 		up.tooltip_text = "ui.question.move_up"
 		up.pressed.connect(model.move.bind(id, -1))
 		var down: Button = Button.new()
-		down.text = "▼"
+		down.text = "ui.question.move_down"
 		down.tooltip_text = "ui.question.move_down"
 		down.pressed.connect(model.move.bind(id, 1))
 		row.add_child(card)

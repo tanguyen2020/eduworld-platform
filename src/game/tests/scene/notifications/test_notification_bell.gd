@@ -48,7 +48,9 @@ func test_badge_and_toast_follow_the_service() -> void:
 	var hud: CanvasLayer = r[1] as CanvasLayer
 	var bell: Button = hud.find_child("NotificationBell", true, false) as Button
 	assert_bool(bell.visible).is_true()
-	assert_str(bell.text).is_equal(tr("ui.notification.bell"))
+	# F096-AC-15: the bell is an icon (no emoji); the count appears beside it only when there is one.
+	assert_str(bell.text).is_empty()
+	assert_object(bell.icon).is_not_null()
 	h.http.reply(ROUTE, 200, AssignmentFixtures.page(_items(2)))
 	await services.assignments.refresh()
 	await (r[0] as GdUnitSceneRunner).simulate_frames(1)
@@ -57,6 +59,10 @@ func test_badge_and_toast_follow_the_service() -> void:
 	var texts: PackedStringArray = stack.call("texts") as PackedStringArray
 	assert_int(texts.size()).is_equal(1)
 	assert_str(texts[0]).is_equal(tr("ui.notification.assignments_pending").format({"count": 2}))
+	# F096-AC-08: the toast shows its text (the Body label is visible, not an empty bar).
+	var body: Label = stack.get_child(0).find_child("Body", true, false) as Label
+	assert_bool(body.is_visible_in_tree()).is_true()
+	assert_float(body.get_combined_minimum_size().y).is_greater(0.0)
 
 
 func test_at_most_three_toasts_at_once() -> void:

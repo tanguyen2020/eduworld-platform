@@ -50,11 +50,12 @@ layout_mode = 2
 [node name="EffectRow" type="HBoxContainer" parent="Effect/EffectBox"]
 layout_mode = 2
 
-[node name="EffectIcon" type="Label" parent="Effect/EffectBox/EffectRow"]
+[node name="EffectIcon" type="TextureRect" parent="Effect/EffectBox/EffectRow"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"FeedbackLabel"
-auto_translate_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+stretch_mode = 5
 
 [node name="EffectText" type="Label" parent="Effect/EffectBox/EffectRow"]
 unique_name_in_owner = true

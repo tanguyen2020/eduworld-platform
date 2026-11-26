@@ -52,3 +52,14 @@ func test_pick_follows_locale_then_content_language() -> void:
 	assert_str(L10n.pick({"en": "English only", "vi": ""}, "vi-VN", "en")).is_equal("English only")
 	assert_str(L10n.pick_language({"en": "x"}, "vi-VN")).is_equal("en")
 	assert_str(L10n.pick({}, "vi-VN")).is_empty()
+
+
+## F096-AC-17: 503 UNAVAILABLE and gateway outages without a Problem body read "Hệ thống đang bận…", in vi and en,
+## on S01 (LoginFormModel) as everywhere else (L10n.error_text); never the generic message.
+func test_service_unavailable_says_the_system_is_busy() -> void:
+	for code: String in ["UNAVAILABLE", "HTTP_502", "HTTP_503", "HTTP_504"]:
+		assert_str(L10n.error_text(code)).is_equal("Hệ thống đang bận, em thử lại sau ít phút nhé.")
+		assert_str(LoginFormModel.message_for(code)).is_equal("Hệ thống đang bận, em thử lại sau ít phút nhé.")
+	TranslationServer.set_locale("en-US")
+	assert_str(L10n.error_text("HTTP_503")).is_equal("The system is busy. Please try again in a few minutes.")
+	assert_int(AppState.pending_telemetry.size()).is_equal(0)

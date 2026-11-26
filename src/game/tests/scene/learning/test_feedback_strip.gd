@@ -27,8 +27,9 @@ func test_wrong_answer_shows_cross_text_option_feedback_and_explanation() -> voi
 	var panel: PanelContainer = _node("VerdictPanel") as PanelContainer
 	assert_bool(panel.visible).is_true()
 	assert_str(String(panel.theme_type_variation)).is_equal("FeedbackIncorrectPanel")
-	assert_str((_node("Icon") as Label).text).is_equal("✗")
-	assert_str(String(strip.call("verdict_text"))).is_equal("✗ %s" % tr("ui.feedback.incorrect"))
+	assert_object((_node("Icon") as TextureRect).texture).is_equal(preload("res://resources/ui/icons/cross.svg"))
+	assert_str(String(strip.call("verdict_text"))).is_equal(tr("ui.feedback.incorrect"))
+	assert_str(String(strip.call("verdict_icon"))).is_equal("incorrect")
 	var feedback: RichTextLabel = _node("FeedbackText") as RichTextLabel
 	assert_bool(feedback.visible).is_true()
 	assert_str(feedback.get_parsed_text()).contains("Em đã cộng 3 + 6")
@@ -40,7 +41,8 @@ func test_wrong_answer_shows_cross_text_option_feedback_and_explanation() -> voi
 func test_right_answer_shows_check_and_text() -> void:
 	await _show(LearningFixtures.response_result_correct())
 	assert_str(String((_node("VerdictPanel") as PanelContainer).theme_type_variation)).is_equal("FeedbackCorrectPanel")
-	assert_str(String(strip.call("verdict_text"))).is_equal("✓ %s" % tr("ui.feedback.correct"))
+	assert_str(String(strip.call("verdict_text"))).is_equal(tr("ui.feedback.correct"))
+	assert_str(String(strip.call("verdict_icon"))).is_equal("correct")
 	assert_bool(_node("FeedbackText").visible).is_false()
 
 

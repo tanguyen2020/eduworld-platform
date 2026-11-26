@@ -1,6 +1,6 @@
 # Feature Specification: F096 — Student UX pass 1: nhận diện EduWorld và làm mượt hành trình học sinh
 
-**Feature Branch**: `096-student-ux-pass-1` · **Created**: 2026-11-26 · **Status**: Ready · **Module**: `src/game/` (+ `design/game-tokens`, `design/icons/game`, `src/game/web`) · **Mốc**: M3 · **Phụ thuộc**: F060, F061, F062, F063, F064, F070, F071, F133
+**Feature Branch**: `096-student-ux-pass-1` · **Created**: 2026-11-26 · **Status**: Done · **Module**: `src/game/` (+ `design/game-tokens`, `design/icons/game`, `src/game/web`) · **Mốc**: M3 · **Phụ thuộc**: F060, F061, F062, F063, F064, F070, F071, F133
 **Input**: Owner 2026-11-26 (qua orchestrator): (1) "thiết kế game thật dễ dùng và thu hút học sinh" (khối 1–9); (2) "màn hình Godot Engine có thể đổi thành giao diện chuyên về Eduworld hay không?" — thay mọi màn mang nhận diện Godot bằng nhận diện EduWorld. Owner đánh giá bằng bản Web (renderer Compatibility). Feature chỉ đổi phía client (Godot + Web shell + token/icon), không đổi luật gameplay hay hợp đồng backend (AGENTS R34). FR nguồn: FR-GAME-001, FR-GAME-003, FR-GAME-010, FR-AUTH-002, FR-RWD-002; NFR-A11Y-001, NFR-I18N-001, NFR-I18N-003, NFR-COMP-004, NFR-MAINT-007, NFR-SAFE-003.
 
 ## Clarifications
@@ -15,8 +15,8 @@ Owner có lệnh thường trực "chốt hết": điểm thiếu được chố
 - Q: Icon ứng dụng? → A: [Confirmed] Một icon EduWorld (Tia Sáng trên nền trời bo góc, có Mây) sinh cùng công cụ: `application/config/icon` (PC/Web favicon + apple-touch-icon do `html/export_icon`), Android `launcher_icons/main_192x192` + adaptive foreground/background 432, iOS `icons/icon_1024x1024`. Tiêu đề cửa sổ và tab "EduWorld" (`config/name`, `$GODOT_PROJECT_NAME`).
 - Q: Không tài liệu nào dự kiến màn "Thông tin / Giấy phép" — đặt thông báo giấy phép Godot (MIT) ở đâu? → A: [Confirmed — cách nhỏ nhất khớp spec] Thêm nhóm **Thông tin** vào Cài đặt (S15) với nút "Giấy phép" mở một trang cuộn trong panel Cài đặt: phiên bản game, văn bản MIT của Godot lấy từ `Engine.get_license_text()`, danh sách thành phần bên thứ ba của engine từ `Engine.get_copyright_info()`, font OFL (Baloo 2, Be Vietnam Pro) và asset tự làm MIT. Văn bản pháp lý hiển thị nguyên văn tiếng Anh (không dịch); tiêu đề, nút qua `.po`. Ghi vào STUDENT_GAME_UX_SOCIAL §10.
 - Q: Hướng dẫn lần đầu hiện khi nào trên máy dùng chung (Web phòng máy)? → A: [Confirmed] Hiện khi (a) học sinh vừa tạo nhân vật S02 trong phiên này, hoặc (b) thiết bị chưa từng hiện hướng dẫn (cờ cục bộ `onboarding_hub_seen` trong `user://settings.cfg`, không phải dữ liệu nghiệp vụ, không PII). Luôn có "Bỏ qua"; tối đa 3 bước, mỗi bước một câu ngắn kèm icon; mở lại được từ Cài đặt ("Xem lại hướng dẫn"). Không chặn di chuyển sau khi đóng.
-- Q: "Đi đâu tiếp?" hiển thị thế nào mà không đặt logic nghiệp vụ trong UI? → A: [Confirmed] Thẻ **Việc tiếp theo** luôn hiện bên trái HUD (khi quest tracker không hiện): có bài nhà trường giao → "Làm bài nhà trường giao (n)" mở Nhật ký tab Nhà trường giao; không có → "Mở Bản đồ để khám phá" mở World Map. Chọn gợi ý bằng model thuần `NextStepHint` (đọc số bài từ AppState, không gọi mạng, không quyết định nghiệp vụ — R1).
-- Q: Phản hồi phần thưởng thế nào cho vui mà không tạo áp lực (R19)? → A: [Confirmed — STUDENT_GAME_UX_CORE S07 §9 "≤ 2,5 s", NFR-SAFE-003] Màn kết quả có dải chúc mừng: Mây vui, sao nhỏ bay lên một lần ≤ 2,5 s (tắt khi "Giảm chuyển động"), số sao = số câu đúng với `g1_3`; không đếm ngược, không "quay lại ngày mai", không chuỗi ngày, không so sánh với bạn, không thông điệp mất mát. Phần thưởng chỉ là thứ server đã trao.
+- Q: "Đi đâu tiếp?" hiển thị thế nào mà không đặt logic nghiệp vụ trong UI? → A: [Confirmed] Thẻ **Việc tiếp theo** luôn hiện bên trái HUD (quest tracker F072 ở bên phải, không chồng nhau): có bài nhà trường giao → "Làm bài nhà trường giao (n)" mở Nhật ký tab Nhà trường giao; không có → "Mở Bản đồ để khám phá" mở World Map. Chọn gợi ý bằng model thuần `NextStepHint` (đọc số bài từ AppState, không gọi mạng, không quyết định nghiệp vụ — R1).
+- Q: Phản hồi phần thưởng thế nào cho vui mà không tạo áp lực (R19)? → A: [Confirmed — STUDENT_GAME_UX_LEARNING §10.3 "hiệu ứng chúc mừng ≤ 1,5 s", NFR-SAFE-003] Màn kết quả có dải chúc mừng: Mây vui, sao nhỏ bay lên một lần ≤ 1,5 s (tắt khi "Giảm chuyển động"), số sao = số câu đúng với `g1_3`; không đếm ngược, không "quay lại ngày mai", không chuỗi ngày, không so sánh với bạn, không thông điệp mất mát. Phần thưởng chỉ là thứ server đã trao.
 - Q: Ký tự emoji (💡 🔔 🎉 ⭐ 🏅 🔊 🚩 🔥) trong chuỗi UI? → A: [Confirmed — NFR-COMP-004, bản Web không có font hệ thống] Bản Web chỉ có font đóng gói (Baloo 2, Be Vietnam Pro) nên emoji thành ô vuông. Mọi ký tự trong `vi.po`/`en.po` PHẢI có trong font đóng gói; biểu tượng dùng icon SVG `design/icons/game` (token màu) thay emoji.
 - Q: Màn dọc (portrait)? → A: [Confirmed — STUDENT_GAME_UX §2 "ngang trên mọi nền tảng"] Không thiết kế bố cục dọc; ảnh 720×1280 chỉ để kiểm cửa sổ Web dọc không vỡ (canvas_items co giãn).
 - Q: Lỗi 503 trên S01? → A: [Confirmed — giao việc orchestrator] Mã `UNAVAILABLE` và HTTP 502/503/504 không có Problem → "Hệ thống đang bận, em thử lại sau ít phút nhé." / "The system is busy. Please try again in a few minutes." dùng chung `ui.error.UNAVAILABLE`.
@@ -27,6 +27,7 @@ Owner có lệnh thường trực "chốt hết": điểm thiếu được chố
 - F096-1: S02 Tạo nhân vật — khung xem trước 3D nhỏ và nhiều khoảng trống, mẫu nhân vật chỉ có chữ (không ảnh) cho `g1_3` [Proposed: lượt UX sau, cần ảnh thumbnail mẫu từ pipeline `thumbnail_renderer`].
 - F096-2: Lồng tiếng thật cho bước hướng dẫn của Mây (`g1_3`) cần asset audio có version [Proposed: khi có asset, bước hướng dẫn phát giọng; nay phụ đề + icon theo STUDENT_GAME_UX_LEARNING §7].
 - F096-3: Phụ đề `VoiceCaption` lặp lại nguyên đề bài ngay trên đề (S16) — đúng spec F063 nhưng thừa chữ [Proposed: chỉ hiện phụ đề khi tắt tiếng/không có tai nghe, cần quyết định UX ở LEARNING].
+- F096-4: Ở điểm spawn Hub, marker Tia Sáng (cao > 1,5 m, F094-AC-13) của `quest.hub.welcome_sign` (0, 0, 12) nằm giữa camera và nhân vật, che phần thân dưới [Proposed: làm mờ/ẩn marker khi cách camera < khoảng cách tầm với — quyết định ở WORLD_RENDERING, không dời seed].
 
 ## Bảng kiểm UX (trước khi sửa)
 
@@ -47,6 +48,28 @@ Chụp bằng `tools/capture_screens.gd` (renderer Compatibility = bản Web, fi
 | S18 Kết quả (`result`) | 3 | 3 | 2 | 2 | 3 | Hai khung lớn trống, emoji 🎉 ⭐ 🏅, header còn "1/11", không có khoảnh khắc chúc mừng | P1 | F096-AC-14, AC-15 |
 | S04 Bản đồ (`world_map`) | 1 | 1 | 1 | 1 | 1 | `g1_3`: ô vuông xanh trống (không hình, không tên); `g4+`: hàng vỡ (điều kiện rộng 1 ký tự, nút "Đi" mất chữ) | P1 | F096-AC-12 |
 | S15 Cài đặt (`settings`) | 3 | 3 | 2 | 3 | 2 | Preset đang chọn chữ tối trên nền xanh đậm (không đạt AA); ngôn ngữ đang chọn không hiện; không có giấy phép | P1 | F096-AC-04, AC-13 |
+
+### Sau khi sửa (2026-11-26)
+
+Ảnh: `screenshots/<màn>-after-<cỡ>-<ngôn ngữ>-<khối>.png` (Compatibility) và `screenshots/web_*-after-*.png` (shell Web trong Chromium). Điểm theo cùng thang R · D · T · P · A.
+
+| Màn | Trước | Sau | Đã sửa |
+|---|---|---|---|
+| Boot splash (engine) | 1·3·1·1·3 | 5·5·4·5·5 | Ảnh EduWorld (Tia Sáng + chữ + Mây) trên nền trời token, không logo Godot |
+| Màn chờ Web | 3·4·1·1·4 | 5·5·4·5·5 | Logo, Mây nói "Đang chuẩn bị thế giới cho em…", thanh bo tròn; favicon/apple-touch-icon EduWorld |
+| Splash trong game | 3·3·1·2·4 | 5·5·4·5·5 | Nền trời + logo + Mây nói trạng thái (liền mạch với boot splash) |
+| S01 Đăng nhập | 4·3·4·4·4 | 4·5·4·4·4 | Nút "Hủy" sau 10 s; 503 → "Hệ thống đang bận, em thử lại sau ít phút nhé." |
+| S01 Tự vào lại, giờ nghỉ, hàng chờ | 3·3·1·2·4 | 5·4·4·5·5 | Cùng bố cục nhận diện, Mây nói nội dung |
+| S02 Tạo nhân vật | 3·3·2·3·3 | 3·3·2·3·3 | Không sửa lượt này (F096-1); nút ‹ › thay ◀ ▶ (không có trong font) |
+| S03 Vào Hub lần đầu | 1·2·1·2·2 | 4·4·4·4·4 | Camera sau lưng, nhìn xuống; Mây hướng dẫn 3 bước; thẻ "Việc tiếp theo"; toast có chữ |
+| S03 HUD | 3·2·2·3·3 | 5·4·4·4·4 | Icon + chữ mọi nút, "Biểu cảm", không "(J)", chuông là icon + số |
+| S05 Nhật ký | 4·4·3·3·4 | 4·4·3·4·4 | Icon trạng thái thay ký hiệu ✓ ngoài font |
+| S16 Làm bài | 4·4·3·3·3 | 4·4·3·4·4 | ✓/✗ phản hồi, loa, gợi ý là icon (trước đây ô vuông trên Web); timer không dùng ⏳ |
+| S18 Kết quả | 3·3·2·2·3 | 5·4·4·4·4 | Dải chúc mừng (Mây, sao icon cho `g1_3`, ≤ 1,5 s), phần thưởng có icon, bỏ "1/11" |
+| S04 Bản đồ | 1·1·1·1·1 | 4·5·4·4·4 | `g1_3`: thẻ icon + tên; khối khác: hàng icon/tên/tiến độ/nút "Đến đây" có chữ |
+| S15 Cài đặt | 3·3·2·3·2 | 4·4·3·4·4 | Chip có ✓ cho ngôn ngữ/preset (đạt AA), nhóm Thông tin: Giấy phép, Xem lại hướng dẫn |
+
+Còn lại (ghi follow-up): marker Tia Sáng của biển chào (`quest.hub.welcome_sign`, seed F072) đứng ngay trước nhân vật ở điểm spawn Hub, che một phần thân (F096-4: làm mờ marker gần camera — cần quyết định WORLD_RENDERING); S02 (F096-1).
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -77,7 +100,7 @@ Lần đầu vào Quảng trường Tia Sáng, học sinh thấy nhân vật c�
 
 **Why this priority**: Màn vào Hub là nơi học sinh bỏ cuộc nếu không thấy gì hoặc không biết bấm đâu (bảng kiểm: Hub 1–2 điểm).
 
-**Independent Test**: `test_camera_rig.gd`, `test_main_hud.gd`, `test_onboarding_hint.gd`, `test_next_step_hint.gd`, `test_toast_stack.gd`; ảnh `hub-*`, `hub_onboarding-*`.
+**Independent Test**: `test_camera_rig.gd`, `test_main_hud.gd`, `test_onboarding_guide.gd`, `test_notification_bell.gd`; ảnh `hub-*`, `hub_onboarding-*`.
 
 **Acceptance Criteria (EARS)**:
 
@@ -87,7 +110,7 @@ Lần đầu vào Quảng trường Tia Sáng, học sinh thấy nhân vật c�
 | F096-AC-08 | KHI HUD nhận một thông báo ngắn (toast), HỆ THỐNG PHẢI hiện đúng nội dung chữ của nó (không có thanh rỗng) | `STUDENT_GAME_UX_CORE` S03 §6 · F064-AC-20 | — |
 | F096-AC-09 | Mỗi nút của HUD PHẢI có icon SVG từ `design/icons/game` kèm nhãn qua `.po` (không gợi ý phím trong nhãn; phím tắt ở tooltip), mọi nhãn đã dịch `vi`/`en`, và vùng chạm ≥ chiều cao nút tối thiểu của khối (≥ 64 dp với `g1_3`) | FR-GAME-010 · `STUDENT_GAME_UX` §4.3 · NFR-I18N-001 · NFR-A11Y-001 | TC-UI-003 |
 | F096-AC-10 | KHI học sinh vào Hub lần đầu trên thiết bị hoặc ngay sau khi tạo nhân vật, HỆ THỐNG PHẢI hiện hướng dẫn của Mây tối đa 3 bước (mỗi bước một câu ngắn, icon, làm nổi nút HUD liên quan) có "Tiếp" và "Bỏ qua"; KHI hướng dẫn đóng, HỆ THỐNG PHẢI không hiện lại trên thiết bị đó trừ khi học sinh chọn "Xem lại hướng dẫn" trong Cài đặt | `WORLD_DESIGN` §2 (Mây hướng dẫn) · `STUDENT_GAME_UX_CORE` S03 · FR-GAME-010 | — |
-| F096-AC-11 | TRONG KHI ở thế giới và không có quest tracker hiển thị, HUD PHẢI hiện thẻ "Việc tiếp theo": có bài nhà trường giao → mở Nhật ký tab Nhà trường giao; không có → mở World Map; gợi ý chọn bởi model thuần không gọi mạng | `STUDENT_GAME_UX_CORE` S03, S05 · AGENTS R1 | — |
+| F096-AC-11 | TRONG KHI ở thế giới, HUD PHẢI luôn hiện thẻ "Việc tiếp theo": có bài nhà trường giao → mở Nhật ký tab Nhà trường giao; không có → mở World Map; gợi ý chọn bởi model thuần không gọi mạng | `STUDENT_GAME_UX_CORE` S03, S05 · AGENTS R1 | — |
 
 ---
 
@@ -95,7 +118,7 @@ Lần đầu vào Quảng trường Tia Sáng, học sinh thấy nhân vật c�
 
 **Why this priority**: Bản đồ `g1_3` không dùng được, danh sách bản đồ vỡ, Cài đặt thiếu tương phản, emoji thành ô vuông trên Web.
 
-**Independent Test**: `test_world_map_scene.gd`, `test_settings_panel.gd`, `test_font_coverage.gd`, `test_grade_band_touch_targets.gd`; ảnh `world_map-*`, `settings-*`, `about-*`.
+**Independent Test**: `test_world_map.gd`, `test_settings_panel.gd`, `test_font_coverage.gd`, `test_grade_band_touch_targets.gd`; ảnh `world_map-*`, `settings-*`, `about-*`.
 
 **Acceptance Criteria (EARS)**:
 
@@ -116,13 +139,13 @@ Lần đầu vào Quảng trường Tia Sáng, học sinh thấy nhân vật c�
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F096-AC-14 | KHI màn kết quả mở, HỆ THỐNG PHẢI hiện dải chúc mừng (Mây, sao icon; `g1_3` số sao = số câu đúng) với hiệu ứng một lần ≤ 2,5 s, không hiệu ứng TRONG KHI "Giảm chuyển động" bật; KHÔNG ĐƯỢC có đếm ngược, chuỗi ngày, lời mời quay lại, so sánh với người khác hay thông điệp mất mát; phần thưởng chỉ là phần server đã trao | NFR-SAFE-003 · FR-RWD-002 · AGENTS R5, R19 · `STUDENT_GAME_UX_CORE` S07 §9 · `STUDENT_GAME_UX_LEARNING` §10 | — |
+| F096-AC-14 | KHI màn kết quả mở, HỆ THỐNG PHẢI hiện dải chúc mừng (Mây, sao icon; `g1_3` số sao = số câu đúng) với hiệu ứng một lần ≤ 1,5 s, không hiệu ứng TRONG KHI "Giảm chuyển động" bật; KHÔNG ĐƯỢC có đếm ngược, chuỗi ngày, lời mời quay lại, so sánh với người khác hay thông điệp mất mát; phần thưởng chỉ là phần server đã trao | NFR-SAFE-003 · FR-RWD-002 · AGENTS R5, R19 · `STUDENT_GAME_UX_LEARNING` §10.3 | — |
 
 ---
 
 ### User Story 5 — Đăng nhập không bị kẹt (Priority: P1)
 
-**Independent Test**: `test_login_scene.gd`, `test_login_form.gd`, `test_l10n.gd`; ảnh `login_busy_cancel-*`, `login_error_busy-*`.
+**Independent Test**: `test_login_scene.gd`, `test_l10n.gd`; ảnh `login_busy_cancel-*`, `login_error_busy-*`.
 
 **Acceptance Criteria (EARS)**:
 
@@ -176,7 +199,7 @@ Lần đầu vào Quảng trường Tia Sáng, học sinh thấy nhân vật c�
 | Tham số | Dùng để |
 |---|---|
 | Thời gian hiện nút "Hủy" khi đăng nhập: 10 s (`STUDENT_GAME_UX_CORE` S01 §8) | F096-AC-16 |
-| Hiệu ứng chúc mừng ≤ 2,5 s (`STUDENT_GAME_UX_CORE` S07 §9) | F096-AC-14 |
+| Hiệu ứng chúc mừng ≤ 1,5 s (`STUDENT_GAME_UX_LEARNING` §10.3) | F096-AC-14 |
 | Số bước hướng dẫn tối đa: 3 (`STUDENT_GAME_UX_CORE` S03, mục hướng dẫn lần đầu) | F096-AC-10 |
 | `quality_presets`, `renderer_default` (CONFIG_DEFAULTS) | Chụp ảnh Compatibility (F096-AC-19) |
 

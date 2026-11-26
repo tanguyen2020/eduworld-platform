@@ -7,20 +7,27 @@ extends Control
 ## Layout: three columns inside the screen margin — brand + Mây (left), the form card (centre, scrolls only when the
 ## window is shorter than the card), language (right). Widths come from UiTokens (`component.form_card.*`), styles
 ## from the generated Theme (R32); the stretch mode keeps the logical width ≥ 1280 px so the columns always fit.
+## F096-AC-16: after CANCEL_AFTER_SEC of "Đang vào…" a "Hủy" button appears (AuthService.cancel_login).
 
 const LOCALE_VI: String = "vi-VN"
 const LOCALE_EN: String = "en-US"
 const ICON_EYE: Texture2D = preload("res://resources/ui/icons/eye.svg")
 const ICON_EYE_OFF: Texture2D = preload("res://resources/ui/icons/eye_off.svg")
 const ICON_CHECK: Texture2D = preload("res://resources/ui/icons/check.svg")
+## STUDENT_GAME_UX_CORE S01 §8: a slow sign-in can be cancelled after 10 s.
+const CANCEL_AFTER_SEC: float = 10.0
 
 var _seen_clear_count: int = -1
 var _language_group: ButtonGroup = ButtonGroup.new()
+## Monotonic time the current sign-in started (on AuthService.clock when it has one); valid while `_timing_sign_in`.
+var busy_since_msec: int = 0
+var _timing_sign_in: bool = false
 
 @onready var _username: LineEdit = %Username
 @onready var _password: LineEdit = %Password
 @onready var _show_password: Button = %ShowPassword
 @onready var _sign_in: Button = %SignIn
+@onready var _cancel: Button = %CancelSignIn
 @onready var _remember: CheckBox = %Remember
 @onready var _forgot: Button = %Forgot
 @onready var _forgot_box: Control = %ForgotBox
@@ -55,6 +62,7 @@ func _ready() -> void:
 	_password.text_submitted.connect(_on_password_submitted)
 	_show_password.toggled.connect(_on_show_password_toggled)
 	_sign_in.pressed.connect(_on_sign_in_pressed)
+	_cancel.pressed.connect(_on_cancel_pressed)
 	_remember.toggled.connect(_on_remember_toggled)
 	_forgot.pressed.connect(_on_forgot_pressed)
 	_lang_vi.pressed.connect(_on_language_pressed.bind(LOCALE_VI))
@@ -79,6 +87,17 @@ func _process(_delta: float) -> void:
 	if AuthService.form.rate_limited_until_msec > 0 and AuthService.clock != null:
 		if AuthService.form.tick_rate_limit(AuthService.clock.now_msec()):
 			_render()
+	if _timing_sign_in and not _cancel.visible and cancel_due():
+		_cancel.visible = true
+
+
+## True once the current sign-in has lasted CANCEL_AFTER_SEC (F096-AC-16).
+func cancel_due() -> bool:
+	return _timing_sign_in and _now_msec() - busy_since_msec >= int(CANCEL_AFTER_SEC * 1000.0)
+
+
+func _now_msec() -> int:
+	return AuthService.clock.now_msec() if AuthService.clock != null else Time.get_ticks_msec()
 
 
 ## Column and icon sizes from the design tokens (no magic numbers in the scene, R32).
@@ -155,6 +174,12 @@ func _render() -> void:
 		var creating: bool = AuthService.state == GameStateMachine.State.CREATING_SESSION
 		_sign_in.text = tr("ui.login.resolving_tenant") if creating else tr("ui.login.signing_in")
 	_spinner.visible = form.busy
+	if form.busy and not _timing_sign_in:
+		_timing_sign_in = true
+		busy_since_msec = _now_msec()
+	elif not form.busy:
+		_timing_sign_in = false
+	_cancel.visible = form.busy and cancel_due()
 	_username.editable = not form.busy
 	_password.editable = not form.busy
 	_sign_in.disabled = form.busy or left > 0 or not LoginFormModel.can_submit(_username.text, _password.text)
@@ -208,6 +233,10 @@ func _on_password_submitted(_text: String) -> void:
 
 func _on_sign_in_pressed() -> void:
 	AuthService.login(_username.text, _password.text)
+
+
+func _on_cancel_pressed() -> void:
+	AuthService.cancel_login()
 
 
 func _on_show_password_toggled(shown: bool) -> void:

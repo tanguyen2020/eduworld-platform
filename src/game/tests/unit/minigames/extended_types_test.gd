@@ -128,7 +128,7 @@ func test_effects_play_only_after_the_server_grading() -> void:
 		assert_bool((scene.find_child("Effect", true, false) as Control).visible).override_failure_message(type).is_false()
 		scene.show_feedback(_result(1, false))
 		assert_int(scene.effects_played).override_failure_message(type).is_equal(1)
-		assert_str(scene.last_icon).is_equal(MiniGameBase.ICON_INCORRECT)
+		assert_object(scene.last_icon).is_equal(MiniGameBase.ICON_INCORRECT)
 		assert_int(scene.sounds_played).is_equal(1)
 
 
@@ -154,7 +154,7 @@ func test_puzzle_pieces_open_only_on_the_server_verdict() -> void:
 	_answer(scene, 1)
 	scene.show_feedback(_result(2, true))
 	assert_int(int(scene.get("revealed"))).is_equal(1)
-	assert_str(((scene.get("pieces") as Array)[0] as Label).text).is_equal("★")
+	assert_object(((scene.get("pieces") as Array)[0] as Button).icon).is_not_null()
 
 
 func test_extended_scenes_leave_no_orphan_after_teardown() -> void:
@@ -208,7 +208,7 @@ func test_timed_challenge_is_graded_by_the_server_only() -> void:
 	h.http.reply(MiniGameFixtures.ROUTE_RESPOND, 200, MiniGameFixtures.result(1, false))
 	MiniGameFixtures.answer(host.scene as MiniGameQuestionScene)
 	await _settle()
-	assert_str(host.scene.last_icon).is_equal(MiniGameBase.ICON_INCORRECT)
+	assert_object(host.scene.last_icon).is_equal(MiniGameBase.ICON_INCORRECT)
 	var body: Dictionary = h.http.last(MiniGameFixtures.ROUTE_RESPOND).body
 	assert_dict(body["response"] as Dictionary).is_equal({"option_id": "o_b"})
 	assert_bool(body.has("is_correct")).is_false()

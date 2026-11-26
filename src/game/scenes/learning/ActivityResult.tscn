@@ -1,21 +1,69 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/learning/activity_result.gd" id="1_script"]
+[ext_resource type="Script" path="res://scenes/ui/components/celebration_banner.gd" id="2_celebration"]
+[ext_resource type="Script" path="res://scenes/ui/components/cloudy_mascot.gd" id="3_mascot"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/party.svg" id="4_party"]
 
 [node name="ActivityResult" type="VBoxContainer"]
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_script")
 
-[node name="Title" type="Label" parent="."]
+[node name="Celebration" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+alignment = 1
+script = ExtResource("2_celebration")
+
+[node name="CelebrationMascot" type="Control" parent="Celebration"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("3_mascot")
+bubble_tail = false
+
+[node name="Bubble" type="PanelContainer" parent="Celebration"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"SpeechBubble"
+
+[node name="Box" type="VBoxContainer" parent="Celebration/Bubble"]
+layout_mode = 2
+theme_type_variation = &"FieldBox"
+
+[node name="TitleRow" type="HBoxContainer" parent="Celebration/Bubble/Box"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="PartyIcon" type="TextureRect" parent="Celebration/Bubble/Box/TitleRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("4_party")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Celebration/Bubble/Box/TitleRow"]
 layout_mode = 2
 theme_type_variation = &"HeadingLabel"
 text = "ui.result.done"
-horizontal_alignment = 1
+
+[node name="Cheer" type="Label" parent="Celebration/Bubble/Box"]
+layout_mode = 2
+theme_type_variation = &"SpeechBubbleLabel"
+text = "ui.result.celebrate"
+
+[node name="Stars" type="HBoxContainer" parent="Celebration/Bubble/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
 
 [node name="Regions" type="HBoxContainer" parent="."]
 layout_mode = 2
-size_flags_vertical = 3
 
 [node name="Learning" type="PanelContainer" parent="Regions"]
 unique_name_in_owner = true

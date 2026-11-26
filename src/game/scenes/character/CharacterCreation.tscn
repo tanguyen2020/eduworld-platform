@@ -150,7 +150,7 @@ unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "ui.avatar.previous"
 theme_type_variation = &"SecondaryButton"
-text = "◀"
+text = "‹"
 
 [node name="HairName" type="Label" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection/HairRow"]
 unique_name_in_owner = true
@@ -163,7 +163,7 @@ unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "ui.avatar.next_option"
 theme_type_variation = &"SecondaryButton"
-text = "▶"
+text = "›"
 
 [node name="OutfitLabel" type="Label" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection"]
 layout_mode = 2
@@ -177,7 +177,7 @@ unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "ui.avatar.previous"
 theme_type_variation = &"SecondaryButton"
-text = "◀"
+text = "‹"
 
 [node name="OutfitName" type="Label" parent="Window/Box/Body/Options/OptionsBox/CustomizeSection/OutfitRow"]
 unique_name_in_owner = true
@@ -190,7 +190,7 @@ unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "ui.avatar.next_option"
 theme_type_variation = &"SecondaryButton"
-text = "▶"
+text = "›"
 
 [node name="HairColorSection" type="VBoxContainer" parent="Window/Box/Body/Options/OptionsBox"]
 unique_name_in_owner = true

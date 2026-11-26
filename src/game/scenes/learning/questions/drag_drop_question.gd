@@ -3,6 +3,9 @@ extends QuestionRendererBase
 ## device can tap a card then a zone (STUDENT_GAME_UX_LEARNING §4.3, F063-AC-02); tapping a placed card sends it
 ## back to the tray. Emits `{placements}`.
 
+## F096-AC-15: icon of a card already dropped in a zone.
+const PLACED_ICON: Texture2D = preload("res://resources/ui/icons/tick.svg")
+
 var cards: Dictionary = {}
 var zones: Dictionary = {}
 var card_labels: Dictionary = {}
@@ -79,7 +82,9 @@ func _refresh() -> void:
 	for id: Variant in cards.keys():
 		var b: DropButton = cards[id] as DropButton
 		var zone: String = model.zone_of(String(id))
-		b.text = String(card_labels.get(id, "")) + ("" if zone.is_empty() else " ✓")
+		b.text = String(card_labels.get(id, ""))
+		# F096-AC-15: a placed card shows the tick icon (no ✓ glyph in the shipped fonts).
+		b.icon = null if zone.is_empty() else PLACED_ICON
 		b.set_pressed_no_signal(model.picked == String(id))
 		b.disabled = locked
 		b.drag_enabled = not locked

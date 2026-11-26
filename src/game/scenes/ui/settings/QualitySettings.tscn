@@ -16,19 +16,19 @@ layout_mode = 2
 [node name="PresetLow" type="Button" parent="Presets"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"SecondaryButton"
+theme_type_variation = &"ChoiceChip"
 text = "ui.quality.preset.low"
 
 [node name="PresetMedium" type="Button" parent="Presets"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"SecondaryButton"
+theme_type_variation = &"ChoiceChip"
 text = "ui.quality.preset.medium"
 
 [node name="PresetHigh" type="Button" parent="Presets"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"SecondaryButton"
+theme_type_variation = &"ChoiceChip"
 text = "ui.quality.preset.high"
 
 [node name="Shadows" type="CheckButton" parent="."]

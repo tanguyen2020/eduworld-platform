@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/settings/settings_panel.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/ui/settings/QualitySettings.tscn" id="2_quality"]
 [ext_resource type="PackedScene" path="res://scenes/ui/dialogs/LogoutConfirm.tscn" id="3_logout"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/info.svg" id="4_info"]
 
 [node name="SettingsPanel" type="Control"]
 layout_mode = 3
@@ -23,61 +24,142 @@ anchor_bottom = 0.92
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Scroll" type="ScrollContainer" parent="Window"]
+[node name="Main" type="ScrollContainer" parent="Window"]
+unique_name_in_owner = true
 layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="Box" type="VBoxContainer" parent="Window/Scroll"]
+[node name="Box" type="VBoxContainer" parent="Window/Main"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Header" type="HBoxContainer" parent="Window/Scroll/Box"]
+[node name="Header" type="HBoxContainer" parent="Window/Main/Box"]
 layout_mode = 2
 
-[node name="Title" type="Label" parent="Window/Scroll/Box/Header"]
+[node name="Title" type="Label" parent="Window/Main/Box/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"HeadingLabel"
 text = "ui.settings.title"
 
-[node name="Close" type="Button" parent="Window/Scroll/Box/Header"]
+[node name="Close" type="Button" parent="Window/Main/Box/Header"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SecondaryButton"
 text = "ui.common.close"
 
-[node name="LanguageTitle" type="Label" parent="Window/Scroll/Box"]
+[node name="LanguageTitle" type="Label" parent="Window/Main/Box"]
 layout_mode = 2
+theme_type_variation = &"HeadingLabel"
 text = "ui.settings.language"
 
-[node name="Languages" type="HBoxContainer" parent="Window/Scroll/Box"]
+[node name="Languages" type="HBoxContainer" parent="Window/Main/Box"]
 layout_mode = 2
 
-[node name="LangVi" type="Button" parent="Window/Scroll/Box/Languages"]
+[node name="LangVi" type="Button" parent="Window/Main/Box/Languages"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"SecondaryButton"
+theme_type_variation = &"ChoiceChip"
 text = "ui.login.language_vi"
 
-[node name="LangEn" type="Button" parent="Window/Scroll/Box/Languages"]
+[node name="LangEn" type="Button" parent="Window/Main/Box/Languages"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"SecondaryButton"
+theme_type_variation = &"ChoiceChip"
 text = "ui.login.language_en"
 
-[node name="QualitySettings" parent="Window/Scroll/Box" instance=ExtResource("2_quality")]
+[node name="QualitySettings" parent="Window/Main/Box" instance=ExtResource("2_quality")]
 layout_mode = 2
 
-[node name="AccountTitle" type="Label" parent="Window/Scroll/Box"]
+[node name="AccountTitle" type="Label" parent="Window/Main/Box"]
 layout_mode = 2
+theme_type_variation = &"HeadingLabel"
 text = "ui.settings.account"
 
-[node name="Logout" type="Button" parent="Window/Scroll/Box"]
+[node name="Logout" type="Button" parent="Window/Main/Box"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 theme_type_variation = &"SecondaryButton"
 text = "ui.settings.logout"
+
+[node name="AboutTitle" type="Label" parent="Window/Main/Box"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.settings.about"
+
+[node name="About" type="HFlowContainer" parent="Window/Main/Box"]
+layout_mode = 2
+
+[node name="ReplayGuide" type="Button" parent="Window/Main/Box/About"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.settings.replay_guide"
+
+[node name="OpenLicenses" type="Button" parent="Window/Main/Box/About"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+icon = ExtResource("4_info")
+text = "ui.settings.licenses"
+
+[node name="LicensesPage" type="VBoxContainer" parent="Window"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"FormBox"
+
+[node name="Header" type="HBoxContainer" parent="Window/LicensesPage"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="Back" type="Button" parent="Window/LicensesPage/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.settings.back"
+
+[node name="Title" type="Label" parent="Window/LicensesPage/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HeadingLabel"
+text = "ui.settings.licenses_title"
+autowrap_mode = 3
+
+[node name="AboutVersion" type="Label" parent="Window/LicensesPage"]
+unique_name_in_owner = true
+layout_mode = 2
+auto_translate_mode = 2
+
+[node name="Intro" type="Label" parent="Window/LicensesPage"]
+layout_mode = 2
+text = "ui.settings.licenses_intro"
+autowrap_mode = 3
+
+[node name="Project" type="Label" parent="Window/LicensesPage"]
+layout_mode = 2
+text = "ui.settings.licenses_project"
+autowrap_mode = 3
+
+[node name="EngineTitle" type="Label" parent="Window/LicensesPage"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.settings.licenses_engine"
+autowrap_mode = 3
+
+[node name="Scroll" type="ScrollContainer" parent="Window/LicensesPage"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="LicenseText" type="Label" parent="Window/LicensesPage/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MutedLabel"
+auto_translate_mode = 2
+autowrap_mode = 3
 
 [node name="LogoutConfirm" parent="." instance=ExtResource("3_logout")]
 unique_name_in_owner = true

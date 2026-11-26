@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/hud/main_hud.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/ContextActionButton.tscn" id="2_action"]
@@ -6,6 +6,14 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/NetworkBanner.tscn" id="4_network"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/NotificationBell.tscn" id="5_bell"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/ToastStack.tscn" id="6_toasts"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/OnboardingHint.tscn" id="7_onboarding"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/assignments.svg" id="8_icon_assignments"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/journal.svg" id="9_icon_journal"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/settings.svg" id="10_icon_settings"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/wardrobe.svg" id="11_icon_wardrobe"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/map.svg" id="12_icon_map"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/home.svg" id="13_icon_home"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/bell.svg" id="14_icon_bell"]
 
 [node name="MainHud" type="CanvasLayer"]
 layer = 2
@@ -70,6 +78,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 theme_type_variation = &"SecondaryButton"
+icon = ExtResource("8_icon_assignments")
 text = "ui.hub.assignments"
 
 [node name="JournalButton" type="Button" parent="Root/TopBar"]
@@ -78,17 +87,20 @@ layout_mode = 2
 size_flags_vertical = 0
 tooltip_text = "ui.hub.journal.tooltip"
 theme_type_variation = &"SecondaryButton"
+icon = ExtResource("9_icon_journal")
 text = "ui.hub.journal"
 
 [node name="NotificationBell" parent="Root/TopBar" instance=ExtResource("5_bell")]
 unique_name_in_owner = true
 layout_mode = 2
+icon = ExtResource("14_icon_bell")
 
 [node name="SettingsButton" type="Button" parent="Root/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 theme_type_variation = &"SecondaryButton"
+icon = ExtResource("10_icon_settings")
 text = "ui.hub.settings"
 
 [node name="WardrobeButton" type="Button" parent="Root/TopBar"]
@@ -97,6 +109,7 @@ layout_mode = 2
 size_flags_vertical = 0
 tooltip_text = "ui.hub.wardrobe.tooltip"
 theme_type_variation = &"SecondaryButton"
+icon = ExtResource("11_icon_wardrobe")
 text = "ui.hub.wardrobe"
 
 [node name="MapButton" type="Button" parent="Root/TopBar"]
@@ -105,7 +118,35 @@ layout_mode = 2
 size_flags_vertical = 0
 tooltip_text = "ui.hub.map.tooltip"
 theme_type_variation = &"SecondaryButton"
+icon = ExtResource("12_icon_map")
 text = "ui.hub.map"
+
+[node name="NextStep" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.14
+anchor_bottom = 0.14
+mouse_filter = 2
+theme_type_variation = &"HudPanel"
+
+[node name="Box" type="VBoxContainer" parent="Root/NextStep"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"FieldBox"
+
+[node name="Title" type="Label" parent="Root/NextStep/Box"]
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+text = "ui.next_step.title"
+autowrap_mode = 3
+
+[node name="NextStepButton" type="Button" parent="Root/NextStep/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+auto_translate_mode = 2
+autowrap_mode = 3
 
 [node name="SystemBanner" type="PanelContainer" parent="Root"]
 unique_name_in_owner = true
@@ -177,6 +218,7 @@ unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "ui.hub.home.tooltip"
 theme_type_variation = &"SecondaryButton"
+icon = ExtResource("13_icon_home")
 text = "ui.hub.home"
 
 [node name="Joystick" parent="Root" instance=ExtResource("3_joystick")]
@@ -188,5 +230,9 @@ anchor_bottom = 1.0
 grow_vertical = 0
 
 [node name="NetworkBanner" parent="Root" instance=ExtResource("4_network")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="OnboardingHint" parent="Root" instance=ExtResource("7_onboarding")]
 unique_name_in_owner = true
 layout_mode = 1

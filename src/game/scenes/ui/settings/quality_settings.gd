@@ -5,6 +5,8 @@ extends VBoxContainer
 ## never switches by itself (F062-AC-16).
 
 const PRESET_BUTTONS: Dictionary = {"low": "PresetLow", "medium": "PresetMedium", "high": "PresetHigh"}
+## F096-AC-13: the chosen preset is a selected `ChoiceChip` with a check icon (not colour only).
+const ICON_CHECK: Texture2D = preload("res://resources/ui/icons/check.svg")
 
 var suggested_preset: String = ""
 
@@ -40,7 +42,9 @@ func preset_button(preset: String) -> Button:
 
 func _render() -> void:
 	for preset: String in PRESET_BUTTONS.keys():
-		preset_button(preset).set_pressed_no_signal(QualityManager.preset == preset)
+		var chosen: bool = QualityManager.preset == preset
+		preset_button(preset).set_pressed_no_signal(chosen)
+		preset_button(preset).icon = ICON_CHECK if chosen else null
 	_shadows.set_pressed_no_signal(QualityManager.shadows_enabled())
 	_antialiasing.set_pressed_no_signal(QualityManager.antialiasing() != "none")
 	_suggestion.visible = not suggested_preset.is_empty() and suggested_preset != QualityManager.preset

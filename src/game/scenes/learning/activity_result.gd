@@ -4,13 +4,18 @@ extends VBoxContainer
 ## never a 10-point scale —, the server score for older bands, objectives to review) and "Phần thưởng trong game"
 ## (only rewards the server granted; hidden when there are none). Then Mây's recommendations with a practice button
 ## (`startAdHocAttempt` with `recommendation_id`, through the host). No comparison with other students, no teacher
-## comment (ADR-0072, AGENTS R16). When results are released later it only says so (`results_later`).
+## comment (ADR-0072, AGENTS R16). When results are released later it only says so (`results_later`). F096-AC-14: a
+## CelebrationBanner on top (Mây, "Hoàn thành!", one star icon per right answer for `g1_3`, a single effect ≤ 1.5 s, none
+## with reduced motion); rewards are listed with icons, never emoji (F096-AC-15).
 
 signal practice_requested(recommendation: AttemptReviewModel.Recommendation)
 signal back_requested()
 
 const BAND_COUNT_ONLY: String = "g1_3"
-const STAR: String = "⭐"
+const REWARD_ICONS: Dictionary = {
+	"xp": preload("res://resources/ui/icons/star.svg"), "badge": preload("res://resources/ui/icons/medal.svg"),
+}
+const REWARD_ICON_ITEM: Texture2D = preload("res://resources/ui/icons/party.svg")
 
 var review: AttemptReviewModel = null
 var rewards: Array[Dictionary] = []
@@ -25,6 +30,7 @@ var results_later: bool = false
 @onready var _recs_box: VBoxContainer = %Recommendations
 @onready var _rec_list: VBoxContainer = %RecommendationList
 @onready var _back: Button = %Back
+@onready var _celebration: CelebrationBanner = %Celebration
 
 
 func _ready() -> void:
@@ -37,8 +43,7 @@ func show_review(reviewed: AttemptReviewModel, grade_band: String, granted: Arra
 	_later.visible = false
 	var total: int = reviewed.items.size()
 	var correct: int = reviewed.correct_count()
-	var count_text: String = tr("ui.result.correct_count").format({"correct": correct, "total": total})
-	_score.text = ("%s %s" % [STAR, count_text]) if grade_band == BAND_COUNT_ONLY else count_text
+	_score.text = tr("ui.result.correct_count").format({"correct": correct, "total": total})
 	_score.visible = total > 0
 	_points.visible = grade_band != BAND_COUNT_ONLY and reviewed.has_score
 	_points.text = tr("ui.result.score").format({"score": _number(reviewed.score), "max": _number(reviewed.max_score)})
@@ -46,6 +51,7 @@ func show_review(reviewed: AttemptReviewModel, grade_band: String, granted: Arra
 	_weak.text = tr("ui.result.weak_count").format({"n": reviewed.weak_objectives.size()})
 	_show_rewards(granted)
 	_show_recommendations(reviewed.recommendations)
+	_celebration.celebrate(correct if grade_band == BAND_COUNT_ONLY else 0, Settings.reduce_motion)
 
 
 ## `result_release` ≠ immediate and not released yet: "Kết quả sẽ có khi nhà trường công bố" (F063-AC-23).
@@ -58,6 +64,11 @@ func show_results_later(granted: Array = []) -> void:
 	_later.visible = true
 	_show_rewards(granted)
 	_show_recommendations([])
+	_celebration.celebrate(0, Settings.reduce_motion)
+
+
+func celebration() -> CelebrationBanner:
+	return _celebration
 
 
 func score_text() -> String:
@@ -87,9 +98,19 @@ func _show_rewards(granted: Array) -> void:
 	for entry: Variant in granted:
 		if entry is Dictionary:
 			rewards.append(entry as Dictionary)
+			var row: HBoxContainer = HBoxContainer.new()
+			row.theme_type_variation = &"ToolbarBox"
+			var icon: TextureRect = TextureRect.new()
+			icon.texture = REWARD_ICONS.get(String((entry as Dictionary).get("kind", "")), REWARD_ICON_ITEM) as Texture2D
+			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.custom_minimum_size = Vector2.ONE * UiTokens.COMPONENT_ICON_SIZE
+			row.add_child(icon)
 			var label: Label = Label.new()
+			label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 			label.text = _reward_text(entry as Dictionary)
-			_reward_list.add_child(label)
+			row.add_child(label)
+			_reward_list.add_child(row)
 	_rewards_box.visible = not rewards.is_empty()
 
 

@@ -89,7 +89,7 @@ func test_check_next_finish_submit_and_result() -> void:
 	assert_str(String(body["kind"])).is_equal("question")
 	var strip: Control = host.find_child("FeedbackStrip", true, false) as Control
 	assert_bool(strip.visible).is_true()
-	assert_str(String(strip.call("verdict_text"))).starts_with("✗")
+	assert_str(String(strip.call("verdict_icon"))).is_equal("incorrect")
 	assert_str(_primary().text).is_equal("ui.activity_player.next")
 	await host.call("press_primary")
 	assert_int(_renderer().current_position()).is_equal(2)
@@ -97,7 +97,7 @@ func test_check_next_finish_submit_and_result() -> void:
 	h.http.reply(LearningFixtures.ROUTE_RESPOND, 200, LearningFixtures.response_result_correct())
 	await host.call("press_primary")
 	await _settle()
-	assert_str(String(strip.call("verdict_text"))).starts_with("✓")
+	assert_str(String(strip.call("verdict_icon"))).is_equal("correct")
 	assert_str(_primary().text).is_equal("ui.activity_player.finish")
 	h.http.reply(LearningFixtures.ROUTE_SUBMIT, 200, LearningFixtures.submitted())
 	h.http.reply(LearningFixtures.ROUTE_REVIEW, 200, LearningFixtures.review())

@@ -73,7 +73,7 @@ func _refresh() -> void:
 		var b: DropButton = left_buttons[id] as DropButton
 		var partner: String = model.partner_of(String(id))
 		var label: String = String(b.get_meta("label", ""))
-		b.text = label if partner.is_empty() else "%s → %s" % [label, String(right_numbers.get(partner, "?"))]
+		b.text = label if partner.is_empty() else "%s » %s" % [label, String(right_numbers.get(partner, "?"))]
 		b.set_pressed_no_signal(model.picked_left == String(id))
 		b.disabled = locked
 		b.drag_enabled = not locked

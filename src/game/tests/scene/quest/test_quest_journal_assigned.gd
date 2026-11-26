@@ -79,7 +79,7 @@ func test_opening_refreshes_and_rows_show_title_due_and_status() -> void:
 		var title: Label = row.find_child("Title", true, false) as Label
 		assert_str(title.text).is_equal(model.title)
 		assert_int(title.auto_translate_mode).is_equal(Node.AUTO_TRANSLATE_MODE_DISABLED)
-		assert_str((row.find_child("StatusIcon", true, false) as Label).text).is_not_empty()
+		assert_object((row.find_child("StatusIcon", true, false) as TextureRect).texture).is_not_null()
 		var status: String = (row.find_child("Status", true, false) as Label).text
 		assert_bool(status.is_empty() or status.begins_with("ui.")).is_false()
 		seen_status.append(status)

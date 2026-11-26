@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/emote_wheel.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/emote.svg" id="2_icon"]
 
 [node name="EmoteWheel" type="Control"]
 layout_mode = 3
@@ -28,6 +29,7 @@ unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "ui.emote.open.tooltip"
 theme_type_variation = &"SecondaryButton"
+icon = ExtResource("2_icon")
 text = "ui.emote.open"
 
 [node name="Ring" type="Control" parent="."]

@@ -5,7 +5,9 @@ extends CanvasLayer
 ## XpBar, CurrencyChip, QuestTracker, Minimap, ChatDock and PartyChip exist in the layout but stay hidden until their
 ## owning features. Reads AppState only and emits intents; no business logic, no network (AGENTS R1, G-4).
 ## Layout follows the grade band (`g1_3`: touch targets ≥ 64 dp from UiTokens density, no minimap — F062-AC-05);
-## every string is a `ui.hub.*` key, re-rendered on a locale change (F062-AC-06).
+## every string is a `ui.hub.*` key, re-rendered on a locale change (F062-AC-06). F096: every button carries an icon of
+## design/icons/game beside its label (F096-AC-09), the "Việc tiếp theo" card always says what to do next
+## (NextStepHint, F096-AC-11) and Mây's first-time guide (OnboardingHint, F096-AC-10) is hosted here.
 
 signal context_action_pressed()
 signal journal_pressed()
@@ -18,9 +20,13 @@ signal home_pressed()
 ## F064: 🔔 or a toast touched — the owner opens "Nhà trường giao" through NotificationService.
 signal notifications_pressed()
 signal joystick_moved(vector: Vector2)
+## F096: the "Việc tiếp theo" card was pressed — the owner opens `screen_id` with `args` (EventBus.ui_requested).
+signal next_step_pressed(screen_id: StringName, args: Dictionary)
 
 ## PlayerBadge width in touch-target units (nickname ≤ 24 chars + grade band fit at every density).
 const BADGE_WIDTH_FACTOR: float = 3.0
+## "Việc tiếp theo" card width in touch-target units (a two-line label wraps inside it, F096-AC-11).
+const NEXT_STEP_WIDTH_FACTOR: float = 4.0
 const NO_MINIMAP_BANDS: PackedStringArray = ["g1_3"]
 ## Slots owned by later features (F074 XP, F075 Xu, F072 quest tracker, F071 minimap, F110 chat, F102 party).
 const FUTURE_SLOTS: PackedStringArray = ["XpBar", "CurrencyChip", "QuestTracker", "Minimap", "ChatDock", "PartyChip"]
@@ -51,6 +57,11 @@ var banner_args: Dictionary = {}
 @onready var _network: PanelContainer = %NetworkBanner
 @onready var _bell: Button = %NotificationBell
 @onready var _toasts: VBoxContainer = %ToastStack
+@onready var _next_step_button: Button = %NextStepButton
+@onready var _onboarding: OnboardingHint = %OnboardingHint
+
+## F096: the current "Việc tiếp theo" suggestion (NextStepHint.for_assignments).
+var next_step: Dictionary = {}
 
 ## F064: notices of new school work (AppState.services; null in previews and unit tests of the HUD alone).
 var notifications: NotificationService = null
@@ -70,6 +81,8 @@ func _ready() -> void:
 	_joystick.connect("moved", joystick_moved.emit)
 	_bell.pressed.connect(notifications_pressed.emit)
 	_toasts.connect("toast_pressed", notifications_pressed.emit)
+	_next_step_button.pressed.connect(_on_next_step_pressed)
+	_onboarding.target_root = self
 	bind_notifications(AppState.services.notifications if AppState.services != null else null)
 	AppState.player_changed.connect(_on_player_changed)
 	AppState.assignments_changed.connect(_on_assignments_changed)
@@ -93,9 +106,10 @@ func apply_band(value: String) -> void:
 	band = value if ThemeService.is_valid_band(value) else ThemeService.default_band()
 	minimap_allowed = not band in NO_MINIMAP_BANDS
 	var target: float = float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[band])
-	for button: Button in [_assignments_chip, _journal, _bell, _settings, _wardrobe, _map, _home, _context_action]:
+	for button: Button in touch_buttons():
 		button.custom_minimum_size = Vector2(target, target)
 	_badge.custom_minimum_size = Vector2(target * BADGE_WIDTH_FACTOR, target)
+	_next_step_button.custom_minimum_size.x = maxf(target * NEXT_STEP_WIDTH_FACTOR, float(UiTokens.SIZE_LAYOUT_280))
 	_render()
 
 
@@ -130,6 +144,21 @@ func show_hub_notice(key: String) -> void:
 	_network.call("show_hub_notice", key)
 
 
+## F096-AC-18: every button of the HUD whose touch target follows the grade band.
+func touch_buttons() -> Array[Button]:
+	return [_assignments_chip, _journal, _bell, _settings, _wardrobe, _map, _home, _context_action, _next_step_button,
+		_onboarding.find_child("Skip", true, false) as Button, _onboarding.find_child("Next", true, false) as Button]
+
+
+## F096-AC-10: opens Mây's guide (the owner decides when: first entry on the device or right after S02).
+func start_onboarding() -> void:
+	_onboarding.start()
+
+
+func onboarding() -> OnboardingHint:
+	return _onboarding
+
+
 func network_banner() -> PanelContainer:
 	return _network
 
@@ -149,8 +178,15 @@ func _render() -> void:
 	var count: int = AppState.assignments.size()
 	_assignments_chip.text = tr("ui.hub.assignments_count").format({"count": count}) if count > 0 \
 			else tr("ui.hub.assignments")
+	next_step = NextStepHint.for_assignments(count)
+	_next_step_button.text = tr(String(next_step["label_key"])).format(next_step["args"] as Dictionary)
+	_next_step_button.icon = load(String(next_step["icon"])) as Texture2D
 	_banner.visible = not banner_key.is_empty()
 	_banner_label.text = tr(banner_key).format(banner_args) if not banner_key.is_empty() else ""
+
+
+func _on_next_step_pressed() -> void:
+	next_step_pressed.emit(next_step["screen_id"] as StringName, next_step["screen_args"] as Dictionary)
 
 
 func _on_toast_requested(key: String, args: Dictionary) -> void:

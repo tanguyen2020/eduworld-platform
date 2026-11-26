@@ -1,6 +1,6 @@
 # Student Game UX — Màn học tập
 
-> Trạng thái: Draft · Phiên bản: 0.2 (bỏ ghi âm/tự luận, thêm gợi ý, phản hồi theo phương án, hỗ trợ lớp 1–3 — ADR-0072) · Owner: UX/UI Designer + EdTech Specialist · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Cập nhật 2026-11-26 (F096: dải chúc mừng ở màn kết quả, icon thay emoji) (bỏ ghi âm/tự luận, thêm gợi ý, phản hồi theo phương án, hỗ trợ lớp 1–3 — ADR-0072) · Owner: UX/UI Designer + EdTech Specialist · Cập nhật: 2026-11-15
 > Liên quan: [STUDENT_GAME_UX](STUDENT_GAME_UX.md) (quy ước chung, màn game) · [DESIGN_SYSTEM §5](DESIGN_SYSTEM.md#5-game-design-system-godot-3d) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md) · [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) · [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [ADR-0055](../adr/ADR-0055-cong-thuc-toan-vat-ly-hoa-hoc-mathjax-4-hien-thi-mathlive-nh.md) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0059](../adr/ADR-0059-hop-nhat-api-attempt-va-chua-lam-ai-giong-noi.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md)
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Quy ước áp dụng · 3. Learning activity player (khung chung) · 4. Exercise / question player · 5. Video player · 6. Bài nghe · 7. Hỗ trợ lớp 1–3 · 8. Mô phỏng · 9. Bài kiểm tra có giờ · 10. Kết quả học tập · 11. Khóa dịch đề xuất · 12. Acceptance criteria
@@ -455,7 +455,9 @@ Hai thẻ xếp ngang có thể vuốt (Kết quả học tập | Phần thưở
 - Không có nhận xét của giáo viên. Phần học tập chỉ gồm kết quả tự chấm, LO cần ôn, phản hồi theo phương án (trong "Xem lại câu sai", khi FeedbackTiming cho phép) và gợi ý ôn tập tự động của Mây.
 - Không so sánh với bạn khác trên màn này.
 
-Hiệu năng: hiệu ứng chúc mừng ≤ 1,5 s, tắt được; thế giới 3D vẫn ở trạng thái P-1 cho đến khi rời màn.
+- **Dải chúc mừng (F096):** trên cùng màn là Mây cạnh bong bóng "Hoàn thành!" (icon chúc mừng) + "Em làm xong rồi, giỏi quá!"; với `g1_3` thêm một **ngôi sao icon cho mỗi câu đúng** (tối đa 10; không có sao cho khối lớn hơn). Luôn tích cực: không đếm ngược, không chuỗi ngày, không "quay lại ngày mai", không so sánh, không thông điệp mất mát (NFR-SAFE-003). Phần thưởng liệt kê kèm icon (sao cho XP, huy hiệu, quà) — không emoji (bản Web không có font emoji, [DESIGN_SYSTEM §5.1](DESIGN_SYSTEM.md#51-token-ui)). Header không còn vị trí câu ("1/11").
+
+Hiệu năng: hiệu ứng chúc mừng ≤ 1,5 s (sao bật lên lần lượt, Mây nhún một lần), chạy một lần, tắt khi "Giảm chuyển động"; thế giới 3D vẫn ở trạng thái P-1 cho đến khi rời màn.
 
 ## 11. Khóa dịch đề xuất
 

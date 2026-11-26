@@ -8,14 +8,15 @@ extends VBoxContainer
 signal worked_example_requested(lesson_id: String)
 signal math_failed()
 
-const ICON_CORRECT: String = "✓"
-const ICON_INCORRECT: String = "✗"
+## F096-AC-15: tick/cross icons of design/icons/game (the shipped fonts have no ✓/✗; the Web build has no fallback).
+const ICON_CORRECT: Texture2D = preload("res://resources/ui/icons/check.svg")
+const ICON_INCORRECT: Texture2D = preload("res://resources/ui/icons/cross.svg")
 
 var result: ResponseResultModel = null
 var worked_example_ref: String = ""
 
 @onready var _verdict_panel: PanelContainer = %VerdictPanel
-@onready var _icon: Label = %Icon
+@onready var _icon: TextureRect = %Icon
 @onready var _verdict: Label = %Verdict
 @onready var _details: PanelContainer = %Details
 @onready var _feedback: RichTextLabel = %FeedbackText
@@ -25,6 +26,7 @@ var worked_example_ref: String = ""
 
 
 func _ready() -> void:
+	_icon.custom_minimum_size = Vector2.ONE * UiTokens.COMPONENT_ICON_SIZE
 	_worked.pressed.connect(_on_worked_pressed)
 	clear()
 
@@ -42,7 +44,7 @@ func show_result(graded: ResponseResultModel, math: MathSvgCache) -> void:
 	_verdict_panel.visible = graded.has_verdict
 	if graded.has_verdict:
 		_verdict_panel.theme_type_variation = &"FeedbackCorrectPanel" if graded.is_correct else &"FeedbackIncorrectPanel"
-		_icon.text = ICON_CORRECT if graded.is_correct else ICON_INCORRECT
+		_icon.texture = ICON_CORRECT if graded.is_correct else ICON_INCORRECT
 		_verdict.text = "ui.feedback.correct" if graded.is_correct else "ui.feedback.incorrect"
 	var fb: ResponseResultModel.AnswerFeedback = graded.feedback
 	worked_example_ref = fb.worked_example_ref if fb != null else ""
@@ -59,7 +61,14 @@ func show_result(graded: ResponseResultModel, math: MathSvgCache) -> void:
 
 ## Text shown for the verdict (tests and read-aloud).
 func verdict_text() -> String:
-	return "%s %s" % [_icon.text, tr(_verdict.text)] if _verdict_panel.visible else ""
+	return tr(_verdict.text) if _verdict_panel.visible else ""
+
+
+## "correct" / "incorrect": the icon shown with the verdict ("" when the verdict is hidden).
+func verdict_icon() -> String:
+	if not _verdict_panel.visible:
+		return ""
+	return "correct" if _icon.texture == ICON_CORRECT else "incorrect"
 
 
 func _fill(label: RichTextLabel, text: String, formulas: Array[MathAssetRefModel], math: MathSvgCache) -> void:

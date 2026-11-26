@@ -13,11 +13,12 @@ theme_type_variation = &"FeedbackCorrectPanel"
 [node name="Row" type="HBoxContainer" parent="VerdictPanel"]
 layout_mode = 2
 
-[node name="Icon" type="Label" parent="VerdictPanel/Row"]
+[node name="Icon" type="TextureRect" parent="VerdictPanel/Row"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"FeedbackLabel"
-text = "✓"
+size_flags_vertical = 4
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Verdict" type="Label" parent="VerdictPanel/Row"]
 unique_name_in_owner = true

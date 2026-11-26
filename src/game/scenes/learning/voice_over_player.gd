@@ -5,15 +5,16 @@ extends PanelContainer
 ## shown so the student can work without sound. Audio clips come from MediaLoader (RAM only).
 
 const BUS: StringName = &"Voice"
-const ICON_SOUND: String = "🔊"
-const ICON_MUTED: String = "🔇"
+## Speaker icons of design/icons/game (F096-AC-15: no emoji, the Web build has no emoji font).
+const ICON_SOUND: Texture2D = preload("res://resources/ui/icons/sound_on.svg")
+const ICON_MUTED: Texture2D = preload("res://resources/ui/icons/sound_off.svg")
 
 var stream: AudioStream = null
 var caption: String = ""
 ## g1_3 (or the student's auto-read setting): the caption is always shown with the stem.
 var always_caption: bool = false
 
-@onready var _icon: Label = %Icon
+@onready var _icon: TextureRect = %Icon
 @onready var _caption: Label = %Caption
 @onready var _replay: Button = %Replay
 @onready var _player: AudioStreamPlayer = %Player
@@ -21,6 +22,7 @@ var always_caption: bool = false
 
 func _ready() -> void:
 	_player.bus = BUS
+	_icon.custom_minimum_size = Vector2.ONE * UiTokens.COMPONENT_ICON_SIZE
 	_replay.pressed.connect(replay)
 	visible = false
 
@@ -56,8 +58,9 @@ func is_caption_visible() -> bool:
 	return visible and _caption.visible
 
 
-func icon_text() -> String:
-	return _icon.text
+## "sound_on" or "sound_off": the speaker icon shown beside the caption.
+func icon_name() -> String:
+	return "sound_off" if _icon.texture == ICON_MUTED else "sound_on"
 
 
 ## Muted when the Voice or Master bus is muted or silent.
@@ -74,5 +77,5 @@ func _render() -> void:
 	var show_caption: bool = always_caption or muted or stream == null
 	visible = not caption.is_empty() and (show_caption or stream != null)
 	_caption.visible = show_caption
-	_icon.text = ICON_MUTED if muted or stream == null else ICON_SOUND
+	_icon.texture = ICON_MUTED if muted or stream == null else ICON_SOUND
 	_replay.visible = stream != null

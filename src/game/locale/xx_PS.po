@@ -30,7 +30,7 @@ msgid "ui.activity_player.finish"
 msgstr "[!! Fïñïšĥ ~~~ !!]"
 
 msgid "ui.activity_player.hint"
-msgstr "[!! 💡 Ĥïñţ ~~~ !!]"
+msgstr "[!! Ĥïñţ ~~ !!]"
 
 msgid "ui.activity_player.hint_error"
 msgstr "[!! Çöüĺđñ'ţ ğëţ á ĥïñţ. Pĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~ !!]"
@@ -60,7 +60,7 @@ msgid "ui.activity_player.pause_confirm"
 msgstr "[!! Ţáķë á ƀŕëáķ? Ýöüŕ þŕöğŕëšš ïš šávëđ. ~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.activity_player.read_aloud"
-msgstr "[!! 🔊 Ŕëáđ áĺöüđ ~~~~~ !!]"
+msgstr "[!! Ŕëáđ áĺöüđ ~~~~ !!]"
 
 msgid "ui.activity_player.results_later"
 msgstr "[!! Šüƀɱïţţëđ! Ŕëšüĺţš ŵïĺĺ áþþëáŕ ŵĥëñ ýöüŕ šçĥööĺ ŕëĺëášëš ţĥëɱ. ~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
@@ -81,7 +81,7 @@ msgid "ui.audio.not_ready"
 msgstr "[!! Ţĥë ĺïšţëñïñğ ĺëššöñ ïš šţïĺĺ ƀëïñğ þŕëþáŕëđ. Pĺëášë çöɱë ƀáçķ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.audio.play"
-msgstr "[!! ▶ / ❚❚ Ĺïšţëñ ~~~~~~ !!]"
+msgstr "[!! Ĺïšţëñ / Páüšë ~~~~~~ !!]"
 
 msgid "ui.audio.plays_exhausted"
 msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ þĺáýš. Ýöü çáñ šţïĺĺ áñšŵëŕ ţĥë qüëšţïöñš. ~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
@@ -123,7 +123,7 @@ msgid "ui.avatar.name_hint"
 msgstr "[!! Ñáɱëš áŕë ɱáđë ƒöŕ ýöü ţö ķëëþ ýöü šáƒë. ~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.avatar.next"
-msgstr "[!! Ñëxţ ▶ ~~~ !!]"
+msgstr "[!! Ñëxţ ~~ !!]"
 
 msgid "ui.avatar.next_option"
 msgstr "[!! Ñëxţ ~~ !!]"
@@ -221,6 +221,9 @@ msgstr "[!! ẸđüŴöŕĺđ ïš çĺöšëđ ŕïğĥţ ñöŵ. Ýöü çáñ
 msgid "ui.common.retry"
 msgstr "[!! Ţŕý áğáïñ ~~~~ !!]"
 
+msgid "ui.common.timed"
+msgstr "[!! Ţïɱëđ ~~ !!]"
+
 msgid "ui.config_error.body"
 msgstr "[!! Ţĥë çöñƒïğüŕáţïöñ öƒ ţĥïš ïñšţáĺĺáţïöñ ïš ƀŕöķëñ. Pĺëášë ášķ á ţëáçĥëŕ öŕ á þáŕëñţ ţö ŕëïñšţáĺĺ ţĥë ğáɱë. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -240,7 +243,7 @@ msgid "ui.emote.close.tooltip"
 msgstr "[!! Çĺöšë ţĥë ëɱöţë ŵĥëëĺ ~~~~~~~~~ !!]"
 
 msgid "ui.emote.open"
-msgstr "[!! Ẹɱöţë ~~ !!]"
+msgstr "[!! Ẹɱöţëš ~~~ !!]"
 
 msgid "ui.emote.open.tooltip"
 msgstr "[!! Ẹɱöţë ŵĥëëĺ (Ţ) ~~~~~~ !!]"
@@ -381,7 +384,7 @@ msgid "ui.error.TENANT_NOT_SELECTED"
 msgstr "[!! Pĺëášë çĥööšë ýöüŕ šçĥööĺ ţö çöñţïñüë. ~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.UNAVAILABLE"
-msgstr "[!! Ţĥë šëŕvëŕ ïš ƀüšý. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~ !!]"
+msgstr "[!! Ţĥë šýšţëɱ ïš ƀüšý. Pĺëášë ţŕý áğáïñ ïñ á ƒëŵ ɱïñüţëš. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.VALIDATION_FAILED"
 msgstr "[!! Šöɱë ïñƒöŕɱáţïöñ ïš ñöţ váĺïđ. Pĺëášë çĥëçķ ïţ. ~~~~~~~~~~~~~~~~~~~ !!]"
@@ -420,10 +423,10 @@ msgid "ui.exam.exit_confirm"
 msgstr "[!! Ţïɱë ķëëþš ŕüññïñğ ŵĥïĺë ýöü áŕë áŵáý. Ĺëávë ţĥë ţëšţ? ~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.exam.flag"
-msgstr "[!! 🚩 Fĺáğ ~~~ !!]"
+msgstr "[!! Fĺáğ ~~ !!]"
 
 msgid "ui.exam.grid_legend"
-msgstr "[!! ● áñšŵëŕëđ · ○ ñöţ áñšŵëŕëđ · 🚩 ƒĺáğğëđ ~~~~~~~~~~~~~~~~ !!]"
+msgstr "[!! Ţïçķ: áñšŵëŕëđ · Fĺáğ: ɱáŕķëđ ţö ŕëvïëŵ ~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.exam.leave"
 msgstr "[!! Ĺëávë ~~ !!]"
@@ -435,7 +438,7 @@ msgid "ui.exam.loading"
 msgstr "[!! Ĺöáđïñğ ţĥë ţëšţ… ~~~~~~~ !!]"
 
 msgid "ui.exam.next"
-msgstr "[!! Ñëxţ ▶ ~~~ !!]"
+msgstr "[!! Ñëxţ qüëšţïöñ ~~~~~~ !!]"
 
 msgid "ui.exam.offline"
 msgstr "[!! Öƒƒĺïñë — ýöüŕ áñšŵëŕš áŕë ķëþţ öñ ţĥïš đëvïçë ƒöŕ ñöŵ ~~~~~~~~~~~~~~~~~~~~~~ !!]"
@@ -444,7 +447,7 @@ msgid "ui.exam.practice_objective"
 msgstr "[!! Pŕáçţïšë ţĥïš ğöáĺ ~~~~~~~~ !!]"
 
 msgid "ui.exam.prev"
-msgstr "[!! ◀ Pŕëvïöüš ~~~~ !!]"
+msgstr "[!! Pŕëvïöüš qüëšţïöñ ~~~~~~~ !!]"
 
 msgid "ui.exam.question_of"
 msgstr "[!! Qüëšţïöñ {n}/{total} ~~~~~~~~ !!]"
@@ -528,7 +531,7 @@ msgid "ui.exam.take_over"
 msgstr "[!! Çöñţïñüë öñ ţĥïš đëvïçë ~~~~~~~~~~ !!]"
 
 msgid "ui.exam.time_left"
-msgstr "[!! ⏱ {time} ~~~~ !!]"
+msgstr "[!! {time} ĺëƒţ ~~~~~ !!]"
 
 msgid "ui.exam.time_warning_1"
 msgstr "[!! 1 ɱïñüţë ĺëƒţ. ~~~~~~ !!]"
@@ -540,7 +543,7 @@ msgid "ui.exam.title"
 msgstr "[!! Ẹxáɱ ŕööɱ ~~~~ !!]"
 
 msgid "ui.exam.unflag"
-msgstr "[!! 🚩 Üñƒĺáğ ~~~~ !!]"
+msgstr "[!! Üñƒĺáğ ~~~ !!]"
 
 msgid "ui.exam.view_result"
 msgstr "[!! Šëë ŕëšüĺţ ~~~~ !!]"
@@ -744,10 +747,10 @@ msgid "ui.hub.join_denied"
 msgstr "[!! Ýöü çáñ'ţ ğö ţĥëŕë ŕïğĥţ ñöŵ. Šţáý ĥëŕë ƒöŕ ñöŵ! ~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.hub.journal"
-msgstr "[!! Qüëšţš (Ĵ) ~~~~ !!]"
+msgstr "[!! Qüëšţš ~~~ !!]"
 
 msgid "ui.hub.journal.tooltip"
-msgstr "[!! Öþëñ ţĥë qüëšţ ĵöüŕñáĺ ~~~~~~~~~ !!]"
+msgstr "[!! Öþëñ ţĥë qüëšţ ĵöüŕñáĺ (Ĵ ķëý) ~~~~~~~~~~~~ !!]"
 
 msgid "ui.hub.map"
 msgstr "[!! Máþ ~~ !!]"
@@ -980,14 +983,23 @@ msgstr "[!! Đöñë ~~ !!]"
 msgid "ui.minigame.game_score"
 msgstr "[!! Ğáɱë šçöŕë: {points} ~~~~~~~~ !!]"
 
+msgid "ui.minigame.mark_correct"
+msgstr "[!! ŕïğĥţ ~~ !!]"
+
+msgid "ui.minigame.mark_incorrect"
+msgstr "[!! ñöţ ýëţ ~~~ !!]"
+
+msgid "ui.minigame.mark_saved"
+msgstr "[!! šávëđ ~~ !!]"
+
 msgid "ui.minigame.not_completed"
 msgstr "[!! Ñöţ çöɱþĺëţëđ ýëţ, þĺáý áğáïñ! ~~~~~~~~~~~~ !!]"
 
 msgid "ui.minigame.points"
-msgstr "[!! ⭐ {points} ~~~~ !!]"
+msgstr "[!! {points} þöïñţš ~~~~~~ !!]"
 
 msgid "ui.minigame.streak"
-msgstr "[!! 🔥 {streak} ~~~~ !!]"
+msgstr "[!! {streak} ïñ á ŕöŵ ~~~~~~~ !!]"
 
 msgid "ui.minigame.submit_state"
 msgstr "[!! Šüƀɱïţ ţĥë ëxþëŕïɱëñţ ~~~~~~~~~ !!]"
@@ -998,6 +1010,15 @@ msgstr "[!! Ğáɱë övëŕ ~~~~ !!]"
 msgid "ui.minigame.time_up"
 msgstr "[!! Ţïɱë ïš üþ! ~~~~~ !!]"
 
+msgid "ui.next_step.assignments"
+msgstr "[!! Đö ýöüŕ šçĥööĺ ŵöŕķ ({count}) ~~~~~~~~~~~~ !!]"
+
+msgid "ui.next_step.explore"
+msgstr "[!! Öþëñ ţĥë Máþ ţö ëxþĺöŕë ~~~~~~~~~~ !!]"
+
+msgid "ui.next_step.title"
+msgstr "[!! Ŵĥáţ'š ñëxţ ~~~~~ !!]"
+
 msgid "ui.notification.assignment_new"
 msgstr "[!! Ñëŵ ŵöŕķ: {title} ~~~~~~~ !!]"
 
@@ -1007,14 +1028,32 @@ msgstr "[!! Ýöü ĥávë {count} ñëŵ šçĥööĺ ţášķš ~~~~~~~~~~~~~~
 msgid "ui.notification.assignments_pending"
 msgstr "[!! Ýöü ĥávë {count} šçĥööĺ ţášķš ţö đö ~~~~~~~~~~~~~~ !!]"
 
-msgid "ui.notification.bell"
-msgstr "[!! 🔔 ~ !!]"
-
 msgid "ui.notification.bell_count"
-msgstr "[!! 🔔 {count} ~~~~ !!]"
+msgstr "[!! {count} ~~~ !!]"
 
 msgid "ui.notification.bell_tooltip"
 msgstr "[!! Ñëŵ ŵöŕķ ~~~~ !!]"
+
+msgid "ui.onboarding.next"
+msgstr "[!! Ñëxţ ~~ !!]"
+
+msgid "ui.onboarding.progress"
+msgstr "[!! Šţëþ {n} öƒ {total} ~~~~~~~~ !!]"
+
+msgid "ui.onboarding.skip"
+msgstr "[!! Šķïþ ~~ !!]"
+
+msgid "ui.onboarding.start"
+msgstr "[!! Ĺëţ'š þĺáý ~~~~ !!]"
+
+msgid "ui.onboarding.step_assignments"
+msgstr "[!! Ýöüŕ šçĥööĺ ŵöŕķ ïš ĥëŕë. Ţáþ ïţ ţö šţáŕţ! ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.onboarding.step_explore"
+msgstr "[!! Öþëñ ţĥë Máþ öŕ ŵáĺķ ţĥŕöüğĥ á ŵïñđ ğáţë ţö ëxþĺöŕë ñëŵ ĺáñđš. ~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.onboarding.step_welcome"
+msgstr "[!! Ĥï! Ï'ɱ Çĺöüđý. Ŵëĺçöɱë ţö Šþáŕķ Šqüáŕë! ~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.quality.antialiasing"
 msgstr "[!! Åñţï-áĺïášïñğ ~~~~~~ !!]"
@@ -1217,11 +1256,14 @@ msgstr "[!! Ŕëçöññëçţïñğ… ~~~~~~ !!]"
 msgid "ui.result.back_to_quest"
 msgstr "[!! Ɓáçķ ţö qüëšţ ~~~~~~ !!]"
 
+msgid "ui.result.celebrate"
+msgstr "[!! Ýöü đïđ ïţ — ğŕëáţ ĵöƀ! ~~~~~~~~~~ !!]"
+
 msgid "ui.result.correct_count"
 msgstr "[!! {correct}/{total} çöŕŕëçţ ~~~~~~~~~~ !!]"
 
 msgid "ui.result.done"
-msgstr "[!! 🎉 Åĺĺ đöñë! ~~~~~ !!]"
+msgstr "[!! Åĺĺ đöñë! ~~~~ !!]"
 
 msgid "ui.result.learning"
 msgstr "[!! Ĺëáŕñïñğ ŕëšüĺţš ~~~~~~~ !!]"
@@ -1230,7 +1272,7 @@ msgid "ui.result.recommendation"
 msgstr "[!! Mâý šüğğëšţš šöɱë þŕáçţïçë: ~~~~~~~~~~~ !!]"
 
 msgid "ui.result.reward_badge"
-msgstr "[!! 🏅 Ñëŵ ƀáđğë ~~~~~ !!]"
+msgstr "[!! Ñëŵ ƀáđğë ~~~~ !!]"
 
 msgid "ui.result.reward_item"
 msgstr "[!! +{amount} ïţëɱ(š) ~~~~~~~ !!]"
@@ -1244,14 +1286,38 @@ msgstr "[!! Ğáɱë ŕëŵáŕđš ~~~~~ !!]"
 msgid "ui.result.score"
 msgstr "[!! Šçöŕë: {score}/{max} ~~~~~~~~ !!]"
 
+msgid "ui.result.stars_tooltip"
+msgstr "[!! Öñë šţáŕ ƒöŕ ëáçĥ ŕïğĥţ áñšŵëŕ ~~~~~~~~~~~~ !!]"
+
 msgid "ui.result.weak_count"
 msgstr "[!! Ţö ŕëvïëŵ: {n} ğöáĺš ~~~~~~~~ !!]"
+
+msgid "ui.settings.about"
+msgstr "[!! Åƀöüţ ~~ !!]"
 
 msgid "ui.settings.account"
 msgstr "[!! Åççöüñţ ~~~ !!]"
 
+msgid "ui.settings.back"
+msgstr "[!! Ɓáçķ ţö Šëţţïñğš ~~~~~~~ !!]"
+
 msgid "ui.settings.language"
 msgstr "[!! Ĺáñğüáğë ~~~~ !!]"
+
+msgid "ui.settings.licenses"
+msgstr "[!! Ĺïçëñçëš ~~~~ !!]"
+
+msgid "ui.settings.licenses_engine"
+msgstr "[!! Ğöđöţ Ẹñğïñë (MÏŢ ĺïçëñçë) ~~~~~~~~~~~ !!]"
+
+msgid "ui.settings.licenses_intro"
+msgstr "[!! ẸđüŴöŕĺđ ïš ɱáđë ŵïţĥ Ğöđöţ Ẹñğïñë áñđ ţĥë öþëñ-šöüŕçë šöƒţŵáŕë ƀëĺöŵ. Ĺïçëñçë ţëxţš áŕë ķëþţ ïñ Ẹñğĺïšĥ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.settings.licenses_project"
+msgstr "[!! ẸđüŴöŕĺđ þïçţüŕëš, 3Đ ɱöđëĺš áñđ ïçöñš: MÏŢ ĺïçëñçë. Föñţš Ɓáĺöö 2 áñđ Ɓë Vïëţñáɱ Pŕö: ŠÏĹ Öþëñ Föñţ Ĺïçëñšë 1.1. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.settings.licenses_title"
+msgstr "[!! Šöƒţŵáŕë ĺïçëñçëš ~~~~~~~ !!]"
 
 msgid "ui.settings.logout"
 msgstr "[!! Šïğñ öüţ ~~~~ !!]"
@@ -1261,6 +1327,9 @@ msgstr "[!! Šţáý ~~ !!]"
 
 msgid "ui.settings.logout_confirm"
 msgstr "[!! Đö ýöü ŵáñţ ţö šïğñ öüţ? Ñëxţ ţïɱë ýöü ŵïĺĺ ñëëđ ýöüŕ þáššŵöŕđ. ~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.settings.replay_guide"
+msgstr "[!! Šĥöŵ Çĺöüđý'š ğüïđë áğáïñ ~~~~~~~~~~ !!]"
 
 msgid "ui.settings.title"
 msgstr "[!! Šëţţïñğš ~~~~ !!]"
@@ -1308,7 +1377,7 @@ msgid "ui.video.not_ready"
 msgstr "[!! Ţĥë vïđëö ïš šţïĺĺ ƀëïñğ þŕëþáŕëđ. Pĺëášë çöɱë ƀáçķ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.video.play_pause"
-msgstr "[!! ▶ / ❚❚ ~~~ !!]"
+msgstr "[!! Pĺáý / Páüšë ~~~~~ !!]"
 
 msgid "ui.video.restart"
 msgstr "[!! Šţáŕţ övëŕ ~~~~ !!]"

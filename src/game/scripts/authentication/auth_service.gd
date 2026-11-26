@@ -80,6 +80,9 @@ var min_client_version: String = ""
 var store_url: String = ""
 ## True while resume waits for the network ("Đang kết nối…").
 var connecting: bool = false
+## F096-AC-10: the student finished S02 (character creation) in this session — Mây's Hub guide opens even on a shared
+## device that already showed it to someone else. Cleared on sign-out.
+var just_created_character: bool = false
 var signed_in: bool = false
 
 var _password: PasswordBuffer = PasswordBuffer.new()
@@ -614,6 +617,7 @@ func _enter_game() -> void:
 ## S02 confirmed (avatar + nickname saved): enter the hub. Ignored outside Character Creation.
 func complete_character_creation() -> void:
 	if state == STATE.CHARACTER_CREATION:
+		just_created_character = true
 		_set_state(STATE.IN_WORLD)
 
 
@@ -723,6 +727,7 @@ func _remote_logout() -> void:
 ## Drops every token/tenant/session of RAM; `erase_store` also erases the SecureStorage record.
 func _clear_all(erase_store: bool) -> void:
 	tokens.clear()
+	just_created_character = false
 	_password.wipe()
 	_login_ticket = ""
 	choices.clear()

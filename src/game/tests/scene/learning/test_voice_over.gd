@@ -71,7 +71,7 @@ func test_g1_3_plays_the_voice_over_automatically() -> void:
 	v.call("present", VIETNAMESE, _tone(), true)
 	assert_bool(bool(v.call("is_playing"))).is_true()
 	assert_bool(bool(v.call("is_caption_visible"))).is_true()
-	assert_str(String(v.call("icon_text"))).is_equal("🔊")
+	assert_str(String(v.call("icon_name"))).is_equal("sound_on")
 
 
 func test_older_bands_do_not_autoplay_but_can_replay() -> void:
@@ -89,11 +89,11 @@ func test_muted_sound_always_shows_caption_and_muted_icon() -> void:
 	v.call("present", VIETNAMESE, _tone(), true)
 	assert_bool(bool(v.call("is_playing"))).is_false()
 	assert_bool(bool(v.call("is_caption_visible"))).is_true()
-	assert_str(String(v.call("icon_text"))).is_equal("🔇")
+	assert_str(String(v.call("icon_name"))).is_equal("sound_off")
 
 
 func test_no_recording_shows_caption() -> void:
 	var v: PanelContainer = _voice()
 	v.call("present", VIETNAMESE, null, true)
 	assert_bool(bool(v.call("is_caption_visible"))).is_true()
-	assert_str(String(v.call("icon_text"))).is_equal("🔇")
+	assert_str(String(v.call("icon_name"))).is_equal("sound_off")

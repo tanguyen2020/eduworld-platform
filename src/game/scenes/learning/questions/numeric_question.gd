@@ -38,7 +38,7 @@ func _build() -> void:
 		pad.add_child(b)
 		pad_buttons.append(b)
 	var back: Button = Button.new()
-	back.text = "⌫"
+	back.text = "ui.question.backspace"
 	back.tooltip_text = "ui.question.backspace"
 	back.pressed.connect(model.backspace)
 	pad.add_child(back)

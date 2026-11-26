@@ -63,11 +63,11 @@ func test_countdown_follows_the_server_clock_offset() -> void:
 	assert_int(_scene().remaining_ms).is_equal(FIXTURE_TIME_MS)
 	var clock: Label = host.find_child("Clock", true, false) as Label
 	assert_bool(clock.visible).is_true()
-	assert_str(clock.text).is_equal("⏳ 03:00")
+	assert_str(clock.text).is_equal("03:00")
 	h.clock.advance(30.0)
 	host.tick_clock()
 	assert_int(_scene().remaining_ms).is_equal(FIXTURE_TIME_MS - 30000)
-	assert_str(clock.text).is_equal("⏳ 02:30")
+	assert_str(clock.text).is_equal("02:30")
 
 
 func test_countdown_ignores_the_device_wall_clock_and_uses_server_time() -> void:
@@ -196,10 +196,10 @@ func test_verdicts_come_with_sound_and_icon_and_text() -> void:
 	MiniGameFixtures.answer(_scene())
 	await _settle()
 	var scene: MiniGameQuestionScene = _scene()
-	assert_str(scene.last_icon).is_equal("✓")
+	assert_object(scene.last_icon).is_equal(MiniGameBase.ICON_CORRECT)
 	assert_int(scene.sounds_played).is_equal(1)
 	assert_str((scene.find_child("EffectText", true, false) as Label).text).is_equal("ui.feedback.correct")
-	assert_str((scene.find_child("EffectIcon", true, false) as Label).text).is_equal("✓")
+	assert_object((scene.find_child("EffectIcon", true, false) as TextureRect).texture).is_equal(MiniGameBase.ICON_CORRECT)
 	var sfx: AudioStreamPlayer = scene.find_child("FeedbackSfx", true, false) as AudioStreamPlayer
 	assert_object(sfx).is_not_null()
 	assert_object(sfx.stream).is_same(MiniGameFeedbackSfx.stream(MiniGameFeedbackSfx.KIND_CORRECT))
@@ -208,7 +208,7 @@ func test_verdicts_come_with_sound_and_icon_and_text() -> void:
 	h.http.reply(MiniGameFixtures.ROUTE_RESPOND, 200, MiniGameFixtures.result(2, false))
 	MiniGameFixtures.answer(_scene())
 	await _settle()
-	assert_str(scene.last_icon).is_equal("✗")
+	assert_object(scene.last_icon).is_equal(MiniGameBase.ICON_INCORRECT)
 	assert_int(scene.sounds_played).is_equal(2)
 	assert_str((scene.find_child("EffectText", true, false) as Label).text).is_equal("ui.feedback.incorrect")
 	assert_object(sfx.stream).is_same(MiniGameFeedbackSfx.stream(MiniGameFeedbackSfx.KIND_INCORRECT))

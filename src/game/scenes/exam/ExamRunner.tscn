@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/exam/exam_runner.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/exam/ExamCountdownLabel.tscn" id="2_clock"]
 [ext_resource type="PackedScene" path="res://scenes/exam/QuestionGrid.tscn" id="3_grid"]
 [ext_resource type="PackedScene" path="res://scenes/exam/SubmitConfirm.tscn" id="4_confirm"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/flag.svg" id="90_icon_flag"]
 
 [node name="ExamRunner" type="Control"]
 visible = false
@@ -102,6 +103,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SecondaryButton"
 toggle_mode = true
+icon = ExtResource("90_icon_flag")
 text = "ui.exam.flag"
 
 [node name="Scroll" type="ScrollContainer" parent="Window/Box/Body/Main"]

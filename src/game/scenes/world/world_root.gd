@@ -48,10 +48,12 @@ func _ready() -> void:
 	_hud.connect("map_pressed", _on_map_pressed)
 	_hud.connect("joystick_moved", _on_joystick_moved)
 	_hud.connect("notifications_pressed", _on_notifications_pressed)
+	_hud.connect("next_step_pressed", _on_next_step_pressed)
 	_bind_zone(zone)
 	SceneRouter.area_entered.connect(_on_area_entered)
 	SceneRouter.area_change_failed.connect(_on_area_change_failed)
 	EventBus.ui_requested.connect(_on_ui_requested)
+	EventBus.onboarding_requested.connect(_on_onboarding_requested)
 	AuthService.curfew_warning_raised.connect(_on_curfew_warning_raised)
 	var services: ServiceLocator = AppState.get_services()
 	services.play_time.break_reminder_shown.connect(_on_break_reminder_shown)
@@ -81,6 +83,8 @@ func _exit_tree() -> void:
 		locator.profile.avatar_saved.disconnect(_on_avatar_saved)
 	if EventBus.ui_requested.is_connected(_on_ui_requested):
 		EventBus.ui_requested.disconnect(_on_ui_requested)
+	if EventBus.onboarding_requested.is_connected(_on_onboarding_requested):
+		EventBus.onboarding_requested.disconnect(_on_onboarding_requested)
 	if AuthService.curfew_warning_raised.is_connected(_on_curfew_warning_raised):
 		AuthService.curfew_warning_raised.disconnect(_on_curfew_warning_raised)
 	var services: ServiceLocator = AppState.services
@@ -148,6 +152,7 @@ func _start_quality() -> void:
 		QualityManager.apply_device_profiles(config.device_profiles)
 	if not QualityManager.needs_benchmark() or zone.player == null:
 		_benchmark.hide()
+		_maybe_start_onboarding()
 		return
 	_set_player_input(false)
 	_hud.visible = false
@@ -158,6 +163,24 @@ func _start_quality() -> void:
 func _on_benchmark_finished(_preset: String) -> void:
 	_hud.visible = true
 	_set_player_input(true)
+	_maybe_start_onboarding()
+
+
+## F096-AC-10: Mây's guide on the first entry on this device, or right after S02 (character creation) in this session.
+func _maybe_start_onboarding() -> void:
+	if OnboardingGuide.should_show(Settings.onboarding_hub_seen, AuthService.just_created_character):
+		AuthService.just_created_character = false
+		_hud.call("start_onboarding")
+
+
+## F096-AC-10: "Xem lại hướng dẫn của Mây" (Cài đặt).
+func _on_onboarding_requested() -> void:
+	_hud.call("start_onboarding")
+
+
+## F096-AC-11: the "Việc tiếp theo" card opens the screen it suggests.
+func _on_next_step_pressed(screen_id: StringName, args: Dictionary) -> void:
+	EventBus.ui_requested.emit(screen_id, args)
 	AppState.get_services().play_time.release(BENCHMARK_HOLD)
 
 

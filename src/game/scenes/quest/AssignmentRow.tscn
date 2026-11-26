@@ -9,9 +9,12 @@ script = ExtResource("1_script")
 [node name="Box" type="HBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="StatusIcon" type="Label" parent="Box"]
+[node name="StatusIcon" type="TextureRect" parent="Box"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Main" type="VBoxContainer" parent="Box"]
 layout_mode = 2

@@ -4,9 +4,10 @@ extends MiniGameQuestionScene
 ## decides that an answer is right (ADR-0016). One piece per item of the attempt.
 
 const PIECE_HIDDEN: String = "?"
-const PIECE_SHOWN: String = "★"
+## F096-AC-15: an uncovered piece shows the star icon of design/icons/game (no "★" glyph on the Web build).
+const PIECE_SHOWN: Texture2D = preload("res://resources/ui/icons/star.svg")
 
-var pieces: Array[Label] = []
+var pieces: Array[Button] = []
 var revealed: int = 0
 
 @onready var _board: GridContainer = %Board
@@ -21,10 +22,16 @@ func _on_setup() -> void:
 	var count: int = session.items().size() if session != null else 0
 	_board.columns = maxi(1, ceili(sqrt(float(count))))
 	for i: int in count:
-		var piece: Label = Label.new()
+		# A flat, non-interactive tile (a Button only for its centred icon + text layout).
+		var piece: Button = Button.new()
+		piece.flat = true
+		piece.disabled = true
+		piece.focus_mode = Control.FOCUS_NONE
+		piece.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		piece.text = PIECE_HIDDEN
 		piece.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
-		piece.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		piece.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		piece.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		piece.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_board.add_child(piece)
 		pieces.append(piece)
@@ -47,5 +54,6 @@ func _on_finish(summary: MiniGameSummaryModel, marks: Array[ResponseResultModel]
 
 func _reveal() -> void:
 	if revealed < pieces.size():
-		pieces[revealed].text = PIECE_SHOWN
+		pieces[revealed].text = ""
+		pieces[revealed].icon = PIECE_SHOWN
 		revealed += 1

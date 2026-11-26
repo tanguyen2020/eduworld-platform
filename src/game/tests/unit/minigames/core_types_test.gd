@@ -113,7 +113,7 @@ func test_effects_play_only_after_show_feedback() -> void:
 		assert_bool(scene.locked).override_failure_message(type).is_true()
 		scene.show_feedback(_result(1, true))
 		assert_int(scene.effects_played).override_failure_message(type).is_equal(1)
-		assert_str(scene.last_icon).is_equal(MiniGameBase.ICON_CORRECT)
+		assert_object(scene.last_icon).is_equal(MiniGameBase.ICON_CORRECT)
 		assert_bool(effect.visible).is_true()
 		assert_str((scene.find_child("EffectPoints", true, false) as Label).text).is_equal("+10")
 
@@ -144,7 +144,7 @@ func test_end_of_game_display_defers_effects_to_finish() -> void:
 	assert_int(scene.effects_played).is_equal(2)
 	assert_int(scene.sounds_played).is_equal(1)
 	var marks: Label = scene.find_child("SummaryMarks", true, false) as Label
-	assert_str(marks.text).contains("1 ✓").contains("2 ✗")
+	assert_str(marks.text).contains("1 " + tr("ui.minigame.mark_correct")).contains("2 " + tr("ui.minigame.mark_incorrect"))
 	assert_bool((scene.find_child("Summary", true, false) as Control).visible).is_true()
 
 

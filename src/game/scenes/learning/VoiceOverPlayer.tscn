@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/learning/voice_over_player.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/sound_on.svg" id="2_sound"]
 
 [node name="VoiceOverPlayer" type="PanelContainer"]
 theme_type_variation = &"VoiceCaption"
@@ -9,11 +10,13 @@ script = ExtResource("1_script")
 [node name="Row" type="HBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="Icon" type="Label" parent="Row"]
+[node name="Icon" type="TextureRect" parent="Row"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"VoiceCaptionLabel"
-text = "🔊"
+size_flags_vertical = 4
+texture = ExtResource("2_sound")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Caption" type="Label" parent="Row"]
 unique_name_in_owner = true
@@ -27,6 +30,7 @@ autowrap_mode = 3
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SecondaryButton"
+icon = ExtResource("2_sound")
 text = "ui.activity_player.read_aloud"
 
 [node name="Player" type="AudioStreamPlayer" parent="."]

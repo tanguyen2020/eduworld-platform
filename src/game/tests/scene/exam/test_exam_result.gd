@@ -102,7 +102,8 @@ func test_explanation_and_feedback_only_when_sent() -> void:
 func test_g1_3_shows_right_answers_with_a_star_and_no_scale() -> void:
 	var view: Control = await _submit_and_get(200, ExamFixtures.result(), "g1_3")
 	assert_bool(_label(view, "Score").visible).is_false()
-	assert_str(_label(view, "Correct").text).starts_with("⭐")
+	assert_str(_label(view, "Correct").text).is_equal(tr("ui.exam.result_correct").format({"correct": 1, "total": 2}))
+	assert_bool((view.find_child("StarIcon", true, false) as TextureRect).visible).is_true()
 
 
 func test_no_rank_and_no_other_student() -> void:

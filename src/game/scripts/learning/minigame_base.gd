@@ -25,9 +25,15 @@ signal quit_requested()
 ## Minimum touch target of grades 1–5 (DESIGN_SYSTEM density g1_3, NFR-A11Y-001).
 const TOUCH_MIN_PX: int = UiTokens.DENSITY_G1_3_BUTTON_MIN_HEIGHT
 const PRIMARY_BANDS: PackedStringArray = ["g1_3", "g4_5"]
-const ICON_CORRECT: String = "✓"
-const ICON_INCORRECT: String = "✗"
-const ICON_SAVED: String = "•"
+## F096-AC-15: effect icons of design/icons/game (no ✓/✗ glyph in the shipped fonts). Words for the summary marks.
+const ICON_CORRECT: Texture2D = preload("res://resources/ui/icons/check.svg")
+const ICON_INCORRECT: Texture2D = preload("res://resources/ui/icons/cross.svg")
+const ICON_SAVED: Texture2D = preload("res://resources/ui/icons/info.svg")
+const MARK_KEYS: Dictionary = {
+	MiniGameFeedbackSfx.KIND_CORRECT: "ui.minigame.mark_correct",
+	MiniGameFeedbackSfx.KIND_INCORRECT: "ui.minigame.mark_incorrect",
+}
+const MARK_KEY_SAVED: String = "ui.minigame.mark_saved"
 
 var config: MiniGameConfigModel = null
 var session: MiniGameSessionModel = null
@@ -43,7 +49,7 @@ var effects_played: int = 0
 var sounds_played: int = 0
 ## Kind of the last effect (`correct`, `incorrect`, `saved`) and its icon.
 var last_effect: String = ""
-var last_icon: String = ""
+var last_icon: Texture2D = null
 ## Graded answers whose effect waits for the end (`feedback_display`).
 var deferred: Array[ResponseResultModel] = []
 var _sfx: AudioStreamPlayer = null
@@ -176,7 +182,12 @@ func play_sound(kind: String) -> void:
 	sounds_played += 1
 
 
-static func icon_of(kind: String) -> String:
+## Short word of a mark in the end summary ("đúng" / "chưa đúng" / "đã lưu").
+static func mark_key(kind: String) -> String:
+	return String(MARK_KEYS.get(kind, MARK_KEY_SAVED))
+
+
+static func icon_of(kind: String) -> Texture2D:
 	match kind:
 		MiniGameFeedbackSfx.KIND_CORRECT:
 			return ICON_CORRECT
