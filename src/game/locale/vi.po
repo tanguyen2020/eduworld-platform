@@ -2829,3 +2829,489 @@ msgstr "Mạng đang chập chờn. Em thử lại khi có mạng nhé."
 
 msgid "ui.party.presence.offline"
 msgstr "Không trực tuyến"
+
+msgid "ui.chat.title.party"
+msgstr "Chat nhóm"
+
+msgid "ui.chat.title.match"
+msgstr "Chat trận"
+
+msgid "ui.chat.title.direct"
+msgstr "Tin nhắn riêng"
+
+msgid "ui.chat.title.generic"
+msgstr "Chat"
+
+msgid "ui.chat.tab.team"
+msgstr "Đội"
+
+msgid "ui.chat.tab.match"
+msgstr "Cả trận"
+
+msgid "ui.chat.collapse"
+msgstr "Thu gọn chat"
+
+msgid "ui.chat.expand"
+msgstr "Mở chat"
+
+msgid "ui.chat.unread_many"
+msgstr "99+"
+
+msgid "ui.chat.mention_badge"
+msgstr "@"
+
+msgid "ui.chat.empty"
+msgstr "Hãy chào mọi người bằng một tin nhắn nhanh!"
+
+msgid "ui.chat.mini_line"
+msgstr "{nickname}: {text}"
+
+msgid "ui.chat.you"
+msgstr "{nickname} (em)"
+
+msgid "ui.chat.input_placeholder"
+msgstr "Nhập tin nhắn…"
+
+msgid "ui.chat.send"
+msgstr "Gửi"
+
+msgid "ui.chat.counter"
+msgstr "{count}/{max}"
+
+msgid "ui.chat.counter_over"
+msgstr "{count}/{max} — dài quá rồi"
+
+msgid "ui.chat.cancel_context"
+msgstr "Bỏ"
+
+msgid "ui.chat.replying_to"
+msgstr "Đang trả lời {nickname}: {text}"
+
+msgid "ui.chat.quoting"
+msgstr "Đang trích dẫn {nickname}: {text}"
+
+msgid "ui.chat.editing"
+msgstr "Đang sửa tin của em"
+
+msgid "ui.chat.reply_to"
+msgstr "Trả lời: {text}"
+
+msgid "ui.chat.quote_of"
+msgstr "Trích dẫn: “{text}”"
+
+msgid "ui.chat.original_gone"
+msgstr "Tin nhắn gốc không còn"
+
+msgid "ui.chat.forwarded_from"
+msgstr "Đã chuyển tiếp từ {nickname}"
+
+msgid "ui.chat.edited"
+msgstr "đã chỉnh sửa"
+
+msgid "ui.chat.recalled"
+msgstr "Tin nhắn đã được thu hồi"
+
+msgid "ui.chat.removed"
+msgstr "Tin nhắn đã được đội an toàn gỡ"
+
+msgid "ui.chat.held_own"
+msgstr "Đang được kiểm tra"
+
+msgid "ui.chat.mentioned_you"
+msgstr "Nhắc tới em"
+
+msgid "ui.chat.gif_label"
+msgstr "Ảnh động"
+
+msgid "ui.chat.gif_tag"
+msgstr "GIF"
+
+msgid "ui.chat.sticker_label"
+msgstr "Nhãn dán"
+
+msgid "ui.chat.quick_unknown"
+msgstr "Một tin nhắn nhanh"
+
+msgid "ui.chat.system.generic"
+msgstr "Thông báo của trò chơi"
+
+msgid "ui.chat.state.pending"
+msgstr "Đang gửi"
+
+msgid "ui.chat.state.sent"
+msgstr "Đã gửi"
+
+msgid "ui.chat.state.delivered"
+msgstr "Đã nhận"
+
+msgid "ui.chat.state.read"
+msgstr "Đã xem"
+
+msgid "ui.chat.typing_one"
+msgstr "{nickname} đang soạn tin…"
+
+msgid "ui.chat.typing_two"
+msgstr "{a} và {b} đang soạn tin…"
+
+msgid "ui.chat.typing_many"
+msgstr "{a}, {b} và {c} đang soạn tin…"
+
+msgid "ui.chat.reconnecting"
+msgstr "Đang kết nối lại chat…"
+
+msgid "ui.chat.syncing"
+msgstr "Đang đồng bộ tin nhắn…"
+
+msgid "ui.chat.closed_match"
+msgstr "Trận đã kết thúc. Em vẫn đọc lại được tin nhắn."
+
+msgid "ui.chat.closed_party"
+msgstr "Nhóm đã giải tán. Em vẫn đọc lại được tin nhắn."
+
+msgid "ui.chat.retention_notice"
+msgstr "Tin nhắn trong trận được giữ {days} ngày. Nếu có điều gì chưa vui, em hãy báo cáo trước khi hết hạn nhé."
+
+msgid "ui.chat.muted_until"
+msgstr "Em tạm thời không gửi được tin đến {time}. Em vẫn đọc tin và chơi cùng nhóm bình thường."
+
+msgid "ui.chat.pinned_item"
+msgstr "Tin ghim — {nickname}: {text}"
+
+msgid "ui.chat.copied"
+msgstr "Đã sao chép"
+
+msgid "ui.chat.forward_done"
+msgstr "Đã chuyển tiếp tin nhắn"
+
+msgid "ui.chat.blocked_done"
+msgstr "Đã chặn {nickname}. Em sẽ không thấy tin của bạn ấy nữa."
+
+msgid "ui.chat.muted_done"
+msgstr "Đã tắt tiếng {nickname}. Em sẽ không thấy tin của bạn ấy nữa."
+
+msgid "ui.chat.care_ok"
+msgstr "Em hiểu rồi"
+
+msgid "ui.chat.feedback.masked"
+msgstr "Một vài chữ đã được che. Hãy dùng lời lẽ thân thiện nhé!"
+
+msgid "ui.chat.feedback.pii_blocked"
+msgstr "Tin nhắn chưa gửi được: không chia sẻ thông tin cá nhân như số điện thoại, địa chỉ hay mạng xã hội để giữ an toàn nhé."
+
+msgid "ui.chat.feedback.term_blocked"
+msgstr "Tin nhắn có từ chưa phù hợp, em thử viết lại nhé."
+
+msgid "ui.chat.feedback.held"
+msgstr "Tin nhắn đang được kiểm tra an toàn. Các bạn sẽ thấy khi kiểm tra xong."
+
+msgid "ui.chat.feedback.care"
+msgstr "Mây rất quan tâm tới em. Nếu em đang buồn hay có ai làm em sợ, hãy nói với thầy cô hoặc bố mẹ nhé. Em cũng có thể gọi 111 (miễn phí) để được lắng nghe và giúp đỡ."
+
+msgid "ui.chat.feedback.rate_limited"
+msgstr "Bạn gửi hơi nhanh, chờ chút nhé."
+
+msgid "ui.chat.feedback.muted"
+msgstr "Em tạm thời không thể chat. Em vẫn đọc tin và chơi cùng nhóm bình thường."
+
+msgid "ui.chat.feedback.restrict_text"
+msgstr "Bây giờ em chỉ gửi được tin nhắn nhanh."
+
+msgid "ui.chat.feedback.channel_closed"
+msgstr "Kênh chat này đã đóng. Em vẫn đọc lại được tin nhắn."
+
+msgid "ui.chat.feedback.kind_not_allowed"
+msgstr "Trường em chỉ dùng tin nhắn nhanh và hình cảm xúc trong kênh này."
+
+msgid "ui.chat.feedback.not_allowed"
+msgstr "Em chưa gửi được tin vào kênh này."
+
+msgid "ui.chat.feedback.curfew"
+msgstr "Đã đến giờ nghỉ, chat sẽ mở lại vào ngày mai nhé."
+
+msgid "ui.chat.feedback.edit_expired"
+msgstr "Đã quá thời gian sửa tin này."
+
+msgid "ui.chat.feedback.recall_expired"
+msgstr "Đã quá thời gian thu hồi tin này."
+
+msgid "ui.chat.feedback.forward_not_allowed"
+msgstr "Tin này không chuyển tiếp được."
+
+msgid "ui.chat.feedback.pin_limit"
+msgstr "Kênh đã có đủ 3 tin ghim. Em bỏ ghim một tin trước nhé."
+
+msgid "ui.chat.feedback.mention_limit"
+msgstr "Em chỉ nhắc tới được vài bạn trong một tin thôi."
+
+msgid "ui.chat.feedback.reaction_limit"
+msgstr "Em đã thả đủ cảm xúc cho tin này rồi."
+
+msgid "ui.chat.feedback.feature_disabled"
+msgstr "Kênh này chưa dùng được tính năng đó."
+
+msgid "ui.chat.feedback.asset_locked"
+msgstr "Nhãn dán này chưa mở khóa."
+
+msgid "ui.chat.feedback.edit_conflict"
+msgstr "Tin vừa thay đổi, em thử lại nhé."
+
+msgid "ui.chat.feedback.too_long"
+msgstr "Tin nhắn dài quá, em viết ngắn hơn {max} ký tự nhé."
+
+msgid "ui.chat.feedback.generic"
+msgstr "Tin nhắn chưa gửi được, em thử lại nhé."
+
+msgid "ui.chat.picker.open"
+msgstr "Mở bảng hình cảm xúc"
+
+msgid "ui.chat.picker.emoji"
+msgstr "Cảm xúc"
+
+msgid "ui.chat.picker.sticker"
+msgstr "Nhãn dán"
+
+msgid "ui.chat.picker.gif"
+msgstr "Ảnh động"
+
+msgid "ui.chat.picker.empty"
+msgstr "Chưa có gì ở đây."
+
+msgid "ui.chat.picker.locked_pack"
+msgstr "{pack}: {hint}"
+
+msgid "ui.chat.menu.open"
+msgstr "Thao tác với tin nhắn"
+
+msgid "ui.chat.menu.title"
+msgstr "Tin của {nickname}"
+
+msgid "ui.chat.menu.title_own"
+msgstr "Tin của em"
+
+msgid "ui.chat.menu.reply"
+msgstr "Trả lời"
+
+msgid "ui.chat.menu.quote"
+msgstr "Trích dẫn"
+
+msgid "ui.chat.menu.forward"
+msgstr "Chuyển tiếp"
+
+msgid "ui.chat.menu.copy"
+msgstr "Sao chép"
+
+msgid "ui.chat.menu.pin"
+msgstr "Ghim"
+
+msgid "ui.chat.menu.unpin"
+msgstr "Bỏ ghim"
+
+msgid "ui.chat.menu.edit"
+msgstr "Sửa"
+
+msgid "ui.chat.menu.recall"
+msgstr "Thu hồi"
+
+msgid "ui.chat.menu.readers"
+msgstr "Ai đã xem"
+
+msgid "ui.chat.menu.safety"
+msgstr "Giữ an toàn"
+
+msgid "ui.chat.menu.mute"
+msgstr "Tắt tiếng"
+
+msgid "ui.chat.menu.block"
+msgstr "Chặn"
+
+msgid "ui.chat.menu.report"
+msgstr "Báo cáo"
+
+msgid "ui.chat.recall.title"
+msgstr "Thu hồi tin nhắn?"
+
+msgid "ui.chat.recall.question"
+msgstr "Mọi người sẽ thấy \"Tin nhắn đã được thu hồi\". Em có chắc không?"
+
+msgid "ui.chat.forward.title"
+msgstr "Chuyển tiếp tới"
+
+msgid "ui.chat.forward.hint"
+msgstr "Chọn tối đa 5 kênh của em."
+
+msgid "ui.chat.forward.send"
+msgstr "Chuyển tiếp"
+
+msgid "ui.chat.readers.title"
+msgstr "Ai đã xem tin này"
+
+msgid "ui.chat.readers.read"
+msgstr "Đã xem: {names}"
+
+msgid "ui.chat.readers.delivered"
+msgstr "Đã nhận: {names}"
+
+msgid "ui.chat.readers.nobody"
+msgstr "chưa có ai"
+
+msgid "ui.chat.report.title"
+msgstr "Báo cáo {nickname}"
+
+msgid "ui.chat.report.question"
+msgstr "Chuyện gì đã xảy ra? Em chọn một hình nhé."
+
+msgid "ui.chat.report.reason.rude_language"
+msgstr "Nói lời khó nghe"
+
+msgid "ui.chat.report.reason.bullying"
+msgstr "Bắt nạt, trêu chọc"
+
+msgid "ui.chat.report.reason.asked_personal_info"
+msgstr "Hỏi thông tin riêng"
+
+msgid "ui.chat.report.reason.spam"
+msgstr "Gửi tin liên tục"
+
+msgid "ui.chat.report.reason.inappropriate_content"
+msgstr "Nội dung không phù hợp"
+
+msgid "ui.chat.report.reason.cheating"
+msgstr "Gian lận"
+
+msgid "ui.chat.report.reason.other"
+msgstr "Lý do khác"
+
+msgid "ui.chat.report.send"
+msgstr "Gửi báo cáo"
+
+msgid "ui.chat.report.thanks_title"
+msgstr "Cảm ơn em"
+
+msgid "ui.chat.report.thanks"
+msgstr "Cảm ơn em đã báo, đội an toàn EduWorld sẽ xem xét."
+
+msgid "ui.chat.report.block_offer"
+msgstr "Em có muốn chặn {nickname} không?"
+
+msgid "ui.chat.report.done"
+msgstr "Xong"
+
+msgid "ui.chat.players.open"
+msgstr "Người chơi cùng em"
+
+msgid "ui.chat.players.title"
+msgstr "Người chơi cùng em"
+
+msgid "ui.chat.players.report"
+msgstr "Báo cáo người chơi"
+
+msgid "ui.chat.players.none"
+msgstr "Chưa có bạn nào khác ở đây."
+
+msgid "ui.chat.emoji.smile"
+msgstr "Mặt cười"
+
+msgid "ui.chat.emoji.laugh"
+msgstr "Cười lớn"
+
+msgid "ui.chat.emoji.grin"
+msgstr "Cười tươi"
+
+msgid "ui.chat.emoji.wink"
+msgstr "Nháy mắt"
+
+msgid "ui.chat.emoji.heart"
+msgstr "Trái tim"
+
+msgid "ui.chat.emoji.thumbs_up"
+msgstr "Thích"
+
+msgid "ui.chat.emoji.clap"
+msgstr "Vỗ tay"
+
+msgid "ui.chat.emoji.star"
+msgstr "Ngôi sao"
+
+msgid "ui.chat.emoji.sparkles"
+msgstr "Lấp lánh"
+
+msgid "ui.chat.emoji.party"
+msgstr "Ăn mừng"
+
+msgid "ui.chat.emoji.trophy"
+msgstr "Cúp"
+
+msgid "ui.chat.emoji.medal"
+msgstr "Huy chương"
+
+msgid "ui.chat.emoji.fire"
+msgstr "Ngọn lửa"
+
+msgid "ui.chat.emoji.rocket"
+msgstr "Tên lửa"
+
+msgid "ui.chat.emoji.rainbow"
+msgstr "Cầu vồng"
+
+msgid "ui.chat.emoji.sun"
+msgstr "Mặt trời"
+
+msgid "ui.chat.emoji.book"
+msgstr "Quyển sách"
+
+msgid "ui.chat.emoji.pencil"
+msgstr "Bút chì"
+
+msgid "ui.chat.emoji.light_bulb"
+msgstr "Bóng đèn ý tưởng"
+
+msgid "ui.chat.emoji.check"
+msgstr "Đúng rồi"
+
+msgid "ui.chat.emoji.hundred"
+msgstr "Một trăm điểm"
+
+msgid "ui.chat.emoji.muscle"
+msgstr "Cố lên"
+
+msgid "ui.chat.emoji.wave"
+msgstr "Vẫy tay"
+
+msgid "ui.chat.emoji.hug"
+msgstr "Ôm"
+
+msgid "ui.chat.emoji.thinking"
+msgstr "Suy nghĩ"
+
+msgid "ui.chat.emoji.surprised"
+msgstr "Ngạc nhiên"
+
+msgid "ui.chat.emoji.sad"
+msgstr "Buồn"
+
+msgid "ui.chat.emoji.sleepy"
+msgstr "Buồn ngủ"
+
+msgid "ui.chat.emoji.ok_hand"
+msgstr "Ổn rồi"
+
+msgid "ui.chat.emoji.pray"
+msgstr "Cảm ơn"
+
+msgid "ui.chat.emoji.handshake"
+msgstr "Bắt tay"
+
+msgid "ui.chat.emoji.raised_hand"
+msgstr "Giơ tay"
+
+msgid "ui.chat.emoji.unknown"
+msgstr "Hình cảm xúc"
+
+msgid "ui.party.chat"
+msgstr "Chat nhóm"
+
+msgid "ui.chat.keyboard"
+msgstr "Gõ chữ"
+
+msgid "ui.chat.empty_closed"
+msgstr "Chưa có tin nhắn nào trong kênh này."

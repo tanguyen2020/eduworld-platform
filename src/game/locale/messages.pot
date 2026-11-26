@@ -486,6 +486,489 @@ msgstr ""
 msgid "ui.challenge.type.weekly"
 msgstr ""
 
+msgid "ui.chat.blocked_done"
+msgstr ""
+
+msgid "ui.chat.cancel_context"
+msgstr ""
+
+msgid "ui.chat.care_ok"
+msgstr ""
+
+msgid "ui.chat.closed_match"
+msgstr ""
+
+msgid "ui.chat.closed_party"
+msgstr ""
+
+msgid "ui.chat.collapse"
+msgstr ""
+
+msgid "ui.chat.copied"
+msgstr ""
+
+msgid "ui.chat.counter"
+msgstr ""
+
+msgid "ui.chat.counter_over"
+msgstr ""
+
+msgid "ui.chat.edited"
+msgstr ""
+
+msgid "ui.chat.editing"
+msgstr ""
+
+msgid "ui.chat.emoji.book"
+msgstr ""
+
+msgid "ui.chat.emoji.check"
+msgstr ""
+
+msgid "ui.chat.emoji.clap"
+msgstr ""
+
+msgid "ui.chat.emoji.fire"
+msgstr ""
+
+msgid "ui.chat.emoji.grin"
+msgstr ""
+
+msgid "ui.chat.emoji.handshake"
+msgstr ""
+
+msgid "ui.chat.emoji.heart"
+msgstr ""
+
+msgid "ui.chat.emoji.hug"
+msgstr ""
+
+msgid "ui.chat.emoji.hundred"
+msgstr ""
+
+msgid "ui.chat.emoji.laugh"
+msgstr ""
+
+msgid "ui.chat.emoji.light_bulb"
+msgstr ""
+
+msgid "ui.chat.emoji.medal"
+msgstr ""
+
+msgid "ui.chat.emoji.muscle"
+msgstr ""
+
+msgid "ui.chat.emoji.ok_hand"
+msgstr ""
+
+msgid "ui.chat.emoji.party"
+msgstr ""
+
+msgid "ui.chat.emoji.pencil"
+msgstr ""
+
+msgid "ui.chat.emoji.pray"
+msgstr ""
+
+msgid "ui.chat.emoji.rainbow"
+msgstr ""
+
+msgid "ui.chat.emoji.raised_hand"
+msgstr ""
+
+msgid "ui.chat.emoji.rocket"
+msgstr ""
+
+msgid "ui.chat.emoji.sad"
+msgstr ""
+
+msgid "ui.chat.emoji.sleepy"
+msgstr ""
+
+msgid "ui.chat.emoji.smile"
+msgstr ""
+
+msgid "ui.chat.emoji.sparkles"
+msgstr ""
+
+msgid "ui.chat.emoji.star"
+msgstr ""
+
+msgid "ui.chat.emoji.sun"
+msgstr ""
+
+msgid "ui.chat.emoji.surprised"
+msgstr ""
+
+msgid "ui.chat.emoji.thinking"
+msgstr ""
+
+msgid "ui.chat.emoji.thumbs_up"
+msgstr ""
+
+msgid "ui.chat.emoji.trophy"
+msgstr ""
+
+msgid "ui.chat.emoji.unknown"
+msgstr ""
+
+msgid "ui.chat.emoji.wave"
+msgstr ""
+
+msgid "ui.chat.emoji.wink"
+msgstr ""
+
+msgid "ui.chat.empty"
+msgstr ""
+
+msgid "ui.chat.empty_closed"
+msgstr ""
+
+msgid "ui.chat.expand"
+msgstr ""
+
+msgid "ui.chat.feedback.asset_locked"
+msgstr ""
+
+msgid "ui.chat.feedback.care"
+msgstr ""
+
+msgid "ui.chat.feedback.channel_closed"
+msgstr ""
+
+msgid "ui.chat.feedback.curfew"
+msgstr ""
+
+msgid "ui.chat.feedback.edit_conflict"
+msgstr ""
+
+msgid "ui.chat.feedback.edit_expired"
+msgstr ""
+
+msgid "ui.chat.feedback.feature_disabled"
+msgstr ""
+
+msgid "ui.chat.feedback.forward_not_allowed"
+msgstr ""
+
+msgid "ui.chat.feedback.generic"
+msgstr ""
+
+msgid "ui.chat.feedback.held"
+msgstr ""
+
+msgid "ui.chat.feedback.kind_not_allowed"
+msgstr ""
+
+msgid "ui.chat.feedback.masked"
+msgstr ""
+
+msgid "ui.chat.feedback.mention_limit"
+msgstr ""
+
+msgid "ui.chat.feedback.muted"
+msgstr ""
+
+msgid "ui.chat.feedback.not_allowed"
+msgstr ""
+
+msgid "ui.chat.feedback.pii_blocked"
+msgstr ""
+
+msgid "ui.chat.feedback.pin_limit"
+msgstr ""
+
+msgid "ui.chat.feedback.rate_limited"
+msgstr ""
+
+msgid "ui.chat.feedback.reaction_limit"
+msgstr ""
+
+msgid "ui.chat.feedback.recall_expired"
+msgstr ""
+
+msgid "ui.chat.feedback.restrict_text"
+msgstr ""
+
+msgid "ui.chat.feedback.term_blocked"
+msgstr ""
+
+msgid "ui.chat.feedback.too_long"
+msgstr ""
+
+msgid "ui.chat.forward.hint"
+msgstr ""
+
+msgid "ui.chat.forward.send"
+msgstr ""
+
+msgid "ui.chat.forward.title"
+msgstr ""
+
+msgid "ui.chat.forward_done"
+msgstr ""
+
+msgid "ui.chat.forwarded_from"
+msgstr ""
+
+msgid "ui.chat.gif_label"
+msgstr ""
+
+msgid "ui.chat.gif_tag"
+msgstr ""
+
+msgid "ui.chat.held_own"
+msgstr ""
+
+msgid "ui.chat.input_placeholder"
+msgstr ""
+
+msgid "ui.chat.keyboard"
+msgstr ""
+
+msgid "ui.chat.mention_badge"
+msgstr ""
+
+msgid "ui.chat.mentioned_you"
+msgstr ""
+
+msgid "ui.chat.menu.block"
+msgstr ""
+
+msgid "ui.chat.menu.copy"
+msgstr ""
+
+msgid "ui.chat.menu.edit"
+msgstr ""
+
+msgid "ui.chat.menu.forward"
+msgstr ""
+
+msgid "ui.chat.menu.mute"
+msgstr ""
+
+msgid "ui.chat.menu.open"
+msgstr ""
+
+msgid "ui.chat.menu.pin"
+msgstr ""
+
+msgid "ui.chat.menu.quote"
+msgstr ""
+
+msgid "ui.chat.menu.readers"
+msgstr ""
+
+msgid "ui.chat.menu.recall"
+msgstr ""
+
+msgid "ui.chat.menu.reply"
+msgstr ""
+
+msgid "ui.chat.menu.report"
+msgstr ""
+
+msgid "ui.chat.menu.safety"
+msgstr ""
+
+msgid "ui.chat.menu.title"
+msgstr ""
+
+msgid "ui.chat.menu.title_own"
+msgstr ""
+
+msgid "ui.chat.menu.unpin"
+msgstr ""
+
+msgid "ui.chat.mini_line"
+msgstr ""
+
+msgid "ui.chat.muted_done"
+msgstr ""
+
+msgid "ui.chat.muted_until"
+msgstr ""
+
+msgid "ui.chat.original_gone"
+msgstr ""
+
+msgid "ui.chat.picker.emoji"
+msgstr ""
+
+msgid "ui.chat.picker.empty"
+msgstr ""
+
+msgid "ui.chat.picker.gif"
+msgstr ""
+
+msgid "ui.chat.picker.locked_pack"
+msgstr ""
+
+msgid "ui.chat.picker.open"
+msgstr ""
+
+msgid "ui.chat.picker.sticker"
+msgstr ""
+
+msgid "ui.chat.pinned_item"
+msgstr ""
+
+msgid "ui.chat.players.none"
+msgstr ""
+
+msgid "ui.chat.players.open"
+msgstr ""
+
+msgid "ui.chat.players.report"
+msgstr ""
+
+msgid "ui.chat.players.title"
+msgstr ""
+
+msgid "ui.chat.quick_unknown"
+msgstr ""
+
+msgid "ui.chat.quote_of"
+msgstr ""
+
+msgid "ui.chat.quoting"
+msgstr ""
+
+msgid "ui.chat.readers.delivered"
+msgstr ""
+
+msgid "ui.chat.readers.nobody"
+msgstr ""
+
+msgid "ui.chat.readers.read"
+msgstr ""
+
+msgid "ui.chat.readers.title"
+msgstr ""
+
+msgid "ui.chat.recall.question"
+msgstr ""
+
+msgid "ui.chat.recall.title"
+msgstr ""
+
+msgid "ui.chat.recalled"
+msgstr ""
+
+msgid "ui.chat.reconnecting"
+msgstr ""
+
+msgid "ui.chat.removed"
+msgstr ""
+
+msgid "ui.chat.reply_to"
+msgstr ""
+
+msgid "ui.chat.replying_to"
+msgstr ""
+
+msgid "ui.chat.report.block_offer"
+msgstr ""
+
+msgid "ui.chat.report.done"
+msgstr ""
+
+msgid "ui.chat.report.question"
+msgstr ""
+
+msgid "ui.chat.report.reason.asked_personal_info"
+msgstr ""
+
+msgid "ui.chat.report.reason.bullying"
+msgstr ""
+
+msgid "ui.chat.report.reason.cheating"
+msgstr ""
+
+msgid "ui.chat.report.reason.inappropriate_content"
+msgstr ""
+
+msgid "ui.chat.report.reason.other"
+msgstr ""
+
+msgid "ui.chat.report.reason.rude_language"
+msgstr ""
+
+msgid "ui.chat.report.reason.spam"
+msgstr ""
+
+msgid "ui.chat.report.send"
+msgstr ""
+
+msgid "ui.chat.report.thanks"
+msgstr ""
+
+msgid "ui.chat.report.thanks_title"
+msgstr ""
+
+msgid "ui.chat.report.title"
+msgstr ""
+
+msgid "ui.chat.retention_notice"
+msgstr ""
+
+msgid "ui.chat.send"
+msgstr ""
+
+msgid "ui.chat.state.delivered"
+msgstr ""
+
+msgid "ui.chat.state.pending"
+msgstr ""
+
+msgid "ui.chat.state.read"
+msgstr ""
+
+msgid "ui.chat.state.sent"
+msgstr ""
+
+msgid "ui.chat.sticker_label"
+msgstr ""
+
+msgid "ui.chat.syncing"
+msgstr ""
+
+msgid "ui.chat.system.generic"
+msgstr ""
+
+msgid "ui.chat.tab.match"
+msgstr ""
+
+msgid "ui.chat.tab.team"
+msgstr ""
+
+msgid "ui.chat.title.direct"
+msgstr ""
+
+msgid "ui.chat.title.generic"
+msgstr ""
+
+msgid "ui.chat.title.match"
+msgstr ""
+
+msgid "ui.chat.title.party"
+msgstr ""
+
+msgid "ui.chat.typing_many"
+msgstr ""
+
+msgid "ui.chat.typing_one"
+msgstr ""
+
+msgid "ui.chat.typing_two"
+msgstr ""
+
+msgid "ui.chat.unread_many"
+msgstr ""
+
+msgid "ui.chat.you"
+msgstr ""
+
 msgid "ui.collection.back"
 msgstr ""
 
@@ -1774,6 +2257,9 @@ msgid "ui.party.activity_changed"
 msgstr ""
 
 msgid "ui.party.alone"
+msgstr ""
+
+msgid "ui.party.chat"
 msgstr ""
 
 msgid "ui.party.countdown"

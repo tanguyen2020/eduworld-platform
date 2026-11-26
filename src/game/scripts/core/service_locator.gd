@@ -26,6 +26,11 @@ var hub: HubSync = null
 var presence: PresenceService = null
 ## The student's party (F102): REST + realtime `party.*`, PartyStore read by the lobby, the HUD and the invitation toast.
 var party: PartyService = null
+## Gameplay chat (F119): REST + realtime `chat.*`, ChatStore read by the ChatDock of the party lobby / match screens;
+## block and mute (SocialService, shared with the friends UI) and reports (ReportService, MODERATION §5).
+var chat: ChatService = null
+var social: SocialService = null
+var reports: ReportService = null
 ## World of the student: areas, exploration, chapters, level sessions, discoveries, NPC dialogues (F071).
 var world: WorldService = null
 ## Quests of the student: list, delivery, accept/abandon, step reports, learning steps, realtime progress (F072).
@@ -85,6 +90,14 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	party.access_denied.connect(_on_access_denied)
 	# F102 edge case: an invitation during an exam, a challenge or the activity player only raises the bell count.
 	party.quiet_check = func() -> bool: return exam.in_progress() or challenge.is_running() or presence.activity_status == PresenceService.IN_ACTIVITY
+	chat = ChatService.new(rest, realtime, app_state, telemetry, _cdn_base_url())
+	chat.access_denied.connect(_on_access_denied)
+	social = SocialService.new(rest, telemetry)
+	social.access_denied.connect(_on_access_denied)
+	# F119-AC-15: once the server confirmed a block / mute, the player's messages leave the chat at once.
+	social.relation_changed.connect(func(user_id: String, _kind: String) -> void: chat.store.hide_user(user_id))
+	reports = ReportService.new(rest, telemetry)
+	reports.access_denied.connect(_on_access_denied)
 	if realtime != null:
 		realtime.resync_required.connect(resync)
 		if app_state != null:
@@ -96,6 +109,8 @@ func start_session(bootstrap: Dictionary) -> void:
 	assignments.clear()
 	notifications.reset()
 	party.clear()
+	chat.clear()
+	reports.clear()
 	play_time.configure(bootstrap.get("policies", {}) as Dictionary)
 	var flags: Variant = bootstrap.get("feature_flags", {})
 	# CONFIG_DEFAULTS `analytics_product_telemetry_enabled` (default on) as published in the bootstrap feature flags.
@@ -110,6 +125,8 @@ func end_session() -> void:
 	assignments.clear()
 	notifications.reset()
 	party.clear()
+	chat.clear()
+	reports.clear()
 	learning.clear()
 	exam.clear()
 	media.clear()
@@ -131,6 +148,7 @@ func resync() -> void:
 	inventory.load_wallet()
 	notifications.load_unread()
 	party.resync()
+	chat.resync()
 	if challenge.is_running():
 		challenge.resume(challenge.attempt().challenge_attempt_id)
 	if not hub.desired_area.is_empty():

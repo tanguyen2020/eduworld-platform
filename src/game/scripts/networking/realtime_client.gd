@@ -542,7 +542,8 @@ func _on_failed(env: WsEnvelope) -> void:
 		Log.info("realtime_error", {"code": code})
 		message_received.emit(env.type, env.payload)
 		return
-	_complete(env.ref, CommandResult.failure(code, WsEnvelope.as_int(env.payload.get("retry_after_ms"))))
+	var details: Dictionary = env.payload["details"] as Dictionary if env.payload.get("details") is Dictionary else {}
+	_complete(env.ref, CommandResult.failure(code, WsEnvelope.as_int(env.payload.get("retry_after_ms")), details))
 
 
 func _complete(ref: String, result: CommandResult) -> void:

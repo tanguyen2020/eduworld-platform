@@ -12,6 +12,8 @@ var ok: bool = false
 var code: String = ""
 var retry_after_ms: int = 0
 var result: Dictionary = {}
+## `details` of `system.command.failed` (stable fields only, e.g. `category_code` of CHAT_CONTENT_BLOCKED — F119).
+var details: Dictionary = {}
 
 
 static func success(data: Dictionary = {}) -> CommandResult:
@@ -21,8 +23,9 @@ static func success(data: Dictionary = {}) -> CommandResult:
 	return r
 
 
-static func failure(error_code: String, retry_ms: int = 0) -> CommandResult:
+static func failure(error_code: String, retry_ms: int = 0, error_details: Dictionary = {}) -> CommandResult:
 	var r: CommandResult = CommandResult.new()
 	r.code = error_code
 	r.retry_after_ms = retry_ms
+	r.details = error_details
 	return r

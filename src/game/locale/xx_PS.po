@@ -494,6 +494,489 @@ msgstr "[!! Ţöüŕñáɱëñţ ~~~~ !!]"
 msgid "ui.challenge.type.weekly"
 msgstr "[!! Ŵëëķĺý ~~~ !!]"
 
+msgid "ui.chat.blocked_done"
+msgstr "[!! Ýöü ƀĺöçķëđ {nickname}. Ýöü ŵöñ'ţ šëë ţĥëïŕ ɱëššáğëš áñý ɱöŕë. ~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.cancel_context"
+msgstr "[!! Çáñçëĺ ~~~ !!]"
+
+msgid "ui.chat.care_ok"
+msgstr "[!! Ï üñđëŕšţáñđ ~~~~~ !!]"
+
+msgid "ui.chat.closed_match"
+msgstr "[!! Ţĥë ɱáţçĥ ĥáš ëñđëđ. Ýöü çáñ šţïĺĺ ŕëáđ ţĥë ɱëššáğëš. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.closed_party"
+msgstr "[!! Ţĥë þáŕţý ĥáš ëñđëđ. Ýöü çáñ šţïĺĺ ŕëáđ ţĥë ɱëššáğëš. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.collapse"
+msgstr "[!! Föĺđ ţĥë çĥáţ ~~~~~~ !!]"
+
+msgid "ui.chat.copied"
+msgstr "[!! Çöþïëđ ~~~ !!]"
+
+msgid "ui.chat.counter"
+msgstr "[!! {count}/{max} ~~~~~~ !!]"
+
+msgid "ui.chat.counter_over"
+msgstr "[!! {count}/{max} — ţöö ĺöñğ ~~~~~~~~~~ !!]"
+
+msgid "ui.chat.edited"
+msgstr "[!! ëđïţëđ ~~~ !!]"
+
+msgid "ui.chat.editing"
+msgstr "[!! Ẹđïţïñğ ýöüŕ ɱëššáğë ~~~~~~~~ !!]"
+
+msgid "ui.chat.emoji.book"
+msgstr "[!! Ɓööķ ~~ !!]"
+
+msgid "ui.chat.emoji.check"
+msgstr "[!! Çĥëçķ ~~ !!]"
+
+msgid "ui.chat.emoji.clap"
+msgstr "[!! Çĺáþ ~~ !!]"
+
+msgid "ui.chat.emoji.fire"
+msgstr "[!! Fïŕë ~~ !!]"
+
+msgid "ui.chat.emoji.grin"
+msgstr "[!! Ɓïğ ğŕïñ ~~~~ !!]"
+
+msgid "ui.chat.emoji.handshake"
+msgstr "[!! Ĥáñđšĥáķë ~~~~ !!]"
+
+msgid "ui.chat.emoji.heart"
+msgstr "[!! Ĥëáŕţ ~~ !!]"
+
+msgid "ui.chat.emoji.hug"
+msgstr "[!! Ĥüğ ~~ !!]"
+
+msgid "ui.chat.emoji.hundred"
+msgstr "[!! Ĥüñđŕëđ þöïñţš ~~~~~~ !!]"
+
+msgid "ui.chat.emoji.laugh"
+msgstr "[!! Ĺáüğĥ ~~ !!]"
+
+msgid "ui.chat.emoji.light_bulb"
+msgstr "[!! Ïđëá ƀüĺƀ ~~~~ !!]"
+
+msgid "ui.chat.emoji.medal"
+msgstr "[!! Mëđáĺ ~~ !!]"
+
+msgid "ui.chat.emoji.muscle"
+msgstr "[!! Šţŕöñğ áŕɱ ~~~~ !!]"
+
+msgid "ui.chat.emoji.ok_hand"
+msgstr "[!! ÖĶ ĥáñđ ~~~ !!]"
+
+msgid "ui.chat.emoji.party"
+msgstr "[!! Páŕţý ~~ !!]"
+
+msgid "ui.chat.emoji.pencil"
+msgstr "[!! Pëñçïĺ ~~~ !!]"
+
+msgid "ui.chat.emoji.pray"
+msgstr "[!! Ţĥáñķ ýöü ~~~~ !!]"
+
+msgid "ui.chat.emoji.rainbow"
+msgstr "[!! Ŕáïñƀöŵ ~~~ !!]"
+
+msgid "ui.chat.emoji.raised_hand"
+msgstr "[!! Ŕáïšëđ ĥáñđ ~~~~~ !!]"
+
+msgid "ui.chat.emoji.rocket"
+msgstr "[!! Ŕöçķëţ ~~~ !!]"
+
+msgid "ui.chat.emoji.sad"
+msgstr "[!! Šáđ ~~ !!]"
+
+msgid "ui.chat.emoji.sleepy"
+msgstr "[!! Šĺëëþý ~~~ !!]"
+
+msgid "ui.chat.emoji.smile"
+msgstr "[!! Šɱïĺë ~~ !!]"
+
+msgid "ui.chat.emoji.sparkles"
+msgstr "[!! Šþáŕķĺëš ~~~~ !!]"
+
+msgid "ui.chat.emoji.star"
+msgstr "[!! Šţáŕ ~~ !!]"
+
+msgid "ui.chat.emoji.sun"
+msgstr "[!! Šüñ ~~ !!]"
+
+msgid "ui.chat.emoji.surprised"
+msgstr "[!! Šüŕþŕïšëđ ~~~~ !!]"
+
+msgid "ui.chat.emoji.thinking"
+msgstr "[!! Ţĥïñķïñğ ~~~~ !!]"
+
+msgid "ui.chat.emoji.thumbs_up"
+msgstr "[!! Ţĥüɱƀš üþ ~~~~ !!]"
+
+msgid "ui.chat.emoji.trophy"
+msgstr "[!! Ţŕöþĥý ~~~ !!]"
+
+msgid "ui.chat.emoji.unknown"
+msgstr "[!! Ẹɱöĵï ~~ !!]"
+
+msgid "ui.chat.emoji.wave"
+msgstr "[!! Ŵávë ~~ !!]"
+
+msgid "ui.chat.emoji.wink"
+msgstr "[!! Ŵïñķ ~~ !!]"
+
+msgid "ui.chat.empty"
+msgstr "[!! Šáý ĥï ţö ëvëŕýöñë ŵïţĥ á qüïçķ ɱëššáğë! ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.empty_closed"
+msgstr "[!! Ñö ɱëššáğëš ïñ ţĥïš çĥáţ. ~~~~~~~~~~ !!]"
+
+msgid "ui.chat.expand"
+msgstr "[!! Öþëñ çĥáţ ~~~~ !!]"
+
+msgid "ui.chat.feedback.asset_locked"
+msgstr "[!! Ţĥïš šţïçķëŕ ïšñ'ţ üñĺöçķëđ ýëţ. ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.care"
+msgstr "[!! Çĺöüđý çáŕëš áƀöüţ ýöü. Ïƒ ýöü ƒëëĺ šáđ öŕ šöɱëöñë ɱáķëš ýöü šçáŕëđ, þĺëášë ţëĺĺ á ţëáçĥëŕ öŕ ýöüŕ þáŕëñţš. Ýöü çáñ áĺšö çáĺĺ 111 (ƒŕëë) ïñ Vïëţñáɱ ţö ţáĺķ ţö šöɱëöñë ŵĥö çáñ ĥëĺþ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.channel_closed"
+msgstr "[!! Ţĥïš çĥáţ ïš çĺöšëđ. Ýöü çáñ šţïĺĺ ŕëáđ ţĥë ɱëššáğëš. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.curfew"
+msgstr "[!! Ïţ'š ŕëšţ ţïɱë. Ţĥë çĥáţ öþëñš áğáïñ ţöɱöŕŕöŵ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.edit_conflict"
+msgstr "[!! Ţĥë ɱëššáğë ĵüšţ çĥáñğëđ, þĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.edit_expired"
+msgstr "[!! Ïţ'š ţöö ĺáţë ţö ëđïţ ţĥïš ɱëššáğë. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.feature_disabled"
+msgstr "[!! Ţĥïš çĥáţ đöëšñ'ţ ĥávë ţĥáţ ƒëáţüŕë. ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.forward_not_allowed"
+msgstr "[!! Ţĥïš ɱëššáğë çáñ'ţ ƀë ƒöŕŵáŕđëđ. ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.generic"
+msgstr "[!! Ţĥë ɱëššáğë ŵášñ'ţ šëñţ, þĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.held"
+msgstr "[!! Ýöüŕ ɱëššáğë ïš ƀëïñğ çĥëçķëđ ƒöŕ šáƒëţý. Öţĥëŕš ŵïĺĺ šëë ïţ öñçë ïţ'š çĥëçķëđ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.kind_not_allowed"
+msgstr "[!! Ýöüŕ šçĥööĺ üšëš öñĺý qüïçķ ɱëššáğëš áñđ ëɱöĵï þïçţüŕëš ĥëŕë. ~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.masked"
+msgstr "[!! Šöɱë ŵöŕđš ŵëŕë ĥïđđëñ. Ĺëţ'š üšë ķïñđ ŵöŕđš! ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.mention_limit"
+msgstr "[!! Ýöü çáñ ɱëñţïöñ öñĺý á ƒëŵ ƒŕïëñđš ïñ öñë ɱëššáğë. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.muted"
+msgstr "[!! Ýöü çáñ'ţ çĥáţ ƒöŕ ñöŵ. Ýöü çáñ šţïĺĺ ŕëáđ ɱëššáğëš áñđ ķëëþ þĺáýïñğ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.not_allowed"
+msgstr "[!! Ýöü çáñ'ţ šëñđ ɱëššáğëš ïñ ţĥïš çĥáţ ýëţ. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.pii_blocked"
+msgstr "[!! Mëššáğë ñöţ šëñţ: ţö šţáý šáƒë, đöñ'ţ šĥáŕë þëŕšöñáĺ đëţáïĺš ĺïķë þĥöñë ñüɱƀëŕš, áđđŕëššëš öŕ šöçïáĺ áççöüñţš. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.pin_limit"
+msgstr "[!! Ţĥëŕë áŕë áĺŕëáđý 3 þïññëđ ɱëššáğëš. Üñþïñ öñë ƒïŕšţ. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.rate_limited"
+msgstr "[!! Ýöü'ŕë šëñđïñğ á ƀïţ ƒášţ, þĺëášë ŵáïţ á ɱöɱëñţ. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.reaction_limit"
+msgstr "[!! Ýöü'vë áĺŕëáđý áđđëđ ëñöüğĥ ŕëáçţïöñš ţö ţĥïš ɱëššáğë. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.recall_expired"
+msgstr "[!! Ïţ'š ţöö ĺáţë ţö üñšëñđ ţĥïš ɱëššáğë. ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.restrict_text"
+msgstr "[!! Föŕ ñöŵ ýöü çáñ öñĺý šëñđ qüïçķ ɱëššáğëš. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.term_blocked"
+msgstr "[!! Ýöüŕ ɱëššáğë ĥáš ŵöŕđš ţĥáţ áŕëñ'ţ öķáý. Pĺëášë ţŕý ŵŕïţïñğ ïţ áğáïñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.feedback.too_long"
+msgstr "[!! Ţĥáţ'š ţöö ĺöñğ — þĺëášë ķëëþ ïţ üñđëŕ {max} çĥáŕáçţëŕš. ~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.forward.hint"
+msgstr "[!! Pïçķ üþ ţö 5 öƒ ýöüŕ çĥáţš. ~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.forward.send"
+msgstr "[!! Föŕŵáŕđ ~~~ !!]"
+
+msgid "ui.chat.forward.title"
+msgstr "[!! Föŕŵáŕđ ţö ~~~~ !!]"
+
+msgid "ui.chat.forward_done"
+msgstr "[!! Mëššáğë ƒöŕŵáŕđëđ ~~~~~~~ !!]"
+
+msgid "ui.chat.forwarded_from"
+msgstr "[!! Föŕŵáŕđëđ ƒŕöɱ {nickname} ~~~~~~~~~~ !!]"
+
+msgid "ui.chat.gif_label"
+msgstr "[!! Åñïɱáţëđ þïçţüŕë ~~~~~~~ !!]"
+
+msgid "ui.chat.gif_tag"
+msgstr "[!! ĞÏF ~~ !!]"
+
+msgid "ui.chat.held_own"
+msgstr "[!! Ɓëïñğ çĥëçķëđ ~~~~~~ !!]"
+
+msgid "ui.chat.input_placeholder"
+msgstr "[!! Ţýþë á ɱëššáğë… ~~~~~~ !!]"
+
+msgid "ui.chat.keyboard"
+msgstr "[!! Ţýþë ~~ !!]"
+
+msgid "ui.chat.mention_badge"
+msgstr "[!! @ ~ !!]"
+
+msgid "ui.chat.mentioned_you"
+msgstr "[!! Mëñţïöñš ýöü ~~~~~ !!]"
+
+msgid "ui.chat.menu.block"
+msgstr "[!! Ɓĺöçķ ~~ !!]"
+
+msgid "ui.chat.menu.copy"
+msgstr "[!! Çöþý ~~ !!]"
+
+msgid "ui.chat.menu.edit"
+msgstr "[!! Ẹđïţ ~~ !!]"
+
+msgid "ui.chat.menu.forward"
+msgstr "[!! Föŕŵáŕđ ~~~ !!]"
+
+msgid "ui.chat.menu.mute"
+msgstr "[!! Müţë ~~ !!]"
+
+msgid "ui.chat.menu.open"
+msgstr "[!! Mëššáğë áçţïöñš ~~~~~~ !!]"
+
+msgid "ui.chat.menu.pin"
+msgstr "[!! Pïñ ~~ !!]"
+
+msgid "ui.chat.menu.quote"
+msgstr "[!! Qüöţë ~~ !!]"
+
+msgid "ui.chat.menu.readers"
+msgstr "[!! Šëëñ ƀý ~~~ !!]"
+
+msgid "ui.chat.menu.recall"
+msgstr "[!! Üñšëñđ ~~~ !!]"
+
+msgid "ui.chat.menu.reply"
+msgstr "[!! Ŕëþĺý ~~ !!]"
+
+msgid "ui.chat.menu.report"
+msgstr "[!! Ŕëþöŕţ ~~~ !!]"
+
+msgid "ui.chat.menu.safety"
+msgstr "[!! Šţáý šáƒë ~~~~ !!]"
+
+msgid "ui.chat.menu.title"
+msgstr "[!! Mëššáğë ƒŕöɱ {nickname} ~~~~~~~~~~ !!]"
+
+msgid "ui.chat.menu.title_own"
+msgstr "[!! Ýöüŕ ɱëššáğë ~~~~~ !!]"
+
+msgid "ui.chat.menu.unpin"
+msgstr "[!! Üñþïñ ~~ !!]"
+
+msgid "ui.chat.mini_line"
+msgstr "[!! {nickname}: {text} ~~~~~~~~ !!]"
+
+msgid "ui.chat.muted_done"
+msgstr "[!! Ýöü ɱüţëđ {nickname}. Ýöü ŵöñ'ţ šëë ţĥëïŕ ɱëššáğëš áñý ɱöŕë. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.muted_until"
+msgstr "[!! Ýöü çáñ'ţ šëñđ ɱëššáğëš üñţïĺ {time}. Ýöü çáñ šţïĺĺ ŕëáđ ţĥëɱ áñđ ķëëþ þĺáýïñğ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.original_gone"
+msgstr "[!! Ţĥë öŕïğïñáĺ ɱëššáğë ïš ğöñë ~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.picker.emoji"
+msgstr "[!! Ẹɱöĵï ~~ !!]"
+
+msgid "ui.chat.picker.empty"
+msgstr "[!! Ñöţĥïñğ ĥëŕë ýëţ. ~~~~~~~ !!]"
+
+msgid "ui.chat.picker.gif"
+msgstr "[!! ĞÏFš ~~ !!]"
+
+msgid "ui.chat.picker.locked_pack"
+msgstr "[!! {pack}: {hint} ~~~~~~ !!]"
+
+msgid "ui.chat.picker.open"
+msgstr "[!! Öþëñ ţĥë ëɱöĵï ƀöáŕđ ~~~~~~~~ !!]"
+
+msgid "ui.chat.picker.sticker"
+msgstr "[!! Šţïçķëŕš ~~~~ !!]"
+
+msgid "ui.chat.pinned_item"
+msgstr "[!! Pïññëđ — {nickname}: {text} ~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.players.none"
+msgstr "[!! Ñö öţĥëŕ þĺáýëŕš ĥëŕë ýëţ. ~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.players.open"
+msgstr "[!! Pĺáýëŕš ŵïţĥ ýöü ~~~~~~~ !!]"
+
+msgid "ui.chat.players.report"
+msgstr "[!! Ŕëþöŕţ þĺáýëŕ ~~~~~~ !!]"
+
+msgid "ui.chat.players.title"
+msgstr "[!! Pĺáýëŕš ŵïţĥ ýöü ~~~~~~~ !!]"
+
+msgid "ui.chat.quick_unknown"
+msgstr "[!! Å qüïçķ ɱëššáğë ~~~~~~ !!]"
+
+msgid "ui.chat.quote_of"
+msgstr "[!! Qüöţë: “{text}” ~~~~~~ !!]"
+
+msgid "ui.chat.quoting"
+msgstr "[!! Qüöţïñğ {nickname}: {text} ~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.readers.delivered"
+msgstr "[!! Đëĺïvëŕëđ: {names} ~~~~~~~~ !!]"
+
+msgid "ui.chat.readers.nobody"
+msgstr "[!! ñöƀöđý ýëţ ~~~~ !!]"
+
+msgid "ui.chat.readers.read"
+msgstr "[!! Šëëñ: {names} ~~~~~~ !!]"
+
+msgid "ui.chat.readers.title"
+msgstr "[!! Ŵĥö šáŵ ţĥïš ɱëššáğë ~~~~~~~~ !!]"
+
+msgid "ui.chat.recall.question"
+msgstr "[!! Ẹvëŕýöñë ŵïĺĺ šëë \"Ţĥïš ɱëššáğë ŵáš üñšëñţ\". Åŕë ýöü šüŕë? ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.recall.title"
+msgstr "[!! Üñšëñđ ɱëššáğë? ~~~~~~ !!]"
+
+msgid "ui.chat.recalled"
+msgstr "[!! Ţĥïš ɱëššáğë ŵáš üñšëñţ ~~~~~~~~~~ !!]"
+
+msgid "ui.chat.reconnecting"
+msgstr "[!! Ŕëçöññëçţïñğ ţĥë çĥáţ… ~~~~~~~~~ !!]"
+
+msgid "ui.chat.removed"
+msgstr "[!! Ţĥïš ɱëššáğë ŵáš ŕëɱövëđ ƀý ţĥë šáƒëţý ţëáɱ ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.reply_to"
+msgstr "[!! Ŕëþĺý: {text} ~~~~~~ !!]"
+
+msgid "ui.chat.replying_to"
+msgstr "[!! Ŕëþĺýïñğ ţö {nickname}: {text} ~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.report.block_offer"
+msgstr "[!! Đö ýöü ŵáñţ ţö ƀĺöçķ {nickname}? ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.report.done"
+msgstr "[!! Đöñë ~~ !!]"
+
+msgid "ui.chat.report.question"
+msgstr "[!! Ŵĥáţ ĥáþþëñëđ? Pïçķ á þïçţüŕë. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.report.reason.asked_personal_info"
+msgstr "[!! Åšķëđ ƒöŕ þŕïváţë ïñƒö ~~~~~~~~~ !!]"
+
+msgid "ui.chat.report.reason.bullying"
+msgstr "[!! Ɓüĺĺýïñğ öŕ ţëášïñğ ~~~~~~~~ !!]"
+
+msgid "ui.chat.report.reason.cheating"
+msgstr "[!! Çĥëáţïñğ ~~~~ !!]"
+
+msgid "ui.chat.report.reason.inappropriate_content"
+msgstr "[!! Ñöţ öķáý ƒöŕ ķïđš ~~~~~~~ !!]"
+
+msgid "ui.chat.report.reason.other"
+msgstr "[!! Šöɱëţĥïñğ ëĺšë ~~~~~~ !!]"
+
+msgid "ui.chat.report.reason.rude_language"
+msgstr "[!! Ŕüđë ŵöŕđš ~~~~ !!]"
+
+msgid "ui.chat.report.reason.spam"
+msgstr "[!! Šþáɱɱïñğ ~~~~ !!]"
+
+msgid "ui.chat.report.send"
+msgstr "[!! Šëñđ ŕëþöŕţ ~~~~~ !!]"
+
+msgid "ui.chat.report.thanks"
+msgstr "[!! Ţĥáñķš ƒöŕ ţëĺĺïñğ üš. Ţĥë ẸđüŴöŕĺđ šáƒëţý ţëáɱ ŵïĺĺ ĺööķ ïñţö ïţ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.report.thanks_title"
+msgstr "[!! Ţĥáñķ ýöü ~~~~ !!]"
+
+msgid "ui.chat.report.title"
+msgstr "[!! Ŕëþöŕţ {nickname} ~~~~~~~ !!]"
+
+msgid "ui.chat.retention_notice"
+msgstr "[!! Máţçĥ ɱëššáğëš áŕë ķëþţ ƒöŕ {days} đáýš. Ïƒ šöɱëţĥïñğ ŵáš ñöţ öķáý, þĺëášë ŕëþöŕţ ïţ ƀëƒöŕë ţĥëñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.send"
+msgstr "[!! Šëñđ ~~ !!]"
+
+msgid "ui.chat.state.delivered"
+msgstr "[!! Đëĺïvëŕëđ ~~~~ !!]"
+
+msgid "ui.chat.state.pending"
+msgstr "[!! Šëñđïñğ ~~~ !!]"
+
+msgid "ui.chat.state.read"
+msgstr "[!! Šëëñ ~~ !!]"
+
+msgid "ui.chat.state.sent"
+msgstr "[!! Šëñţ ~~ !!]"
+
+msgid "ui.chat.sticker_label"
+msgstr "[!! Šţïçķëŕ ~~~ !!]"
+
+msgid "ui.chat.syncing"
+msgstr "[!! Šýñçïñğ ɱëššáğëš… ~~~~~~~ !!]"
+
+msgid "ui.chat.system.generic"
+msgstr "[!! Ğáɱë ñöţïçë ~~~~~ !!]"
+
+msgid "ui.chat.tab.match"
+msgstr "[!! Ŵĥöĺë ɱáţçĥ ~~~~~ !!]"
+
+msgid "ui.chat.tab.team"
+msgstr "[!! Ţëáɱ ~~ !!]"
+
+msgid "ui.chat.title.direct"
+msgstr "[!! Pŕïváţë ɱëššáğëš ~~~~~~~ !!]"
+
+msgid "ui.chat.title.generic"
+msgstr "[!! Çĥáţ ~~ !!]"
+
+msgid "ui.chat.title.match"
+msgstr "[!! Máţçĥ çĥáţ ~~~~ !!]"
+
+msgid "ui.chat.title.party"
+msgstr "[!! Páŕţý çĥáţ ~~~~ !!]"
+
+msgid "ui.chat.typing_many"
+msgstr "[!! {a}, {b} áñđ {c} áŕë ţýþïñğ… ~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.typing_one"
+msgstr "[!! {nickname} ïš ţýþïñğ… ~~~~~~~~~ !!]"
+
+msgid "ui.chat.typing_two"
+msgstr "[!! {a} áñđ {b} áŕë ţýþïñğ… ~~~~~~~~~~ !!]"
+
+msgid "ui.chat.unread_many"
+msgstr "[!! 99+ ~~ !!]"
+
+msgid "ui.chat.you"
+msgstr "[!! {nickname} (ýöü) ~~~~~~~ !!]"
+
 msgid "ui.collection.back"
 msgstr "[!! Åĺĺ çöĺĺëçţïöñš ~~~~~~ !!]"
 
@@ -1792,6 +2275,9 @@ msgstr "[!! Ţĥë áçţïvïţý çĥáñğëđ, ëvëŕýöñë ğëţš ŕë
 
 msgid "ui.party.alone"
 msgstr "[!! Ïñvïţë ýöüŕ ƒŕïëñđš ţö þĺáý ţöğëţĥëŕ! Pĺáýïñğ ţöğëţĥëŕ ïš ɱöŕë ƒüñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.party.chat"
+msgstr "[!! Páŕţý çĥáţ ~~~~ !!]"
 
 msgid "ui.party.countdown"
 msgstr "[!! Ğëţ ŕëáđý, ëvëŕýöñë! ~~~~~~~~ !!]"

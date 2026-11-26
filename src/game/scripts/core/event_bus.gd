@@ -24,6 +24,12 @@ signal onboarding_requested()
 ## F102: a party invitation arrived (realtime `party.invitation.received`) — the HUD shows the InvitationToast.
 @warning_ignore("unused_signal")
 signal party_invitation_received(invitation: InvitationModel)
+## F119 (F119-AC-03): a question / answer area is on screen (Knowledge Battle, boss — emitted by the F063/F109/F110
+## screens): the chat dock shrinks to its 2-line strip so it never covers the question, and grows back when hidden.
+@warning_ignore("unused_signal")
+signal question_shown()
+@warning_ignore("unused_signal")
+signal question_hidden()
 ## F069: the S07 level-up modal was shown (accessibility announce, analytics without PII).
 @warning_ignore("unused_signal")
 signal level_up_shown(to_level: int)

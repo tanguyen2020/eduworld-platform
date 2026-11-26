@@ -2829,3 +2829,489 @@ msgstr "The connection is weak. Try again when you are online."
 
 msgid "ui.party.presence.offline"
 msgstr "Offline"
+
+msgid "ui.chat.title.party"
+msgstr "Party chat"
+
+msgid "ui.chat.title.match"
+msgstr "Match chat"
+
+msgid "ui.chat.title.direct"
+msgstr "Private messages"
+
+msgid "ui.chat.title.generic"
+msgstr "Chat"
+
+msgid "ui.chat.tab.team"
+msgstr "Team"
+
+msgid "ui.chat.tab.match"
+msgstr "Whole match"
+
+msgid "ui.chat.collapse"
+msgstr "Fold the chat"
+
+msgid "ui.chat.expand"
+msgstr "Open chat"
+
+msgid "ui.chat.unread_many"
+msgstr "99+"
+
+msgid "ui.chat.mention_badge"
+msgstr "@"
+
+msgid "ui.chat.empty"
+msgstr "Say hi to everyone with a quick message!"
+
+msgid "ui.chat.mini_line"
+msgstr "{nickname}: {text}"
+
+msgid "ui.chat.you"
+msgstr "{nickname} (you)"
+
+msgid "ui.chat.input_placeholder"
+msgstr "Type a message…"
+
+msgid "ui.chat.send"
+msgstr "Send"
+
+msgid "ui.chat.counter"
+msgstr "{count}/{max}"
+
+msgid "ui.chat.counter_over"
+msgstr "{count}/{max} — too long"
+
+msgid "ui.chat.cancel_context"
+msgstr "Cancel"
+
+msgid "ui.chat.replying_to"
+msgstr "Replying to {nickname}: {text}"
+
+msgid "ui.chat.quoting"
+msgstr "Quoting {nickname}: {text}"
+
+msgid "ui.chat.editing"
+msgstr "Editing your message"
+
+msgid "ui.chat.reply_to"
+msgstr "Reply: {text}"
+
+msgid "ui.chat.quote_of"
+msgstr "Quote: “{text}”"
+
+msgid "ui.chat.original_gone"
+msgstr "The original message is gone"
+
+msgid "ui.chat.forwarded_from"
+msgstr "Forwarded from {nickname}"
+
+msgid "ui.chat.edited"
+msgstr "edited"
+
+msgid "ui.chat.recalled"
+msgstr "This message was unsent"
+
+msgid "ui.chat.removed"
+msgstr "This message was removed by the safety team"
+
+msgid "ui.chat.held_own"
+msgstr "Being checked"
+
+msgid "ui.chat.mentioned_you"
+msgstr "Mentions you"
+
+msgid "ui.chat.gif_label"
+msgstr "Animated picture"
+
+msgid "ui.chat.gif_tag"
+msgstr "GIF"
+
+msgid "ui.chat.sticker_label"
+msgstr "Sticker"
+
+msgid "ui.chat.quick_unknown"
+msgstr "A quick message"
+
+msgid "ui.chat.system.generic"
+msgstr "Game notice"
+
+msgid "ui.chat.state.pending"
+msgstr "Sending"
+
+msgid "ui.chat.state.sent"
+msgstr "Sent"
+
+msgid "ui.chat.state.delivered"
+msgstr "Delivered"
+
+msgid "ui.chat.state.read"
+msgstr "Seen"
+
+msgid "ui.chat.typing_one"
+msgstr "{nickname} is typing…"
+
+msgid "ui.chat.typing_two"
+msgstr "{a} and {b} are typing…"
+
+msgid "ui.chat.typing_many"
+msgstr "{a}, {b} and {c} are typing…"
+
+msgid "ui.chat.reconnecting"
+msgstr "Reconnecting the chat…"
+
+msgid "ui.chat.syncing"
+msgstr "Syncing messages…"
+
+msgid "ui.chat.closed_match"
+msgstr "The match has ended. You can still read the messages."
+
+msgid "ui.chat.closed_party"
+msgstr "The party has ended. You can still read the messages."
+
+msgid "ui.chat.retention_notice"
+msgstr "Match messages are kept for {days} days. If something was not okay, please report it before then."
+
+msgid "ui.chat.muted_until"
+msgstr "You can't send messages until {time}. You can still read them and keep playing."
+
+msgid "ui.chat.pinned_item"
+msgstr "Pinned — {nickname}: {text}"
+
+msgid "ui.chat.copied"
+msgstr "Copied"
+
+msgid "ui.chat.forward_done"
+msgstr "Message forwarded"
+
+msgid "ui.chat.blocked_done"
+msgstr "You blocked {nickname}. You won't see their messages any more."
+
+msgid "ui.chat.muted_done"
+msgstr "You muted {nickname}. You won't see their messages any more."
+
+msgid "ui.chat.care_ok"
+msgstr "I understand"
+
+msgid "ui.chat.feedback.masked"
+msgstr "Some words were hidden. Let's use kind words!"
+
+msgid "ui.chat.feedback.pii_blocked"
+msgstr "Message not sent: to stay safe, don't share personal details like phone numbers, addresses or social accounts."
+
+msgid "ui.chat.feedback.term_blocked"
+msgstr "Your message has words that aren't okay. Please try writing it again."
+
+msgid "ui.chat.feedback.held"
+msgstr "Your message is being checked for safety. Others will see it once it's checked."
+
+msgid "ui.chat.feedback.care"
+msgstr "Cloudy cares about you. If you feel sad or someone makes you scared, please tell a teacher or your parents. You can also call 111 (free) in Vietnam to talk to someone who can help."
+
+msgid "ui.chat.feedback.rate_limited"
+msgstr "You're sending a bit fast, please wait a moment."
+
+msgid "ui.chat.feedback.muted"
+msgstr "You can't chat for now. You can still read messages and keep playing."
+
+msgid "ui.chat.feedback.restrict_text"
+msgstr "For now you can only send quick messages."
+
+msgid "ui.chat.feedback.channel_closed"
+msgstr "This chat is closed. You can still read the messages."
+
+msgid "ui.chat.feedback.kind_not_allowed"
+msgstr "Your school uses only quick messages and emoji pictures here."
+
+msgid "ui.chat.feedback.not_allowed"
+msgstr "You can't send messages in this chat yet."
+
+msgid "ui.chat.feedback.curfew"
+msgstr "It's rest time. The chat opens again tomorrow."
+
+msgid "ui.chat.feedback.edit_expired"
+msgstr "It's too late to edit this message."
+
+msgid "ui.chat.feedback.recall_expired"
+msgstr "It's too late to unsend this message."
+
+msgid "ui.chat.feedback.forward_not_allowed"
+msgstr "This message can't be forwarded."
+
+msgid "ui.chat.feedback.pin_limit"
+msgstr "There are already 3 pinned messages. Unpin one first."
+
+msgid "ui.chat.feedback.mention_limit"
+msgstr "You can mention only a few friends in one message."
+
+msgid "ui.chat.feedback.reaction_limit"
+msgstr "You've already added enough reactions to this message."
+
+msgid "ui.chat.feedback.feature_disabled"
+msgstr "This chat doesn't have that feature."
+
+msgid "ui.chat.feedback.asset_locked"
+msgstr "This sticker isn't unlocked yet."
+
+msgid "ui.chat.feedback.edit_conflict"
+msgstr "The message just changed, please try again."
+
+msgid "ui.chat.feedback.too_long"
+msgstr "That's too long — please keep it under {max} characters."
+
+msgid "ui.chat.feedback.generic"
+msgstr "The message wasn't sent, please try again."
+
+msgid "ui.chat.picker.open"
+msgstr "Open the emoji board"
+
+msgid "ui.chat.picker.emoji"
+msgstr "Emoji"
+
+msgid "ui.chat.picker.sticker"
+msgstr "Stickers"
+
+msgid "ui.chat.picker.gif"
+msgstr "GIFs"
+
+msgid "ui.chat.picker.empty"
+msgstr "Nothing here yet."
+
+msgid "ui.chat.picker.locked_pack"
+msgstr "{pack}: {hint}"
+
+msgid "ui.chat.menu.open"
+msgstr "Message actions"
+
+msgid "ui.chat.menu.title"
+msgstr "Message from {nickname}"
+
+msgid "ui.chat.menu.title_own"
+msgstr "Your message"
+
+msgid "ui.chat.menu.reply"
+msgstr "Reply"
+
+msgid "ui.chat.menu.quote"
+msgstr "Quote"
+
+msgid "ui.chat.menu.forward"
+msgstr "Forward"
+
+msgid "ui.chat.menu.copy"
+msgstr "Copy"
+
+msgid "ui.chat.menu.pin"
+msgstr "Pin"
+
+msgid "ui.chat.menu.unpin"
+msgstr "Unpin"
+
+msgid "ui.chat.menu.edit"
+msgstr "Edit"
+
+msgid "ui.chat.menu.recall"
+msgstr "Unsend"
+
+msgid "ui.chat.menu.readers"
+msgstr "Seen by"
+
+msgid "ui.chat.menu.safety"
+msgstr "Stay safe"
+
+msgid "ui.chat.menu.mute"
+msgstr "Mute"
+
+msgid "ui.chat.menu.block"
+msgstr "Block"
+
+msgid "ui.chat.menu.report"
+msgstr "Report"
+
+msgid "ui.chat.recall.title"
+msgstr "Unsend message?"
+
+msgid "ui.chat.recall.question"
+msgstr "Everyone will see \"This message was unsent\". Are you sure?"
+
+msgid "ui.chat.forward.title"
+msgstr "Forward to"
+
+msgid "ui.chat.forward.hint"
+msgstr "Pick up to 5 of your chats."
+
+msgid "ui.chat.forward.send"
+msgstr "Forward"
+
+msgid "ui.chat.readers.title"
+msgstr "Who saw this message"
+
+msgid "ui.chat.readers.read"
+msgstr "Seen: {names}"
+
+msgid "ui.chat.readers.delivered"
+msgstr "Delivered: {names}"
+
+msgid "ui.chat.readers.nobody"
+msgstr "nobody yet"
+
+msgid "ui.chat.report.title"
+msgstr "Report {nickname}"
+
+msgid "ui.chat.report.question"
+msgstr "What happened? Pick a picture."
+
+msgid "ui.chat.report.reason.rude_language"
+msgstr "Rude words"
+
+msgid "ui.chat.report.reason.bullying"
+msgstr "Bullying or teasing"
+
+msgid "ui.chat.report.reason.asked_personal_info"
+msgstr "Asked for private info"
+
+msgid "ui.chat.report.reason.spam"
+msgstr "Spamming"
+
+msgid "ui.chat.report.reason.inappropriate_content"
+msgstr "Not okay for kids"
+
+msgid "ui.chat.report.reason.cheating"
+msgstr "Cheating"
+
+msgid "ui.chat.report.reason.other"
+msgstr "Something else"
+
+msgid "ui.chat.report.send"
+msgstr "Send report"
+
+msgid "ui.chat.report.thanks_title"
+msgstr "Thank you"
+
+msgid "ui.chat.report.thanks"
+msgstr "Thanks for telling us. The EduWorld safety team will look into it."
+
+msgid "ui.chat.report.block_offer"
+msgstr "Do you want to block {nickname}?"
+
+msgid "ui.chat.report.done"
+msgstr "Done"
+
+msgid "ui.chat.players.open"
+msgstr "Players with you"
+
+msgid "ui.chat.players.title"
+msgstr "Players with you"
+
+msgid "ui.chat.players.report"
+msgstr "Report player"
+
+msgid "ui.chat.players.none"
+msgstr "No other players here yet."
+
+msgid "ui.chat.emoji.smile"
+msgstr "Smile"
+
+msgid "ui.chat.emoji.laugh"
+msgstr "Laugh"
+
+msgid "ui.chat.emoji.grin"
+msgstr "Big grin"
+
+msgid "ui.chat.emoji.wink"
+msgstr "Wink"
+
+msgid "ui.chat.emoji.heart"
+msgstr "Heart"
+
+msgid "ui.chat.emoji.thumbs_up"
+msgstr "Thumbs up"
+
+msgid "ui.chat.emoji.clap"
+msgstr "Clap"
+
+msgid "ui.chat.emoji.star"
+msgstr "Star"
+
+msgid "ui.chat.emoji.sparkles"
+msgstr "Sparkles"
+
+msgid "ui.chat.emoji.party"
+msgstr "Party"
+
+msgid "ui.chat.emoji.trophy"
+msgstr "Trophy"
+
+msgid "ui.chat.emoji.medal"
+msgstr "Medal"
+
+msgid "ui.chat.emoji.fire"
+msgstr "Fire"
+
+msgid "ui.chat.emoji.rocket"
+msgstr "Rocket"
+
+msgid "ui.chat.emoji.rainbow"
+msgstr "Rainbow"
+
+msgid "ui.chat.emoji.sun"
+msgstr "Sun"
+
+msgid "ui.chat.emoji.book"
+msgstr "Book"
+
+msgid "ui.chat.emoji.pencil"
+msgstr "Pencil"
+
+msgid "ui.chat.emoji.light_bulb"
+msgstr "Idea bulb"
+
+msgid "ui.chat.emoji.check"
+msgstr "Check"
+
+msgid "ui.chat.emoji.hundred"
+msgstr "Hundred points"
+
+msgid "ui.chat.emoji.muscle"
+msgstr "Strong arm"
+
+msgid "ui.chat.emoji.wave"
+msgstr "Wave"
+
+msgid "ui.chat.emoji.hug"
+msgstr "Hug"
+
+msgid "ui.chat.emoji.thinking"
+msgstr "Thinking"
+
+msgid "ui.chat.emoji.surprised"
+msgstr "Surprised"
+
+msgid "ui.chat.emoji.sad"
+msgstr "Sad"
+
+msgid "ui.chat.emoji.sleepy"
+msgstr "Sleepy"
+
+msgid "ui.chat.emoji.ok_hand"
+msgstr "OK hand"
+
+msgid "ui.chat.emoji.pray"
+msgstr "Thank you"
+
+msgid "ui.chat.emoji.handshake"
+msgstr "Handshake"
+
+msgid "ui.chat.emoji.raised_hand"
+msgstr "Raised hand"
+
+msgid "ui.chat.emoji.unknown"
+msgstr "Emoji"
+
+msgid "ui.party.chat"
+msgstr "Party chat"
+
+msgid "ui.chat.keyboard"
+msgstr "Type"
+
+msgid "ui.chat.empty_closed"
+msgstr "No messages in this chat."

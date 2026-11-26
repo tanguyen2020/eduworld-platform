@@ -65,6 +65,26 @@ const SCHEMAS: Dictionary = {
 		"party_id": "s64", "outcome": "s32", "?party_activity_id": "s64", "?reason": "s32", "?summary": "obj",
 	},
 	"party.party.disbanded": {"party_id": "s64", "reason": "s32"},
+	# F119: gameplay chat (ChatMessage and nested players checked again by ChatMessageModel / ChatStore).
+	"chat.message.created": {"message_id": "s64", "channel_id": "s64", "seq": "int", "sender": "obj", "kind": "s16",
+		"created_at": "int", "?body": "s500", "?quick_message_id": "s64", "?emoji": "s64", "?params": "obj",
+		"?reactions": "obj", "?revision": "int", "?recalled": "bool", "?moderation_state": "s16"},
+	"chat.message.acked": {"client_message_id": "s64", "message_id": "s64", "channel_id": "s64", "seq": "int",
+		"?moderation_state": "s16"},
+	"chat.message.held": {"message_id": "s64", "channel_id": "s64", "?notice": "s1000"},
+	"chat.message.edited": {"message_id": "s64", "channel_id": "s64", "seq": "int", "body": "s500", "revision": "int",
+		"edited_at": "int", "?mentions": "arr"},
+	"chat.message.recalled": {"message_id": "s64", "channel_id": "s64", "seq": "int", "?recalled_at": "int"},
+	"chat.message.removed": {"message_id": "s64", "channel_id": "s64", "?reason": "s32"},
+	"chat.reaction.updated": {"message_id": "s64", "channel_id": "s64", "reactions": "obj"},
+	"chat.pin.updated": {"channel_id": "s64", "pinned_message_ids": "arr", "?actor": "obj"},
+	"chat.typing.updated": {"channel_id": "s64", "typing": "arr"},
+	"chat.receipt.updated": {"channel_id": "s64", "?member": "obj", "?delivered_seq": "int", "?read_seq": "int"},
+	"chat.unread.updated": {"counts": "obj", "?mentions": "obj"},
+	"chat.mention.created": {"channel_id": "s64", "message_id": "s64", "by": "obj", "?seq": "int", "?preview": "s80"},
+	"chat.sanction.applied": {"sanction_type": "s32", "?reason_code": "s64", "?until": "int", "?notice": "s1000"},
+	"chat.history.loaded": {"channel_id": "s64", "messages": "arr", "has_more": "bool"},
+	"chat.channel.membership_changed": {"channel_id": "s64", "channel_type": "s16", "op": "s16", "status": "s16"},
 }
 
 

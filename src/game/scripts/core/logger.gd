@@ -14,6 +14,8 @@ const SENSITIVE_KEYS: PackedStringArray = [
 	"id_token", "authorization", "cookie", "set_cookie", "login_ticket", "otp", "ticket", "resume_token",
 	"full_name", "fullname", "first_name", "last_name", "given_name", "family_name", "real_name", "ho_ten",
 	"display_name", "name",
+	# F119 (AGENTS R14): chat content never reaches a log, whatever the event.
+	"body", "chat_text", "draft", "excerpt", "reply_excerpt", "preview", "quote_excerpt",
 ]
 ## Key fragments that hide the value wherever they appear in a field name.
 const SENSITIVE_FRAGMENTS: PackedStringArray = ["password", "token", "secret", "authorization", "cookie", "ticket"]
