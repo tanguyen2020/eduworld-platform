@@ -1,0 +1,192 @@
+# promtool unit tests of rules/swarm.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/swarm.yaml
+evaluation_interval: 1m
+tests:
+  - name: ServiceDown
+    interval: 1m
+    input_series:
+      - series: swarm_service_replicas_running{swarm_service="worker-chat",service="worker",profile="chat"}
+        values: 2x10 0x10
+      - series: swarm_service_replicas_desired{swarm_service="worker-chat",service="worker",profile="chat"}
+        values: 2x20
+      - series: swarm_service_replicas_running{swarm_service="core-api",service="core-api"}
+        values: 3x20
+      - series: swarm_service_replicas_desired{swarm_service="core-api",service="core-api"}
+        values: 3x20
+      - series: swarm_service_replicas_running{swarm_service="core-api-canary",service="core-api-canary"}
+        values: "0x20"
+      - series: swarm_service_replicas_desired{swarm_service="core-api-canary",service="core-api-canary"}
+        values: 1x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ServiceDown
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: ServiceDown
+        exp_alerts:
+          - exp_labels:
+              swarm_service: worker-chat
+              service: worker
+              profile: chat
+              severity: critical
+            exp_annotations:
+              summary: No replica of worker-chat is running for 2 minutes
+              runbook_url: docs/11-operations/runbooks/ServiceDown.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: SwarmReplicasBelowDesired
+    interval: 1m
+    input_series:
+      - series: swarm_service_replicas_running{swarm_service="core-api",service="core-api"}
+        values: 3x10 2x10 1x10
+      - series: swarm_service_replicas_desired{swarm_service="core-api",service="core-api"}
+        values: 3x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: SwarmReplicasBelowDesired
+        exp_alerts: []
+      - eval_time: 18m
+        alertname: SwarmReplicasBelowDesired
+        exp_alerts:
+          - exp_labels:
+              swarm_service: core-api
+              service: core-api
+              severity: warning
+            exp_annotations:
+              summary: core-api runs fewer replicas than desired for 5 minutes
+              runbook_url: docs/11-operations/runbooks/SwarmReplicasBelowDesired.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+      - eval_time: 28m
+        alertname: SwarmReplicasBelowDesired
+        exp_alerts:
+          - exp_labels:
+              swarm_service: core-api
+              service: core-api
+              severity: warning
+            exp_annotations:
+              summary: core-api runs fewer replicas than desired for 5 minutes
+              runbook_url: docs/11-operations/runbooks/SwarmReplicasBelowDesired.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+          - exp_labels:
+              swarm_service: core-api
+              service: core-api
+              severity: critical
+            exp_annotations:
+              summary: core-api runs fewer replicas than desired for 5 minutes
+              runbook_url: docs/11-operations/runbooks/SwarmReplicasBelowDesired.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: SwarmTaskRestartLoop
+    interval: 1m
+    input_series:
+      - series: swarm_task_restarts_total{swarm_service="realtime",service="realtime"}
+        values: 0x10 0+1x15
+      - series: swarm_task_restarts_total{swarm_service="core-api",service="core-api"}
+        values: "0x25"
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: SwarmTaskRestartLoop
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: SwarmTaskRestartLoop
+        exp_alerts:
+          - exp_labels:
+              swarm_service: realtime
+              service: realtime
+              severity: warning
+            exp_annotations:
+              summary: Tasks of realtime restarted more than 5 times in 15 minutes
+              runbook_url: docs/11-operations/runbooks/SwarmTaskRestartLoop.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: SwarmNodeDown node
+    interval: 1m
+    input_series:
+      - series: swarm_node_ready{node="app-1",role="app",manager="false"}
+        values: 1x10 0x10
+      - series: swarm_node_ready{node="app-2",role="app",manager="false"}
+        values: 1x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: SwarmNodeDown
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: SwarmNodeDown
+        exp_alerts:
+          - exp_labels:
+              node: app-1
+              role: app
+              severity: critical
+            exp_annotations:
+              summary: Swarm node app-1 (role app) is not ready for 2 minutes
+              runbook_url: docs/11-operations/runbooks/SwarmNodeDown.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: SwarmNodeDown manager quorum
+    interval: 1m
+    input_series:
+      - series: swarm_node_manager_reachable{node="manager-1"}
+        values: 1x20
+      - series: swarm_node_manager_reachable{node="manager-2"}
+        values: 1x10 0x10
+      - series: swarm_node_manager_reachable{node="manager-3"}
+        values: 1x10 0x10
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: SwarmNodeDown
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: SwarmNodeDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              role: manager
+              node: quorum
+            exp_annotations:
+              summary: Swarm managers lost the Raft quorum
+              runbook_url: docs/11-operations/runbooks/SwarmNodeDown.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: NodeCapacityHigh
+    interval: 1m
+    input_series:
+      - series: node_cpu_seconds_total{node="app-1",role="app",cpu="0",mode="idle"}
+        values: 0+60x10 600+6x30
+      - series: node_cpu_seconds_total{node="app-2",role="app",cpu="0",mode="idle"}
+        values: 0+60x40
+      - series: node_cpu_seconds_total{node="pg-1",role="data-pg",cpu="0",mode="idle"}
+        values: 0+6x40
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: NodeCapacityHigh
+        exp_alerts: []
+      - eval_time: 30m
+        alertname: NodeCapacityHigh
+        exp_alerts:
+          - exp_labels:
+              node: app-1
+              role: app
+              severity: warning
+            exp_annotations:
+              summary: CPU of node app-1 (role app) above 75% for 10 minutes in school hours
+              runbook_url: docs/11-operations/runbooks/NodeCapacityHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ScheduledScaleFailed
+    interval: 1m
+    input_series:
+      - series: eduworld_ops_scale_actions_total{service="core-api",action="scale_up",result="error"}
+        values: 0x10 1x10
+      - series: eduworld_ops_scale_actions_total{service="realtime",action="scale_up",result="ok"}
+        values: 0+1x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ScheduledScaleFailed
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: ScheduledScaleFailed
+        exp_alerts:
+          - exp_labels:
+              service: core-api
+              severity: critical
+            exp_annotations:
+              summary: ops-scheduler failed to scale core-api on the timetable
+              runbook_url: docs/11-operations/runbooks/ScheduledScaleFailed.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

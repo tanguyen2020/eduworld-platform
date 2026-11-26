@@ -1,0 +1,408 @@
+# promtool unit tests of rules/chat.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/chat.yaml
+evaluation_interval: 1m
+tests:
+  - name: ChatModerationDisabled
+    interval: 1m
+    input_series:
+      - series: eduworld_chat_policy_disabled{tenant="t-a",step="profanity"}
+        values: 0x10 1x10
+      - series: eduworld_chat_policy_disabled{tenant="t-b",step="profanity"}
+        values: "0x20"
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ChatModerationDisabled
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: ChatModerationDisabled
+        exp_alerts:
+          - exp_labels:
+              tenant: t-a
+              step: profanity
+              severity: warning
+              module: chat
+            exp_annotations:
+              summary: Moderation step profanity switched off (t-a)
+              description: >-
+                Approved by two System Admins with a reason and expires_at ≤ 24 h (ADR-0078); pii and grooming always run. Check the reason and expiry in listModerationSwitches; it switches back on at
+                expires_at (moderation-switch-expirer).
+              runbook_url: docs/11-operations/runbooks/ChatModerationDisabled.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ChatModerationDisabledLong
+    interval: 5m
+    input_series:
+      - series: eduworld_chat_policy_disabled{tenant="t-a",step="profanity"}
+        values: 0x12 1x300
+      - series: eduworld_chat_policy_disabled{tenant="t-b",step="profanity"}
+        values: 0x100 1x212
+      - series: eduworld_chat_policy_disabled{tenant="t-c",step="pii"}
+        values: 0x200 1x112
+    alert_rule_test:
+      - eval_time: 10h
+        alertname: ChatModerationDisabledLong
+        exp_alerts: []
+      - eval_time: 1510m
+        alertname: ChatModerationDisabledLong
+        exp_alerts:
+          - exp_labels:
+              tenant: t-a
+              step: profanity
+              severity: critical
+              module: chat
+            exp_annotations:
+              summary: Moderation step profanity off for more than its allowed time (t-a)
+              runbook_url: docs/11-operations/runbooks/ChatModerationDisabledLong.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+          - exp_labels:
+              tenant: t-c
+              step: pii
+              severity: critical
+              module: chat
+            exp_annotations:
+              summary: Moderation step pii off for more than its allowed time (t-c)
+              runbook_url: docs/11-operations/runbooks/ChatModerationDisabledLong.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: SensitiveCatalogVersionSkew
+    interval: 1m
+    input_series:
+      - series: eduworld_chat_sensitive_catalog_version{scope="platform",instance="core-api-1"}
+        values: 5x30
+      - series: eduworld_chat_sensitive_catalog_version{scope="platform",instance="core-api-2"}
+        values: 5x10 4x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: SensitiveCatalogVersionSkew
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: SensitiveCatalogVersionSkew
+        exp_alerts:
+          - exp_labels:
+              scope: platform
+              severity: warning
+              module: chat
+            exp_annotations:
+              summary: Nodes run different sensitive-word catalog versions (platform) for 5 minutes
+              runbook_url: docs/11-operations/runbooks/SensitiveCatalogVersionSkew.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ChatPIISpike
+    interval: 1m
+    input_series:
+      - series: eduworld_chat_sensitive_matches_total{category="pii",action="block"}
+        values: 0+1x1500 1501+30x60
+    alert_rule_test:
+      - eval_time: 1400m
+        alertname: ChatPIISpike
+        exp_alerts: []
+      - eval_time: 1530m
+        alertname: ChatPIISpike
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: chat
+            exp_annotations:
+              summary: PII blocked in chat above 5× the daily baseline (incident or spam campaign?)
+              runbook_url: docs/11-operations/runbooks/ChatPIISpike.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ModerationP1Unclaimed
+    interval: 1m
+    input_series:
+      - series: eduworld_moderation_case_unclaimed_age_seconds{severity="p1"}
+        values: 0+60x10 600+60x10
+      - series: eduworld_moderation_case_unclaimed_age_seconds{severity="p3"}
+        values: 5000x20
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: ModerationP1Unclaimed
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: ModerationP1Unclaimed
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              module: chat
+              team: safety
+            exp_annotations:
+              summary: A p1 moderation case has no assignee for more than 15 minutes (p1_unclaimed_alert_minutes)
+              description: Claim the oldest p1 case in the queue (listModerationCases?severity=p1&assignee=unassigned).
+              runbook_url: docs/11-operations/runbooks/ModerationP1Unclaimed.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ModerationSlaBreached
+    interval: 1m
+    input_series:
+      - series: eduworld_moderation_cases_open{severity="p1",assigned="false"}
+        values: 1x80
+      - series: eduworld_moderation_case_unclaimed_age_seconds{severity="p1"}
+        values: 0+60x80
+    alert_rule_test:
+      - eval_time: 50m
+        alertname: ModerationSlaBreached
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: ModerationSlaBreached
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              module: chat
+              team: safety
+            exp_annotations:
+              summary: "A p1 moderation case missed its first-response SLA (report_sla: 1 hour)"
+              description: moderation-sla-escalator escalated it; the team lead takes it (MODERATION §6.3).
+              runbook_url: docs/11-operations/runbooks/ModerationSlaBreached.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ModerationSchoolNotificationsOverdue
+    interval: 1m
+    input_series:
+      - series: eduworld_moderation_school_notifications_overdue
+        values: 0x10 2x80
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ModerationSchoolNotificationsOverdue
+        exp_alerts: []
+      - eval_time: 75m
+        alertname: ModerationSchoolNotificationsOverdue
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: chat
+              team: safety
+            exp_annotations:
+              summary: School safety notifications past ack_due_at without acknowledgement
+              description: school-notification-reminder reminded the school; follow up per MODERATION §6.4 (listSchoolSafetyNotificationsPlatform?overdue=true).
+              runbook_url: docs/11-operations/runbooks/ModerationSchoolNotificationsOverdue.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ChatModerationBacklog
+    interval: 1m
+    input_series:
+      - series: eduworld_moderation_case_unclaimed_age_seconds{severity="high"}
+        values: 0+60x40
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: ChatModerationBacklog
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: ChatModerationBacklog
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              module: chat
+              team: safety
+            exp_annotations:
+              summary: A high moderation case waits for more than 30 minutes
+              runbook_url: docs/11-operations/runbooks/ChatModerationBacklog.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ModerationOncallGap
+    interval: 1m
+    input_series:
+      - series: eduworld_moderation_oncall_coverage{oncall_role="primary"}
+        values: 1x10 0x10
+      - series: eduworld_moderation_oncall_coverage{oncall_role="secondary"}
+        values: 1x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ModerationOncallGap
+        exp_alerts: []
+      - eval_time: 18m
+        alertname: ModerationOncallGap
+        exp_alerts:
+          - exp_labels:
+              oncall_role: primary
+              severity: critical
+              module: chat
+              team: safety
+            exp_annotations:
+              summary: No live on-call shift of role primary covers now
+              description: p1 cases page the next level with people (MODERATION §6.3). The team lead creates the missing shift (createModerationOncallShift).
+              runbook_url: docs/11-operations/runbooks/ModerationOncallGap.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: NotificationConsumerBacklog
+    interval: 1m
+    input_series:
+      - series: eduworld_consumer_pending{consumer="chat.notify_assignment"}
+        values: 10x10 5000x20
+      - series: eduworld_consumer_pending{consumer="chatXnotify_other"}
+        values: 9999x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: NotificationConsumerBacklog
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: NotificationConsumerBacklog
+        exp_alerts:
+          - exp_labels:
+              consumer: chat.notify_assignment
+              severity: warning
+              module: chat
+            exp_annotations:
+              summary: Notification consumer chat.notify_assignment has more than 1000 pending events for 10 minutes
+              description: Students see their notifications late. chat.notify_assignment waits for module learning (listAssignmentRecipients); check DLQ_CHAT and the modcall errors of chat→learning.
+              runbook_url: docs/11-operations/runbooks/NotificationConsumerBacklog.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: NotificationDeliverySlow
+    interval: 1m
+    input_series:
+      - series: eduworld_notification_delivery_latency_seconds_bucket{le="2"}
+        values: 0+10x30 300x40
+      - series: eduworld_notification_delivery_latency_seconds_bucket{le="5"}
+        values: 0+10x70
+      - series: eduworld_notification_delivery_latency_seconds_bucket{le="+Inf"}
+        values: 0+10x70
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: NotificationDeliverySlow
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: NotificationDeliverySlow
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: chat
+            exp_annotations:
+              summary: p95 from the source event to notification.item.created above 2 s (SC-001 of F123)
+              description: Check the lag of the chat.notify_* consumers and the Valkey publish of ew:rt:user:<id>.
+              runbook_url: docs/11-operations/runbooks/NotificationDeliverySlow.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ChatJetStreamUnavailable
+    interval: 1m
+    input_series:
+      - series: eduworld_chat_jetstream_publish_errors_total{reason="timeout"}
+        values: 0x10 0+10x20
+      - series: eduworld_chat_messages_total{channel_type="match",kind="text",decision="allowed"}
+        values: 0+100x30
+      - series: up{job="nats",instance="nats-1"}
+        values: 1x30
+      - series: up{job="nats",instance="nats-2"}
+        values: 1x30
+      - series: up{job="nats",instance="nats-3"}
+        values: 1x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ChatJetStreamUnavailable
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: ChatJetStreamUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              module: chat
+            exp_annotations:
+              summary: Chat cannot publish to JetStream (errors above 5% or NATS quorum lost)
+              runbook_url: docs/11-operations/runbooks/ChatJetStreamUnavailable.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ChatJetStreamUnavailable NATS quorum lost
+    interval: 1m
+    input_series:
+      - series: up{job="nats",instance="nats-1"}
+        values: 1x30
+      - series: up{job="nats",instance="nats-2"}
+        values: 1x10 0x20
+      - series: up{job="nats",instance="nats-3"}
+        values: 1x10 0x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ChatJetStreamUnavailable
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: ChatJetStreamUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              module: chat
+            exp_annotations:
+              summary: Chat cannot publish to JetStream (errors above 5% or NATS quorum lost)
+              runbook_url: docs/11-operations/runbooks/ChatJetStreamUnavailable.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ChatPersistLagHigh
+    interval: 1m
+    input_series:
+      - series: eduworld_chat_persist_lag_seconds_bucket{le="5"}
+        values: 0+10x30 300x40
+      - series: eduworld_chat_persist_lag_seconds_bucket{le="10"}
+        values: 0+10x70
+      - series: eduworld_chat_persist_lag_seconds_bucket{le="+Inf"}
+        values: 0+10x70
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: ChatPersistLagHigh
+        exp_alerts: []
+      - eval_time: 55m
+        alertname: ChatPersistLagHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: chat
+              service: worker
+              profile: chat
+            exp_annotations:
+              summary: chat-persister is behind (p95 lag above 5 s or more than 10 000 pending)
+              runbook_url: docs/11-operations/runbooks/ChatPersistLagHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ChatDLQNotEmpty
+    interval: 1m
+    input_series:
+      - series: nats_stream_total_messages{stream="DLQ_CHAT"}
+        values: 0x10 2x10
+      - series: nats_stream_total_messages{stream="DLQ_GAME"}
+        values: 9x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ChatDLQNotEmpty
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: ChatDLQNotEmpty
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: chat
+            exp_annotations:
+              summary: DLQ_CHAT holds messages
+              runbook_url: docs/11-operations/runbooks/ChatDLQNotEmpty.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ChatSendLatencyHigh
+    interval: 1m
+    input_series:
+      - series: eduworld_chat_send_latency_seconds_bucket{channel_type="match",le="0.3"}
+        values: 0+10x30 300x40
+      - series: eduworld_chat_send_latency_seconds_bucket{channel_type="match",le="1"}
+        values: 0+10x70
+      - series: eduworld_chat_send_latency_seconds_bucket{channel_type="match",le="+Inf"}
+        values: 0+10x70
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: ChatSendLatencyHigh
+        exp_alerts: []
+      - eval_time: 55m
+        alertname: ChatSendLatencyHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: chat
+            exp_annotations:
+              summary: p95 chat send latency above 0.3 s for 10 minutes (NFR-PERF-003)
+              runbook_url: docs/11-operations/runbooks/ChatSendLatencyHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ChatPurgeBacklog
+    interval: 1m
+    input_series:
+      - series: eduworld_chat_purge_backlog_oldest_seconds
+        values: 3600x10 200000x10
+      - series: eduworld_chat_purge_failures_total
+        values: "0x20"
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ChatPurgeBacklog
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: ChatPurgeBacklog
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: chat
+              service: worker
+              profile: chat
+            exp_annotations:
+              summary: Gameplay chat purge is more than 2 days behind or failing
+              runbook_url: docs/11-operations/runbooks/ChatPurgeBacklog.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

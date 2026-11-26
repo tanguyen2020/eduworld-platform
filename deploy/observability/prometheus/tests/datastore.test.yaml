@@ -1,0 +1,141 @@
+# promtool unit tests of rules/datastore.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/datastore.yaml
+evaluation_interval: 1m
+tests:
+  - name: PostgresReplicationLag
+    interval: 1m
+    input_series:
+      - series: pg_replication_lag_seconds{instance="pg-2:9187"}
+        values: 1x10 60x10
+      - series: pg_replication_lag_seconds{instance="pg-1:9187"}
+        values: "0x20"
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: PostgresReplicationLag
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: PostgresReplicationLag
+        exp_alerts:
+          - exp_labels:
+              instance: pg-2:9187
+              severity: critical
+            exp_annotations:
+              summary: PostgreSQL replica pg-2:9187 lags more than 30 s (RPO at risk)
+              runbook_url: docs/11-operations/runbooks/PostgresReplicationLag.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: PostgresConnectionsHigh
+    interval: 1m
+    input_series:
+      - series: pg_stat_database_numbackends{instance="pg-1:9187",datname="eduworld_game"}
+        values: 50x10 95x10
+      - series: pg_settings_max_connections{instance="pg-1:9187"}
+        values: 100x20
+      - series: pg_stat_database_numbackends{instance="pg-2:9187",datname="eduworld_game"}
+        values: 10x20
+      - series: pg_settings_max_connections{instance="pg-2:9187"}
+        values: 100x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: PostgresConnectionsHigh
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: PostgresConnectionsHigh
+        exp_alerts:
+          - exp_labels:
+              instance: pg-1:9187
+              severity: warning
+            exp_annotations:
+              summary: PostgreSQL pg-1:9187 uses more than 85% of max_connections
+              runbook_url: docs/11-operations/runbooks/PostgresConnectionsHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: PostgresDiskHigh
+    interval: 1m
+    input_series:
+      - series: node_filesystem_avail_bytes{node="pg-1",role="data-pg",fstype="ext4",mountpoint="/"}
+        values: 50x10 15x10 5x10
+      - series: node_filesystem_size_bytes{node="pg-1",role="data-pg",fstype="ext4",mountpoint="/"}
+        values: 100x30
+      - series: node_filesystem_avail_bytes{node="app-1",role="app",fstype="ext4",mountpoint="/"}
+        values: 1x30
+      - series: node_filesystem_size_bytes{node="app-1",role="app",fstype="ext4",mountpoint="/"}
+        values: 100x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: PostgresDiskHigh
+        exp_alerts: []
+      - eval_time: 18m
+        alertname: PostgresDiskHigh
+        exp_alerts:
+          - exp_labels:
+              node: pg-1
+              severity: warning
+            exp_annotations:
+              summary: Disk of PostgreSQL node pg-1 above 80%
+              runbook_url: docs/11-operations/runbooks/PostgresDiskHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+      - eval_time: 28m
+        alertname: PostgresDiskHigh
+        exp_alerts:
+          - exp_labels:
+              node: pg-1
+              severity: warning
+            exp_annotations:
+              summary: Disk of PostgreSQL node pg-1 above 80%
+              runbook_url: docs/11-operations/runbooks/PostgresDiskHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+          - exp_labels:
+              node: pg-1
+              severity: critical
+            exp_annotations:
+              summary: Disk of PostgreSQL node pg-1 above 90%
+              runbook_url: docs/11-operations/runbooks/PostgresDiskHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ValkeyMemoryHigh
+    interval: 1m
+    input_series:
+      - series: redis_memory_used_bytes{instance="valkey-cache:9121"}
+        values: 50x10 90x10
+      - series: redis_memory_max_bytes{instance="valkey-cache:9121"}
+        values: 100x20
+      - series: redis_memory_used_bytes{instance="valkey-ratelimit:9121"}
+        values: 999x20
+      - series: redis_memory_max_bytes{instance="valkey-ratelimit:9121"}
+        values: "0x20"
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ValkeyMemoryHigh
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: ValkeyMemoryHigh
+        exp_alerts:
+          - exp_labels:
+              instance: valkey-cache:9121
+              severity: warning
+            exp_annotations:
+              summary: Valkey valkey-cache:9121 uses more than 85% of maxmemory
+              runbook_url: docs/11-operations/runbooks/ValkeyMemoryHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ValkeyDown
+    interval: 1m
+    input_series:
+      - series: redis_up{instance="valkey-cache:9121"}
+        values: 1x10 0x10
+      - series: redis_up{instance="valkey-ratelimit:9121"}
+        values: 1x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ValkeyDown
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: ValkeyDown
+        exp_alerts:
+          - exp_labels:
+              instance: valkey-cache:9121
+              severity: critical
+            exp_annotations:
+              summary: Valkey valkey-cache:9121 does not answer for 1 minute (realtime degraded)
+              runbook_url: docs/11-operations/runbooks/ValkeyDown.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

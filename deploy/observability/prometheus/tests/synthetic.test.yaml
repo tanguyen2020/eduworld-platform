@@ -1,0 +1,32 @@
+# promtool unit tests of rules/synthetic.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/synthetic.yaml
+evaluation_interval: 1m
+tests:
+  - name: SyntheticProbeFailing
+    interval: 5m
+    input_series:
+      - series: eduworld_synthetic_probe_success{probe="client_config",result="ok"}
+        values: 1x3 _x6
+      - series: eduworld_synthetic_probe_success{probe="client_config",result="error"}
+        values: _x3 0x6
+      - series: eduworld_synthetic_probe_success{probe="student_login",result="ok"}
+        values: 1x3 _x6
+      - series: eduworld_synthetic_probe_success{probe="student_login",result="rate_limited"}
+        values: _x3 0x6
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: SyntheticProbeFailing
+        exp_alerts: []
+      - eval_time: 40m
+        alertname: SyntheticProbeFailing
+        exp_alerts:
+          - exp_labels:
+              probe: client_config
+              severity: critical
+            exp_annotations:
+              summary: Synthetic probe client_config failed two cycles in a row
+              runbook_url: docs/11-operations/runbooks/SyntheticProbeFailing.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

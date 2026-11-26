@@ -1,0 +1,35 @@
+# Alert rules of module game (F080 T050, F131 T023, MONITORING §5, §10; GAME_ANALYTICS §10). Labels never carry a
+# user id (R14). AnalyticsRawRowsHigh warns at 80% of analytics_store_migration_threshold (500 million rows,
+# ADR-0058); the migration decision itself needs the threshold sustained for 2 weeks (GAME_ANALYTICS §10).
+groups:
+  - name: game-analytics
+    rules:
+      - alert: AnalyticsRawRowsHigh
+        expr: sum(eduworld_analytics_raw_rows) > 400000000
+        for: 1h
+        labels: { severity: warning, module: game }
+        annotations:
+          summary: "analytics.events_raw passed 400 million rows (80% of analytics_store_migration_threshold)"
+          description: "Prepare the ADR on the analytics store (ADR-0058, ADR-0070)."
+          runbook_url: "docs/11-operations/runbooks/AnalyticsRawRowsHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: AnalyticsRollupSlow
+        expr: histogram_quantile(0.95, sum by (le) (rate(eduworld_analytics_rollup_duration_seconds_bucket{step="day"}[1h]))) > 7200
+        for: 1h
+        labels: { severity: warning, module: game }
+        annotations:
+          summary: "A tenant day of the Game Analytics rollup takes more than 2 hours (p95)"
+          description: "GAME_ANALYTICS §10 threshold (rollup ngày > 2 h). Check the job analytics-rollup-hourly / dashboard-day-close-game and the size of events_raw."
+          runbook_url: "docs/11-operations/runbooks/AnalyticsRollupSlow.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+  - name: game-sessions
+    rules:
+      - alert: GameTakeoverSpike
+        expr: |
+          sum(rate(eduworld_game_session_takeovers_total[1h])) > 5 * sum(rate(eduworld_game_session_takeovers_total[1d] offset 1h))
+          and sum(increase(eduworld_game_session_takeovers_total[1h])) > 10
+        labels: { severity: warning, module: game }
+        annotations:
+          summary: "Game session takeovers above 5× the daily baseline (shared accounts or leaked passwords?)"
+          runbook_url: "docs/11-operations/runbooks/GameTakeoverSpike.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

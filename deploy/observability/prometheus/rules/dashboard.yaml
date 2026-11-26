@@ -1,0 +1,63 @@
+# School/game dashboard alerts (F131 T023, MONITORING §5, DASHBOARD_DATA §7, §13, ADR-0062). DashboardReplicaLag
+# threshold = dashboard_replica_lag_alert_seconds (60 s, CONFIG_DEFAULTS §17d). `job` of eduworld_job_runs_total is the
+# scheduled job name (Prometheus keeps it: metric_relabel_configs maps exported_job back to job for backend targets).
+groups:
+  - name: dashboard
+    rules:
+      - alert: DashboardSlow
+        expr: |
+          histogram_quantile(0.95, sum by (module, le) (rate(eduworld_dashboard_query_duration_seconds_bucket[15m]))) > 2
+          and on() eduworld:school_hours
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "p95 dashboard queries of module {{ $labels.module }} above 2 s for 15 minutes"
+          runbook_url: "docs/11-operations/runbooks/DashboardSlow.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: DashboardTimeoutsSpike
+        expr: |
+          sum(rate(eduworld_dashboard_rejected_total{reason="timeout"}[15m]))
+            / sum(rate(eduworld_dashboard_query_duration_seconds_count[15m])) > 0.01
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "More than 1% of dashboard queries time out (statement_timeout)"
+          runbook_url: "docs/11-operations/runbooks/DashboardTimeoutsSpike.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: RollupLagHigh
+        expr: |
+          max by (module, rollup) (eduworld_rollup_lag_seconds{module="learning"}) > 900
+          or max by (module, rollup) (eduworld_rollup_lag_seconds{module="game"}) > 3600
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "Rollup {{ $labels.rollup }} of module {{ $labels.module }} is behind"
+          runbook_url: "docs/11-operations/runbooks/RollupLagHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: DayCloseNotDone
+        expr: |
+          sum by (job) (increase(eduworld_job_runs_total{job=~"dashboard-day-close.*",result="ok"}[24h])) == 0
+          and on() ((hour() * 60 + minute() + 420) % 1440 >= 300)
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.job }} has not succeeded for yesterday by 05:00 ICT"
+          runbook_url: "docs/11-operations/runbooks/DayCloseNotDone.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: DashboardReplicaLag
+        expr: max by (instance) (pg_replication_lag_seconds) > 60
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Replica {{ $labels.instance }} serving the dashboards lags more than 60 s"
+          runbook_url: "docs/11-operations/runbooks/DashboardReplicaLag.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: LateEventsHigh
+        expr: |
+          sum(increase(eduworld_rollup_late_events_total{bucket=">48h"}[1d]))
+            / sum(increase(eduworld_events_consumed_total{result="ok"}[1d])) > 0.005
+        labels: { severity: warning }
+        annotations:
+          summary: "More than 0.5% of the day's events arrive later than 48 hours"
+          runbook_url: "docs/11-operations/runbooks/LateEventsHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

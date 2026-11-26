@@ -1,0 +1,76 @@
+# Docker Swarm and node alerts (F131 T023, MONITORING §5, ADR-0024). swarm_* come from swarm-exporter (ops stack,
+# read-only Docker API through docker-api-proxy): labels swarm_service, service (binary; worker-<p> gives worker and
+# profile <p>), profile; swarm_node_* carry node, role, manager. node_exporter series get node/role by relabelling.
+groups:
+  - name: swarm
+    rules:
+      - alert: ServiceDown
+        expr: |
+          max by (service, profile, swarm_service) (swarm_service_replicas_running{service=~"core-api|realtime|worker"}) == 0
+          and max by (service, profile, swarm_service) (swarm_service_replicas_desired{service=~"core-api|realtime|worker"}) > 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "No replica of {{ $labels.swarm_service }} is running for 2 minutes"
+          runbook_url: "docs/11-operations/runbooks/ServiceDown.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: SwarmReplicasBelowDesired
+        expr: |
+          max by (service, profile, swarm_service) (swarm_service_replicas_running)
+            < max by (service, profile, swarm_service) (swarm_service_replicas_desired)
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.swarm_service }} runs fewer replicas than desired for 5 minutes"
+          runbook_url: "docs/11-operations/runbooks/SwarmReplicasBelowDesired.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: SwarmReplicasBelowDesired
+        expr: |
+          max by (service, profile, swarm_service) (swarm_service_replicas_running)
+            < 0.5 * max by (service, profile, swarm_service) (swarm_service_replicas_desired)
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.swarm_service }} runs fewer replicas than desired for 5 minutes"
+          runbook_url: "docs/11-operations/runbooks/SwarmReplicasBelowDesired.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: SwarmTaskRestartLoop
+        expr: sum by (service, profile, swarm_service) (increase(swarm_task_restarts_total[15m])) > 5
+        labels: { severity: warning }
+        annotations:
+          summary: "Tasks of {{ $labels.swarm_service }} restarted more than 5 times in 15 minutes"
+          runbook_url: "docs/11-operations/runbooks/SwarmTaskRestartLoop.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: SwarmNodeDown
+        expr: max by (node, role) (swarm_node_ready) == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "Swarm node {{ $labels.node }} (role {{ $labels.role }}) is not ready for 2 minutes"
+          runbook_url: "docs/11-operations/runbooks/SwarmNodeDown.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      # Managers: critical at once when the Raft quorum is lost (reachable managers ≤ half of the managers).
+      - alert: SwarmNodeDown
+        expr: count(swarm_node_manager_reachable == 1) <= count(swarm_node_manager_reachable) / 2
+        labels: { severity: critical, role: manager, node: quorum }
+        annotations:
+          summary: "Swarm managers lost the Raft quorum"
+          runbook_url: "docs/11-operations/runbooks/SwarmNodeDown.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: NodeCapacityHigh
+        expr: |
+          (1 - avg by (node, role) (rate(node_cpu_seconds_total{mode="idle",role=~"app|realtime|idp"}[5m]))) > 0.75
+          and on() eduworld:school_hours
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "CPU of node {{ $labels.node }} (role {{ $labels.role }}) above 75% for 10 minutes in school hours"
+          runbook_url: "docs/11-operations/runbooks/NodeCapacityHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ScheduledScaleFailed
+        expr: sum by (service) (increase(eduworld_ops_scale_actions_total{result="error"}[10m])) > 0
+        labels: { severity: critical }
+        annotations:
+          summary: "ops-scheduler failed to scale {{ $labels.service }} on the timetable"
+          runbook_url: "docs/11-operations/runbooks/ScheduledScaleFailed.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

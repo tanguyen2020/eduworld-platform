@@ -1,0 +1,78 @@
+# REST/API alerts of core-api and the gateway (F131 T023, MONITORING §5). Thresholds owned by MONITORING §5.
+# `service` (binary, or core-api-canary during a canary) and `profile` are attached by Prometheus relabelling of the
+# Swarm service name; `module` comes from the binary. scripts/deploy/canary.sh watches ModuleHighErrorRate and
+# APILatencyP95High pending/firing for service="core-api-canary" — keep `service` and `module` in their output.
+groups:
+  - name: api
+    rules:
+      - alert: APIHighErrorRate
+        expr: |
+          sum(rate(apisix_http_status{job="apisix",code=~"5.."}[5m])) / sum(rate(apisix_http_status{job="apisix"}[5m])) > 0.02
+        for: 5m
+        labels: { severity: critical, service: apisix }
+        annotations:
+          summary: "More than 2% 5xx on the public gateway for 5 minutes"
+          runbook_url: "docs/11-operations/runbooks/APIHighErrorRate.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ModuleHighErrorRate
+        expr: |
+          sum by (service, module) (rate(eduworld_http_server_requests_total{status_class="5xx"}[5m]))
+            / sum by (service, module) (rate(eduworld_http_server_requests_total[5m])) > 0.02
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "Module {{ $labels.module }} answers more than 2% 5xx ({{ $labels.service }})"
+          runbook_url: "docs/11-operations/runbooks/ModuleHighErrorRate.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: APILatencyP95High
+        expr: |
+          label_replace(histogram_quantile(0.95, sum by (service, module, le) (rate(eduworld_http_server_duration_seconds_bucket{method=~"GET|HEAD"}[10m]))) > 0.4, "kind", "read", "", "")
+          or
+          label_replace(histogram_quantile(0.95, sum by (service, module, le) (rate(eduworld_http_server_duration_seconds_bucket{method!~"GET|HEAD|OPTIONS"}[10m]))) > 0.8, "kind", "write", "", "")
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "p95 {{ $labels.kind }} latency of module {{ $labels.module }} above its threshold ({{ $labels.service }})"
+          runbook_url: "docs/11-operations/runbooks/APILatencyP95High.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ModuleDatabaseUnavailable
+        expr: max by (service, module, database) (eduworld_db_pool_connections{state="total"}) == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "Module {{ $labels.module }} has no connection to its database {{ $labels.database }} ({{ $labels.service }})"
+          runbook_url: "docs/11-operations/runbooks/ModuleDatabaseUnavailable.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: PanicRecoveredSpike
+        expr: sum by (service, module) (increase(eduworld_panics_recovered_total[5m])) > 10
+        labels: { severity: warning }
+        annotations:
+          summary: "More than 10 recovered panics in 5 minutes in module {{ $labels.module }} ({{ $labels.service }})"
+          runbook_url: "docs/11-operations/runbooks/PanicRecoveredSpike.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      # Critical variant: the panics come with a restart loop of core-api (SwarmTaskRestartLoop condition).
+      - alert: PanicRecoveredSpike
+        expr: |
+          sum by (service, module) (increase(eduworld_panics_recovered_total{service="core-api"}[5m])) > 10
+          and on() sum(increase(swarm_task_restarts_total{service="core-api"}[15m])) > 5
+        labels: { severity: critical }
+        annotations:
+          summary: "More than 10 recovered panics in 5 minutes in module {{ $labels.module }} ({{ $labels.service }})"
+          runbook_url: "docs/11-operations/runbooks/PanicRecoveredSpike.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: CircuitBreakerOpen
+        expr: max by (module, integration) (eduworld_external_client_circuit_state{integration!~"keycloak_token|keycloak_admin"}) == 2
+        for: 2m
+        labels: { severity: warning }
+        annotations:
+          summary: "Circuit breaker {{ $labels.module }} → {{ $labels.integration }} open for 2 minutes"
+          runbook_url: "docs/11-operations/runbooks/CircuitBreakerOpen.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: CircuitBreakerOpen
+        expr: max by (module, integration) (eduworld_external_client_circuit_state{integration=~"keycloak_token|keycloak_admin"}) == 2
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "Circuit breaker {{ $labels.module }} → {{ $labels.integration }} open for 2 minutes"
+          runbook_url: "docs/11-operations/runbooks/CircuitBreakerOpen.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

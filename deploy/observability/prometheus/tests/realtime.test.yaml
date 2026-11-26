@@ -1,0 +1,79 @@
+# promtool unit tests of rules/realtime.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/realtime.yaml
+evaluation_interval: 1m
+tests:
+  - name: RealtimeConnectFailures
+    interval: 1m
+    input_series:
+      - series: eduworld_ws_connect_total{result="ok"}
+        values: 0+100x60
+      - series: eduworld_ws_connect_total{result="rejected"}
+        values: 0+1x30 31+20x30
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: RealtimeConnectFailures
+        exp_alerts: []
+      - eval_time: 55m
+        alertname: RealtimeConnectFailures
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              service: realtime
+              module: realtime
+            exp_annotations:
+              summary: More than 10% of WebSocket connects fail for 5 minutes
+              runbook_url: docs/11-operations/runbooks/RealtimeConnectFailures.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: RealtimeNodeDown
+    interval: 1m
+    input_series:
+      - series: up{job="realtime",service="realtime",instance="10.0.1.5:9090"}
+        values: 1x10 0x10
+      - series: up{job="realtime",service="realtime",instance="10.0.1.6:9090"}
+        values: 1x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: RealtimeNodeDown
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: RealtimeNodeDown
+        exp_alerts:
+          - exp_labels:
+              job: realtime
+              service: realtime
+              instance: 10.0.1.5:9090
+              severity: critical
+              module: realtime
+            exp_annotations:
+              summary: A realtime replica (10.0.1.5:9090) cannot be scraped for 2 minutes
+              runbook_url: docs/11-operations/runbooks/RealtimeNodeDown.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: NatsRequestTimeouts
+    interval: 1m
+    input_series:
+      - series: eduworld_nats_request_errors_total{module="game",reason="timeout"}
+        values: 0x30 0+5x30
+      - series: eduworld_nats_request_duration_seconds_count{module="game",subject_group="quest"}
+        values: 0+100x60
+      - series: eduworld_nats_request_errors_total{module="chat",reason="timeout"}
+        values: "0x60"
+      - series: eduworld_nats_request_duration_seconds_count{module="chat",subject_group="send"}
+        values: 0+100x60
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: NatsRequestTimeouts
+        exp_alerts: []
+      - eval_time: 55m
+        alertname: NatsRequestTimeouts
+        exp_alerts:
+          - exp_labels:
+              module: game
+              severity: warning
+              service: realtime
+            exp_annotations:
+              summary: More than 2% of WS commands to module game time out on NATS
+              runbook_url: docs/11-operations/runbooks/NatsRequestTimeouts.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

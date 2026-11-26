@@ -1,0 +1,141 @@
+# promtool unit tests of rules/async.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/async.yaml
+evaluation_interval: 1m
+tests:
+  - name: OutboxLagHigh
+    interval: 1m
+    input_series:
+      - series: eduworld_outbox_lag_seconds{module="game"}
+        values: 1x10 120x20
+      - series: eduworld_outbox_lag_seconds{module="chat"}
+        values: 1x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: OutboxLagHigh
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: OutboxLagHigh
+        exp_alerts:
+          - exp_labels:
+              module: game
+              severity: critical
+              service: worker
+              profile: events
+            exp_annotations:
+              summary: Outbox of module game is more than 60 s behind
+              runbook_url: docs/11-operations/runbooks/OutboxLagHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: EventConsumerLag
+    interval: 1m
+    input_series:
+      - series: nats_consumer_num_pending{stream="EVT_GAME",consumer="game.xp"}
+        values: 5000x10 20000x30
+      - series: nats_consumer_num_pending{stream="EVT_CHAT",consumer="chat.notify"}
+        values: 100x40
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: EventConsumerLag
+        exp_alerts: []
+      - eval_time: 30m
+        alertname: EventConsumerLag
+        exp_alerts:
+          - exp_labels:
+              stream: EVT_GAME
+              consumer: game.xp
+              severity: warning
+            exp_annotations:
+              summary: Consumer game.xp of EVT_GAME falls behind
+              runbook_url: docs/11-operations/runbooks/EventConsumerLag.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ProjectionLagHigh
+    interval: 1m
+    input_series:
+      - series: eduworld_projection_lag_seconds{module="game",projection="ref_students"}
+        values: 5x10 120x20
+      - series: eduworld_projection_lag_seconds{module="learning",projection="ref_tenants"}
+        values: 5x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ProjectionLagHigh
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: ProjectionLagHigh
+        exp_alerts:
+          - exp_labels:
+              module: game
+              projection: ref_students
+              severity: warning
+            exp_annotations:
+              summary: Projection ref_students of module game is more than 60 s behind
+              runbook_url: docs/11-operations/runbooks/ProjectionLagHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: EventDLQNotEmpty
+    interval: 1m
+    input_series:
+      - series: nats_stream_total_messages{stream="DLQ_GAME"}
+        values: 0x10 3x10
+      - series: nats_stream_total_messages{stream="DLQ_CHAT"}
+        values: 5x20
+      - series: nats_stream_total_messages{stream="EVT_GAME"}
+        values: 1000x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: EventDLQNotEmpty
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: EventDLQNotEmpty
+        exp_alerts:
+          - exp_labels:
+              stream: DLQ_GAME
+              severity: warning
+            exp_annotations:
+              summary: Dead letter stream DLQ_GAME holds messages
+              runbook_url: docs/11-operations/runbooks/EventDLQNotEmpty.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: InfraPartitionsMissing
+    interval: 1m
+    input_series:
+      - series: eduworld_infra_partition_days_ahead{module="chat",table="outbox"}
+        values: 30x10 5x10
+      - series: eduworld_infra_partition_days_ahead{module="game",table="outbox"}
+        values: 30x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: InfraPartitionsMissing
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: InfraPartitionsMissing
+        exp_alerts:
+          - exp_labels:
+              module: chat
+              table: outbox
+              severity: warning
+            exp_annotations:
+              summary: Less than 7 days of partitions ahead for outbox (chat)
+              runbook_url: docs/11-operations/runbooks/InfraPartitionsMissing.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: InfraPartitionRefused
+    interval: 1m
+    input_series:
+      - series: eduworld_infra_partition_refused_total{module="game",table="outbox"}
+        values: 0x10 1x10
+      - series: eduworld_infra_partition_refused_total{module="chat",table="outbox"}
+        values: "0x20"
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: InfraPartitionRefused
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: InfraPartitionRefused
+        exp_alerts:
+          - exp_labels:
+              module: game
+              table: outbox
+              severity: warning
+            exp_annotations:
+              summary: "Expired partition of outbox kept: unpublished outbox or unhandled dead letters"
+              runbook_url: docs/11-operations/runbooks/InfraPartitionRefused.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

@@ -1,0 +1,91 @@
+# promtool unit tests of rules/content.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/content.yaml
+evaluation_interval: 1m
+tests:
+  - name: ContentPublishSlow
+    interval: 1m
+    input_series:
+      - series: eduworld_content_publish_to_visible_seconds_bucket{le="30"}
+        values: 0+10x30 300x40
+      - series: eduworld_content_publish_to_visible_seconds_bucket{le="60"}
+        values: 0+10x70
+      - series: eduworld_content_publish_to_visible_seconds_bucket{le="+Inf"}
+        values: 0+10x70
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: ContentPublishSlow
+        exp_alerts: []
+      - eval_time: 68m
+        alertname: ContentPublishSlow
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: learning
+            exp_annotations:
+              summary: p95 publish → visible above 30 s for 15 minutes (publish_to_visible_max)
+              runbook_url: docs/11-operations/runbooks/ContentPublishSlow.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ContentCacheHitLow
+    interval: 1m
+    input_series:
+      - series: eduworld_content_cache_requests_total{service="core-api",layer="valkey",result="hit"}
+        values: 0+99x40 3960+50x80
+      - series: eduworld_content_cache_requests_total{service="core-api",layer="valkey",result="miss"}
+        values: 0+1x40 40+50x80
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: ContentCacheHitLow
+        exp_alerts: []
+      - eval_time: 115m
+        alertname: ContentCacheHitLow
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: learning
+            exp_annotations:
+              summary: Valkey content cache hit ratio below 90% for 30 minutes in school hours
+              runbook_url: docs/11-operations/runbooks/ContentCacheHitLow.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: MediaPipelineBacklog
+    interval: 1m
+    input_series:
+      - series: eduworld_media_queue_pending
+        values: 10x10 500x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: MediaPipelineBacklog
+        exp_alerts: []
+      - eval_time: 30m
+        alertname: MediaPipelineBacklog
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: learning
+              service: worker
+              profile: events
+            exp_annotations:
+              summary: More than 200 media jobs pending for 15 minutes
+              runbook_url: docs/11-operations/runbooks/MediaPipelineBacklog.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: MediaInfectedFile
+    interval: 1m
+    input_series:
+      - series: eduworld_media_infected_total
+        values: 0x10 1x10
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: MediaInfectedFile
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: MediaInfectedFile
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: learning
+            exp_annotations:
+              summary: The antivirus rejected an uploaded media file
+              runbook_url: docs/11-operations/runbooks/MediaInfectedFile.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

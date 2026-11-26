@@ -1,0 +1,54 @@
+# Async/event alerts: outbox, NATS consumers, projections, DLQ, partitions (F131 T023, MONITORING §5, ADR-0042).
+# The prometheus-nats-exporter series jetstream_* are renamed to the MONITORING names nats_* (labels stream, consumer)
+# by metric_relabel_configs in prometheus.<env>.yml.
+groups:
+  - name: async
+    rules:
+      - alert: OutboxLagHigh
+        expr: max by (module) (eduworld_outbox_lag_seconds) > 60
+        for: 5m
+        labels: { severity: critical, service: worker, profile: events }
+        annotations:
+          summary: "Outbox of module {{ $labels.module }} is more than 60 s behind"
+          runbook_url: "docs/11-operations/runbooks/OutboxLagHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: EventConsumerLag
+        expr: |
+          max by (stream, consumer) (nats_consumer_num_pending{stream=~"EVT_.*"}) > 10000
+          or (deriv(max by (stream, consumer) (nats_consumer_num_pending{stream=~"EVT_.*"})[10m:1m]) > 0
+              and max by (stream, consumer) (nats_consumer_num_pending{stream=~"EVT_.*"}) > 0)
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Consumer {{ $labels.consumer }} of {{ $labels.stream }} falls behind"
+          runbook_url: "docs/11-operations/runbooks/EventConsumerLag.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ProjectionLagHigh
+        expr: max by (module, projection) (eduworld_projection_lag_seconds) > 60
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Projection {{ $labels.projection }} of module {{ $labels.module }} is more than 60 s behind"
+          runbook_url: "docs/11-operations/runbooks/ProjectionLagHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: EventDLQNotEmpty
+        expr: max by (stream) (nats_stream_total_messages{stream=~"DLQ_.*",stream!="DLQ_CHAT"}) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Dead letter stream {{ $labels.stream }} holds messages"
+          runbook_url: "docs/11-operations/runbooks/EventDLQNotEmpty.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: InfraPartitionsMissing
+        expr: min by (module, table) (eduworld_infra_partition_days_ahead) < 7
+        labels: { severity: warning }
+        annotations:
+          summary: "Less than 7 days of partitions ahead for {{ $labels.table }} ({{ $labels.module }})"
+          runbook_url: "docs/11-operations/runbooks/InfraPartitionsMissing.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: InfraPartitionRefused
+        expr: sum by (module, table) (increase(eduworld_infra_partition_refused_total[1d])) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Expired partition of {{ $labels.table }} kept: unpublished outbox or unhandled dead letters"
+          runbook_url: "docs/11-operations/runbooks/InfraPartitionRefused.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

@@ -1,0 +1,134 @@
+# promtool unit tests of rules/dashboard.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/dashboard.yaml
+evaluation_interval: 1m
+tests:
+  - name: DashboardSlow
+    interval: 1m
+    input_series:
+      - series: eduworld_dashboard_query_duration_seconds_bucket{module="learning",query_id="school_overview",le="2"}
+        values: 0+10x30 300x50
+      - series: eduworld_dashboard_query_duration_seconds_bucket{module="learning",query_id="school_overview",le="5"}
+        values: 0+10x80
+      - series: eduworld_dashboard_query_duration_seconds_bucket{module="learning",query_id="school_overview",le="+Inf"}
+        values: 0+10x80
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: DashboardSlow
+        exp_alerts: []
+      - eval_time: 75m
+        alertname: DashboardSlow
+        exp_alerts:
+          - exp_labels:
+              module: learning
+              severity: warning
+            exp_annotations:
+              summary: p95 dashboard queries of module learning above 2 s for 15 minutes
+              runbook_url: docs/11-operations/runbooks/DashboardSlow.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: DashboardTimeoutsSpike
+    interval: 1m
+    input_series:
+      - series: eduworld_dashboard_rejected_total{reason="timeout"}
+        values: 0x30 0+5x40
+      - series: eduworld_dashboard_query_duration_seconds_count{module="learning",query_id="school_overview"}
+        values: 0+100x70
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: DashboardTimeoutsSpike
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: DashboardTimeoutsSpike
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: More than 1% of dashboard queries time out (statement_timeout)
+              runbook_url: docs/11-operations/runbooks/DashboardTimeoutsSpike.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: RollupLagHigh
+    interval: 1m
+    input_series:
+      - series: eduworld_rollup_lag_seconds{module="learning",rollup="progress_daily"}
+        values: 100x10 1200x30
+      - series: eduworld_rollup_lag_seconds{module="game",rollup="game_daily"}
+        values: 1200x40
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: RollupLagHigh
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: RollupLagHigh
+        exp_alerts:
+          - exp_labels:
+              module: learning
+              rollup: progress_daily
+              severity: warning
+            exp_annotations:
+              summary: Rollup progress_daily of module learning is behind
+              runbook_url: docs/11-operations/runbooks/RollupLagHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: DayCloseNotDone
+    interval: 1m
+    input_series:
+      - series: eduworld_job_runs_total{module="game",job="dashboard-day-close-game",result="ok"}
+        values: 1x1200
+      - series: eduworld_job_runs_total{module="learning",job="dashboard-day-close",result="ok"}
+        values: 0+1x1200
+    alert_rule_test:
+      - eval_time: 40m
+        alertname: DayCloseNotDone
+        exp_alerts:
+          - exp_labels:
+              job: dashboard-day-close-game
+              severity: warning
+            exp_annotations:
+              summary: dashboard-day-close-game has not succeeded for yesterday by 05:00 ICT
+              runbook_url: docs/11-operations/runbooks/DayCloseNotDone.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+      - eval_time: 1110m
+        alertname: DayCloseNotDone
+        exp_alerts: []
+  - name: DashboardReplicaLag
+    interval: 1m
+    input_series:
+      - series: pg_replication_lag_seconds{instance="pg-2:9187"}
+        values: 5x10 90x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: DashboardReplicaLag
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: DashboardReplicaLag
+        exp_alerts:
+          - exp_labels:
+              instance: pg-2:9187
+              severity: warning
+            exp_annotations:
+              summary: Replica pg-2:9187 serving the dashboards lags more than 60 s
+              runbook_url: docs/11-operations/runbooks/DashboardReplicaLag.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: LateEventsHigh
+    interval: 1m
+    input_series:
+      - series: eduworld_rollup_late_events_total{bucket=">48h"}
+        values: 0x10 0+10x50
+      - series: eduworld_rollup_late_events_total{bucket="24h-48h"}
+        values: 0+50x60
+      - series: eduworld_events_consumed_total{module="game",consumer="game.analytics",event_type="telemetry",result="ok"}
+        values: 0+1000x60
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: LateEventsHigh
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: LateEventsHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: More than 0.5% of the day's events arrive later than 48 hours
+              runbook_url: docs/11-operations/runbooks/LateEventsHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

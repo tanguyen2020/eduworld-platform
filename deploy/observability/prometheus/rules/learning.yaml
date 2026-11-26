@@ -1,0 +1,23 @@
+# Alert rules of module learning (F035 T068, F031, F131 T023, MONITORING §5). Thresholds owned by MONITORING §5.
+groups:
+  # LEARNING_EFFICACY_PLAN §6: an A/B experiment stopped by its guardrail (an arm at least experiment_guardrail_drop_pp
+  # points under the control).
+  - name: learning-experiments
+    rules:
+      - alert: ExperimentGuardrailBreached
+        expr: sum(increase(eduworld_experiment_guardrail_breaches_total[1d])) > 0
+        labels: { severity: warning, module: learning }
+        annotations:
+          summary: "An A/B learning experiment was stopped by its guardrail"
+          description: "An arm lowered the primary metric by experiment_guardrail_drop_pp or more against the control; the students are back on the control. Review the results (getLearningExperimentResults)."
+          runbook_url: "docs/11-operations/runbooks/ExperimentGuardrailBreached.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+  - name: learning-partitions
+    rules:
+      - alert: LearningPartitionsMissing
+        expr: min by (table) (eduworld_learning_events_partition_months_ahead) < 2
+        labels: { severity: critical, module: learning }
+        annotations:
+          summary: "Fewer than 2 months of partitions ahead for {{ $labels.table }} (no DEFAULT partition)"
+          runbook_url: "docs/11-operations/runbooks/LearningPartitionsMissing.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

@@ -1,0 +1,10 @@
+{{/* Notification templates (F131 T025). Only the alert labels/annotations: rules never carry PII (AGENTS R14). The
+     runbook path is relative to the repository (docs/11-operations/runbooks/<AlertName>.md). */}}
+{{ define "eduworld.subject" }}[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}{{ if .CommonLabels.service }} · {{ .CommonLabels.service }}{{ end }}{{ if .CommonLabels.module }} · {{ .CommonLabels.module }}{{ end }}{{ end }}
+
+{{ define "eduworld.email" }}
+<p><b>{{ template "eduworld.subject" . }}</b></p>
+<ul>
+{{ range .Alerts }}<li>{{ .Labels.severity }} — {{ .Annotations.summary }}<br>Runbook: {{ .Annotations.runbook_url }} · Since {{ .StartsAt }}</li>
+{{ end }}</ul>
+{{ end }}

@@ -1,0 +1,65 @@
+# promtool unit tests of rules/backup.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/backup.yaml
+evaluation_interval: 1m
+tests:
+  - name: BackupFailed
+    interval: 1m
+    input_series:
+      - series: eduworld_backup_last_status{target="postgres",type="full"}
+        values: 1x10 0x10
+      - series: eduworld_backup_last_status{target="etcd",type="snapshot"}
+        values: 1x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: BackupFailed
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: BackupFailed
+        exp_alerts:
+          - exp_labels:
+              target: postgres
+              type: full
+              severity: critical
+            exp_annotations:
+              summary: Last full run of backup target postgres failed
+              runbook_url: docs/11-operations/runbooks/BackupFailed.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: BackupMissing
+    interval: 1h
+    input_series:
+      - series: eduworld_backup_last_success_timestamp{target="postgres",type="full"}
+        values: "0x40"
+      - series: eduworld_backup_last_success_timestamp{target="postgres",type="diff"}
+        values: 0+3600x40
+      - series: eduworld_backup_last_success_timestamp{target="etcd",type="snapshot"}
+        values: "0x40"
+      - series: eduworld_backup_last_success_timestamp{target="keycloak_export",type="realm"}
+        values: "0x40"
+      - series: eduworld_backup_last_success_timestamp{target="keycloak_export",type="check"}
+        values: 0+3600x40
+      - series: eduworld_backup_last_success_timestamp{target="object_storage",type="offsite"}
+        values: "0x40"
+    alert_rule_test:
+      - eval_time: 20h
+        alertname: BackupMissing
+        exp_alerts: []
+      - eval_time: 27h
+        alertname: BackupMissing
+        exp_alerts:
+          - exp_labels:
+              target: etcd
+              severity: critical
+            exp_annotations:
+              summary: No successful backup of etcd for 26 hours
+              runbook_url: docs/11-operations/runbooks/BackupMissing.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+          - exp_labels:
+              target: keycloak_export
+              severity: critical
+            exp_annotations:
+              summary: No successful backup of keycloak_export for 26 hours
+              runbook_url: docs/11-operations/runbooks/BackupMissing.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

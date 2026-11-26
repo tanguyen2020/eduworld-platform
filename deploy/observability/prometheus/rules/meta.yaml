@@ -1,0 +1,53 @@
+# Meta-monitoring and shared recording rules (F131 T024, MONITORING §5 "Meta-monitoring", §1). Owner of every
+# threshold: docs/11-operations/MONITORING.md §5 (AGENTS R33) — change it there first, then here, in the same MR.
+#  - eduworld:school_hours: present (value = minute of the day, ICT) only during the school hours 06:30–22:00 ICT
+#    (UTC+7, no DST). Rules restricted to school hours add `and on() eduworld:school_hours`.
+#  - Watchdog: always firing; Alertmanager sends it to the external heartbeat receiver every minute — when the
+#    heartbeat stops for 10 minutes, the external service pages the on-call (F131-AC-10).
+groups:
+  - name: eduworld-calendar
+    interval: 1m
+    rules:
+      - record: eduworld:school_hours
+        expr: ((hour() * 60 + minute() + 420) % 1440 >= 390) and ((hour() * 60 + minute() + 420) % 1440 < 1320)
+
+  - name: eduworld-meta
+    rules:
+      - alert: Watchdog
+        expr: vector(1)
+        labels: { severity: warning, heartbeat: "true" }
+        annotations:
+          summary: "Heartbeat of the alerting pipeline (always firing)"
+          description: "Sent to the external heartbeat receiver; its absence for 10 minutes means Prometheus or Alertmanager is down."
+          runbook_url: "docs/11-operations/runbooks/Watchdog.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: PrometheusTargetDown
+        expr: up == 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Scrape target {{ $labels.job }} ({{ $labels.instance }}) is down for 5 minutes"
+          runbook_url: "docs/11-operations/runbooks/PrometheusTargetDown.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: PrometheusTargetSampleLimit
+        expr: sum by (job) (increase(prometheus_target_scrapes_exceeded_sample_limit_total[5m])) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Scrapes of {{ $labels.job }} exceed sample_limit (label cardinality too high)"
+          runbook_url: "docs/11-operations/runbooks/PrometheusTargetSampleLimit.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: PrometheusRuleFailures
+        expr: sum by (rule_group) (increase(prometheus_rule_evaluation_failures_total[5m])) > 0
+        labels: { severity: critical }
+        annotations:
+          summary: "Rule group {{ $labels.rule_group }} fails to evaluate (alerts may be blind)"
+          runbook_url: "docs/11-operations/runbooks/PrometheusRuleFailures.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: AlertmanagerNotificationsFailing
+        expr: sum by (integration) (rate(alertmanager_notifications_failed_total[5m])) > 0
+        for: 10m
+        labels: { severity: critical }
+        annotations:
+          summary: "Alertmanager cannot deliver notifications through {{ $labels.integration }}"
+          runbook_url: "docs/11-operations/runbooks/AlertmanagerNotificationsFailing.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

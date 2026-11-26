@@ -1,0 +1,122 @@
+# promtool unit tests of rules/storage.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/storage.yaml
+evaluation_interval: 1m
+tests:
+  - name: ObjectStorageDown
+    interval: 1m
+    input_series:
+      - series: eduworld_external_client_requests_total{module="learning",integration="s3",outcome="ok"}
+        values: 0+100x40
+      - series: eduworld_external_client_requests_total{module="learning",integration="s3",outcome="error"}
+        values: 0x10 0+20x30
+      - series: up{job="seaweedfs-s3",instance="storage-s3:8333"}
+        values: 1x40
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ObjectStorageDown
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: ObjectStorageDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+            exp_annotations:
+              summary: "Object storage unhealthy: S3 gateway down or more than 5% S3 errors from the modules"
+              runbook_url: docs/11-operations/runbooks/ObjectStorageDown.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ObjectStorageNodeDown
+    interval: 1m
+    input_series:
+      - series: up{job="seaweedfs-volume",instance="v1"}
+        values: 1x20
+      - series: up{job="seaweedfs-volume",instance="v2"}
+        values: 1x20
+      - series: up{job="seaweedfs-volume",instance="v3"}
+        values: 1x5 0x15
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: ObjectStorageNodeDown
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: ObjectStorageNodeDown
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: Fewer than 3 healthy object storage nodes for 5 minutes
+              runbook_url: docs/11-operations/runbooks/ObjectStorageNodeDown.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ObjectStorageNodeDown single-node staging
+    interval: 1m
+    input_series:
+      - series: up{job="seaweedfs-volume",instance="v1"}
+        values: 1x20
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: ObjectStorageNodeDown
+        exp_alerts: []
+  - name: ObjectStorageReplicationLag
+    interval: 1m
+    input_series:
+      - series: eduworld_object_storage_replication_lag_seconds{bucket="ew-media-private"}
+        values: 10x10 600x20
+      - series: eduworld_object_storage_replication_lag_seconds{bucket="ew-media-public"}
+        values: 10x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ObjectStorageReplicationLag
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: ObjectStorageReplicationLag
+        exp_alerts:
+          - exp_labels:
+              bucket: ew-media-private
+              severity: critical
+            exp_annotations:
+              summary: Replication of bucket ew-media-private is more than 5 minutes behind (RPO)
+              runbook_url: docs/11-operations/runbooks/ObjectStorageReplicationLag.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ObjectStorageVolumeHigh
+    interval: 1m
+    input_series:
+      - series: node_filesystem_avail_bytes{node="storage-1",role="storage",fstype="ext4",mountpoint="/data"}
+        values: 50x10 10x10
+      - series: node_filesystem_size_bytes{node="storage-1",role="storage",fstype="ext4",mountpoint="/data"}
+        values: 100x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ObjectStorageVolumeHigh
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: ObjectStorageVolumeHigh
+        exp_alerts:
+          - exp_labels:
+              node: storage-1
+              severity: warning
+            exp_annotations:
+              summary: Object storage node storage-1 uses more than 80% of its disk
+              runbook_url: docs/11-operations/runbooks/ObjectStorageVolumeHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ObjectStorageBackupMissing
+    interval: 1h
+    input_series:
+      - series: eduworld_backup_last_success_timestamp{target="object_storage",type="offsite"}
+        values: "0x30"
+      - series: eduworld_backup_last_success_timestamp{target="object_storage",type="replication"}
+        values: 0+3600x30
+    alert_rule_test:
+      - eval_time: 20h
+        alertname: ObjectStorageBackupMissing
+        exp_alerts: []
+      - eval_time: 27h
+        alertname: ObjectStorageBackupMissing
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+            exp_annotations:
+              summary: No successful off-cluster copy of object storage for 26 hours
+              runbook_url: docs/11-operations/runbooks/ObjectStorageBackupMissing.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

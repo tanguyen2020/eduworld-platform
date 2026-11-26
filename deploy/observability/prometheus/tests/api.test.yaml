@@ -1,0 +1,219 @@
+# promtool unit tests of rules/api.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/api.yaml
+evaluation_interval: 1m
+tests:
+  - name: APIHighErrorRate
+    interval: 1m
+    input_series:
+      - series: apisix_http_status{job="apisix",code="200"}
+        values: 0+100x60
+      - series: apisix_http_status{job="apisix",code="502"}
+        values: 0+1x30 31+10x30
+      - series: apisix_http_status{job="apisix-internal",code="500"}
+        values: 0+100x60
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: APIHighErrorRate
+        exp_alerts: []
+      - eval_time: 55m
+        alertname: APIHighErrorRate
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              service: apisix
+            exp_annotations:
+              summary: More than 2% 5xx on the public gateway for 5 minutes
+              runbook_url: docs/11-operations/runbooks/APIHighErrorRate.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ModuleHighErrorRate
+    interval: 1m
+    input_series:
+      - series: eduworld_http_server_requests_total{service="core-api",module="game",status_class="2xx"}
+        values: 0+100x60
+      - series: eduworld_http_server_requests_total{service="core-api",module="game",status_class="5xx"}
+        values: 0+1x30 31+10x30
+      - series: eduworld_http_server_requests_total{service="core-api",module="learning",status_class="2xx"}
+        values: 0+100x60
+      - series: eduworld_http_server_requests_total{service="core-api",module="learning",status_class="5xx"}
+        values: 0+1x60
+      - series: eduworld_http_server_requests_total{service="core-api-canary",module="chat",status_class="2xx"}
+        values: 0+10x60
+      - series: eduworld_http_server_requests_total{service="core-api-canary",module="chat",status_class="5xx"}
+        values: 0x30 0+5x30
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: ModuleHighErrorRate
+        exp_alerts: []
+      - eval_time: 55m
+        alertname: ModuleHighErrorRate
+        exp_alerts:
+          - exp_labels:
+              service: core-api
+              module: game
+              severity: critical
+            exp_annotations:
+              summary: Module game answers more than 2% 5xx (core-api)
+              runbook_url: docs/11-operations/runbooks/ModuleHighErrorRate.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+          - exp_labels:
+              service: core-api-canary
+              module: chat
+              severity: critical
+            exp_annotations:
+              summary: Module chat answers more than 2% 5xx (core-api-canary)
+              runbook_url: docs/11-operations/runbooks/ModuleHighErrorRate.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: APILatencyP95High
+    interval: 1m
+    input_series:
+      - series: eduworld_http_server_duration_seconds_bucket{service="core-api",module="game",method="GET",le="0.4"}
+        values: 0+10x30 300x40
+      - series: eduworld_http_server_duration_seconds_bucket{service="core-api",module="game",method="GET",le="1"}
+        values: 0+10x70
+      - series: eduworld_http_server_duration_seconds_bucket{service="core-api",module="game",method="GET",le="+Inf"}
+        values: 0+10x70
+      - series: eduworld_http_server_duration_seconds_bucket{service="core-api",module="chat",method="POST",le="0.8"}
+        values: 0+10x30 300x40
+      - series: eduworld_http_server_duration_seconds_bucket{service="core-api",module="chat",method="POST",le="2.5"}
+        values: 0+10x70
+      - series: eduworld_http_server_duration_seconds_bucket{service="core-api",module="chat",method="POST",le="+Inf"}
+        values: 0+10x70
+      - series: eduworld_http_server_duration_seconds_bucket{service="core-api",module="learning",method="GET",le="0.4"}
+        values: 0+10x70
+      - series: eduworld_http_server_duration_seconds_bucket{service="core-api",module="learning",method="GET",le="+Inf"}
+        values: 0+10x70
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: APILatencyP95High
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: APILatencyP95High
+        exp_alerts:
+          - exp_labels:
+              service: core-api
+              module: game
+              kind: read
+              severity: warning
+            exp_annotations:
+              summary: p95 read latency of module game above its threshold (core-api)
+              runbook_url: docs/11-operations/runbooks/APILatencyP95High.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+          - exp_labels:
+              service: core-api
+              module: chat
+              kind: write
+              severity: warning
+            exp_annotations:
+              summary: p95 write latency of module chat above its threshold (core-api)
+              runbook_url: docs/11-operations/runbooks/APILatencyP95High.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: ModuleDatabaseUnavailable
+    interval: 1m
+    input_series:
+      - series: eduworld_db_pool_connections{service="core-api",module="game",database="eduworld_game",pool="primary",state="total"}
+        values: 5x10 0x20
+      - series: eduworld_db_pool_connections{service="core-api",module="learning",database="eduworld_learning",pool="primary",state="total"}
+        values: 5x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ModuleDatabaseUnavailable
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: ModuleDatabaseUnavailable
+        exp_alerts:
+          - exp_labels:
+              service: core-api
+              module: game
+              database: eduworld_game
+              severity: critical
+            exp_annotations:
+              summary: Module game has no connection to its database eduworld_game (core-api)
+              runbook_url: docs/11-operations/runbooks/ModuleDatabaseUnavailable.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: PanicRecoveredSpike warning
+    interval: 1m
+    input_series:
+      - series: eduworld_panics_recovered_total{service="core-api",module="game",entrypoint="http"}
+        values: 0x10 0+5x20
+      - series: eduworld_panics_recovered_total{service="core-api",module="chat",entrypoint="http"}
+        values: 0+1x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: PanicRecoveredSpike
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: PanicRecoveredSpike
+        exp_alerts:
+          - exp_labels:
+              service: core-api
+              module: game
+              severity: warning
+            exp_annotations:
+              summary: More than 10 recovered panics in 5 minutes in module game (core-api)
+              runbook_url: docs/11-operations/runbooks/PanicRecoveredSpike.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: PanicRecoveredSpike critical with a core-api restart loop
+    interval: 1m
+    input_series:
+      - series: eduworld_panics_recovered_total{service="core-api",module="game",entrypoint="http"}
+        values: 0x10 0+5x20
+      - series: swarm_task_restarts_total{service="core-api",swarm_service="core-api"}
+        values: 0x10 0+1x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: PanicRecoveredSpike
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: PanicRecoveredSpike
+        exp_alerts:
+          - exp_labels:
+              service: core-api
+              module: game
+              severity: warning
+            exp_annotations:
+              summary: More than 10 recovered panics in 5 minutes in module game (core-api)
+              runbook_url: docs/11-operations/runbooks/PanicRecoveredSpike.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+          - exp_labels:
+              service: core-api
+              module: game
+              severity: critical
+            exp_annotations:
+              summary: More than 10 recovered panics in 5 minutes in module game (core-api)
+              runbook_url: docs/11-operations/runbooks/PanicRecoveredSpike.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: CircuitBreakerOpen
+    interval: 1m
+    input_series:
+      - series: eduworld_external_client_circuit_state{module="identity",integration="sis"}
+        values: 0x10 2x20
+      - series: eduworld_external_client_circuit_state{module="identity",integration="keycloak_token"}
+        values: 0x15 2x20
+      - series: eduworld_external_client_circuit_state{module="learning",integration="s3"}
+        values: 1x40
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: CircuitBreakerOpen
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: CircuitBreakerOpen
+        exp_alerts:
+          - exp_labels:
+              module: identity
+              integration: sis
+              severity: warning
+            exp_annotations:
+              summary: Circuit breaker identity → sis open for 2 minutes
+              runbook_url: docs/11-operations/runbooks/CircuitBreakerOpen.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+          - exp_labels:
+              module: identity
+              integration: keycloak_token
+              severity: critical
+            exp_annotations:
+              summary: Circuit breaker identity → keycloak_token open for 2 minutes
+              runbook_url: docs/11-operations/runbooks/CircuitBreakerOpen.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

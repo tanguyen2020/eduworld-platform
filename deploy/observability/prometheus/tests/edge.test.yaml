@@ -1,0 +1,45 @@
+# promtool unit tests of rules/edge.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/edge.yaml
+evaluation_interval: 1m
+tests:
+  - name: CdnErrorRate
+    interval: 1m
+    input_series:
+      - series: probe_success{job="blackbox-cdn",instance="cdn-public"}
+        values: 1x30 0x30
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: CdnErrorRate
+        exp_alerts: []
+      - eval_time: 55m
+        alertname: CdnErrorRate
+        exp_alerts:
+          - exp_labels:
+              instance: cdn-public
+              severity: critical
+            exp_annotations:
+              summary: CDN probe cdn-public fails more than 1% for 10 minutes
+              runbook_url: docs/11-operations/runbooks/CdnErrorRate.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: CertificateExpiring
+    interval: 1m
+    input_series:
+      - series: probe_ssl_earliest_cert_expiry{job="blackbox-tls",instance="api-public"}
+        values: 1000000x10 5000000x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: CertificateExpiring
+        exp_alerts:
+          - exp_labels:
+              instance: api-public
+              severity: warning
+            exp_annotations:
+              summary: TLS certificate of api-public expires in less than 14 days
+              runbook_url: docs/11-operations/runbooks/CertificateExpiring.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+      - eval_time: 20m
+        alertname: CertificateExpiring
+        exp_alerts: []

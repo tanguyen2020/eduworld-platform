@@ -1,0 +1,68 @@
+# SLI recording rules and SLO burn-rate alerts (F131 T030, F131-AC-15). Owner of the SLOs: MONITORING §6; the
+# availability target is the parameter `availability` (CONFIG_DEFAULTS §18: 99.5 % per month in school hours) — it is
+# recorded once as eduworld:slo_availability_target and every burn-rate expression reads it (AGENTS R33).
+# Histogram SLIs read the bucket whose upper bound is the SLO threshold: the emitting code must keep that bucket
+# (MONITORING §6 note). "Learning durability" is measured by the daily reconciliation, not by Prometheus.
+groups:
+  - name: eduworld-slo-sli
+    interval: 30s
+    rules:
+      - record: eduworld:slo_availability_target
+        expr: vector(0.995)
+      # Availability REST: non-5xx at the public APISIX, 429 excluded from the denominator.
+      - record: eduworld:sli_availability_errors:ratio_rate5m
+        expr: sum(rate(apisix_http_status{job="apisix",code=~"5.."}[5m])) / sum(rate(apisix_http_status{job="apisix",code!="429"}[5m]))
+      - record: eduworld:sli_availability_errors:ratio_rate30m
+        expr: sum(rate(apisix_http_status{job="apisix",code=~"5.."}[30m])) / sum(rate(apisix_http_status{job="apisix",code!="429"}[30m]))
+      - record: eduworld:sli_availability_errors:ratio_rate1h
+        expr: sum(rate(apisix_http_status{job="apisix",code=~"5.."}[1h])) / sum(rate(apisix_http_status{job="apisix",code!="429"}[1h]))
+      - record: eduworld:sli_availability_errors:ratio_rate6h
+        expr: sum(rate(apisix_http_status{job="apisix",code=~"5.."}[6h])) / sum(rate(apisix_http_status{job="apisix",code!="429"}[6h]))
+      # Latency REST read: GET answered < 200 ms at the gateway (APISIX latency in ms, extra label method).
+      - record: eduworld:sli_latency_read:ratio_rate5m
+        expr: sum(rate(apisix_http_latency_bucket{job="apisix",type="request",method="GET",le="200"}[5m])) / sum(rate(apisix_http_latency_count{job="apisix",type="request",method="GET"}[5m]))
+      # Latency submit: attempt/exam submit < 400 ms at core-api.
+      - record: eduworld:sli_latency_submit:ratio_rate5m
+        expr: sum(rate(eduworld_http_server_duration_seconds_bucket{method="POST",route=~".*[:/]submit",le="0.4"}[5m])) / sum(rate(eduworld_http_server_duration_seconds_count{method="POST",route=~".*[:/]submit"}[5m]))
+      # Realtime delivery: p95 chat/lobby receive → fan-out (server side), target < 250 ms.
+      - record: eduworld:sli_realtime_delivery:p95_5m
+        expr: histogram_quantile(0.95, sum by (le) (rate(eduworld_chat_send_latency_seconds_bucket[5m])))
+      # Realtime connect: WS connects with a valid ticket that succeed.
+      - record: eduworld:sli_ws_connect:ratio_rate5m
+        expr: sum(rate(eduworld_ws_connect_total{result="ok"}[5m])) / sum(rate(eduworld_ws_connect_total{result!~"ticket_invalid|ticket_expired"}[5m]))
+      # Login: password login → hub < 3 s (login_slo).
+      - record: eduworld:sli_login:ratio_rate5m
+        expr: sum(rate(eduworld_auth_login_duration_seconds_bucket{method="password",le="3"}[5m])) / sum(rate(eduworld_auth_login_duration_seconds_count{method="password"}[5m]))
+      # Content publish: publish/rollback visible to new plays < 30 s (publish_to_visible_max).
+      - record: eduworld:sli_publish:ratio_rate1h
+        expr: sum(rate(eduworld_content_publish_to_visible_seconds_bucket{le="30"}[1h])) / sum(rate(eduworld_content_publish_to_visible_seconds_count[1h]))
+      # Dashboard: dashboard queries < 2 s at the API.
+      - record: eduworld:sli_dashboard:ratio_rate5m
+        expr: sum(rate(eduworld_dashboard_query_duration_seconds_bucket{le="2"}[5m])) / sum(rate(eduworld_dashboard_query_duration_seconds_count[5m]))
+
+  - name: eduworld-slo-burn
+    rules:
+      # Multiwindow, multi-burn-rate (MONITORING §6): fast = 14.4× over 1 h confirmed on 5 m; slow = 6× over 6 h
+      # confirmed on 30 m. Only in school hours (the SLO window counts school hours only).
+      - alert: SLOBurnRateFast
+        expr: |
+          eduworld:sli_availability_errors:ratio_rate1h > on() group_left() (14.4 * (1 - eduworld:slo_availability_target))
+          and on() eduworld:sli_availability_errors:ratio_rate5m > on() group_left() (14.4 * (1 - eduworld:slo_availability_target))
+          and on() eduworld:school_hours
+        for: 2m
+        labels: { severity: critical, slo: availability }
+        annotations:
+          summary: "Availability error budget burns more than 14.4× (1 h and 5 m windows)"
+          runbook_url: "docs/11-operations/runbooks/SLOBurnRateFast.md"
+          source: "docs/11-operations/MONITORING.md#6-slo--confirmed-oq-11"
+      - alert: SLOBurnRateSlow
+        expr: |
+          eduworld:sli_availability_errors:ratio_rate6h > on() group_left() (6 * (1 - eduworld:slo_availability_target))
+          and on() eduworld:sli_availability_errors:ratio_rate30m > on() group_left() (6 * (1 - eduworld:slo_availability_target))
+          and on() eduworld:school_hours
+        for: 15m
+        labels: { severity: warning, slo: availability }
+        annotations:
+          summary: "Availability error budget burns more than 6× (6 h and 30 m windows)"
+          runbook_url: "docs/11-operations/runbooks/SLOBurnRateSlow.md"
+          source: "docs/11-operations/MONITORING.md#6-slo--confirmed-oq-11"

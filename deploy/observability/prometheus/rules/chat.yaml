@@ -1,0 +1,161 @@
+# Alert rules of module chat (F116 T035, F121 T041, F123 T030, F124 T037, F131 T023; MONITORING §5, MODERATION §6, §12,
+# ADR-0030, ADR-0035, ADR-0078). Labels carry no user, case or message content (R14, R16). Alerts with team: safety go to
+# the receiver safety-oncall of Alertmanager (F124).
+groups:
+  # A moderation step switched off for the platform or a tenant raises a warning at once
+  # (eduworld_chat_policy_disabled{tenant,step} = 1 while the step is off; tenant="platform" for the platform level).
+  - name: chat-moderation
+    rules:
+      - alert: ChatModerationDisabled
+        expr: max by (tenant, step) (eduworld_chat_policy_disabled) == 1
+        labels: { severity: warning, module: chat }
+        annotations:
+          summary: "Moderation step {{ $labels.step }} switched off ({{ $labels.tenant }})"
+          description: "Approved by two System Admins with a reason and expires_at ≤ 24 h (ADR-0078); pii and grooming always run. Check the reason and expiry in listModerationSwitches; it switches back on at expires_at (moderation-switch-expirer)."
+          runbook_url: "docs/11-operations/runbooks/ChatModerationDisabled.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      # Off for more than 24 h, or the pii step off for more than 4 h (one rule: a step must stay off the whole window).
+      - alert: ChatModerationDisabledLong
+        expr: |
+          min_over_time((max by (tenant, step) (eduworld_chat_policy_disabled))[24h:5m]) == 1
+          or min_over_time((max by (tenant, step) (eduworld_chat_policy_disabled{step="pii"}))[4h:5m]) == 1
+        labels: { severity: critical, module: chat }
+        annotations:
+          summary: "Moderation step {{ $labels.step }} off for more than its allowed time ({{ $labels.tenant }})"
+          runbook_url: "docs/11-operations/runbooks/ChatModerationDisabledLong.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: SensitiveCatalogVersionSkew
+        expr: max by (scope) (eduworld_chat_sensitive_catalog_version) != min by (scope) (eduworld_chat_sensitive_catalog_version)
+        for: 5m
+        labels: { severity: warning, module: chat }
+        annotations:
+          summary: "Nodes run different sensitive-word catalog versions ({{ $labels.scope }}) for 5 minutes"
+          runbook_url: "docs/11-operations/runbooks/SensitiveCatalogVersionSkew.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ChatPIISpike
+        expr: |
+          sum(rate(eduworld_chat_sensitive_matches_total{category="pii"}[15m]))
+            > 5 * sum(rate(eduworld_chat_sensitive_matches_total{category="pii"}[1d] offset 15m))
+          and sum(rate(eduworld_chat_sensitive_matches_total{category="pii"}[15m])) > 1/60
+        labels: { severity: warning, module: chat }
+        annotations:
+          summary: "PII blocked in chat above 5× the daily baseline (incident or spam campaign?)"
+          runbook_url: "docs/11-operations/runbooks/ChatPIISpike.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+  # Platform Safety Team (MODERATION §6.3, CHILD_SAFETY §11): gauges refreshed every 30 s by moderation-sla-escalator.
+  # A p1 case without assignee for p1_unclaimed_alert_minutes (15 min) pages the on-call (receiver safety-oncall, F124).
+  - name: chat-safety-team
+    rules:
+      - alert: ModerationP1Unclaimed
+        expr: max(eduworld_moderation_case_unclaimed_age_seconds{severity="p1"}) > 900
+        labels: { severity: critical, module: chat, team: safety }
+        annotations:
+          summary: "A p1 moderation case has no assignee for more than 15 minutes (p1_unclaimed_alert_minutes)"
+          description: "Claim the oldest p1 case in the queue (listModerationCases?severity=p1&assignee=unassigned)."
+          runbook_url: "docs/11-operations/runbooks/ModerationP1Unclaimed.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ModerationSlaBreached
+        expr: sum(eduworld_moderation_cases_open{severity="p1"}) > 0 and on() max(eduworld_moderation_case_unclaimed_age_seconds{severity="p1"}) > 3600
+        labels: { severity: critical, module: chat, team: safety }
+        annotations:
+          summary: "A p1 moderation case missed its first-response SLA (report_sla: 1 hour)"
+          description: "moderation-sla-escalator escalated it; the team lead takes it (MODERATION §6.3)."
+          runbook_url: "docs/11-operations/runbooks/ModerationSlaBreached.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ModerationSchoolNotificationsOverdue
+        expr: max(eduworld_moderation_school_notifications_overdue) > 0
+        for: 1h
+        labels: { severity: warning, module: chat, team: safety }
+        annotations:
+          summary: "School safety notifications past ack_due_at without acknowledgement"
+          description: "school-notification-reminder reminded the school; follow up per MODERATION §6.4 (listSchoolSafetyNotificationsPlatform?overdue=true)."
+          runbook_url: "docs/11-operations/runbooks/ModerationSchoolNotificationsOverdue.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ChatModerationBacklog
+        expr: max(eduworld_moderation_case_unclaimed_age_seconds{severity="high"}) > 1800
+        labels: { severity: critical, module: chat, team: safety }
+        annotations:
+          summary: "A high moderation case waits for more than 30 minutes"
+          runbook_url: "docs/11-operations/runbooks/ChatModerationBacklog.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+  # Safety Team operations (F124 T037, MODERATION §6.1, §6.3): on-call coverage refreshed every minute by oncall-escalator.
+  - name: chat-safety-operations
+    rules:
+      - alert: ModerationOncallGap
+        expr: min by (oncall_role) (eduworld_moderation_oncall_coverage) == 0
+        for: 5m
+        labels: { severity: critical, module: chat, team: safety }
+        annotations:
+          summary: "No live on-call shift of role {{ $labels.oncall_role }} covers now"
+          description: "p1 cases page the next level with people (MODERATION §6.3). The team lead creates the missing shift (createModerationOncallShift)."
+          runbook_url: "docs/11-operations/runbooks/ModerationOncallGap.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+  # In-game notifications (F123 T030, CHAT_SYSTEM §10): the chat.notify_* consumers fall behind (learning slow or down
+  # keeps chat.notify_assignment from acking, F123-AC-07) or the push misses SC-001 (p95 ≤ 2 s from the source event).
+  - name: chat-notifications
+    rules:
+      - alert: NotificationConsumerBacklog
+        expr: max by (consumer) (eduworld_consumer_pending{consumer=~"chat\\.notify_.*"}) > 1000
+        for: 10m
+        labels: { severity: warning, module: chat }
+        annotations:
+          summary: "Notification consumer {{ $labels.consumer }} has more than 1000 pending events for 10 minutes"
+          description: "Students see their notifications late. chat.notify_assignment waits for module learning (listAssignmentRecipients); check DLQ_CHAT and the modcall errors of chat→learning."
+          runbook_url: "docs/11-operations/runbooks/NotificationConsumerBacklog.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: NotificationDeliverySlow
+        expr: histogram_quantile(0.95, sum by (le) (rate(eduworld_notification_delivery_latency_seconds_bucket[10m]))) > 2
+        for: 15m
+        labels: { severity: warning, module: chat }
+        annotations:
+          summary: "p95 from the source event to notification.item.created above 2 s (SC-001 of F123)"
+          description: "Check the lag of the chat.notify_* consumers and the Valkey publish of ew:rt:user:<id>."
+          runbook_url: "docs/11-operations/runbooks/NotificationDeliverySlow.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+  # Chat over NATS JetStream (ADR-0035) and the gameplay chat purge (ADR-0033).
+  - name: chat-delivery
+    rules:
+      - alert: ChatJetStreamUnavailable
+        expr: |
+          sum(rate(eduworld_chat_jetstream_publish_errors_total[5m])) > 0.05 * sum(rate(eduworld_chat_messages_total[5m]))
+          or on() count(up{job="nats"} == 1) < 2
+        for: 5m
+        labels: { severity: critical, module: chat }
+        annotations:
+          summary: "Chat cannot publish to JetStream (errors above 5% or NATS quorum lost)"
+          runbook_url: "docs/11-operations/runbooks/ChatJetStreamUnavailable.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ChatPersistLagHigh
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(eduworld_chat_persist_lag_seconds_bucket[10m]))) > 5
+          or on() max(nats_consumer_num_pending{consumer=~".*persister"}) > 10000
+        for: 10m
+        labels: { severity: warning, module: chat, service: worker, profile: chat }
+        annotations:
+          summary: "chat-persister is behind (p95 lag above 5 s or more than 10 000 pending)"
+          runbook_url: "docs/11-operations/runbooks/ChatPersistLagHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ChatDLQNotEmpty
+        expr: max(nats_stream_total_messages{stream="DLQ_CHAT"}) > 0
+        labels: { severity: warning, module: chat }
+        annotations:
+          summary: "DLQ_CHAT holds messages"
+          runbook_url: "docs/11-operations/runbooks/ChatDLQNotEmpty.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ChatSendLatencyHigh
+        expr: histogram_quantile(0.95, sum by (le) (rate(eduworld_chat_send_latency_seconds_bucket[10m]))) > 0.3
+        for: 10m
+        labels: { severity: warning, module: chat }
+        annotations:
+          summary: "p95 chat send latency above 0.3 s for 10 minutes (NFR-PERF-003)"
+          runbook_url: "docs/11-operations/runbooks/ChatSendLatencyHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ChatPurgeBacklog
+        expr: |
+          max(eduworld_chat_purge_backlog_oldest_seconds) > 2 * 86400
+          or on() sum(increase(eduworld_chat_purge_failures_total[1h])) > 0
+        labels: { severity: warning, module: chat, service: worker, profile: chat }
+        annotations:
+          summary: "Gameplay chat purge is more than 2 days behind or failing"
+          runbook_url: "docs/11-operations/runbooks/ChatPurgeBacklog.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

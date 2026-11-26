@@ -1,20 +1,80 @@
-# Alertmanager routing (F124 T037): the alerts of the Platform Safety Team (label team=safety: ModerationP1Unclaimed,
-# ModerationSlaBreached, ModerationOncallGap, EmailDeliveryFailing, SchoolSafetyNotificationNoRecipient …) go to the
-# receiver safety-oncall at once, repeated every 15 minutes until resolved (MONITORING §5, CHILD_SAFETY §11). The general
-# routing, the SMS channel and the other receivers belong to F131. The webhook URL is a secret file (ops_alert_safety_*),
-# never committed (AGENTS R4).
+# Alertmanager routing (F131 T025, F131-AC-09/AC-10; F124 T037 for team=safety). MONITORING §1, §5 own the rules:
+#  - critical → oncall-critical (on-call chat group + SMS gateway + email), warning → ops-warning (chat group);
+#  - grouping by alertname, service, module; Watchdog → heartbeat (external dead-man switch, every minute);
+#  - alerts with team=safety (ModerationP1Unclaimed, ModerationOncallGap, EmailDeliveryFailing …) → safety-oncall at
+#    once, repeated every 15 minutes until resolved (CHILD_SAFETY §11, F124);
+#  - inhibition: ServiceDown of a Swarm service mutes the other alerts of the same service/profile; a critical alert
+#    mutes its warning twin (same alertname and target labels).
+# Every receiver endpoint is a Docker secret file (ops_alert_*), never committed (AGENTS R4). The SMTP relay, sender
+# and recipient list are environment values: the placeholders __EW_*__ are filled at container start by
+# deploy/swarm/config/alertmanager-entrypoint.sh from obs.env (no secret in them). Silences need an author and a
+# comment (Alertmanager API v2 requires createdBy + comment; runbooks/README.md).
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: "__EW_ALERT_SMTP_SMARTHOST__"
+  smtp_from: "__EW_ALERT_SMTP_FROM__"
+  smtp_auth_username: "__EW_ALERT_SMTP_USERNAME__"
+  smtp_auth_password_file: /run/secrets/ops_alert_smtp_password
+  smtp_require_tls: true
+
+templates:
+  - /etc/alertmanager/templates/*.tmpl
+
 route:
-  receiver: default
-  group_by: [alertname, module]
+  receiver: ops-warning
+  group_by: [alertname, service, module]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
   routes:
+    - matchers: ['alertname="Watchdog"']
+      receiver: heartbeat
+      group_by: [alertname]
+      group_wait: 0s
+      group_interval: 1m
+      repeat_interval: 1m
     - matchers: ['team="safety"']
       receiver: safety-oncall
       group_by: [alertname]
       group_wait: 0s
       group_interval: 1m
       repeat_interval: 15m
+    - matchers: ['severity="critical"']
+      receiver: oncall-critical
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 1h
+    - matchers: ['severity="warning"']
+      receiver: ops-warning
+
+inhibit_rules:
+  - source_matchers: ['alertname="ServiceDown"']
+    target_matchers: ['alertname!="ServiceDown"', 'alertname!="Watchdog"']
+    equal: [service, profile]
+  - source_matchers: ['severity="critical"']
+    target_matchers: ['severity="warning"']
+    equal: [alertname, service, module, profile, swarm_service, node, instance]
+
 receivers:
-  - name: default
+  - name: heartbeat
+    webhook_configs:
+      - url_file: /run/secrets/ops_alert_heartbeat_url
+        send_resolved: false
+  - name: oncall-critical
+    webhook_configs:
+      - url_file: /run/secrets/ops_alert_chat_webhook_url
+        send_resolved: true
+      - url_file: /run/secrets/ops_alert_sms_webhook_url
+        send_resolved: false
+    email_configs:
+      - to: "__EW_ALERT_EMAIL_TO__"
+        send_resolved: true
+        headers: { Subject: '{{ template "eduworld.subject" . }}' }
+        html: '{{ template "eduworld.email" . }}'
+  - name: ops-warning
+    webhook_configs:
+      - url_file: /run/secrets/ops_alert_chat_webhook_url
+        send_resolved: true
   - name: safety-oncall
     webhook_configs:
       - url_file: /run/secrets/ops_alert_safety_webhook_url

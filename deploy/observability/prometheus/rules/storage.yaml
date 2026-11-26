@@ -1,0 +1,50 @@
+# Object storage alerts (F131 T023, MONITORING §5, ADR-0075, ADR-0093: SeaweedFS self-hosted, 3 `storage` nodes in
+# production, 1 in staging). S3 errors as seen by the modules come from eduworld_external_client_requests_total
+# (integration="s3"); node health from the SeaweedFS volume servers (job seaweedfs-volume); replication lag of the
+# private bucket and the off-cluster copy from the backup-tools textfile metrics (BACKUP_RECOVERY §3.4).
+groups:
+  - name: object-storage
+    rules:
+      - alert: ObjectStorageDown
+        expr: |
+          sum(rate(eduworld_external_client_requests_total{integration="s3",outcome!="ok"}[2m]))
+            / sum(rate(eduworld_external_client_requests_total{integration="s3"}[2m])) > 0.05
+          or on() min(up{job="seaweedfs-s3"}) == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "Object storage unhealthy: S3 gateway down or more than 5% S3 errors from the modules"
+          runbook_url: "docs/11-operations/runbooks/ObjectStorageDown.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      # Only for a cluster of at least 3 volume servers (production); staging runs a single node.
+      - alert: ObjectStorageNodeDown
+        expr: count(up{job="seaweedfs-volume"} == 1) < 3 and on() count(up{job="seaweedfs-volume"}) >= 3
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Fewer than 3 healthy object storage nodes for 5 minutes"
+          runbook_url: "docs/11-operations/runbooks/ObjectStorageNodeDown.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ObjectStorageReplicationLag
+        expr: max by (bucket) (eduworld_object_storage_replication_lag_seconds) > 300
+        for: 10m
+        labels: { severity: critical }
+        annotations:
+          summary: "Replication of bucket {{ $labels.bucket }} is more than 5 minutes behind (RPO)"
+          runbook_url: "docs/11-operations/runbooks/ObjectStorageReplicationLag.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ObjectStorageVolumeHigh
+        expr: |
+          1 - min by (node) (node_filesystem_avail_bytes{role="storage",fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{role="storage",fstype!~"tmpfs|overlay"}) > 0.8
+        labels: { severity: warning }
+        annotations:
+          summary: "Object storage node {{ $labels.node }} uses more than 80% of its disk"
+          runbook_url: "docs/11-operations/runbooks/ObjectStorageVolumeHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ObjectStorageBackupMissing
+        expr: time() - max(eduworld_backup_last_success_timestamp{target="object_storage",type="offsite"}) > 26 * 3600
+        labels: { severity: critical }
+        annotations:
+          summary: "No successful off-cluster copy of object storage for 26 hours"
+          runbook_url: "docs/11-operations/runbooks/ObjectStorageBackupMissing.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

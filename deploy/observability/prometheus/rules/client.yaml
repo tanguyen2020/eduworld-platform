@@ -1,0 +1,13 @@
+# Game client alerts from telemetry (F131 T023, MONITORING §5, §10; F080 converts telemetry to metrics).
+groups:
+  - name: client
+    rules:
+      - alert: ClientCrashRateHigh
+        expr: |
+          sum by (client_version) (increase(eduworld_client_crashes_total[1h]))
+            / sum by (client_version) (increase(eduworld_client_sessions_total[1h])) > 0.02
+        labels: { severity: warning, module: game }
+        annotations:
+          summary: "Crash rate of client {{ $labels.client_version }} above 2% of sessions"
+          runbook_url: "docs/11-operations/runbooks/ClientCrashRateHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

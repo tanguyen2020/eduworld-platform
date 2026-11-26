@@ -1,0 +1,22 @@
+# Backup alerts (F131 T023, MONITORING §5, BACKUP_RECOVERY §3.4). backup-tools writes textfile metrics read by
+# node_exporter on the ops node: eduworld_backup_*{target,type}. BackupMissing aggregates `max by (target)` because
+# each target has several job types (full/diff/offsite…); restore tests and checks are not backups.
+# Threshold 26 hours = alert_thresholds (CONFIG_DEFAULTS §18). object_storage has its own ObjectStorageBackupMissing.
+groups:
+  - name: backup
+    rules:
+      - alert: BackupFailed
+        expr: max by (target, type) (eduworld_backup_last_status) == 0
+        labels: { severity: critical }
+        annotations:
+          summary: "Last {{ $labels.type }} run of backup target {{ $labels.target }} failed"
+          runbook_url: "docs/11-operations/runbooks/BackupFailed.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: BackupMissing
+        expr: |
+          time() - max by (target) (eduworld_backup_last_success_timestamp{target!="object_storage",type!~"restore_.*|check"}) > 26 * 3600
+        labels: { severity: critical }
+        annotations:
+          summary: "No successful backup of {{ $labels.target }} for 26 hours"
+          runbook_url: "docs/11-operations/runbooks/BackupMissing.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

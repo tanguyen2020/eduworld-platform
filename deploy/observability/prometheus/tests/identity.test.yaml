@@ -1,0 +1,504 @@
+# promtool unit tests of rules/identity.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/identity.yaml
+evaluation_interval: 1m
+tests:
+  - name: EmailDeliveryFailing
+    interval: 1m
+    input_series:
+      - series: eduworld_email_deliveries_total{template="school_safety",status="failed"}
+        values: 0x10 1x10
+      - series: eduworld_email_deliveries_total{template="school_safety",status="sent"}
+        values: 0+1x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: EmailDeliveryFailing
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: EmailDeliveryFailing
+        exp_alerts:
+          - exp_labels:
+              template: school_safety
+              severity: critical
+              module: identity
+              team: safety
+            exp_annotations:
+              summary: Staff emails of template school_safety failed after email_delivery_max_attempts
+              description: Check the SMTP relay (EW_SMTP_*) and identity.email_deliveries (status failed, last_error_code); the school still sees the notification in the portal.
+              runbook_url: docs/11-operations/runbooks/EmailDeliveryFailing.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: SchoolSafetyNotificationNoRecipient
+    interval: 1m
+    input_series:
+      - series: eduworld_school_safety_notification_no_recipient_total{template="school_safety"}
+        values: 0x10 1x10
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: SchoolSafetyNotificationNoRecipient
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: SchoolSafetyNotificationNoRecipient
+        exp_alerts:
+          - exp_labels:
+              template: school_safety
+              severity: warning
+              module: identity
+              team: safety
+            exp_annotations:
+              summary: A school safety notification has no School Admin or Tenant Admin to email
+              description: Assign a School Admin to the school (or a Tenant Admin) and contact the school directly (MODERATION §6.4).
+              runbook_url: docs/11-operations/runbooks/SchoolSafetyNotificationNoRecipient.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: LoginLatencyHigh
+    interval: 1m
+    input_series:
+      - series: eduworld_auth_login_duration_seconds_bucket{method="password",le="3"}
+        values: 0+10x30 300x30
+      - series: eduworld_auth_login_duration_seconds_bucket{method="password",le="10"}
+        values: 0+10x60
+      - series: eduworld_auth_login_duration_seconds_bucket{method="password",le="+Inf"}
+        values: 0+10x60
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: LoginLatencyHigh
+        exp_alerts: []
+      - eval_time: 50m
+        alertname: LoginLatencyHigh
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              module: identity
+            exp_annotations:
+              summary: p95 password login → hub above 3 s for 5 minutes (login_slo)
+              runbook_url: docs/11-operations/runbooks/LoginLatencyHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: LoginLatencyHigh outside school hours
+    interval: 1m
+    input_series:
+      - series: eduworld_auth_login_duration_seconds_bucket{method="password",le="3"}
+        values: "0x1100"
+      - series: eduworld_auth_login_duration_seconds_bucket{method="password",le="10"}
+        values: 0+10x1100
+      - series: eduworld_auth_login_duration_seconds_bucket{method="password",le="+Inf"}
+        values: 0+10x1100
+    alert_rule_test:
+      - eval_time: 14h
+        alertname: LoginLatencyHigh
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              module: identity
+            exp_annotations:
+              summary: p95 password login → hub above 3 s for 5 minutes (login_slo)
+              runbook_url: docs/11-operations/runbooks/LoginLatencyHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+      - eval_time: 17h30m
+        alertname: LoginLatencyHigh
+        exp_alerts: []
+  - name: KeycloakCpuHigh
+    interval: 1m
+    input_series:
+      - series: container_cpu_usage_seconds_total{swarm_service="keycloak",name="eduworld_keycloak.1.abc"}
+        values: 0+12x10 120+54x20
+      - series: container_spec_cpu_quota{swarm_service="keycloak",name="eduworld_keycloak.1.abc"}
+        values: 100000x30
+      - series: container_spec_cpu_period{swarm_service="keycloak",name="eduworld_keycloak.1.abc"}
+        values: 100000x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: KeycloakCpuHigh
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: KeycloakCpuHigh
+        exp_alerts:
+          - exp_labels:
+              name: eduworld_keycloak.1.abc
+              severity: warning
+              service: keycloak
+            exp_annotations:
+              summary: Keycloak container eduworld_keycloak.1.abc uses more than 75% of its CPU limit
+              runbook_url: docs/11-operations/runbooks/KeycloakCpuHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: LoginRateNearCapacity
+    interval: 15s
+    input_series:
+      - series: keycloak_user_events_total{event="login",realm="eduworld"}
+        values: 0+750x40 30000+1350x40
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: LoginRateNearCapacity
+        exp_alerts: []
+      - eval_time: 18m
+        alertname: LoginRateNearCapacity
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              service: keycloak
+            exp_annotations:
+              summary: More than 80 logins/s on Keycloak (80% of the 100/s design peak)
+              runbook_url: docs/11-operations/runbooks/LoginRateNearCapacity.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: LoginRateOverCapacity
+    interval: 15s
+    input_series:
+      - series: keycloak_user_events_total{event="login",realm="eduworld"}
+        values: 0+750x40 30000+1800x40
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: LoginRateOverCapacity
+        exp_alerts: []
+      - eval_time: 18m
+        alertname: LoginRateOverCapacity
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              service: keycloak
+            exp_annotations:
+              summary: Login load beyond Keycloak capacity (over 110/s, or successes halved while errors grow)
+              runbook_url: docs/11-operations/runbooks/LoginRateOverCapacity.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: AccountNotProvisionedSpike
+    interval: 1m
+    input_series:
+      - series: eduworld_auth_logins_total{result="not_provisioned",method="password",tenant="t-a"}
+        values: 0x10 0+2x50
+      - series: eduworld_auth_logins_total{result="not_provisioned",method="password",tenant="t-b"}
+        values: 0+0.5x60
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: AccountNotProvisionedSpike
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: AccountNotProvisionedSpike
+        exp_alerts:
+          - exp_labels:
+              tenant: t-a
+              severity: warning
+              module: identity
+            exp_annotations:
+              summary: More than 50 logins/hour refused with ACCOUNT_NOT_PROVISIONED
+              runbook_url: docs/11-operations/runbooks/AccountNotProvisionedSpike.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: GameRefreshReuseSpike
+    interval: 1m
+    input_series:
+      - series: eduworld_auth_game_refresh_total{result="reused",mode="renew",tenant="t-a"}
+        values: 0x10 0+1x50
+      - series: eduworld_auth_game_refresh_total{result="ok",mode="renew",tenant="t-a"}
+        values: 0+100x60
+      - series: eduworld_auth_game_refresh_total{result="reused",mode="renew",tenant="t-b"}
+        values: "0x60"
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: GameRefreshReuseSpike
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: GameRefreshReuseSpike
+        exp_alerts:
+          - exp_labels:
+              tenant: t-a
+              severity: warning
+              module: identity
+            exp_annotations:
+              summary: Refresh token reuse or device mismatch spike
+              runbook_url: docs/11-operations/runbooks/GameRefreshReuseSpike.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: LoginWaitingRoomActive
+    interval: 1m
+    input_series:
+      - series: eduworld_auth_waiting_room_queued
+        values: 0x10 5x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: LoginWaitingRoomActive
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: LoginWaitingRoomActive
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: identity
+            exp_annotations:
+              summary: The login waiting room has queued students for 10 minutes
+              runbook_url: docs/11-operations/runbooks/LoginWaitingRoomActive.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: LoginErrorSpike
+    interval: 1m
+    input_series:
+      - series: keycloak_user_events_total{event="login_error",realm="eduworld"}
+        values: 0+1x1500 1501+60x60
+    alert_rule_test:
+      - eval_time: 1400m
+        alertname: LoginErrorSpike
+        exp_alerts: []
+      - eval_time: 1530m
+        alertname: LoginErrorSpike
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              service: keycloak
+            exp_annotations:
+              summary: Keycloak login errors above 5× the daily baseline (credential stuffing?)
+              runbook_url: docs/11-operations/runbooks/LoginErrorSpike.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: KeycloakLoginFailuresSpike
+    interval: 1m
+    input_series:
+      - series: eduworld_auth_game_login_total{result="invalid_credentials"}
+        values: 0+1x1500 1501+60x60
+    alert_rule_test:
+      - eval_time: 1400m
+        alertname: KeycloakLoginFailuresSpike
+        exp_alerts: []
+      - eval_time: 1525m
+        alertname: KeycloakLoginFailuresSpike
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: identity
+            exp_annotations:
+              summary: Failed game logins above 5× the daily baseline (brute force or IdP failure?)
+              runbook_url: docs/11-operations/runbooks/KeycloakLoginFailuresSpike.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: JWKSFetchFailing
+    interval: 1m
+    input_series:
+      - series: eduworld_jwks_refresh_total{service="core-api",result="ok"}
+        values: 0+1x10 10x20
+      - series: eduworld_jwks_refresh_total{service="core-api",result="error"}
+        values: 0x10 1+1x20
+      - series: eduworld_jwks_refresh_total{service="realtime",result="ok"}
+        values: 0+1x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: JWKSFetchFailing
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: JWKSFetchFailing
+        exp_alerts:
+          - exp_labels:
+              service: core-api
+              severity: critical
+              module: identity
+            exp_annotations:
+              summary: core-api cannot refresh the Keycloak JWKS for 5 minutes
+              runbook_url: docs/11-operations/runbooks/JWKSFetchFailing.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: SisSyncStale
+    interval: 1h
+    input_series:
+      - series: eduworld_sis_last_success_timestamp{connection="c1"}
+        values: "0x30"
+      - series: eduworld_sis_last_success_timestamp{connection="c2"}
+        values: 0+3600x30
+    alert_rule_test:
+      - eval_time: 20h
+        alertname: SisSyncStale
+        exp_alerts: []
+      - eval_time: 27h
+        alertname: SisSyncStale
+        exp_alerts:
+          - exp_labels:
+              connection: c1
+              severity: warning
+              module: identity
+            exp_annotations:
+              summary: SIS connection c1 has no successful sync for 26 hours
+              runbook_url: docs/11-operations/runbooks/SisSyncStale.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: SisLoginSyncTimeouts
+    interval: 1m
+    input_series:
+      - series: eduworld_sis_login_sync_total{branch="blocking",result="timeout"}
+        values: 0x30 0+1x30
+      - series: eduworld_sis_login_sync_total{branch="blocking",result="ok"}
+        values: 0+10x60
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: SisLoginSyncTimeouts
+        exp_alerts: []
+      - eval_time: 55m
+        alertname: SisLoginSyncTimeouts
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: identity
+            exp_annotations:
+              summary: More than 5% of blocking login syncs time out
+              runbook_url: docs/11-operations/runbooks/SisLoginSyncTimeouts.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: SisLookupTimeouts
+    interval: 1m
+    input_series:
+      - series: eduworld_sis_lookup_total{connection="c1",result="timeout"}
+        values: 0x30 0+5x30
+      - series: eduworld_sis_lookup_total{connection="c1",result="hit"}
+        values: 0+10x60
+      - series: eduworld_sis_lookup_total{connection="c2",result="hit"}
+        values: 0+10x60
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: SisLookupTimeouts
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: SisLookupTimeouts
+        exp_alerts:
+          - exp_labels:
+              connection: c1
+              severity: warning
+              module: identity
+            exp_annotations:
+              summary: More than 20% of SIS lookups of c1 time out
+              runbook_url: docs/11-operations/runbooks/SisLookupTimeouts.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: SISSyncFailed
+    interval: 1m
+    input_series:
+      - series: eduworld_sis_sync_runs_total{connection="c1",mode="full",status="failed"}
+        values: 0x10 1x10 2x20
+      - series: eduworld_sis_sync_runs_total{connection="c2",mode="full",status="failed"}
+        values: 0x10 1x10 2x20
+      - series: eduworld_sis_sync_runs_total{connection="c2",mode="full",status="succeeded"}
+        values: 0x15 1x25
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: SISSyncFailed
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: SISSyncFailed
+        exp_alerts:
+          - exp_labels:
+              connection: c1
+              severity: warning
+              module: identity
+            exp_annotations:
+              summary: Two SIS syncs in a row failed for c1
+              runbook_url: docs/11-operations/runbooks/SISSyncFailed.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: AuditPartitionMissing
+    interval: 1m
+    input_series:
+      - series: eduworld_partition_missing_total{table="audit.audit_logs"}
+        values: 0x10 1x10
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: AuditPartitionMissing
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: AuditPartitionMissing
+        exp_alerts:
+          - exp_labels:
+              table: audit.audit_logs
+              severity: critical
+              module: identity
+            exp_annotations:
+              summary: Next month partition of audit.audit_logs is missing
+              runbook_url: docs/11-operations/runbooks/AuditPartitionMissing.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: AuditTenantMismatch
+    interval: 1m
+    input_series:
+      - series: eduworld_audit_records_total{service="chat",result="tenant_mismatch"}
+        values: 0x10 1x10
+      - series: eduworld_audit_records_total{service="chat",result="recorded"}
+        values: 0+5x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: AuditTenantMismatch
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: AuditTenantMismatch
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: identity
+            exp_annotations:
+              summary: Audit events name a school of another tenant
+              runbook_url: docs/11-operations/runbooks/AuditTenantMismatch.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: TenantFilterBypassSpike
+    interval: 1m
+    input_series:
+      - series: eduworld_tenant_filter_bypass_total{module="chat",reason="moderation_case"}
+        values: 0+1x1500 1501+30x90
+      - series: eduworld_tenant_filter_bypass_total{module="game",reason="platform_job"}
+        values: 0+1x1600
+    alert_rule_test:
+      - eval_time: 1400m
+        alertname: TenantFilterBypassSpike
+        exp_alerts: []
+      - eval_time: 1590m
+        alertname: TenantFilterBypassSpike
+        exp_alerts:
+          - exp_labels:
+              module: chat
+              severity: warning
+            exp_annotations:
+              summary: Tenant filter bypasses of module chat above 5× the baseline
+              runbook_url: docs/11-operations/runbooks/TenantFilterBypassSpike.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: SagaStuck
+    interval: 1m
+    input_series:
+      - series: eduworld_saga_stuck{saga="tenant_clone"}
+        values: 0x10 1x40
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: SagaStuck
+        exp_alerts: []
+      - eval_time: 45m
+        alertname: SagaStuck
+        exp_alerts:
+          - exp_labels:
+              saga: tenant_clone
+              severity: warning
+              module: identity
+            exp_annotations:
+              summary: Saga tenant_clone stuck for 30 minutes
+              runbook_url: docs/11-operations/runbooks/SagaStuck.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: StudentCleanupLargeBatch
+    interval: 1m
+    input_series:
+      - series: eduworld_student_cleanup_large_batch_total{tenant="t-a"}
+        values: 0x10 1x10
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: StudentCleanupLargeBatch
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: StudentCleanupLargeBatch
+        exp_alerts:
+          - exp_labels:
+              tenant: t-a
+              severity: warning
+              module: identity
+            exp_annotations:
+              summary: A student cleanup run waits for approval (more than 10% of a tenant)
+              runbook_url: docs/11-operations/runbooks/StudentCleanupLargeBatch.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: StudentCleanupJobFailed
+    interval: 1m
+    input_series:
+      - series: eduworld_job_runs_total{module="identity",job="student-inactive-cleanup",result="ok"}
+        values: 0+1x20
+      - series: eduworld_job_runs_total{module="identity",job="student-inactive-cleanup",result="error"}
+        values: 0x10 1x10
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: StudentCleanupJobFailed
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: StudentCleanupJobFailed
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: identity
+              service: worker
+              profile: jobs
+            exp_annotations:
+              summary: student-inactive-cleanup failed or has not succeeded for 48 hours
+              runbook_url: docs/11-operations/runbooks/StudentCleanupJobFailed.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

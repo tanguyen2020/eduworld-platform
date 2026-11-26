@@ -1,0 +1,22 @@
+# Edge alerts: CDN and TLS certificates (F131 T023, MONITORING §5). Both come from blackbox_exporter probes (obs stack):
+# job blackbox-cdn probes a public immutable CDN object, job blackbox-tls the public HTTPS endpoints.
+# STAND-IN (R17): the CDN provider's own 5xx metrics are not integrated yet; CdnErrorRate uses the failure ratio of the
+# synthetic CDN probe until the provider export exists (MONITORING §5 note).
+groups:
+  - name: edge
+    rules:
+      - alert: CdnErrorRate
+        expr: 1 - avg by (instance) (avg_over_time(probe_success{job="blackbox-cdn"}[10m])) > 0.01
+        for: 10m
+        labels: { severity: critical }
+        annotations:
+          summary: "CDN probe {{ $labels.instance }} fails more than 1% for 10 minutes"
+          runbook_url: "docs/11-operations/runbooks/CdnErrorRate.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: CertificateExpiring
+        expr: min by (instance) (probe_ssl_earliest_cert_expiry{job="blackbox-tls"}) - time() < 14 * 86400
+        labels: { severity: warning }
+        annotations:
+          summary: "TLS certificate of {{ $labels.instance }} expires in less than 14 days"
+          runbook_url: "docs/11-operations/runbooks/CertificateExpiring.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

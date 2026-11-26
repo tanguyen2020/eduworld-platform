@@ -1,0 +1,118 @@
+# promtool unit tests of rules/meta.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+evaluation_interval: 1m
+tests:
+  - name: Watchdog
+    interval: 1m
+    input_series: []
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: Watchdog
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              heartbeat: "true"
+            exp_annotations:
+              summary: Heartbeat of the alerting pipeline (always firing)
+              description: Sent to the external heartbeat receiver; its absence for 10 minutes means Prometheus or Alertmanager is down.
+              runbook_url: docs/11-operations/runbooks/Watchdog.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: PrometheusTargetDown
+    interval: 1m
+    input_series:
+      - series: up{job="node",instance="n1"}
+        values: 1x10 0x20
+      - series: up{job="node",instance="n2"}
+        values: 1x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: PrometheusTargetDown
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: PrometheusTargetDown
+        exp_alerts:
+          - exp_labels:
+              job: node
+              instance: n1
+              severity: warning
+            exp_annotations:
+              summary: Scrape target node (n1) is down for 5 minutes
+              runbook_url: docs/11-operations/runbooks/PrometheusTargetDown.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: PrometheusTargetSampleLimit
+    interval: 1m
+    input_series:
+      - series: prometheus_target_scrapes_exceeded_sample_limit_total{job="core-api"}
+        values: 0x10 1+1x10
+      - series: prometheus_target_scrapes_exceeded_sample_limit_total{job="realtime"}
+        values: "0x20"
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: PrometheusTargetSampleLimit
+        exp_alerts: []
+      - eval_time: 18m
+        alertname: PrometheusTargetSampleLimit
+        exp_alerts:
+          - exp_labels:
+              job: core-api
+              severity: warning
+            exp_annotations:
+              summary: Scrapes of core-api exceed sample_limit (label cardinality too high)
+              runbook_url: docs/11-operations/runbooks/PrometheusTargetSampleLimit.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: PrometheusRuleFailures
+    interval: 1m
+    input_series:
+      - series: prometheus_rule_evaluation_failures_total{rule_group="api.yaml;api"}
+        values: 0x10 1+1x10
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: PrometheusRuleFailures
+        exp_alerts: []
+      - eval_time: 18m
+        alertname: PrometheusRuleFailures
+        exp_alerts:
+          - exp_labels:
+              rule_group: api.yaml;api
+              severity: critical
+            exp_annotations:
+              summary: Rule group api.yaml;api fails to evaluate (alerts may be blind)
+              runbook_url: docs/11-operations/runbooks/PrometheusRuleFailures.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: AlertmanagerNotificationsFailing
+    interval: 1m
+    input_series:
+      - series: alertmanager_notifications_failed_total{integration="webhook"}
+        values: 0x10 1+1x30
+      - series: alertmanager_notifications_failed_total{integration="email"}
+        values: "0x40"
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: AlertmanagerNotificationsFailing
+        exp_alerts: []
+      - eval_time: 30m
+        alertname: AlertmanagerNotificationsFailing
+        exp_alerts:
+          - exp_labels:
+              integration: webhook
+              severity: critical
+            exp_annotations:
+              summary: Alertmanager cannot deliver notifications through webhook
+              runbook_url: docs/11-operations/runbooks/AlertmanagerNotificationsFailing.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: eduworld:school_hours (07:00 ICT in, 23:30 ICT out)
+    interval: 1m
+    input_series:
+      - series: dummy
+        values: "0x1000"
+    promql_expr_test:
+      - expr: eduworld:school_hours
+        eval_time: 0m
+        exp_samples:
+          - labels: eduworld:school_hours
+            value: 420
+      - expr: eduworld:school_hours
+        eval_time: 15h
+        exp_samples: []

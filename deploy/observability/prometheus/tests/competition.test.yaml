@@ -1,0 +1,129 @@
+# promtool unit tests of rules/competition.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/competition.yaml
+evaluation_interval: 1m
+tests:
+  - name: CompetitionRoomTickSlow
+    interval: 1m
+    input_series:
+      - series: eduworld_room_tick_duration_seconds_bucket{room_type="hub",le="0.02"}
+        values: 0+10x30 300x30
+      - series: eduworld_room_tick_duration_seconds_bucket{room_type="hub",le="0.05"}
+        values: 0+10x60
+      - series: eduworld_room_tick_duration_seconds_bucket{room_type="hub",le="+Inf"}
+        values: 0+10x60
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: CompetitionRoomTickSlow
+        exp_alerts: []
+      - eval_time: 55m
+        alertname: CompetitionRoomTickSlow
+        exp_alerts:
+          - exp_labels:
+              room_type: hub
+              severity: warning
+              module: competition
+            exp_annotations:
+              summary: Room tick p99 > 20 ms (hub)
+              description: Budget ≤ 5 ms per tick for a hub instance of 40 (REALTIME_ARCHITECTURE §8). Check room count per core-api replica.
+              runbook_url: docs/11-operations/runbooks/CompetitionRoomTickSlow.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: MatchmakingWaitHigh
+    interval: 1m
+    input_series:
+      - series: eduworld_mm_wait_seconds_bucket{mode="ranked",result="matched",le="60"}
+        values: 0+10x30 300x50
+      - series: eduworld_mm_wait_seconds_bucket{mode="ranked",result="matched",le="120"}
+        values: 0+10x80
+      - series: eduworld_mm_wait_seconds_bucket{mode="ranked",result="matched",le="+Inf"}
+        values: 0+10x80
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: MatchmakingWaitHigh
+        exp_alerts: []
+      - eval_time: 75m
+        alertname: MatchmakingWaitHigh
+        exp_alerts:
+          - exp_labels:
+              mode: ranked
+              severity: warning
+              module: competition
+            exp_annotations:
+              summary: Matchmaking wait p95 > 60 s (ranked)
+              description: NFR-PERF-007 targets p90 ≤ 45 s when the queue has enough players. Check queue sizes (eduworld_mm_queue_size) and the matchmaker loop.
+              runbook_url: docs/11-operations/runbooks/MatchmakingWaitHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: MatchmakerLoopSlow
+    interval: 1m
+    input_series:
+      - series: eduworld_mm_loop_duration_seconds_bucket{le="1"}
+        values: 0+10x30 300x30
+      - series: eduworld_mm_loop_duration_seconds_bucket{le="5"}
+        values: 0+10x60
+      - series: eduworld_mm_loop_duration_seconds_bucket{le="+Inf"}
+        values: 0+10x60
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: MatchmakerLoopSlow
+        exp_alerts: []
+      - eval_time: 55m
+        alertname: MatchmakerLoopSlow
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: competition
+            exp_annotations:
+              summary: Matchmaker pass p95 > 1 s
+              description: One pass over every queue must stay under 1 s (MATCHMAKING §10). Check Valkey latency and the number of queues per worker.
+              runbook_url: docs/11-operations/runbooks/MatchmakerLoopSlow.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: MatchmakingStalled
+    interval: 1m
+    input_series:
+      - series: eduworld_mm_queue_size{queue="ranked_g6_9_math"}
+        values: 3x30
+      - series: eduworld_mm_queue_size{queue="ranked_g1_3_math"}
+        values: "0x30"
+      - series: eduworld_mm_proposals_total{mode="ranked",result="accepted"}
+        values: 0+1x10 10x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: MatchmakingStalled
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MatchmakingStalled
+        exp_alerts:
+          - exp_labels:
+              queue: ranked_g6_9_math
+              severity: warning
+              module: competition
+              service: worker
+              profile: jobs
+            exp_annotations:
+              summary: Queue ranked_g6_9_math has players but no new proposal for 3 minutes
+              runbook_url: docs/11-operations/runbooks/MatchmakingStalled.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: DuplicateMatchResults
+    interval: 1m
+    input_series:
+      - series: eduworld_match_results_total{mode="ranked",result="duplicate_rejected"}
+        values: 0x10 0+10x10
+      - series: eduworld_match_results_total{mode="ranked",result="recorded"}
+        values: 0+5x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: DuplicateMatchResults
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: DuplicateMatchResults
+        exp_alerts:
+          - exp_labels:
+              mode: ranked
+              severity: warning
+              module: competition
+            exp_annotations:
+              summary: More than 20 duplicate match results rejected in 5 minutes (ranked)
+              runbook_url: docs/11-operations/runbooks/DuplicateMatchResults.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

@@ -41,7 +41,7 @@ func TestSafetyOperationsAlerts(t *testing.T) {
 		}
 		return string(b)
 	}
-	chat, identity, am := read("prometheus/alerts/chat.yml"), read("prometheus/alerts/identity.yml"), read("alertmanager/alertmanager.yml")
+	chat, identity, am := read("prometheus/rules/chat.yaml"), read("prometheus/rules/identity.yaml"), read("alertmanager/alertmanager.yml")
 	for _, want := range []string{"alert: ModerationOncallGap", "eduworld_moderation_oncall_coverage) == 0", "team: safety"} {
 		if !strings.Contains(chat, want) {
 			t.Errorf("chat.yml lacks %q", want)

@@ -30,10 +30,10 @@ func TestModerationBypassOnlyInModeration(t *testing.T) {
 }
 
 // T038 / F121-AC-22: the alert ModerationP1Unclaimed fires when the oldest unassigned p1 case is older than
-// p1_unclaimed_alert_minutes (15 minutes) — rule of deploy/observability/prometheus/alerts/chat.yml on the gauge the
+// p1_unclaimed_alert_minutes (15 minutes) — rule of deploy/observability/prometheus/rules/chat.yaml on the gauge the
 // job moderation-sla-escalator publishes (promtool is not available locally: the rule text is checked here).
 func TestModerationAlertRules(t *testing.T) {
-	b, err := os.ReadFile(filepath.Join(moduleDir(t), "..", "..", "..", "..", "deploy", "observability", "prometheus", "alerts", "chat.yml"))
+	b, err := os.ReadFile(filepath.Join(moduleDir(t), "..", "..", "..", "..", "deploy", "observability", "prometheus", "rules", "chat.yaml"))
 	if err != nil {
 		t.Fatal(err)
 	}

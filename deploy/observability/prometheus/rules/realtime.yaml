@@ -1,0 +1,30 @@
+# Realtime alerts (F131 T023, MONITORING §5). Thresholds owned by MONITORING §5.
+groups:
+  - name: realtime
+    rules:
+      - alert: RealtimeConnectFailures
+        expr: sum(rate(eduworld_ws_connect_total{result!="ok"}[5m])) / sum(rate(eduworld_ws_connect_total[5m])) > 0.10
+        for: 5m
+        labels: { severity: critical, service: realtime, module: realtime }
+        annotations:
+          summary: "More than 10% of WebSocket connects fail for 5 minutes"
+          runbook_url: "docs/11-operations/runbooks/RealtimeConnectFailures.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: RealtimeNodeDown
+        expr: up{service="realtime"} == 0
+        for: 2m
+        labels: { severity: critical, module: realtime }
+        annotations:
+          summary: "A realtime replica ({{ $labels.instance }}) cannot be scraped for 2 minutes"
+          runbook_url: "docs/11-operations/runbooks/RealtimeNodeDown.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: NatsRequestTimeouts
+        expr: |
+          sum by (module) (rate(eduworld_nats_request_errors_total{reason="timeout"}[5m]))
+            / sum by (module) (rate(eduworld_nats_request_duration_seconds_count[5m])) > 0.02
+        for: 5m
+        labels: { severity: warning, service: realtime }
+        annotations:
+          summary: "More than 2% of WS commands to module {{ $labels.module }} time out on NATS"
+          runbook_url: "docs/11-operations/runbooks/NatsRequestTimeouts.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

@@ -1,0 +1,93 @@
+# promtool unit tests of rules/slo.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/slo.yaml
+evaluation_interval: 1m
+tests:
+  - name: SLOBurnRateFast fires after one hour above 14.4x
+    interval: 1m
+    input_series:
+      - series: apisix_http_status{job="apisix",code="200"}
+        values: 0+90x200
+      - series: apisix_http_status{job="apisix",code="500"}
+        values: 0x60 10+10x140
+    alert_rule_test:
+      - eval_time: 50m
+        alertname: SLOBurnRateFast
+        exp_alerts: []
+      - eval_time: 130m
+        alertname: SLOBurnRateFast
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              slo: availability
+            exp_annotations:
+              summary: Availability error budget burns more than 14.4× (1 h and 5 m windows)
+              runbook_url: docs/11-operations/runbooks/SLOBurnRateFast.md
+              source: docs/11-operations/MONITORING.md#6-slo--confirmed-oq-11
+  - name: SLOBurnRateFast silent outside school hours
+    interval: 1m
+    input_series:
+      - series: apisix_http_status{job="apisix",code="200"}
+        values: 0+90x1100
+      - series: apisix_http_status{job="apisix",code="500"}
+        values: 0x960 10+10x140
+    alert_rule_test:
+      - eval_time: 1050m
+        alertname: SLOBurnRateFast
+        exp_alerts: []
+  - name: SLOBurnRateFast ignores 429
+    interval: 1m
+    input_series:
+      - series: apisix_http_status{job="apisix",code="200"}
+        values: 0+90x200
+      - series: apisix_http_status{job="apisix",code="429"}
+        values: 0x60 10+50x140
+    alert_rule_test:
+      - eval_time: 130m
+        alertname: SLOBurnRateFast
+        exp_alerts: []
+  - name: SLOBurnRateSlow fires after six hours above 6x
+    interval: 1m
+    input_series:
+      - series: apisix_http_status{job="apisix",code="200"}
+        values: 0+95x500
+      - series: apisix_http_status{job="apisix",code="500"}
+        values: 0x60 5+5x440
+    alert_rule_test:
+      - eval_time: 50m
+        alertname: SLOBurnRateSlow
+        exp_alerts: []
+      - eval_time: 450m
+        alertname: SLOBurnRateSlow
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              slo: availability
+            exp_annotations:
+              summary: Availability error budget burns more than 6× (6 h and 30 m windows)
+              runbook_url: docs/11-operations/runbooks/SLOBurnRateSlow.md
+              source: docs/11-operations/MONITORING.md#6-slo--confirmed-oq-11
+  - name: availability SLI excludes 429 from the denominator
+    interval: 1m
+    input_series:
+      - series: apisix_http_status{job="apisix",code="200"}
+        values: 0+75x60
+      - series: apisix_http_status{job="apisix",code="503"}
+        values: 0+25x60
+      - series: apisix_http_status{job="apisix",code="429"}
+        values: 0+1000x60
+      - series: apisix_http_status{job="apisix-internal",code="500"}
+        values: 0+1000x60
+    promql_expr_test:
+      - expr: eduworld:sli_availability_errors:ratio_rate5m
+        eval_time: 30m
+        exp_samples:
+          - labels: eduworld:sli_availability_errors:ratio_rate5m
+            value: 0.25
+      - expr: eduworld:slo_availability_target
+        eval_time: 30m
+        exp_samples:
+          - labels: eduworld:slo_availability_target
+            value: 0.995

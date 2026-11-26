@@ -1,0 +1,70 @@
+# promtool unit tests of rules/game.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/game.yaml
+evaluation_interval: 1m
+tests:
+  - name: AnalyticsRawRowsHigh
+    interval: 1m
+    input_series:
+      - series: eduworld_analytics_raw_rows
+        values: 300000000x10 450000000x70
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: AnalyticsRawRowsHigh
+        exp_alerts: []
+      - eval_time: 75m
+        alertname: AnalyticsRawRowsHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: game
+            exp_annotations:
+              summary: analytics.events_raw passed 400 million rows (80% of analytics_store_migration_threshold)
+              description: Prepare the ADR on the analytics store (ADR-0058, ADR-0070).
+              runbook_url: docs/11-operations/runbooks/AnalyticsRawRowsHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: AnalyticsRollupSlow
+    interval: 1m
+    input_series:
+      - series: eduworld_analytics_rollup_duration_seconds_bucket{step="day",le="7200"}
+        values: 0+1x60 60x120
+      - series: eduworld_analytics_rollup_duration_seconds_bucket{step="day",le="14400"}
+        values: 0+1x180
+      - series: eduworld_analytics_rollup_duration_seconds_bucket{step="day",le="+Inf"}
+        values: 0+1x180
+    alert_rule_test:
+      - eval_time: 50m
+        alertname: AnalyticsRollupSlow
+        exp_alerts: []
+      - eval_time: 170m
+        alertname: AnalyticsRollupSlow
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: game
+            exp_annotations:
+              summary: A tenant day of the Game Analytics rollup takes more than 2 hours (p95)
+              description: GAME_ANALYTICS §10 threshold (rollup ngày > 2 h). Check the job analytics-rollup-hourly / dashboard-day-close-game and the size of events_raw.
+              runbook_url: docs/11-operations/runbooks/AnalyticsRollupSlow.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: GameTakeoverSpike
+    interval: 1m
+    input_series:
+      - series: eduworld_game_session_takeovers_total{platform="windows"}
+        values: 0+1x1500 1501+30x90
+    alert_rule_test:
+      - eval_time: 1400m
+        alertname: GameTakeoverSpike
+        exp_alerts: []
+      - eval_time: 1590m
+        alertname: GameTakeoverSpike
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: game
+            exp_annotations:
+              summary: Game session takeovers above 5× the daily baseline (shared accounts or leaked passwords?)
+              runbook_url: docs/11-operations/runbooks/GameTakeoverSpike.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

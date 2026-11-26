@@ -1,0 +1,49 @@
+# promtool unit tests of rules/learning.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/learning.yaml
+evaluation_interval: 1m
+tests:
+  - name: ExperimentGuardrailBreached
+    interval: 1m
+    input_series:
+      - series: eduworld_experiment_guardrail_breaches_total
+        values: 0x10 1x10
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ExperimentGuardrailBreached
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: ExperimentGuardrailBreached
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              module: learning
+            exp_annotations:
+              summary: An A/B learning experiment was stopped by its guardrail
+              description: An arm lowered the primary metric by experiment_guardrail_drop_pp or more against the control; the students are back on the control. Review the results (getLearningExperimentResults).
+              runbook_url: docs/11-operations/runbooks/ExperimentGuardrailBreached.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: LearningPartitionsMissing
+    interval: 1m
+    input_series:
+      - series: eduworld_learning_events_partition_months_ahead{table="learning_events"}
+        values: 3x10 1x10
+      - series: eduworld_learning_events_partition_months_ahead{table="attempt_answers"}
+        values: 3x20
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: LearningPartitionsMissing
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: LearningPartitionsMissing
+        exp_alerts:
+          - exp_labels:
+              table: learning_events
+              severity: critical
+              module: learning
+            exp_annotations:
+              summary: Fewer than 2 months of partitions ahead for learning_events (no DEFAULT partition)
+              runbook_url: docs/11-operations/runbooks/LearningPartitionsMissing.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

@@ -1,0 +1,50 @@
+# PostgreSQL and Valkey alerts (F131 T023, MONITORING §5). postgres_exporter (pg_*), redis_exporter (redis_*, user
+# `exporter` of the Valkey ACL, read-only), node_exporter on the data-pg nodes (node, role by relabelling).
+groups:
+  - name: datastore
+    rules:
+      - alert: PostgresReplicationLag
+        expr: max by (instance) (pg_replication_lag_seconds) > 30
+        labels: { severity: critical }
+        annotations:
+          summary: "PostgreSQL replica {{ $labels.instance }} lags more than 30 s (RPO at risk)"
+          runbook_url: "docs/11-operations/runbooks/PostgresReplicationLag.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: PostgresConnectionsHigh
+        expr: sum by (instance) (pg_stat_database_numbackends) / max by (instance) (pg_settings_max_connections) > 0.85
+        labels: { severity: warning }
+        annotations:
+          summary: "PostgreSQL {{ $labels.instance }} uses more than 85% of max_connections"
+          runbook_url: "docs/11-operations/runbooks/PostgresConnectionsHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: PostgresDiskHigh
+        expr: |
+          1 - min by (node) (node_filesystem_avail_bytes{role="data-pg",fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{role="data-pg",fstype!~"tmpfs|overlay"}) > 0.8
+        labels: { severity: warning }
+        annotations:
+          summary: "Disk of PostgreSQL node {{ $labels.node }} above 80%"
+          runbook_url: "docs/11-operations/runbooks/PostgresDiskHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: PostgresDiskHigh
+        expr: |
+          1 - min by (node) (node_filesystem_avail_bytes{role="data-pg",fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{role="data-pg",fstype!~"tmpfs|overlay"}) > 0.9
+        labels: { severity: critical }
+        annotations:
+          summary: "Disk of PostgreSQL node {{ $labels.node }} above 90%"
+          runbook_url: "docs/11-operations/runbooks/PostgresDiskHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ValkeyMemoryHigh
+        expr: max by (instance) (redis_memory_used_bytes) / max by (instance) (redis_memory_max_bytes > 0) > 0.85
+        labels: { severity: warning }
+        annotations:
+          summary: "Valkey {{ $labels.instance }} uses more than 85% of maxmemory"
+          runbook_url: "docs/11-operations/runbooks/ValkeyMemoryHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: ValkeyDown
+        expr: max by (instance) (redis_up) == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "Valkey {{ $labels.instance }} does not answer for 1 minute (realtime degraded)"
+          runbook_url: "docs/11-operations/runbooks/ValkeyDown.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

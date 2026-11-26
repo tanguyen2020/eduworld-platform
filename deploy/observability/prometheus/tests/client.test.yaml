@@ -1,0 +1,33 @@
+# promtool unit tests of rules/client.yaml (F131 T019/T029, F131-AC-08/AC-15): every alert has a firing case and a
+# non-firing case. Run: make obs-rules (promtool test rules deploy/observability/prometheus/tests/*.test.yaml).
+rule_files:
+  - ../rules/meta.yaml
+  - ../rules/client.yaml
+evaluation_interval: 1m
+tests:
+  - name: ClientCrashRateHigh
+    interval: 1m
+    input_series:
+      - series: eduworld_client_crashes_total{platform="windows",client_version="1.2.0"}
+        values: 0x10 0+5x50
+      - series: eduworld_client_sessions_total{platform="windows",client_version="1.2.0"}
+        values: 0+100x60
+      - series: eduworld_client_crashes_total{platform="windows",client_version="1.1.0"}
+        values: "0x60"
+      - series: eduworld_client_sessions_total{platform="windows",client_version="1.1.0"}
+        values: 0+100x60
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ClientCrashRateHigh
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: ClientCrashRateHigh
+        exp_alerts:
+          - exp_labels:
+              client_version: 1.2.0
+              severity: warning
+              module: game
+            exp_annotations:
+              summary: Crash rate of client 1.2.0 above 2% of sessions
+              runbook_url: docs/11-operations/runbooks/ClientCrashRateHigh.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed

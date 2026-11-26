@@ -1,0 +1,213 @@
+# Alert rules of module identity and Keycloak (F124 T037, F131 T023, MONITORING §5). Labels carry templates only
+# (R14): no user, school or IP. `tenant` is a bounded internal label only where MONITORING §3 lists it.
+groups:
+  - name: identity-safety-mail
+    rules:
+      - alert: EmailDeliveryFailing
+        expr: sum by (template) (increase(eduworld_email_deliveries_total{status="failed"}[15m])) > 0
+        labels: { severity: critical, module: identity, team: safety }
+        annotations:
+          summary: "Staff emails of template {{ $labels.template }} failed after email_delivery_max_attempts"
+          description: "Check the SMTP relay (EW_SMTP_*) and identity.email_deliveries (status failed, last_error_code); the school still sees the notification in the portal."
+          runbook_url: "docs/11-operations/runbooks/EmailDeliveryFailing.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: SchoolSafetyNotificationNoRecipient
+        expr: sum by (template) (increase(eduworld_school_safety_notification_no_recipient_total[1h])) > 0
+        labels: { severity: warning, module: identity, team: safety }
+        annotations:
+          summary: "A school safety notification has no School Admin or Tenant Admin to email"
+          description: "Assign a School Admin to the school (or a Tenant Admin) and contact the school directly (MODERATION §6.4)."
+          runbook_url: "docs/11-operations/runbooks/SchoolSafetyNotificationNoRecipient.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+
+  - name: identity-login
+    rules:
+      - alert: LoginLatencyHigh
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(eduworld_auth_login_duration_seconds_bucket{method="password"}[5m]))) > 3
+          and on() eduworld:school_hours
+        for: 5m
+        labels: { severity: critical, module: identity }
+        annotations:
+          summary: "p95 password login → hub above 3 s for 5 minutes (login_slo)"
+          runbook_url: "docs/11-operations/runbooks/LoginLatencyHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: KeycloakCpuHigh
+        expr: |
+          sum by (name) (rate(container_cpu_usage_seconds_total{swarm_service="keycloak"}[5m]))
+            / sum by (name) (container_spec_cpu_quota{swarm_service="keycloak"} / container_spec_cpu_period{swarm_service="keycloak"}) > 0.75
+        for: 5m
+        labels: { severity: warning, service: keycloak }
+        annotations:
+          summary: "Keycloak container {{ $labels.name }} uses more than 75% of its CPU limit"
+          runbook_url: "docs/11-operations/runbooks/KeycloakCpuHigh.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: LoginRateNearCapacity
+        expr: sum(rate(keycloak_user_events_total{event="login"}[1m])) > 80
+        for: 2m
+        labels: { severity: warning, service: keycloak }
+        annotations:
+          summary: "More than 80 logins/s on Keycloak (80% of the 100/s design peak)"
+          runbook_url: "docs/11-operations/runbooks/LoginRateNearCapacity.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: LoginRateOverCapacity
+        expr: |
+          sum(rate(keycloak_user_events_total{event="login"}[1m])) > 110
+          or (
+            sum(rate(eduworld_auth_logins_total{result="ok",method="password"}[1m]))
+              < 0.5 * sum(rate(eduworld_auth_logins_total{result="ok",method="password"}[1m] offset 10m))
+            and on() sum(rate(keycloak_user_events_total{event="login_error"}[1m]))
+              > sum(rate(keycloak_user_events_total{event="login_error"}[1m] offset 10m))
+          )
+        for: 2m
+        labels: { severity: critical, service: keycloak }
+        annotations:
+          summary: "Login load beyond Keycloak capacity (over 110/s, or successes halved while errors grow)"
+          runbook_url: "docs/11-operations/runbooks/LoginRateOverCapacity.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: AccountNotProvisionedSpike
+        expr: sum by (tenant) (increase(eduworld_auth_logins_total{result="not_provisioned"}[1h])) > 50
+        labels: { severity: warning, module: identity }
+        annotations:
+          summary: "More than 50 logins/hour refused with ACCOUNT_NOT_PROVISIONED"
+          runbook_url: "docs/11-operations/runbooks/AccountNotProvisionedSpike.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: GameRefreshReuseSpike
+        expr: |
+          sum by (tenant) (increase(eduworld_auth_game_refresh_total{result=~"reused|device_mismatch"}[1h])) > 20
+          or (
+            sum by (tenant) (rate(eduworld_auth_game_refresh_total{result=~"reused|device_mismatch"}[15m]))
+              > 5 * sum by (tenant) (rate(eduworld_auth_game_refresh_total{result=~"reused|device_mismatch"}[1d] offset 15m))
+          )
+        labels: { severity: warning, module: identity }
+        annotations:
+          summary: "Refresh token reuse or device mismatch spike"
+          runbook_url: "docs/11-operations/runbooks/GameRefreshReuseSpike.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: LoginWaitingRoomActive
+        expr: max(eduworld_auth_waiting_room_queued) > 0
+        for: 10m
+        labels: { severity: warning, module: identity }
+        annotations:
+          summary: "The login waiting room has queued students for 10 minutes"
+          runbook_url: "docs/11-operations/runbooks/LoginWaitingRoomActive.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      # Spikes vs a 1-day baseline; the floor (1 error/min) keeps a quiet baseline from paging on a single error
+      # (MONITORING §5 note, [Proposed]).
+      - alert: LoginErrorSpike
+        expr: |
+          sum(rate(keycloak_user_events_total{event="login_error"}[15m]))
+            > 5 * sum(rate(keycloak_user_events_total{event="login_error"}[1d] offset 15m))
+          and sum(rate(keycloak_user_events_total{event="login_error"}[15m])) > 1/60
+        labels: { severity: warning, service: keycloak }
+        annotations:
+          summary: "Keycloak login errors above 5× the daily baseline (credential stuffing?)"
+          runbook_url: "docs/11-operations/runbooks/LoginErrorSpike.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: KeycloakLoginFailuresSpike
+        expr: |
+          sum(rate(eduworld_auth_game_login_total{result=~"invalid_credentials|account_locked"}[10m]))
+            > 5 * sum(rate(eduworld_auth_game_login_total{result=~"invalid_credentials|account_locked"}[1d] offset 10m))
+          and sum(rate(eduworld_auth_game_login_total{result=~"invalid_credentials|account_locked"}[10m])) > 1/60
+        labels: { severity: warning, module: identity }
+        annotations:
+          summary: "Failed game logins above 5× the daily baseline (brute force or IdP failure?)"
+          runbook_url: "docs/11-operations/runbooks/KeycloakLoginFailuresSpike.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: JWKSFetchFailing
+        expr: |
+          sum by (service) (increase(eduworld_jwks_refresh_total{result!="ok"}[5m])) > 0
+          unless sum by (service) (increase(eduworld_jwks_refresh_total{result="ok"}[5m])) > 0
+        for: 5m
+        labels: { severity: critical, module: identity }
+        annotations:
+          summary: "{{ $labels.service }} cannot refresh the Keycloak JWKS for 5 minutes"
+          runbook_url: "docs/11-operations/runbooks/JWKSFetchFailing.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+
+  - name: identity-sis
+    rules:
+      - alert: SisSyncStale
+        expr: time() - max by (connection) (eduworld_sis_last_success_timestamp) > 26 * 3600
+        labels: { severity: warning, module: identity }
+        annotations:
+          summary: "SIS connection {{ $labels.connection }} has no successful sync for 26 hours"
+          runbook_url: "docs/11-operations/runbooks/SisSyncStale.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: SisLoginSyncTimeouts
+        expr: |
+          sum(rate(eduworld_sis_login_sync_total{branch="blocking",result="timeout"}[10m]))
+            / sum(rate(eduworld_sis_login_sync_total{branch="blocking"}[10m])) > 0.05
+        labels: { severity: warning, module: identity }
+        annotations:
+          summary: "More than 5% of blocking login syncs time out"
+          runbook_url: "docs/11-operations/runbooks/SisLoginSyncTimeouts.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: SisLookupTimeouts
+        expr: |
+          sum by (connection) (rate(eduworld_sis_lookup_total{result="timeout"}[15m]))
+            / sum by (connection) (rate(eduworld_sis_lookup_total[15m])) > 0.2
+        labels: { severity: warning, module: identity }
+        annotations:
+          summary: "More than 20% of SIS lookups of {{ $labels.connection }} time out"
+          runbook_url: "docs/11-operations/runbooks/SisLookupTimeouts.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: SISSyncFailed
+        expr: |
+          sum by (connection) (increase(eduworld_sis_sync_runs_total{status="failed"}[6h])) >= 2
+          unless sum by (connection) (increase(eduworld_sis_sync_runs_total{status="succeeded"}[6h])) > 0
+        labels: { severity: warning, module: identity }
+        annotations:
+          summary: "Two SIS syncs in a row failed for {{ $labels.connection }}"
+          runbook_url: "docs/11-operations/runbooks/SISSyncFailed.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+
+  - name: identity-platform
+    rules:
+      - alert: AuditPartitionMissing
+        expr: sum by (table) (increase(eduworld_partition_missing_total[1d])) > 0
+        labels: { severity: critical, module: identity }
+        annotations:
+          summary: "Next month partition of {{ $labels.table }} is missing"
+          runbook_url: "docs/11-operations/runbooks/AuditPartitionMissing.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: AuditTenantMismatch
+        expr: sum(increase(eduworld_audit_records_total{result="tenant_mismatch"}[1h])) > 0
+        labels: { severity: warning, module: identity }
+        annotations:
+          summary: "Audit events name a school of another tenant"
+          runbook_url: "docs/11-operations/runbooks/AuditTenantMismatch.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: TenantFilterBypassSpike
+        expr: |
+          sum by (module) (rate(eduworld_tenant_filter_bypass_total[1h]))
+            > 5 * sum by (module) (rate(eduworld_tenant_filter_bypass_total[1d] offset 1h))
+        labels: { severity: warning }
+        annotations:
+          summary: "Tenant filter bypasses of module {{ $labels.module }} above 5× the baseline"
+          runbook_url: "docs/11-operations/runbooks/TenantFilterBypassSpike.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: SagaStuck
+        expr: max by (saga) (eduworld_saga_stuck) > 0
+        for: 30m
+        labels: { severity: warning, module: identity }
+        annotations:
+          summary: "Saga {{ $labels.saga }} stuck for 30 minutes"
+          runbook_url: "docs/11-operations/runbooks/SagaStuck.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: StudentCleanupLargeBatch
+        expr: sum by (tenant) (increase(eduworld_student_cleanup_large_batch_total[1h])) > 0
+        labels: { severity: warning, module: identity }
+        annotations:
+          summary: "A student cleanup run waits for approval (more than 10% of a tenant)"
+          runbook_url: "docs/11-operations/runbooks/StudentCleanupLargeBatch.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      - alert: StudentCleanupJobFailed
+        expr: |
+          sum(increase(eduworld_job_runs_total{job="student-inactive-cleanup",result="ok"}[48h])) == 0
+          or sum(increase(eduworld_job_runs_total{job="student-inactive-cleanup",result="error"}[1h])) > 0
+        labels: { severity: warning, module: identity, service: worker, profile: jobs }
+        annotations:
+          summary: "student-inactive-cleanup failed or has not succeeded for 48 hours"
+          runbook_url: "docs/11-operations/runbooks/StudentCleanupJobFailed.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
