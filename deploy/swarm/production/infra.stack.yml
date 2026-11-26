@@ -26,8 +26,13 @@ x-apisix: &apisix
   configs:
     - { source: apisix_config, target: /usr/local/apisix/conf/config.yaml }
     - { source: apisix_entrypoint, target: /usr/local/bin/ew-entrypoint.sh, mode: 0555 }
+    # Custom plugins of the routes (F004): same files and path as the local standalone gateways (extra_lua_path).
+    - { source: apisix_plugin_tenant_header, target: /usr/local/apisix/custom/apisix/plugins/ew-tenant-header.lua }
+    - { source: apisix_plugin_api_rate, target: /usr/local/apisix/custom/apisix/plugins/ew-api-rate.lua }
+    - { source: apisix_plugin_login_key, target: /usr/local/apisix/custom/apisix/plugins/ew-login-key.lua }
   healthcheck:
-    test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:9091/apisix/prometheus/metrics || exit 1"]
+    # The APISIX image has no curl/wget: bash /dev/tcp probe of the Prometheus export port (validate-adc.sh runs it).
+    test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9091 && printf 'GET /apisix/prometheus/metrics HTTP/1.0\r\n\r\n' >&3 && grep -q '200 OK' <&3"]
     interval: 10s
     timeout: 3s
     retries: 3
@@ -96,7 +101,7 @@ x-sentinel: &sentinel
 services:
   apisix:
     <<: *apisix
-    secrets: [apisix_etcd_password, apisix_admin_key, apisix_login_key_secret, apisix_valkey_password]
+    secrets: [apisix_etcd_password, apisix_admin_key, apisix_viewer_key, apisix_login_key_secret, apisix_valkey_password]
     ports:
       - { target: 9443, published: 443, protocol: tcp, mode: host }   # L4 load balancer → node edge
     networks: [edge, admin]
@@ -113,7 +118,8 @@ services:
 
   apisix-internal:
     <<: *apisix
-    secrets: [apisix_etcd_password, apisix_admin_key]
+    secrets: [apisix_etcd_password, apisix_admin_key, apisix_viewer_key]
+    environment: { APISIX_ETCD_PREFIX: /apisix-internal }   # own route set in etcd (deploy/swarm/config/apisix.yaml)
     ports:
       - { target: 9443, published: 8443, protocol: tcp, mode: host }  # VPN quản trị only (security group)
     networks: [admin, edge]
@@ -350,6 +356,9 @@ volumes:
 configs:
   apisix_config: { file: ../config/apisix.yaml, name: "eduworld_apisix_config_${CFG_APISIX_YAML}" }
   apisix_entrypoint: { file: ../config/apisix-entrypoint.sh, name: "eduworld_apisix_entrypoint_${CFG_APISIX_ENTRYPOINT_SH}" }
+  apisix_plugin_tenant_header: { file: ../../apisix/plugins/ew-tenant-header.lua, name: "eduworld_apisix_plugin_tenant_header_${CFG_EW_TENANT_HEADER_LUA}" }
+  apisix_plugin_api_rate: { file: ../../apisix/plugins/ew-api-rate.lua, name: "eduworld_apisix_plugin_api_rate_${CFG_EW_API_RATE_LUA}" }
+  apisix_plugin_login_key: { file: ../../apisix/plugins/ew-login-key.lua, name: "eduworld_apisix_plugin_login_key_${CFG_EW_LOGIN_KEY_LUA}" }
   nats_config: { file: ../config/nats.conf, name: "eduworld_nats_config_${CFG_NATS_CONF}" }
   nats_entrypoint: { file: ../config/nats-entrypoint.sh, name: "eduworld_nats_entrypoint_${CFG_NATS_ENTRYPOINT_SH}" }
   valkey_config: { file: ../config/valkey.conf, name: "eduworld_valkey_config_${CFG_VALKEY_CONF}" }
@@ -358,6 +367,7 @@ configs:
 secrets:
   apisix_etcd_password: { external: true, name: "apisix_etcd_password_v${SECRET_VER_APISIX_ETCD_PASSWORD}" }
   apisix_admin_key: { external: true, name: "apisix_admin_key_v${SECRET_VER_APISIX_ADMIN_KEY}" }
+  apisix_viewer_key: { external: true, name: "apisix_viewer_key_v${SECRET_VER_APISIX_VIEWER_KEY}" }
   apisix_login_key_secret: { external: true, name: "apisix_login_key_secret_v${SECRET_VER_APISIX_LOGIN_KEY_SECRET}" }
   apisix_valkey_password: { external: true, name: "apisix_valkey_password_v${SECRET_VER_APISIX_VALKEY_PASSWORD}" }
   keycloak_db_password: { external: true, name: "keycloak_db_password_v${SECRET_VER_KEYCLOAK_DB_PASSWORD}" }

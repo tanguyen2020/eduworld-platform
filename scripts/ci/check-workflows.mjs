@@ -2,7 +2,8 @@
 //   - every third-party `uses:` is pinned to a full 40-char commit SHA (local `./` actions are exempt);
 //   - every workflow declares top-level `permissions` with `contents: read` (no write-all default);
 //   - jobs exporting/signing iOS run on a macOS runner;
-//   - jobs bound to Environment staging/production run only on [self-hosted, deploy] and never for fork PRs.
+//   - jobs bound to Environment staging/production run only on [self-hosted, deploy] and never for fork PRs;
+//   - secrets.APISIX_ADMIN_KEY only in step env of jobs bound to Environment staging/production (F130 T052).
 // Usage: node scripts/ci/check-workflows.mjs [dir=.github/workflows]   → exit 1 on violations.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -51,6 +52,10 @@ export function checkWorkflowText(file, text) {
     add(lineOf(/^permissions:/), 'permissions', 'top-level permissions must be a map with `contents: read`');
   }
 
+  if (JSON.stringify(doc.env ?? {}).includes('secrets.APISIX_ADMIN_KEY')) {
+    add(lineOf(/^env:/), 'apisix-admin-key', 'APISIX_ADMIN_KEY must never be in the workflow-level env');
+  }
+
   // 3) runners per job
   for (const [id, job] of Object.entries(doc.jobs ?? {})) {
     const jobLine = lineOf(new RegExp(`^\\s{2}${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:\\s*$`));
@@ -62,6 +67,17 @@ export function checkWorkflowText(file, text) {
     }
 
     const env = typeof job.environment === 'string' ? job.environment : job.environment?.name;
+
+    // 4) APISIX admin key (F130 T052, DEPLOYMENT §13): only in jobs bound to Environment staging/production (or the
+    //    environment input of a manual deploy workflow), and only in the env of the step that needs it.
+    if (JSON.stringify(job).includes('secrets.APISIX_ADMIN_KEY')) {
+      if (!env || !/^(staging|production)$|inputs\.environment/.test(env)) {
+        add(jobLine, 'apisix-admin-key', `job "${id}" reads APISIX_ADMIN_KEY without Environment staging/production`);
+      }
+      if (JSON.stringify(job.env ?? {}).includes('secrets.APISIX_ADMIN_KEY')) {
+        add(jobLine, 'apisix-admin-key', `job "${id}": APISIX_ADMIN_KEY only in the env of the step that uses it, not the job env`);
+      }
+    }
     if (env && /^(staging|production)$/.test(env)) {
       const selfDeploy = runsOn.includes('self-hosted') && runsOn.includes('deploy');
       if (!selfDeploy) {

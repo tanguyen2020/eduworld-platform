@@ -1,0 +1,53 @@
+# apisix:sync (F130 T052; DEPLOYMENT §5, §11.2): applies the gateway routes of the selected commit to staging or
+# production when only deploy/apisix changed (a backend release syncs the routes itself in release.yml). Manual only;
+# required reviewers of Environment production apply. Shares the concurrency group deploy-<env> with the deploy jobs,
+# so it never runs during a release/canary; apisix-sync.sh also refuses while a canary traffic-split is active.
+name: apisix-sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [staging, production]
+        default: staging
+      mode:
+        description: "diff = show the changes only; sync = apply them (adc sync)"
+        type: choice
+        options: [diff, sync]
+        default: diff
+
+permissions:
+  contents: read
+
+jobs:
+  apisix-sync:
+    if: vars.DEPLOY_ENABLED == 'true' && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: ${{ inputs.environment }}
+    concurrency: { group: "deploy-${{ inputs.environment }}", cancel-in-progress: false }
+    env:
+      TARGET_ENV: ${{ inputs.environment }}
+      MODE: ${{ inputs.mode }}
+      EW_APISIX_ADMIN_URL: ${{ vars.APISIX_ADMIN_URL }}
+      EW_APISIX_INTERNAL_ADMIN_URL: ${{ vars.APISIX_INTERNAL_ADMIN_URL }}
+      EW_DEPLOY_REASON: apisix-sync
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: adc diff / sync
+        env:
+          ROUTES_ENV: ${{ vars.APISIX_ROUTES_ENV }}
+          APISIX_ADMIN_KEY: ${{ secrets.APISIX_ADMIN_KEY }}
+        run: |
+          umask 077
+          d="$RUNNER_TEMP/apisix-sync"; mkdir -p "$d"
+          printf '%s\n' "$ROUTES_ENV" > "$d/routes.env"; printf '%s' "$APISIX_ADMIN_KEY" > "$d/admin.key"
+          EW_APISIX_ROUTES_ENV_FILE="$d/routes.env" EW_APISIX_ADMIN_KEY_FILE="$d/admin.key" \
+            bash scripts/deploy/apisix-sync.sh --env="$TARGET_ENV" --mode="$MODE"
+      - name: remove credentials
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/apisix-sync"

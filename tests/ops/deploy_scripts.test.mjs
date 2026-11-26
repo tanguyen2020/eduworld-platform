@@ -149,7 +149,7 @@ test('stack deploy exports SECRET_VER_* and CFG_* for every reference (infra sta
   assert.match(dumped, /^CFG_SENTINEL_CONF_TPL=[0-9a-f]{12}$/m);
 });
 
-function canaryRig({ alerts, rulesLoaded = true }) {
+function canaryRig({ alerts, rulesLoaded = true, routes = '{"list":[{"value":{"id":"r1","upstream_id":"core-api"}},{"value":{"id":"r2","upstream_id":"realtime"}}]}' }) {
   const r = rig({ EW_APISIX_ADMIN_URL: 'http://apisix-admin:9180', EW_PROMETHEUS_URL: 'http://prometheus:9090' });
   const key = path.join(r.state, 'admin_key');
   fs.writeFileSync(key, 'test-admin-key');
@@ -161,7 +161,7 @@ function canaryRig({ alerts, rulesLoaded = true }) {
   *"/api/v1/query"*) echo '{"data":{"result":${result}}}' ;;
   *"/apisix/admin/routes"*"-X PATCH"*|*"-X PATCH"*) echo '{}' ;;
   *"/apisix/admin/upstreams/"*) echo '{}' ;;
-  *"/apisix/admin/routes"*) echo '{"list":[{"value":{"id":"r1","upstream_id":"core-api"}},{"value":{"id":"r2","upstream_id":"realtime"}}]}' ;;
+  *"/apisix/admin/routes"*) echo '${routes}' ;;
   *) echo "curl-stub unhandled $*" >&2; exit 7 ;;
 esac`);
   return r;

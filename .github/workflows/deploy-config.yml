@@ -71,6 +71,10 @@ jobs:
           node --test deploy/apisix/scripts/
       - name: boot rendered gateways
         run: bash deploy/apisix/scripts/validate-standalone.sh
+      # F130 T052: the ADC output with the pinned adc (deploy/apisix/adc.env) against throwaway etcd + both gateways in
+      # traditional mode with the Swarm config: lint, diff (viewer key), sync (admin key), isolation, canary interplay.
+      - name: ADC sync against throwaway gateways
+        run: bash deploy/apisix/scripts/validate-adc.sh
       - name: staging route diff (job summary)
         if: github.event_name == 'pull_request'
         env:
@@ -90,6 +94,36 @@ jobs:
               echo "Base branch has no routes.yaml renderer; full staging render is the new configuration."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # F130 T052 — apisix:sync (diff): what the PR would change on the staging gateways, read-only. Environment
+  # staging-readonly holds only the viewer key (APISIX role viewer cannot write) and the staging routes env; the admin
+  # key never reaches a pull request (apisix:sync with --mode=sync runs in release.yml / apisix-sync.yml).
+  apisix-sync-diff:
+    if: github.event_name == 'pull_request' && vars.DEPLOY_ENABLED == 'true' && github.event.pull_request.head.repo.fork != true
+    needs: apisix
+    runs-on: [self-hosted, deploy]
+    environment: staging-readonly
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: adc diff against staging (job summary)
+        env:
+          ROUTES_ENV: ${{ vars.APISIX_ROUTES_ENV }}
+          VIEWER_KEY: ${{ secrets.APISIX_VIEWER_KEY }}
+          EW_APISIX_ADMIN_URL: ${{ vars.APISIX_ADMIN_URL }}
+          EW_APISIX_INTERNAL_ADMIN_URL: ${{ vars.APISIX_INTERNAL_ADMIN_URL }}
+        run: |
+          umask 077
+          d="$RUNNER_TEMP/apisix-sync"; mkdir -p "$d"
+          printf '%s\n' "$ROUTES_ENV" > "$d/routes.env"; printf '%s' "$VIEWER_KEY" > "$d/viewer.key"
+          EW_APISIX_ROUTES_ENV_FILE="$d/routes.env" EW_APISIX_VIEWER_KEY_FILE="$d/viewer.key" \
+            bash scripts/deploy/apisix-sync.sh --env=staging --mode=diff
+      - name: remove credentials
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/apisix-sync"
 
   # F004: realm as code static checks (F004-AC-01, AC-08, AC-22, AC-24..AC-27). The keycloak-config-cli
   # dry-run against staging needs the staging Keycloak and GitHub Environment secrets (F130, [TBD]).

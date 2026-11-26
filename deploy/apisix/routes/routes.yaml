@@ -23,8 +23,9 @@ login_profiles:
   portal: { fields: [username, identifier], device_count: ${EW_RATE_PORTAL_DEVICE_PER_MIN}, user_count: ${EW_RATE_PORTAL_USER_PER_MIN},
             global_count: ${EW_RATE_PORTAL_GLOBAL_PER_SEC}, global_window: 1, global_code: RATE_LIMITED, name: portal-login }
 
-# api_rate_default (SECURITY_ARCHITECTURE §14): per user (`sub`), reads and writes counted apart, in Valkey.
-rate_store: { host: ${EW_RATELIMIT_VALKEY_HOST}, port: ${EW_RATELIMIT_VALKEY_PORT} }
+# api_rate_default (SECURITY_ARCHITECTURE §14): per user (`sub`), reads and writes counted apart, in Valkey (ACL user
+# EW_RATELIMIT_VALKEY_USERNAME: `apisix` on staging/production, deploy/valkey/users.acl.template).
+rate_store: { host: ${EW_RATELIMIT_VALKEY_HOST}, port: ${EW_RATELIMIT_VALKEY_PORT}, username: ${EW_RATELIMIT_VALKEY_USERNAME} }
 rate_profiles:
   api: { read_count: ${EW_RATE_API_READ_PER_MIN}, write_count: ${EW_RATE_API_WRITE_PER_MIN} }
   session: { read_count: ${EW_RATE_SESSION_PER_MIN}, write_count: ${EW_RATE_SESSION_PER_MIN} }

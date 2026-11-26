@@ -41,15 +41,20 @@ apisix() { "$CURL" -fsS -K "$work/apisix.cfg" -H 'Content-Type: application/json
 canary="${STACK}_core-api-canary"
 image="ghcr.io/$GHCR_ORG/eduworld/core-api:$VERSION"
 
+# Routes synced by ADC (scripts/deploy/apisix-sync.sh) reference their service (service_id) and carry the label
+# ew-upstream=core-api (deploy/apisix/scripts/render.mjs); upstream_id == core-api covers routes created otherwise.
 routes_of_core_api() {
-  apisix "$ADMIN_URL/apisix/admin/routes" | jq -r '.list[]?.value | select(.upstream_id == "core-api") | .id'
+  apisix "$ADMIN_URL/apisix/admin/routes" \
+    | jq -r '.list[]?.value | select(.labels["ew-upstream"] == "core-api" or .upstream_id == "core-api") | .id'
 }
-set_split() { # weight or "null"
-  local body id
+set_split() { # weight or "null"; fails when no core-api route exists (a canary without traffic would pass blindly)
+  local body id ids
   if [ "$1" = null ]; then body='{"plugins":{"traffic-split":null}}'
   else body=$(jq -nc --argjson w "$1" '{plugins:{"traffic-split":{rules:[{weighted_upstreams:[{upstream_id:"core-api-canary",weight:$w},{weight:(100-$w)}]}]}}}')
   fi
-  for id in $(routes_of_core_api); do apisix -X PATCH "$ADMIN_URL/apisix/admin/routes/$id" -d "$body" >/dev/null; done
+  ids=$(routes_of_core_api) || return 1
+  [ -n "$ids" ] || { log error "no APISIX route of upstream core-api (label ew-upstream): run apisix:sync first"; return 1; }
+  for id in $ids; do apisix -X PATCH "$ADMIN_URL/apisix/admin/routes/$id" -d "$body" >/dev/null; done
 }
 cleanup_canary() {
   set_split null || log error "could not remove traffic-split: remove it by hand (routes with upstream core-api)"

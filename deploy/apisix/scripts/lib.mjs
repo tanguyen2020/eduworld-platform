@@ -7,13 +7,22 @@ const require = createRequire(new URL('../../../scripts/package.json', import.me
 export const yaml = require('js-yaml');
 export const ROOT = new URL('../', import.meta.url);
 
-export function loadEnv(name) {
+function parseEnv(text) {
   const env = {};
-  for (const line of readFileSync(new URL(`routes/env/${name}`, ROOT), 'utf8').split('\n')) {
+  for (const line of text.split('\n')) {
     const m = /^([A-Z0-9_]+)=(.*)$/.exec(line.trim());
     if (m) env[m[1]] = m[2];
   }
   return env;
+}
+
+export function loadEnv(name) {
+  return parseEnv(readFileSync(new URL(`routes/env/${name}`, ROOT), 'utf8'));
+}
+
+// loadEnvFile reads an env file outside the repo (CI writes the GitHub Environment variable APISIX_ROUTES_ENV there).
+export function loadEnvFile(path) {
+  return parseEnv(readFileSync(path, 'utf8'));
 }
 
 // substitute replaces ${VAR} in the YAML text (comment lines excluded) before parsing; an unknown

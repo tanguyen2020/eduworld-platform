@@ -199,22 +199,31 @@ jobs:
       DOCKER_TLS_VERIFY: "1"
       DOCKER_CERT_PATH: ${{ github.workspace }}/.docker-tls
       EW_DEPLOY_REASON: release
+      EW_APISIX_ADMIN_URL: ${{ vars.APISIX_ADMIN_URL }}
+      EW_APISIX_INTERNAL_ADMIN_URL: ${{ vars.APISIX_INTERNAL_ADMIN_URL }}
+      EW_APISIX_ADMIN_KEY_FILE: ${{ github.workspace }}/.docker-tls/apisix-admin-key
+      EW_APISIX_ROUTES_ENV_FILE: ${{ github.workspace }}/.docker-tls/apisix-routes.env
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
       - run: npm ci --prefix scripts --silent
-      - name: Docker API client certificate (manager over TLS, DEPLOYMENT §10.3)
+      - name: Docker API client certificate (manager over TLS, DEPLOYMENT §10.3) and APISIX admin key
         env:
           CA: ${{ secrets.SWARM_TLS_CA }}
           CERT: ${{ secrets.SWARM_TLS_CERT }}
           KEY: ${{ secrets.SWARM_TLS_KEY }}
+          APISIX_ADMIN_KEY: ${{ secrets.APISIX_ADMIN_KEY }}
+          APISIX_ROUTES_ENV: ${{ vars.APISIX_ROUTES_ENV }}
         run: bash scripts/deploy/write-docker-tls.sh
       - name: validate stacks
         run: EW_SKIP_GO=1 bash scripts/deploy/validate-stacks.sh --env=staging
       - name: migrate jobs, then stack deploy
         run: bash scripts/deploy/deploy-service.sh --env=staging --stack=app --version="${GITHUB_REF#refs/tags/backend/}" --record-digests="$RUNNER_TEMP/staging-digests.txt"
+      # F130 T052: gateway routes of this commit (ADC rendered from deploy/apisix/routes/routes.yaml), both gateways.
+      - name: apisix:sync (staging)
+        run: bash scripts/deploy/apisix-sync.sh --env=staging --mode=sync
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: staging-digests
@@ -237,8 +246,10 @@ jobs:
       DOCKER_TLS_VERIFY: "1"
       DOCKER_CERT_PATH: ${{ github.workspace }}/.docker-tls
       EW_APISIX_ADMIN_URL: ${{ vars.APISIX_ADMIN_URL }}
+      EW_APISIX_INTERNAL_ADMIN_URL: ${{ vars.APISIX_INTERNAL_ADMIN_URL }}
       EW_PROMETHEUS_URL: ${{ vars.PROMETHEUS_URL }}
       EW_APISIX_ADMIN_KEY_FILE: ${{ github.workspace }}/.docker-tls/apisix-admin-key
+      EW_APISIX_ROUTES_ENV_FILE: ${{ github.workspace }}/.docker-tls/apisix-routes.env
       EW_DEPLOY_REASON: release
       HOTFIX_FLAG: ${{ contains(github.event.head_commit.message, '[hotfix]') && '--hotfix' || '' }}
     steps:
@@ -257,9 +268,14 @@ jobs:
           CERT: ${{ secrets.SWARM_TLS_CERT }}
           KEY: ${{ secrets.SWARM_TLS_KEY }}
           APISIX_ADMIN_KEY: ${{ secrets.APISIX_ADMIN_KEY }}
+          APISIX_ROUTES_ENV: ${{ vars.APISIX_ROUTES_ENV }}
         run: bash scripts/deploy/write-docker-tls.sh
       - name: migrate jobs (same digests as staging, maintenance window)
         run: bash scripts/deploy/deploy-service.sh --env=production --stack=app --version="${GITHUB_REF#refs/tags/backend/}" --expect-digests="$RUNNER_TEMP/staging-digests.txt" --migrate-only $HOTFIX_FLAG
+      # F130 T052: routes BEFORE the canary (same job): a sync during a canary would revert its traffic-split, and the
+      # canary patches the routes the sync just wrote (selected by label ew-upstream=core-api).
+      - name: apisix:sync (production)
+        run: bash scripts/deploy/apisix-sync.sh --env=production --mode=sync
       - name: canary core-api 10 % for 30 minutes
         run: bash scripts/deploy/canary.sh --env=production --version="${GITHUB_REF#refs/tags/backend/}"
       - name: rest of the stack (realtime, worker-*)

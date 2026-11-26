@@ -127,7 +127,7 @@ secrets:
   # Infrastructure (not module credentials).
   - match: '^apisix_(valkey_password|login_key_secret)$'
     services: [apisix]
-  - match: '^apisix_(etcd_password|admin_key)$'
+  - match: '^apisix_(etcd_password|admin_key|viewer_key)$'
     services: [apisix, apisix-internal]
   - match: '^keycloak_(db_password|admin_password)$'
     services: [keycloak]

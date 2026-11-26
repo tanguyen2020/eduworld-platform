@@ -256,7 +256,7 @@ keycloak-check: ## Static checks of the realm as code (clients, flows, secrets, 
 keycloak-test: ## Realm behaviour against the running Keycloak (direct grants, amr, idempotent apply)
 	KC_INTEGRATION=1 node --test deploy/keycloak/tests/realm.integration.test.mjs
 
-.PHONY: apisix-render apisix-check apisix-smoke
+.PHONY: apisix-render apisix-check apisix-smoke apisix-adc apisix-adc-validate apisix-sync
 apisix-render: ## Render deploy/apisix/standalone/{public,internal}/apisix.yaml from routes.yaml (ENV=local)
 	node deploy/apisix/scripts/render.mjs --env=$(or $(ENV),local)
 
@@ -269,6 +269,15 @@ apisix-check: ## Gateway config checks: rendered files fresh, routes vs spec, no
 
 apisix-smoke: ## Gateway behaviour against the running stack (public :9080, internal :9180)
 	APISIX_SMOKE=1 node --test deploy/apisix/tests/smoke.test.mjs
+
+apisix-adc: ## Render the ADC files of both gateways (F130 T052) into tmp/apisix-adc: ROUTES_ENV=<env file> (default the staging template)
+	node deploy/apisix/scripts/render.mjs --format=adc --env-file=$(or $(ROUTES_ENV),deploy/apisix/routes/env/staging.env.example) --out=tmp/apisix-adc
+
+apisix-adc-validate: ## ADC lint/diff/sync against throwaway etcd + both gateways (traditional mode, Swarm config, pinned adc)
+	bash deploy/apisix/scripts/validate-adc.sh
+
+apisix-sync: ## CI job apisix:sync on the deploy runner: ENV=staging|production SYNC=diff|sync (needs EW_APISIX_* env, DEPLOYMENT §5)
+	bash scripts/deploy/apisix-sync.sh --env=$(ENV) --mode=$(or $(SYNC),diff)
 
 # ---------- design tokens (F005, ADR-0047) ----------
 PNPM ?= pnpm

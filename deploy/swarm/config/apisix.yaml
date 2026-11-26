@@ -1,5 +1,6 @@
 # APISIX traditional mode (etcd) for staging/production gateways (F130, DEPLOYMENT §5). Routes are not here: the CI
-# job apisix:sync applies the ADC configuration rendered from deploy/apisix/routes/routes.yaml (F130 T052). Same
+# job apisix:sync applies the ADC configuration rendered from deploy/apisix/routes/routes.yaml (F130 T052; one ADC file
+# per gateway, each synced through the Admin API of its own gateway). Same
 # plugin list and access-log policy as the local standalone config (deploy/apisix/config.yaml, F004).
 deployment:
   role: traditional
@@ -9,13 +10,18 @@ deployment:
     admin_listen: { ip: 0.0.0.0, port: 9180 }      # admin network only (no published port); key from env below
     admin_key_required: true
     admin_key:
-      - name: admin
+      - name: admin                                 # apisix:sync (adc sync) and the canary only
         key: ${{APISIX_ADMIN_KEY}}
         role: admin
+      - name: viewer                                # read-only: adc diff of pull requests (CI apisix:sync diff)
+        key: ${{APISIX_VIEWER_KEY}}
+        role: viewer
     allow_admin: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16]
   etcd:
     host: ["http://etcd-apisix-1:2379", "http://etcd-apisix-2:2379", "http://etcd-apisix-3:2379"]
-    prefix: /apisix
+    # One etcd cluster, one key prefix per gateway: the public gateway keeps /apisix, apisix-internal sets
+    # APISIX_ETCD_PREFIX=/apisix-internal (stack env), so neither gateway ever loads the routes of the other (ADR-0009).
+    prefix: ${{APISIX_ETCD_PREFIX:=/apisix}}
     timeout: 30
     user: apisix
     password: ${{APISIX_ETCD_PASSWORD}}

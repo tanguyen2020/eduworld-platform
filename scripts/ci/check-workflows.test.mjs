@@ -77,3 +77,30 @@ test('deploy job without fork guard fails', () => {
 test('deploy job on self-hosted deploy runner with fork guard passes', () => {
   assert.deepEqual(msgs(deployJob('[self-hosted, deploy]', "github.event_name == 'push' && github.event.pull_request.head.repo.fork != true")), []);
 });
+
+// F130 T052: the APISIX admin key is a secret of the deploy jobs only (apisix:sync, canary), in the step that uses it.
+const keyJob = (environment, where) => `name: k
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  sync:
+    runs-on: [self-hosted, deploy]
+${environment ? `    environment: ${environment}\n` : ''}    if: github.event.pull_request.head.repo.fork != true
+${where === 'job' ? '    env:\n      APISIX_ADMIN_KEY: ${{ secrets.APISIX_ADMIN_KEY }}\n' : ''}    steps:
+      - run: echo sync
+${where === 'step' ? '        env:\n          APISIX_ADMIN_KEY: ${{ secrets.APISIX_ADMIN_KEY }}\n' : ''}`;
+
+test('APISIX admin key in the step env of a staging/production job passes', () => {
+  assert.deepEqual(msgs(keyJob('production', 'step')), []);
+  assert.deepEqual(msgs(keyJob('${{ inputs.environment }}', 'step')), []);
+});
+
+test('APISIX admin key without a deploy Environment fails', () => {
+  assert.deepEqual(msgs(keyJob('', 'step')), ['6:apisix-admin-key']);
+  assert.deepEqual(msgs(keyJob('staging-readonly', 'step')), ['6:apisix-admin-key']);
+});
+
+test('APISIX admin key in the job env fails', () => {
+  assert.deepEqual(msgs(keyJob('staging', 'job')), ['6:apisix-admin-key']);
+});
