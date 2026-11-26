@@ -273,6 +273,17 @@ body {
 	outline-offset: var(--ew-size-border-2);
 }
 
+/* F113: a phone held sideways (2:1 or wider) is short — a smaller Mây keeps the logo, the line and "Chơi" in view. */
+@media (min-aspect-ratio: 2/1) {
+	.ew-panel {
+		gap: var(--ew-size-space-8);
+	}
+
+	.ew-panel .ew-mascot {
+		width: calc(var(--ew-component-mascot-size) / 3);
+	}
+}
+
 /* Rotate prompt (F113-AC-06): covers the loading view while the window is portrait; never the notice/error pages. */
 #ew-rotate {
 	position: absolute;
