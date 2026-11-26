@@ -7,7 +7,8 @@
     "ink": {
       "900": { "$value": "#1E2A44", "$description": "Darkest ink: primary text, HUD background." },
       "700": { "$value": "#4A5878", "$description": "Secondary text." },
-      "600": { "$value": "#5C6886", "$description": "Muted text." }
+      "600": { "$value": "#5C6886", "$description": "Muted text." },
+      "200": { "$value": "#D3D8E3", "$description": "Neutral outline of a resting answer tile after grading (F099)." }
     },
     "cream": {
       "50": { "$value": "#FFF8E7", "$description": "Panel background." },
@@ -38,6 +39,18 @@
       "50": { "$value": "#FDECF3", "$description": "Pink answer tile background (F097)." },
       "200": { "$value": "#FFB8C9", "$description": "Cheeks of the guide Mây (Cloudy)." },
       "700": { "$value": "#C2255C", "$description": "Pink answer tile accent (F097)." }
+    },
+    "cyan": {
+      "50": { "$value": "#E0F2FE", "$description": "Ocean blue answer tile background (F099)." },
+      "700": { "$value": "#0369A1", "$description": "Ocean blue answer tile accent (F099): hue far from the green and orange state colours." }
+    },
+    "plum": {
+      "50": { "$value": "#FAE8FF", "$description": "Plum answer tile background (F099)." },
+      "700": { "$value": "#A21CAF", "$description": "Plum answer tile accent (F099)." }
+    },
+    "indigo": {
+      "50": { "$value": "#EEF2FF", "$description": "Indigo answer tile background (F099)." },
+      "700": { "$value": "#4338CA", "$description": "Indigo answer tile accent (F099)." }
     },
     "sand": {
       "200": { "$value": "#F4D9A6", "$description": "Floating island rock, lit side." },
@@ -234,7 +247,9 @@
     "ratio": {
       "085": { "$value": 0.85, "$description": "0.85×." },
       "100": { "$value": 1, "$description": "1.0×." },
-      "135": { "$value": 1.35, "$description": "1.35× (text_expansion_allowance, CONFIG_DEFAULTS)." }
+      "135": { "$value": 1.35, "$description": "1.35× (text_expansion_allowance, CONFIG_DEFAULTS)." },
+      "150": { "$value": 1.5, "$description": "1.5× (answer tile growth cap in a landscape window, F099)." },
+      "400": { "$value": 4, "$description": "4× (answer tile growth cap in a portrait window, F099)." }
     },
     "toon": {
       "steps": { "$value": 2, "$description": "Toon cel shading light steps: 2 gives shadow / mid / lit bands (ADR-0103)." },

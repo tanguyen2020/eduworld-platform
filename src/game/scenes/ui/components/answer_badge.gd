@@ -7,8 +7,10 @@ extends Control
 ## F098 (tap-to-answer): `verdict` overrides the look — three dots while the server grades, a tick on a green disc for
 ## a right answer or the right-answer tile, a soft cross on a warm orange disc for a not-yet-right answer (shape and the
 ## tile's tag words, never colour alone).
+## F099: `REST` is the calm look of every other tile once the answer is graded — the number stays on a neutral ink disc
+## (never the right / not-yet-right colours, never a "failed" grey-out).
 
-enum Verdict { NONE, PENDING, CORRECT, TRY, ANSWER }
+enum Verdict { NONE, PENDING, CORRECT, TRY, ANSWER, REST }
 
 const ACCENTS: Array[Color] = [
 	UiTokens.COMPONENT_ANSWER_TILE_ACCENT_1, UiTokens.COMPONENT_ANSWER_TILE_ACCENT_2,
@@ -91,6 +93,11 @@ func _draw() -> void:
 				c + Vector2(0.5, -0.32) * r]), accent, w, true)
 		return
 	draw_circle(c, r, accent)
+	_draw_number(c, r)
+
+
+## The keyboard number in white, centred in the disc.
+func _draw_number(c: Vector2, r: float) -> void:
 	var font: Font = get_theme_font(&"font", &"Button")
 	var font_size: int = int(r * 1.2)
 	var text: String = str(number)
@@ -113,6 +120,9 @@ func _draw_verdict(c: Vector2, r: float) -> void:
 			draw_circle(c, r, UiTokens.COMPONENT_ANSWER_TILE_CORRECT_BORDER)
 			draw_polyline(PackedVector2Array([c + Vector2(-0.45, 0.02) * r, c + Vector2(-0.12, 0.35) * r,
 					c + Vector2(0.5, -0.32) * r]), UiTokens.COMPONENT_ANSWER_TILE_TAG_TEXT, w, true)
+		Verdict.REST:
+			draw_circle(c, r, UiTokens.COMPONENT_ANSWER_TILE_REST_ACCENT)
+			_draw_number(c, r)
 		Verdict.TRY:
 			draw_circle(c, r, UiTokens.COMPONENT_ANSWER_TILE_TRY_BORDER)
 			var d: float = r * 0.36

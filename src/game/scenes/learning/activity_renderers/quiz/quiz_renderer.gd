@@ -61,6 +61,16 @@ func supports_instant_answer() -> bool:
 	return true
 
 
+## F099: the question is centred in the scroll box and its answer tiles grow into the free room (STUDENT_GAME_UX_LEARNING
+## §3.3a); content taller than the box still scrolls from the top.
+func fit_layout(available: float, tall: bool) -> float:
+	if question == null:
+		return -1.0
+	(%Content as VBoxContainer).alignment = BoxContainer.ALIGNMENT_CENTER
+	question.size_flags_vertical = Control.SIZE_FILL
+	return question.fit_height(available, tall)
+
+
 func set_instant_answer(on: bool, two_taps: bool = false) -> void:
 	if question != null:
 		question.set_instant_answer(on, two_taps)

@@ -221,16 +221,16 @@
     "answer_tile": {
       "bg_1": { "$type": "color", "$value": "{palette.sky.100}", "$description": "Answer tile 1 background (blue tint, F097)." },
       "accent_1": { "$type": "color", "$value": "{palette.blue.600}", "$description": "Answer tile 1 border, number badge and selected fill (blue, F097)." },
-      "bg_2": { "$type": "color", "$value": "{palette.orange.50}", "$description": "Answer tile 2 background (orange tint, F097)." },
-      "accent_2": { "$type": "color", "$value": "{palette.orange.700}", "$description": "Answer tile 2 border, number badge and selected fill (orange, F097)." },
-      "bg_3": { "$type": "color", "$value": "{palette.green.50}", "$description": "Answer tile 3 background (green tint, F097)." },
-      "accent_3": { "$type": "color", "$value": "{palette.green.700}", "$description": "Answer tile 3 border, number badge and selected fill (green, F097)." },
-      "bg_4": { "$type": "color", "$value": "{palette.violet.50}", "$description": "Answer tile 4 background (violet tint, F097)." },
-      "accent_4": { "$type": "color", "$value": "{palette.violet.700}", "$description": "Answer tile 4 border, number badge and selected fill (violet, F097)." },
-      "bg_5": { "$type": "color", "$value": "{palette.pink.50}", "$description": "Answer tile 5 background (pink tint, F097)." },
-      "accent_5": { "$type": "color", "$value": "{palette.pink.700}", "$description": "Answer tile 5 border, number badge and selected fill (pink, F097)." },
-      "bg_6": { "$type": "color", "$value": "{palette.teal.50}", "$description": "Answer tile 6 background (teal tint, F097)." },
-      "accent_6": { "$type": "color", "$value": "{palette.teal.700}", "$description": "Answer tile 6 border, number badge and selected fill (teal, F097)." },
+      "bg_2": { "$type": "color", "$value": "{palette.plum.50}", "$description": "Answer tile 2 background (plum tint, F099: no orange — the not-yet-right state colour)." },
+      "accent_2": { "$type": "color", "$value": "{palette.plum.700}", "$description": "Answer tile 2 border, number badge and selected fill (plum, F099)." },
+      "bg_3": { "$type": "color", "$value": "{palette.pink.50}", "$description": "Answer tile 3 background (pink tint, F099: no green — the right state colour)." },
+      "accent_3": { "$type": "color", "$value": "{palette.pink.700}", "$description": "Answer tile 3 border, number badge and selected fill (pink, F099)." },
+      "bg_4": { "$type": "color", "$value": "{palette.cyan.50}", "$description": "Answer tile 4 background (ocean blue tint, F099)." },
+      "accent_4": { "$type": "color", "$value": "{palette.cyan.700}", "$description": "Answer tile 4 border, number badge and selected fill (ocean blue, F099)." },
+      "bg_5": { "$type": "color", "$value": "{palette.violet.50}", "$description": "Answer tile 5 background (violet tint, F099)." },
+      "accent_5": { "$type": "color", "$value": "{palette.violet.700}", "$description": "Answer tile 5 border, number badge and selected fill (violet, F099)." },
+      "bg_6": { "$type": "color", "$value": "{palette.indigo.50}", "$description": "Answer tile 6 background (indigo tint, F099: no teal next to the green state)." },
+      "accent_6": { "$type": "color", "$value": "{palette.indigo.700}", "$description": "Answer tile 6 border, number badge and selected fill (indigo, F099)." },
       "text": {
         "$type": "color",
         "$value": "{color.text.primary}",
@@ -254,7 +254,8 @@
           { "token": "component.answer_tile.accent_3", "level": "normal" },
           { "token": "component.answer_tile.accent_4", "level": "normal" },
           { "token": "component.answer_tile.accent_5", "level": "normal" },
-          { "token": "component.answer_tile.accent_6", "level": "normal" }
+          { "token": "component.answer_tile.accent_6", "level": "normal" },
+          { "token": "component.answer_tile.rest_accent", "level": "normal" }
         ] } }
       },
       "edge": { "$type": "dimension", "$value": "{size.border.6}", "$description": "Bottom depth edge of an answer tile (candy look)." },
@@ -278,6 +279,17 @@
           { "token": "component.answer_tile.tag_try_bg", "level": "normal" }
         ] } }
       },
+      "rest_bg": { "$type": "color", "$value": "{palette.white}", "$description": "Resting tile after grading (F099): every tile that is neither the chosen one nor the right answer — calm, readable, never greyed out as a failure." },
+      "rest_border": { "$type": "color", "$value": "{palette.ink.200}", "$description": "Neutral outline and depth edge of a resting tile (F099)." },
+      "rest_accent": { "$type": "color", "$value": "{palette.ink.600}", "$description": "Number badge disc of a resting tile (F099); the number stays." },
+      "rest_text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Label of a resting tile (F099).",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.answer_tile.rest_bg", "level": "normal" }] } }
+      },
+      "grow_max": { "$type": "number", "$value": "{number.ratio.150}", "$description": "Largest answer tile height as a multiple of density.<band>.answer.min_height when the board has free room, landscape window (F099)." },
+      "grow_max_tall": { "$type": "number", "$value": "{number.ratio.400}", "$description": "Largest answer tile height as a multiple of density.<band>.answer.min_height, portrait window (F099)." },
       "tag_pending_text": {
         "$type": "color",
         "$value": "{color.text.primary}",
@@ -286,6 +298,49 @@
           { "token": "component.answer_tile.tag_pending_bg", "level": "normal" }
         ] } }
       }
+    },
+    "caption": {
+      "bg": { "$type": "color", "$value": "{palette.white}", "$description": "Readable caption card of the video player (F099): light card, not a see-through strip." },
+      "border": { "$type": "color", "$value": "{palette.sky.300}", "$description": "Caption card outline (F099)." },
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.primary}",
+        "$description": "Caption words and the speaker name written before them (F099; never a colour code).",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.caption.bg", "level": "normal" }] } }
+      }
+    },
+    "media_track": {
+      "track": { "$type": "color", "$value": "{palette.sky.200}", "$description": "Media progress bar groove (F099)." },
+      "watched": { "$type": "color", "$value": "{palette.sky.300}", "$description": "Part already watched / heard — the student may seek inside it (F099)." },
+      "played": {
+        "$type": "color",
+        "$value": "{color.accent.primary}",
+        "$description": "Played part and thumb of the media progress bar (F099).",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.media_track.track", "level": "graphic" }] } }
+      },
+      "chapter": {
+        "$type": "color",
+        "$value": "{palette.ink.700}",
+        "$description": "Notch at the start of each chapter / audio segment (F099).",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.media_track.track", "level": "graphic" }] } }
+      },
+      "marker": { "$type": "color", "$value": "{palette.amber.400}", "$description": "Disc of a question not answered yet (with a question mark, F099)." },
+      "marker_done": { "$type": "color", "$value": "{color.accent.primary}", "$description": "Disc of an answered question (with a tick, F099: shape and colour)." },
+      "marker_text": {
+        "$type": "color",
+        "$value": "{palette.ink.900}",
+        "$description": "Question mark on a pending question disc (F099).",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.media_track.marker", "level": "normal" }] } }
+      },
+      "marker_done_text": {
+        "$type": "color",
+        "$value": "{palette.white}",
+        "$description": "Tick on an answered question disc (F099).",
+        "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.media_track.marker_done", "level": "normal" }] } }
+      }
+    },
+    "media_stage": {
+      "bg": { "$type": "color", "$value": "{palette.ink.900}", "$description": "Screen behind the video picture (F099)." }
     },
     "question_card": {
       "bg": { "$type": "color", "$value": "{palette.white}", "$description": "Question card (stem + read-aloud) background (F097)." },

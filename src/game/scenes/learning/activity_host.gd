@@ -15,6 +15,9 @@ extends Control
 ## exam/diagnostic/competition, one-step question), a tap on an answer tile sends the answer at once — no "Kiểm tra"
 ## step; the tiles lock and the tapped one shows "Đang chấm…" until the server's verdict; a refused answer offers
 ## "Gửi lại". Grade bands in `eduworld/learning/tap_confirm_bands` confirm with a second tap on the same tile.
+## F099 (STUDENT_GAME_UX_LEARNING §3.3a): the board is balanced — the renderer grows its answer tiles into the free room
+## and centres the question; on a portrait board the body is as tall as its content and two spacers centre the question
+## with Mây's row right under the answers. Media renderers give Mây's line through `coach_hint()`.
 
 signal closed()
 
@@ -45,6 +48,8 @@ const ICON_NEXT: Texture2D = preload("res://resources/ui/icons/next_light.svg")
 const TAP_AGAIN_KEY: String = "ui.activity_player.tap_again"
 const RESEND_KEY: String = "ui.activity_player.resend"
 const ICON_RESEND: Texture2D = preload("res://resources/ui/icons/retry_light.svg")
+## F099: a balancing pass that changed the layout runs again next frame, at most this many times in a row.
+const BALANCE_MAX_PASSES: int = 3
 
 ## WorldRoot holds the break reminder while a learning screen is open (F062-AC-22).
 var blocks_break_reminder: bool = true
@@ -69,6 +74,10 @@ var _flushing: bool = false
 ## F098: the current item sends its answer on tap / asks for a second tap first (InstantAnswerPolicy, per item).
 var _instant: bool = false
 var _double_tap: bool = false
+## F099: frames left before the next balancing pass, and passes run since the last request (a pass that changes the
+## layout asks for one more, at most BALANCE_MAX_PASSES in a row).
+var _balance_frames: int = 0
+var _balance_passes: int = 0
 
 @onready var _exit: Button = %Exit
 @onready var _title: Label = %Title
@@ -83,6 +92,9 @@ var _double_tap: bool = false
 @onready var _offline: Label = %Offline
 @onready var _voice: PanelContainer = %VoiceOver
 @onready var _body: VBoxContainer = %Body
+@onready var _layout: VBoxContainer = _frame.get_node("Layout") as VBoxContainer
+@onready var _top_spacer: Control = %TopSpacer
+@onready var _bottom_spacer: Control = %BottomSpacer
 @onready var _state_panel: VBoxContainer = %StatePanel
 @onready var _state_label: Label = %StateLabel
 @onready var _details_label: Label = %DetailsLabel
@@ -121,6 +133,8 @@ func _ready() -> void:
 	_feedback.connect("worked_example_requested", _on_worked_example_requested)
 	_feedback.connect("math_failed", _on_math_failed)
 	_exit_confirm.hide()
+	_layout.resized.connect(queue_balance)
+	_body.resized.connect(queue_balance)
 	if client_version.is_empty():
 		client_version = String(Config.client_version)
 
@@ -201,6 +215,7 @@ func present(attempt: AttemptModel) -> void:
 	renderer.run_submitted.connect(_on_run_submitted)
 	renderer.read_aloud_requested.connect(_on_read_aloud_requested)
 	renderer.choice_tapped.connect(_on_choice_tapped)
+	renderer.coach_hint_changed.connect(_refresh_coach)
 	if renderer.has_signal("template_load_failed"):
 		renderer.connect("template_load_failed", _on_template_load_failed.bind(attempt.activity_type))
 	_set_state(State.PRESENTING)
@@ -640,7 +655,14 @@ func _refresh_coach() -> void:
 	_action_row.visible = _status.visible or _action_details.visible
 	var busy: bool = _feedback.visible or _action_row.visible or bool(_hints.call("is_showing_hint"))
 	_coach_line.visible = not busy
-	_coach_line.text = TAP_AGAIN_KEY if _confirm_ready() else (CHEER_HINT_KEY if _hints.visible else CHEER_KEY)
+	var hint: String = renderer.coach_hint() if renderer != null else ""
+	if _confirm_ready():
+		_coach_line.text = TAP_AGAIN_KEY
+	elif not hint.is_empty() and not _hints.visible:
+		_coach_line.text = hint
+	else:
+		_coach_line.text = CHEER_HINT_KEY if _hints.visible else CHEER_KEY
+	queue_balance()
 
 
 ## F098: a band that confirms with two taps has a chosen tile waiting for its second tap.
@@ -701,6 +723,14 @@ func _on_access_denied(code: String) -> void:
 func _process(delta: float) -> void:
 	if not visible:
 		return
+	if _balance_frames > 0:
+		_balance_frames -= 1
+		if _balance_frames == 0:
+			if balance() and _balance_passes < BALANCE_MAX_PASSES:
+				_balance_passes += 1
+				_balance_frames = 1
+			else:
+				_balance_passes = 0
 	_state_sec += delta
 	if state == State.LOADING and _state_sec >= LOAD_RETRY_AFTER_SEC and not _retry.visible:
 		_retry_action = start.bind(args)
@@ -774,3 +804,46 @@ func set_top_inset(px: float) -> void:
 	var frame: Control = get_node_or_null("%Frame") as Control
 	if frame != null:
 		frame.offset_top = maxf(0.0, px)
+
+
+# ---------- F099: balanced board ----------
+
+## Asks for a balancing pass on the next frame (layout, state or bubble changed).
+func queue_balance() -> void:
+	if _balance_frames == 0:
+		_balance_frames = 1
+
+
+## F099 (STUDENT_GAME_UX_LEARNING §3.3a): the renderer fits its content into the room of the body (answer tiles grow,
+## the question is centred). On a portrait board (taller than wide) the body shrinks to that content and the spacers
+## share the rest above and below, so Mây's row sits right under the answers. Returns whether the layout changed.
+func balance() -> bool:
+	var tall: bool = size.y > size.x
+	var room: float = _body_room()
+	var used: float = -1.0
+	if renderer != null and is_instance_valid(renderer) and room > 0.0 			and state in [State.PRESENTING, State.AWAITING_RESULT, State.FEEDBACK, State.SUBMITTING]:
+		used = renderer.fit_layout(room, tall)
+	var stack: bool = tall and used >= 0.0 and used + 1.0 < room
+	var height: float = ceilf(used) if stack else 0.0
+	var flags: int = Control.SIZE_FILL if stack else Control.SIZE_EXPAND_FILL
+	var changed: bool = _top_spacer.visible != stack or _body.size_flags_vertical != flags 			or absf(_body.custom_minimum_size.y - height) > 0.5
+	_top_spacer.visible = stack
+	_bottom_spacer.visible = stack
+	_body.size_flags_vertical = flags
+	_body.custom_minimum_size.y = height
+	return changed
+
+
+## Height the body gets when it is the only part of the board that grows (the board minus every other visible row).
+func _body_room() -> float:
+	var sep: float = float(_layout.get_theme_constant(&"separation"))
+	var taken: float = 0.0
+	var rows: int = 0
+	for child: Node in _layout.get_children():
+		var c: Control = child as Control
+		if c == null or not c.visible or c == _top_spacer or c == _bottom_spacer:
+			continue
+		rows += 1
+		if c != _body:
+			taken += c.get_combined_minimum_size().y
+	return _layout.size.y - taken - sep * float(maxi(rows - 1, 0))

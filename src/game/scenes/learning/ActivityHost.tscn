@@ -151,6 +151,13 @@ visible = false
 layout_mode = 2
 text = "ui.common.retry"
 
+[node name="TopSpacer" type="Control" parent="Frame/Layout"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
 [node name="Body" type="VBoxContainer" parent="Frame/Layout"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -226,6 +233,13 @@ unique_name_in_owner = true
 layout_mode = 2
 icon = ExtResource("10_check")
 text = "ui.activity_player.check"
+
+[node name="BottomSpacer" type="Control" parent="Frame/Layout"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
 
 [node name="ExitConfirm" type="PanelContainer" parent="."]
 unique_name_in_owner = true

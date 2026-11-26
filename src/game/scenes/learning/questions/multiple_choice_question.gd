@@ -39,3 +39,20 @@ func _refresh() -> void:
 func select_index(index: int) -> void:
 	if not locked:
 		(answer as MultipleChoiceAnswer).select_index(index)
+
+
+## F099: every choice tile grows into the free room; a portrait board shows up to 4 choices in one column.
+func _fit_tiles() -> Array[Button]:
+	var out: Array[Button] = []
+	for b: Variant in buttons.values():
+		out.append(b as Button)
+	return out
+
+
+func _fit_rows() -> int:
+	var grid: GridContainer = %Answers as GridContainer
+	return ceili(float(buttons.size()) / float(maxi(grid.columns, 1)))
+
+
+func _apply_tall(tall: bool) -> void:
+	(%Answers as GridContainer).columns = 1 if tall or buttons.size() > 4 else 2

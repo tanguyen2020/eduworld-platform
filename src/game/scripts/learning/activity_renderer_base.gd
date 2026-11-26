@@ -34,6 +34,9 @@ signal read_aloud_requested()
 ## F098: an answer tile of a one-step question was tapped (or its key pressed); `repeated` = already selected.
 @warning_ignore("unused_signal")
 signal choice_tapped(repeated: bool)
+## F099: the coach line of the player changed (media renderers: `coach_hint()`); the host refreshes Mây's bubble.
+@warning_ignore("unused_signal")
+signal coach_hint_changed()
 
 var attempt: AttemptModel = null
 var context: RendererContext = null
@@ -53,6 +56,17 @@ func wire_question(q: QuestionRendererBase) -> void:
 ## Whether the question stem is drawn on screen (F096-3: the host then shows no caption repeating it).
 func shows_stem() -> bool:
 	return get("question") is QuestionRendererBase
+
+
+## F099: fits the content into `available` px of height on a portrait (`tall`) or landscape board and returns the height
+## it uses; -1 = this renderer fills the body as it is (no balancing).
+func fit_layout(_available: float, _tall: bool) -> float:
+	return -1.0
+
+
+## F099: what Mây says in the bubble when it has nothing else to show (a translation key; "" = the host's cheer).
+func coach_hint() -> String:
+	return ""
 
 
 ## F098: whether this renderer can send a one-step answer on tap (quiz-style renderers); media, simulation and

@@ -127,15 +127,26 @@ func show_verdict(result: ResponseResultModel) -> void:
 	if result == null or not result.has_verdict or chosen == null:
 		return
 	_mark_tile(chosen, AnswerBadge.Verdict.CORRECT if result.is_correct else AnswerBadge.Verdict.TRY)
+	var right: Button = null
 	if not result.is_correct and not result.correct_response.is_empty():
-		var right: Button = _tile_for_response(result.correct_response)
+		right = _tile_for_response(result.correct_response)
 		if right != null and right != chosen:
 			_mark_tile(right, AnswerBadge.Verdict.ANSWER)
+	# F099: every other tile rests in a calm neutral look (number kept) — only the chosen tile and the right answer
+	# carry the right / not-yet-right colours, so no candy tile can pass for a graded one.
+	for b: Button in _all_tiles():
+		if b != chosen and b != right:
+			_mark_tile(b, AnswerBadge.Verdict.REST)
 
 
 ## The tile of the current answer of a one-step question (overridden); null otherwise.
 func _chosen_tile() -> Button:
 	return null
+
+
+## Every answer tile of a one-step question (overridden); [] otherwise (F099).
+func _all_tiles() -> Array[Button]:
+	return []
 
 
 ## The tile matching a `QuestionResponse` of the server (overridden); null when none.
@@ -159,9 +170,11 @@ func _mark_tile(b: Button, verdict: AnswerBadge.Verdict) -> void:
 			b.theme_type_variation = &"AnswerTileCorrect"
 		AnswerBadge.Verdict.TRY:
 			b.theme_type_variation = &"AnswerTileTry"
+		AnswerBadge.Verdict.REST:
+			b.theme_type_variation = &"AnswerTileRest"
 		_:
 			b.theme_type_variation = b.get_meta(&"tile_type") as StringName
-	if verdict == AnswerBadge.Verdict.NONE:
+	if verdict == AnswerBadge.Verdict.NONE or verdict == AnswerBadge.Verdict.REST:
 		return
 	var tag: Label = Label.new()
 	tag.name = TAG_NAME
@@ -288,3 +301,51 @@ func _load_icon(button: Button, formula: MathAssetRefModel) -> void:
 			MathSvgCache.scale_for(MathInline.font_px(button), MathInline.screen_scale()), MathInline.text_color(button))
 	if is_instance_valid(button) and tex != null:
 		button.icon = tex
+
+
+# ---------- F099: balanced layout ----------
+
+## Rows of a four-choice question — a 2×2 grid on a landscape board, one column on a portrait board: the growth
+## reference of the tile block (two true/false tiles may grow as much as the four tiles of a choice question).
+const GROW_REFERENCE_ROWS: int = 2
+const GROW_REFERENCE_ROWS_TALL: int = 4
+
+## Answer tiles that grow into the free room of the board (overridden by the one-step choice questions); [] = this
+## question keeps its tiles at the band's height (STUDENT_GAME_UX_LEARNING §3.3a).
+func _fit_tiles() -> Array[Button]:
+	return []
+
+
+## Rows of `_fit_tiles()` (overridden).
+func _fit_rows() -> int:
+	return 0
+
+
+## Layout of a portrait board: one column of choices (overridden).
+func _apply_tall(_tall: bool) -> void:
+	pass
+
+
+## F099: the answer tiles share `available` px of height — never below the band's tile height, never above
+## `component.answer_tile.grow_max` × it (`grow_max_tall` × on a portrait board); the font stays the band's stem size.
+## Returns the height of the question once fitted.
+func fit_height(available: float, tall: bool) -> float:
+	_apply_tall(tall)
+	var tiles: Array[Button] = _fit_tiles()
+	for b: Button in tiles:
+		b.custom_minimum_size.y = 0.0
+	var base: float = get_combined_minimum_size().y
+	var rows: int = _fit_rows()
+	if tiles.is_empty() or rows <= 0 or available <= base:
+		return base
+	var tile_h: float = _tile_height()
+	var grow: float = UiTokens.COMPONENT_ANSWER_TILE_GROW_MAX_TALL if tall else UiTokens.COMPONENT_ANSWER_TILE_GROW_MAX
+	# The block of tiles may grow as much as the block of a four-choice question would, so a question with fewer rows
+	# (true/false) does not leave a hole.
+	var share: float = maxf(float(GROW_REFERENCE_ROWS_TALL if tall else GROW_REFERENCE_ROWS) / float(rows), 1.0)
+	var extra: float = floorf(minf((available - base) / float(rows), tile_h * maxf(grow - 1.0, 0.0) * share))
+	if extra < 1.0:
+		return base
+	for b: Button in tiles:
+		b.custom_minimum_size.y = maxf(b.get_combined_minimum_size().y, tile_h) + extra
+	return get_combined_minimum_size().y

@@ -219,3 +219,87 @@ static func _broken_word(c: Control) -> String:
 
 static func _short(root: Node, c: Node) -> String:
 	return String(root.get_path_to(c))
+
+
+## F099-AC-07: empty horizontal bands of the activity board. Every control showing something (text, button, bar,
+## picture, Mây) of the board in viewport `vp` is projected on the vertical axis (content of a ScrollContainer clipped
+## to its scroll box); no gap between two neighbouring contents — or from the last one to the bottom of the board — may
+## be taller than `max_ratio` × the view height. Returns one line per band too tall.
+static func empty_bands(root: Node, vp: Viewport, label: String, max_ratio: float = 0.25) -> PackedStringArray:
+	var out: PackedStringArray = []
+	var board: Control = _board(root, vp)
+	if board == null:
+		return PackedStringArray(["%s: no activity board" % label])
+	var view_h: float = float(vp.size.y if vp is SubViewport else vp.get_visible_rect().size.y)
+	var inner: Rect2 = board.get_global_rect()
+	var box: StyleBox = board.get_theme_stylebox(&"panel")
+	if box != null:
+		inner = Rect2(inner.position + Vector2(box.get_margin(SIDE_LEFT), box.get_margin(SIDE_TOP)),
+				inner.size - Vector2(box.get_margin(SIDE_LEFT) + box.get_margin(SIDE_RIGHT),
+				box.get_margin(SIDE_TOP) + box.get_margin(SIDE_BOTTOM)))
+	var spans: Array[Vector2] = []
+	for node: Node in board.find_children("*", "Control", true, false):
+		var c: Control = node as Control
+		if c.get_viewport() != vp or not c.is_visible_in_tree() or c.size.x <= 0.0 or c.size.y <= 0.0 \
+				or not _shows_content(c):
+			continue
+		var rect: Rect2 = c.get_global_rect()
+		var scroll: ScrollContainer = _scroll_of(c, board)
+		if scroll != null:
+			rect = rect.intersection(scroll.get_global_rect())
+		rect = rect.intersection(inner)
+		if rect.size.y > 0.0:
+			spans.append(Vector2(rect.position.y, rect.end.y))
+	if spans.is_empty():
+		return PackedStringArray(["%s: nothing shown on the board" % label])
+	spans.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x < b.x)
+	var limit: float = max_ratio * view_h
+	var reach: float = spans[0].y
+	for i: int in range(1, spans.size()):
+		var gap: float = spans[i].x - reach
+		if gap > limit:
+			out.append("%s: empty band %.0f px (%.0f%% of the view) at y=%.0f" % [label, gap, gap / view_h * 100.0, reach])
+		reach = maxf(reach, spans[i].y)
+	var tail: float = inner.end.y - reach
+	if tail > limit:
+		out.append("%s: empty band %.0f px (%.0f%% of the view) under the content" % [label, tail, tail / view_h * 100.0])
+	last_largest_band = 0.0
+	reach = spans[0].y
+	for i: int in range(1, spans.size()):
+		last_largest_band = maxf(last_largest_band, spans[i].x - reach)
+		reach = maxf(reach, spans[i].y)
+	last_largest_band = maxf(last_largest_band, inner.end.y - reach) / view_h
+	return out
+
+
+## Largest empty band of the last `empty_bands` call, as a share of the view height (for the evidence table).
+static var last_largest_band: float = 0.0
+
+
+static func _board(root: Node, vp: Viewport) -> Control:
+	var nodes: Array[Node] = [root]
+	nodes.append_array(root.find_children("*", "Control", true, false))
+	for node: Node in nodes:
+		var c: Control = node as Control
+		if c != null and c.get_viewport() == vp and c.is_visible_in_tree() and c.theme_type_variation == &"ActivityBoard":
+			return c
+	return null
+
+
+static func _shows_content(c: Control) -> bool:
+	if c is Label:
+		return not (c as Label).text.strip_edges().is_empty()
+	if c is RichTextLabel:
+		return not (c as RichTextLabel).text.is_empty()
+	if c is TextureRect:
+		return (c as TextureRect).texture != null
+	return c is BaseButton or c is Range or c is LineEdit or c is CloudyMascot
+
+
+static func _scroll_of(c: Control, stop: Node) -> ScrollContainer:
+	var p: Node = c.get_parent()
+	while p != null and p != stop:
+		if p is ScrollContainer:
+			return p as ScrollContainer
+		p = p.get_parent()
+	return null

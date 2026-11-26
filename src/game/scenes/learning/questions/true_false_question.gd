@@ -106,6 +106,32 @@ func _chosen_tile() -> Button:
 	return row[0] if model.value == 1 else row[1]
 
 
+func _all_tiles() -> Array[Button]:
+	var out: Array[Button] = []
+	if not (answer as TrueFalseAnswer).has_statements() and pairs.has(""):
+		out.append_array(pairs[""] as Array[Button])
+	return out
+
+
+## F099: the two big tiles of a single statement grow into the free room — side by side on a landscape board, one
+## above the other on a portrait board.
+func _fit_tiles() -> Array[Button]:
+	return _all_tiles()
+
+
+func _fit_rows() -> int:
+	var tiles: Array[Button] = _all_tiles()
+	if tiles.is_empty():
+		return 0
+	return 2 if (tiles[0].get_parent() as GridContainer).columns == 1 else 1
+
+
+func _apply_tall(tall: bool) -> void:
+	var tiles: Array[Button] = _all_tiles()
+	if not tiles.is_empty():
+		(tiles[0].get_parent() as GridContainer).columns = 1 if tall else 2
+
+
 func _tile_for_response(response: Dictionary) -> Button:
 	if not response.get("value") is bool or not pairs.has(""):
 		return null

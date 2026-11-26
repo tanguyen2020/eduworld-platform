@@ -68,3 +68,24 @@ func _chosen_tile() -> Button:
 
 func _tile_for_response(response: Dictionary) -> Button:
 	return buttons.get(String(response.get("option_id", ""))) as Button
+
+
+func _all_tiles() -> Array[Button]:
+	var out: Array[Button] = []
+	for b: Variant in buttons.values():
+		out.append(b as Button)
+	return out
+
+
+## F099: every choice tile grows into the free room; a portrait board shows up to 4 choices in one column.
+func _fit_tiles() -> Array[Button]:
+	return _all_tiles()
+
+
+func _fit_rows() -> int:
+	var grid: GridContainer = %Answers as GridContainer
+	return ceili(float(buttons.size()) / float(maxi(grid.columns, 1)))
+
+
+func _apply_tall(tall: bool) -> void:
+	(%Answers as GridContainer).columns = 1 if tall or buttons.size() > 4 else 2

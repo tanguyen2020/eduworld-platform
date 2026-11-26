@@ -307,11 +307,11 @@ func test_without_correct_response_no_other_tile_is_marked() -> void:
 	_tap(tiles[0])
 	await _settle()
 	assert_int(QuestionRendererBase.tile_verdict(tiles[0])).is_equal(AnswerBadge.Verdict.TRY)
+	# F099: the other tiles rest in the neutral look (no tag, no right-answer mark).
 	for i: int in [1, 2, 3]:
-		assert_int(QuestionRendererBase.tile_verdict(tiles[i])).is_equal(AnswerBadge.Verdict.NONE)
+		assert_int(QuestionRendererBase.tile_verdict(tiles[i])).is_equal(AnswerBadge.Verdict.REST)
 		assert_object(_tag(tiles[i])).is_null()
-		assert_bool(String(tiles[i].theme_type_variation).begins_with("AnswerTile")).is_true()
-		assert_str(String(tiles[i].theme_type_variation)).is_not_equal("AnswerTileCorrect")
+		assert_str(String(tiles[i].theme_type_variation)).is_equal("AnswerTileRest")
 
 
 func test_hidden_verdict_marks_no_tile() -> void:
