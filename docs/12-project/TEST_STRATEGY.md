@@ -1,6 +1,6 @@
 # Test Strategy
 
-> Trạng thái: Draft · Phiên bản: 0.9 · Owner: QA Engineer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-21 (ADR-0095: TC lớp/enrollment/nhóm học tập viết lại theo khối, TC-ORG-105/106 Removed) · 2026-11-17 (ADR-0091: đăng nhập portal bằng form riêng qua backend TC-AUTH-093…101, sửa TC-AUTH-067/070/072/089, TC-TEN-011d; ADR-0090: bật/tắt menu/action TC-CMS-MENU-01…06; ADR-0074: contract test HTTP giữa service thay bằng facade test + kiểm tra kiến trúc, TC-SVC viết lại cho modular monolith, thêm TC-SVC-016/017; TC giờ giới nghiêm, PII/grooming luôn chạy, tenant `common`, preset chat — ADR-0078; "Tiếp tục là…" và Windows máy dùng chung — ADR-0086; bỏ TC QR/PIN — ADR-0076 Rejected; object storage ADR-0075; CI GitHub Actions; mốc pilot ADR-0073/0080)
+> Trạng thái: Draft · Phiên bản: 0.9 · Owner: QA Engineer · Cập nhật: 2026-11-26 (§6.10 ma trận khối 1–9 backend) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-21 (ADR-0095: TC lớp/enrollment/nhóm học tập viết lại theo khối, TC-ORG-105/106 Removed) · 2026-11-17 (ADR-0091: đăng nhập portal bằng form riêng qua backend TC-AUTH-093…101, sửa TC-AUTH-067/070/072/089, TC-TEN-011d; ADR-0090: bật/tắt menu/action TC-CMS-MENU-01…06; ADR-0074: contract test HTTP giữa service thay bằng facade test + kiểm tra kiến trúc, TC-SVC viết lại cho modular monolith, thêm TC-SVC-016/017; TC giờ giới nghiêm, PII/grooming luôn chạy, tenant `common`, preset chat — ADR-0078; "Tiếp tục là…" và Windows máy dùng chung — ADR-0086; bỏ TC QR/PIN — ADR-0076 Rejected; object storage ADR-0075; CI GitHub Actions; mốc pilot ADR-0073/0080)
 > Liên quan: [ROADMAP](ROADMAP.md) · [SYSTEM_ARCHITECTURE §7](../06-architecture/SYSTEM_ARCHITECTURE.md#7-non-functional-baseline) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [LOCAL_DEVELOPMENT](../11-operations/LOCAL_DEVELOPMENT.md)
 
 **Mục đích.** Nguồn duy nhất về chiến lược kiểm thử và ma trận test case của EduWorld.
@@ -82,7 +82,7 @@ Mỗi release candidate chạy smoke E2E trên **toàn bộ thiết bị hạng 
 
 - **Generator** (`src/backend/tools/datagen`, sinh dữ liệu và đẩy qua API/CSV của module identity để các module khác nhận qua event): sinh N tổ chức × M trường × lớp 1–9 × học sinh và nhân sự nhà trường với tên giả tiếng Việt, enrollment, chuyển lớp/trường, trạng thái khóa; xuất CSV cho `csv_import` và JSON theo DTO của EduWorld SIS Contract (dùng cho `sis-mock`).
 - Bộ nội dung chuẩn: câu hỏi đủ 11 loại, mỗi loại có trường hợp biên (đáp án số thập phân dấu phẩy/chấm, khoảng trắng, chữ hoa/thường, có/không dấu tiếng Việt).
-- Bộ tài khoản persona: học sinh lớp 1, 3, 5, 7, 9; `school_admin` hai trường (`ad.truong.a`, `ad.truong.b`); `academic_manager` theo môn (`qlcm.truong.a`); tenant content editor/reviewer; content admin/reviewer; `safety_moderator`; system admin.
+- Bộ tài khoản persona: học sinh mỗi khối 1–9 (seed demo, §6.10); `school_admin` hai trường (`ad.truong.a`, `ad.truong.b`); `academic_manager` theo môn (`qlcm.truong.a`); tenant content editor/reviewer; content admin/reviewer; `safety_moderator`; system admin.
 - Không bao giờ sao chép dữ liệu production xuống môi trường thấp hơn. Nếu cần tái hiện lỗi, dùng dữ liệu đã ẩn danh có phê duyệt.
 
 ## 6. Ma trận test bắt buộc (Master Prompt §22, §26 re-architecture + Party Addendum §8)
@@ -614,6 +614,52 @@ Hiệu năng server và tải: §8. Hiệu năng client trên máy tầm trung: 
 | TC-DASH-008 | Xuất báo cáo 1 triệu dòng; người dùng mở 3 export cùng lúc; link hết hạn | I, A | Job chạy nền, link 15 phút, file xóa sau 7 ngày, có audit; export thứ 3 nhận 429 `EXPORT_LIMIT_REACHED`; link hết hạn trả 403 (AC-DASH-009) |
 | TC-DASH-009 | Tenant A gọi dashboard với `school_id`/`grade_level` của tenant B (không còn `class_id` — ADR-0095); ô khối < 5 học sinh; khóa cache của tenant khác | A, S | 404; ô nhỏ hiển thị "< 5"; khóa cache có `tenant_id`, không lộ chéo tenant (AC-DASH-011) |
 | TC-DASH-010 | Tải dashboard với dữ liệu 2 năm (TC-PERF-025) | P | Xem §8.2 (AC-DASH-010) |
+
+### 6.10. Ma trận khối 1–9 (backend)
+
+Mọi quy tắc backend phụ thuộc khối chạy đủ 9 khối bằng test bảng, khẳng định chính xác các biên 3→4, 4→5, 5→6 và 7→8 (owner duyệt "ma trận test khối 1–9", 2026-11-26). Giá trị lấy từ seed/cấu hình của module (CONFIG_DEFAULTS qua `infrastructure/config`, seed `matchmaking_config.json`, `ranking_rules.json`), không đặt số trong test. Tên test: `TestGradeMatrix*` trong `src/backend/modules/<module>/tests/unit` (U; identity: `tests/unit/grade`) và `tests/integration` (I, PostgreSQL/Valkey qua testcontainers). Ô = ✓ (đã kiểm ở khối đó) + giá trị mong đợi. Tài khoản demo mỗi khối: [LOCAL_DEVELOPMENT §5](../11-operations/LOCAL_DEVELOPMENT.md#5-dữ-liệu-seed).
+
+| Quy tắc (tài liệu sở hữu) | Test | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Ghép trận H1 ([MATCHMAKING §2.1](../03-social-multiplayer/MATCHMAKING.md)) | U `TestGradeMatrixMatchmakingH1` · I `TestGradeMatrixMatchmakingQueues` | ✓ g1 | ✓ g2 | ✓ g3 | ✓ g4 | ✓ g5 | ✓ ±1 với 7 sau 30 s | ✓ ±1 với 6 sau 30 s | ✓ ±1 với 9 sau 30 s | ✓ ±1 với 8 sau 30 s |
+| Team Battle từ khối 4 ([COMPETITION_SYSTEM §3.2](../01-game-design/COMPETITION_SYSTEM.md)) | U `TestGradeMatrixMatchmakingModes`, `TestGradeMatrixBattleRules` · I `TestGradeMatrixMatchmakingQueues` | ✓ không | ✓ không | ✓ không | ✓ có | ✓ có | ✓ có | ✓ có | ✓ có | ✓ có |
+| Thời gian câu 1v1/đội (`battle_1v1_format`) | U `TestGradeMatrixBattleRules` | ✓ 30 s | ✓ 30 s | ✓ 30 s | ✓ 20 s | ✓ 20 s | ✓ 20 s | ✓ 20 s | ✓ 20 s | ✓ 20 s |
+| Bonus tốc độ (`speed_bonus_min_grade` = 6): trận, Timed Quiz, mini-game | U `TestGradeMatrixBattleRules`, `TestGradeMatrixSpeedBonusFloorHolds`; game `TestGradeMatrixMiniGame`; learning `TestGradeMatrixMiniGameScoring` | ✓ không | ✓ không | ✓ không | ✓ không | ✓ không | ✓ có | ✓ có | ✓ có | ✓ có |
+| Timed Quiz xếp hạng cá nhân | U `TestGradeMatrixBattleRules` | ✓ mục tiêu nhóm | ✓ mục tiêu nhóm | ✓ mục tiêu nhóm | ✓ hạng | ✓ hạng | ✓ hạng | ✓ hạng | ✓ hạng | ✓ hạng |
+| Ngưỡng trả lời quá nhanh (`cheat_fast_answer_flag`) | U `TestGradeMatrixBattleRules` | ✓ 600 ms | ✓ 600 ms | ✓ 600 ms | ✓ 600 ms | ✓ 600 ms | ✓ 400 ms | ✓ 400 ms | ✓ 400 ms | ✓ 400 ms |
+| Loại party, cùng khối ([PARTY_SYSTEM §4](../03-social-multiplayer/PARTY_SYSTEM.md)) | U `TestGradeMatrixPartyPolicy` | ✓ friend/quest, cùng khối | ✓ friend/quest, cùng khối | ✓ friend/quest, cùng khối | ✓ + competition_team | ✓ + competition_team | ✓ + study/custom | ✓ + study/custom | ✓ + study/custom | ✓ + study/custom |
+| Dải khối hub/duel/party/world/analytics (GLOSSARY "Grade band") | U `TestGradeMatrixBands`; game `TestGradeMatrixWorldAndBands` · I `TestGradeMatrixQuestsAndWorld` (room hub) | ✓ g1_3 | ✓ g1_3 | ✓ g1_3 | ✓ g4_5 | ✓ g4_5 | ✓ g6_7 | ✓ g6_7 | ✓ g8_9 | ✓ g8_9 |
+| Hiển thị leaderboard ([COMPETITION_SYSTEM §9.4](../01-game-design/COMPETITION_SYSTEM.md)) | U `TestGradeMatrixLeaderboardVisibility` · I `TestGradeMatrixLeaderboards` | ✓ chỉ mục tiêu khối | ✓ chỉ mục tiêu khối | ✓ chỉ mục tiêu khối | ✓ top 10 + nhóm %, không lộ hạng cuối | ✓ top 10 + nhóm %, không lộ hạng cuối | ✓ top 50 ± 3 | ✓ top 50 ± 3 | ✓ top 50 ± 3 | ✓ top 50 ± 3 |
+| Danh sách bảng theo khối (seed §9.2) | I `TestGradeMatrixLeaderboards` | ✓ 1 bảng | ✓ 1 bảng | ✓ 1 bảng | ✓ 6 bảng | ✓ 6 bảng | ✓ 7 (+ đội) | ✓ 7 (+ đội) | ✓ 7 (+ đội) | ✓ 7 (+ đội) |
+| Mục tiêu khối: ô người đóng góp < 5 ẩn | U `TestGradeMatrixGradeGoalMinCell` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| F108 không nới được sàn (hiển thị, cửa sổ khối, bonus tốc độ, đội, hạng) | U `TestGradeMatrixVisibilityConfigNeverLoosens` (1.500 payload ngẫu nhiên), `TestGradeMatrixSpeedBonusFloorHolds`, `TestGradeMatrixLeaderboardGradesConfig` | ✓ bảng xếp hạng bị từ chối | ✓ bảng xếp hạng bị từ chối | ✓ bảng xếp hạng bị từ chối | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Mức khó challenge ([CHALLENGE_BOSS_SYSTEM §2.2](../01-game-design/CHALLENGE_BOSS_SYSTEM.md)) | U `TestGradeMatrixChallengeLevels` · I `TestGradeMatrixChallengeRead` | ✓ easy–hard | ✓ easy–hard | ✓ easy–hard | ✓ + expert | ✓ + expert | ✓ 5 mức | ✓ 5 mức | ✓ 5 mức | ✓ 5 mức |
+| Thời gian challenge (`g1_3_challenge_rules`) | U `TestGradeMatrixChallengeLevels` · I `TestGradeMatrixChallengeRead` | ✓ × 1,5 | ✓ × 1,5 | ✓ × 1,5 | ✓ × 1 | ✓ × 1 | ✓ × 1 | ✓ × 1 | ✓ × 1 | ✓ × 1 |
+| `difficulties[]`, `active_attempt_id` (delta F076) | U `TestGradeMatrixChallengeLevels` · I `TestGradeMatrixChallengeRead` | ✓ không có expert/legendary | ✓ không có expert/legendary | ✓ không có expert/legendary | ✓ legendary `grade_not_allowed` | ✓ legendary `grade_not_allowed` | ✓ | ✓ | ✓ | ✓ |
+| Challenge/quest chỉ của khối mình (F072, F076) | U `TestGradeMatrixChallengeVisibility`, `TestGradeMatrixQuests` · I `TestGradeMatrixChallengeRead`, `TestGradeMatrixQuestsAndWorld` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| XP nội dung thấp hơn ≥ 2 khối × 0,25 (`xp_below_grade_multiplier`; miễn với gợi ý, bài giao) | U `TestGradeMatrixXPBelowGrade` (9 × 9 khối × 3 mode) | ✓ không áp | ✓ không áp | ✓ nội dung khối 1 | ✓ ≤ khối 2 | ✓ ≤ khối 3 | ✓ ≤ khối 4 | ✓ ≤ khối 5 | ✓ ≤ khối 6 | ✓ ≤ khối 7 |
+| `learning_block_max_items` (khối thấp nhất của quest) | U `TestGradeMatrixQuests` | ✓ 3 | ✓ 3 | ✓ 3 | ✓ 5 | ✓ 5 | ✓ 8 | ✓ 8 | ✓ 8 | ✓ 8 |
+| Quest học tập hết hạn khi đổi khối (F074-AC-25) | U `TestGradeMatrixQuests` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `learning_zone.history` ([WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md)) | I `TestGradeMatrixQuestsAndWorld` | ✓ khóa | ✓ khóa | ✓ khóa | ✓ mở | ✓ mở | ✓ mở | ✓ mở | ✓ mở | ✓ mở |
+| Mini-game config theo khối (F073) | U `TestGradeMatrixMiniGame` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Đối tượng sự kiện `grade_levels` (F077) | U `TestGradeMatrixLiveOps` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `by_grade` sự kiện trường (F081, ô < 5 ẩn) | U `TestGradeMatrixLiveOps` | ✓ không trả | ✓ không trả | ✓ không trả | ✓ ≥ 5 | ✓ ≥ 5 | ✓ ≥ 5 | ✓ ≥ 5 | ✓ ≥ 5 | ✓ ≥ 5 |
+| Shop listing theo khối (F075) | U `TestGradeMatrixShop` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Analytics game: chiều dải khối, ẩn ô nhỏ (F080) | U `TestGradeMatrixAnalyticsSuppression`, `TestGradeMatrixWorldAndBands` | ✓ g1_3 | ✓ g1_3 | ✓ g1_3 | ✓ g4_5 | ✓ g4_5 | ✓ g6_7 | ✓ g6_7 | ✓ g8_9 | ✓ g8_9 |
+| Câu hỏi challenge đúng khối (F076-AC-09) | I `TestGradeMatrixChallengeQuestions` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Bài giao theo khối (F041-AC-32) | I `TestGradeMatrixAssignmentTargets` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Số lần trả lời mỗi câu (`attempts_per_question`) | U `TestGradeMatrixAttemptRules` | ✓ 3 | ✓ 3 | ✓ 3 | ✓ 2 | ✓ 2 | ✓ 2 | ✓ 2 | ✓ 2 | ✓ 2 |
+| Ngưỡng rapid guess | U `TestGradeMatrixAttemptRules` | ✓ × 1,5 | ✓ × 1,5 | ✓ × 1,5 | ✓ × 1 | ✓ × 1 | ✓ × 1 | ✓ × 1 | ✓ × 1 | ✓ × 1 |
+| Cỡ bài chẩn đoán | U `TestGradeMatrixAttemptRules` | ✓ 15 | ✓ 15 | ✓ 15 | ✓ 20 | ✓ 20 | ✓ 20 | ✓ 20 | ✓ 20 | ✓ 20 |
+| Hiện số mastery (LEARNING_EXPERIENCE §7) | U `TestGradeMatrixMasteryDisplay` | ✓ không | ✓ không | ✓ không | ✓ không | ✓ không | ✓ có | ✓ có | ✓ có | ✓ có |
+| Mini-game: trừ điểm khi sai (F073-AC-09) | U `TestGradeMatrixMiniGameScoring` | ✓ không | ✓ không | ✓ không | ✓ không | ✓ không | ✓ có | ✓ có | ✓ có | ✓ có |
+| Audio bắt buộc g1_3 (F025-AC-15) | U `TestGradeMatrixAudioRequired` | ✓ bắt buộc | ✓ bắt buộc | ✓ bắt buộc | ✓ không | ✓ không | ✓ không | ✓ không | ✓ không | ✓ không |
+| School Learning Dashboard: ẩn khối < 5 học sinh (FR-ANL-016) | U `TestGradeMatrixGradeSuppression` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Xếp khối, lên khối đầu năm học (SIS, `student.placement_changed`) | U `TestGradeMatrixPlacement` · I `TestGradeMatrixSisRollover` | ✓ → 2 | ✓ → 3 | ✓ → 4 | ✓ → 5 | ✓ → 6 | ✓ → 7 | ✓ → 8 | ✓ → 9 | ✓ tốt nghiệp |
+| Mật khẩu tạm lần đầu ([ACCOUNT_PROVISIONING §3.4](../09-identity/ACCOUNT_PROVISIONING.md)) | U `TestGradeMatrixTemporaryPassword` | ✓ không | ✓ không | ✓ không | ✓ không | ✓ không | ✓ có | ✓ có | ✓ có | ✓ có |
+| Tài khoản demo (seed identity) | I `TestDevSeedIsIdempotent` (19 học sinh) | `hs.mai.1`, `hs.oanh.1` | `hs.nam.2` | `hs.an.3a` | `hs.em.4a` | `hs.phuc.5`, `hs.son.5` | `hs.giang.6a` | `hs.dung.7a` | `hs.khanh.8a` | `hs.lan.9a` |
+
+Quyết định ghi lại khi lập ma trận (lệnh thường trực "chốt hết", [Confirmed]): khối 1–3 không nhận `expert`/`legendary` trong `difficulties[]`, kể cả dạng khóa (AC-UX-0601 thắng S06 §6a — [F076 Clarifications 2026-11-26](../../specs/076-challenge-engine-solo/spec.md)). Không phát hiện hành vi lệch tài liệu sở hữu.
 
 ## 7. Security testing
 
