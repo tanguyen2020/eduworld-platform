@@ -92,7 +92,12 @@ var (
 	keyRe  = regexp.MustCompile(`^media/[0-9a-f]{64}/[A-Za-z0-9._-]{1,200}$`)
 	codeRe = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,63}$`)
 	tagRe  = regexp.MustCompile(`^[a-z0-9 _-]{1,64}$`)
+	// itemCodeRe is the item code of item.granted (RB-308, ADR-0100).
+	itemCodeRe = regexp.MustCompile(`^[a-z0-9_]{1,64}$`)
 )
+
+// ValidTag reports a GIF tag (lowercase without diacritics, ≤ 64).
+func ValidTag(t string) bool { return tagRe.MatchString(t) }
 
 // ValidKey reports an immutable library key media/<sha256>/<file> (R31).
 func ValidKey(k string) bool { return keyRe.MatchString(k) }
@@ -106,9 +111,10 @@ func KeyHash(k string) string {
 	return parts[1]
 }
 
-// UnlockRule locks a pack until the student owns an item or got a reward (module game, F075); nil = for everyone.
+// UnlockRule locks a pack until the student owns an item or got a reward (module game, F075); nil = for everyone. ItemID
+// is the item code carried by item.granted (Clarifications F082 2026-11-26), RewardRuleID the published reward rule.
 type UnlockRule struct {
-	ItemID       *uuid.UUID `json:"item_id,omitempty"`
+	ItemID       *string    `json:"item_id,omitempty"`
 	RewardRuleID *uuid.UUID `json:"reward_rule_id,omitempty"`
 }
 
@@ -180,8 +186,13 @@ func (p Pack) Check() error {
 			return err
 		}
 	}
-	if p.UnlockRule != nil && p.UnlockRule.ItemID == nil && p.UnlockRule.RewardRuleID == nil {
-		return FieldError{"payload.unlock_rule", "item_id or reward_rule_id"}
+	if p.UnlockRule != nil {
+		switch r := p.UnlockRule; {
+		case (r.ItemID == nil) == (r.RewardRuleID == nil):
+			return FieldError{"payload.unlock_rule", "exactly one of item_id or reward_rule_id"}
+		case r.ItemID != nil && !itemCodeRe.MatchString(*r.ItemID):
+			return FieldError{"payload.unlock_rule.item_id", "^[a-z0-9_]{1,64}$"}
+		}
 	}
 	if len(p.Stickers) > MaxStickers {
 		return FieldError{"payload.stickers", "too many"}

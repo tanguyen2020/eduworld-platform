@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/content.unpublished.v1.schema.json",
+  "title": "Payload content.unpublished v1 (module chat, owner F082, ADR-0043)",
+  "description": "Một sticker pack hoặc GIF được gỡ khỏi thư viện (học sinh không chọn được nữa; tin đã gửi vẫn hiển thị vì asset bất biến). Envelope tenant_id = null (nội dung platform). Consumer: AUD, snapshot/CDN worker. Không chứa tệp, chỉ id.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["item_type", "item_id", "from_version", "reason", "unpublished_by", "unpublished_at"],
+  "properties": {
+    "item_type": { "enum": ["sticker_pack", "gif"] },
+    "item_id": { "type": "string", "format": "uuid" },
+    "from_version": { "type": "integer", "minimum": 1 },
+    "reason": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "unpublished_by": { "type": "string", "format": "uuid" },
+    "unpublished_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    { "item_type": "gif", "item_id": "0193a6b2-0000-7000-8000-0000000000a1", "from_version": 1, "reason": "GIF lỗi thời", "unpublished_by": "0193a5f4-6c1e-7b2a-9d1f-000000000009", "unpublished_at": "2026-11-26T08:30:12.345Z" }
+  ]
+}

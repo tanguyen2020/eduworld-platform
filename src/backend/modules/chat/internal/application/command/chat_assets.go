@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 
@@ -30,6 +31,12 @@ const (
 	AuditChatAssetTransition  = "chat_asset.transitioned"
 	AuditChatAssetPublished   = "chat_asset.published"
 	AuditChatAssetPresigned   = "chat_asset.upload_presigned"
+	AuditChatAssetRolledBack  = "chat_asset.rolled_back"
+	AuditChatAssetUnpublished = "chat_asset.unpublished"
+	EventContentRolledBack    = "content.rolled_back"
+	EventContentUnpublished   = "content.unpublished"
+	// MaxReasonLength bounds the reason of a rollback/unpublish (RollbackRequest/ReasonRequest maxLength).
+	MaxReasonLength           = 500
 	EventContentPublished     = "content.published"
 	PresignTTL                = 15 * time.Minute
 	assetPresignMaxFileLength = 200
@@ -53,7 +60,17 @@ type ChatAssets struct {
 	Audit     write.Auditor
 	Metrics   AssetMetrics // nil: none
 	Limits    chatasset.Limits
-	Now       func() time.Time
+	// RequiredLanguages is game_text_required_languages (vi, en): the languages a sticker pack needs before submit_review
+	// (F082-AC-02, NFR-I18N-002); nil = vi and en.
+	RequiredLanguages []string
+	Now               func() time.Time
+}
+
+func (h ChatAssets) required() []string {
+	if len(h.RequiredLanguages) == 0 {
+		return []string{"vi", "en"}
+	}
+	return h.RequiredLanguages
 }
 
 func (h ChatAssets) now() time.Time {
@@ -231,6 +248,13 @@ func (h ChatAssets) UpdateDraft(ctx context.Context, typ string, id uuid.UUID, v
 // inspect applies the file rules of chat_asset_file_max to the files of a version (F118-AC-17): read from the bucket,
 // never trusted from the client.
 func (h ChatAssets) inspect(ctx context.Context, t chatasset.Type, payload []byte) error {
+	_, err := h.inspectStamp(ctx, t, payload)
+	return err
+}
+
+// inspectStamp is inspect returning the payload whose file facts (size, format, dimensions) are those read from the
+// bucket, not the numbers the client declared (F082 Clarifications 2026-11-26).
+func (h ChatAssets) inspectStamp(ctx context.Context, t chatasset.Type, payload []byte) ([]byte, error) {
 	reject := func(err error) error {
 		var fl chatasset.FileError
 		if errors.As(err, &fl) && h.Metrics != nil {
@@ -252,44 +276,47 @@ func (h ChatAssets) inspect(ctx context.Context, t chatasset.Type, payload []byt
 	case chatasset.TypeStickerPacks:
 		var p chatasset.Pack
 		if err := json.Unmarshal(payload, &p); err != nil {
-			return err
+			return nil, err
 		}
 		if len(p.Stickers) == 0 {
-			return problem.Invalid("payload.stickers", problem.SubInvalid, "at least one sticker")
+			return nil, problem.Invalid("payload.stickers", problem.SubInvalid, "at least one sticker")
 		}
-		for _, s := range p.Stickers {
+		for i, s := range p.Stickers {
 			if s.AssetKey == "" {
-				return problem.Invalid("payload.stickers.asset_key", problem.SubInvalid, "required")
+				return nil, problem.Invalid("payload.stickers.asset_key", problem.SubInvalid, "required")
 			}
 			f, err := open(s.AssetKey, h.Limits.StickerMaxBytes)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			if err := chatasset.CheckSticker(f, h.Limits); err != nil {
-				return reject(err)
+				return nil, reject(err)
 			}
+			p.Stickers[i].SizeBytes, p.Stickers[i].ContentType = f.SizeBytes, f.ContentType
 		}
+		return json.Marshal(p)
 	default:
 		var g chatasset.Gif
 		if err := json.Unmarshal(payload, &g); err != nil {
-			return err
+			return nil, err
 		}
 		if g.AssetKey == "" || g.PreviewKey == "" {
-			return problem.Invalid("payload.asset_key", problem.SubInvalid, "asset_key and preview_key are required")
+			return nil, problem.Invalid("payload.asset_key", problem.SubInvalid, "asset_key and preview_key are required")
 		}
 		a, err := open(g.AssetKey, h.Limits.GifMaxBytes)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		pv, err := open(g.PreviewKey, h.Limits.GifMaxBytes)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if err := chatasset.CheckGif(a, pv, h.Limits); err != nil {
-			return reject(err)
+			return nil, reject(err)
 		}
+		g.SizeBytes, g.Width, g.Height = a.SizeBytes, a.Width, a.Height
+		return json.Marshal(g)
 	}
-	return nil
 }
 
 // Transition is transitionGameConfigVersion: submit_review (files checked), approve (a GIF by someone else than its
@@ -325,9 +352,27 @@ func (h ChatAssets) Transition(ctx context.Context, typ string, id uuid.UUID, ve
 			return problem.New(problem.InvalidStateTransition, "")
 		}
 		if action == chatasset.ActionSubmit {
-			if err := h.inspect(ctx, t, cur.Payload); err != nil {
+			if t == chatasset.TypeStickerPacks {
+				var pack chatasset.Pack
+				if err := json.Unmarshal(cur.Payload, &pack); err != nil {
+					return err
+				}
+				if missing := pack.MissingTranslations(h.required()); len(missing) > 0 {
+					pe := problem.New(problem.TranslationIncomplete, "")
+					for i, m := range missing {
+						if i == 20 {
+							break
+						}
+						pe.AddField("payload"+m, problem.SubRequired, "a required language is missing")
+					}
+					return pe
+				}
+			}
+			stamped, err := h.inspectStamp(ctx, t, cur.Payload)
+			if err != nil {
 				return err
 			}
+			cur.Payload = stamped
 		}
 		if action == chatasset.ActionApprove {
 			at, by := h.now(), p.UserID
@@ -459,4 +504,122 @@ func (h ChatAssets) Presign(ctx context.Context, typ string, id uuid.UUID, file,
 		return "", "", expires, problem.New(problem.Unavailable, "object storage unavailable").Retry()
 	}
 	return key, url, h.now().Add(PresignTTL), nil
+}
+
+// releaseInput checks the reason of a rollback/unpublish (required, ≤ 500).
+func releaseReason(reason string) error {
+	switch {
+	case strings.TrimSpace(reason) == "":
+		return problem.Invalid("reason", problem.SubRequired, "a reason is required")
+	case utf8.RuneCountInString(reason) > MaxReasonLength:
+		return problem.Invalid("reason", problem.SubMaxLength, "at most 500 characters")
+	}
+	return nil
+}
+
+// Rollback is rollbackGameConfig of sticker-packs/gifs (F082-AC-04, ADR-0043): the library takes the state of a version
+// published before (it has published_at) again and the pointer moves to it; the version that was current is archived;
+// no version content changes (R31). Reason required, game.content.publish, content.rolled_back + audit.
+func (h ChatAssets) Rollback(ctx context.Context, typ string, id uuid.UUID, to int, reason string) (r port.AssetRelease, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.command.RollbackChatAsset")
+	defer func() { done(err) }()
+	t, err := assetType(typ)
+	if err != nil {
+		return r, err
+	}
+	p, sc, err := platformWrite(ctx, authz.PermGameContentPublish)
+	if err != nil {
+		return r, err
+	}
+	if err := releaseReason(reason); err != nil {
+		return r, err
+	}
+	err = h.UoW.InTenantTx(ctx, sc, func(ctx context.Context) error {
+		target, err := h.Repo.Version(ctx, t, id, to)
+		if err != nil {
+			return err
+		}
+		if target == nil {
+			return problem.New(problem.NotFound, "")
+		}
+		if target.PublishedAt == nil || (target.Status != chatasset.StatusPublished && target.Status != chatasset.StatusArchived) {
+			return problem.Invalid("to_version", problem.SubInvalid, "a version published before")
+		}
+		cur, err := h.Repo.Current(ctx, t, id)
+		if err != nil {
+			return err
+		}
+		if cur != nil && cur.VersionID == target.VersionID {
+			return problem.New(problem.InvalidStateTransition, "this version is already current")
+		}
+		if err := h.inspect(ctx, t, target.Payload); err != nil { // the files are still there and unchanged
+			return err
+		}
+		now := h.now()
+		tv := target.Version
+		r = port.AssetRelease{ReleaseID: ids.New(), Type: t, ConfigID: id, Action: "rollback", ToVersion: &tv, Reason: reason, ActorID: p.UserID, At: now}
+		if cur != nil {
+			from := cur.Version
+			r.FromVersion = &from
+		}
+		if err := h.Repo.Rollback(ctx, *target, cur, r); err != nil {
+			return err
+		}
+		if err := h.Events.Publish(ctx, write.Event{Type: EventContentRolledBack, SubjectType: t.ItemType(), SubjectID: id.String(),
+			PartitionKey: id.String(), Platform: true, OccurredAt: now, Payload: map[string]any{"item_type": t.ItemType(), "item_id": id,
+				"from_version": r.FromVersion, "to_version": tv, "to_version_id": target.VersionID, "reason": reason, "rolled_back_by": p.UserID,
+				"rolled_back_at": now}}); err != nil {
+			return err
+		}
+		return h.record(ctx, AuditChatAssetRolledBack, t, id, map[string]any{"to_version": tv, "reason_length": utf8.RuneCountInString(reason)})
+	})
+	return r, err
+}
+
+// Unpublish is unpublishGameConfig of sticker-packs/gifs (F082-AC-04): students stop seeing the pack/GIF (status
+// archived, pointer NULL); messages already sent keep showing it (assets are immutable). Reason required,
+// game.content.publish, content.unpublished + audit.
+func (h ChatAssets) Unpublish(ctx context.Context, typ string, id uuid.UUID, reason string) (r port.AssetRelease, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.command.UnpublishChatAsset")
+	defer func() { done(err) }()
+	t, err := assetType(typ)
+	if err != nil {
+		return r, err
+	}
+	p, sc, err := platformWrite(ctx, authz.PermGameContentPublish)
+	if err != nil {
+		return r, err
+	}
+	if err := releaseReason(reason); err != nil {
+		return r, err
+	}
+	err = h.UoW.InTenantTx(ctx, sc, func(ctx context.Context) error {
+		latest, err := h.Repo.Latest(ctx, t, id)
+		if err != nil {
+			return err
+		}
+		if latest == 0 {
+			return problem.New(problem.NotFound, "")
+		}
+		cur, err := h.Repo.Current(ctx, t, id)
+		if err != nil {
+			return err
+		}
+		if cur == nil {
+			return problem.New(problem.InvalidStateTransition, "not published")
+		}
+		now := h.now()
+		from := cur.Version
+		r = port.AssetRelease{ReleaseID: ids.New(), Type: t, ConfigID: id, Action: "unpublish", FromVersion: &from, Reason: reason, ActorID: p.UserID, At: now}
+		if err := h.Repo.Unpublish(ctx, t, id, cur, r); err != nil {
+			return err
+		}
+		if err := h.Events.Publish(ctx, write.Event{Type: EventContentUnpublished, SubjectType: t.ItemType(), SubjectID: id.String(),
+			PartitionKey: id.String(), Platform: true, OccurredAt: now, Payload: map[string]any{"item_type": t.ItemType(), "item_id": id,
+				"from_version": from, "reason": reason, "unpublished_by": p.UserID, "unpublished_at": now}}); err != nil {
+			return err
+		}
+		return h.record(ctx, AuditChatAssetUnpublished, t, id, map[string]any{"from_version": from, "reason_length": utf8.RuneCountInString(reason)})
+	})
+	return r, err
 }

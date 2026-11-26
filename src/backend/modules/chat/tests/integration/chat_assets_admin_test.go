@@ -39,6 +39,10 @@ func (m *memStorage) PresignPut(_ context.Context, key string, _ int64, _ time.D
 	return "https://storage.test.invalid/" + key + "?X-Amz-Signature=test", nil
 }
 
+func (m *memStorage) PresignGet(_ context.Context, key string, _ time.Duration) (string, error) {
+	return "https://storage.test.invalid/" + key + "?X-Amz-Signature=get", nil
+}
+
 func (m *memStorage) Head(_ context.Context, key string) (int64, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -209,8 +213,8 @@ func TestChatAssetsAdmin(t *testing.T) {
 	hugeKey := "media/" + shaOf(huge) + "/huge.png"
 	store.put(hugeKey, huge)
 	pr := call(author, http.MethodPost, "/game-admin/sticker-packs", "", map[string]any{"payload": map[string]any{"code": "vui-ve",
-		"name_vi": "Vui vẻ", "stickers": []map[string]any{{"asset_key": hugeKey, "content_type": "image/png", "size_bytes": len(huge),
-			"alt_text_vi": "Mèo"}}}})
+		"name_vi": "Vui vẻ", "name_en": "Happy", "stickers": []map[string]any{{"asset_key": hugeKey, "content_type": "image/png", "size_bytes": len(huge),
+			"alt_text_vi": "Mèo", "alt_text_en": "Cat"}}}})
 	if pr.status != http.StatusCreated {
 		t.Fatalf("create pack: %d %s", pr.status, pr.raw)
 	}

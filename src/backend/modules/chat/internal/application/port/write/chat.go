@@ -86,6 +86,14 @@ type AssetRepository interface {
 	Publish(ctx context.Context, v port.AssetVersion, previous *port.AssetVersion, r port.AssetRelease) error
 	// Published returns the published version of the item (nil: none).
 	Published(ctx context.Context, t chatasset.Type, id uuid.UUID) (*port.AssetVersion, error)
+	// Current returns the version the release pointer of the item holds (nil: never published or unpublished), locked.
+	Current(ctx context.Context, t chatasset.Type, id uuid.UUID) (*port.AssetVersion, error)
+	// Rollback materializes target as the library state again, moves the pointer to it, archives the published version
+	// that was current (previous, nil: none) and appends the release (F082-AC-04).
+	Rollback(ctx context.Context, target port.AssetVersion, previous *port.AssetVersion, r port.AssetRelease) error
+	// Unpublish withdraws the item from the library (status archived, pointer NULL), archives the published version that
+	// was current and appends the release; the files and old messages stay (assets are immutable).
+	Unpublish(ctx context.Context, t chatasset.Type, id uuid.UUID, previous *port.AssetVersion, r port.AssetRelease) error
 }
 
 // StatusRepository changes the status of a persistent channel (F120: club read_only, direct frozen/open).

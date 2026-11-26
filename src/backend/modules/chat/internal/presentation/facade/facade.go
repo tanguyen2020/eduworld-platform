@@ -62,6 +62,8 @@ func (f Facade) ScreenText(ctx context.Context, req api.ScreenTextRequestObject)
 // Facade serves the operations of module chat called by other modules.
 type Facade struct {
 	Moderation DisplayTextChecker
+	// Assignments serves the tenant assignments of the sticker packs (F082 T040); nil = 503 UNAVAILABLE.
+	Assignments Assignments
 }
 
 // ModerateDisplayText implements chatapi.StrictServerInterface (x-allowed-callers: competition, x-context-required:

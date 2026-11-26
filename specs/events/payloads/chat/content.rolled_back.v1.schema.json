@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/content.rolled_back.v1.schema.json",
+  "title": "Payload content.rolled_back v1 (module chat, owner F082, ADR-0043)",
+  "description": "Một sticker pack hoặc GIF của thư viện platform được rollback về version từng publish (con trỏ current_version_id đổi, không version nào bị sửa — R31). Envelope tenant_id = null (nội dung platform). Consumer: AUD, snapshot/CDN worker. Không chứa tệp, chỉ id; reason là lý do vận hành nhập (không dữ liệu học sinh).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["item_type", "item_id", "to_version", "to_version_id", "reason", "rolled_back_by", "rolled_back_at"],
+  "properties": {
+    "item_type": { "enum": ["sticker_pack", "gif"] },
+    "item_id": { "type": "string", "format": "uuid" },
+    "from_version": { "type": ["integer", "null"], "minimum": 1 },
+    "to_version": { "type": "integer", "minimum": 1 },
+    "to_version_id": { "type": "string", "format": "uuid" },
+    "reason": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "rolled_back_by": { "type": "string", "format": "uuid" },
+    "rolled_back_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    { "item_type": "sticker_pack", "item_id": "0193a6b2-0000-7000-8000-0000000000a1", "from_version": 2, "to_version": 1, "to_version_id": "0193a6b2-0000-7000-8000-0000000000a2", "reason": "Sticker sai chính tả", "rolled_back_by": "0193a5f4-6c1e-7b2a-9d1f-000000000009", "rolled_back_at": "2026-11-26T08:30:12.345Z" }
+  ]
+}

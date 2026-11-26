@@ -83,6 +83,12 @@ func (s *S3) PresignPut(_ context.Context, key string, size int64, ttl time.Dura
 	return s.base.Scheme + "://" + s.base.Host + uri + "?" + q, nil
 }
 
+// PresignGet signs a short GET of a private object (preview of an unpublished pack/GIF, F082-AC-07).
+func (s *S3) PresignGet(_ context.Context, key string, ttl time.Duration) (string, error) {
+	uri := s.objectURI(key)
+	return s.base.Scheme + "://" + s.base.Host + uri + "?" + presign(s.cfg, http.MethodGet, s.base.Host, uri, nil, s.clock().UTC(), ttl), nil
+}
+
 // Head returns the object size.
 func (s *S3) Head(ctx context.Context, key string) (int64, error) {
 	resp, err := s.do(ctx, http.MethodHead, key)

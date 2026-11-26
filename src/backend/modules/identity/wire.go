@@ -103,12 +103,18 @@ type CompetitionFacade interface {
 }
 
 // Imports are the facades of the other modules called by the sagas and platform operations of identity.
-// Chat implements no facade operation yet (OQ F045-3): its steps answer 503 UNAVAILABLE. Competition nil (a binary
-// without its use cases): its merge step answers 503 and the lifecycle sagas skip it.
+// Chat serves the sticker pack assignments (F082 T040); nil (a binary without its use cases): its steps answer 503
+// UNAVAILABLE. Competition nil: its merge step answers 503 and the lifecycle sagas skip it.
 type Imports struct {
 	Learning    LearningFacade
 	Game        GameFacade
 	Competition CompetitionFacade
+	Chat        ChatFacade
+}
+
+// ChatFacade is what module identity calls on module chat (x-allowed-callers: identity, F082 T040).
+type ChatFacade interface {
+	modules.ChatAssignmentOps
 }
 
 // build constructs every use case of module identity on the real adapters and declares its entry points.
@@ -180,6 +186,9 @@ func build(r *module.Registry, m *Module, in Imports) error {
 	gw := modules.Gateway{Learning: in.Learning, LearningMerge: in.Learning, GameMerge: in.Game, GameAssign: in.Game}
 	studentParts := []port.StudentDataParticipant{participants.Game{F: in.Game}, participants.Learning{F: in.Learning}}
 	anonymizers := []port.UserDataAnonymizer{participants.GameAnonymize{F: in.Game}, participants.LearningAnonymize{F: in.Learning}}
+	if in.Chat != nil {
+		gw.ChatAssign = in.Chat
+	}
 	if in.Competition != nil {
 		gw.CompetitionMerge, gw.CompetitionAssign = in.Competition, in.Competition
 		studentParts = append(studentParts, participants.Competition{F: in.Competition})

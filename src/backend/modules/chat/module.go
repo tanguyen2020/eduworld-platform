@@ -60,6 +60,10 @@ const Name = "chat"
 type Facade interface {
 	ModerateDisplayText(ctx context.Context, req chatapi.ModerateDisplayTextRequestObject) (chatapi.ModerateDisplayTextResponseObject, error)
 	ScreenText(ctx context.Context, req chatapi.ScreenTextRequestObject) (chatapi.ScreenTextResponseObject, error)
+	// F082 T040: the tenant assignments of the sticker packs (x-allowed-callers: identity).
+	ApplyTenantAssignments(ctx context.Context, req chatapi.ApplyTenantAssignmentsRequestObject) (chatapi.ApplyTenantAssignmentsResponseObject, error)
+	RevokeTenantAssignments(ctx context.Context, req chatapi.RevokeTenantAssignmentsRequestObject) (chatapi.RevokeTenantAssignmentsResponseObject, error)
+	ListResourceAssignments(ctx context.Context, req chatapi.ListResourceAssignmentsRequestObject) (chatapi.ListResourceAssignmentsResponseObject, error)
 }
 
 // Module is the registered module; Facade() serves the facade operations of module chat.
@@ -211,6 +215,9 @@ func Register(r *module.Registry) (*Module, error) {
 		if err != nil {
 			return nil, fmt.Errorf("chat: %w", err)
 		}
+		// F082 T040: tenant assignments of the sticker packs, called by module identity (platform operations, ADR-0029).
+		mod.facade = chatfacade.Facade{Moderation: pipe.Validator, Assignments: command.ChatAssignments{UoW: core.UoW, Store: persistence.Assignments{},
+			Audit: persistence.Auditor{R: core.Recorder}, Cursors: cursors}}
 		var js jetstream.JetStream
 		if r.NATS() != nil {
 			if js, err = r.JetStream(); err != nil {
@@ -287,7 +294,7 @@ func Register(r *module.Registry) (*Module, error) {
 				Inspector: storage.Inspector{Storage: objects}, Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder},
 				Metrics: observability.Features{}, Limits: chatasset.Limits{StickerMaxBytes: assetsCfg.StickerMaxBytes, GifMaxBytes: assetsCfg.GifMaxBytes,
 					GifMaxPixels: assetsCfg.GifMaxPixels}},
-				Queries: query.ChatAssets{Read: core.ReadSession, Reader: persistence.Assets{}}},
+				Queries: query.ChatAssets{Read: core.ReadSession, Reader: persistence.Assets{}, Cursors: cursors, Storage: objects}},
 			Policies: &chathttp.PolicyHandlers{Commands: policyAdmin, Queries: query.Policies{Read: core.ReadSession, Reader: persistence.Policies{},
 				Chat: persistence.ChatReader{}}},
 			Persistent: &chathttp.PersistentHandlers{Direct: persistentCmd, Search: query.Search{Read: core.ReadSession, Reader: persistence.Search{},

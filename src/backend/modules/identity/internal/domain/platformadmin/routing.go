@@ -40,6 +40,7 @@ var owners = map[string]string{
 	"challenge": ModuleGame, "quest": ModuleGame, "minigame_config": ModuleGame, "item": ModuleGame,
 	"shop_item": ModuleGame, "event_template": ModuleGame, // F078: assignable game resources (ADR-0029)
 	"tournament_template": ModuleCompetition, "challenge_template": ModuleCompetition, // templates of COMPETITION_SYSTEM §10.2 (F107)
+	"sticker_pack":    ModuleChat,                                        // F082 T040: sticker packs of the chat library (GIFs are shared, never assigned)
 	"school_settings": ModuleIdentity, "tenant_settings": ModuleIdentity, // no class_template (ADR-0095)
 	ResourceUser: ModuleIdentity, ResourceStudent: ModuleIdentity,
 }

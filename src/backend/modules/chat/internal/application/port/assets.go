@@ -23,6 +23,8 @@ type AssetStorage interface {
 	Head(ctx context.Context, key string) (int64, error)
 	// Open streams the object.
 	Open(ctx context.Context, key string) (io.ReadCloser, error)
+	// PresignGet signs a short GET of a private object (preview of an unpublished pack/GIF in Game Studio, F082-AC-07).
+	PresignGet(ctx context.Context, key string, ttl time.Duration) (string, error)
 }
 
 // AssetInspector reads an uploaded object and tells what it really is (sniffed format, size, dimensions, animation,
@@ -61,8 +63,27 @@ type AssetRelease struct {
 	At          time.Time
 }
 
+// AssetFilter is listGameConfigs of sticker-packs/gifs (F082): one row per item — its newest version, or its newest
+// version of Status — of the live items, filtered by the author of that version and by a GIF tag, keyset after
+// (updated_at, config_id) descending; Limit rows are read (limit+1 detects has_more).
+type AssetFilter struct {
+	Type     chatasset.Type
+	Status   string
+	AuthorID *uuid.UUID
+	Tag      string
+	AfterAt  *time.Time
+	AfterID  *uuid.UUID
+	Limit    int
+}
+
 // AssetReader reads the versions of the library (platform G tables, read session).
 type AssetReader interface {
-	ListVersions(ctx context.Context, t chatasset.Type, id *uuid.UUID, status string, limit int) ([]AssetVersion, error)
+	ListItems(ctx context.Context, f AssetFilter) ([]AssetVersion, error)
+	// ListItemVersions lists the versions of one item newest first, keyset before version number (found = the item exists).
+	ListItemVersions(ctx context.Context, t chatasset.Type, id uuid.UUID, before *int, limit int) (rows []AssetVersion, found bool, err error)
 	GetVersion(ctx context.Context, t chatasset.Type, id uuid.UUID, version int) (*AssetVersion, error)
+	// CurrentVersion is the version number of the release pointer of the item (nil: not published or unpublished).
+	CurrentVersion(ctx context.Context, t chatasset.Type, id uuid.UUID) (*int, error)
+	// Releases lists the release history of one item newest first, keyset before (created_at, release_id).
+	Releases(ctx context.Context, t chatasset.Type, id uuid.UUID, beforeAt *time.Time, beforeID *uuid.UUID, limit int) ([]AssetRelease, error)
 }

@@ -185,22 +185,7 @@ func (Assets) Publish(ctx context.Context, v port.AssetVersion, prev *port.Asset
 			return err
 		}
 	}
-	var from, to any
-	if r.FromVersion != nil {
-		from = *r.FromVersion
-	}
-	if r.ToVersion != nil {
-		to = *r.ToVersion
-	}
-	// tenancyguard:ok platform library releases (G table, append-only)
-	if _, err := t.ExecContext(ctx, `INSERT INTO chat.chat_asset_releases (release_id, config_type, config_id, action, from_version_id,
-		to_version_id, reason, actor_id, created_at) VALUES ($1, $2::varchar, $3, $4,
-			(SELECT version_id FROM chat.chat_asset_versions WHERE config_type = $2::varchar AND config_id = $3 AND version = $5::int),
-			(SELECT version_id FROM chat.chat_asset_versions WHERE config_type = $2::varchar AND config_id = $3 AND version = $6::int), NULLIF($7::varchar, ''), $8, $9)`,
-		r.ReleaseID, string(r.Type), r.ConfigID, r.Action, from, to, r.Reason, r.ActorID, r.At); err != nil {
-		return fmt.Errorf("chat assets: release: %w", err)
-	}
-	return nil
+	return insertRelease(ctx, t, r)
 }
 
 func publishPack(ctx context.Context, t *sql.Tx, v port.AssetVersion, at time.Time) error {
@@ -274,25 +259,46 @@ func publishGif(ctx context.Context, t *sql.Tx, v port.AssetVersion, at time.Tim
 	return nil
 }
 
-// ListVersions returns the versions of the library, newest first: of one type, optionally of one item or status.
-func (Assets) ListVersions(ctx context.Context, typ chatasset.Type, id *uuid.UUID, status string, limit int) ([]port.AssetVersion, error) {
+// / ListItems returns one row per live item of the library — its newest version, or its newest version of status —
+// filtered by author and GIF tag (any locale, of that version), newest change first, keyset after (updated_at, config_id)
+// in the query (LIMIT n+1 by the caller; never sliced in memory — F082).
+func (Assets) ListItems(ctx context.Context, f port.AssetFilter) ([]port.AssetVersion, error) {
 	t, err := anyTx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	var item any
-	if id != nil {
-		item = *id
+	var author, afterID, afterAt any
+	if f.AuthorID != nil {
+		author = *f.AuthorID
 	}
-	// tenancyguard:ok platform library versions (G table)
-	rows, err := t.QueryContext(ctx, `SELECT `+assetVersionColumns+` FROM chat.chat_asset_versions v
-		WHERE v.config_type = $1 AND ($2::uuid IS NULL OR v.config_id = $2) AND ($3 = '' OR v.status = $3)
-		ORDER BY v.updated_at DESC, v.version DESC LIMIT $4`, string(typ), item, status, limit)
+	if f.AfterID != nil && f.AfterAt != nil {
+		afterID, afterAt = *f.AfterID, *f.AfterAt
+	}
+	// tenancyguard:ok platform library (G tables, no tenant_id); live items only (deleted_at of the pack/GIF); keyset
+	rows, err := t.QueryContext(ctx, `WITH newest AS (
+			SELECT DISTINCT ON (v.config_id) v.version_id, v.config_id, v.updated_at
+			FROM chat.chat_asset_versions v
+			WHERE v.config_type = $1 AND ($2 = '' OR v.status = $2)
+				AND NOT EXISTS (SELECT 1 FROM chat.sticker_packs p WHERE p.pack_id = v.config_id AND p.deleted_at IS NOT NULL)
+				AND NOT EXISTS (SELECT 1 FROM chat.gif_assets g WHERE g.gif_id = v.config_id AND g.deleted_at IS NOT NULL)
+			ORDER BY v.config_id, v.version DESC),
+		page AS (SELECT n.version_id FROM newest n JOIN chat.chat_asset_versions v ON v.version_id = n.version_id
+			WHERE ($3::uuid IS NULL OR v.created_by = $3)
+				AND ($4 = '' OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(coalesce(v.payload->'tags_vi', '[]'::jsonb)
+					|| coalesce(v.payload->'tags_en', '[]'::jsonb)) AS tg(tag) WHERE tg.tag = $4))
+				AND ($5::timestamptz IS NULL OR (n.updated_at, n.config_id) < ($5::timestamptz, $6::uuid))
+			ORDER BY n.updated_at DESC, n.config_id DESC LIMIT $7)
+		SELECT `+assetVersionColumns+` FROM chat.chat_asset_versions v WHERE v.version_id IN (SELECT version_id FROM page)
+		ORDER BY v.updated_at DESC, v.config_id DESC`, string(f.Type), f.Status, author, f.Tag, afterAt, afterID, f.Limit)
 	if err != nil {
 		return nil, fmt.Errorf("chat assets: list: %w", err)
 	}
+	return scanAssetVersions(rows)
+}
+
+func scanAssetVersions(rows *sql.Rows) ([]port.AssetVersion, error) {
 	defer func() { _ = rows.Close() }()
-	var out []port.AssetVersion
+	out := []port.AssetVersion{}
 	for rows.Next() {
 		v, err := scanAssetVersion(rows)
 		if err != nil {
@@ -301,6 +307,202 @@ func (Assets) ListVersions(ctx context.Context, typ chatasset.Type, id *uuid.UUI
 		out = append(out, v)
 	}
 	return out, rows.Err()
+}
+
+// ListItemVersions returns the versions of one item newest first, keyset before version (LIMIT in the query).
+func (Assets) ListItemVersions(ctx context.Context, typ chatasset.Type, id uuid.UUID, before *int, limit int) ([]port.AssetVersion, bool, error) {
+	t, err := anyTx(ctx)
+	if err != nil {
+		return nil, false, err
+	}
+	var b any
+	if before != nil {
+		b = *before
+	}
+	// tenancyguard:ok platform library versions (G table); keyset on version
+	rows, err := t.QueryContext(ctx, `SELECT `+assetVersionColumns+` FROM chat.chat_asset_versions v
+		WHERE v.config_type = $1 AND v.config_id = $2 AND ($3::int IS NULL OR v.version < $3) ORDER BY v.version DESC LIMIT $4`,
+		string(typ), id, b, limit)
+	if err != nil {
+		return nil, false, fmt.Errorf("chat assets: versions: %w", err)
+	}
+	out, err := scanAssetVersions(rows)
+	if err != nil {
+		return nil, false, err
+	}
+	if len(out) > 0 || before != nil {
+		return out, true, nil
+	}
+	var found bool
+	// tenancyguard:ok platform library versions (G table)
+	if err := t.QueryRowContext(ctx, `SELECT EXISTS (SELECT 1 FROM chat.chat_asset_versions WHERE config_type = $1 AND config_id = $2)`,
+		string(typ), id).Scan(&found); err != nil {
+		return nil, false, fmt.Errorf("chat assets: versions: %w", err)
+	}
+	return out, found, nil
+}
+
+// itemTable is the pointer table of a type (pack or GIF).
+func itemTable(typ chatasset.Type) (table, key string) {
+	if typ == chatasset.TypeStickerPacks {
+		return "chat.sticker_packs", "pack_id"
+	}
+	return "chat.gif_assets", "gif_id"
+}
+
+// CurrentVersion implements port.AssetReader.
+func (Assets) CurrentVersion(ctx context.Context, typ chatasset.Type, id uuid.UUID) (*int, error) {
+	t, err := anyTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	table, key := itemTable(typ)
+	var n sql.NullInt64
+	// tenancyguard:ok platform library (G tables); live item only
+	err = t.QueryRowContext(ctx, `SELECT v.version FROM `+table+` i JOIN chat.chat_asset_versions v ON v.version_id = i.current_version_id
+		WHERE i.`+key+` = $1 AND i.deleted_at IS NULL AND i.status = 'published'`, id).Scan(&n)
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && !n.Valid) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("chat assets: current: %w", err)
+	}
+	v := int(n.Int64)
+	return &v, nil
+}
+
+// Releases implements port.AssetReader.
+func (Assets) Releases(ctx context.Context, typ chatasset.Type, id uuid.UUID, beforeAt *time.Time, beforeID *uuid.UUID, limit int) ([]port.AssetRelease, error) {
+	t, err := anyTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var at, bid any
+	if beforeAt != nil && beforeID != nil {
+		at, bid = *beforeAt, *beforeID
+	}
+	// tenancyguard:ok platform library releases (G table, append-only); keyset on (created_at, release_id)
+	rows, err := t.QueryContext(ctx, `SELECT r.release_id, r.action, f.version, tv.version, coalesce(r.reason, ''), r.actor_id, r.created_at
+		FROM chat.chat_asset_releases r
+		LEFT JOIN chat.chat_asset_versions f ON f.version_id = r.from_version_id
+		LEFT JOIN chat.chat_asset_versions tv ON tv.version_id = r.to_version_id
+		WHERE r.config_type = $1 AND r.config_id = $2 AND ($3::timestamptz IS NULL OR (r.created_at, r.release_id) < ($3::timestamptz, $4::uuid))
+		ORDER BY r.created_at DESC, r.release_id DESC LIMIT $5`, string(typ), id, at, bid, limit)
+	if err != nil {
+		return nil, fmt.Errorf("chat assets: releases: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	out := []port.AssetRelease{}
+	for rows.Next() {
+		r := port.AssetRelease{Type: typ, ConfigID: id}
+		var from, to sql.NullInt64
+		if err := rows.Scan(&r.ReleaseID, &r.Action, &from, &to, &r.Reason, &r.ActorID, &r.At); err != nil {
+			return nil, fmt.Errorf("chat assets: releases: %w", err)
+		}
+		if from.Valid {
+			n := int(from.Int64)
+			r.FromVersion = &n
+		}
+		if to.Valid {
+			n := int(to.Int64)
+			r.ToVersion = &n
+		}
+		r.At = r.At.UTC()
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+// Current implements write.AssetRepository.
+func (Assets) Current(ctx context.Context, typ chatasset.Type, id uuid.UUID) (*port.AssetVersion, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	table, key := itemTable(typ)
+	// tenancyguard:ok platform library (G tables); live item, pointer of a published item, locked
+	v, err := scanAssetVersion(t.QueryRowContext(ctx, `SELECT `+assetVersionColumns+` FROM `+table+` i
+		JOIN chat.chat_asset_versions v ON v.version_id = i.current_version_id
+		WHERE i.`+key+` = $1 AND i.deleted_at IS NULL AND i.status = 'published' FOR UPDATE OF i`, id))
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("chat assets: current: %w", err)
+	}
+	return &v, nil
+}
+
+func archivePublished(ctx context.Context, t *sql.Tx, prev *port.AssetVersion, at time.Time) error {
+	if prev == nil || prev.Status != chatasset.StatusPublished {
+		return nil
+	}
+	// tenancyguard:ok platform library versions (G table): published → archived is the only change allowed
+	if _, err := t.ExecContext(ctx, `UPDATE chat.chat_asset_versions SET status = 'archived', updated_at = $2 WHERE version_id = $1`,
+		prev.VersionID, at); err != nil {
+		return fmt.Errorf("chat assets: archive previous: %w", err)
+	}
+	return nil
+}
+
+func insertRelease(ctx context.Context, t *sql.Tx, r port.AssetRelease) error {
+	var from, to any
+	if r.FromVersion != nil {
+		from = *r.FromVersion
+	}
+	if r.ToVersion != nil {
+		to = *r.ToVersion
+	}
+	// tenancyguard:ok platform library releases (G table, append-only)
+	if _, err := t.ExecContext(ctx, `INSERT INTO chat.chat_asset_releases (release_id, config_type, config_id, action, from_version_id,
+		to_version_id, reason, actor_id, created_at) VALUES ($1, $2::varchar, $3, $4,
+			(SELECT version_id FROM chat.chat_asset_versions WHERE config_type = $2::varchar AND config_id = $3 AND version = $5::int),
+			(SELECT version_id FROM chat.chat_asset_versions WHERE config_type = $2::varchar AND config_id = $3 AND version = $6::int), NULLIF($7::varchar, ''), $8, $9)`,
+		r.ReleaseID, string(r.Type), r.ConfigID, r.Action, from, to, r.Reason, r.ActorID, r.At); err != nil {
+		return fmt.Errorf("chat assets: release: %w", err)
+	}
+	return nil
+}
+
+// Rollback implements write.AssetRepository.
+func (Assets) Rollback(ctx context.Context, target port.AssetVersion, prev *port.AssetVersion, r port.AssetRelease) error {
+	t, err := tx(ctx)
+	if err != nil {
+		return err
+	}
+	if prev != nil && prev.VersionID != target.VersionID {
+		if err := archivePublished(ctx, t, prev, r.At); err != nil {
+			return err
+		}
+	}
+	switch target.Type {
+	case chatasset.TypeStickerPacks:
+		err = publishPack(ctx, t, target, r.At)
+	default:
+		err = publishGif(ctx, t, target, r.At)
+	}
+	if err != nil {
+		return err
+	}
+	return insertRelease(ctx, t, r)
+}
+
+// Unpublish implements write.AssetRepository.
+func (Assets) Unpublish(ctx context.Context, typ chatasset.Type, id uuid.UUID, prev *port.AssetVersion, r port.AssetRelease) error {
+	t, err := tx(ctx)
+	if err != nil {
+		return err
+	}
+	if err := archivePublished(ctx, t, prev, r.At); err != nil {
+		return err
+	}
+	table, key := itemTable(typ)
+	// tenancyguard:ok platform library (G tables): withdrawn from the library (students stop seeing it); files stay
+	if _, err := t.ExecContext(ctx, `UPDATE `+table+` SET status = 'archived', current_version_id = NULL, updated_at = $2
+		WHERE `+key+` = $1 AND deleted_at IS NULL`, id, r.At); err != nil {
+		return fmt.Errorf("chat assets: unpublish: %w", err)
+	}
+	return insertRelease(ctx, t, r)
 }
 
 // GetVersion returns one version (read side), nil when unknown.
