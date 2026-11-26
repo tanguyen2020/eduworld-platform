@@ -13,6 +13,8 @@ on:
       - "scripts/ops/**"
       - "tests/ops/**"
       - "src/backend/tools/ops-scheduler/**"
+      - "src/backend/tools/swarm-exporter/**"
+      - "src/backend/tools/glitchtip-bridge/**"
       - ".github/workflows/deploy-config.yml"
   push:
     branches: [main]
@@ -24,6 +26,8 @@ on:
       - "scripts/ops/**"
       - "tests/ops/**"
       - "src/backend/tools/ops-scheduler/**"
+      - "src/backend/tools/swarm-exporter/**"
+      - "src/backend/tools/glitchtip-bridge/**"
       - ".github/workflows/deploy-config.yml"
 
 permissions:
@@ -118,8 +122,8 @@ jobs:
       - run: npm ci --prefix scripts --silent
       - name: validate stacks (validate)
         run: bash scripts/deploy/validate-stacks.sh
-      - name: ops-scheduler unit tests
-        run: go -C src/backend test ./tools/ops-scheduler/...
+      - name: ops tools unit tests (ops-scheduler; F131 swarm-exporter, glitchtip-bridge)
+        run: go -C src/backend test ./tools/ops-scheduler/... ./tools/swarm-exporter/... ./tools/glitchtip-bridge/...
       - name: unit tests of the deploy/backup/runbook scripts
         run: node --test tests/ops/
       - name: shellcheck

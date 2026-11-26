@@ -1,6 +1,6 @@
 # Release lane (F001 T040, F001-AC-15, F001-AC-26): build the four images from one commit, scan,
 # SBOM, sign (keyless cosign), push to ghcr.io tagged with git sha (+ backend version on tags).
-# Never tags `latest`. F130: ops images (ops-scheduler, backup-tools, postgres-patroni) and the Swarm deploy —
+# Never tags `latest`. F130: ops images (ops-scheduler, backup-tools, postgres-patroni; F131: swarm-exporter, glitchtip-bridge) and the Swarm deploy —
 # staging on a backend/vX.Y.Z tag (migrate jobs → stack deploy, digests recorded), production after the Release Manager
 # approval of Environment production (same digests, maintenance window unless [hotfix], migrate → core-api canary →
 # rest of the stack) and rollback of one Swarm service (workflow_dispatch). Deploy jobs need vars.DEPLOY_ENABLED.
@@ -129,6 +129,8 @@ jobs:
       matrix:
         include:
           - { image: ops-scheduler, file: deploy/docker/ops-scheduler.Dockerfile, hardened: true }
+          - { image: swarm-exporter, file: deploy/docker/swarm-exporter.Dockerfile, hardened: true }
+          - { image: glitchtip-bridge, file: deploy/docker/glitchtip-bridge.Dockerfile, hardened: true }
           - { image: backup-tools, file: deploy/backup/Dockerfile, hardened: false }
           - { image: postgres-patroni, file: deploy/postgres/patroni.Dockerfile, hardened: false }
     env:
