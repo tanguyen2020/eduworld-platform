@@ -87,7 +87,7 @@ Không lưu tích Descartes của mọi chiều. Mỗi module khai báo **tập 
 | | trường × khối × LO (`rollup_grade_objective_weekly`) | `school_id`, `grade_level`, `objective_id` (chỉ theo tuần) |
 | | trường (`rollup_school_*`) | `school_id`, `grade_level`, `subject_id` |
 | | tenant (`rollup_tenant_*`) | `grade_level`, `subject_id` |
-| module game | `analytics.rollup_*` | Tập cố định theo [GAME_ANALYTICS §6](../11-operations/GAME_ANALYTICS.md#6-mô-hình-dữ-liệu): `(tenant)`, `(tenant, school)`, `(tenant, grade_band)`, `(tenant, platform)`, `(tenant, locale)`, `(tenant, device_tier)`; tập chiều của một dòng xác định bởi các khóa trong `dims` (`dims_hash`) |
+| module game | `analytics.rollup_*` | Tập cố định theo [GAME_ANALYTICS §6](../11-operations/GAME_ANALYTICS.md#6-mô-hình-dữ-liệu): `(tenant)`, `(tenant, school)`, `(tenant, grade_band)`, `(tenant, platform)`, `(tenant, locale)`, `(tenant, device_tier)`, `(tenant, school, grade_band)`, `(tenant, school, platform)`, `(tenant, school, device_tier)` (F080); truy vấn platform chỉ lọc **một** chiều (`422` khi lọc hai chiều không có tập); tập chiều của một dòng xác định bởi các khóa trong `dims` (`dims_hash`) |
 
 ### 3.4. Loại tenant QA
 

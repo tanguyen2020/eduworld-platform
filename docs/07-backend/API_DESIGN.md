@@ -1012,7 +1012,7 @@ Webhook từ SIS **không** nằm trong `/api/v1/sis/*`. Đây là luồng machi
 | GET | `/tenant/trash?resource_type=` | Thùng rác của tenant [Confirmed] | TA · `tenant.trash.read` | T | P3 |
 | POST | `/tenant/trash/{resource_type}/{id}:restore` | Khôi phục trong tenant [Confirmed] | TA · `tenant.trash.restore` | B | P3 |
 
-Game Analytics (module game, ADR-0058, [GAME_ANALYTICS §11](../11-operations/GAME_ANALYTICS.md#11-api)); operationId lần lượt `getGameMetrics`, `getGameRetention`, `getGameFunnel`, `getGameContentStats`, `getGamePerformance`, `createGameAnalyticsExport`, `getTenantGameSummary`:
+Game Analytics (module game, ADR-0058, [GAME_ANALYTICS §11](../11-operations/GAME_ANALYTICS.md#11-api)); operationId lần lượt `getGameMetrics`, `getGameRetention`, `getGameFunnel`, `getGameContentStats`, `getGamePerformance`, `createGameAnalyticsExport`, `getGameAnalyticsExport`, `getTenantGameSummary` (Live dashboard: `getLiveOpsOverview`, giám sát sự kiện: `listEventRuns` — F080):
 
 | Method | Path | Mô tả | Role | Idem | Phase |
 |---|---|---|---|---|---|
@@ -1022,6 +1022,9 @@ Game Analytics (module game, ADR-0058, [GAME_ANALYTICS §11](../11-operations/GA
 | GET | `/admin/analytics/game/content-stats?kind=quest\|challenge\|boss&sort=&…` | **→ module `game`.** Thống kê theo nội dung | `game.analytics.read` | T | P4 |
 | GET | `/admin/analytics/game/performance?…` | **→ module `game`.** Hiệu năng thực tế theo nền tảng/hạng thiết bị/preset/phiên bản | `game.analytics.read` | T | P4 |
 | POST | `/admin/analytics/game/exports` | **→ module `game`.** Xuất CSV bất đồng bộ (`202`) | `game.analytics.read` | B | P4 |
+| GET | `/admin/analytics/game/exports/{export_id}` | **→ module `game`.** `getGameAnalyticsExport`: trạng thái job + link ký (chỉ người tạo, F080) | `game.analytics.read` | — | P4 |
+| GET | `/admin/liveops/overview` | **→ module `game`.** `getLiveOpsOverview`: KPI Live dashboard từ Prometheus, catalog cố định, `503` khi nguồn lỗi (F080) | `game.liveops.read` | — | P4 |
+| GET | `/game-admin/event-runs` | **→ module `game`.** `listEventRuns`: lượt chạy sự kiện platform cho Giám sát sự kiện, keyset (F080) | `game.liveops.read` | — | P4 |
 | GET | `/tenant/analytics/game/summary?from=&to=&school_ids=&grade_bands=` | **→ module `game`.** Báo cáo tổng hợp tenant (ẩn ô < 5) — gateway public | TA · `analytics.tenant.read`; SA · `analytics.school.read` | T | P4 |
 
 Dashboard học tập & báo cáo (module learning, ADR-0062, [DASHBOARD_DATA §14](DASHBOARD_DATA.md#14-api-đề-xuất)):

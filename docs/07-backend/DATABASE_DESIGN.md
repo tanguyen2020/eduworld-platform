@@ -420,6 +420,11 @@ Ghi bởi analytics consumer của module game; chỉ số định nghĩa ở [G
 | `content_stats_weekly` | T, P (năm) | `iso_week`, `content_kind varchar(16)` (`quest`/`challenge`/`boss`), `content_version_id uuid`, `started`, `completed`, `abandoned`, `duration_p50_s` | UNIQUE `(iso_week, tenant_id, content_kind, content_version_id)` |
 | `perf_daily` | T, P (tháng) | `bucket_date`, `platform`, `device_tier`, `preset varchar(8)`, `renderer varchar(16)`, `client_version`, `samples int`, `fps_p50`, `fps_p10`, `budget_pass_rate`, `load_cold_p50_ms`, `load_cold_p90_ms`, `load_area_p90_ms`, `crash_free_rate` | UNIQUE `(bucket_date, tenant_id, platform, device_tier, preset, renderer, client_version)` |
 
+| `rollup_monthly` | T (không partition) | như `rollup_daily` theo tháng (`metric_date` = ngày 1) | UNIQUE tương tự (F080) |
+| `rollup_days` | T | `tenant_id`, `bucket_date`, `is_final`, `needs_reclose`, `closed_at` | PK `(tenant_id, bucket_date)` — trạng thái chốt ngày (F080) |
+| `export_jobs` | T (`tenant_id` NULL = export platform) | `export_id`, `requested_by`, `report varchar(32)`, `params jsonb` (≤ 8 KB), `status varchar(16)`, `row_count`, `object_key varchar(512)`, `error_code`, `expires_at` | idx hàng chờ `WHERE status = 'queued'` (F080) |
+
+Triển khai F080 (2026-11-26): bảng viết tay (không entity ent, khóa ghép như `login_events`), **chưa partition** (index theo ngày; partition khi chạm cỡ §11 DASHBOARD_DATA); `events_raw` thêm `key_version smallint`; `player_days` dùng khóa thay thế `(activity_date, day_id)` + UNIQUE `(activity_date, player_key)` (vì `player_key` NULL sau ẩn danh) và thêm `reminders_shown`, `late_night`, `social`, `matches`, `purchases`, `level`; bảng `rollup_*`/`cohort_retention`/`funnel_daily` thêm `dim_set varchar(64)` (tập chiều của dòng), `players int` (số người chơi của ô — ẩn ô), `hist jsonb`, `is_final`, và dùng `metric_date date` (thứ Hai đầu tuần ISO cho bảng tuần) thay `iso_week`; `content_stats_weekly` thêm `content_id`, `succeeded`, `ended`, `players`; `perf_daily` thêm `sessions`, `players`. Role `game_dashboard` chỉ `SELECT` các bảng tổng hợp + `ref.tenants`, `ref.schools`.
 - Consumer idempotent qua `infra.processed_events` (ADR-0042); dashboard chỉ đọc bảng tổng hợp, không đọc `events_raw`.
 - Truy vấn liên tenant chỉ qua role `game_platform` có audit (ADR-0005).
 

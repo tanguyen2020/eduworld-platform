@@ -455,6 +455,9 @@ Giá trị do [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) sở
 | `analytics_late_event_window` | 48 | giờ | code | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §5 |
 | `analytics_perf_sample_interval` | 60 | giây/phiên | code | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §3.2 |
 | `analytics_product_telemetry_enabled` | bật; tenant tắt được (perf/crash vẫn gửi) | — | platform + tenant | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §3.2 |
+| `analytics_telemetry_future_skew` | 5 (`occurred_at` của telemetry lệch tương lai quá giá trị này → bỏ sự kiện, đếm metric) | phút | code | [Confirmed — F080 2026-11-26] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §3.2 |
+| `analytics_quest_abandon_review_rate` | 40% (`quest_abandon_rate` vượt → `flagged_for_review` trong panel nội dung) | % | code | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §4.2 |
+| `liveops_kpi_thresholds` | CCU cảnh báo ≥ 90% `target_ccu`, sự cố ≥ 100% · chờ ghép trận p95 cảnh báo > 60 s, sự cố > 120 s · tỷ lệ 5xx cảnh báo ≥ 1%, sự cố ≥ 5% · báo cáo mới/giờ cảnh báo ≥ 10, sự cố ≥ 50 · SIS thành công cuối cảnh báo > 26 h, sự cố > 48 h · rollback trong 24 h ≥ 1 → cảnh báo | — | code (`query.DefaultKPIThresholds`, `EW_TARGET_CCU`) | [Confirmed — F080 2026-11-26] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §7.1 |
 | `analytics_store_migration_threshold` | raw > 500 triệu dòng · dashboard p95 > 2 s · rollup ngày > 2 h · tăng p95 ghi DB > 20% (kéo dài ≥ 2 tuần) | — | — | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §10 |
 
 ## 17d. Dashboard (ADR-0062)

@@ -1,6 +1,6 @@
 # Game Analytics
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Product Manager + Game Director + Backend Architect · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (telemetry `break_reminder_shown` thay domain event `wellbeing.break_reminder_shown` (chưa từng được chốt); loại tenant QA, rollup theo `dims_hash`, quyền Academic Manager)
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Product Manager + Game Director + Backend Architect · Cập nhật: 2026-11-26 (F080 triển khai: `quest_completion_rate`, tập chiều có `(trường, khối/nền tảng/hạng)`, bảng chưa partition, quyền Academic Manager, API export/Live dashboard) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (telemetry `break_reminder_shown` thay domain event `wellbeing.break_reminder_shown` (chưa từng được chốt); loại tenant QA, rollup theo `dims_hash`, quyền Academic Manager)
 > Liên quan: [ADR-0058](../adr/ADR-0058-game-analytics-tong-hop-trong-postgresql-qua-su-kien-nats.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [MONITORING](MONITORING.md) · [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md)
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Nguyên tắc · 3. Danh mục sự kiện tracking · 4. Định nghĩa chỉ số · 5. Pipeline · 6. Mô hình dữ liệu · 7. Dashboard và báo cáo · 8. Quyền truy cập · 9. Retention và quyền riêng tư · 10. Ngưỡng chuyển kho phân tích riêng · 11. API · 12. Tiêu chí nghiệm thu
@@ -101,6 +101,7 @@ Trường hoặc platform tắt telemetry sản phẩm (không thiết yếu) th
 | `challenge_success_rate` | `status = succeeded` ÷ challenge đã kết thúc, theo `difficulty` và khối | Challenge version · tuần |
 | `boss_defeat_rate` | `result = defeated` ÷ encounter, theo `party_size`, khối | Boss version · tuần |
 | `abandon_rate` | Gộp: quest bỏ, challenge `abandoned`, trận `abandoned` ÷ số bắt đầu tương ứng | Ngày |
+| `quest_completion_rate` | `quest_complete` ÷ `quest_accept` trong kỳ (tỷ lệ hoàn thành quest của báo cáo tenant §7.2) | Ngày |
 
 Ngưỡng cân bằng độ khó tham khảo cho game designer [Confirmed]: `challenge_success_rate` mục tiêu 60–85% ở mức Normal; quest có `quest_abandon_rate` > 40% vào danh sách cần xem lại.
 
@@ -195,7 +196,7 @@ Schema `analytics` trong database `eduworld_game` (chi tiết cột, index ở [
 |---|---|---|---|
 | `analytics.events_raw` | 1 dòng/sự kiện: chiều chuẩn §3 + `event_name` varchar(64), `source` (`server`/`client`), `props` jsonb (≤ 2 KB, chỉ khóa trong danh mục) | Ngày theo `occurred_on` | 90 ngày |
 | `analytics.player_days` | 1 dòng/`player_key`/ngày: số phiên, `active_seconds`, ngày hoạt động đầu tiên (cho retention), chiều chuẩn | Tháng | 400 ngày |
-| `analytics.rollup_daily` | Chỉ số §4 đã tổng hợp theo ngày × **tập chiều cố định** (`metric_date`, `metric_code`, `metric_version`, `dims` jsonb chỉ chứa khóa của một tập chiều, `dims_hash` = băm của `dims` đã chuẩn hóa thứ tự khóa, `numerator`, `denominator`, `hist` cho percentile, `is_final`, `computed_at`; khóa duy nhất `(metric_date, metric_code, metric_version, tenant_id, dims_hash)` theo [DATABASE_DESIGN §2.8b](../07-backend/DATABASE_DESIGN.md)). Tập chiều: `(tenant)`, `(tenant, school)`, `(tenant, grade_band)`, `(tenant, platform)`, `(tenant, locale)`, `(tenant, device_tier)` — không lưu tích các chiều ([DASHBOARD_DATA §3](../07-backend/DASHBOARD_DATA.md#3-mô-hình-rollup-chung)) | Tháng | 2 năm |
+| `analytics.rollup_daily` | Chỉ số §4 đã tổng hợp theo ngày × **tập chiều cố định** (`metric_date`, `metric_code`, `metric_version`, `dims` jsonb chỉ chứa khóa của một tập chiều, `dims_hash` = băm của `dims` đã chuẩn hóa thứ tự khóa, `numerator`, `denominator`, `hist` cho percentile, `is_final`, `computed_at`; khóa duy nhất `(metric_date, metric_code, metric_version, tenant_id, dims_hash)` theo [DATABASE_DESIGN §2.8b](../07-backend/DATABASE_DESIGN.md)). Tập chiều: `(tenant)`, `(tenant, school)`, `(tenant, grade_band)`, `(tenant, platform)`, `(tenant, locale)`, `(tenant, device_tier)` và, cho báo cáo của School Admin (§7.2), `(tenant, school, grade_band)`, `(tenant, school, platform)`, `(tenant, school, device_tier)`; cột `dim_set` ghi tập chiều của dòng (F080) — không lưu tích các chiều khác. Một số chỉ số có thêm khóa riêng: `currency_sources/sinks` theo `reason_code`, `event_participation_rate` theo `event_id` (chỉ cấp tenant) ([DASHBOARD_DATA §3](../07-backend/DASHBOARD_DATA.md#3-mô-hình-rollup-chung)) | Tháng | 2 năm |
 | `analytics.rollup_weekly` | Như trên theo tuần ISO | Năm | 3 năm |
 | `analytics.rollup_monthly` | Như trên theo tháng (dashboard khoảng > 1 năm) | Không partition | 5 năm |
 | `analytics.cohort_retention` | `cohort_date`, `dims`/`dims_hash`, `day_n`, `cohort_size`, `retained` | Năm | 2 năm |
@@ -203,7 +204,7 @@ Schema `analytics` trong database `eduworld_game` (chi tiết cột, index ở [
 | `analytics.content_stats_weekly` | Theo `quest_version_id`/`challenge_version_id`/`boss_version_id`: nhận, hoàn thành, bỏ, thời gian p50 | Năm | 2 năm |
 | `analytics.perf_daily` | Theo nền tảng × `device_tier` × `preset` × `renderer` × `client_version`: FPS, load time, crash-free, số mẫu | Tháng | 2 năm |
 
-Mọi bảng có `tenant_id` (RLS theo ADR-0005); truy vấn liên tenant chỉ qua role platform có audit. Dashboard chỉ đọc bảng tổng hợp trên read replica bằng role `game_dashboard`, không đọc `events_raw`/`player_days` (DASHBOARD_DATA §7). DAU/WAU/MAU, retention và percentile là chỉ số không cộng dồn được: tính chính xác trong job chốt ngày từ `player_days`, không cộng từ bảng ngày (DASHBOARD_DATA §3.2).
+Release 1.0 (F080): các bảng chưa partition — index theo ngày, partition tháng/năm khi chạm cỡ [DASHBOARD_DATA §11](../07-backend/DASHBOARD_DATA.md) (cùng quyết định với ledger F077); thêm `analytics.rollup_days` (trạng thái chốt ngày của tenant), `analytics.export_jobs` (job xuất CSV). Mọi bảng có `tenant_id` (RLS theo ADR-0005); truy vấn liên tenant chỉ qua role platform có audit. Dashboard chỉ đọc bảng tổng hợp trên read replica bằng role `game_dashboard`, không đọc `events_raw`/`player_days` (DASHBOARD_DATA §7). DAU/WAU/MAU, retention và percentile là chỉ số không cộng dồn được: tính chính xác trong job chốt ngày từ `player_days`, không cộng từ bảng ngày (DASHBOARD_DATA §3.2).
 
 ## 7. Dashboard và báo cáo
 
@@ -235,7 +236,7 @@ Tenant Admin/School Admin (và Academic Manager có `analytics.school.read` scop
 |---|---|---|
 | System Admin, Live-ops, Game Designer, Product | Mọi tenant, mọi panel §7.1 | `game.analytics.read` (platform-only, nhóm `game.*` không bao giờ cấp cho role tenant) |
 | Tenant Admin | Tenant của phiên, báo cáo §7.2 | `analytics.tenant.read` |
-| School Admin, Academic Manager | Trường của mình trong tenant, báo cáo §7.2; quyết định theo permission, không theo tên vai trò. UserRole scope `subject` (Academic Manager theo môn) không đủ cho báo cáo game cấp trường → `403 PERMISSION_DENIED` | `analytics.school.read` (scope `school`) |
+| School Admin, Academic Manager | Trường của mình trong tenant, báo cáo §7.2 (màn "Hoạt động game" workspace C, F080); quyết định theo permission, không theo tên vai trò. UserRole scope `subject` (Academic Manager theo môn) không đủ cho báo cáo game cấp trường → `403 PERMISSION_DENIED` | `analytics.school.read` (scope `school`) |
 | Safety Moderator, học sinh | Không có quyền Game Analytics | — |
 
 Tra ngược `player_key` → học sinh chỉ dùng cho hỗ trợ/an toàn, do System Admin thực hiện qua công cụ riêng, bắt buộc lý do và audit [Confirmed].
@@ -262,7 +263,10 @@ Do module `game` phục vụ; đọc từ bảng tổng hợp, có phân trang/b
 | GET | `/api/v1/admin/analytics/game/content-stats?kind=quest\|challenge\|boss&sort=&…` | Thống kê theo nội dung (top bỏ, tỷ lệ thành công) | `game.analytics.read` |
 | GET | `/api/v1/admin/analytics/game/performance?…` | Hiệu năng theo thiết bị/preset/phiên bản | `game.analytics.read` |
 | POST | `/api/v1/admin/analytics/game/exports` | Xuất CSV bất đồng bộ (`202`, link tải ngắn hạn) | `game.analytics.read` |
-| GET | `/api/v1/tenant/analytics/game/summary?from=&to=&school_ids=&grade_bands=` | Báo cáo tổng hợp tenant (ẩn ô < 5) | `analytics.tenant.read` / `analytics.school.read` |
+| GET | `/api/v1/admin/analytics/game/exports/{export_id}` | Trạng thái job + link ký `dashboard_export_link_ttl_minutes` (chỉ người tạo) | `game.analytics.read` |
+| GET | `/api/v1/admin/liveops/overview` | KPI Live dashboard từ Prometheus (catalog cố định, `LiveOpsOverview`; Prometheus lỗi → `503`) | `game.liveops.read` |
+| GET | `/api/v1/game-admin/event-runs` | Lượt chạy sự kiện platform cho Giám sát sự kiện (keyset) | `game.liveops.read` |
+| GET | `/api/v1/tenant/analytics/game/summary?from=&to=&school_ids=&grade_bands=` | Báo cáo tổng hợp tenant (ẩn ô < 5, ẩn bổ sung; trường ngoài tenant `404`, ngoài scope `403`) | `analytics.tenant.read` / `analytics.school.read` (scope `subject` → `403`) |
 | POST | `/api/v1/game/telemetry` | Hiện có; mở rộng payload `events[]` với `type` §3.2 | Học sinh (game client) |
 
 ## 12. Tiêu chí nghiệm thu
