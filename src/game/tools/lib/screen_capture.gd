@@ -7,8 +7,11 @@ extends Node
 const SETTLE_FRAMES: int = 10
 const SettingsScript := preload("res://scripts/core/settings.gd")
 const SETTINGS_PATH: String = "user://capture_screens_settings.cfg"
+## F113: landscape windows only (STUDENT_GAME_UX §2) plus the phone held upright (390×844), which shows the rotate
+## prompt instead of the game. An unknown size is an error (never a silent fallback).
 const SIZES: Dictionary = {
-	"1280x720": Vector2i(1280, 720), "1024x600": Vector2i(1024, 600), "720x1280": Vector2i(720, 1280),
+	"1280x720": Vector2i(1280, 720), "1024x600": Vector2i(1024, 600), "844x390": Vector2i(844, 390),
+	"390x844": Vector2i(390, 844),
 }
 ## Screen name → builder method. Order follows the student journey (STUDENT_GAME_UX §11).
 const SCREENS: PackedStringArray = [
@@ -74,7 +77,10 @@ func run(args: PackedStringArray) -> int:
 			continue
 		for size_name: String in sizes:
 			for locale: String in locales:
-				var size: Vector2i = SIZES.get(size_name, Vector2i(1280, 720)) as Vector2i
+				if not SIZES.has(size_name):
+					printerr("capture_screens: unknown size %s (known: %s)" % [size_name, ", ".join(SIZES.keys())])
+					return 2
+				var size: Vector2i = SIZES[size_name] as Vector2i
 				DisplayServer.window_set_size(size)
 				get_tree().root.size = size
 				AppState.set_grade_band(_band)
