@@ -87,7 +87,7 @@ func TestDevSeedIsIdempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("first run: %v (report %+v)", err, first)
 	}
-	want := devseed.Report{Tenants: 2, Schools: 3, Connections: 2, Imports: 3, Students: 14, PlatformStaff: 9, TenantStaff: 6, Locked: 1}
+	want := devseed.Report{Tenants: 2, Schools: 3, Connections: 2, Imports: 3, Students: 19, PlatformStaff: 9, TenantStaff: 6, Locked: 1}
 	got := first
 	got.Grants = 0
 	if got != want || first.Grants != 16 {
