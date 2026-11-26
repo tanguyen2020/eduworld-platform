@@ -160,7 +160,7 @@ func (c *Consumer) Handle(ctx context.Context, m jetstream.Msg) {
 	ctx = tenancy.WithModule(ctx, c.o.Module)
 	ctx, done := observability.UseCase(ctx, c.o.Module+".consumer."+c.o.Name[len(c.o.Module)+1:])
 	duplicate := false
-	err := c.o.UoW.InTenantTx(ctx, scope, func(ctx context.Context) error {
+	err := c.inTx(ctx, scope, func(ctx context.Context) error {
 		tx, _ := entx.Tx(ctx)
 		res, err := tx.ExecContext(ctx, `INSERT INTO infra.processed_events (consumer, event_id, event_occurred_at)
 			VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, c.o.Name, e.EventID, e.OccurredAt.UTC())
@@ -201,6 +201,20 @@ func delivered(m jetstream.Msg) uint64 {
 		return 1
 	}
 	return md.NumDelivered
+}
+
+// inTx runs fn in the consumer transaction. A panic of the handler (re-raised by the UnitOfWork after its
+// rollback) is recovered, counted and reported (eduworld_panics_recovered_total, GlitchTip — F131-AC-17) and
+// becomes an ordinary handler error: the message is retried with back-off and dead-lettered after MaxDeliver
+// instead of crashing the worker and every consumer in it.
+func (c *Consumer) inTx(ctx context.Context, scope tenancy.Scope, fn func(ctx context.Context) error) (err error) {
+	defer func() {
+		if p := recover(); p != nil {
+			observability.RecoveredPanic(ctx, c.o.Module, observability.EntrypointConsumer, p)
+			err = fmt.Errorf("outbox: consumer %s panicked: %v", c.o.Name, p)
+		}
+	}()
+	return c.o.UoW.InTenantTx(ctx, scope, fn)
 }
 
 // deadLetter publishes ew.dlq.<module>.<consumer>, records infra.dead_letters and terminates the

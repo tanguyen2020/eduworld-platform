@@ -81,6 +81,9 @@ func (i *RequestInfo) SetCode(code string) {
 // RequestID returns the request id.
 func (i *RequestInfo) RequestID() string { return i.snapshot().requestID }
 
+// Module returns the owning module of the matched route ("" before routing or when absent).
+func (i *RequestInfo) Module() string { return i.snapshot().module }
+
 type infoKey struct{}
 
 // InfoFrom returns the RequestInfo of ctx (nil-safe when absent).
@@ -136,7 +139,7 @@ func New(o Options) (*Obs, error) {
 		Buckets: []float64{.005, .01, .025, .05, .1, .15, .25, .4, .6, 1, 2.5, 5, 10},
 	}, []string{"module", "route", "method", "status_class"})
 	if o.Registerer != nil {
-		for _, c := range []prometheus.Collector{ob.requests, ob.duration, usecaseDuration} {
+		for _, c := range []prometheus.Collector{ob.requests, ob.duration, usecaseDuration, panicsRecovered} {
 			if err := o.Registerer.Register(c); err != nil {
 				var are prometheus.AlreadyRegisteredError
 				if !errors.As(err, &are) {

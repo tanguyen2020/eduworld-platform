@@ -16,6 +16,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
@@ -135,7 +136,10 @@ func Call[T any](ctx context.Context, op Op, fn func(ctx context.Context) (T, er
 	go func() {
 		defer func() {
 			if p := recover(); p != nil {
-				ch <- result[T]{err: fmt.Errorf("modcall: panic in %s.%s: %v", op.Callee, op.Operation, p)}
+				// counted and reported here with the callee module; the error is marked so the 500 it becomes at the
+				// HTTP edge is not reported a second time (F131-AC-17)
+				observability.RecoveredPanic(ctx, op.Callee, observability.EntrypointFacade, p)
+				ch <- result[T]{err: observability.MarkReported(fmt.Errorf("modcall: panic in %s.%s: %v", op.Callee, op.Operation, p))}
 			}
 		}()
 		v, err := fn(ctx)

@@ -15,6 +15,8 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
 
 // Headers set by the gateway on every command (REALTIME_ARCHITECTURE §2.1). Handlers in core-api trust them only
@@ -153,7 +155,7 @@ func ServeCommand(ctx context.Context, nc *nats.Conn, module, typ string, h Comm
 	}
 	subject := CommandSubject(module, typ)
 	sub, err := nc.QueueSubscribe(subject, module, func(m *nats.Msg) {
-		reply := handle(ctx, m, h, timeout)
+		reply := handle(ctx, module, m, h, timeout)
 		b, err := json.Marshal(reply)
 		if err != nil {
 			b = []byte(`{"ok":false,"problem":{"code":"INTERNAL","retryable":true}}`)
@@ -170,10 +172,12 @@ func ServeCommand(ctx context.Context, nc *nats.Conn, module, typ string, h Comm
 	return nil
 }
 
-func handle(parent context.Context, m *nats.Msg, h CommandHandler, timeout time.Duration) (r Reply) {
+func handle(parent context.Context, module string, m *nats.Msg, h CommandHandler, timeout time.Duration) (r Reply) {
+	tctx := otel.GetTextMapPropagator().Extract(context.WithoutCancel(parent), propagation.HeaderCarrier(http.Header(m.Header)))
 	defer func() {
 		if p := recover(); p != nil {
-			slog.ErrorContext(parent, "realtime command panic", "subject", m.Subject)
+			slog.ErrorContext(tctx, "realtime command panic", "subject", m.Subject)
+			observability.RecoveredPanic(tctx, module, observability.EntrypointNATS, p) // metric + GlitchTip (F131-AC-17)
 			r = Fail("INTERNAL", true)
 		}
 	}()
@@ -181,8 +185,7 @@ func handle(parent context.Context, m *nats.Msg, h CommandHandler, timeout time.
 	if err != nil {
 		return Fail("UNAUTHENTICATED", false)
 	}
-	ctx := otel.GetTextMapPropagator().Extract(context.WithoutCancel(parent), propagation.HeaderCarrier(http.Header(m.Header)))
-	ctx, cancel := context.WithTimeout(ctx, timeout)
+	ctx, cancel := context.WithTimeout(tctx, timeout)
 	defer cancel()
 	payload := m.Data
 	if len(payload) == 0 {

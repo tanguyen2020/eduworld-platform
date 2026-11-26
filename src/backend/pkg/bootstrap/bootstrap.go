@@ -18,6 +18,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/buildinfo"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/lifecycle"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
@@ -66,6 +67,16 @@ func Run(ctx context.Context, o Options) error {
 	info := buildinfo.Get(o.Binary, o.Profile)
 	log := newLogger(o, info)
 	slog.SetDefault(log)
+
+	tracker, err := newErrorTracker(o, info)
+	if err != nil {
+		return err
+	}
+	observability.SetErrorTracker(tracker)
+	defer func() {
+		tracker.Flush(2 * time.Second)
+		observability.SetErrorTracker(nil)
+	}()
 
 	hr := health.NewRegistry(info)
 	obs, err := newObs(ctx, o, log, hr)
@@ -142,7 +153,7 @@ func Run(ctx context.Context, o Options) error {
 
 	log.Info("started",
 		"binary", info.Binary, "profile", info.Profile, "modules", o.Modules,
-		"version", info.Version, "commit", info.Commit,
+		"version", info.Version, "commit", info.Commit, "error_tracking", tracker != nil,
 		"admin_addr", adminLn.Addr().String(), "http_addr", httpAddr,
 		"checks", hr.CheckNames())
 	if o.Ready != nil {
@@ -231,4 +242,20 @@ func newObs(ctx context.Context, o Options, log *slog.Logger, hr *health.Registr
 		opts.SpanProcessor = p
 	}
 	return observability.New(opts)
+}
+
+// newErrorTracker enables error tracking (GlitchTip, F131-AC-17) when EW_ERROR_TRACKING_DSN_FILE names the Docker
+// secret holding the DSN; unset = disabled, no Sentry client and no network. An unreadable file stops the binary
+// with an error naming the variable only (F130-AC-11).
+func newErrorTracker(o Options, info buildinfo.Info) (*observability.ErrorTracker, error) {
+	path := strings.TrimSpace(o.Getenv("EW_ERROR_TRACKING_DSN_FILE"))
+	if path == "" {
+		return nil, nil
+	}
+	dsn, err := config.ReadSecretFile("EW_ERROR_TRACKING_DSN_FILE", path)
+	if err != nil {
+		return nil, err
+	}
+	return observability.NewErrorTracker(observability.ErrorTrackingOptions{DSN: dsn, Binary: info.Binary, Profile: info.Profile,
+		Env: o.Getenv("EW_ENV"), Version: info.Version})
 }

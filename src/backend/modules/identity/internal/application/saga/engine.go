@@ -202,6 +202,7 @@ func (e Engine) Execute(ctx context.Context, def Definition, id uuid.UUID) (out 
 func (e Engine) call(ctx context.Context, s Step, run write.SagaRun, i int) (res Result, err error) {
 	defer func() {
 		if p := recover(); p != nil {
+			observability.RecoveredPanic(ctx, "identity", observability.EntrypointJob, p) // metric + GlitchTip (F131-AC-17)
 			err = fmt.Errorf("saga step %s.%s panicked: %v", s.Service, s.Action, p)
 		}
 	}()

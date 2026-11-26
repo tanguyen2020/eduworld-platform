@@ -368,7 +368,9 @@ func (s *Server) recoverer(next http.Handler) http.Handler {
 					panic(v)
 				}
 				s.log.ErrorContext(r.Context(), "panic", "panic", fmt.Sprint(v), "stack", string(debug.Stack()))
-				WriteError(w, r, errors.New("panic"))
+				// eduworld_panics_recovered_total + GlitchTip event (module of the matched route, F131-AC-17)
+				observability.RecoveredPanic(r.Context(), "", observability.EntrypointHTTP, v)
+				WriteError(w, r, observability.MarkReported(errors.New("panic")))
 			}
 		}()
 		next.ServeHTTP(w, r)
@@ -376,9 +378,14 @@ func (s *Server) recoverer(next http.Handler) http.Handler {
 }
 
 // WriteError writes RFC 9457 Problem Details with the trace id of the request; unknown errors become
-// 500 INTERNAL without internal detail (F002-AC-20).
+// 500 INTERNAL without internal detail (F002-AC-20) and are reported to error tracking as unexpected 5xx
+// (F131-AC-17) unless already reported as a recovered panic.
 func WriteError(w http.ResponseWriter, r *http.Request, err error) {
-	observability.InfoFrom(r.Context()).SetCode(string(problem.From(err, "").Code))
+	code := problem.From(err, "").Code
+	observability.InfoFrom(r.Context()).SetCode(string(code))
+	if code == problem.Internal {
+		observability.ReportUnexpected(r.Context(), "", observability.EntrypointHTTP, err)
+	}
 	problem.Write(w, r, err, TraceID(r.Context()))
 }
 
