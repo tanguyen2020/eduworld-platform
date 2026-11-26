@@ -14,6 +14,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/bossschema"
@@ -47,6 +48,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/room"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/security"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/storage"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/translation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/consumer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/facade"
 	gamehttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/http"
@@ -306,7 +308,8 @@ func Register(r *module.Registry) (*Module, error) {
 		Challenges: &command.ChallengePublishRules{Schema: challengeschema.Validator{}, Rules: challengeCfg.Rules, Content: challengesql.Content{}},
 		Bosses:     &command.BossPublishRules{Schema: bossschema.Validator{}, Content: bosssql.Content{}}}
 	adminUC := command.GameAdmin{UoW: core.UoW, Store: write.GameConfigRepo{}, Kernel: kernel, Learning: learningLate,
-		Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder}, Metrics: observability.GameAdminMetrics{}, Policy: adminCfg.Policy}
+		Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder}, Metrics: observability.GameAdminMetrics{}, Policy: adminCfg.Policy,
+		Translations: write.TranslationRepo{}}
 	urls := storage.PublicURL{BaseURL: adminCfg.CDNBase}
 	simRate, err := gameconfig.XPSimulationRateFrom(r.Config())
 	if err != nil {
@@ -328,6 +331,14 @@ func Register(r *module.Registry) (*Module, error) {
 	if adminCfg.ClamdAddr != "" {
 		mediaUC.Scanner = storage.Scanner{Clamd: pkgmedia.Clamd{Addr: adminCfg.ClamdAddr}}
 	}
+	// F082: translation files of game content (export/import jobs) and the backfill of translation states.
+	observability.RegisterTranslations(r.Metrics())
+	translationsUC := command.Translations{UoW: core.UoW, Store: write.TranslationRepo{}, Configs: write.GameConfigRepo{}, Media: write.GameMediaRepo{},
+		Admin: adminUC, Storage: mediaUC.Storage, Codecs: map[string]port.TranslationCodec{"xliff": translation.XLIFF{}, "csv": translation.CSV{}},
+		Audit: write.Auditor{R: core.Recorder}, Metrics: observability.TranslationMetrics{}}
+	translationQueries := query.TranslationJobs{Read: core.ReadSession, Jobs: read.TranslationJobs{}, Storage: mediaUC.Storage,
+		LinkTTL: adminCfg.ReportLinkTTL}
+	backfillUC := command.TranslationBackfill{UoW: core.UoW, Store: write.TranslationRepo{}, Required: adminCfg.Policy.RequiredLanguages}
 	assignUC := command.GameAssignments{UoW: core.UoW, Store: write.TenantAssignmentRepo{}, Manifests: gameManifest,
 		Audit: write.Auditor{R: core.Recorder}, Cursors: cursors}
 	// F080 Game Analytics: telemetry, the analytics consumers, rollup/close/retention/export jobs, the dashboard reads on
@@ -400,7 +411,8 @@ func Register(r *module.Registry) (*Module, error) {
 			Renders: clues, Names: bosssql.Reads{}},
 		Admin:         gamehttp.GameAdminHandlers{Commands: adminUC, Queries: adminQueries, Media: mediaUC},
 		Analytics:     gamehttp.AnalyticsHandlers{Ingest: ingest, Queries: gameAnalytics, Exports: exportsUC, Overview: overview},
-		TelemetryFlag: query.ProductTelemetryFlag{Read: core.ReadSession, Flags: analyticssql.Store{}, Platform: anaCfg.Config.ProductTelemetry}}
+		TelemetryFlag: query.ProductTelemetryFlag{Read: core.ReadSession, Flags: analyticssql.Store{}, Platform: anaCfg.Config.ProductTelemetry},
+		Translations:  gamehttp.TranslationHandlers{Commands: translationsUC, Queries: translationQueries}}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
 	}
@@ -563,6 +575,8 @@ func Register(r *module.Registry) (*Module, error) {
 		gameconfig.AnalyticsRetentionBatch)))
 	// Without object storage (EW_S3_*) the export worker leaves the jobs queued.
 	r.Job(Name, job.AnalyticsExport, gameconfig.AnalyticsExportInterval, module.JobFunc(job.AnalyticsExportJob(exportsUC)))
+	r.Job(Name, job.TranslationJobs, gameconfig.TranslationJobsInterval, module.JobFunc(job.TranslationJobsJob(translationsUC)))
+	r.Job(Name, job.TranslationBackfill, gameconfig.TranslationBackfillInterval, module.JobFunc(job.TranslationBackfillJob(backfillUC)))
 	r.Job(Name, job.SessionTimeout, cfg.TimeoutScan, module.JobFunc(job.SessionTimeoutJob(sessions)))
 	r.Job(Name, job.CurfewSessionCloser, job.CurfewCloserInterval, module.JobFunc(job.CurfewSessionCloserJob(sessions)))
 	return m, nil

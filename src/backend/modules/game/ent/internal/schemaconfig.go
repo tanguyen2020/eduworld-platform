@@ -31,6 +31,7 @@ type SchemaConfig struct {
 	CommunityGoal             string // CommunityGoal table.
 	CommunityGoalContribution string // CommunityGoalContribution table.
 	CommunityGoalProgress     string // CommunityGoalProgress table.
+	ConfigTranslationState    string // ConfigTranslationState table.
 	ContentRelease            string // ContentRelease table.
 	Currency                  string // Currency table.
 	CurrencyLedgerEntry       string // CurrencyLedgerEntry table.
@@ -92,6 +93,7 @@ type SchemaConfig struct {
 	StoryProgress             string // StoryProgress table.
 	StudentAchievement        string // StudentAchievement table.
 	TenantResourceAssignment  string // TenantResourceAssignment table.
+	TranslationJob            string // TranslationJob table.
 	Wallet                    string // Wallet table.
 	WorldArea                 string // WorldArea table.
 	WorldAreaUnlock           string // WorldAreaUnlock table.

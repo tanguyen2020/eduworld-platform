@@ -41,6 +41,7 @@ var migrations = map[string][]string{
 		"media_assets", "media_usages", "client_manifests"},
 	"20270101000103_f103_boss_coop.sql": {"boss_definitions", "boss_versions", "boss_encounters", "boss_encounter_members",
 		"boss_encounter_contributions", "boss_phase_plans", "boss_answer_results", "party_quest_sessions", "party_quest_contributions"},
+	"20270102000082_f082_translations.sql": {"config_translation_states", "translation_jobs"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -103,7 +104,8 @@ func schemas() map[string]string {
 		"boss_definitions": c.BossDefinition, "boss_versions": c.BossVersion, "boss_encounters": c.BossEncounter,
 		"boss_encounter_members": c.BossEncounterMember, "boss_encounter_contributions": c.BossEncounterContribution,
 		"boss_phase_plans": c.BossPhasePlan, "boss_answer_results": c.BossAnswerResult, "party_quest_sessions": c.PartyQuestSession,
-		"party_quest_contributions": c.PartyQuestContribution}
+		"party_quest_contributions": c.PartyQuestContribution, "config_translation_states": c.ConfigTranslationState,
+		"translation_jobs": c.TranslationJob}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

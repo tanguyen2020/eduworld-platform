@@ -180,8 +180,15 @@ func writeVersion(w http.ResponseWriter, status int, v gameadmin.ConfigVersionVi
 
 func (h GameAdminHandlers) list(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
+	// tag/author_id filter the sticker/GIF library of module chat only (F082-AC-05).
+	for _, k := range []string{"tag", "author_id"} {
+		if q.Get(k) != "" {
+			fail(w, r, problem.Invalid(k, problem.SubInvalid, "filter of config_type sticker-packs/gifs only"))
+			return
+		}
+	}
 	out, err := h.Queries.List(r.Context(), cfgType(r), query.ConfigListInput{Status: q.Get("status"), From: q.Get("from"), To: q.Get("to"),
-		Cursor: q.Get("cursor"), Limit: limitOf(r)})
+		TranslationStatus: q.Get("translation_status"), Cursor: q.Get("cursor"), Limit: limitOf(r)})
 	if err != nil {
 		fail(w, r, err)
 		return

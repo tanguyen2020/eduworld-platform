@@ -36,6 +36,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoal"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoalcontribution"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoalprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/configtranslationstate"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currencyledgerentry"
@@ -98,6 +99,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storyprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/studentachievement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/tenantresourceassignment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/translationjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/wallet"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldarea"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaunlock"
@@ -140,6 +142,7 @@ const (
 	TypeCommunityGoal             = "CommunityGoal"
 	TypeCommunityGoalContribution = "CommunityGoalContribution"
 	TypeCommunityGoalProgress     = "CommunityGoalProgress"
+	TypeConfigTranslationState    = "ConfigTranslationState"
 	TypeContentRelease            = "ContentRelease"
 	TypeCurrency                  = "Currency"
 	TypeCurrencyLedgerEntry       = "CurrencyLedgerEntry"
@@ -201,6 +204,7 @@ const (
 	TypeStoryProgress             = "StoryProgress"
 	TypeStudentAchievement        = "StudentAchievement"
 	TypeTenantResourceAssignment  = "TenantResourceAssignment"
+	TypeTranslationJob            = "TranslationJob"
 	TypeWallet                    = "Wallet"
 	TypeWorldArea                 = "WorldArea"
 	TypeWorldAreaUnlock           = "WorldAreaUnlock"
@@ -34188,6 +34192,1260 @@ func (m *CommunityGoalProgressMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *CommunityGoalProgressMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown CommunityGoalProgress edge %s", name)
+}
+
+// ConfigTranslationStateMutation represents an operation that mutates the ConfigTranslationState nodes in the graph.
+type ConfigTranslationStateMutation struct {
+	config
+	op                      Op
+	typ                     string
+	id                      *uuid.UUID
+	created_at              *time.Time
+	created_by              *uuid.UUID
+	updated_at              *time.Time
+	updated_by              *uuid.UUID
+	deleted_at              *time.Time
+	deleted_by              *uuid.UUID
+	delete_reason           *string
+	version                 *int64
+	addversion              *int64
+	config_type             *string
+	config_id               *uuid.UUID
+	translation_status      *string
+	missing_pointers        *[]string
+	appendmissing_pointers  []string
+	outdated_pointers       *[]map[string]interface{}
+	appendoutdated_pointers []map[string]interface{}
+	translation_meta        *map[string]interface{}
+	computed_at             *time.Time
+	clearedFields           map[string]struct{}
+	done                    bool
+	oldValue                func(context.Context) (*ConfigTranslationState, error)
+	predicates              []predicate.ConfigTranslationState
+}
+
+var _ ent.Mutation = (*ConfigTranslationStateMutation)(nil)
+
+// configtranslationstateOption allows management of the mutation configuration using functional options.
+type configtranslationstateOption func(*ConfigTranslationStateMutation)
+
+// newConfigTranslationStateMutation creates new mutation for the ConfigTranslationState entity.
+func newConfigTranslationStateMutation(c config, op Op, opts ...configtranslationstateOption) *ConfigTranslationStateMutation {
+	m := &ConfigTranslationStateMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeConfigTranslationState,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withConfigTranslationStateID sets the ID field of the mutation.
+func withConfigTranslationStateID(id uuid.UUID) configtranslationstateOption {
+	return func(m *ConfigTranslationStateMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ConfigTranslationState
+		)
+		m.oldValue = func(ctx context.Context) (*ConfigTranslationState, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ConfigTranslationState.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withConfigTranslationState sets the old ConfigTranslationState of the mutation.
+func withConfigTranslationState(node *ConfigTranslationState) configtranslationstateOption {
+	return func(m *ConfigTranslationStateMutation) {
+		m.oldValue = func(context.Context) (*ConfigTranslationState, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ConfigTranslationStateMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ConfigTranslationStateMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ConfigTranslationState entities.
+func (m *ConfigTranslationStateMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ConfigTranslationStateMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ConfigTranslationStateMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ConfigTranslationState.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ConfigTranslationStateMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ConfigTranslationStateMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ConfigTranslationStateMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *ConfigTranslationStateMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *ConfigTranslationStateMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *ConfigTranslationStateMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[configtranslationstate.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *ConfigTranslationStateMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[configtranslationstate.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *ConfigTranslationStateMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, configtranslationstate.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ConfigTranslationStateMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ConfigTranslationStateMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ConfigTranslationStateMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *ConfigTranslationStateMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *ConfigTranslationStateMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *ConfigTranslationStateMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[configtranslationstate.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *ConfigTranslationStateMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[configtranslationstate.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *ConfigTranslationStateMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, configtranslationstate.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ConfigTranslationStateMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ConfigTranslationStateMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ConfigTranslationStateMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[configtranslationstate.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ConfigTranslationStateMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[configtranslationstate.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ConfigTranslationStateMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, configtranslationstate.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *ConfigTranslationStateMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *ConfigTranslationStateMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *ConfigTranslationStateMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[configtranslationstate.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *ConfigTranslationStateMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[configtranslationstate.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *ConfigTranslationStateMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, configtranslationstate.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *ConfigTranslationStateMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *ConfigTranslationStateMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *ConfigTranslationStateMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[configtranslationstate.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *ConfigTranslationStateMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[configtranslationstate.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *ConfigTranslationStateMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, configtranslationstate.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *ConfigTranslationStateMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *ConfigTranslationStateMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *ConfigTranslationStateMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *ConfigTranslationStateMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *ConfigTranslationStateMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetConfigType sets the "config_type" field.
+func (m *ConfigTranslationStateMutation) SetConfigType(s string) {
+	m.config_type = &s
+}
+
+// ConfigType returns the value of the "config_type" field in the mutation.
+func (m *ConfigTranslationStateMutation) ConfigType() (r string, exists bool) {
+	v := m.config_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfigType returns the old "config_type" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldConfigType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfigType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfigType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfigType: %w", err)
+	}
+	return oldValue.ConfigType, nil
+}
+
+// ResetConfigType resets all changes to the "config_type" field.
+func (m *ConfigTranslationStateMutation) ResetConfigType() {
+	m.config_type = nil
+}
+
+// SetConfigID sets the "config_id" field.
+func (m *ConfigTranslationStateMutation) SetConfigID(u uuid.UUID) {
+	m.config_id = &u
+}
+
+// ConfigID returns the value of the "config_id" field in the mutation.
+func (m *ConfigTranslationStateMutation) ConfigID() (r uuid.UUID, exists bool) {
+	v := m.config_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfigID returns the old "config_id" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldConfigID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfigID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfigID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfigID: %w", err)
+	}
+	return oldValue.ConfigID, nil
+}
+
+// ResetConfigID resets all changes to the "config_id" field.
+func (m *ConfigTranslationStateMutation) ResetConfigID() {
+	m.config_id = nil
+}
+
+// SetTranslationStatus sets the "translation_status" field.
+func (m *ConfigTranslationStateMutation) SetTranslationStatus(s string) {
+	m.translation_status = &s
+}
+
+// TranslationStatus returns the value of the "translation_status" field in the mutation.
+func (m *ConfigTranslationStateMutation) TranslationStatus() (r string, exists bool) {
+	v := m.translation_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTranslationStatus returns the old "translation_status" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldTranslationStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTranslationStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTranslationStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTranslationStatus: %w", err)
+	}
+	return oldValue.TranslationStatus, nil
+}
+
+// ResetTranslationStatus resets all changes to the "translation_status" field.
+func (m *ConfigTranslationStateMutation) ResetTranslationStatus() {
+	m.translation_status = nil
+}
+
+// SetMissingPointers sets the "missing_pointers" field.
+func (m *ConfigTranslationStateMutation) SetMissingPointers(s []string) {
+	m.missing_pointers = &s
+	m.appendmissing_pointers = nil
+}
+
+// MissingPointers returns the value of the "missing_pointers" field in the mutation.
+func (m *ConfigTranslationStateMutation) MissingPointers() (r []string, exists bool) {
+	v := m.missing_pointers
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMissingPointers returns the old "missing_pointers" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldMissingPointers(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMissingPointers is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMissingPointers requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMissingPointers: %w", err)
+	}
+	return oldValue.MissingPointers, nil
+}
+
+// AppendMissingPointers adds s to the "missing_pointers" field.
+func (m *ConfigTranslationStateMutation) AppendMissingPointers(s []string) {
+	m.appendmissing_pointers = append(m.appendmissing_pointers, s...)
+}
+
+// AppendedMissingPointers returns the list of values that were appended to the "missing_pointers" field in this mutation.
+func (m *ConfigTranslationStateMutation) AppendedMissingPointers() ([]string, bool) {
+	if len(m.appendmissing_pointers) == 0 {
+		return nil, false
+	}
+	return m.appendmissing_pointers, true
+}
+
+// ResetMissingPointers resets all changes to the "missing_pointers" field.
+func (m *ConfigTranslationStateMutation) ResetMissingPointers() {
+	m.missing_pointers = nil
+	m.appendmissing_pointers = nil
+}
+
+// SetOutdatedPointers sets the "outdated_pointers" field.
+func (m *ConfigTranslationStateMutation) SetOutdatedPointers(value []map[string]interface{}) {
+	m.outdated_pointers = &value
+	m.appendoutdated_pointers = nil
+}
+
+// OutdatedPointers returns the value of the "outdated_pointers" field in the mutation.
+func (m *ConfigTranslationStateMutation) OutdatedPointers() (r []map[string]interface{}, exists bool) {
+	v := m.outdated_pointers
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutdatedPointers returns the old "outdated_pointers" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldOutdatedPointers(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutdatedPointers is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutdatedPointers requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutdatedPointers: %w", err)
+	}
+	return oldValue.OutdatedPointers, nil
+}
+
+// AppendOutdatedPointers adds value to the "outdated_pointers" field.
+func (m *ConfigTranslationStateMutation) AppendOutdatedPointers(value []map[string]interface{}) {
+	m.appendoutdated_pointers = append(m.appendoutdated_pointers, value...)
+}
+
+// AppendedOutdatedPointers returns the list of values that were appended to the "outdated_pointers" field in this mutation.
+func (m *ConfigTranslationStateMutation) AppendedOutdatedPointers() ([]map[string]interface{}, bool) {
+	if len(m.appendoutdated_pointers) == 0 {
+		return nil, false
+	}
+	return m.appendoutdated_pointers, true
+}
+
+// ResetOutdatedPointers resets all changes to the "outdated_pointers" field.
+func (m *ConfigTranslationStateMutation) ResetOutdatedPointers() {
+	m.outdated_pointers = nil
+	m.appendoutdated_pointers = nil
+}
+
+// SetTranslationMeta sets the "translation_meta" field.
+func (m *ConfigTranslationStateMutation) SetTranslationMeta(value map[string]interface{}) {
+	m.translation_meta = &value
+}
+
+// TranslationMeta returns the value of the "translation_meta" field in the mutation.
+func (m *ConfigTranslationStateMutation) TranslationMeta() (r map[string]interface{}, exists bool) {
+	v := m.translation_meta
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTranslationMeta returns the old "translation_meta" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldTranslationMeta(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTranslationMeta is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTranslationMeta requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTranslationMeta: %w", err)
+	}
+	return oldValue.TranslationMeta, nil
+}
+
+// ResetTranslationMeta resets all changes to the "translation_meta" field.
+func (m *ConfigTranslationStateMutation) ResetTranslationMeta() {
+	m.translation_meta = nil
+}
+
+// SetComputedAt sets the "computed_at" field.
+func (m *ConfigTranslationStateMutation) SetComputedAt(t time.Time) {
+	m.computed_at = &t
+}
+
+// ComputedAt returns the value of the "computed_at" field in the mutation.
+func (m *ConfigTranslationStateMutation) ComputedAt() (r time.Time, exists bool) {
+	v := m.computed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldComputedAt returns the old "computed_at" field's value of the ConfigTranslationState entity.
+// If the ConfigTranslationState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigTranslationStateMutation) OldComputedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldComputedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldComputedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldComputedAt: %w", err)
+	}
+	return oldValue.ComputedAt, nil
+}
+
+// ResetComputedAt resets all changes to the "computed_at" field.
+func (m *ConfigTranslationStateMutation) ResetComputedAt() {
+	m.computed_at = nil
+}
+
+// Where appends a list predicates to the ConfigTranslationStateMutation builder.
+func (m *ConfigTranslationStateMutation) Where(ps ...predicate.ConfigTranslationState) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ConfigTranslationStateMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ConfigTranslationStateMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ConfigTranslationState, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ConfigTranslationStateMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ConfigTranslationStateMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ConfigTranslationState).
+func (m *ConfigTranslationStateMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ConfigTranslationStateMutation) Fields() []string {
+	fields := make([]string, 0, 15)
+	if m.created_at != nil {
+		fields = append(fields, configtranslationstate.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, configtranslationstate.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, configtranslationstate.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, configtranslationstate.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, configtranslationstate.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, configtranslationstate.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, configtranslationstate.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, configtranslationstate.FieldVersion)
+	}
+	if m.config_type != nil {
+		fields = append(fields, configtranslationstate.FieldConfigType)
+	}
+	if m.config_id != nil {
+		fields = append(fields, configtranslationstate.FieldConfigID)
+	}
+	if m.translation_status != nil {
+		fields = append(fields, configtranslationstate.FieldTranslationStatus)
+	}
+	if m.missing_pointers != nil {
+		fields = append(fields, configtranslationstate.FieldMissingPointers)
+	}
+	if m.outdated_pointers != nil {
+		fields = append(fields, configtranslationstate.FieldOutdatedPointers)
+	}
+	if m.translation_meta != nil {
+		fields = append(fields, configtranslationstate.FieldTranslationMeta)
+	}
+	if m.computed_at != nil {
+		fields = append(fields, configtranslationstate.FieldComputedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ConfigTranslationStateMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case configtranslationstate.FieldCreatedAt:
+		return m.CreatedAt()
+	case configtranslationstate.FieldCreatedBy:
+		return m.CreatedBy()
+	case configtranslationstate.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case configtranslationstate.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case configtranslationstate.FieldDeletedAt:
+		return m.DeletedAt()
+	case configtranslationstate.FieldDeletedBy:
+		return m.DeletedBy()
+	case configtranslationstate.FieldDeleteReason:
+		return m.DeleteReason()
+	case configtranslationstate.FieldVersion:
+		return m.Version()
+	case configtranslationstate.FieldConfigType:
+		return m.ConfigType()
+	case configtranslationstate.FieldConfigID:
+		return m.ConfigID()
+	case configtranslationstate.FieldTranslationStatus:
+		return m.TranslationStatus()
+	case configtranslationstate.FieldMissingPointers:
+		return m.MissingPointers()
+	case configtranslationstate.FieldOutdatedPointers:
+		return m.OutdatedPointers()
+	case configtranslationstate.FieldTranslationMeta:
+		return m.TranslationMeta()
+	case configtranslationstate.FieldComputedAt:
+		return m.ComputedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ConfigTranslationStateMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case configtranslationstate.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case configtranslationstate.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case configtranslationstate.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case configtranslationstate.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case configtranslationstate.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case configtranslationstate.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case configtranslationstate.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case configtranslationstate.FieldVersion:
+		return m.OldVersion(ctx)
+	case configtranslationstate.FieldConfigType:
+		return m.OldConfigType(ctx)
+	case configtranslationstate.FieldConfigID:
+		return m.OldConfigID(ctx)
+	case configtranslationstate.FieldTranslationStatus:
+		return m.OldTranslationStatus(ctx)
+	case configtranslationstate.FieldMissingPointers:
+		return m.OldMissingPointers(ctx)
+	case configtranslationstate.FieldOutdatedPointers:
+		return m.OldOutdatedPointers(ctx)
+	case configtranslationstate.FieldTranslationMeta:
+		return m.OldTranslationMeta(ctx)
+	case configtranslationstate.FieldComputedAt:
+		return m.OldComputedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ConfigTranslationState field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ConfigTranslationStateMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case configtranslationstate.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case configtranslationstate.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case configtranslationstate.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case configtranslationstate.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case configtranslationstate.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case configtranslationstate.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case configtranslationstate.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case configtranslationstate.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case configtranslationstate.FieldConfigType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfigType(v)
+		return nil
+	case configtranslationstate.FieldConfigID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfigID(v)
+		return nil
+	case configtranslationstate.FieldTranslationStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTranslationStatus(v)
+		return nil
+	case configtranslationstate.FieldMissingPointers:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMissingPointers(v)
+		return nil
+	case configtranslationstate.FieldOutdatedPointers:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutdatedPointers(v)
+		return nil
+	case configtranslationstate.FieldTranslationMeta:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTranslationMeta(v)
+		return nil
+	case configtranslationstate.FieldComputedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetComputedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ConfigTranslationState field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ConfigTranslationStateMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, configtranslationstate.FieldVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ConfigTranslationStateMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case configtranslationstate.FieldVersion:
+		return m.AddedVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ConfigTranslationStateMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case configtranslationstate.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ConfigTranslationState numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ConfigTranslationStateMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(configtranslationstate.FieldCreatedBy) {
+		fields = append(fields, configtranslationstate.FieldCreatedBy)
+	}
+	if m.FieldCleared(configtranslationstate.FieldUpdatedBy) {
+		fields = append(fields, configtranslationstate.FieldUpdatedBy)
+	}
+	if m.FieldCleared(configtranslationstate.FieldDeletedAt) {
+		fields = append(fields, configtranslationstate.FieldDeletedAt)
+	}
+	if m.FieldCleared(configtranslationstate.FieldDeletedBy) {
+		fields = append(fields, configtranslationstate.FieldDeletedBy)
+	}
+	if m.FieldCleared(configtranslationstate.FieldDeleteReason) {
+		fields = append(fields, configtranslationstate.FieldDeleteReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ConfigTranslationStateMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ConfigTranslationStateMutation) ClearField(name string) error {
+	switch name {
+	case configtranslationstate.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case configtranslationstate.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case configtranslationstate.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case configtranslationstate.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case configtranslationstate.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	}
+	return fmt.Errorf("unknown ConfigTranslationState nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ConfigTranslationStateMutation) ResetField(name string) error {
+	switch name {
+	case configtranslationstate.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case configtranslationstate.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case configtranslationstate.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case configtranslationstate.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case configtranslationstate.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case configtranslationstate.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case configtranslationstate.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case configtranslationstate.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case configtranslationstate.FieldConfigType:
+		m.ResetConfigType()
+		return nil
+	case configtranslationstate.FieldConfigID:
+		m.ResetConfigID()
+		return nil
+	case configtranslationstate.FieldTranslationStatus:
+		m.ResetTranslationStatus()
+		return nil
+	case configtranslationstate.FieldMissingPointers:
+		m.ResetMissingPointers()
+		return nil
+	case configtranslationstate.FieldOutdatedPointers:
+		m.ResetOutdatedPointers()
+		return nil
+	case configtranslationstate.FieldTranslationMeta:
+		m.ResetTranslationMeta()
+		return nil
+	case configtranslationstate.FieldComputedAt:
+		m.ResetComputedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ConfigTranslationState field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ConfigTranslationStateMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ConfigTranslationStateMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ConfigTranslationStateMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ConfigTranslationStateMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ConfigTranslationStateMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ConfigTranslationStateMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ConfigTranslationStateMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown ConfigTranslationState unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ConfigTranslationStateMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown ConfigTranslationState edge %s", name)
 }
 
 // ContentReleaseMutation represents an operation that mutates the ContentRelease nodes in the graph.
@@ -121319,6 +122577,1934 @@ func (m *TenantResourceAssignmentMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *TenantResourceAssignmentMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown TenantResourceAssignment edge %s", name)
+}
+
+// TranslationJobMutation represents an operation that mutates the TranslationJob nodes in the graph.
+type TranslationJobMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *uuid.UUID
+	created_at         *time.Time
+	created_by         *uuid.UUID
+	updated_at         *time.Time
+	updated_by         *uuid.UUID
+	deleted_at         *time.Time
+	deleted_by         *uuid.UUID
+	delete_reason      *string
+	version            *int64
+	addversion         *int64
+	kind               *string
+	status             *string
+	format             *string
+	source_language    *string
+	target_language    *string
+	only_missing       *bool
+	dry_run            *bool
+	request            *map[string]interface{}
+	input_asset_id     *uuid.UUID
+	result_storage_key *string
+	report             *map[string]interface{}
+	error_message      *string
+	requested_by       *uuid.UUID
+	idempotency_key    *string
+	attempts           *int
+	addattempts        *int
+	started_at         *time.Time
+	finished_at        *time.Time
+	clearedFields      map[string]struct{}
+	done               bool
+	oldValue           func(context.Context) (*TranslationJob, error)
+	predicates         []predicate.TranslationJob
+}
+
+var _ ent.Mutation = (*TranslationJobMutation)(nil)
+
+// translationjobOption allows management of the mutation configuration using functional options.
+type translationjobOption func(*TranslationJobMutation)
+
+// newTranslationJobMutation creates new mutation for the TranslationJob entity.
+func newTranslationJobMutation(c config, op Op, opts ...translationjobOption) *TranslationJobMutation {
+	m := &TranslationJobMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTranslationJob,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTranslationJobID sets the ID field of the mutation.
+func withTranslationJobID(id uuid.UUID) translationjobOption {
+	return func(m *TranslationJobMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *TranslationJob
+		)
+		m.oldValue = func(ctx context.Context) (*TranslationJob, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().TranslationJob.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTranslationJob sets the old TranslationJob of the mutation.
+func withTranslationJob(node *TranslationJob) translationjobOption {
+	return func(m *TranslationJobMutation) {
+		m.oldValue = func(context.Context) (*TranslationJob, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TranslationJobMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TranslationJobMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of TranslationJob entities.
+func (m *TranslationJobMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TranslationJobMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TranslationJobMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().TranslationJob.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *TranslationJobMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *TranslationJobMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *TranslationJobMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *TranslationJobMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *TranslationJobMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *TranslationJobMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[translationjob.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *TranslationJobMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[translationjob.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *TranslationJobMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, translationjob.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *TranslationJobMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *TranslationJobMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *TranslationJobMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *TranslationJobMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *TranslationJobMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *TranslationJobMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[translationjob.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *TranslationJobMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[translationjob.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *TranslationJobMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, translationjob.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *TranslationJobMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *TranslationJobMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *TranslationJobMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[translationjob.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *TranslationJobMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[translationjob.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *TranslationJobMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, translationjob.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *TranslationJobMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *TranslationJobMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *TranslationJobMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[translationjob.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *TranslationJobMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[translationjob.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *TranslationJobMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, translationjob.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *TranslationJobMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *TranslationJobMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *TranslationJobMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[translationjob.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *TranslationJobMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[translationjob.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *TranslationJobMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, translationjob.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *TranslationJobMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *TranslationJobMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *TranslationJobMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *TranslationJobMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *TranslationJobMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetKind sets the "kind" field.
+func (m *TranslationJobMutation) SetKind(s string) {
+	m.kind = &s
+}
+
+// Kind returns the value of the "kind" field in the mutation.
+func (m *TranslationJobMutation) Kind() (r string, exists bool) {
+	v := m.kind
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKind returns the old "kind" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldKind(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKind is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKind requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKind: %w", err)
+	}
+	return oldValue.Kind, nil
+}
+
+// ResetKind resets all changes to the "kind" field.
+func (m *TranslationJobMutation) ResetKind() {
+	m.kind = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *TranslationJobMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *TranslationJobMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *TranslationJobMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetFormat sets the "format" field.
+func (m *TranslationJobMutation) SetFormat(s string) {
+	m.format = &s
+}
+
+// Format returns the value of the "format" field in the mutation.
+func (m *TranslationJobMutation) Format() (r string, exists bool) {
+	v := m.format
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFormat returns the old "format" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldFormat(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFormat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFormat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFormat: %w", err)
+	}
+	return oldValue.Format, nil
+}
+
+// ResetFormat resets all changes to the "format" field.
+func (m *TranslationJobMutation) ResetFormat() {
+	m.format = nil
+}
+
+// SetSourceLanguage sets the "source_language" field.
+func (m *TranslationJobMutation) SetSourceLanguage(s string) {
+	m.source_language = &s
+}
+
+// SourceLanguage returns the value of the "source_language" field in the mutation.
+func (m *TranslationJobMutation) SourceLanguage() (r string, exists bool) {
+	v := m.source_language
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceLanguage returns the old "source_language" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldSourceLanguage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceLanguage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceLanguage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceLanguage: %w", err)
+	}
+	return oldValue.SourceLanguage, nil
+}
+
+// ResetSourceLanguage resets all changes to the "source_language" field.
+func (m *TranslationJobMutation) ResetSourceLanguage() {
+	m.source_language = nil
+}
+
+// SetTargetLanguage sets the "target_language" field.
+func (m *TranslationJobMutation) SetTargetLanguage(s string) {
+	m.target_language = &s
+}
+
+// TargetLanguage returns the value of the "target_language" field in the mutation.
+func (m *TranslationJobMutation) TargetLanguage() (r string, exists bool) {
+	v := m.target_language
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetLanguage returns the old "target_language" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldTargetLanguage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetLanguage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetLanguage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetLanguage: %w", err)
+	}
+	return oldValue.TargetLanguage, nil
+}
+
+// ResetTargetLanguage resets all changes to the "target_language" field.
+func (m *TranslationJobMutation) ResetTargetLanguage() {
+	m.target_language = nil
+}
+
+// SetOnlyMissing sets the "only_missing" field.
+func (m *TranslationJobMutation) SetOnlyMissing(b bool) {
+	m.only_missing = &b
+}
+
+// OnlyMissing returns the value of the "only_missing" field in the mutation.
+func (m *TranslationJobMutation) OnlyMissing() (r bool, exists bool) {
+	v := m.only_missing
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOnlyMissing returns the old "only_missing" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldOnlyMissing(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOnlyMissing is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOnlyMissing requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOnlyMissing: %w", err)
+	}
+	return oldValue.OnlyMissing, nil
+}
+
+// ResetOnlyMissing resets all changes to the "only_missing" field.
+func (m *TranslationJobMutation) ResetOnlyMissing() {
+	m.only_missing = nil
+}
+
+// SetDryRun sets the "dry_run" field.
+func (m *TranslationJobMutation) SetDryRun(b bool) {
+	m.dry_run = &b
+}
+
+// DryRun returns the value of the "dry_run" field in the mutation.
+func (m *TranslationJobMutation) DryRun() (r bool, exists bool) {
+	v := m.dry_run
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDryRun returns the old "dry_run" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldDryRun(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDryRun is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDryRun requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDryRun: %w", err)
+	}
+	return oldValue.DryRun, nil
+}
+
+// ResetDryRun resets all changes to the "dry_run" field.
+func (m *TranslationJobMutation) ResetDryRun() {
+	m.dry_run = nil
+}
+
+// SetRequest sets the "request" field.
+func (m *TranslationJobMutation) SetRequest(value map[string]interface{}) {
+	m.request = &value
+}
+
+// Request returns the value of the "request" field in the mutation.
+func (m *TranslationJobMutation) Request() (r map[string]interface{}, exists bool) {
+	v := m.request
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequest returns the old "request" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldRequest(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequest is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequest requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequest: %w", err)
+	}
+	return oldValue.Request, nil
+}
+
+// ResetRequest resets all changes to the "request" field.
+func (m *TranslationJobMutation) ResetRequest() {
+	m.request = nil
+}
+
+// SetInputAssetID sets the "input_asset_id" field.
+func (m *TranslationJobMutation) SetInputAssetID(u uuid.UUID) {
+	m.input_asset_id = &u
+}
+
+// InputAssetID returns the value of the "input_asset_id" field in the mutation.
+func (m *TranslationJobMutation) InputAssetID() (r uuid.UUID, exists bool) {
+	v := m.input_asset_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInputAssetID returns the old "input_asset_id" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldInputAssetID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInputAssetID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInputAssetID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInputAssetID: %w", err)
+	}
+	return oldValue.InputAssetID, nil
+}
+
+// ClearInputAssetID clears the value of the "input_asset_id" field.
+func (m *TranslationJobMutation) ClearInputAssetID() {
+	m.input_asset_id = nil
+	m.clearedFields[translationjob.FieldInputAssetID] = struct{}{}
+}
+
+// InputAssetIDCleared returns if the "input_asset_id" field was cleared in this mutation.
+func (m *TranslationJobMutation) InputAssetIDCleared() bool {
+	_, ok := m.clearedFields[translationjob.FieldInputAssetID]
+	return ok
+}
+
+// ResetInputAssetID resets all changes to the "input_asset_id" field.
+func (m *TranslationJobMutation) ResetInputAssetID() {
+	m.input_asset_id = nil
+	delete(m.clearedFields, translationjob.FieldInputAssetID)
+}
+
+// SetResultStorageKey sets the "result_storage_key" field.
+func (m *TranslationJobMutation) SetResultStorageKey(s string) {
+	m.result_storage_key = &s
+}
+
+// ResultStorageKey returns the value of the "result_storage_key" field in the mutation.
+func (m *TranslationJobMutation) ResultStorageKey() (r string, exists bool) {
+	v := m.result_storage_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResultStorageKey returns the old "result_storage_key" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldResultStorageKey(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResultStorageKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResultStorageKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResultStorageKey: %w", err)
+	}
+	return oldValue.ResultStorageKey, nil
+}
+
+// ClearResultStorageKey clears the value of the "result_storage_key" field.
+func (m *TranslationJobMutation) ClearResultStorageKey() {
+	m.result_storage_key = nil
+	m.clearedFields[translationjob.FieldResultStorageKey] = struct{}{}
+}
+
+// ResultStorageKeyCleared returns if the "result_storage_key" field was cleared in this mutation.
+func (m *TranslationJobMutation) ResultStorageKeyCleared() bool {
+	_, ok := m.clearedFields[translationjob.FieldResultStorageKey]
+	return ok
+}
+
+// ResetResultStorageKey resets all changes to the "result_storage_key" field.
+func (m *TranslationJobMutation) ResetResultStorageKey() {
+	m.result_storage_key = nil
+	delete(m.clearedFields, translationjob.FieldResultStorageKey)
+}
+
+// SetReport sets the "report" field.
+func (m *TranslationJobMutation) SetReport(value map[string]interface{}) {
+	m.report = &value
+}
+
+// Report returns the value of the "report" field in the mutation.
+func (m *TranslationJobMutation) Report() (r map[string]interface{}, exists bool) {
+	v := m.report
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReport returns the old "report" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldReport(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReport is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReport requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReport: %w", err)
+	}
+	return oldValue.Report, nil
+}
+
+// ClearReport clears the value of the "report" field.
+func (m *TranslationJobMutation) ClearReport() {
+	m.report = nil
+	m.clearedFields[translationjob.FieldReport] = struct{}{}
+}
+
+// ReportCleared returns if the "report" field was cleared in this mutation.
+func (m *TranslationJobMutation) ReportCleared() bool {
+	_, ok := m.clearedFields[translationjob.FieldReport]
+	return ok
+}
+
+// ResetReport resets all changes to the "report" field.
+func (m *TranslationJobMutation) ResetReport() {
+	m.report = nil
+	delete(m.clearedFields, translationjob.FieldReport)
+}
+
+// SetErrorMessage sets the "error_message" field.
+func (m *TranslationJobMutation) SetErrorMessage(s string) {
+	m.error_message = &s
+}
+
+// ErrorMessage returns the value of the "error_message" field in the mutation.
+func (m *TranslationJobMutation) ErrorMessage() (r string, exists bool) {
+	v := m.error_message
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorMessage returns the old "error_message" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldErrorMessage(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorMessage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorMessage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorMessage: %w", err)
+	}
+	return oldValue.ErrorMessage, nil
+}
+
+// ClearErrorMessage clears the value of the "error_message" field.
+func (m *TranslationJobMutation) ClearErrorMessage() {
+	m.error_message = nil
+	m.clearedFields[translationjob.FieldErrorMessage] = struct{}{}
+}
+
+// ErrorMessageCleared returns if the "error_message" field was cleared in this mutation.
+func (m *TranslationJobMutation) ErrorMessageCleared() bool {
+	_, ok := m.clearedFields[translationjob.FieldErrorMessage]
+	return ok
+}
+
+// ResetErrorMessage resets all changes to the "error_message" field.
+func (m *TranslationJobMutation) ResetErrorMessage() {
+	m.error_message = nil
+	delete(m.clearedFields, translationjob.FieldErrorMessage)
+}
+
+// SetRequestedBy sets the "requested_by" field.
+func (m *TranslationJobMutation) SetRequestedBy(u uuid.UUID) {
+	m.requested_by = &u
+}
+
+// RequestedBy returns the value of the "requested_by" field in the mutation.
+func (m *TranslationJobMutation) RequestedBy() (r uuid.UUID, exists bool) {
+	v := m.requested_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestedBy returns the old "requested_by" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldRequestedBy(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestedBy: %w", err)
+	}
+	return oldValue.RequestedBy, nil
+}
+
+// ResetRequestedBy resets all changes to the "requested_by" field.
+func (m *TranslationJobMutation) ResetRequestedBy() {
+	m.requested_by = nil
+}
+
+// SetIdempotencyKey sets the "idempotency_key" field.
+func (m *TranslationJobMutation) SetIdempotencyKey(s string) {
+	m.idempotency_key = &s
+}
+
+// IdempotencyKey returns the value of the "idempotency_key" field in the mutation.
+func (m *TranslationJobMutation) IdempotencyKey() (r string, exists bool) {
+	v := m.idempotency_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIdempotencyKey returns the old "idempotency_key" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldIdempotencyKey(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIdempotencyKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIdempotencyKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIdempotencyKey: %w", err)
+	}
+	return oldValue.IdempotencyKey, nil
+}
+
+// ClearIdempotencyKey clears the value of the "idempotency_key" field.
+func (m *TranslationJobMutation) ClearIdempotencyKey() {
+	m.idempotency_key = nil
+	m.clearedFields[translationjob.FieldIdempotencyKey] = struct{}{}
+}
+
+// IdempotencyKeyCleared returns if the "idempotency_key" field was cleared in this mutation.
+func (m *TranslationJobMutation) IdempotencyKeyCleared() bool {
+	_, ok := m.clearedFields[translationjob.FieldIdempotencyKey]
+	return ok
+}
+
+// ResetIdempotencyKey resets all changes to the "idempotency_key" field.
+func (m *TranslationJobMutation) ResetIdempotencyKey() {
+	m.idempotency_key = nil
+	delete(m.clearedFields, translationjob.FieldIdempotencyKey)
+}
+
+// SetAttempts sets the "attempts" field.
+func (m *TranslationJobMutation) SetAttempts(i int) {
+	m.attempts = &i
+	m.addattempts = nil
+}
+
+// Attempts returns the value of the "attempts" field in the mutation.
+func (m *TranslationJobMutation) Attempts() (r int, exists bool) {
+	v := m.attempts
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttempts returns the old "attempts" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldAttempts(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttempts is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttempts requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttempts: %w", err)
+	}
+	return oldValue.Attempts, nil
+}
+
+// AddAttempts adds i to the "attempts" field.
+func (m *TranslationJobMutation) AddAttempts(i int) {
+	if m.addattempts != nil {
+		*m.addattempts += i
+	} else {
+		m.addattempts = &i
+	}
+}
+
+// AddedAttempts returns the value that was added to the "attempts" field in this mutation.
+func (m *TranslationJobMutation) AddedAttempts() (r int, exists bool) {
+	v := m.addattempts
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttempts resets all changes to the "attempts" field.
+func (m *TranslationJobMutation) ResetAttempts() {
+	m.attempts = nil
+	m.addattempts = nil
+}
+
+// SetStartedAt sets the "started_at" field.
+func (m *TranslationJobMutation) SetStartedAt(t time.Time) {
+	m.started_at = &t
+}
+
+// StartedAt returns the value of the "started_at" field in the mutation.
+func (m *TranslationJobMutation) StartedAt() (r time.Time, exists bool) {
+	v := m.started_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartedAt returns the old "started_at" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldStartedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartedAt: %w", err)
+	}
+	return oldValue.StartedAt, nil
+}
+
+// ClearStartedAt clears the value of the "started_at" field.
+func (m *TranslationJobMutation) ClearStartedAt() {
+	m.started_at = nil
+	m.clearedFields[translationjob.FieldStartedAt] = struct{}{}
+}
+
+// StartedAtCleared returns if the "started_at" field was cleared in this mutation.
+func (m *TranslationJobMutation) StartedAtCleared() bool {
+	_, ok := m.clearedFields[translationjob.FieldStartedAt]
+	return ok
+}
+
+// ResetStartedAt resets all changes to the "started_at" field.
+func (m *TranslationJobMutation) ResetStartedAt() {
+	m.started_at = nil
+	delete(m.clearedFields, translationjob.FieldStartedAt)
+}
+
+// SetFinishedAt sets the "finished_at" field.
+func (m *TranslationJobMutation) SetFinishedAt(t time.Time) {
+	m.finished_at = &t
+}
+
+// FinishedAt returns the value of the "finished_at" field in the mutation.
+func (m *TranslationJobMutation) FinishedAt() (r time.Time, exists bool) {
+	v := m.finished_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFinishedAt returns the old "finished_at" field's value of the TranslationJob entity.
+// If the TranslationJob object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TranslationJobMutation) OldFinishedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFinishedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFinishedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFinishedAt: %w", err)
+	}
+	return oldValue.FinishedAt, nil
+}
+
+// ClearFinishedAt clears the value of the "finished_at" field.
+func (m *TranslationJobMutation) ClearFinishedAt() {
+	m.finished_at = nil
+	m.clearedFields[translationjob.FieldFinishedAt] = struct{}{}
+}
+
+// FinishedAtCleared returns if the "finished_at" field was cleared in this mutation.
+func (m *TranslationJobMutation) FinishedAtCleared() bool {
+	_, ok := m.clearedFields[translationjob.FieldFinishedAt]
+	return ok
+}
+
+// ResetFinishedAt resets all changes to the "finished_at" field.
+func (m *TranslationJobMutation) ResetFinishedAt() {
+	m.finished_at = nil
+	delete(m.clearedFields, translationjob.FieldFinishedAt)
+}
+
+// Where appends a list predicates to the TranslationJobMutation builder.
+func (m *TranslationJobMutation) Where(ps ...predicate.TranslationJob) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TranslationJobMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TranslationJobMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.TranslationJob, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TranslationJobMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TranslationJobMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (TranslationJob).
+func (m *TranslationJobMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TranslationJobMutation) Fields() []string {
+	fields := make([]string, 0, 25)
+	if m.created_at != nil {
+		fields = append(fields, translationjob.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, translationjob.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, translationjob.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, translationjob.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, translationjob.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, translationjob.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, translationjob.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, translationjob.FieldVersion)
+	}
+	if m.kind != nil {
+		fields = append(fields, translationjob.FieldKind)
+	}
+	if m.status != nil {
+		fields = append(fields, translationjob.FieldStatus)
+	}
+	if m.format != nil {
+		fields = append(fields, translationjob.FieldFormat)
+	}
+	if m.source_language != nil {
+		fields = append(fields, translationjob.FieldSourceLanguage)
+	}
+	if m.target_language != nil {
+		fields = append(fields, translationjob.FieldTargetLanguage)
+	}
+	if m.only_missing != nil {
+		fields = append(fields, translationjob.FieldOnlyMissing)
+	}
+	if m.dry_run != nil {
+		fields = append(fields, translationjob.FieldDryRun)
+	}
+	if m.request != nil {
+		fields = append(fields, translationjob.FieldRequest)
+	}
+	if m.input_asset_id != nil {
+		fields = append(fields, translationjob.FieldInputAssetID)
+	}
+	if m.result_storage_key != nil {
+		fields = append(fields, translationjob.FieldResultStorageKey)
+	}
+	if m.report != nil {
+		fields = append(fields, translationjob.FieldReport)
+	}
+	if m.error_message != nil {
+		fields = append(fields, translationjob.FieldErrorMessage)
+	}
+	if m.requested_by != nil {
+		fields = append(fields, translationjob.FieldRequestedBy)
+	}
+	if m.idempotency_key != nil {
+		fields = append(fields, translationjob.FieldIdempotencyKey)
+	}
+	if m.attempts != nil {
+		fields = append(fields, translationjob.FieldAttempts)
+	}
+	if m.started_at != nil {
+		fields = append(fields, translationjob.FieldStartedAt)
+	}
+	if m.finished_at != nil {
+		fields = append(fields, translationjob.FieldFinishedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TranslationJobMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case translationjob.FieldCreatedAt:
+		return m.CreatedAt()
+	case translationjob.FieldCreatedBy:
+		return m.CreatedBy()
+	case translationjob.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case translationjob.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case translationjob.FieldDeletedAt:
+		return m.DeletedAt()
+	case translationjob.FieldDeletedBy:
+		return m.DeletedBy()
+	case translationjob.FieldDeleteReason:
+		return m.DeleteReason()
+	case translationjob.FieldVersion:
+		return m.Version()
+	case translationjob.FieldKind:
+		return m.Kind()
+	case translationjob.FieldStatus:
+		return m.Status()
+	case translationjob.FieldFormat:
+		return m.Format()
+	case translationjob.FieldSourceLanguage:
+		return m.SourceLanguage()
+	case translationjob.FieldTargetLanguage:
+		return m.TargetLanguage()
+	case translationjob.FieldOnlyMissing:
+		return m.OnlyMissing()
+	case translationjob.FieldDryRun:
+		return m.DryRun()
+	case translationjob.FieldRequest:
+		return m.Request()
+	case translationjob.FieldInputAssetID:
+		return m.InputAssetID()
+	case translationjob.FieldResultStorageKey:
+		return m.ResultStorageKey()
+	case translationjob.FieldReport:
+		return m.Report()
+	case translationjob.FieldErrorMessage:
+		return m.ErrorMessage()
+	case translationjob.FieldRequestedBy:
+		return m.RequestedBy()
+	case translationjob.FieldIdempotencyKey:
+		return m.IdempotencyKey()
+	case translationjob.FieldAttempts:
+		return m.Attempts()
+	case translationjob.FieldStartedAt:
+		return m.StartedAt()
+	case translationjob.FieldFinishedAt:
+		return m.FinishedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TranslationJobMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case translationjob.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case translationjob.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case translationjob.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case translationjob.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case translationjob.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case translationjob.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case translationjob.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case translationjob.FieldVersion:
+		return m.OldVersion(ctx)
+	case translationjob.FieldKind:
+		return m.OldKind(ctx)
+	case translationjob.FieldStatus:
+		return m.OldStatus(ctx)
+	case translationjob.FieldFormat:
+		return m.OldFormat(ctx)
+	case translationjob.FieldSourceLanguage:
+		return m.OldSourceLanguage(ctx)
+	case translationjob.FieldTargetLanguage:
+		return m.OldTargetLanguage(ctx)
+	case translationjob.FieldOnlyMissing:
+		return m.OldOnlyMissing(ctx)
+	case translationjob.FieldDryRun:
+		return m.OldDryRun(ctx)
+	case translationjob.FieldRequest:
+		return m.OldRequest(ctx)
+	case translationjob.FieldInputAssetID:
+		return m.OldInputAssetID(ctx)
+	case translationjob.FieldResultStorageKey:
+		return m.OldResultStorageKey(ctx)
+	case translationjob.FieldReport:
+		return m.OldReport(ctx)
+	case translationjob.FieldErrorMessage:
+		return m.OldErrorMessage(ctx)
+	case translationjob.FieldRequestedBy:
+		return m.OldRequestedBy(ctx)
+	case translationjob.FieldIdempotencyKey:
+		return m.OldIdempotencyKey(ctx)
+	case translationjob.FieldAttempts:
+		return m.OldAttempts(ctx)
+	case translationjob.FieldStartedAt:
+		return m.OldStartedAt(ctx)
+	case translationjob.FieldFinishedAt:
+		return m.OldFinishedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown TranslationJob field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TranslationJobMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case translationjob.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case translationjob.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case translationjob.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case translationjob.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case translationjob.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case translationjob.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case translationjob.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case translationjob.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case translationjob.FieldKind:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKind(v)
+		return nil
+	case translationjob.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case translationjob.FieldFormat:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFormat(v)
+		return nil
+	case translationjob.FieldSourceLanguage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceLanguage(v)
+		return nil
+	case translationjob.FieldTargetLanguage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetLanguage(v)
+		return nil
+	case translationjob.FieldOnlyMissing:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOnlyMissing(v)
+		return nil
+	case translationjob.FieldDryRun:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDryRun(v)
+		return nil
+	case translationjob.FieldRequest:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequest(v)
+		return nil
+	case translationjob.FieldInputAssetID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInputAssetID(v)
+		return nil
+	case translationjob.FieldResultStorageKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResultStorageKey(v)
+		return nil
+	case translationjob.FieldReport:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReport(v)
+		return nil
+	case translationjob.FieldErrorMessage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorMessage(v)
+		return nil
+	case translationjob.FieldRequestedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestedBy(v)
+		return nil
+	case translationjob.FieldIdempotencyKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIdempotencyKey(v)
+		return nil
+	case translationjob.FieldAttempts:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttempts(v)
+		return nil
+	case translationjob.FieldStartedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartedAt(v)
+		return nil
+	case translationjob.FieldFinishedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFinishedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TranslationJob field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TranslationJobMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, translationjob.FieldVersion)
+	}
+	if m.addattempts != nil {
+		fields = append(fields, translationjob.FieldAttempts)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TranslationJobMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case translationjob.FieldVersion:
+		return m.AddedVersion()
+	case translationjob.FieldAttempts:
+		return m.AddedAttempts()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TranslationJobMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case translationjob.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case translationjob.FieldAttempts:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttempts(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TranslationJob numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TranslationJobMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(translationjob.FieldCreatedBy) {
+		fields = append(fields, translationjob.FieldCreatedBy)
+	}
+	if m.FieldCleared(translationjob.FieldUpdatedBy) {
+		fields = append(fields, translationjob.FieldUpdatedBy)
+	}
+	if m.FieldCleared(translationjob.FieldDeletedAt) {
+		fields = append(fields, translationjob.FieldDeletedAt)
+	}
+	if m.FieldCleared(translationjob.FieldDeletedBy) {
+		fields = append(fields, translationjob.FieldDeletedBy)
+	}
+	if m.FieldCleared(translationjob.FieldDeleteReason) {
+		fields = append(fields, translationjob.FieldDeleteReason)
+	}
+	if m.FieldCleared(translationjob.FieldInputAssetID) {
+		fields = append(fields, translationjob.FieldInputAssetID)
+	}
+	if m.FieldCleared(translationjob.FieldResultStorageKey) {
+		fields = append(fields, translationjob.FieldResultStorageKey)
+	}
+	if m.FieldCleared(translationjob.FieldReport) {
+		fields = append(fields, translationjob.FieldReport)
+	}
+	if m.FieldCleared(translationjob.FieldErrorMessage) {
+		fields = append(fields, translationjob.FieldErrorMessage)
+	}
+	if m.FieldCleared(translationjob.FieldIdempotencyKey) {
+		fields = append(fields, translationjob.FieldIdempotencyKey)
+	}
+	if m.FieldCleared(translationjob.FieldStartedAt) {
+		fields = append(fields, translationjob.FieldStartedAt)
+	}
+	if m.FieldCleared(translationjob.FieldFinishedAt) {
+		fields = append(fields, translationjob.FieldFinishedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TranslationJobMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TranslationJobMutation) ClearField(name string) error {
+	switch name {
+	case translationjob.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case translationjob.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case translationjob.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case translationjob.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case translationjob.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case translationjob.FieldInputAssetID:
+		m.ClearInputAssetID()
+		return nil
+	case translationjob.FieldResultStorageKey:
+		m.ClearResultStorageKey()
+		return nil
+	case translationjob.FieldReport:
+		m.ClearReport()
+		return nil
+	case translationjob.FieldErrorMessage:
+		m.ClearErrorMessage()
+		return nil
+	case translationjob.FieldIdempotencyKey:
+		m.ClearIdempotencyKey()
+		return nil
+	case translationjob.FieldStartedAt:
+		m.ClearStartedAt()
+		return nil
+	case translationjob.FieldFinishedAt:
+		m.ClearFinishedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown TranslationJob nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TranslationJobMutation) ResetField(name string) error {
+	switch name {
+	case translationjob.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case translationjob.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case translationjob.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case translationjob.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case translationjob.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case translationjob.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case translationjob.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case translationjob.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case translationjob.FieldKind:
+		m.ResetKind()
+		return nil
+	case translationjob.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case translationjob.FieldFormat:
+		m.ResetFormat()
+		return nil
+	case translationjob.FieldSourceLanguage:
+		m.ResetSourceLanguage()
+		return nil
+	case translationjob.FieldTargetLanguage:
+		m.ResetTargetLanguage()
+		return nil
+	case translationjob.FieldOnlyMissing:
+		m.ResetOnlyMissing()
+		return nil
+	case translationjob.FieldDryRun:
+		m.ResetDryRun()
+		return nil
+	case translationjob.FieldRequest:
+		m.ResetRequest()
+		return nil
+	case translationjob.FieldInputAssetID:
+		m.ResetInputAssetID()
+		return nil
+	case translationjob.FieldResultStorageKey:
+		m.ResetResultStorageKey()
+		return nil
+	case translationjob.FieldReport:
+		m.ResetReport()
+		return nil
+	case translationjob.FieldErrorMessage:
+		m.ResetErrorMessage()
+		return nil
+	case translationjob.FieldRequestedBy:
+		m.ResetRequestedBy()
+		return nil
+	case translationjob.FieldIdempotencyKey:
+		m.ResetIdempotencyKey()
+		return nil
+	case translationjob.FieldAttempts:
+		m.ResetAttempts()
+		return nil
+	case translationjob.FieldStartedAt:
+		m.ResetStartedAt()
+		return nil
+	case translationjob.FieldFinishedAt:
+		m.ResetFinishedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown TranslationJob field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TranslationJobMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TranslationJobMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TranslationJobMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TranslationJobMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TranslationJobMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TranslationJobMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TranslationJobMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown TranslationJob unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TranslationJobMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown TranslationJob edge %s", name)
 }
 
 // WalletMutation represents an operation that mutates the Wallet nodes in the graph.

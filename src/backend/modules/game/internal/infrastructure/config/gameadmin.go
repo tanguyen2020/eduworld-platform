@@ -20,6 +20,12 @@ const (
 	MediaPipelineInterval                 = 30 * time.Second
 	RenderRetryInterval                   = time.Minute
 	GameAdminJobBatch                     = 50
+	// DefaultReportLinkTTLMinutes is report_link_ttl (15 minutes, owner SCHOOL_LMS): the signed download link of a
+	// translation file (F082 Clarifications 2026-11-16).
+	DefaultReportLinkTTLMinutes = 15
+	// TranslationJobsInterval and TranslationBackfillInterval are the ticks of the translation jobs (F082).
+	TranslationJobsInterval     = 5 * time.Second
+	TranslationBackfillInterval = time.Minute
 )
 
 // DefaultTextRequiredLanguages is game_text_required_languages (vi, en; ADR-0056).
@@ -35,6 +41,8 @@ type GameAdmin struct {
 	S3Timeout                                      time.Duration
 	// CDNBase is EW_CDN_BASE_URL (CDN URLs of ready media and renders; empty = no URL).
 	CDNBase string
+	// ReportLinkTTL is report_link_ttl (EW_GAME_REPORT_LINK_TTL_MINUTES): validity of a translation file download link.
+	ReportLinkTTL time.Duration
 	// ClamdAddr is the clamd address of EW_MEDIA_SCAN=clamd://host:port ("" = EW_MEDIA_SCAN=disabled, local only).
 	ClamdAddr string
 }
@@ -63,7 +71,8 @@ func GameAdminFrom(c *config.Config) (GameAdmin, error) {
 		RenderBackoff:     time.Duration(c.Int("EW_GAME_RENDER_BACKOFF_SECONDS", DefaultRenderBackoffSeconds)) * time.Second,
 		S3Endpoint:        c.StringOr("EW_S3_ENDPOINT", ""), S3Region: c.StringOr("EW_S3_REGION", ""),
 		S3AccessKey: c.StringOr("EW_S3_ACCESS_KEY", ""), S3SecretKey: c.StringOr("EW_S3_SECRET_KEY", ""),
-		S3Timeout: c.Duration("EW_S3_TIMEOUT", 0), CDNBase: strings.TrimRight(c.StringOr("EW_CDN_BASE_URL", ""), "/")}
+		S3Timeout:     c.Duration("EW_S3_TIMEOUT", 0),
+		ReportLinkTTL: time.Duration(c.Int("EW_GAME_REPORT_LINK_TTL_MINUTES", DefaultReportLinkTTLMinutes)) * time.Minute, CDNBase: strings.TrimRight(c.StringOr("EW_CDN_BASE_URL", ""), "/")}
 	switch scan := c.StringOr("EW_MEDIA_SCAN", "disabled"); {
 	case scan == "disabled":
 	case strings.HasPrefix(scan, "clamd://"):

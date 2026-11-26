@@ -78,6 +78,9 @@ type CommunityGoalContribution func(*sql.Selector)
 // CommunityGoalProgress is the predicate function for communitygoalprogress builders.
 type CommunityGoalProgress func(*sql.Selector)
 
+// ConfigTranslationState is the predicate function for configtranslationstate builders.
+type ConfigTranslationState func(*sql.Selector)
+
 // ContentRelease is the predicate function for contentrelease builders.
 type ContentRelease func(*sql.Selector)
 
@@ -260,6 +263,9 @@ type StudentAchievement func(*sql.Selector)
 
 // TenantResourceAssignment is the predicate function for tenantresourceassignment builders.
 type TenantResourceAssignment func(*sql.Selector)
+
+// TranslationJob is the predicate function for translationjob builders.
+type TranslationJob func(*sql.Selector)
 
 // Wallet is the predicate function for wallet builders.
 type Wallet func(*sql.Selector)

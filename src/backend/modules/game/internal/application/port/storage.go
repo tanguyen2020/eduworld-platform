@@ -13,6 +13,8 @@ type ObjectStorage interface {
 	// PresignPut signs a PUT of exactly size bytes of type mime, valid for ttl; headers are the headers the client must
 	// send with the PUT.
 	PresignPut(ctx context.Context, bucket, key string, size int64, mime string, ttl time.Duration) (url string, headers map[string]string, err error)
+	// PresignGet signs a GET of a private object valid for ttl (download link of a translation file, F082).
+	PresignGet(ctx context.Context, bucket, key string, ttl time.Duration) (string, error)
 	// Head returns the size of an object or ErrObjectNotFound.
 	Head(ctx context.Context, bucket, key string) (int64, error)
 	// Open streams an object (the caller closes it) or returns ErrObjectNotFound.

@@ -35,3 +35,29 @@ func MediaPipelineJob(r MediaRunner) RunOnce {
 func RenderRetryJob(r MediaRunner) RunOnce {
 	return func(ctx context.Context) (int, error) { return r.RetryRenders(ctx) }
 }
+
+// Names of the translation jobs (F082).
+const (
+	TranslationJobs     = "translation-jobs"
+	TranslationBackfill = "game-translation-state-backfill"
+)
+
+// TranslationRunner runs the queued translation jobs (command.Translations).
+type TranslationRunner interface {
+	RunNext(ctx context.Context) (int, error)
+}
+
+// StateBackfiller computes the missing translation states (command.TranslationBackfill).
+type StateBackfiller interface {
+	Run(ctx context.Context) (int, error)
+}
+
+// TranslationJobsJob is one tick of translation-jobs (F082-AC-12, AC-13): one queued job per tick.
+func TranslationJobsJob(r TranslationRunner) RunOnce {
+	return func(ctx context.Context) (int, error) { return r.RunNext(ctx) }
+}
+
+// TranslationBackfillJob is one tick of game-translation-state-backfill (Clarifications F082 2026-11-26).
+func TranslationBackfillJob(b StateBackfiller) RunOnce {
+	return func(ctx context.Context) (int, error) { return b.Run(ctx) }
+}

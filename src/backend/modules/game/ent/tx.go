@@ -60,6 +60,8 @@ type Tx struct {
 	CommunityGoalContribution *CommunityGoalContributionClient
 	// CommunityGoalProgress is the client for interacting with the CommunityGoalProgress builders.
 	CommunityGoalProgress *CommunityGoalProgressClient
+	// ConfigTranslationState is the client for interacting with the ConfigTranslationState builders.
+	ConfigTranslationState *ConfigTranslationStateClient
 	// ContentRelease is the client for interacting with the ContentRelease builders.
 	ContentRelease *ContentReleaseClient
 	// Currency is the client for interacting with the Currency builders.
@@ -182,6 +184,8 @@ type Tx struct {
 	StudentAchievement *StudentAchievementClient
 	// TenantResourceAssignment is the client for interacting with the TenantResourceAssignment builders.
 	TenantResourceAssignment *TenantResourceAssignmentClient
+	// TranslationJob is the client for interacting with the TranslationJob builders.
+	TranslationJob *TranslationJobClient
 	// Wallet is the client for interacting with the Wallet builders.
 	Wallet *WalletClient
 	// WorldArea is the client for interacting with the WorldArea builders.
@@ -351,6 +355,7 @@ func (tx *Tx) init() {
 	tx.CommunityGoal = NewCommunityGoalClient(tx.config)
 	tx.CommunityGoalContribution = NewCommunityGoalContributionClient(tx.config)
 	tx.CommunityGoalProgress = NewCommunityGoalProgressClient(tx.config)
+	tx.ConfigTranslationState = NewConfigTranslationStateClient(tx.config)
 	tx.ContentRelease = NewContentReleaseClient(tx.config)
 	tx.Currency = NewCurrencyClient(tx.config)
 	tx.CurrencyLedgerEntry = NewCurrencyLedgerEntryClient(tx.config)
@@ -412,6 +417,7 @@ func (tx *Tx) init() {
 	tx.StoryProgress = NewStoryProgressClient(tx.config)
 	tx.StudentAchievement = NewStudentAchievementClient(tx.config)
 	tx.TenantResourceAssignment = NewTenantResourceAssignmentClient(tx.config)
+	tx.TranslationJob = NewTranslationJobClient(tx.config)
 	tx.Wallet = NewWalletClient(tx.config)
 	tx.WorldArea = NewWorldAreaClient(tx.config)
 	tx.WorldAreaUnlock = NewWorldAreaUnlockClient(tx.config)

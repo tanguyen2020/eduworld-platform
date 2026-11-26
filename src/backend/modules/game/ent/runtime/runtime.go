@@ -30,6 +30,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoal"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoalcontribution"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoalprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/configtranslationstate"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currencyledgerentry"
@@ -92,6 +93,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storyprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/studentachievement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/tenantresourceassignment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/translationjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/wallet"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldarea"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaunlock"
@@ -1191,6 +1193,45 @@ func init() {
 	communitygoalprogressDescID := communitygoalprogressMixinFields0[0].Descriptor()
 	// communitygoalprogress.DefaultID holds the default value on creation for the id field.
 	communitygoalprogress.DefaultID = communitygoalprogressDescID.Default.(func() uuid.UUID)
+	configtranslationstateMixin := schema.ConfigTranslationState{}.Mixin()
+	configtranslationstateMixinHooks0 := configtranslationstateMixin[0].Hooks()
+	configtranslationstate.Hooks[0] = configtranslationstateMixinHooks0[0]
+	configtranslationstateMixinInters0 := configtranslationstateMixin[0].Interceptors()
+	configtranslationstate.Interceptors[0] = configtranslationstateMixinInters0[0]
+	configtranslationstateMixinFields0 := configtranslationstateMixin[0].Fields()
+	_ = configtranslationstateMixinFields0
+	configtranslationstateFields := schema.ConfigTranslationState{}.Fields()
+	_ = configtranslationstateFields
+	// configtranslationstateDescCreatedAt is the schema descriptor for created_at field.
+	configtranslationstateDescCreatedAt := configtranslationstateMixinFields0[1].Descriptor()
+	// configtranslationstate.DefaultCreatedAt holds the default value on creation for the created_at field.
+	configtranslationstate.DefaultCreatedAt = configtranslationstateDescCreatedAt.Default.(func() time.Time)
+	// configtranslationstateDescUpdatedAt is the schema descriptor for updated_at field.
+	configtranslationstateDescUpdatedAt := configtranslationstateMixinFields0[3].Descriptor()
+	// configtranslationstate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	configtranslationstate.DefaultUpdatedAt = configtranslationstateDescUpdatedAt.Default.(func() time.Time)
+	// configtranslationstate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	configtranslationstate.UpdateDefaultUpdatedAt = configtranslationstateDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// configtranslationstateDescDeleteReason is the schema descriptor for delete_reason field.
+	configtranslationstateDescDeleteReason := configtranslationstateMixinFields0[7].Descriptor()
+	// configtranslationstate.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	configtranslationstate.DeleteReasonValidator = configtranslationstateDescDeleteReason.Validators[0].(func(string) error)
+	// configtranslationstateDescVersion is the schema descriptor for version field.
+	configtranslationstateDescVersion := configtranslationstateMixinFields0[8].Descriptor()
+	// configtranslationstate.DefaultVersion holds the default value on creation for the version field.
+	configtranslationstate.DefaultVersion = configtranslationstateDescVersion.Default.(int64)
+	// configtranslationstateDescConfigType is the schema descriptor for config_type field.
+	configtranslationstateDescConfigType := configtranslationstateFields[0].Descriptor()
+	// configtranslationstate.ConfigTypeValidator is a validator for the "config_type" field. It is called by the builders before save.
+	configtranslationstate.ConfigTypeValidator = configtranslationstateDescConfigType.Validators[0].(func(string) error)
+	// configtranslationstateDescTranslationStatus is the schema descriptor for translation_status field.
+	configtranslationstateDescTranslationStatus := configtranslationstateFields[2].Descriptor()
+	// configtranslationstate.TranslationStatusValidator is a validator for the "translation_status" field. It is called by the builders before save.
+	configtranslationstate.TranslationStatusValidator = configtranslationstateDescTranslationStatus.Validators[0].(func(string) error)
+	// configtranslationstateDescID is the schema descriptor for id field.
+	configtranslationstateDescID := configtranslationstateMixinFields0[0].Descriptor()
+	// configtranslationstate.DefaultID holds the default value on creation for the id field.
+	configtranslationstate.DefaultID = configtranslationstateDescID.Default.(func() uuid.UUID)
 	contentreleaseMixin := schema.ContentRelease{}.Mixin()
 	contentreleaseMixinHooks0 := contentreleaseMixin[0].Hooks()
 	contentrelease.Hooks[0] = contentreleaseMixinHooks0[0]
@@ -4038,6 +4079,81 @@ func init() {
 	tenantresourceassignmentDescID := tenantresourceassignmentMixinFields0[0].Descriptor()
 	// tenantresourceassignment.DefaultID holds the default value on creation for the id field.
 	tenantresourceassignment.DefaultID = tenantresourceassignmentDescID.Default.(func() uuid.UUID)
+	translationjobMixin := schema.TranslationJob{}.Mixin()
+	translationjobMixinHooks0 := translationjobMixin[0].Hooks()
+	translationjob.Hooks[0] = translationjobMixinHooks0[0]
+	translationjobMixinInters0 := translationjobMixin[0].Interceptors()
+	translationjob.Interceptors[0] = translationjobMixinInters0[0]
+	translationjobMixinFields0 := translationjobMixin[0].Fields()
+	_ = translationjobMixinFields0
+	translationjobFields := schema.TranslationJob{}.Fields()
+	_ = translationjobFields
+	// translationjobDescCreatedAt is the schema descriptor for created_at field.
+	translationjobDescCreatedAt := translationjobMixinFields0[1].Descriptor()
+	// translationjob.DefaultCreatedAt holds the default value on creation for the created_at field.
+	translationjob.DefaultCreatedAt = translationjobDescCreatedAt.Default.(func() time.Time)
+	// translationjobDescUpdatedAt is the schema descriptor for updated_at field.
+	translationjobDescUpdatedAt := translationjobMixinFields0[3].Descriptor()
+	// translationjob.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	translationjob.DefaultUpdatedAt = translationjobDescUpdatedAt.Default.(func() time.Time)
+	// translationjob.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	translationjob.UpdateDefaultUpdatedAt = translationjobDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// translationjobDescDeleteReason is the schema descriptor for delete_reason field.
+	translationjobDescDeleteReason := translationjobMixinFields0[7].Descriptor()
+	// translationjob.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	translationjob.DeleteReasonValidator = translationjobDescDeleteReason.Validators[0].(func(string) error)
+	// translationjobDescVersion is the schema descriptor for version field.
+	translationjobDescVersion := translationjobMixinFields0[8].Descriptor()
+	// translationjob.DefaultVersion holds the default value on creation for the version field.
+	translationjob.DefaultVersion = translationjobDescVersion.Default.(int64)
+	// translationjobDescKind is the schema descriptor for kind field.
+	translationjobDescKind := translationjobFields[0].Descriptor()
+	// translationjob.KindValidator is a validator for the "kind" field. It is called by the builders before save.
+	translationjob.KindValidator = translationjobDescKind.Validators[0].(func(string) error)
+	// translationjobDescStatus is the schema descriptor for status field.
+	translationjobDescStatus := translationjobFields[1].Descriptor()
+	// translationjob.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	translationjob.StatusValidator = translationjobDescStatus.Validators[0].(func(string) error)
+	// translationjobDescFormat is the schema descriptor for format field.
+	translationjobDescFormat := translationjobFields[2].Descriptor()
+	// translationjob.FormatValidator is a validator for the "format" field. It is called by the builders before save.
+	translationjob.FormatValidator = translationjobDescFormat.Validators[0].(func(string) error)
+	// translationjobDescSourceLanguage is the schema descriptor for source_language field.
+	translationjobDescSourceLanguage := translationjobFields[3].Descriptor()
+	// translationjob.SourceLanguageValidator is a validator for the "source_language" field. It is called by the builders before save.
+	translationjob.SourceLanguageValidator = translationjobDescSourceLanguage.Validators[0].(func(string) error)
+	// translationjobDescTargetLanguage is the schema descriptor for target_language field.
+	translationjobDescTargetLanguage := translationjobFields[4].Descriptor()
+	// translationjob.TargetLanguageValidator is a validator for the "target_language" field. It is called by the builders before save.
+	translationjob.TargetLanguageValidator = translationjobDescTargetLanguage.Validators[0].(func(string) error)
+	// translationjobDescOnlyMissing is the schema descriptor for only_missing field.
+	translationjobDescOnlyMissing := translationjobFields[5].Descriptor()
+	// translationjob.DefaultOnlyMissing holds the default value on creation for the only_missing field.
+	translationjob.DefaultOnlyMissing = translationjobDescOnlyMissing.Default.(bool)
+	// translationjobDescDryRun is the schema descriptor for dry_run field.
+	translationjobDescDryRun := translationjobFields[6].Descriptor()
+	// translationjob.DefaultDryRun holds the default value on creation for the dry_run field.
+	translationjob.DefaultDryRun = translationjobDescDryRun.Default.(bool)
+	// translationjobDescResultStorageKey is the schema descriptor for result_storage_key field.
+	translationjobDescResultStorageKey := translationjobFields[9].Descriptor()
+	// translationjob.ResultStorageKeyValidator is a validator for the "result_storage_key" field. It is called by the builders before save.
+	translationjob.ResultStorageKeyValidator = translationjobDescResultStorageKey.Validators[0].(func(string) error)
+	// translationjobDescErrorMessage is the schema descriptor for error_message field.
+	translationjobDescErrorMessage := translationjobFields[11].Descriptor()
+	// translationjob.ErrorMessageValidator is a validator for the "error_message" field. It is called by the builders before save.
+	translationjob.ErrorMessageValidator = translationjobDescErrorMessage.Validators[0].(func(string) error)
+	// translationjobDescIdempotencyKey is the schema descriptor for idempotency_key field.
+	translationjobDescIdempotencyKey := translationjobFields[13].Descriptor()
+	// translationjob.IdempotencyKeyValidator is a validator for the "idempotency_key" field. It is called by the builders before save.
+	translationjob.IdempotencyKeyValidator = translationjobDescIdempotencyKey.Validators[0].(func(string) error)
+	// translationjobDescAttempts is the schema descriptor for attempts field.
+	translationjobDescAttempts := translationjobFields[14].Descriptor()
+	// translationjob.DefaultAttempts holds the default value on creation for the attempts field.
+	translationjob.DefaultAttempts = translationjobDescAttempts.Default.(int)
+	// translationjobDescID is the schema descriptor for id field.
+	translationjobDescID := translationjobMixinFields0[0].Descriptor()
+	// translationjob.DefaultID holds the default value on creation for the id field.
+	translationjob.DefaultID = translationjobDescID.Default.(func() uuid.UUID)
 	walletMixin := schema.Wallet{}.Mixin()
 	walletMixinHooks0 := walletMixin[0].Hooks()
 	wallet.Hooks[0] = walletMixinHooks0[0]

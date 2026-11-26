@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:sticker-pack:1",
+  "title": "StickerPack",
+  "description": "Payload một version sticker pack của thư viện chat platform (module chat, owner F118; form Game Studio F082). Tên và alt text song ngữ: `vi` bắt buộc khi lưu nháp, `en` bắt buộc khi gửi duyệt (game_text_required_languages, NFR-I18N-002). Tệp chỉ qua presignChatAssetUpload, khóa bất biến media/<sha256>/<file> (R31). `stickers[].preview_url` là URL ký ngắn hạn do server thêm vào phản hồi, chỉ đọc, không lưu. Xem docs/03-social-multiplayer/CHAT_SYSTEM.md §7.5.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["code", "name_vi", "stickers"],
+  "properties": {
+    "code": { "type": "string", "maxLength": 64, "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$" },
+    "name_vi": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "name_en": { "type": "string", "maxLength": 128 },
+    "unlock_rule": {
+      "description": "Vắng = mặc định (mọi học sinh của tenant được gán). Một trong hai: vật phẩm (mã item, khớp item.granted) hoặc reward rule đã phát hành.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["item_id"],
+          "properties": { "item_id": { "type": "string", "maxLength": 64, "pattern": "^[a-z0-9_]{1,64}$" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reward_rule_id"],
+          "properties": { "reward_rule_id": { "type": "string", "format": "uuid" } }
+        }
+      ]
+    },
+    "unlock_hint_vi": { "type": "string", "maxLength": 1000 },
+    "unlock_hint_en": { "type": "string", "maxLength": 1000 },
+    "stickers": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["asset_key", "alt_text_vi"],
+        "properties": {
+          "sticker_id": { "type": "string", "format": "uuid", "description": "Do server cấp khi thêm sticker mới" },
+          "asset_key": { "type": "string", "maxLength": 512, "pattern": "^media/[0-9a-f]{64}/[A-Za-z0-9._-]{1,200}$" },
+          "content_type": { "type": "string", "enum": ["image/webp", "image/png"] },
+          "size_bytes": { "type": "integer", "minimum": 1, "maximum": 2097152 },
+          "alt_text_vi": { "type": "string", "minLength": 1, "maxLength": 1000 },
+          "alt_text_en": { "type": "string", "maxLength": 1000 },
+          "sort_order": { "type": "integer", "minimum": 0, "maximum": 1000 },
+          "preview_url": { "type": "string", "format": "uri", "maxLength": 2048, "readOnly": true }
+        }
+      }
+    }
+  }
+}

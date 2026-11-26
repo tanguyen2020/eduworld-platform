@@ -12,6 +12,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/gameadmin"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/gameconfig"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/i18ntext"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/liveops"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
@@ -68,12 +69,24 @@ func (h GameAdmin) view(t gameconfig.Type, r read.ConfigRow) gameadmin.ConfigVer
 	if payload == nil {
 		payload = map[string]any{}
 	}
-	return gameadmin.ConfigVersionView{ConfigType: t.Name, ConfigID: r.ConfigID, ConfigVersionID: r.VersionID, Version: r.VersionNo, Status: r.Status,
+	v := gameadmin.ConfigVersionView{ConfigType: t.Name, ConfigID: r.ConfigID, ConfigVersionID: r.VersionID, Version: r.VersionNo, Status: r.Status,
 		Title: r.Title, Payload: payload, AuthorID: r.AuthorID, ReviewerID: r.ReviewerID, ReviewNote: r.ReviewNote, ChangeNote: r.ChangeNote,
 		BasedOnVersion: r.BasedOnNo, IsCurrent: r.IsCurrent, PublishedAt: r.PublishedAt, UpdatedAt: r.UpdatedAt.UTC(),
 		ThumbnailURL: h.renderURL(r.ThumbnailSHA, gameconfig.MediaRenderThumbnail), TurntableURL: h.renderURL(r.TurntableSHA, gameconfig.MediaRenderTurntable),
 		RenderStatus: gameconfig.ThumbnailState(r.ThumbnailSHA != nil, gameconfig.RenderStatus(deref(r.RenderJob))),
 		ETag:         gameadmin.ETagOf(r.Revision)}
+	v.TranslationStatus = r.TranslationStatus
+	if r.TranslationStatus != nil {
+		v.MissingFields = r.MissingFields
+		if v.MissingFields == nil {
+			v.MissingFields = []string{}
+		}
+		v.OutdatedFields = make([]gameadmin.OutdatedField, 0, len(r.OutdatedFields))
+		for _, o := range r.OutdatedFields {
+			v.OutdatedFields = append(v.OutdatedFields, gameadmin.OutdatedField{Pointer: o.Pointer, TranslatedInVersion: o.TranslatedInVersion})
+		}
+	}
+	return v
 }
 
 func deref(s *string) string {
@@ -108,7 +121,9 @@ type ConfigPage struct {
 // ConfigListInput is the query of listGameConfigs_game: From/To (YYYY-MM-DD, ICT) only for events (calendar window).
 type ConfigListInput struct {
 	Status, From, To, Cursor string
-	Limit                    int
+	// TranslationStatus filters on the translation state of the newest version (F082-AC-09).
+	TranslationStatus string
+	Limit             int
 }
 
 // eventsType is the config type of the events calendar window.
@@ -131,6 +146,9 @@ func (h GameAdmin) List(ctx context.Context, configType string, in ConfigListInp
 		}
 		return out, err
 	}
+	if in.TranslationStatus != "" && !i18ntext.ValidStatus(in.TranslationStatus) {
+		return out, problem.Invalid("translation_status", problem.SubInvalid, "complete, partial or outdated")
+	}
 	if win != nil && configType != eventsType {
 		return out, problem.Invalid("from", problem.SubInvalid, "from/to filter only config_type events")
 	}
@@ -140,7 +158,7 @@ func (h GameAdmin) List(ctx context.Context, configType string, in ConfigListInp
 		return out, problem.New(problem.BadRequest, "invalid cursor")
 	}
 	err = h.reader(ctx, configType, func(ctx context.Context, t gameconfig.Type) error {
-		f := read.ConfigFilter{ItemType: t.ItemType, Status: in.Status, Limit: n + 1}
+		f := read.ConfigFilter{ItemType: t.ItemType, Status: in.Status, TranslationStatus: in.TranslationStatus, Limit: n + 1}
 		if cur != nil {
 			id := cur.ID
 			f.After = &id
@@ -433,8 +451,11 @@ func (h GameAdmin) MediaAsset(ctx context.Context, id uuid.UUID) (out MediaView,
 	if err != nil {
 		return out, err
 	}
-	if err := gameadmin.RequireAnyRead(ctx, p); err != nil {
-		return out, err
+	// A translator follows the check of the translation file it uploaded (kind document, F082-AC-15).
+	if !p.Has(authz.PermGameContentTranslate) {
+		if err := gameadmin.RequireAnyRead(ctx, p); err != nil {
+			return out, err
+		}
 	}
 	err = h.Read.Read(tenancy.WithScope(ctx, sc), func(ctx context.Context) error {
 		a, err := h.Data.MediaAsset(ctx, id)

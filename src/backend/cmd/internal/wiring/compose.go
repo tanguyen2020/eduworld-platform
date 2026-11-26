@@ -90,6 +90,9 @@ func Compose(r *module.Registry) (*Composition, error) {
 	if f := cmp.Facade(); f != nil {
 		in.Competition = f
 	}
+	if f := cht.Facade(); f != nil {
+		in.Chat = f // F082 T040: sticker pack assignments
+	}
 	if err := idm.Wire(in); err != nil {
 		return nil, err
 	}

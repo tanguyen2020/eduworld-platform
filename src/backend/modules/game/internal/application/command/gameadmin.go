@@ -20,6 +20,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/gameconfig"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/i18ntext"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
@@ -85,7 +86,9 @@ type GameAdmin struct {
 	Audit    write.Auditor
 	Metrics  GameAdminMetrics
 	Policy   GameAdminPolicy
-	Now      func() time.Time
+	// Translations stores the translation state of each saved version (F082-AC-08); nil = not computed (unit tests).
+	Translations write.TranslationStore
+	Now          func() time.Time
 }
 
 // ConfigVersionView, ReleaseView and UsageView are the contract views (application/gameadmin).
@@ -159,7 +162,13 @@ func (h GameAdmin) prepare(ctx context.Context, t gameconfig.Type, doc map[strin
 	if len(b) > gameconfig.MaxPayloadBytes {
 		return nil, "", "", problem.Invalid("payload", problem.SubMaxLength, "at most 65536 bytes")
 	}
-	parsed, err := h.Kernel.Validate(ctx, ContentItem{Type: t.ItemType, Payload: b}, now)
+	// A draft may still miss a translation (F082-AC-08): the type checks run on a copy whose missing languages are filled,
+	// the stored payload keeps the gap; submit_review and publish check the real payload (Clarifications 2026-11-26).
+	vb, err := json.Marshal(i18ntext.ValidationCopy(doc, h.Policy.RequiredLanguages))
+	if err != nil {
+		return nil, "", "", err
+	}
+	parsed, err := h.Kernel.Validate(ctx, ContentItem{Type: t.ItemType, Payload: vb}, now)
 	if err != nil {
 		return nil, "", "", err
 	}
@@ -251,6 +260,9 @@ func (h GameAdmin) Create(ctx context.Context, configType string, in Draft) (out
 			return err
 		}
 		out = configView(t, v, false)
+		if err := h.saveTranslationState(ctx, t, v, nil, nil, now, &out); err != nil {
+			return err
+		}
 		return idempotency.SetResult(ctx, out)
 	})
 	if err == nil {
@@ -322,6 +334,9 @@ func (h GameAdmin) CreateVersion(ctx context.Context, configType string, configI
 		out = configView(t, v, false)
 		bn := src.VersionNo
 		out.BasedOnVersion = &bn
+		if err := h.saveTranslationState(ctx, t, v, src.Payload, &src.ID, now, &out); err != nil {
+			return err
+		}
 		return idempotency.SetResult(ctx, out)
 	})
 	if err == nil {
@@ -428,7 +443,7 @@ func (h GameAdmin) UpdateDraft(ctx context.Context, configType string, configID 
 		if err := h.renderStatus(ctx, &out); err != nil {
 			return err
 		}
-		return nil
+		return h.saveTranslationState(ctx, t, next, v.Payload, &v.ID, now, &out)
 	})
 	if err == nil {
 		h.metric(configType, "update")

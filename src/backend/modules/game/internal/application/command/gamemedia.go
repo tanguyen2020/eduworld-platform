@@ -108,7 +108,12 @@ func (h GameMedia) Presign(ctx context.Context, in PresignInput) (out PresignRes
 	if err != nil {
 		return out, err
 	}
-	if err := gameadmin.RequireAnyWrite(ctx, p); err != nil {
+	// A translation file (kind document, F082) needs game.content.translate; any other kind a console write permission.
+	if gameconfig.MediaKind(in.Kind) == gameconfig.MediaDocument {
+		if err := authz.Require(ctx, p, authz.PermGameContentTranslate, authz.Resource{}); err != nil {
+			return out, err
+		}
+	} else if err := gameadmin.RequireAnyWrite(ctx, p); err != nil {
 		return out, err
 	}
 	u := gameconfig.Upload{Kind: gameconfig.MediaKind(in.Kind), MIME: in.MIME, Size: in.Size, SHA256: in.SHA256, Filename: in.Filename, License: in.License}
@@ -247,7 +252,11 @@ func (h GameMedia) processOne(ctx context.Context, a write.MediaAsset, now time.
 	if int64(len(data)) != a.Size || hex.EncodeToString(sum[:]) != a.SHA256 {
 		return true, h.finish(ctx, a.ID, nil, gameconfig.RejectChecksumMismatch, now)
 	}
-	if !pkgmedia.Compatible(a.MIME, pkgmedia.Sniff(data)) {
+	if a.Kind == string(gameconfig.MediaDocument) {
+		if !gameconfig.TextDocument(data) {
+			return true, h.finish(ctx, a.ID, nil, gameconfig.RejectTypeMismatch, now)
+		}
+	} else if !pkgmedia.Compatible(a.MIME, pkgmedia.Sniff(data)) {
 		return true, h.finish(ctx, a.ID, nil, gameconfig.RejectTypeMismatch, now)
 	}
 	if h.Scanner != nil {
@@ -258,6 +267,11 @@ func (h GameMedia) processOne(ctx context.Context, a write.MediaAsset, now time.
 		if !clean {
 			return true, h.finish(ctx, a.ID, nil, gameconfig.RejectVirus, now)
 		}
+	}
+	if a.Kind == string(gameconfig.MediaDocument) {
+		// A translation file stays in the private quarantine bucket once checked: never public, never on the CDN (R31).
+		ready := a
+		return true, h.finish(ctx, a.ID, &ready, "", now)
 	}
 	key := gameconfig.OriginalKey(a.SHA256, gameconfig.MediaKind(a.Kind), a.MIME)
 	if err := h.Storage.Put(ctx, pkgmedia.BucketPublic, key, bytes.NewReader(data), int64(len(data)), a.MIME, pkgmedia.ImmutableCacheControl); err != nil {
@@ -288,10 +302,17 @@ func (h GameMedia) finish(ctx context.Context, id uuid.UUID, ready *write.MediaA
 			return h.Events.Publish(ctx, write.Event{Type: EventMediaRejected, SubjectType: "media", SubjectID: id.String(), Platform: true,
 				OccurredAt: now, Payload: map[string]any{"asset_id": id, "tenant_id": nil, "reason": reason}})
 		}
-		cur.Status, cur.Bucket, cur.Variants, cur.Width, cur.Height = string(gameconfig.MediaReady), pkgmedia.BucketPublic, ready.Variants,
+		bucket := pkgmedia.BucketPublic
+		if ready.Kind == string(gameconfig.MediaDocument) {
+			bucket = pkgmedia.BucketQuarantine // a document is never published (kind document)
+		}
+		cur.Status, cur.Bucket, cur.Variants, cur.Width, cur.Height = string(gameconfig.MediaReady), bucket, ready.Variants,
 			ready.Width, ready.Height
 		if err := h.Store.SaveAsset(ctx, *cur, now); err != nil {
 			return err
+		}
+		if bucket != pkgmedia.BucketPublic {
+			return nil // a translation file is private: no media.processed (its consumers handle public content only)
 		}
 		return h.Events.Publish(ctx, write.Event{Type: EventMediaProcessed, SubjectType: "media", SubjectID: id.String(), Platform: true,
 			OccurredAt: now, Payload: map[string]any{"asset_id": id, "tenant_id": nil, "sha256": cur.SHA256, "bucket": pkgmedia.BucketPublic,

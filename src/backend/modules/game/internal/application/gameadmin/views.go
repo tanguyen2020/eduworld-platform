@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/i18ntext"
 )
 
 // ConfigVersionView is GameConfigVersion of the contract; ETag is the header of the response.
@@ -30,7 +32,17 @@ type ConfigVersionView struct {
 	RenderStatus string `json:"render_status,omitempty"`
 	// CalendarWarnings is set (possibly empty) only by listGameConfigs events with a from/to window (F079-AC-14).
 	CalendarWarnings *[]CalendarWarning `json:"calendar_warnings,omitempty"`
-	ETag             string             `json:"-"`
+	// TranslationStatus, MissingFields and OutdatedFields are the translation state of the version (F082-AC-08).
+	TranslationStatus *string         `json:"translation_status,omitempty"`
+	MissingFields     []string        `json:"missing_fields,omitempty"`
+	OutdatedFields    []OutdatedField `json:"outdated_fields,omitempty"`
+	ETag              string          `json:"-"`
+}
+
+// OutdatedField is GameConfigVersion.outdated_fields[].
+type OutdatedField struct {
+	Pointer             string `json:"pointer"`
+	TranslatedInVersion int    `json:"translated_in_version"`
 }
 
 // CalendarWarning is GameEventCalendarWarning of the contract.
@@ -76,3 +88,25 @@ type UsageView struct {
 
 // ETagOf is the entity tag of a version row (its optimistic revision).
 func ETagOf(revision int64) string { return `"` + strconv.FormatInt(revision, 10) + `"` }
+
+// TranslationJobView is TranslationJob of the contract (download_url/expires_at are signed by the query, F082).
+type TranslationJobView struct {
+	JobID          uuid.UUID        `json:"job_id"`
+	Kind           string           `json:"kind"`
+	Status         string           `json:"status"`
+	Format         string           `json:"format"`
+	TargetLanguage string           `json:"target_language"`
+	DryRun         bool             `json:"dry_run"`
+	CreatedAt      time.Time        `json:"created_at"`
+	FinishedAt     *time.Time       `json:"finished_at,omitempty"`
+	ErrorMessage   *string          `json:"error_message,omitempty"`
+	DownloadURL    *string          `json:"download_url,omitempty"`
+	ExpiresAt      *time.Time       `json:"expires_at,omitempty"`
+	Report         *i18ntext.Report `json:"report,omitempty"`
+}
+
+// BucketExports is the private bucket of generated files (ADR-0044); TranslationKeyPrefix the folder of translation files.
+const (
+	BucketExports        = "ew-exports"
+	TranslationKeyPrefix = "translations/"
+)

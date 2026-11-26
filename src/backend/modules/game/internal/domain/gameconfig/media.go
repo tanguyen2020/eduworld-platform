@@ -1,11 +1,13 @@
 package gameconfig
 
 import (
+	"bytes"
 	"errors"
 	"math"
 	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // MediaKind is game.media_assets.kind.
@@ -18,6 +20,8 @@ const (
 	MediaModel3D         MediaKind = "model3d"
 	MediaRenderThumbnail MediaKind = "render_thumbnail"
 	MediaRenderTurntable MediaKind = "render_turntable"
+	// MediaDocument is a translation file to import (XLIFF/CSV, F082): checked, kept private, never published.
+	MediaDocument MediaKind = "document"
 )
 
 // MediaStatus is game.media_assets.status.
@@ -67,6 +71,9 @@ var mediaRules = map[MediaKind]mediaRule{
 		Ext: map[string]string{"audio/ogg": "ogg", "audio/mpeg": "mp3", "audio/wav": "wav", "audio/x-wav": "wav"}},
 	MediaModel3D: {MIME: []string{"model/gltf-binary", "application/x-godot-pck"}, MaxBytes: 50 * mb,
 		Ext: map[string]string{"model/gltf-binary": "glb", "application/x-godot-pck": "pck"}},
+	// document: translation files to import (Clarifications F082 2026-11-26, media_max_bytes_by_kind).
+	MediaDocument: {MIME: []string{"application/xliff+xml", "text/csv"}, MaxBytes: 5 * mb,
+		Ext: map[string]string{"application/xliff+xml": "xlf", "text/csv": "csv"}},
 }
 
 var shaRe = regexp.MustCompile(`^[0-9a-f]{64}$`)
@@ -98,6 +105,12 @@ func (u Upload) Validate() error {
 		return ErrMediaInput
 	}
 	return nil
+}
+
+// TextDocument reports a translation file body: valid UTF-8 text without NUL bytes (XLIFF/CSV are text; anything binary
+// is refused by the media pipeline as type_mismatch).
+func TextDocument(b []byte) bool {
+	return utf8.Valid(b) && !bytes.ContainsRune(b, 0)
 }
 
 // Extension returns the extension of the stored original of a kind/MIME ("bin" when unknown).

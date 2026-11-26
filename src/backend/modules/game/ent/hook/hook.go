@@ -297,6 +297,18 @@ func (f CommunityGoalProgressFunc) Mutate(ctx context.Context, m ent.Mutation) (
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommunityGoalProgressMutation", m)
 }
 
+// The ConfigTranslationStateFunc type is an adapter to allow the use of ordinary
+// function as ConfigTranslationState mutator.
+type ConfigTranslationStateFunc func(context.Context, *ent.ConfigTranslationStateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ConfigTranslationStateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ConfigTranslationStateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ConfigTranslationStateMutation", m)
+}
+
 // The ContentReleaseFunc type is an adapter to allow the use of ordinary
 // function as ContentRelease mutator.
 type ContentReleaseFunc func(context.Context, *ent.ContentReleaseMutation) (ent.Value, error)
@@ -1027,6 +1039,18 @@ func (f TenantResourceAssignmentFunc) Mutate(ctx context.Context, m ent.Mutation
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TenantResourceAssignmentMutation", m)
+}
+
+// The TranslationJobFunc type is an adapter to allow the use of ordinary
+// function as TranslationJob mutator.
+type TranslationJobFunc func(context.Context, *ent.TranslationJobMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TranslationJobFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TranslationJobMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TranslationJobMutation", m)
 }
 
 // The WalletFunc type is an adapter to allow the use of ordinary

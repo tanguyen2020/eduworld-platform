@@ -36,20 +36,33 @@ const configSelect = `SELECT c.config_id, c.item_type, c.item_key, v.config_vers
 		(SELECT cv.version_no FROM game.config_versions cv WHERE cv.config_version_id = c.current_version_id AND cv.deleted_at IS NULL),
 		(SELECT j.status FROM game.render_jobs j WHERE j.config_version_id = v.config_version_id AND j.kind = 'render_thumbnail'
 			AND j.deleted_at IS NULL ORDER BY CASE j.status WHEN 'queued' THEN 0 WHEN 'failed' THEN 0 WHEN 'dead' THEN 1 ELSE 2 END,
-			j.updated_at DESC, j.render_job_id LIMIT 1)
+			j.updated_at DESC, j.render_job_id LIMIT 1),
+		ts.translation_status, ts.missing_pointers, ts.outdated_pointers
 	FROM game.config_items c
 	JOIN game.config_versions v ON v.config_id = c.config_id AND v.deleted_at IS NULL
-	LEFT JOIN game.config_versions b ON b.config_version_id = v.based_on_version_id AND b.deleted_at IS NULL`
+	LEFT JOIN game.config_versions b ON b.config_version_id = v.based_on_version_id AND b.deleted_at IS NULL
+	LEFT JOIN game.config_translation_states ts ON ts.config_version_id = v.config_version_id AND ts.deleted_at IS NULL`
 
 func scanConfig(row interface{ Scan(...any) error }) (read.ConfigRow, error) {
 	var r read.ConfigRow
-	var title, note, change, thumb, turn, job sql.NullString
-	var payload []byte
+	var title, note, change, thumb, turn, job, tstatus sql.NullString
+	var payload, missing, outdated []byte
 	err := row.Scan(&r.ConfigID, &r.ItemType, &r.ItemKey, &r.VersionID, &r.VersionNo, &r.Status, &title, &payload, &r.AuthorID, &r.ReviewerID,
 		&note, &change, &r.BasedOnNo, &r.PublishedAt, &r.PublishedBy, &r.UpdatedAt, &r.Revision, &r.IsCurrent, &thumb, &turn, &r.ScheduledAt,
-		&r.CurrentVersion, &job)
+		&r.CurrentVersion, &job, &tstatus, &missing, &outdated)
 	if err != nil {
 		return r, err
+	}
+	r.TranslationStatus = ns(tstatus)
+	if len(missing) > 0 {
+		if err := json.Unmarshal(missing, &r.MissingFields); err != nil {
+			return r, fmt.Errorf("missing_pointers: %w", err)
+		}
+	}
+	if len(outdated) > 0 {
+		if err := json.Unmarshal(outdated, &r.OutdatedFields); err != nil {
+			return r, fmt.Errorf("outdated_pointers: %w", err)
+		}
 	}
 	r.Payload = payload
 	r.Title, r.ReviewNote, r.ChangeNote, r.ThumbnailSHA, r.TurntableSHA = ns(title), ns(note), ns(change), ns(thumb), ns(turn)
@@ -83,6 +96,20 @@ var listWindow = `WITH newest AS (
 	` + configSelect + `
 	WHERE v.config_version_id IN (SELECT config_version_id FROM page) AND c.deleted_at IS NULL ORDER BY c.config_id`
 
+// listTranslation is listGameConfigs_game with translation_status (F082-AC-09): the newest version of each item (or its
+// newest version of status), kept when the translation state of that version equals $5; keyset page on config_id.
+//
+// tenancyguard:ok platform content (G tables, no tenant_id); deleted_at filtered on every table; keyset on config_id
+var listTranslation = `WITH newest AS (
+		SELECT DISTINCT ON (c.config_id) c.config_id, v.config_version_id
+		FROM game.config_items c JOIN game.config_versions v ON v.config_id = c.config_id AND v.deleted_at IS NULL
+		WHERE c.item_type = $1 AND c.deleted_at IS NULL AND ($2 = '' OR v.status = $2) AND ($3::uuid IS NULL OR c.config_id > $3)
+		ORDER BY c.config_id, v.version_no DESC),
+	page AS (SELECT n.config_version_id FROM newest n JOIN game.config_translation_states s ON s.config_version_id = n.config_version_id
+		AND s.deleted_at IS NULL WHERE s.translation_status = $5 ORDER BY n.config_id LIMIT $4)
+	` + configSelect + `
+	WHERE v.config_version_id IN (SELECT config_version_id FROM page) AND c.deleted_at IS NULL ORDER BY c.config_id`
+
 func ns(s sql.NullString) *string {
 	if !s.Valid {
 		return nil
@@ -98,7 +125,9 @@ func (GameConfigs) List(ctx context.Context, f read.ConfigFilter) ([]read.Config
 		return nil, err
 	}
 	var rows *sql.Rows
-	if f.WindowStart != nil && f.WindowEnd != nil {
+	if f.TranslationStatus != "" {
+		rows, err = t.QueryContext(ctx, listTranslation, f.ItemType, f.Status, f.After, f.Limit, f.TranslationStatus)
+	} else if f.WindowStart != nil && f.WindowEnd != nil {
 		rows, err = t.QueryContext(ctx, listWindow, f.ItemType, f.Status, f.After, f.Limit, *f.WindowStart, *f.WindowEnd)
 	} else {
 		// tenancyguard:ok platform content (G tables, no tenant_id); deleted_at filtered on every table; keyset on config_id

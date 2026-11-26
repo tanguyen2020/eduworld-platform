@@ -35,6 +35,17 @@ type ConfigRow struct {
 	// RenderJob is the status of the render_thumbnail job of the version (queued/failed first, then dead, then done; nil
 	// when none) — render_status with ThumbnailSHA (F079-AC-16).
 	RenderJob *string
+	// TranslationStatus, MissingFields and OutdatedFields are the translation state of the version (F082-AC-08; nil when
+	// not computed yet).
+	TranslationStatus *string
+	MissingFields     []string
+	OutdatedFields    []OutdatedField
+}
+
+// OutdatedField is one outdated game text of a version (outdated_fields[]).
+type OutdatedField struct {
+	Pointer             string `json:"pointer"`
+	TranslatedInVersion int    `json:"translated_in_version"`
 }
 
 // ConfigFilter is listGameConfigs_game: one row per item (its newest version, or its newest version of Status),
@@ -47,6 +58,8 @@ type ConfigFilter struct {
 	// WindowStart/WindowEnd keep the items whose listed version has a payload.schedule [start_at, end_at) intersecting
 	// [WindowStart, WindowEnd) (events calendar, F079-AC-14); nil = no window.
 	WindowStart, WindowEnd *time.Time
+	// TranslationStatus keeps the items whose newest version has this translation state (F082-AC-09); "" = any.
+	TranslationStatus string
 }
 
 // CalendarWarningRow is one decoration_area_overlap of a listed event version with another event of the window.

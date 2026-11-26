@@ -7415,6 +7415,7 @@ components:
         - item
         - shop_item
         - event_template
+        - sticker_pack
         - school_settings
         - tenant_settings
         - user

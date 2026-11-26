@@ -41,6 +41,10 @@ func (m *memStorage) PresignPut(_ context.Context, bucket, key string, size int6
 	return "https://s3.test/" + bucket + "/" + key + "?ttl=" + ttl.String(), map[string]string{"Content-Type": mime}, nil
 }
 
+func (m *memStorage) PresignGet(_ context.Context, bucket, key string, ttl time.Duration) (string, error) {
+	return "https://s3.test/" + bucket + "/" + key + "?get&ttl=" + ttl.String(), nil
+}
+
 func (m *memStorage) Head(_ context.Context, bucket, key string) (int64, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -131,7 +135,8 @@ func (e *env) learningFacade() modules.LearningAttempts {
 func (e *env) adminUC() command.GameAdmin {
 	k := e.publisher()
 	return command.GameAdmin{UoW: e.uow, Store: writerepo.GameConfigRepo{}, Kernel: &k, Learning: e.learningFacade(),
-		Events: writerepo.Publisher{W: e.writer}, Audit: writerepo.Auditor{R: e.rec}, Policy: e.adminPolicy(), Now: e.clock.Now}
+		Events: writerepo.Publisher{W: e.writer}, Audit: writerepo.Auditor{R: e.rec}, Policy: e.adminPolicy(), Now: e.clock.Now,
+		Translations: writerepo.TranslationRepo{}}
 }
 
 func (e *env) adminQueries() query.GameAdmin {

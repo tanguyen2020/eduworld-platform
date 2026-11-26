@@ -938,6 +938,49 @@ var (
 			},
 		},
 	}
+	// ConfigTranslationStatesColumns holds the columns for the "config_translation_states" table.
+	ConfigTranslationStatesColumns = []*schema.Column{
+		{Name: "config_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "config_type", Type: field.TypeString, Size: 64},
+		{Name: "config_id", Type: field.TypeUUID},
+		{Name: "translation_status", Type: field.TypeString, Size: 64},
+		{Name: "missing_pointers", Type: field.TypeJSON},
+		{Name: "outdated_pointers", Type: field.TypeJSON},
+		{Name: "translation_meta", Type: field.TypeJSON},
+		{Name: "computed_at", Type: field.TypeTime},
+	}
+	// ConfigTranslationStatesTable holds the schema information for the "config_translation_states" table.
+	ConfigTranslationStatesTable = &schema.Table{
+		Name:       "config_translation_states",
+		Columns:    ConfigTranslationStatesColumns,
+		PrimaryKey: []*schema.Column{ConfigTranslationStatesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "config_translation_states_status_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigTranslationStatesColumns[9], ConfigTranslationStatesColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "config_translation_states_item_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigTranslationStatesColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// ContentReleasesColumns holds the columns for the "content_releases" table.
 	ContentReleasesColumns = []*schema.Column{
 		{Name: "release_id", Type: field.TypeUUID},
@@ -3181,6 +3224,59 @@ var (
 			},
 		},
 	}
+	// TranslationJobsColumns holds the columns for the "translation_jobs" table.
+	TranslationJobsColumns = []*schema.Column{
+		{Name: "job_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "kind", Type: field.TypeString, Size: 64},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "format", Type: field.TypeString, Size: 64},
+		{Name: "source_language", Type: field.TypeString, Size: 8},
+		{Name: "target_language", Type: field.TypeString, Size: 8},
+		{Name: "only_missing", Type: field.TypeBool, Default: true},
+		{Name: "dry_run", Type: field.TypeBool, Default: false},
+		{Name: "request", Type: field.TypeJSON},
+		{Name: "input_asset_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "result_storage_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "report", Type: field.TypeJSON, Nullable: true},
+		{Name: "error_message", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "requested_by", Type: field.TypeUUID},
+		{Name: "idempotency_key", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "attempts", Type: field.TypeInt, Default: 0},
+		{Name: "started_at", Type: field.TypeTime, Nullable: true},
+		{Name: "finished_at", Type: field.TypeTime, Nullable: true},
+	}
+	// TranslationJobsTable holds the schema information for the "translation_jobs" table.
+	TranslationJobsTable = &schema.Table{
+		Name:       "translation_jobs",
+		Columns:    TranslationJobsColumns,
+		PrimaryKey: []*schema.Column{TranslationJobsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "translation_jobs_idem_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TranslationJobsColumns[21], TranslationJobsColumns[22]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "idempotency_key IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "translation_jobs_queue_idx",
+				Unique:  false,
+				Columns: []*schema.Column{TranslationJobsColumns[10], TranslationJobsColumns[1]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status IN ('queued', 'running') AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// WalletsColumns holds the columns for the "wallets" table.
 	WalletsColumns = []*schema.Column{
 		{Name: "wallet_id", Type: field.TypeUUID},
@@ -3446,6 +3542,7 @@ var (
 		CommunityGoalsTable,
 		CommunityGoalContributionsTable,
 		CommunityGoalProgressTable,
+		ConfigTranslationStatesTable,
 		ContentReleasesTable,
 		CurrenciesTable,
 		CurrencyLedgerTable,
@@ -3507,6 +3604,7 @@ var (
 		StoryProgressTable,
 		StudentAchievementsTable,
 		TenantResourceAssignmentsTable,
+		TranslationJobsTable,
 		WalletsTable,
 		WorldAreasTable,
 		WorldAreaUnlocksTable,
@@ -3589,6 +3687,9 @@ func init() {
 	}
 	CommunityGoalProgressTable.Annotation = &entsql.Annotation{
 		Table: "community_goal_progress",
+	}
+	ConfigTranslationStatesTable.Annotation = &entsql.Annotation{
+		Table: "config_translation_states",
 	}
 	ContentReleasesTable.Annotation = &entsql.Annotation{
 		Table: "content_releases",
@@ -3772,6 +3873,9 @@ func init() {
 	}
 	TenantResourceAssignmentsTable.Annotation = &entsql.Annotation{
 		Table: "tenant_resource_assignments",
+	}
+	TranslationJobsTable.Annotation = &entsql.Annotation{
+		Table: "translation_jobs",
 	}
 	WalletsTable.Annotation = &entsql.Annotation{
 		Table: "wallets",

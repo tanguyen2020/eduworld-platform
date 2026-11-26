@@ -36,6 +36,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoal"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoalcontribution"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoalprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/configtranslationstate"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currencyledgerentry"
@@ -97,6 +98,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storyprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/studentachievement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/tenantresourceassignment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/translationjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/wallet"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldarea"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaunlock"
@@ -188,6 +190,7 @@ func checkColumn(t, c string) error {
 			communitygoal.Table:             communitygoal.ValidColumn,
 			communitygoalcontribution.Table: communitygoalcontribution.ValidColumn,
 			communitygoalprogress.Table:     communitygoalprogress.ValidColumn,
+			configtranslationstate.Table:    configtranslationstate.ValidColumn,
 			contentrelease.Table:            contentrelease.ValidColumn,
 			currency.Table:                  currency.ValidColumn,
 			currencyledgerentry.Table:       currencyledgerentry.ValidColumn,
@@ -249,6 +252,7 @@ func checkColumn(t, c string) error {
 			storyprogress.Table:             storyprogress.ValidColumn,
 			studentachievement.Table:        studentachievement.ValidColumn,
 			tenantresourceassignment.Table:  tenantresourceassignment.ValidColumn,
+			translationjob.Table:            translationjob.ValidColumn,
 			wallet.Table:                    wallet.ValidColumn,
 			worldarea.Table:                 worldarea.ValidColumn,
 			worldareaunlock.Table:           worldareaunlock.ValidColumn,

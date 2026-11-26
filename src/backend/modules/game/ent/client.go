@@ -39,6 +39,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoal"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoalcontribution"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoalprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/configtranslationstate"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currencyledgerentry"
@@ -100,6 +101,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storyprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/studentachievement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/tenantresourceassignment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/translationjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/wallet"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldarea"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaunlock"
@@ -164,6 +166,8 @@ type Client struct {
 	CommunityGoalContribution *CommunityGoalContributionClient
 	// CommunityGoalProgress is the client for interacting with the CommunityGoalProgress builders.
 	CommunityGoalProgress *CommunityGoalProgressClient
+	// ConfigTranslationState is the client for interacting with the ConfigTranslationState builders.
+	ConfigTranslationState *ConfigTranslationStateClient
 	// ContentRelease is the client for interacting with the ContentRelease builders.
 	ContentRelease *ContentReleaseClient
 	// Currency is the client for interacting with the Currency builders.
@@ -286,6 +290,8 @@ type Client struct {
 	StudentAchievement *StudentAchievementClient
 	// TenantResourceAssignment is the client for interacting with the TenantResourceAssignment builders.
 	TenantResourceAssignment *TenantResourceAssignmentClient
+	// TranslationJob is the client for interacting with the TranslationJob builders.
+	TranslationJob *TranslationJobClient
 	// Wallet is the client for interacting with the Wallet builders.
 	Wallet *WalletClient
 	// WorldArea is the client for interacting with the WorldArea builders.
@@ -335,6 +341,7 @@ func (c *Client) init() {
 	c.CommunityGoal = NewCommunityGoalClient(c.config)
 	c.CommunityGoalContribution = NewCommunityGoalContributionClient(c.config)
 	c.CommunityGoalProgress = NewCommunityGoalProgressClient(c.config)
+	c.ConfigTranslationState = NewConfigTranslationStateClient(c.config)
 	c.ContentRelease = NewContentReleaseClient(c.config)
 	c.Currency = NewCurrencyClient(c.config)
 	c.CurrencyLedgerEntry = NewCurrencyLedgerEntryClient(c.config)
@@ -396,6 +403,7 @@ func (c *Client) init() {
 	c.StoryProgress = NewStoryProgressClient(c.config)
 	c.StudentAchievement = NewStudentAchievementClient(c.config)
 	c.TenantResourceAssignment = NewTenantResourceAssignmentClient(c.config)
+	c.TranslationJob = NewTranslationJobClient(c.config)
 	c.Wallet = NewWalletClient(c.config)
 	c.WorldArea = NewWorldAreaClient(c.config)
 	c.WorldAreaUnlock = NewWorldAreaUnlockClient(c.config)
@@ -522,6 +530,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		CommunityGoal:             NewCommunityGoalClient(cfg),
 		CommunityGoalContribution: NewCommunityGoalContributionClient(cfg),
 		CommunityGoalProgress:     NewCommunityGoalProgressClient(cfg),
+		ConfigTranslationState:    NewConfigTranslationStateClient(cfg),
 		ContentRelease:            NewContentReleaseClient(cfg),
 		Currency:                  NewCurrencyClient(cfg),
 		CurrencyLedgerEntry:       NewCurrencyLedgerEntryClient(cfg),
@@ -583,6 +592,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		StoryProgress:             NewStoryProgressClient(cfg),
 		StudentAchievement:        NewStudentAchievementClient(cfg),
 		TenantResourceAssignment:  NewTenantResourceAssignmentClient(cfg),
+		TranslationJob:            NewTranslationJobClient(cfg),
 		Wallet:                    NewWalletClient(cfg),
 		WorldArea:                 NewWorldAreaClient(cfg),
 		WorldAreaUnlock:           NewWorldAreaUnlockClient(cfg),
@@ -633,6 +643,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		CommunityGoal:             NewCommunityGoalClient(cfg),
 		CommunityGoalContribution: NewCommunityGoalContributionClient(cfg),
 		CommunityGoalProgress:     NewCommunityGoalProgressClient(cfg),
+		ConfigTranslationState:    NewConfigTranslationStateClient(cfg),
 		ContentRelease:            NewContentReleaseClient(cfg),
 		Currency:                  NewCurrencyClient(cfg),
 		CurrencyLedgerEntry:       NewCurrencyLedgerEntryClient(cfg),
@@ -694,6 +705,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		StoryProgress:             NewStoryProgressClient(cfg),
 		StudentAchievement:        NewStudentAchievementClient(cfg),
 		TenantResourceAssignment:  NewTenantResourceAssignmentClient(cfg),
+		TranslationJob:            NewTranslationJobClient(cfg),
 		Wallet:                    NewWalletClient(cfg),
 		WorldArea:                 NewWorldAreaClient(cfg),
 		WorldAreaUnlock:           NewWorldAreaUnlockClient(cfg),
@@ -736,9 +748,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.BossVersion, c.Challenge, c.ChallengeAttempt, c.ChallengeVersion,
 		c.CharacterCatalog, c.CharacterCatalogVersion, c.ClientManifest, c.Collection,
 		c.CollectionItem, c.CollectionProgress, c.CollectionVersion, c.CommunityGoal,
-		c.CommunityGoalContribution, c.CommunityGoalProgress, c.ContentRelease,
-		c.Currency, c.CurrencyLedgerEntry, c.EconomyAdjustment, c.Event,
-		c.EventParticipation, c.EventPointEntry, c.EventRun, c.EventTemplate,
+		c.CommunityGoalContribution, c.CommunityGoalProgress, c.ConfigTranslationState,
+		c.ContentRelease, c.Currency, c.CurrencyLedgerEntry, c.EconomyAdjustment,
+		c.Event, c.EventParticipation, c.EventPointEntry, c.EventRun, c.EventTemplate,
 		c.EventTemplateVersion, c.EventVersion, c.ExplorationProgress,
 		c.GameConfigItem, c.GameConfigVersion, c.GameProfile, c.GameSession,
 		c.InventoryItem, c.ItemDefinition, c.ItemDefinitionVersion, c.ItemLedgerEntry,
@@ -753,8 +765,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.SeasonPointEntry, c.SeasonTrack, c.SeasonTrackProgress, c.SeasonTrackVersion,
 		c.ShopItem, c.ShopItemVersion, c.ShopPurchase, c.StoryChapter,
 		c.StoryChapterVersion, c.StoryProgress, c.StudentAchievement,
-		c.TenantResourceAssignment, c.Wallet, c.WorldArea, c.WorldAreaUnlock,
-		c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap, c.XpLedgerEntry,
+		c.TenantResourceAssignment, c.TranslationJob, c.Wallet, c.WorldArea,
+		c.WorldAreaUnlock, c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap,
+		c.XpLedgerEntry,
 	} {
 		n.Use(hooks...)
 	}
@@ -770,9 +783,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.BossVersion, c.Challenge, c.ChallengeAttempt, c.ChallengeVersion,
 		c.CharacterCatalog, c.CharacterCatalogVersion, c.ClientManifest, c.Collection,
 		c.CollectionItem, c.CollectionProgress, c.CollectionVersion, c.CommunityGoal,
-		c.CommunityGoalContribution, c.CommunityGoalProgress, c.ContentRelease,
-		c.Currency, c.CurrencyLedgerEntry, c.EconomyAdjustment, c.Event,
-		c.EventParticipation, c.EventPointEntry, c.EventRun, c.EventTemplate,
+		c.CommunityGoalContribution, c.CommunityGoalProgress, c.ConfigTranslationState,
+		c.ContentRelease, c.Currency, c.CurrencyLedgerEntry, c.EconomyAdjustment,
+		c.Event, c.EventParticipation, c.EventPointEntry, c.EventRun, c.EventTemplate,
 		c.EventTemplateVersion, c.EventVersion, c.ExplorationProgress,
 		c.GameConfigItem, c.GameConfigVersion, c.GameProfile, c.GameSession,
 		c.InventoryItem, c.ItemDefinition, c.ItemDefinitionVersion, c.ItemLedgerEntry,
@@ -787,8 +800,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.SeasonPointEntry, c.SeasonTrack, c.SeasonTrackProgress, c.SeasonTrackVersion,
 		c.ShopItem, c.ShopItemVersion, c.ShopPurchase, c.StoryChapter,
 		c.StoryChapterVersion, c.StoryProgress, c.StudentAchievement,
-		c.TenantResourceAssignment, c.Wallet, c.WorldArea, c.WorldAreaUnlock,
-		c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap, c.XpLedgerEntry,
+		c.TenantResourceAssignment, c.TranslationJob, c.Wallet, c.WorldArea,
+		c.WorldAreaUnlock, c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap,
+		c.XpLedgerEntry,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -845,6 +859,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.CommunityGoalContribution.mutate(ctx, m)
 	case *CommunityGoalProgressMutation:
 		return c.CommunityGoalProgress.mutate(ctx, m)
+	case *ConfigTranslationStateMutation:
+		return c.ConfigTranslationState.mutate(ctx, m)
 	case *ContentReleaseMutation:
 		return c.ContentRelease.mutate(ctx, m)
 	case *CurrencyMutation:
@@ -967,6 +983,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.StudentAchievement.mutate(ctx, m)
 	case *TenantResourceAssignmentMutation:
 		return c.TenantResourceAssignment.mutate(ctx, m)
+	case *TranslationJobMutation:
+		return c.TranslationJob.mutate(ctx, m)
 	case *WalletMutation:
 		return c.Wallet.mutate(ctx, m)
 	case *WorldAreaMutation:
@@ -4222,6 +4240,141 @@ func (c *CommunityGoalProgressClient) mutate(ctx context.Context, m *CommunityGo
 		return (&CommunityGoalProgressDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown CommunityGoalProgress mutation op: %q", m.Op())
+	}
+}
+
+// ConfigTranslationStateClient is a client for the ConfigTranslationState schema.
+type ConfigTranslationStateClient struct {
+	config
+}
+
+// NewConfigTranslationStateClient returns a client for the ConfigTranslationState from the given config.
+func NewConfigTranslationStateClient(c config) *ConfigTranslationStateClient {
+	return &ConfigTranslationStateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `configtranslationstate.Hooks(f(g(h())))`.
+func (c *ConfigTranslationStateClient) Use(hooks ...Hook) {
+	c.hooks.ConfigTranslationState = append(c.hooks.ConfigTranslationState, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `configtranslationstate.Intercept(f(g(h())))`.
+func (c *ConfigTranslationStateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ConfigTranslationState = append(c.inters.ConfigTranslationState, interceptors...)
+}
+
+// Create returns a builder for creating a ConfigTranslationState entity.
+func (c *ConfigTranslationStateClient) Create() *ConfigTranslationStateCreate {
+	mutation := newConfigTranslationStateMutation(c.config, OpCreate)
+	return &ConfigTranslationStateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ConfigTranslationState entities.
+func (c *ConfigTranslationStateClient) CreateBulk(builders ...*ConfigTranslationStateCreate) *ConfigTranslationStateCreateBulk {
+	return &ConfigTranslationStateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ConfigTranslationStateClient) MapCreateBulk(slice any, setFunc func(*ConfigTranslationStateCreate, int)) *ConfigTranslationStateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ConfigTranslationStateCreateBulk{err: fmt.Errorf("calling to ConfigTranslationStateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ConfigTranslationStateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ConfigTranslationStateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ConfigTranslationState.
+func (c *ConfigTranslationStateClient) Update() *ConfigTranslationStateUpdate {
+	mutation := newConfigTranslationStateMutation(c.config, OpUpdate)
+	return &ConfigTranslationStateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ConfigTranslationStateClient) UpdateOne(_m *ConfigTranslationState) *ConfigTranslationStateUpdateOne {
+	mutation := newConfigTranslationStateMutation(c.config, OpUpdateOne, withConfigTranslationState(_m))
+	return &ConfigTranslationStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ConfigTranslationStateClient) UpdateOneID(id uuid.UUID) *ConfigTranslationStateUpdateOne {
+	mutation := newConfigTranslationStateMutation(c.config, OpUpdateOne, withConfigTranslationStateID(id))
+	return &ConfigTranslationStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ConfigTranslationState.
+func (c *ConfigTranslationStateClient) Delete() *ConfigTranslationStateDelete {
+	mutation := newConfigTranslationStateMutation(c.config, OpDelete)
+	return &ConfigTranslationStateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ConfigTranslationStateClient) DeleteOne(_m *ConfigTranslationState) *ConfigTranslationStateDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ConfigTranslationStateClient) DeleteOneID(id uuid.UUID) *ConfigTranslationStateDeleteOne {
+	builder := c.Delete().Where(configtranslationstate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ConfigTranslationStateDeleteOne{builder}
+}
+
+// Query returns a query builder for ConfigTranslationState.
+func (c *ConfigTranslationStateClient) Query() *ConfigTranslationStateQuery {
+	return &ConfigTranslationStateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeConfigTranslationState},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ConfigTranslationState entity by its id.
+func (c *ConfigTranslationStateClient) Get(ctx context.Context, id uuid.UUID) (*ConfigTranslationState, error) {
+	return c.Query().Where(configtranslationstate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ConfigTranslationStateClient) GetX(ctx context.Context, id uuid.UUID) *ConfigTranslationState {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ConfigTranslationStateClient) Hooks() []Hook {
+	hooks := c.hooks.ConfigTranslationState
+	return append(hooks[:len(hooks):len(hooks)], configtranslationstate.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ConfigTranslationStateClient) Interceptors() []Interceptor {
+	inters := c.inters.ConfigTranslationState
+	return append(inters[:len(inters):len(inters)], configtranslationstate.Interceptors[:]...)
+}
+
+func (c *ConfigTranslationStateClient) mutate(ctx context.Context, m *ConfigTranslationStateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ConfigTranslationStateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ConfigTranslationStateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ConfigTranslationStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ConfigTranslationStateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ConfigTranslationState mutation op: %q", m.Op())
 	}
 }
 
@@ -12458,6 +12611,141 @@ func (c *TenantResourceAssignmentClient) mutate(ctx context.Context, m *TenantRe
 	}
 }
 
+// TranslationJobClient is a client for the TranslationJob schema.
+type TranslationJobClient struct {
+	config
+}
+
+// NewTranslationJobClient returns a client for the TranslationJob from the given config.
+func NewTranslationJobClient(c config) *TranslationJobClient {
+	return &TranslationJobClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `translationjob.Hooks(f(g(h())))`.
+func (c *TranslationJobClient) Use(hooks ...Hook) {
+	c.hooks.TranslationJob = append(c.hooks.TranslationJob, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `translationjob.Intercept(f(g(h())))`.
+func (c *TranslationJobClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TranslationJob = append(c.inters.TranslationJob, interceptors...)
+}
+
+// Create returns a builder for creating a TranslationJob entity.
+func (c *TranslationJobClient) Create() *TranslationJobCreate {
+	mutation := newTranslationJobMutation(c.config, OpCreate)
+	return &TranslationJobCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TranslationJob entities.
+func (c *TranslationJobClient) CreateBulk(builders ...*TranslationJobCreate) *TranslationJobCreateBulk {
+	return &TranslationJobCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TranslationJobClient) MapCreateBulk(slice any, setFunc func(*TranslationJobCreate, int)) *TranslationJobCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TranslationJobCreateBulk{err: fmt.Errorf("calling to TranslationJobClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TranslationJobCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TranslationJobCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TranslationJob.
+func (c *TranslationJobClient) Update() *TranslationJobUpdate {
+	mutation := newTranslationJobMutation(c.config, OpUpdate)
+	return &TranslationJobUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TranslationJobClient) UpdateOne(_m *TranslationJob) *TranslationJobUpdateOne {
+	mutation := newTranslationJobMutation(c.config, OpUpdateOne, withTranslationJob(_m))
+	return &TranslationJobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TranslationJobClient) UpdateOneID(id uuid.UUID) *TranslationJobUpdateOne {
+	mutation := newTranslationJobMutation(c.config, OpUpdateOne, withTranslationJobID(id))
+	return &TranslationJobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TranslationJob.
+func (c *TranslationJobClient) Delete() *TranslationJobDelete {
+	mutation := newTranslationJobMutation(c.config, OpDelete)
+	return &TranslationJobDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TranslationJobClient) DeleteOne(_m *TranslationJob) *TranslationJobDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TranslationJobClient) DeleteOneID(id uuid.UUID) *TranslationJobDeleteOne {
+	builder := c.Delete().Where(translationjob.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TranslationJobDeleteOne{builder}
+}
+
+// Query returns a query builder for TranslationJob.
+func (c *TranslationJobClient) Query() *TranslationJobQuery {
+	return &TranslationJobQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTranslationJob},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TranslationJob entity by its id.
+func (c *TranslationJobClient) Get(ctx context.Context, id uuid.UUID) (*TranslationJob, error) {
+	return c.Query().Where(translationjob.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TranslationJobClient) GetX(ctx context.Context, id uuid.UUID) *TranslationJob {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TranslationJobClient) Hooks() []Hook {
+	hooks := c.hooks.TranslationJob
+	return append(hooks[:len(hooks):len(hooks)], translationjob.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TranslationJobClient) Interceptors() []Interceptor {
+	inters := c.inters.TranslationJob
+	return append(inters[:len(inters):len(inters)], translationjob.Interceptors[:]...)
+}
+
+func (c *TranslationJobClient) mutate(ctx context.Context, m *TranslationJobMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TranslationJobCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TranslationJobUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TranslationJobUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TranslationJobDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TranslationJob mutation op: %q", m.Op())
+	}
+}
+
 // WalletClient is a client for the Wallet schema.
 type WalletClient struct {
 	config
@@ -13412,22 +13700,22 @@ type (
 		ChallengeVersion, CharacterCatalog, CharacterCatalogVersion, ClientManifest,
 		Collection, CollectionItem, CollectionProgress, CollectionVersion,
 		CommunityGoal, CommunityGoalContribution, CommunityGoalProgress,
-		ContentRelease, Currency, CurrencyLedgerEntry, EconomyAdjustment, Event,
-		EventParticipation, EventPointEntry, EventRun, EventTemplate,
-		EventTemplateVersion, EventVersion, ExplorationProgress, GameConfigItem,
-		GameConfigVersion, GameProfile, GameSession, InventoryItem, ItemDefinition,
-		ItemDefinitionVersion, ItemLedgerEntry, LevelDefinition, LevelHistory,
-		LevelSession, LevelVersion, LoginEvent, MediaAsset, MediaUsage, MiniGameConfig,
-		MiniGameConfigVersion, MiniGamePlay, NicknameChange, NpcDialogue,
-		NpcDialogueVersion, PartyQuestContribution, PartyQuestSession,
+		ConfigTranslationState, ContentRelease, Currency, CurrencyLedgerEntry,
+		EconomyAdjustment, Event, EventParticipation, EventPointEntry, EventRun,
+		EventTemplate, EventTemplateVersion, EventVersion, ExplorationProgress,
+		GameConfigItem, GameConfigVersion, GameProfile, GameSession, InventoryItem,
+		ItemDefinition, ItemDefinitionVersion, ItemLedgerEntry, LevelDefinition,
+		LevelHistory, LevelSession, LevelVersion, LoginEvent, MediaAsset, MediaUsage,
+		MiniGameConfig, MiniGameConfigVersion, MiniGamePlay, NicknameChange,
+		NpcDialogue, NpcDialogueVersion, PartyQuestContribution, PartyQuestSession,
 		PeriodicQuestGrant, PreviewSession, ProgressionCurve, ProgressionCurveVersion,
 		ProgressionLevel, QuestDefinition, QuestProgress, QuestStepAttempt,
 		QuestVersion, RenderJob, RewardGrant, RewardRule, RewardRuleVersion,
 		ScheduledPublication, SeasonPointEntry, SeasonTrack, SeasonTrackProgress,
 		SeasonTrackVersion, ShopItem, ShopItemVersion, ShopPurchase, StoryChapter,
 		StoryChapterVersion, StoryProgress, StudentAchievement,
-		TenantResourceAssignment, Wallet, WorldArea, WorldAreaUnlock, WorldAreaVersion,
-		WorldUnlockFact, XpDailyCap, XpLedgerEntry []ent.Hook
+		TenantResourceAssignment, TranslationJob, Wallet, WorldArea, WorldAreaUnlock,
+		WorldAreaVersion, WorldUnlockFact, XpDailyCap, XpLedgerEntry []ent.Hook
 	}
 	inters struct {
 		Achievement, AchievementProgressEvent, AchievementVersion, AvatarPreset,
@@ -13436,22 +13724,22 @@ type (
 		ChallengeVersion, CharacterCatalog, CharacterCatalogVersion, ClientManifest,
 		Collection, CollectionItem, CollectionProgress, CollectionVersion,
 		CommunityGoal, CommunityGoalContribution, CommunityGoalProgress,
-		ContentRelease, Currency, CurrencyLedgerEntry, EconomyAdjustment, Event,
-		EventParticipation, EventPointEntry, EventRun, EventTemplate,
-		EventTemplateVersion, EventVersion, ExplorationProgress, GameConfigItem,
-		GameConfigVersion, GameProfile, GameSession, InventoryItem, ItemDefinition,
-		ItemDefinitionVersion, ItemLedgerEntry, LevelDefinition, LevelHistory,
-		LevelSession, LevelVersion, LoginEvent, MediaAsset, MediaUsage, MiniGameConfig,
-		MiniGameConfigVersion, MiniGamePlay, NicknameChange, NpcDialogue,
-		NpcDialogueVersion, PartyQuestContribution, PartyQuestSession,
+		ConfigTranslationState, ContentRelease, Currency, CurrencyLedgerEntry,
+		EconomyAdjustment, Event, EventParticipation, EventPointEntry, EventRun,
+		EventTemplate, EventTemplateVersion, EventVersion, ExplorationProgress,
+		GameConfigItem, GameConfigVersion, GameProfile, GameSession, InventoryItem,
+		ItemDefinition, ItemDefinitionVersion, ItemLedgerEntry, LevelDefinition,
+		LevelHistory, LevelSession, LevelVersion, LoginEvent, MediaAsset, MediaUsage,
+		MiniGameConfig, MiniGameConfigVersion, MiniGamePlay, NicknameChange,
+		NpcDialogue, NpcDialogueVersion, PartyQuestContribution, PartyQuestSession,
 		PeriodicQuestGrant, PreviewSession, ProgressionCurve, ProgressionCurveVersion,
 		ProgressionLevel, QuestDefinition, QuestProgress, QuestStepAttempt,
 		QuestVersion, RenderJob, RewardGrant, RewardRule, RewardRuleVersion,
 		ScheduledPublication, SeasonPointEntry, SeasonTrack, SeasonTrackProgress,
 		SeasonTrackVersion, ShopItem, ShopItemVersion, ShopPurchase, StoryChapter,
 		StoryChapterVersion, StoryProgress, StudentAchievement,
-		TenantResourceAssignment, Wallet, WorldArea, WorldAreaUnlock, WorldAreaVersion,
-		WorldUnlockFact, XpDailyCap, XpLedgerEntry []ent.Interceptor
+		TenantResourceAssignment, TranslationJob, Wallet, WorldArea, WorldAreaUnlock,
+		WorldAreaVersion, WorldUnlockFact, XpDailyCap, XpLedgerEntry []ent.Interceptor
 	}
 )
 
@@ -13482,6 +13770,7 @@ var (
 		CommunityGoal:             tableSchemas[0],
 		CommunityGoalContribution: tableSchemas[0],
 		CommunityGoalProgress:     tableSchemas[0],
+		ConfigTranslationState:    tableSchemas[0],
 		ContentRelease:            tableSchemas[0],
 		Currency:                  tableSchemas[1],
 		CurrencyLedgerEntry:       tableSchemas[1],
@@ -13543,6 +13832,7 @@ var (
 		StoryProgress:             tableSchemas[0],
 		StudentAchievement:        tableSchemas[1],
 		TenantResourceAssignment:  tableSchemas[2],
+		TranslationJob:            tableSchemas[0],
 		Wallet:                    tableSchemas[1],
 		WorldArea:                 tableSchemas[0],
 		WorldAreaUnlock:           tableSchemas[0],

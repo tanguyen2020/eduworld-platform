@@ -93,6 +93,8 @@ type Handlers struct {
 	Analytics AnalyticsHandlers
 	// TelemetryFlag answers ClientConfig.product_telemetry_enabled (nil = the platform default, on).
 	TelemetryFlag TelemetryFlag
+	// Translations are the translation files of game content (F082); nil Commands = not mounted.
+	Translations TranslationHandlers
 	// IPHasher hashes the client address for game.login_events.ip_hash (nil = no hash). The raw IP stops here.
 	IPHasher port.IPHasher
 }
@@ -233,6 +235,11 @@ func Register(s *httpx.Server, h Handlers) error {
 	}
 	if h.Admin.Commands != nil {
 		if err := registerGameAdmin(s, h.Admin); err != nil {
+			return err
+		}
+	}
+	if h.Translations.Commands != nil {
+		if err := registerTranslations(s, h.Translations); err != nil {
 			return err
 		}
 	}
