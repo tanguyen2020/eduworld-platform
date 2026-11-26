@@ -1,6 +1,6 @@
 # Feature Specification: F102 — Giao diện party trong Godot: panel, lời mời, lobby, ready
 
-**Feature Branch**: `102-godot-party-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M4a · **Phụ thuộc**: F092, F101 (và F100; danh sách bạn bè từ F095)
+**Feature Branch**: `102-godot-party-ui` · **Created**: 2026-11-16 · **Status**: In progress · **Module**: `src/game/` · **Mốc**: M4a · **Phụ thuộc**: F092, F101 (và F100; danh sách bạn bè từ F095)
 **Input**: Học sinh tạo party, mời bạn bằng chạm avatar, nhận lời mời dạng popup, vào Party Lobby (thành viên, online, Ready, chọn hoạt động, Bắt đầu), thấy trạng thái leader/thành viên mất kết nối, chuyển vào phiên chơi chung và quay lại lobby. FR nguồn: FR-PTY-001, FR-PTY-006, FR-PTY-008, FR-PTY-012.
 
 ## Clarifications
@@ -17,6 +17,13 @@
 - Q: Picker mời còn "bạn cùng lớp"? → A: Không. Theo [ADR-0095 mục 5 (D2)](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md#5-game-xã-hội-chat-d2-d5-d7-confirmed--owner-2026-11-21) `InviteFriendPicker` không nhóm/lọc theo lớp, chỉ hiển thị danh sách server trả (nickname + avatar); không còn ngoại lệ hiển thị nào cho "bạn cùng lớp" (R16).
 - Q: Quy tắc party mới ảnh hưởng client thế nào? → A: Quy tắc do [PARTY_SYSTEM](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) sở hữu (lớp 1–3 chỉ `friend`/`quest`, cùng đúng khối với leader, luôn cùng tenant, khác trường chỉ khi tenant bật liên trường ADR-0054; party `friend` chỉ mời bạn bè; `visibility` chỉ `private`/`friends`; loại `study_group` đổi tên `study_party`). Client **không** tự kiểm các điều kiện này; vi phạm hiển thị thông điệp thân thiện theo F102-AC-05 (`PARTY_POLICY_VIOLATION`, `PARTY_INVITE_NOT_ALLOWED`).
 - Q: Ô "Ai được vào" trong cài đặt party? → A: Chỉ hai lựa chọn `private`/`friends`, không có "Cả lớp" (nếu màn cài đặt hiển thị visibility — nhãn theo file dịch).
+
+### Session 2026-11-27 (triển khai client)
+
+- Q: Thông báo `party_invitation` của F123 và popup lời mời của F102 có cùng bật? → A: [Confirmed — theo F102-AC-03, F123 Ngoài phạm vi "toast lời mời party → F102"] Lời mời party chỉ bật `InvitationToast` (có "Vào nhóm"/"Lần sau nhé"); `NotificationService` vẫn tăng số trên chuông và giữ dòng trong hộp thông báo nhưng bỏ toast chung cho `party_invitation` (`delegated_popup_kinds`). Nút "Xem" của dòng mở màn `party` ở mục lời mời (args `{view: "invitations", id}`); lời mời đã hết hạn → "Lời mời đã hết hạn".
+- Q: "Chuyển cảnh qua SceneRouter tới `scene_ref` và vào `room_id`" làm thế nào khi `hub.instance.join` không có `room_id`? → A: [Proposed] `SceneRouter.enter_party_session(scene_ref, room_id)` nạp zone như một lần đổi khu (`area_entered` kèm `room_id`); hub join của zone đó để server xếp thành viên vào instance của phiên (PARTY_SYSTEM §6.1 bước 6). Màn chơi co-op/boss nhóm (F103 phía Godot) chưa có trong danh mục.
+- Q: Nút "Tạo nhóm" tạo loại party nào? → A: [Proposed] `friend` cho mọi khối (loại duy nhất mọi khối đều được tạo); party `quest` sinh từ quest co-op, `competition_team` từ thi đấu, `study_party`/`custom` (lớp 6–9) chưa có lối tạo trên client — server vẫn quyết định loại được phép.
+- Q: Cấp độ trên thẻ thành viên khi REST `PartyMember` không có `level`? → A: [Proposed] Hiện khi đã biết từ `PublicPlayer` của message realtime, ẩn khi chưa biết (không tự suy ra).
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -156,6 +163,12 @@ Bạn rớt mạng thì thẻ mờ đi; leader rớt mạng thì có băng "Trư
 - Màn boss S06, HUD phase/năng lượng, thẻ dữ kiện bước `interdependent`, tiến độ quest chung: chưa có feature Godot trong danh mục (đề xuất bổ sung — backend ở F103).
 - Thông báo lời mời khi offline (push/notification center) → F123. "Đi theo trưởng nhóm" khi chuyển khu → F091/F092.
 - `DifficultySelector` cho `coop_challenge`/`learning_challenge` → F109 (cùng F105).
+
+## Câu hỏi mở
+
+- F102-1 [Proposed]: Thêm `level` vào `PartyMember` của REST (delta F100) để thẻ thành viên luôn có cấp độ ngay khi mở màn.
+- F102-2 [Proposed]: Lối tạo party `study_party`/`custom` cho lớp 6–9 (chọn loại khi tạo) và API trả danh sách loại party được phép theo khối, để client không phải đoán.
+- F102-3 [Proposed]: Feature Godot cho màn chơi co-op/boss nhóm (HUD phase, thẻ dữ kiện `interdependent`, tiến độ chung) — hiện chỉ vào zone của phiên.
 
 ## Assumptions
 

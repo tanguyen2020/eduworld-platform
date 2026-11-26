@@ -1,6 +1,6 @@
 # Game Networking — phía Godot client
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Multiplayer Engineer + Senior Godot Developer · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (§4.4: `session.session.ended` trước close — `4410` giờ giới nghiêm giữ token, `4403` thu hồi xóa token; `Idempotency-Key` UUIDv7 theo ADR-0089; màn "Tiếp tục là…" khi resume, máy dùng chung, lỗi giờ giới nghiêm ADR-0078; bỏ QR/PIN — ADR-0076 Rejected) · 2026-11-16 (ADR-0083, ADR-0086)
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Multiplayer Engineer + Senior Godot Developer · Cập nhật: 2026-11-27 (F102: §8 party client — `state_version`, Ready/hoạt động qua WS hoặc REST, kết nối lại) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (§4.4: `session.session.ended` trước close — `4410` giờ giới nghiêm giữ token, `4403` thu hồi xóa token; `Idempotency-Key` UUIDv7 theo ADR-0089; màn "Tiếp tục là…" khi resume, máy dùng chung, lỗi giờ giới nghiêm ADR-0078; bỏ QR/PIN — ADR-0076 Rejected) · 2026-11-16 (ADR-0083, ADR-0086)
 > Liên quan: [ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md) · [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) (giao thức, server) · [AsyncAPI realtime](../../specs/asyncapi/eduworld-realtime.v1.yaml) · [API_DESIGN](../07-backend/API_DESIGN.md) · [ADR-0008, ADR-0010, ADR-0011](../adr/README.md) · [GODOT_ARCHITECTURE](GODOT_ARCHITECTURE.md)
 
 **Mục đích & phạm vi.** Phía client Godot: REST client, vòng đời token, RealtimeClient (kết nối, reconnect/resume, takeover), hub sync, đồng hồ server, client state machine cho battle/party/chat. Giao thức và hành vi server ở REALTIME_ARCHITECTURE và AsyncAPI.
@@ -227,7 +227,9 @@ Quy tắc client:
 ## 8. Party & lobby (client)
 
 - Party CRUD/mời/chấp nhận qua REST (Idempotency-Key); trạng thái live (`party.member.status_changed`, ready, activity selected) qua WS.
-- `PartyService` giữ `PartyModel` duy nhất trong `AppState`; mọi cập nhật WS có `party_version` tăng dần — bỏ qua message có version cũ hơn; phát hiện thiếu version → `GET` party qua REST.
+- `PartyService` giữ `PartyModel` duy nhất trong `AppState` (qua `PartyStore`); message WS mang `state_version` (`party.member.joined`, `party.member.left`, `party.activity.selected`, snapshot) áp theo thứ tự — bằng/cũ hơn bản đang giữ → bỏ; lớn hơn bản giữ + 1 → `getParty` qua REST và không áp message đó (F102-AC-07). Ready/trạng thái/leader (`party.member.ready_changed`, `party.member.status_changed`, `party.leader.transferred`) không mang version, áp ngay cho đúng thành viên.
+- Ready (`party.member.ready_set`) và chọn hoạt động (`party.activity.select` + `expected_version`) gửi qua WS khi `RealtimeClient` nhận lệnh, nếu không thì REST `setPartyReady` / `selectPartyActivity`; màn chỉ đổi theo xác nhận của server (push, ack hoặc phản hồi REST). `CONFLICT` / `412 VERSION_MISMATCH` → tải lại party, không tự gửi lại; Bắt đầu chỉ qua REST `startPartySession` (`Idempotency-Key`, lỗi `409` có `ineligible_members`).
+- Đang kết nối lại (hoặc REST lỗi mạng): khóa thao tác ghi party, giữ dữ liệu để xem; có mạng lại → `getMyParty` + `listMyInvitations`, vào lại phòng phiên nếu party `in_activity` và mình là thành viên (F102-AC-15).
 - Khi leader bắt đầu session: client nhận thông tin room/instance từ server, chuyển zone qua `SceneRouter` (WORLD_RENDERING §3). Chi tiết nghiệp vụ: [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md).
 
 ## 8b. Chat (client) — ADR-0034/0035

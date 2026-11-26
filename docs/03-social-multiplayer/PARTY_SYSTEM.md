@@ -1,6 +1,6 @@
 # Party, Group & Cooperative Multiplayer
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Multiplayer Engineer + Game Director · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Multiplayer Engineer + Game Director · Cập nhật: 2026-11-27 (F102: §12.4 thành phần Godot đã hiện thực, tên scene theo GODOT_ARCHITECTURE §3) · 2026-11-15
 > Liên quan: [ADR-0050 Party vs Club](../adr/ADR-0050-party-tam-thoi-va-guild-club-ben-vung-la-hai-khai-niem-tach.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [MULTIPLAYER_GAMEPLAY](MULTIPLAYER_GAMEPLAY.md) · [SOCIAL_SYSTEM](SOCIAL_SYSTEM.md) · [MATCHMAKING](MATCHMAKING.md) · [CHAT_SYSTEM](CHAT_SYSTEM.md) · [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) · [DOMAIN_MODEL §6](../06-architecture/DOMAIN_MODEL.md#6-multiplayer-party--competition) · [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) · [OpenAPI](../../specs/openapi) · [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)
 
 > [!IMPORTANT]
@@ -299,6 +299,8 @@ Mọi bảng có `tenant_id`, soft-delete và RLS theo tenant (ADR-0005, ADR-002
 | Cooperative Gameplay | `scripts/multiplayer/coop_room_client.gd` | Hiển thị đóng góp của member, không hiển thị điểm học tập của người khác |
 
 UI lớp 1–5: nút lớn, mời bằng avatar bạn bè, không cần gõ tên; lớp 6–9: thêm settings nâng cao.
+
+Hiện thực client F102 (tên scene/script theo [GODOT_ARCHITECTURE §3](../08-game-client/GODOT_ARCHITECTURE.md)): `scenes/social/{PartyLobby,PartyMemberCard,InviteFriendPicker,ActivitySelector,InvitationToast}.tscn`, `scenes/ui/hud/PartyHud.tscn` (slot `PartyChip` của HUD), `scripts/multiplayer/{party_service,party_store}.gd` + `models/`. Bố cục và câu chữ: [STUDENT_GAME_UX_SOCIAL §5](../05-ux/STUDENT_GAME_UX_SOCIAL.md#5-party-lobby). Client không tự kiểm quy tắc §8 (loại party theo khối, cùng khối/trường/tenant, điều kiện hoạt động): chỉ hiển thị danh sách và lý do server trả. Chat nhóm nhúng chờ F119 (slot `EmbeddedChat` ẩn); `coop_room_client.gd` thuộc feature co-op Godot chưa có trong danh mục.
 
 ## 13. State machines
 
