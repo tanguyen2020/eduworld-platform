@@ -97,7 +97,7 @@ func setupPersistent(t *testing.T, o chatOpts) *pEnv {
 		c.policyHandlers = &chathttp.PolicyHandlers{Commands: p.policies, Queries: query.Policies{Read: c.read, Reader: persistence.Policies{},
 			Chat: persistence.ChatReader{}}}
 		c.persistentHandlers = &chathttp.PersistentHandlers{Direct: p.persistent, Search: query.Search{Read: c.read, Reader: persistence.Search{},
-			Cursors: codec}, Kinds: c.reads.Kinds}
+			Cursors: codec}, Caps: c.reads.Caps}
 		c.clubHandlers = &chathttp.ClubHandlers{Commands: p.clubs, Queries: query.Clubs{Read: c.read, Reader: persistence.ClubReads{},
 			Directory: persistence.Directory{}, Cursors: codec}, WeekLoc: ict}
 		p.retention = command.PersistentRetention{UoW: c.uow, Store: persistence.Retention{}, Audit: persistence.Auditor{R: c.rec},

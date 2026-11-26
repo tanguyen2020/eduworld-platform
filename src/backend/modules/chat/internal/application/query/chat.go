@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"sort"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -58,6 +59,22 @@ type Chat struct {
 	// Implicit resolves World/Area (F120-AC-12, AC-13); Ensure creates them lazily (command.Persistent.EnsureImplicit,
 	// called by chat.channel.join before the query). nil: no implicit channel.
 	Implicit *service.Implicit
+	// Sanctions are the active sanctions of the caller (service.Sanctions, cached ew:chat:sanction): they narrow
+	// Channel.sendable_kinds and features (delta F119). nil: no sanction considered.
+	Sanctions SanctionReader
+	Now       func() time.Time
+}
+
+// SanctionReader returns the active sanctions of a user (service.Sanctions).
+type SanctionReader interface {
+	Active(ctx context.Context, tenant, user uuid.UUID, now time.Time) ([]port.Sanction, error)
+}
+
+func (q Chat) now() time.Time {
+	if q.Now != nil {
+		return q.Now()
+	}
+	return time.Now()
 }
 
 // MessageView is one message of a history with the card of its sender.
@@ -82,10 +99,56 @@ type MessagePage struct {
 
 // ChannelView is one channel of listMyChannels.
 type ChannelView struct {
-	Channel      channel.Channel
-	AllowedKinds []policy.Kind
-	UnreadCount  int64
-	MyReadSeq    int64
+	Channel     channel.Channel
+	UnreadCount int64
+	MyReadSeq   int64
+	ChannelCaps
+}
+
+// ChannelCaps is what the caller may do in a channel now (delta F119, CHAT_SYSTEM §3, §7.1): the kinds of the effective
+// policy, the kinds the caller can send under its active sanctions, max_text_length and the features narrowed to those
+// kinds. Allowed false (policy denied): no kind, no length, no features.
+type ChannelCaps struct {
+	Allowed       bool
+	AllowedKinds  []policy.Kind
+	SendableKinds []policy.Kind
+	MaxTextLength int
+	Features      policy.Features
+}
+
+// caps derives the ChannelCaps of ch from its effective policy (nil: denied) and the active sanctions of the caller.
+func caps(ch channel.Channel, eff *policy.Effective, sanctions []port.Sanction, now time.Time) ChannelCaps {
+	if eff == nil {
+		return ChannelCaps{AllowedKinds: []policy.Kind{}, SendableKinds: []policy.Kind{}}
+	}
+	sendable := make([]policy.Kind, 0, len(eff.AllowedKinds))
+	for _, k := range eff.AllowedKinds {
+		ok := true
+		for _, s := range sanctions {
+			if s.Refusal(ch.ID, string(k), string(ch.Type), now) != "" {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			sendable = append(sendable, k)
+		}
+	}
+	return ChannelCaps{Allowed: true, AllowedKinds: eff.AllowedKinds, SendableKinds: sendable, MaxTextLength: eff.MaxTextLength,
+		Features: eff.Features.ForCaller(sendable, ch.Type.Implicit())}
+}
+
+// sanctions loads the active sanctions of the viewer once per request (none without a reader); a failed read is
+// CHAT_TEMPORARILY_UNAVAILABLE like the policy (never report a muted student as free to send).
+func (q Chat) sanctions(ctx context.Context, v Viewer, now time.Time) ([]port.Sanction, error) {
+	if q.Sanctions == nil {
+		return nil, nil
+	}
+	list, err := q.Sanctions.Active(ctx, v.TenantID, v.UserID, now)
+	if err != nil {
+		return nil, unavailableProblem()
+	}
+	return list, nil
 }
 
 func (q Chat) recentLimit() int {
@@ -370,24 +433,29 @@ func (q Chat) ListMyChannels(ctx context.Context, v Viewer) (out []ChannelView, 
 	}); err != nil {
 		return nil, err
 	}
+	now := q.now()
+	sanctions, err := q.sanctions(ctx, v, now)
+	if err != nil {
+		return nil, err
+	}
 	out = make([]ChannelView, 0, len(rows))
 	for _, r := range rows {
 		school := r.SchoolID
 		if school == nil {
 			school = r.Channel.SchoolID
 		}
-		kinds := []policy.Kind{}
+		var effective *policy.Effective
 		eff, err := q.Facts.Effective(ctx, v.TenantID, school, r.Channel)
 		switch {
 		case err == nil:
-			kinds = eff.AllowedKinds
+			effective = &eff
 		case !errors.Is(err, policy.ErrDenied):
 			return nil, unavailableProblem()
 		}
-		out = append(out, ChannelView{Channel: r.Channel, AllowedKinds: kinds, UnreadCount: max(r.Channel.LastSeq-r.MyReadSeq, 0),
-			MyReadSeq: r.MyReadSeq})
+		out = append(out, ChannelView{Channel: r.Channel, UnreadCount: max(r.Channel.LastSeq-r.MyReadSeq, 0),
+			MyReadSeq: r.MyReadSeq, ChannelCaps: caps(r.Channel, effective, sanctions, now)})
 	}
-	implicit, err := q.implicitChannels(ctx, v)
+	implicit, err := q.implicitChannels(ctx, v, sanctions, now)
 	if err != nil {
 		return nil, err
 	}
@@ -397,7 +465,7 @@ func (q Chat) ListMyChannels(ctx context.Context, v Viewer) (out []ChannelView, 
 // implicitChannels are the World channel of the caller and the Area channel of its hub instance (F120-AC-12, AC-13), when
 // the effective policy allows them (a tenant common has no World until System Admin re-enables it, F120-AC-28). Their ids
 // are deterministic: the row is created at the first send or join.
-func (q Chat) implicitChannels(ctx context.Context, v Viewer) ([]ChannelView, error) {
+func (q Chat) implicitChannels(ctx context.Context, v Viewer, sanctions []port.Sanction, now time.Time) ([]ChannelView, error) {
 	if q.Implicit == nil {
 		return nil, nil
 	}
@@ -413,7 +481,7 @@ func (q Chat) implicitChannels(ctx context.Context, v Viewer) ([]ChannelView, er
 		if facts, err := q.Facts.Channel(ctx, v.TenantID, ch.ID); err == nil && facts != nil {
 			ch = facts.Channel
 		}
-		out = append(out, ChannelView{Channel: ch, AllowedKinds: eff.AllowedKinds})
+		out = append(out, ChannelView{Channel: ch, ChannelCaps: caps(ch, &eff, sanctions, now)})
 		return nil
 	}
 	world, scope, ok, err := q.Implicit.World(ctx, v.TenantID, v.UserID)
@@ -450,17 +518,25 @@ func (m MessageView) Extras() port.MessageExtras {
 		Mentions: m.Mentions}
 }
 
-// Kinds returns the kinds the effective policy allows the viewer in ch (none when denied or unavailable).
-func (q Chat) Kinds(ctx context.Context, v Viewer, ch channel.Channel) []policy.Kind {
+// Caps returns what the viewer may do in ch now (openDirectChannel, delta F119): the kinds of the effective policy, the
+// sendable kinds under its active sanctions, max_text_length and features. Best effort: a denied policy or an
+// unavailable read gives no kind and no features (the commands still check every request).
+func (q Chat) Caps(ctx context.Context, v Viewer, ch channel.Channel) ChannelCaps {
 	school := ch.SchoolID
 	if q.Implicit != nil {
 		if s, err := q.Implicit.School(ctx, v.TenantID, v.UserID); err == nil && s != nil {
 			school = s
 		}
 	}
+	now := q.now()
 	eff, err := q.Facts.Effective(ctx, v.TenantID, school, ch)
 	if err != nil {
-		return []policy.Kind{}
+		return caps(ch, nil, nil, now)
 	}
-	return eff.AllowedKinds
+	sanctions, err := q.sanctions(ctx, v, now)
+	if err != nil { // sanctions unknown: the policy kinds stay, nothing is reported as sendable (fail closed)
+		return ChannelCaps{Allowed: true, AllowedKinds: eff.AllowedKinds, SendableKinds: []policy.Kind{}, MaxTextLength: eff.MaxTextLength,
+			Features: eff.Features.ForCaller(nil, ch.Type.Implicit())}
+	}
+	return caps(ch, &eff, sanctions, now)
 }

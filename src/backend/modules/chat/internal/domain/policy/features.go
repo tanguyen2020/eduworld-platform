@@ -1,6 +1,9 @@
 package policy
 
-import "time"
+import (
+	"slices"
+	"time"
+)
 
 // Receipts modes of features.receipts (chat-policy.schema.json v5).
 const (
@@ -27,6 +30,7 @@ type Features struct {
 	Pin                 bool   `json:"pin"`
 	Typing              bool   `json:"typing"`
 	Receipts            string `json:"receipts,omitempty"`
+	Search              bool   `json:"search"`
 	EditWindowMinutes   int    `json:"edit_window_minutes,omitempty"`
 	RecallWindowHours   int    `json:"recall_window_hours,omitempty"`
 	MaxPins             int    `json:"max_pins,omitempty"`
@@ -136,4 +140,25 @@ func (f Features) Has(name string) bool {
 		return f.ReceiptMode() != ReceiptsNone
 	}
 	return false
+}
+
+// ForCaller narrows the features of the effective policy to what a caller who can send the kinds sendable may use now
+// in a channel (Channel.features of listMyChannels, delta F119; CHAT_SYSTEM §7.1): sticker/GIF need their kind, edit and
+// mention need text (only text is edited, mentions live in text), reply/quote/forward need some sendable kind; World and
+// Area (implicit) have no forward, pin, typing nor receipts (the commands refuse them there). The remaining features keep
+// the policy value: the commands still check every request (role rights such as the party leader's pin included).
+func (f Features) ForCaller(sendable []Kind, implicit bool) Features {
+	can := func(k Kind) bool { return slices.Contains(sendable, k) }
+	some := len(sendable) > 0
+	f.Sticker = f.Sticker && can(KindSticker)
+	f.Gif = f.Gif && can(KindGif)
+	f.Edit = f.Edit && can(KindText)
+	f.Mention = f.Mention && can(KindText)
+	f.Reply = f.Reply && some
+	f.Quote = f.Quote && some
+	f.Forward = f.Forward && some && !implicit
+	if implicit {
+		f.Pin, f.Typing, f.Receipts = false, false, ReceiptsNone
+	}
+	return f
 }

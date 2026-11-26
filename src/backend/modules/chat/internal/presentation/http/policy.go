@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -297,9 +298,15 @@ func (h PolicyHandlers) putCommon(w http.ResponseWriter, r *http.Request) {
 // features renders ChatFeatures (the message features of the channel type, platform level).
 func features(f policy.Features) map[string]any {
 	out := map[string]any{"edit": f.Edit, "recall": f.Recall, "reply": f.Reply, "quote": f.Quote, "forward": f.Forward,
-		"sticker": f.Sticker, "gif": f.Gif, "reaction": f.Reaction, "mention": f.Mention, "pin": f.Pin, "typing": f.Typing}
+		"sticker": f.Sticker, "gif": f.Gif, "reaction": f.Reaction, "mention": f.Mention, "pin": f.Pin, "typing": f.Typing, "search": f.Search}
 	if f.Receipts != "" {
 		out["receipts"] = f.Receipts
+	}
+	if f.Edit {
+		out["edit_window_minutes"] = int(f.EditWindow() / time.Minute)
+	}
+	if f.Recall {
+		out["recall_window_hours"] = int(f.RecallWindow() / time.Hour)
 	}
 	return out
 }

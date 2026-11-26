@@ -280,6 +280,7 @@ func Register(r *module.Registry) (*Module, error) {
 			Config: query.ChatConfig{RecentBuffer: chatCfg.RecentBuffer}}
 		reads.Decor = &featureReads
 		reads.Implicit = implicit
+		reads.Sanctions = pipe.Validator.Sanctions // Channel.sendable_kinds and features (delta F119)
 		policyAdmin := command.PolicyAdmin{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: persistence.Policies{},
 			Schema: policyschema.Validator{}, Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder},
 			Gens: cache.PolicyGens{C: vk}, Curfew: facts.Curfew, PlatformCurfew: policy.Curfew{chatCfg.PlatformCurfew},
@@ -314,7 +315,7 @@ func Register(r *module.Registry) (*Module, error) {
 			Policies: &chathttp.PolicyHandlers{Commands: policyAdmin, Queries: query.Policies{Read: core.ReadSession, Reader: persistence.Policies{},
 				Chat: persistence.ChatReader{}}},
 			Persistent: &chathttp.PersistentHandlers{Direct: persistentCmd, Search: query.Search{Read: core.ReadSession, Reader: persistence.Search{},
-				Cursors: cursors}, Kinds: reads.Kinds},
+				Cursors: cursors}, Caps: reads.Caps},
 			Clubs: &chathttp.ClubHandlers{Commands: clubCmd, Queries: query.Clubs{Read: core.ReadSession, Reader: persistence.ClubReads{},
 				Directory: persistence.Directory{}, Cursors: cursors}, WeekLoc: chatCfg.CurfewLocation},
 			Notifications: &chathttp.NotificationHandlers{Commands: notifications, Queries: query.Notifications{Read: core.ReadSession,

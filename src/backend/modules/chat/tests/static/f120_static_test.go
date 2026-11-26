@@ -67,10 +67,14 @@ func TestNoVoice(t *testing.T) {
 	if err != nil || !strings.Contains(string(mig), "(capabilities->>'voice') IS DISTINCT FROM 'true'") {
 		t.Fatalf("capabilities CHECK missing: %v", err)
 	}
-	for _, f := range []string{"internal/presentation/http/chat.go", "internal/presentation/http/persistent.go"} {
+	// ChannelBody (persistent.go) renders every Channel: listMyChannels and openDirectChannel (delta F119).
+	for _, f := range []string{"internal/presentation/http/persistent.go"} {
 		b, err := os.ReadFile(filepath.Join(root, f))
 		if err != nil || !strings.Contains(string(b), `"voice": false`) {
 			t.Errorf("%s does not render capabilities.voice false", f)
 		}
+	}
+	if b, err := os.ReadFile(filepath.Join(root, "internal/presentation/http/chat.go")); err != nil || !strings.Contains(string(b), "ChannelBody(") {
+		t.Error("listMyChannels does not render its channels with ChannelBody")
 	}
 }

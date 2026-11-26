@@ -129,16 +129,8 @@ func (h ChatHandlers) listMyChannels(w http.ResponseWriter, r *http.Request) {
 	}
 	data := make([]map[string]any, len(rows))
 	for i, c := range rows {
-		kinds := make([]string, len(c.AllowedKinds))
-		for j, k := range c.AllowedKinds {
-			kinds[j] = string(k)
-		}
-		data[i] = map[string]any{"channel_id": c.Channel.ID, "channel_type": string(c.Channel.Type), "allowed_kinds": kinds,
-			"unread_count": c.UnreadCount, "last_seq": c.Channel.LastSeq, "my_read_seq": c.MyReadSeq, "status": c.Channel.Status,
-			"capabilities": map[string]any{"voice": false}} // no voice (FR-CHAT-007, F120-AC-16)
-		if c.Channel.PurgeAfter != nil { // retention shown to the student (F117-AC-14, FR-CHAT-011)
-			data[i]["purge_after"] = c.Channel.PurgeAfter.UTC()
-		}
+		data[i] = ChannelBody(c.Channel, c.ChannelCaps)
+		data[i]["unread_count"], data[i]["my_read_seq"] = c.UnreadCount, c.MyReadSeq
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": data})
 }

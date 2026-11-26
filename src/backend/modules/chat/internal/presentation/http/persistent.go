@@ -32,8 +32,8 @@ type Searcher interface {
 type PersistentHandlers struct {
 	Direct DirectOpener
 	Search Searcher
-	// Kinds returns the allowed kinds of a channel for the caller (query.Chat effective policy); nil: none listed.
-	Kinds func(ctx context.Context, v query.Viewer, ch channel.Channel) []policy.Kind
+	// Caps returns what the caller may do in a channel (query.Chat.Caps: effective policy and sanctions); nil: none listed.
+	Caps func(ctx context.Context, v query.Viewer, ch channel.Channel) query.ChannelCaps
 }
 
 // PersistentOperations are the F120 player operations.
@@ -62,18 +62,31 @@ func registerPersistent(s *httpx.Server, h *PersistentHandlers) error {
 	return nil
 }
 
-// ChannelBody renders a Channel of the contract: no voice (capabilities.voice false, FR-CHAT-007, F120-AC-16).
-func ChannelBody(c channel.Channel, kinds []policy.Kind) map[string]any {
-	ks := make([]string, len(kinds))
-	for i, k := range kinds {
-		ks[i] = string(k)
+// ChannelBody renders a Channel of the contract: no voice (capabilities.voice false, FR-CHAT-007, F120-AC-16); the kinds
+// of the effective policy and, when the policy allows the channel, what the caller may use now — sendable_kinds,
+// max_text_length and features (delta F119, CHAT_SYSTEM §7.1); purge_after shown to the student (F117-AC-14).
+func ChannelBody(c channel.Channel, caps query.ChannelCaps) map[string]any {
+	m := map[string]any{"channel_id": c.ID, "channel_type": string(c.Type), "allowed_kinds": kindNames(caps.AllowedKinds),
+		"sendable_kinds": kindNames(caps.SendableKinds), "last_seq": c.LastSeq, "status": c.Status,
+		"capabilities": map[string]any{"voice": false}}
+	if caps.Allowed {
+		if caps.MaxTextLength > 0 {
+			m["max_text_length"] = caps.MaxTextLength
+		}
+		m["features"] = features(caps.Features)
 	}
-	m := map[string]any{"channel_id": c.ID, "channel_type": string(c.Type), "allowed_kinds": ks, "last_seq": c.LastSeq,
-		"status": c.Status, "capabilities": map[string]any{"voice": false}}
 	if c.PurgeAfter != nil {
 		m["purge_after"] = c.PurgeAfter.UTC()
 	}
 	return m
+}
+
+func kindNames(kinds []policy.Kind) []string {
+	out := make([]string, len(kinds))
+	for i, k := range kinds {
+		out[i] = string(k)
+	}
+	return out
 }
 
 func (h PersistentHandlers) openDirect(w http.ResponseWriter, r *http.Request) {
@@ -94,15 +107,15 @@ func (h PersistentHandlers) openDirect(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, err)
 		return
 	}
-	var kinds []policy.Kind
-	if h.Kinds != nil {
-		kinds = h.Kinds(r.Context(), v, res.Channel)
+	caps := query.ChannelCaps{}
+	if h.Caps != nil {
+		caps = h.Caps(r.Context(), v, res.Channel)
 	}
 	status := http.StatusOK
 	if res.Created {
 		status = http.StatusCreated
 	}
-	writeJSON(w, status, ChannelBody(res.Channel, kinds))
+	writeJSON(w, status, ChannelBody(res.Channel, caps))
 }
 
 func optTime(r *http.Request, name string) (*time.Time, error) {

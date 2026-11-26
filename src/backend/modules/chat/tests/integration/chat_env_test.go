@@ -236,7 +236,8 @@ func setupChat(t *testing.T, o chatOpts) *chatEnv {
 		c.pipe, c.send.Validator = p, p.Validator
 	}
 	c.reads = query.Chat{Read: e.read, Reader: outageReader{ChatReader: persistence.ChatReader{}, o: c.outage}, Facts: c.facts,
-		Recent: recent, Fanout: fanout, Config: query.ChatConfig{RecentBuffer: 200}}
+		Recent: recent, Fanout: fanout, Config: query.ChatConfig{RecentBuffer: 200}, Now: e.clock.Now,
+		Sanctions: service.Sanctions{Read: e.read, Reader: persistence.ModerationReader{}, Cache: cache.Sanctions{C: vk}}}
 	c.channels = command.Channels{UoW: e.uow, Repo: persistence.Channels{}, Audit: persistence.Auditor{R: e.rec}, Facts: c.facts,
 		AfterCommit: func(ctx context.Context, fn func(ctx context.Context)) error { fn(ctx); return nil }, Now: e.clock.Now}
 	store := o.store
