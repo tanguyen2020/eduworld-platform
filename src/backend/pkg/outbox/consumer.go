@@ -92,10 +92,15 @@ func NewConsumer(ctx context.Context, o ConsumerOptions) (*Consumer, error) {
 		_ = o.Registerer.Register(consumed)
 	}
 	durable := strings.ReplaceAll(o.Name, ".", "_")
-	cons, err := o.JS.CreateOrUpdateConsumer(ctx, o.Stream, jetstream.ConsumerConfig{
+	cfg := jetstream.ConsumerConfig{
 		Durable: durable, FilterSubjects: o.Subjects, AckPolicy: jetstream.AckExplicitPolicy,
 		AckWait: o.AckWait, MaxDeliver: -1, // DLQ decision is ours (delivery count), not the server's
-	})
+	}
+	// A durable reset to a point in time by scripts/ops/reset-consumers.sh after a restore (BACKUP_RECOVERY §3.5,
+	// F130-AC-17) keeps its start position: the deliver policy of an existing consumer cannot be updated, so the
+	// binary reuses it instead of failing at start-up or replaying from the beginning.
+	cfg.DeliverPolicy, cfg.OptStartTime, cfg.OptStartSeq = existingStart(ctx, o.JS, o.Stream, durable)
+	cons, err := o.JS.CreateOrUpdateConsumer(ctx, o.Stream, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("outbox: consumer %s: %w", o.Name, err)
 	}
@@ -240,4 +245,14 @@ func orUnknown(s string) string {
 		return "unknown"
 	}
 	return s
+}
+
+// existingStart returns the start position of an existing durable (deliver all for a new one).
+func existingStart(ctx context.Context, js jetstream.JetStream, stream, durable string) (jetstream.DeliverPolicy, *time.Time, uint64) {
+	c, err := js.Consumer(ctx, stream, durable)
+	if err != nil {
+		return jetstream.DeliverAllPolicy, nil, 0
+	}
+	cur := c.CachedInfo().Config
+	return cur.DeliverPolicy, cur.OptStartTime, cur.OptStartSeq
 }
