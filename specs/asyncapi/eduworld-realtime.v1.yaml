@@ -692,6 +692,18 @@ components:
         status: { type: string, enum: [online, away, in_activity, disconnected] }
         ready: { type: boolean }
         joined_at: { $ref: '#/components/schemas/EpochMs' }
+    NotificationKind:
+      type: string
+      description: 'Một enum loại thông báo dùng chung REST (Notification.kind) và WS (notification.item.created); nguồn specs/schemas/common/enums.schema.json (RB-513, F123)'
+      enum: [assignment_new, assignment_due, party_invitation, friend_request, quest_available, reward_granted, tournament_update, moderation_notice, system, assignment_results_released, level_reached, achievement_unlocked]
+    NotificationAction:
+      type: object
+      description: 'Deep link mở màn trong game, vd. {"kind":"open_assignment","id":"..."} (F123-AC-18)'
+      required: [kind]
+      additionalProperties: false
+      properties:
+        kind: { type: string, maxLength: 64, pattern: '^[a-z][a-z0-9_]{0,63}$' }
+        id: { $ref: '#/components/schemas/Uuid' }
     PartyActivityType:
       type: string
       description: 'Một enum loại hoạt động party (PARTY_SYSTEM §5); nguồn specs/schemas/common/enums.schema.json. M4a chỉ bật explore, quest, boss.'
@@ -1756,6 +1768,10 @@ components:
     # ======================= NOTIFICATION =======================
     NotificationItemMarkRead:
       name: notification.item.mark_read
+      summary: 'Đánh dấu đã đọc (≤ 100 id); id không thuộc người gửi bị bỏ qua (F123-AC-09). Chuyển tiếp NATS ew.cmd.chat.notification.item.mark_read.'
+      examples:
+        - name: mark_read
+          payload: {"v":1,"type":"notification.item.mark_read","id":"0193b0a0-0000-7000-8000-0000000000aa","ts":1763712000000,"payload":{"notification_ids":["0193b0a0-0000-7000-8000-000000000001"]}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ClientEnvelope'
@@ -1769,6 +1785,12 @@ components:
                   notification_ids: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/Uuid' } }
     NotificationItemCreated:
       name: notification.item.created
+      summary: 'Thông báo mới của chính người nhận (F123-AC-04): ghi PostgreSQL trước, đẩy sau commit; không droppable, được giữ trong buffer resume. Không có push ngoài game (FR-NTF-003).'
+      examples:
+        - name: friend_request
+          payload: {"v":1,"type":"notification.item.created","seq":7,"ts":1763712000000,"payload":{"notification_id":"0193b0a0-0000-7000-8000-000000000001","kind":"friend_request","message_code":"friend.request_received","params":{"nickname":"SaoBang12"},"ref_type":"friend_request","ref_id":"0193b0a0-0000-7000-8000-000000000002","action":{"kind":"open_friend_requests","id":"0193b0a0-0000-7000-8000-000000000002"},"created_at":1763712000000}}
+        - name: assignment_new
+          payload: {"v":1,"type":"notification.item.created","seq":8,"ts":1763712000000,"payload":{"notification_id":"0193b0a0-0000-7000-8000-000000000003","kind":"assignment_new","message_code":"assignment.new","params":{"title":"Phép nhân trong phạm vi 100"},"ref_type":"assignment","ref_id":"0193b0a0-0000-7000-8000-000000000004","action":{"kind":"open_assignment","id":"0193b0a0-0000-7000-8000-000000000004"},"created_at":1763712000000}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1777,12 +1799,10 @@ components:
               type: { const: notification.item.created }
               payload:
                 type: object
-                required: [notification_id, category, title]
+                required: [notification_id, kind, message_code, created_at]
                 properties:
                   notification_id: { $ref: '#/components/schemas/Uuid' }
-                  category:
-                    type: string
-                    enum: [assignment, quest, reward, achievement, friend, party, competition, tournament, moderation, event, system]
+                  kind: { $ref: '#/components/schemas/NotificationKind' }
                   title: { $ref: '#/components/schemas/LocalizedName' }
                   body: { $ref: '#/components/schemas/LocalizedText' }
                   message_code:
@@ -1793,8 +1813,10 @@ components:
                     type: object
                     maxProperties: 20
                     additionalProperties: { type: string, maxLength: 255 }
-                    description: Tham số chèn vào chuỗi theo mã (client dựng câu theo locale)
-                  action: { type: object, description: 'Deep link trong game, vd. {"kind":"open_assignment","id":"..."}' }
+                    description: 'Tham số chèn vào chuỗi theo mã (client dựng câu theo locale): chỉ nickname, tên nội dung, mã định danh (F123-AC-05)'
+                  ref_type: { type: string, maxLength: 64 }
+                  ref_id: { $ref: '#/components/schemas/Uuid' }
+                  action: { $ref: '#/components/schemas/NotificationAction' }
                   created_at: { $ref: '#/components/schemas/EpochMs' }
 
     # ======================= PARTY / LOBBY =======================

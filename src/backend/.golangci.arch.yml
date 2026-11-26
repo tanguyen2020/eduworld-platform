@@ -19,8 +19,6 @@ linters:
               desc: "chat is not in x-allowed-callers of competition"
             - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/api"
               desc: "chat is not in x-allowed-callers of game"
-            - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/api"
-              desc: "chat is not in x-allowed-callers of learning"
             - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/api"
               desc: "chat is not in x-allowed-callers of realtime"
         module-competition:

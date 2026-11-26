@@ -419,6 +419,7 @@ routes:
       - /api/v1/social/*
       - /api/v1/notifications
       - /api/v1/notifications/*
+      - /api/v1/notifications:read-all
     priority: 100
     upstream_id: core-api
     plugins:

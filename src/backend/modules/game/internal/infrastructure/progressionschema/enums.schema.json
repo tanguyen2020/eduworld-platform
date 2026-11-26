@@ -9,6 +9,11 @@
       "description": "Enum presence duy nhất của hệ thống (MULTIPLAYER_GAMEPLAY §5, F091): realtime (AsyncAPI), PlayerCard và REST; người bật ẩn trạng thái hiển thị offline với người không được thấy.",
       "enum": ["offline", "online", "in_activity", "in_match", "away"]
     },
+    "NotificationKind": {
+      "type": "string",
+      "description": "Một enum loại thông báo trong game dùng chung REST (Notification.kind), WS (notification.item.created) và CHECK social.notifications.kind (RB-513, F123, SOCIAL_SYSTEM §8).",
+      "enum": ["assignment_new", "assignment_due", "party_invitation", "friend_request", "quest_available", "reward_granted", "tournament_update", "moderation_notice", "system", "assignment_results_released", "level_reached", "achievement_unlocked"]
+    },
     "PartyActivityType": {
       "type": "string",
       "description": "Một enum loại hoạt động party (PARTY_SYSTEM §5, F101 research R4): REST PartyActivityType, AsyncAPI ActivityRef.kind (party), internal module game và CHECK multiplayer.party_activities.activity_type. Release M4a chỉ bật explore, quest, boss.",

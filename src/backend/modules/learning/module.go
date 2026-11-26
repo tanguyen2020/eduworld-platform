@@ -103,8 +103,8 @@ const DashboardPoolSize = 10
 // implemented in this release: the platform-ops operations of F020, the student lifecycle steps of F016 and the
 // attempt operations of F030 US5 (createAttempt, getAttemptResult; caller module game, wired by F072), the merge
 // step mergeUserData (F030 T056), the question plans of competition matches (createQuestionPlan, scorePlanAnswer,
-// revealPlanItem; caller module competition, F105) and the mini-game source check validateMinigameQuestionSource (caller
-// module game, F073).
+// revealPlanItem; caller module competition, F105), the mini-game source check validateMinigameQuestionSource (caller
+// module game, F073) and listAssignmentRecipients (caller module chat, F123).
 type Facade interface {
 	ApplyTenantAssignments(ctx context.Context, req api.ApplyTenantAssignmentsRequestObject) (api.ApplyTenantAssignmentsResponseObject, error)
 	RevokeTenantAssignments(ctx context.Context, req api.RevokeTenantAssignmentsRequestObject) (api.RevokeTenantAssignmentsResponseObject, error)
@@ -124,6 +124,7 @@ type Facade interface {
 	ValidateMinigameQuestionSource(ctx context.Context, req api.ValidateMinigameQuestionSourceRequestObject) (api.ValidateMinigameQuestionSourceResponseObject, error)
 	CheckPublishedLearningContent(ctx context.Context, req api.CheckPublishedLearningContentRequestObject) (api.CheckPublishedLearningContentResponseObject, error)
 	GetLearningMaterialRenders(ctx context.Context, req api.GetLearningMaterialRendersRequestObject) (api.GetLearningMaterialRendersResponseObject, error)
+	ListAssignmentRecipients(ctx context.Context, req api.ListAssignmentRecipientsRequestObject) (api.ListAssignmentRecipientsResponseObject, error)
 }
 
 var _ Facade = facade.Facade{}
@@ -479,6 +480,7 @@ func build(r *module.Registry) (*wiring, error) {
 			Audit: auditor}},
 		AttemptOpener: att, AttemptResults: attq,
 		Merge:       command.MergeUserData{UoW: core.UoW, Store: write.MergeRepo{}, Audit: auditor},
+		Recipients:  query.AssignmentRecipients{Session: core.ReadSession, Model: read.AssignmentRecipientModel{}},
 		Idempotency: core.Idempotency}
 	// F105: question plans of competition matches (createQuestionPlan, scorePlanAnswer, revealPlanItem).
 	f.Plans = command.QuestionPlans{Attempts: att, Plans: write.QuestionPlanRepo{}, Recent: selfRepo, Config: command.DefaultQuestionPlanConfig()}

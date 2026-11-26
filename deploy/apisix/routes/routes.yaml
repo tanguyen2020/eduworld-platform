@@ -152,7 +152,7 @@ routes:
     uris: [/api/v1/auth/*, /api/v1/me/*, /api/v1/students/*, /api/v1/learning/*, /api/v1/exams/*, /api/v1/game/*,
            /api/v1/multiplayer/*, /api/v1/competition/*, /api/v1/leaderboards, /api/v1/leaderboards/*, /api/v1/chat/*,
            /api/v1/social/*,
-           /api/v1/notifications, /api/v1/notifications/*]
+           /api/v1/notifications, /api/v1/notifications/*, /api/v1/notifications:read-all]
     upstream: core-api
     modules: [identity, learning, game, competition, chat]
     auth: oidc

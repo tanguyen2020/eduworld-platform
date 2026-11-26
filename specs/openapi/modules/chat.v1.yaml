@@ -1989,7 +1989,10 @@ paths:
         - notifications
       operationId: listNotifications
       x-portal-shell: true
-      summary: Danh sách thông báo
+      summary: Hộp thông báo của chính người gọi (mới nhất trước) kèm số chưa đọc (F123, API_DESIGN §9.11)
+      description: |
+        Chỉ thông báo có `recipient_id` = người gọi trong tenant phiên (F123-AC-08); `unread=true` chỉ lấy mục chưa đọc.
+        Thông báo chỉ giao trong game và qua API này — không có push di động, Web Push, email hay SMS (FR-NTF-003).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2009,6 +2012,7 @@ paths:
                 required:
                   - data
                   - page
+                  - unread_count
                 properties:
                   data:
                     type: array
@@ -2016,11 +2020,90 @@ paths:
                       $ref: '#/components/schemas/Notification'
                   page:
                     $ref: '#/components/schemas/PageInfo'
+                  unread_count:
+                    type: integer
+                    minimum: 0
+                    description: Số thông báo chưa đọc của người gọi (mọi trang)
+              example:
+                data:
+                  - notification_id: 0193b0a0-0000-7000-8000-000000000001
+                    kind: friend_request
+                    message_code: friend.request_received
+                    params:
+                      nickname: SaoBang12
+                    ref_type: friend_request
+                    ref_id: 0193b0a0-0000-7000-8000-000000000002
+                    action:
+                      kind: open_friend_requests
+                      id: 0193b0a0-0000-7000-8000-000000000002
+                    read: false
+                    created_at: '2026-11-21T08:00:00Z'
+                page:
+                  next_cursor: null
+                  has_more: false
+                  limit: 20
+                unread_count: 1
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /notifications/{notification_id}:read:
+    post:
+      x-service: chat
+      tags:
+        - notifications
+      operationId: markNotificationRead
+      x-portal-shell: true
+      summary: Đánh dấu một thông báo của mình đã đọc (đặt read_at một lần; gọi lại không đổi — F123-AC-09)
+      description: Thông báo không thuộc người gọi (người khác, tenant khác) → `404 NOT_FOUND`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/NotificationIdPath'
+      responses:
+        '200':
+          description: Thông báo sau khi đánh dấu đã đọc
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /notifications:read-all:
+    post:
+      x-service: chat
+      tags:
+        - notifications
+      operationId: markAllNotificationsRead
+      x-portal-shell: true
+      summary: Đánh dấu mọi thông báo chưa đọc của mình (tạo trước thời điểm gọi) đã đọc (F123-AC-10)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Số chưa đọc sau khi đánh dấu
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - unread_count
+                properties:
+                  unread_count:
+                    type: integer
+                    minimum: 0
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /admin/chat/policies/platform:
     get:
       x-service: chat
@@ -5225,6 +5308,12 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
+    NotificationIdPath:
+      name: notification_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
     TenantIdHeaderOptional:
       name: X-Tenant-Id
       in: header
@@ -5292,12 +5381,6 @@ components:
         $ref: '#/components/schemas/Uuid'
     GrantIdPath:
       name: grant_id
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/Uuid'
-    NotificationIdPath:
-      name: notification_id
       in: path
       required: true
       schema:
@@ -6609,17 +6692,7 @@ components:
         notification_id:
           $ref: '#/components/schemas/Uuid'
         kind:
-          type: string
-          enum:
-            - assignment_new
-            - assignment_due
-            - party_invitation
-            - friend_request
-            - quest_available
-            - reward_granted
-            - tournament_update
-            - moderation_notice
-            - system
+          $ref: '#/components/schemas/NotificationKind'
         title:
           $ref: '#/components/schemas/LocalizedName'
         body:
@@ -6629,6 +6702,8 @@ components:
           maxLength: 64
         ref_id:
           $ref: '#/components/schemas/Uuid'
+        action:
+          $ref: '#/components/schemas/NotificationAction'
         read:
           type: boolean
         created_at:
@@ -6640,9 +6715,26 @@ components:
         params:
           type: object
           maxProperties: 20
+          description: Chỉ nickname, tên nội dung và mã định danh cho deep link — không tên thật, trường, lớp, điểm của người khác (F123-AC-05, R16)
           additionalProperties:
             type: string
             maxLength: 255
+    NotificationKind:
+      type: string
+      description: Một enum loại thông báo dùng chung REST (Notification.kind) và WS (notification.item.created), nguồn specs/schemas/common/enums.schema.json (RB-513, F123)
+      enum:
+        - assignment_new
+        - assignment_due
+        - party_invitation
+        - friend_request
+        - quest_available
+        - reward_granted
+        - tournament_update
+        - moderation_notice
+        - system
+        - assignment_results_released
+        - level_reached
+        - achievement_unlocked
     LocalizedText:
       type: object
       description: Mô tả/văn bản game song ngữ bắt buộc cả vi và en (ADR-0056 mục 2)
@@ -6659,6 +6751,20 @@ components:
           type: string
           minLength: 1
           maxLength: 4000
+    NotificationAction:
+      type: object
+      description: Deep link mở màn trong game (F123-AC-18); client mở màn qua EventBus, không gọi API nghiệp vụ từ scene
+      required:
+        - kind
+      additionalProperties: false
+      properties:
+        kind:
+          type: string
+          maxLength: 64
+          pattern: ^[a-z][a-z0-9_]{0,63}$
+          description: open_friend_requests, open_party_invitation, open_assignment, open_assignment_result, open_profile, open_achievements
+        id:
+          $ref: '#/components/schemas/Uuid'
     ChatPolicyDocument:
       type: object
       required:

@@ -8096,10 +8096,51 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách thông báo */
+        /**
+         * Hộp thông báo của chính người gọi (mới nhất trước) kèm số chưa đọc (F123, API_DESIGN §9.11)
+         * @description Chỉ thông báo có `recipient_id` = người gọi trong tenant phiên (F123-AC-08); `unread=true` chỉ lấy mục chưa đọc.
+         *     Thông báo chỉ giao trong game và qua API này — không có push di động, Web Push, email hay SMS (FR-NTF-003).
+         */
         get: operations["listNotifications"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications:read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Đánh dấu mọi thông báo chưa đọc của mình (tạo trước thời điểm gọi) đã đọc (F123-AC-10) */
+        post: operations["markAllNotificationsRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/{notification_id}:read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Đánh dấu một thông báo của mình đã đọc (đặt read_at một lần; gọi lại không đổi — F123-AC-09)
+         * @description Thông báo không thuộc người gọi (người khác, tenant khác) → `404 NOT_FOUND`.
+         */
+        post: operations["markNotificationRead"];
         delete?: never;
         options?: never;
         head?: never;
@@ -14946,13 +14987,14 @@ export interface components {
             nickname_option_id: components["schemas"]["Uuid"];
         };
         Notification: {
+            action?: components["schemas"]["NotificationAction"];
             body?: components["schemas"]["LocalizedText"];
             created_at: components["schemas"]["Timestamp"];
-            /** @enum {string} */
-            kind: "assignment_new" | "assignment_due" | "party_invitation" | "friend_request" | "quest_available" | "reward_granted" | "tournament_update" | "moderation_notice" | "system";
+            kind: components["schemas"]["NotificationKind"];
             /** @description Mã thông điệp (ui.notification.<code>) — client có thể tự dựng câu theo locale */
             message_code?: string;
             notification_id: components["schemas"]["Uuid"];
+            /** @description Chỉ nickname, tên nội dung và mã định danh cho deep link — không tên thật, trường, lớp, điểm của người khác (F123-AC-05, R16) */
             params?: {
                 [key: string]: string;
             };
@@ -14961,6 +15003,17 @@ export interface components {
             ref_type?: string;
             title?: components["schemas"]["LocalizedName"];
         };
+        /** @description Deep link mở màn trong game (F123-AC-18); client mở màn qua EventBus, không gọi API nghiệp vụ từ scene */
+        NotificationAction: {
+            id?: components["schemas"]["Uuid"];
+            /** @description open_friend_requests, open_party_invitation, open_assignment, open_assignment_result, open_profile, open_achievements */
+            kind: string;
+        };
+        /**
+         * @description Một enum loại thông báo dùng chung REST (Notification.kind) và WS (notification.item.created), nguồn specs/schemas/common/enums.schema.json (RB-513, F123)
+         * @enum {string}
+         */
+        NotificationKind: "assignment_new" | "assignment_due" | "party_invitation" | "friend_request" | "quest_available" | "reward_granted" | "tournament_update" | "moderation_notice" | "system" | "assignment_results_released" | "level_reached" | "achievement_unlocked";
         /** @description NPCDialogueVersion đang publish (specs/schemas/npc-dialogue.schema.json) — điều kiện chỉ để hiển thị; action nghiệp vụ đi qua API server (ADR-0016) */
         NpcDialogueDelivery: {
             dialogue_id: components["schemas"]["Uuid"];
@@ -37967,13 +38020,108 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "notification_id": "0193b0a0-0000-7000-8000-000000000001",
+                     *           "kind": "friend_request",
+                     *           "message_code": "friend.request_received",
+                     *           "params": {
+                     *             "nickname": "SaoBang12"
+                     *           },
+                     *           "ref_type": "friend_request",
+                     *           "ref_id": "0193b0a0-0000-7000-8000-000000000002",
+                     *           "action": {
+                     *             "kind": "open_friend_requests",
+                     *             "id": "0193b0a0-0000-7000-8000-000000000002"
+                     *           },
+                     *           "read": false,
+                     *           "created_at": "2026-11-21T08:00:00Z"
+                     *         }
+                     *       ],
+                     *       "page": {
+                     *         "next_cursor": null,
+                     *         "has_more": false,
+                     *         "limit": 20
+                     *       },
+                     *       "unread_count": 1
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["Notification"][];
                         page: components["schemas"]["PageInfo"];
+                        /** @description Số thông báo chưa đọc của người gọi (mọi trang) */
+                        unread_count: number;
                     };
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    markAllNotificationsRead: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Số chưa đọc sau khi đánh dấu */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        unread_count: number;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    markNotificationRead: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                notification_id: components["parameters"]["NotificationIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thông báo sau khi đánh dấu đã đọc */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notification"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     listSchoolAcademicYears: {

@@ -658,6 +658,15 @@ type ActivityRef struct {
 // ActivityRefContentType activity = learning activity đã publish (F030, ghim version); question_set = bộ câu hỏi đã publish; minigame_config = cấu hình mini-game của module game (F073, content_id = minigame_config_id, content_version_id = version ghim, bắt buộc; đọc projection ref.minigame_config_versions)
 type ActivityRefContentType string
 
+// AssignmentRecipientPage defines model for AssignmentRecipientPage.
+type AssignmentRecipientPage struct {
+	Page       CommonInternalCommonV1PageInfo `json:"page"`
+	StudentIds []openapi_types.UUID           `json:"student_ids"`
+
+	// Title Tiêu đề bài do trường đặt (tham số title của thông báo; không tên học sinh, không điểm)
+	Title string `json:"title"`
+}
+
 // AttemptCreateRequest defines model for AttemptCreateRequest.
 type AttemptCreateRequest struct {
 	Activity ActivityRef `json:"activity"`
@@ -1264,6 +1273,12 @@ type CommonInternalCommonV1Unauthorized = CommonInternalCommonV1Problem
 // CommonInternalCommonV1ValidationFailed RFC 9457 Problem Details, dùng chung catalog mã lỗi với API public (API_DESIGN §4.1).
 type CommonInternalCommonV1ValidationFailed = CommonInternalCommonV1Problem
 
+// ListAssignmentRecipientsParams defines parameters for ListAssignmentRecipients.
+type ListAssignmentRecipientsParams struct {
+	Cursor *CommonInternalCommonV1Cursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit  *int                          `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
 // ListResourceAssignmentsParams defines parameters for ListResourceAssignments.
 type ListResourceAssignmentsParams struct {
 	ResourceType CommonInternalCommonV1ResourceType `form:"resource_type" json:"resource_type"`
@@ -1678,6 +1693,9 @@ func (t *QuestionResponse) UnmarshalJSON(b []byte) error {
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// ListAssignmentRecipients Học sinh nhận một bài giao (đã trừ học sinh được miễn) và tiêu đề bài — module chat tạo thông báo assignment_new / assignment_results_released (F123-AC-02)
+	// (GET /internal/v1/assignments/{assignment_id}/recipients)
+	ListAssignmentRecipients(w http.ResponseWriter, r *http.Request, assignmentId openapi_types.UUID, params ListAssignmentRecipientsParams)
 	// CreateAttempt Mở attempt cho một hoạt động học tập được kích hoạt từ game (bước quest, mini-game, challenge)
 	// (POST /internal/v1/attempts)
 	CreateAttempt(w http.ResponseWriter, r *http.Request)
@@ -1742,6 +1760,61 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// ListAssignmentRecipients operation middleware
+func (siw *ServerInterfaceWrapper) ListAssignmentRecipients(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "assignment_id" -------------
+	var assignmentId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "assignment_id", r.PathValue("assignment_id"), &assignmentId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "assignment_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAssignmentRecipientsParams
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAssignmentRecipients(w, r, assignmentId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // CreateAttempt operation middleware
 func (siw *ServerInterfaceWrapper) CreateAttempt(w http.ResponseWriter, r *http.Request) {
@@ -2373,6 +2446,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/assignments/{assignment_id}/recipients", wrapper.ListAssignmentRecipients)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/attempts", wrapper.CreateAttempt)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/attempts/{attempt_id}", wrapper.GetAttemptResult)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/learning-content:check-published", wrapper.CheckPublishedLearningContent)
@@ -2408,6 +2482,93 @@ type CommonInternalCommonV1NotFoundApplicationProblemPlusJSONResponse CommonInte
 type CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse CommonInternalCommonV1Problem
 
 type CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse CommonInternalCommonV1Problem
+
+type ListAssignmentRecipientsRequestObject struct {
+	AssignmentId openapi_types.UUID `json:"assignment_id"`
+	Params       ListAssignmentRecipientsParams
+}
+
+type ListAssignmentRecipientsResponseObject interface {
+	VisitListAssignmentRecipientsResponse(w http.ResponseWriter) error
+}
+
+type ListAssignmentRecipients200JSONResponse AssignmentRecipientPage
+
+func (response ListAssignmentRecipients200JSONResponse) VisitListAssignmentRecipientsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAssignmentRecipients401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response ListAssignmentRecipients401ApplicationProblemPlusJSONResponse) VisitListAssignmentRecipientsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAssignmentRecipients403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response ListAssignmentRecipients403ApplicationProblemPlusJSONResponse) VisitListAssignmentRecipientsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAssignmentRecipients404ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response ListAssignmentRecipients404ApplicationProblemPlusJSONResponse) VisitListAssignmentRecipientsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAssignmentRecipients422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response ListAssignmentRecipients422ApplicationProblemPlusJSONResponse) VisitListAssignmentRecipientsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
 
 type CreateAttemptRequestObject struct {
 	Body *CreateAttemptJSONRequestBody
@@ -3889,6 +4050,9 @@ func (response RevealPlanItem409ApplicationProblemPlusJSONResponse) VisitRevealP
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// ListAssignmentRecipients Học sinh nhận một bài giao (đã trừ học sinh được miễn) và tiêu đề bài — module chat tạo thông báo assignment_new / assignment_results_released (F123-AC-02)
+	// (GET /internal/v1/assignments/{assignment_id}/recipients)
+	ListAssignmentRecipients(ctx context.Context, request ListAssignmentRecipientsRequestObject) (ListAssignmentRecipientsResponseObject, error)
 	// CreateAttempt Mở attempt cho một hoạt động học tập được kích hoạt từ game (bước quest, mini-game, challenge)
 	// (POST /internal/v1/attempts)
 	CreateAttempt(ctx context.Context, request CreateAttemptRequestObject) (CreateAttemptResponseObject, error)
@@ -3982,6 +4146,33 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// ListAssignmentRecipients operation middleware
+func (sh *strictHandler) ListAssignmentRecipients(w http.ResponseWriter, r *http.Request, assignmentId openapi_types.UUID, params ListAssignmentRecipientsParams) {
+	var request ListAssignmentRecipientsRequestObject
+
+	request.AssignmentId = assignmentId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAssignmentRecipients(ctx, request.(ListAssignmentRecipientsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAssignmentRecipients")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListAssignmentRecipientsResponseObject); ok {
+		if err := validResponse.VisitListAssignmentRecipientsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // CreateAttempt operation middleware
@@ -4544,6 +4735,7 @@ var ErrNotFaked = errors.New("api: operation not faked")
 
 // Fake implements StrictServerInterface for caller tests: each method calls its <Name>Func.
 type Fake struct {
+	ListAssignmentRecipientsFunc       func(ctx context.Context, request ListAssignmentRecipientsRequestObject) (ListAssignmentRecipientsResponseObject, error)
 	CreateAttemptFunc                  func(ctx context.Context, request CreateAttemptRequestObject) (CreateAttemptResponseObject, error)
 	GetAttemptResultFunc               func(ctx context.Context, request GetAttemptResultRequestObject) (GetAttemptResultResponseObject, error)
 	CheckPublishedLearningContentFunc  func(ctx context.Context, request CheckPublishedLearningContentRequestObject) (CheckPublishedLearningContentResponseObject, error)
@@ -4565,6 +4757,14 @@ type Fake struct {
 }
 
 var _ StrictServerInterface = (*Fake)(nil)
+
+// ListAssignmentRecipients calls ListAssignmentRecipientsFunc.
+func (f *Fake) ListAssignmentRecipients(a0 context.Context, a1 ListAssignmentRecipientsRequestObject) (ListAssignmentRecipientsResponseObject, error) {
+	if f.ListAssignmentRecipientsFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ListAssignmentRecipientsFunc(a0, a1)
+}
 
 // CreateAttempt calls CreateAttemptFunc.
 func (f *Fake) CreateAttempt(a0 context.Context, a1 CreateAttemptRequestObject) (CreateAttemptResponseObject, error) {

@@ -45,6 +45,8 @@ type Facade struct {
 	PublishedContent query.CheckPublishedContentHandler
 	// Materials serves getLearningMaterialRenders (caller module game, F103 research R3).
 	Materials query.MaterialRendersHandler
+	// Recipients serves listAssignmentRecipients for module chat (F123): the students receiving an assignment.
+	Recipients AssignmentRecipients
 	// Idempotency stores the results of the writing operations (infra.idempotency_records, idempotency_record_ttl).
 	Idempotency *idempotency.Store
 }

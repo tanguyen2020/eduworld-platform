@@ -121,11 +121,15 @@ func TestPlatformOpsOnlyForIdentity(t *testing.T) {
 		Pattern: "/internal/v1/platform/tenant-assignments:apply"}, http.NotFoundHandler()); err == nil {
 		t.Fatal("httpx mounted an /internal/ route")
 	}
-	// archgen: chat calls no learning operation, so .golangci.arch.yml denies it modules/learning/api.
+	// archgen: realtime calls no learning operation, so .golangci.arch.yml denies it modules/learning/api; chat calls
+	// listAssignmentRecipients (F123) and may import it — never a platform-ops operation (checked above).
 	rules := string(repoFile(t, "src/backend/.golangci.arch.yml"))
 	if !strings.Contains(rules, `pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/api"`) ||
-		!strings.Contains(rules, "chat is not in x-allowed-callers of learning") {
-		t.Fatal("depguard rule denying modules/learning/api to chat is missing (run tools/archgen)")
+		!strings.Contains(rules, "realtime is not in x-allowed-callers of learning") {
+		t.Fatal("depguard rule denying modules/learning/api to realtime is missing (run tools/archgen)")
+	}
+	if strings.Contains(rules, "chat is not in x-allowed-callers of learning") {
+		t.Fatal("chat calls listAssignmentRecipients (F123): archgen must not deny it modules/learning/api")
 	}
 }
 

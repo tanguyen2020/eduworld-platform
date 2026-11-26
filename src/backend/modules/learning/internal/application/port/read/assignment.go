@@ -72,3 +72,11 @@ type SchoolAssignmentReadModel interface {
 	Release(ctx context.Context, id uuid.UUID) (release, status string, ok bool, err error)
 	GameActivities(ctx context.Context, f GameActivityFilter) ([]dto.GameActivityView, error)
 }
+
+// AssignmentRecipientReadModel reads the students who receive an assignment (F123, facade listAssignmentRecipients) in the
+// read transaction of ctx (TenantScope: RLS).
+type AssignmentRecipientReadModel interface {
+	// Recipients returns the title of the assignment (ok = false when it does not exist in the session tenant) and up to
+	// limit+1 targeted students after the given student id (ordered by student id), minus the students with a live excuse.
+	Recipients(ctx context.Context, assignmentID uuid.UUID, after *uuid.UUID, limit int) (title string, ok bool, ids []uuid.UUID, err error)
+}
