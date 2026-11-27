@@ -3,8 +3,10 @@ extends RefCounted
 ## What the battle screen shows, rebuilt from the server only (F109 US2; GAME_NETWORKING §7; ADR-0016): the full
 ## `battle.state.snapshot` replaces everything (after a reconnect nothing local is reused, F109-AC-11) and each
 ## `battle.*` message updates one part. Scores, progress, deadlines and verdicts are never computed here.
-## `speed_bonus_enabled` / `primary_user_ids` are the F105 deltas of contracts/README §6: read when the server sends
-## them; absent = no speed hint at all and no primary marker (the safe reading, F109-AC-09/AC-10).
+## The server fields of the 2026-11-27 delta (spec Clarifications): `speed_bonus_enabled` (countdown / snapshot — the
+## speed hint shows only when true, F109-AC-09), `primary_user_ids` (team battle — the "lượt chính" marker, AC-10) and
+## `chat_channel_ids` {match, team?} (the always-on match chat, AC-13). An older server without them reads safely:
+## no speed hint, no primary marker, and the chat falls back to the open channels of `listMyChannels`.
 
 ## Display states (data-model §2) mapped from `battle.state.snapshot.state`.
 const STATE_LOBBY: String = "lobby"
@@ -40,6 +42,8 @@ var my_answer_locked: bool = false
 var participants: Array[BattlePlayer] = []
 var speed_bonus_enabled: bool = false
 var primary_user_ids: PackedStringArray = []
+## `chat_channel_ids` of the server: `{match}` (+ `team` in a team battle, the student's own team) — valid ids only.
+var chat_channel_ids: Dictionary = {}
 var resume_deadline_at: int = 0
 var evaluation: AnswerEvaluation = null
 var correct_rate: float = -1.0
@@ -62,6 +66,7 @@ static func from_snapshot(data: Dictionary) -> BattleView:
 	v.my_answer_locked = DataRead.bool_of(data, "my_answer_locked")
 	v.speed_bonus_enabled = DataRead.bool_of(data, "speed_bonus_enabled")
 	v.primary_user_ids = DataRead.strings_of(data, "primary_user_ids", 8)
+	v.chat_channel_ids = chat_channels_of(data)
 	for raw: Variant in data["participants"] as Array:
 		var p: BattlePlayer = BattlePlayer.from_dict(raw)
 		if p != null:
@@ -71,9 +76,23 @@ static func from_snapshot(data: Dictionary) -> BattleView:
 	return v
 
 
+## `chat_channel_ids` of a `matchmaking.match.assigned` / `battle.state.snapshot` payload (`MatchChatChannelIds`):
+## `{match}` + `team` when sent; empty when absent or the match id is not a UUID (the client never builds an id).
+static func chat_channels_of(data: Dictionary) -> Dictionary:
+	var raw: Dictionary = DataRead.dict_of(data, "chat_channel_ids")
+	var match_channel: String = DataRead.str_of(raw, "match")
+	if not Uuid.is_valid(match_channel):
+		return {}
+	var out: Dictionary = {"match": match_channel}
+	var team_channel: String = DataRead.str_of(raw, "team")
+	if Uuid.is_valid(team_channel):
+		out["team"] = team_channel
+	return out
+
+
 ## The server question (`QuestionRender` of the AsyncAPI) as the F063 model: the render fields as `render_payload`,
-## options keyed `id` (the AsyncAPI names them `option_id`, the learning render `id` — both accepted). Answer keys a
-## server bug might add are stripped by QuestionRenderModel (R6).
+## options keyed `id` (the standard key since 2026-11-27; the deprecated `option_id` alias is still accepted when
+## it comes alone). Answer keys a server bug might add are stripped by QuestionRenderModel (R6).
 static func question_from(q: Dictionary, index: int) -> QuestionRenderModel:
 	var payload: Dictionary = {}
 	for k: Variant in q.keys():

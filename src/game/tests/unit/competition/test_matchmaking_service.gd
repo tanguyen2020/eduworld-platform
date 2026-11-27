@@ -8,7 +8,9 @@ extends GdUnitTestSuite
 ##   `match_assigned`;
 ## - `409 MM_TICKET_ALREADY_ACTIVE` reads the held ticket again, a timeout ends the queue with "timeout", a lost
 ##   ticket after a reconnect says "Hàng chờ đã kết thúc";
-## - duels: `createDuel` keyed, `410 DUEL_EXPIRED` and `SOCIAL_SCOPE_VIOLATION` are friendly sentences (no reason).
+## - duels: `createDuel` keyed, `410 DUEL_EXPIRED` and `SOCIAL_SCOPE_VIOLATION` are friendly sentences (no reason);
+## - server deltas 2026-11-27: `match.assigned` carries the match chat ids; a 409 `ticket_id` reopens that ticket;
+##   `competition.duel.received` raises `duel_received` with the challenger card (not when quiet / expired).
 
 var h: RealtimeHarness = null
 var mm: MatchmakingService = null
@@ -32,6 +34,7 @@ func before_test() -> void:
 
 func after_test() -> void:
 	h.client.unregister_handler(MatchmakingService.PREFIX, mm.handle_message)
+	h.client.unregister_handler(MatchmakingService.PREFIX_COMPETITION, mm.handle_competition_message)
 	h.dispose()
 
 
@@ -131,6 +134,19 @@ func test_ready_check_accept_requeue_and_assignment() -> void:
 	mm.handle_message("matchmaking.match.assigned", CompetitionFixtures.ws("matchmaking.match.assigned", "battle_1v1"))
 	assert_array(assigned).is_equal(["%s|battle_1v1" % CompetitionFixtures.MATCH_ID])
 	assert_object(mm.ticket).is_null()
+	# The server's match chat channel comes with the assignment (no team channel in 1v1).
+	assert_dict(mm.chat_channels_for(CompetitionFixtures.MATCH_ID)).is_equal({"match": "5bc7f014-e25a-5bc9-b357-7c1090ed139b"})
+	assert_dict(mm.chat_channels_for(CompetitionFixtures.TEAM_MATCH_ID)).is_empty()
+
+
+func test_team_assignment_carries_the_match_and_own_team_channels() -> void:
+	mm.handle_message("matchmaking.match.assigned", CompetitionFixtures.ws("matchmaking.match.assigned", "team_battle"))
+	assert_array(assigned).is_equal(["%s|team_battle" % CompetitionFixtures.TEAM_MATCH_ID])
+	assert_dict(mm.chat_channels_for(CompetitionFixtures.TEAM_MATCH_ID)).is_equal({
+		"match": "4cf706cf-d9ed-54c4-ada6-d38bbb9140cf", "team": "a8bf5cd0-c9b5-5c6f-916f-392612711d25"})
+	# A robot match afterwards has no ids from the assignment (the battle snapshot brings them).
+	mm.enter_match(CompetitionFixtures.MATCH_ID, "battle_1v1")
+	assert_dict(mm.chat_channels_for(CompetitionFixtures.MATCH_ID)).is_empty()
 
 
 func test_accept_falls_back_to_rest_when_the_socket_is_down() -> void:
@@ -145,7 +161,7 @@ func test_already_active_reads_the_held_ticket_and_timeout_suggests_another_mode
 	_ticket_created()
 	await mm.find_match("battle_1v1", CompetitionFixtures.MATH)
 	h.http.clear(CompetitionFixtures.ROUTE_TICKET_CREATE).reply(CompetitionFixtures.ROUTE_TICKET_CREATE, 409,
-			AuthHarness.problem(409, "MM_TICKET_ALREADY_ACTIVE"))
+			_active_without_id())
 	var before: int = h.http.count(CompetitionFixtures.ROUTE_TICKET_GET)
 	var result: ApiResult = await mm.find_match("team_battle", CompetitionFixtures.MATH)
 	assert_str(result.code).is_equal("MM_TICKET_ALREADY_ACTIVE")
@@ -157,9 +173,28 @@ func test_already_active_reads_the_held_ticket_and_timeout_suggests_another_mode
 	assert_object(mm.ticket).is_null()
 
 
+func test_already_active_with_the_problem_ticket_id_reopens_that_ticket() -> void:
+	# Nothing held in RAM (the app was opened again): the problem's `ticket_id` is read.
+	h.http.clear(CompetitionFixtures.ROUTE_TICKET_CREATE).reply(CompetitionFixtures.ROUTE_TICKET_CREATE, 409,
+			AuthHarness.problem(409, "MM_TICKET_ALREADY_ACTIVE", {"ticket_id": CompetitionFixtures.TICKET_ID}))
+	var result: ApiResult = await mm.find_match("battle_1v1", CompetitionFixtures.MATH)
+	assert_str(result.problem.ticket_id).is_equal(CompetitionFixtures.TICKET_ID)
+	assert_str(h.http.last(CompetitionFixtures.ROUTE_TICKET_GET).url).contains(CompetitionFixtures.TICKET_ID)
+	assert_bool(mm.in_queue()).is_true()
+	assert_str(mm.ticket.ticket_id).is_equal(CompetitionFixtures.TICKET_ID)
+	assert_array(notices).is_empty()
+
+
+## `409 MM_TICKET_ALREADY_ACTIVE` without `ticket_id` (the held ticket is only another party member's).
+func _active_without_id() -> Dictionary:
+	var body: Dictionary = AuthHarness.problem(409, "MM_TICKET_ALREADY_ACTIVE")
+	body.erase("ticket_id")
+	return body
+
+
 func test_already_active_without_a_held_ticket_says_so() -> void:
 	h.http.clear(CompetitionFixtures.ROUTE_TICKET_CREATE).reply(CompetitionFixtures.ROUTE_TICKET_CREATE, 409,
-			AuthHarness.problem(409, "MM_TICKET_ALREADY_ACTIVE"))
+			_active_without_id())
 	await mm.find_match("battle_1v1", CompetitionFixtures.MATH)
 	assert_array(notices).is_equal(["ui.arena.error.MM_TICKET_ALREADY_ACTIVE"])
 
@@ -214,3 +249,47 @@ func test_duel_create_accept_expired_and_scope() -> void:
 	var text: String = TranslationServer.translate("ui.arena.error.SOCIAL_SCOPE_VIOLATION").to_lower()
 	for word: String in ["khối", "chặn", "bạn bè", "block", "grade"]:
 		assert_str(text).not_contains(word)
+
+
+func test_a_friends_duel_raises_the_prompt_with_the_public_card_only() -> void:
+	var got: Array[DuelModel] = []
+	mm.duel_received.connect(func(d: DuelModel) -> void: got.append(d))
+	var payload: Dictionary = CompetitionFixtures.ws("competition.duel.received", "friend_duel")
+	payload["expires_at"] = mm.now_ms() + 60000
+	# Through the realtime dispatcher, as the server sends it.
+	h.push(h.envelope("competition.duel.received", payload))
+	await get_tree().process_frame
+	assert_int(got.size()).is_equal(1)
+	var duel: DuelModel = got[0]
+	assert_str(duel.duel_id).is_equal(String(payload["duel_id"]))
+	assert_str(duel.other_nickname).is_equal("CaHeoVui07")
+	assert_str(duel.challenger_id).is_equal(CompetitionFixtures.OPPONENT)
+	assert_str(duel.subject_id).is_equal(CompetitionFixtures.MATH)
+	assert_bool(duel.is_pending()).is_true()
+	assert_int(duel.seconds_left(mm.now_ms())).is_between(59, 60)
+	assert_object(mm.incoming_duel).is_same(duel)
+	# Declining answers the server and forgets the prompt.
+	h.http.reply(CompetitionFixtures.ROUTE_DUEL_DECLINE, 200, CompetitionFixtures.openapi("createDuel.201"))
+	await mm.decline_duel(duel)
+	assert_int(h.http.count(CompetitionFixtures.ROUTE_DUEL_DECLINE)).is_equal(1)
+	assert_object(mm.incoming_duel).is_null()
+
+
+func test_a_duel_is_not_shown_when_quiet_expired_or_malformed() -> void:
+	var got: Array[DuelModel] = []
+	mm.duel_received.connect(func(d: DuelModel) -> void: got.append(d))
+	var payload: Dictionary = CompetitionFixtures.ws("competition.duel.received", "friend_duel")
+	payload["expires_at"] = mm.now_ms() + 60000
+	mm.quiet_check = func() -> bool: return true
+	mm.handle_competition_message("competition.duel.received", payload)
+	mm.quiet_check = Callable()
+	var late: Dictionary = payload.duplicate(true)
+	late["expires_at"] = mm.now_ms() - 1000
+	mm.handle_competition_message("competition.duel.received", late)
+	var no_card: Dictionary = payload.duplicate(true)
+	no_card.erase("challenger")
+	mm.handle_competition_message("competition.duel.received", no_card)
+	# Another competition message is not a duel.
+	mm.handle_competition_message("competition.tier.updated", payload)
+	assert_array(got).is_empty()
+	assert_object(mm.incoming_duel).is_null()

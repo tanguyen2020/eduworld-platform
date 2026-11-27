@@ -54,6 +54,7 @@ func _dispose(p: Player) -> void:
 	if p.mm.in_queue():
 		await p.mm.cancel()
 	p.realtime.unregister_handler(MatchmakingService.PREFIX, p.mm.handle_message)
+	p.realtime.unregister_handler(MatchmakingService.PREFIX_COMPETITION, p.mm.handle_competition_message)
 	p.realtime.unregister_handler(BattleClient.PREFIX, p.battle.handle_message)
 	p.realtime.stop()
 	p.realtime.queue_free()

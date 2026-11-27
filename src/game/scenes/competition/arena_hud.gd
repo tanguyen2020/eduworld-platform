@@ -1,8 +1,9 @@
 class_name ArenaHud
 extends Control
 ## The arena layer over the world HUD (F109-AC-02, AC-03, AC-26): the floating QueueStatusBar (top centre, the student
-## keeps walking), the ReadyCheckDialog when the server proposes a match, and the tournament toast ("Trận giải của em
-## bắt đầu sau 10 phút" — "Xem" opens the tournament tab). Lets every click through except on its own controls. UI only:
+## keeps walking), the ReadyCheckDialog when the server proposes a match, the tournament toast ("Trận giải của em
+## bắt đầu sau 10 phút" — "Xem" opens the tournament tab) and the DuelIncomingPrompt when a friend challenges the
+## student (`competition.duel.received`, top centre under the HUD top bar). Lets every click through except on its own controls. UI only:
 ## MatchmakingService / TournamentService do the work.
 
 signal arena_requested(args: Dictionary)
@@ -15,6 +16,7 @@ var tournaments: TournamentService = null
 var toast_tournament: String = ""
 var _bar: QueueStatusBar = null
 var _ready_check: ReadyCheckDialog = null
+var _duel_prompt: DuelIncomingPrompt = null
 var _toast: PanelContainer = null
 var _toast_label: Label = null
 var _toast_left: float = 0.0
@@ -61,10 +63,23 @@ func _init() -> void:
 	row.add_child(open)
 	_ready_check = ReadyCheckDialog.new()
 	add_child(_ready_check)
+	_duel_prompt = DuelIncomingPrompt.new()
+	_duel_prompt.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_duel_prompt.anchor_left = 0.5
+	_duel_prompt.anchor_right = 0.5
+	_duel_prompt.anchor_top = 0.14
+	_duel_prompt.anchor_bottom = 0.14
+	_duel_prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_duel_prompt.custom_minimum_size.x = float(UiTokens.SIZE_LAYOUT_660)
+	add_child(_duel_prompt)
 
 
 func bind(mm: MatchmakingService, tours: TournamentService) -> void:
+	if matchmaking != null and matchmaking.duel_received.is_connected(show_duel):
+		matchmaking.duel_received.disconnect(show_duel)
 	matchmaking = mm
+	if matchmaking != null:
+		matchmaking.duel_received.connect(show_duel)
 	_bar.bind(mm)
 	_ready_check.bind(mm)
 	if tournaments != null and tournaments.toast_requested.is_connected(show_toast):
@@ -82,9 +97,16 @@ func show_toast(key: String, args: Dictionary, tournament_id: String) -> void:
 	UiBuild.size_buttons(_toast)
 
 
+## A friend's duel (`competition.duel.received`): the prompt with "Nhận lời" / "Để lần sau".
+func show_duel(duel: DuelModel) -> void:
+	if matchmaking != null and duel != null:
+		_duel_prompt.present(matchmaking, duel)
+
+
 func advance(delta: float) -> void:
 	_bar.advance(delta)
 	_ready_check.advance(delta)
+	_duel_prompt.advance(delta)
 	if _toast_left > 0.0:
 		_toast_left -= delta
 		if _toast_left <= 0.0:
@@ -101,6 +123,10 @@ func queue_bar() -> QueueStatusBar:
 
 func ready_check() -> ReadyCheckDialog:
 	return _ready_check
+
+
+func duel_prompt() -> DuelIncomingPrompt:
+	return _duel_prompt
 
 
 func toast_text() -> String:

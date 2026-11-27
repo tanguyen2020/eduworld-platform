@@ -2400,6 +2400,18 @@ msgstr "Thử thách đã kết thúc. Mình xem kết quả nhé."
 msgid "ui.error.CONFLICT"
 msgstr "Có thay đổi mới, em thử lại nhé."
 
+msgid "ui.error.TOURNAMENT_NOT_ELIGIBLE"
+msgstr "Lúc này em chưa tham gia được giải này."
+
+msgid "ui.error.TOURNAMENT_REGISTRATION_CLOSED"
+msgstr "Giải này đã hết giờ đăng ký rồi."
+
+msgid "ui.error.TOURNAMENT_FULL"
+msgstr "Giải đã đủ bạn tham gia rồi. Em xem giải khác nhé!"
+
+msgid "ui.error.TOURNAMENT_CHECK_IN_CLOSED"
+msgstr "Đã hết giờ check-in của giải này."
+
 msgid "ui.collection.completion_reward"
 msgstr "Thưởng khi đủ bộ:"
 
@@ -3484,6 +3496,12 @@ msgstr "Lượt của em"
 msgid "ui.arena.battle.role_support"
 msgstr "Em hỗ trợ"
 
+msgid "ui.arena.battle.speed_hint"
+msgstr "Trả lời đúng và nhanh để được thêm điểm nhé!"
+
+msgid "ui.arena.battle.primary_marker"
+msgstr "Bạn trả lời chính câu này cho đội"
+
 msgid "ui.arena.battle.reconnecting"
 msgstr "Đang kết nối lại…"
 
@@ -3567,6 +3585,12 @@ msgstr "+{points} điểm thi đấu"
 
 msgid "ui.arena.result.encouragement"
 msgstr "Em đã cố gắng lắm! Mình cùng ôn lại chủ đề này rồi thử tiếp nhé."
+
+msgid "ui.competition.encouragement.loss_streak_review"
+msgstr "Em đã rất cố gắng! Mình cùng ôn lại chủ đề {topic} môn {subject} rồi thử tiếp nhé."
+
+msgid "ui.competition.encouragement.loss_streak_review.subject"
+msgstr "Em đã rất cố gắng! Mình cùng ôn lại môn {subject} một chút rồi thử tiếp nhé."
 
 msgid "ui.arena.result.again"
 msgstr "Chơi lại"
@@ -3657,6 +3681,21 @@ msgstr "Nhận lời"
 
 msgid "ui.arena.duel.decline"
 msgstr "Để lần sau"
+
+msgid "ui.arena.duel.incoming_prompt"
+msgstr "{nickname} muốn thách đấu em!"
+
+msgid "ui.arena.duel.incoming_subject"
+msgstr "Môn {subject}"
+
+msgid "ui.arena.duel.incoming_topic"
+msgstr "Môn {subject} · {topic}"
+
+msgid "ui.arena.duel.level"
+msgstr "Cấp {level}"
+
+msgid "ui.arena.duel.seconds_left"
+msgstr "Còn {seconds} giây"
 
 msgid "ui.arena.error.generic"
 msgstr "Có lỗi nhỏ, em thử lại sau nhé."
@@ -3904,14 +3943,8 @@ msgstr "Phòng sẽ mở trước giờ thi một chút."
 msgid "ui.tournament.error.not_eligible"
 msgstr "Giải này chưa dành cho em."
 
-msgid "ui.tournament.error.registration_closed"
-msgstr "Đã hết thời gian đăng ký."
-
-msgid "ui.tournament.error.full"
-msgstr "Giải đã đủ người rồi."
-
-msgid "ui.tournament.error.check_in_closed"
-msgstr "Đã hết giờ check-in."
+msgid "ui.tournament.error.already_registered"
+msgstr "Em đã đăng ký giải này rồi."
 
 msgid "ui.tournament.error.window_closed"
 msgstr "Chưa tới giờ hoặc đã hết giờ cho việc này."

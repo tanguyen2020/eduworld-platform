@@ -108,6 +108,9 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	matchmaking = MatchmakingService.new(rest, realtime, app_state, telemetry)
 	matchmaking.access_denied.connect(_on_access_denied)
 	battle = BattleClient.new(realtime, app_state)
+	# F109: a friend's duel prompt never pops during an exam, a challenge, the activity player or a match, nor with the
+	# popups off (the same rule as the party invitation popup) — the duel then ends by itself after 60 s.
+	matchmaking.quiet_check = func() -> bool: return not party.should_popup(null) or not battle.match_id.is_empty()
 	leaderboards = LeaderboardService.new(rest, realtime, telemetry)
 	leaderboards.access_denied.connect(_on_access_denied)
 	tournaments = TournamentService.new(rest, realtime, telemetry)

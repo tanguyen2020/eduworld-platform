@@ -3,7 +3,8 @@ extends RefCounted
 ## The end of a match as the server recorded it (`battle.match.ended`; F109-AC-14, AC-16, COMPETITION_SYSTEM §3–§4, §12).
 ## Kept: status, each result row (team, outcome, score, correct count, Competition Points), the Timed Quiz parts the
 ## server sends by grade (lớp 1–3: `grade_goal` — collective progress, no rank; lớp ≥ 4: `top` + `my_rank`) and the
-## `encouragement` delta (§12). A `rating_delta` / raw rating is never copied (FR-RNK-003).
+## `encouragement` the server sends to this student only (§12, `BattleEncouragement`). A `rating_delta` / raw rating is
+## never copied (FR-RNK-003).
 
 const OUTCOMES: PackedStringArray = ["win", "loss", "draw", "abandoned", "forfeit", "no_contest"]
 
@@ -20,7 +21,8 @@ var top: Array[Dictionary] = []
 var my_rank: int = 0
 ## Timed Quiz lớp 1–3: `{current, target, reached, contributors_count (-1 = hidden)}`; empty when not sent.
 var grade_goal: Dictionary = {}
-## `{code, topic_id}` (COMPETITION_SYSTEM §12, delta): an encouraging message + "ôn chủ đề" suggestion.
+## `{code, message_code, subject_id, topic_id}` (COMPETITION_SYSTEM §12): an encouraging line + the "ôn lại" suggestion of
+## the match's subject / topic; `topic_id` is "" when the match had no topic. Empty when not sent.
 var encouragement: Dictionary = {}
 
 
@@ -60,7 +62,11 @@ static func from_dict(data: Variant) -> MatchSummary:
 			"reached": DataRead.bool_of(goal, "reached"), "contributors_count": DataRead.nullable_int(goal, "contributors_count")}
 	var enc: Dictionary = DataRead.dict_of(d, "encouragement")
 	if not DataRead.str_of(enc, "code").is_empty():
-		s.encouragement = {"code": DataRead.str_of(enc, "code").left(64), "topic_id": DataRead.str_of(enc, "topic_id")}
+		var subject: String = DataRead.str_of(enc, "subject_id")
+		var topic: String = DataRead.str_of(enc, "topic_id")
+		s.encouragement = {"code": DataRead.str_of(enc, "code").left(64), "message_code": DataRead.str_of(enc,
+			"message_code").left(128), "subject_id": subject if Uuid.is_valid(subject) else "",
+			"topic_id": topic if Uuid.is_valid(topic) else ""}
 	return s
 
 

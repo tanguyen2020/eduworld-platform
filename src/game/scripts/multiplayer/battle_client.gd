@@ -123,6 +123,9 @@ func handle_message(type: String, payload: Dictionary, _envelope: Variant = null
 			view.state = BattleView.STATE_COUNTDOWN
 			view.countdown_at = DataRead.int_of(payload, "starts_at")
 			view.question_count = maxi(view.question_count, DataRead.int_of(payload, "question_count"))
+			# The pinned match rule (server delta 2026-11-27): the speed hint shows only when the server says so (AC-09).
+			if payload.has("speed_bonus_enabled"):
+				view.speed_bonus_enabled = DataRead.bool_of(payload, "speed_bonus_enabled")
 			view_changed.emit(view)
 		"battle.question.shown":
 			_ensure_view()
@@ -262,6 +265,9 @@ func _apply_snapshot(payload: Dictionary) -> void:
 		next.mode = view.mode
 	if next.mode.is_empty():
 		next.mode = mode
+	# The chat channel ids are fixed for the match (pkg/chatid): an older snapshot without them keeps the known ones.
+	if view != null and next.chat_channel_ids.is_empty():
+		next.chat_channel_ids = view.chat_channel_ids
 	if view != null and view.question_instance_id == next.question_instance_id:
 		next.shown_at = view.shown_at
 	if next.shown_at == 0 and next.time_limit_ms > 0 and next.deadline_at > 0:

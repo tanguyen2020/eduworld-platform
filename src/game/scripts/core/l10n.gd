@@ -69,6 +69,10 @@ const ERROR_KEYS: PackedStringArray = [
 	"ui.error.CHALLENGE_ATTEMPT_LIMIT",
 	"ui.error.INVALID_STATE_TRANSITION",
 	"ui.error.CONFLICT",
+	"ui.error.TOURNAMENT_NOT_ELIGIBLE",
+	"ui.error.TOURNAMENT_REGISTRATION_CLOSED",
+	"ui.error.TOURNAMENT_FULL",
+	"ui.error.TOURNAMENT_CHECK_IN_CLOSED",
 ]
 
 

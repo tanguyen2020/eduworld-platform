@@ -2400,6 +2400,18 @@ msgstr "The challenge has ended. Let us see the result."
 msgid "ui.error.CONFLICT"
 msgstr "Something changed, please try again."
 
+msgid "ui.error.TOURNAMENT_NOT_ELIGIBLE"
+msgstr "You cannot join this tournament right now."
+
+msgid "ui.error.TOURNAMENT_REGISTRATION_CLOSED"
+msgstr "Sign-up for this tournament has closed."
+
+msgid "ui.error.TOURNAMENT_FULL"
+msgstr "This tournament is full. Have a look at another one!"
+
+msgid "ui.error.TOURNAMENT_CHECK_IN_CLOSED"
+msgstr "Check-in for this tournament has closed."
+
 msgid "ui.collection.completion_reward"
 msgstr "Reward for the full set:"
 
@@ -3484,6 +3496,12 @@ msgstr "Your turn"
 msgid "ui.arena.battle.role_support"
 msgstr "You help"
 
+msgid "ui.arena.battle.speed_hint"
+msgstr "Answer right and fast to earn bonus points!"
+
+msgid "ui.arena.battle.primary_marker"
+msgstr "Answers this question for the team"
+
 msgid "ui.arena.battle.reconnecting"
 msgstr "Reconnecting…"
 
@@ -3567,6 +3585,12 @@ msgstr "+{points} competition points"
 
 msgid "ui.arena.result.encouragement"
 msgstr "You tried really hard! Let us review this topic and try again."
+
+msgid "ui.competition.encouragement.loss_streak_review"
+msgstr "You tried so hard! Let us review {topic} in {subject} together, then try again."
+
+msgid "ui.competition.encouragement.loss_streak_review.subject"
+msgstr "You tried so hard! Let us review {subject} a little together, then try again."
 
 msgid "ui.arena.result.again"
 msgstr "Play again"
@@ -3657,6 +3681,21 @@ msgstr "Accept"
 
 msgid "ui.arena.duel.decline"
 msgstr "Not now"
+
+msgid "ui.arena.duel.incoming_prompt"
+msgstr "{nickname} wants to challenge you!"
+
+msgid "ui.arena.duel.incoming_subject"
+msgstr "Subject: {subject}"
+
+msgid "ui.arena.duel.incoming_topic"
+msgstr "{subject} · {topic}"
+
+msgid "ui.arena.duel.level"
+msgstr "Level {level}"
+
+msgid "ui.arena.duel.seconds_left"
+msgstr "{seconds} seconds left"
 
 msgid "ui.arena.error.generic"
 msgstr "Something went wrong, please try again later."
@@ -3904,14 +3943,8 @@ msgstr "The room opens a little before the start."
 msgid "ui.tournament.error.not_eligible"
 msgstr "This tournament is not for you."
 
-msgid "ui.tournament.error.registration_closed"
-msgstr "Sign-up has closed."
-
-msgid "ui.tournament.error.full"
-msgstr "The tournament is full."
-
-msgid "ui.tournament.error.check_in_closed"
-msgstr "Check-in has closed."
+msgid "ui.tournament.error.already_registered"
+msgstr "You have already signed up for this tournament."
 
 msgid "ui.tournament.error.window_closed"
 msgstr "It is not the right time for this."

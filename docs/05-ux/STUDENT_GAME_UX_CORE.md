@@ -303,7 +303,7 @@ Bước Tên:  Chọn tên của em  ( Cú Mèo Chăm Chỉ 27 )( Rồng Xanh Vu
 └──────────────────────────────────────────────────────────────┘
 ```
 
-**6. Thành phần.** `PlayerBadge` (avatar, nickname, danh hiệu, level), `XpBar`, `CurrencyChip`, `NotificationBell`, `QuestTracker` (≤ 3 quest), `AreaTitle`, `EventChip`, `Minimap` (ảnh 2D + marker), `ContextActionButton`, `Joystick` (mobile), `ChatDock`, `PartyChip`, `HomeButton`, `ToastStack` (≤ 3 toast), `NextStepCard`, `OnboardingHint`.
+**6. Thành phần.** `PlayerBadge` (avatar, nickname, danh hiệu, level — nickname **không bao giờ bị cắt** "…": thẻ rộng ra theo chỗ trống cạnh các nút trên cùng để tên nằm một dòng, thiếu chỗ thì xuống dòng giữa hai từ (hai dòng cân nhau, vd. 740×360), không thu nhỏ chữ dưới sàn của khối — F109 lượt delta 2026-11-27 theo quy tắc F125), `XpBar`, `CurrencyChip`, `NotificationBell`, `QuestTracker` (≤ 3 quest), `AreaTitle`, `EventChip`, `Minimap` (ảnh 2D + marker), `ContextActionButton`, `Joystick` (mobile), `ChatDock`, `PartyChip`, `HomeButton`, `ToastStack` (≤ 3 toast), `NextStepCard`, `OnboardingHint`.
 
 **6a. Nút, "Việc tiếp theo", hướng dẫn lần đầu, camera (F096, [Confirmed — owner 2026-11-26 "thiết kế game thật dễ dùng và thu hút học sinh", F096 Clarifications Session 2026-11-26]).**
 

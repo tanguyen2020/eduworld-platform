@@ -7,7 +7,10 @@ extends GdUnitTestSuite
 ## - `ANSWER_LATE` / `ANSWER_ALREADY_SUBMITTED` / `MATCH_NOT_ACTIVE` keep the lock and are never re-sent;
 ## - verdict / points only from `battle.answer.evaluated`, scores from `battle.question.revealed`;
 ## - an older snapshot is dropped; a reconnect asks `battle.state.request` and rebuilds from the snapshot only;
-## - status / pause / resume (replay of the current question) / end.
+## - status / pause / resume (replay of the current question) / end;
+## - the server deltas of 2026-11-27: `speed_bonus_enabled` (countdown / snapshot), `primary_user_ids` (team battle),
+##   `chat_channel_ids` (kept by a later snapshot without them), options keyed `id` (an `option_id` alone still works);
+##   a server without them reads safely (no speed hint, no primary marker, no chat ids).
 
 const SELF_ID: String = "0193b0a0-0000-7000-8000-0000000000a1"
 
@@ -54,7 +57,12 @@ func test_snapshot_builds_the_view_from_the_server() -> void:
 	assert_int(v.question_count).is_equal(3)
 	assert_int(v.participants.size()).is_equal(2)
 	assert_str(v.question.type).is_equal("single_choice")
-	assert_bool(v.speed_bonus_enabled).is_false()
+	# The pinned rule of this match (server): the speed hint is on; the match chat id is the server's.
+	assert_bool(v.speed_bonus_enabled).is_true()
+	assert_dict(v.chat_channel_ids).is_equal({"match": "5bc7f014-e25a-5bc9-b357-7c1090ed139b"})
+	assert_array(v.primary_user_ids).is_empty()
+	var options: Array = v.question.render_payload["options"] as Array
+	assert_str(String((options[1] as Dictionary)["id"])).is_equal("o_b")
 	assert_bool(bc.input_locked).is_false()
 
 
@@ -169,13 +177,51 @@ func test_messages_of_another_match_are_ignored() -> void:
 	assert_bool(bc.view.is_over()).is_false()
 
 
-func test_speed_bonus_and_primary_flags_are_read_when_the_server_sends_them() -> void:
-	var snap: Dictionary = CompetitionFixtures.ws("battle.state.snapshot", "team_battle")
+func test_team_snapshot_reads_primary_players_speed_rule_and_both_chat_channels() -> void:
 	bc.match_id = CompetitionFixtures.TEAM_MATCH_ID
-	snap["speed_bonus_enabled"] = true
-	snap["primary_user_ids"] = [SELF_ID]
-	bc.handle_message("battle.state.snapshot", snap)
-	assert_bool(bc.view.speed_bonus_enabled).is_true()
+	bc.handle_message("battle.state.snapshot", CompetitionFixtures.ws("battle.state.snapshot", "team_battle"))
+	assert_bool(bc.view.speed_bonus_enabled).is_false()
+	assert_array(bc.view.primary_user_ids).is_equal(PackedStringArray([SELF_ID, CompetitionFixtures.OPPONENT]))
 	assert_bool(bc.is_primary()).is_true()
+	assert_dict(bc.view.chat_channel_ids).is_equal({"match": "4cf706cf-d9ed-54c4-ada6-d38bbb9140cf",
+		"team": "a8bf5cd0-c9b5-5c6f-916f-392612711d25"})
 	assert_int(bc.view.team_score(1)).is_equal(390)
 	assert_int(bc.my_team()).is_equal(1)
+	# The next question names other primary players (the student now helps).
+	var shown: Dictionary = CompetitionFixtures.ws("battle.question.shown", "team_battle")
+	shown["state_version"] = bc.view.state_version + 1
+	bc.handle_message("battle.question.shown", shown)
+	assert_bool(bc.is_primary()).is_equal(SELF_ID in DataRead.strings_of(shown, "primary_user_ids", 8))
+
+
+func test_countdown_carries_the_speed_rule() -> void:
+	var countdown: Dictionary = CompetitionFixtures.ws("battle.countdown.started", "battle_1v1")
+	bc.handle_message("battle.countdown.started", countdown)
+	assert_str(bc.view.state).is_equal(BattleView.STATE_COUNTDOWN)
+	assert_bool(bc.view.speed_bonus_enabled).is_true()
+	countdown["speed_bonus_enabled"] = false
+	bc.view.state_version = 0
+	bc.handle_message("battle.countdown.started", countdown)
+	assert_bool(bc.view.speed_bonus_enabled).is_false()
+
+
+func test_a_server_without_the_new_fields_reads_safely() -> void:
+	_snapshot()
+	var bare: Dictionary = CompetitionFixtures.ws("battle.state.snapshot", "question_1v1")
+	for key: String in ["speed_bonus_enabled", "chat_channel_ids", "primary_user_ids"]:
+		bare.erase(key)
+	bare["state_version"] = 8
+	# An older server: options carry the deprecated `option_id` only.
+	for o: Variant in (bare["current_question"] as Dictionary)["options"] as Array:
+		(o as Dictionary).erase("id")
+	bc.handle_message("battle.state.snapshot", bare)
+	assert_bool(bc.view.speed_bonus_enabled).is_false()
+	assert_array(bc.view.primary_user_ids).is_empty()
+	# The chat ids are fixed for the match: the ones of the earlier snapshot stay.
+	assert_str(String(bc.view.chat_channel_ids.get("match", ""))).is_equal("5bc7f014-e25a-5bc9-b357-7c1090ed139b")
+	var options: Array = bc.view.question.render_payload["options"] as Array
+	assert_str(String((options[0] as Dictionary)["id"])).is_equal("o_a")
+	# A fresh match with no ids at all: nothing is invented.
+	bc.start(CompetitionFixtures.MATCH_ID, "battle_1v1")
+	bc.handle_message("battle.state.snapshot", bare)
+	assert_dict(bc.view.chat_channel_ids).is_empty()

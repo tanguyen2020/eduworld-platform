@@ -7,7 +7,11 @@ extends GdUnitTestSuite
 ##   and "Hủy"; the robot offer; the timeout with "Chọn chế độ khác" / "Tìm lại";
 ## - the ready check: players by nickname, the bar on the server clock, seconds for lớp 4–9, none for lớp 1–3,
 ##   "Vào trận" sends the accept once;
-## - "Thách đấu bạn" opens the friend picker.
+## - "Thách đấu bạn" opens the friend picker;
+## - a friend's duel (`competition.duel.received`) pops the DuelIncomingPrompt on the HUD: the challenger's public card,
+##   the subject, "Luyện tập, không tính hạng", the time left on the server clock (seconds for lớp 4–9, the bar only for
+##   lớp 1–3); "Nhận lời" → `acceptDuel` → the match opens; "Để lần sau" → `declineDuel`; it closes at `expires_at`;
+##   an expired duel says so kindly.
 
 var s: CompetitionSceneHarness = null
 var screen: ArenaScreen = null
@@ -151,3 +155,79 @@ func test_incoming_duel_expired_says_so() -> void:
 	for i: int in 6:
 		await await_idle_frame()
 	assert_str(dialog.status_text()).is_equal(tr("ui.arena.error.DUEL_EXPIRED"))
+
+
+func _duel_hud() -> ArenaHud:
+	var hud: ArenaHud = ArenaHud.new()
+	hud.theme = AppState.theme_service.current_theme
+	add_child(hud)
+	hud.bind(s.services.matchmaking, s.services.tournaments)
+	await s.services.matchmaking.load_subjects()
+	var p: Dictionary = s.ws("competition.duel.received", "friend_duel")
+	p["expires_at"] = s.services.matchmaking.now_ms() + 60000
+	s.push("competition.duel.received", p)
+	hud.advance(0.1)
+	await await_idle_frame()
+	return hud
+
+
+func test_incoming_duel_prompt_shows_the_card_and_accept_opens_the_match() -> void:
+	var hud: ArenaHud = await _duel_hud()
+	var prompt: DuelIncomingPrompt = hud.duel_prompt()
+	assert_bool(prompt.visible).is_true()
+	assert_str(prompt.title_text()).is_equal(tr("ui.arena.duel.incoming_prompt").format({"nickname": "CaHeoVui07"}))
+	assert_str(prompt.detail_text()).is_equal(tr("ui.arena.duel.incoming_subject").format({"subject": "Toán"}))
+	assert_str(prompt.time_text()).contains("60")
+	assert_float(prompt.time_bar().value).is_greater(0.95)
+	var assigned: Array[String] = []
+	s.services.matchmaking.match_assigned.connect(func(id: String, _m: String) -> void: assigned.append(id))
+	s.h.http.reply(CompetitionFixtures.ROUTE_DUEL_ACCEPT, 200, CompetitionFixtures.openapi("acceptDuel.200"))
+	prompt.accept_button().pressed.emit()
+	for i: int in 4:
+		await await_idle_frame()
+	assert_int(s.h.http.count(CompetitionFixtures.ROUTE_DUEL_ACCEPT)).is_equal(1)
+	assert_bool(Uuid.is_valid(String(s.h.http.last(CompetitionFixtures.ROUTE_DUEL_ACCEPT).headers.get("idempotency-key", "")))).is_true()
+	assert_int(assigned.size()).is_equal(1)
+	assert_bool(prompt.visible).is_false()
+	hud.free()
+
+
+func test_incoming_duel_lower_grades_see_no_numbers_decline_and_expiry() -> void:
+	AppState.set_grade_band("g1_3")
+	var hud: ArenaHud = await _duel_hud()
+	var prompt: DuelIncomingPrompt = hud.duel_prompt()
+	assert_bool(prompt.visible).is_true()
+	assert_str(prompt.time_text()).is_empty()
+	assert_bool(prompt.time_bar().is_visible_in_tree()).is_true()
+	s.h.http.reply(CompetitionFixtures.ROUTE_DUEL_DECLINE, 200, CompetitionFixtures.openapi("createDuel.201"))
+	prompt.decline_button().pressed.emit()
+	for i: int in 3:
+		await await_idle_frame()
+	assert_bool(prompt.visible).is_false()
+	assert_int(s.h.http.count(CompetitionFixtures.ROUTE_DUEL_DECLINE)).is_equal(1)
+	# Another duel left unanswered closes by itself at the server `expires_at` (60 s, nothing stored).
+	var p: Dictionary = s.ws("competition.duel.received", "friend_duel")
+	p["expires_at"] = s.services.matchmaking.now_ms() + 60000
+	s.push("competition.duel.received", p)
+	assert_bool(prompt.visible).is_true()
+	prompt.duel.expires_ms = s.services.matchmaking.now_ms() - 1
+	hud.advance(0.1)
+	assert_bool(prompt.visible).is_false()
+	assert_object(s.services.matchmaking.incoming_duel).is_null()
+	hud.free()
+
+
+func test_an_expired_duel_answer_says_so_kindly() -> void:
+	var hud: ArenaHud = await _duel_hud()
+	var prompt: DuelIncomingPrompt = hud.duel_prompt()
+	s.h.http.reply(CompetitionFixtures.ROUTE_DUEL_ACCEPT, 410, AuthHarness.problem(410, "DUEL_EXPIRED"))
+	prompt.accept_button().pressed.emit()
+	for i: int in 4:
+		await await_idle_frame()
+	assert_bool(prompt.visible).is_true()
+	assert_str(prompt.status_text()).is_equal(tr("ui.arena.error.DUEL_EXPIRED"))
+	assert_bool(prompt.close_button().visible).is_true()
+	assert_bool(prompt.accept_button().visible).is_false()
+	prompt.close_button().pressed.emit()
+	assert_bool(prompt.visible).is_false()
+	hud.free()

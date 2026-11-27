@@ -55,6 +55,8 @@ func push(type: String, payload: Dictionary) -> void:
 		services.battle.handle_message(type, payload)
 	elif type.begins_with("tournament."):
 		services.tournaments.handle_message(type, payload)
+	elif type.begins_with("competition."):
+		services.matchmaking.handle_competition_message(type, payload)
 
 
 ## The AsyncAPI example `<type>.<name>` for the signed-in student.
@@ -74,6 +76,7 @@ func dispose() -> void:
 		_unregister()
 		if services.matchmaking != null and rt != null:
 			rt.client.unregister_handler(MatchmakingService.PREFIX, services.matchmaking.handle_message)
+			rt.client.unregister_handler(MatchmakingService.PREFIX_COMPETITION, services.matchmaking.handle_competition_message)
 		if services.battle != null and rt != null:
 			rt.client.unregister_handler(BattleClient.PREFIX, services.battle.handle_message)
 	if rt != null:
@@ -95,6 +98,7 @@ func _unregister() -> void:
 		return
 	if services.matchmaking != null:
 		auto.unregister_handler(MatchmakingService.PREFIX, services.matchmaking.handle_message)
+		auto.unregister_handler(MatchmakingService.PREFIX_COMPETITION, services.matchmaking.handle_competition_message)
 	if services.battle != null:
 		auto.unregister_handler(BattleClient.PREFIX, services.battle.handle_message)
 	auto.unregister_handler(LeaderboardService.PREFIX, services.leaderboards.handle_message)

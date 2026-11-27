@@ -10,9 +10,13 @@ extends GameApiService
 ##   the contract); the state changes only with what the server confirmed.
 ## - `matchmaking.*` messages update the ticket and the proposal; `matchmaking.match.assigned` (or a duel / robot /
 ##   challenge match) raises `match_assigned` — the world opens the battle screen.
-## - `409 MM_TICKET_ALREADY_ACTIVE` reopens the known ticket (`getMatchmakingTicket`); a timeout suggests another
-##   mode or the unranked robot (F109-AC-04). After a reconnect the held ticket is read again; a lost ticket
-##   (FR-MM-006) ends the queue with "Hàng chờ đã kết thúc, em tìm lại nhé".
+## - `matchmaking.match.assigned` carries the match chat ids (`chat_channel_ids` {match, team?}) the battle screen opens.
+## - `409 MM_TICKET_ALREADY_ACTIVE` reopens the ticket of the problem's `ticket_id` (`getMatchmakingTicket`; without one:
+##   the ticket held in RAM, else "Em đang trong hàng chờ rồi."); a timeout suggests another mode or the unranked robot
+##   (F109-AC-04). After a reconnect the held ticket is read again; a lost ticket (FR-MM-006) ends the queue with
+##   "Hàng chờ đã kết thúc, em tìm lại nhé".
+## - `competition.duel.received` (a friend's duel for this student) raises `duel_received` — the HUD shows the incoming
+##   duel prompt, unless the student is busy (`quiet_check`: exam, challenge, activity, match, popups off).
 ## The client never decides a mode, a subject or an opponent by grade: the server does (R1, R5). Nicknames and ids of
 ## other students are never logged (R14); nothing is written to disk.
 
@@ -25,10 +29,13 @@ signal proposal_changed(proposal: MatchProposalModel)
 ## A proposal closed: `requeued` true when the student is back in the queue (someone else declined).
 signal proposal_closed(requeued: bool)
 signal match_assigned(match_id: String, mode: String)
+## A friend challenged this student (`competition.duel.received`, not when quiet or already expired).
+signal duel_received(duel: DuelModel)
 signal notice_requested(key: String, args: Dictionary)
 signal busy_changed(busy: bool)
 
 const PREFIX: String = "matchmaking"
+const PREFIX_COMPETITION: String = "competition"
 const PATH_MODES: String = "/competition/modes"
 const PATH_TICKETS: String = "/competition/matchmaking/tickets"
 const PATH_TICKET: String = "/competition/matchmaking/tickets/%s"
@@ -48,6 +55,7 @@ const MSG_PROPOSAL: String = "matchmaking.proposal.created"
 const MSG_PROPOSAL_UPDATED: String = "matchmaking.proposal.updated"
 const MSG_PROPOSAL_CANCELLED: String = "matchmaking.proposal.cancelled"
 const MSG_ASSIGNED: String = "matchmaking.match.assigned"
+const MSG_DUEL_RECEIVED: String = "competition.duel.received"
 const CODE_ACTIVE: String = "MM_TICKET_ALREADY_ACTIVE"
 const KEY_QUEUE_LOST: String = "ui.arena.queue.lost"
 const KEY_ALREADY_QUEUED: String = "ui.arena.error.MM_TICKET_ALREADY_ACTIVE"
@@ -65,6 +73,13 @@ var proposal: MatchProposalModel = null
 ## The last match the server assigned (the battle screen enters it).
 var assigned_match_id: String = ""
 var assigned_mode: String = ""
+## `chat_channel_ids` {match, team?} of the assigned match (from `matchmaking.match.assigned`; empty for a robot / duel /
+## challenge match — the battle snapshot carries them then).
+var assigned_chat_channels: Dictionary = {}
+## The friend's duel waiting for an answer (`competition.duel.received`), null once answered / expired.
+var incoming_duel: DuelModel = null
+## True while the student must not be interrupted by a duel prompt (set by ServiceLocator).
+var quiet_check: Callable = Callable()
 ## The last search of the student `{mode, subject_id, topic_id}` ("Chơi lại", "Tìm lại").
 var last_search: Dictionary = {}
 var _intent_keys: Dictionary = {}
@@ -79,6 +94,7 @@ func _init(rest: RestApiClient = null, realtime_client: GameRealtimeClient = nul
 	app_state = app_state_node
 	if realtime != null:
 		realtime.register_handler(PREFIX, handle_message)
+		realtime.register_handler(PREFIX_COMPETITION, handle_competition_message)
 		realtime.connection_state_changed.connect(_on_connection_state_changed)
 
 
@@ -135,6 +151,14 @@ func subject_name(subject_id: String) -> String:
 	return name if not name.is_empty() else TranslationServer.translate("ui.arena.subject.unknown")
 
 
+## Name of `topic_id` of `subject_id` in the student's language ("" when the topics of the subject were not read).
+func topic_name(subject_id: String, topic_id: String) -> String:
+	for t: Dictionary in topics.get(subject_id, []) as Array:
+		if String(t["topic_id"]) == topic_id:
+			return L10n.pick(t["name"] as Dictionary) if t["name"] is Dictionary else ""
+	return ""
+
+
 func mode(mode_code: String) -> ArenaModeModel:
 	for m: ArenaModeModel in modes:
 		if m.mode == mode_code:
@@ -169,9 +193,13 @@ func find_match(mode_code: String, subject_id: String, topic_id: String = "", pa
 	if result.ok:
 		_set_ticket(MatchmakingTicketModel.from_dict(result.body()))
 	elif result.code == CODE_ACTIVE:
-		# F109-AC-04: the ticket of this student is already queued — show it (the problem carries no ticket id: the
-		# one held in RAM is read again; without one the student is told and the bar waits for the next update).
-		if ticket != null:
+		# F109-AC-04: the ticket of this student is already queued — the problem's `ticket_id` reopens its queue bar;
+		# without it (a party ticket of another member) the ticket held in RAM, else the student is told and the bar
+		# waits for the next `matchmaking.ticket.updated`.
+		var held_id: String = result.problem.ticket_id if result.problem != null else ""
+		if Uuid.is_valid(held_id):
+			await load_ticket(held_id)
+		elif ticket != null:
 			await refresh_ticket()
 		else:
 			notice_requested.emit(KEY_ALREADY_QUEUED, {})
@@ -182,7 +210,15 @@ func find_match(mode_code: String, subject_id: String, topic_id: String = "", pa
 func refresh_ticket() -> ApiResult:
 	if ticket == null:
 		return ApiResult.failure("NOT_FOUND")
-	var result: ApiResult = await send_request(ApiRequest.make_get(PATH_TICKET % ticket.ticket_id), "getMatchmakingTicket")
+	return await load_ticket(ticket.ticket_id)
+
+
+## Coroutine: `getMatchmakingTicket` of `ticket_id` (the held ticket, or the `ticket_id` of a 409
+## `MM_TICKET_ALREADY_ACTIVE`): an active ticket opens the queue bar; 404 = lost.
+func load_ticket(ticket_id: String) -> ApiResult:
+	if not Uuid.is_valid(ticket_id):
+		return ApiResult.failure("NOT_FOUND")
+	var result: ApiResult = await send_request(ApiRequest.make_get(PATH_TICKET % ticket_id), "getMatchmakingTicket")
 	if result.ok:
 		_apply_ticket(MatchmakingTicketModel.from_dict(result.body()))
 	elif result.status == 404:
@@ -285,15 +321,29 @@ func accept_duel(duel: DuelModel) -> ApiResult:
 	var result: ApiResult = await _write(ApiRequest.make_post(PATH_DUEL_ACCEPT % duel.duel_id), "acceptDuel",
 			"duel_accept:%s" % duel.duel_id, PackedStringArray(["DUEL_EXPIRED", "HTTP_410"]))
 	if result.ok:
+		_forget_incoming(duel)
 		var accepted: DuelModel = DuelModel.from_dict(result.body())
 		if accepted != null and Uuid.is_valid(accepted.match_id):
 			_assign(accepted.match_id, "battle_1v1")
+	elif result.code in ["DUEL_EXPIRED", "HTTP_410", "NOT_FOUND", "HTTP_404"]:
+		_forget_incoming(duel)
 	return result
 
 
 func decline_duel(duel: DuelModel) -> ApiResult:
+	_forget_incoming(duel)
 	return await _write(ApiRequest.make_post(PATH_DUEL_DECLINE % duel.duel_id), "declineDuel", "",
 			PackedStringArray(["DUEL_EXPIRED", "HTTP_410"]))
+
+
+## The incoming duel prompt closed without an answer (it ran out of time): the duel ends by itself on the server.
+func dismiss_incoming_duel() -> void:
+	incoming_duel = null
+
+
+func _forget_incoming(duel: DuelModel) -> void:
+	if incoming_duel != null and duel != null and incoming_duel.duel_id == duel.duel_id:
+		incoming_duel = null
 
 
 # ---------- realtime ----------
@@ -331,7 +381,26 @@ func handle_message(type: String, payload: Dictionary, _envelope: Variant = null
 			if Uuid.is_valid(match_id):
 				proposal = null
 				_end_queue("matched")
-				_assign(match_id, DataRead.str_of(payload, "mode"))
+				_assign(match_id, DataRead.str_of(payload, "mode"), BattleView.chat_channels_of(payload))
+
+
+## Realtime dispatcher handler for `competition.*`: the duel a friend sent this student (`competition.duel.received`,
+## server delta 2026-11-27). Shown at once or never — the duel lives 60 s and has no stored notification.
+func handle_competition_message(type: String, payload: Dictionary, _envelope: Variant = null) -> void:
+	if type != MSG_DUEL_RECEIVED:
+		return
+	var duel: DuelModel = DuelModel.from_received(payload)
+	if duel == null or duel.seconds_left(now_ms()) <= 0:
+		return
+	if quiet_check.is_valid() and bool(quiet_check.call()):
+		return
+	incoming_duel = duel
+	duel_received.emit(duel)
+
+
+## `chat_channel_ids` of `match_id` from `matchmaking.match.assigned` (empty when not known for that match).
+func chat_channels_for(match_id: String) -> Dictionary:
+	return assigned_chat_channels if match_id == assigned_match_id and Uuid.is_valid(match_id) else {}
 
 
 ## Seconds left of the ready check (server clock).
@@ -370,6 +439,8 @@ func clear() -> void:
 	proposal = null
 	assigned_match_id = ""
 	assigned_mode = ""
+	assigned_chat_channels = {}
+	incoming_duel = null
 	last_search = {}
 	_intent_keys.clear()
 
@@ -407,11 +478,12 @@ func _end_queue(reason: String) -> void:
 		queue_ended.emit(reason)
 
 
-func _assign(match_id: String, mode_code: String) -> void:
+func _assign(match_id: String, mode_code: String, chat_channels: Dictionary = {}) -> void:
 	if not Uuid.is_valid(match_id):
 		return
 	assigned_match_id = match_id
 	assigned_mode = mode_code
+	assigned_chat_channels = chat_channels
 	match_assigned.emit(match_id, mode_code)
 
 

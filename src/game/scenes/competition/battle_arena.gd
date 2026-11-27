@@ -6,11 +6,12 @@ extends Control
 ## - MatchHeader (sides, server scores, "Câu 2/3", the time bar — seconds only for lớp 4–9), the question drawn by the
 ##   F063 renderer of its type (one tap on a tile = the answer for one-step questions; keys 1–4 on a PC; "Gửi đáp án"
 ##   for the others), "Đã ghi nhận" at once, ✓ / ✗ + points only from the server (AC-05…AC-09);
-## - the always-on match chat (F119 ChatDock, `match` / team `team` channels, no option to turn it off): the right
-##   column, shrunk to its 2-line strip while a question is on screen (`EventBus.question_shown` / `question_hidden`)
+## - the always-on match chat (F119 ChatDock on the server's `chat_channel_ids` {match, team?}, no option to turn it
+##   off): the right column, shrunk to its 2-line strip while a question is on screen (`EventBus.question_shown` / `question_hidden`)
 ##   so it never covers the answers (AC-13);
 ## - banners "Đối thủ đang kết nối lại…" (until the server `grace_until`), "Em đang kết nối lại…"; the pause overlay;
-##   the start countdown 3-2-1 from the server `starts_at` (AC-11);
+##   the start countdown 3-2-1 from the server `starts_at` (AC-11) with "Trả lời đúng và nhanh…" only when the server
+##   says `speed_bonus_enabled` (AC-09);
 ## - MatchResultView at the end (AC-14…AC-16).
 ## UI only: BattleClient / MatchmakingService / LeaderboardService / MatchHistoryService do the work (R1).
 
@@ -43,6 +44,8 @@ var _stage_box: VBoxContainer = null
 var _question_slot: VBoxContainer = null
 var _submit: Button = null
 var _countdown: Label = null
+## "Trả lời đúng và nhanh để được thêm điểm!" — only while waiting / counting down and only when the server enabled it.
+var _speed_hint: HBoxContainer = null
 var _waiting: Label = null
 var _reveal: AnswerRevealOverlay = null
 var _result: MatchResultView = null
@@ -140,6 +143,10 @@ func banner_text() -> String:
 
 func status_text() -> String:
 	return (_status["label"] as Label).text if (_status["panel"] as PanelContainer).visible else ""
+
+
+func speed_hint_visible() -> bool:
+	return _speed_hint.visible
 
 
 func countdown_text() -> String:
@@ -293,10 +300,12 @@ func _on_match_ended(summary: MatchSummary) -> void:
 	_result.self_id = battle.self_id
 	var again: bool = services != null and not services.matchmaking.last_search.is_empty() \
 			and battle.view != null and battle.view.mode in ["battle_1v1", "team_battle"]
+	_result.matchmaking = services.matchmaking if services != null else null
 	_result.show_result(summary, battle.view, again)
 	_header.render(battle.view, battle.self_id)
 	if services == null:
 		return
+	_load_encouragement_names(summary)
 	var leaderboards: LeaderboardService = services.leaderboards
 	await leaderboards.load_tiers()
 	if visible and battle != null and battle.view != null:
@@ -305,6 +314,20 @@ func _on_match_ended(summary: MatchSummary) -> void:
 		await services.match_history.load_detail(summary.match_id)
 		if visible:
 			_result.show_review(services.match_history.details.get(summary.match_id) as MatchRecord)
+
+
+## The subject / topic names of the encouragement line (read once, cached by MatchmakingService), then drawn again.
+func _load_encouragement_names(summary: MatchSummary) -> void:
+	var subject_id: String = String(summary.encouragement.get("subject_id", ""))
+	if not Uuid.is_valid(subject_id):
+		return
+	var mm: MatchmakingService = services.matchmaking
+	if not mm.subject_names.has(subject_id):
+		await mm.load_subjects()
+	if Uuid.is_valid(String(summary.encouragement.get("topic_id", ""))):
+		await mm.load_topics(subject_id)
+	if visible and _result.visible:
+		_result.refresh_encouragement()
 
 
 func _on_notice(key: String, args: Dictionary) -> void:
@@ -317,6 +340,9 @@ func _render_state() -> void:
 	var view: BattleView = battle.view if battle != null else null
 	var state: String = view.state if view != null else BattleView.STATE_LOBBY
 	_countdown.visible = state == BattleView.STATE_COUNTDOWN
+	# F109-AC-09: the speed hint exists only when the pinned rule of the match enables it (never for lớp 1–5).
+	_speed_hint.visible = view != null and view.speed_bonus_enabled and question == null \
+			and state in [BattleView.STATE_LOBBY, BattleView.STATE_COUNTDOWN]
 	var waiting_key: String = ""
 	match state:
 		BattleView.STATE_LOBBY:
@@ -474,16 +500,38 @@ func strip_slot() -> Control:
 
 # ---------- chat (F119) ----------
 
-## The always-on `match` channel (+ the student's `team` channel in a team battle). The contract carries no channel id
-## with the match (open question F109): the open `match` / `team` gameplay channels of `listMyChannels` are the ones
-## of the running match (a student plays one match at a time).
+## The always-on `match` channel (+ the student's `team` channel in a team battle): the server's `chat_channel_ids` of
+## the snapshot, else of `matchmaking.match.assigned` (server delta 2026-11-27; the client never builds an id). The
+## channel opens when the match starts — the dock joins it and retries until then. Only an older server without the ids
+## falls back to the open `match` / `team` channels of `listMyChannels` (one match at a time).
 func _open_chat() -> void:
 	if services == null or services.chat == null or not Uuid.is_valid(match_id):
 		return
+	var ids: Dictionary = battle.view.chat_channel_ids if battle != null and battle.view != null else {}
+	if ids.is_empty() and services.matchmaking != null:
+		ids = services.matchmaking.chat_channels_for(match_id)
+	var match_channel: String = String(ids.get("match", ""))
+	var team_channel: String = String(ids.get("team", ""))
+	if ids.is_empty():
+		var found: Array[String] = await _open_channels_of_list()
+		if not visible:
+			return
+		# The snapshot may have brought the server ids meanwhile: they win over the list.
+		var later: Dictionary = battle.view.chat_channel_ids if battle != null and battle.view != null else {}
+		match_channel = String(later.get("match", found[0]))
+		team_channel = String(later.get("team", found[1] if later.is_empty() else ""))
+	if match_channel.is_empty():
+		return
+	var others: Array[Dictionary] = battle.others() if battle != null else []
+	var is_team: bool = mode == "team_battle" or (battle != null and battle.view != null and battle.view.is_team_battle())
+	_chat_dock.show_match(match_id, match_channel, team_channel if is_team else "", others)
+	_chat_ready = not others.is_empty()
+
+
+## Fallback of an older server: `[match, team]` ids of the open gameplay channels of `listMyChannels`.
+func _open_channels_of_list() -> Array[String]:
 	var chat: ChatService = services.chat
 	await chat.load_channels()
-	if not visible:
-		return
 	var match_channel: String = ""
 	var team_channel: String = ""
 	for id: String in chat.store.channel_ids():
@@ -494,12 +542,7 @@ func _open_chat() -> void:
 			match_channel = id
 		elif c.channel_type == ChatChannelModel.TYPE_TEAM and team_channel.is_empty():
 			team_channel = id
-	if match_channel.is_empty():
-		return
-	var others: Array[Dictionary] = battle.others() if battle != null else []
-	var is_team: bool = mode == "team_battle" or (battle != null and battle.view != null and battle.view.is_team_battle())
-	_chat_dock.show_match(match_id, match_channel, team_channel if is_team else "", others)
-	_chat_ready = not others.is_empty()
+	return [match_channel, team_channel]
 
 
 # ---------- layout ----------
@@ -592,6 +635,18 @@ func _build() -> void:
 	UiBuild.expand(_countdown, true, true)
 	_countdown.visible = false
 	_stage_box.add_child(_countdown)
+	_speed_hint = UiBuild.hbox(&"ToolbarBox")
+	_speed_hint.name = "SpeedHint"
+	_speed_hint.alignment = BoxContainer.ALIGNMENT_CENTER
+	_speed_hint.visible = false
+	var rocket: TextureRect = UiBuild.icon_rect("emoji_rocket")
+	rocket.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_speed_hint.add_child(rocket)
+	var hint: Label = UiBuild.keep_words(UiBuild.label("ui.arena.battle.speed_hint", &"InstructionLabel"))
+	hint.name = "SpeedHintLabel"
+	hint.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_speed_hint.add_child(hint)
+	_stage_box.add_child(_speed_hint)
 	_waiting = UiBuild.label("", &"InstructionLabel")
 	_waiting.name = "Waiting"
 	_waiting.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

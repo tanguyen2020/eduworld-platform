@@ -49,6 +49,9 @@ const SCREENS: PackedStringArray = [
 	"arena_queue_timeout", "arena_ready_check", "arena_battle_question", "arena_battle_recorded", "arena_battle_reveal",
 	"arena_battle_team", "arena_battle_reconnect", "arena_result_win", "arena_result_loss", "arena_result_quiz_goal",
 	"arena_result_quiz_rank", "arena_result_cancelled",
+	# F109 server deltas (2026-11-27): a friend's duel prompt on the HUD, the loss-streak encouragement, a tournament
+	# problem with its own sentence (`409 TOURNAMENT_FULL`).
+	"arena_duel_incoming", "arena_result_encouragement", "arena_tournament_error",
 ]
 ## Sample look of the local player (catalog codes of the F070 fixture; display only).
 const SAMPLE_AVATAR: Dictionary = {

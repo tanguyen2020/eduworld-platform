@@ -63,7 +63,7 @@ Spec: `specs/asyncapi/eduworld-realtime.v1.yaml`.
 
 ## 6. Delta cần thực hiện
 
-Phase 2 task T004–T007. F109 không sửa `specs/` trong đợt viết spec; owner thực hiện.
+Phase 2 task T004–T007. F109 không sửa `specs/` trong đợt viết spec; owner thực hiện. Client Godot đã đọc mọi delta "Đã áp 2026-11-27" (xem spec Clarifications phiên "client đọc delta server"; task T049–T056).
 
 - **Cần thêm** (owner F105) `listArenaModes` `GET /competition/modes` → `{data: ArenaMode[]}`; `ArenaMode` {`mode` `MatchMode`, `available` boolean, `locked_reason_code` string maxLength 64, `speed_bonus_enabled` boolean} ([COMPETITION_SYSTEM §2](../../../docs/01-game-design/COMPETITION_SYSTEM.md)).
 - **Đã áp 2026-11-27** (owner F105, AsyncAPI — xem spec Clarifications phiên "delta server đã có") `battle.countdown.started` + `battle.state.snapshot` thêm `speed_bonus_enabled` boolean; `battle.question.shown` thêm `primary_user_ids` (array `Uuid`, maxItems 8, chỉ `team_battle`); `battle.match.ended` thêm `encouragement` {`code` enum `loss_streak_review`, `message_code`, `subject_id`, `topic_id`?} ([COMPETITION_SYSTEM §3.2, §12](../../../docs/01-game-design/COMPETITION_SYSTEM.md)); thêm `chat_channel_ids` (`matchmaking.match.assigned`, `battle.state.snapshot`), `competition.duel.received`, khóa lựa chọn chuẩn `id` (+ alias `option_id`), `409 MM_TICKET_ALREADY_ACTIVE` kèm `ticket_id`.

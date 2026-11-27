@@ -32,7 +32,9 @@ signal menu_pressed()
 ## opens the Party screen with `args`.
 signal party_requested(args: Dictionary)
 
-## PlayerBadge width in touch-target units (nickname ≤ 24 chars + grade band fit at every density).
+## Smallest PlayerBadge width in touch-target units. The badge takes the room the top bar leaves next to its buttons:
+## the whole nickname on one line when it fits; else it wraps between words and is never cut (F125 rule: no ellipsis on
+## a student's name, no text below the band floor) — the badge grows taller and the left column follows its `resized`.
 const BADGE_WIDTH_FACTOR: float = 3.0
 ## "Việc tiếp theo" card width in touch-target units (a two-line label wraps inside it, F096-AC-11).
 const NEXT_STEP_WIDTH_FACTOR: float = 4.0
@@ -105,7 +107,11 @@ func _ready() -> void:
 	_bell.pressed.connect(notifications_pressed.emit)
 	_toasts.connect("toast_pressed", _on_toast_pressed)
 	_next_step_button.pressed.connect(_on_next_step_pressed)
+	# A Theme switch (band, compact) changes the font: the longest word of the name keeps its width.
+	UiBuild.keep_words(_nickname)
+	UiBuild.keep_words(_grade_band)
 	_badge.resized.connect(_layout_left_column)
+	(_badge.get_parent() as Control).resized.connect(_fit_badge)
 	_xp_panel.resized.connect(_layout_left_column)
 	_next_step_card.resized.connect(_layout_left_column)
 	get_viewport().size_changed.connect(_layout_left_column)
@@ -258,6 +264,9 @@ func _render() -> void:
 	_nickname.tooltip_text = _nickname.text
 	_grade_band.text = tr(String(BAND_KEYS.get(band, "ui.hub.grade_band.g1_3")))
 	_grade_band.tooltip_text = _grade_band.text
+	UiBuild.fit_words(_nickname)
+	UiBuild.fit_words(_grade_band)
+	_fit_badge.call_deferred()
 	var count: int = AppState.assignments.size()
 	_assignments_chip.text = tr("ui.hub.assignments_count").format({"count": count}) if count > 0 \
 			else tr("ui.hub.assignments")
@@ -340,6 +349,52 @@ func currency_chip() -> CurrencyChip:
 func _on_progression_changed(progression: ProgressionModel) -> void:
 	_xp_panel.visible = progression != null
 	_layout_left_column.call_deferred()
+
+
+## The PlayerBadge width: its texts on one line when the top bar has the room beside its buttons; else the width of two
+## balanced lines (the name wraps between words, e.g. "Cú Mèo Chăm" / "Chỉ 27"); never less than BADGE_WIDTH_FACTOR
+## touch targets and never so wide that the buttons wrap (with less room the name takes more lines — never cut).
+func _fit_badge() -> void:
+	if _badge == null or not is_inside_tree():
+		return
+	var bar: Control = _badge.get_parent() as Control
+	var gap: float = float(bar.get_theme_constant(&"h_separation"))
+	var others: float = 0.0
+	for child: Node in bar.get_children():
+		var c: Control = child as Control
+		if c == null or c == _badge or not c.visible or (c.size_flags_horizontal & Control.SIZE_EXPAND) != 0:
+			continue
+		others += c.get_combined_minimum_size().x + gap
+	var base: float = UiBuild.target_for(band) * BADGE_WIDTH_FACTOR
+	var want: float = base
+	var font: Font = _nickname.get_theme_font(&"font")
+	if font != null:
+		var px: int = _nickname.get_theme_font_size(&"font_size")
+		var band_w: float = font.get_string_size(_grade_band.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, px).x
+		var pad: float = 0.0
+		for box: StyleBox in [_badge.get_theme_stylebox(&"panel"), _nickname.get_theme_stylebox(&"normal")]:
+			if box != null:
+				pad += box.get_margin(SIDE_LEFT) + box.get_margin(SIDE_RIGHT)
+		var one_line: float = font.get_string_size(_nickname.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, px).x
+		want = ceilf(maxf(one_line, band_w) + pad) + 1.0
+		var room_now: float = floorf(bar.size.x - others - gap) - 1.0
+		if want > room_now:
+			want = ceilf(maxf(_two_line_width(_nickname.text, font, px), band_w) + pad) + 1.0
+	var room: float = floorf(bar.size.x - others - gap) - 1.0
+	var width: float = clampf(want, base, maxf(base, room))
+	if not is_equal_approx(_badge.custom_minimum_size.x, width):
+		_badge.custom_minimum_size.x = width
+
+
+## Width of `text` wrapped into two lines at the most balanced word break (one line when it has a single word).
+static func _two_line_width(text: String, font: Font, px: int) -> float:
+	var words: PackedStringArray = text.split(" ", false)
+	var best: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, px).x
+	for i: int in range(1, words.size()):
+		var first: float = font.get_string_size(" ".join(words.slice(0, i)), HORIZONTAL_ALIGNMENT_LEFT, -1.0, px).x
+		var second: float = font.get_string_size(" ".join(words.slice(i)), HORIZONTAL_ALIGNMENT_LEFT, -1.0, px).x
+		best = minf(best, maxf(first, second))
+	return best
 
 
 func _layout_left_column() -> void:

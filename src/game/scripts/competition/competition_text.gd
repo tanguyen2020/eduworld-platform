@@ -27,18 +27,32 @@ const ERROR_KEYS: Dictionary = {
 	"OFFLINE": "ui.arena.error.NETWORK_ERROR",
 	"TIMEOUT": "ui.arena.error.NETWORK_ERROR",
 }
-## Tournament problems (the contract has no TOURNAMENT_* codes yet: 404 / 403 POLICY_DENIED / 409 CONFLICT (full) /
-## 422 INVALID_STATE_TRANSITION (window closed) — F109-AC-24, open question in quickstart).
+## Tournament problems (F109-AC-24; server delta 2026-11-27): the four `TOURNAMENT_*` codes show their own
+## `ui.error.<CODE>` sentence; outside the audience is still 404, an entry already made is `409 CONFLICT`, and
+## `INVALID_STATE_TRANSITION` (organiser path / older server) reads as "not now".
 const TOURNAMENT_ERROR_KEYS: Dictionary = {
-	"TOURNAMENT_NOT_ELIGIBLE": "ui.tournament.error.not_eligible",
+	"TOURNAMENT_NOT_ELIGIBLE": "ui.error.TOURNAMENT_NOT_ELIGIBLE",
+	"TOURNAMENT_REGISTRATION_CLOSED": "ui.error.TOURNAMENT_REGISTRATION_CLOSED",
+	"TOURNAMENT_FULL": "ui.error.TOURNAMENT_FULL",
+	"TOURNAMENT_CHECK_IN_CLOSED": "ui.error.TOURNAMENT_CHECK_IN_CLOSED",
 	"POLICY_DENIED": "ui.tournament.error.not_eligible",
 	"NOT_FOUND": "ui.tournament.error.not_eligible",
 	"HTTP_404": "ui.tournament.error.not_eligible",
-	"TOURNAMENT_REGISTRATION_CLOSED": "ui.tournament.error.registration_closed",
-	"TOURNAMENT_FULL": "ui.tournament.error.full",
-	"CONFLICT": "ui.tournament.error.full",
-	"TOURNAMENT_CHECK_IN_CLOSED": "ui.tournament.error.check_in_closed",
+	"CONFLICT": "ui.tournament.error.already_registered",
 }
+## `battle.match.ended.encouragement.code` → the client sentence (the server `message_code`
+## `competition.encouragement.<code>` is the client key `ui.competition.encouragement.<code>`, as notifications read
+## `ui.notification.<code>`); `{subject}` / `{topic}` are the names of the match's subject and topic. Only listed codes
+## are shown — a server string never becomes a key by itself.
+const ENCOURAGEMENT_KEYS: Dictionary = {
+	"loss_streak_review": "ui.competition.encouragement.loss_streak_review",
+}
+## The same sentence when the match had no topic (subject only).
+const ENCOURAGEMENT_SUBJECT_KEYS: Dictionary = {
+	"loss_streak_review": "ui.competition.encouragement.loss_streak_review.subject",
+}
+## An encouragement code this client does not know yet: the kind general line.
+const KEY_ENCOURAGEMENT_GENERIC: String = "ui.arena.result.encouragement"
 const MODE_KEYS: Dictionary = {
 	"battle_1v1": "ui.arena.mode.battle_1v1", "team_battle": "ui.arena.mode.team_battle",
 	"coop_challenge": "ui.arena.mode.coop_challenge", "timed_quiz": "ui.arena.mode.timed_quiz",
@@ -95,6 +109,20 @@ static func tournament_error_key(code: String) -> String:
 	if code == "INVALID_STATE_TRANSITION":
 		return "ui.tournament.error.window_closed"
 	return error_key(code)
+
+
+## The sentence of `encouragement` (`{code, message_code, subject_id, topic_id}`); `with_topic` = a topic name is
+## known. The `message_code` is used only when it names a listed sentence.
+static func encouragement_key(encouragement: Dictionary, with_topic: bool) -> String:
+	var code: String = String(encouragement.get("code", ""))
+	var message_code: String = String(encouragement.get("message_code", ""))
+	if not ENCOURAGEMENT_KEYS.has(code):
+		for known: Variant in ENCOURAGEMENT_KEYS.keys():
+			if "ui." + message_code == String(ENCOURAGEMENT_KEYS[known]):
+				code = String(known)
+	if not ENCOURAGEMENT_KEYS.has(code):
+		return KEY_ENCOURAGEMENT_GENERIC
+	return String(ENCOURAGEMENT_KEYS[code]) if with_topic else String(ENCOURAGEMENT_SUBJECT_KEYS[code])
 
 
 static func mode_key(mode: String) -> String:

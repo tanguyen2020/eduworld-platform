@@ -48,6 +48,20 @@ Các câu `[Proposed]` ở phiên trên về contract server nay đã có trên 
 - Q: Mã lỗi giải? → A: **Server cung cấp** `TOURNAMENT_NOT_ELIGIBLE` (403, bị hạn chế thi đấu), `TOURNAMENT_FULL` (409, kể cả đóng sớm vì đủ chỗ), `TOURNAMENT_REGISTRATION_CLOSED` (422, ngoài cửa sổ đăng ký), `TOURNAMENT_CHECK_IN_CLOSED` (422, ngoài cửa sổ check-in) — cùng HTTP status như trước; đã đăng ký → vẫn `409 CONFLICT`; ngoài đối tượng vẫn `404`. Đường đăng ký hộ của người tổ chức giữ `INVALID_STATE_TRANSITION`. [Confirmed]
 - Ghi chú cho client: fixture Godot sinh từ ví dụ AsyncAPI (`gen_fixtures`) cần chạy lại ở lượt client tiếp theo (ví dụ mới: `matchmaking.match.assigned` team_battle, `battle.question.shown` team_battle, `battle.match.ended` loss_streak_encouragement, `competition.duel.received`).
 
+### Session 2026-11-27 (client đọc delta server — bỏ cách đọc dự phòng, [Confirmed])
+
+Client Godot đã đọc các trường của phiên trên; các cách đọc dự phòng `[Proposed]` của phiên "triển khai client" được **thay thế** như sau (vẫn đọc an toàn khi trường vắng — server/checkpoint cũ):
+
+- `speed_bonus_enabled`: đọc ở `battle.countdown.started` (cập nhật luật trận) và snapshot; gợi ý "Trả lời đúng và nhanh để được thêm điểm nhé!" chỉ hiện ở giai đoạn chờ/đếm ngược khi cờ `true`, ẩn khi câu hỏi hiện; "Thưởng tốc độ" vẫn chỉ khi `time_bonus > 0`.
+- `primary_user_ids`: mỗi đội người trả lời chính câu này có ngôi sao + chữ đậm trong `MatchHeader`; học sinh đọc "Lượt của em" / "Em hỗ trợ".
+- `encouragement`: client chỉ nhận `code` đã biết; `message_code` `competition.encouragement.<code>` là khóa `ui.competition.encouragement.<code>` của client (cùng quy ước `ui.notification.<code>` của F123, để `extract_pot` kiểm được), `{subject}`/`{topic}` là tên môn/chủ đề đọc từ `listSubjects`/`listTopics` (không có chủ đề → câu `….subject` chỉ nêu môn); hiện thành dòng thứ hai trong bong bóng Mây ở màn kết quả.
+- `chat_channel_ids`: chat trận mở theo id của snapshot, trước snapshot theo `matchmaking.match.assigned`; `listMyChannels` chỉ còn là dự phòng khi server không gửi id (giữ id đã biết khi snapshot sau thiếu trường).
+- Khóa lựa chọn: `id` chuẩn; option chỉ có `option_id` vẫn được chuẩn hóa về `id`; câu trả lời vẫn `{option_id: <id>}`.
+- `409 MM_TICKET_ALREADY_ACTIVE` có `ticket_id` → `getMatchmakingTicket` của id đó mở thanh hàng chờ; không có id → ticket trong RAM, không có nữa → "Em đang trong hàng chờ rồi."
+- `competition.duel.received`: hộp `DuelIncomingPrompt` trên HUD (thẻ công khai của bạn thách, môn/chủ đề, "Luyện tập, không tính hạng", thanh thời gian theo `expires_at`, lớp 1–3 không có số giây), "Nhận lời" → `acceptDuel`, "Để lần sau" → `declineDuel`; tự đóng khi hết hạn; không hiện khi đang thi/thử thách/làm bài/trong trận hoặc tắt popup (cùng quy tắc lời mời nhóm F102).
+- Lỗi giải: bốn mã `TOURNAMENT_*` có câu riêng `ui.error.<CODE>`; `409 CONFLICT` nay là "Em đã đăng ký giải này rồi." (không còn hiểu là "đủ chỗ"); `POLICY_DENIED`/`404` → "Giải này chưa dành cho em."; `INVALID_STATE_TRANSITION` → "Chưa tới giờ hoặc đã hết giờ cho việc này."; sau 409/422 chi tiết giải được đọc lại.
+- Câu hỏi mở còn lại (không thuộc delta này): bỏ `note` khỏi F109-AC-16 (bảng báo cáo F119 không có chữ tự do) vẫn chờ owner xác nhận.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Chọn chế độ, tìm trận, ready check (Priority: P1) 🎯 MVP

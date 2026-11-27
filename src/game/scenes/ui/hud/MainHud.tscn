@@ -55,13 +55,13 @@ mouse_filter = 2
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudLabel"
-text_overrun_behavior = 3
+autowrap_mode = 3
 
 [node name="GradeBand" type="Label" parent="Root/TopBar/PlayerBadge/Box"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudLabel"
-text_overrun_behavior = 3
+autowrap_mode = 3
 
 [node name="Spacer" type="Control" parent="Root/TopBar"]
 layout_mode = 2

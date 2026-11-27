@@ -5,14 +5,18 @@ extends RefCounted
 ## `arena` (Thi đấu tab), `leaderboard_goal` / `leaderboard_top` / `leaderboard_ranked` (one per server visibility),
 ## `history`, `history_detail`, `tournaments`, `tournament_bracket` (tree for lớp 6–9, path for lớp 1–5), `duel`,
 ## `queue`, `queue_timeout`, `ready_check`, `battle_question`, `battle_recorded`, `battle_reveal`, `battle_team`,
-## `battle_reconnect`, `result_win`, `result_loss`, `result_quiz_goal`, `result_quiz_rank`, `result_cancelled`.
+## `battle_reconnect`, `result_win`, `result_loss`, `result_quiz_goal`, `result_quiz_rank`, `result_cancelled`; the server
+## deltas of 2026-11-27: `duel_incoming` (a friend's duel prompt on the HUD), `result_encouragement` (loss streak line with
+## the subject / topic), `tournament_error` (`409 TOURNAMENT_FULL` on sign-up).
 
 const VIEWS: PackedStringArray = [
 	"arena", "leaderboard_goal", "leaderboard_top", "leaderboard_ranked", "history", "history_detail", "tournaments",
 	"tournament_bracket", "duel", "queue", "queue_timeout", "ready_check", "battle_question", "battle_recorded",
 	"battle_reveal", "battle_team", "battle_reconnect", "result_win", "result_loss", "result_quiz_goal",
-	"result_quiz_rank", "result_cancelled",
+	"result_quiz_rank", "result_cancelled", "duel_incoming", "result_encouragement", "tournament_error",
 ]
+## A topic of the listTopics fixture (Phép nhân) for the duel / encouragement views.
+const TOPIC_MULTIPLY: String = "0193b0a0-0000-7000-8000-000000000611"
 const FRAMES: int = 12
 
 
@@ -44,7 +48,7 @@ static func build(view: String, parent: Control, services: ServiceLocator, http:
 	var self_id: String = prepare(services, http, view == "battle_team")
 	if view.begins_with("battle_") or view.begins_with("result_"):
 		return await _battle(view, parent, services, self_id)
-	if view in ["queue", "queue_timeout", "ready_check"]:
+	if view in ["queue", "queue_timeout", "ready_check", "duel_incoming"]:
 		return await _hud(view, parent, services, self_id)
 	var tab: String = ArenaScreen.TAB_PLAY
 	if view.begins_with("leaderboard_"):
@@ -60,6 +64,12 @@ static func build(view: String, parent: Control, services: ServiceLocator, http:
 		tab = ArenaScreen.TAB_HISTORY
 	elif view.begins_with("tournament"):
 		tab = ArenaScreen.TAB_TOURNAMENTS
+		if view == "tournament_error":
+			# Not signed up yet and the last places just went (the server says TOURNAMENT_FULL).
+			var open: Dictionary = CompetitionFixtures.openapi("getTournament.200", self_id)
+			open.erase("my_entry")
+			open["entry_count"] = open["max_entries"]
+			http.clear(CompetitionFixtures.ROUTE_TOURNAMENT).reply(CompetitionFixtures.ROUTE_TOURNAMENT, 200, open)
 		if view == "tournament_bracket":
 			var detail: Dictionary = CompetitionFixtures.openapi("getTournament.200", self_id)
 			detail["status"] = "in_progress"
@@ -74,6 +84,12 @@ static func build(view: String, parent: Control, services: ServiceLocator, http:
 			await screen.history().open_detail(CompetitionFixtures.MATCH_ID)
 		"tournament_bracket":
 			await screen.tournaments().open_detail(CompetitionFixtures.TOURNAMENT_ID)
+		"tournament_error":
+			await screen.tournaments().open_detail(CompetitionFixtures.TOURNAMENT_ID)
+			await _frames(parent, 6)
+			http.clear(CompetitionFixtures.ROUTE_REGISTER).reply(CompetitionFixtures.ROUTE_REGISTER, 409,
+					AuthHarness.problem(409, "TOURNAMENT_FULL"))
+			await services.tournaments.register(CompetitionFixtures.TOURNAMENT_ID)
 		"duel":
 			screen.duel_button().pressed.emit()
 			await _frames(parent, FRAMES)
@@ -88,6 +104,19 @@ static func _hud(view: String, parent: Control, services: ServiceLocator, self_i
 	parent.add_child(hud)
 	hud.bind(services.matchmaking, services.tournaments)
 	var mm: MatchmakingService = services.matchmaking
+	if view == "duel_incoming":
+		await mm.load_subjects()
+		await mm.load_topics(CompetitionFixtures.MATH)
+		var duel: Dictionary = CompetitionFixtures.ws("competition.duel.received", "friend_duel", self_id)
+		duel["expires_at"] = mm.now_ms() + 45000
+		duel["topic_id"] = TOPIC_MULTIPLY
+		var card: Dictionary = duel["challenger"] as Dictionary
+		card["level"] = 7
+		card["avatar_config"] = PartyMemberCard.DEFAULT_AVATAR.duplicate(true)
+		mm.handle_competition_message("competition.duel.received", duel)
+		hud.advance(0.1)
+		await _frames(parent, FRAMES)
+		return hud
 	mm.last_search = {"mode": "battle_1v1", "subject_id": CompetitionFixtures.MATH, "topic_id": ""}
 	mm.handle_message("matchmaking.ticket.updated", CompetitionFixtures.ws("matchmaking.ticket.updated", "queued", self_id))
 	if view == "queue":
@@ -118,8 +147,10 @@ static func _battle(view: String, parent: Control, services: ServiceLocator, sel
 	snap["match_id"] = match_id
 	snap["mode"] = mode
 	snap["deadline_at"] = bc.now_ms() + 12000
-	if team:
-		snap["primary_user_ids"] = [self_id]
+	# Team battle: the fixture's primary players (the student for team 1, CaHeoVui07 for team 2) are kept.
+	# The server's chat ids name the channels of the chat fixtures (their sample messages show in the dock).
+	snap["chat_channel_ids"] = {"match": ChatFixtures.MATCH_CHANNEL, "team": ChatFixtures.TEAM_CHANNEL} if team \
+			else {"match": ChatFixtures.MATCH_CHANNEL}
 	bc.handle_message("battle.state.snapshot", snap)
 	await _frames(parent, 6)
 	match view:
@@ -134,12 +165,23 @@ static func _battle(view: String, parent: Control, services: ServiceLocator, sel
 			var st: Dictionary = CompetitionFixtures.ws("battle.participant.status_changed", "opponent_disconnected", self_id)
 			st["grace_until"] = bc.now_ms() + 20000
 			bc.handle_message("battle.participant.status_changed", st)
-		"result_win", "result_loss", "result_cancelled", "result_quiz_goal", "result_quiz_rank":
+		"result_win", "result_loss", "result_cancelled", "result_quiz_goal", "result_quiz_rank", "result_encouragement":
 			services.matchmaking.last_search = {"mode": mode, "subject_id": CompetitionFixtures.MATH, "topic_id": ""}
 			var name: String = {"result_win": "win", "result_loss": "loss", "result_cancelled": "cancelled",
-				"result_quiz_goal": "timed_quiz_grade_goal", "result_quiz_rank": "timed_quiz_rank"}[view]
+				"result_quiz_goal": "timed_quiz_grade_goal", "result_quiz_rank": "timed_quiz_rank",
+				"result_encouragement": "loss_streak_encouragement"}[view]
 			var ended: Dictionary = CompetitionFixtures.ws("battle.match.ended", name, self_id)
 			ended["match_id"] = match_id
+			if view == "result_encouragement":
+				# This student lost the match (the third in a row): the server sent them the encouragement.
+				for r: Variant in ended["results"] as Array:
+					var row: Dictionary = r as Dictionary
+					var mine: bool = String(row["user_id"]) == self_id
+					row["outcome"] = "loss" if mine else "win"
+					row["score"] = 350 if mine else 420
+					row["correct_count"] = 2 if mine else 3
+					row["competition_points"] = 6 if mine else 12
+				(ended["encouragement"] as Dictionary)["topic_id"] = TOPIC_MULTIPLY
 			bc.handle_message("battle.match.ended", ended)
 	arena.advance(0.1)
 	await _frames(parent, FRAMES)

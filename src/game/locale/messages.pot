@@ -198,6 +198,9 @@ msgstr ""
 msgid "ui.arena.battle.preparing"
 msgstr ""
 
+msgid "ui.arena.battle.primary_marker"
+msgstr ""
+
 msgid "ui.arena.battle.progress"
 msgstr ""
 
@@ -228,6 +231,9 @@ msgstr ""
 msgid "ui.arena.battle.self_reconnecting"
 msgstr ""
 
+msgid "ui.arena.battle.speed_hint"
+msgstr ""
+
 msgid "ui.arena.battle.submit"
 msgstr ""
 
@@ -243,10 +249,22 @@ msgstr ""
 msgid "ui.arena.duel.incoming"
 msgstr ""
 
+msgid "ui.arena.duel.incoming_prompt"
+msgstr ""
+
+msgid "ui.arena.duel.incoming_subject"
+msgstr ""
+
 msgid "ui.arena.duel.incoming_title"
 msgstr ""
 
+msgid "ui.arena.duel.incoming_topic"
+msgstr ""
+
 msgid "ui.arena.duel.later"
+msgstr ""
+
+msgid "ui.arena.duel.level"
 msgstr ""
 
 msgid "ui.arena.duel.no_friends"
@@ -256,6 +274,9 @@ msgid "ui.arena.duel.open"
 msgstr ""
 
 msgid "ui.arena.duel.pick_friend"
+msgstr ""
+
+msgid "ui.arena.duel.seconds_left"
 msgstr ""
 
 msgid "ui.arena.duel.send"
@@ -1440,6 +1461,12 @@ msgstr ""
 msgid "ui.common.timed"
 msgstr ""
 
+msgid "ui.competition.encouragement.loss_streak_review"
+msgstr ""
+
+msgid "ui.competition.encouragement.loss_streak_review.subject"
+msgstr ""
+
 msgid "ui.config_error.body"
 msgstr ""
 
@@ -1621,6 +1648,18 @@ msgid "ui.error.TENANT_MISMATCH"
 msgstr ""
 
 msgid "ui.error.TENANT_NOT_SELECTED"
+msgstr ""
+
+msgid "ui.error.TOURNAMENT_CHECK_IN_CLOSED"
+msgstr ""
+
+msgid "ui.error.TOURNAMENT_FULL"
+msgstr ""
+
+msgid "ui.error.TOURNAMENT_NOT_ELIGIBLE"
+msgstr ""
+
+msgid "ui.error.TOURNAMENT_REGISTRATION_CLOSED"
 msgstr ""
 
 msgid "ui.error.UNAVAILABLE"
@@ -3627,16 +3666,10 @@ msgstr ""
 msgid "ui.tournament.entry.withdrawn"
 msgstr ""
 
-msgid "ui.tournament.error.check_in_closed"
-msgstr ""
-
-msgid "ui.tournament.error.full"
+msgid "ui.tournament.error.already_registered"
 msgstr ""
 
 msgid "ui.tournament.error.not_eligible"
-msgstr ""
-
-msgid "ui.tournament.error.registration_closed"
 msgstr ""
 
 msgid "ui.tournament.error.window_closed"

@@ -102,4 +102,28 @@ Khối chỉ đổi những gì server/Theme quyết định (cỡ chữ tầng 
 ### 5.4 Còn chờ và câu hỏi mở
 
 - Chạy thật hai client với backend (kịch bản 2, 3, 5, 9, 19, 21 — `test_arena_flow_headless.gd`), video trận + reconnect, trace_id; đo FPS BattleArena trên DEV-AND-MID1 (kịch bản 10).
-- Câu hỏi mở cho backend/owner ở [spec Clarifications 2026-11-27](spec.md#session-2026-11-27-triển-khai-client--đối-chiếu-contract-trên-main): `speed_bonus_enabled` / `primary_user_ids` / `encouragement` và `chat_channel_ids` chưa có trong AsyncAPI, `ticket_id` trong 409, `option_id` / `id` của câu hỏi, nguồn giao lời thách đấu cho người nhận, mã lỗi `TOURNAMENT_*`, ô `note` của AC-16, thẻ chế độ "khóa kèm lý do" — đều [Proposed].
+- Các câu hỏi mở contract của phiên "triển khai client" (`speed_bonus_enabled`, `primary_user_ids`, `encouragement`, `chat_channel_ids`, `ticket_id` trong 409, khóa `id`/`option_id`, lời thách đấu đến, mã `TOURNAMENT_*`) **đã đóng** — server cung cấp và client đã đọc (§5.5). Còn mở: ô `note` của AC-16, thẻ chế độ "khóa kèm lý do" (server chỉ trả chế độ khả dụng).
+
+### 5.5 Lượt đọc delta server (2026-11-27)
+
+Bằng chứng của T049–T057 (spec Clarifications phiên "client đọc delta server").
+
+| Lệnh | Kết quả |
+|---|---|
+| GdUnit4 `res://tests/unit/competition` + `tests/unit/networking/test_realtime_fixtures.gd` + `res://tests/scene/competition` | 74/74 pass (`test_matchmaking_service` 15, `test_battle_client` 11, `test_competition_services` 11, `test_realtime_fixtures` 4, `test_arena_screen` 9, `test_arena_tabs` 9, `test_battle_arena` 15) — gồm 2 test đỏ trước lượt này |
+| GdUnit4 toàn bộ `res://tests` | 1420 test: 0 lỗi, 0 fail, 0 flaky, 15 bỏ qua (live/backend) — gồm ma trận khối với `duel_incoming`, `result_encouragement`, `tournament_error` và hub có nickname dài |
+| Lint Godot: `check_typed` (696 tệp), `lint_theme_overrides`, `lint_layers`, `lint_signals`, `lint_art`, `extract_pot --check`, `pseudo_locale --check`, `gen_fixtures --check` (215 tệp), `check_no_admin_ui` | OK |
+| Web export + `check_web_export` | OK (index.wasm 39 514 754 B, index.pck 8 890 748 B, index.js 279 815 B) |
+| `check-features`, `check-links` | 0 lỗi (2 cảnh báo có sẵn) · 0 link hỏng |
+
+Ảnh `-delta` trong [screenshots/](screenshots/) (renderer Compatibility, `tools/capture_screens.gd --tag=delta`): 4 màn × 4 khối × 1280×720 và 844×390 (`vi`) + `en` `g4_5` 1280×720, và `hub` 740×360 × 4 khối — 40 ảnh, đã xem từng ảnh.
+
+| Màn (tệp) | `g1_3` | `g4_5` | `g6_7` | `g8_9` |
+|---|---|---|---|---|
+| Lời thách đấu đến (`arena_duel_incoming`) | hộp giữa trên: chân dung, "CaHeoVui07 muốn thách đấu em!", "Môn Toán · Phép nhân", "Cấp 7", "Luyện tập, không tính hạng", **chỉ thanh thời gian (không số)**, nút to "Để lần sau" / "Nhận lời" | như `g1_3` + "Còn 45 giây"; `en`: "wants to challenge you!", "45 seconds left" | như `g4_5`, chữ tầng nhỏ | như `g6_7` |
+| Kết quả có lời động viên (`arena_result_encouragement`) | bong bóng Mây: "Chưa thắng lần này…" + dòng icon sách "Em đã rất cố gắng! Mình cùng ôn lại chủ đề Phép nhân môn Toán rồi thử tiếp nhé." (không số trận thua) | như `g1_3`; `en` "You tried so hard! Let us review Phép nhân in Math together…" | như `g1_3` | như `g1_3` |
+| Đấu đội có dấu lượt chính (`arena_battle_team`) | mỗi đội: ngôi sao + chữ đậm xanh cho người trả lời chính (MeoXanh42, CaHeoVui07), "Lượt của em"; chat trận theo id server (2 tin mẫu) | như `g1_3` + số giây | như `g4_5` | như `g4_5` |
+| Lỗi giải (`arena_tournament_error`) | băng đỏ "Giải đã đủ bạn tham gia rồi. Em xem giải khác nhé!" trên đầu chi tiết, "Đã đăng ký: 16/16" | như `g1_3`; `en` "This tournament is full. Have a look at another one!" | như `g1_3` | như `g1_3` |
+| Hub 740×360 (`hub`) | thẻ người chơi "Cú Mèo / Chăm Chỉ 27" + "Khối 1–3" — **tên đủ, không "…"** | như `g1_3` | "Cú Mèo Chăm Chỉ 27" một dòng (thẻ rộng theo chỗ trống) | như `g6_7` |
+
+Ghi nhận khi xem ảnh (có sẵn trước lượt này, không do thay đổi ở đây — đã chụp đối chứng với `match_header.gd` của main): ở 844×390 `g1_3`/`g4_5` màn đấu đội **có băng "đang kết nối lại"**, hàng đáp án nằm dưới mép khung câu hỏi (phải cuộn) vì header + băng + dải chat gấp chiếm chiều cao canvas compact 540 (F125). `g6_7`/`g8_9` vừa (4 ô một hàng). Đề xuất lượt UX sau: thu băng kết nối lại thành icon trên thẻ đội khi câu hỏi đang hiện ở canvas compact.

@@ -107,12 +107,28 @@ func test_list_detail_register_and_check_in_window() -> void:
 
 func test_tournament_problems_are_friendly_sentences() -> void:
 	await ts.load_detail(CompetitionFixtures.TOURNAMENT_ID)
-	for pair: Array in [[409, "CONFLICT", "ui.tournament.error.full"], [403, "POLICY_DENIED", "ui.tournament.error.not_eligible"],
+	# The four TOURNAMENT_* codes of the server (2026-11-27) each have their own `ui.error.<CODE>` sentence; an entry
+	# already made is 409 CONFLICT; INVALID_STATE_TRANSITION (organiser path) reads "not now".
+	for pair: Array in [[403, "TOURNAMENT_NOT_ELIGIBLE", "ui.error.TOURNAMENT_NOT_ELIGIBLE"],
+			[409, "TOURNAMENT_FULL", "ui.error.TOURNAMENT_FULL"],
+			[422, "TOURNAMENT_REGISTRATION_CLOSED", "ui.error.TOURNAMENT_REGISTRATION_CLOSED"],
+			[409, "CONFLICT", "ui.tournament.error.already_registered"],
+			[403, "POLICY_DENIED", "ui.tournament.error.not_eligible"],
 			[422, "INVALID_STATE_TRANSITION", "ui.tournament.error.window_closed"]]:
 		h.http.clear(CompetitionFixtures.ROUTE_REGISTER).reply(CompetitionFixtures.ROUTE_REGISTER, int(pair[0]),
 				AuthHarness.problem(int(pair[0]), String(pair[1])))
+		var reads: int = h.http.count(CompetitionFixtures.ROUTE_TOURNAMENT)
 		await ts.register(CompetitionFixtures.TOURNAMENT_ID)
 		assert_str(notices[notices.size() - 1]).is_equal(String(pair[2]))
+		assert_bool(L10n.has_key(String(pair[2]))).override_failure_message(String(pair[2])).is_true()
+		# Full / already registered / outside the window: the detail is read again (the buttons follow the server).
+		assert_int(h.http.count(CompetitionFixtures.ROUTE_TOURNAMENT)).is_equal(reads + (1 if int(pair[0]) != 403 else 0))
+	var t: TournamentModel = ts.tournament(CompetitionFixtures.TOURNAMENT_ID)
+	h.http.reply(CompetitionFixtures.ROUTE_CHECK_IN, 422, AuthHarness.problem(422, "TOURNAMENT_CHECK_IN_CLOSED"))
+	assert_object(t.my_entry).is_not_null()
+	await ts.check_in(t)
+	assert_str(notices[notices.size() - 1]).is_equal("ui.error.TOURNAMENT_CHECK_IN_CLOSED")
+	assert_str(CompetitionText.tournament_error_key("TOURNAMENT_CHECK_IN_CLOSED")).is_equal("ui.error.TOURNAMENT_CHECK_IN_CLOSED")
 	h.http.clear(CompetitionFixtures.ROUTE_TOURNAMENT).reply(CompetitionFixtures.ROUTE_TOURNAMENT, 404, AuthHarness.problem(404, "NOT_FOUND"))
 	await ts.load_detail(CompetitionFixtures.TOURNAMENT_ID)
 	assert_object(ts.details.get(CompetitionFixtures.TOURNAMENT_ID)).is_null()

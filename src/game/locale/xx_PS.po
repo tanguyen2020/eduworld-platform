@@ -200,6 +200,9 @@ msgstr "[!! Ţĥë ɱáţçĥ ïš þáüšëđ ƒöŕ á ɱöɱëñţ, þĺëá
 msgid "ui.arena.battle.preparing"
 msgstr "[!! Ğëţţïñğ ţĥë ɱáţçĥ ŕëáđý… ~~~~~~~~~~ !!]"
 
+msgid "ui.arena.battle.primary_marker"
+msgstr "[!! Åñšŵëŕš ţĥïš qüëšţïöñ ƒöŕ ţĥë ţëáɱ ~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.arena.battle.progress"
 msgstr "[!! Qüëšţïöñ {n}/{total} ~~~~~~~~ !!]"
 
@@ -230,6 +233,9 @@ msgstr "[!! {seconds} š ~~~~~ !!]"
 msgid "ui.arena.battle.self_reconnecting"
 msgstr "[!! Ŕëçöññëçţïñğ… Ýöüŕ ɱáţçĥ ïš ķëþţ ƒöŕ ýöü. ~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.arena.battle.speed_hint"
+msgstr "[!! Åñšŵëŕ ŕïğĥţ áñđ ƒášţ ţö ëáŕñ ƀöñüš þöïñţš! ~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.arena.battle.submit"
 msgstr "[!! Šëñđ áñšŵëŕ ~~~~~ !!]"
 
@@ -248,11 +254,23 @@ msgstr "[!! Ñöţ ñöŵ ~~~ !!]"
 msgid "ui.arena.duel.incoming"
 msgstr "[!! {nickname} çĥáĺĺëñğëš ýöü ïñ {subject}! ~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.arena.duel.incoming_prompt"
+msgstr "[!! {nickname} ŵáñţš ţö çĥáĺĺëñğë ýöü! ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.duel.incoming_subject"
+msgstr "[!! Šüƀĵëçţ: {subject} ~~~~~~~~ !!]"
+
 msgid "ui.arena.duel.incoming_title"
 msgstr "[!! Å çĥáĺĺëñğë ~~~~~ !!]"
 
+msgid "ui.arena.duel.incoming_topic"
+msgstr "[!! {subject} · {topic} ~~~~~~~~ !!]"
+
 msgid "ui.arena.duel.later"
 msgstr "[!! Ñöţ ñöŵ ~~~ !!]"
+
+msgid "ui.arena.duel.level"
+msgstr "[!! Ĺëvëĺ {level} ~~~~~~ !!]"
 
 msgid "ui.arena.duel.no_friends"
 msgstr "[!! Ýöü ĥávë ñö ƒŕïëñđš öñ ýöüŕ ĺïšţ ýëţ. ~~~~~~~~~~~~~~~ !!]"
@@ -262,6 +280,9 @@ msgstr "[!! Çĥáĺĺëñğë á ƒŕïëñđ ~~~~~~~~ !!]"
 
 msgid "ui.arena.duel.pick_friend"
 msgstr "[!! Pïçķ á ƒŕïëñđ ~~~~~~ !!]"
+
+msgid "ui.arena.duel.seconds_left"
+msgstr "[!! {seconds} šëçöñđš ĺëƒţ ~~~~~~~~~ !!]"
 
 msgid "ui.arena.duel.send"
 msgstr "[!! Šëñđ çĥáĺĺëñğë ~~~~~~ !!]"
@@ -1451,6 +1472,12 @@ msgstr "[!! Šĥöŵ ɱöŕë ïţëɱš ~~~~~~ !!]"
 msgid "ui.common.timed"
 msgstr "[!! Ţïɱëđ ~~ !!]"
 
+msgid "ui.competition.encouragement.loss_streak_review"
+msgstr "[!! Ýöü ţŕïëđ šö ĥáŕđ! Ĺëţ üš ŕëvïëŵ {topic} ïñ {subject} ţöğëţĥëŕ, ţĥëñ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.competition.encouragement.loss_streak_review.subject"
+msgstr "[!! Ýöü ţŕïëđ šö ĥáŕđ! Ĺëţ üš ŕëvïëŵ {subject} á ĺïţţĺë ţöğëţĥëŕ, ţĥëñ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.config_error.body"
 msgstr "[!! Ţĥë çöñƒïğüŕáţïöñ öƒ ţĥïš ïñšţáĺĺáţïöñ ïš ƀŕöķëñ. Pĺëášë ášķ á ţëáçĥëŕ öŕ á þáŕëñţ ţö ŕëïñšţáĺĺ ţĥë ğáɱë. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -1633,6 +1660,18 @@ msgstr "[!! Pĺëášë šïğñ ïñ áğáïñ. ~~~~~~~~~ !!]"
 
 msgid "ui.error.TENANT_NOT_SELECTED"
 msgstr "[!! Pĺëášë çĥööšë ýöüŕ šçĥööĺ ţö çöñţïñüë. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.TOURNAMENT_CHECK_IN_CLOSED"
+msgstr "[!! Çĥëçķ-ïñ ƒöŕ ţĥïš ţöüŕñáɱëñţ ĥáš çĺöšëđ. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.TOURNAMENT_FULL"
+msgstr "[!! Ţĥïš ţöüŕñáɱëñţ ïš ƒüĺĺ. Ĥávë á ĺööķ áţ áñöţĥëŕ öñë! ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.TOURNAMENT_NOT_ELIGIBLE"
+msgstr "[!! Ýöü çáññöţ ĵöïñ ţĥïš ţöüŕñáɱëñţ ŕïğĥţ ñöŵ. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.TOURNAMENT_REGISTRATION_CLOSED"
+msgstr "[!! Šïğñ-üþ ƒöŕ ţĥïš ţöüŕñáɱëñţ ĥáš çĺöšëđ. ~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.UNAVAILABLE"
 msgstr "[!! Ţĥë šýšţëɱ ïš ƀüšý. Pĺëášë ţŕý áğáïñ ïñ á ƒëŵ ɱïñüţëš. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
@@ -3680,17 +3719,11 @@ msgstr "[!! Ýöü šïğñëđ üþ ~~~~~~ !!]"
 msgid "ui.tournament.entry.withdrawn"
 msgstr "[!! Ñöţ ţáķïñğ þáŕţ ~~~~~~ !!]"
 
-msgid "ui.tournament.error.check_in_closed"
-msgstr "[!! Çĥëçķ-ïñ ĥáš çĺöšëđ. ~~~~~~~~ !!]"
-
-msgid "ui.tournament.error.full"
-msgstr "[!! Ţĥë ţöüŕñáɱëñţ ïš ƒüĺĺ. ~~~~~~~~~~ !!]"
+msgid "ui.tournament.error.already_registered"
+msgstr "[!! Ýöü ĥávë áĺŕëáđý šïğñëđ üþ ƒöŕ ţĥïš ţöüŕñáɱëñţ. ~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.tournament.error.not_eligible"
 msgstr "[!! Ţĥïš ţöüŕñáɱëñţ ïš ñöţ ƒöŕ ýöü. ~~~~~~~~~~~~~ !!]"
-
-msgid "ui.tournament.error.registration_closed"
-msgstr "[!! Šïğñ-üþ ĥáš çĺöšëđ. ~~~~~~~~ !!]"
 
 msgid "ui.tournament.error.window_closed"
 msgstr "[!! Ïţ ïš ñöţ ţĥë ŕïğĥţ ţïɱë ƒöŕ ţĥïš. ~~~~~~~~~~~~~~ !!]"

@@ -202,6 +202,13 @@ func test_login_fits_every_band() -> void:
 func test_hub_hud_fits_every_band() -> void:
 	await s.services.progression.refresh()
 	await s.services.inventory.load_wallet()
+	# F109 follow-up (F125 rule): a long generated nickname is never cut on the player card — it wraps between words.
+	var player: Dictionary = AppState.player.duplicate(true)
+	var profile: Dictionary = (player.get("game_profile", {}) as Dictionary).duplicate(true) \
+			if player.get("game_profile") is Dictionary else {}
+	profile["nickname"] = "Cú Mèo Chăm Chỉ 12"
+	player["game_profile"] = profile
+	AppState.player = player
 	_assert_none(await _matrix("hud", func(vp: SubViewport, _band: String) -> Node:
 		return _mount(vp, _scene("res://scenes/ui/hud/MainHud.tscn"))))
 
@@ -580,10 +587,11 @@ func test_chat_list_shows_three_messages_in_every_band() -> void:
 
 ## F109 (F109-AC-01…AC-27 layout; STUDENT_GAME_UX_SOCIAL §8): the arena, its tabs (a leaderboard per server visibility,
 ## history detail, tournament bracket — tree / path by band), the friend duel, the HUD queue bar and ready check, and the
-## battle screen (question, reveal, team battle, result win / Timed Quiz grade goal) in every band × window.
+## battle screen (question, reveal, team battle, result win / Timed Quiz grade goal), and the server deltas of 2026-11-27
+## (a friend's duel prompt, the loss-streak encouragement, a tournament problem sentence) in every band × window.
 const ARENA_MATRIX_VIEWS: PackedStringArray = ["arena", "leaderboard_goal", "leaderboard_ranked", "history_detail",
 	"tournament_bracket", "duel", "queue", "ready_check", "battle_question", "battle_reveal", "battle_team", "result_win",
-	"result_quiz_goal"]
+	"result_quiz_goal", "duel_incoming", "result_encouragement", "tournament_error"]
 
 
 func _arena(vp: SubViewport, view: String) -> Node:

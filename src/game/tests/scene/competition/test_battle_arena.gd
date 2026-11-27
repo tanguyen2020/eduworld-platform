@@ -3,10 +3,12 @@ extends GdUnitTestSuite
 ## AC-14): the battle screen on the contract fixtures —
 ## - the snapshot draws the header (both nicknames, server scores, "Câu 1/3") and the question with the F063 renderer;
 ## - a tap sends one `battle.answer.submit`, every tile locks and "Đã ghi nhận" shows; ✓ / ✗ in words and the points only
-##   after `battle.answer.evaluated`; "Thưởng tốc độ" only when `time_bonus > 0`; no speed hint while
-##   `speed_bonus_enabled` is false;
+##   after `battle.answer.evaluated`; "Thưởng tốc độ" only when `time_bonus > 0`; the speed hint only when the server's
+##   `speed_bonus_enabled` is true (countdown), never while it is false;
 ## - lớp 1–3: no number of seconds, answer tiles ≥ 64 dp; lớp 4–9: the seconds;
-## - team battle: team scores, "Lượt chính của em" from `primary_user_ids`;
+## - team battle: team scores, "Lượt chính của em" and a star on each team's primary player from `primary_user_ids`;
+## - the match chat opens on the server's `chat_channel_ids` (team + match in a team battle);
+## - the loss-streak `encouragement` of the server: Mây's line with the subject and topic names;
 ## - "Đối thủ đang kết nối lại…" until the grace, the pause overlay; the 3D world is suspended while open;
 ## - the match chat is always there (no off switch), shrinks to its 2-line strip while a question is on screen;
 ## - the result: encouraging outcome, points, tier in words (never a rating number), cancelled = "Trận đã hủy", the
@@ -139,13 +141,37 @@ func test_verdict_in_words_and_speed_bonus_only_when_sent() -> void:
 
 func test_no_speed_hint_while_the_bonus_is_off() -> void:
 	await _open()
-	await _question_snapshot()
+	var countdown: Dictionary = s.ws("battle.countdown.started", "battle_1v1")
+	countdown["speed_bonus_enabled"] = false
+	countdown["starts_at"] = s.services.battle.now_ms() + 3000
+	s.push("battle.countdown.started", countdown)
+	await _frames()
+	assert_bool(arena.speed_hint_visible()).is_false()
+	var snap: Dictionary = s.ws("battle.state.snapshot", "question_1v1")
+	snap["speed_bonus_enabled"] = false
+	snap["deadline_at"] = s.services.battle.now_ms() + 15000
+	s.push("battle.state.snapshot", snap)
+	await _frames()
 	# Every visible word of the match screen outside the chat (the chat's own "tin nhắn nhanh" is quick messages).
 	var words: String = " ".join(arena.find_children("*", "Label", true, false).filter(
 			func(n: Node) -> bool: return (n as Label).is_visible_in_tree() and not arena.chat_dock().is_ancestor_of(n)).map(
 			func(n: Node) -> String: return tr((n as Label).text))).to_lower()
 	for hint: String in ["nhanh", "tốc độ", "fast", "speed"]:
 		assert_str(words).not_contains(hint)
+
+
+func test_speed_hint_shows_in_the_countdown_only_when_the_server_enables_it() -> void:
+	await _open()
+	var countdown: Dictionary = s.ws("battle.countdown.started", "battle_1v1")
+	countdown["starts_at"] = s.services.battle.now_ms() + 3000
+	s.push("battle.countdown.started", countdown)
+	await _frames()
+	assert_bool(bool(countdown["speed_bonus_enabled"])).is_true()
+	assert_bool(arena.speed_hint_visible()).is_true()
+	assert_str(arena.countdown_text()).is_not_empty()
+	# The question takes the stage: the hint steps back (the answers are what matter now).
+	await _question_snapshot()
+	assert_bool(arena.speed_hint_visible()).is_false()
 
 
 func test_grade_1_3_has_no_seconds_and_big_tiles() -> void:
@@ -168,6 +194,7 @@ func test_team_battle_scores_and_primary_marker() -> void:
 	assert_str(sides).contains(tr("ui.arena.battle.my_team"))
 	assert_str(sides).contains(tr("ui.arena.battle.score").format({"score": "390"}))
 	assert_str(arena.header().role_text()).is_equal(tr("ui.arena.battle.role_primary"))
+	assert_array(arena.header().primary_names()).is_equal(PackedStringArray(["MeoXanh42"]))
 	# A player away is said in words by the banner.
 	arena.advance(0.1)
 	assert_str(arena.banner_text()).contains("SaoBang09")
@@ -260,3 +287,56 @@ func test_report_from_the_result_uses_the_f119_sheet_with_the_match_context() ->
 	await _frames()
 	assert_str(String(r.dialogs().view)).is_equal("report")
 	assert_str(String(r.dialogs().context["match_id"])).is_equal(CompetitionFixtures.MATCH_ID)
+
+
+func test_team_battle_marks_each_teams_primary_player_and_opens_both_chat_channels() -> void:
+	await _open(CompetitionFixtures.TEAM_MATCH_ID, "team_battle")
+	var snap: Dictionary = s.ws("battle.state.snapshot", "team_battle")
+	snap["deadline_at"] = s.services.battle.now_ms() + 15000
+	s.push("battle.state.snapshot", snap)
+	await _frames(8)
+	# The server named one primary player per team for this question (a1 = the student, a2 = the other team).
+	var names: PackedStringArray = arena.header().primary_names()
+	assert_array(names).contains_exactly_in_any_order(PackedStringArray(["MeoXanh42", "CaHeoVui07"]))
+	assert_str(arena.header().role_text()).is_equal(tr("ui.arena.battle.role_primary"))
+	# The chat ids are the server's: the student's team channel first, then the whole match.
+	var ids: Dictionary = snap["chat_channel_ids"] as Dictionary
+	assert_array(arena.chat_dock().channel_ids).is_equal(PackedStringArray([String(ids["team"]), String(ids["match"])]))
+
+
+func test_match_chat_uses_the_assigned_channel_before_the_snapshot() -> void:
+	s.push_example("matchmaking.match.assigned", "battle_1v1")
+	await _open()
+	assert_array(arena.chat_dock().channel_ids).is_equal(PackedStringArray(["5bc7f014-e25a-5bc9-b357-7c1090ed139b"]))
+
+
+func test_loss_streak_encouragement_names_the_subject_and_topic() -> void:
+	await _open()
+	await _question_snapshot()
+	var ended: Dictionary = s.ws("battle.match.ended", "loss_streak_encouragement")
+	# The fixture student lost this one; the topic is one of the subject's topics (listTopics).
+	(ended["encouragement"] as Dictionary)["topic_id"] = "0193b0a0-0000-7000-8000-000000000611"
+	s.push("battle.match.ended", ended)
+	await _frames(12)
+	var line: String = arena.result_view().encouragement_text()
+	assert_str(line).is_equal(tr("ui.competition.encouragement.loss_streak_review").format({"subject": "Toán",
+		"topic": "Phép nhân"}))
+	# Without a topic the sentence names the subject only; nothing about how many matches were lost.
+	arena.close()
+	await _open()
+	await _question_snapshot()
+	var no_topic: Dictionary = s.ws("battle.match.ended", "loss_streak_encouragement")
+	(no_topic["encouragement"] as Dictionary).erase("topic_id")
+	s.push("battle.match.ended", no_topic)
+	await _frames(12)
+	line = arena.result_view().encouragement_text()
+	assert_str(line).is_equal(tr("ui.competition.encouragement.loss_streak_review.subject").format({"subject": "Toán"}))
+	for word: String in ["3", "thua", "lose"]:
+		assert_str(line.to_lower()).not_contains(word)
+	# A match end without the field shows no extra line.
+	arena.close()
+	await _open()
+	await _question_snapshot()
+	s.push_example("battle.match.ended", "loss")
+	await _frames(8)
+	assert_str(arena.result_view().encouragement_text()).is_empty()

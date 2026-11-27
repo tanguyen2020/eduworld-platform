@@ -4,7 +4,8 @@ extends RefCounted
 ## accepts unknown codes (shown as `ui.error.generic`, GODOT_ARCHITECTURE §9) and never displays `detail` to a
 ## student (support only). F061 adds the typed extension members the game login flow uses (F061-AC-20):
 ## `errors[]`, `choices[]` + `login_ticket` (GameLoginProblem), `other_device` (ActiveSessionConflict),
-## `min_client_version` + `store_url` (ClientVersionProblem), `reopen_at` (CURFEW_ACTIVE).
+## `min_client_version` + `store_url` (ClientVersionProblem), `reopen_at` (CURFEW_ACTIVE). F109: `ticket_id` of
+## `409 MM_TICKET_ALREADY_ACTIVE` (only when the held ticket includes the caller).
 
 
 var type: String = ""
@@ -20,6 +21,7 @@ var login_ticket: String = ""
 var min_client_version: String = ""
 var store_url: String = ""
 var reopen_at: String = ""
+var ticket_id: String = ""
 var choices: Array[TenantChoice] = []
 var other_device: OtherDevice = null
 
@@ -59,6 +61,7 @@ static func from_dict(data: Dictionary) -> ApiProblem:
 	problem.min_client_version = _string(data, "min_client_version")
 	problem.store_url = _string(data, "store_url")
 	problem.reopen_at = _string(data, "reopen_at")
+	problem.ticket_id = _string(data, "ticket_id")
 	var errs: Variant = data.get("errors", [])
 	if errs is Array:
 		for item: Variant in (errs as Array):

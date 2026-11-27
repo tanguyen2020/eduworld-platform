@@ -5,7 +5,9 @@ extends VBoxContainer
 ##   này — em đã làm rất tốt!"), the student's score and right answers, the Competition Points the server gave and the
 ##   tier reloaded from `getMyRatings` (never a rating number — AC-15); team battle: the student's team outcome; Timed
 ##   Quiz: lớp 1–3 the grade goal (GradeGoalBar, no rank), lớp 4–9 "Em xếp thứ 3" + the top nicknames the server sent;
-## - the server `encouragement` (§12): a kind line + "ôn chủ đề" suggestion (AC-16);
+## - the server `encouragement` (§12, sent to this student only after a losing streak): a second line in Mây's bubble
+##   "Em đã rất cố gắng! Mình cùng ôn lại chủ đề {topic} môn {subject}…" (`ui.competition.encouragement.<code>`, the
+##   names from MatchmakingService; no count of losses, no rank — AC-16);
 ## - the questions to review (from `getMatch.review`, after the match: ✓ / ✗ in words, the explanation);
 ## - cancelled / aborted: "Trận đã hủy, không tính kết quả" (AC-14);
 ## - "Báo cáo người chơi" / "Chặn" per opponent (F119 ChatPlayerSafety + the report sheet; never for the robot);
@@ -16,6 +18,10 @@ signal play_again_requested()
 signal back_requested()
 
 var self_id: String = ""
+## Names of the encouragement's subject / topic (set by the battle screen; null = the generic words).
+var matchmaking: MatchmakingService = null
+var _summary: MatchSummary = null
+var _encouragement: Label = null
 var _coach_slot: VBoxContainer = null
 var _stats: VBoxContainer = null
 var _tier: TierBadge = null
@@ -79,6 +85,8 @@ func show_result(summary: MatchSummary, view: BattleView, again: bool) -> void:
 	UiBuild.clear(_safety_box)
 	_safety = null
 	_tier.show_tier(null)
+	_summary = summary
+	_encouragement = null
 	_again.visible = again and not summary.is_void()
 	if summary.is_void():
 		_outcome_key = "ui.arena.result.void"
@@ -89,8 +97,23 @@ func show_result(summary: MatchSummary, view: BattleView, again: bool) -> void:
 	var outcome: String = String(mine.get("outcome", ""))
 	var quiz: bool = view != null and view.mode == "timed_quiz"
 	_outcome_key = "ui.arena.result.quiz_done" if quiz else CompetitionText.outcome_key(outcome)
-	_coach_slot.add_child(ArenaUi.coach_line(_outcome_key, {"topic": TranslationServer.translate("ui.arena.result.topic_any")},
-			CloudyMascot.Mood.HAPPY if outcome != "loss" else CloudyMascot.Mood.ENCOURAGE))
+	var encourage: bool = not summary.encouragement.is_empty()
+	var coach: HBoxContainer = ArenaUi.coach_line(_outcome_key, {"topic": TranslationServer.translate("ui.arena.result.topic_any")},
+			CloudyMascot.Mood.HAPPY if outcome != "loss" and not encourage else CloudyMascot.Mood.ENCOURAGE)
+	_coach_slot.add_child(coach)
+	if encourage:
+		# The same bubble of Mây says it (one mascot on the screen): a kind line + what to review.
+		var row: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
+		row.name = "EncouragementRow"
+		var book: TextureRect = UiBuild.icon_rect("emoji_book")
+		book.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(book)
+		_encouragement = UiBuild.keep_words(UiBuild.data_label("", &"SpeechBubbleLabel"))
+		_encouragement.name = "Encouragement"
+		UiBuild.expand(_encouragement)
+		row.add_child(_encouragement)
+		(coach.find_child("CoachLine", true, false) as Label).get_parent().add_child(row)
+		refresh_encouragement()
 	if not mine.is_empty():
 		_stats.add_child(_stat("star", TranslationServer.translate("ui.arena.result.score").format({
 			"score": ArenaUi.num(float(int(mine["score"]))), "correct": int(mine["correct_count"]),
@@ -112,8 +135,6 @@ func show_result(summary: MatchSummary, view: BattleView, again: bool) -> void:
 		if not names.is_empty():
 			_stats.add_child(UiBuild.data_label(TranslationServer.translate("ui.arena.result.quiz_top").format({
 				"names": ", ".join(names)}), &"MutedLabel"))
-	if not summary.encouragement.is_empty():
-		_stats.add_child(ArenaUi.coach_line("ui.arena.result.encouragement", {}, CloudyMascot.Mood.ENCOURAGE))
 	if view != null:
 		var others: Array[Dictionary] = []
 		for p: BattlePlayer in view.participants:
@@ -130,6 +151,25 @@ func show_result(summary: MatchSummary, view: BattleView, again: bool) -> void:
 				_dialogs.relation(ChatDialogs.ACT_BLOCK, id, nick))
 			_safety_box.add_child(_safety)
 	UiBuild.size_buttons(self)
+
+
+## Draws the encouragement line again (the subject / topic names arrived — MatchmakingService read them).
+func refresh_encouragement() -> void:
+	if _encouragement == null or _summary == null:
+		return
+	var enc: Dictionary = _summary.encouragement
+	var subject_id: String = String(enc.get("subject_id", ""))
+	var topic_id: String = String(enc.get("topic_id", ""))
+	var subject: String = matchmaking.subject_name(subject_id) if matchmaking != null \
+			else TranslationServer.translate("ui.arena.subject.unknown")
+	var topic: String = matchmaking.topic_name(subject_id, topic_id) if matchmaking != null and not topic_id.is_empty() else ""
+	_encouragement.text = TranslationServer.translate(CompetitionText.encouragement_key(enc, not topic.is_empty())).format(
+			{"subject": subject, "topic": topic})
+	UiBuild.fit_words(_encouragement)
+
+
+func encouragement_text() -> String:
+	return _encouragement.text if _encouragement != null else ""
 
 
 ## The tier after `getMyRatings` (the tier of this mode / subject, or none yet).

@@ -101,7 +101,9 @@ func register(tournament_id: String, party_id: String = "") -> ApiResult:
 		body["party_id"] = party_id
 	var result: ApiResult = await _write(ApiRequest.make_post(PATH_ENTRIES % tournament_id, body), "registerTournamentEntry",
 			"register:%s:%s" % [tournament_id, party_id])
-	if result.ok or result.code == "CONFLICT" or result.status == 422:
+	# Already registered (409 CONFLICT), full (409 TOURNAMENT_FULL) or outside the window (422): the detail is read
+	# again so the buttons follow the server state.
+	if result.ok or result.status == 409 or result.status == 422:
 		await load_detail(tournament_id)
 	return result
 

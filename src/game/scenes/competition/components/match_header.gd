@@ -2,7 +2,8 @@ class_name MatchHeader
 extends PanelContainer
 ## Top of the battle screen (F109-AC-05, AC-09, AC-10; STUDENT_GAME_UX_SOCIAL §8 `MatchHeader`): the two sides with a
 ## portrait, the nickname and the server score (team battle: "Đội của em" / "Đội bạn" with the team score and the
-## members' nicknames; "Lượt chính" / "Hỗ trợ" in words for the student from the server `primary_user_ids`), the
+## members' nicknames — the member answering this question for each team (server `primary_user_ids`) has a star and
+## stronger text, and the student reads "Lượt của em" / "Em hỗ trợ" in words), the
 ## question progress "Câu 2/3" and the time bar from `deadline_at − server now`. Lớp 1–3 see the bar only (no seconds
 ## — AC-09); lớp 4–9 also see "12 giây". A player away has a grey card with the wifi sign; the words are in the reconnect banner (not colour only).
 ## UI only: values are BattleClient's (server).
@@ -114,7 +115,7 @@ func _render_progress(view: BattleView, self_id: String) -> void:
 
 
 func _signature_of(view: BattleView, self_id: String) -> String:
-	var parts: PackedStringArray = [view.mode, self_id, TranslationServer.get_locale()]
+	var parts: PackedStringArray = [view.mode, self_id, TranslationServer.get_locale(), ",".join(view.primary_user_ids)]
 	for p: BattlePlayer in view.participants:
 		parts.append("%s|%d|%s|%s" % [p.user_id, p.team, p.connected, p.score_visible()])
 	return ",".join(parts)
@@ -220,14 +221,40 @@ func _team_side(view: BattleView, team: int, mine: bool) -> Control:
 	score.name = "TeamScore"
 	box.add_child(score)
 	_scores["team:%d" % team] = score
-	var names: PackedStringArray = []
-	for p: BattlePlayer in view.members(team):
-		names.append(p.nickname)
-	var members: Label = UiBuild.keep_words(UiBuild.data_label(", ".join(names), &"MutedLabel"))
+	# Each member on its own chip-like item, never cut (keep whole words); the primary of this question has a star.
+	var members: HFlowContainer = HFlowContainer.new()
 	members.name = "Members"
 	box.add_child(members)
+	for p: BattlePlayer in view.members(team):
+		members.add_child(_member_item(p, p.user_id in view.primary_user_ids))
 	# A player away is said in words by the reconnect banner of the screen (the header stays short on a phone).
 	return card
+
+
+## One team member: the nickname, with a star + stronger text when the server named them primary for this question.
+func _member_item(p: BattlePlayer, primary: bool) -> HBoxContainer:
+	var item: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
+	item.name = "Primary" if primary else "Member"
+	if primary:
+		var star: TextureRect = UiBuild.icon_rect("star", 0.8)
+		star.name = "PrimaryStar"
+		star.tooltip_text = "ui.arena.battle.primary_marker"
+		star.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		item.add_child(star)
+	var nick: String = p.nickname if not p.bot else TranslationServer.translate("ui.arena.battle.robot")
+	var l: Label = UiBuild.data_label(nick, &"InstructionLabel" if primary else &"MutedLabel", false)
+	l.name = "Nickname"
+	l.tooltip_text = nick
+	item.add_child(l)
+	return item
+
+
+## Nicknames the server marked primary for this question (tests / accessibility).
+func primary_names() -> PackedStringArray:
+	var out: PackedStringArray = []
+	for node: Node in find_children("Primary*", "HBoxContainer", true, false):
+		out.append(((node as Node).get_node("Nickname") as Label).text)
+	return out
 
 
 func _score_text(score: int) -> String:
