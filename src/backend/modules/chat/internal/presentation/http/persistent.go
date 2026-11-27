@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/channel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/policy"
@@ -34,15 +35,26 @@ type PersistentHandlers struct {
 	Search Searcher
 	// Caps returns what the caller may do in a channel (query.Chat.Caps: effective policy and sanctions); nil: none listed.
 	Caps func(ctx context.Context, v query.Viewer, ch channel.Channel) query.ChannelCaps
+	// Peer returns the public card of the other student of a direct channel (query.Chat.Peer, delta F112-5); nil: none.
+	Peer func(ctx context.Context, v query.Viewer, ch channel.Channel) *read.ChatCard
+	// Settings is updateChannelMembership (command.ChannelSettings, delta F112-9).
+	Settings ChannelSettingsSetter
+}
+
+// ChannelSettingsSetter is updateChannelMembership (command.ChannelSettings).
+type ChannelSettingsSetter interface {
+	SetNotificationLevel(ctx context.Context, ch uuid.UUID, level string) (command.ChannelMembership, error)
 }
 
 // PersistentOperations are the F120 player operations.
-var PersistentOperations = []string{"openDirectChannel", "searchMessages"}
+var PersistentOperations = []string{"openDirectChannel", "searchMessages", "updateChannelMembership"}
 
 func init() {
 	for _, o := range []httpx.Operation{
 		{ID: "openDirectChannel", Method: http.MethodPost, Pattern: "/chat/direct-channels", SuccessStatus: http.StatusOK},
 		{ID: "searchMessages", Method: http.MethodGet, Pattern: "/chat/search", SuccessStatus: http.StatusOK},
+		{ID: "updateChannelMembership", Method: http.MethodPatch, Pattern: "/chat/channels/{channel_id}/membership",
+			Idempotency: httpx.IdempotencyRequired, SuccessStatus: http.StatusOK},
 	} {
 		o.Module, o.Tenant, o.Guard = "chat", httpx.TenantRequired, httpx.GuardGamePlayer
 		Operations[o.ID] = o
@@ -50,10 +62,11 @@ func init() {
 }
 
 func registerPersistent(s *httpx.Server, h *PersistentHandlers) error {
-	if h.Direct == nil || h.Search == nil {
+	if h.Direct == nil || h.Search == nil || h.Settings == nil {
 		return errors.New("chat: the persistent channel handlers are required")
 	}
-	routes := map[string]http.HandlerFunc{"openDirectChannel": h.openDirect, "searchMessages": h.search}
+	routes := map[string]http.HandlerFunc{"openDirectChannel": h.openDirect, "searchMessages": h.search,
+		"updateChannelMembership": h.updateMembership}
 	for _, id := range PersistentOperations {
 		if err := s.Handle(Operations[id], routes[id]); err != nil {
 			return err
@@ -79,6 +92,17 @@ func ChannelBody(c channel.Channel, caps query.ChannelCaps) map[string]any {
 		m["purge_after"] = c.PurgeAfter.UTC()
 	}
 	return m
+}
+
+// SelfFields adds what a channel tells the caller about itself and the other side (listMyChannels): notification_level
+// and muted where the caller has a membership (delta F112-9), the peer card of a direct channel (delta F112-5, R16).
+func SelfFields(m map[string]any, level string, peer *read.ChatCard) {
+	if level != "" {
+		m["notification_level"], m["muted"] = level, level == command.NotificationNone
+	}
+	if peer != nil {
+		m["peer"] = card(query.Card{UserID: peer.UserID, Nickname: peer.Nickname, Level: max(peer.Level, 1), Avatar: peer.Avatar})
+	}
 }
 
 func kindNames(kinds []policy.Kind) []string {
@@ -115,7 +139,32 @@ func (h PersistentHandlers) openDirect(w http.ResponseWriter, r *http.Request) {
 	if res.Created {
 		status = http.StatusCreated
 	}
-	writeJSON(w, status, ChannelBody(res.Channel, caps))
+	body := ChannelBody(res.Channel, caps)
+	if h.Peer != nil {
+		SelfFields(body, "", h.Peer(r.Context(), v, res.Channel))
+	}
+	writeJSON(w, status, body)
+}
+
+func (h PersistentHandlers) updateMembership(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "channel_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var b struct {
+		NotificationLevel string `json:"notification_level"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&b); err != nil || b.NotificationLevel == "" {
+		fail(w, r, problem.Invalid("notification_level", problem.SubRequired, "all, mentions or none"))
+		return
+	}
+	out, err := h.Settings.SetNotificationLevel(r.Context(), id, b.NotificationLevel)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out.Body())
 }
 
 func optTime(r *http.Request, name string) (*time.Time, error) {
@@ -163,8 +212,15 @@ func (h PersistentHandlers) search(w http.ResponseWriter, r *http.Request) {
 	for i, hit := range p.Data {
 		msg := Message(hit.Message.Envelope, hit.Sender, hit.Message.Recalled)
 		item := map[string]any{"message": msg, "channel_id": hit.Message.Envelope.ChannelID, "channel_type": hit.ChannelType}
-		if body, ok := msg["body"].(string); ok && body != "" {
-			item["highlight"] = body
+		if hit.Highlight != "" { // plain text + code point ranges, no markup (delta F112-8)
+			item["highlight"] = hit.Highlight
+			if len(hit.Ranges) > 0 {
+				ranges := make([]map[string]int, len(hit.Ranges))
+				for j, rg := range hit.Ranges {
+					ranges[j] = map[string]int{"start": rg.Start, "length": rg.Length}
+				}
+				item["highlight_ranges"] = ranges
+			}
 		}
 		data[i] = item
 	}

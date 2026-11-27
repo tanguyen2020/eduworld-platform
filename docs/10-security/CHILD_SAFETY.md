@@ -123,6 +123,7 @@ Khuyến nghị vận hành [Confirmed]: chỉ tắt từng bước có lý do c
 | Party liên trường | Không (mặc định Release 1.0) [Confirmed] |
 | Party khác grade band | Được nếu cùng trường và thỏa điều kiện ghép nhóm ([PARTY_SYSTEM §6.2](../03-social-multiplayer/PARTY_SYSTEM.md#62-kiểm-tra-ở-bước-3--eligibility): cùng band hoặc band liền kề khi activity cho phép); câu hỏi theo khối thấp hơn của nhóm ([COMPETITION_SYSTEM §5](../01-game-design/COMPETITION_SYSTEM.md#5-công-bằng-theo-khối-lớp)). Đây là điều kiện ghép **hoạt động học tập**, không áp vào chat (ADR-0020) |
 | Block | Chặn mọi tương tác (chat, mời, ghép party, ghép trận nếu còn lựa chọn khác). Ẩn tin do server quyết định ở mọi channel, kể cả World/Area: không giao tin của người đã block/bị block hoặc đã bị tắt tiếng, cả realtime lẫn lịch sử bộ đệm (F120 T061, [CHAT_SYSTEM §2](../03-social-multiplayer/CHAT_SYSTEM.md)) |
+| Gỡ thành viên / lưu trữ club | **Chỉ nhân sự trường** ở portal (`removeSchoolClubMember` có lý do + audit, `archiveClub` với `social.club.approve`); học sinh — kể cả chủ club và `officer` — không loại bạn khỏi nhóm hay đóng nhóm trong game (`403`), vì thao tác loại người giữa trẻ em với nhau dễ thành công cụ cô lập bạn; học sinh vẫn có Tắt tiếng/Chặn/Báo cáo ([SOCIAL_SYSTEM §6.2](../03-social-multiplayer/SOCIAL_SYSTEM.md#62-thành-viên--vai-trò), delta F112-2, owner chốt 2026-11-28) [Confirmed] |
 
 ### 3.5. Preset "chỉ quick message + emote" (ADR-0078)
 

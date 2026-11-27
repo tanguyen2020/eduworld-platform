@@ -44,6 +44,10 @@ Các khoảng trống gặp khi code, chốt theo hướng an toàn nhất:
 
 - Q: Mã lỗi riêng cho giải? → A: Catalog thêm `TOURNAMENT_NOT_ELIGIBLE` (403 — học sinh/thành viên đội bị hạn chế thi đấu khi tự đăng ký; ngoài đối tượng vẫn `404`), `TOURNAMENT_FULL` (409 — đủ `max_entries`, kể cả đóng sớm vì đủ chỗ), `TOURNAMENT_REGISTRATION_CLOSED` (422 — ngoài cửa sổ đăng ký), `TOURNAMENT_CHECK_IN_CLOSED` (422 — ngoài cửa sổ check-in hoặc entry chưa xác nhận). HTTP status giữ như trước (client cũ xử lý theo status vẫn đúng; client phải chấp nhận mã lạ); đã đăng ký → vẫn `409 CONFLICT`; rút entry sau khi khóa và mọi đường của người tổ chức giữ `INVALID_STATE_TRANSITION`. Test: `TestF107Entries`.
 
+### Session 2026-11-28 (câu hỏi mở F112-3 của client F112 — [Confirmed], owner "chốt hết")
+
+- Q: Học sinh (chủ club) có operation liệt kê template giải nội bộ để tạo sự kiện club `internal_tournament` (`ClubEventCreate.tournament_template_id`) không? → A: [Confirmed] Không trong version này: F107 không thêm operation liệt kê template cho học sinh; module chat từ chối `internal_tournament` (hoặc có `tournament_template_id`) từ game bằng `422 VALIDATION_FAILED` `VALUE_NOT_AVAILABLE` (F120 Clarifications 2026-11-28). Giải nội bộ của club là việc sau (cần operation + quyết định ai tạo từ template), không mở rộng phạm vi F107.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — School Admin tạo thử thách khối/giải trường từ template (Priority: P1) 🎯 MVP

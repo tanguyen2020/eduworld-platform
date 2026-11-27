@@ -34,7 +34,7 @@
 | `LDB` Leaderboard | module competition | 5 | 5 | 0 | 4 | 0 | CMP (10) | 1 | 0 | 0 / 7 |
 | `TRN` Tournament | module competition | 3 | 3 | 0 | 12 | 0 | CMP (10) | 1 | 0 | 0 / 8 |
 | `SOC` Social | module chat | 4 | 4 | 0 | 35 | 0 | SOC (9) | 1 | 0 | 0 / 11 |
-| `CHAT` Chat | module chat | 17 | 17 | 0 | 17 | 0 | CHAT (48) | 2 | 15 | 0 / 0 |
+| `CHAT` Chat | module chat | 17 | 17 | 0 | 18 | 0 | CHAT (48) | 2 | 15 | 0 / 0 |
 | `MOD` Moderation & Child Safety | module chat | 18 | 18 | 0 | 41 | 0 | CHAT (48) | 4 | 6 | 0 / 25 |
 | `NTF` Notification | module chat | 3 | 3 | 2 | 3 | 0 | SOC (9) | 0 | 0 | 0 / 0 |
 | `GAM` XP, level, tiến trình | module game | 11 | 11 | 0 | 5 | 0 | GAM (12) | 1 | 4 | 0 / 10 |
@@ -46,7 +46,7 @@
 | `LMS` LMS | module learning | 10 | 10 | 1 | 34 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 28 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 23 | 603 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 23 | 604 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -510,23 +510,23 @@ AC: AC-CHAT-001, AC-CHAT-002, AC-CHAT-003, AC-CHAT-004, AC-CHAT-005, AC-CHAT-006
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-CHAT-001 | Channel: World, Area, Match, Party, Team, Direct Message; cấu hình bằng policy; không có channel Class/Stud… | P4 (Match/Party/Team theo trận), P5 (còn lại) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-002 | Không có rule = deny; quyền vào channel theo quan hệ (cùng trường/instance/nhóm/bạn bè) và policy, như nhau… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-003 | Text, emoji, reactions, quick messages, group chat, history, unread count, notifications | P4 (channel gameplay), P5 (còn lại) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-004 | Một bộ quy tắc chat cho mọi lớp 1–9 (không điều kiện theo grade_level/grade_band): đủ 7 channel; World = cù… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-005 | Mọi tin nhắn phải hợp lệ: pipeline đồng bộ phía server cho mọi kind — normalize → định dạng/độ dài → profan… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-006 | Lịch sử chat theo quyền và retention job (mặc định 180 ngày; rà soát thời hạn theo luật: Deferred ADR-0082) | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-007 | Không có voice chat trong Release 1.0; điểm mở rộng chỉ ở mức thiết kế, không hiện thực (ADR-0051, ADR-0070) | — | [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-008 | Giao tin nhắn realtime qua /realtime/v1, gửi qua REST hoặc WS có idempotency client message id | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-009 | Chat gameplay luôn có (ADR-0020 mục 6): vào trận 1v1 → channel match; trận đội → team mỗi đội + match chung… | P4 | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [SPEC_RECONCILIATION_BACKLOG](SPEC_RECONCILIATION_BACKLOG.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-010 | UI chat trong lobby/trận/party: panel thu gọn được nhưng không tắt; quick message một chạm; tab Đội/Cả trận… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-011 | Purge chat gameplay (ADR-0033): channel match, team theo trận, party (sau giải tán) bị xóa vật lý sau gamep… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-012 | Sửa tin trong 15 phút (chạy lại kiểm duyệt, lưu revision) và thu hồi trong 24 giờ (placeholder, giữ bằng ch… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-013 | Reply, Quote (trích từ bản đã che), Forward (cùng tenant, ≤ 5 đích, chạy lại kiểm duyệt) — ADR-0034 | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-014 | Emoji, Sticker (pack platform, có thể mở khóa bằng phần thưởng), GIF (thư viện nội bộ đã duyệt, không dịch… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-015 | Mention @nickname (≤ 5/tin, thông báo + đếm riêng), Pin (≤ 3/channel), Copy (bản đã che), Typing indicator… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-016 | Trạng thái Sent/Delivered/Read theo con trỏ, Unread count + mention count, Lịch sử phân trang và tìm kiếm f… | P4 (tìm kiếm P5) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-017 | Truyền tải chat qua NATS JetStream (bền vững, trước khi xác nhận Sent) + Valkey Pub/Sub (fan-out realtime),… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-001 | Channel: World, Area, Match, Party, Team, Direct Message; cấu hình bằng policy; không có channel Class/Stud… | P4 (Match/Party/Team theo trận), P5 (còn lại) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-002 | Không có rule = deny; quyền vào channel theo quan hệ (cùng trường/instance/nhóm/bạn bè) và policy, như nhau… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-003 | Text, emoji, reactions, quick messages, group chat, history, unread count, notifications | P4 (channel gameplay), P5 (còn lại) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-004 | Một bộ quy tắc chat cho mọi lớp 1–9 (không điều kiện theo grade_level/grade_band): đủ 7 channel; World = cù… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-005 | Mọi tin nhắn phải hợp lệ: pipeline đồng bộ phía server cho mọi kind — normalize → định dạng/độ dài → profan… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-006 | Lịch sử chat theo quyền và retention job (mặc định 180 ngày; rà soát thời hạn theo luật: Deferred ADR-0082) | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-007 | Không có voice chat trong Release 1.0; điểm mở rộng chỉ ở mức thiết kế, không hiện thực (ADR-0051, ADR-0070) | — | [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-008 | Giao tin nhắn realtime qua /realtime/v1, gửi qua REST hoặc WS có idempotency client message id | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-009 | Chat gameplay luôn có (ADR-0020 mục 6): vào trận 1v1 → channel match; trận đội → team mỗi đội + match chung… | P4 | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [SPEC_RECONCILIATION_BACKLOG](SPEC_RECONCILIATION_BACKLOG.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-010 | UI chat trong lobby/trận/party: panel thu gọn được nhưng không tắt; quick message một chạm; tab Đội/Cả trận… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-011 | Purge chat gameplay (ADR-0033): channel match, team theo trận, party (sau giải tán) bị xóa vật lý sau gamep… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-012 | Sửa tin trong 15 phút (chạy lại kiểm duyệt, lưu revision) và thu hồi trong 24 giờ (placeholder, giữ bằng ch… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-013 | Reply, Quote (trích từ bản đã che), Forward (cùng tenant, ≤ 5 đích, chạy lại kiểm duyệt) — ADR-0034 | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-014 | Emoji, Sticker (pack platform, có thể mở khóa bằng phần thưởng), GIF (thư viện nội bộ đã duyệt, không dịch… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-015 | Mention @nickname (≤ 5/tin, thông báo + đếm riêng), Pin (≤ 3/channel), Copy (bản đã che), Typing indicator… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-016 | Trạng thái Sent/Delivered/Read theo con trỏ, Unread count + mention count, Lịch sử phân trang và tìm kiếm f… | P4 (tìm kiếm P5) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-017 | Truyền tải chat qua NATS JetStream (bền vững, trước khi xác nhận Sent) + Valkey Pub/Sub (fan-out realtime),… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-CHAT |
 
 ### 3.23. `MOD` Moderation & Child Safety
 

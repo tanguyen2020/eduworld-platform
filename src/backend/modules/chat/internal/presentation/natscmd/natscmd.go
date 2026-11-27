@@ -71,6 +71,13 @@ func failure(ctx context.Context, err error) rt.Reply {
 	if c, ok := pe.Ext["category_code"].(string); ok && c != "" { // F116-AC-05: the category only, never a matched term
 		r.Problem.Details = map[string]string{"category_code": c}
 	}
+	// CURFEW_ACTIVE, and CHAT_NOT_ALLOWED outside the allowed hours (delta F112-6): details.reopen_at, RFC 3339 UTC.
+	if t, ok := pe.Ext["reopen_at"].(time.Time); ok && !t.IsZero() {
+		if r.Problem.Details == nil {
+			r.Problem.Details = map[string]string{}
+		}
+		r.Problem.Details["reopen_at"] = t.UTC().Format(time.RFC3339)
+	}
 	return r
 }
 

@@ -20,6 +20,9 @@ const (
 	SubMaxLength = "MAX_LENGTH"
 	SubRequired  = "REQUIRED"
 	SubInvalid   = "INVALID"
+	// SubValueNotAvailable: a value of the contract enum the server does not accept on this path now (ClubGoalCreate.metric
+	// without a source event, ClubEventCreate.event_kind internal_tournament from the game — F112-3, F112-4).
+	SubValueNotAvailable = "VALUE_NOT_AVAILABLE"
 )
 
 // FieldError is one entry of errors[] (ValidationProblem).

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat_policy.updated.v1.schema.json",
   "title": "Payload chat_policy.updated v1 (module chat, owner F120)",
-  "description": "Chính sách chat một cấp được lưu version mới (putChatPolicy/putPlatformChatPolicy, F120-AC-06, AC-26). Không chứa rule chi tiết hay nội dung tin. Consumer: chat (vô hiệu cache effective policy chat_policy_cache), RT, AUD.",
+  "description": "Chính sách chat một cấp được lưu version mới (putChatPolicy/putPlatformChatPolicy, F120-AC-06, AC-26). Không chứa rule chi tiết hay nội dung tin. Consumer: chat (vô hiệu cache effective policy chat_policy_cache), identity (bản chiếu direct_message_enabled của PlayerBootstrap — delta F112-7), RT, AUD.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -54,6 +54,10 @@
         "quick_message_emote_only"
       ]
     },
+    "direct_message_enabled": {
+      "type": "boolean",
+      "description": "Cấp này có để channel direct bật không (delta F112-7, thêm 2026-11-28): false khi rule direct của cấp tắt (enabled = false) hoặc allowed_kinds không còn loại hợp lệ; ở cấp platform còn false khi không có rule direct. Không tính giao allowed_kinds giữa các cấp, giờ chat, sanction. Event phát trước delta không có trường này."
+    },
     "actor_id": {
       "type": "string",
       "format": "uuid"
@@ -76,7 +80,8 @@
       ],
       "preset": "quick_message_emote_only",
       "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
-      "occurred_at": "2026-11-23T08:30:12.345Z"
+      "occurred_at": "2026-11-23T08:30:12.345Z",
+      "direct_message_enabled": true
     }
   ]
 }

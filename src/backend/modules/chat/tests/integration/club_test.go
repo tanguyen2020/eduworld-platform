@@ -292,9 +292,14 @@ func TestClubChannelMembership(t *testing.T) {
 	if h.status != http.StatusOK || len(h.data()) != 1 || h.data()[0]["body"] != "chao mung tro lai" {
 		t.Fatalf("history after joining again: %d %s", h.status, h.raw)
 	}
-	// The owner removes chi (club.member_left reason removed).
-	if r := c.call(owner, http.MethodDelete, "/social/clubs/"+clubID.String()+"/members/"+chi.id.String(), "", nil); r.status != http.StatusNoContent {
-		t.Fatalf("remove: %d %s", r.status, r.raw)
+	// Delta F112-2: the owner (a student) no longer removes chi — school staff do, with a reason (club.member_left reason removed).
+	if r := c.call(owner, http.MethodDelete, "/social/clubs/"+clubID.String()+"/members/"+chi.id.String(), "", nil); r.status != 403 ||
+		r.code() != "PERMISSION_DENIED" {
+		t.Fatalf("student owner removes: %d %s", r.status, r.raw)
+	}
+	if r := c.portal(staff, c.tenantA, http.MethodPost, "/tenant/social/clubs/"+clubID.String()+"/members/"+chi.id.String()+":remove",
+		map[string]string{"Idempotency-Key": newKey()}, map[string]any{"reason": "Nhà trường gỡ thành viên"}); r.status != http.StatusNoContent {
+		t.Fatalf("staff remove: %d %s", r.status, r.raw)
 	}
 	if n := c.count(`SELECT count(*) FROM chat.channel_members WHERE channel_id = $1 AND user_id = $2 AND left_at IS NOT NULL`, ch, chi.id); n != 1 {
 		t.Fatal("removed member still active in the channel")
@@ -303,8 +308,13 @@ func TestClubChannelMembership(t *testing.T) {
 	if len(left) != 2 || left[1]["reason"] != "removed" {
 		t.Fatalf("club.member_left: %v", left)
 	}
-	// Archive: channel read_only, history kept.
-	if r := c.call(owner, http.MethodPost, "/social/clubs/"+clubID.String()+":archive", newKey(), nil); r.status != http.StatusNoContent {
+	// Archive (delta F112-2: staff only, the student owner → 403): channel read_only, history kept.
+	if r := c.call(owner, http.MethodPost, "/social/clubs/"+clubID.String()+":archive", newKey(), nil); r.status != 403 ||
+		r.code() != "PERMISSION_DENIED" {
+		t.Fatalf("student owner archives: %d %s", r.status, r.raw)
+	}
+	if r := c.portal(staff, c.tenantA, http.MethodPost, "/social/clubs/"+clubID.String()+":archive", map[string]string{"Idempotency-Key": newKey()},
+		nil); r.status != http.StatusNoContent {
 		t.Fatalf("archive: %d %s", r.status, r.raw)
 	}
 	if n := c.count(`SELECT count(*) FROM chat.channels WHERE channel_id = $1 AND status = 'read_only'`, ch); n != 1 {

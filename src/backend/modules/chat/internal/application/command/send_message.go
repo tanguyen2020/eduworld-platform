@@ -268,7 +268,12 @@ func (h Send) send(ctx context.Context, s Sender, req message.Request) (SendResu
 	}
 	if !eff.OpenAt(now, h.HoursLoc) { // allowed_hours of the persistent channels (F120, CHAT_SYSTEM §3.1)
 		h.rejected(problem.ChatNotAllowed)
-		return SendResult{}, problem.New(problem.ChatNotAllowed, "")
+		pe := problem.New(problem.ChatNotAllowed, "")
+		// delta F112-6: the first minute the chat hours open again outside the curfew (server time).
+		if reopen, ok := eff.ReopenAt(now, h.HoursLoc, func(t time.Time) bool { on, _ := curfew.Active(t); return on }); ok {
+			pe = pe.With("reopen_at", reopen)
+		}
+		return SendResult{}, pe
 	}
 	if !eff.Allows(policy.Kind(req.Kind)) {
 		h.rejected(problem.ChatKindNotAllowed)

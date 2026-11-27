@@ -306,6 +306,13 @@ func TestCommonTenantDefaults(t *testing.T) {
 	if countOf(c.audits(), "chat_policy.common_tenant_social_updated") != 1 {
 		t.Fatalf("audit: %v", c.audits())
 	}
+	// delta F112-7: chat_policy.common_tenant_social_updated (schema-valid, no reason) for the identity projection.
+	if n := c.checkEvents("chat_policy.common_tenant_social_updated")["chat_policy.common_tenant_social_updated"]; n != 1 {
+		t.Fatalf("common override events: %d", n)
+	}
+	if ev := c.events("chat_policy.common_tenant_social_updated")[0]; ev["direct_enabled"] != true || ev["reason"] != nil || ev["version"] != float64(1) {
+		t.Fatalf("common override event: %v", ev)
+	}
 	if r := c.call(x, http.MethodPost, "/chat/direct-channels", "", map[string]any{"user_id": y.id}); r.status != http.StatusCreated {
 		t.Fatalf("dm after re-enable: %d %s", r.status, r.raw)
 	}

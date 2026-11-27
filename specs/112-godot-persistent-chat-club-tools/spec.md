@@ -21,6 +21,21 @@
 - Q: Cài đặt thông báo theo channel (`notification_level`, CHAT_SYSTEM §9 "Mute channel")? → A: Ngoài phạm vi F112: contract chưa có operation (`PATCH …/membership` chỉ có trong tài liệu). Client chỉ đọc `Channel.muted` để hiện biểu tượng chuông gạch kèm chữ. Câu hỏi mở F112-9. [Confirmed]
 - Q: Bố cục trên điện thoại (F125 `compact`) và tablet? → A: Theo STUDENT_GAME_UX_SOCIAL §7: PC/tablet — khung nổi dưới-trái mở rộng được (tablet ≤ 40% chiều rộng); điện thoại — tấm phủ cao hết màn trượt từ trái, nút "✕ Đóng" đỏ (F125-AC-06), hàng tab cuộn ngang bằng mũi tên. Quy tắc "≥ 3 tin" (`chat_list_min_visible`) áp cho mọi tab channel bền vững như F119. [Confirmed]
 
+### Session 2026-11-28 (backend đóng câu hỏi mở F112-1…F112-9 — [Confirmed], owner "chốt hết": phương án an toàn nhất)
+
+Delta server đã áp (F120/F115/F013/F107 Clarifications 2026-11-28; contracts §6 cột "Quyết định server"). Các quyết định phía client ở trên **giữ nguyên** (client vẫn hẹp hơn hoặc bằng server); dùng thêm trường/operation mới là quyết định của F112 khi triển khai, không mở rộng phạm vi ở đây.
+
+- F112-1 → [Confirmed] Server theo SOCIAL_SYSTEM §6.2: chỉ `owner` sửa club, tạo mục tiêu/sự kiện, bổ nhiệm; `officer` chỉ duyệt yêu cầu và mời (`403 PERMISSION_DENIED`) — khớp "chỉ owner thấy công cụ quản lý".
+- F112-2 → [Confirmed] Học sinh không gỡ thành viên, không lưu trữ club (server `403`); nhân sự trường làm ở portal — khớp "không có trong game".
+- F112-3 → [Confirmed] `internal_tournament` không mở cho học sinh (server `422 VALUE_NOT_AVAILABLE`) — khớp bốn loại sự kiện của client.
+- F112-4 → [Confirmed] Contract công bố `ClubGoalAcceptedMetric` và `listClubGoals.accepted_metrics` (cùng ba chỉ số); client có thể dựng danh sách từ `accepted_metrics` thay file dữ liệu.
+- F112-5 → [Confirmed] `Channel.peer` (thẻ công khai, R16) ở channel `direct`; ánh xạ RAM vẫn là đường dự phòng khi `peer` vắng.
+- F112-6 → [Confirmed] `CHAT_NOT_ALLOWED` ngoài giờ chat mang `reopen_at` (REST) / `details.reopen_at` (WS); câu trung tính hiện tại vẫn đúng, giờ mở lại là bổ sung tùy chọn.
+- F112-7 → [Confirmed] Bootstrap có `policies.chat.direct_message_enabled` từ bản chiếu policy (vắng khi chưa chiếu cấp platform) — khớp quy tắc nút "Nhắn tin".
+- F112-8 → [Confirmed] `highlight` là văn bản thuần + `highlight_ranges` theo điểm mã — khớp "hiển thị văn bản thuần"; client có thể tô theo `highlight_ranges` thay so khớp phía client.
+- F112-9 → [Confirmed] Có `updateChannelMembership` + `Channel.notification_level`/`muted`; cài đặt thông báo theo channel trong game vẫn ngoài phạm vi F112 cho tới khi spec này được cập nhật.
+- Fixture GdUnit4 (`tools/gen_fixtures.mjs`) cần sinh lại từ example mới (T002); chưa chạy Godot.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Khung chat HUD với các channel bền vững (Priority: P1) 🎯 MVP

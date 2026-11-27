@@ -131,6 +131,7 @@ func (h ChatHandlers) listMyChannels(w http.ResponseWriter, r *http.Request) {
 	for i, c := range rows {
 		data[i] = ChannelBody(c.Channel, c.ChannelCaps)
 		data[i]["unread_count"], data[i]["my_read_seq"] = c.UnreadCount, c.MyReadSeq
+		SelfFields(data[i], c.NotificationLevel, c.Peer)
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": data})
 }

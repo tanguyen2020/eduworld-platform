@@ -309,7 +309,7 @@ func (ChatReader) MyChannels(ctx context.Context, tenant, user uuid.UUID, limit 
 		return nil, err
 	}
 	// tenancyguard:ok chat.channel_members joined with chat.channels, both of the session tenant, live rows only
-	rows, err := t.QueryContext(ctx, `SELECT `+channelColumns+`, m.school_id, m.last_read_seq, m.joined_at
+	rows, err := t.QueryContext(ctx, `SELECT `+channelColumns+`, m.school_id, m.last_read_seq, m.joined_at, m.notification_level
 		FROM chat.channel_members m
 		JOIN chat.channels c ON c.channel_id = m.channel_id AND c.tenant_id = m.tenant_id AND c.deleted_at IS NULL
 		WHERE m.tenant_id = $1 AND m.user_id = $2 AND m.deleted_at IS NULL AND m.left_at IS NULL
@@ -322,7 +322,7 @@ func (ChatReader) MyChannels(ctx context.Context, tenant, user uuid.UUID, limit 
 	for rows.Next() {
 		var r read.MyChannel
 		var school uuid.NullUUID
-		ch, err := scanChannel(rows, &school, &r.MyReadSeq, &r.JoinedAt)
+		ch, err := scanChannel(rows, &school, &r.MyReadSeq, &r.JoinedAt, &r.NotificationLevel)
 		if err != nil {
 			return nil, fmt.Errorf("chat: my channels: %w", err)
 		}

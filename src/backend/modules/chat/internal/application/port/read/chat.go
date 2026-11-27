@@ -82,6 +82,8 @@ type MyChannel struct {
 	SchoolID  *uuid.UUID // school of the membership (policy level)
 	MyReadSeq int64
 	JoinedAt  time.Time
+	// NotificationLevel is the notification setting of the caller (all, mentions, none — delta F112-9).
+	NotificationLevel string
 }
 
 // MessageQuery selects stored messages of one channel visible to Reader, by seq (exclusive bounds), from From

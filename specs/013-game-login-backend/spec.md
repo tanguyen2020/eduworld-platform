@@ -46,6 +46,10 @@
 
 - Q: Đăng nhập game khi bỏ enrollment? → A: [Confirmed] Membership tenant của học sinh = học sinh hiệu lực (`org.students.status = active`, chưa xóa mềm, trường còn sống). `NO_ACTIVE_ENROLLMENT` giữ mã, nghĩa mới "không có trường/khối hiệu lực" (chuỗi game: "Em chưa có thông tin trường/khối trong năm học này."); login sync nhánh B dùng kết quả `missing_placement`. Bootstrap không còn `class`; khối lấy từ `student.grade_level`; `policies.party.cross_class_allowed` bị gỡ khỏi contract. Test: `TestGameLogin`, `TestLoginSync`.
 
+### Session 2026-11-28 (delta server F112-7 — [Confirmed], owner "chốt hết")
+
+- Q: Identity điền `PlayerBootstrap.policies.chat.direct_message_enabled` từ policy hiệu lực (câu hỏi mở F112-7 của client F112) thế nào mà không gọi module chat trên đường đăng nhập (R30, ADR-0045)? → A: [Confirmed] Bằng bản chiếu event của module chat (owner F120): consumer `identity.chat_direct_policy` (stream `EVT_CHAT`, profile `worker-events`) nhận `chat_policy.updated` (trường mới `direct_message_enabled` của cấp platform/tenant/school) và `chat_policy.common_tenant_social_updated` (override tenant `common`), ghi `identity.chat_direct_policy_platform` (G) và `identity.chat_direct_policies` (T, RLS), chỉ thay bằng version mới hơn. `gameLogin`, `selectGameLoginTenant`, `refreshGameToken` `mode = resume` điền trường theo `settings.DirectMessageEnabled`: AND các cấp (cấp nào tắt `direct` thì `false`), tenant `common` `false` tới khi override bật lại, **vắng** khi chưa chiếu cấp platform (client: vắng → vẫn hiện, server quyết định). Đọc bản chiếu lỗi không làm hỏng đăng nhập (bỏ trường, log). Không tính giao `allowed_kinds` giữa các cấp, giờ chat, sanction, quan hệ bạn bè — chỉ để hiển thị (module chat vẫn kiểm mỗi lệnh). Event phát trước delta không mang trường nên bản chiếu đầy dần từ lần lưu policy kế tiếp [Proposed: chưa có backfill]. F015 không đổi. Test: `TestDirectMessageEnabled`, `TestChatDirectPolicyConsumer`, `TestChatDirectPolicyBootstrap`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Học sinh đăng nhập bằng form trong game (Priority: P1)

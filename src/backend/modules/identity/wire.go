@@ -280,6 +280,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 	gameAuth := command.GameAuth{UoW: core.UoW, Accounts: write.GameLoginRepo{}, Memberships: read.LoginMembershipReader{Session: core.ReadSession},
 		Sessions: write.GameAuthSessionRepo{}, Bootstrap: read.BootstrapReader{Session: core.ReadSession}, Events: events, Audit: auditor,
 		IdP: gameTokens, KC: kc, Tickets: tickets, Limiter: cache.NewFallbackLimiter(cache.RateLimiter{C: vk}), Curfew: policy, Hours: policy, DailyLimit: policy,
+		Chat: gameauth.ChatDirectPolicy{Reader: read.ChatDirectModel{Session: core.ReadSession}}, // delta F112-7
 		Sync: func(ctx context.Context, userID uuid.UUID) (*uuid.UUID, error) {
 			res, err := ls.Ensure(ctx, userID)
 			return res.SisConnectionID, err
@@ -426,6 +427,8 @@ func build(r *module.Registry, m *Module, in Imports) error {
 			Users: write.LastLoginRepo{}}}.Handle},
 		consumer.DailyPlayTimeName: {consumer.DailyPlayTimeSubjects, consumer.DailyPlayTime{PlayTime: command.RecordPlayTime{
 			PlayTime: write.PlayTimeRepo{}, Location: policy.Location()}}.Handle}, // OQ-17
+		consumer.ChatDirectPolicyName: {consumer.ChatDirectPolicySubjects, consumer.ChatDirectPolicy{Record: command.RecordChatDirectPolicy{
+			Policies: write.ChatDirectPolicyRepo{}}}.Handle}, // delta F112-7
 		consumer.DefaultAssignmentsName: {consumer.DefaultAssignmentsSubjects, consumer.DefaultAssignments{Apply: command.ApplyDefaultAssignments{PlatformAdminDeps: pad}}.Handle},
 		consumer.FeatureToggleCacheName: {[]string{consumer.FeatureToggleCacheSubject}, consumer.FeatureToggleCache{Cache: toggles}.Handle},
 		consumer.SanctionEnforcerName:   {consumer.SanctionEnforcerSubjects, consumer.SanctionEnforcer{Locks: sanctionLocks, Audit: auditor}.Handle},

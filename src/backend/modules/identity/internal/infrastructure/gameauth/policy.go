@@ -121,3 +121,24 @@ func (p SettingsPolicy) DailyPlayLimit(ctx context.Context, tenant uuid.UUID, sc
 	played, err := p.PlayTime.PlayedOn(tenancy.WithScope(ctx, sc), tenant, user, settings.DateOf(now, loc))
 	return s.DailyPlayLimitMinutes, played, loc, err
 }
+
+// ChatDirectPolicy implements port.ChatDirectSource from the projections of the chat policy levels (delta F112-7) under
+// the TenantScope of the student.
+type ChatDirectPolicy struct {
+	Reader read.ChatDirectPolicyReader
+}
+
+var _ port.ChatDirectSource = ChatDirectPolicy{}
+
+// DirectMessageEnabled implements port.ChatDirectSource.
+func (p ChatDirectPolicy) DirectMessageEnabled(ctx context.Context, tenant uuid.UUID, school *uuid.UUID, commonTenant bool) (*bool, error) {
+	sc, err := authz.EventScope(tenant)
+	if err != nil {
+		return nil, err
+	}
+	levels, err := p.Reader.ChatDirectLevels(tenancy.WithScope(ctx, sc), tenant, school)
+	if err != nil {
+		return nil, err
+	}
+	return settings.DirectMessageEnabled(levels, commonTenant), nil
+}

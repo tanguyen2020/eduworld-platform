@@ -37,6 +37,7 @@ Keycloak (ra ngoài): token endpoint (password, refresh_token), revoke/logout, A
 | `audit.recorded` | identity → audit sink (F015) | `specs/events/payloads/common/audit.recorded.v1.schema.json` | Có sẵn (áp 2026-11-17), owner F003 |
 | `game_session.replaced` | game (F014) → identity (consumer F014 gọi `GameAuthSessionRevoker` của F013): thu hồi phiên game thiết bị cũ | `specs/events/payloads/game/game_session.replaced.v1.schema.json` (`old_device_id`, `old_keycloak_sid`) | Có sẵn (áp 2026-11-17), owner F014 |
 | `user.access_revoked`, `user.status_changed`, `student.cleaned_up` | Tiêu thụ (identity, consumer thu hồi phiên game) | `specs/events/payloads/identity/<event>.v1.schema.json` — owner F011 (`user.*`, T005), owner F016 (`student.cleaned_up`, T004); F013 không tạo schema, chỉ dùng fixture (T045) | Có sẵn (áp 2026-11-17), owner F011/F016 |
+| `chat_policy.updated` · `chat_policy.common_tenant_social_updated` | Tiêu thụ (identity, consumer `identity.chat_direct_policy`): bản chiếu `direct_message_enabled` cho `PlayerBootstrap.policies.chat` (delta F112-7, 2026-11-28) | `specs/events/payloads/chat/chat_policy.updated.v1.schema.json`, `specs/events/payloads/chat/chat_policy.common_tenant_social_updated.v1.schema.json` — owner F120 | Đã thêm (2026-11-28) |
 
 ## 5. JSON Schema nội dung
 

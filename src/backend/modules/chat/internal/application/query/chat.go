@@ -102,6 +102,10 @@ type ChannelView struct {
 	Channel     channel.Channel
 	UnreadCount int64
 	MyReadSeq   int64
+	// NotificationLevel of the caller ("" for World/Area: no membership — delta F112-9).
+	NotificationLevel string
+	// Peer is the public card of the other student of a direct channel (nil otherwise or unknown — delta F112-5).
+	Peer *read.ChatCard
 	ChannelCaps
 }
 
@@ -453,7 +457,8 @@ func (q Chat) ListMyChannels(ctx context.Context, v Viewer) (out []ChannelView, 
 			return nil, unavailableProblem()
 		}
 		out = append(out, ChannelView{Channel: r.Channel, UnreadCount: max(r.Channel.LastSeq-r.MyReadSeq, 0),
-			MyReadSeq: r.MyReadSeq, ChannelCaps: caps(r.Channel, effective, sanctions, now)})
+			MyReadSeq: r.MyReadSeq, NotificationLevel: r.NotificationLevel, Peer: q.Peer(ctx, v, r.Channel),
+			ChannelCaps: caps(r.Channel, effective, sanctions, now)})
 	}
 	implicit, err := q.implicitChannels(ctx, v, sanctions, now)
 	if err != nil {
@@ -510,6 +515,34 @@ func (q Chat) implicitChannels(ctx context.Context, v Viewer, sanctions []port.S
 		}
 	}
 	return out, nil
+}
+
+// Peer returns the public card of the other student of a direct channel (delta F112-5): user id, nickname, level and
+// avatar only — never a real name, school or grade (R16). nil for another channel type, when the facts cannot be read
+// (best effort: the field is optional) or when the other student has no player profile yet.
+func (q Chat) Peer(ctx context.Context, v Viewer, ch channel.Channel) *read.ChatCard {
+	if ch.Type != channel.Direct {
+		return nil
+	}
+	facts, err := q.Facts.Channel(ctx, v.TenantID, ch.ID)
+	if err != nil || facts == nil {
+		if err != nil {
+			slog.WarnContext(ctx, "chat: direct peer card unavailable", "error", err)
+		}
+		return nil
+	}
+	for _, m := range facts.Members {
+		if m.UserID == v.UserID {
+			continue
+		}
+		c, ok := facts.Cards[m.UserID]
+		if !ok || c.Nickname == nil {
+			return nil
+		}
+		c.UserID = m.UserID
+		return &c
+	}
+	return nil
 }
 
 // Extras returns the read-time parts of the view.

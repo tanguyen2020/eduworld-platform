@@ -318,7 +318,10 @@ func Register(r *module.Registry) (*Module, error) {
 			Policies: &chathttp.PolicyHandlers{Commands: policyAdmin, Queries: query.Policies{Read: core.ReadSession, Reader: persistence.Policies{},
 				Chat: persistence.ChatReader{}}},
 			Persistent: &chathttp.PersistentHandlers{Direct: persistentCmd, Search: query.Search{Read: core.ReadSession, Reader: persistence.Search{},
-				Cursors: cursors}, Caps: reads.Caps},
+				Cursors: cursors}, Caps: reads.Caps, Peer: reads.Peer,
+				// delta F112-9: updateChannelMembership (notification level of the caller, audited).
+				Settings: command.ChannelSettings{UoW: core.UoW, Facts: facts, Repo: persistence.Gameplay{},
+					Audit: persistence.Auditor{R: core.Recorder}}},
 			Clubs: &chathttp.ClubHandlers{Commands: clubCmd, Queries: query.Clubs{Read: core.ReadSession, Reader: persistence.ClubReads{},
 				Directory: persistence.Directory{}, Cursors: cursors}, WeekLoc: chatCfg.CurfewLocation},
 			Notifications: &chathttp.NotificationHandlers{Commands: notifications, Queries: query.Notifications{Read: core.ReadSession,

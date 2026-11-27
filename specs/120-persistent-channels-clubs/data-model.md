@@ -95,3 +95,4 @@ Cột và độ dài giữ nguyên DATABASE_DESIGN §2.11 (`name varchar(64)`, `
 | `club.created` / `club.approved` / `club.archived` | Vòng đời club | `specs/events/payloads/chat/club.*.v1.schema.json` (Cần thêm) |
 | `club.member_joined` / `club.member_left` | Thành viên đổi | như trên |
 | `club.goal_completed` | Đạt `target` | như trên |
+| `chat_policy.common_tenant_social_updated` | System Admin lưu override tenant `common` (`putCommonTenantSocialOverride`) — delta F112-7, 2026-11-28 | `specs/events/payloads/chat/chat_policy.common_tenant_social_updated.v1.schema.json` (Đã thêm) |

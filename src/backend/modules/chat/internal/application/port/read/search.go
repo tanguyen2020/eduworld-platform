@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/message"
 )
 
 // SearchQuery is one searchMessages page (F120-AC-22, AC-23): tsquery of the words (unaccented in the database), the
@@ -26,6 +28,9 @@ type SearchHit struct {
 	Message     StoredMessage
 	ChannelType string
 	Sender      ChatCard
+	// Highlight and Ranges are set by the query (plain display text + matches of the search words, delta F112-8).
+	Highlight string
+	Ranges    []message.Range
 }
 
 // SearchReader reads the full-text matches of the persistent channels the reader is an active member of (from its

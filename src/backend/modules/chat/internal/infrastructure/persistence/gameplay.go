@@ -226,3 +226,27 @@ func (Gameplay) ResetMentions(ctx context.Context, tenant, id, user uuid.UUID) (
 	}
 	return delivered, readSeq, mentions, nil
 }
+
+var _ write.MembershipSettings = Gameplay{}
+
+// SetNotificationLevel implements write.MembershipSettings on the live, active member row (CHECK all/mentions/none).
+func (Gameplay) SetNotificationLevel(ctx context.Context, tenant, id, user uuid.UUID, level string, at time.Time) (string, bool, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return "", false, err
+	}
+	var before string
+	// tenancyguard:ok chat.channel_members of the session tenant, live active row only (the old value read in the same UPDATE)
+	err = t.QueryRowContext(ctx, `UPDATE chat.channel_members m SET notification_level = $4, updated_at = $5
+		FROM (SELECT channel_member_id, notification_level FROM chat.channel_members
+			WHERE tenant_id = $1 AND channel_id = $2 AND user_id = $3 AND deleted_at IS NULL AND left_at IS NULL FOR UPDATE) old
+		WHERE m.channel_member_id = old.channel_member_id AND m.tenant_id = $1
+		RETURNING old.notification_level`, tenant, id, user, level, at).Scan(&before)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, fmt.Errorf("chat: set notification level: %w", err)
+	}
+	return before, true, nil
+}

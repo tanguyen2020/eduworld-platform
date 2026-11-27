@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/message"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
@@ -104,6 +105,19 @@ func (q Search) Search(ctx context.Context, v Viewer, in SearchInput) (out Searc
 		next := q.Cursors.Encode(page.Cursor{Key: last.CreatedAt.UTC().Format(time.RFC3339Nano), ID: last.MessageID})
 		out.Page.NextCursor, out.Page.HasMore = &next, true
 	}
+	for i := range hits {
+		hits[i].Highlight, hits[i].Ranges = highlight(hits[i].Message, in.Q)
+	}
 	out.Data = hits
 	return out, nil
+}
+
+// highlight is the plain-text highlight of a hit (delta F112-8): the display body of a text/emoji message that is not
+// recalled — never the original of a masked message — with the code point ranges of the search words; "" otherwise.
+func highlight(m read.StoredMessage, q string) (string, []message.Range) {
+	e := m.Envelope
+	if m.Recalled || e.BodyDisplay == nil || *e.BodyDisplay == "" || (e.MsgKind != message.KindText && e.MsgKind != message.KindEmoji) {
+		return "", nil
+	}
+	return message.Highlight(*e.BodyDisplay, q, searchMaxWords)
 }

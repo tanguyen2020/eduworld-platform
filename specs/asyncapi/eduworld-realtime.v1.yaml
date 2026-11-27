@@ -1062,6 +1062,12 @@ components:
           payload: {"v":1,"type":"system.command.failed","seq":72,"ts":1763712132000,"ref":"0193b0a0-0000-7000-8000-000000000d08","payload":{"code":"CHAT_REACTION_LIMIT","message":"Em đã thả đủ cảm xúc cho tin này rồi."}}
         - name: chat_muted
           payload: {"v":1,"type":"system.command.failed","seq":73,"ts":1763712133000,"ref":"0193b0a0-0000-7000-8000-000000000d09","payload":{"code":"CHAT_MUTED","message":"Em tạm thời không gửi được tin."}}
+        - name: chat_not_allowed_hours
+          payload: {"v":1,"type":"system.command.failed","seq":74,"ts":1763712134000,"ref":"0193b0a0-0000-7000-8000-000000000d0a","payload":{"code":"CHAT_NOT_ALLOWED","message":"Kênh này đang nghỉ, em quay lại sau nhé.","details":{"reopen_at":"2026-11-29T00:00:00Z"}}}
+        - name: chat_not_allowed
+          payload: {"v":1,"type":"system.command.failed","seq":75,"ts":1763712135000,"ref":"0193b0a0-0000-7000-8000-000000000d0b","payload":{"code":"CHAT_NOT_ALLOWED","message":"Em chưa nhắn riêng được với bạn này lúc này."}}
+        - name: curfew_active
+          payload: {"v":1,"type":"system.command.failed","seq":76,"ts":1763712136000,"ref":"0193b0a0-0000-7000-8000-000000000d0c","payload":{"code":"CURFEW_ACTIVE","message":"Đã đến giờ nghỉ ngơi rồi.","details":{"reopen_at":"2026-11-28T23:30:00Z"}}}
         - name: room_full
           payload: {"v":1,"type":"system.command.failed","seq":4,"ts":1763600000300,"ref":"0192f3a4-5b6c-7d8e-9f01-23456789abce","payload":{"code":"ROOM_FULL","message":"Khu này đang đông, em thử lại sau nhé."}}
       title: Lệnh thất bại / lỗi giao thức
@@ -1084,6 +1090,13 @@ components:
                     description: Chi tiết ổn định của lỗi; CHAT_CONTENT_BLOCKED chỉ có category_code (không có từ đã khớp hay vị trí — ADR-0030, F116-AC-05)
                     properties:
                       category_code: { type: string, maxLength: 64 }
+                      reopen_at:
+                        type: string
+                        format: date-time
+                        description: |
+                          Giờ server (RFC 3339, UTC) mở lại: CURFEW_ACTIVE — hết giờ giới nghiêm hiệu lực (ADR-0078); CHAT_NOT_ALLOWED
+                          khi gửi ngoài allowed_hours của channel bền vững — phút đầu tiên khung giờ chat mở lại ngoài giờ giới nghiêm
+                          (delta F112-6). Vắng với CHAT_NOT_ALLOWED vì lý do khác (policy tắt, không là bạn bè, chặn — không nêu lý do).
     SystemSessionResumed:
       name: system.session.resumed
       examples:
@@ -1523,6 +1536,13 @@ components:
                     additionalProperties: { type: integer }
     ChatChannelMembershipChanged:
       name: chat.channel.membership_changed
+      examples:
+        - name: dm_frozen
+          payload: {"v":1,"type":"chat.channel.membership_changed","seq":80,"ts":1763712140000,"payload":{"channel_id":"0193b0a0-0000-7000-8000-000000000503","channel_type":"direct","op":"status_changed","status":"frozen"}}
+        - name: club_read_only
+          payload: {"v":1,"type":"chat.channel.membership_changed","seq":81,"ts":1763712141000,"payload":{"channel_id":"0193b0a0-0000-7000-8000-000000000502","channel_type":"team","op":"status_changed","status":"read_only"}}
+        - name: club_left
+          payload: {"v":1,"type":"chat.channel.membership_changed","seq":82,"ts":1763712142000,"payload":{"channel_id":"0193b0a0-0000-7000-8000-000000000502","channel_type":"team","op":"removed","status":"open"}}
       summary: |
         Thành viên của một channel bền vững đổi với chính người nhận (F120): vào/rời club (channel team cố định), mở channel
         direct; hoặc trạng thái channel đổi (club khóa/lưu trữ → read_only, DM bị block → frozen, unblock → open). Module chat

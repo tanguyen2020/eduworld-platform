@@ -143,6 +143,7 @@ func (h GameAuth) refreshLocked(ctx context.Context, cfg GameAuthConfig, in dto.
 		if err := h.applyCurfew(ctx, cfg, &boot); err != nil {
 			return refreshOutcome{err: err, result: refreshDenied} // curfew never revokes the session (F013-AC-32)
 		}
+		h.applyChat(ctx, &boot)
 		if err := h.applyDailyLimit(ctx, &boot, s.UserID); err != nil {
 			return refreshOutcome{err: err, result: refreshDenied} // neither does the daily play limit (F013-AC-33)
 		}

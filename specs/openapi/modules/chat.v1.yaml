@@ -137,6 +137,44 @@ paths:
                     status: open
                     capabilities:
                       voice: false
+                    notification_level: none
+                    muted: true
+                  - channel_id: 0193b0a0-0000-7000-8000-000000000503
+                    channel_type: direct
+                    allowed_kinds:
+                      - text
+                      - emoji
+                      - quick
+                      - sticker
+                      - gif
+                    sendable_kinds:
+                      - text
+                      - emoji
+                      - quick
+                      - sticker
+                      - gif
+                    max_text_length: 200
+                    unread_count: 0
+                    last_seq: 9
+                    my_read_seq: 9
+                    status: open
+                    capabilities:
+                      voice: false
+                    notification_level: all
+                    muted: false
+                    peer:
+                      user_id: 0193b0a0-0000-7000-8000-0000000000a2
+                      nickname: CaHeoVui07
+                      level: 10
+                      avatar_config:
+                        schema_version: 1
+                        body_type: kid_b
+                        skin_tone: tone_04
+                        hair:
+                          item_id: hair_spiky_01
+                          color: hair_col_01
+                        outfit:
+                          item_id: outfit_sport_01
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
@@ -144,6 +182,62 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /chat/channels/{channel_id}/membership:
+    patch:
+      x-service: chat
+      tags:
+        - chat
+      operationId: updateChannelMembership
+      summary: Đặt mức thông báo (tắt tiếng) của chính mình ở một channel (CHAT_SYSTEM §9 "Mute channel")
+      description: |
+        Delta F112-9. Chỉ đổi `notification_level` của **chính người gọi** ở channel mà người gọi đang là thành viên (club `team`,
+        `direct`, `party`, `match`, `team` theo trận) trong tenant của phiên; `none` = tắt tiếng (`Channel.muted = true`). Chỉ là
+        cài đặt thông báo: vẫn nhận và đọc tin, unread vẫn đếm, **không** ảnh hưởng pipeline kiểm duyệt, báo cáo, chặn hay
+        tắt tiếng người khác (R15). Lặp lại cùng giá trị trả cùng kết quả; `Idempotency-Key` bắt buộc (R10, replay theo khóa,
+        thiếu → `428`). Mỗi lần đổi ghi audit `chat.channel_membership.updated` (không nội dung tin). Không phải thành viên, channel
+        khác tenant hoặc không tồn tại → `404`; World/Area (không có membership — CHAT_SYSTEM §7.1) → `422 VALIDATION_FAILED`
+        (`errors[0].field = channel_id`).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/ChannelId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChannelMembershipUpdate'
+            example:
+              notification_level: none
+      responses:
+        '200':
+          description: Cài đặt hiện hành của người gọi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannelMembership'
+              example:
+                channel_id: 0193b0a0-0000-7000-8000-000000000502
+                notification_level: none
+                muted: true
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /chat/channels/{channel_id}/messages:
     get:
       x-service: chat
@@ -365,6 +459,8 @@ paths:
         bạn bè và không block nhau; mở lại trả cùng channel (`200`). Không là bạn bè, có block hoặc policy tắt `direct`
         (kể cả tenant `common` chưa được System Admin bật lại — F120-AC-28) → `403 CHAT_NOT_ALLOWED`. Học sinh khác tenant
         hoặc không tồn tại → `404`. Channel bị đóng băng do block vẫn trả về với `status = frozen` (gửi → `CHAT_NOT_ALLOWED`).
+        Phản hồi có `peer` = thẻ công khai của người kia (delta F112-5, R16); `notification_level`/`muted` của người gọi đọc ở
+        `listMyChannels` (hoặc phản hồi của `updateChannelMembership`).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -387,6 +483,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Channel'
+              example:
+                channel_id: 0193b0a0-0000-7000-8000-000000000503
+                channel_type: direct
+                allowed_kinds:
+                  - text
+                  - emoji
+                  - quick
+                  - sticker
+                  - gif
+                sendable_kinds:
+                  - text
+                  - emoji
+                  - quick
+                  - sticker
+                  - gif
+                max_text_length: 200
+                last_seq: 9
+                status: open
+                capabilities:
+                  voice: false
+                peer:
+                  user_id: 0193b0a0-0000-7000-8000-0000000000a2
+                  nickname: CaHeoVui07
+                  level: 10
+                  avatar_config:
+                    schema_version: 1
+                    body_type: kid_b
+                    skin_tone: tone_04
+                    hair:
+                      item_id: hair_spiky_01
+                      color: hair_col_01
+                    outfit:
+                      item_id: outfit_sport_01
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
@@ -396,13 +525,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Channel'
+              example:
+                channel_id: 0193b0a0-0000-7000-8000-000000000504
+                channel_type: direct
+                allowed_kinds:
+                  - text
+                  - emoji
+                  - quick
+                  - sticker
+                  - gif
+                sendable_kinds:
+                  - text
+                  - emoji
+                  - quick
+                  - sticker
+                  - gif
+                max_text_length: 200
+                last_seq: 0
+                status: open
+                capabilities:
+                  voice: false
+                peer:
+                  user_id: 0193b0a0-0000-7000-8000-0000000000a3
+                  nickname: GauNau15
+                  level: 11
+                  avatar_config:
+                    schema_version: 1
+                    body_type: kid_a
+                    skin_tone: tone_03
+                    hair:
+                      item_id: hair_ponytail_01
+                      color: hair_col_06
+                    outfit:
+                      item_id: outfit_explorer_01
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          description: CHAT_NOT_ALLOWED — không là bạn bè, có block, hoặc policy tắt `direct` (không nêu lý do, không nêu ai chặn ai)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: https://errors.eduworld.vn/chat-not-allowed
+                title: Forbidden
+                status: 403
+                code: CHAT_NOT_ALLOWED
         '404':
           $ref: '#/components/responses/NotFound'
         '422':
@@ -821,6 +992,41 @@ paths:
                       $ref: '#/components/schemas/MessageSearchHit'
                   page:
                     $ref: '#/components/schemas/PageInfo'
+              example:
+                data:
+                  - message:
+                      message_id: 0193b0a0-0000-7000-8000-000000000621
+                      channel_id: 0193b0a0-0000-7000-8000-000000000502
+                      seq: 4
+                      sender:
+                        user_id: 0193b0a0-0000-7000-8000-0000000000a2
+                        nickname: CaHeoVui07
+                        level: 10
+                        avatar_config:
+                          schema_version: 1
+                          body_type: kid_b
+                          skin_tone: tone_04
+                          hair:
+                            item_id: hair_spiky_01
+                            color: hair_col_01
+                          outfit:
+                            item_id: outfit_sport_01
+                      kind: text
+                      body: Mai mình luyện Toán nhé, nhân vật mới đẹp quá!
+                      revision: 1
+                      moderation_state: allowed
+                      created_at: '2026-11-27T15:10:00Z'
+                    channel_id: 0193b0a0-0000-7000-8000-000000000502
+                    channel_type: team
+                    highlight: Mai mình luyện Toán nhé, nhân vật mới đẹp quá!
+                    highlight_ranges:
+                      - start: 25
+                        length: 4
+                      - start: 30
+                        length: 3
+                page:
+                  has_more: false
+                  limit: 20
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
@@ -1638,7 +1844,11 @@ paths:
       tags:
         - social
       operationId: updateClub
-      summary: Sửa thông tin club (owner/officer; tên và mô tả qua kiểm duyệt)
+      summary: Sửa thông tin club (owner; tên và mô tả qua kiểm duyệt)
+      description: |
+        Chỉ chủ club (`my_role = owner`): `officer`/`member` → `403 PERMISSION_DENIED` (SOCIAL_SYSTEM §6.2 — delta F112-1 2026-11-28,
+        trước đó server cho cả `officer`). `If-Match` = `version` hiện tại, lệch → `412 VERSION_MISMATCH`. Tên, mô tả qua pipeline
+        kiểm duyệt (`451`).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -1650,6 +1860,10 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ClubUpdate'
+            example:
+              name: Nhà thám hiểm nhí
+              description: Cùng nhau khám phá và học vui mỗi tuần
+              icon_id: club_icon_compass
       responses:
         '200':
           description: Đã cập nhật
@@ -1657,6 +1871,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Club'
+              example:
+                club_id: 0193b0a0-0000-7000-8000-000000000c01
+                club_type: interest_group
+                name: Nhà thám hiểm nhí
+                description: Cùng nhau khám phá và học vui mỗi tuần
+                icon_id: club_icon_compass
+                school_id: 0193a5f4-6c1e-7b2a-9d1f-000000000002
+                owner_id: 0193b0a0-0000-7000-8000-0000000000a1
+                status: active
+                member_count: 6
+                max_members: 50
+                my_role: owner
+                chat_channel_id: 0193b0a0-0000-7000-8000-000000000502
+                version: 4
+                created_at: '2026-11-20T08:00:00Z'
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
@@ -1667,9 +1896,30 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '412':
-          $ref: '#/components/responses/PreconditionFailed'
+          description: VERSION_MISMATCH — `If-Match` không còn là version hiện tại (người khác vừa sửa)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: https://errors.eduworld.vn/version-mismatch
+                title: Precondition Failed
+                status: 412
+                code: VERSION_MISMATCH
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '451':
+          description: CHAT_CONTENT_BLOCKED — tên hoặc mô tả không qua kiểm duyệt (chỉ `category_code`, không có từ đã khớp — R15)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: https://errors.eduworld.vn/chat-content-blocked
+                title: Unavailable For Legal Reasons
+                status: 451
+                code: CHAT_CONTENT_BLOCKED
+                category_code: insult
   /social/clubs/{club_id}:approve:
     post:
       x-service: chat
@@ -1710,6 +1960,9 @@ paths:
         - social
       operationId: leaveClub
       summary: Rời club
+      description: |
+        Thành viên (kể cả `officer`) rời club: kết thúc membership và channel `team` của club trong cùng transaction. Chủ club không
+        rời được (`409`); club của chủ đã nghỉ do nhân sự trường lưu trữ ở portal (`archiveClub`, F112-2).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -1730,7 +1983,11 @@ paths:
         - social
       operationId: archiveClub
       x-portal-action: action.school_lms.clubs.approve
-      summary: Giải tán/lưu trữ club (owner, school_admin)
+      summary: Lưu trữ club (nhân sự trường — social.club.approve; không cho học sinh)
+      description: |
+        Chỉ nhân sự trường qua portal (`social.club.approve` trong phạm vi trường của club, F122). Học sinh — kể cả chủ club — nhận
+        `403 PERMISSION_DENIED` (delta F112-2 2026-11-28: đóng nhóm giữa trẻ em với nhau để nhân sự quyết định, CHILD_SAFETY; trước
+        đó chủ club là học sinh lưu trữ được). Club chuyển `archived`, channel `team` của club `read_only`, phát `club.archived`.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -1791,7 +2048,12 @@ paths:
       tags:
         - social
       operationId: removeClubMember
-      summary: Gỡ thành viên khỏi club (owner, school_admin)
+      summary: Gỡ thành viên khỏi club — không mở cho học sinh (nhân sự dùng removeSchoolClubMember)
+      description: |
+        Route người chơi (`game_player`) nhưng **không** học sinh nào được gỡ người khác: luôn `403 PERMISSION_DENIED` (delta F112-2
+        2026-11-28 — loại người khỏi nhóm giữa trẻ em với nhau dễ thành công cụ cô lập bạn, CHILD_SAFETY; trước đó chủ club và
+        `officer` gỡ được). Nhân sự trường gỡ thành viên ở portal bằng `removeSchoolClubMember` (lý do bắt buộc, audit — F122). Học
+        sinh vẫn có Tắt tiếng/Chặn/Báo cáo. Club không tồn tại hoặc người gọi không phải thành viên → `404`.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -1812,6 +2074,7 @@ paths:
         - social
       operationId: updateClubMemberRole
       summary: Đổi vai trò thành viên (owner bổ nhiệm officer)
+      description: Chỉ chủ club; không trao được vai trò `owner` (người kia là chủ club → `404`).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -1831,6 +2094,8 @@ paths:
                   enum:
                     - officer
                     - member
+            example:
+              role: officer
       responses:
         '200':
           description: OK
@@ -1838,6 +2103,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClubMember'
+              example:
+                club_id: 0193b0a0-0000-7000-8000-000000000c01
+                user_id: 0193b0a0-0000-7000-8000-0000000000a2
+                nickname: CaHeoVui07
+                role: officer
+                joined_at: '2026-11-21T08:00:00Z'
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
@@ -2190,6 +2461,29 @@ paths:
                     maxItems: 20
                     items:
                       $ref: '#/components/schemas/ClubGoal'
+                  accepted_metrics:
+                    type: array
+                    maxItems: 5
+                    description: |
+                      Chỉ số `createClubGoal` chấp nhận lúc này (delta F112-4, cùng danh sách server kiểm): client dựng danh sách chọn
+                      từ đây, không hardcode. Server hiện hành luôn trả trường này.
+                    items:
+                      $ref: '#/components/schemas/ClubGoalAcceptedMetric'
+              example:
+                data:
+                  - goal_id: 0193b0a0-0000-7000-8000-000000000c11
+                    club_id: 0193b0a0-0000-7000-8000-000000000c01
+                    title: Cả club hoàn thành 30 bài
+                    metric: activities_completed
+                    target: 30
+                    progress: 12
+                    my_contribution: 3
+                    week_start: '2026-11-23'
+                    status: active
+                accepted_metrics:
+                  - activities_completed
+                  - quests_completed
+                  - discoveries_found
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
@@ -2202,7 +2496,11 @@ paths:
       tags:
         - social
       operationId: createClubGoal
-      summary: Tạo mục tiêu tuần cho club (owner/officer)
+      summary: Tạo mục tiêu tuần cho club (owner)
+      description: |
+        Chỉ chủ club (`my_role = owner`): `officer` chỉ duyệt yêu cầu tham gia và mời (SOCIAL_SYSTEM §6.2 — delta F112-1 2026-11-28,
+        trước đó server cho cả `officer`) → `403 PERMISSION_DENIED`. `metric` phải thuộc `ClubGoalAcceptedMetric` (F112-4); tiêu đề
+        qua pipeline kiểm duyệt (`451`). Club không `active` → `409`.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2221,6 +2519,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClubGoal'
+              example:
+                goal_id: 0193b0a0-0000-7000-8000-000000000c11
+                club_id: 0193b0a0-0000-7000-8000-000000000c01
+                title: Cả club hoàn thành 30 bài
+                metric: activities_completed
+                target: 30
+                progress: 0
+                my_contribution: 0
+                week_start: '2026-11-23'
+                status: active
           headers:
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
@@ -2230,8 +2538,26 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/ValidationFailed'
+          description: VALIDATION_FAILED (vd. `metric` ngoài `ClubGoalAcceptedMetric` → `errors[0].code = VALUE_NOT_AVAILABLE`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblem'
+              example:
+                type: https://errors.eduworld.vn/validation-failed
+                title: Unprocessable Entity
+                status: 422
+                code: VALIDATION_FAILED
+                detail: request validation failed
+                errors:
+                  - field: metric
+                    code: VALUE_NOT_AVAILABLE
+                    message: metric not counted from a verified event yet
+        '451':
+          $ref: '#/components/responses/MessageBlocked'
   /social/clubs/{club_id}/events:
     get:
       x-service: chat
@@ -2274,7 +2600,12 @@ paths:
       tags:
         - social
       operationId: createClubEvent
-      summary: Tạo sự kiện club (owner/officer; giải nội bộ dùng template — ADR-0027)
+      summary: Tạo sự kiện club (owner; giải nội bộ chưa mở cho học sinh)
+      description: |
+        Chỉ chủ club (`my_role = owner`): `officer` → `403 PERMISSION_DENIED` (SOCIAL_SYSTEM §6.2 — delta F112-1 2026-11-28, trước đó
+        server cho cả `officer`). `event_kind = internal_tournament` hoặc có `tournament_template_id` → `422 VALIDATION_FAILED`
+        (`VALUE_NOT_AVAILABLE`): học sinh không có operation liệt kê template giải nội bộ (delta F112-3). Tiêu đề, mô tả qua pipeline
+        kiểm duyệt (`451`). Club không `active` → `409`.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2293,6 +2624,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClubEvent'
+              example:
+                event_id: 0193b0a0-0000-7000-8000-000000000c21
+                club_id: 0193b0a0-0000-7000-8000-000000000c01
+                title: Luyện tập Toán cuối tuần
+                description: Cả nhóm cùng làm bài luyện tập nhé!
+                event_kind: practice_session
+                starts_at: '2026-11-29T08:00:00Z'
+                ends_at: '2026-11-29T09:00:00Z'
           headers:
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
@@ -2302,8 +2641,26 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/ValidationFailed'
+          description: VALIDATION_FAILED (vd. `internal_tournament` từ game → `errors[0].code = VALUE_NOT_AVAILABLE`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblem'
+              example:
+                type: https://errors.eduworld.vn/validation-failed
+                title: Unprocessable Entity
+                status: 422
+                code: VALIDATION_FAILED
+                detail: request validation failed
+                errors:
+                  - field: event_kind
+                    code: VALUE_NOT_AVAILABLE
+                    message: internal_tournament is not available from the game
+        '451':
+          $ref: '#/components/responses/MessageBlocked'
   /notifications:
     get:
       x-service: chat
@@ -5572,14 +5929,6 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
-    Limit:
-      name: limit
-      in: query
-      schema:
-        type: integer
-        minimum: 1
-        maximum: 100
-        default: 20
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -5592,6 +5941,14 @@ components:
         type: string
         format: uuid
         pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
     MessageId:
       name: message_id
       in: path
@@ -5798,6 +6155,19 @@ components:
           $ref: '#/components/schemas/Timestamp'
         muted:
           type: boolean
+          description: |
+            true khi `notification_level = none` của người gọi (delta F112-9, `updateChannelMembership`). Chỉ là cài đặt thông báo:
+            vẫn nhận tin, unread vẫn đếm, không ảnh hưởng pipeline kiểm duyệt, báo cáo hay chặn (CHAT_SYSTEM §9). Vắng ở World/Area.
+        notification_level:
+          $ref: '#/components/schemas/ChannelNotificationLevel'
+          description: |
+            Cài đặt thông báo của người gọi ở channel (CHAT_SYSTEM §9, §10 — delta F112-9); mặc định `all`. Vắng ở World/Area (không có
+            membership, không có unread — CHAT_SYSTEM §7.1).
+        peer:
+          $ref: '#/components/schemas/PlayerCard'
+          description: |
+            Chỉ ở channel `direct` (delta F112-5): thẻ công khai của người kia — `user_id`, `nickname`, `level`, `avatar_config`;
+            không bao giờ tên thật, trường, khối (R16) và không có `presence`. Vắng khi chưa có hồ sơ người chơi của người kia.
     ChannelType:
       type: string
       description: Không còn class, study_group (ADR-0095).
@@ -5864,6 +6234,117 @@ components:
     Timestamp:
       type: string
       format: date-time
+    ChannelNotificationLevel:
+      type: string
+      description: 'Mức thông báo theo channel (CHAT_SYSTEM §10): all — mọi tin; mentions — chỉ khi được nhắc tên; none — tắt thông báo (muted)'
+      enum:
+        - all
+        - mentions
+        - none
+    PlayerCard:
+      type: object
+      description: Thông tin công khai tối thiểu của người chơi khác (không tên thật, không trường nếu liên trường)
+      required:
+        - user_id
+        - nickname
+      properties:
+        user_id:
+          $ref: '#/components/schemas/Uuid'
+        nickname:
+          type: string
+          maxLength: 32
+        level:
+          type: integer
+        avatar_config:
+          $ref: '#/components/schemas/AvatarConfig'
+        presence:
+          type: string
+          enum:
+            - offline
+            - online
+            - in_activity
+            - in_match
+            - away
+          description: PresenceStatus (MULTIPLAYER_GAMEPLAY §5, enum chung với AsyncAPI)
+    AvatarConfig:
+      type: object
+      description: Cấu trúc theo CHARACTER_SYSTEM §5.1 — bản JSON Schema dùng chung specs/schemas/avatar-config.schema.json (phải giữ khớp). item_id là mã (varchar 64), không phải UUID; server kiểm danh mục, sở hữu (ITEM_NOT_OWNED) và slot (EQUIP_SLOT_INVALID); ≤ 16 KB.
+      additionalProperties: false
+      required:
+        - schema_version
+        - body_type
+        - skin_tone
+        - hair
+        - outfit
+      properties:
+        schema_version:
+          type: integer
+          const: 1
+        body_type:
+          $ref: '#/components/schemas/CatalogCode'
+        skin_tone:
+          $ref: '#/components/schemas/CatalogCode'
+        hair:
+          type: object
+          additionalProperties: false
+          required:
+            - item_id
+            - color
+          properties:
+            item_id:
+              $ref: '#/components/schemas/CatalogCode'
+            color:
+              $ref: '#/components/schemas/CatalogCode'
+        outfit:
+          type: object
+          additionalProperties: false
+          required:
+            - item_id
+          properties:
+            item_id:
+              $ref: '#/components/schemas/CatalogCode'
+        accessories:
+          type: array
+          maxItems: 4
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - slot
+              - item_id
+            properties:
+              slot:
+                type: string
+                enum:
+                  - head
+                  - face
+                  - back
+                  - hand
+              item_id:
+                $ref: '#/components/schemas/CatalogCode'
+        emote_slots:
+          type: array
+          maxItems: 6
+          description: Tối đa emote_wheel_slots (CONFIG_DEFAULTS)
+          items:
+            $ref: '#/components/schemas/CatalogCode'
+        pet:
+          $ref: '#/components/schemas/CatalogCode'
+        title:
+          $ref: '#/components/schemas/CatalogCode'
+        frame:
+          $ref: '#/components/schemas/CatalogCode'
+        badge_showcase:
+          type: array
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/CatalogCode'
+    CatalogCode:
+      type: string
+      minLength: 1
+      maxLength: 64
+      pattern: ^[a-z0-9_]+$
+      description: Mã nội dung game (item_id, preset, dáng, màu) — chuỗi, không phải UUID
     Problem:
       type: object
       required:
@@ -5913,7 +6394,7 @@ components:
         reopen_at:
           type: string
           format: date-time
-          description: Chỉ có khi `code = CURFEW_ACTIVE` (thời điểm hết giờ giới nghiêm hiệu lực, giờ server, ADR-0078) hoặc `code = DAILY_PLAY_LIMIT_REACHED` (00:00 ICT hôm sau, CHILD_SAFETY §4.2)
+          description: Chỉ có khi `code = CURFEW_ACTIVE` (thời điểm hết giờ giới nghiêm hiệu lực, giờ server, ADR-0078), `code = DAILY_PLAY_LIMIT_REACHED` (00:00 ICT hôm sau, CHILD_SAFETY §4.2) hoặc `code = CHAT_NOT_ALLOWED` khi gửi ngoài `allowed_hours` của channel bền vững (phút đầu tiên khung giờ chat mở lại ngoài giờ giới nghiêm, giờ server — delta F112-6; vắng khi trong 7 ngày tới không có giờ mở hoặc lý do không phải khung giờ)
         ticket_id:
           type: string
           format: uuid
@@ -6106,6 +6587,55 @@ components:
         - ROLE_NOT_FOUND
         - FEATURE_DISABLED
         - FEATURE_NOT_DISABLEABLE
+    ChannelMembershipUpdate:
+      type: object
+      additionalProperties: false
+      required:
+        - notification_level
+      properties:
+        notification_level:
+          $ref: '#/components/schemas/ChannelNotificationLevel'
+    ChannelMembership:
+      type: object
+      description: Cài đặt của chính người gọi ở một channel (delta F112-9)
+      required:
+        - channel_id
+        - notification_level
+        - muted
+      properties:
+        channel_id:
+          $ref: '#/components/schemas/Uuid'
+        notification_level:
+          $ref: '#/components/schemas/ChannelNotificationLevel'
+        muted:
+          type: boolean
+          description: notification_level = none
+      example:
+        channel_id: 0193b0a0-0000-7000-8000-000000000502
+        notification_level: none
+        muted: true
+    ValidationProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                required:
+                  - field
+                  - code
+                properties:
+                  field:
+                    type: string
+                    maxLength: 64
+                  code:
+                    type: string
+                    maxLength: 64
+                  message:
+                    type: string
+                    maxLength: 1000
     Message:
       type: object
       required:
@@ -6189,110 +6719,6 @@ components:
           additionalProperties:
             type: string
             maxLength: 255
-    PlayerCard:
-      type: object
-      description: Thông tin công khai tối thiểu của người chơi khác (không tên thật, không trường nếu liên trường)
-      required:
-        - user_id
-        - nickname
-      properties:
-        user_id:
-          $ref: '#/components/schemas/Uuid'
-        nickname:
-          type: string
-          maxLength: 32
-        level:
-          type: integer
-        avatar_config:
-          $ref: '#/components/schemas/AvatarConfig'
-        presence:
-          type: string
-          enum:
-            - offline
-            - online
-            - in_activity
-            - in_match
-            - away
-          description: PresenceStatus (MULTIPLAYER_GAMEPLAY §5, enum chung với AsyncAPI)
-    AvatarConfig:
-      type: object
-      description: Cấu trúc theo CHARACTER_SYSTEM §5.1 — bản JSON Schema dùng chung specs/schemas/avatar-config.schema.json (phải giữ khớp). item_id là mã (varchar 64), không phải UUID; server kiểm danh mục, sở hữu (ITEM_NOT_OWNED) và slot (EQUIP_SLOT_INVALID); ≤ 16 KB.
-      additionalProperties: false
-      required:
-        - schema_version
-        - body_type
-        - skin_tone
-        - hair
-        - outfit
-      properties:
-        schema_version:
-          type: integer
-          const: 1
-        body_type:
-          $ref: '#/components/schemas/CatalogCode'
-        skin_tone:
-          $ref: '#/components/schemas/CatalogCode'
-        hair:
-          type: object
-          additionalProperties: false
-          required:
-            - item_id
-            - color
-          properties:
-            item_id:
-              $ref: '#/components/schemas/CatalogCode'
-            color:
-              $ref: '#/components/schemas/CatalogCode'
-        outfit:
-          type: object
-          additionalProperties: false
-          required:
-            - item_id
-          properties:
-            item_id:
-              $ref: '#/components/schemas/CatalogCode'
-        accessories:
-          type: array
-          maxItems: 4
-          items:
-            type: object
-            additionalProperties: false
-            required:
-              - slot
-              - item_id
-            properties:
-              slot:
-                type: string
-                enum:
-                  - head
-                  - face
-                  - back
-                  - hand
-              item_id:
-                $ref: '#/components/schemas/CatalogCode'
-        emote_slots:
-          type: array
-          maxItems: 6
-          description: Tối đa emote_wheel_slots (CONFIG_DEFAULTS)
-          items:
-            $ref: '#/components/schemas/CatalogCode'
-        pet:
-          $ref: '#/components/schemas/CatalogCode'
-        title:
-          $ref: '#/components/schemas/CatalogCode'
-        frame:
-          $ref: '#/components/schemas/CatalogCode'
-        badge_showcase:
-          type: array
-          maxItems: 3
-          items:
-            $ref: '#/components/schemas/CatalogCode'
-    CatalogCode:
-      type: string
-      minLength: 1
-      maxLength: 64
-      pattern: ^[a-z0-9_]+$
-      description: Mã nội dung game (item_id, preset, dáng, màu) — chuỗi, không phải UUID
     QuoteRef:
       type: object
       required:
@@ -6403,28 +6829,6 @@ components:
           description: Người được mention (thành viên channel); vượt chat_mentions_max (5) → 422 CHAT_MENTION_LIMIT, id không hợp lệ bị loại khỏi tin (CHAT_SYSTEM §7.7)
           items:
             $ref: '#/components/schemas/Uuid'
-    ValidationProblem:
-      allOf:
-        - $ref: '#/components/schemas/Problem'
-        - type: object
-          properties:
-            errors:
-              type: array
-              items:
-                type: object
-                required:
-                  - field
-                  - code
-                properties:
-                  field:
-                    type: string
-                    maxLength: 64
-                  code:
-                    type: string
-                    maxLength: 64
-                  message:
-                    type: string
-                    maxLength: 1000
     QuickMessage:
       type: object
       required:
@@ -6562,7 +6966,37 @@ components:
         highlight:
           type: string
           maxLength: 1000
-          description: Đoạn trích có đánh dấu từ khớp (từ nội dung đã che)
+          description: |
+            Văn bản thuần (delta F112-8): nội dung hiển thị đã che của tin (Unicode NFC), **không** có thẻ, BBCode hay ký tự đánh dấu
+            nào; client hiển thị như văn bản, không phân tích markup. Từ khớp nằm ở `highlight_ranges`. Vắng khi tin không có nội
+            dung chữ (quick, sticker, GIF) hoặc đã thu hồi.
+        highlight_ranges:
+          type: array
+          maxItems: 32
+          description: |
+            Vị trí các đoạn khớp từ khóa `q` trong `highlight` (delta F112-8): `start` và `length` tính theo **điểm mã Unicode**
+            (code point) của `highlight`, tăng dần, không chồng nhau. Khớp như tìm kiếm: từng từ của `q` là tiền tố của một từ trong
+            nội dung, không phân biệt hoa thường, có/không dấu tiếng Việt. Chỉ tính trên nội dung đã che nên không bao giờ trỏ tới
+            phần bị che hay từ của danh mục kiểm duyệt (R15); vắng khi không có `highlight`.
+          items:
+            $ref: '#/components/schemas/TextRange'
+    TextRange:
+      type: object
+      additionalProperties: false
+      required:
+        - start
+        - length
+      properties:
+        start:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          description: Vị trí điểm mã đầu tiên (đếm từ 0)
+        length:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          description: Số điểm mã
     StickerPack:
       type: object
       required:
@@ -6960,6 +7394,16 @@ components:
             - active
             - completed
             - expired
+    ClubGoalAcceptedMetric:
+      type: string
+      description: |
+        Chỉ số mục tiêu club server chấp nhận lúc này khi tạo mục tiêu (delta F112-4; F120 Clarifications 2026-11-23): mỗi giá trị
+        đếm được từ một event đã xác minh (`activity.graded`, `quest.completed`, `world.discovery_found`). Tập con của
+        `ClubGoalCreate.metric`; thêm giá trị khi có event nguồn (additive).
+      enum:
+        - activities_completed
+        - quests_completed
+        - discoveries_found
     ClubGoalCreate:
       type: object
       required:
@@ -6977,12 +7421,20 @@ components:
             - minutes_learning
             - boss_defeated
             - discoveries_found
+          description: |
+            Server chỉ nhận các giá trị của `ClubGoalAcceptedMetric` (đếm được từ event đã xác minh — delta F112-4, cũng trả trong
+            `accepted_metrics` của `listClubGoals`); `minutes_learning`, `boss_defeated` chưa có event nguồn → `422 VALIDATION_FAILED`
+            (`errors[0].field = metric`, `errors[0].code = VALUE_NOT_AVAILABLE`).
         subject_id:
           $ref: '#/components/schemas/Uuid'
         target:
           type: integer
           minimum: 1
           maximum: 100000
+      example:
+        title: Cả club hoàn thành 30 bài
+        metric: activities_completed
+        target: 30
     ClubEvent:
       type: object
       required:
@@ -7035,12 +7487,22 @@ components:
             - boss_raid
             - internal_tournament
             - other
+          description: |
+            Vắng → `other`. `internal_tournament` không tạo được từ game (delta F112-3: học sinh không có cách liệt kê template giải
+            nội bộ) → `422 VALIDATION_FAILED` (`errors[0].field = event_kind`, `errors[0].code = VALUE_NOT_AVAILABLE`).
         tournament_template_id:
           $ref: '#/components/schemas/Uuid'
+          description: Chỉ thuộc `internal_tournament` (chưa mở cho học sinh, F112-3); gửi kèm loại khác → `422 VALIDATION_FAILED` (`errors[0].field = tournament_template_id`)
         starts_at:
           $ref: '#/components/schemas/Timestamp'
         ends_at:
           $ref: '#/components/schemas/Timestamp'
+      example:
+        title: Luyện tập Toán cuối tuần
+        description: Cả nhóm cùng làm bài luyện tập nhé!
+        event_kind: practice_session
+        starts_at: '2026-11-29T08:00:00Z'
+        ends_at: '2026-11-29T09:00:00Z'
     Notification:
       type: object
       required:

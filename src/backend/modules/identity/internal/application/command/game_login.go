@@ -122,6 +122,7 @@ type GameAuth struct {
 	Curfew      port.CurfewSource
 	Hours       port.AccessHoursSource    // F015: school/tenant access hours (nil = none)
 	DailyLimit  port.DailyPlayLimitSource // OQ-17: daily play limit of the school (nil = none)
+	Chat        port.ChatDirectSource     // delta F112-7: policies.chat.direct_message_enabled (nil = omitted)
 	Sync        LoginSyncFunc
 	Restore     LoginRestorer // F016 US4: restore of a cleaned-up student (nil = ACCOUNT_NOT_PROVISIONED)
 	Metrics     port.GameAuthMetrics
@@ -543,6 +544,7 @@ func (h GameAuth) complete(ctx context.Context, cfg GameAuthConfig, c completion
 	if err := h.applyCurfew(ctx, cfg, &b); err != nil {
 		return deny(port.GameLoginCurfewActive, err)
 	}
+	h.applyChat(ctx, &b)
 	if err := h.applyDailyLimit(ctx, &b, user); err != nil {
 		return deny(port.GameLoginDailyLimitReached, err)
 	}
@@ -612,6 +614,23 @@ func (h GameAuth) applyCurfew(ctx context.Context, cfg GameAuthConfig, b *dto.Pl
 		return problem.New(problem.CurfewActive, "").With("reopen_at", reopen.UTC().Format(time.RFC3339))
 	}
 	return nil
+}
+
+// applyChat sets policies.chat.direct_message_enabled from the projection of the chat policy levels (delta F112-7). It
+// is display only, so an unreadable projection never fails the login: the field is left out (logged) and the client
+// shows the button, module chat deciding on every command.
+func (h GameAuth) applyChat(ctx context.Context, b *dto.PlayerBootstrap) {
+	if h.Chat == nil {
+		return
+	}
+	v, err := h.Chat.DirectMessageEnabled(ctx, b.TenantID, b.SchoolID, b.IsCommonTenant)
+	if err != nil {
+		slog.WarnContext(ctx, "identity: chat direct policy unavailable for the bootstrap", "error", err)
+		return
+	}
+	if v != nil {
+		b.Policies.Chat = &dto.ChatPolicy{DirectMessageEnabled: v}
+	}
 }
 
 // applyDailyLimit refuses with 403 DAILY_PLAY_LIMIT_REACHED + reopen_at (00:00 ICT the next day) a student whose

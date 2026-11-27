@@ -100,9 +100,16 @@ type PlayTimePolicy struct {
 	Curfew *CurfewPolicy `json:"curfew,omitempty"`
 }
 
-// BootstrapPolicies is PlayerBootstrap.policies (display only; the server checks). Chat and party policies
-// come from F015 settings and are omitted until then.
+// ChatPolicy is PlayerBootstrap.policies.chat (display only; module chat checks every command).
+type ChatPolicy struct {
+	// DirectMessageEnabled is the projection of the chat policy levels of module chat (delta F112-7); nil: omitted.
+	DirectMessageEnabled *bool `json:"direct_message_enabled,omitempty"`
+}
+
+// BootstrapPolicies is PlayerBootstrap.policies (display only; the server checks). The party policy comes from F015
+// settings and is omitted until then.
 type BootstrapPolicies struct {
+	Chat     *ChatPolicy     `json:"chat,omitempty"`
 	PlayTime *PlayTimePolicy `json:"play_time,omitempty"`
 }
 

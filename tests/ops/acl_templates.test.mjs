@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
-import { checkAll, checkValkey, checkNats, repoInputs, nCovers, nPrefix, vCovers, jwtEstimate } from '../../scripts/deploy/check-acl-templates.mjs';
+import { checkAll, checkValkey, checkNats, repoInputs, NATS_EXPECT, nCovers, nPrefix, vCovers, jwtEstimate } from '../../scripts/deploy/check-acl-templates.mjs';
 import { renderValkeyAcl, valkeyInputs, expandUser, expandAll, credsDrift, credsClaims, verifyNatsCreds, renderNatsAccounts, currentPermissions } from '../../scripts/deploy/render-acl.mjs';
 
 const base = repoInputs();
@@ -75,6 +75,21 @@ test('NATS: a subject used by the code but not granted is reported', () => {
     for (const u of ['core-api', 'worker']) p.users[u].publish = p.users[u].publish.filter((s) => s !== 'ew.job.identity.sis.>');
     delete p.users.worker.jetstream.IDENTITY_SIS_JOBS;
   })), /"ew\.job\.identity\.sis\.[a-z_>]*".*granted to none of core-api, worker/);
+});
+
+test('NATS: a pkg/ literal must be classified; parseOnly takes no direction and grants nothing', () => {
+  const extra = (file, lit) => ({ ...base, code: [...base.code, { file, lit, kind: 'nats' }] });
+  has(checkNats(extra('pkg/unknown/thing.go', 'ew.evt.')), /pkg\/unknown\/thing\.go: "ew\.evt\." is not classified/);
+  const saved = NATS_EXPECT['pkg/module/consumers.go'];
+  try {
+    NATS_EXPECT['pkg/module/consumers.go'] = { 'ew.evt.': { parseOnly: true, sub: ['worker'] } };
+    has(checkNats(base), /"ew\.evt\." is parseOnly and must not list pub\/sub/);
+    NATS_EXPECT['pkg/module/consumers.go'] = { 'ew.evt.': {} };
+    has(checkNats(base), /"ew\.evt\." has neither a direction \(pub\/sub\) nor parseOnly/);
+  } finally {
+    NATS_EXPECT['pkg/module/consumers.go'] = saved;
+  }
+  assert.deepEqual(checkNats(base), []);
 });
 
 test('NATS: whole-space wildcards, raw $JS grants, unknown streams and unused grants are refused', () => {

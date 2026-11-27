@@ -5,6 +5,7 @@ package integration
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -70,8 +71,20 @@ func TestSearchMessages(t *testing.T) {
 	if strings.Contains(r.raw, "gốc") || strings.Contains(r.raw, "world") || strings.Contains(r.raw, "thu hồi") {
 		t.Fatalf("search leaks: %s", r.raw)
 	}
-	if r := c.search(binh, "tu bi che"); len(r.data()) != 1 {
-		t.Fatalf("display text of the masked message: %s", r.raw)
+	masked := c.search(binh, "tu bi che")
+	if len(masked.data()) != 1 {
+		t.Fatalf("display text of the masked message: %s", masked.raw)
+	}
+	// delta F112-8: highlight = the masked display text in plain text, ranges in code points of the search words only.
+	if h := masked.data()[0]; h["highlight"] != "tu bi che ***" || fmt.Sprint(h["highlight_ranges"]) !=
+		"[map[length:2 start:0] map[length:2 start:3] map[length:3 start:6]]" {
+		t.Fatalf("highlight of the masked message: %v", h)
+	}
+	for _, h := range r.data() {
+		ranges, _ := h["highlight_ranges"].([]any)
+		if len(ranges) != 2 || strings.ContainsAny(fmt.Sprint(h["highlight"]), "<>[]") {
+			t.Fatalf("nhan vat highlight: %v", h)
+		}
 	}
 	if r := c.search(binh, "NHÂN VẬT CHÍNH"); len(r.data()) != 1 {
 		t.Fatalf("upper case with diacritics: %s", r.raw)

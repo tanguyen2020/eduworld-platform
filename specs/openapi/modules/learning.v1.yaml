@@ -7895,7 +7895,7 @@ components:
         reopen_at:
           type: string
           format: date-time
-          description: Chỉ có khi `code = CURFEW_ACTIVE` (thời điểm hết giờ giới nghiêm hiệu lực, giờ server, ADR-0078) hoặc `code = DAILY_PLAY_LIMIT_REACHED` (00:00 ICT hôm sau, CHILD_SAFETY §4.2)
+          description: Chỉ có khi `code = CURFEW_ACTIVE` (thời điểm hết giờ giới nghiêm hiệu lực, giờ server, ADR-0078), `code = DAILY_PLAY_LIMIT_REACHED` (00:00 ICT hôm sau, CHILD_SAFETY §4.2) hoặc `code = CHAT_NOT_ALLOWED` khi gửi ngoài `allowed_hours` của channel bền vững (phút đầu tiên khung giờ chat mở lại ngoài giờ giới nghiêm, giờ server — delta F112-6; vắng khi trong 7 ngày tới không có giờ mở hoặc lý do không phải khung giờ)
         ticket_id:
           type: string
           format: uuid

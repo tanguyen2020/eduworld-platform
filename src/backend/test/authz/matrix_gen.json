@@ -6359,6 +6359,18 @@
     ]
   },
   {
+    "operation_id": "updateChannelMembership",
+    "module": "chat",
+    "method": "PATCH",
+    "path": "/chat/channels/{channel_id}/membership",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "updateClub",
     "module": "chat",
     "method": "PATCH",

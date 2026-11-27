@@ -164,10 +164,22 @@ func clubProblem(err error) error {
 	case errors.Is(err, club.ErrLimitReached):
 		return problem.New(problem.ClubLimitReached, "")
 	case errors.Is(err, club.ErrOwnerLeaves):
-		return problem.New(problem.Conflict, "the owner archives the club instead of leaving")
+		return problem.New(problem.Conflict, "the owner cannot leave; school staff archive the club")
+	case errors.Is(err, club.ErrMetric):
+		return problem.Invalid("metric", problem.SubInvalid, "a ClubGoalCreate metric")
+	case errors.Is(err, club.ErrMetricUnavailable):
+		return problem.Invalid("metric", problem.SubValueNotAvailable, "metric not counted from a verified event yet")
+	case errors.Is(err, club.ErrEventKind):
+		return problem.Invalid("event_kind", problem.SubInvalid, "a ClubEventCreate event_kind")
+	case errors.Is(err, club.ErrEventKindUnavailable):
+		return problem.Invalid("event_kind", problem.SubValueNotAvailable, "internal_tournament is not available from the game")
 	}
 	return err
 }
+
+// studentDenied refuses a club operation the role of a student does not hold (403 PERMISSION_DENIED); deniedOutside
+// audits it once the transaction rolled back.
+func studentDenied() error { return problem.New(problem.PermissionDenied, "") }
 
 func scopeViolation() error { return problem.New(problem.SocialScopeViolation, "") }
 
@@ -562,7 +574,8 @@ func (h Clubs) Approve(ctx context.Context, id uuid.UUID) (out ClubView, err err
 	return out, deniedOutside(ctx, err, "approveClub")
 }
 
-// Update implements updateClub (owner/officer; If-Match version; name and description through the pipeline).
+// Update implements updateClub (owner only — an officer approves requests and invites, SOCIAL_SYSTEM §6.2, delta F112-1;
+// If-Match version; name and description through the pipeline).
 func (h Clubs) Update(ctx context.Context, id uuid.UUID, ifMatch int64, in ClubInput) (out ClubView, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.command.UpdateClub")
 	defer func() { done(err) }()
@@ -582,8 +595,8 @@ func (h Clubs) Update(ctx context.Context, id uuid.UUID, ifMatch int64, in ClubI
 		if err != nil {
 			return err
 		}
-		if m == nil || !club.Manager(m.Role) {
-			return problem.New(problem.PermissionDenied, "")
+		if m == nil || !club.Editor(m.Role) {
+			return studentDenied()
 		}
 		if c.Version != ifMatch {
 			return problem.New(problem.VersionMismatch, "")
@@ -614,7 +627,7 @@ func (h Clubs) Update(ctx context.Context, id uuid.UUID, ifMatch int64, in ClubI
 		out = view(*c, m.Role, false)
 		return nil
 	})
-	return out, err
+	return out, deniedOutside(ctx, err, "updateClub")
 }
 
 // Leave implements leaveClub: the membership and the channel membership end in the same transaction (history 404 after,
@@ -654,8 +667,9 @@ func (h Clubs) Leave(ctx context.Context, id uuid.UUID) (err error) {
 	})
 }
 
-// Archive implements archiveClub (owner, or staff with social.club.approve): archived, the team channel read_only
-// (history kept by retention), club.archived (F120-AC-20).
+// Archive implements archiveClub (staff with social.club.approve in the school of the club): archived, the team channel
+// read_only (history kept by retention), club.archived (F120-AC-20). A student — the owner included — is refused 403
+// PERMISSION_DENIED (delta F112-2: closing a group of children is for school staff in the portal); not a member → 404.
 func (h Clubs) Archive(ctx context.Context, id uuid.UUID) (err error) {
 	ctx, done := observability.UseCase(ctx, "chat.command.ArchiveClub")
 	defer func() { done(err) }()
@@ -672,8 +686,11 @@ func (h Clubs) Archive(ctx context.Context, id uuid.UUID) (err error) {
 		if err != nil {
 			return err
 		}
-		if a.isStudent() && (m == nil || m.Role != club.RoleOwner) {
-			return problem.New(problem.PermissionDenied, "")
+		if a.isStudent() {
+			if m == nil {
+				return notFound()
+			}
+			return studentDenied()
 		}
 		if c.Status == club.StatusArchived {
 			return idempotency.SetResult(ctx, nil)
@@ -749,8 +766,11 @@ func (h Clubs) SetRole(ctx context.Context, id, user uuid.UUID, role string) (ou
 	return out, err
 }
 
-// Remove implements removeClubMember (owner: anyone but the owner; officer: members only), F120-AC-20.
-func (h Clubs) Remove(ctx context.Context, id, user uuid.UUID) (err error) {
+// Remove implements removeClubMember: no student removes another member from the game, the owner and the officers
+// included (delta F112-2, 2026-11-28 — removing a child from a group of children is for school staff, with a reason and
+// an audit: removeSchoolClubMember, F122; students keep mute, block and report). A member gets 403 PERMISSION_DENIED
+// (audited), a caller who does not see the club 404. The target is never looked up (the answer does not depend on it).
+func (h Clubs) Remove(ctx context.Context, id, _ uuid.UUID) (err error) {
 	ctx, done := observability.UseCase(ctx, "chat.command.RemoveClubMember")
 	defer func() { done(err) }()
 	a, err := h.actor(ctx)
@@ -760,39 +780,19 @@ func (h Clubs) Remove(ctx context.Context, id, user uuid.UUID) (err error) {
 	if !a.isStudent() {
 		return problem.New(problem.GameAccessStudentOnly, "")
 	}
-	now := h.now()
-	return h.UoW.Do(ctx, func(ctx context.Context) error {
+	return deniedOutside(ctx, h.UoW.Do(ctx, func(ctx context.Context) error {
 		if err := h.loadStudent(ctx, &a); err != nil {
 			return err
 		}
-		c, m, err := h.club(ctx, a, id)
+		_, m, err := h.club(ctx, a, id)
 		if err != nil {
 			return err
 		}
-		if m == nil || !club.Manager(m.Role) {
-			return problem.New(problem.PermissionDenied, "")
-		}
-		target, err := h.Store.Member(ctx, a.tenant, c.ID, user)
-		if err != nil {
-			return err
-		}
-		if target == nil || target.Role == club.RoleOwner || target.UserID == a.p.UserID {
+		if m == nil {
 			return notFound()
 		}
-		if m.Role == club.RoleOfficer && target.Role != club.RoleMember {
-			return problem.New(problem.PermissionDenied, "")
-		}
-		if err := h.leave(ctx, c, *target, "removed", a.p.UserID, now); err != nil {
-			return err
-		}
-		if err := h.Store.SaveClub(ctx, *c, a.p.UserID, now); err != nil {
-			return err
-		}
-		if err := h.record(ctx, AuditClubMemberRemove, *c, map[string]any{"user_id": user.String()}); err != nil {
-			return err
-		}
-		return h.afterCommit(ctx, *c, MembershipRemoved, channel.StatusOpen, user)
-	})
+		return studentDenied()
+	}), "removeClubMember")
 }
 
 // StaffRemoveReasonMax is maxLength of the reason of removeSchoolClubMember.
@@ -1169,12 +1169,8 @@ func (h Clubs) DecideInvitation(ctx context.Context, invitationID uuid.UUID, acc
 	return out, err
 }
 
-// countedMetrics are the goal metrics fed by a verified event today (F120-AC-21): minutes_learning waits for
-// activity.graded.duration_seconds (owner F031) and boss_defeated for boss.encounter_completed (owner F103) [Proposed].
-var countedMetrics = map[string]bool{club.MetricActivities: true, club.MetricQuests: true, club.MetricDiscoveries: true}
-
-// CreateGoal implements createClubGoal (owner/officer): a goal of the current week; a metric without a verified source
-// event yet → 422 VALIDATION_FAILED.
+// CreateGoal implements createClubGoal (owner only, delta F112-1): a goal of the current week; a metric outside
+// club.AcceptedMetrics (no verified source event yet) → 422 VALIDATION_FAILED VALUE_NOT_AVAILABLE (delta F112-4).
 func (h Clubs) CreateGoal(ctx context.Context, id uuid.UUID, in GoalInput, loc *time.Location) (out write.ClubGoal, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.command.CreateClubGoal")
 	defer func() { done(err) }()
@@ -1185,8 +1181,8 @@ func (h Clubs) CreateGoal(ctx context.Context, id uuid.UUID, in GoalInput, loc *
 	if !a.isStudent() {
 		return out, problem.New(problem.GameAccessStudentOnly, "")
 	}
-	if !countedMetrics[in.Metric] {
-		return out, problem.Invalid("metric", problem.SubInvalid, "metric not counted from a verified event yet")
+	if err := club.CheckMetric(in.Metric); err != nil {
+		return out, clubProblem(err)
 	}
 	if in.Target < 1 || in.Target > 100000 {
 		return out, problem.Invalid("target", problem.SubInvalid, "1..100000")
@@ -1200,8 +1196,8 @@ func (h Clubs) CreateGoal(ctx context.Context, id uuid.UUID, in GoalInput, loc *
 		if err != nil {
 			return err
 		}
-		if m == nil || !club.Manager(m.Role) {
-			return problem.New(problem.PermissionDenied, "")
+		if m == nil || !club.Editor(m.Role) {
+			return studentDenied()
 		}
 		if err := c.Usable(); err != nil {
 			return clubProblem(err)
@@ -1216,7 +1212,7 @@ func (h Clubs) CreateGoal(ctx context.Context, id uuid.UUID, in GoalInput, loc *
 		}
 		return idempotency.SetResult(ctx, GoalBody(out, 0))
 	})
-	return out, err
+	return out, deniedOutside(ctx, err, "createClubGoal")
 }
 
 // GoalBody renders a ClubGoal.
@@ -1232,7 +1228,8 @@ func GoalBody(g write.ClubGoal, mine int) map[string]any {
 	return m
 }
 
-// CreateEvent implements createClubEvent (owner/officer; title and description through the pipeline).
+// CreateEvent implements createClubEvent (owner only, delta F112-1; title and description through the pipeline);
+// internal_tournament or a tournament template → 422 VALUE_NOT_AVAILABLE (delta F112-3).
 func (h Clubs) CreateEvent(ctx context.Context, id uuid.UUID, in EventInput) (out write.ClubEvent, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.command.CreateClubEvent")
 	defer func() { done(err) }()
@@ -1249,8 +1246,8 @@ func (h Clubs) CreateEvent(ctx context.Context, id uuid.UUID, in EventInput) (ou
 	if in.EndsAt != nil && !in.EndsAt.After(in.StartsAt) {
 		return out, problem.Invalid("ends_at", problem.SubInvalid, "after starts_at")
 	}
-	if in.Kind == "" {
-		in.Kind = "other"
+	if in.Kind, err = club.StudentEventKind(in.Kind, in.TournamentTemplateID); err != nil {
+		return out, clubProblem(err)
 	}
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
 		if err := h.loadStudent(ctx, &a); err != nil {
@@ -1260,8 +1257,8 @@ func (h Clubs) CreateEvent(ctx context.Context, id uuid.UUID, in EventInput) (ou
 		if err != nil {
 			return err
 		}
-		if m == nil || !club.Manager(m.Role) {
-			return problem.New(problem.PermissionDenied, "")
+		if m == nil || !club.Editor(m.Role) {
+			return studentDenied()
 		}
 		if err := c.Usable(); err != nil {
 			return clubProblem(err)
@@ -1277,7 +1274,7 @@ func (h Clubs) CreateEvent(ctx context.Context, id uuid.UUID, in EventInput) (ou
 		}
 		return idempotency.SetResult(ctx, EventBody(out))
 	})
-	return out, err
+	return out, deniedOutside(ctx, err, "createClubEvent")
 }
 
 // EventBody renders a ClubEvent.
@@ -1299,7 +1296,7 @@ func (h Clubs) RecordProgress(ctx context.Context, tenant, student uuid.UUID, me
 	loc *time.Location) (completed int, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.command.RecordClubGoalProgress")
 	defer func() { done(err) }()
-	if delta <= 0 || !countedMetrics[metric] {
+	if delta <= 0 || !slices.Contains(club.AcceptedMetrics, metric) {
 		return 0, nil
 	}
 	err = h.UoW.InTenantTx(ctx, mustScope(tenant), func(ctx context.Context) error {

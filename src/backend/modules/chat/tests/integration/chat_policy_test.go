@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/channel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
 )
@@ -60,8 +62,13 @@ func TestChatPolicyPutLevels(t *testing.T) {
 		t.Fatalf("put school level: %d %s", r.status, r.raw)
 	}
 	c.clock.Add(time.Minute)
-	if r := c.sendWS(an, "c1", dm, "con thuc khong"); replyCode(r) != "CHAT_NOT_ALLOWED" {
+	// delta F112-6: details.reopen_at = 07:00 ICT the next day (the first minute of the school hours outside the curfew).
+	if r := c.sendWS(an, "c1", dm, "con thuc khong"); replyCode(r) != "CHAT_NOT_ALLOWED" || r.Problem.Details["reopen_at"] != "2026-11-24T00:00:00Z" {
 		t.Fatalf("narrowed hours 20:31: %+v", r)
+	}
+	if r := c.sendREST(an, dm, map[string]any{"client_message_id": uuid.New(), "kind": "text", "body": "qua REST"}); r.status != 403 ||
+		r.code() != "CHAT_NOT_ALLOWED" || r.body["reopen_at"] != "2026-11-24T00:00:00Z" {
+		t.Fatalf("narrowed hours REST: %d %s", r.status, r.raw)
 	}
 	c.clock.Set(at(10, 0))
 	if r := c.sendWS(an, "c1", dm, "chao buoi sang"); !r.OK {
@@ -99,6 +106,12 @@ func TestChatPolicyPutLevels(t *testing.T) {
 	}
 	if n := c.checkEvents("chat_policy.updated")["chat_policy.updated"]; n != 2 {
 		t.Fatalf("events chat_policy.updated: %d", n)
+	}
+	// delta F112-7: each event tells what the level leaves of direct (enabled school rule → true) for module identity.
+	for _, ev := range c.events("chat_policy.updated") {
+		if ev["direct_message_enabled"] != true {
+			t.Fatalf("direct_message_enabled: %v", ev)
+		}
 	}
 	if n := c.count(`SELECT count(*) FROM chat.chat_policies WHERE tenant_id = $1 AND scope_type = 'school' AND scope_id = $2
 		AND deleted_at IS NULL AND version = 2 AND reason IS NOT NULL`, c.tenantA, c.schoolA); n != 1 {

@@ -209,3 +209,9 @@ type PlayTimeReader interface {
 	// PlayedOn returns the time user played in tenant on day (0 when none).
 	PlayedOn(ctx context.Context, tenant, user uuid.UUID, day settings.PlayDate) (time.Duration, error)
 }
+
+// ChatDirectPolicyReader reads the projected direct_message_enabled levels of a student (delta F112-7): the platform
+// row and the common/tenant rows of tenant and the row of school (nil: no school), under the TenantScope of the caller.
+type ChatDirectPolicyReader interface {
+	ChatDirectLevels(ctx context.Context, tenant uuid.UUID, school *uuid.UUID) (settings.ChatDirectLevels, error)
+}

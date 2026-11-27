@@ -28,6 +28,7 @@ const (
 	EventChatPolicyUpdated      = "chat_policy.updated"
 	AuditChatPolicyUpdated      = "chat_policy.updated"
 	AuditCommonOverrideUpdated  = "chat_policy.common_tenant_social_updated"
+	EventCommonOverrideUpdated  = "chat_policy.common_tenant_social_updated"
 	policyTimezone              = "Asia/Ho_Chi_Minh"
 	maxPolicyReason             = 500
 	minPolicyReason             = 10
@@ -478,6 +479,8 @@ func (h PolicyAdmin) recorded(ctx context.Context, cur *read.PolicyRow, row read
 	if doc.Preset != "" {
 		payload["preset"] = doc.Preset
 	}
+	// delta F112-7: what this level leaves of the direct channel, projected by module identity into PlayerBootstrap.
+	payload["direct_message_enabled"] = policy.DirectMessageEnabled(doc, row.ScopeType == policyScopePlatform)
 	e := write.Event{Type: EventChatPolicyUpdated, SubjectType: "chat_policy", SubjectID: row.ID.String(),
 		PartitionKey: row.ID.String(), OccurredAt: row.UpdatedAt, Payload: payload}
 	if row.TenantID != nil {
@@ -553,8 +556,16 @@ func (h PolicyAdmin) PutCommonOverride(ctx context.Context, in CommonOverrideInp
 			Result: audit.ResultSuccess, Reason: reason, Metadata: meta}); err != nil {
 			return err
 		}
-		res = CommonOverrideResult{Row: row}
+		// delta F112-7: module identity projects direct_enabled into PlayerBootstrap.policies.chat (no reason in the event).
 		t := tenant
+		if err := h.Events.Publish(ctx, write.Event{Type: EventCommonOverrideUpdated, SubjectType: "tenant", SubjectID: tenant.String(),
+			PartitionKey: tenant.String(), TenantID: &t, OccurredAt: row.UpdatedAt, Payload: map[string]any{"tenant_id": tenant,
+				"direct_enabled": row.Override.DirectEnabled, "world_enabled": row.Override.WorldEnabled,
+				"area_free_text_enabled": row.Override.AreaFreeTextEnabled, "version": row.Version, "actor_id": p.UserID,
+				"occurred_at": row.UpdatedAt}}); err != nil {
+			return err
+		}
+		res = CommonOverrideResult{Row: row}
 		return h.bump(ctx, &t)
 	})
 	if err != nil {

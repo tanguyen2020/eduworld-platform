@@ -142,3 +142,9 @@ type KeycloakEmailAdmin interface {
 type KeycloakAnonymizer interface {
 	AnonymizeUser(ctx context.Context, userID string) error
 }
+
+// ChatDirectSource returns PlayerBootstrap.policies.chat.direct_message_enabled of a student (delta F112-7) from the
+// projection of the chat policy events (never module chat itself on the login path, R30); nil: not projected yet.
+type ChatDirectSource interface {
+	DirectMessageEnabled(ctx context.Context, tenantID uuid.UUID, schoolID *uuid.UUID, commonTenant bool) (*bool, error)
+}

@@ -43,6 +43,10 @@ Quyết định khi triển khai (đề xuất bảo thủ nhất, phù hợp AD
 
 - Q: Channel `class`, `study_group` và cấp policy `class`? → A: bỏ (ADR-0095 mục 5, FR-CHAT-001, FR-MOD-004); không tạo kênh khối (R15 không đổi). Còn 6 loại channel `world`, `area`, `match`, `party`, `team`, `direct`; policy 3 cấp platform → tenant → school; khóa cache `chat_policy_cache` theo `(tenant, school, channel_type)`. `channel.New` từ chối `class`/`study_group` (`ErrType`); seed policy platform **version 2** không còn rule `class`/`study_group` (migration `20261231000002_adr0095_noclass.sql`, `chat-policy.schema.json` v5 sửa tại chỗ vì chỉ seed platform từng mang các giá trị này). Channel `class`/`study_group` còn sót (nếu có) bị soft-delete giữ tin làm bằng chứng; dòng policy cấp `class` bị soft-delete; giá trị cũ trong CHECK bỏ ở WP-R khi 0 dòng. Enum `channel_type` của `chat-envelope`, `chat.message_created`, `chat.message_held` thu hẹp tại chỗ (v1, tương thích ngược). AC giữ mã; F115-AC-08, AC-14, AC-22 sửa chữ/test.
 
+### Session 2026-11-28 (delta server F112-6 — [Confirmed], owner "chốt hết")
+
+- Q: `CHAT_NOT_ALLOWED` khi gửi ngoài `allowed_hours` của channel bền vững có cho biết lúc nào mở lại (câu hỏi mở F112-6 của client F112)? → A: [Confirmed] Có, additive: `reopen_at` = phút đầu tiên mà khung giờ của mọi cấp mở lại và không nằm trong giờ giới nghiêm của học sinh (quét tối đa 7 ngày, không có → vắng), giờ server UTC. REST: trường `reopen_at` của Problem (như `CURFEW_ACTIVE`); WS: `system.command.failed.details.reopen_at` (RFC 3339) — `natscmd.failure` chuyển cả `reopen_at` của `CURFEW_ACTIVE` vào `details` (F115-AC-22 không đổi mã). `CHAT_NOT_ALLOWED` vì policy tắt, không là bạn bè hay chặn không mang `reopen_at` và không nêu lý do. Owner tài liệu: [CHAT_SYSTEM §3](../../docs/03-social-multiplayer/CHAT_SYSTEM.md#3-policy-resolution). Test: `TestF112ReopenAt`, `TestFailureDetails`, `TestChatPolicyPutLevels` (20:31 → `2026-11-24T00:00:00Z`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Gửi và nhận tin realtime, bền vững trước khi "Sent" (Priority: P1)

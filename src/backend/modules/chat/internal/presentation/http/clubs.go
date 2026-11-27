@@ -464,7 +464,8 @@ func (h ClubHandlers) goals(w http.ResponseWriter, r *http.Request) {
 		data[i] = command.GoalBody(write.ClubGoal{ID: g.ID, ClubID: g.ClubID, Title: g.Title, Metric: g.Metric, SubjectID: g.SubjectID,
 			Target: g.Target, Progress: g.Progress, WeekStart: g.WeekStart, Status: g.Status}, g.MyContribution)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": data})
+	// accepted_metrics: the metrics createClubGoal accepts now, the very list it checks (delta F112-4).
+	writeJSON(w, http.StatusOK, map[string]any{"data": data, "accepted_metrics": club.AcceptedMetrics})
 }
 
 func (h ClubHandlers) createGoal(w http.ResponseWriter, r *http.Request) {

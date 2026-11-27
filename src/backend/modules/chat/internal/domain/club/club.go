@@ -167,8 +167,46 @@ func (c Club) CanAdd() error {
 	return nil
 }
 
-// Manager reports a role that manages members, invitations, goals and events (owner, officer).
+// Manager reports a role that handles the join requests and invitations of a club (owner, officer — SOCIAL_SYSTEM §6.2).
 func Manager(role string) bool { return role == RoleOwner || role == RoleOfficer }
+
+// Editor reports the role that edits the club, names officers and creates goals and events: the owner only
+// (SOCIAL_SYSTEM §6.2 — an officer approves requests and invites; delta F112-1, 2026-11-28).
+func Editor(role string) bool { return role == RoleOwner }
+
+// Kinds of a club event (ClubEventCreate.event_kind).
+const (
+	EventPractice   = "practice_session"
+	EventCoopQuest  = "coop_quest"
+	EventBossRaid   = "boss_raid"
+	EventTournament = "internal_tournament"
+	EventOther      = "other"
+)
+
+// Event kind errors: ErrEventKind for a value outside the contract, ErrEventKindUnavailable for internal_tournament (or a
+// tournament template) from the game — students have no operation that lists the internal tournament templates
+// (delta F112-3, 2026-11-28).
+var (
+	ErrEventKind            = errors.New("club: event_kind is not a club event kind")
+	ErrEventKindUnavailable = errors.New("club: internal_tournament is not available from the game")
+)
+
+// StudentEventKind checks the kind of an event a student creates ("" = other) and returns it.
+func StudentEventKind(kind string, template *uuid.UUID) (string, error) {
+	if kind == "" {
+		kind = EventOther
+	}
+	switch kind {
+	case EventPractice, EventCoopQuest, EventBossRaid, EventOther:
+		if template != nil {
+			return "", ErrEventKindUnavailable
+		}
+		return kind, nil
+	case EventTournament:
+		return "", ErrEventKindUnavailable
+	}
+	return "", ErrEventKind
+}
 
 // WeekStart is the Monday (policy day in loc) of the week of t: the week of a club goal.
 func WeekStart(t time.Time, loc *time.Location) time.Time {
@@ -188,3 +226,28 @@ const (
 	MetricBoss        = "boss_defeated"
 	MetricDiscoveries = "discoveries_found"
 )
+
+// Metrics lists the metrics of the contract (ClubGoalCreate.metric).
+var Metrics = []string{MetricActivities, MetricQuests, MetricMinutes, MetricBoss, MetricDiscoveries}
+
+// AcceptedMetrics are the goal metrics fed by a verified event today, in contract order (ClubGoalAcceptedMetric, delta
+// F112-4; F120-AC-21): minutes_learning waits for activity.graded.duration_seconds (owner F031) and boss_defeated for
+// boss.encounter_completed (owner F103) [Proposed].
+var AcceptedMetrics = []string{MetricActivities, MetricQuests, MetricDiscoveries}
+
+// Metric errors: ErrMetric outside the contract, ErrMetricUnavailable for a contract metric without a source event yet.
+var (
+	ErrMetric            = errors.New("club: metric is not a club goal metric")
+	ErrMetricUnavailable = errors.New("club: metric not counted from a verified event yet")
+)
+
+// CheckMetric checks the metric of a new goal.
+func CheckMetric(m string) error {
+	switch {
+	case slices.Contains(AcceptedMetrics, m):
+		return nil
+	case slices.Contains(Metrics, m):
+		return ErrMetricUnavailable
+	}
+	return ErrMetric
+}

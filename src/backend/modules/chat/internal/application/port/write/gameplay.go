@@ -66,3 +66,10 @@ type CursorRepository interface {
 	// messages after last_read_seq) and returns the delivered and read cursors and the mention count.
 	ResetMentions(ctx context.Context, tenant, channel, user uuid.UUID) (delivered, read, mentions int64, err error)
 }
+
+// MembershipSettings writes the settings of a member of a channel (delta F112-9).
+type MembershipSettings interface {
+	// SetNotificationLevel sets notification_level of the active member (ok false: not an active member) and returns the
+	// level before the write.
+	SetNotificationLevel(ctx context.Context, tenant, channel, user uuid.UUID, level string, at time.Time) (before string, ok bool, err error)
+}

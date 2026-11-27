@@ -56,3 +56,46 @@ func (h RecordPlayTime) Handle(ctx context.Context, tenant, user uuid.UUID, ende
 	}
 	return nil
 }
+
+// ChatDirectPolicyEvent is one chat policy event of module chat projected by RecordChatDirectPolicy (delta F112-7).
+type ChatDirectPolicyEvent struct {
+	Level   string     // settings.ChatLevel*
+	Tenant  *uuid.UUID // nil for the platform level
+	ScopeID uuid.UUID  // tenant (common, tenant) or school (school); unused for platform
+	Enabled bool
+	Version int64
+}
+
+// RecordChatDirectPolicy applies chat_policy.updated / chat_policy.common_tenant_social_updated of module chat to the
+// projection read by the game login (delta F112-7: PlayerBootstrap.policies.chat.direct_message_enabled without calling
+// module chat, R30). It runs inside the transaction of the consumer identity.chat_direct_policy (platform scope for a
+// platform event, TenantScope otherwise; idempotency per event_id by pkg/outbox); an older version than the one
+// projected is skipped (events of one level may arrive out of order).
+type RecordChatDirectPolicy struct {
+	Policies write.ChatDirectPolicyWriter
+}
+
+// Handle projects one level.
+func (h RecordChatDirectPolicy) Handle(ctx context.Context, e ChatDirectPolicyEvent) (err error) {
+	ctx, done := observability.UseCase(ctx, "identity.command.RecordChatDirectPolicy")
+	defer func() { done(err) }()
+	if e.Version < 1 {
+		return problem.New(problem.Internal, "chat direct policy event without version")
+	}
+	switch e.Level {
+	case settings.ChatLevelPlatform:
+		if e.Tenant != nil {
+			return problem.New(problem.Internal, "platform chat policy event with a tenant")
+		}
+		_, err = h.Policies.SetPlatformChatDirect(ctx, e.Enabled, e.Version)
+		return err
+	case settings.ChatLevelCommon, settings.ChatLevelTenant, settings.ChatLevelSchool:
+		if e.Tenant == nil || *e.Tenant == uuid.Nil || e.ScopeID == uuid.Nil ||
+			(e.Level != settings.ChatLevelSchool && e.ScopeID != *e.Tenant) {
+			return problem.New(problem.Internal, "chat policy event without tenant or scope")
+		}
+		_, err = h.Policies.SetChatDirect(ctx, *e.Tenant, e.Level, e.ScopeID, e.Enabled, e.Version)
+		return err
+	}
+	return problem.New(problem.Internal, "unknown chat policy level "+e.Level)
+}

@@ -68,6 +68,9 @@ export const NATS_EXPECT = {
   'pkg/natsx/streams.go': { 'ew.evt.': { pub: ['worker'] }, 'ew.dlq.': { pub: ['worker'] } },
   'pkg/outbox/writer.go': { 'ew.evt.': { pub: ['worker'] } },
   'pkg/natsx/principal_invalidator.go': { '*': { sub: ['core-api'] } },
+  // F134 consumer info: the prefix only parses the subjects of the declared outbox consumers into source + event types
+  // (listProcessedEventIds); nothing is published or subscribed there, so it needs no grant and attributes none.
+  'pkg/module/consumers.go': { 'ew.evt.': { parseOnly: true } },
 };
 
 /** Extracts the "ew:…" (Valkey) and "ew.…" (NATS) string literals of the Go files: [{file, lit, kind}]. */
@@ -278,6 +281,15 @@ export function checkNats({ perms, code, secretKeys, streamsInCode, maxControlLi
     }
     const exp = NATS_EXPECT[c.file]?.[c.lit] ?? NATS_EXPECT[c.file]?.['*'];
     if (!exp) { problems.push(`nats: ${c.file}: "${c.lit}" is not classified (add it to NATS_EXPECT of check-acl-templates.mjs)`); continue; }
+    if (exp.parseOnly) {
+      // Parsed, never sent or received: a direction as well would attribute grants to code that uses none.
+      if (exp.pub || exp.sub) problems.push(`nats: ${c.file}: "${c.lit}" is parseOnly and must not list pub/sub`);
+      continue;
+    }
+    if (!exp.pub?.length && !exp.sub?.length) {
+      problems.push(`nats: ${c.file}: "${c.lit}" has neither a direction (pub/sub) nor parseOnly`);
+      continue;
+    }
     for (const b of exp.pub ?? []) {
       attributed.push({ bin: b, lit: c.lit });
       if (!pubOf(b).some((g) => nMatch(g, c.lit))) problems.push(`nats: ${b} must publish "${c.lit}" (${c.file})`);

@@ -321,7 +321,7 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 | 504 | `DASHBOARD_QUERY_TIMEOUT` | Truy vấn bị hủy ở database sau `statement_timeout` 5 giây; client gợi ý thu hẹp khoảng thời gian |
 | 429 | `EXPORT_LIMIT_REACHED` | Vượt số export đồng thời/ngày của người dùng hoặc tenant (DASHBOARD_DATA §10); có `Retry-After` |
 
-**Sub-code trong `errors[]`** (không phải `code` cấp Problem, không có trong `ProblemCode`): `PASSWORD_POLICY_VIOLATION` — trong `422 VALIDATION_FAILED` của `setup:password`/`password:reset` khi mật khẩu mới không đạt password policy của realm (ADR-0091); `PERMISSION_NOT_ALLOWED_FOR_SCOPE` — trong `422 VALIDATION_FAILED` khi lưu role `tenant` chứa permission `platform.*`/`game.*`/`competition.config.*` (ADR-0066); `REQUIRED`, `TOO_LONG`, `PATTERN_MISMATCH`… — lỗi validate field.
+**Sub-code trong `errors[]`** (không phải `code` cấp Problem, không có trong `ProblemCode`): `PASSWORD_POLICY_VIOLATION` — trong `422 VALIDATION_FAILED` của `setup:password`/`password:reset` khi mật khẩu mới không đạt password policy của realm (ADR-0091); `PERMISSION_NOT_ALLOWED_FOR_SCOPE` — trong `422 VALIDATION_FAILED` khi lưu role `tenant` chứa permission `platform.*`/`game.*`/`competition.config.*` (ADR-0066); `VALUE_NOT_AVAILABLE` — trong `422 VALIDATION_FAILED` khi một giá trị có trong enum của contract nhưng server chưa nhận ở đường gọi đó (`ClubGoalCreate.metric` ngoài `ClubGoalAcceptedMetric`, `ClubEventCreate.event_kind = internal_tournament` từ game — delta F112-3, F112-4); `REQUIRED`, `TOO_LONG`, `PATTERN_MISMATCH`… — lỗi validate field.
 
 WebSocket dùng enum `ErrorCode` riêng trong [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml) (trả qua `system.command.failed`). Mã nào có ở cả hai kênh thì **trùng tên** với `ProblemCode` (vd. `CHAT_CONTENT_BLOCKED`, `PARTY_NOT_LEADER`, `ROOM_NOT_MEMBER`). Các mã chỉ có trên WS: `UNKNOWN_TYPE`, `ROOM_FULL`, `ANSWER_LATE`, `ANSWER_ALREADY_SUBMITTED`, `MATCH_NOT_ACTIVE`, `PROPOSAL_EXPIRED`.
 
@@ -675,12 +675,12 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 | GET | `/chat/channels/{channel_id}/messages` | Lịch sử (`?before_seq&after_seq&limit`) theo retention/policy — hợp nhất PostgreSQL + bộ đệm gần nhất (ADR-0035); tin thu hồi/gỡ trả placeholder | member | T | P4 |
 | GET | `/chat/channels/{channel_id}/pins` | Tin đang ghim (≤ 3) | member | T | P4 |
 | GET | `/chat/channels/{channel_id}/messages/{message_id}/receipts` | Trạng thái đã nhận/đã xem: nhóm ≤ 8 → danh sách; class/study_group → chỉ số đếm | member | T | P4 |
-| GET | `/chat/search` | Tìm full-text (`?q&channel_id&sender_id&from&to&cursor`) trong channel mình là thành viên; tenant-scoped; không trả tin thu hồi/bị chặn | STU | T | P5 |
+| GET | `/chat/search` | Tìm full-text (`?q&channel_id&sender_id&from&to&cursor`) trong channel mình là thành viên; tenant-scoped; không trả tin thu hồi/bị chặn; `highlight` văn bản thuần + `highlight_ranges` theo điểm mã (delta F112-8, [CHAT_SYSTEM §8.4](../03-social-multiplayer/CHAT_SYSTEM.md#84-tìm-kiếm)) | STU | T | P5 |
 | GET | `/chat/stickers` | Sticker pack được gán cho tenant + trạng thái mở khóa của học sinh | STU | T | P4 |
 | GET | `/chat/gifs` | Thư viện GIF nội bộ (`?tag&cursor`) | STU | T | P4 |
 | POST | `/chat/channels/{channel_id}/messages` | Gửi tin (fallback REST; đường chính là WS) | member theo policy | B | P5 |
 | POST | `/chat/channels/{channel_id}/read` | Cập nhật `last_read_seq` | member | T | P5 |
-| PUT | `/chat/channels/{channel_id}/mute` | Tắt thông báo channel | member | T | P5 |
+| PATCH | `/chat/channels/{channel_id}/membership` | Đặt `notification_level` (`all`/`mentions`/`none` = tắt tiếng) của chính mình ở channel đang là thành viên (`updateChannelMembership`, delta F112-9): World/Area → `422`, không phải thành viên/khác tenant → `404`; audit mỗi lần đổi; không ảnh hưởng kiểm duyệt | STU (member) | B | P5 |
 | POST | `/chat/direct-channels` | Mở DM (chỉ giữa bạn bè không block nhau, ADR-0020) | STU | B | P5 |
 | GET | `/chat/quick-messages?channel_type=` | Bộ Quick Message (dùng chung mọi lớp), văn bản song ngữ `{vi, en}`; tin gửi chỉ mang `quick_message_id`, người nhận hiển thị theo ngôn ngữ của mình (ADR-0056) — `listQuickMessages` | STU | T | P5 |
 | POST | `/chat/messages/{message_id}/reactions` | Reaction emoji (REST fallback của `chat.reaction.toggle`) | member | T | P4 |
@@ -689,7 +689,7 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 | POST | `/chat/messages/{message_id}:forward` | Forward tới ≤ 5 channel (REST fallback) | member | B | P4 |
 | PUT/DELETE | `/chat/channels/{channel_id}/pins/{message_id}` | Ghim / bỏ ghim (REST fallback) | theo §7.8 CHAT_SYSTEM | T | P4 |
 | POST | `/chat/reports` | Báo cáo tin nhắn/người dùng | Mọi role | B | P5 |
-| POST | `/chat/direct-channels` | Mở/lấy channel `direct` với một bạn bè (`openDirectChannel`, F120): `201` tạo, `200` đã có; không bạn bè/block/policy tắt → `403 CHAT_NOT_ALLOWED` | STU | T | P5 |
+| POST | `/chat/direct-channels` | Mở/lấy channel `direct` với một bạn bè (`openDirectChannel`, F120): `201` tạo, `200` đã có, kèm `peer` (thẻ công khai người kia — delta F112-5); không bạn bè/block/policy tắt → `403 CHAT_NOT_ALLOWED` | STU | T | P5 |
 | GET/PUT | `/tenant/chat-policies/{scope_type}/{scope_id}` | Chat policy cấp `tenant`/`school` (`getChatPolicy`/`putChatPolicy`, F120): chỉ siết chặt hơn cấp trên, `If-Match` (lần đầu `"0"`), `reason`; `422 CHAT_POLICY_RELAX_NOT_ALLOWED`/`CHAT_POLICY_ALWAYS_ON`/`VALIDATION_FAILED` | TA (`tenant.settings.*`), SA (`school.settings.*`, trường mình) | T | P5 |
 | GET | `/tenant/chat-policies:effective` | Policy hiệu lực của một loại channel trong trường (`?school_id&channel_type`) | SA (`school.settings.read`) | T | P5 |
 | GET/PUT | `/admin/chat/policies/platform` | Chat policy cấp platform (gateway nội bộ) | SYS (`platform.settings.write`) | T | P5 |
@@ -758,17 +758,17 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 | GET | `/social/mutes` | Danh sách người đã tắt tiếng | STU | T | P5 |
 | PUT/DELETE | `/social/mutes/{user_id}` | Tắt tiếng / bỏ tắt tiếng | STU | T | P5 |
 | GET/POST | `/social/clubs` | Club của tôi / có thể tham gia; tạo club (HS tạo → `pending_approval`) — Team cố định là **loại club** (ADR-0050); study group **không** phải club, thuộc module learning (`/lms/schools/{school_id}/study-groups`, ADR-0084) | STU | T/B | P5 |
-| GET/PATCH | `/social/clubs/{club_id}` | Chi tiết; sửa thông tin (owner/officer, qua kiểm duyệt, `If-Match`) | Thành viên; owner/officer | T | P5 |
+| GET/PATCH | `/social/clubs/{club_id}` | Chi tiết; sửa thông tin (chỉ owner — delta F112-1; qua kiểm duyệt, `If-Match`) | Thành viên; owner | T | P5 |
 | POST | `/social/clubs/{club_id}:approve` | School Admin duyệt club do HS tạo | SA · `social.club.approve` | B | P5 |
-| POST | `/social/clubs/{club_id}:leave`, `:archive` | Rời club; giải tán/lưu trữ | Thành viên; owner, SA | T/B | P5 |
+| POST | `/social/clubs/{club_id}:leave`, `:archive` | Rời club; lưu trữ (chỉ nhân sự — học sinh kể cả owner → `403`, delta F112-2) | Thành viên; SA · `social.club.approve` | T/B | P5 |
 | GET | `/social/clubs/{club_id}/members` | Thành viên (nickname, vai trò) | Thành viên | T | P5 |
-| PATCH/DELETE | `/social/clubs/{club_id}/members/{user_id}` | Đổi vai trò; gỡ thành viên | Owner, SA | T | P5 |
+| PATCH/DELETE | `/social/clubs/{club_id}/members/{user_id}` | Đổi vai trò (owner); gỡ thành viên — không học sinh nào gỡ được (`403`, delta F112-2), nhân sự dùng `removeSchoolClubMember` | Owner (PATCH) | T | P5 |
 | GET/POST | `/social/clubs/{club_id}/join-requests` | Yêu cầu chờ duyệt; xin tham gia | Owner/officer; STU | T/B | P5 |
 | POST | `/social/club-join-requests/{request_id}:accept`, `:reject` | Duyệt / từ chối | Owner/officer | B/T | P5 |
 | POST | `/social/clubs/{club_id}/invitations` | Mời (≤ 50/lần, kiểm tra phạm vi, block) | Owner/officer | B | P5 |
 | POST | `/social/club-invitations/{invitation_id}:accept`, `:decline` | Nhận / từ chối lời mời club | STU (invitee) | B/T | P5 |
-| GET/POST | `/social/clubs/{club_id}/goals` | Mục tiêu tuần (đếm từ event, không chia sẻ điểm cá nhân) | Thành viên; owner/officer | T/B | P5 |
-| GET/POST | `/social/clubs/{club_id}/events` | Lịch sự kiện club (giải nội bộ từ template) | Thành viên; owner/officer | T/B | P5 |
+| GET/POST | `/social/clubs/{club_id}/goals` | Mục tiêu tuần (đếm từ event, không chia sẻ điểm cá nhân); `GET` kèm `accepted_metrics` (delta F112-4) | Thành viên; owner (delta F112-1) | T/B | P5 |
+| GET/POST | `/social/clubs/{club_id}/events` | Lịch sự kiện club; `internal_tournament` chưa mở cho học sinh → `422 VALUE_NOT_AVAILABLE` (delta F112-3) | Thành viên; owner (delta F112-1) | T/B | P5 |
 
 ### 9.11. Notifications — `/api/v1/notifications`
 

@@ -165,3 +165,38 @@ func HoursOpen(levels [][]TimeWindow, t time.Time, loc *time.Location) bool {
 	}
 	return true
 }
+
+// NextOpen returns the first whole minute after t at which the allowed hours of every level let a message through and
+// blocked (the curfew of the student) does not refuse it — the reopen_at of CHAT_NOT_ALLOWED outside the allowed hours
+// (delta F112-6); false when no such minute exists within a week (an empty window list allows nothing).
+func NextOpen(levels [][]TimeWindow, t time.Time, loc *time.Location, blocked func(time.Time) bool) (time.Time, bool) {
+	if loc == nil {
+		loc = defaultLoc
+	}
+	masks := make([]WeekMask, len(levels))
+	for i, ws := range levels {
+		masks[i] = Mask(ws)
+	}
+	start := t.In(loc)
+	start = time.Date(start.Year(), start.Month(), start.Day(), start.Hour(), start.Minute(), 0, 0, loc)
+	for i := 1; i <= minutesPerWeek; i++ {
+		c := start.Add(time.Duration(i) * time.Minute)
+		m := minuteOfWeek(c, loc)
+		open := true
+		for k := range masks {
+			if !masks[k][m] {
+				open = false
+				break
+			}
+		}
+		if open && (blocked == nil || !blocked(c)) {
+			return c.UTC(), true
+		}
+	}
+	return time.Time{}, false
+}
+
+// ReopenAt is NextOpen of the allowed hours of e.
+func (e Effective) ReopenAt(t time.Time, loc *time.Location, blocked func(time.Time) bool) (time.Time, bool) {
+	return NextOpen(e.Hours, t, loc, blocked)
+}

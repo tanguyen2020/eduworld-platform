@@ -2552,6 +2552,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chat/channels/{channel_id}/membership": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Đặt mức thông báo (tắt tiếng) của chính mình ở một channel (CHAT_SYSTEM §9 "Mute channel")
+         * @description Delta F112-9. Chỉ đổi `notification_level` của **chính người gọi** ở channel mà người gọi đang là thành viên (club `team`,
+         *     `direct`, `party`, `match`, `team` theo trận) trong tenant của phiên; `none` = tắt tiếng (`Channel.muted = true`). Chỉ là
+         *     cài đặt thông báo: vẫn nhận và đọc tin, unread vẫn đếm, **không** ảnh hưởng pipeline kiểm duyệt, báo cáo, chặn hay
+         *     tắt tiếng người khác (R15). Lặp lại cùng giá trị trả cùng kết quả; `Idempotency-Key` bắt buộc (R10, replay theo khóa,
+         *     thiếu → `428`). Mỗi lần đổi ghi audit `chat.channel_membership.updated` (không nội dung tin). Không phải thành viên, channel
+         *     khác tenant hoặc không tồn tại → `404`; World/Area (không có membership — CHAT_SYSTEM §7.1) → `422 VALIDATION_FAILED`
+         *     (`errors[0].field = channel_id`).
+         */
+        patch: operations["updateChannelMembership"];
+        trace?: never;
+    };
     "/chat/channels/{channel_id}/messages": {
         parameters: {
             query?: never;
@@ -2640,6 +2666,8 @@ export interface paths {
          *     bạn bè và không block nhau; mở lại trả cùng channel (`200`). Không là bạn bè, có block hoặc policy tắt `direct`
          *     (kể cả tenant `common` chưa được System Admin bật lại — F120-AC-28) → `403 CHAT_NOT_ALLOWED`. Học sinh khác tenant
          *     hoặc không tồn tại → `404`. Channel bị đóng băng do block vẫn trả về với `status = frozen` (gửi → `CHAT_NOT_ALLOWED`).
+         *     Phản hồi có `peer` = thẻ công khai của người kia (delta F112-5, R16); `notification_level`/`muted` của người gọi đọc ở
+         *     `listMyChannels` (hoặc phản hồi của `updateChannelMembership`).
          */
         post: operations["openDirectChannel"];
         delete?: never;
@@ -8698,7 +8726,12 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Sửa thông tin club (owner/officer; tên và mô tả qua kiểm duyệt) */
+        /**
+         * Sửa thông tin club (owner; tên và mô tả qua kiểm duyệt)
+         * @description Chỉ chủ club (`my_role = owner`): `officer`/`member` → `403 PERMISSION_DENIED` (SOCIAL_SYSTEM §6.2 — delta F112-1 2026-11-28,
+         *     trước đó server cho cả `officer`). `If-Match` = `version` hiện tại, lệch → `412 VERSION_MISMATCH`. Tên, mô tả qua pipeline
+         *     kiểm duyệt (`451`).
+         */
         patch: operations["updateClub"];
         trace?: never;
     };
@@ -8728,7 +8761,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Giải tán/lưu trữ club (owner, school_admin) */
+        /**
+         * Lưu trữ club (nhân sự trường — social.club.approve; không cho học sinh)
+         * @description Chỉ nhân sự trường qua portal (`social.club.approve` trong phạm vi trường của club, F122). Học sinh — kể cả chủ club — nhận
+         *     `403 PERMISSION_DENIED` (delta F112-2 2026-11-28: đóng nhóm giữa trẻ em với nhau để nhân sự quyết định, CHILD_SAFETY; trước
+         *     đó chủ club là học sinh lưu trữ được). Club chuyển `archived`, channel `team` của club `read_only`, phát `club.archived`.
+         */
         post: operations["archiveClub"];
         delete?: never;
         options?: never;
@@ -8745,7 +8783,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Rời club */
+        /**
+         * Rời club
+         * @description Thành viên (kể cả `officer`) rời club: kết thúc membership và channel `team` của club trong cùng transaction. Chủ club không
+         *     rời được (`409`); club của chủ đã nghỉ do nhân sự trường lưu trữ ở portal (`archiveClub`, F112-2).
+         */
         post: operations["leaveClub"];
         delete?: never;
         options?: never;
@@ -8763,7 +8805,13 @@ export interface paths {
         /** Lịch sự kiện club */
         get: operations["listClubEvents"];
         put?: never;
-        /** Tạo sự kiện club (owner/officer; giải nội bộ dùng template — ADR-0027) */
+        /**
+         * Tạo sự kiện club (owner; giải nội bộ chưa mở cho học sinh)
+         * @description Chỉ chủ club (`my_role = owner`): `officer` → `403 PERMISSION_DENIED` (SOCIAL_SYSTEM §6.2 — delta F112-1 2026-11-28, trước đó
+         *     server cho cả `officer`). `event_kind = internal_tournament` hoặc có `tournament_template_id` → `422 VALIDATION_FAILED`
+         *     (`VALUE_NOT_AVAILABLE`): học sinh không có operation liệt kê template giải nội bộ (delta F112-3). Tiêu đề, mô tả qua pipeline
+         *     kiểm duyệt (`451`). Club không `active` → `409`.
+         */
         post: operations["createClubEvent"];
         delete?: never;
         options?: never;
@@ -8781,7 +8829,12 @@ export interface paths {
         /** Mục tiêu tập thể của club (tiến độ tổng, đóng góp của tôi) */
         get: operations["listClubGoals"];
         put?: never;
-        /** Tạo mục tiêu tuần cho club (owner/officer) */
+        /**
+         * Tạo mục tiêu tuần cho club (owner)
+         * @description Chỉ chủ club (`my_role = owner`): `officer` chỉ duyệt yêu cầu tham gia và mời (SOCIAL_SYSTEM §6.2 — delta F112-1 2026-11-28,
+         *     trước đó server cho cả `officer`) → `403 PERMISSION_DENIED`. `metric` phải thuộc `ClubGoalAcceptedMetric` (F112-4); tiêu đề
+         *     qua pipeline kiểm duyệt (`451`). Club không `active` → `409`.
+         */
         post: operations["createClubGoal"];
         delete?: never;
         options?: never;
@@ -8851,11 +8904,20 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Gỡ thành viên khỏi club (owner, school_admin) */
+        /**
+         * Gỡ thành viên khỏi club — không mở cho học sinh (nhân sự dùng removeSchoolClubMember)
+         * @description Route người chơi (`game_player`) nhưng **không** học sinh nào được gỡ người khác: luôn `403 PERMISSION_DENIED` (delta F112-2
+         *     2026-11-28 — loại người khỏi nhóm giữa trẻ em với nhau dễ thành công cụ cô lập bạn, CHILD_SAFETY; trước đó chủ club và
+         *     `officer` gỡ được). Nhân sự trường gỡ thành viên ở portal bằng `removeSchoolClubMember` (lý do bắt buộc, audit — F122). Học
+         *     sinh vẫn có Tắt tiếng/Chặn/Báo cáo. Club không tồn tại hoặc người gọi không phải thành viên → `404`.
+         */
         delete: operations["removeClubMember"];
         options?: never;
         head?: never;
-        /** Đổi vai trò thành viên (owner bổ nhiệm officer) */
+        /**
+         * Đổi vai trò thành viên (owner bổ nhiệm officer)
+         * @description Chỉ chủ club; không trao được vai trò `owner` (người kia là chủ club → `404`).
+         */
         patch: operations["updateClubMemberRole"];
         trace?: never;
     };
@@ -11628,9 +11690,23 @@ export interface components {
              *     client không dùng hằng số. Vắng khi policy không cho channel.
              */
             max_text_length?: number;
+            /**
+             * @description true khi `notification_level = none` của người gọi (delta F112-9, `updateChannelMembership`). Chỉ là cài đặt thông báo:
+             *     vẫn nhận tin, unread vẫn đếm, không ảnh hưởng pipeline kiểm duyệt, báo cáo hay chặn (CHAT_SYSTEM §9). Vắng ở World/Area.
+             */
             muted?: boolean;
             /** Format: int64 */
             my_read_seq?: number;
+            /**
+             * @description Cài đặt thông báo của người gọi ở channel (CHAT_SYSTEM §9, §10 — delta F112-9); mặc định `all`. Vắng ở World/Area (không có
+             *     membership, không có unread — CHAT_SYSTEM §7.1).
+             */
+            notification_level?: components["schemas"]["ChannelNotificationLevel"];
+            /**
+             * @description Chỉ ở channel `direct` (delta F112-5): thẻ công khai của người kia — `user_id`, `nickname`, `level`, `avatar_config`;
+             *     không bao giờ tên thật, trường, khối (R16) và không có `presence`. Vắng khi chưa có hồ sơ người chơi của người kia.
+             */
+            peer?: components["schemas"]["PlayerCard"];
             pinned_count?: number;
             purge_after?: components["schemas"]["Timestamp"];
             /**
@@ -11648,6 +11724,28 @@ export interface components {
             unread_count?: number;
             unread_mentions?: number;
         };
+        /**
+         * @description Cài đặt của chính người gọi ở một channel (delta F112-9)
+         * @example {
+         *       "channel_id": "0193b0a0-0000-7000-8000-000000000502",
+         *       "notification_level": "none",
+         *       "muted": true
+         *     }
+         */
+        ChannelMembership: {
+            channel_id: components["schemas"]["Uuid"];
+            /** @description notification_level = none */
+            muted: boolean;
+            notification_level: components["schemas"]["ChannelNotificationLevel"];
+        };
+        ChannelMembershipUpdate: {
+            notification_level: components["schemas"]["ChannelNotificationLevel"];
+        };
+        /**
+         * @description Mức thông báo theo channel (CHAT_SYSTEM §10): all — mọi tin; mentions — chỉ khi được nhắc tên; none — tắt thông báo (muted)
+         * @enum {string}
+         */
+        ChannelNotificationLevel: "all" | "mentions" | "none";
         /**
          * @description Không còn class, study_group (ADR-0095).
          * @enum {string}
@@ -11827,13 +11925,27 @@ export interface components {
             starts_at: components["schemas"]["Timestamp"];
             title: string;
         };
+        /**
+         * @example {
+         *       "title": "Luyện tập Toán cuối tuần",
+         *       "description": "Cả nhóm cùng làm bài luyện tập nhé!",
+         *       "event_kind": "practice_session",
+         *       "starts_at": "2026-11-29T08:00:00Z",
+         *       "ends_at": "2026-11-29T09:00:00Z"
+         *     }
+         */
         ClubEventCreate: {
             description?: string;
             ends_at?: components["schemas"]["Timestamp"];
-            /** @enum {string} */
+            /**
+             * @description Vắng → `other`. `internal_tournament` không tạo được từ game (delta F112-3: học sinh không có cách liệt kê template giải
+             *     nội bộ) → `422 VALIDATION_FAILED` (`errors[0].field = event_kind`, `errors[0].code = VALUE_NOT_AVAILABLE`).
+             * @enum {string}
+             */
             event_kind?: "practice_session" | "coop_quest" | "boss_raid" | "internal_tournament" | "other";
             starts_at: components["schemas"]["Timestamp"];
             title: string;
+            /** @description Chỉ thuộc `internal_tournament` (chưa mở cho học sinh, F112-3); gửi kèm loại khác → `422 VALIDATION_FAILED` (`errors[0].field = tournament_template_id`) */
             tournament_template_id?: components["schemas"]["Uuid"];
         };
         ClubGoal: {
@@ -11854,8 +11966,27 @@ export interface components {
             /** Format: date */
             week_start: string;
         };
+        /**
+         * @description Chỉ số mục tiêu club server chấp nhận lúc này khi tạo mục tiêu (delta F112-4; F120 Clarifications 2026-11-23): mỗi giá trị
+         *     đếm được từ một event đã xác minh (`activity.graded`, `quest.completed`, `world.discovery_found`). Tập con của
+         *     `ClubGoalCreate.metric`; thêm giá trị khi có event nguồn (additive).
+         * @enum {string}
+         */
+        ClubGoalAcceptedMetric: "activities_completed" | "quests_completed" | "discoveries_found";
+        /**
+         * @example {
+         *       "title": "Cả club hoàn thành 30 bài",
+         *       "metric": "activities_completed",
+         *       "target": 30
+         *     }
+         */
         ClubGoalCreate: {
-            /** @enum {string} */
+            /**
+             * @description Server chỉ nhận các giá trị của `ClubGoalAcceptedMetric` (đếm được từ event đã xác minh — delta F112-4, cũng trả trong
+             *     `accepted_metrics` của `listClubGoals`); `minutes_learning`, `boss_defeated` chưa có event nguồn → `422 VALIDATION_FAILED`
+             *     (`errors[0].field = metric`, `errors[0].code = VALUE_NOT_AVAILABLE`).
+             * @enum {string}
+             */
             metric: "activities_completed" | "quests_completed" | "minutes_learning" | "boss_defeated" | "discoveries_found";
             subject_id?: components["schemas"]["Uuid"];
             target: number;
@@ -14808,8 +14939,19 @@ export interface components {
         MessageSearchHit: {
             channel_id: components["schemas"]["Uuid"];
             channel_type: components["schemas"]["ChannelType"];
-            /** @description Đoạn trích có đánh dấu từ khớp (từ nội dung đã che) */
+            /**
+             * @description Văn bản thuần (delta F112-8): nội dung hiển thị đã che của tin (Unicode NFC), **không** có thẻ, BBCode hay ký tự đánh dấu
+             *     nào; client hiển thị như văn bản, không phân tích markup. Từ khớp nằm ở `highlight_ranges`. Vắng khi tin không có nội
+             *     dung chữ (quick, sticker, GIF) hoặc đã thu hồi.
+             */
             highlight?: string;
+            /**
+             * @description Vị trí các đoạn khớp từ khóa `q` trong `highlight` (delta F112-8): `start` và `length` tính theo **điểm mã Unicode**
+             *     (code point) của `highlight`, tăng dần, không chồng nhau. Khớp như tìm kiếm: từng từ của `q` là tiền tố của một từ trong
+             *     nội dung, không phân biệt hoa thường, có/không dấu tiếng Việt. Chỉ tính trên nội dung đã che nên không bao giờ trỏ tới
+             *     phần bị che hay từ của danh mục kiểm duyệt (R15); vắng khi không có `highlight`.
+             */
+            highlight_ranges?: components["schemas"]["TextRange"][];
             message: components["schemas"]["Message"];
         };
         /** @description Phần cấu hình client cần để chơi (F073-AC-07) — không có question_source, đáp án, scoring_rule hay phản hồi theo phương án. */
@@ -15493,6 +15635,13 @@ export interface components {
                     allowed_kinds_by_channel?: {
                         [key: string]: ("text" | "quick" | "emoji")[];
                     };
+                    /**
+                     * @description Policy chat hiệu lực có cho channel `direct` ở trường của học sinh không (delta F112-7): `false` khi cấp platform,
+                     *     cấp mặc định của tenant `common` (chưa được System Admin bật lại), tenant hoặc trường tắt `direct`. Module identity
+                     *     điền từ bản chiếu event `chat_policy.updated` / `chat_policy.common_tenant_social_updated` của module chat (không
+                     *     gọi module chat trên đường đăng nhập — R30). Vắng khi bản chiếu chưa có cấp platform. Chỉ để hiển thị nút "Nhắn
+                     *     tin"; server vẫn kiểm mỗi lệnh (`CHAT_NOT_ALLOWED`), không tính giờ chat, sanction hay quan hệ bạn bè/chặn.
+                     */
                     direct_message_enabled?: boolean;
                 };
                 party?: {
@@ -15723,7 +15872,7 @@ export interface components {
             policy_reason?: string;
             /**
              * Format: date-time
-             * @description Chỉ có khi `code = CURFEW_ACTIVE` (thời điểm hết giờ giới nghiêm hiệu lực, giờ server, ADR-0078) hoặc `code = DAILY_PLAY_LIMIT_REACHED` (00:00 ICT hôm sau, CHILD_SAFETY §4.2)
+             * @description Chỉ có khi `code = CURFEW_ACTIVE` (thời điểm hết giờ giới nghiêm hiệu lực, giờ server, ADR-0078), `code = DAILY_PLAY_LIMIT_REACHED` (00:00 ICT hôm sau, CHILD_SAFETY §4.2) hoặc `code = CHAT_NOT_ALLOWED` khi gửi ngoài `allowed_hours` của channel bền vững (phút đầu tiên khung giờ chat mở lại ngoài giờ giới nghiêm, giờ server — delta F112-6; vắng khi trong 7 ngày tới không có giờ mở hoặc lý do không phải khung giờ)
              */
             reopen_at?: string;
             /** @description Có khi lỗi tạm thời (vd. `503 UNAVAILABLE` khi module identity không trả Principal): client được phép thử lại với backoff (F002-AC-09) */
@@ -17813,6 +17962,12 @@ export interface components {
             code: string;
             name: string;
             publisher?: string;
+        };
+        TextRange: {
+            /** @description Số điểm mã */
+            length: number;
+            /** @description Vị trí điểm mã đầu tiên (đếm từ 0) */
+            start: number;
         };
         /** Format: date-time */
         Timestamp: string;
@@ -24648,6 +24803,53 @@ export interface operations {
                      *           "status": "open",
                      *           "capabilities": {
                      *             "voice": false
+                     *           },
+                     *           "notification_level": "none",
+                     *           "muted": true
+                     *         },
+                     *         {
+                     *           "channel_id": "0193b0a0-0000-7000-8000-000000000503",
+                     *           "channel_type": "direct",
+                     *           "allowed_kinds": [
+                     *             "text",
+                     *             "emoji",
+                     *             "quick",
+                     *             "sticker",
+                     *             "gif"
+                     *           ],
+                     *           "sendable_kinds": [
+                     *             "text",
+                     *             "emoji",
+                     *             "quick",
+                     *             "sticker",
+                     *             "gif"
+                     *           ],
+                     *           "max_text_length": 200,
+                     *           "unread_count": 0,
+                     *           "last_seq": 9,
+                     *           "my_read_seq": 9,
+                     *           "status": "open",
+                     *           "capabilities": {
+                     *             "voice": false
+                     *           },
+                     *           "notification_level": "all",
+                     *           "muted": false,
+                     *           "peer": {
+                     *             "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *             "nickname": "CaHeoVui07",
+                     *             "level": 10,
+                     *             "avatar_config": {
+                     *               "schema_version": 1,
+                     *               "body_type": "kid_b",
+                     *               "skin_tone": "tone_04",
+                     *               "hair": {
+                     *                 "item_id": "hair_spiky_01",
+                     *                 "color": "hair_col_01"
+                     *               },
+                     *               "outfit": {
+                     *                 "item_id": "outfit_sport_01"
+                     *               }
+                     *             }
                      *           }
                      *         }
                      *       ]
@@ -24661,6 +24863,67 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+        };
+    };
+    updateChannelMembership: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                channel_id: components["parameters"]["ChannelId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "notification_level": "none"
+                 *     }
+                 */
+                "application/json": components["schemas"]["ChannelMembershipUpdate"];
+            };
+        };
+        responses: {
+            /** @description Cài đặt hiện hành của người gọi */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "channel_id": "0193b0a0-0000-7000-8000-000000000502",
+                     *       "notification_level": "none",
+                     *       "muted": true
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ChannelMembership"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     listChannelMessages: {
@@ -25078,6 +25341,49 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "channel_id": "0193b0a0-0000-7000-8000-000000000503",
+                     *       "channel_type": "direct",
+                     *       "allowed_kinds": [
+                     *         "text",
+                     *         "emoji",
+                     *         "quick",
+                     *         "sticker",
+                     *         "gif"
+                     *       ],
+                     *       "sendable_kinds": [
+                     *         "text",
+                     *         "emoji",
+                     *         "quick",
+                     *         "sticker",
+                     *         "gif"
+                     *       ],
+                     *       "max_text_length": 200,
+                     *       "last_seq": 9,
+                     *       "status": "open",
+                     *       "capabilities": {
+                     *         "voice": false
+                     *       },
+                     *       "peer": {
+                     *         "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *         "nickname": "CaHeoVui07",
+                     *         "level": 10,
+                     *         "avatar_config": {
+                     *           "schema_version": 1,
+                     *           "body_type": "kid_b",
+                     *           "skin_tone": "tone_04",
+                     *           "hair": {
+                     *             "item_id": "hair_spiky_01",
+                     *             "color": "hair_col_01"
+                     *           },
+                     *           "outfit": {
+                     *             "item_id": "outfit_sport_01"
+                     *           }
+                     *         }
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["Channel"];
                 };
             };
@@ -25088,11 +25394,70 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "channel_id": "0193b0a0-0000-7000-8000-000000000504",
+                     *       "channel_type": "direct",
+                     *       "allowed_kinds": [
+                     *         "text",
+                     *         "emoji",
+                     *         "quick",
+                     *         "sticker",
+                     *         "gif"
+                     *       ],
+                     *       "sendable_kinds": [
+                     *         "text",
+                     *         "emoji",
+                     *         "quick",
+                     *         "sticker",
+                     *         "gif"
+                     *       ],
+                     *       "max_text_length": 200,
+                     *       "last_seq": 0,
+                     *       "status": "open",
+                     *       "capabilities": {
+                     *         "voice": false
+                     *       },
+                     *       "peer": {
+                     *         "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+                     *         "nickname": "GauNau15",
+                     *         "level": 11,
+                     *         "avatar_config": {
+                     *           "schema_version": 1,
+                     *           "body_type": "kid_a",
+                     *           "skin_tone": "tone_03",
+                     *           "hair": {
+                     *             "item_id": "hair_ponytail_01",
+                     *             "color": "hair_col_06"
+                     *           },
+                     *           "outfit": {
+                     *             "item_id": "outfit_explorer_01"
+                     *           }
+                     *         }
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["Channel"];
                 };
             };
             401: components["responses"]["Unauthenticated"];
-            403: components["responses"]["Forbidden"];
+            /** @description CHAT_NOT_ALLOWED — không là bạn bè, có block, hoặc policy tắt `direct` (không nêu lý do, không nêu ai chặn ai) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "https://errors.eduworld.vn/chat-not-allowed",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "code": "CHAT_NOT_ALLOWED"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             404: components["responses"]["NotFound"];
             422: components["responses"]["ValidationFailed"];
         };
@@ -25544,6 +25909,58 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "message": {
+                     *             "message_id": "0193b0a0-0000-7000-8000-000000000621",
+                     *             "channel_id": "0193b0a0-0000-7000-8000-000000000502",
+                     *             "seq": 4,
+                     *             "sender": {
+                     *               "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *               "nickname": "CaHeoVui07",
+                     *               "level": 10,
+                     *               "avatar_config": {
+                     *                 "schema_version": 1,
+                     *                 "body_type": "kid_b",
+                     *                 "skin_tone": "tone_04",
+                     *                 "hair": {
+                     *                   "item_id": "hair_spiky_01",
+                     *                   "color": "hair_col_01"
+                     *                 },
+                     *                 "outfit": {
+                     *                   "item_id": "outfit_sport_01"
+                     *                 }
+                     *               }
+                     *             },
+                     *             "kind": "text",
+                     *             "body": "Mai mình luyện Toán nhé, nhân vật mới đẹp quá!",
+                     *             "revision": 1,
+                     *             "moderation_state": "allowed",
+                     *             "created_at": "2026-11-27T15:10:00Z"
+                     *           },
+                     *           "channel_id": "0193b0a0-0000-7000-8000-000000000502",
+                     *           "channel_type": "team",
+                     *           "highlight": "Mai mình luyện Toán nhé, nhân vật mới đẹp quá!",
+                     *           "highlight_ranges": [
+                     *             {
+                     *               "start": 25,
+                     *               "length": 4
+                     *             },
+                     *             {
+                     *               "start": 30,
+                     *               "length": 3
+                     *             }
+                     *           ]
+                     *         }
+                     *       ],
+                     *       "page": {
+                     *         "has_more": false,
+                     *         "limit": 20
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["MessageSearchHit"][];
                         page: components["schemas"]["PageInfo"];
@@ -40979,6 +41396,13 @@ export interface operations {
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "name": "Nhà thám hiểm nhí",
+                 *       "description": "Cùng nhau khám phá và học vui mỗi tuần",
+                 *       "icon_id": "club_icon_compass"
+                 *     }
+                 */
                 "application/json": components["schemas"]["ClubUpdate"];
             };
         };
@@ -40990,14 +41414,66 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "club_id": "0193b0a0-0000-7000-8000-000000000c01",
+                     *       "club_type": "interest_group",
+                     *       "name": "Nhà thám hiểm nhí",
+                     *       "description": "Cùng nhau khám phá và học vui mỗi tuần",
+                     *       "icon_id": "club_icon_compass",
+                     *       "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+                     *       "owner_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *       "status": "active",
+                     *       "member_count": 6,
+                     *       "max_members": 50,
+                     *       "my_role": "owner",
+                     *       "chat_channel_id": "0193b0a0-0000-7000-8000-000000000502",
+                     *       "version": 4,
+                     *       "created_at": "2026-11-20T08:00:00Z"
+                     *     }
+                     */
                     "application/json": components["schemas"]["Club"];
                 };
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
-            412: components["responses"]["PreconditionFailed"];
+            /** @description VERSION_MISMATCH — `If-Match` không còn là version hiện tại (người khác vừa sửa) */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "https://errors.eduworld.vn/version-mismatch",
+                     *       "title": "Precondition Failed",
+                     *       "status": 412,
+                     *       "code": "VERSION_MISMATCH"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             422: components["responses"]["ValidationFailed"];
+            /** @description CHAT_CONTENT_BLOCKED — tên hoặc mô tả không qua kiểm duyệt (chỉ `category_code`, không có từ đã khớp — R15) */
+            451: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "https://errors.eduworld.vn/chat-content-blocked",
+                     *       "title": "Unavailable For Legal Reasons",
+                     *       "status": 451,
+                     *       "code": "CHAT_CONTENT_BLOCKED",
+                     *       "category_code": "insult"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     approveClub: {
@@ -41193,12 +41669,49 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "event_id": "0193b0a0-0000-7000-8000-000000000c21",
+                     *       "club_id": "0193b0a0-0000-7000-8000-000000000c01",
+                     *       "title": "Luyện tập Toán cuối tuần",
+                     *       "description": "Cả nhóm cùng làm bài luyện tập nhé!",
+                     *       "event_kind": "practice_session",
+                     *       "starts_at": "2026-11-29T08:00:00Z",
+                     *       "ends_at": "2026-11-29T09:00:00Z"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ClubEvent"];
                 };
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
-            422: components["responses"]["ValidationFailed"];
+            409: components["responses"]["Conflict"];
+            /** @description VALIDATION_FAILED (vd. `internal_tournament` từ game → `errors[0].code = VALUE_NOT_AVAILABLE`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "https://errors.eduworld.vn/validation-failed",
+                     *       "title": "Unprocessable Entity",
+                     *       "status": 422,
+                     *       "code": "VALIDATION_FAILED",
+                     *       "detail": "request validation failed",
+                     *       "errors": [
+                     *         {
+                     *           "field": "event_kind",
+                     *           "code": "VALUE_NOT_AVAILABLE",
+                     *           "message": "internal_tournament is not available from the game"
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            451: components["responses"]["MessageBlocked"];
         };
     };
     listClubGoals: {
@@ -41228,7 +41741,34 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "goal_id": "0193b0a0-0000-7000-8000-000000000c11",
+                     *           "club_id": "0193b0a0-0000-7000-8000-000000000c01",
+                     *           "title": "Cả club hoàn thành 30 bài",
+                     *           "metric": "activities_completed",
+                     *           "target": 30,
+                     *           "progress": 12,
+                     *           "my_contribution": 3,
+                     *           "week_start": "2026-11-23",
+                     *           "status": "active"
+                     *         }
+                     *       ],
+                     *       "accepted_metrics": [
+                     *         "activities_completed",
+                     *         "quests_completed",
+                     *         "discoveries_found"
+                     *       ]
+                     *     }
+                     */
                     "application/json": {
+                        /**
+                         * @description Chỉ số `createClubGoal` chấp nhận lúc này (delta F112-4, cùng danh sách server kiểm): client dựng danh sách chọn
+                         *     từ đây, không hardcode. Server hiện hành luôn trả trường này.
+                         */
+                        accepted_metrics?: components["schemas"]["ClubGoalAcceptedMetric"][];
                         data: components["schemas"]["ClubGoal"][];
                     };
                 };
@@ -41275,12 +41815,51 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "goal_id": "0193b0a0-0000-7000-8000-000000000c11",
+                     *       "club_id": "0193b0a0-0000-7000-8000-000000000c01",
+                     *       "title": "Cả club hoàn thành 30 bài",
+                     *       "metric": "activities_completed",
+                     *       "target": 30,
+                     *       "progress": 0,
+                     *       "my_contribution": 0,
+                     *       "week_start": "2026-11-23",
+                     *       "status": "active"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ClubGoal"];
                 };
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
-            422: components["responses"]["ValidationFailed"];
+            409: components["responses"]["Conflict"];
+            /** @description VALIDATION_FAILED (vd. `metric` ngoài `ClubGoalAcceptedMetric` → `errors[0].code = VALUE_NOT_AVAILABLE`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "https://errors.eduworld.vn/validation-failed",
+                     *       "title": "Unprocessable Entity",
+                     *       "status": 422,
+                     *       "code": "VALIDATION_FAILED",
+                     *       "detail": "request validation failed",
+                     *       "errors": [
+                     *         {
+                     *           "field": "metric",
+                     *           "code": "VALUE_NOT_AVAILABLE",
+                     *           "message": "metric not counted from a verified event yet"
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            451: components["responses"]["MessageBlocked"];
         };
     };
     inviteToClub: {
@@ -41512,6 +42091,11 @@ export interface operations {
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "role": "officer"
+                 *     }
+                 */
                 "application/json": {
                     /** @enum {string} */
                     role: "officer" | "member";
@@ -41526,6 +42110,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "club_id": "0193b0a0-0000-7000-8000-000000000c01",
+                     *       "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *       "nickname": "CaHeoVui07",
+                     *       "role": "officer",
+                     *       "joined_at": "2026-11-21T08:00:00Z"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ClubMember"];
                 };
             };

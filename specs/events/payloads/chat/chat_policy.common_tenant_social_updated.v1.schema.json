@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat_policy.common_tenant_social_updated.v1.schema.json",
+  "title": "Payload chat_policy.common_tenant_social_updated v1 (module chat, owner F120)",
+  "description": "System Admin lưu cài đặt bật lại DM/World/Area tự do của một tenant common (putCommonTenantSocialOverride, F120-AC-28; delta F112-7 2026-11-28). Không chứa lý do (lý do ở audit). Consumer: identity (bản chiếu direct_message_enabled của PlayerBootstrap), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_id",
+    "direct_enabled",
+    "world_enabled",
+    "area_free_text_enabled",
+    "version",
+    "actor_id",
+    "occurred_at"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Tenant common được đặt"
+    },
+    "direct_enabled": {
+      "type": "boolean"
+    },
+    "world_enabled": {
+      "type": "boolean"
+    },
+    "area_free_text_enabled": {
+      "type": "boolean"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Version của dòng override (tăng mỗi lần lưu): consumer bỏ bản cũ hơn bản đã chiếu"
+    },
+    "actor_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c0",
+      "direct_enabled": true,
+      "world_enabled": false,
+      "area_free_text_enabled": false,
+      "version": 2,
+      "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "occurred_at": "2026-11-28T09:00:00.000Z"
+    }
+  ]
+}
