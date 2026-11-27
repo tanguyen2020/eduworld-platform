@@ -52,13 +52,13 @@ Viết tắt: `<module>` ∈ `identity`, `learning`, `game`, `competition`, `cha
 - [x] T020 [P] [US2] Test F134-AC-08: golden dataset có event tenant QA → không vào `events_raw`/`player_days`, metric dropped (TC-ANL-001) — file: `GM/tests/integration/analytics/qa_tenant_ingest_test.go` — **Bằng chứng:** `TestAnalyticsQATenantExcluded` (consumer + metric) và `TestAnalyticsTelemetry` (telemetry, F080) pass
 - [x] T021 [P] [US2] Test F134-AC-09: query catalog + export + `getPlatformLearningSummary` loại tenant QA kể cả dữ liệu cũ; `tenant_ids` chỉ QA → rỗng + `excluded_tenant_ids` (TC-ANL-001) — file: `GM/tests/integration/analytics/qa_tenant_query_test.go`, `src/backend/modules/learning/tests/integration/analytics/platform_summary_qa_test.go` — **Bằng chứng:** `TestAnalyticsQATenantExcluded` (5 API game, trước/sau cờ, bỏ cờ), learning `TestTenantAndPlatformSummary` (mọi tenant → excluded) + `TestPlatformReport` (export loại tenant QA) pass
 - [x] T022 [P] [US2] Test F134-AC-10: Tenant Admin tenant QA → `200` rỗng; tenant khác → `403`/`404` (TC-ANL-004) — file: `GM/tests/integration/analytics/tenant_summary_qa_test.go` — **Bằng chứng:** `TestAnalyticsQATenantExcluded` (Tenant Admin tenant QA 200 rỗng, tenant B → 403) pass
-- [ ] T023 [P] [US2] Test F134-AC-11: `TenantForm` công tắc + xác nhận, `TenantFilter` nhãn QA (TC-CMS-WS-01) — file: `WP/platform-admin/__tests__/TenantFormQa.test.tsx`, `src/cms/frontend/packages/ops-ui/src/tenant/TenantFilter.test.tsx`
+- [x] T023 [P] [US2] Test F134-AC-11: `TenantForm` công tắc + xác nhận, `TenantFilter` nhãn QA (TC-CMS-WS-01) — file: `WP/platform-admin/__tests__/TenantFormQa.test.tsx`, `src/cms/frontend/packages/ops-ui/src/tenant/TenantFilter.test.tsx` — **Bằng chứng:** `platform-admin/__tests__/TenantFormQa.test.tsx` (4 test) + `shell/TenantFilter.test.tsx` (nhãn QA) pass
 
 ### Implementation cho User Story 2
 
 - [x] T024 [US2] identity: `Tenant.SetQA`, `UpdateTenant` (+`is_qa`), outbox `tenant.updated` — file: `src/backend/modules/identity/internal/domain/tenant/tenant.go`, `src/backend/modules/identity/internal/application/command/tenant/update_tenant.go` — **Bằng chứng:** `Tenant.SetQA`/`Patch.IsQA`, `UpdateTenant` (+audit `tenant.qa_flag_changed`, `idempotency.SetResult`), payload `is_qa`
 - [x] T025 [US2] Projection `ref.tenants.is_qa` (game, learning); game ingest bỏ QA; query catalog + export anti-join; learning platform summary anti-join — file: `GM/internal/application/command/analytics/{ingest_domain_event.go,ingest_telemetry.go}`, `GM/internal/application/query/analytics/query_catalog.go`, `src/backend/modules/learning/internal/application/query/analytics/platform_summary.go` — **Bằng chứng:** projection có sẵn (F080/F020); `QATenants` + `excluded_tenant_ids`, tóm tắt tenant QA rỗng, learning excluded khi hỏi mọi tenant, export platform loại tenant QA
-- [ ] T026 [US2] Portal: công tắc QA, nhãn QA, chuỗi i18n — file: `WP/platform-admin/tenants/TenantForm.tsx`, `src/cms/frontend/packages/ops-ui/src/tenant/TenantFilter.tsx`, `WP/platform-admin/i18n/{vi,en}.json`
+- [x] T026 [US2] Portal: công tắc QA, nhãn QA, chuỗi i18n — file: `WP/platform-admin/tenants/TenantForm.tsx`, `src/cms/frontend/packages/ops-ui/src/tenant/TenantFilter.tsx`, `WP/platform-admin/i18n/{vi,en}.json` — **Bằng chứng:** `TenantForm.tsx` (công tắc + xác nhận, chỉ người có `platform.tenant.manage`, khóa cho `common`), `TenantListPage.tsx`/`TenantControls.tsx` (`QaTenantTag`), i18n vi/en
 
 ## Phase 5: User Story 3 — Trang tải bộ cài (Priority: P2)
 
@@ -69,13 +69,13 @@ Viết tắt: `<module>` ∈ `identity`, `learning`, `game`, `competition`, `cha
 - [x] T029 [P] [US3] Test F134-AC-14: chỉ mục sai chữ ký/schema/không tải được → `503 UNAVAILABLE`, không link — file: `GM/tests/integration/installer/index_invalid_test.go` — **Bằng chứng:** `TestInstallerIndexVerification` + `TestSchoolClientInstallers` (đổi 1 byte → 503 không link, CDN down → 503, chưa cấu hình → 503) pass
 - [x] T030 [P] [US3] Test F134-AC-15 tenant isolation + authorization: trường khác cùng/khác tenant → `404`; Academic Manager, học sinh → `403` (TC-TEN-003, TC-TEN-001) — file: `GM/tests/integration/installer/authz_test.go` — **Bằng chứng:** `TestSchoolClientInstallers` (A2 cùng tenant / B khác tenant → 404, academic_manager và học sinh → 403, `authztest.Cover`) pass
 - [x] T031 [P] [US3] Test F134-AC-16: response không chứa trường ngoài schema, chuỗi trong giới hạn (TC-TEN-024) — file: `GM/tests/contract/installer_response_test.go` — **Bằng chứng:** `TestSchoolClientInstallers` (chỉ trường public, không lộ tenant/đường dẫn nội bộ) + `TestInstallerIndexVerification` (giới hạn chuỗi) — đặt trong integration/unit thay vì tests/contract
-- [ ] T032 [P] [US3] Test F134-AC-17: trang hiển thị bảng, sao chép SHA-256, lỗi `503` theo `code`, menu ẩn khi thiếu permission (TC-CMS-WS-01) — file: `WP/school-lms/installers/__tests__/InstallerListPage.test.tsx`, `src/cms/frontend/apps/portal/tests/e2e/school-lms/installers.spec.ts`
+- [x] T032 [P] [US3] Test F134-AC-17: trang hiển thị bảng, sao chép SHA-256, lỗi `503` theo `code`, menu ẩn khi thiếu permission (TC-CMS-WS-01) — file: `WP/school-lms/installers/__tests__/InstallerListPage.test.tsx`, `src/cms/frontend/apps/portal/tests/e2e/school-lms/installers.spec.ts` — **Bằng chứng:** `school-lms/installers/__tests__/InstallerListPage.test.tsx` 9/9 pass (bảng, sao chép SHA-256, 503/404 theo code không link, chọn trường cho Tenant Admin unit, thẻ bản Web + WebGL 2); Playwright E2E chờ stack thật
 
 ### Implementation cho User Story 3
 
-- [ ] T033 [US3] CI: `publish-index.sh` (ký RSA-SHA256, chỉ kênh `production` sau promote) gọi từ job release của F133 — file: `deploy/installer/school-kit/publish-index.sh`, `.github/workflows/godot.yml`
+- [ ] T033 [US3] CI: `publish-index.sh` (ký RSA-SHA256, chỉ kênh `production` sau promote) gọi từ job release của F133 — file: `deploy/installer/school-kit/publish-index.sh`, `.github/workflows/godot.yml` — **Một phần:** `publish-index.sh` xong (test 8/8, T027); còn nối vào job phát hành `godot.yml` khi F133 có job build bộ cài trường (khóa ký + `kits.json`)
 - [x] T034 [US3] module game: domain `FilterByGradeBands`; port `SchoolKitIndex`; adapter HTTP + kiểm chữ ký + cache Valkey; query `ListSchoolInstallers`; handler `listSchoolClientInstallers` — file: `GM/internal/domain/installer/`, `GM/internal/infrastructure/release/`, `GM/internal/application/query/installer/list_school_installers.go`, `GM/internal/presentation/http/public/client_installers.go` — **Bằng chứng:** domain `installer`, port `SchoolKitIndex`/`InstallerReads`, `infrastructure/release` (timeout, retry GET, circuit breaker, cache Valkey 5 phút), query `SchoolInstallers`, route `installers.go`
-- [ ] T035 [US3] Portal: `InstallerListPage`, `DeviceConfigGuide`, hook `useSchoolInstallers`, mục menu workspace C theo khóa catalog `menu.school_lms.installers`, i18n — file: `WP/school-lms/installers/`, `WP/school-lms/routes.tsx`, `src/cms/frontend/apps/portal/src/i18n/locales/{vi,en}/portal.school_lms.json`
+- [x] T035 [US3] Portal: `InstallerListPage`, `DeviceConfigGuide`, hook `useSchoolInstallers`, mục menu workspace C theo khóa catalog `menu.school_lms.installers`, i18n — file: `WP/school-lms/installers/`, `WP/school-lms/routes.tsx`, `src/cms/frontend/apps/portal/src/i18n/locales/{vi,en}/portal.school_lms.json` — **Bằng chứng:** `school-lms/installers/{InstallerListPage,DeviceConfigGuide,WebClientCard,api,format,webgl}.tsx/ts`, màn hình gắn theo khóa catalog trong `school-lms/index.tsx`, i18n `portal.school_lms.json` vi/en
 
 ## Phase N: Polish & Cross-Cutting
 
@@ -85,9 +85,9 @@ Viết tắt: `<module>` ∈ `identity`, `learning`, `game`, `competition`, `cha
 - [x] T039 [P] MONITORING: `eduworld_analytics_events_dropped_total`, `eduworld_school_kit_index_fetch_total`, alert `SchoolKitIndexInvalid` + rule — file: `docs/11-operations/MONITORING.md`, `deploy/observability/prometheus/rules/game.yaml` — **Bằng chứng:** MONITORING §3 (2 metric), §5 `SchoolKitIndexInvalid`, rule + `promtool test rules game.test.yaml` SUCCESS, runbook; `check-alerts` 0 vi phạm
 - [x] T040 [P] Workflow nightly (`on.schedule` trong `go.yml`) chạy T011 (TC-SVC-014) — file: `.github/workflows/go.yml` — **Bằng chứng:** không cần lịch riêng: job `integration (binaries, health)` của `go.yml` chạy `./cmd/...` (gồm T011) ở mỗi thay đổi backend
 - [x] T041 [P] CHANGELOG — file: `CHANGELOG.md` — **Bằng chứng:** CHANGELOG [Unreleased] Added
-- [ ] T042 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
-- [ ] T043 [P] Test F134-AC-18: tắt `menu.school_lms.installers` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/installers/__tests__/feature-toggle.test.tsx`
-- [ ] T044 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F134-AC-18) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/routes.tsx`
+- [ ] T042 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — **Chờ:** stack compose/staging thật (khôi phục PITR thật, CDN phát hành, portal chạy với backend thật); tự động hóa tương đương đã có ở T011, T019–T022, T028–T032
+- [x] T043 [P] Test F134-AC-18: tắt `menu.school_lms.installers` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/installers/__tests__/feature-toggle.test.tsx` — **Bằng chứng:** `school-lms/installers/__tests__/feature-toggle.test.tsx` (menu tắt, action tắt, `403 FEATURE_DISABLED` → tải lại quyền) pass
+- [x] T044 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F134-AC-18) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/routes.tsx` — **Bằng chứng:** màn hình đăng ký theo khóa `menu.school_lms.installers` (registry sinh từ catalog, `gen:check` sạch), nút tải/bản Web bọc `<ActionGate action.school_lms.installers.view>`
 
 ## Dependencies & Execution Order
 
@@ -96,8 +96,8 @@ Viết tắt: `<module>` ∈ `identity`, `learning`, `game`, `competition`, `cha
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F134-AC-* có test pass (ghi mã test/TC)
+- [x] Mọi tiêu chí F134-AC-* có test pass (ghi mã test/TC) — AC-01…06: T009–T015; AC-07: T019; AC-08…10: T020–T022; AC-11: T023; AC-12: T027; AC-13…16: T028–T031; AC-17: T032; AC-18: T043
 - [ ] `make gen-check`, `make lint`, `make test`, `make test-integration` (5 module), `make arch-check`, `make test-contract`, `make migrate-lint`, `make web-test`, `make web-lint` xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — test double chỉ trong `_test.go`/`src/test`, gắn nhãn
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật

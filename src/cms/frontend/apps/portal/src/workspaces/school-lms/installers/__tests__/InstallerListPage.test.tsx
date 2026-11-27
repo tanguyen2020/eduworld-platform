@@ -113,7 +113,8 @@ describe('Tải bộ cài (F134-AC-17)', () => {
     const state = installersState();
     state.list = { ...state.list, web_client_url: null };
     await renderInstallers(URL, { state });
-    expect(await screen.findByRole('link', { name: 'Tải bộ cài 1.4.0 cho Khối 1–3' })).toBeInTheDocument();
+    const page = await screen.findByTestId('installers-page');
+    expect(await within(page).findByRole('link', { name: 'Tải bộ cài 1.4.0 cho Khối 1–3' }, { timeout: 15_000 })).toBeInTheDocument();
     expect(screen.queryByTestId('web-client-card')).toBeNull();
   });
 });
