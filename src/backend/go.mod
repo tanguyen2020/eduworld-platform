@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	entgo.io/ent v0.14.6
 	github.com/HugoSmits86/nativewebp v1.2.1
-	github.com/coder/websocket v1.8.14
+	github.com/coder/websocket v1.8.15
 	github.com/failsafe-go/failsafe-go v0.9.8
 	github.com/getkin/kin-openapi v0.153.0
 	github.com/getsentry/sentry-go v0.50.0
@@ -18,8 +18,9 @@ require (
 	github.com/knadh/koanf/providers/env v1.1.0
 	github.com/knadh/koanf/v2 v2.4.1
 	github.com/nats-io/nats.go v1.56.0
-	github.com/oapi-codegen/runtime v1.9.0
+	github.com/oapi-codegen/runtime v1.9.1
 	github.com/prometheus/client_golang v1.25.0
+	github.com/prometheus/client_model v0.6.3
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	github.com/testcontainers/testcontainers-go v0.45.0
 	github.com/valkey-io/valkey-go v1.0.80
@@ -93,7 +94,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
-	github.com/prometheus/client_model v0.6.3 // indirect
 	github.com/prometheus/common v0.72.0 // indirect
 	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/richardlehane/mscfb v1.0.6 // indirect
