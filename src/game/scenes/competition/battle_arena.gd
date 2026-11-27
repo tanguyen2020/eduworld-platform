@@ -20,8 +20,9 @@ const SUSPEND_REASON: StringName = &"battle"
 const BLOCKING_ACTIVITY: StringName = &"battle"
 ## Share of the screen width of the chat column.
 const CHAT_SHARE: float = 0.38
-## Largest share of the width the chat column may take (its own minimum width at lớp 1–3 can be larger than CHAT_SHARE).
-const CHAT_SHARE_MAX: float = 0.45
+## Largest share of the width the chat column may take (its own minimum width at lớp 1–3 or with a long translation can
+## be larger than CHAT_SHARE; the question side keeps the rest).
+const CHAT_SHARE_MAX: float = 0.6
 ## One-step question types answered by a single tap (F098 tap-to-answer).
 const INSTANT_TYPES: PackedStringArray = ["single_choice", "true_false"]
 

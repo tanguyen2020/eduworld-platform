@@ -34,7 +34,7 @@ func _init() -> void:
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	center.size_flags_stretch_ratio = 1.2
 	row.add_child(center)
-	_progress = UiBuild.data_label("", &"HeadingLabel", false)
+	_progress = UiBuild.data_label("", &"HeadingLabel")
 	_progress.name = "Progress"
 	_progress.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	center.add_child(_progress)
@@ -105,6 +105,8 @@ func render(view: BattleView, self_id: String) -> void:
 func _render_progress(view: BattleView, self_id: String) -> void:
 	_progress.text = TranslationServer.translate("ui.arena.battle.progress").format({
 		"n": mini(view.question_index + 1, maxi(view.question_count, 1)), "total": maxi(view.question_count, 1)})
+	# Wraps between words only (a long translation), never inside a word.
+	_progress.custom_minimum_size.x = ArenaUi.longest_word_width(_progress)
 	var primary: bool = self_id in view.primary_user_ids
 	_role.visible = view.is_team_battle() and not view.primary_user_ids.is_empty()
 	_role.text = "ui.arena.battle.role_primary" if primary else "ui.arena.battle.role_support"
@@ -180,7 +182,7 @@ func _player_side(p: BattlePlayer, mine: bool) -> Control:
 	name_label.tooltip_text = nick
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if mine else HORIZONTAL_ALIGNMENT_RIGHT
 	texts.add_child(name_label)
-	var score: Label = UiBuild.data_label(_score_text(p.score), &"InstructionLabel", false)
+	var score: Label = UiBuild.data_label(_score_text(p.score), &"InstructionLabel")
 	score.name = "Score"
 	score.horizontal_alignment = name_label.horizontal_alignment
 	_scores[p.user_id] = score
@@ -211,7 +213,7 @@ func _team_side(view: BattleView, team: int, mine: bool) -> Control:
 	UiBuild.expand(title)
 	head.add_child(title)
 	# The score on its own line: the header stays narrow enough for the chat strip beside it.
-	var score: Label = UiBuild.data_label(_score_text(view.team_score(team)), &"InstructionLabel", false)
+	var score: Label = UiBuild.data_label(_score_text(view.team_score(team)), &"InstructionLabel")
 	score.name = "TeamScore"
 	box.add_child(score)
 	_scores["team:%d" % team] = score

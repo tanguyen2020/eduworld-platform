@@ -87,6 +87,18 @@ static func tag(key: String, variation: StringName = &"SectionTag") -> Label:
 	return l
 
 
+## Width of the longest word of a label in its own font (a wrapping label never gets narrower, no word cut).
+static func longest_word_width(l: Label) -> float:
+	var font: Font = l.get_theme_font(&"font")
+	if font == null:
+		return 0.0
+	var px: int = l.get_theme_font_size(&"font_size")
+	var widest: float = 0.0
+	for word: String in l.text.split(" ", false):
+		widest = maxf(widest, font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, px).x)
+	return ceilf(widest) + 2.0
+
+
 ## A section tag (yellow pill, upper case) that hugs its words on the left of a column.
 static func section(key: String) -> Label:
 	var l: Label = UiBuild.label(key, &"SectionTag", false)
