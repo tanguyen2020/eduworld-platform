@@ -1,0 +1,127 @@
+# Fixture contract of the authz-matrix tests (F132 T022–T024): one operation per route group and per parameter shape.
+openapi: 3.1.0
+info: { title: authz-matrix fixture, version: 0.0.1 }
+security:
+  - keycloakBearer: []
+paths:
+  /auth/game/login:
+    post:
+      x-service: identity
+      operationId: gameLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200': { description: OK }
+  /game/client-config:
+    get:
+      x-service: game
+      operationId: getClientConfig
+      security: []
+      responses:
+        '200': { description: OK }
+  /game/players/{player_id}:
+    get:
+      x-service: game
+      operationId: getPlayerProfile
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - { name: player_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: OK }
+  /cms/things:
+    get:
+      x-service: learning
+      operationId: listCmsThings
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+      responses:
+        '200': { description: OK }
+  /cms/things/{thing_id}:
+    patch:
+      x-service: learning
+      operationId: updateThing
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - { name: thing_id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: If-Match, in: header, required: true, schema: { type: string, maxLength: 512 } }
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string, maxLength: 255 }
+                status: { type: string, enum: [draft, published] }
+                id: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+  /game-admin/things/{thing_id}:
+    get:
+      x-service: game
+      operationId: getGameAdminThing
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - { name: thing_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: OK }
+  /leaderboards/{leaderboard_id}:
+    get:
+      x-service: competition
+      operationId: getLeaderboard
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
+        - { name: leaderboard_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: OK }
+  /me/tenants:
+    get:
+      x-service: identity
+      operationId: listMyTenants
+      responses:
+        '200': { description: OK }
+components:
+  securitySchemes:
+    keycloakBearer: { type: http, scheme: bearer, bearerFormat: JWT }
+    keycloakAdminBearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    TenantIdHeader:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    TenantIdHeaderOptional:
+      name: X-Tenant-Id
+      in: header
+      required: false
+      schema: { type: string, format: uuid }
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username, password, platform]
+      additionalProperties: false
+      properties:
+        username: { type: string, minLength: 1, maxLength: 128 }
+        password: { type: string, minLength: 1, maxLength: 256, writeOnly: true }
+        platform: { type: string, enum: [web, android, ios] }
+        device_id: { type: string, format: uuid }
+        meta:
+          type: object
+          properties:
+            note: { type: string, maxLength: 10 }
+        tags:
+          type: array
+          maxItems: 3
+          items: { type: string, maxLength: 5 }
+        choice:
+          oneOf:
+            - { type: string, maxLength: 3 }
+            - { type: integer }

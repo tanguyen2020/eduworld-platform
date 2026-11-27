@@ -1,0 +1,10 @@
+[
+  { "operation_id": "gameLogin", "module": "identity", "method": "POST", "path": "/auth/game/login", "public": true, "required": [] },
+  { "operation_id": "getClientConfig", "module": "game", "method": "GET", "path": "/game/client-config", "public": true, "required": [] },
+  { "operation_id": "getGameAdminThing", "module": "game", "method": "GET", "path": "/game-admin/things/{thing_id}", "has_id_param": true, "required": ["cross_tenant", "role_denied"] },
+  { "operation_id": "getLeaderboard", "module": "competition", "method": "GET", "path": "/leaderboards/{leaderboard_id}", "tenant_scoped": true, "has_id_param": true, "required": ["cross_tenant", "role_denied"] },
+  { "operation_id": "getPlayerProfile", "module": "game", "method": "GET", "path": "/game/players/{player_id}", "tenant_scoped": true, "has_id_param": true, "required": ["cross_tenant", "role_denied"] },
+  { "operation_id": "listCmsThings", "module": "learning", "method": "GET", "path": "/cms/things", "tenant_scoped": true, "required": ["cross_tenant", "role_denied"] },
+  { "operation_id": "listMyTenants", "module": "identity", "method": "GET", "path": "/me/tenants", "required": ["role_denied"] },
+  { "operation_id": "updateThing", "module": "learning", "method": "PATCH", "path": "/cms/things/{thing_id}", "tenant_scoped": true, "has_id_param": true, "required": ["cross_tenant", "role_denied"] }
+]

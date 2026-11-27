@@ -1,0 +1,8 @@
+# Reviewed overrides of the authz-matrix (F132-AC-15). Default classes come from the route group (see
+# internal/cases/cases.go): /game/* (except client-config), /multiplayer/*, /social/*, /chat/*, /notifications = player;
+# /cms/, /lms/, /tenant/, /schools/ = portal; /game-admin/, /admin/ = platform; everything else = permission-guarded.
+# Add an entry only with the ADR/spec that justifies it; every skip needs a reason.
+class: {}
+#   exampleOperationId: player        # player | portal | platform | other
+skip: {}
+#   exampleOperationId: "irreversible on a shared environment (spec F0xx)"

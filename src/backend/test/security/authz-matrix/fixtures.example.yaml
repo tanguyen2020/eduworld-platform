@@ -1,0 +1,23 @@
+# Example fixtures of the authz-matrix (copy to a file outside the repo or a GitHub Environment secret file).
+# Synthetic seed only (TEST_STRATEGY §4, AGENTS R16): demo accounts of LOCAL_DEVELOPMENT §5 / the staging seed.
+# Passwords are NEVER in this file: EW_AUTHZ_PASSWORD_FILE_<ROLE> (or EW_AUTHZ_TOKEN_<ROLE>) per role.
+tenants:
+  a: "00000000-0000-0000-0000-00000000000a"   # tenant of the callers (school a1 = th-demo-a)
+  b: "00000000-0000-0000-0000-00000000000b"   # another tenant (cross-tenant target)
+accounts:
+  student: { username: hs.an.3a, kind: game }
+  school_admin: { username: ad.truong.a, kind: portal }
+  academic_manager: { username: qlcm.truong.a, kind: portal }
+  tenant_admin: { username: ad.donvi, kind: portal }
+  safety_moderator: { username: sm.antoan, kind: portal }
+  system_admin: { username: sa.admin, kind: portal }
+client_version: "1.0.0"
+platform: web
+# Path parameter values by scope: a1 = school of the callers, a2 = other school of tenant a, b = tenant b.
+# A missing value becomes a random UUID (reported as synthetic_id): fill at least the ids of tenant b.
+ids:
+  a1: { student_id: "", school_id: "" }
+  a2: { student_id: "", school_id: "" }
+  b: { student_id: "", school_id: "", leaderboard_id: "", channel_id: "" }
+# Request bodies by operationId when the generated minimal body is rejected by the contract check (422).
+bodies: {}

@@ -1,0 +1,298 @@
+# Security sweep (F132 US3: F132-AC-15…AC-19, SECURITY_ARCHITECTURE §15–§16, TEST_STRATEGY §7, ADR-0088).
+# - unit (pull request): tests of the sweep tooling itself (authz-matrix, wsfuzz, ZAP gate, rescan scripts).
+# - authz-matrix (weekly + before a release): operation × role × scope relation, SCOPE=internal and MODE=maxlength
+#   against staging, strict (100 % of the asserted cases, F132-AC-15/16/17).
+# - wsfuzz-nightly: hostile frames to the staging realtime gateway; crash or connection leak fails (F132-AC-18).
+# - dast-weekly: OWASP ZAP baseline + authenticated scan (API from the OpenAPI, Admin Portal); any High fails (F132-AC-18).
+# - rescan-daily-*: Trivy on the digests running on staging and production, one issue per critical CVE with a fix,
+#   due in critical_vuln_fix (F132-AC-19); deps-daily: govulncheck + OSV on main (new advisories, unchanged code).
+# PR scans of the code (gitleaks, govulncheck, OSV, trivy fs) stay in security.yml; this workflow does not repeat them.
+# Jobs bound to Environment staging/production run on [self-hosted, deploy] and never for pull requests from forks.
+name: security-sweep
+
+on:
+  pull_request:
+    paths:
+      - "src/backend/test/security/**"
+      - "src/backend/tools/envguard/**"
+      - "src/backend/test/authz/matrix_gen.json"
+      - "specs/openapi/eduworld-api.v1.yaml"
+      - "tests/security/**"
+      - "scripts/security/**"
+      - ".github/workflows/security-sweep.yml"
+  schedule:
+    - cron: "0 19 * * *" # 02:00 ICT nightly: wsfuzz
+    - cron: "0 20 * * *" # 03:00 ICT daily: rescan of running images + dependencies
+    - cron: "0 21 * * 0" # 04:00 ICT Monday: authz-matrix + DAST (outside warm_up_windows and school hours)
+  workflow_dispatch:
+    inputs:
+      sweep:
+        description: "Which sweep (before a release: all)"
+        type: choice
+        options: [all, authz-matrix, wsfuzz, dast, rescan]
+        default: all
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-sweep-${{ github.ref }}-${{ github.event.schedule || github.event_name }}
+  cancel-in-progress: false
+
+env:
+  ZAP_IMAGE: ghcr.io/zaproxy/zaproxy:2.16.1
+
+jobs:
+  unit:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: src/backend/go.mod
+          cache-dependency-path: src/backend/go.sum
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: authz-matrix + wsfuzz + envguard unit tests (spec fixtures, labelled stand-ins)
+        run: make test-security-tools
+      - name: case counts of the real contract (offline)
+        run: go -C src/backend run ./test/security/authz-matrix/cmd/authz-matrix -mode gen
+      - name: ZAP gate + rescan scripts
+        run: node --test tests/security/zap/ scripts/security/
+      - name: shellcheck
+        run: shellcheck scripts/security/*.sh
+
+  authz-matrix:
+    if: >-
+      (github.event.schedule == '0 21 * * 0' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all","authz-matrix"]'), inputs.sweep)))
+      && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: staging
+    env:
+      EW_ENV: staging
+      EW_BASE_URL: ${{ vars.EW_API_BASE_URL }}
+      EW_INTERNAL_BASE_URL: ${{ vars.EW_INTERNAL_API_BASE_URL }}
+      EW_AUTHZ_DIRECT_TARGETS: ${{ vars.EW_AUTHZ_DIRECT_TARGETS }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: src/backend/go.mod
+          cache-dependency-path: src/backend/go.sum
+      - name: fixtures and credentials of the synthetic QA accounts (files in RUNNER_TEMP, removed at the end)
+        env:
+          FIXTURES: ${{ secrets.AUTHZ_FIXTURES_YAML }}
+          PASSWORDS: ${{ secrets.AUTHZ_PASSWORDS_ENV }}
+        run: |
+          umask 077
+          printf '%s\n' "$FIXTURES" > "$RUNNER_TEMP/authz-fixtures.yaml"
+          echo "EW_AUTHZ_FIXTURES=$RUNNER_TEMP/authz-fixtures.yaml" >> "$GITHUB_ENV"
+          # PASSWORDS: lines ROLE=password; each becomes EW_AUTHZ_PASSWORD_FILE_<ROLE> (never echoed, never in argv).
+          while IFS='=' read -r role pw; do
+            [ -n "$role" ] || continue
+            printf '%s' "$pw" > "$RUNNER_TEMP/authz-pw-$role"
+            echo "EW_AUTHZ_PASSWORD_FILE_${role^^}=$RUNNER_TEMP/authz-pw-$role" >> "$GITHUB_ENV"
+          done <<< "$PASSWORDS"
+      - name: matrix (F132-AC-15)
+        run: make authz-matrix ENV=staging STRICT=1 OUT="$GITHUB_WORKSPACE/tmp/security"
+      - name: internal routes and ports (F132-AC-16)
+        if: always()
+        run: make authz-matrix ENV=staging SCOPE=internal STRICT=1 OUT="$GITHUB_WORKSPACE/tmp/security"
+      - name: maxLength and X-Tenant-Id (F132-AC-17)
+        if: always()
+        run: make authz-matrix ENV=staging MODE=maxlength STRICT=1 OUT="$GITHUB_WORKSPACE/tmp/security"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: authz-matrix-report
+          path: tmp/security/authz-matrix-*
+      - name: remove credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP"/authz-pw-* "$RUNNER_TEMP/authz-fixtures.yaml"
+
+  wsfuzz-nightly:
+    if: >-
+      (github.event.schedule == '0 19 * * *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all","wsfuzz"]'), inputs.sweep)))
+      && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: staging
+    env:
+      EW_ENV: staging
+      EW_BASE_URL: ${{ vars.EW_API_BASE_URL }}
+      EW_WSFUZZ_USERNAME: ${{ vars.EW_WSFUZZ_USERNAME }}
+      EW_WSFUZZ_ORIGIN: ${{ vars.EW_WSFUZZ_ORIGIN }}
+      EW_WSFUZZ_METRICS_URL: ${{ vars.EW_REALTIME_METRICS_URL }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: src/backend/go.mod
+          cache-dependency-path: src/backend/go.sum
+      - name: password file of the synthetic QA student
+        env:
+          PW: ${{ secrets.WSFUZZ_PASSWORD }}
+        run: |
+          umask 077
+          printf '%s' "$PW" > "$RUNNER_TEMP/wsfuzz-pw"
+          echo "EW_WSFUZZ_PASSWORD_FILE=$RUNNER_TEMP/wsfuzz-pw" >> "$GITHUB_ENV"
+      - name: wsfuzz (crash or connection leak fails)
+        run: make wsfuzz ENV=staging OUT="$GITHUB_WORKSPACE/tmp/security"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: wsfuzz-report
+          path: tmp/security/wsfuzz.json
+      - name: remove credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/wsfuzz-pw"
+
+  dast-weekly:
+    if: >-
+      (github.event.schedule == '0 21 * * 0' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all","dast"]'), inputs.sweep)))
+      && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: staging
+    env:
+      EW_ENV: staging
+      EW_ZAP_API_URL: ${{ vars.EW_API_BASE_URL }}
+      EW_ZAP_ADMIN_API_URL: ${{ vars.EW_INTERNAL_API_BASE_URL }}
+      EW_ZAP_PORTAL_URL: ${{ vars.EW_PORTAL_URL }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - name: access tokens of the synthetic QA accounts (masked, short-lived)
+        env:
+          STUDENT_USER: ${{ vars.EW_ZAP_STUDENT_USERNAME }}
+          STUDENT_PW: ${{ secrets.ZAP_STUDENT_PASSWORD }}
+          STAFF_USER: ${{ vars.EW_ZAP_STAFF_USERNAME }}
+          STAFF_PW: ${{ secrets.ZAP_STAFF_PASSWORD }}
+        run: |
+          dev=$(cat /proc/sys/kernel/random/uuid)
+          st=$(jq -n --arg u "$STUDENT_USER" --arg p "$STUDENT_PW" --arg d "$dev" '{username:$u,password:$p,device_id:$d,client_version:"1.0.0",platform:"web"}' |
+            curl -fsS -H 'Content-Type: application/json' -H "X-Device-Id: $dev" --data @- "$EW_ZAP_API_URL/auth/game/login" | jq -r .tokens.access_token)
+          sf=$(jq -n --arg u "$STAFF_USER" --arg p "$STAFF_PW" --arg d "$dev" '{username:$u,password:$p,device_id:$d}' |
+            curl -fsS -H 'Content-Type: application/json' --data @- "$EW_ZAP_API_URL/auth/portal/login" | jq -r .access_token)
+          echo "::add-mask::$st"
+          echo "::add-mask::$sf"
+          { echo "EW_ZAP_STUDENT_TOKEN=$st"; echo "EW_ZAP_STAFF_TOKEN=$sf"; } >> "$GITHUB_ENV"
+      - name: ZAP baseline (public API + Admin Portal, passive)
+        run: |
+          mkdir -p tmp/security && chmod 777 tmp/security
+          for t in "$EW_ZAP_API_URL" "$EW_ZAP_PORTAL_URL"; do
+            name=$(echo "$t" | sed -E 's#https?://##; s#[^a-zA-Z0-9]+#-#g')
+            docker run --rm -v "$PWD:/zap/wrk" "$ZAP_IMAGE" zap-baseline.py -t "$t" -c tests/security/zap/baseline.conf \
+              -J "tmp/security/zap-baseline-$name.json" -I || true
+          done
+      - name: ZAP authenticated (OpenAPI import + portal spider, active scan)
+        run: |
+          docker run --rm -v "$PWD:/zap/wrk" -e EW_ZAP_API_URL -e EW_ZAP_ADMIN_API_URL -e EW_ZAP_PORTAL_URL \
+            -e EW_ZAP_STUDENT_TOKEN -e EW_ZAP_STAFF_TOKEN "$ZAP_IMAGE" zap.sh -cmd -autorun /zap/wrk/tests/security/zap/auth-context.yaml
+      - name: gate — any High fails (DEPLOYMENT §15)
+        run: node tests/security/zap/check-report.mjs tmp/security/zap-*.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: zap-report
+          path: tmp/security/zap-*
+
+  rescan-daily-staging:
+    if: >-
+      (github.event.schedule == '0 20 * * *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all","rescan"]'), inputs.sweep)))
+      && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: staging
+    permissions:
+      contents: read
+      issues: write
+      packages: read
+    env:
+      DOCKER_HOST: ${{ vars.SWARM_MANAGER_HOST }}
+      DOCKER_TLS_VERIFY: "1"
+      DOCKER_CERT_PATH: ${{ github.workspace }}/.docker-tls
+      GH_TOKEN: ${{ github.token }}
+      TRIVY_USERNAME: ${{ github.actor }}
+      TRIVY_PASSWORD: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: Docker API client certificate of the manager (DEPLOYMENT §10.3)
+        env:
+          CA: ${{ secrets.SWARM_TLS_CA }}
+          CERT: ${{ secrets.SWARM_TLS_CERT }}
+          KEY: ${{ secrets.SWARM_TLS_KEY }}
+        run: bash scripts/deploy/write-docker-tls.sh
+      - name: rescan running digests (Trivy) → issues due in critical_vuln_fix
+        run: bash scripts/security/rescan.sh --env=staging
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: rescan-staging
+          path: tmp/security/rescan
+      - name: remove credentials
+        if: always()
+        run: rm -rf "$DOCKER_CERT_PATH"
+
+  rescan-daily-production:
+    if: >-
+      (github.event.schedule == '0 20 * * *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all","rescan"]'), inputs.sweep)))
+      && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: production
+    permissions:
+      contents: read
+      issues: write
+      packages: read
+    env:
+      DOCKER_HOST: ${{ vars.SWARM_MANAGER_HOST }}
+      DOCKER_TLS_VERIFY: "1"
+      DOCKER_CERT_PATH: ${{ github.workspace }}/.docker-tls
+      GH_TOKEN: ${{ github.token }}
+      TRIVY_USERNAME: ${{ github.actor }}
+      TRIVY_PASSWORD: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: Docker API client certificate of the manager (read-only query, DEPLOYMENT §10.3)
+        env:
+          CA: ${{ secrets.SWARM_TLS_CA }}
+          CERT: ${{ secrets.SWARM_TLS_CERT }}
+          KEY: ${{ secrets.SWARM_TLS_KEY }}
+        run: bash scripts/deploy/write-docker-tls.sh
+      - name: rescan running digests (Trivy) → issues due in critical_vuln_fix
+        run: bash scripts/security/rescan.sh --env=production
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: rescan-production
+          path: tmp/security/rescan
+      - name: remove credentials
+        if: always()
+        run: rm -rf "$DOCKER_CERT_PATH"
+
+  deps-daily:
+    if: github.event.schedule == '0 20 * * *' || (github.event_name == 'workflow_dispatch' && contains(fromJSON('["all","rescan"]'), inputs.sweep))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: golang/govulncheck-action@b625fbe08f3bccbe446d94fbf87fcc875a4f50ee # v1.0.4
+        with:
+          go-version-input: stable
+          check-latest: true
+          work-dir: src/backend
+          go-package: ./...
+      - uses: google/osv-scanner-action/osv-scanner-action@40a8940a65eab1544a6af759e43d936201a131a2 # v2.0.3
+        with:
+          scan-args: |-
+            --recursive
+            ./

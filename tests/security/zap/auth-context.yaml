@@ -1,0 +1,80 @@
+# OWASP ZAP Automation Framework plan — authenticated DAST of staging (F132 T027, F132-AC-18, SECURITY_ARCHITECTURE §16).
+# Run by .github/workflows/security-sweep.yml (job dast-weekly) on the self-hosted `deploy` runner:
+#   docker run --rm -v "$PWD:/zap/wrk" -e EW_ZAP_API_URL -e EW_ZAP_PORTAL_URL -e EW_ZAP_ADMIN_API_URL \
+#     -e EW_ZAP_STUDENT_TOKEN -e EW_ZAP_STAFF_TOKEN ghcr.io/zaproxy/zaproxy:2.16.1 zap.sh -cmd -autorun /zap/wrk/tests/security/zap/auth-context.yaml
+# Tokens are short-lived access tokens of synthetic QA accounts obtained by the job (never committed, never logged);
+# the job fails on any High alert (check-report.mjs). No production target: the job refuses EW_ENV != staging.
+env:
+  contexts:
+    - name: api-student
+      urls: ["${EW_ZAP_API_URL}"]
+      includePaths: ["${EW_ZAP_API_URL}/.*"]
+      excludePaths:
+        - "${EW_ZAP_API_URL}/auth/game/logout.*"     # keep the session of the scan
+        - "${EW_ZAP_API_URL}/auth/game/token:refresh.*"
+    - name: admin-portal
+      urls: ["${EW_ZAP_PORTAL_URL}", "${EW_ZAP_ADMIN_API_URL}"]
+      includePaths: ["${EW_ZAP_PORTAL_URL}/.*", "${EW_ZAP_ADMIN_API_URL}/.*"]
+      excludePaths:
+        - "${EW_ZAP_ADMIN_API_URL}/auth/portal/logout.*"
+        - "${EW_ZAP_ADMIN_API_URL}/admin/.*:delete.*"   # no destructive platform action on the shared environment
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+jobs:
+  # Authorization header per context (replacer rules are global: one header per target host).
+  - type: replacer
+    parameters:
+      deleteAllRules: true
+    rules:
+      - description: student token on the public API
+        url: "${EW_ZAP_API_URL}.*"
+        matchType: req_header
+        matchString: Authorization
+        replacementString: "Bearer ${EW_ZAP_STUDENT_TOKEN}"
+      - description: staff token on the Admin Portal API
+        url: "${EW_ZAP_ADMIN_API_URL}.*"
+        matchType: req_header
+        matchString: Authorization
+        replacementString: "Bearer ${EW_ZAP_STAFF_TOKEN}"
+  # API scan: every operation of the public contract (the same spec core-api validates requests with).
+  - type: openapi
+    parameters:
+      apiFile: /zap/wrk/specs/openapi/eduworld-api.v1.yaml
+      targetUrl: "${EW_ZAP_API_URL}"
+      context: api-student
+  - type: spider
+    parameters:
+      context: admin-portal
+      url: "${EW_ZAP_PORTAL_URL}"
+      maxDuration: 5
+  - type: spiderAjax
+    parameters:
+      context: admin-portal
+      url: "${EW_ZAP_PORTAL_URL}"
+      maxDuration: 5
+      browserId: firefox-headless
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 10
+  - type: activeScan
+    parameters:
+      context: api-student
+      maxScanDurationInMins: 45
+      threadPerHost: 2          # shared staging: bounded load
+  - type: activeScan
+    parameters:
+      context: admin-portal
+      maxScanDurationInMins: 30
+      threadPerHost: 2
+  - type: report
+    parameters:
+      template: traditional-json
+      reportDir: /zap/wrk/tmp/security
+      reportFile: zap-authenticated.json
+  - type: report
+    parameters:
+      template: traditional-md
+      reportDir: /zap/wrk/tmp/security
+      reportFile: zap-authenticated.md

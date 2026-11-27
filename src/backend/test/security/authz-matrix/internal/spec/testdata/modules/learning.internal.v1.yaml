@@ -1,0 +1,16 @@
+# Fixture facade spec (paths only are read).
+openapi: 3.1.0
+info: { title: learning facade fixture, version: 0.0.1 }
+paths:
+  /internal/v1/learning/attempts/{attempt_id}:
+    get:
+      operationId: getAttemptFacade
+      x-allowed-callers: [game]
+      responses:
+        '200': { description: OK }
+  /internal/v1/learning/scores:
+    post:
+      operationId: scoreFacade
+      x-allowed-callers: [competition]
+      responses:
+        '200': { description: OK }
