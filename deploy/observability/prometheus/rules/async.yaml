@@ -52,3 +52,14 @@ groups:
           summary: "Expired partition of {{ $labels.table }} kept: unpublished outbox or unhandled dead letters"
           runbook_url: "docs/11-operations/runbooks/InfraPartitionRefused.md"
           source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      # Whole NATS cluster lost (F132 chaos finding): every backend binary probes its NATS connection at scrape
+      # (eduworld_nats_connected, PING/PONG within nats_readiness_probe_timeout); a binary reconnects to any node of
+      # EW_NATS_URLS, so all of them at 0 means no node is reachable. One node down is not this alert.
+      - alert: NatsClusterDown
+        expr: max(eduworld_nats_connected) == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "No backend binary reaches any NATS node for 1 minute (NATS cluster lost)"
+          runbook_url: "docs/11-operations/runbooks/NatsClusterDown.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

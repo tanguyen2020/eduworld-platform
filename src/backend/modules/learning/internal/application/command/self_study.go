@@ -255,3 +255,18 @@ func recommendationID(r *write.RecommendationRow) *uuid.UUID {
 	id := r.ID
 	return &id
 }
+
+// tooFastRatio is the share of the scored answers of a submitted attempt flagged rapid_guess (ANTI_CHEAT §3 "too_fast",
+// metric eduworld_answers_too_fast_ratio of §10). nil when nothing is measured: no metrics, rapid_guess not detected
+// (F030 behaviour without SelfStudy) or no scored answer.
+func (h Attempts) tooFastRatio(ctx context.Context, a attempt.Attempt) (*float64, error) {
+	if h.Metrics == nil || h.Self == nil {
+		return nil, nil
+	}
+	scored, rapid, err := h.Store.ScoredAnswerCounts(ctx, a.ID)
+	if err != nil || scored == 0 {
+		return nil, err
+	}
+	r := float64(rapid) / float64(scored)
+	return &r, nil
+}

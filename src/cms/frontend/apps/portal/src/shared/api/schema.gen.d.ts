@@ -14454,10 +14454,7 @@ export interface components {
         };
         /** @description matching — cặp [left_id, right_id] */
         MatchingResponse: {
-            pairs: [
-                components["schemas"]["ItemId"],
-                components["schemas"]["ItemId"]
-            ][];
+            pairs: components["schemas"]["ItemId"][][];
         };
         MatchmakingTicket: {
             /** @description Chờ quá mm_bot_after — có thể gọi startBotMatch. */

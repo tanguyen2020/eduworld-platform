@@ -71,4 +71,8 @@ type BattleMetrics interface {
 	Signal(kind string)
 	// MatchResult counts one RecordMatchResult by result: recorded, duplicate_rejected (eduworld_match_results_total, MONITORING §3).
 	MatchResult(mode, result string)
+	// MatchVoided counts one match voided for strong cheating evidence (eduworld_matches_voided_total{mode}, ANTI_CHEAT
+	// §9 level 2, §10). The series of every mode are exposed at 0; the void use case (violation handling, out of scope
+	// of F105 spec §Ngoài phạm vi) calls it when it lands.
+	MatchVoided(mode string)
 }

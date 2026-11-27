@@ -85,6 +85,9 @@ type AttemptStore interface {
 	// LastAnsweredAt is the server time of the last answer of an attempt (nil before the first): the moment the next item
 	// of a mini-game counts as served (F073-AC-08).
 	LastAnsweredAt(ctx context.Context, attemptID uuid.UUID) (*time.Time, error)
+	// ScoredAnswerCounts counts the scored answers of an attempt and those flagged rapid_guess (too fast to read the
+	// stem, ANTI_CHEAT §3): eduworld_answers_too_fast_ratio after a submit (ANTI_CHEAT §10).
+	ScoredAnswerCounts(ctx context.Context, attemptID uuid.UUID) (scored, rapid int, err error)
 }
 
 // LearningEvent is one row of learning.learning_events (EVENT_DESIGN §5, learning-event.schema.json): written in the

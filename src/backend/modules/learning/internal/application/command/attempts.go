@@ -52,6 +52,9 @@ type AttemptMetrics interface {
 	// Completed counts one activity completed by a student submit (graded).
 	Completed(activityType, context, subject, gradeBand string)
 	Expired(kind string)
+	// TooFastRatio observes the share of the scored answers of a submitted attempt flagged rapid_guess
+	// (eduworld_answers_too_fast_ratio{mode}, ANTI_CHEAT §3, §10).
+	TooFastRatio(mode string, ratio float64)
 }
 
 // Attempts holds the write use cases of the Activity & Attempt Engine (F030 US1–US3, US5, US6; ACTIVITY_ENGINE §6–§11).

@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/battle"
 )
 
 // Metrics of the battle engine (F105 plan §Quan sát): never a school, student or match label (R14, cardinality).
@@ -26,6 +27,8 @@ var (
 		Help: "battle.state.request (join or reconnect) by result."}, []string{"result"})
 	btSignals = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_integrity_signals_total",
 		Help: "Integrity signals recorded by the battle engine, by type."}, []string{"type"})
+	btVoided = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_matches_voided_total",
+		Help: "Matches voided for strong cheating evidence (ANTI_CHEAT §9 level 2), by mode."}, []string{"mode"})
 	btResults = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_match_results_total",
 		Help: "RecordMatchResult calls by mode and result (recorded, duplicate_rejected — alert DuplicateMatchResults)."},
 		[]string{"mode", "result"})
@@ -37,7 +40,7 @@ func RegisterBattle(reg prometheus.Registerer) {
 		if reg == nil {
 			return
 		}
-		for _, c := range []prometheus.Collector{btRejected, btScore, btAbandon, btAborted, btReconnect, btSignals, btResults} {
+		for _, c := range []prometheus.Collector{btRejected, btScore, btAbandon, btAborted, btReconnect, btSignals, btResults, btVoided} {
 			_ = reg.Register(c)
 		}
 	})
@@ -77,3 +80,19 @@ func (Battle) MatchResult(mode, result string) { btResults.WithLabelValues(mode,
 
 // MatchResults exposes eduworld_match_results_total (tests).
 func MatchResults() *prometheus.CounterVec { return btResults }
+
+// VoidModes are the match modes of eduworld_matches_voided_total, exposed at 0 from start so an alert or a dashboard
+// reads 0 instead of no data before the first void.
+var VoidModes = []string{battle.Mode1v1, battle.ModeTeam, battle.ModeCoop, battle.ModeTimedQuiz, battle.ModeTournament}
+
+func init() {
+	for _, m := range VoidModes {
+		btVoided.WithLabelValues(m)
+	}
+}
+
+// MatchVoided implements port.BattleMetrics.
+func (Battle) MatchVoided(mode string) { btVoided.WithLabelValues(mode).Inc() }
+
+// MatchesVoided exposes eduworld_matches_voided_total (tests).
+func MatchesVoided() *prometheus.CounterVec { return btVoided }

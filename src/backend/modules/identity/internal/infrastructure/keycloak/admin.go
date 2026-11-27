@@ -27,6 +27,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
 
 // Config of the adapter (LOCAL_DEVELOPMENT §4, KEYCLOAK_SSO §8). No URL, realm or credential is hardcoded.
@@ -102,7 +103,7 @@ func New(cfg Config, client *http.Client) (*Admin, error) {
 		return err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, port.ErrKCConflict) && !errors.Is(err, port.ErrKCNotFound) &&
 			!errors.Is(err, errClient)
 	}
-	cb := circuitbreaker.NewBuilder[result]().HandleIf(transient).
+	cb := observability.ObserveCircuit(circuitbreaker.NewBuilder[result](), "identity", observability.IntegrationKeycloakAdmin).HandleIf(transient).
 		WithFailureRateThreshold(cfg.FailureRatio, 10, time.Minute).WithDelay(30 * time.Second).WithSuccessThreshold(2).Build()
 	rp := retrypolicy.NewBuilder[result]().HandleIf(transient).
 		WithMaxRetries(cfg.MaxRetries).WithBackoff(100*time.Millisecond, time.Second).ReturnLastFailure().Build()

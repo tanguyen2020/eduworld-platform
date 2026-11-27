@@ -148,9 +148,15 @@ func TestSelfStudyPracticeHintsRapidGuess(t *testing.T) {
 		t.Fatalf("question.answered hints_used/rapid_guess: %d", n)
 	}
 	// AC-17: the attempt keeps the score of the hinted and the rapid answers.
+	practice := map[string]string{"mode": "practice"}
+	tooFastN, tooFastSum := metricSum(t, observability.AnswersTooFast(), practice), histogramSum(t, observability.AnswersTooFast(), practice)
 	sub := must(t, c.submit(t, hsAn, id), http.StatusOK, "submit")
 	if sub.str("evaluation", "score") != "2" {
 		t.Fatalf("score: %s", sub.raw)
+	}
+	// ANTI_CHEAT §10: one observation of eduworld_answers_too_fast_ratio = 1 rapid of 3 scored answers (retries unscored).
+	if n, s := metricSum(t, observability.AnswersTooFast(), practice)-tooFastN, histogramSum(t, observability.AnswersTooFast(), practice)-tooFastSum; n != 1 || s < 0.333 || s > 0.334 {
+		t.Fatalf("eduworld_answers_too_fast_ratio: +%v observations, +%v sum; want 1, 1/3", n, s)
 	}
 	// AC-18: the rapid guess is no evidence (2 of 3 scored answers).
 	k.gradedOnly(ctx, t, id)

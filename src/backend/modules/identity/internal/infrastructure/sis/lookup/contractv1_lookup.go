@@ -20,6 +20,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/sis"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
 
 // Defaults of CONFIG_DEFAULTS: sis_login_sync_timeout_ms, sis_login_sync_concurrency, sis_login_sync_breaker.
@@ -77,7 +78,7 @@ func (a *Adapter) guard(id uuid.UUID) failsafe.Executor[map[string]any] {
 	if delay <= 0 {
 		delay = DefaultBreakerDelay
 	}
-	cb := circuitbreaker.NewBuilder[map[string]any]().HandleIf(counted).WithFailureThreshold(uint(th)).WithDelay(delay).Build()
+	cb := observability.ObserveCircuit(circuitbreaker.NewBuilder[map[string]any](), "identity", observability.IntegrationSIS).HandleIf(counted).WithFailureThreshold(uint(th)).WithDelay(delay).Build()
 	bh := bulkhead.NewBuilder[map[string]any](uint(n)).Build() // no wait: a full bulkhead refuses at once
 	g := failsafe.With[map[string]any](cb, bh)
 	a.guards[id] = g

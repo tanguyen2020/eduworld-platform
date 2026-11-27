@@ -13,7 +13,7 @@ Tính năng phụ thuộc tích hợp ngoài (Keycloak, SIS, object storage) đa
 
 ## Chẩn đoán
 
-1. `eduworld_external_client_requests_total{module,integration,outcome}`
+1. `eduworld_external_client_circuit_state{module,integration}` (2 = open, 1 = half-open): cặp nào mở, từ khi nào; Keycloak: `eduworld_identity_org_sync_total{result="circuit_open"}`, `eduworld_keycloak_token_call_duration_seconds`; log adapter theo `trace_id`
 2. Hệ thống ngoài có sống không (Keycloak, SIS của trường, `storage-s3`)
 
 ## Xử lý

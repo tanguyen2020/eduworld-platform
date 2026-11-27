@@ -139,3 +139,35 @@ tests:
               summary: "Expired partition of outbox kept: unpublished outbox or unhandled dead letters"
               runbook_url: docs/11-operations/runbooks/InfraPartitionRefused.md
               source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: NatsClusterDown
+    interval: 1m
+    input_series:
+      - series: eduworld_nats_connected{service="core-api",instance="10.0.1.5:9090"}
+        values: 1x5 0x15
+      - series: eduworld_nats_connected{service="realtime",instance="10.0.1.7:9090"}
+        values: 1x5 0x15
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: NatsClusterDown
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: NatsClusterDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+            exp_annotations:
+              summary: "No backend binary reaches any NATS node for 1 minute (NATS cluster lost)"
+              runbook_url: docs/11-operations/runbooks/NatsClusterDown.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  # One binary cut off (or one NATS node down: clients reconnect elsewhere) is not a cluster loss.
+  - name: NatsClusterDown one binary only
+    interval: 1m
+    input_series:
+      - series: eduworld_nats_connected{service="core-api",instance="10.0.1.5:9090"}
+        values: 1x5 0x15
+      - series: eduworld_nats_connected{service="realtime",instance="10.0.1.7:9090"}
+        values: 1x20
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: NatsClusterDown
+        exp_alerts: []

@@ -139,3 +139,30 @@ tests:
               summary: Valkey valkey-cache:9121 does not answer for 1 minute (realtime degraded)
               runbook_url: docs/11-operations/runbooks/ValkeyDown.md
               source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  - name: PatroniSwitchover
+    interval: 1m
+    input_series:
+      # pg-1 primary on timeline 1; switchover at minute 15: pg-2 promoted (timeline 2), pg-1 rejoins as replica.
+      - series: patroni_postgres_timeline{scope="eduworld",name="pg-1",instance="pg-1:8008"}
+        values: 1x16 2x14
+      - series: patroni_postgres_timeline{scope="eduworld",name="pg-2",instance="pg-2:8008"}
+        values: 1x15 2x15
+      - series: patroni_postgres_timeline{scope="eduworld",name="pg-3",instance="pg-3:8008"}
+        values: 1x15 2x15
+    alert_rule_test:
+      - eval_time: 14m
+        alertname: PatroniSwitchover
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: PatroniSwitchover
+        exp_alerts:
+          - exp_labels:
+              scope: eduworld
+              severity: warning
+            exp_annotations:
+              summary: "Patroni cluster eduworld changed its primary in the last 10 minutes (switchover or failover)"
+              runbook_url: docs/11-operations/runbooks/PatroniSwitchover.md
+              source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+      - eval_time: 28m
+        alertname: PatroniSwitchover
+        exp_alerts: []

@@ -24,6 +24,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/portalauth"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
 
 // PortalConfig configures the token client of the confidential client eduworld-portal (ADR-0091 §2).
@@ -122,7 +123,7 @@ func NewPortalTokens(cfg PortalConfig, client *http.Client) (*PortalTokens, erro
 			!errors.Is(err, port.ErrPortalAccessDenied) && !errors.Is(err, port.ErrPortalSetupRequired) &&
 			!errors.Is(err, port.ErrPortalRefreshInvalid) && !errors.Is(err, errMisconfigured)
 	}
-	cb := circuitbreaker.NewBuilder[tokenResult]().HandleIf(transient).
+	cb := observability.ObserveCircuit(circuitbreaker.NewBuilder[tokenResult](), "identity", observability.IntegrationKeycloakToken).HandleIf(transient).
 		WithFailureRateThreshold(cfg.FailureRatio, 10, time.Minute).WithDelay(30 * time.Second).WithSuccessThreshold(2).Build()
 	rp := retrypolicy.NewBuilder[tokenResult]().HandleIf(transient).
 		WithMaxRetries(cfg.MaxRetries).WithBackoff(100*time.Millisecond, time.Second).ReturnLastFailure().Build()

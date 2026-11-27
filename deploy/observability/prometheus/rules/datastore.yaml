@@ -48,3 +48,13 @@ groups:
           summary: "Valkey {{ $labels.instance }} does not answer for 1 minute (realtime degraded)"
           runbook_url: "docs/11-operations/runbooks/ValkeyDown.md"
           source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+      # Patroni promoted another node (switchover or failover, F132 chaos finding): the timeline of the cluster rose in
+      # the last 10 minutes. Patroni REST /metrics (:8008, GET without auth) scraped as job `patroni` (deploy labels of
+      # pg-N in data.stack.yml).
+      - alert: PatroniSwitchover
+        expr: max by (scope) (patroni_postgres_timeline) > max by (scope) (patroni_postgres_timeline offset 10m)
+        labels: { severity: warning }
+        annotations:
+          summary: "Patroni cluster {{ $labels.scope }} changed its primary in the last 10 minutes (switchover or failover)"
+          runbook_url: "docs/11-operations/runbooks/PatroniSwitchover.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"

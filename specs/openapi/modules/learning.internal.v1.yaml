@@ -964,12 +964,10 @@ components:
               maxItems: 10
               items:
                 type: array
+                description: Một cặp đúng 2 phần tử [left_id, right_id] (cả hai là ItemId).
                 minItems: 2
                 maxItems: 2
-                prefixItems:
-                  - { $ref: '#/components/schemas/ItemId' }
-                  - { $ref: '#/components/schemas/ItemId' }
-                items: false
+                items: { $ref: '#/components/schemas/ItemId' }
         - title: ordering
           type: object
           required: [order]

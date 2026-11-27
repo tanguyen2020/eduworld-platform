@@ -28,3 +28,19 @@ eduworld_match_results_total{mode="duel",result="recorded"} 1
 		t.Fatal(err)
 	}
 }
+
+// ANTI_CHEAT §10: eduworld_matches_voided_total{mode} is registered with the battle metrics, every mode exposed at 0
+// from start, and counts one void per call.
+func TestMatchesVoidedMetric(t *testing.T) {
+	reg := prometheus.NewRegistry()
+	btOnce = sync.Once{}
+	RegisterBattle(reg)
+	if n, err := testutil.GatherAndCount(reg, "eduworld_matches_voided_total"); err != nil || n != len(VoidModes) {
+		t.Fatalf("eduworld_matches_voided_total series = %d (%v), want %d (every mode at 0)", n, err, len(VoidModes))
+	}
+	before := testutil.ToFloat64(MatchesVoided().WithLabelValues("battle_1v1"))
+	Battle{}.MatchVoided("battle_1v1")
+	if got := testutil.ToFloat64(MatchesVoided().WithLabelValues("battle_1v1")) - before; got != 1 {
+		t.Fatalf("eduworld_matches_voided_total{mode=battle_1v1} += %v, want 1", got)
+	}
+}

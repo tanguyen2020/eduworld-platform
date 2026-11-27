@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Stable error codes returned in the check output instead of raw errors (no DSN/host leaks).
@@ -124,15 +126,48 @@ func ValkeyCheck(p ValkeyPinger) CheckFunc {
 	}
 }
 
-// NATSCheck checks the NATS connection state (check name `nats`).
-func NATSCheck(conn *nats.Conn) CheckFunc {
-	return func(context.Context) error {
-		if conn == nil {
-			return coded(CodeNotConfigured, errors.New("nats connection is nil"))
-		}
-		if !conn.IsConnected() {
-			return coded(CodeNotConnected, fmt.Errorf("nats status %s", conn.Status()))
-		}
-		return nil
+// NATSProbeTimeout is nats_readiness_probe_timeout (CONFIG_DEFAULTS §18, owner DEPLOYMENT §14): the longest wait for
+// the PONG of the readiness PING, below the 2 s budget of one /readyz evaluation (DefaultTimeout).
+const NATSProbeTimeout = time.Second
+
+// ProbeNATS reports whether the NATS server answers on conn: the client state must be CONNECTED and a PING must get
+// its PONG within timeout (one round trip, a few bytes). The client state alone stays CONNECTED for minutes when the
+// server is paused or the network silently drops packets, until the client's own ping timer notices (F132 chaos
+// finding), so readiness and eduworld_nats_connected probe the server instead.
+func ProbeNATS(ctx context.Context, conn *nats.Conn, timeout time.Duration) error {
+	if conn == nil {
+		return coded(CodeNotConfigured, errors.New("nats connection is nil"))
 	}
+	if !conn.IsConnected() {
+		return coded(CodeNotConnected, fmt.Errorf("nats status %s", conn.Status()))
+	}
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	if err := conn.FlushWithContext(ctx); err != nil {
+		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, nats.ErrTimeout) {
+			return coded(CodeTimeout, fmt.Errorf("nats ping: %w", err))
+		}
+		return coded(CodeUnreachable, fmt.Errorf("nats ping: %w", err))
+	}
+	return nil
+}
+
+// NATSCheck checks that the NATS server answers (check name `nats`, ProbeNATS with NATSProbeTimeout).
+func NATSCheck(conn *nats.Conn) CheckFunc {
+	return func(ctx context.Context) error { return ProbeNATS(ctx, conn, NATSProbeTimeout) }
+}
+
+// NATSConnectedGauge is eduworld_nats_connected (MONITORING §3 "Metric bổ sung"): 1 when ProbeNATS succeeds at scrape
+// time, 0 otherwise. A binary connects to any node of the cluster (EW_NATS_URLS) and reconnects to another one, so
+// every binary at 0 means the whole cluster is unreachable (alert NatsClusterDown, MONITORING §5).
+func NATSConnectedGauge(conn *nats.Conn) prometheus.Collector {
+	return prometheus.NewGaugeFunc(prometheus.GaugeOpts{
+		Name: "eduworld_nats_connected",
+		Help: "1 when the NATS server answers a PING of this binary within nats_readiness_probe_timeout, 0 otherwise.",
+	}, func() float64 {
+		if ProbeNATS(context.Background(), conn, NATSProbeTimeout) != nil {
+			return 0
+		}
+		return 1
+	})
 }

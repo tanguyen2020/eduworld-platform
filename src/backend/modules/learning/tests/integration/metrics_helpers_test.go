@@ -66,3 +66,31 @@ func metricLabelValues(t *testing.T, c prometheus.Collector, label string, want 
 	}
 	return out
 }
+
+// histogramSum adds the sample sums of the histogram series of c matching want (before/after deltas).
+func histogramSum(t *testing.T, c prometheus.Collector, want map[string]string) float64 {
+	t.Helper()
+	reg := prometheus.NewRegistry()
+	if err := reg.Register(c); err != nil {
+		t.Fatal(err)
+	}
+	mfs, err := reg.Gather()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sum := 0.0
+	for _, mf := range mfs {
+	next:
+		for _, m := range mf.GetMetric() {
+			for _, l := range m.GetLabel() {
+				if v, ok := want[l.GetName()]; ok && v != l.GetValue() {
+					continue next
+				}
+			}
+			if h := m.GetHistogram(); h != nil {
+				sum += h.GetSampleSum()
+			}
+		}
+	}
+	return sum
+}

@@ -8,10 +8,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/nats-io/nats.go"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/natsx"
 	rt "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/realtime"
 )
 
@@ -56,7 +58,7 @@ func (r Router) Request(ctx context.Context, c rt.Caller, module, typ string, pa
 	m := nats.NewMsg(rt.CommandSubject(module, typ))
 	m.Header = c.Header(ctx)
 	m.Data = payload
-	res, err := r.NC.RequestMsgWithContext(ctx, m)
+	res, err := natsx.Request(ctx, r.NC, module, SubjectGroup(typ), m)
 	if err != nil {
 		return rt.Reply{}, fmt.Errorf("%w: %w", ErrUnavailable, err)
 	}
@@ -68,6 +70,30 @@ func (r Router) Request(ctx context.Context, c rt.Caller, module, typ string, pa
 		reply.Problem = &rt.ReplyProblem{Code: "INTERNAL", Retryable: true}
 	}
 	return reply, nil
+}
+
+// SubjectGroup is the subject_group label of eduworld_nats_request_* for a command type: its first segment
+// ("battle.answer.submit" → "battle"), a closed list since the types come from the AsyncAPI (Routes).
+func SubjectGroup(typ string) string {
+	if i := strings.IndexByte(typ, '.'); i > 0 {
+		return typ[:i]
+	}
+	if typ == "" {
+		return "unknown"
+	}
+	return typ
+}
+
+// InitMetrics creates the eduworld_nats_request_errors_total series of every module reached by request/reply at 0
+// (alert NatsRequestTimeouts needs them before the first failure).
+func InitMetrics() {
+	seen := map[string]bool{}
+	for _, r := range Routes {
+		if r.Kind == KindRequest && !seen[r.Module] {
+			seen[r.Module] = true
+			natsx.InitRequestMetrics(r.Module)
+		}
+	}
 }
 
 // RoomInput publishes payload to ew.in.room.<room> (fire-and-forget, no ack).

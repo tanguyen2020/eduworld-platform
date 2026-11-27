@@ -22,6 +22,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/lifecycle"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/natsx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
 
@@ -101,6 +102,11 @@ func Run(ctx context.Context, o Options) error {
 	}
 	defer nc.Close()
 	hr.Register("nats", health.Readiness, health.NATSCheck(nc))
+	// Shared adapter metrics (MONITORING §3): NATS connection (alert NatsClusterDown), NATS request/reply (alert
+	// NatsRequestTimeouts) and circuit breakers of the external integrations (alert CircuitBreakerOpen).
+	hr.Metrics().MustRegister(health.NATSConnectedGauge(nc))
+	hr.Metrics().MustRegister(natsx.RequestCollectors()...)
+	hr.Metrics().MustRegister(observability.ExternalCollectors()...)
 
 	workers := lifecycle.NewGroup(ctx)
 	for _, w := range o.Workers {

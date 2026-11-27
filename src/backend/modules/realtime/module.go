@@ -10,6 +10,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/conn"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/internal/router"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
 )
@@ -38,6 +39,7 @@ func Register(r *module.Registry) (*Module, error) {
 		return nil, fmt.Errorf("realtime: %w", err)
 	}
 	deps := conn.Deps{Config: cfg, Valkey: vk, NATS: r.NATS(), Metrics: observability.New(r.Metrics(), cfg.NodeID)}
+	router.InitMetrics() // eduworld_nats_request_* are registered by pkg/bootstrap (natsx.RequestCollectors)
 	if r.NATS() != nil {
 		js, err := r.JetStream()
 		if err != nil {

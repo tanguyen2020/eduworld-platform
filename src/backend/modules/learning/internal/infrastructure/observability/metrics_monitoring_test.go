@@ -58,3 +58,30 @@ eduworld_exam_submissions_total{exam_type="mock",result="late"} 1
 		}
 	}
 }
+
+// ANTI_CHEAT §10: eduworld_answers_too_fast_ratio{mode} is a histogram of the share of rapid_guess answers per
+// submitted attempt; the bucket le=0.3 splits the attempts below the anomaly threshold of ANTI_CHEAT §3 (≥ 30 %).
+func TestAnswersTooFastRatio(t *testing.T) {
+	reg := prometheus.NewRegistry()
+	RegisterAttempts(reg)
+	AttemptCounter{}.TooFastRatio("practice", 0)
+	AttemptCounter{}.TooFastRatio("practice", 0.25)
+	AttemptCounter{}.TooFastRatio("practice", 0.6)
+	want := `
+# HELP eduworld_answers_too_fast_ratio Share of the scored answers of a submitted attempt flagged rapid_guess (too fast to read the stem, ANTI_CHEAT §3), by mode.
+# TYPE eduworld_answers_too_fast_ratio histogram
+eduworld_answers_too_fast_ratio_bucket{mode="practice",le="0"} 1
+eduworld_answers_too_fast_ratio_bucket{mode="practice",le="0.1"} 1
+eduworld_answers_too_fast_ratio_bucket{mode="practice",le="0.2"} 1
+eduworld_answers_too_fast_ratio_bucket{mode="practice",le="0.3"} 2
+eduworld_answers_too_fast_ratio_bucket{mode="practice",le="0.5"} 2
+eduworld_answers_too_fast_ratio_bucket{mode="practice",le="0.75"} 3
+eduworld_answers_too_fast_ratio_bucket{mode="practice",le="1"} 3
+eduworld_answers_too_fast_ratio_bucket{mode="practice",le="+Inf"} 3
+eduworld_answers_too_fast_ratio_sum{mode="practice"} 0.85
+eduworld_answers_too_fast_ratio_count{mode="practice"} 3
+`
+	if err := testutil.GatherAndCompare(reg, strings.NewReader(want), "eduworld_answers_too_fast_ratio"); err != nil {
+		t.Fatal(err)
+	}
+}

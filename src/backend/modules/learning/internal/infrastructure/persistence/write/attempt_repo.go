@@ -264,3 +264,18 @@ func (AttemptRepo) LastAnsweredAt(ctx context.Context, attemptID uuid.UUID) (*ti
 	t := at.Time.UTC()
 	return &t, nil
 }
+
+// ScoredAnswerCounts implements write.AttemptStore: scored answers of the attempt and those flagged rapid_guess
+// (eduworld_answers_too_fast_ratio, ANTI_CHEAT §3, §10).
+func (AttemptRepo) ScoredAnswerCounts(ctx context.Context, attemptID uuid.UUID) (scored, rapid int, err error) {
+	tx, ok := entx.Tx(ctx)
+	if !ok {
+		return 0, 0, entx.ErrNoTransaction
+	}
+	// tenancyguard:ok append-only table without deleted_at, filtered by the session tenant (RLS T as well)
+	if err := tx.QueryRowContext(ctx, `SELECT count(*) FILTER (WHERE is_scored), count(*) FILTER (WHERE is_scored AND rapid_guess)
+		FROM assessment.attempt_answers WHERE attempt_id = $1 AND tenant_id = infra.current_tenant_id()`, attemptID).Scan(&scored, &rapid); err != nil {
+		return 0, 0, fmt.Errorf("attempt answers: %w", err)
+	}
+	return scored, rapid, nil
+}

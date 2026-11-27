@@ -112,6 +112,14 @@
 - [x] T042 [P] CHANGELOG mục F131 — file: `CHANGELOG.md` — CHANGELOG mục F131
 - [ ] T043 Chạy [quickstart.md](quickstart.md) trên staging và ghi bằng chứng — file: `specs/131-observability-alerting-runbooks/quickstart.md` — kịch bản quickstart.md trên staging — **chờ môi trường staging**
 
+### Follow-up 2026-11-27 — lỗ hổng do chaos/anti-cheat F132 phát hiện (obsfix)
+
+- [x] T044 [P] Phát `eduworld_external_client_circuit_state{module,integration}` từ breaker của adapter ngoài — file: `src/backend/pkg/observability/external.go` — `ObserveCircuit` gắn vào 7 breaker (S3 ×4 module, Keycloak Admin, Keycloak token, SIS lookup), gauge = trạng thái xấu nhất mỗi cặp; test `pkg/observability/external_test.go` (3 test)
+- [x] T045 [P] Phát `eduworld_nats_request_duration_seconds`/`eduworld_nats_request_errors_total` — file: `src/backend/pkg/natsx/request.go` — helper `natsx.Request` dùng trong `modules/realtime/internal/router`, lý do `timeout`/`no_responders`/`unavailable`/`error`, series 0 từ khởi động; test `pkg/natsx/request_test.go` (3 test, server NATS giả MOCK trong test), `router_test.go`
+- [x] T046 Readiness `nats` thăm dò server (PING/PONG, `nats_readiness_probe_timeout` 1 s) + gauge `eduworld_nats_connected` — file: `src/backend/pkg/health/checks.go` — test `pkg/health/nats_probe_test.go` (4 test: server bị pause vẫn CONNECTED → `fail/timeout` trong ≤ 1 s)
+- [x] T047 Alert `NatsClusterDown`, `PatroniSwitchover` (MONITORING §5) + runbook + ca `promtool` bắn/không bắn; deploy label job `patroni` cho `pg-N` (staging, production) — file: `deploy/observability/prometheus/rules/{async,datastore}.yaml`
+- [x] T048 Anti-cheat ANTI_CHEAT §10: `eduworld_answers_too_fast_ratio{mode}` (learning, khi học sinh nộp attempt) và `eduworld_matches_voided_total{mode}` (competition, series 0; use case vô hiệu trận thuộc feature xử lý vi phạm sau); sửa Spectral `array-items` của `MatchingResponse.pairs` — file: `src/backend/modules/learning/internal/infrastructure/observability/attempt_metrics.go` — `TestAnswersTooFastRatio`, `TestMatchesVoidedMetric`, integration `TestSelfStudyPracticeHintsRapidGuess` (1 rapid / 3 câu tính điểm → +1 quan sát, tổng 1/3); Spectral 0 lỗi, oasdiff 0 breaking
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 (cần Prometheus/Alertmanager của US1) → US3 → US4 → Polish.

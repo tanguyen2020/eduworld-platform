@@ -24,6 +24,11 @@ var (
 		Name: "eduworld_answer_rate_limited_total",
 		Help: "Answers and submits refused with 429 by answer_rate, by kind (answer, submit).",
 	}, []string{"kind"})
+	answersTooFast = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "eduworld_answers_too_fast_ratio",
+		Help:    "Share of the scored answers of a submitted attempt flagged rapid_guess (too fast to read the stem, ANTI_CHEAT §3), by mode.",
+		Buckets: []float64{0, .1, .2, .3, .5, .75, 1},
+	}, []string{"mode"})
 	answerRateFailures = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "eduworld_answer_rate_counter_failures_total",
 		Help: "answer_rate counter calls that failed on Valkey and let the call through, by kind.",
@@ -32,7 +37,7 @@ var (
 
 // RegisterAttempts adds the attempt metrics to r; already registered collectors are ignored.
 func RegisterAttempts(r prometheus.Registerer) {
-	for _, c := range []prometheus.Collector{attemptStarted, attemptSubmitted, activitiesCompleted, attemptExpired, answerRateLimited, answerRateFailures} {
+	for _, c := range []prometheus.Collector{attemptStarted, attemptSubmitted, activitiesCompleted, attemptExpired, answerRateLimited, answerRateFailures, answersTooFast} {
 		_ = r.Register(c)
 	}
 }
@@ -72,3 +77,11 @@ func (RateCounter) RateLimited(kind string) { answerRateLimited.WithLabelValues(
 
 // RateCounterFailed counts one counter call that failed (the call was let through).
 func (RateCounter) RateCounterFailed(kind string) { answerRateFailures.WithLabelValues(kind).Inc() }
+
+// TooFastRatio observes the share of rapid_guess answers of one submitted attempt (ANTI_CHEAT §10).
+func (AttemptCounter) TooFastRatio(mode string, ratio float64) {
+	answersTooFast.WithLabelValues(mode).Observe(ratio)
+}
+
+// AnswersTooFast exposes eduworld_answers_too_fast_ratio (tests).
+func AnswersTooFast() *prometheus.HistogramVec { return answersTooFast }

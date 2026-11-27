@@ -24,6 +24,7 @@ import (
 	"github.com/failsafe-go/failsafe-go/retrypolicy"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
 
 // Config of the adapter (EW_S3_ENDPOINT, EW_S3_REGION, EW_S3_ACCESS_KEY, EW_S3_SECRET_KEY, bucket name).
@@ -65,7 +66,7 @@ func New(cfg Config, client *http.Client) (*S3, error) {
 		client = &http.Client{}
 	}
 	transient := func(_ result, err error) bool { return errors.Is(err, errTransient) }
-	cb := circuitbreaker.NewBuilder[result]().HandleIf(transient).WithFailureThresholdRatio(5, 10).
+	cb := observability.ObserveCircuit(circuitbreaker.NewBuilder[result](), "identity", observability.IntegrationS3).HandleIf(transient).WithFailureThresholdRatio(5, 10).
 		WithDelay(30 * time.Second).Build()
 	rp := retrypolicy.NewBuilder[result]().HandleIf(transient).WithMaxRetries(2).
 		WithBackoff(100*time.Millisecond, time.Second).ReturnLastFailure().Build()

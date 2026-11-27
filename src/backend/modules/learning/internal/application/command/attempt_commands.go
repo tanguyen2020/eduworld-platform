@@ -468,6 +468,7 @@ func (h Attempts) Submit(ctx context.Context, id uuid.UUID) (out dto.AttemptView
 	// MONITORING §3: every student submit by mode and result; a completion once the transaction committed.
 	mode := labelUnknown
 	var completion *[4]string
+	var tooFast *float64 // ANTI_CHEAT §10: share of the scored answers flagged rapid_guess (nil = not measured)
 	defer func() {
 		if h.Metrics == nil {
 			return
@@ -477,6 +478,9 @@ func (h Attempts) Submit(ctx context.Context, id uuid.UUID) (out dto.AttemptView
 		}
 		if err == nil && completion != nil {
 			h.Metrics.Completed(completion[0], completion[1], completion[2], completion[3])
+		}
+		if err == nil && tooFast != nil {
+			h.Metrics.TooFastRatio(mode, *tooFast)
 		}
 	}()
 	p, err := student(ctx)
@@ -518,6 +522,9 @@ func (h Attempts) Submit(ctx context.Context, id uuid.UUID) (out dto.AttemptView
 			return err
 		}
 		if completion, err = h.completionLabels(ctx, a, src); err != nil {
+			return err
+		}
+		if tooFast, err = h.tooFastRatio(ctx, a); err != nil {
 			return err
 		}
 		if _, visibleAt, err := h.resultRelease(ctx, a, h.now()); err != nil {

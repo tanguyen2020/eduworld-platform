@@ -13,7 +13,7 @@ Lệnh WS (quest, party, chat) của học sinh bị timeout.
 
 ## Chẩn đoán
 
-1. `eduworld_nats_request_errors_total` theo `module`
+1. `eduworld_nats_request_errors_total` theo `module` và `reason` (`timeout`, `no_responders` = không có handler, `unavailable` = kết nối NATS đóng/đang nối lại — nếu mọi binary cùng `unavailable` xem [NatsClusterDown](NatsClusterDown.md))
 2. `core-api` có subscribe `ew.cmd.<module>.>` không (log khởi động), CPU `core-api`
 3. NATS: `nats_consumer_num_pending`, trạng thái cụm
 

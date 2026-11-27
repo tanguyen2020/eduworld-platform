@@ -1,6 +1,6 @@
 # Anti-cheat
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Multiplayer Engineer + Identity & Security Engineer · Cập nhật: 2026-11-27 (F132: harness §11, metric speed hack §10, mã từ chối đề §3) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Multiplayer Engineer + Identity & Security Engineer · Cập nhật: 2026-11-27 (obsfix: §10 phát `eduworld_answers_too_fast_ratio`, `eduworld_matches_voided_total`) · 2026-11-27 (F132: harness §11, metric speed hack §10, mã từ chối đề §3) · 2026-11-15
 > Liên quan: [ADR-0016, ADR-0018, ADR-0010, ADR-0011](../adr/README.md) · [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [EXERCISE_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) · [RANKING](../01-game-design/COMPETITION_SYSTEM.md) · [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) · [SECURITY_ARCHITECTURE §14](SECURITY_ARCHITECTURE.md)
 
 **Mục đích & phạm vi.** Nguồn duy nhất về chống gian lận game, học tập và thi đấu: server-authoritative, kiểm tra thời gian, chống trùng/replay, rate limit đặc thù gameplay, phát hiện bất thường, **quy tắc và giá trị chống farm XP/Xu**, xử lý vi phạm. Rate limit chung của API → [SECURITY_ARCHITECTURE §14](SECURITY_ARCHITECTURE.md).
@@ -106,7 +106,7 @@ Không công khai tên học sinh vi phạm; không trừ điểm học tập t�
 ## 10. Audit & quan sát
 
 - Audit: void match, rollback rating, điều chỉnh kết quả tournament, xử lý vi phạm.
-- Metrics: `eduworld_integrity_signals_total{type}`, `eduworld_idempotency_replays_total{route}`, `eduworld_answers_too_fast_ratio`, `eduworld_matches_voided_total{mode}`, `eduworld_rt_speed_violations_total` (module competition, F132; danh mục và nhãn: [MONITORING §3](../11-operations/MONITORING.md#3-metric-bắt-buộc-master-prompt-18)). `eduworld_answers_too_fast_ratio` và `eduworld_matches_voided_total` chưa phát (tín hiệu tương ứng ghi ở `integrity_signals`; void trận chưa có use case).
+- Metrics: `eduworld_integrity_signals_total{type}`, `eduworld_idempotency_replays_total{route}`, `eduworld_answers_too_fast_ratio`, `eduworld_matches_voided_total{mode}`, `eduworld_rt_speed_violations_total` (module competition, F132; danh mục và nhãn: [MONITORING §3](../11-operations/MONITORING.md#3-metric-bắt-buộc-master-prompt-18)). `eduworld_answers_too_fast_ratio{mode}` (module learning): histogram tỉ lệ câu tính điểm bị gắn `too_fast` (`rapid_guess`, §3) của mỗi attempt học sinh nộp, phát khi nộp attempt. `eduworld_matches_voided_total{mode}` (module competition): mọi mode có series 0 từ khi khởi động, tăng khi trận bị vô hiệu theo §9 mức 2; use case vô hiệu trận thuộc feature xử lý vi phạm sau (ngoài phạm vi F105), cho tới khi có use case đó giá trị luôn là 0.
 - Dashboard cho Multiplayer Engineer/Safety; báo cáo tuần cho tổ chức giải.
 
 ## 11. Kiểm thử

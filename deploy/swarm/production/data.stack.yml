@@ -131,6 +131,7 @@ services:
     environment: { PATRONI_NAME: pg-1, PATRONI_RESTAPI_CONNECT_ADDRESS: "pg-1:8008", PATRONI_POSTGRESQL_CONNECT_ADDRESS: "pg-1:5432" }
     volumes: ["pg-1-data:/var/lib/postgresql/data", "pg-1-run:/var/run/postgresql"]
     deploy:
+      labels: { prometheus.scrape: "true", prometheus.port: "8008", prometheus.network: data, prometheus.job: patroni }  # Patroni REST /metrics (alert PatroniSwitchover)
       placement: { constraints: [node.labels.role == data-pg, node.labels.name == pg-1] }
       resources: { limits: { cpus: "30", memory: 120G }, reservations: { cpus: "16", memory: 96G } }
       <<: *update-stateful
@@ -140,6 +141,7 @@ services:
     environment: { PATRONI_NAME: pg-2, PATRONI_RESTAPI_CONNECT_ADDRESS: "pg-2:8008", PATRONI_POSTGRESQL_CONNECT_ADDRESS: "pg-2:5432" }
     volumes: ["pg-2-data:/var/lib/postgresql/data", "pg-2-run:/var/run/postgresql"]
     deploy:
+      labels: { prometheus.scrape: "true", prometheus.port: "8008", prometheus.network: data, prometheus.job: patroni }  # Patroni REST /metrics (alert PatroniSwitchover)
       placement: { constraints: [node.labels.role == data-pg, node.labels.name == pg-2] }
       resources: { limits: { cpus: "30", memory: 120G }, reservations: { cpus: "16", memory: 96G } }
       <<: *update-stateful
@@ -149,6 +151,7 @@ services:
     environment: { PATRONI_NAME: pg-3, PATRONI_RESTAPI_CONNECT_ADDRESS: "pg-3:8008", PATRONI_POSTGRESQL_CONNECT_ADDRESS: "pg-3:5432" }
     volumes: ["pg-3-data:/var/lib/postgresql/data", "pg-3-run:/var/run/postgresql"]
     deploy:
+      labels: { prometheus.scrape: "true", prometheus.port: "8008", prometheus.network: data, prometheus.job: patroni }  # Patroni REST /metrics (alert PatroniSwitchover)
       placement: { constraints: [node.labels.role == data-pg, node.labels.name == pg-3] }
       resources: { limits: { cpus: "30", memory: 120G }, reservations: { cpus: "16", memory: 96G } }
       <<: *update-stateful
