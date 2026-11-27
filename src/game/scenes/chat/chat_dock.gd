@@ -58,6 +58,8 @@ var _kb_offset: float = 0.0
 var _panel: PanelContainer = null
 var _box: VBoxContainer = null
 var _header: HBoxContainer = null
+var _head_icon: TextureRect = null
+var _spacer: Control = null
 var _title: Label = null
 var _badge: Label = null
 var _mention_badge: Label = null
@@ -65,6 +67,7 @@ var _players: Button = null
 var _collapse: Button = null
 var _expand: Button = null
 var _tabs: HBoxContainer = null
+var _tab_bar: ChipScroller = null
 var _tab_buttons: Dictionary = {}
 var _tab_badges: Dictionary = {}
 var _banner: PanelContainer = null
@@ -217,7 +220,7 @@ func select_channel(id: String) -> void:
 	current_channel = id
 	_dialogs.context = _report_context()
 	for t: Variant in _tab_buttons.keys():
-		(_tab_buttons[t] as Button).theme_type_variation = &"TabButtonSelected" if String(t) == id else &"TabButton"
+		(_tab_buttons[t] as Button).theme_type_variation = &"ChatTabButtonSelected" if String(t) == id else &"ChatTabButton"
 	_render_channel()
 	_update_viewing()
 
@@ -247,7 +250,13 @@ func _apply_mode() -> void:
 	var expanded: bool = mode == Mode.EXPANDED
 	var mini: bool = mode == Mode.MINI
 	visible = not (external_toggle and mode == Mode.COLLAPSED)
-	_tabs.visible = expanded and channel_ids.size() > 1
+	# Team battle, open: the tabs "Đội" / "Cả trận" take the place of the chat icon and title on the header line
+	# (F119 "≥ 3 tin"); collapsed / 2-line strip / a single channel: the chat icon and the title.
+	_tab_bar.visible = expanded and channel_ids.size() > 1
+	var tabs_in_header: bool = _tab_bar.visible
+	_head_icon.visible = not tabs_in_header
+	_title.visible = not tabs_in_header
+	_spacer.visible = not tabs_in_header
 	_pins.visible = expanded and _pins.get_child_count() > 0
 	_list_box.visible = expanded
 	_composer.visible = expanded and not _care.visible
@@ -678,16 +687,16 @@ func _build_tabs() -> void:
 	_tab_buttons.clear()
 	_tab_badges.clear()
 	if channel_ids.size() < 2:
-		_tabs.visible = false
+		_tab_bar.visible = false
 		return
 	for id: String in channel_ids:
 		var team: bool = id == channel_ids[0]
 		var wrap: HBoxContainer = UiBuild.hbox()
 		UiBuild.expand(wrap)
 		var b: Button = UiBuild.button("ui.chat.tab.team" if team else "ui.chat.tab.match", "tab_team" if team else "tab_match",
-				&"TabButton")
+				&"ChatTabButton")
 		b.name = "TabTeam" if team else "TabMatch"
-		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		b.autowrap_mode = TextServer.AUTOWRAP_OFF
 		UiBuild.expand(b)
 		b.pressed.connect(func() -> void: select_channel(id))
 		wrap.add_child(b)
@@ -714,9 +723,10 @@ func _build() -> void:
 	_header = UiBuild.hbox(&"ToolbarBox")
 	_header.name = "Header"
 	_box.add_child(_header)
-	var icon: TextureRect = UiBuild.icon_rect("chat")
-	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_header.add_child(icon)
+	_head_icon = UiBuild.icon_rect("chat")
+	_head_icon.name = "ChatIcon"
+	_head_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_header.add_child(_head_icon)
 	_title = UiBuild.label("ui.chat.title.party", &"SectionTag", false)
 	_title.name = "Title"
 	_title.uppercase = true
@@ -732,10 +742,11 @@ func _build() -> void:
 	_mention_badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_mention_badge.visible = false
 	_header.add_child(_mention_badge)
-	var spacer: Control = Control.new()
-	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	UiBuild.expand(spacer)
-	_header.add_child(spacer)
+	_spacer = Control.new()
+	_spacer.name = "Spacer"
+	_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiBuild.expand(_spacer)
+	_header.add_child(_spacer)
 	_players = UiBuild.button("", "group", &"IconButton")
 	_players.name = "Players"
 	_players.tooltip_text = "ui.chat.players.open"
@@ -757,10 +768,15 @@ func _build() -> void:
 	_mini.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_mini.visible = false
 	_box.add_child(_mini)
+	# Team battle: the tabs "Đội" / "Cả trận" on the header line in place of the chat icon and title (F119 "≥ 3 tin"); a
+	# much longer translation scrolls sideways with the arrows instead of taking a line of its own.
 	_tabs = UiBuild.hbox(&"ToolbarBox")
 	_tabs.name = "Tabs"
-	_tabs.visible = false
-	_box.add_child(_tabs)
+	_tab_bar = UiBuild.chip_scroller(_tabs) as ChipScroller
+	_tab_bar.name = "TabBar"
+	_tab_bar.visible = false
+	_header.add_child(_tab_bar)
+	_header.move_child(_tab_bar, _spacer.get_index())
 	_banner = UiBuild.panel(&"WarningBannerPanel")
 	_banner.name = "Banner"
 	_banner.visible = false

@@ -47,8 +47,10 @@ func after_test() -> void:
 ## returns every problem found.
 ## F099-AC-07: `empty` also checks that the activity board has no empty band taller than 25% of the view.
 ## F113: `sizes` defaults to the landscape windows (BandLayoutProbe.SIZES); the rotate prompt passes PORTRAIT_SIZES.
-func _matrix(label: String, build: Callable, empty: bool = false, sizes: Dictionary = BandLayoutProbe.SIZES
-		) -> PackedStringArray:
+## F119 (STUDENT_GAME_UX_SOCIAL §7): `chat_space` also checks every open chat dock with ChatSpaceProbe (≥ 3 typical
+## messages or 45% of the dock in the visible list) and that at least one dock was checked.
+func _matrix(label: String, build: Callable, empty: bool = false, sizes: Dictionary = BandLayoutProbe.SIZES,
+		chat_space: bool = false) -> PackedStringArray:
 	var failures: PackedStringArray = []
 	for band: String in UiTokens.DENSITY_BANDS:
 		for window: String in sizes.keys():
@@ -74,6 +76,12 @@ func _matrix(label: String, build: Callable, empty: bool = false, sizes: Diction
 						failures.append("%s %s %s: media bar %.0f px < touch target" % [label, band, window, t.size.y])
 				if BandLayoutProbe.last_texts == 0:
 					failures.append("%s %s %s: no visible text checked" % [label, band, window])
+				if chat_space:
+					failures.append_array(await ChatSpaceProbe.check(root, vp, "%s %s %s" % [label, band, window]))
+					if ChatSpaceProbe.last_checked == 0:
+						failures.append("%s %s %s: no open chat dock checked" % [label, band, window])
+					band_note += ", chat list %.0f/%.0f px (row %.0f, content %.0f)" % [ChatSpaceProbe.last_list,
+							ChatSpaceProbe.last_need, ChatSpaceProbe.last_row, ChatSpaceProbe.last_content]
 				_seen.append("%s %s %s: %d buttons, %d texts, %d tiles%s" % [label, band, window,
 						BandLayoutProbe.last_buttons, BandLayoutProbe.last_texts, BandLayoutProbe.last_tiles, band_note])
 			vp.queue_free()
@@ -532,6 +540,69 @@ func test_party_lobby_with_chat_open_fits_every_band() -> void:
 		for i: int in 6:
 			await await_idle_frame()
 		return lobby))
+
+
+## F119 / STUDENT_GAME_UX_SOCIAL §7 "≥ 3 tin": in every band × window × locale (vi, en, pseudo +35%) and every dock
+## placement — the party lobby (PC column at 1280×720 / 1024×600, phone slide-in panel at 844×390) and the dock of a
+## team battle (tabs Đội / Cả trận) — the open chat with its composer in the default state (g1_3: smile board open)
+## shows at least three typical text messages, or 45% of the dock content, in the message list.
+func test_chat_list_shows_three_messages_in_every_band() -> void:
+	var locale: String = String(Settings.locale)
+	var failures: PackedStringArray = []
+	for next: String in ["vi-VN", "en-US", L10n.pseudo_locale()]:
+		Settings.set_locale(next, false)
+		failures.append_array(await _matrix("space_party_" + next, func(vp: SubViewport, band: String) -> Node:
+			var lobby: PartyLobby = await _party_lobby(vp, band, "lobby") as PartyLobby
+			if lobby.chat_button().visible:
+				lobby.chat_button().pressed.emit()
+			for i: int in 6:
+				await await_idle_frame()
+			return lobby, false, BandLayoutProbe.SIZES, true))
+		failures.append_array(await _matrix("space_team_" + next, func(vp: SubViewport, _band: String) -> Node:
+			return await _chat(vp, "team"), false, BandLayoutProbe.SIZES, true))
+	Settings.set_locale(locale, false)
+	_assert_none(failures)
+
+
+## The "≥ 3 tin" probe fails on the F119 layout it was written against: the dock in the old party lobby slot (the
+## activity column under the members tags, 560 × 425 px at 1280×720) with the g1_3 smile board open shows about one
+## message — a guard against a probe that passes everything.
+func test_chat_space_probe_flags_the_old_thin_message_list() -> void:
+	AppState.set_grade_band("g1_3")
+	var vp: SubViewport = auto_free(SubViewport.new()) as SubViewport
+	vp.size = Vector2i(1280, 720)
+	add_child(vp)
+	var root: Control = Control.new()
+	root.theme = AppState.theme_service.current_theme
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	vp.add_child(root)
+	var chat: ChatService = s.services.chat
+	ChatScreens.prepare(s.services, s.h.http)
+	var dock: ChatDock = (load("res://scenes/chat/ChatDock.tscn") as PackedScene).instantiate() as ChatDock
+	dock.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	root.add_child(dock)
+	dock.position = Vector2(643, 165)
+	dock.size = Vector2(560, 425)
+	dock.bind_services(chat, s.services.social, s.services.reports)
+	dock.show_party(ChatFixtures.PARTY_ID, ChatFixtures.PARTY_CHANNEL, ChatSceneHarness.others())
+	for i: int in 14:
+		await await_idle_frame()
+	assert_bool(dock.composer().picker().is_visible_in_tree()).is_true()
+	var text: String = "\n".join(await ChatSpaceProbe.check(root, vp, "old"))
+	assert_int(ChatSpaceProbe.last_checked).is_equal(1)
+	assert_str(text).contains("message list")
+	assert_float(ChatSpaceProbe.last_list).is_less(ChatSpaceProbe.last_need)
+	# The same dock given the room of three messages passes (the probe measures, it does not always fail).
+	dock.size = Vector2(560, 700)
+	vp.size = Vector2i(1280, 900)
+	for i: int in 8:
+		await await_idle_frame()
+	assert_array(await ChatSpaceProbe.check(root, vp, "tall")).is_empty()
+	# A collapsed dock is not checked (the 2-line strip / header only is the student's choice).
+	dock.collapse()
+	await await_idle_frame()
+	assert_array(await ChatSpaceProbe.check(root, vp, "collapsed")).is_empty()
+	assert_int(ChatSpaceProbe.last_checked).is_equal(0)
 
 
 ## The probe itself catches what it must (a guard against a silent matrix).

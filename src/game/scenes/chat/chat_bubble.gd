@@ -38,7 +38,10 @@ var assets: ChatAssetCache = null
 var budget: ChatAnimationBudget = null
 var _panel: PanelContainer = null
 var _box: VBoxContainer = null
+var _head: HBoxContainer = null
 var _name: Label = null
+## The time beside the sender name (a message of another player: name and time on one line, F119 "≥ 3 tin").
+var _head_time: Label = null
 var _forwarded: Label = null
 var _quote: PanelContainer = null
 var _quote_label: Label = null
@@ -87,6 +90,7 @@ func refresh() -> void:
 	_panel.theme_type_variation = &"ChatBubbleMention" if mentioned else (&"ChatBubbleMine" if mine else &"ChatBubbleOther")
 	_name.text = ChatText.sender_text(m, self_id)
 	_name.visible = not mine and not m.is_system()
+	_head.visible = _name.visible
 	_forwarded.visible = m.is_forwarded and not m.recalled
 	_forwarded.text = ChatText.forwarded_text(m) if m.is_forwarded else ""
 	var has_reply: bool = not m.reply_to_message_id.is_empty()
@@ -102,9 +106,14 @@ func refresh() -> void:
 	_mention.visible = mentioned
 	_edited.visible = m.edited_at_ms > 0 and not m.recalled and not m.is_removed()
 	_time.text = ChatText.time_text(m.created_at_ms)
-	_time.visible = not _time.text.is_empty()
+	# Another player: the time sits on the name line; the bottom line only shows "đã chỉnh sửa" / "Nhắc tới em" when
+	# there is one (a typical message is two lines — STUDENT_GAME_UX_SOCIAL §7 "≥ 3 tin").
+	_head_time.text = _time.text
+	_head_time.visible = _name.visible and not _time.text.is_empty()
+	_time.visible = not _time.text.is_empty() and not _head_time.visible
 	_state_icon.visible = mine and not m.is_held()
 	_state.visible = mine and not m.is_held()
+	_meta.visible = _mention.visible or _edited.visible or _time.visible or _state.visible
 	if mine:
 		_state_icon.texture = UiBuild.icon(String(STATE_ICONS[m.local_state]))
 		_state.text = String(STATE_KEYS[m.local_state])
@@ -300,10 +309,19 @@ func _build() -> void:
 	_box.name = "Box"
 	_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(_box)
+	_head = UiBuild.hbox()
+	_head.name = "Head"
+	_head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_box.add_child(_head)
 	_name = UiBuild.data_label("", &"ChatNameLabel", false)
 	_name.name = "Sender"
 	_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_box.add_child(_name)
+	UiBuild.expand(_name)
+	_head.add_child(_name)
+	_head_time = UiBuild.data_label("", &"ChatMetaLabel", false)
+	_head_time.name = "HeadTime"
+	_head_time.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_head.add_child(_head_time)
 	_forwarded = UiBuild.data_label("", &"ChatMetaLabel")
 	_forwarded.name = "Forwarded"
 	_box.add_child(_forwarded)

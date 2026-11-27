@@ -374,8 +374,9 @@ func test_older_bands_change_who_may_join_from_the_settings() -> void:
 # ---------- F119-AC-01 (party chat in the lobby) ----------
 
 ## F119-AC-01, TC-CHAT-017: the lobby mounts the always-on party chat at once (channel of the snapshot), with the other
-## members for mentions / the players list; nothing in it turns the chat off.
-func test_lobby_shows_the_party_chat_under_the_activity() -> void:
+## members for mentions / the players list; nothing in it turns the chat off. PC (F119 "≥ 3 tin"): the chat is the right
+## column of the whole window height — beside the Ready / Start bar, which sits in the left column.
+func test_lobby_shows_the_party_chat_in_a_full_height_column() -> void:
 	await s.start()
 	var lobby: PartyLobby = await _lobby()
 	await _frames(10)
@@ -383,6 +384,13 @@ func test_lobby_shows_the_party_chat_under_the_activity() -> void:
 	assert_object(dock).is_not_null()
 	assert_bool(lobby.chat_slot().visible).is_true()
 	assert_bool(dock.is_visible_in_tree()).is_true()
+	if not lobby.is_phone_layout():
+		var slot: Rect2 = lobby.chat_slot().get_global_rect()
+		var bar: Rect2 = (lobby.find_child("BottomBar", true, false) as Control).get_global_rect()
+		var title: Rect2 = (lobby.find_child("TitleBar", true, false) as Control).get_global_rect()
+		assert_float(slot.position.x).is_greater_equal(bar.end.x)
+		assert_float(slot.end.y).is_greater_equal(bar.end.y - 1.0)
+		assert_float(slot.position.y - title.end.y).is_less(UiBuild.target())
 	assert_str(dock.context_id).is_equal(PartyFixtures.PARTY_ID)
 	assert_str(dock.current_channel).is_equal(ChatFixtures.PARTY_CHANNEL)
 	assert_int(dock.members.size()).is_equal(2)

@@ -9,8 +9,10 @@ extends Control
 ##   chọn" for the others), the Ready toggle and — for the leader only — "Bắt đầu", grey with the reason in words while
 ##   something is missing (F102-AC-06…AC-10). PC: two columns; a wide phone: the cards in one row, the big buttons at the
 ##   bottom (F102-AC-18). The party chat (F119 ChatDock, channel `party` of the snapshot `chat_channel_id`, always-on —
-##   ADR-0020 §6) sits under the activity on a PC; on a phone it slides in from the right over 45% of the window from the
-##   "Chat nhóm" button of the bottom bar (with the unread badge), the Ready / Start buttons stay visible.
+##   ADR-0020 §6) is the right column of the whole window height on a PC (members, activity and the Ready / Start bar
+##   on the left); on a phone it slides in from the right over 45% of the window, from the top of the title bar to the
+##   bottom bar, from the "Chat nhóm" button (with the unread badge) — the Ready / Start buttons stay visible. The list
+##   keeps the room of ≥ 3 messages (STUDENT_GAME_UX_SOCIAL §7).
 ## - Leader menu on a card ("Chuyển trưởng nhóm", "Mời rời nhóm"), "Rời nhóm" (red) and the settings ("Giải tán nhóm")
 ##   always through a confirmation (F102-AC-12); "Thu nhỏ" closes the window and keeps the party (PartyHud on the HUD).
 ## - Banners: yellow "Đang kết nối lại…" while offline (writes locked, the party stays readable, AC-15) and "Trưởng nhóm
@@ -29,6 +31,13 @@ const NOTICE_SEC: float = 4.0
 const COUNTDOWN_FROM: int = 3
 ## Width / height above which the window uses the phone layout (cards in one row, big buttons at the bottom).
 const PHONE_ASPECT: float = 1.9
+## Share of the window width the phone chat overlay takes (F102-AC-18).
+const PHONE_CHAT_SHARE: float = 0.45
+## Margins of the window, as a share of the screen (sides, top / bottom).
+const WINDOW_MARGIN_X: float = 0.015
+const WINDOW_MARGIN_Y: float = 0.02
+## Share of the title bar the buttons may take on one line before they flow onto a second one.
+const TITLE_BUTTONS_SHARE: float = 0.7
 ## Width of the big "Tạo nhóm và mời bạn" button, in touch targets.
 const CREATE_WIDTH: float = 6.0
 const SUMMARY_KEYS: Dictionary = {
@@ -58,6 +67,8 @@ var _settings: Button = null
 var _minimize: Button = null
 var _leave: Button = null
 var _close: Button = null
+var _title_buttons: HFlowContainer = null
+var _title_icon: TextureRect = null
 var _banner: PanelContainer = null
 var _banner_label: Label = null
 var _notice: PanelContainer = null
@@ -88,7 +99,10 @@ var _chat_dock: ChatDock = null
 var _chat_overlay: Control = null
 var _chat_button: Button = null
 var _chat_badge: Label = null
-var _bottom: HBoxContainer = null
+var _bottom_box: VBoxContainer = null
+var _bottom: HFlowContainer = null
+var _bottom_spacer: Control = null
+var _tools: HBoxContainer = null
 var _ready_toggle: Button = null
 var _start_hint: Label = null
 var _start: Button = null
@@ -377,6 +391,7 @@ func _render_frame() -> void:
 	var p: PartyModel = _party()
 	var in_party: bool = p != null
 	_title.text = tr("ui.party.title").format({"name": p.name}) if in_party else tr("ui.party.title_alone")
+	_fit_title_buttons.call_deferred()
 	_title.tooltip_text = _title.text
 	_type_tag.visible = in_party
 	_type_tag.text = String(TYPE_KEYS.get(p.party_type, "ui.party.type.friend")) if in_party else ""
@@ -387,6 +402,7 @@ func _render_frame() -> void:
 	_alone.visible = not in_party
 	_lobby.visible = in_party
 	_bottom.visible = in_party
+	_bottom_box.visible = in_party
 
 
 ## Keeps one card per member: new members get a card, gone members lose theirs; the others are refreshed in place.
@@ -517,6 +533,7 @@ func _set_state(key: String, error: bool) -> void:
 	_state.text = key
 	_state.visible = not key.is_empty()
 	_retry.visible = error
+	_tools.visible = _state.visible or _retry.visible
 
 
 func _focus_default() -> void:
@@ -716,16 +733,17 @@ func _place_chat() -> void:
 		_render_chat()
 
 
-## The phone overlay: right 45% of the window, between the title bar and the Ready / Start bar.
+## The phone overlay (F119 "≥ 3 tin"): the right PHONE_CHAT_SHARE of the window, from the top of the title bar (its own
+## header has "Thu gọn" to give the party buttons back) down to the Ready / Start bar, which stays visible.
 func _place_chat_overlay() -> void:
 	var win: Rect2 = _window.get_global_rect()
-	var top: float = (_window.find_child("TitleBar", true, false) as Control).get_global_rect().end.y
-	var bottom: float = _bottom.get_global_rect().position.y if _bottom.visible else win.end.y
+	var top: float = (_window.find_child("TitleBar", true, false) as Control).get_global_rect().position.y
+	var bottom: float = _bottom_box.get_global_rect().position.y if _bottom_box.visible else win.end.y
 	var pad: float = float(UiTokens.SIZE_SPACE_12)
-	var w: float = win.size.x * 0.45
+	var w: float = win.size.x * PHONE_CHAT_SHARE
 	var origin: Vector2 = get_global_rect().position
-	_chat_overlay.position = Vector2(win.end.x - w - pad * 2.0, top + pad) - origin
-	_chat_overlay.size = Vector2(w, maxf(bottom - top - pad * 2.0, UiBuild.target() * 2.0))
+	_chat_overlay.position = Vector2(win.end.x - w - pad * 2.0, top) - origin
+	_chat_overlay.size = Vector2(w, maxf(bottom - top - pad, UiBuild.target() * 2.0))
 
 
 func _on_chat_mode_changed(_mode: int) -> void:
@@ -758,10 +776,12 @@ func _apply_layout() -> void:
 	_members.vertical = not phone
 	_members_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO if phone else ScrollContainer.SCROLL_MODE_DISABLED
 	_members_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if phone else ScrollContainer.SCROLL_MODE_AUTO
-	_members_scroll.custom_minimum_size.y = UiBuild.target() * 1.9 if phone else 0.0
+	# PC: at least one card shows (with a long translation the body scrolls instead of squeezing the cards away).
+	_members_scroll.custom_minimum_size.y = UiBuild.target() * (1.9 if phone else 1.6)
 	_members_scroll.size_flags_vertical = Control.SIZE_FILL if phone else Control.SIZE_EXPAND_FILL
 	# Phone: the card row keeps its height, the activity takes the rest (no empty band between them).
 	_members_column.size_flags_vertical = Control.SIZE_FILL if phone else Control.SIZE_EXPAND_FILL
+	_place_start_hint()
 	# Phone: "Đổi hoạt động" sits in the activity row (no scrolling to reach it); PC: under the activity card.
 	var target: Control = _activity_row if phone else _activity_column
 	if _choose.get_parent() != target:
@@ -771,6 +791,21 @@ func _apply_layout() -> void:
 			_activity_column.move_child(_choose, _activity_card.get_index() + 1)
 
 
+## Phone: the reason in words between Ready and Start (one line); PC: on its own line above the buttons.
+func _place_start_hint() -> void:
+	var inline: bool = _phone
+	var target: Control = _bottom if inline else _bottom_box
+	if _start_hint.get_parent() != target:
+		_start_hint.get_parent().remove_child(_start_hint)
+		target.add_child(_start_hint)
+		if inline:
+			_bottom.move_child(_start_hint, _bottom_spacer.get_index())
+		else:
+			_bottom_box.move_child(_start_hint, 0)
+	_start_hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER if inline else Control.SIZE_FILL
+	_bottom_spacer.visible = not inline
+
+
 func _build() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -778,10 +813,12 @@ func _build() -> void:
 	_window = UiBuild.panel()
 	_window.name = "Window"
 	_window.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_window.anchor_left = 0.04
-	_window.anchor_top = 0.04
-	_window.anchor_right = 0.96
-	_window.anchor_bottom = 0.96
+	# F119 "≥ 3 tin": the window takes nearly the whole screen (the chat column gets the height; the title and its
+	# buttons keep one line even with a long translation).
+	_window.anchor_left = WINDOW_MARGIN_X
+	_window.anchor_top = WINDOW_MARGIN_Y
+	_window.anchor_right = 1.0 - WINDOW_MARGIN_X
+	_window.anchor_bottom = 1.0 - WINDOW_MARGIN_Y
 	_window.offset_left = 0.0
 	_window.offset_top = 0.0
 	_window.offset_right = 0.0
@@ -817,8 +854,12 @@ func _build() -> void:
 	_notice_label.name = "NoticeLabel"
 	UiBuild.expand(_notice_label)
 	notice_row.add_child(_notice_label)
-	var tools: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
-	box.add_child(tools)
+	_tools = UiBuild.hbox(&"ToolbarBox")
+	_tools.name = "Tools"
+	# Shown only with the loading / error words (an empty row would still take a gap of the window).
+	_tools.visible = false
+	box.add_child(_tools)
+	var tools: HBoxContainer = _tools
 	_state = UiBuild.label("", &"MutedLabel")
 	_state.name = "StateLabel"
 	_state.visible = false
@@ -837,12 +878,23 @@ func _build() -> void:
 	body_scroll.name = "BodyScroll"
 	body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	UiBuild.expand(body_scroll, true, true)
-	box.add_child(body_scroll)
+	# F119 "≥ 3 tin": on a PC the party chat is a column of the whole window height on the right (title bar to the
+	# bottom edge); the body and the Ready / Start bar share the left column.
+	var main: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
+	main.name = "Main"
+	UiBuild.expand(main, true, true)
+	box.add_child(main)
+	var left: VBoxContainer = UiBuild.vbox(&"FormBox")
+	left.name = "Left"
+	UiBuild.expand(left, true, true)
+	main.add_child(left)
+	left.add_child(body_scroll)
 	body_scroll.add_child(body)
 	_build_invitations(body)
 	_build_alone(body)
 	_build_lobby(body)
-	_build_bottom(box)
+	_build_bottom(left)
+	main.add_child(_chat_slot)
 	_chat_overlay = Control.new()
 	_chat_overlay.name = "ChatOverlay"
 	_chat_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -865,9 +917,10 @@ func _build_title(box: VBoxContainer) -> void:
 	box.add_child(bar)
 	var row: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
 	bar.add_child(row)
-	var icon: TextureRect = UiBuild.icon_rect("group")
-	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(icon)
+	_title_icon = UiBuild.icon_rect("group")
+	_title_icon.name = "TitleIcon"
+	_title_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(_title_icon)
 	_title = UiBuild.data_label("", &"WindowTitleLabel", false)
 	_title.name = "Title"
 	_title.uppercase = true
@@ -876,13 +929,16 @@ func _build_title(box: VBoxContainer) -> void:
 	_title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	UiBuild.expand(_title)
 	row.add_child(_title)
-	# The buttons flow onto a second line when a translation is long; the title keeps half of the bar.
+	# The buttons keep one line and the title wraps first (F119 "≥ 3 tin": the title bar stays short so the chat column
+	# keeps its height); only past TITLE_BUTTONS_SHARE of the bar do the buttons flow onto a second line.
 	var buttons: HFlowContainer = HFlowContainer.new()
+	_title_buttons = buttons
 	buttons.name = "Buttons"
 	buttons.alignment = FlowContainer.ALIGNMENT_END
 	buttons.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	UiBuild.expand(buttons)
+	buttons.size_flags_horizontal = Control.SIZE_SHRINK_END
 	row.add_child(buttons)
+	row.resized.connect(func() -> void: _fit_title_buttons.call_deferred())
 	_settings = UiBuild.button("", "settings", &"IconButton")
 	_settings.name = "Settings"
 	_settings.tooltip_text = "ui.party.settings.title"
@@ -901,6 +957,33 @@ func _build_title(box: VBoxContainer) -> void:
 	_close.name = "Close"
 	_close.pressed.connect(close)
 	buttons.add_child(_close)
+	for b: Node in buttons.get_children():
+		(b as Control).minimum_size_changed.connect(func() -> void: _fit_title_buttons.call_deferred())
+		(b as Control).visibility_changed.connect(func() -> void: _fit_title_buttons.call_deferred())
+
+
+## The title buttons on one line (their whole width, at most TITLE_BUTTONS_SHARE of the bar); the title wraps beside them.
+func _fit_title_buttons() -> void:
+	var row: Control = _title_buttons.get_parent() as Control
+	var total: float = 0.0
+	var shown: int = 0
+	for b: Node in _title_buttons.get_children():
+		if (b as Control).visible:
+			total += (b as Control).get_combined_minimum_size().x
+			shown += 1
+	total += float(_title_buttons.get_theme_constant(&"h_separation")) * float(maxi(shown - 1, 0))
+	var want: float = ceilf(minf(total, row.size.x * TITLE_BUTTONS_SHARE))
+	if not is_equal_approx(_title_buttons.custom_minimum_size.x, want):
+		_title_buttons.custom_minimum_size.x = want
+	# The group icon gives its room to the title when the title would otherwise wrap (a long translation).
+	var sep: float = float(row.get_theme_constant(&"separation"))
+	var font: Font = _title.get_theme_font(&"font")
+	var words: String = _title.text.to_upper()
+	var title_w: float = 0.0
+	if font != null:
+		title_w = font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, _title.get_theme_font_size(&"font_size")).x
+	var icon_w: float = _title_icon.get_combined_minimum_size().x + sep
+	_title_icon.visible = icon_w + title_w + sep + want <= row.size.x
 
 
 func _build_invitations(body: VBoxContainer) -> void:
@@ -1011,26 +1094,31 @@ func _build_lobby(body: VBoxContainer) -> void:
 	_ineligible = UiBuild.vbox(&"FieldBox")
 	_ineligible.name = "Ineligible"
 	right.add_child(_ineligible)
-	# F119: the party chat panel (always-on channel `party`, ADR-0020 §6) under the activity on a PC.
+	# F119: the party chat panel (always-on channel `party`, ADR-0020 §6): on a PC the right column of the whole window
+	# height (added to the main row by _build), on a phone the slide-in overlay.
 	_chat_slot = Control.new()
 	_chat_slot.name = "EmbeddedChat"
 	_chat_slot.visible = false
 	_chat_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_chat_slot.custom_minimum_size.y = UiBuild.target() * 4.0
 	UiBuild.expand(_chat_slot, true, true)
-	# The chat column is as wide as the members column (the smile board keeps its tabs on one line).
-	_chat_slot.size_flags_stretch_ratio = 1.3
-	_lobby.add_child(_chat_slot)
+	# The chat column is as wide as the members + activity column (the smile board keeps its tabs on one line).
 	_chat_dock = (load("res://scenes/chat/ChatDock.tscn") as PackedScene).instantiate() as ChatDock
 	_chat_dock.mode_changed.connect(_on_chat_mode_changed)
 	_chat_dock.unread_changed.connect(_on_chat_unread)
 	_chat_slot.add_child(_chat_dock)
 
 
+## The Ready / Start bar. A phone keeps it on one line (the reason in words between the buttons); a PC puts the reason
+## on its own line above the buttons (the bar shares the left column with the members when the chat column is there),
+## and a much longer translation moves "Bắt đầu" to a second line instead of pushing it out of the window.
 func _build_bottom(box: VBoxContainer) -> void:
-	_bottom = UiBuild.hbox(&"ToolbarBox")
+	_bottom_box = UiBuild.vbox(&"FieldBox")
+	_bottom_box.name = "BottomBox"
+	box.add_child(_bottom_box)
+	_bottom = HFlowContainer.new()
 	_bottom.name = "BottomBar"
-	box.add_child(_bottom)
+	_bottom_box.add_child(_bottom)
 	_ready_toggle = UiBuild.button("ui.party.ready", "check")
 	_ready_toggle.name = "ReadyToggle"
 	_ready_toggle.pressed.connect(_on_ready_pressed)
@@ -1054,6 +1142,13 @@ func _build_bottom(box: VBoxContainer) -> void:
 	_start_hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	UiBuild.expand(_start_hint)
 	_bottom.add_child(_start_hint)
+	# Pushes "Bắt đầu" to the right while the reason sits on its own line (PC).
+	_bottom_spacer = Control.new()
+	_bottom_spacer.name = "Spacer"
+	_bottom_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bottom_spacer.visible = false
+	UiBuild.expand(_bottom_spacer)
+	_bottom.add_child(_bottom_spacer)
 	_start = UiBuild.button("ui.party.start", "play_light")
 	_start.name = "StartButton"
 	_start.pressed.connect(_on_start_pressed)

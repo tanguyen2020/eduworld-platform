@@ -72,6 +72,26 @@ func test_team_battle_has_team_and_match_tabs_with_their_own_badges() -> void:
 	assert_str(dock.tab_badge_text(ChatFixtures.MATCH_CHANNEL)).is_empty()
 
 
+## F119 "≥ 3 tin" (STUDENT_GAME_UX_SOCIAL §7): the team tabs sit on the header line in place of the chat icon and the
+## title (one line less for the tabs); collapsed, the title comes back and the tabs go.
+func test_team_tabs_take_the_place_of_the_title_on_the_header_line() -> void:
+	var dock: ChatDock = auto_free(await s.match_dock(self)) as ChatDock
+	var header: Control = dock.find_child("Header", true, false) as Control
+	var team: Button = dock.tab_button(ChatFixtures.TEAM_CHANNEL)
+	assert_bool(header.is_ancestor_of(team)).is_true()
+	assert_bool(team.is_visible_in_tree()).is_true()
+	assert_bool((dock.find_child("Title", true, false) as Control).visible).is_false()
+	assert_int(team.autowrap_mode).is_equal(TextServer.AUTOWRAP_OFF)
+	dock.collapse()
+	await s.settle(dock, 2)
+	assert_bool((dock.find_child("Title", true, false) as Control).visible).is_true()
+	assert_bool(team.is_visible_in_tree()).is_false()
+	# A party (one channel) keeps its icon and title.
+	var party: ChatDock = auto_free(await s.party_dock(self)) as ChatDock
+	assert_bool((party.find_child("Title", true, false) as Control).visible).is_true()
+	assert_bool((party.find_child("TabBar", true, false) as Control).visible).is_false()
+
+
 func test_question_shrinks_the_dock_to_two_lines_and_messages_keep_coming() -> void:
 	var dock: ChatDock = auto_free(await s.party_dock(self)) as ChatDock
 	EventBus.question_shown.emit()

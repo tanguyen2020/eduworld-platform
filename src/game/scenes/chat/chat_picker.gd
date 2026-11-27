@@ -1,8 +1,11 @@
 class_name ChatPicker
 extends VBoxContainer
 ## The smile board of the composer (F119-AC-08, AC-16, AC-17; CHAT_SYSTEM §7.5, STUDENT_GAME_UX_SOCIAL §7
-## EmojiStickerGifPicker): three tabs Emoji / Sticker / GIF (icon + word, the chosen tab yellow-blue like Cài đặt). One
-## sideways-scrolling row per tab keeps it small on a phone in landscape:
+## EmojiStickerGifPicker): three tabs Emoji / Sticker / GIF (icon + word on one line, never wrapping; the chosen tab
+## yellow-blue like Cài đặt). One sideways-scrolling row per tab keeps it small on a phone in landscape. The board
+## keeps the message list room of three messages (F119 "≥ 3 tin", STUDENT_GAME_UX_SOCIAL §7): in a wide panel the tabs
+## sit on the content row ("Gõ chữ" · tabs · pictures — one row); in a narrow one the tabs are a row of their own above
+## "Gõ chữ" · pictures (two rows).
 ## - Emoji: the platform emoji set as SVG pictures (no emoji characters — the Web build has no emoji font);
 ## - Sticker: the stickers of the unlocked packs of `listStickerPacks`; a locked pack shows a lock and the server's hint
 ##   to unlock it ("Hoàn thành nhiệm vụ … để mở bộ này");
@@ -22,9 +25,17 @@ const TAB_EMOJI: StringName = &"emoji"
 const TAB_STICKER: StringName = &"sticker"
 const TAB_GIF: StringName = &"gif"
 
+## Touch targets of picture room the content keeps beside the tabs before they move to their own row (the arrows of
+## the row and about three pictures).
+const WIDE_CONTENT_TARGETS: float = 5.0
+
 var current_tab: StringName = TAB_EMOJI
 var current_topic: String = ""
-var _tabs: HFlowContainer = null
+## The tabs sit on the content row (wide panel) instead of their own row.
+var wide: bool = false
+var _tabs: HBoxContainer = null
+var _tab_bar: ChipScroller = null
+var _body: HBoxContainer = null
 var _tab_buttons: Dictionary = {}
 var _emoji_row: HBoxContainer = null
 var _emoji_box: Control = null
@@ -45,6 +56,42 @@ func _init() -> void:
 	name = "ChatPicker"
 	theme_type_variation = &"FieldBox"
 	_build()
+	resized.connect(_arrange)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_THEME_CHANGED or what == NOTIFICATION_TRANSLATION_CHANGED:
+		_arrange.call_deferred()
+
+
+## Wide panel: "Gõ chữ" · tabs · pictures on one row; narrow: the tabs on their own row above.
+func _arrange() -> void:
+	if _tab_bar == null or size.x <= 0.0:
+		return
+	var sep: float = float(_body.get_theme_constant(&"separation"))
+	var tabs_w: float = _tabs.get_combined_minimum_size().x
+	var room: float = _side.get_combined_minimum_size().x + tabs_w + UiBuild.target() * WIDE_CONTENT_TARGETS + sep * 2.0
+	var next: bool = size.x >= room
+	if next == wide and _tab_bar.get_parent() == (_body if wide else self):
+		_tab_bar.custom_minimum_size.x = tabs_w if wide else 0.0
+		return
+	wide = next
+	_tab_bar.get_parent().remove_child(_tab_bar)
+	if wide:
+		_body.add_child(_tab_bar)
+		_body.move_child(_tab_bar, _side.get_index() + 1)
+		_tab_bar.size_flags_horizontal = Control.SIZE_FILL
+		_tab_bar.custom_minimum_size.x = tabs_w
+	else:
+		add_child(_tab_bar)
+		move_child(_tab_bar, 0)
+		_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_tab_bar.custom_minimum_size.x = 0.0
+
+
+## Whether the tabs share the content row (wide panel).
+func tabs_on_content_row() -> bool:
+	return _tab_bar.get_parent() == _body
 
 
 ## Which tabs the channel allows (`allowed_kinds` of the server).
@@ -59,9 +106,10 @@ func show_tab(tab: StringName) -> void:
 	current_tab = tab
 	for t: Variant in _tab_buttons.keys():
 		var b: Button = _tab_buttons[t] as Button
-		b.theme_type_variation = &"TabButtonSelected" if t == tab else &"TabButton"
+		b.theme_type_variation = &"ChatTabButtonSelected" if t == tab else &"ChatTabButton"
 	_emoji_box.visible = tab == TAB_EMOJI
 	_sticker_box.visible = tab == TAB_STICKER
+	_sticker_hints.visible = tab == TAB_STICKER
 	_gif_box.visible = tab == TAB_GIF
 	_refresh_empty()
 	tab_opened.emit(tab)
@@ -182,30 +230,36 @@ func _refresh_empty() -> void:
 
 
 func _build() -> void:
-	# Equal tabs on one line, words wrapping inside a tab (g1_3); a much longer translation moves a tab to a second line.
-	_tabs = HFlowContainer.new()
+	# Tab chips on ONE line, never wrapping: icon + short word, as wide as their words; a much longer translation
+	# scrolls sideways with the arrows instead of making the board taller.
+	_tabs = UiBuild.hbox(&"ToolbarBox")
 	_tabs.name = "Tabs"
-	add_child(_tabs)
+	# Equal tabs across the row when they fit (the scroll box stretches an expanding row).
+	UiBuild.expand(_tabs)
 	for spec: Array in [[TAB_EMOJI, "ui.chat.picker.emoji", "tab_emoji"], [TAB_STICKER, "ui.chat.picker.sticker", "tab_sticker"],
 			[TAB_GIF, "ui.chat.picker.gif", "tab_gif"]]:
-		var b: Button = UiBuild.button(String(spec[1]), String(spec[2]), &"TabButton")
+		var b: Button = UiBuild.button(String(spec[1]), String(spec[2]), &"ChatTabButton")
 		b.name = "Tab" + String(spec[0]).capitalize()
-		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		b.autowrap_mode = TextServer.AUTOWRAP_OFF
 		UiBuild.expand(b)
 		var tab: StringName = spec[0] as StringName
 		b.pressed.connect(func() -> void: show_tab(tab))
 		_tabs.add_child(b)
 		_tab_buttons[tab] = b
-	var body: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
-	body.name = "Body"
-	add_child(body)
+	_tab_bar = UiBuild.chip_scroller(_tabs) as ChipScroller
+	_tab_bar.name = "TabBar"
+	add_child(_tab_bar)
+	_body = UiBuild.hbox(&"ToolbarBox")
+	_body.name = "Body"
+	add_child(_body)
 	_side = UiBuild.vbox()
 	_side.name = "Side"
-	body.add_child(_side)
+	_side.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_body.add_child(_side)
 	_stack = UiBuild.vbox(&"FieldBox")
 	_stack.name = "Stack"
 	UiBuild.expand(_stack)
-	body.add_child(_stack)
+	_body.add_child(_stack)
 	_emoji_row = UiBuild.hbox(&"ToolbarBox")
 	_emoji_row.name = "Emoji"
 	for code: String in ChatText.EMOJI_SET:
@@ -222,8 +276,10 @@ func _build() -> void:
 	_stack.add_child(_sticker_box)
 	_sticker_row = UiBuild.hbox(&"ToolbarBox")
 	_sticker_box.add_child(UiBuild.chip_scroller(_sticker_row))
+	# The hints of the locked packs run under the whole board ("Gõ chữ" included): fewer lines than beside it.
 	_sticker_hints = UiBuild.vbox()
-	_sticker_box.add_child(_sticker_hints)
+	_sticker_hints.name = "LockedHints"
+	add_child(_sticker_hints)
 	_gif_box = UiBuild.vbox(&"FieldBox")
 	_gif_box.name = "Gifs"
 	_stack.add_child(_gif_box)
@@ -235,3 +291,6 @@ func _build() -> void:
 	_empty.name = "Empty"
 	_stack.add_child(_empty)
 	show_tab(TAB_EMOJI)
+	# A hidden tab (channel policy), a translation or the "Gõ chữ" button changing width may move the tabs.
+	_tabs.minimum_size_changed.connect(func() -> void: _arrange.call_deferred())
+	_side.minimum_size_changed.connect(func() -> void: _arrange.call_deferred())

@@ -86,6 +86,38 @@ func test_state_of_own_messages_has_an_icon_and_a_word() -> void:
 	assert_str(_bubble(ChatFixtures.MSG_TEXT).state_text()).is_empty()
 
 
+## F119 "≥ 3 tin": another player's text shows the time on the name line (a typical message is two lines, the bottom
+## line is gone); the student's own message keeps time + state at the bottom.
+func test_time_sits_beside_the_name_of_another_player() -> void:
+	var other: ChatBubble = _bubble(ChatFixtures.MSG_TEXT)
+	var head_time: Label = other.find_child("HeadTime", true, false) as Label
+	assert_bool(head_time.visible).is_true()
+	assert_str(head_time.text).is_not_empty()
+	assert_bool((other.find_child("Head", true, false) as Control).is_ancestor_of(head_time)).is_true()
+	assert_bool((other.find_child("Time", true, false) as Control).visible).is_false()
+	var mine: ChatBubble = _bubble(ChatFixtures.MSG_MINE)
+	assert_bool((mine.find_child("Head", true, false) as Control).visible).is_false()
+	assert_bool((mine.find_child("Time", true, false) as Control).visible).is_true()
+	assert_bool((mine.find_child("Meta", true, false) as Control).visible).is_true()
+
+
+## F119 "≥ 3 tin": the board tabs keep one line (icon + word, never wrapping); a wide panel puts them on the content row
+## ("Gõ chữ" · tabs · pictures), a narrow one on a row of their own.
+func test_board_tabs_keep_one_line_and_share_the_row_when_wide() -> void:
+	var picker: ChatPicker = dock.composer().picker()
+	dock.composer().set_board(true)
+	await s.settle(dock, 3)
+	for tab: StringName in [ChatPicker.TAB_EMOJI, ChatPicker.TAB_STICKER, ChatPicker.TAB_GIF]:
+		assert_int(picker.tab_button(tab).autowrap_mode).is_equal(TextServer.AUTOWRAP_OFF)
+		assert_float(picker.tab_button(tab).size.y).is_less_equal(picker.tab_button(tab).get_combined_minimum_size().y + 1.0)
+	dock.size = Vector2(1400, 760)
+	await s.settle(dock, 4)
+	assert_bool(picker.tabs_on_content_row()).is_true()
+	dock.size = Vector2(480, 760)
+	await s.settle(dock, 4)
+	assert_bool(picker.tabs_on_content_row()).is_false()
+
+
 func test_mention_bubble_is_yellow_with_words() -> void:
 	var p: Dictionary = ChatFixtures.ws("chat.message.created.text")
 	p["message_id"] = Uuid.v4()
