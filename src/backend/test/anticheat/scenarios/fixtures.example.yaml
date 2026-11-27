@@ -1,0 +1,17 @@
+# Fixture of the anti-cheat runner (F132, make anticheat ENV=<env>): ids of resources SEEDED in the target environment
+# for the QA students — never real students, never a password (EW_ANTICHEAT_PASSWORD comes from the GitHub Environment
+# secret). Copy, fill and pass with EW_ANTICHEAT_FIXTURES=<file>; the filled file is not committed.
+primary:
+  username: hs.qa.anticheat.1        # QA student (tenant QA, is_qa = true)
+  device_id: 00000000-0000-4000-8000-000000000a01
+opponent:                            # same tenant and grade as primary (battle)
+  username: hs.qa.anticheat.2
+  device_id: 00000000-0000-4000-8000-000000000a02
+practice_activity_id: ""             # published practice activity, choice items, results released immediately, awards XP
+exam_session_id: ""                  # open exam session for primary with a short duration (deadline scenario)
+deadline_grace: 30s                  # exam_offline_sync_grace of the environment (EXAM_ENGINE §6)
+hub_area: main_hub
+chat_channel_id: ""                  # a channel primary may post in (replay scenario)
+battle_mode: ranked_1v1
+battle_subject_id: ""
+xp_decay: [100, 50, 25, 0, 0]        # PROGRESSION_SYSTEM §3.2 (AC-CMP-209)

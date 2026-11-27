@@ -1,0 +1,97 @@
+# Anti-cheat lane (F132 US4, T035, F132-AC-21…24; ANTI_CHEAT §11; ADR-0016, ADR-0088).
+#   harness   every change of the harness or the rule: unit tests of src/backend/test/anticheat against labelled
+#             stand-ins (they prove the scenarios catch a cheating server, nothing about the platform), the Spectral
+#             function no-client-authoritative-fields and its run over the public OpenAPI.
+#   staging   the 10 scenarios of ANTI_CHEAT §11 against staging: workflow_dispatch before every release (SC-005: 10/10,
+#             a skipped scenario is not a pass) and weekly; QA students of the tenant QA (is_qa), fixture and password
+#             from the GitHub Environment staging; gated by vars.ANTICHEAT_ENABLED until staging exists (pending env).
+name: anticheat
+
+on:
+  pull_request:
+    paths:
+      - "src/backend/test/anticheat/**"
+      - "src/backend/tools/gameclient/**"
+      - "src/backend/tools/envguard/**"
+      - "specs/spectral-functions/**"
+      - "specs/.spectral.yaml"
+      - "scripts/specs/check-client-authoritative.mjs"
+      - ".github/workflows/anticheat.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/backend/test/anticheat/**"
+      - "src/backend/tools/gameclient/**"
+      - "src/backend/tools/envguard/**"
+      - "specs/spectral-functions/**"
+      - "specs/.spectral.yaml"
+      - "scripts/specs/check-client-authoritative.mjs"
+      - ".github/workflows/anticheat.yml"
+  schedule:
+    - cron: "0 18 * * 3" # Thursday 01:00 ICT, outside school hours
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anticheat-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  harness:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: stable
+          check-latest: true
+          cache-dependency-path: src/backend/go.sum
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: harness unit tests (stand-ins; F132-AC-21…24 logic)
+        run: go -C src/backend test -race -count=1 ./test/anticheat/... ./tools/gameclient/...
+      - name: scenarios compile with the anticheat tag
+        run: go -C src/backend vet -tags anticheat ./test/anticheat/...
+      - name: Spectral rule no-client-authoritative-fields (F132-AC-21)
+        run: |
+          node --test specs/spectral-functions/
+          node scripts/specs/check-client-authoritative.mjs
+
+  staging:
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && vars.ANTICHEAT_ENABLED == 'true' && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: staging
+    timeout-minutes: 90
+    concurrency: { group: anticheat-staging, cancel-in-progress: false }
+    env:
+      EW_ENV: staging
+      EW_API_BASE_URL: ${{ vars.STAGING_API_BASE_URL }}
+      EW_PROMETHEUS_URL: ${{ vars.PROMETHEUS_URL }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: stable
+          cache-dependency-path: src/backend/go.sum
+      - name: fixture of the seeded QA students (secret, never committed)
+        env:
+          FIXTURES: ${{ secrets.ANTICHEAT_FIXTURES_YAML }}
+        run: printf '%s\n' "$FIXTURES" > "$RUNNER_TEMP/anticheat-fixtures.yaml"
+      - name: 10 scenarios of ANTI_CHEAT §11
+        env:
+          EW_ANTICHEAT_PASSWORD: ${{ secrets.ANTICHEAT_PASSWORD }}
+          EW_ANTICHEAT_FIXTURES: ${{ runner.temp }}/anticheat-fixtures.yaml
+        run: make anticheat ENV=staging
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: anticheat-${{ github.run_id }}
+          path: tmp/anticheat/
+      - name: remove fixture
+        if: always()
+        run: rm -f "$RUNNER_TEMP/anticheat-fixtures.yaml"
