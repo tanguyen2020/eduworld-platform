@@ -18,10 +18,18 @@ RUN CGO_ENABLED=0 go build -trimpath \
         -X github.com/tanguyen2020/eduworld-platform/src/backend/pkg/buildinfo.BuildTime=${BUILD_TIME}" \
       -o /out/worker ./cmd/worker
 
-# Runtime: Alpine with ffmpeg/ffprobe (media worker of module learning, profile events: Ogg Vorbis/MP3, Ogg Theora,
-# H.264 MP4 and HLS — F027, CONTENT_MODEL §7). Images are processed in pure Go (no libvips/cgo).
-FROM alpine:3.22
-RUN apk add --no-cache ffmpeg ca-certificates tzdata  && addgroup -S -g 10001 app && adduser -S -D -H -u 10001 -G app app
+# Stage media-tools = image eduworld/media-tools (DEPLOYMENT §2, CONTENT_PRODUCTION_PLAN §8): Alpine with ffmpeg/ffprobe
+# (media worker of module learning, profile events: Ogg Vorbis/MP3, Ogg Theora, H.264 MP4 and HLS — F027,
+# CONTENT_MODEL §7) and Pandoc 3.6 (Word import lessons_docx: .docx with OMML formulas → JSON AST, run as an external
+# process with --sandbox and a timeout, never linked into Go — F028). Images are processed in pure Go (no libvips/cgo).
+#   docker build --target media-tools -t eduworld/media-tools:<version> -f deploy/docker/worker.Dockerfile .
+FROM alpine:3.22 AS media-tools
+RUN apk add --no-cache ffmpeg pandoc-cli ca-certificates tzdata && addgroup -S -g 10001 app && adduser -S -D -H -u 10001 -G app app
+LABEL org.opencontainers.image.title="eduworld/media-tools"
+USER 10001:10001
+
+# Runtime: the worker on top of media-tools.
+FROM media-tools
 ARG VERSION=dev
 ARG COMMIT=unknown
 LABEL org.opencontainers.image.title="eduworld/worker" \

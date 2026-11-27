@@ -670,7 +670,7 @@ workspaces:
             label_key: portal.action.content_studio.question_bank.import
             title: Nhập câu hỏi hàng loạt
             required_permissions: [learning_content.import]
-            operation_ids: [createContentImport, getContentImport]
+            operation_ids: [createContentImport, getContentImport, listContentImportItems, createDraftFromImportItem]
             can_disable: true
           - key: action.content_studio.question_bank.calibration
             label_key: portal.action.content_studio.question_bank.calibration

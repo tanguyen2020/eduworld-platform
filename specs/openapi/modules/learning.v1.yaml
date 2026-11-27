@@ -1926,6 +1926,92 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /cms/learning/imports/{import_id}/items:
+    get:
+      x-service: learning
+      tags:
+        - cms
+      operationId: listContentImportItems
+      x-portal-action: action.content_studio.question_bank.import
+      summary: Báo cáo từng câu của job import Word lessons_docx (F028) — theo số thứ tự câu, phân trang keyset (learning_content.import)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/ImportIdPath'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ContentImportItemStatus'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContentImportItem'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cms/learning/imports/{import_id}/items/{item_no}:create-draft:
+    post:
+      x-service: learning
+      tags:
+        - cms
+      operationId: createDraftFromImportItem
+      x-portal-action: action.content_studio.question_bank.import
+      summary: Tạo câu hỏi version 1 trạng thái draft từ một câu đã phân tích của job lessons_docx, kèm SVG công thức render trên portal (F028, learning_content.import)
+      description: |
+        Nội dung câu (đề, phương án, đáp án, gợi ý, giải thích, metadata) là nội dung server đã phân tích; client chỉ gửi
+        math_assets cho đúng các công thức của câu (ContentImportItem.formulas, render MathJax 4 — ADR-0055 §4). Thiếu hoặc
+        thừa công thức, SVG không hợp lệ → 422 MATH_RENDER_FAILED; câu error/đã created hoặc job chưa phân tích xong →
+        409 CONFLICT (errors[].code = IMPORT_ITEM_NOT_IMPORTABLE | IMPORT_ITEM_ALREADY_CREATED); validator của
+        createQuestion từ chối → 422 VALIDATION_FAILED và câu chuyển draft_failed. Ảnh nhúng của câu được đưa vào media
+        pipeline (F027). Không bao giờ publish.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ImportIdPath'
+        - $ref: '#/components/parameters/ImportItemNoPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentImportItemDraftRequest'
+      responses:
+        '201':
+          description: Đã tạo Draft
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentImportItem'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /cms/learning/review-tasks:
     get:
       x-service: learning
@@ -7558,6 +7644,15 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
+    ImportItemNoPath:
+      name: item_no
+      in: path
+      required: true
+      description: Số thứ tự câu trong file Word (ContentImportItem.item_no)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 10000
     CurriculumIdPath:
       name: curriculum_id
       in: path
@@ -11249,7 +11344,7 @@ components:
             - lessons_docx
             - curriculum_yaml
             - curriculum_csv
-          description: curriculum_yaml/curriculum_csv cần curriculum.write (F021); questions_*/content_json cần learning_content.import (F024, specs/schemas/import/questions-row.schema.json); lessons_docx chưa hỗ trợ (422 VALIDATION_FAILED, errors[].code = IMPORT_KIND_NOT_SUPPORTED)
+          description: 'curriculum_yaml/curriculum_csv cần curriculum.write (F021); questions_*/content_json cần learning_content.import (F024, specs/schemas/import/questions-row.schema.json); lessons_docx (Word .docx theo mẫu CONTENT_PRODUCTION_PLAN §8, F028) cần learning_content.import: job chỉ phân tích, báo cáo từng câu qua listContentImportItems, Draft tạo bằng createDraftFromImportItem — dry_run không đổi hành vi'
         dry_run:
           type: boolean
           default: false
@@ -11278,12 +11373,20 @@ components:
             - failed
         result:
           type: object
-          description: Bản ghi đã tạo (import curriculum, F021)
+          description: Bản ghi đã tạo (import curriculum, F021); số câu của job lessons_docx (F028)
           properties:
             curriculum_id:
               $ref: '#/components/schemas/Uuid'
             curriculum_version_id:
               $ref: '#/components/schemas/Uuid'
+            items_total:
+              type: integer
+              minimum: 0
+              description: Số câu tách được từ file Word
+            items_importable:
+              type: integer
+              minimum: 0
+              description: Số câu ready/warning (tạo Draft được)
         dry_run:
           type: boolean
         created_count:
@@ -11314,6 +11417,151 @@ components:
           $ref: '#/components/schemas/Timestamp'
         finished_at:
           $ref: '#/components/schemas/Timestamp'
+    ContentImportItemStatus:
+      type: string
+      description: 'Trạng thái một câu của job lessons_docx (F028 data-model §2): ready/warning tạo Draft được, error không, created đã tạo, draft_failed validator từ chối (tạo lại được)'
+      enum:
+        - ready
+        - warning
+        - error
+        - created
+        - draft_failed
+    ContentImportItem:
+      type: object
+      description: Một câu của file Word (content.import_items, F028)
+      required:
+        - import_id
+        - item_no
+        - status
+        - issues
+        - formulas
+        - images
+      properties:
+        import_id:
+          $ref: '#/components/schemas/Uuid'
+        item_no:
+          type: integer
+          minimum: 1
+        source_label:
+          type: string
+          maxLength: 32
+          description: Nhãn trong file, vd. "Câu 12"
+        status:
+          $ref: '#/components/schemas/ContentImportItemStatus'
+        question_type:
+          type: string
+          enum:
+            - single_choice
+            - multiple_choice
+        stem_preview:
+          type: string
+          maxLength: 200
+        issues:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/ContentImportItemIssue'
+        formulas:
+          type: array
+          maxItems: 60
+          description: Công thức khác nhau của câu (LaTeX đã qua allowlist); portal render MathJax 4 rồi gửi math_assets cho đúng danh sách này
+          items:
+            type: object
+            required:
+              - latex
+              - display
+            additionalProperties: false
+            properties:
+              latex:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              display:
+                type: boolean
+        images:
+          type: array
+          maxItems: 30
+          description: Ảnh nhúng của câu; đưa vào media pipeline khi tạo Draft
+          items:
+            type: object
+            required:
+              - ref
+              - alt
+            additionalProperties: false
+            properties:
+              ref:
+                $ref: '#/components/schemas/Uuid'
+              alt:
+                type: string
+                maxLength: 1000
+              mime:
+                type: string
+                maxLength: 64
+        question:
+          type: object
+          description: Nội dung đã phân tích để xem trước (type, stem, render_payload, answer_key, scoring_rule, hints, explanation theo question.schema.json; mã môn/curriculum/topic/LO, khối, độ khó)
+        question_id:
+          $ref: '#/components/schemas/Uuid'
+        question_version_id:
+          $ref: '#/components/schemas/Uuid'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+    ContentImportItemIssue:
+      type: object
+      required:
+        - code
+        - severity
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          maxLength: 64
+          description: Mã vấn đề (contracts F028 §1), vd. ANSWER_MISSING, MATH_NOT_ALLOWED, FORMULA_NEEDS_REWRITE, EXTERNAL_LINK_REMOVED
+        field:
+          type: string
+          maxLength: 128
+        message:
+          type: string
+          maxLength: 500
+        severity:
+          type: string
+          enum:
+            - error
+            - warning
+        source:
+          type: string
+          enum:
+            - validator
+          description: Lỗi validator của createQuestion khi tạo Draft (câu draft_failed)
+    ContentImportItemDraftRequest:
+      type: object
+      required:
+        - math_assets
+      additionalProperties: false
+      properties:
+        math_assets:
+          type: array
+          maxItems: 50
+          description: SVG + speech text (MathJax 4 trên portal) của mỗi công thức trong ContentImportItem.formulas — cùng dạng math_assets của createQuestion (F027)
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - latex
+              - svg
+              - speech_text
+            properties:
+              latex:
+                type: string
+                minLength: 1
+                maxLength: 2000
+              svg:
+                type: string
+                maxLength: 262144
+                description: SVG ≤ 256 KB (math_svg_max)
+              speech_text:
+                type: string
+                maxLength: 1000
     ContentReviewTask:
       type: object
       required:
