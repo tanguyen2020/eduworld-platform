@@ -20,6 +20,7 @@
       },
       "options": [
         {
+          "id": "o_a",
           "option_id": "o_a",
           "content": {
             "blocks": [
@@ -31,6 +32,7 @@
           }
         },
         {
+          "id": "o_b",
           "option_id": "o_b",
           "content": {
             "blocks": [
@@ -42,6 +44,7 @@
           }
         },
         {
+          "id": "o_c",
           "option_id": "o_c",
           "content": {
             "blocks": [
@@ -53,6 +56,7 @@
           }
         },
         {
+          "id": "o_d",
           "option_id": "o_d",
           "content": {
             "blocks": [

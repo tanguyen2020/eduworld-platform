@@ -10,5 +10,6 @@
   "policy_reason": "sample",
   "category_code": "sample",
   "feature_key": "sample",
-  "reopen_at": "2026-11-15T07:30:00Z"
+  "reopen_at": "2026-11-15T07:30:00Z",
+  "ticket_id": "00000000-0000-4000-8000-000000000001"
 }

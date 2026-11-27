@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "type": "matchmaking.match.assigned",
+  "seq": 49,
+  "ts": 1763712049000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000502",
+    "room_id": "0193b0a0-0000-7000-8000-000000000502",
+    "mode": "team_battle",
+    "chat_channel_ids": {
+      "match": "4cf706cf-d9ed-54c4-ada6-d38bbb9140cf",
+      "team": "a8bf5cd0-c9b5-5c6f-916f-392612711d25"
+    }
+  }
+}

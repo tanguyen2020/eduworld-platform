@@ -11,6 +11,10 @@
     "round": 1,
     "question_index": 2,
     "question_count": 3,
+    "speed_bonus_enabled": true,
+    "chat_channel_ids": {
+      "match": "5bc7f014-e25a-5bc9-b357-7c1090ed139b"
+    },
     "participants": [
       {
         "player": {

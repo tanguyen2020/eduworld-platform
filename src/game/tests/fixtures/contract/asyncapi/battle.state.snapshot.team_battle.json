@@ -24,6 +24,7 @@
       },
       "options": [
         {
+          "id": "o_a",
           "option_id": "o_a",
           "content": {
             "blocks": [
@@ -35,6 +36,7 @@
           }
         },
         {
+          "id": "o_b",
           "option_id": "o_b",
           "content": {
             "blocks": [
@@ -46,6 +48,7 @@
           }
         },
         {
+          "id": "o_c",
           "option_id": "o_c",
           "content": {
             "blocks": [
@@ -57,6 +60,7 @@
           }
         },
         {
+          "id": "o_d",
           "option_id": "o_d",
           "content": {
             "blocks": [
@@ -72,6 +76,15 @@
     },
     "deadline_at": 1763712071000,
     "my_answer_locked": false,
+    "speed_bonus_enabled": false,
+    "primary_user_ids": [
+      "0193b0a0-0000-7000-8000-0000000000a1",
+      "0193b0a0-0000-7000-8000-0000000000a2"
+    ],
+    "chat_channel_ids": {
+      "match": "4cf706cf-d9ed-54c4-ada6-d38bbb9140cf",
+      "team": "a8bf5cd0-c9b5-5c6f-916f-392612711d25"
+    },
     "participants": [
       {
         "player": {

@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "type": "competition.duel.received",
+  "seq": 73,
+  "ts": 1763712073000,
+  "payload": {
+    "duel_id": "0193b0a0-0000-7000-8000-000000000801",
+    "challenger": {
+      "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+      "nickname": "CaHeoVui07"
+    },
+    "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+    "expires_at": 1763712133000
+  }
+}

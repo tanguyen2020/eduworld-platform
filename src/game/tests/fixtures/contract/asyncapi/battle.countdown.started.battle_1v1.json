@@ -7,6 +7,7 @@
     "match_id": "0193b0a0-0000-7000-8000-000000000501",
     "starts_at": 1763712056000,
     "question_count": 3,
-    "rounds": 1
+    "rounds": 1,
+    "speed_bonus_enabled": true
   }
 }
