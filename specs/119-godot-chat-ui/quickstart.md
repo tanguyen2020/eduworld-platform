@@ -46,7 +46,7 @@ Chạy trên worktree `feat/f119`, Godot 4.7.2 headless, fake + fixture sinh t�
 | Lệnh | Kết quả |
 |---|---|
 | GdUnit4 `res://tests/unit/chat` | `test_chat_store.gd` 13/13, `test_chat_service.gd` 12/12, `test_chat_service_retry.gd` 7/7, `test_feedback_mapper.gd` 5/5, `test_quick_message_catalog.gd` 4/4, `test_report_service.gd` 4/4, `test_block_mute_hide.gd` 3/3, `test_chat_assets_models.gd` 7/7, `test_chat_boundaries.gd` 6/6 |
-| GdUnit4 `res://tests/scene/chat` + lobby | `test_chat_dock.gd` 7/7, `test_chat_composer.gd` 9/9, `test_chat_action_menu.gd` 9/9, `test_chat_bubbles_picker.gd` 9/9; `test_party_lobby.gd::test_lobby_shows_the_party_chat_under_the_activity` pass |
+| GdUnit4 `res://tests/scene/chat` + lobby | `test_chat_dock.gd` 7/7, `test_chat_composer.gd` 9/9, `test_chat_action_menu.gd` 9/9, `test_chat_bubbles_picker.gd` 9/9; `test_party_lobby.gd::test_lobby_shows_the_party_chat_under_the_activity` pass (đổi tên thành `test_lobby_shows_the_party_chat_in_a_full_height_column` ở §5.3) |
 | GdUnit4 `res://tests/scene/test_grade_band_matrix.gd` (phần chat) | `test_chat_dock_fits_every_band` (10 trạng thái), `test_chat_dock_fits_every_band_with_long_text` (pseudo-locale +35%: đội, menu, báo cáo, bị tắt tiếng), `test_party_lobby_with_chat_open_fits_every_band` — 4 khối × 1280×720 / 1024×600 / 844×390: pass; các test party F102 vẫn pass với panel chat trong màn Nhóm |
 | GdUnit4 `res://tests/perf/test_chat_list_perf.gd` | 2/2 — 500 tin vào một channel: giữ 200 (`chat_recent_buffer`), pool bubble < 30, tin mới ≤ ngân sách cập nhật UI; typing gộp ≤ 1 lần/giây |
 | GdUnit4 `res://tests/integration/test_chat_flow_headless.gd` | bỏ qua (cần backend compose + `EW_REALTIME_PUBLIC_URL`, `EDUWORLD_IT_API_BASE_URL`) — như các test live khác |
@@ -86,7 +86,7 @@ Chạy trên worktree `feat/f119`, Godot 4.7.2 headless, fake + fixture sinh t�
 
 **Kết luận:** 23/23 F119-AC có test tự động pass với fake + fixture contract. F119 **In progress** cho tới khi `test_chat_flow_headless.gd` chạy được trên backend của owner (AC-01/05/06/08/10/11/13/15 phần thật), F109/F110 gắn `ChatDock` vào trận/boss/kết quả (AC-01…03, AC-14), và đo lab FPS (AC-17, AC-21).
 
-### 5.2. Rà ảnh — khối × màn (99 ảnh trong [screenshots/](screenshots/), Compatibility; 4 khối × 1280×720 + 844×390 `vi`, `en` g4_5 1280×720)
+### 5.2. Rà ảnh F119 — khối × màn (bố cục trước sửa "≥ 3 tin", ảnh `-before-` của party_chat/chat_team/chat_picker; ảnh `-after-` hiện tại xem §5.3) (99 ảnh trong [screenshots/](screenshots/), Compatibility; 4 khối × 1280×720 + 844×390 `vi`, `en` g4_5 1280×720)
 
 | Màn | g1_3 | g4_5 | g6_7 | g8_9 | en (g4_5) |
 |---|---|---|---|---|---|
@@ -103,3 +103,42 @@ Chạy trên worktree `feat/f119`, Godot 4.7.2 headless, fake + fixture sinh t�
 | `chat_mini` (dải 2 dòng) | Đạt | Đạt | Đạt | Đạt | Đạt |
 
 Đã sửa trong lúc rà: tin mới nhất bị cắt (ghim đáy khi danh sách tự cuộn), bảng mặt cười và hàng gõ chữ cùng hiện làm panel tràn (thay phiên), tab bảng xuống 2 hàng (tab đều nhau một hàng), icon tab xanh trên nền xanh (icon trắng `tab_*`), icon trên nút chính khi mờ (`flag`/`send_blue`), ô nhập nhiều dòng nền xám mặc định (theme `TextEdit`), băng tắt tiếng lặp hai lần, lời mời "chào mọi người" ở kênh đã đóng, panel chat bị gỡ liên kết khi chuyển sang overlay điện thoại, màn Nhóm PC để chat chỉ còn một khe nhỏ (chat chiếm cột phải).
+
+### 5.3. Sửa bố cục "≥ 3 tin" (2026-11-27, [Clarifications](spec.md#session-2026-11-27-sửa-bố-cục--chỗ-cho-tin-nhắn-confirmed-bởi-orchestrator-theo-chốt-hết-của-owner))
+
+Quy tắc ở [STUDENT_GAME_UX_SOCIAL §7](../../docs/05-ux/STUDENT_GAME_UX_SOCIAL.md#7-chat): phần nhìn thấy của danh sách tin ≥ 3 tin chữ điển hình (bong bóng thật của khối) hoặc ≥ 45% nội dung panel, lấy lớn hơn. Worktree `fix/chat-dock-space`, Godot 4.7.2.
+
+| Lệnh | Kết quả |
+|---|---|
+| `test_grade_band_matrix.gd::test_chat_list_shows_three_messages_in_every_band` | 72/72 lần dựng đạt (4 khối × 1280×720 / 1024×600 / 844×390 × `vi`/`en`/`xx-PS` × màn Nhóm — PC cột chat, điện thoại panel trượt — và panel trận đội) |
+| Cùng test trên bố cục F119 cũ (trước khi sửa code) | 33/72 không đạt (mọi khối ở màn Nhóm PC/điện thoại trừ một số ô g6_7–g8_9, và g1_3 ở panel trận đội) — vd. màn Nhóm `g1_3` 1280×720: danh sách 106 px < 347 px (một bong bóng 113 px), pseudo 64 px |
+| `test_chat_space_probe_flags_the_old_thin_message_list` (test âm) | pass — panel ở ô cũ 560 × 425 px, `g1_3`, bảng mở: probe báo "message list"; cùng panel đủ cao thì không báo; panel thu gọn không bị kiểm |
+| GdUnit4 `res://tests/scene/chat` + lobby | `test_chat_dock.gd` 8/8 (thêm `test_team_tabs_take_the_place_of_the_title_on_the_header_line`), `test_chat_bubbles_picker.gd` 11/11 (thêm `test_time_sits_beside_the_name_of_another_player`, `test_board_tabs_keep_one_line_and_share_the_row_when_wide`), `test_chat_composer.gd` 9/9, `test_chat_action_menu.gd` 9/9, `test_party_lobby.gd` 16/16 (`test_lobby_shows_the_party_chat_in_a_full_height_column`), `test_chip_scroller.gd` 3/3, `test_grade_band_matrix.gd` 35/35 |
+| GdUnit4 toàn bộ `res://tests` | 1319 test case — 1305 pass, 0 lỗi, 0 fail, 14 bỏ qua (test live cần backend) |
+| Lint Godot | `check_typed` OK (636), `lint_theme_overrides` OK (512), `lint_layers` OK (296), `lint_signals` OK (376), `lint_art` OK (443), `bake_art --check` 0 stale, `brand_assets --check` OK, `extract_pot --check` OK (462), `pseudo_locale --check` OK, `gen_fixtures --check` OK (154), `check_no_admin_ui` OK, `scan_artifact_test` 22/22 |
+| Token | `make design-tokens-check` (`pnpm test` 57/57, `pnpm check`): tương phản 832/832 AA, generated khớp (181 file), semver OK — giữ `tokens@0.20.0` (chỉ thêm biến thể `ChatTabButton`/`ChatTabButtonSelected`) |
+| Web | export Web + `check_web_export` OK (wasm 39,5 MB, pck 8,4 MB) + `scan_artifact` OK; `node --test src/game/web/tests/` 17 pass, 4 bỏ qua, 0 fail |
+| Specs/docs | `check-features` 0 lỗi, `check-cross-features` 0 lỗi, `check-links` 0 hỏng, `check-mermaid` 0 lỗi, `build-rtm --check` khớp |
+
+Chiều cao danh sách nhìn thấy / yêu cầu (px logic, trường hợp xấu nhất trong 3 ngôn ngữ):
+
+| Khối | Cửa sổ | Màn Nhóm (PC cột / điện thoại panel) | Panel trận đội |
+|---|---|---|---|
+| g1_3 | 1280×720 | 252 / 242 (pseudo) | 313 / 271 |
+| g1_3 | 1024×600 | 281 / 251 | 339 / 283 |
+| g1_3 | 844×390 | 274 / 248 (panel 45%) | 313 / 271 |
+| g4_5 | 1280×720 · 1024×600 · 844×390 | 324/241 · 353/254 · 344/250 | 388/271 · 414/283 · 388/271 |
+| g6_7 | 1280×720 · 1024×600 · 844×390 | 360/248 · 389/261 · 372/253 | 408/273 · 434/285 · 408/273 |
+| g8_9 | 1280×720 · 1024×600 · 844×390 | 376/249 · 405/262 · 388/255 | 420/273 · 446/285 · 420/273 |
+
+Ảnh (Compatibility) trong [screenshots/](screenshots/): `-after-` mới của 11 màn chat × 4 khối × 1280×720 / 1024×600 / 844×390 `vi` (132 ảnh), `en` `g4_5` 1280×720 (11), `xx` `g1_3` của `party_chat`/`chat_team`/`chat_picker` 1280×720 + 844×390 (6); `-before-` = ảnh F119 cũ của `party_chat`, `chat_team`, `chat_picker` (27). Rà từng khối:
+
+| Màn | g1_3 | g4_5 | g6_7 | g8_9 |
+|---|---|---|---|---|
+| `party_chat` | Đạt — PC: cột chat cao hết cửa sổ, bảng mở sẵn 3 hàng (quick · tab một dòng · Gõ chữ + emoji), thấy 2 tin của mẫu (một tin trả lời + đã sửa 4 dòng, một nhãn dán) = chỗ của 3 tin chữ; điện thoại: panel 45% từ đỉnh thanh tiêu đề, Sẵn sàng/Bắt đầu vẫn thấy | Đạt — 3–4 tin | Đạt — 4–5 tin | Đạt — 4–5 tin |
+| `chat_team` | Đạt — tab "Đội"/"Cả trận" trên dòng tiêu đề, 3 tin + "đang soạn tin" | Đạt | Đạt | Đạt |
+| `chat_picker` (Nhãn dán) | Đạt — tab một dòng, gợi ý bộ khóa chạy dưới cả bảng (2 dòng thay 3) | Đạt | Đạt | Đạt |
+| `chat_menu`, `chat_report`, `chat_thanks`, `chat_blocked`, `chat_muted`, `chat_closed`, `chat_care`, `chat_mini` | Đạt (không đổi, tab trận đội trên dòng tiêu đề) | Đạt | Đạt | Đạt |
+| `en` (g4_5) / `xx` (g1_3) | — | Đạt ("Team"/"Whole match", "Emoji/Stickers/GIFs") | — | — |
+
+Pseudo `xx` g1_3: tiêu đề màn Nhóm một dòng (biểu tượng nhóm nhường chỗ), tab trận đội và tab bảng cuộn ngang bằng mũi tên (không xuống dòng), cột trái cuộn với tối thiểu một thẻ thành viên. Đã sửa trong lúc rà: `ChipScroller` giữ mũi tên sau khi hàng đã vừa (tab bảng bị che "Ảnh động"), hàng tab lệch giữa trên điện thoại (xếp lại khi mũi tên ẩn), gợi ý bộ khóa 3 dòng bên cạnh "Gõ chữ", bản đầu panel điện thoại 62% vi phạm F102-AC-18 (trả về 45%).
