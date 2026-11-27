@@ -475,7 +475,7 @@ Trường, lớp, khối, tỉnh của học sinh trả trong `PlayerBootstrap.s
 | GET | `/game/world/manifest` | Manifest thế giới: area, scene, asset bundle PCK (version, checksum, URL CDN) | STU | T | P1 |
 | GET | `/game/world/areas` | Danh sách `WorldArea` + quyền truy cập | STU | T | P2 |
 | POST | `/game/world/areas/{area_id}:enter` | Xin vào area: kiểm tra quyền, gán instance theo ADR-0012 | STU | T | P2 |
-| — | ~~`/game/world/friends/{user_id}:join`~~ | **Không dùng.** "Tham gia bạn" là lệnh WS `hub.instance.join {follow_user_id}` do module competition (hub instance) xử lý ([REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md)); `joinFriendInWorld` chờ gỡ khỏi spec | — | — | — |
+| — | ~~`/game/world/friends/{user_id}:join`~~ | **Không dùng.** "Tham gia bạn" là lệnh WS `hub.instance.join {follow_user_id}` do module competition (hub instance) xử lý ([REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md)); `joinFriendInWorld` đã gỡ khỏi spec (F071 T004; RB-625 đóng 2026-11-28 — bỏ hẳn, không đổi nghĩa) | — | — | — |
 | GET | `/game/content-manifest` | Content manifest của tenant (item → version hiện hành, snapshot URL/sha256, bundle, area); `ETag` + `If-None-Match` → `304`. Gọi khi khởi động và khi vào màn mới (ADR-0043) | STU | T | P2 |
 | POST | `/game/levels/{level_id}:start` | Vào màn: tạo `LevelSession`, **ghim** version nội dung theo con trỏ hiện hành, trả danh sách snapshot/bundle/media cần preload (signed URL nếu private) | STU | B | P2 |
 | POST | `/game/level-sessions/{level_session_id}:end` | Rời/hoàn thành màn — bỏ ghim; màn sau nhận version mới nhất | STU | B | P2 |
@@ -744,7 +744,8 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 
 | Method | Path | Mô tả | Role | Idem | Phase |
 |---|---|---|---|---|---|
-| GET | `/social/friends` | Danh sách bạn + presence tóm tắt | STU | T | P5 |
+| GET | `/social/friends` | Danh sách bạn + presence tóm tắt; `PlayerCard.title` = danh hiệu level (delta F095) | STU | T | P5 |
+| GET | `/social/friend-suggestions` | `listFriendSuggestions` `?source=recently_played` (bắt buộc, giá trị duy nhất — ADR-0095): "Vừa chơi cùng" trong `friend_suggestion_recent_window`, đã loại bạn, lời mời chờ, chặn, tắt tiếng, ngoài phạm vi; thẻ không presence (delta F095 cho F111) | STU | T | P5 |
 | DELETE | `/social/friends/{user_id}` | Hủy kết bạn (không thông báo người kia) | STU | T | P5 |
 | POST | `/social/friend-codes` | Tạo mã bạn bè 10 phút | STU | B | P5 |
 | POST | `/social/friend-codes:redeem` | Nhập mã bạn bè → gửi lời mời (`FRIEND_CODE_INVALID`, `SOCIAL_SCOPE_VIOLATION`) | STU | B | P5 |
@@ -766,6 +767,7 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 | GET/POST | `/social/clubs/{club_id}/join-requests` | Yêu cầu chờ duyệt; xin tham gia | Owner/officer; STU | T/B | P5 |
 | POST | `/social/club-join-requests/{request_id}:accept`, `:reject` | Duyệt / từ chối | Owner/officer | B/T | P5 |
 | POST | `/social/clubs/{club_id}/invitations` | Mời (≤ 50/lần, kiểm tra phạm vi, block) | Owner/officer | B | P5 |
+| GET | `/social/club-invitations` | `listMyClubInvitations`: lời mời club của chính học sinh (`status` mặc định `pending`), kèm `club_name`, `inviter_nickname` (delta F120 cho F111) | STU (invitee) | T | P5 |
 | POST | `/social/club-invitations/{invitation_id}:accept`, `:decline` | Nhận / từ chối lời mời club | STU (invitee) | B/T | P5 |
 | GET/POST | `/social/clubs/{club_id}/goals` | Mục tiêu tuần (đếm từ event, không chia sẻ điểm cá nhân); `GET` kèm `accepted_metrics` (delta F112-4) | Thành viên; owner (delta F112-1) | T/B | P5 |
 | GET/POST | `/social/clubs/{club_id}/events` | Lịch sự kiện club; `internal_tournament` chưa mở cho học sinh → `422 VALUE_NOT_AVAILABLE` (delta F112-3) | Thành viên; owner (delta F112-1) | T/B | P5 |

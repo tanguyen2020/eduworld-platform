@@ -131,6 +131,9 @@ type ProjectionWriter interface {
 	StudentStatus(ctx context.Context, student uuid.UUID, tenant *uuid.UUID, status string) (bool, error)
 	StudentDeleted(ctx context.Context, student, tenant uuid.UUID, deleted bool, at time.Time) (bool, error)
 	PlayerProfile(ctx context.Context, student, tenant uuid.UUID, nickname *string, level int, avatar []byte, version int64) (bool, error)
+	// PlayerLevel raises the level of a projected profile to level (never lowers it) and sets the level title when title
+	// is not nil (level.reached, delta F095); false when the profile is not projected yet or already at a higher level.
+	PlayerLevel(ctx context.Context, student, tenant uuid.UUID, level int, title []byte) (bool, error)
 	School(ctx context.Context, school, tenant uuid.UUID, status *string, settings []byte, version int64) (bool, error)
 	PlatformSetting(ctx context.Context, key string, value []byte, version int64) (bool, error)
 	// TenantRetention stores gameplay_chat_retention_days of a tenant (nil: inherit the platform; F117 research R4); ok

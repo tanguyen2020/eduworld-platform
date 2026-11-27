@@ -28,6 +28,10 @@ func TestNotificationCatalog(t *testing.T) {
 		"level.reached":               {"level_reached", "progression.level_reached", "open_profile"},
 		"achievement.unlocked":        {"achievement_unlocked", "achievement.unlocked", "open_achievements"},
 		"report.resolved":             {"moderation_notice", "moderation.report_handled", ""},
+		// Delta F120/F123 (client F111): the club notifications open the club.
+		"club.invitation_sent": {"club_invitation", "club.invitation_received", "open_club"},
+		"club.join_requested":  {"club_join_request", "club.join_request_received", "open_club"},
+		"club.approved":        {"club_approved", "club.approved", "open_club"},
 	}
 	if len(notification.MessageCatalog) != len(want) {
 		t.Fatalf("catalog has %d entries", len(notification.MessageCatalog))

@@ -21,6 +21,9 @@ const (
 	DefaultPresenceTTL      = 90 * time.Second   // presence_ttl
 	DefaultExpiryInterval   = time.Minute        // job expire-friend-requests
 	DefaultTimeZone         = "Asia/Ho_Chi_Minh" // platform day of the per-day limit
+	// DefaultSuggestionWindow is friend_suggestion_recent_window (7 days; "Vừa chơi cùng" of listFriendSuggestions,
+	// delta F095 — SOCIAL_SYSTEM §4.1, CONFIG_DEFAULTS).
+	DefaultSuggestionWindow = 7 * 24 * time.Hour
 )
 
 // Social is the configuration of the F095 use cases.
@@ -28,12 +31,15 @@ type Social struct {
 	UseCase        command.SocialConfig
 	PresenceTTL    time.Duration
 	ExpiryInterval time.Duration
+	// SuggestionWindow is friend_suggestion_recent_window (EW_SOCIAL_FRIEND_SUGGESTION_WINDOW, 1h..30 days).
+	SuggestionWindow time.Duration
 }
 
 // SocialFrom reads the F095 configuration (T002): EW_SOCIAL_MAX_PENDING_REQUESTS, EW_SOCIAL_MAX_REQUESTS_PER_DAY,
 // EW_SOCIAL_MAX_FRIENDS (friend_limits 10/20/100), EW_SOCIAL_FRIEND_REQUEST_TTL (friend_request_ttl, 7 days),
 // EW_SOCIAL_FRIEND_CODE_TTL (friend_code_ttl, 10 min), EW_PRESENCE_TTL (presence_ttl, 90 s, shared with the gateway),
-// EW_SOCIAL_EXPIRY_INTERVAL (1 min) and EW_PLATFORM_TIMEZONE (day of the per-day limit).
+// EW_SOCIAL_EXPIRY_INTERVAL (1 min), EW_PLATFORM_TIMEZONE (day of the per-day limit) and
+// EW_SOCIAL_FRIEND_SUGGESTION_WINDOW (friend_suggestion_recent_window, 7 days — delta F095).
 func SocialFrom(c *config.Config) (Social, error) {
 	loc, err := time.LoadLocation(c.StringOr("EW_PLATFORM_TIMEZONE", DefaultTimeZone))
 	if err != nil {
@@ -47,8 +53,9 @@ func SocialFrom(c *config.Config) (Social, error) {
 			RequestTTL: c.Duration("EW_SOCIAL_FRIEND_REQUEST_TTL", DefaultFriendRequestTTL),
 			CodeTTL:    c.Duration("EW_SOCIAL_FRIEND_CODE_TTL", DefaultFriendCodeTTL),
 		},
-		PresenceTTL:    c.Duration("EW_PRESENCE_TTL", DefaultPresenceTTL),
-		ExpiryInterval: c.Duration("EW_SOCIAL_EXPIRY_INTERVAL", DefaultExpiryInterval),
+		PresenceTTL:      c.Duration("EW_PRESENCE_TTL", DefaultPresenceTTL),
+		ExpiryInterval:   c.Duration("EW_SOCIAL_EXPIRY_INTERVAL", DefaultExpiryInterval),
+		SuggestionWindow: c.Duration("EW_SOCIAL_FRIEND_SUGGESTION_WINDOW", DefaultSuggestionWindow),
 	}
 	l := out.UseCase.Limits
 	switch {
@@ -62,6 +69,8 @@ func SocialFrom(c *config.Config) (Social, error) {
 		return out, errors.New("chat config: EW_PRESENCE_TTL must be ≥ 10s")
 	case out.ExpiryInterval < time.Second:
 		return out, errors.New("chat config: EW_SOCIAL_EXPIRY_INTERVAL must be ≥ 1s")
+	case out.SuggestionWindow < time.Hour || out.SuggestionWindow > 30*24*time.Hour:
+		return out, errors.New("chat config: EW_SOCIAL_FRIEND_SUGGESTION_WINDOW must be 1h..720h")
 	}
 	return out, nil
 }

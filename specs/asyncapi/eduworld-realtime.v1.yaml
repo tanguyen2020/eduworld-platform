@@ -697,10 +697,10 @@ components:
     NotificationKind:
       type: string
       description: 'Một enum loại thông báo dùng chung REST (Notification.kind) và WS (notification.item.created); nguồn specs/schemas/common/enums.schema.json (RB-513, F123)'
-      enum: [assignment_new, assignment_due, party_invitation, friend_request, quest_available, reward_granted, tournament_update, moderation_notice, system, assignment_results_released, level_reached, achievement_unlocked]
+      enum: [assignment_new, assignment_due, party_invitation, friend_request, quest_available, reward_granted, tournament_update, moderation_notice, system, assignment_results_released, level_reached, achievement_unlocked, club_invitation, club_join_request, club_approved]
     NotificationAction:
       type: object
-      description: 'Deep link mở màn trong game, vd. {"kind":"open_assignment","id":"..."} (F123-AC-18)'
+      description: 'Deep link mở màn trong game, vd. {"kind":"open_assignment","id":"..."} (F123-AC-18); open_club (id = club_id) cho club_invitation, club_join_request, club_approved; open_event (id = event_id) dành sẵn (delta F120/F123)'
       required: [kind]
       additionalProperties: false
       properties:
@@ -1927,6 +1927,12 @@ components:
           payload: {"v":1,"type":"notification.item.created","seq":7,"ts":1763712000000,"payload":{"notification_id":"0193b0a0-0000-7000-8000-000000000001","kind":"friend_request","message_code":"friend.request_received","params":{"nickname":"SaoBang12"},"ref_type":"friend_request","ref_id":"0193b0a0-0000-7000-8000-000000000002","action":{"kind":"open_friend_requests","id":"0193b0a0-0000-7000-8000-000000000002"},"created_at":1763712000000}}
         - name: assignment_new
           payload: {"v":1,"type":"notification.item.created","seq":8,"ts":1763712000000,"payload":{"notification_id":"0193b0a0-0000-7000-8000-000000000003","kind":"assignment_new","message_code":"assignment.new","params":{"title":"Phép nhân trong phạm vi 100"},"ref_type":"assignment","ref_id":"0193b0a0-0000-7000-8000-000000000004","action":{"kind":"open_assignment","id":"0193b0a0-0000-7000-8000-000000000004"},"created_at":1763712000000}}
+        - name: club_invitation
+          payload: {"v":1,"type":"notification.item.created","seq":76,"ts":1763712080000,"payload":{"notification_id":"0193b0a0-0000-7000-8000-000000000c11","kind":"club_invitation","message_code":"club.invitation_received","params":{"nickname":"CaHeoVui07"},"ref_type":"club","ref_id":"0193b0a0-0000-7000-8000-000000000c01","action":{"kind":"open_club","id":"0193b0a0-0000-7000-8000-000000000c01"},"created_at":1763712080000}}
+        - name: club_join_request
+          payload: {"v":1,"type":"notification.item.created","seq":77,"ts":1763712085000,"payload":{"notification_id":"0193b0a0-0000-7000-8000-000000000c12","kind":"club_join_request","message_code":"club.join_request_received","params":{"nickname":"SaoBang12"},"ref_type":"club","ref_id":"0193b0a0-0000-7000-8000-000000000c01","action":{"kind":"open_club","id":"0193b0a0-0000-7000-8000-000000000c01"},"created_at":1763712085000}}
+        - name: club_approved
+          payload: {"v":1,"type":"notification.item.created","seq":78,"ts":1763712090000,"payload":{"notification_id":"0193b0a0-0000-7000-8000-000000000c13","kind":"club_approved","message_code":"club.approved","params":{},"ref_type":"club","ref_id":"0193b0a0-0000-7000-8000-000000000c01","action":{"kind":"open_club","id":"0193b0a0-0000-7000-8000-000000000c01"},"created_at":1763712090000}}
         - name: tournament_update
           payload: {"v":1,"type":"notification.item.created","seq":75,"ts":1763712075000,"payload":{"notification_id":"0193b0a0-0000-7000-8000-000000000c01","kind":"tournament_update","message_code":"tournament.check_in_open","params":{"title":"Giải Toán khối 4 tuần này"},"ref_type":"tournament","ref_id":"0193b0a0-0000-7000-8000-000000000901","created_at":1763712075000}}
       payload:

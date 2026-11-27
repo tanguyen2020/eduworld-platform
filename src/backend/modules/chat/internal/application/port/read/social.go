@@ -18,11 +18,13 @@ type After struct {
 
 // Relation is one row of listFriends, listBlocks or listMutes: the other student and the public card (R16).
 type Relation struct {
-	RowID     uuid.UUID // friendship_id, block_id or mute_id (cursor)
-	UserID    uuid.UUID
-	Nickname  *string
-	Level     int
-	Avatar    json.RawMessage
+	RowID    uuid.UUID // friendship_id, block_id or mute_id (cursor)
+	UserID   uuid.UUID
+	Nickname *string
+	Level    int
+	Avatar   json.RawMessage
+	// Title is the level title (LocalizedName {vi, en}) of ref.player_profiles (delta F095); nil when none.
+	Title     json.RawMessage
 	CreatedAt time.Time
 }
 
@@ -51,4 +53,26 @@ type SocialReader interface {
 	Mutes(ctx context.Context, tenant, user uuid.UUID, after *After, limit int) ([]Relation, error)
 	// FriendIDs returns the live friends of user without a block in either direction (presence fan-out).
 	FriendIDs(ctx context.Context, tenant, user uuid.UUID) ([]uuid.UUID, error)
+	// Coplayers lists the students who played with user since since ("Vừa chơi cùng", delta F095), most recent first,
+	// already without: friends, pending friend requests either way, blocks either way, mutes of user, students not
+	// active or cleaned up, and (when sameSchool is set) students of another school. Keyset (last_played_at, other_id).
+	Coplayers(ctx context.Context, f CoplayerFilter) ([]Coplayer, error)
+}
+
+// CoplayerFilter is the query of Coplayers.
+type CoplayerFilter struct {
+	Tenant     uuid.UUID
+	User       uuid.UUID
+	Since      time.Time
+	Now        time.Time  // pending friend requests are the ones with expires_at > Now
+	SameSchool *uuid.UUID // nil: every school of the tenant (unit tenant with cross_school_social_enabled)
+	After      *After     // keyset (At = last_played_at, ID = other_id), nil for the first page
+	Limit      int
+}
+
+// Coplayer is one row of Coplayers: the public card of the other student and the last time they played together.
+type Coplayer struct {
+	Relation
+	ContextKind  string
+	LastPlayedAt time.Time
 }

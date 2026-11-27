@@ -33,7 +33,7 @@
 | `RNK` Ranking | module competition | 4 | 4 | 0 | 1 | 0 | CMP (10) | 0 | 0 | 0 / 6 |
 | `LDB` Leaderboard | module competition | 5 | 5 | 0 | 4 | 0 | CMP (10) | 1 | 0 | 0 / 7 |
 | `TRN` Tournament | module competition | 3 | 3 | 0 | 12 | 0 | CMP (10) | 1 | 0 | 0 / 8 |
-| `SOC` Social | module chat | 4 | 4 | 0 | 35 | 0 | SOC (9) | 1 | 0 | 0 / 11 |
+| `SOC` Social | module chat | 4 | 4 | 0 | 37 | 0 | SOC (9) | 1 | 0 | 0 / 11 |
 | `CHAT` Chat | module chat | 17 | 17 | 0 | 18 | 0 | CHAT (48) | 2 | 15 | 0 / 0 |
 | `MOD` Moderation & Child Safety | module chat | 18 | 18 | 0 | 41 | 0 | CHAT (48) | 4 | 6 | 0 / 25 |
 | `NTF` Notification | module chat | 3 | 3 | 2 | 3 | 0 | SOC (9) | 0 | 0 | 0 / 0 |
@@ -46,7 +46,7 @@
 | `LMS` LMS | module learning | 10 | 10 | 1 | 34 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 28 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 23 | 604 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 23 | 606 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -497,10 +497,10 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 11 AC, 0 US — [SOCIAL_SYSTEM](..
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-SOC-001 | Friend list, friend request, invitation; tenant common tắt mặc định kết bạn (ADR-0078) | P5 (cơ bản cho mời party: P4) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [ROADMAP](ROADMAP.md) | _suy luận:_ 35 op | _suy luận:_ TC-SOC |
-| FR-SOC-002 | Mặc định chỉ kết bạn cùng trường (như nhau cho mọi khối); tenant unit có thể mở liên trường trong tenant | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-SOC |
-| FR-SOC-003 | Block / Mute người dùng; block chặn chat, mời, ghép party | P5 (Block: P4 cùng party) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-SOC |
-| FR-SOC-004 | Team/club của học sinh theo policy (SOCIAL_SYSTEM); nhóm học tập LMS (Study Group, ADR-0084) đã bỏ theo ADR… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-SOC |
+| FR-SOC-001 | Friend list, friend request, invitation; tenant common tắt mặc định kết bạn (ADR-0078) | P5 (cơ bản cho mời party: P4) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [ROADMAP](ROADMAP.md) | _suy luận:_ 37 op | _suy luận:_ TC-SOC |
+| FR-SOC-002 | Mặc định chỉ kết bạn cùng trường (như nhau cho mọi khối); tenant unit có thể mở liên trường trong tenant | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-SOC |
+| FR-SOC-003 | Block / Mute người dùng; block chặn chat, mời, ghép party | P5 (Block: P4 cùng party) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-SOC |
+| FR-SOC-004 | Team/club của học sinh theo policy (SOCIAL_SYSTEM); nhóm học tập LMS (Study Group, ADR-0084) đã bỏ theo ADR… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-SOC |
 
 ### 3.22. `CHAT` Chat
 

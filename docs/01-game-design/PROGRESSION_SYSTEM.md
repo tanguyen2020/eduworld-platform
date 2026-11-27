@@ -217,7 +217,7 @@ Cấu hình (`/api/v1/game-admin/{config_type}`, platform-only, permission `game
 | Event | Producer | Payload chính |
 |---|---|---|
 | `xp.awarded` | module game | `amount`, `source_code`, `source_id`, `rule_id`, `capped` |
-| `level.reached` | module game | `from_level`, `to_level`, `curve_version`, `title_code` |
+| `level.reached` | module game | `from_level`, `to_level`, `curve_version`, `title_code`, `title` (tên song ngữ của danh hiệu, null khi không có — module chat chiếu vào `PlayerCard.title`, delta F095) |
 | `reward.granted` | module game | `grant_id`, `trigger_kind`, `items[]`, `xp`, `source_event_id` |
 
 ## 9. Lỗi

@@ -46,6 +46,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `specs/openapi/modules/
 | `quest.completed` · `boss.encounter_completed` · `world.discovery_found` | Tiêu thụ (club goal) | `specs/events/payloads/game/*.v1.schema.json` | Cần thêm (owner F072/F103/F071) |
 | `chat_policy.updated` | Phát | `specs/events/payloads/chat/chat_policy.updated.v1.schema.json` | Đã thêm (2026-11-23) |
 | `club.created` · `club.approved` · `club.archived` · `club.member_joined` · `club.member_left` · `club.goal_completed` | Phát | `specs/events/payloads/chat/club.*.v1.schema.json` | Đã thêm (2026-11-23) |
+| `club.invitation_sent` · `club.join_requested` | Phát | `specs/events/payloads/chat/club.invitation_sent.v1.schema.json`, `club.join_requested.v1.schema.json` | Đã thêm (2026-11-28, delta cho F111: thông báo `club_invitation`/`club_join_request` qua `chat.notify_club`) |
 | `chat_policy.common_tenant_social_updated` | Phát | `specs/events/payloads/chat/chat_policy.common_tenant_social_updated.v1.schema.json` | Đã thêm (2026-11-28, delta F112-7; `chat_policy.updated` thêm `direct_message_enabled`) |
 
 ## 5. JSON Schema nội dung

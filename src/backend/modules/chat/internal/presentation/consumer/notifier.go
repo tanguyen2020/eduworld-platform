@@ -21,6 +21,7 @@ import (
 type NotificationCreator interface {
 	FromEvent(ctx context.Context, src notification.Source, recipients []uuid.UUID, actor *uuid.UUID) (int, error)
 	FromAssignment(ctx context.Context, src notification.Source, assignment uuid.UUID) (int, error)
+	FromClubManagers(ctx context.Context, src notification.Source, club uuid.UUID, actor uuid.UUID) (int, error)
 }
 
 // Notifier is the handler of the consumers chat.notify_* (F123 T001, T017): it decodes the source event (payload schema
@@ -38,7 +39,7 @@ type NotifierConfig struct {
 
 // NotifierNames are the durable consumers of the notifier, one per producer stream (+ the moderation notices of chat).
 var NotifierNames = []string{messaging.NotifyFriendRequestName, messaging.NotifyModerationName, messaging.NotifyPartyInvitationName,
-	messaging.NotifyAssignmentName, messaging.NotifyProgressionName}
+	messaging.NotifyAssignmentName, messaging.NotifyProgressionName, messaging.NotifyClubName}
 
 // NotifierOptions returns the options of the consumer name (one of NotifierNames).
 func NotifierOptions(name string, h Notifier, cfg NotifierConfig, uow *entx.UnitOfWork, dlq *sql.DB, js jetstream.JetStream) outbox.ConsumerOptions {
@@ -108,6 +109,8 @@ func (c Notifier) Handle(ctx context.Context, e outbox.Envelope) error {
 		return notifyResult(err)
 	case notification.EventLevelReached, notification.EventAchievementUnlock:
 		return c.progression(ctx, e, src)
+	case notification.EventClubInvitation, notification.EventClubJoinRequested, notification.EventClubApproved:
+		return c.club(ctx, e, src, tenant)
 	case notification.EventReportResolved:
 		var p struct {
 			TenantID   uuid.UUID `json:"tenant_id"`
@@ -124,6 +127,49 @@ func (c Notifier) Handle(ctx context.Context, e outbox.Envelope) error {
 		return c.one(ctx, src, p.ReporterID, nil)
 	}
 	return nil
+}
+
+// club handles the club events of module chat (delta F120/F123): club.invitation_sent → the invitee (nickname of the
+// inviter); club.join_requested → the active owner and officers (nickname of the requester); club.approved → the owner
+// when school staff approved a pending club (approver_id set and not the owner; a club created active notifies nobody).
+// The deep link is open_club {id: club_id}; the payload carries ids only (R16).
+func (c Notifier) club(ctx context.Context, e outbox.Envelope, src notification.Source, tenant uuid.UUID) error {
+	var p struct {
+		ClubID      uuid.UUID  `json:"club_id"`
+		TenantID    uuid.UUID  `json:"tenant_id"`
+		InviterID   uuid.UUID  `json:"inviter_id"`
+		InviteeID   uuid.UUID  `json:"invitee_id"`
+		RequesterID uuid.UUID  `json:"requester_id"`
+		OwnerID     uuid.UUID  `json:"owner_id"`
+		ApproverID  *uuid.UUID `json:"approver_id"`
+	}
+	if err := decode(e, &p); err != nil {
+		return outbox.Permanent(err)
+	}
+	if p.TenantID != tenant || p.ClubID == uuid.Nil {
+		return outbox.Permanent(invalid(e.EventType, "tenant_id/club_id"))
+	}
+	src.RefID = &p.ClubID
+	switch e.EventType {
+	case notification.EventClubInvitation:
+		if p.InviterID == uuid.Nil || p.InviteeID == uuid.Nil {
+			return outbox.Permanent(invalid(e.EventType, "inviter_id/invitee_id"))
+		}
+		return c.one(ctx, src, p.InviteeID, &p.InviterID)
+	case notification.EventClubJoinRequested:
+		if p.RequesterID == uuid.Nil {
+			return outbox.Permanent(invalid(e.EventType, "requester_id"))
+		}
+		_, err := c.H.FromClubManagers(ctx, src, p.ClubID, p.RequesterID)
+		return notifyResult(err)
+	}
+	if p.OwnerID == uuid.Nil {
+		return outbox.Permanent(invalid(e.EventType, "owner_id"))
+	}
+	if p.ApproverID == nil || *p.ApproverID == p.OwnerID {
+		return nil // created active (auto) or approved by the owner: nothing new to tell
+	}
+	return c.one(ctx, src, p.OwnerID, nil)
 }
 
 func (c Notifier) one(ctx context.Context, src notification.Source, recipient uuid.UUID, actor *uuid.UUID) error {

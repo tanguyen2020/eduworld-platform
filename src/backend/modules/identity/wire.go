@@ -284,7 +284,8 @@ func build(r *module.Registry, m *Module, in Imports) error {
 	gameAuth := command.GameAuth{UoW: core.UoW, Accounts: write.GameLoginRepo{}, Memberships: read.LoginMembershipReader{Session: core.ReadSession},
 		Sessions: write.GameAuthSessionRepo{}, Bootstrap: read.BootstrapReader{Session: core.ReadSession}, Events: events, Audit: auditor,
 		IdP: gameTokens, KC: kc, Tickets: tickets, Limiter: cache.NewFallbackLimiter(cache.RateLimiter{C: vk}), Curfew: policy, Hours: policy, DailyLimit: policy,
-		Chat: gameauth.ChatDirectPolicy{Reader: read.ChatDirectModel{Session: core.ReadSession}}, // delta F112-7
+		Chat:   gameauth.ChatDirectPolicy{Reader: read.ChatDirectModel{Session: core.ReadSession}}, // delta F112-7
+		Social: policy,                                                                             // delta F013/F015 (F111): policies.social from the school and tenant settings
 		Sync: func(ctx context.Context, userID uuid.UUID) (*uuid.UUID, error) {
 			res, err := ls.Ensure(ctx, userID)
 			return res.SisConnectionID, err

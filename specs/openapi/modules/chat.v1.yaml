@@ -1288,6 +1288,104 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /social/friend-suggestions:
+    get:
+      x-service: chat
+      tags:
+        - social
+      operationId: listFriendSuggestions
+      summary: Gợi ý kết bạn "Vừa chơi cùng" (không tìm kiếm tự do, không "Bạn cùng lớp" — ADR-0095)
+      description: |
+        Delta F095 cho client F111 (owner chốt 2026-11-28 [Confirmed]). `source = recently_played` (giá trị duy nhất;
+        `classmates` bỏ theo ADR-0095): những học sinh đã cùng chơi với người gọi trong `friend_suggestion_recent_window`
+        (7 ngày, CONFIG_DEFAULTS) — cùng hoạt động party (`context_kind = party`; co-op quest, boss, co-op challenge là
+        `coop`) hoặc cùng trận (`match`; trận > 8 người chỉ tính cùng đội) do module chat chiếu từ event
+        `party.activity_started`, `match.started` của module competition (R29, không gọi đồng bộ). `club` dành sẵn (chưa
+        có nguồn). Server loại: chính người gọi, bạn hiện có, lời mời kết bạn đang chờ hai chiều, quan hệ chặn hai chiều,
+        người mà người gọi đã tắt tiếng, học sinh không còn hoạt động và người ngoài phạm vi kết bạn (khác trường khi
+        tenant chưa bật `cross_school_social_enabled` — SOCIAL_SYSTEM §4.1, §7); tenant `common` chưa bật kết bạn → danh
+        sách rỗng. Mới chơi gần nhất trước. `player` là `PlayerCard` không có `presence` (người chưa là bạn không thấy
+        trạng thái) — không tên thật, trường, khối (R16). Chỉ học sinh (`game_player`).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: source
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - recently_played
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/FriendSuggestion'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+              example:
+                data:
+                  - player:
+                      user_id: 0193b0a0-0000-7000-8000-0000000000a6
+                      nickname: GauTruc22
+                      level: 7
+                      title:
+                        vi: Nhà thám hiểm
+                        en: Explorer
+                      avatar_config:
+                        schema_version: 1
+                        body_type: kid_a
+                        skin_tone: tone_02
+                        hair:
+                          item_id: hair_braids_01
+                          color: hair_col_05
+                        outfit:
+                          item_id: outfit_star_01
+                    source: recently_played
+                    context_kind: coop
+                    last_played_at: '2026-11-27T09:15:00Z'
+                  - player:
+                      user_id: 0193b0a0-0000-7000-8000-0000000000a7
+                      nickname: CaVang15
+                      level: 5
+                      avatar_config:
+                        schema_version: 1
+                        body_type: kid_b
+                        skin_tone: tone_03
+                        hair:
+                          item_id: hair_spiky_01
+                          color: hair_col_04
+                        outfit:
+                          item_id: outfit_sport_01
+                    source: recently_played
+                    context_kind: match
+                    last_played_at: '2026-11-26T14:02:00Z'
+                page:
+                  next_cursor: null
+                  has_more: false
+                  limit: 20
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /social/friend-requests:
     get:
       x-service: chat
@@ -2385,6 +2483,76 @@ paths:
           $ref: '#/components/responses/Conflict'
         '429':
           $ref: '#/components/responses/RateLimited'
+  /social/club-invitations:
+    get:
+      x-service: chat
+      tags:
+        - social
+      operationId: listMyClubInvitations
+      summary: Lời mời vào club của chính học sinh (hộp lời mời trong game)
+      description: |
+        Delta F120 cho client F111 (owner chốt 2026-11-28 [Confirmed]). Chỉ lời mời gửi tới người gọi trong tenant phiên
+        (`invitee_id` = người gọi); không bao giờ lời mời của học sinh khác. `status` mặc định `pending` = lời mời đang chờ
+        chưa hết hạn (`club_invitation_ttl`) của club còn `active`; `expired` gồm cả lời mời `pending` đã quá
+        `expires_at`. Mới nhất trước. Mỗi dòng kèm `club_name` (tên club đã qua kiểm duyệt) và `inviter_nickname` — không
+        tên thật, trường, khối (R16). Chỉ học sinh (`game_player`).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - pending
+              - accepted
+              - declined
+              - expired
+              - cancelled
+            default: pending
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/ClubInvitation'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+              example:
+                data:
+                  - invitation_id: 0193b0a0-0000-7000-8000-000000000c31
+                    club_id: 0193b0a0-0000-7000-8000-000000000c01
+                    club_name: Nhà thám hiểm nhí
+                    inviter_id: 0193b0a0-0000-7000-8000-0000000000a1
+                    inviter_nickname: CaHeoVui07
+                    invitee_id: 0193b0a0-0000-7000-8000-0000000000a3
+                    status: pending
+                    expires_at: '2026-12-04T08:00:00Z'
+                page:
+                  next_cursor: null
+                  has_more: false
+                  limit: 20
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /social/club-invitations/{invitation_id}:accept:
     post:
       x-service: chat
@@ -6266,6 +6434,12 @@ components:
             - in_match
             - away
           description: PresenceStatus (MULTIPLAYER_GAMEPLAY §5, enum chung với AsyncAPI)
+        title:
+          $ref: '#/components/schemas/LocalizedName'
+          description: |
+            Danh hiệu level hiện tại của người chơi (`title` của progression curve — PROGRESSION_SYSTEM §4.3), module chat chiếu từ
+            `level.reached.title` (delta F095, owner chốt 2026-11-28 [Confirmed]). Vắng khi học sinh chưa đạt level có danh hiệu
+            kể từ khi có trường này — client ẩn danh hiệu. Chỉ thông tin game, không lộ dữ liệu học tập (R16).
     AvatarConfig:
       type: object
       description: Cấu trúc theo CHARACTER_SYSTEM §5.1 — bản JSON Schema dùng chung specs/schemas/avatar-config.schema.json (phải giữ khớp). item_id là mã (varchar 64), không phải UUID; server kiểm danh mục, sở hữu (ITEM_NOT_OWNED) và slot (EQUIP_SLOT_INVALID); ≤ 16 KB.
@@ -6345,6 +6519,22 @@ components:
       maxLength: 64
       pattern: ^[a-z0-9_]+$
       description: Mã nội dung game (item_id, preset, dáng, màu) — chuỗi, không phải UUID
+    LocalizedName:
+      type: object
+      description: Tên/nhãn hiển thị song ngữ bắt buộc cả vi và en (văn bản game — ADR-0056 mục 2)
+      required:
+        - vi
+        - en
+      additionalProperties: false
+      properties:
+        vi:
+          type: string
+          minLength: 1
+          maxLength: 255
+        en:
+          type: string
+          minLength: 1
+          maxLength: 255
     Problem:
       type: object
       required:
@@ -6857,22 +7047,6 @@ components:
         sort_order:
           type: integer
           minimum: 0
-    LocalizedName:
-      type: object
-      description: Tên/nhãn hiển thị song ngữ bắt buộc cả vi và en (văn bản game — ADR-0056 mục 2)
-      required:
-        - vi
-        - en
-      additionalProperties: false
-      properties:
-        vi:
-          type: string
-          minLength: 1
-          maxLength: 255
-        en:
-          type: string
-          minLength: 1
-          maxLength: 255
     PinnedMessage:
       type: object
       required:
@@ -7107,6 +7281,29 @@ components:
               $ref: '#/components/schemas/Uuid'
             party_id:
               $ref: '#/components/schemas/Uuid'
+    FriendSuggestion:
+      type: object
+      description: Một gợi ý kết bạn của `listFriendSuggestions` (delta F095) — không tên thật, trường, khối (R16)
+      required:
+        - player
+        - source
+      properties:
+        player:
+          $ref: '#/components/schemas/PlayerCard'
+        source:
+          type: string
+          enum:
+            - recently_played
+        context_kind:
+          type: string
+          enum:
+            - party
+            - match
+            - club
+            - coop
+          description: 'Lần chơi chung gần nhất: party (hoạt động party), coop (co-op quest/boss/co-op challenge), match (trận); club dành sẵn'
+        last_played_at:
+          $ref: '#/components/schemas/Timestamp'
     FriendRequest:
       type: object
       required:
@@ -7332,8 +7529,16 @@ components:
           $ref: '#/components/schemas/Uuid'
         club_id:
           $ref: '#/components/schemas/Uuid'
+        club_name:
+          type: string
+          maxLength: 64
+          description: Tên club (đã qua kiểm duyệt) — delta F120 cho F111
         inviter_id:
           $ref: '#/components/schemas/Uuid'
+        inviter_nickname:
+          type: string
+          maxLength: 32
+          description: Nickname người mời (không tên thật — R16) — delta F120 cho F111
         invitee_id:
           $ref: '#/components/schemas/Uuid'
         status:
@@ -7557,6 +7762,9 @@ components:
         - assignment_results_released
         - level_reached
         - achievement_unlocked
+        - club_invitation
+        - club_join_request
+        - club_approved
     LocalizedText:
       type: object
       description: Mô tả/văn bản game song ngữ bắt buộc cả vi và en (ADR-0056 mục 2)
@@ -7584,7 +7792,7 @@ components:
           type: string
           maxLength: 64
           pattern: ^[a-z][a-z0-9_]{0,63}$
-          description: open_friend_requests, open_party_invitation, open_assignment, open_assignment_result, open_profile, open_achievements
+          description: 'open_friend_requests, open_party_invitation, open_assignment, open_assignment_result, open_profile, open_achievements, open_club (id = club_id: club_invitation, club_join_request, club_approved — delta F120/F123), open_event (id = event_id; dành sẵn, Release 1.0 chưa có thông báo nào dùng)'
         id:
           $ref: '#/components/schemas/Uuid'
     ChatPolicyDocument:

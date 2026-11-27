@@ -166,7 +166,7 @@ Cột "Feature đã chọn" là **quyết định đã chốt** (Technical Archi
 | RB-622 | EVENT_DESIGN chưa ghi module identity tiêu thụ `sanction.applied/lifted`, `moderation.school_notified`; chưa có hạ tầng gửi email (SMTP) trong tài liệu | Thêm consumer; biến `EW_SMTP_*` | P2 | F124 |
 | RB-623 | UI lịch trực Safety Team và break-glass chưa thuộc feature nào | Bổ sung vào F122 | P2 | F122, F124 |
 | RB-624 | Cơ chế loại tenant QA khỏi analytics chưa có trong GAME_ANALYTICS, DASHBOARD_DATA, TEST_STRATEGY | Cột `is_qa` trên tenant | P2 | F131, F134 |
-| RB-625 | "Tham gia bạn": `joinFriendInWorld` (STUDENT_GAME_UX_SOCIAL §11, F071) vs `hub.instance.join {follow_user_id}` (F091) | Theo F091; bỏ hoặc định nghĩa lại `joinFriendInWorld` | P2 | F071, F091, F111 |
+| RB-625 | "Tham gia bạn": `joinFriendInWorld` (STUDENT_GAME_UX_SOCIAL §11, F071) vs `hub.instance.join {follow_user_id}` (F091) | Theo F091; bỏ hoặc định nghĩa lại `joinFriendInWorld` — **Đóng 2026-11-28:** bỏ hẳn (đã gỡ khỏi `game.v1` ở F071 T004, không đổi nghĩa); "Tham gia bạn" chỉ qua `hub.instance.join {follow_user_id}` | P2 | F071, F091, F111 |
 | RB-626 | Tắt tạo club: `403 PERMISSION_DENIED` (F120-AC-17) vs `SOCIAL_SCOPE_VIOLATION` (AC-SOC-006); UX ẩn tab Club cho `g1_3` vs ADR-0020 quyền xã hội như nhau | Một mã lỗi; chỉ khác UX | P2 | F111, F120 |
 | RB-612 | Tài khoản demo còn thiếu: reviewer tenant, `game_designer`, `liveops`, platform thứ hai có `game.economy.adjust`, `competition_admin`; seed thiếu học sinh lớp 6–9 | Bổ sung LOCAL_DEVELOPMENT | P2 | F025, F078, F108, F109 |
 

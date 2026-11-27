@@ -28,11 +28,12 @@ const ProjectionIdentityName = "chat.projection_identity"
 var ProjectionIdentityEvents = []string{"tenant.created", "tenant.updated", "student.synced", "user.status_changed",
 	"student.cleaned_up", "student.restored", "school.synced", "school.updated", "platform_settings.changed"}
 
-// ProjectionGameName keeps ref.player_profiles (nickname, avatar, level of PlayerCard, F095-AC-11).
+// ProjectionGameName keeps ref.player_profiles (nickname, avatar, level of PlayerCard, F095-AC-11; level and title from
+// level.reached, delta F095).
 const ProjectionGameName = "chat.projection_game"
 
 // ProjectionGameEvents are the game events it projects (owner F070).
-var ProjectionGameEvents = []string{"game_profile.updated"}
+var ProjectionGameEvents = []string{"game_profile.updated", "level.reached"}
 
 // Subjects returns the exact subjects of the events of producer.
 func Subjects(producer string, events []string) []string {
@@ -53,6 +54,13 @@ const GameplayChannelsName = "chat.gameplay_channels"
 var GameplayChannelsEvents = []string{"party.created", "party.member_joined", "party.member_left", "party.member_kicked", "party.leader_transferred",
 	"party.disbanded", "match.started", "match.completed", "match.aborted"}
 
+// RecentCoplayersName keeps social.recent_coplayers ("Vừa chơi cùng" of listFriendSuggestions, delta F095) from the
+// competition events below (party activity members, match participants).
+const RecentCoplayersName = "chat.recent_coplayers"
+
+// RecentCoplayersEvents are the competition events it reads.
+var RecentCoplayersEvents = []string{"party.activity_started", "match.started"}
+
 // Durable consumers of the in-game notifications (F123 T001, EVENT_DESIGN §3.2): one per producer stream, plus the
 // moderation notices of F121 on the chat stream. They run with the other domain consumers (worker events).
 const (
@@ -61,6 +69,8 @@ const (
 	NotifyPartyInvitationName = "chat.notify_party_invitation"
 	NotifyAssignmentName      = "chat.notify_assignment"
 	NotifyProgressionName     = "chat.notify_progression"
+	// NotifyClubName turns the club events of module chat into club notifications (delta F120/F123 for the client F111).
+	NotifyClubName = "chat.notify_club"
 )
 
 // NotifierRoute is the stream, producer and events of one notifier consumer.
@@ -77,4 +87,5 @@ var Notifiers = map[string]NotifierRoute{
 	NotifyPartyInvitationName: {Stream: CompetitionStream, Producer: "competition", Events: []string{"party.invitation_sent"}},
 	NotifyAssignmentName:      {Stream: LearningStream, Producer: "learning", Events: []string{"assignment.published", "assignment.results_released"}},
 	NotifyProgressionName:     {Stream: GameStream, Producer: "game", Events: []string{"level.reached", "achievement.unlocked"}},
+	NotifyClubName:            {Stream: ChatStream, Producer: "chat", Events: []string{"club.invitation_sent", "club.join_requested", "club.approved"}},
 }

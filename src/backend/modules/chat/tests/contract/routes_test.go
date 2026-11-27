@@ -97,9 +97,9 @@ func TestOperationsMatchSpec(t *testing.T) {
 	// 8 Game Studio sticker/GIF operations (F118: the shared /game-admin/{config_type} ones for sticker-packs/gifs + presign),
 	// 7 chat policy, 2 persistent channel/search and 21 club operations (F120), getTenantModerationStatus (F122 banner),
 	// rejectModerationSwitchChange, listModerationCaseTenants, listSchoolClubMembers and removeSchoolClubMember (F122 T060–T064),
-	// 9 on-call and break-glass operations (F124), 3 in-game notification operations (F123) and updateChannelMembership
-	// (delta F112-9).
-	if len(found) != len(chathttp.Operations) || len(found) != 126 { // + 4 of F082 (diff, rollback, unpublish, releases of sticker-packs/gifs)
+	// 9 on-call and break-glass operations (F124), 3 in-game notification operations (F123), updateChannelMembership
+	// (delta F112-9), listFriendSuggestions and listMyClubInvitations (deltas F095/F120 for the clients F110/F111).
+	if len(found) != len(chathttp.Operations) || len(found) != 128 { // + 4 of F082 (diff, rollback, unpublish, releases of sticker-packs/gifs)
 		t.Fatalf("chat operations found in the spec: %d of %d: %v", len(found), len(chathttp.Operations), found)
 	}
 	// F116-AC-18: the catalogue and switch administration is internal-gateway only (x-internal, /admin/), except the

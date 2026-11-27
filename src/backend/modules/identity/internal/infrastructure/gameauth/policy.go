@@ -25,6 +25,7 @@ type SettingsPolicy struct {
 }
 
 var (
+	_ port.SocialSettingsSource = SettingsPolicy{}
 	_ port.CurfewSource         = SettingsPolicy{}
 	_ port.AccessHoursSource    = SettingsPolicy{}
 	_ port.DailyPlayLimitSource = SettingsPolicy{}
@@ -120,6 +121,25 @@ func (p SettingsPolicy) DailyPlayLimit(ctx context.Context, tenant uuid.UUID, sc
 	}
 	played, err := p.PlayTime.PlayedOn(tenancy.WithScope(ctx, sc), tenant, user, settings.DateOf(now, loc))
 	return s.DailyPlayLimitMinutes, played, loc, err
+}
+
+// SocialSettings implements port.SocialSettingsSource (delta F013/F015): student_club_creation of the school (absent =
+// false) and cross_school_social_enabled of the tenant (absent = false).
+func (p SettingsPolicy) SocialSettings(ctx context.Context, tenant uuid.UUID, school *uuid.UUID) (bool, bool, error) {
+	s, err := p.school(ctx, tenant, school, settings.Curfew{})
+	if err != nil {
+		return false, false, err
+	}
+	club := s != nil && s.StudentClubCreation
+	ts, found, err := p.Reader.TenantSettings(ctx, tenant)
+	if err != nil || !found {
+		return club, false, err
+	}
+	t, err := dto.TenantSettingsOf(ts.Value, ts.Version, settings.StudentCleanup{})
+	if err != nil {
+		return club, false, err
+	}
+	return club, t.CrossSchoolSocialEnabled, nil
 }
 
 // ChatDirectPolicy implements port.ChatDirectSource from the projections of the chat policy levels (delta F112-7) under

@@ -12,7 +12,7 @@
     "NotificationKind": {
       "type": "string",
       "description": "Một enum loại thông báo trong game dùng chung REST (Notification.kind), WS (notification.item.created) và CHECK social.notifications.kind (RB-513, F123, SOCIAL_SYSTEM §8).",
-      "enum": ["assignment_new", "assignment_due", "party_invitation", "friend_request", "quest_available", "reward_granted", "tournament_update", "moderation_notice", "system", "assignment_results_released", "level_reached", "achievement_unlocked"]
+      "enum": ["assignment_new", "assignment_due", "party_invitation", "friend_request", "quest_available", "reward_granted", "tournament_update", "moderation_notice", "system", "assignment_results_released", "level_reached", "achievement_unlocked", "club_invitation", "club_join_request", "club_approved"]
     },
     "PartyActivityType": {
       "type": "string",

@@ -32,10 +32,15 @@ const (
 	EventClubMemberJoined = "club.member_joined"
 	EventClubMemberLeft   = "club.member_left"
 	EventClubGoalComplete = "club.goal_completed"
-	AuditClubCreated      = "club.created"
-	AuditClubApproved     = "club.approved"
-	AuditClubArchived     = "club.archived"
-	AuditClubMemberRemove = "club.member_removed"
+	// EventClubInvitation and EventClubJoinRequested feed the club notifications (delta F120/F123, consumer
+	// chat.notify_club); published only for a new row (a pending one or a member already there publishes nothing).
+	EventClubInvitation    = "club.invitation_sent"
+	EventClubJoinRequested = "club.join_requested"
+	AuditClubInvitation    = "club.invitation_sent"
+	AuditClubCreated       = "club.created"
+	AuditClubApproved      = "club.approved"
+	AuditClubArchived      = "club.archived"
+	AuditClubMemberRemove  = "club.member_removed"
 )
 
 // ClubInput is the body of createClub / updateClub (ClubCreate / ClubUpdate).
@@ -927,6 +932,9 @@ func (h Clubs) RequestJoin(ctx context.Context, id uuid.UUID) (out write.ClubReq
 				return err
 			}
 			r = *p
+		} else if err := h.publish(ctx, EventClubJoinRequested, *c, now, map[string]any{"request_id": r.ID,
+			"requester_id": r.RequesterID}); err != nil { // club_join_request for the owner and officers (delta F120/F123)
+			return err
 		}
 		out = r
 		return idempotency.SetResult(ctx, RequestBody(r))
@@ -1072,10 +1080,20 @@ func (h Clubs) Invite(ctx context.Context, id uuid.UUID, invitees []uuid.UUID) (
 			} else if existing != nil {
 				continue
 			}
-			inv, _, err := h.Store.CreateInvitation(ctx, write.ClubInvitation{ID: ids.New(), TenantID: a.tenant, ClubID: c.ID,
+			inv, created, err := h.Store.CreateInvitation(ctx, write.ClubInvitation{ID: ids.New(), TenantID: a.tenant, ClubID: c.ID,
 				InviterID: a.p.UserID, InviteeID: u, ExpiresAt: now.Add(h.inviteTTL())})
 			if err != nil {
 				return err
+			}
+			if created { // R10: a new invitation is audited and notified (club_invitation), a pending one is not repeated
+				if err := h.publish(ctx, EventClubInvitation, *c, now, map[string]any{"invitation_id": inv.ID, "inviter_id": inv.InviterID,
+					"invitee_id": inv.InviteeID, "expires_at": inv.ExpiresAt.UTC()}); err != nil {
+					return err
+				}
+				if err := h.record(ctx, AuditClubInvitation, *c, map[string]any{"invitation_id": inv.ID.String(),
+					"invitee_id": inv.InviteeID.String()}); err != nil {
+					return err
+				}
 			}
 			out = append(out, *inv)
 		}

@@ -311,7 +311,7 @@ func Register(r *module.Registry) (*Module, error) {
 		catalogReads := query.Catalog{Read: core.ReadSession, Reader: persistence.Catalog{}, Moderation: persistence.ModerationReader{},
 			Engine: pipe.Validator.Engine, Audit: core.Recorder, Cursors: cursors}
 		h := chathttp.Handlers{Commands: social, Queries: query.Social{Read: core.ReadSession, Relations: persistence.Reader{},
-			Presence: presence, Cursors: cursors}, Chat: &chathttp.ChatHandlers{Send: send, Queries: reads,
+			Presence: presence, Cursors: cursors, Directory: persistence.Directory{}, SuggestionWindow: cfg.SuggestionWindow}, Chat: &chathttp.ChatHandlers{Send: send, Queries: reads,
 			Quick: query.QuickMessages{Catalog: pipe.Quick}}, Catalog: &chathttp.CatalogHandlers{Commands: catalogAdmin, Queries: catalogReads},
 			Switches: &chathttp.SwitchHandlers{Commands: switchAdmin, Queries: query.Switches{Read: core.ReadSession, Reader: persistence.Switches{},
 				Moderation: persistence.ModerationReader{}, Cursors: cursors}},
@@ -459,6 +459,12 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("chat.moderation_cases", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.MessageHeldOptions(consumer.MessageHeld{H: safetyCmd}, core.UoW, core.App, js)
 	})
+	// chat.recent_coplayers (delta F095 for F111): party activities and matches of module competition feed the
+	// "Vừa chơi cùng" rows of listFriendSuggestions.
+	coplayers := command.Coplayers{UoW: core.UoW, Store: persistence.Coplay{}}
+	r.Consumer(messagingRecentCoplayers, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.CoplayersOptions(consumer.Coplayers{H: coplayers}, core.UoW, core.App, js)
+	})
 	// In-game notifications (F123 T001): one durable consumer per producer stream, with the other domain consumers
 	// (worker events, where every module is composed and the learning facade is wired — Clarifications 2026-11-21).
 	for _, name := range consumer.NotifierNames {
@@ -527,4 +533,6 @@ const (
 	messagingMembership        = "chat.membership"
 	messagingClubGoalsLearning = "chat.club_goals_learning"
 	messagingClubGoalsGame     = "chat.club_goals_game"
+	// messagingRecentCoplayers is messaging.RecentCoplayersName (delta F095).
+	messagingRecentCoplayers = "chat.recent_coplayers"
 )

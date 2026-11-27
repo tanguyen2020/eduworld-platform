@@ -292,7 +292,8 @@ func (c IdentityProjection) student(ctx context.Context, e outbox.Envelope) (boo
 }
 
 // GameProjection is the consumer chat.projection_game: ref.player_profiles from game_profile.updated (nickname, avatar,
-// level of the PlayerCard, F095-AC-11; public data only, R16).
+// level of the PlayerCard, F095-AC-11) and level.reached (level, title of the PlayerCard — delta F095); public data
+// only, R16.
 type GameProjection struct{ P command.Projection }
 
 // GameProjectionOptions returns its options.
@@ -303,6 +304,9 @@ func GameProjectionOptions(h GameProjection, uow *entx.UnitOfWork, dlq *sql.DB, 
 
 // Handle implements outbox.Handler.
 func (c GameProjection) Handle(ctx context.Context, e outbox.Envelope) error {
+	if e.EventType == "level.reached" {
+		return c.levelReached(ctx, e)
+	}
 	if e.EventType != "game_profile.updated" {
 		return nil
 	}
@@ -331,5 +335,37 @@ func (c GameProjection) Handle(ctx context.Context, e outbox.Envelope) error {
 		return outbox.Permanent(invalid(e.EventType, "length"))
 	}
 	ok, err := c.P.PlayerProfile(ctx, tenant, p.StudentID, p.Nickname, p.Level, avatar, *p.SourceVersion)
+	return classify("player_profiles", e, ok, err)
+}
+
+// levelReached applies level.reached (owner F074): the level and the level title (LocalizedName {vi, en}) of the public
+// card (delta F095). A title that is not a bounded {vi, en} pair is a payload error (DLQ).
+func (c GameProjection) levelReached(ctx context.Context, e outbox.Envelope) error {
+	var p struct {
+		StudentID uuid.UUID `json:"student_id"`
+		ToLevel   int       `json:"to_level"`
+		Title     *struct {
+			Vi string `json:"vi"`
+			En string `json:"en"`
+		} `json:"title"`
+	}
+	if err := decode(e, &p); err != nil {
+		return outbox.Permanent(err)
+	}
+	tenant, err := envTenant(e)
+	switch {
+	case err != nil:
+		return outbox.Permanent(err)
+	case p.StudentID == uuid.Nil || p.ToLevel < 2 || p.ToLevel > 200:
+		return outbox.Permanent(invalid(e.EventType, "student_id/to_level"))
+	}
+	var title []byte
+	if p.Title != nil {
+		if p.Title.Vi == "" || p.Title.En == "" || !maxLen(&p.Title.Vi, 255) || !maxLen(&p.Title.En, 255) {
+			return outbox.Permanent(invalid(e.EventType, "title"))
+		}
+		title, _ = json.Marshal(map[string]string{"vi": p.Title.Vi, "en": p.Title.En})
+	}
+	ok, err := c.P.PlayerLevel(ctx, tenant, p.StudentID, p.ToLevel, title)
 	return classify("player_profiles", e, ok, err)
 }

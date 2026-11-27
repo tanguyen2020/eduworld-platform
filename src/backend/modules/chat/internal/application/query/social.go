@@ -33,7 +33,17 @@ type Social struct {
 	Presence  port.PresenceStore // nil: everyone offline
 	Cursors   *page.Codec
 	Now       func() time.Time
+	// Directory reads the projected caller and tenant (listFriendSuggestions scope).
+	Directory ClubDirectory
+	// SuggestionWindow is friend_suggestion_recent_window (CONFIG_DEFAULTS; 0 = DefaultSuggestionWindow).
+	SuggestionWindow time.Duration
 }
+
+// DefaultSuggestionWindow is friend_suggestion_recent_window (7 days, SOCIAL_SYSTEM §4.1, CONFIG_DEFAULTS).
+const DefaultSuggestionWindow = 7 * 24 * time.Hour
+
+// SourceRecentlyPlayed is the only source of listFriendSuggestions (classmates removed, ADR-0095).
+const SourceRecentlyPlayed = "recently_played"
 
 // Card is a PlayerCard of the contract (no real name, school, class, score — R16).
 type Card struct {
@@ -41,6 +51,7 @@ type Card struct {
 	Nickname *string
 	Level    int
 	Avatar   []byte
+	Title    []byte // level title LocalizedName (delta F095); nil: not part of the response
 	Presence string // empty: not part of the response
 }
 
@@ -85,7 +96,7 @@ func caller(ctx context.Context) (uuid.UUID, uuid.UUID, error) {
 }
 
 func cardOf(r read.Relation) Card {
-	return Card{UserID: r.UserID, Nickname: r.Nickname, Level: r.Level, Avatar: r.Avatar}
+	return Card{UserID: r.UserID, Nickname: r.Nickname, Level: r.Level, Avatar: r.Avatar, Title: r.Title}
 }
 
 type lister func(ctx context.Context, tenant, user uuid.UUID, after *read.After, limit int) ([]read.Relation, error)
@@ -202,6 +213,93 @@ func (q Social) ListFriendRequests(ctx context.Context, direction string) (out [
 		}
 		out[i] = Request{ID: r.ID, Status: status, CreatedAt: r.CreatedAt, ExpiresAt: r.ExpiresAt, Requester: cardOf(r.Requester),
 			Addressee: cardOf(r.Addressee)}
+	}
+	return out, nil
+}
+
+// Suggestion is a FriendSuggestion of listFriendSuggestions.
+type Suggestion struct {
+	Card         Card // no presence: a student who is not a friend never sees it
+	Source       string
+	ContextKind  string
+	LastPlayedAt time.Time
+}
+
+// SuggestionPage is a page of suggestions.
+type SuggestionPage struct {
+	Data []Suggestion
+	Page page.Info
+}
+
+// ListFriendSuggestions implements listFriendSuggestions (delta F095 for the client F111, owner chốt 2026-11-28): the
+// students who played with the caller within friend_suggestion_recent_window ("Vừa chơi cùng"), most recent first,
+// without friends, pending requests, blocks (either way), the students the caller muted, inactive students and the
+// students outside the friend scope (another school unless the unit tenant enabled cross-school social; nobody in a
+// common tenant that did not re-enable friends). Public card only, no presence (R16). No free search exists.
+func (q Social) ListFriendSuggestions(ctx context.Context, source string, limit int, cursor string) (out SuggestionPage, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.query.ListFriendSuggestions")
+	defer func() { done(err) }()
+	tenant, me, err := caller(ctx)
+	if err != nil {
+		return out, err
+	}
+	if source != SourceRecentlyPlayed {
+		return out, problem.Invalid("source", problem.SubInvalid, "must be recently_played")
+	}
+	if q.Directory == nil {
+		return out, errors.New("chat: friend suggestions need the directory")
+	}
+	limit = page.Limit(limit)
+	cur, err := q.Cursors.Decode(cursor)
+	if err != nil {
+		return out, problem.New(problem.BadRequest, "invalid cursor")
+	}
+	var after *read.After
+	if cur != nil {
+		at, err := time.Parse(time.RFC3339Nano, cur.Key)
+		if err != nil {
+			return out, problem.New(problem.BadRequest, "invalid cursor")
+		}
+		after = &read.After{At: at, ID: cur.ID}
+	}
+	window := q.SuggestionWindow
+	if window <= 0 {
+		window = DefaultSuggestionWindow
+	}
+	now := q.now()
+	out.Page = page.Info{Limit: limit}
+	var rows []read.Coplayer
+	if err := q.Read.Read(ctx, func(ctx context.Context) error {
+		t, err := q.Directory.Tenant(ctx, tenant)
+		if err != nil {
+			return err
+		}
+		self, err := q.Directory.Student(ctx, tenant, me)
+		if err != nil {
+			return err
+		}
+		if t == nil || self == nil || !self.Active() || !t.FriendsEnabled() {
+			return nil // nobody to suggest (F095-AC-23: friends off in a common tenant)
+		}
+		f := read.CoplayerFilter{Tenant: tenant, User: me, Since: now.Add(-window), Now: now, After: after, Limit: limit + 1}
+		if t.Type != social.TenantUnit || !t.CrossSchool {
+			school := self.SchoolID
+			f.SameSchool = &school
+		}
+		rows, err = q.Relations.Coplayers(ctx, f)
+		return err
+	}); err != nil {
+		return out, err
+	}
+	if len(rows) > limit {
+		rows = rows[:limit]
+		last := rows[len(rows)-1]
+		next := q.Cursors.Encode(page.Cursor{Key: last.LastPlayedAt.UTC().Format(time.RFC3339Nano), ID: last.UserID})
+		out.Page.NextCursor, out.Page.HasMore = &next, true
+	}
+	out.Data = make([]Suggestion, len(rows))
+	for i, r := range rows {
+		out.Data[i] = Suggestion{Card: cardOf(r.Relation), Source: SourceRecentlyPlayed, ContextKind: r.ContextKind, LastPlayedAt: r.LastPlayedAt}
 	}
 	return out, nil
 }

@@ -34,6 +34,16 @@ func TestLevelUpMultipleLevelsAndRewards(t *testing.T) {
 		reached[1]["from_level"] != float64(2) || reached[1]["to_level"] != float64(3) || reached[1]["curve_version"] != float64(2) {
 		t.Fatalf("level.reached %+v", reached)
 	}
+	// Delta F095: level.reached carries the level title {vi, en} (projected by module chat into PlayerCard.title).
+	for _, r := range reached {
+		lt, _ := r["title"].(map[string]any)
+		if vi, _ := lt["vi"].(string); vi == "" {
+			t.Fatalf("level.reached title %+v", r["title"])
+		}
+		if en, _ := lt["en"].(string); en == "" {
+			t.Fatalf("level.reached title %+v", r["title"])
+		}
+	}
 	var title string
 	if err := e.platform.QueryRowContext(ctx, `SELECT title_code FROM game.game_profiles WHERE student_id = $1`, s.id).Scan(&title); err != nil ||
 		title != "beginner" {

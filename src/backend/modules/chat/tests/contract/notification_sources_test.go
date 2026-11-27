@@ -21,7 +21,13 @@ type recorder struct {
 	recipients []uuid.UUID
 	actor      *uuid.UUID
 	assignment uuid.UUID
+	club       uuid.UUID
 	calls      int
+}
+
+func (r *recorder) FromClubManagers(_ context.Context, src notification.Source, club uuid.UUID, actor uuid.UUID) (int, error) {
+	r.src, r.club, r.actor, r.calls = src, club, &actor, r.calls+1
+	return 1, nil
 }
 
 func (r *recorder) FromEvent(_ context.Context, src notification.Source, recipients []uuid.UUID, actor *uuid.UUID) (int, error) {
@@ -55,6 +61,7 @@ func TestNotificationSourcesContract(t *testing.T) {
 		payload                   map[string]any
 		recipient, actor          *uuid.UUID
 		assignment                bool
+		managers                  bool
 		params                    map[string]string
 		none                      bool
 	}{
@@ -78,6 +85,20 @@ func TestNotificationSourcesContract(t *testing.T) {
 		{name: "report_resolved", module: "chat", event: "report.resolved", version: 1, recipient: &b,
 			payload: map[string]any{"tenant_id": tenant.String(), "report_id": ref.String(), "case_id": uuid.NewString(),
 				"reporter_id": b.String(), "kind": "moderation_notice", "message_code": "moderation.report_handled", "resolved_at": now}},
+		// Delta F120/F123 (client F111): the club notifications; ref = club_id (deep link open_club).
+		{name: "club_invitation", module: "chat", event: "club.invitation_sent", version: 1, recipient: &b, actor: &a,
+			payload: map[string]any{"invitation_id": uuid.NewString(), "club_id": ref.String(), "tenant_id": tenant.String(),
+				"inviter_id": a.String(), "invitee_id": b.String(), "expires_at": now, "occurred_at": now}},
+		{name: "club_join_requested", module: "chat", event: "club.join_requested", version: 1, managers: true, actor: &a,
+			payload: map[string]any{"request_id": uuid.NewString(), "club_id": ref.String(), "tenant_id": tenant.String(),
+				"requester_id": a.String(), "occurred_at": now}},
+		{name: "club_approved_by_staff", module: "chat", event: "club.approved", version: 1, recipient: &b,
+			payload: map[string]any{"club_id": ref.String(), "tenant_id": tenant.String(), "club_type": "interest_group",
+				"owner_id": b.String(), "school_id": school.String(), "chat_channel_id": uuid.NewString(), "approver_id": a.String(),
+				"occurred_at": now}},
+		{name: "club_created_active", module: "chat", event: "club.approved", version: 1, none: true,
+			payload: map[string]any{"club_id": ref.String(), "tenant_id": tenant.String(), "club_type": "interest_group",
+				"owner_id": b.String(), "school_id": school.String(), "chat_channel_id": uuid.NewString(), "occurred_at": now}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -113,6 +134,10 @@ func TestNotificationSourcesContract(t *testing.T) {
 			case c.none:
 				if rec.calls != 0 {
 					t.Fatalf("not open must notify nobody: %+v", rec)
+				}
+			case c.managers:
+				if rec.calls != 1 || rec.club != ref || rec.actor == nil || *rec.actor != *c.actor || rec.src.RefID == nil || *rec.src.RefID != ref {
+					t.Fatalf("club managers: %+v", rec)
 				}
 			case c.assignment:
 				if rec.calls != 1 || rec.assignment != ref || rec.src.RefID == nil || *rec.src.RefID != ref || rec.src.TenantID != tenant {

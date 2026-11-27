@@ -635,3 +635,46 @@ func (ClubReads) Events(ctx context.Context, tenant, clubID uuid.UUID, after *re
 	}
 	return out, rows.Err()
 }
+
+// Invitations implements read.ClubReader (listMyClubInvitations, delta F120): the invitations of invitee only, newest
+// first, with the club name and the nickname of the inviter (R16).
+func (ClubReads) Invitations(ctx context.Context, tenant, invitee uuid.UUID, status string, now time.Time, after *read.ClubCursor,
+	limit int) ([]read.ClubInvitationRow, error) {
+	t, err := anyTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	cond := `i.status = $3::varchar`
+	switch status {
+	case "pending":
+		cond = `$3::varchar = 'pending' AND i.status = 'pending' AND i.expires_at > $4 AND c.status = 'active'`
+	case "expired":
+		cond = `$3::varchar = 'expired' AND (i.status = 'expired' OR (i.status = 'pending' AND i.expires_at <= $4))`
+	}
+	at, id := keyset(after)
+	// tenancyguard:ok social.club_invitations + social.clubs with tenant_id + deleted_at IS NULL; projection ref.player_profiles of the session tenant (no deleted_at)
+	rows, err := t.QueryContext(ctx, `SELECT i.invitation_id, i.club_id, c.name, i.inviter_id, p.nickname, i.invitee_id,
+			CASE WHEN i.status = 'pending' AND i.expires_at <= $4 THEN 'expired' ELSE i.status END, i.expires_at, i.created_at
+		FROM social.club_invitations i
+		JOIN social.clubs c ON c.club_id = i.club_id AND c.tenant_id = i.tenant_id AND c.deleted_at IS NULL
+		LEFT JOIN ref.player_profiles p ON p.tenant_id = i.tenant_id AND p.student_id = i.inviter_id
+		WHERE i.tenant_id = $1 AND i.invitee_id = $2 AND i.deleted_at IS NULL AND `+cond+`
+			AND ($5::timestamptz IS NULL OR (i.created_at, i.invitation_id) < ($5, $6::uuid))
+		ORDER BY i.created_at DESC, i.invitation_id DESC LIMIT $7`, tenant, invitee, status, now, at, id, limit)
+	if err != nil {
+		return nil, fmt.Errorf("chat: club invitations: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []read.ClubInvitationRow
+	for rows.Next() {
+		var r read.ClubInvitationRow
+		var name, nick sql.NullString
+		if err := rows.Scan(&r.ID, &r.ClubID, &name, &r.InviterID, &nick, &r.InviteeID, &r.Status, &r.ExpiresAt, &r.CreatedAt); err != nil {
+			return nil, fmt.Errorf("chat: club invitations: %w", err)
+		}
+		r.ClubName, r.InviterNickname = name.String, nullString(nick)
+		r.ExpiresAt, r.CreatedAt = r.ExpiresAt.UTC(), r.CreatedAt.UTC()
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}

@@ -3921,6 +3921,17 @@
     ]
   },
   {
+    "operation_id": "listFriendSuggestions",
+    "module": "chat",
+    "method": "GET",
+    "path": "/social/friend-suggestions",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listFriends",
     "module": "chat",
     "method": "GET",
@@ -4186,6 +4197,17 @@
     "module": "chat",
     "method": "GET",
     "path": "/chat/channels",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listMyClubInvitations",
+    "module": "chat",
+    "method": "GET",
+    "path": "/social/club-invitations",
     "tenant_scoped": true,
     "required": [
       "cross_tenant",

@@ -40,6 +40,7 @@ type Queries interface {
 	ListBlocks(ctx context.Context, limit int, cursor string) (query.RelationPage, error)
 	ListMutes(ctx context.Context, limit int, cursor string) (query.RelationPage, error)
 	ListFriendRequests(ctx context.Context, direction string) ([]query.Request, error)
+	ListFriendSuggestions(ctx context.Context, source string, limit int, cursor string) (query.SuggestionPage, error)
 }
 
 // Handlers are the use cases served over HTTP: F095 (social) and F115 (chat core; nil leaves the chat routes unmounted,
@@ -78,9 +79,11 @@ func op(id, method, pattern string, idem httpx.IdempotencyMode, status int) http
 // Operations of F095 (method, path, Idempotency-Key and success status of the spec; the contract test checks them
 // against specs/openapi/eduworld-api.v1.yaml). Every route is a player route: game_player + X-Tenant-Id (F095-AC-10).
 var Operations = map[string]httpx.Operation{
-	"listFriends":         op("listFriends", http.MethodGet, "/social/friends", httpx.IdempotencyNone, http.StatusOK),
-	"removeFriend":        op("removeFriend", http.MethodDelete, "/social/friends/{user_id}", httpx.IdempotencyNone, http.StatusNoContent),
-	"listFriendRequests":  op("listFriendRequests", http.MethodGet, "/social/friend-requests", httpx.IdempotencyNone, http.StatusOK),
+	"listFriends":        op("listFriends", http.MethodGet, "/social/friends", httpx.IdempotencyNone, http.StatusOK),
+	"removeFriend":       op("removeFriend", http.MethodDelete, "/social/friends/{user_id}", httpx.IdempotencyNone, http.StatusNoContent),
+	"listFriendRequests": op("listFriendRequests", http.MethodGet, "/social/friend-requests", httpx.IdempotencyNone, http.StatusOK),
+	"listFriendSuggestions": op("listFriendSuggestions", http.MethodGet, "/social/friend-suggestions", httpx.IdempotencyNone,
+		http.StatusOK),
 	"sendFriendRequest":   op("sendFriendRequest", http.MethodPost, "/social/friend-requests", httpx.IdempotencyRequired, http.StatusCreated),
 	"acceptFriendRequest": op("acceptFriendRequest", http.MethodPost, "/social/friend-requests/{request_id}:accept", httpx.IdempotencyRequired, http.StatusNoContent),
 	"rejectFriendRequest": op("rejectFriendRequest", http.MethodPost, "/social/friend-requests/{request_id}:reject", httpx.IdempotencyNone, http.StatusNoContent),
@@ -97,7 +100,7 @@ var Operations = map[string]httpx.Operation{
 // PlayerOperations are the player routes of F095 (all of them).
 var PlayerOperations = []string{"listFriends", "removeFriend", "listFriendRequests", "sendFriendRequest", "acceptFriendRequest",
 	"rejectFriendRequest", "createFriendCode", "redeemFriendCode", "listBlocks", "blockUser", "unblockUser", "listMutes", "muteUser",
-	"unmuteUser"}
+	"unmuteUser", "listFriendSuggestions"}
 
 // Register mounts every F095 operation on the server.
 func Register(s *httpx.Server, h Handlers) error {
@@ -105,20 +108,21 @@ func Register(s *httpx.Server, h Handlers) error {
 		return errors.New("chat: the F095 handlers are required")
 	}
 	routes := map[string]http.HandlerFunc{
-		"listFriends":         h.list(h.Queries.ListFriends, true),
-		"removeFriend":        h.relation(h.Commands.RemoveFriend),
-		"listFriendRequests":  h.listFriendRequests,
-		"sendFriendRequest":   h.sendFriendRequest,
-		"acceptFriendRequest": h.request(h.Commands.AcceptFriendRequest),
-		"rejectFriendRequest": h.request(h.Commands.RejectFriendRequest),
-		"createFriendCode":    h.createFriendCode,
-		"redeemFriendCode":    h.redeemFriendCode,
-		"listBlocks":          h.list(h.Queries.ListBlocks, false),
-		"blockUser":           h.relation(h.Commands.BlockUser),
-		"unblockUser":         h.relation(h.Commands.UnblockUser),
-		"listMutes":           h.list(h.Queries.ListMutes, false),
-		"muteUser":            h.relation(h.Commands.MuteUser),
-		"unmuteUser":          h.relation(h.Commands.UnmuteUser),
+		"listFriends":           h.list(h.Queries.ListFriends, true),
+		"removeFriend":          h.relation(h.Commands.RemoveFriend),
+		"listFriendRequests":    h.listFriendRequests,
+		"listFriendSuggestions": h.listFriendSuggestions,
+		"sendFriendRequest":     h.sendFriendRequest,
+		"acceptFriendRequest":   h.request(h.Commands.AcceptFriendRequest),
+		"rejectFriendRequest":   h.request(h.Commands.RejectFriendRequest),
+		"createFriendCode":      h.createFriendCode,
+		"redeemFriendCode":      h.redeemFriendCode,
+		"listBlocks":            h.list(h.Queries.ListBlocks, false),
+		"blockUser":             h.relation(h.Commands.BlockUser),
+		"unblockUser":           h.relation(h.Commands.UnblockUser),
+		"listMutes":             h.list(h.Queries.ListMutes, false),
+		"muteUser":              h.relation(h.Commands.MuteUser),
+		"unmuteUser":            h.relation(h.Commands.UnmuteUser),
 	}
 	for _, id := range PlayerOperations {
 		if err := s.Handle(Operations[id], routes[id]); err != nil {
@@ -207,7 +211,7 @@ func pathUUID(r *http.Request, name string) (uuid.UUID, error) {
 	return id, nil
 }
 
-// card is a PlayerCard: user_id, nickname, level, avatar_config and (listFriends) presence only (R16).
+// card is a PlayerCard: user_id, nickname, level, avatar_config, title (delta F095) and (listFriends) presence only (R16).
 func card(c query.Card) map[string]any {
 	m := map[string]any{"user_id": c.UserID, "nickname": "", "level": c.Level}
 	if c.Nickname != nil {
@@ -215,6 +219,9 @@ func card(c query.Card) map[string]any {
 	}
 	if len(c.Avatar) > 0 {
 		m["avatar_config"] = json.RawMessage(c.Avatar)
+	}
+	if len(c.Title) > 0 {
+		m["title"] = json.RawMessage(c.Title)
 	}
 	if c.Presence != "" {
 		m["presence"] = c.Presence
@@ -242,6 +249,7 @@ func (h Handlers) list(fn lister, friends bool) http.HandlerFunc {
 				}
 			} else {
 				delete(m, "level")
+				delete(m, "title") // PlayerRelation: nickname and avatar only
 				m["created_at"] = rel.CreatedAt.UTC()
 			}
 			data[i] = m
@@ -334,4 +342,25 @@ func (h Handlers) listFriendRequests(w http.ResponseWriter, r *http.Request) {
 			"requester": card(q.Requester), "addressee": card(q.Addressee)}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": data})
+}
+
+// listFriendSuggestions serves listFriendSuggestions (delta F095): FriendSuggestion {player (PlayerCard without
+// presence), source, context_kind, last_played_at}.
+func (h Handlers) listFriendSuggestions(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	n, _ := strconv.Atoi(q.Get("limit"))
+	p, err := h.Queries.ListFriendSuggestions(r.Context(), q.Get("source"), n, q.Get("cursor"))
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	data := make([]map[string]any, len(p.Data))
+	for i, sg := range p.Data {
+		m := map[string]any{"player": card(sg.Card), "source": sg.Source, "last_played_at": sg.LastPlayedAt.UTC()}
+		if sg.ContextKind != "" {
+			m["context_kind"] = sg.ContextKind
+		}
+		data[i] = m
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": data, "page": p.Page})
 }

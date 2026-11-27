@@ -41,6 +41,10 @@
 - T041 gộp tài khoản: hai bút toán bù `reason_code = adjustment`, `source_type = merge`, `rule_id` NULL, idempotent theo `merge_id`; học sinh đích giữ level cao hơn rồi áp curve với tổng XP.
 - T042 (nhận từ F106): consumer `competition.leaderboard_xp` ghi contribution metric `xp` (`source_type = xp_awarded`) cho bảng `friends_xp_weekly`; bỏ bút toán 0 XP và bút toán bù.
 
+### Session 2026-11-28 (delta cho client F110 — [Confirmed], owner "chốt hết")
+
+- Q: Module chat cần danh hiệu level cho `PlayerCard.title` (F095) mà không đọc database game? → A: [Confirmed] `level.reached` thêm `title` (`LocalizedName` {vi, en} của danh hiệu tại level đó, `null` khi không có hoặc thiếu một ngôn ngữ) cạnh `title_code` (additive, schema v1). Test: `TestLevelUpMultipleLevelsAndRewards` kiểm `title` và schema payload.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Cộng XP server-side từ sự kiện đã kiểm chứng (Priority: P1)

@@ -35,12 +35,16 @@ const (
 	KindAssignmentResults   Kind = "assignment_results_released"
 	KindLevelReached        Kind = "level_reached"
 	KindAchievementUnlocked Kind = "achievement_unlocked"
+	// Club kinds (delta F120/F123 for the client F111): deep link open_club {id: club_id}.
+	KindClubInvitation  Kind = "club_invitation"
+	KindClubJoinRequest Kind = "club_join_request"
+	KindClubApproved    Kind = "club_approved"
 )
 
 // Kinds lists every value of the enum (CHECK social.notifications.kind).
 var Kinds = []Kind{KindAssignmentNew, KindAssignmentDue, KindPartyInvitation, KindFriendRequest, KindQuestAvailable,
 	KindRewardGranted, KindTournamentUpdate, KindModerationNotice, KindSystem, KindAssignmentResults, KindLevelReached,
-	KindAchievementUnlocked}
+	KindAchievementUnlocked, KindClubInvitation, KindClubJoinRequest, KindClubApproved}
 
 // Source events turned into notifications (EVENT_DESIGN §3.2, consumers chat.notify_*).
 const (
@@ -51,6 +55,16 @@ const (
 	EventLevelReached      = "level.reached"
 	EventAchievementUnlock = "achievement.unlocked"
 	EventReportResolved    = "report.resolved"
+	EventClubInvitation    = "club.invitation_sent"
+	EventClubJoinRequested = "club.join_requested"
+	EventClubApproved      = "club.approved"
+)
+
+// ActionOpenClub is the deep link of the club notifications ({kind: open_club, id: club_id}); ActionOpenEvent
+// ({kind: open_event, id: event_id}) is reserved: no Release 1.0 notification uses it (delta F120/F123).
+const (
+	ActionOpenClub  = "open_club"
+	ActionOpenEvent = "open_event"
 )
 
 // Bounds of the contract (ADR-0041): params ≤ 20 entries of ≤ 255 characters; ≤ 100 ids per mark_read.
@@ -88,6 +102,12 @@ var MessageCatalog = map[string]Template{
 	EventAchievementUnlock: {Kind: KindAchievementUnlocked, MessageCode: "achievement.unlocked", Action: "open_achievements",
 		RefType: "achievement", Params: []string{"tier"}},
 	EventReportResolved: {Kind: KindModerationNotice, MessageCode: "moderation.report_handled", RefType: "report"},
+	// Clubs (delta F120/F123): the invitee, the owner and officers of the club, the student owner of an approved club.
+	EventClubInvitation: {Kind: KindClubInvitation, MessageCode: "club.invitation_received", Action: ActionOpenClub, RefType: "club",
+		Params: []string{"nickname"}},
+	EventClubJoinRequested: {Kind: KindClubJoinRequest, MessageCode: "club.join_request_received", Action: ActionOpenClub,
+		RefType: "club", Params: []string{"nickname"}},
+	EventClubApproved: {Kind: KindClubApproved, MessageCode: "club.approved", Action: ActionOpenClub, RefType: "club"},
 }
 
 // Action is the in-game deep link {kind, id?} (NotificationAction of the contract).

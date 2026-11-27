@@ -13,6 +13,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/profile"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/progression"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/reward"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/ids"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
@@ -353,7 +354,7 @@ func (h Progression) levelUp(ctx context.Context, tenant, student uuid.UUID, sch
 		if err := h.Events.Publish(ctx, write.Event{Type: EventLevelReached, SubjectType: "student", SubjectID: student.String(),
 			PartitionKey: student.String(), TenantID: &tenant, OccurredAt: now, Payload: map[string]any{"student_id": student, "from_level": l - 1,
 				"to_level": l, "curve_id": curve.CurveID, "curve_version": curve.Version, "title_code": nullable(title.Code),
-				"trigger_xp_entry_id": trigger, "reached_at": now}}); err != nil {
+				"title": levelTitle(title), "trigger_xp_entry_id": trigger, "reached_at": now}}); err != nil {
 			return nil, err
 		}
 		push := map[string]any{"from_level": l - 1, "to_level": l, "title_code": title.Code, "title": title.Name}
@@ -453,4 +454,14 @@ func (h Progression) push(ctx context.Context, student uuid.UUID, p pushes, at t
 			_ = rt.LevelReached(ctx, student, l, at)
 		}
 	})
+}
+
+// levelTitle is the title of level.reached (LocalizedName {vi, en}, delta F095 for PlayerCard.title): nil when the level
+// has no title or a name is missing (both languages are required, ADR-0056).
+func levelTitle(t progression.Title) map[string]string {
+	vi, en := t.Name["vi"], t.Name["en"]
+	if t.Code == "" || vi == "" || en == "" {
+		return nil
+	}
+	return map[string]string{"vi": vi, "en": en}
 }

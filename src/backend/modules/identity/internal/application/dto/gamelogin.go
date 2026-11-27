@@ -106,10 +106,18 @@ type ChatPolicy struct {
 	DirectMessageEnabled *bool `json:"direct_message_enabled,omitempty"`
 }
 
+// SocialPolicy is PlayerBootstrap.policies.social (delta F013/F015 for F111; display only, module chat checks).
+type SocialPolicy struct {
+	StudentClubCreation  string `json:"student_club_creation"`
+	ClubCreationEligible bool   `json:"club_creation_eligible"`
+	CrossSchoolEnabled   bool   `json:"cross_school_enabled"`
+}
+
 // BootstrapPolicies is PlayerBootstrap.policies (display only; the server checks). The party policy comes from F015
 // settings and is omitted until then.
 type BootstrapPolicies struct {
 	Chat     *ChatPolicy     `json:"chat,omitempty"`
+	Social   *SocialPolicy   `json:"social,omitempty"`
 	PlayTime *PlayTimePolicy `json:"play_time,omitempty"`
 }
 

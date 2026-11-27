@@ -165,7 +165,8 @@ func setup(t *testing.T, o envOpts) *env {
 	if err != nil {
 		t.Fatal(err)
 	}
-	e.queries = query.Social{Read: e.read, Relations: persistence.Reader{}, Presence: o.presence, Cursors: codec, Now: e.clock.Now}
+	e.queries = query.Social{Read: e.read, Relations: persistence.Reader{}, Presence: o.presence, Cursors: codec, Now: e.clock.Now,
+		Directory: persistence.Directory{}}
 	e.server(ctx)
 	return e
 }

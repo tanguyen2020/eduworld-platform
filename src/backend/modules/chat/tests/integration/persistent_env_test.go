@@ -100,7 +100,7 @@ func setupPersistent(t *testing.T, o chatOpts) *pEnv {
 			Cursors: codec}, Caps: c.reads.Caps, Peer: c.reads.Peer, Settings: command.ChannelSettings{UoW: c.uow, Facts: c.facts,
 			Repo: persistence.Gameplay{}, Audit: persistence.Auditor{R: c.rec}, Now: c.clock.Now}}
 		c.clubHandlers = &chathttp.ClubHandlers{Commands: p.clubs, Queries: query.Clubs{Read: c.read, Reader: persistence.ClubReads{},
-			Directory: persistence.Directory{}, Cursors: codec}, WeekLoc: ict}
+			Directory: persistence.Directory{}, Cursors: codec, Now: c.clock.Now}, WeekLoc: ict}
 		p.retention = command.PersistentRetention{UoW: c.uow, Store: persistence.Retention{}, Audit: persistence.Auditor{R: c.rec},
 			Metrics: observability.Persistent{}, Config: command.RetentionConfig{Days: 180, Batch: 2, EvidenceContext: 2}, Now: c.clock.Now}
 	}

@@ -92,6 +92,29 @@ func (h Notifications) FromAssignment(ctx context.Context, src notification.Sour
 	return h.create(ctx, src, all, nil)
 }
 
+// FromClubManagers creates club_join_request for the active owner and officers of club (delta F120/F123): the
+// recipients are read in the transaction of the consumer; a staff owner is skipped by the RecipientPolicy (students
+// only); actor (the requester) gives the nickname and never receives it.
+func (h Notifications) FromClubManagers(ctx context.Context, src notification.Source, club uuid.UUID, actor uuid.UUID) (n int, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.command.CreateNotifications")
+	defer func() { done(err) }()
+	var managers []uuid.UUID
+	if err := h.UoW.Do(ctx, func(ctx context.Context) error {
+		var err error
+		managers, err = h.Store.ClubManagers(ctx, src.TenantID, club)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+	recipients := make([]uuid.UUID, 0, len(managers))
+	for _, m := range managers {
+		if m != actor {
+			recipients = append(recipients, m)
+		}
+	}
+	return h.create(ctx, src, recipients, &actor)
+}
+
 func (h Notifications) create(ctx context.Context, src notification.Source, recipients []uuid.UUID, actor *uuid.UUID) (int, error) {
 	var created []notification.Notification
 	err := h.UoW.Do(ctx, func(ctx context.Context) error {

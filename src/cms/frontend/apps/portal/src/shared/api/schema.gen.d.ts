@@ -8626,6 +8626,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social/club-invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lời mời vào club của chính học sinh (hộp lời mời trong game)
+         * @description Delta F120 cho client F111 (owner chốt 2026-11-28 [Confirmed]). Chỉ lời mời gửi tới người gọi trong tenant phiên
+         *     (`invitee_id` = người gọi); không bao giờ lời mời của học sinh khác. `status` mặc định `pending` = lời mời đang chờ
+         *     chưa hết hạn (`club_invitation_ttl`) của club còn `active`; `expired` gồm cả lời mời `pending` đã quá
+         *     `expires_at`. Mới nhất trước. Mỗi dòng kèm `club_name` (tên club đã qua kiểm duyệt) và `inviter_nickname` — không
+         *     tên thật, trường, khối (R16). Chỉ học sinh (`game_player`).
+         */
+        get: operations["listMyClubInvitations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social/club-invitations/{invitation_id}:accept": {
         parameters: {
             query?: never;
@@ -9027,6 +9051,35 @@ export interface paths {
         put?: never;
         /** Từ chối lời mời kết bạn (người gửi không được báo) */
         post: operations["rejectFriendRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/friend-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gợi ý kết bạn "Vừa chơi cùng" (không tìm kiếm tự do, không "Bạn cùng lớp" — ADR-0095)
+         * @description Delta F095 cho client F111 (owner chốt 2026-11-28 [Confirmed]). `source = recently_played` (giá trị duy nhất;
+         *     `classmates` bỏ theo ADR-0095): những học sinh đã cùng chơi với người gọi trong `friend_suggestion_recent_window`
+         *     (7 ngày, CONFIG_DEFAULTS) — cùng hoạt động party (`context_kind = party`; co-op quest, boss, co-op challenge là
+         *     `coop`) hoặc cùng trận (`match`; trận > 8 người chỉ tính cùng đội) do module chat chiếu từ event
+         *     `party.activity_started`, `match.started` của module competition (R29, không gọi đồng bộ). `club` dành sẵn (chưa
+         *     có nguồn). Server loại: chính người gọi, bạn hiện có, lời mời kết bạn đang chờ hai chiều, quan hệ chặn hai chiều,
+         *     người mà người gọi đã tắt tiếng, học sinh không còn hoạt động và người ngoài phạm vi kết bạn (khác trường khi
+         *     tenant chưa bật `cross_school_social_enabled` — SOCIAL_SYSTEM §4.1, §7); tenant `common` chưa bật kết bạn → danh
+         *     sách rỗng. Mới chơi gần nhất trước. `player` là `PlayerCard` không có `presence` (người chưa là bạn không thấy
+         *     trạng thái) — không tên thật, trường, khối (R16). Chỉ học sinh (`game_player`).
+         */
+        get: operations["listFriendSuggestions"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -11994,10 +12047,14 @@ export interface components {
         };
         ClubInvitation: {
             club_id: components["schemas"]["Uuid"];
+            /** @description Tên club (đã qua kiểm duyệt) — delta F120 cho F111 */
+            club_name?: string;
             expires_at: components["schemas"]["Timestamp"];
             invitation_id: components["schemas"]["Uuid"];
             invitee_id: components["schemas"]["Uuid"];
             inviter_id?: components["schemas"]["Uuid"];
+            /** @description Nickname người mời (không tên thật — R16) — delta F120 cho F111 */
+            inviter_nickname?: string;
             /** @enum {string} */
             status: "pending" | "accepted" | "declined" | "expired" | "cancelled";
         };
@@ -13416,6 +13473,18 @@ export interface components {
              * @enum {string}
              */
             status: "pending" | "accepted" | "rejected" | "cancelled" | "expired";
+        };
+        /** @description Một gợi ý kết bạn của `listFriendSuggestions` (delta F095) — không tên thật, trường, khối (R16) */
+        FriendSuggestion: {
+            /**
+             * @description Lần chơi chung gần nhất: party (hoạt động party), coop (co-op quest/boss/co-op challenge), match (trận); club dành sẵn
+             * @enum {string}
+             */
+            context_kind?: "party" | "match" | "club" | "coop";
+            last_played_at?: components["schemas"]["Timestamp"];
+            player: components["schemas"]["PlayerCard"];
+            /** @enum {string} */
+            source: "recently_played";
         };
         FunnelReport: {
             /** @description `computed_at` cũ nhất trong kết quả (DASHBOARD_DATA §8) */
@@ -15314,14 +15383,14 @@ export interface components {
         /** @description Deep link mở màn trong game (F123-AC-18); client mở màn qua EventBus, không gọi API nghiệp vụ từ scene */
         NotificationAction: {
             id?: components["schemas"]["Uuid"];
-            /** @description open_friend_requests, open_party_invitation, open_assignment, open_assignment_result, open_profile, open_achievements */
+            /** @description open_friend_requests, open_party_invitation, open_assignment, open_assignment_result, open_profile, open_achievements, open_club (id = club_id: club_invitation, club_join_request, club_approved — delta F120/F123), open_event (id = event_id; dành sẵn, Release 1.0 chưa có thông báo nào dùng) */
             kind: string;
         };
         /**
          * @description Một enum loại thông báo dùng chung REST (Notification.kind) và WS (notification.item.created), nguồn specs/schemas/common/enums.schema.json (RB-513, F123)
          * @enum {string}
          */
-        NotificationKind: "assignment_new" | "assignment_due" | "party_invitation" | "friend_request" | "quest_available" | "reward_granted" | "tournament_update" | "moderation_notice" | "system" | "assignment_results_released" | "level_reached" | "achievement_unlocked";
+        NotificationKind: "assignment_new" | "assignment_due" | "party_invitation" | "friend_request" | "quest_available" | "reward_granted" | "tournament_update" | "moderation_notice" | "system" | "assignment_results_released" | "level_reached" | "achievement_unlocked" | "club_invitation" | "club_join_request" | "club_approved";
         /** @description NPCDialogueVersion đang publish (specs/schemas/npc-dialogue.schema.json) — điều kiện chỉ để hiển thị; action nghiệp vụ đi qua API server (ADR-0016) */
         NpcDialogueDelivery: {
             dialogue_id: components["schemas"]["Uuid"];
@@ -15662,6 +15731,27 @@ export interface components {
                         warning_minutes: number;
                     };
                 };
+                /**
+                 * @description Policy xã hội hiệu lực (delta F013/F015 cho client F111, owner chốt 2026-11-28 [Confirmed]) — chỉ để ẩn/hiện nút "Tạo
+                 *     club"; `createClub` vẫn do module chat kiểm (`403 PERMISSION_DENIED`, F120-AC-17). Module identity tính từ cài đặt
+                 *     của chính nó (trường, tenant), không gọi module khác trên đường đăng nhập (R30). Vắng khi không đọc được cài đặt.
+                 * @example {
+                 *       "student_club_creation": "requires_approval",
+                 *       "club_creation_eligible": true,
+                 *       "cross_school_enabled": false
+                 *     }
+                 */
+                social?: {
+                    /** @description true khi học sinh có trường, thuộc khối 4–9 (SOCIAL_SYSTEM §6.1; lớp 1–3 không tạo club) và policy khác `disabled` */
+                    club_creation_eligible: boolean;
+                    /** @description Tenant `unit` bật `cross_school_social_enabled` (ADR-0054, SOCIAL_SYSTEM §7); luôn false với tenant khác */
+                    cross_school_enabled: boolean;
+                    /**
+                     * @description Policy `student_club_creation` của trường (SOCIAL_SYSTEM §6.1): cài đặt trường là boolean — `true` → `requires_approval`, `false`/chưa đặt → `disabled` (cùng quy tắc với module chat, F120); tenant `common` → `disabled`
+                     * @enum {string}
+                     */
+                    student_club_creation: "disabled" | "requires_approval" | "auto";
+                };
             };
             /** @description Ngôn ngữ đã chọn của học sinh; vắng mặt = default_locale của tenant */
             preferred_language?: components["schemas"]["Locale"];
@@ -15685,6 +15775,12 @@ export interface components {
              * @enum {string}
              */
             presence?: "offline" | "online" | "in_activity" | "in_match" | "away";
+            /**
+             * @description Danh hiệu level hiện tại của người chơi (`title` của progression curve — PROGRESSION_SYSTEM §4.3), module chat chiếu từ
+             *     `level.reached.title` (delta F095, owner chốt 2026-11-28 [Confirmed]). Vắng khi học sinh chưa đạt level có danh hiệu
+             *     kể từ khi có trường này — client ẩn danh hiệu. Chỉ thông tin game, không lộ dữ liệu học tập (R16).
+             */
+            title?: components["schemas"]["LocalizedName"];
             user_id: components["schemas"]["Uuid"];
         };
         /** @description Người mình đã chặn/tắt tiếng (listBlocks, listMutes) — chỉ nickname, avatar, thời điểm (R16, F095-AC-19) */
@@ -41102,6 +41198,68 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
         };
     };
+    listMyClubInvitations: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+                status?: "pending" | "accepted" | "declined" | "expired" | "cancelled";
+            };
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "invitation_id": "0193b0a0-0000-7000-8000-000000000c31",
+                     *           "club_id": "0193b0a0-0000-7000-8000-000000000c01",
+                     *           "club_name": "Nhà thám hiểm nhí",
+                     *           "inviter_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *           "inviter_nickname": "CaHeoVui07",
+                     *           "invitee_id": "0193b0a0-0000-7000-8000-0000000000a3",
+                     *           "status": "pending",
+                     *           "expires_at": "2026-12-04T08:00:00Z"
+                     *         }
+                     *       ],
+                     *       "page": {
+                     *         "next_cursor": null,
+                     *         "has_more": false,
+                     *         "limit": 20
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["ClubInvitation"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     acceptClubInvitation: {
         parameters: {
             query?: never;
@@ -42380,6 +42538,106 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    listFriendSuggestions: {
+        parameters: {
+            query: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+                source: "recently_played";
+            };
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "player": {
+                     *             "user_id": "0193b0a0-0000-7000-8000-0000000000a6",
+                     *             "nickname": "GauTruc22",
+                     *             "level": 7,
+                     *             "title": {
+                     *               "vi": "Nhà thám hiểm",
+                     *               "en": "Explorer"
+                     *             },
+                     *             "avatar_config": {
+                     *               "schema_version": 1,
+                     *               "body_type": "kid_a",
+                     *               "skin_tone": "tone_02",
+                     *               "hair": {
+                     *                 "item_id": "hair_braids_01",
+                     *                 "color": "hair_col_05"
+                     *               },
+                     *               "outfit": {
+                     *                 "item_id": "outfit_star_01"
+                     *               }
+                     *             }
+                     *           },
+                     *           "source": "recently_played",
+                     *           "context_kind": "coop",
+                     *           "last_played_at": "2026-11-27T09:15:00Z"
+                     *         },
+                     *         {
+                     *           "player": {
+                     *             "user_id": "0193b0a0-0000-7000-8000-0000000000a7",
+                     *             "nickname": "CaVang15",
+                     *             "level": 5,
+                     *             "avatar_config": {
+                     *               "schema_version": 1,
+                     *               "body_type": "kid_b",
+                     *               "skin_tone": "tone_03",
+                     *               "hair": {
+                     *                 "item_id": "hair_spiky_01",
+                     *                 "color": "hair_col_04"
+                     *               },
+                     *               "outfit": {
+                     *                 "item_id": "outfit_sport_01"
+                     *               }
+                     *             }
+                     *           },
+                     *           "source": "recently_played",
+                     *           "context_kind": "match",
+                     *           "last_played_at": "2026-11-26T14:02:00Z"
+                     *         }
+                     *       ],
+                     *       "page": {
+                     *         "next_cursor": null,
+                     *         "has_more": false,
+                     *         "limit": 20
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["FriendSuggestion"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     listFriends: {

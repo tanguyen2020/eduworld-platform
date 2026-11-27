@@ -174,6 +174,7 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `party_kick_reinvite_block` | 10 | phút | platform | [Confirmed] | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) |
 | `friend_limits` | ≤ 10 lời mời đang chờ; ≤ 20 lời mời/ngày; ≤ 100 bạn | — | platform | [Confirmed] | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) |
 | `friend_request_ttl` / `friend_code_ttl` | 7 ngày / 10 phút | — | platform | [Confirmed] | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) |
+| `friend_suggestion_recent_window` | 7 (cửa sổ "Vừa chơi cùng" của `listFriendSuggestions`; env `EW_SOCIAL_FRIEND_SUGGESTION_WINDOW`, 1 giờ–30 ngày) | ngày | platform | [Confirmed — owner 2026-11-28, delta F095 cho F111] | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) §4.1 |
 | `club_max_members` / `clubs_per_student_max` | 50 / 5 | — | platform + tenant | [Confirmed] (ADR-0050) | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) |
 | `club_invitation_ttl` | 7 (lời mời club hết hạn → `410`; env `EW_CHAT_CLUB_INVITATION_TTL`) | ngày | platform | [Proposed — F120 2026-11-23] | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) §6.5 |
 | `student_club_creation` | `disabled` (chính sách trường; giá trị `disabled` / `requires_approval` / `auto`) | — | tenant | [Confirmed — Technical Architect 2026-11-15] | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) §6.1 |

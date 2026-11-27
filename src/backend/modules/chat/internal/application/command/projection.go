@@ -86,6 +86,14 @@ func (p Projection) PlayerProfile(ctx context.Context, tenant, student uuid.UUID
 	return p.Refs.PlayerProfile(ctx, student, tenant, nickname, level, avatar, version)
 }
 
+// PlayerLevel applies level.reached (owner F074): level (never lowered) and level title of PlayerCard (delta F095).
+func (p Projection) PlayerLevel(ctx context.Context, tenant, student uuid.UUID, level int, title []byte) (bool, error) {
+	if err := p.owned(ctx, tenant, "player_profiles", student); err != nil {
+		return false, err
+	}
+	return p.Refs.PlayerLevel(ctx, student, tenant, level, title)
+}
+
 // School applies school.synced/school.updated (curfew_window of the school, F115-AC-22).
 func (p Projection) School(ctx context.Context, tenant, school uuid.UUID, status *string, settings []byte, version int64) (bool, error) {
 	if err := p.owned(ctx, tenant, "schools", school); err != nil {

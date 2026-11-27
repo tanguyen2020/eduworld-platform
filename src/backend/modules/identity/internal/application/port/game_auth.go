@@ -143,6 +143,13 @@ type KeycloakAnonymizer interface {
 	AnonymizeUser(ctx context.Context, userID string) error
 }
 
+// SocialSettingsSource returns the settings of module identity behind PlayerBootstrap.policies.social (delta F013/F015):
+// the boolean school setting student_club_creation and the tenant setting cross_school_social_enabled. Own tables only
+// (never another module on the login path, R30).
+type SocialSettingsSource interface {
+	SocialSettings(ctx context.Context, tenantID uuid.UUID, schoolID *uuid.UUID) (clubCreation, crossSchool bool, err error)
+}
+
 // ChatDirectSource returns PlayerBootstrap.policies.chat.direct_message_enabled of a student (delta F112-7) from the
 // projection of the chat policy events (never module chat itself on the login path, R30); nil: not projected yet.
 type ChatDirectSource interface {

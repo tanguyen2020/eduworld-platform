@@ -340,3 +340,28 @@ func (NotificationReader) UnreadCount(ctx context.Context, tenant, recipient uui
 	}
 	return unreadCount(ctx, t, tenant, recipient)
 }
+
+// ClubManagers implements write.NotificationStore: the active owner and officers of club (delta F120/F123,
+// club_join_request); the RecipientPolicy then keeps the students only (a staff owner is not in ref.students).
+func (Notifications) ClubManagers(ctx context.Context, tenant, club uuid.UUID) ([]uuid.UUID, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok social.club_members with tenant_id + deleted_at IS NULL (active rows only)
+	rows, err := t.QueryContext(ctx, `SELECT user_id FROM social.club_members WHERE tenant_id = $1 AND club_id = $2
+		AND role IN ('owner', 'officer') AND left_at IS NULL AND deleted_at IS NULL ORDER BY user_id LIMIT 60`, tenant, club)
+	if err != nil {
+		return nil, fmt.Errorf("club managers: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("club managers: %w", err)
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
+}

@@ -5090,6 +5090,35 @@ components:
                     điền từ bản chiếu event `chat_policy.updated` / `chat_policy.common_tenant_social_updated` của module chat (không
                     gọi module chat trên đường đăng nhập — R30). Vắng khi bản chiếu chưa có cấp platform. Chỉ để hiển thị nút "Nhắn
                     tin"; server vẫn kiểm mỗi lệnh (`CHAT_NOT_ALLOWED`), không tính giờ chat, sanction hay quan hệ bạn bè/chặn.
+            social:
+              type: object
+              description: |
+                Policy xã hội hiệu lực (delta F013/F015 cho client F111, owner chốt 2026-11-28 [Confirmed]) — chỉ để ẩn/hiện nút "Tạo
+                club"; `createClub` vẫn do module chat kiểm (`403 PERMISSION_DENIED`, F120-AC-17). Module identity tính từ cài đặt
+                của chính nó (trường, tenant), không gọi module khác trên đường đăng nhập (R30). Vắng khi không đọc được cài đặt.
+              required:
+                - student_club_creation
+                - club_creation_eligible
+                - cross_school_enabled
+              additionalProperties: false
+              properties:
+                student_club_creation:
+                  type: string
+                  enum:
+                    - disabled
+                    - requires_approval
+                    - auto
+                  description: 'Policy `student_club_creation` của trường (SOCIAL_SYSTEM §6.1): cài đặt trường là boolean — `true` → `requires_approval`, `false`/chưa đặt → `disabled` (cùng quy tắc với module chat, F120); tenant `common` → `disabled`'
+                club_creation_eligible:
+                  type: boolean
+                  description: true khi học sinh có trường, thuộc khối 4–9 (SOCIAL_SYSTEM §6.1; lớp 1–3 không tạo club) và policy khác `disabled`
+                cross_school_enabled:
+                  type: boolean
+                  description: Tenant `unit` bật `cross_school_social_enabled` (ADR-0054, SOCIAL_SYSTEM §7); luôn false với tenant khác
+              example:
+                student_club_creation: requires_approval
+                club_creation_eligible: true
+                cross_school_enabled: false
             party:
               type: object
               properties:

@@ -45,6 +45,7 @@ type ClubQueries interface {
 	Requests(ctx context.Context, id uuid.UUID, cursor string, limit int) (query.RequestPage, error)
 	Goals(ctx context.Context, id uuid.UUID) ([]read.ClubGoalRow, error)
 	Events(ctx context.Context, id uuid.UUID, cursor string, limit int) (query.EventPage, error)
+	MyInvitations(ctx context.Context, status, cursor string, limit int) (query.InvitationPage, error)
 }
 
 // ClubHandlers serve the club operations (F120 US4). Player routes carry game_player; approveClub is a portal route
@@ -62,7 +63,7 @@ type ClubHandlers struct {
 var ClubOperations = []string{"listClubs", "createClub", "getClub", "updateClub", "approveClub", "leaveClub", "archiveClub",
 	"listClubMembers", "updateClubMemberRole", "removeClubMember", "listClubJoinRequests", "requestJoinClub", "acceptClubJoinRequest",
 	"rejectClubJoinRequest", "inviteToClub", "acceptClubInvitation", "declineClubInvitation", "listClubGoals", "createClubGoal",
-	"listClubEvents", "createClubEvent", "listSchoolClubMembers", "removeSchoolClubMember"}
+	"listClubEvents", "createClubEvent", "listSchoolClubMembers", "removeSchoolClubMember", "listMyClubInvitations"}
 
 // mixedClubOperations serve students (game client) and staff (portal): the use case checks the caller (x-portal-action).
 var mixedClubOperations = map[string]bool{"listClubs": true, "getClub": true, "archiveClub": true}
@@ -92,6 +93,7 @@ func init() {
 		{ID: "rejectClubJoinRequest", Method: http.MethodPost, Pattern: "/social/club-join-requests/{request_id}:reject", SuccessStatus: http.StatusNoContent},
 		{ID: "inviteToClub", Method: http.MethodPost, Pattern: "/social/clubs/{club_id}/invitations", Idempotency: httpx.IdempotencyRequired,
 			SuccessStatus: http.StatusCreated},
+		{ID: "listMyClubInvitations", Method: http.MethodGet, Pattern: "/social/club-invitations", SuccessStatus: http.StatusOK},
 		{ID: "acceptClubInvitation", Method: http.MethodPost, Pattern: "/social/club-invitations/{invitation_id}:accept",
 			Idempotency: httpx.IdempotencyRequired, SuccessStatus: http.StatusOK},
 		{ID: "declineClubInvitation", Method: http.MethodPost, Pattern: "/social/club-invitations/{invitation_id}:decline",
@@ -130,7 +132,7 @@ func registerClubs(s *httpx.Server, h *ClubHandlers) error {
 		"requestJoinClub": h.requestJoin, "acceptClubJoinRequest": h.decideRequest(true), "rejectClubJoinRequest": h.decideRequest(false),
 		"inviteToClub": h.invite, "acceptClubInvitation": h.decideInvitation(true), "declineClubInvitation": h.decideInvitation(false),
 		"listClubGoals": h.goals, "createClubGoal": h.createGoal, "listClubEvents": h.events, "createClubEvent": h.createEvent,
-		"listSchoolClubMembers": h.staffMembers, "removeSchoolClubMember": h.staffRemove}
+		"listSchoolClubMembers": h.staffMembers, "removeSchoolClubMember": h.staffRemove, "listMyClubInvitations": h.myInvitations}
 	for _, id := range ClubOperations {
 		if err := s.Handle(Operations[id], routes[id]); err != nil {
 			return err
@@ -426,6 +428,28 @@ func (h ClubHandlers) invite(w http.ResponseWriter, r *http.Request) {
 		data[i] = command.InvitationBody(v)
 	}
 	writeJSON(w, http.StatusCreated, map[string]any{"data": data})
+}
+
+// myInvitations serves listMyClubInvitations (delta F120): ClubInvitation with club_name and inviter_nickname.
+func (h ClubHandlers) myInvitations(w http.ResponseWriter, r *http.Request) {
+	p, err := h.Queries.MyInvitations(r.Context(), r.URL.Query().Get("status"), r.URL.Query().Get("cursor"), limitOf(r))
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	data := make([]map[string]any, len(p.Data))
+	for i, v := range p.Data {
+		m := command.InvitationBody(write.ClubInvitation{ID: v.ID, ClubID: v.ClubID, InviterID: v.InviterID, InviteeID: v.InviteeID,
+			Status: v.Status, ExpiresAt: v.ExpiresAt})
+		if v.ClubName != "" {
+			m["club_name"] = v.ClubName
+		}
+		if v.InviterNickname != nil {
+			m["inviter_nickname"] = *v.InviterNickname
+		}
+		data[i] = m
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": data, "page": p.Page})
 }
 
 func (h ClubHandlers) decideInvitation(accept bool) http.HandlerFunc {

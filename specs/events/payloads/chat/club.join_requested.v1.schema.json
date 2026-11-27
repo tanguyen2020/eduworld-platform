@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/club.join_requested.v1.schema.json",
+  "title": "Payload club.join_requested v1 (module chat, owner F120)",
+  "description": "Học sinh vừa gửi một yêu cầu tham gia club mới (requestJoinClub; yêu cầu đang chờ đã có thì không phát). Chỉ mã định danh (R16). Consumer: NTF (chat.notify_club → thông báo club_join_request cho chủ club và officer là học sinh, deep link open_club — delta F120/F123), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["request_id", "club_id", "tenant_id", "requester_id", "occurred_at"],
+  "properties": {
+    "request_id": { "type": "string", "format": "uuid" },
+    "club_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "requester_id": { "type": "string", "format": "uuid" },
+    "occurred_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "request_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000f1",
+      "club_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "requester_id": "0193a5f4-6c1e-7b2a-9d1f-000000000103",
+      "occurred_at": "2026-11-28T08:40:00.000Z"
+    }
+  ]
+}

@@ -123,6 +123,7 @@ type GameAuth struct {
 	Hours       port.AccessHoursSource    // F015: school/tenant access hours (nil = none)
 	DailyLimit  port.DailyPlayLimitSource // OQ-17: daily play limit of the school (nil = none)
 	Chat        port.ChatDirectSource     // delta F112-7: policies.chat.direct_message_enabled (nil = omitted)
+	Social      port.SocialSettingsSource // delta F013/F015 (F111): policies.social (nil = omitted)
 	Sync        LoginSyncFunc
 	Restore     LoginRestorer // F016 US4: restore of a cleaned-up student (nil = ACCOUNT_NOT_PROVISIONED)
 	Metrics     port.GameAuthMetrics
@@ -545,6 +546,7 @@ func (h GameAuth) complete(ctx context.Context, cfg GameAuthConfig, c completion
 		return deny(port.GameLoginCurfewActive, err)
 	}
 	h.applyChat(ctx, &b)
+	h.applySocial(ctx, &b)
 	if err := h.applyDailyLimit(ctx, &b, user); err != nil {
 		return deny(port.GameLoginDailyLimitReached, err)
 	}
@@ -631,6 +633,30 @@ func (h GameAuth) applyChat(ctx context.Context, b *dto.PlayerBootstrap) {
 	if v != nil {
 		b.Policies.Chat = &dto.ChatPolicy{DirectMessageEnabled: v}
 	}
+}
+
+// applySocial sets policies.social (delta F013/F015 for the client F111) from the settings of module identity: display
+// only, so an unreadable setting never fails the login — the field is left out (logged) and module chat still decides
+// createClub. A student without a school gets the disabled policy.
+func (h GameAuth) applySocial(ctx context.Context, b *dto.PlayerBootstrap) {
+	if h.Social == nil {
+		return
+	}
+	in := settings.SocialPolicyInput{TenantType: b.TenantType, CommonTenant: b.IsCommonTenant, HasSchool: b.SchoolID != nil}
+	if b.Student != nil {
+		in.GradeLevel = b.Student.GradeLevel
+	}
+	if in.HasSchool && !in.CommonTenant {
+		club, cross, err := h.Social.SocialSettings(ctx, b.TenantID, b.SchoolID)
+		if err != nil {
+			slog.WarnContext(ctx, "identity: social settings unavailable for the bootstrap", "error", err)
+			return
+		}
+		in.SchoolClubCreation, in.CrossSchoolSocial = club, cross
+	}
+	p := settings.BootstrapSocialPolicy(in)
+	b.Policies.Social = &dto.SocialPolicy{StudentClubCreation: p.StudentClubCreation, ClubCreationEligible: p.ClubCreationEligible,
+		CrossSchoolEnabled: p.CrossSchoolEnabled}
 }
 
 // applyDailyLimit refuses with 403 DAILY_PLAY_LIMIT_REACHED + reopen_at (00:00 ICT the next day) a student whose

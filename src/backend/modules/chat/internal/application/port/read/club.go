@@ -87,4 +87,21 @@ type ClubReader interface {
 	Requests(ctx context.Context, tenant, clubID uuid.UUID, after *ClubCursor, limit int) ([]ClubRequestRow, error)
 	Goals(ctx context.Context, tenant, clubID, viewer uuid.UUID) ([]ClubGoalRow, error)
 	Events(ctx context.Context, tenant, clubID uuid.UUID, after *ClubCursor, limit int) ([]ClubEventRow, error)
+	// Invitations lists the club invitations addressed to invitee (listMyClubInvitations, delta F120), newest first:
+	// status pending = live pending not expired at now of an active club; expired includes the pending ones past
+	// expires_at (reported expired); the other statuses as stored.
+	Invitations(ctx context.Context, tenant, invitee uuid.UUID, status string, now time.Time, after *ClubCursor, limit int) ([]ClubInvitationRow, error)
+}
+
+// ClubInvitationRow is one ClubInvitation of the invitee with the club name and the nickname of the inviter (R16).
+type ClubInvitationRow struct {
+	ID              uuid.UUID
+	ClubID          uuid.UUID
+	ClubName        string
+	InviterID       uuid.UUID
+	InviterNickname *string
+	InviteeID       uuid.UUID
+	Status          string
+	ExpiresAt       time.Time
+	CreatedAt       time.Time
 }

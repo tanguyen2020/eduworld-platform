@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/club.invitation_sent.v1.schema.json",
+  "title": "Payload club.invitation_sent v1 (module chat, owner F120)",
+  "description": "Chủ club hoặc officer vừa tạo một lời mời mới vào club (inviteToClub; lời mời đang chờ đã có hoặc học sinh đã là thành viên thì không phát). Chỉ mã định danh, không tên club, nickname hay tên thật (R16). Consumer: NTF (chat.notify_club → thông báo club_invitation cho invitee_id, deep link open_club — delta F120/F123), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["invitation_id", "club_id", "tenant_id", "inviter_id", "invitee_id", "expires_at", "occurred_at"],
+  "properties": {
+    "invitation_id": { "type": "string", "format": "uuid" },
+    "club_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "inviter_id": { "type": "string", "format": "uuid" },
+    "invitee_id": { "type": "string", "format": "uuid" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "occurred_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "invitation_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000e1",
+      "club_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "inviter_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "invitee_id": "0193a5f4-6c1e-7b2a-9d1f-000000000102",
+      "expires_at": "2026-12-05T08:35:00.000Z",
+      "occurred_at": "2026-11-28T08:35:00.000Z"
+    }
+  ]
+}

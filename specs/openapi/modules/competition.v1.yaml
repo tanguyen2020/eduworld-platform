@@ -4826,6 +4826,12 @@ components:
             - in_match
             - away
           description: PresenceStatus (MULTIPLAYER_GAMEPLAY §5, enum chung với AsyncAPI)
+        title:
+          $ref: '#/components/schemas/LocalizedName'
+          description: |
+            Danh hiệu level hiện tại của người chơi (`title` của progression curve — PROGRESSION_SYSTEM §4.3), module chat chiếu từ
+            `level.reached.title` (delta F095, owner chốt 2026-11-28 [Confirmed]). Vắng khi học sinh chưa đạt level có danh hiệu
+            kể từ khi có trường này — client ẩn danh hiệu. Chỉ thông tin game, không lộ dữ liệu học tập (R16).
     InvitationStatus:
       type: string
       enum:

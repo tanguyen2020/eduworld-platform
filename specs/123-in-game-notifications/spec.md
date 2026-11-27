@@ -21,6 +21,10 @@
 
 - Q: Thông báo bài giao còn nhắm theo lớp/nhóm học tập? → A: Không. Bài giao nhắm (trường, khối) ± danh sách học sinh include/exclude ([ADR-0095 §3](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md)); F123 vẫn lấy người nhận từ facade `listAssignmentRecipients` (đã trừ học sinh miễn/exclude), không tự mở rộng theo khối. Học sinh mới vào khối sau publish được learning thêm vào bài còn mở; F123 không phát thông báo bù cho họ trong phạm vi feature này [Proposed — chưa có event nguồn]. Payload `assignment.created` có v1 và v2 (targets `grade|students`) trong đợt chuyển đổi; consumer chỉ đọc `assignment_id`, `tenant_id`, trạng thái nên chấp nhận cả hai. Không có thông báo hay "bảng tin" cấp lớp. F123-AC-02, F123-AC-05 giữ nghĩa, chỉ đổi chữ.
 
+### Session 2026-11-28 (delta server cho client F111 — [Confirmed], owner "chốt hết": phương án an toàn nhất)
+
+- Q: `Notification.kind` cho club và deep link? → A: [Confirmed] Enum chung REST/WS/CHECK (RB-513, `specs/schemas/common/enums.schema.json`) thêm `club_invitation`, `club_join_request`, `club_approved` (migration nới CHECK `social.notifications.kind`, expand). Consumer mới `chat.notify_club` (stream EVT_CHAT): `club.invitation_sent` → người được mời (`params.nickname` = người mời), `club.join_requested` → chủ club và officer đang hoạt động (RecipientPolicy chỉ giữ học sinh; người gửi yêu cầu không nhận; `params.nickname` = người gửi), `club.approved` → chủ club học sinh chỉ khi nhân sự duyệt. `ref_type = club`, `action = {"kind":"open_club","id":"<club_id>"}`. `open_event` chỉ ghi trong mô tả `NotificationAction` như giá trị dành sẵn: Release 1.0 **không** tạo thông báo sự kiện live-ops (tránh thông báo kéo trẻ quay lại game — SOCIAL_SYSTEM §8, CHILD_SAFETY). Ví dụ AsyncAPI `notification.item.created` cho ba loại để sinh fixture Godot.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Nhận thông báo realtime khi có sự kiện (Priority: P1)

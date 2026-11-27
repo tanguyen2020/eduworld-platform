@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/game/level.reached.v1.schema.json",
   "title": "Payload level.reached v1 (module game, owner F074)",
-  "description": "Học sinh đạt một level theo progression curve hiện hành (một event cho mỗi cấp, kể cả lên nhiều cấp một lần hoặc do job curve-rollout). Không phát tại max_level. Envelope subject = {type: student, id: student_id}. Consumer: game.unlock_on_events (mở khóa vùng theo level), RT, NTF, achievement (F075), ANA, competition.projection_game (ref.player_profiles.level — PartyMember.level, delta F102).",
+  "description": "Học sinh đạt một level theo progression curve hiện hành (một event cho mỗi cấp, kể cả lên nhiều cấp một lần hoặc do job curve-rollout). Không phát tại max_level. Envelope subject = {type: student, id: student_id}. Consumer: game.unlock_on_events (mở khóa vùng theo level), RT, NTF, achievement (F075), ANA, competition.projection_game (ref.player_profiles.level — PartyMember.level, delta F102), chat.projection_game (ref.player_profiles.level + title — PlayerCard.level/title, delta F095).",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -42,6 +42,30 @@
       ],
       "maxLength": 64
     },
+    "title": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "vi",
+        "en"
+      ],
+      "properties": {
+        "vi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        }
+      },
+      "description": "Tên song ngữ của danh hiệu level (LocalizedName, title của curve — PROGRESSION_SYSTEM §4.3); null khi level không có danh hiệu. Consumer chat.projection_game chiếu vào PlayerCard.title (delta F095)."
+    },
     "trigger_xp_entry_id": {
       "type": [
         "string",
@@ -64,7 +88,22 @@
       "curve_version": 2,
       "title_code": null,
       "trigger_xp_entry_id": "0193b0a0-0000-7000-8000-000000000301",
-      "reached_at": "2026-11-27T08:30:00Z"
+      "reached_at": "2026-11-27T08:30:00Z",
+      "title": null
+    },
+    {
+      "student_id": "0193b0a0-0000-7000-8000-000000000201",
+      "from_level": 5,
+      "to_level": 6,
+      "curve_id": "0193b0a0-0000-7000-8000-000000000901",
+      "curve_version": 2,
+      "title_code": "explorer",
+      "trigger_xp_entry_id": "0193b0a0-0000-7000-8000-000000000301",
+      "reached_at": "2026-11-27T08:30:00Z",
+      "title": {
+        "vi": "Nhà thám hiểm",
+        "en": "Explorer"
+      }
     }
   ]
 }

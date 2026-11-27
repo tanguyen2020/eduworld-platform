@@ -27,4 +27,6 @@ type NotificationStore interface {
 	MarkAllRead(ctx context.Context, tenant, recipient uuid.UUID, before, at time.Time) (int, error)
 	// UnreadCount counts the unread rows of recipient.
 	UnreadCount(ctx context.Context, tenant, recipient uuid.UUID) (int, error)
+	// ClubManagers returns the active owner and officers of a club of tenant (club_join_request recipients, delta F120).
+	ClubManagers(ctx context.Context, tenant, club uuid.UUID) ([]uuid.UUID, error)
 }

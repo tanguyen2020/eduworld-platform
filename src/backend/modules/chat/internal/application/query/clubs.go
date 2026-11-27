@@ -30,6 +30,7 @@ type Clubs struct {
 	Reader    read.ClubReader
 	Directory ClubDirectory
 	Cursors   *page.Codec
+	Now       func() time.Time // nil: time.Now
 }
 
 // ClubPage is a page of clubs.
@@ -463,6 +464,62 @@ func (q Clubs) Events(ctx context.Context, id uuid.UUID, cursor string, limit in
 		out.Data = out.Data[:limit]
 		last := out.Data[len(out.Data)-1]
 		out.Page.NextCursor, out.Page.HasMore = q.next(last.StartsAt, last.ID), true
+	}
+	return out, nil
+}
+
+// InvitationPage is a page of the club invitations of the caller.
+type InvitationPage struct {
+	Data []read.ClubInvitationRow
+	Page page.Info
+}
+
+// invitationStatuses are the status values of listMyClubInvitations (ClubInvitation.status).
+var invitationStatuses = []string{"pending", "accepted", "declined", "expired", "cancelled"}
+
+// MyInvitations serves listMyClubInvitations (delta F120 for the client F111, owner chốt 2026-11-28): the invitations
+// addressed to the calling student only (never those of another student), newest first; status pending by default
+// (live, not expired, active club). Club name and inviter nickname only (R16).
+func (q Clubs) MyInvitations(ctx context.Context, status, cursor string, limit int) (out InvitationPage, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.query.ListMyClubInvitations")
+	defer func() { done(err) }()
+	v, err := q.viewer(ctx)
+	if err != nil {
+		return out, err
+	}
+	if !v.isStudent() {
+		return out, problem.New(problem.GameAccessStudentOnly, "")
+	}
+	if status == "" {
+		status = "pending"
+	}
+	if !slices.Contains(invitationStatuses, status) {
+		return out, problem.Invalid("status", problem.SubInvalid, "pending, accepted, declined, expired or cancelled")
+	}
+	after, err := q.cursor(cursor)
+	if err != nil {
+		return out, err
+	}
+	limit = page.Limit(limit)
+	now := time.Now().UTC()
+	if q.Now != nil {
+		now = q.Now().UTC()
+	}
+	err = q.Read.Read(ctx, func(ctx context.Context) error {
+		if err := q.loadStudent(ctx, &v); err != nil {
+			return err
+		}
+		out.Data, err = q.Reader.Invitations(ctx, v.tenant, v.p.UserID, status, now, after, limit+1)
+		return err
+	})
+	if err != nil {
+		return out, err
+	}
+	out.Page = page.Info{Limit: limit}
+	if len(out.Data) > limit {
+		out.Data = out.Data[:limit]
+		last := out.Data[len(out.Data)-1]
+		out.Page.NextCursor, out.Page.HasMore = q.next(last.CreatedAt, last.ID), true
 	}
 	return out, nil
 }

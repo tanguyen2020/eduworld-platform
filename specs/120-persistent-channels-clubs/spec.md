@@ -74,6 +74,14 @@ Các câu hỏi mở phía server của client F112 ([contracts §6](../112-godo
 - Q (F112-8): Định dạng `MessageSearchHit.highlight`? → A: [Confirmed] Văn bản thuần (nội dung đã che, NFC, không thẻ) + `highlight_ranges` `[{start, length}]` theo điểm mã của `highlight` (additive), khớp tiền tố từng từ của `q` không phân biệt hoa thường/dấu — [CHAT_SYSTEM §8.4](../../docs/03-social-multiplayer/CHAT_SYSTEM.md#84-tìm-kiếm). Không bao giờ trả từ của danh mục kiểm duyệt (R15).
 - Q (F112-9): Operation đặt `notification_level`/tắt tiếng channel? → A: [Confirmed] `updateChannelMembership` (`PATCH /chat/channels/{channel_id}/membership`, `game_player`, `Idempotency-Key`, tenant-scoped): chỉ của người gọi ở channel đang là thành viên; World/Area → `422`, không phải thành viên/khác tenant → `404`; audit `chat.channel_membership.updated` khi giá trị đổi; `Channel.notification_level` + `muted` (= `none`) trong `listMyChannels`. Không ảnh hưởng pipeline kiểm duyệt, báo cáo, chặn (R15). Cột `chat.channel_members.notification_level` đã có (F115), không migration.
 
+### Session 2026-11-28 (delta server cho client F111 — [Confirmed], owner "chốt hết": phương án an toàn nhất)
+
+Theo [F111 contracts §6](../111-godot-clubs-events-social/contracts/README.md#6-delta-cần-thực-hiện); tôn trọng các quyết định F112-1…F112-3 ở trên (công cụ chủ club chỉ owner; học sinh không gỡ thành viên/lưu trữ; `internal_tournament` không mở cho học sinh). Contract additive.
+
+- Q: Học sinh xem lời mời club của mình ở đâu? → A: [Confirmed] `listMyClubInvitations` (`GET /social/club-invitations`, `game_player`): chỉ lời mời có `invitee_id` = người gọi trong tenant phiên; `status` mặc định `pending` (còn hạn, club `active`), `expired` gồm cả `pending` đã quá `expires_at` (trả `expired`), các giá trị khác theo bản ghi; mới nhất trước, keyset `(created_at, invitation_id)`. `ClubInvitation` thêm `club_name` (maxLength 64, tên đã qua kiểm duyệt) và `inviter_nickname` (maxLength 32) — không tên thật (R16).
+- Q: `createClub`/`updateClub` khai báo `451 CHAT_CONTENT_BLOCKED`, `ClubType` bỏ `study_group`? → A: Đã có trên main (F120 2026-11-23, WP-C1 ADR-0095); không đổi.
+- Q: Nguồn của thông báo club (F123)? → A: [Confirmed] Event mới `club.invitation_sent` (lời mời **mới**: không phát khi đã có lời mời chờ hoặc đã là thành viên; kèm audit `club.invitation_sent` — R10) và `club.join_requested` (yêu cầu **mới**), chỉ mã định danh; thông báo do consumer `chat.notify_club` (F123) tạo. `club.approved` có sẵn; chỉ báo chủ club khi có `approver_id` khác chủ (nhân sự duyệt club `pending_approval`), club tạo `active` ngay không báo. Test: `TestF120MyClubInvitations`, `TestF111ClubNotifications` (integration), `TestNotificationSourcesContract` (contract).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Thành viên channel bền vững đúng và cô lập (Priority: P1) 🎯 MVP

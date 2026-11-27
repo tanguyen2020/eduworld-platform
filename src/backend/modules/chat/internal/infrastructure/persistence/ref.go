@@ -90,8 +90,21 @@ func (Refs) PlayerProfile(ctx context.Context, student, tenant uuid.UUID, nickna
 	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); ref.* has no deleted_at (rule 2)
 	return changed(ctx, `INSERT INTO ref.player_profiles AS p (student_id, tenant_id, nickname, level, avatar_config, source_version)
 		VALUES ($1, $2, $3::varchar, $4, $5::jsonb, $6)
-		ON CONFLICT (student_id) DO UPDATE SET nickname = $3, level = $4, avatar_config = $5::jsonb, source_version = $6
+		ON CONFLICT (student_id) DO UPDATE SET nickname = $3, level = GREATEST(p.level, $4), avatar_config = $5::jsonb, source_version = $6
 		WHERE p.source_version < $6 AND p.tenant_id = $2`, student, tenant, nickname, level, a, version)
+}
+
+// PlayerLevel implements write.ProjectionWriter (level.reached, delta F095): the level only rises (an older event
+// arriving late changes nothing, the level of game never drops — PROGRESSION_SYSTEM floor protection); the title is
+// the one of that level, kept when the event has none.
+func (Refs) PlayerLevel(ctx context.Context, student, tenant uuid.UUID, level int, title []byte) (bool, error) {
+	var t any
+	if len(title) > 0 {
+		t = string(title)
+	}
+	// tenancyguard:ok projection update under the event TenantScope (RLS on tenant_id); ref.* has no deleted_at (rule 2)
+	return changed(ctx, `UPDATE ref.player_profiles SET level = $3, title = coalesce($4::jsonb, title)
+		WHERE student_id = $1 AND tenant_id = $2 AND level <= $3 AND (level < $3 OR $4::jsonb IS NOT NULL)`, student, tenant, level, t)
 }
 
 var _ write.ProjectionWriter = Refs{}
