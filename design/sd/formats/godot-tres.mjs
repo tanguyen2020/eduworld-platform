@@ -152,6 +152,7 @@ export function formatTheme(map, band, version, label) {
     };
   };
   const tb = raised(btn, lineH);
+  const ctb = raised({ ...btn, padH: halfSpace }, lineH);
   const iconLine = Math.max(icon, lineH);
   const ib = raised({ radius: btnRadius, padH: padIcon }, iconLine);
   const cb = raised({ radius: btnRadius, padH: space }, iconLine);
@@ -274,6 +275,13 @@ export function formatTheme(map, band, version, label) {
     styleBox('tab_idle_pressed', { ...tb.pressed, border: undefined, borderWidth: 0, borderBottom: undefined, expandTop: undefined, bg: v('component.settings.tab_hover_bg') }),
     styleBox('tab_selected', { ...tb.rest, bg: v('component.settings.tab_selected_bg') }),
     styleBox('tab_selected_pressed', { ...tb.pressed, bg: v('component.settings.tab_selected_bg') }),
+    // F119 "≥ 3 tin": the chat board tabs (Cảm xúc / Nhãn dán / Ảnh động) — the settings tab look with half the side padding so
+    // the three icon + word chips stay on one line in a half-window chat column.
+    styleBox('chat_tab_idle', { ...ctb.rest, border: undefined, borderWidth: 0, borderBottom: undefined }),
+    styleBox('chat_tab_hover', { ...ctb.rest, border: undefined, borderWidth: 0, borderBottom: undefined, bg: v('component.settings.tab_hover_bg') }),
+    styleBox('chat_tab_idle_pressed', { ...ctb.pressed, border: undefined, borderWidth: 0, borderBottom: undefined, expandTop: undefined, bg: v('component.settings.tab_hover_bg') }),
+    styleBox('chat_tab_selected', { ...ctb.rest, bg: v('component.settings.tab_selected_bg') }),
+    styleBox('chat_tab_selected_pressed', { ...ctb.pressed, bg: v('component.settings.tab_selected_bg') }),
     styleBox('slider', { ...groove, bg: v('component.slider.track') }),
     styleBox('slider_fill', { ...groove, bg: v('component.slider.fill') }),
   ];
@@ -721,6 +729,28 @@ export function formatTheme(map, band, version, label) {
     ['TabButtonSelected/styles/hover_pressed', sub('tab_selected_pressed')],
     ['TabButtonSelected/styles/normal', sub('tab_selected')],
     ['TabButtonSelected/styles/pressed', sub('tab_selected_pressed')],
+    ['ChatTabButton/base_type', '&"Button"'],
+    ...fontColors('ChatTabButton', c('component.settings.tab_text')),
+    ...iconColors('ChatTabButton', c('component.settings.tab_icon')),
+    ['ChatTabButton/constants/h_separation', String(halfSpace)],
+    ['ChatTabButton/constants/icon_max_width', String(icon)],
+    ['ChatTabButton/styles/disabled', sub('chat_tab_idle')],
+    ['ChatTabButton/styles/focus', sub('focus_ring')],
+    ['ChatTabButton/styles/hover', sub('chat_tab_hover')],
+    ['ChatTabButton/styles/hover_pressed', sub('chat_tab_idle_pressed')],
+    ['ChatTabButton/styles/normal', sub('chat_tab_idle')],
+    ['ChatTabButton/styles/pressed', sub('chat_tab_idle_pressed')],
+    ['ChatTabButtonSelected/base_type', '&"Button"'],
+    ...fontColors('ChatTabButtonSelected', c('component.settings.tab_selected_text')),
+    ...iconColors('ChatTabButtonSelected', c('component.settings.tab_selected_text')),
+    ['ChatTabButtonSelected/constants/h_separation', String(halfSpace)],
+    ['ChatTabButtonSelected/constants/icon_max_width', String(icon)],
+    ['ChatTabButtonSelected/styles/disabled', sub('chat_tab_selected')],
+    ['ChatTabButtonSelected/styles/focus', sub('focus_ring')],
+    ['ChatTabButtonSelected/styles/hover', sub('chat_tab_selected')],
+    ['ChatTabButtonSelected/styles/hover_pressed', sub('chat_tab_selected_pressed')],
+    ['ChatTabButtonSelected/styles/normal', sub('chat_tab_selected')],
+    ['ChatTabButtonSelected/styles/pressed', sub('chat_tab_selected_pressed')],
     ['ToggleSwitch/base_type', '&"CheckButton"'],
     ...fontColors('ToggleSwitch', c('component.toggle.text')),
     ['ToggleSwitch/constants/h_separation', String(halfSpace)],
