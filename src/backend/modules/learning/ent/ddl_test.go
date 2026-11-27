@@ -34,7 +34,7 @@ var migrations = map[string][]string{
 	"20261222000001_f042_exam_engine.sql":      {},
 	"20261229000003_f105_question_plans.sql":   {"question_plans"},
 	"20270101000073_f073_minigame.sql":         {},
-	"20270102000028_f028_import_items.sql":     {"import_items"},
+	"20270202000028_f028_import_items.sql":     {"import_items"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration

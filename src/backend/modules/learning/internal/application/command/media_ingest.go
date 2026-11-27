@@ -52,6 +52,11 @@ func (h Media) IngestFile(ctx context.Context, o contentmodel.Owner, actor uuid.
 	if err := h.Store.InsertAsset(ctx, a); err != nil {
 		return uuid.Nil, err
 	}
+	// SaveAsset is optimistic: continue from the stored row (its version), like CompleteMediaUpload.
+	a, err = h.Store.Asset(ctx, id)
+	if err != nil {
+		return uuid.Nil, err
+	}
 	processing, err := a.Complete(media.Uploaded{Exists: true, Size: a.Size, SHA256: a.SHA256}, now(h.Clock))
 	if err != nil {
 		return uuid.Nil, err

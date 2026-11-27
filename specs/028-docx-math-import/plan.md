@@ -60,7 +60,7 @@ specs/openapi/eduworld-api.v1.yaml                  # listContentImportItems, cr
 src/backend/pkg/media/magic.go                      # MIME .docx trong họ application/zip
 src/backend/modules/learning/
 ├── ent/schema/curriculum.go                        # ImportItem — content.import_items
-├── migrations/20270102000028_f028_import_items.sql
+├── migrations/20270202000028_f028_import_items.sql
 ├── internal/domain/docximport/                     # mô hình đoạn, tách câu theo mẫu, dựng nội dung, chuẩn hóa LaTeX
 ├── internal/domain/media/asset.go                  # MIME .docx cho kind document
 ├── internal/application/command/import_docx.go     # DocxImport: Run (phân tích), CreateDraft (giai đoạn 2)
