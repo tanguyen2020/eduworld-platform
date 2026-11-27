@@ -6,6 +6,7 @@ extends:
 functionsDir: ./spectral-functions
 functions:
   - stringMaxLength
+  - noClientAuthoritativeFields
 rules:
   # ADR-0041 — mọi string phải có maxLength (đồng bộ với scripts/specs/check-maxlength.mjs).
   string-must-have-maxlength:
@@ -15,6 +16,16 @@ rules:
     given: "$..[?(@ && @.type)]"
     then:
       function: stringMaxLength
+  # ANTI_CHEAT §4, ADR-0016, AGENTS R5 (F132-AC-21) — request của học sinh không khai báo trường do server quyết định
+  # (score, xp, is_correct, rating ở mọi độ sâu). Cùng logic chạy trong make specs-lint qua
+  # scripts/specs/check-client-authoritative.mjs (không cần Spectral CLI).
+  no-client-authoritative-fields:
+    description: Request body của operation học sinh không được có score, xp, is_correct, rating (ANTI_CHEAT §4).
+    message: '{{error}}'
+    severity: error
+    given: "$.paths[*][post,put,patch]"
+    then:
+      function: noClientAuthoritativeFields
   # ADR-0074 — operation của spec public (gộp và theo module) phải khai báo module sở hữu; bật qua overrides.
   operation-must-declare-service:
     description: Operation trong spec public phải có x-service (tên module sở hữu, ADR-0074).
