@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "type": "battle.answer.evaluated",
+  "seq": 58,
+  "ts": 1763712058000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000501",
+    "question_instance_id": "qi_501_0",
+    "answered": true,
+    "is_correct": true,
+    "points": 100,
+    "time_bonus": 0,
+    "correct_response": {
+      "option_id": "o_b"
+    }
+  }
+}

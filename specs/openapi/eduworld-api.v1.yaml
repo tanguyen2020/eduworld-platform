@@ -1744,6 +1744,36 @@ paths:
                     type: array
                     maxItems: 100
                     items: { $ref: '#/components/schemas/Subject' }
+              example:
+                items:
+                  - subject_id: 0193b0a0-0000-7000-8000-000000000601
+                    code: math
+                    name:
+                      vi: Toán
+                      en: Math
+                    grade_levels:
+                      - 1
+                      - 2
+                      - 3
+                      - 4
+                      - 5
+                      - 6
+                      - 7
+                      - 8
+                      - 9
+                    icon_key: math
+                  - subject_id: 0193b0a0-0000-7000-8000-000000000602
+                    code: vietnamese
+                    name:
+                      vi: Tiếng Việt
+                      en: Vietnamese
+                    grade_levels:
+                      - 1
+                      - 2
+                      - 3
+                      - 4
+                      - 5
+                    icon_key: vietnamese
         '401': { $ref: '#/components/responses/Unauthenticated' }
   /learning/topics:
     get:
@@ -1772,6 +1802,14 @@ paths:
                   data:
                     type: array
                     items: { $ref: '#/components/schemas/Topic' }
+              example:
+                data:
+                  - topic_id: 0193b0a0-0000-7000-8000-000000000611
+                    name: Phép nhân
+                    code: multiplication
+                  - topic_id: 0193b0a0-0000-7000-8000-000000000612
+                    name: Phép chia
+                    code: division
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
   /learning/objectives:
@@ -2970,6 +3008,13 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Duel' }
+              example:
+                duel_id: 0193b0a0-0000-7000-8000-000000000a01
+                challenger_id: 0193b0a0-0000-7000-8000-0000000000a1
+                opponent_id: 0193b0a0-0000-7000-8000-0000000000a2
+                subject_id: 0193b0a0-0000-7000-8000-000000000601
+                status: pending
+                expires_at: '2026-11-21T08:01:00Z'
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
@@ -2999,6 +3044,14 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Duel' }
+              example:
+                duel_id: 0193b0a0-0000-7000-8000-000000000a01
+                challenger_id: 0193b0a0-0000-7000-8000-0000000000a2
+                opponent_id: 0193b0a0-0000-7000-8000-0000000000a1
+                subject_id: 0193b0a0-0000-7000-8000-000000000601
+                status: accepted
+                match_id: 0193b0a0-0000-7000-8000-000000000506
+                expires_at: '2026-11-21T08:01:00Z'
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
@@ -3053,6 +3106,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MatchmakingTicket'
+              example:
+                ticket_id: 0193b0a0-0000-7000-8000-000000000401
+                status: queued
+                mode: battle_1v1
+                matchmaking_type: skill
+                subject_id: 0193b0a0-0000-7000-8000-000000000601
+                created_at: '2026-11-21T08:00:00Z'
+                wait_seconds: 0
+                estimated_wait_seconds: 30
+                search_widened: false
+                bot_offer_available: false
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
@@ -3083,6 +3147,17 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Match' }
+              example:
+                match_id: 0193b0a0-0000-7000-8000-000000000504
+                mode: battle_1v1
+                subject_id: 0193b0a0-0000-7000-8000-000000000601
+                grade_level: 4
+                status: lobby
+                matchmaking_type: bot
+                ranked: false
+                is_bot: true
+                room_id: 0193b0a0-0000-7000-8000-000000000504
+                question_count: 5
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
@@ -3113,6 +3188,36 @@ paths:
                     type: array
                     maxItems: 10
                     items: { $ref: '#/components/schemas/CompetitionMode' }
+              example:
+                data:
+                  - mode: battle_1v1
+                    matchmaking_types:
+                      - skill
+                      - subject
+                      - topic
+                    ranked: true
+                    ranked_matchmaking_types:
+                      - skill
+                    min_grade: 1
+                    subjects:
+                      - 0193b0a0-0000-7000-8000-000000000601
+                      - 0193b0a0-0000-7000-8000-000000000602
+                  - mode: team_battle
+                    matchmaking_types:
+                      - team
+                    ranked: true
+                    ranked_matchmaking_types:
+                      - team
+                    min_grade: 4
+                    subjects:
+                      - 0193b0a0-0000-7000-8000-000000000601
+                  - mode: coop_challenge
+                    matchmaking_types:
+                      - random
+                    ranked: false
+                    ranked_matchmaking_types: []
+                    min_grade: 1
+                    subjects: []
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
@@ -3136,6 +3241,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MatchmakingTicket'
+              example:
+                ticket_id: 0193b0a0-0000-7000-8000-000000000401
+                status: queued
+                mode: battle_1v1
+                matchmaking_type: skill
+                subject_id: 0193b0a0-0000-7000-8000-000000000601
+                created_at: '2026-11-21T08:00:00Z'
+                wait_seconds: 24
+                estimated_wait_seconds: 30
+                search_widened: true
+                bot_offer_available: false
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
@@ -3185,6 +3301,112 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/Match' }
                   page: { $ref: '#/components/schemas/PageInfo' }
+              example:
+                data:
+                  - match_id: 0193b0a0-0000-7000-8000-000000000501
+                    mode: battle_1v1
+                    subject_id: 0193b0a0-0000-7000-8000-000000000601
+                    grade_level: 4
+                    status: completed
+                    matchmaking_type: skill
+                    ranked: true
+                    is_bot: false
+                    started_at: '2026-11-20T08:00:00Z'
+                    ended_at: '2026-11-20T08:04:10Z'
+                    end_reason: finished
+                    rated: true
+                    question_count: 3
+                    participants:
+                      - player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a1
+                          nickname: MeoXanh42
+                          level: 12
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        team_no: 1
+                        outcome: win
+                        score: 420
+                        correct_count: 3
+                        competition_points: 12
+                      - player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a2
+                          nickname: CaHeoVui07
+                          level: 10
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        team_no: 2
+                        outcome: loss
+                        score: 350
+                        correct_count: 2
+                        competition_points: 6
+                  - match_id: 0193b0a0-0000-7000-8000-000000000505
+                    mode: battle_1v1
+                    subject_id: 0193b0a0-0000-7000-8000-000000000601
+                    grade_level: 4
+                    status: cancelled
+                    matchmaking_type: skill
+                    ranked: true
+                    is_bot: false
+                    started_at: '2026-11-19T09:00:00Z'
+                    ended_at: '2026-11-19T09:01:00Z'
+                    end_reason: all_left
+                    rated: false
+                    question_count: 3
+                    participants:
+                      - player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a1
+                          nickname: MeoXanh42
+                          level: 12
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        team_no: 1
+                        outcome: no_contest
+                        score: null
+                        correct_count: null
+                        competition_points: null
+                      - player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a3
+                          nickname: GauNau15
+                          level: 11
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        team_no: 2
+                        outcome: no_contest
+                        score: null
+                        correct_count: null
+                        competition_points: null
+                page:
+                  next_cursor: eyJrIjoiMjAyNi0xMS0xOSJ9
+                  has_more: true
+                  limit: 20
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
   /competition/matches/{match_id}:
@@ -3210,6 +3432,92 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Match'
+              example:
+                match_id: 0193b0a0-0000-7000-8000-000000000501
+                mode: battle_1v1
+                subject_id: 0193b0a0-0000-7000-8000-000000000601
+                grade_level: 4
+                status: completed
+                matchmaking_type: skill
+                ranked: true
+                is_bot: false
+                room_id: 0193b0a0-0000-7000-8000-000000000501
+                started_at: '2026-11-20T08:00:00Z'
+                ended_at: '2026-11-20T08:04:10Z'
+                end_reason: finished
+                rated: true
+                question_count: 3
+                participants:
+                  - player:
+                      user_id: 0193b0a0-0000-7000-8000-0000000000a1
+                      nickname: MeoXanh42
+                      level: 12
+                      avatar_config:
+                        schema_version: 1
+                        body_type: kid_a
+                        skin_tone: tone_02
+                        hair:
+                          item_id: hair_bob_01
+                          color: hair_col_02
+                        outfit:
+                          item_id: outfit_school_01
+                    team_no: 1
+                    outcome: win
+                    score: 420
+                    correct_count: 3
+                    competition_points: 12
+                  - player:
+                      user_id: 0193b0a0-0000-7000-8000-0000000000a2
+                      nickname: CaHeoVui07
+                      level: 10
+                      avatar_config:
+                        schema_version: 1
+                        body_type: kid_a
+                        skin_tone: tone_02
+                        hair:
+                          item_id: hair_bob_01
+                          color: hair_col_02
+                        outfit:
+                          item_id: outfit_school_01
+                    team_no: 2
+                    outcome: loss
+                    score: 350
+                    correct_count: 2
+                    competition_points: 6
+                review:
+                  - index: 0
+                    question:
+                      stem:
+                        blocks:
+                          - type: paragraph
+                            text: 6 × 3 = ?
+                    correct_response:
+                      option_id: o_b
+                    explanation: Sáu nhân ba bằng mười tám.
+                    my_answer_correct: true
+                    my_points: 150
+                  - index: 1
+                    question:
+                      stem:
+                        blocks:
+                          - type: paragraph
+                            text: '24 : 4 = ?'
+                    correct_response:
+                      option_id: o_a
+                    explanation: null
+                    my_answer_correct: true
+                    my_points: 140
+                  - index: 2
+                    question:
+                      stem:
+                        blocks:
+                          - type: paragraph
+                            text: 7 × 8 = ?
+                    correct_response:
+                      option_id: o_c
+                    explanation: null
+                    my_answer_correct: false
+                    my_points: 0
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -3277,6 +3585,26 @@ paths:
                   data:
                     type: array
                     items: { $ref: '#/components/schemas/Rating' }
+              example:
+                data:
+                  - mode: battle_1v1
+                    subject_id: 0193b0a0-0000-7000-8000-000000000601
+                    season_id: 0193b0a0-0000-7000-8000-000000000701
+                    tier_code: silver_2
+                    tier_name: Bạc II
+                    peak_tier_code: silver_1
+                    provisional: false
+                    provisional_games_required: 5
+                    games_played: 14
+                  - mode: team_battle
+                    subject_id: 0193b0a0-0000-7000-8000-000000000601
+                    season_id: 0193b0a0-0000-7000-8000-000000000701
+                    tier_code: null
+                    tier_name: null
+                    peak_tier_code: null
+                    provisional: true
+                    provisional_games_required: 5
+                    games_played: 2
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
   /competition/seasons:
@@ -3379,6 +3707,39 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/Tournament' }
                   page: { $ref: '#/components/schemas/PageInfo' }
+              example:
+                data:
+                  - tournament_id: 0193b0a0-0000-7000-8000-000000000901
+                    template_id: 0193b0a0-0000-7000-8000-000000000902
+                    name: Giải Toán khối 4 tuần này
+                    format: single_elim
+                    scope_type: school
+                    scope_id: 0193b0a0-0000-7000-8000-000000000903
+                    subject_id: 0193b0a0-0000-7000-8000-000000000601
+                    grade_level: 4
+                    registration_open_at: '2026-11-20T00:00:00Z'
+                    registration_closes_at: '2026-11-24T10:00:00Z'
+                    check_in_opens_at: '2026-11-25T07:30:00Z'
+                    starts_at: '2026-11-25T08:00:00Z'
+                    max_entries: 16
+                    status: registration_open
+                    entry_count: 4
+                    challenge_id: 0193b0a0-0000-7000-8000-000000000904
+                    school_id: 0193b0a0-0000-7000-8000-000000000903
+                    participant_type: individual
+                    team_size: null
+                    mode: battle_1v1
+                    grade_levels:
+                      - 4
+                    seeding_policy: rating
+                    auto_confirm: true
+                    reward_summary: Huy hiệu Nhà vô địch Toán
+                    cancel_reason: null
+                    my_entry: null
+                page:
+                  next_cursor: null
+                  has_more: false
+                  limit: 20
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
   /competition/tournaments/{tournament_id}:
@@ -3398,6 +3759,41 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Tournament' }
+              example:
+                tournament_id: 0193b0a0-0000-7000-8000-000000000901
+                template_id: 0193b0a0-0000-7000-8000-000000000902
+                name: Giải Toán khối 4 tuần này
+                format: single_elim
+                scope_type: school
+                scope_id: 0193b0a0-0000-7000-8000-000000000903
+                subject_id: 0193b0a0-0000-7000-8000-000000000601
+                grade_level: 4
+                registration_open_at: '2026-11-20T00:00:00Z'
+                registration_closes_at: '2026-11-24T10:00:00Z'
+                check_in_opens_at: '2026-11-25T07:30:00Z'
+                starts_at: '2026-11-25T08:00:00Z'
+                max_entries: 16
+                status: registration_open
+                entry_count: 4
+                challenge_id: 0193b0a0-0000-7000-8000-000000000904
+                school_id: 0193b0a0-0000-7000-8000-000000000903
+                participant_type: individual
+                team_size: null
+                mode: battle_1v1
+                grade_levels:
+                  - 4
+                seeding_policy: rating
+                auto_confirm: true
+                reward_summary: Huy hiệu Nhà vô địch Toán
+                cancel_reason: null
+                my_entry:
+                  entry_id: 0193b0a0-0000-7000-8000-000000000911
+                  tournament_id: 0193b0a0-0000-7000-8000-000000000901
+                  status: registered
+                  seed: null
+                  players:
+                    - student_id: 0193b0a0-0000-7000-8000-0000000000a1
+                      nickname: MeoXanh42
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -3483,6 +3879,15 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/TournamentEntryResult' }
+              example:
+                entries:
+                  - entry_id: 0193b0a0-0000-7000-8000-000000000911
+                    tournament_id: 0193b0a0-0000-7000-8000-000000000901
+                    status: registered
+                    seed: null
+                    players:
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a1
+                        nickname: MeoXanh42
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -3552,6 +3957,15 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/TournamentEntry' }
+              example:
+                entry_id: 0193b0a0-0000-7000-8000-000000000911
+                tournament_id: 0193b0a0-0000-7000-8000-000000000901
+                status: checked_in
+                seed: 1
+                players:
+                  - student_id: 0193b0a0-0000-7000-8000-0000000000a1
+                    nickname: MeoXanh42
+                checked_in_at: '2026-11-25T07:35:00Z'
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -3605,6 +4019,76 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Bracket' }
+              example:
+                tournament_id: 0193b0a0-0000-7000-8000-000000000901
+                format: single_elim
+                status: in_progress
+                entries:
+                  - entry_id: 0193b0a0-0000-7000-8000-000000000911
+                    tournament_id: 0193b0a0-0000-7000-8000-000000000901
+                    status: confirmed
+                    seed: 1
+                    players:
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a1
+                        nickname: MeoXanh42
+                  - entry_id: 0193b0a0-0000-7000-8000-000000000912
+                    tournament_id: 0193b0a0-0000-7000-8000-000000000901
+                    status: confirmed
+                    seed: 4
+                    players:
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a2
+                        nickname: CaHeoVui07
+                  - entry_id: 0193b0a0-0000-7000-8000-000000000913
+                    tournament_id: 0193b0a0-0000-7000-8000-000000000901
+                    status: confirmed
+                    seed: 2
+                    players:
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a3
+                        nickname: GauNau15
+                  - entry_id: 0193b0a0-0000-7000-8000-000000000914
+                    tournament_id: 0193b0a0-0000-7000-8000-000000000901
+                    status: confirmed
+                    seed: 3
+                    players:
+                      - student_id: 0193b0a0-0000-7000-8000-0000000000a4
+                        nickname: SaoBang09
+                nodes:
+                  - node_id: 0193b0a0-0000-7000-8000-000000000921
+                    bracket: winners
+                    round: 1
+                    position: 0
+                    entry_a_id: 0193b0a0-0000-7000-8000-000000000911
+                    entry_b_id: 0193b0a0-0000-7000-8000-000000000912
+                    winner_entry_id: 0193b0a0-0000-7000-8000-000000000911
+                    is_draw: false
+                    match_id: 0193b0a0-0000-7000-8000-000000000501
+                    scheduled_at: '2026-11-25T08:00:00Z'
+                    next_win_node_id: 0193b0a0-0000-7000-8000-000000000923
+                    status: confirmed
+                  - node_id: 0193b0a0-0000-7000-8000-000000000922
+                    bracket: winners
+                    round: 1
+                    position: 1
+                    entry_a_id: 0193b0a0-0000-7000-8000-000000000913
+                    entry_b_id: 0193b0a0-0000-7000-8000-000000000914
+                    winner_entry_id: null
+                    is_draw: false
+                    match_id: null
+                    scheduled_at: '2026-11-25T08:10:00Z'
+                    next_win_node_id: 0193b0a0-0000-7000-8000-000000000923
+                    status: scheduled
+                  - node_id: 0193b0a0-0000-7000-8000-000000000923
+                    bracket: winners
+                    round: 2
+                    position: 0
+                    entry_a_id: 0193b0a0-0000-7000-8000-000000000911
+                    entry_b_id: null
+                    winner_entry_id: null
+                    is_draw: false
+                    match_id: null
+                    scheduled_at: '2026-11-25T08:30:00Z'
+                    status: pending
+                groups: []
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -3687,6 +4171,30 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/CompetitionChallenge' }
                   page: { $ref: '#/components/schemas/PageInfo' }
+              example:
+                data:
+                  - challenge_id: 0193b0a0-0000-7000-8000-000000000905
+                    name: 'Thử thách khối 3: Bảng cửu chương'
+                    kind: grade_challenge
+                    format: timed_quiz
+                    starts_at: '2026-11-25T08:00:00Z'
+                    ends_at: '2026-11-25T08:15:00Z'
+                    join_window_opens_at: '2026-11-25T07:55:00Z'
+                    status: scheduled
+                    tournament_id: null
+                  - challenge_id: 0193b0a0-0000-7000-8000-000000000904
+                    name: Giải Toán khối 4 tuần này
+                    kind: school_tournament
+                    format: tournament
+                    starts_at: '2026-11-25T08:00:00Z'
+                    ends_at: null
+                    join_window_opens_at: '2026-11-25T07:30:00Z'
+                    status: scheduled
+                    tournament_id: 0193b0a0-0000-7000-8000-000000000901
+                page:
+                  next_cursor: null
+                  has_more: false
+                  limit: 20
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
@@ -3712,6 +4220,11 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ChallengeJoinResult' }
+              example:
+                challenge_id: 0193b0a0-0000-7000-8000-000000000905
+                match_id: 0193b0a0-0000-7000-8000-000000000503
+                room_id: 0193b0a0-0000-7000-8000-000000000503
+                starts_at: '2026-11-25T08:00:00Z'
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -3746,6 +4259,40 @@ paths:
                     type: array
                     maxItems: 100
                     items: { $ref: '#/components/schemas/LeaderboardSummary' }
+              example:
+                data:
+                  - leaderboard_id: 0193b0a0-0000-7000-8000-000000000801
+                    code: grade_goal_weekly
+                    title: Mục tiêu của khối
+                    metric: grade_goal
+                    scope_type: grade
+                    period: weekly
+                    scope_id: 0193b0a0-0000-7000-8000-000000000903
+                    grade_level: 4
+                  - leaderboard_id: 0193b0a0-0000-7000-8000-000000000802
+                    code: school_arena_weekly
+                    title: Đấu trường trường
+                    metric: competition_points
+                    scope_type: school
+                    period: weekly
+                    scope_id: 0193b0a0-0000-7000-8000-000000000903
+                    grade_level: 4
+                    filters:
+                      subject_id: null
+                      topic_id: null
+                      mode: null
+                  - leaderboard_id: 0193b0a0-0000-7000-8000-000000000803
+                    code: rating_season
+                    title: Xếp hạng thi đấu
+                    metric: rating
+                    scope_type: school
+                    period: season
+                    scope_id: 0193b0a0-0000-7000-8000-000000000903
+                    grade_level: 4
+                    filters:
+                      subject_id: 0193b0a0-0000-7000-8000-000000000601
+                      topic_id: null
+                      mode: battle_1v1
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
   /leaderboards/{leaderboard_id}:
@@ -3776,6 +4323,219 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LeaderboardPage'
+              examples:
+                grade_goal:
+                  summary: 'Mục tiêu của khối (lớp 1–3 và mọi bảng grade_goal): không entries, không nickname người khác'
+                  value:
+                    leaderboard_id: 0193b0a0-0000-7000-8000-000000000801
+                    scope_type: grade
+                    scope_id: 0193b0a0-0000-7000-8000-000000000903
+                    metric: grade_goal
+                    period: weekly
+                    period_key: 2026-W47
+                    visibility: grade_goal
+                    stale: false
+                    entries: []
+                    me: null
+                    grade_goal:
+                      grade_level: 3
+                      current: 640
+                      target: 1000
+                      reached: false
+                      my_contribution: 25
+                      contributors_count: 38
+                    page:
+                      next_cursor: null
+                      has_more: false
+                      limit: 20
+                top_n_percentile:
+                  summary: 'Lớp 4–5: top 10 và nhóm % của em (không bao giờ lộ người cuối bảng)'
+                  value:
+                    leaderboard_id: 0193b0a0-0000-7000-8000-000000000802
+                    scope_type: school
+                    scope_id: 0193b0a0-0000-7000-8000-000000000903
+                    metric: competition_points
+                    period: weekly
+                    period_key: 2026-W47
+                    visibility: top_n_percentile
+                    stale: false
+                    entries:
+                      - rank: 1
+                        player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a2
+                          nickname: CaHeoVui07
+                          level: 10
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        value: 96
+                        is_me: false
+                      - rank: 2
+                        player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a3
+                          nickname: GauNau15
+                          level: 11
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        value: 88
+                        is_me: false
+                      - rank: 3
+                        player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a4
+                          nickname: SaoBang09
+                          level: 9
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        value: 75
+                        is_me: false
+                    me:
+                      rank: null
+                      value: 42
+                      tier_code: null
+                      percentile_bucket: 25
+                    around_me: []
+                    page:
+                      next_cursor: null
+                      has_more: false
+                      limit: 10
+                ranked:
+                  summary: 'Lớp 6–9: top 50 và ±3 quanh em'
+                  value:
+                    leaderboard_id: 0193b0a0-0000-7000-8000-000000000802
+                    scope_type: school
+                    scope_id: 0193b0a0-0000-7000-8000-000000000903
+                    metric: competition_points
+                    period: weekly
+                    period_key: 2026-W47
+                    visibility: ranked
+                    stale: true
+                    entries:
+                      - rank: 1
+                        player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a2
+                          nickname: CaHeoVui07
+                          level: 10
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        value: 210
+                        is_me: false
+                      - rank: 2
+                        player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a3
+                          nickname: GauNau15
+                          level: 11
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        value: 198
+                        is_me: false
+                      - rank: 3
+                        player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a1
+                          nickname: MeoXanh42
+                          level: 12
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        value: 180
+                        is_me: true
+                    me:
+                      rank: 3
+                      value: 180
+                      tier_code: null
+                      percentile_bucket: null
+                    around_me:
+                      - rank: 2
+                        player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a3
+                          nickname: GauNau15
+                          level: 11
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        value: 198
+                        is_me: false
+                      - rank: 3
+                        player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a1
+                          nickname: MeoXanh42
+                          level: 12
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        value: 180
+                        is_me: true
+                      - rank: 4
+                        player:
+                          user_id: 0193b0a0-0000-7000-8000-0000000000a4
+                          nickname: SaoBang09
+                          level: 9
+                          avatar_config:
+                            schema_version: 1
+                            body_type: kid_a
+                            skin_tone: tone_02
+                            hair:
+                              item_id: hair_bob_01
+                              color: hair_col_02
+                            outfit:
+                              item_id: outfit_school_01
+                        value: 171
+                        is_me: false
+                    page:
+                      next_cursor: null
+                      has_more: false
+                      limit: 50
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '401': { $ref: '#/components/responses/Unauthenticated' }

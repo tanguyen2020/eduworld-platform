@@ -1,0 +1,31 @@
+{
+  "data": [
+    {
+      "challenge_id": "0193b0a0-0000-7000-8000-000000000905",
+      "name": "Thử thách khối 3: Bảng cửu chương",
+      "kind": "grade_challenge",
+      "format": "timed_quiz",
+      "starts_at": "2026-11-25T08:00:00Z",
+      "ends_at": "2026-11-25T08:15:00Z",
+      "join_window_opens_at": "2026-11-25T07:55:00Z",
+      "status": "scheduled",
+      "tournament_id": null
+    },
+    {
+      "challenge_id": "0193b0a0-0000-7000-8000-000000000904",
+      "name": "Giải Toán khối 4 tuần này",
+      "kind": "school_tournament",
+      "format": "tournament",
+      "starts_at": "2026-11-25T08:00:00Z",
+      "ends_at": null,
+      "join_window_opens_at": "2026-11-25T07:30:00Z",
+      "status": "scheduled",
+      "tournament_id": "0193b0a0-0000-7000-8000-000000000901"
+    }
+  ],
+  "page": {
+    "next_cursor": null,
+    "has_more": false,
+    "limit": 20
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+  "template_id": "0193b0a0-0000-7000-8000-000000000902",
+  "name": "Giải Toán khối 4 tuần này",
+  "format": "single_elim",
+  "scope_type": "school",
+  "scope_id": "0193b0a0-0000-7000-8000-000000000903",
+  "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+  "grade_level": 4,
+  "registration_open_at": "2026-11-20T00:00:00Z",
+  "registration_closes_at": "2026-11-24T10:00:00Z",
+  "check_in_opens_at": "2026-11-25T07:30:00Z",
+  "starts_at": "2026-11-25T08:00:00Z",
+  "max_entries": 16,
+  "status": "registration_open",
+  "entry_count": 4,
+  "challenge_id": "0193b0a0-0000-7000-8000-000000000904",
+  "school_id": "0193b0a0-0000-7000-8000-000000000903",
+  "participant_type": "individual",
+  "team_size": null,
+  "mode": "battle_1v1",
+  "grade_levels": [
+    4
+  ],
+  "seeding_policy": "rating",
+  "auto_confirm": true,
+  "reward_summary": "Huy hiệu Nhà vô địch Toán",
+  "cancel_reason": null,
+  "my_entry": {
+    "entry_id": "0193b0a0-0000-7000-8000-000000000911",
+    "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+    "status": "registered",
+    "seed": null,
+    "players": [
+      {
+        "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+        "nickname": "MeoXanh42"
+      }
+    ]
+  }
+}

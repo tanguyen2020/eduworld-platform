@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "type": "matchmaking.match.assigned",
+  "seq": 48,
+  "ts": 1763712048000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000501",
+    "room_id": "0193b0a0-0000-7000-8000-000000000501",
+    "mode": "battle_1v1",
+    "scene_ref": "res://scenes/competition/BattleArena.tscn"
+  }
+}

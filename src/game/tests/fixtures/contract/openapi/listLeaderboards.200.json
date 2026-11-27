@@ -1,0 +1,44 @@
+{
+  "data": [
+    {
+      "leaderboard_id": "0193b0a0-0000-7000-8000-000000000801",
+      "code": "grade_goal_weekly",
+      "title": "Mục tiêu của khối",
+      "metric": "grade_goal",
+      "scope_type": "grade",
+      "period": "weekly",
+      "scope_id": "0193b0a0-0000-7000-8000-000000000903",
+      "grade_level": 4
+    },
+    {
+      "leaderboard_id": "0193b0a0-0000-7000-8000-000000000802",
+      "code": "school_arena_weekly",
+      "title": "Đấu trường trường",
+      "metric": "competition_points",
+      "scope_type": "school",
+      "period": "weekly",
+      "scope_id": "0193b0a0-0000-7000-8000-000000000903",
+      "grade_level": 4,
+      "filters": {
+        "subject_id": null,
+        "topic_id": null,
+        "mode": null
+      }
+    },
+    {
+      "leaderboard_id": "0193b0a0-0000-7000-8000-000000000803",
+      "code": "rating_season",
+      "title": "Xếp hạng thi đấu",
+      "metric": "rating",
+      "scope_type": "school",
+      "period": "season",
+      "scope_id": "0193b0a0-0000-7000-8000-000000000903",
+      "grade_level": 4,
+      "filters": {
+        "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+        "topic_id": null,
+        "mode": "battle_1v1"
+      }
+    }
+  ]
+}

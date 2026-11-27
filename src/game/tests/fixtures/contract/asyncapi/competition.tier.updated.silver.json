@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "type": "competition.tier.updated",
+  "seq": 72,
+  "ts": 1763712072000,
+  "payload": {
+    "mode": "battle_1v1",
+    "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+    "season_id": "0193b0a0-0000-7000-8000-000000000701",
+    "tier_code": "silver_2",
+    "provisional": false,
+    "provisional_games_required": 5,
+    "games_played": 15
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "v": 1,
+  "type": "battle.match.ended",
+  "seq": 71,
+  "ts": 1763712071000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000503",
+    "status": "completed",
+    "results": [
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+        "outcome": "no_contest",
+        "score": 80,
+        "correct_count": 8,
+        "competition_points": 4
+      }
+    ],
+    "end_reason": "finished",
+    "rated": false,
+    "review_available": true,
+    "top": [
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+        "rank": 1,
+        "score": 100
+      },
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+        "rank": 2,
+        "score": 90
+      },
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+        "rank": 3,
+        "score": 80
+      }
+    ],
+    "my_rank": 3
+  }
+}

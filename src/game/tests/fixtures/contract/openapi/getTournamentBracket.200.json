@@ -1,0 +1,99 @@
+{
+  "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+  "format": "single_elim",
+  "status": "in_progress",
+  "entries": [
+    {
+      "entry_id": "0193b0a0-0000-7000-8000-000000000911",
+      "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+      "status": "confirmed",
+      "seed": 1,
+      "players": [
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+          "nickname": "MeoXanh42"
+        }
+      ]
+    },
+    {
+      "entry_id": "0193b0a0-0000-7000-8000-000000000912",
+      "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+      "status": "confirmed",
+      "seed": 4,
+      "players": [
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a2",
+          "nickname": "CaHeoVui07"
+        }
+      ]
+    },
+    {
+      "entry_id": "0193b0a0-0000-7000-8000-000000000913",
+      "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+      "status": "confirmed",
+      "seed": 2,
+      "players": [
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a3",
+          "nickname": "GauNau15"
+        }
+      ]
+    },
+    {
+      "entry_id": "0193b0a0-0000-7000-8000-000000000914",
+      "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+      "status": "confirmed",
+      "seed": 3,
+      "players": [
+        {
+          "student_id": "0193b0a0-0000-7000-8000-0000000000a4",
+          "nickname": "SaoBang09"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "0193b0a0-0000-7000-8000-000000000921",
+      "bracket": "winners",
+      "round": 1,
+      "position": 0,
+      "entry_a_id": "0193b0a0-0000-7000-8000-000000000911",
+      "entry_b_id": "0193b0a0-0000-7000-8000-000000000912",
+      "winner_entry_id": "0193b0a0-0000-7000-8000-000000000911",
+      "is_draw": false,
+      "match_id": "0193b0a0-0000-7000-8000-000000000501",
+      "scheduled_at": "2026-11-25T08:00:00Z",
+      "next_win_node_id": "0193b0a0-0000-7000-8000-000000000923",
+      "status": "confirmed"
+    },
+    {
+      "node_id": "0193b0a0-0000-7000-8000-000000000922",
+      "bracket": "winners",
+      "round": 1,
+      "position": 1,
+      "entry_a_id": "0193b0a0-0000-7000-8000-000000000913",
+      "entry_b_id": "0193b0a0-0000-7000-8000-000000000914",
+      "winner_entry_id": null,
+      "is_draw": false,
+      "match_id": null,
+      "scheduled_at": "2026-11-25T08:10:00Z",
+      "next_win_node_id": "0193b0a0-0000-7000-8000-000000000923",
+      "status": "scheduled"
+    },
+    {
+      "node_id": "0193b0a0-0000-7000-8000-000000000923",
+      "bracket": "winners",
+      "round": 2,
+      "position": 0,
+      "entry_a_id": "0193b0a0-0000-7000-8000-000000000911",
+      "entry_b_id": null,
+      "winner_entry_id": null,
+      "is_draw": false,
+      "match_id": null,
+      "scheduled_at": "2026-11-25T08:30:00Z",
+      "status": "pending"
+    }
+  ],
+  "groups": []
+}

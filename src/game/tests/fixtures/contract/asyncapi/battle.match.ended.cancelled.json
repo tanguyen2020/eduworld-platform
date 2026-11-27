@@ -1,0 +1,31 @@
+{
+  "v": 1,
+  "type": "battle.match.ended",
+  "seq": 68,
+  "ts": 1763712068000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000501",
+    "status": "cancelled",
+    "results": [
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+        "team": 1,
+        "outcome": "no_contest",
+        "score": 0,
+        "correct_count": 0,
+        "competition_points": 0
+      },
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+        "team": 2,
+        "outcome": "no_contest",
+        "score": 0,
+        "correct_count": 0,
+        "competition_points": 0
+      }
+    ],
+    "end_reason": "all_left",
+    "rated": false,
+    "review_available": false
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "data": [
+    {
+      "mode": "battle_1v1",
+      "matchmaking_types": [
+        "skill",
+        "subject",
+        "topic"
+      ],
+      "ranked": true,
+      "ranked_matchmaking_types": [
+        "skill"
+      ],
+      "min_grade": 1,
+      "subjects": [
+        "0193b0a0-0000-7000-8000-000000000601",
+        "0193b0a0-0000-7000-8000-000000000602"
+      ]
+    },
+    {
+      "mode": "team_battle",
+      "matchmaking_types": [
+        "team"
+      ],
+      "ranked": true,
+      "ranked_matchmaking_types": [
+        "team"
+      ],
+      "min_grade": 4,
+      "subjects": [
+        "0193b0a0-0000-7000-8000-000000000601"
+      ]
+    },
+    {
+      "mode": "coop_challenge",
+      "matchmaking_types": [
+        "random"
+      ],
+      "ranked": false,
+      "ranked_matchmaking_types": [],
+      "min_grade": 1,
+      "subjects": []
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "type": "matchmaking.ticket.updated",
+  "seq": 42,
+  "ts": 1763712042000,
+  "payload": {
+    "ticket_id": "0193b0a0-0000-7000-8000-000000000401",
+    "status": "queued",
+    "mode": "battle_1v1",
+    "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+    "wait_ms": 31000,
+    "search_widened": false,
+    "matchmaking_type": "skill",
+    "requeued": true
+  }
+}

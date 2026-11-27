@@ -1,0 +1,157 @@
+{
+  "leaderboard_id": "0193b0a0-0000-7000-8000-000000000802",
+  "scope_type": "school",
+  "scope_id": "0193b0a0-0000-7000-8000-000000000903",
+  "metric": "competition_points",
+  "period": "weekly",
+  "period_key": "2026-W47",
+  "visibility": "ranked",
+  "stale": true,
+  "entries": [
+    {
+      "rank": 1,
+      "player": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+        "nickname": "CaHeoVui07",
+        "level": 10,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_a",
+          "skin_tone": "tone_02",
+          "hair": {
+            "item_id": "hair_bob_01",
+            "color": "hair_col_02"
+          },
+          "outfit": {
+            "item_id": "outfit_school_01"
+          }
+        }
+      },
+      "value": 210,
+      "is_me": false
+    },
+    {
+      "rank": 2,
+      "player": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+        "nickname": "GauNau15",
+        "level": 11,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_a",
+          "skin_tone": "tone_02",
+          "hair": {
+            "item_id": "hair_bob_01",
+            "color": "hair_col_02"
+          },
+          "outfit": {
+            "item_id": "outfit_school_01"
+          }
+        }
+      },
+      "value": 198,
+      "is_me": false
+    },
+    {
+      "rank": 3,
+      "player": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+        "nickname": "MeoXanh42",
+        "level": 12,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_a",
+          "skin_tone": "tone_02",
+          "hair": {
+            "item_id": "hair_bob_01",
+            "color": "hair_col_02"
+          },
+          "outfit": {
+            "item_id": "outfit_school_01"
+          }
+        }
+      },
+      "value": 180,
+      "is_me": true
+    }
+  ],
+  "me": {
+    "rank": 3,
+    "value": 180,
+    "tier_code": null,
+    "percentile_bucket": null
+  },
+  "around_me": [
+    {
+      "rank": 2,
+      "player": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+        "nickname": "GauNau15",
+        "level": 11,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_a",
+          "skin_tone": "tone_02",
+          "hair": {
+            "item_id": "hair_bob_01",
+            "color": "hair_col_02"
+          },
+          "outfit": {
+            "item_id": "outfit_school_01"
+          }
+        }
+      },
+      "value": 198,
+      "is_me": false
+    },
+    {
+      "rank": 3,
+      "player": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+        "nickname": "MeoXanh42",
+        "level": 12,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_a",
+          "skin_tone": "tone_02",
+          "hair": {
+            "item_id": "hair_bob_01",
+            "color": "hair_col_02"
+          },
+          "outfit": {
+            "item_id": "outfit_school_01"
+          }
+        }
+      },
+      "value": 180,
+      "is_me": true
+    },
+    {
+      "rank": 4,
+      "player": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a4",
+        "nickname": "SaoBang09",
+        "level": 9,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_a",
+          "skin_tone": "tone_02",
+          "hair": {
+            "item_id": "hair_bob_01",
+            "color": "hair_col_02"
+          },
+          "outfit": {
+            "item_id": "outfit_school_01"
+          }
+        }
+      },
+      "value": 171,
+      "is_me": false
+    }
+  ],
+  "page": {
+    "next_cursor": null,
+    "has_more": false,
+    "limit": 50
+  }
+}

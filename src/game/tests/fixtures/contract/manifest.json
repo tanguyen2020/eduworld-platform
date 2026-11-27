@@ -245,6 +245,94 @@
       "source": "specs/openapi/eduworld-api.v1.yaml#createReport/responses/201/example",
       "sha256": "93cfe45bf6d28ecf13e05eb986c4b65eb5fe94e9b7818d857919b86ee517c12e"
     },
+    "openapi/listCompetitionModes.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listCompetitionModes/responses/200/example",
+      "sha256": "ffc490c9378909fba25e1b28b8ea50badc7db44e98294784b681171f30b04aa7"
+    },
+    "openapi/listSubjects.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listSubjects/responses/200/example",
+      "sha256": "8ac0018902ad5e9dd5633ffbe1af59279429706354c4f31c8b5ed854c17f1bca"
+    },
+    "openapi/listTopics.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listTopics/responses/200/example",
+      "sha256": "6fb7d86977087b634a77cb7e35ddda7d336fe0dc337e303f91eebd18fece7130"
+    },
+    "openapi/createMatchmakingTicket.201.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#createMatchmakingTicket/responses/201/example",
+      "sha256": "4e3a7c8567349b9125a4bcb710ace407b8c52d468ba57ebc4694a952374530a7"
+    },
+    "openapi/getMatchmakingTicket.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#getMatchmakingTicket/responses/200/example",
+      "sha256": "a0177fa9be329a263cd3ec74d0e458ce56d9c53a8aa923fe927ace4185af3ca4"
+    },
+    "openapi/startBotMatch.201.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#startBotMatch/responses/201/example",
+      "sha256": "e3318c893847e8e15012e65603a6a3f5f6ea42cb0c81831ce92ce14dc031de69"
+    },
+    "openapi/getMyRatings.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#getMyRatings/responses/200/example",
+      "sha256": "77bbfc26fceec8d88fa33aa7423eb14ad7a94a8b53d29d522b3b36b0e938fe98"
+    },
+    "openapi/listMyMatches.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listMyMatches/responses/200/example",
+      "sha256": "fe999a3d835fd995e5265d05ec1622df84db80054ea8a44e550f202dedd65026"
+    },
+    "openapi/getMatch.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#getMatch/responses/200/example",
+      "sha256": "2fceac341d703ae762a3ea0bf440064819cb83f252073e087c995a5572390489"
+    },
+    "openapi/listLeaderboards.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listLeaderboards/responses/200/example",
+      "sha256": "1bf05909e0829cbaed1e504b02d65ef78d1a0b4d9e945a2c00780142e32a7c11"
+    },
+    "openapi/getLeaderboard.200.grade_goal.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#getLeaderboard/responses/200/examples/grade_goal",
+      "sha256": "0c3fc3f8786882aa98a3fd3012defc14415136ecbe8d292e970a526eca028914"
+    },
+    "openapi/getLeaderboard.200.top_n_percentile.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#getLeaderboard/responses/200/examples/top_n_percentile",
+      "sha256": "f871145cc5387278523695791af11b35fc174b37e97085676c28b8763633f1cd"
+    },
+    "openapi/getLeaderboard.200.ranked.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#getLeaderboard/responses/200/examples/ranked",
+      "sha256": "a5a649e9a6c20dde8aece28be7079622a6d1869627497d7a92e6e3b5671d5192"
+    },
+    "openapi/listTournaments.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listTournaments/responses/200/example",
+      "sha256": "78329e8b8e22ee6095084b06dc2d0b18a03e403cd4ba9ecc0e3be826d2354764"
+    },
+    "openapi/getTournament.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#getTournament/responses/200/example",
+      "sha256": "214e5cbe3263047c62f260947183f95c90986986712e5e5a8f8cb6ea0b107949"
+    },
+    "openapi/registerTournamentEntry.201.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#registerTournamentEntry/responses/201/example",
+      "sha256": "6c657f60337136b030fdaebafa7097ee33ef664ef10bcd829f2f66e89736a8a6"
+    },
+    "openapi/checkInTournamentEntry.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#checkInTournamentEntry/responses/200/example",
+      "sha256": "d8c6d5317a7b7da9a2bfd7396bc38107af6cc943108995a7c197f158af52f239"
+    },
+    "openapi/getTournamentBracket.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#getTournamentBracket/responses/200/example",
+      "sha256": "841b06cf9a00df968d468ed0e9024780a9c0effe559e4e711136f6acc83c38c6"
+    },
+    "openapi/listMyChallenges.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listMyChallenges/responses/200/example",
+      "sha256": "130d32f72eb6477b4eab9a3b5af7c97145ec5b99e958f96a4825d979a9e7f6e4"
+    },
+    "openapi/joinChallenge.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#joinChallenge/responses/200/example",
+      "sha256": "321d91cfd4fca8ab9bc71c5e63a774dfed9890b71a946a1c820a2a34aa1a74a8"
+    },
+    "openapi/createDuel.201.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#createDuel/responses/201/example",
+      "sha256": "0f08c1445b2c79afbc28c3916bed0446424a3b44fc3cea7f2b18c9d8d8e0c929"
+    },
+    "openapi/acceptDuel.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#acceptDuel/responses/200/example",
+      "sha256": "88e930aa5ae8b8623813f845348247a666d4f63a03886622a75293527b040ef8"
+    },
     "examples/achievement.explorer-math-zone.json": {
       "source": "specs/examples/achievement.explorer-math-zone.json",
       "sha256": "e6003dc883ec9c39ba5e6d0128b2b04f00c3ab45d63902dfef995b122d3aad9b"
@@ -308,6 +396,94 @@
     "examples/shop-item.explorer-hat.json": {
       "source": "specs/examples/shop-item.explorer-hat.json",
       "sha256": "a7f153f2d0b3da1670c9cdba4f7c5f1b08d2035b7e0afde672dfac97d2f3b3cc"
+    },
+    "asyncapi/battle.answer.evaluated.correct_bonus.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleAnswerEvaluated/examples/correct_bonus",
+      "sha256": "105ac6b055e261ef16a9e38b45edd69daeb500d3e1558e93a4d26a752cc36a6d"
+    },
+    "asyncapi/battle.answer.evaluated.incorrect.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleAnswerEvaluated/examples/incorrect",
+      "sha256": "6d1ded6ee62e5a326cf0de5558e425d0524566ea3ff60c90ac32370fb6a4145f"
+    },
+    "asyncapi/battle.answer.evaluated.no_bonus.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleAnswerEvaluated/examples/no_bonus",
+      "sha256": "242bb0d27e5e27425b92116ec496fd4feeebca8394a83702b422d5b033a64341"
+    },
+    "asyncapi/battle.answer.recorded.opponent.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleAnswerRecorded/examples/opponent",
+      "sha256": "0bfaba4dfcfa8f01c421f42a4b22adb1632ff8328d5386125c4bc429034da91a"
+    },
+    "asyncapi/battle.countdown.started.battle_1v1.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleCountdownStarted/examples/battle_1v1",
+      "sha256": "28e9e412452abf26f7f6dcf904b5eb01643ae17fac07ac66611c7152043b6be8"
+    },
+    "asyncapi/battle.match.ended.win.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleMatchEnded/examples/win",
+      "sha256": "da421acef71d3f42dbc270a02af07e7f276153c6eac6a8813fd3c7b9668d723e"
+    },
+    "asyncapi/battle.match.ended.loss.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleMatchEnded/examples/loss",
+      "sha256": "17703768e3ddb03ff7deac1760b9699cb671c994d2ec6c24ced99b5391bf43af"
+    },
+    "asyncapi/battle.match.ended.draw.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleMatchEnded/examples/draw",
+      "sha256": "1fe634ab94b632a3c04389cc8fba203fe60b50a66a2e167cfe94bcf3cf1f9040"
+    },
+    "asyncapi/battle.match.ended.cancelled.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleMatchEnded/examples/cancelled",
+      "sha256": "6c7a7cd4d3e63dca14efe1fef70ab7cc5bb445b544e708388a5266ddfbe7499d"
+    },
+    "asyncapi/battle.match.ended.team_win.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleMatchEnded/examples/team_win",
+      "sha256": "fcf5f2472bef801dbaf6a90bf58b93cbbb7cbe16f8d1b0650951e393a0060228"
+    },
+    "asyncapi/battle.match.ended.timed_quiz_grade_goal.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleMatchEnded/examples/timed_quiz_grade_goal",
+      "sha256": "446f8f1f5f398639f36f2057b66674e376c94d778d133f515c19bc458bcf34d4"
+    },
+    "asyncapi/battle.match.ended.timed_quiz_rank.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleMatchEnded/examples/timed_quiz_rank",
+      "sha256": "9ad7cb00ae7ce5f9c1726b8022426785fb67e8fbc71852c87eefdb0fcd9259c1"
+    },
+    "asyncapi/battle.match.paused.server_failover.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleMatchPaused/examples/server_failover",
+      "sha256": "b4a080471b86bd7fb9f173aa64852d389f465bc908aa657d1f4c4072518cf633"
+    },
+    "asyncapi/battle.match.resumed.replay.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleMatchResumed/examples/replay",
+      "sha256": "2fd5c9282cd27d24ea74f655bf83da71fd7d1b1e4feef048d9be287e904f8836"
+    },
+    "asyncapi/battle.participant.status_changed.opponent_disconnected.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleParticipantStatusChanged/examples/opponent_disconnected",
+      "sha256": "58dae0b935636bf6118aa600bbe414532e55202294d6c6b9b54883ad3cb37ec9"
+    },
+    "asyncapi/battle.participant.status_changed.opponent_back.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleParticipantStatusChanged/examples/opponent_back",
+      "sha256": "47bced5c27ebccc2449350a1fa3d14beb694ccf700b74c2d3ed701d577aba839"
+    },
+    "asyncapi/battle.question.revealed.battle_1v1.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleQuestionRevealed/examples/battle_1v1",
+      "sha256": "67f18c636b23f72a3f10883e7dcf3f356cc934cd1cecb24c6dd81428d6044d71"
+    },
+    "asyncapi/battle.question.shown.single_choice.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleQuestionShown/examples/single_choice",
+      "sha256": "5f3795d3449aab20d13e575eeb04a9f68ef5e0e08fe3a095532f2e4f92cbaa1d"
+    },
+    "asyncapi/battle.round.ended.battle_1v1.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleRoundEnded/examples/battle_1v1",
+      "sha256": "d363c0605624f21b03382d6941f0f11b23dea72cfee39a9b28f88080c3e483f3"
+    },
+    "asyncapi/battle.state.snapshot.question_1v1.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleStateSnapshot/examples/question_1v1",
+      "sha256": "3f370098e47407f02048450d09782ea1da96527e3d3261e153bfbeaad75cbbb5"
+    },
+    "asyncapi/battle.state.snapshot.team_battle.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleStateSnapshot/examples/team_battle",
+      "sha256": "a31ae7b8923bc679e9aa2befe8602bc55ab12ce08af41478d361214525218c40"
+    },
+    "asyncapi/battle.state.snapshot.ended.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleStateSnapshot/examples/ended",
+      "sha256": "3ab66104e045a9533d62e425fd078905b08bb0e078937cc1aa8beb9b5a26bc4c"
     },
     "asyncapi/chat.history.loaded.sync.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatHistoryLoaded/examples/sync",
@@ -405,6 +581,10 @@
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatUnreadUpdated/examples/counts",
       "sha256": "7e2debb2d7fcf717b1dcf0e22634f6715c4d0ebc03821e06fece6ab59abd8aa5"
     },
+    "asyncapi/competition.tier.updated.silver.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/CompetitionTierUpdated/examples/silver",
+      "sha256": "91d87b7f69d02421c8150ebd818d9e3ff52a1a25c3a16b85579a400285166327"
+    },
     "asyncapi/hub.instance.assigned.main_hub.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/HubInstanceAssigned/examples/main_hub",
       "sha256": "4e5c711cbef79df9ed5937ff9a89efcb25a8b42455033fe098ebb11bc376e1d3"
@@ -449,6 +629,42 @@
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/HubSnapshotUpdated/examples/delta",
       "sha256": "761ebfd97b5d310550bba35aeb2b06ec6828f0447c4dd4df40b447be4e0c782b"
     },
+    "asyncapi/matchmaking.match.assigned.battle_1v1.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/MatchmakingMatchAssigned/examples/battle_1v1",
+      "sha256": "20de08df685d4b01516d2763b39bc431ed1a2af9be43b9e906978395175150be"
+    },
+    "asyncapi/matchmaking.proposal.cancelled.requeued.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/MatchmakingProposalCancelled/examples/requeued",
+      "sha256": "786fcde09d6c444f0944b8652f42a1a1d53437183046776d97ad0be0c640265c"
+    },
+    "asyncapi/matchmaking.proposal.cancelled.timeout.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/MatchmakingProposalCancelled/examples/timeout",
+      "sha256": "b8530c3cd63101fc0cbbdf3d7286acae37cce2bad8da660335264a410e58d172"
+    },
+    "asyncapi/matchmaking.proposal.created.battle_1v1.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/MatchmakingProposalCreated/examples/battle_1v1",
+      "sha256": "c02a6eae15ff368619a8a0804fc0f8ecbf32584289522810253f5e9fd81356a1"
+    },
+    "asyncapi/matchmaking.proposal.updated.one_accepted.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/MatchmakingProposalUpdated/examples/one_accepted",
+      "sha256": "d36b5b3b5561d528df8e0931d51094523505de1da77eb4be10440da34cb4f065"
+    },
+    "asyncapi/matchmaking.ticket.updated.queued.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/MatchmakingTicketUpdated/examples/queued",
+      "sha256": "0270fa4c03795778a914c8a187085c278cb01f2463e08309de63e81e66627cde"
+    },
+    "asyncapi/matchmaking.ticket.updated.widened.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/MatchmakingTicketUpdated/examples/widened",
+      "sha256": "10fc4fe419b0657e02f16ee87b400d00fd68773a7e755744725e7ace9c518fa4"
+    },
+    "asyncapi/matchmaking.ticket.updated.requeued.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/MatchmakingTicketUpdated/examples/requeued",
+      "sha256": "23b3b8caf351aa8a675d9a79bdd7523c09dc6e95b0be3ef158e8b937d58b29b5"
+    },
+    "asyncapi/matchmaking.ticket.updated.expired.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/MatchmakingTicketUpdated/examples/expired",
+      "sha256": "89d9e85f49b84f4dc06f506402365081794066ad6aec85ba2b60754db4633661"
+    },
     "asyncapi/notification.item.created.friend_request.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/NotificationItemCreated/examples/friend_request",
       "sha256": "5c588ef278f29e8562ecc61d041ff18ffb64b0148e3a6a84d844f0aa7ffd53b2"
@@ -456,6 +672,10 @@
     "asyncapi/notification.item.created.assignment_new.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/NotificationItemCreated/examples/assignment_new",
       "sha256": "259626cde4e1141ee86870a9502937634b5a8ce54b6c6aa0356da7c6f1f0f55d"
+    },
+    "asyncapi/notification.item.created.tournament_update.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/NotificationItemCreated/examples/tournament_update",
+      "sha256": "f9ced93a8aa895ed242fc57ee2512851a6e25988f3ec10f23d5df3c6efd6605d"
     },
     "asyncapi/notification.item.mark_read.mark_read.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/NotificationItemMarkRead/examples/mark_read",
@@ -612,6 +832,14 @@
     "asyncapi/system.session.welcome.new_connection.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemSessionWelcome/examples/new_connection",
       "sha256": "70ed261d77035dc87fa7bb0eaa7ae9f7527ad6306ecf9e4765d1716bec3c9609"
+    },
+    "asyncapi/tournament.bracket.updated.confirmed.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/TournamentBracketUpdated/examples/confirmed",
+      "sha256": "887c8f7a7cf45300899424521e62758359815192fc0a8ae7e5e7f1244ca68834"
+    },
+    "asyncapi/tournament.match.scheduled.ten_minutes.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/TournamentMatchScheduled/examples/ten_minutes",
+      "sha256": "cae5bc9f9ec7ef5268b5c6e32e499d9cf9d1874765751d949b659594b479c099"
     }
   }
 }

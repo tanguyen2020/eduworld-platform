@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "battle.match.paused",
+  "seq": 63,
+  "ts": 1763712063000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000501",
+    "reason": "server_failover",
+    "resume_deadline_at": 1763712120000
+  }
+}

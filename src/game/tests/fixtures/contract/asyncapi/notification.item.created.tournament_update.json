@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "type": "notification.item.created",
+  "seq": 75,
+  "ts": 1763712075000,
+  "payload": {
+    "notification_id": "0193b0a0-0000-7000-8000-000000000c01",
+    "kind": "tournament_update",
+    "message_code": "tournament.check_in_open",
+    "params": {
+      "title": "Giải Toán khối 4 tuần này"
+    },
+    "ref_type": "tournament",
+    "ref_id": "0193b0a0-0000-7000-8000-000000000901",
+    "created_at": 1763712075000
+  }
+}

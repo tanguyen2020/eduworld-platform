@@ -1,0 +1,12 @@
+{
+  "ticket_id": "0193b0a0-0000-7000-8000-000000000401",
+  "status": "queued",
+  "mode": "battle_1v1",
+  "matchmaking_type": "skill",
+  "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+  "created_at": "2026-11-21T08:00:00Z",
+  "wait_seconds": 24,
+  "estimated_wait_seconds": 30,
+  "search_widened": true,
+  "bot_offer_available": false
+}

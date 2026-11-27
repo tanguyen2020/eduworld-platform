@@ -1,0 +1,125 @@
+{
+  "match_id": "0193b0a0-0000-7000-8000-000000000501",
+  "mode": "battle_1v1",
+  "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+  "grade_level": 4,
+  "status": "completed",
+  "matchmaking_type": "skill",
+  "ranked": true,
+  "is_bot": false,
+  "room_id": "0193b0a0-0000-7000-8000-000000000501",
+  "started_at": "2026-11-20T08:00:00Z",
+  "ended_at": "2026-11-20T08:04:10Z",
+  "end_reason": "finished",
+  "rated": true,
+  "question_count": 3,
+  "participants": [
+    {
+      "player": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+        "nickname": "MeoXanh42",
+        "level": 12,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_a",
+          "skin_tone": "tone_02",
+          "hair": {
+            "item_id": "hair_bob_01",
+            "color": "hair_col_02"
+          },
+          "outfit": {
+            "item_id": "outfit_school_01"
+          }
+        }
+      },
+      "team_no": 1,
+      "outcome": "win",
+      "score": 420,
+      "correct_count": 3,
+      "competition_points": 12
+    },
+    {
+      "player": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+        "nickname": "CaHeoVui07",
+        "level": 10,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_a",
+          "skin_tone": "tone_02",
+          "hair": {
+            "item_id": "hair_bob_01",
+            "color": "hair_col_02"
+          },
+          "outfit": {
+            "item_id": "outfit_school_01"
+          }
+        }
+      },
+      "team_no": 2,
+      "outcome": "loss",
+      "score": 350,
+      "correct_count": 2,
+      "competition_points": 6
+    }
+  ],
+  "review": [
+    {
+      "index": 0,
+      "question": {
+        "stem": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "6 × 3 = ?"
+            }
+          ]
+        }
+      },
+      "correct_response": {
+        "option_id": "o_b"
+      },
+      "explanation": "Sáu nhân ba bằng mười tám.",
+      "my_answer_correct": true,
+      "my_points": 150
+    },
+    {
+      "index": 1,
+      "question": {
+        "stem": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "24 : 4 = ?"
+            }
+          ]
+        }
+      },
+      "correct_response": {
+        "option_id": "o_a"
+      },
+      "explanation": null,
+      "my_answer_correct": true,
+      "my_points": 140
+    },
+    {
+      "index": 2,
+      "question": {
+        "stem": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "7 × 8 = ?"
+            }
+          ]
+        }
+      },
+      "correct_response": {
+        "option_id": "o_c"
+      },
+      "explanation": null,
+      "my_answer_correct": false,
+      "my_points": 0
+    }
+  ]
+}

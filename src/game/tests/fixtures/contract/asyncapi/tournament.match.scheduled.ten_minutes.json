@@ -1,0 +1,18 @@
+{
+  "v": 1,
+  "type": "tournament.match.scheduled",
+  "seq": 73,
+  "ts": 1763712073000,
+  "payload": {
+    "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+    "node_id": "0193b0a0-0000-7000-8000-000000000923",
+    "scheduled_at": 1763712600000,
+    "notice_minutes": 10,
+    "opponents": [
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+        "nickname": "GauNau15"
+      }
+    ]
+  }
+}

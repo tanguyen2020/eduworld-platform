@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "matchmaking.proposal.updated",
+  "seq": 45,
+  "ts": 1763712045000,
+  "payload": {
+    "proposal_id": "0193b0a0-0000-7000-8000-000000000501",
+    "accepted_count": 1,
+    "total": 2
+  }
+}

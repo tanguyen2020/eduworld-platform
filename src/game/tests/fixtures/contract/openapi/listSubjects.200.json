@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+      "code": "math",
+      "name": {
+        "vi": "Toán",
+        "en": "Math"
+      },
+      "grade_levels": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "icon_key": "math"
+    },
+    {
+      "subject_id": "0193b0a0-0000-7000-8000-000000000602",
+      "code": "vietnamese",
+      "name": {
+        "vi": "Tiếng Việt",
+        "en": "Vietnamese"
+      },
+      "grade_levels": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "icon_key": "vietnamese"
+    }
+  ]
+}

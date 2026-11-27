@@ -1,0 +1,47 @@
+{
+  "v": 1,
+  "type": "battle.match.ended",
+  "seq": 69,
+  "ts": 1763712069000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000502",
+    "status": "completed",
+    "results": [
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+        "team": 1,
+        "outcome": "win",
+        "score": 240,
+        "correct_count": 4,
+        "competition_points": 10
+      },
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+        "team": 1,
+        "outcome": "win",
+        "score": 190,
+        "correct_count": 3,
+        "competition_points": 10
+      },
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+        "team": 2,
+        "outcome": "loss",
+        "score": 200,
+        "correct_count": 3,
+        "competition_points": 5
+      },
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a4",
+        "team": 2,
+        "outcome": "loss",
+        "score": 130,
+        "correct_count": 2,
+        "competition_points": 5
+      }
+    ],
+    "end_reason": "finished",
+    "rated": true,
+    "review_available": true
+  }
+}

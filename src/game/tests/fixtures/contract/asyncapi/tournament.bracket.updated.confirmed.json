@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "type": "tournament.bracket.updated",
+  "seq": 74,
+  "ts": 1763712074000,
+  "payload": {
+    "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+    "node_id": "0193b0a0-0000-7000-8000-000000000921",
+    "status": "confirmed",
+    "winner_entry_id": "0193b0a0-0000-7000-8000-000000000911"
+  }
+}

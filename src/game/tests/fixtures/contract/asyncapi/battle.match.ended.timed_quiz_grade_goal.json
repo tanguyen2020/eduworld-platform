@@ -1,0 +1,28 @@
+{
+  "v": 1,
+  "type": "battle.match.ended",
+  "seq": 70,
+  "ts": 1763712070000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000503",
+    "status": "completed",
+    "results": [
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+        "outcome": "no_contest",
+        "score": 60,
+        "correct_count": 6,
+        "competition_points": 0
+      }
+    ],
+    "end_reason": "finished",
+    "rated": false,
+    "review_available": true,
+    "grade_goal": {
+      "current": 820,
+      "target": 1000,
+      "reached": false,
+      "contributors_count": 41
+    }
+  }
+}

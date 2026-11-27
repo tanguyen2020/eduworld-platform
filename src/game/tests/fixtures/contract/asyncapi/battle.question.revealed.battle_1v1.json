@@ -1,0 +1,26 @@
+{
+  "v": 1,
+  "type": "battle.question.revealed",
+  "seq": 59,
+  "ts": 1763712059000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000501",
+    "question_instance_id": "qi_501_0",
+    "correct_rate": 0.5,
+    "scoreboard": [
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+        "team": 1,
+        "is_correct": true,
+        "score": 150
+      },
+      {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+        "team": 2,
+        "is_correct": false,
+        "score": 0
+      }
+    ],
+    "next_at": 1763712075000
+  }
+}

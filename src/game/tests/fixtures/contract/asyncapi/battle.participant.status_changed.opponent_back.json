@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "battle.participant.status_changed",
+  "seq": 62,
+  "ts": 1763712062000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000501",
+    "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+    "connected": true
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "v": 1,
+  "type": "battle.state.snapshot",
+  "seq": 50,
+  "ts": 1763712050000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000501",
+    "mode": "battle_1v1",
+    "state": "question_shown",
+    "state_version": 7,
+    "round": 1,
+    "question_index": 0,
+    "question_count": 3,
+    "current_question": {
+      "question_instance_id": "qi_501_0",
+      "question_type": "single_choice",
+      "stem": {
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "6 × 3 = ?"
+          }
+        ]
+      },
+      "options": [
+        {
+          "option_id": "o_a",
+          "content": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "9"
+              }
+            ]
+          }
+        },
+        {
+          "option_id": "o_b",
+          "content": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "18"
+              }
+            ]
+          }
+        },
+        {
+          "option_id": "o_c",
+          "content": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "12"
+              }
+            ]
+          }
+        },
+        {
+          "option_id": "o_d",
+          "content": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "63"
+              }
+            ]
+          }
+        }
+      ],
+      "time_limit_ms": 20000
+    },
+    "deadline_at": 1763712070000,
+    "my_answer_locked": false,
+    "participants": [
+      {
+        "player": {
+          "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+          "nickname": "MeoXanh42"
+        },
+        "team": 1,
+        "score": 0,
+        "connected": true
+      },
+      {
+        "player": {
+          "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+          "nickname": "CaHeoVui07"
+        },
+        "team": 2,
+        "score": 0,
+        "connected": true
+      }
+    ]
+  }
+}

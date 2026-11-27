@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "topic_id": "0193b0a0-0000-7000-8000-000000000611",
+      "name": "Phép nhân",
+      "code": "multiplication"
+    },
+    {
+      "topic_id": "0193b0a0-0000-7000-8000-000000000612",
+      "name": "Phép chia",
+      "code": "division"
+    }
+  ]
+}

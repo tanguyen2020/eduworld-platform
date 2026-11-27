@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "type": "battle.match.resumed",
+  "seq": 64,
+  "ts": 1763712064000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000501",
+    "replay_current_question": true
+  }
+}

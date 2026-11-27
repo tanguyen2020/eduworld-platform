@@ -1,0 +1,114 @@
+{
+  "v": 1,
+  "type": "battle.state.snapshot",
+  "seq": 51,
+  "ts": 1763712051000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000502",
+    "mode": "team_battle",
+    "state": "question_shown",
+    "state_version": 12,
+    "round": 1,
+    "question_index": 2,
+    "question_count": 7,
+    "current_question": {
+      "question_instance_id": "qi_502_2",
+      "question_type": "single_choice",
+      "stem": {
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "6 × 3 = ?"
+          }
+        ]
+      },
+      "options": [
+        {
+          "option_id": "o_a",
+          "content": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "9"
+              }
+            ]
+          }
+        },
+        {
+          "option_id": "o_b",
+          "content": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "18"
+              }
+            ]
+          }
+        },
+        {
+          "option_id": "o_c",
+          "content": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "12"
+              }
+            ]
+          }
+        },
+        {
+          "option_id": "o_d",
+          "content": {
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "63"
+              }
+            ]
+          }
+        }
+      ],
+      "time_limit_ms": 20000
+    },
+    "deadline_at": 1763712071000,
+    "my_answer_locked": false,
+    "participants": [
+      {
+        "player": {
+          "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+          "nickname": "MeoXanh42"
+        },
+        "team": 1,
+        "score": 240,
+        "connected": true
+      },
+      {
+        "player": {
+          "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+          "nickname": "GauNau15"
+        },
+        "team": 1,
+        "score": 150,
+        "connected": true
+      },
+      {
+        "player": {
+          "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+          "nickname": "CaHeoVui07"
+        },
+        "team": 2,
+        "score": 200,
+        "connected": true
+      },
+      {
+        "player": {
+          "user_id": "0193b0a0-0000-7000-8000-0000000000a4",
+          "nickname": "SaoBang09"
+        },
+        "team": 2,
+        "score": 130,
+        "connected": false
+      }
+    ]
+  }
+}

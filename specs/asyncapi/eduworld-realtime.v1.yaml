@@ -1871,6 +1871,8 @@ components:
           payload: {"v":1,"type":"notification.item.created","seq":7,"ts":1763712000000,"payload":{"notification_id":"0193b0a0-0000-7000-8000-000000000001","kind":"friend_request","message_code":"friend.request_received","params":{"nickname":"SaoBang12"},"ref_type":"friend_request","ref_id":"0193b0a0-0000-7000-8000-000000000002","action":{"kind":"open_friend_requests","id":"0193b0a0-0000-7000-8000-000000000002"},"created_at":1763712000000}}
         - name: assignment_new
           payload: {"v":1,"type":"notification.item.created","seq":8,"ts":1763712000000,"payload":{"notification_id":"0193b0a0-0000-7000-8000-000000000003","kind":"assignment_new","message_code":"assignment.new","params":{"title":"Phép nhân trong phạm vi 100"},"ref_type":"assignment","ref_id":"0193b0a0-0000-7000-8000-000000000004","action":{"kind":"open_assignment","id":"0193b0a0-0000-7000-8000-000000000004"},"created_at":1763712000000}}
+        - name: tournament_update
+          payload: {"v":1,"type":"notification.item.created","seq":75,"ts":1763712075000,"payload":{"notification_id":"0193b0a0-0000-7000-8000-000000000c01","kind":"tournament_update","message_code":"tournament.check_in_open","params":{"title":"Giải Toán khối 4 tuần này"},"ref_type":"tournament","ref_id":"0193b0a0-0000-7000-8000-000000000901","created_at":1763712075000}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2243,6 +2245,15 @@ components:
                   proposal_id: { $ref: '#/components/schemas/Uuid' }
     MatchmakingTicketUpdated:
       name: matchmaking.ticket.updated
+      examples:
+        - name: queued
+          payload: {"v":1,"type":"matchmaking.ticket.updated","seq":40,"ts":1763712040000,"payload":{"ticket_id":"0193b0a0-0000-7000-8000-000000000401","status":"queued","mode":"battle_1v1","subject_id":"0193b0a0-0000-7000-8000-000000000601","wait_ms":24000,"estimated_wait_ms":30000,"search_widened":false,"matchmaking_type":"skill","bot_offer_available":false}}
+        - name: widened
+          payload: {"v":1,"type":"matchmaking.ticket.updated","seq":41,"ts":1763712041000,"payload":{"ticket_id":"0193b0a0-0000-7000-8000-000000000401","status":"queued","mode":"battle_1v1","subject_id":"0193b0a0-0000-7000-8000-000000000601","wait_ms":65000,"estimated_wait_ms":30000,"search_widened":true,"matchmaking_type":"skill","bot_offer_available":true}}
+        - name: requeued
+          payload: {"v":1,"type":"matchmaking.ticket.updated","seq":42,"ts":1763712042000,"payload":{"ticket_id":"0193b0a0-0000-7000-8000-000000000401","status":"queued","mode":"battle_1v1","subject_id":"0193b0a0-0000-7000-8000-000000000601","wait_ms":31000,"search_widened":false,"matchmaking_type":"skill","requeued":true}}
+        - name: expired
+          payload: {"v":1,"type":"matchmaking.ticket.updated","seq":43,"ts":1763712043000,"payload":{"ticket_id":"0193b0a0-0000-7000-8000-000000000401","status":"expired","mode":"battle_1v1","subject_id":"0193b0a0-0000-7000-8000-000000000601","wait_ms":180000,"cancel_reason":"timeout"}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2266,6 +2277,9 @@ components:
                   requeued: { type: boolean, description: 'Về lại hàng đợi sau khi proposal bị hủy, giữ nguyên thời gian chờ (F104-AC-06).' }
     CompetitionTierUpdated:
       name: competition.tier.updated
+      examples:
+        - name: silver
+          payload: {"v":1,"type":"competition.tier.updated","seq":72,"ts":1763712072000,"payload":{"mode":"battle_1v1","subject_id":"0193b0a0-0000-7000-8000-000000000601","season_id":"0193b0a0-0000-7000-8000-000000000701","tier_code":"silver_2","provisional":false,"provisional_games_required":5,"games_played":15}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2286,6 +2300,9 @@ components:
                   games_played: { type: integer, minimum: 0 }
     TournamentMatchScheduled:
       name: tournament.match.scheduled
+      examples:
+        - name: ten_minutes
+          payload: {"v":1,"type":"tournament.match.scheduled","seq":73,"ts":1763712073000,"payload":{"tournament_id":"0193b0a0-0000-7000-8000-000000000901","node_id":"0193b0a0-0000-7000-8000-000000000923","scheduled_at":1763712600000,"notice_minutes":10,"opponents":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15"}]}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2314,6 +2331,9 @@ components:
                         nickname: { type: [string, 'null'], maxLength: 32 }
     TournamentBracketUpdated:
       name: tournament.bracket.updated
+      examples:
+        - name: confirmed
+          payload: {"v":1,"type":"tournament.bracket.updated","seq":74,"ts":1763712074000,"payload":{"tournament_id":"0193b0a0-0000-7000-8000-000000000901","node_id":"0193b0a0-0000-7000-8000-000000000921","status":"confirmed","winner_entry_id":"0193b0a0-0000-7000-8000-000000000911"}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2331,6 +2351,9 @@ components:
                   winner_entry_id: { type: [string, 'null'], format: uuid }
     MatchmakingProposalCreated:
       name: matchmaking.proposal.created
+      examples:
+        - name: battle_1v1
+          payload: {"v":1,"type":"matchmaking.proposal.created","seq":44,"ts":1763712044000,"payload":{"proposal_id":"0193b0a0-0000-7000-8000-000000000501","ticket_id":"0193b0a0-0000-7000-8000-000000000401","deadline_at":1763712059000,"mode":"battle_1v1","teams":[["0193b0a0-0000-7000-8000-0000000000a1"],["0193b0a0-0000-7000-8000-0000000000a2"]],"participants":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42"},{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07"}]}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2353,6 +2376,9 @@ components:
                   participants: { type: array, items: { $ref: '#/components/schemas/PublicPlayer' } }
     MatchmakingProposalUpdated:
       name: matchmaking.proposal.updated
+      examples:
+        - name: one_accepted
+          payload: {"v":1,"type":"matchmaking.proposal.updated","seq":45,"ts":1763712045000,"payload":{"proposal_id":"0193b0a0-0000-7000-8000-000000000501","accepted_count":1,"total":2}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2368,6 +2394,11 @@ components:
                   total: { type: integer }
     MatchmakingProposalCancelled:
       name: matchmaking.proposal.cancelled
+      examples:
+        - name: requeued
+          payload: {"v":1,"type":"matchmaking.proposal.cancelled","seq":46,"ts":1763712046000,"payload":{"proposal_id":"0193b0a0-0000-7000-8000-000000000501","reason":"declined","requeued":true}}
+        - name: timeout
+          payload: {"v":1,"type":"matchmaking.proposal.cancelled","seq":47,"ts":1763712047000,"payload":{"proposal_id":"0193b0a0-0000-7000-8000-000000000501","reason":"timeout","requeued":false}}
       summary: Ai đó từ chối/hết giờ. Người đã accept được trả về hàng đợi với ưu tiên giữ nguyên thời gian chờ.
       payload:
         allOf:
@@ -2384,6 +2415,9 @@ components:
                   requeued: { type: boolean }
     MatchmakingMatchAssigned:
       name: matchmaking.match.assigned
+      examples:
+        - name: battle_1v1
+          payload: {"v":1,"type":"matchmaking.match.assigned","seq":48,"ts":1763712048000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","room_id":"0193b0a0-0000-7000-8000-000000000501","mode":"battle_1v1","scene_ref":"res://scenes/competition/BattleArena.tscn"}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2660,6 +2694,13 @@ components:
                   match_id: { $ref: '#/components/schemas/Uuid' }
     BattleStateSnapshot:
       name: battle.state.snapshot
+      examples:
+        - name: question_1v1
+          payload: {"v":1,"type":"battle.state.snapshot","seq":50,"ts":1763712050000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","mode":"battle_1v1","state":"question_shown","state_version":7,"round":1,"question_index":0,"question_count":3,"current_question":{"question_instance_id":"qi_501_0","question_type":"single_choice","stem":{"blocks":[{"type":"paragraph","text":"6 × 3 = ?"}]},"options":[{"option_id":"o_a","content":{"blocks":[{"type":"paragraph","text":"9"}]}},{"option_id":"o_b","content":{"blocks":[{"type":"paragraph","text":"18"}]}},{"option_id":"o_c","content":{"blocks":[{"type":"paragraph","text":"12"}]}},{"option_id":"o_d","content":{"blocks":[{"type":"paragraph","text":"63"}]}}],"time_limit_ms":20000},"deadline_at":1763712070000,"my_answer_locked":false,"participants":[{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42"},"team":1,"score":0,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07"},"team":2,"score":0,"connected":true}]}}
+        - name: team_battle
+          payload: {"v":1,"type":"battle.state.snapshot","seq":51,"ts":1763712051000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000502","mode":"team_battle","state":"question_shown","state_version":12,"round":1,"question_index":2,"question_count":7,"current_question":{"question_instance_id":"qi_502_2","question_type":"single_choice","stem":{"blocks":[{"type":"paragraph","text":"6 × 3 = ?"}]},"options":[{"option_id":"o_a","content":{"blocks":[{"type":"paragraph","text":"9"}]}},{"option_id":"o_b","content":{"blocks":[{"type":"paragraph","text":"18"}]}},{"option_id":"o_c","content":{"blocks":[{"type":"paragraph","text":"12"}]}},{"option_id":"o_d","content":{"blocks":[{"type":"paragraph","text":"63"}]}}],"time_limit_ms":20000},"deadline_at":1763712071000,"my_answer_locked":false,"participants":[{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42"},"team":1,"score":240,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15"},"team":1,"score":150,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07"},"team":2,"score":200,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a4","nickname":"SaoBang09"},"team":2,"score":130,"connected":false}]}}
+        - name: ended
+          payload: {"v":1,"type":"battle.state.snapshot","seq":52,"ts":1763712052000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","mode":"battle_1v1","state":"ended","state_version":30,"round":1,"question_index":2,"question_count":3,"participants":[{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42"},"team":1,"score":420,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07"},"team":2,"score":350,"connected":true}]}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2691,6 +2732,9 @@ components:
                         connected: { type: boolean }
     BattleCountdownStarted:
       name: battle.countdown.started
+      examples:
+        - name: battle_1v1
+          payload: {"v":1,"type":"battle.countdown.started","seq":53,"ts":1763712053000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","starts_at":1763712056000,"question_count":3,"rounds":1}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2707,6 +2751,9 @@ components:
                   rounds: { type: integer }
     BattleQuestionShown:
       name: battle.question.shown
+      examples:
+        - name: single_choice
+          payload: {"v":1,"type":"battle.question.shown","seq":54,"ts":1763712054000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","round":1,"question_index":0,"question":{"question_instance_id":"qi_501_0","question_type":"single_choice","stem":{"blocks":[{"type":"paragraph","text":"6 × 3 = ?"}]},"options":[{"option_id":"o_a","content":{"blocks":[{"type":"paragraph","text":"9"}]}},{"option_id":"o_b","content":{"blocks":[{"type":"paragraph","text":"18"}]}},{"option_id":"o_c","content":{"blocks":[{"type":"paragraph","text":"12"}]}},{"option_id":"o_d","content":{"blocks":[{"type":"paragraph","text":"63"}]}}],"time_limit_ms":20000},"shown_at":1763712050000,"deadline_at":1763712070000}}
       summary: Render payload không có đáp án (ADR-0016). Server time của message này là mốc tính bonus thời gian.
       payload:
         allOf:
@@ -2726,6 +2773,9 @@ components:
                   deadline_at: { $ref: '#/components/schemas/EpochMs' }
     BattleAnswerRecorded:
       name: battle.answer.recorded
+      examples:
+        - name: opponent
+          payload: {"v":1,"type":"battle.answer.recorded","seq":55,"ts":1763712055000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","question_instance_id":"qi_501_0","user_id":"0193b0a0-0000-7000-8000-0000000000a2","answered_count":1}}
       summary: Gửi cho người trả lời (đã khóa đáp án) và thông báo cho người khác rằng người này đã trả lời (không lộ nội dung).
       payload:
         allOf:
@@ -2743,6 +2793,13 @@ components:
                   answered_count: { type: integer }
     BattleAnswerEvaluated:
       name: battle.answer.evaluated
+      examples:
+        - name: correct_bonus
+          payload: {"v":1,"type":"battle.answer.evaluated","seq":56,"ts":1763712056000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","question_instance_id":"qi_501_0","answered":true,"is_correct":true,"points":150,"time_bonus":50,"correct_response":{"option_id":"o_b"}}}
+        - name: incorrect
+          payload: {"v":1,"type":"battle.answer.evaluated","seq":57,"ts":1763712057000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","question_instance_id":"qi_501_0","answered":true,"is_correct":false,"points":0,"time_bonus":0,"correct_response":{"option_id":"o_b"},"explanation":{"text":"Sáu nhân ba bằng mười tám."}}}
+        - name: no_bonus
+          payload: {"v":1,"type":"battle.answer.evaluated","seq":58,"ts":1763712058000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","question_instance_id":"qi_501_0","answered":true,"is_correct":true,"points":100,"time_bonus":0,"correct_response":{"option_id":"o_b"}}}
       summary: Kết quả riêng của người nhận cho câu vừa reveal.
       payload:
         allOf:
@@ -2764,6 +2821,9 @@ components:
                   explanation: { type: object, description: Giải thích ngắn (nếu chế độ cho phép). }
     BattleQuestionRevealed:
       name: battle.question.revealed
+      examples:
+        - name: battle_1v1
+          payload: {"v":1,"type":"battle.question.revealed","seq":59,"ts":1763712059000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","question_instance_id":"qi_501_0","correct_rate":0.5,"scoreboard":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","team":1,"is_correct":true,"score":150},{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","team":2,"is_correct":false,"score":0}],"next_at":1763712075000}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2789,6 +2849,9 @@ components:
                   next_at: { $ref: '#/components/schemas/EpochMs' }
     BattleRoundEnded:
       name: battle.round.ended
+      examples:
+        - name: battle_1v1
+          payload: {"v":1,"type":"battle.round.ended","seq":60,"ts":1763712060000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","round":1,"standings":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","team":1,"score":420},{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","team":2,"score":350}]}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2812,6 +2875,11 @@ components:
                   next_round_at: { $ref: '#/components/schemas/EpochMs' }
     BattleParticipantStatusChanged:
       name: battle.participant.status_changed
+      examples:
+        - name: opponent_disconnected
+          payload: {"v":1,"type":"battle.participant.status_changed","seq":61,"ts":1763712061000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","user_id":"0193b0a0-0000-7000-8000-0000000000a2","connected":false,"grace_until":1763712091000}}
+        - name: opponent_back
+          payload: {"v":1,"type":"battle.participant.status_changed","seq":62,"ts":1763712062000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","user_id":"0193b0a0-0000-7000-8000-0000000000a2","connected":true}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2828,6 +2896,9 @@ components:
                   grace_until: { $ref: '#/components/schemas/EpochMs' }
     BattleMatchPaused:
       name: battle.match.paused
+      examples:
+        - name: server_failover
+          payload: {"v":1,"type":"battle.match.paused","seq":63,"ts":1763712063000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","reason":"server_failover","resume_deadline_at":1763712120000}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2843,6 +2914,9 @@ components:
                   resume_deadline_at: { $ref: '#/components/schemas/EpochMs' }
     BattleMatchResumed:
       name: battle.match.resumed
+      examples:
+        - name: replay
+          payload: {"v":1,"type":"battle.match.resumed","seq":64,"ts":1763712064000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","replay_current_question":true}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2857,6 +2931,21 @@ components:
                   replay_current_question: { type: boolean, description: 'true khi failover — câu dở được làm lại.' }
     BattleMatchEnded:
       name: battle.match.ended
+      examples:
+        - name: win
+          payload: {"v":1,"type":"battle.match.ended","seq":65,"ts":1763712065000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","status":"completed","results":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","team":1,"outcome":"win","score":420,"correct_count":3,"competition_points":12},{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","team":2,"outcome":"loss","score":350,"correct_count":2,"competition_points":6}],"end_reason":"finished","rated":true,"review_available":true}}
+        - name: loss
+          payload: {"v":1,"type":"battle.match.ended","seq":66,"ts":1763712066000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","status":"completed","results":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","team":1,"outcome":"loss","score":300,"correct_count":2,"competition_points":6},{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","team":2,"outcome":"win","score":410,"correct_count":3,"competition_points":12}],"end_reason":"finished","rated":true,"review_available":true}}
+        - name: draw
+          payload: {"v":1,"type":"battle.match.ended","seq":67,"ts":1763712067000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","status":"completed","results":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","team":1,"outcome":"draw","score":380,"correct_count":3,"competition_points":8},{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","team":2,"outcome":"draw","score":380,"correct_count":3,"competition_points":8}],"end_reason":"finished","rated":true,"review_available":true}}
+        - name: cancelled
+          payload: {"v":1,"type":"battle.match.ended","seq":68,"ts":1763712068000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","status":"cancelled","results":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","team":1,"outcome":"no_contest","score":0,"correct_count":0,"competition_points":0},{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","team":2,"outcome":"no_contest","score":0,"correct_count":0,"competition_points":0}],"end_reason":"all_left","rated":false,"review_available":false}}
+        - name: team_win
+          payload: {"v":1,"type":"battle.match.ended","seq":69,"ts":1763712069000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000502","status":"completed","results":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","team":1,"outcome":"win","score":240,"correct_count":4,"competition_points":10},{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","team":1,"outcome":"win","score":190,"correct_count":3,"competition_points":10},{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","team":2,"outcome":"loss","score":200,"correct_count":3,"competition_points":5},{"user_id":"0193b0a0-0000-7000-8000-0000000000a4","team":2,"outcome":"loss","score":130,"correct_count":2,"competition_points":5}],"end_reason":"finished","rated":true,"review_available":true}}
+        - name: timed_quiz_grade_goal
+          payload: {"v":1,"type":"battle.match.ended","seq":70,"ts":1763712070000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000503","status":"completed","results":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","outcome":"no_contest","score":60,"correct_count":6,"competition_points":0}],"end_reason":"finished","rated":false,"review_available":true,"grade_goal":{"current":820,"target":1000,"reached":false,"contributors_count":41}}}
+        - name: timed_quiz_rank
+          payload: {"v":1,"type":"battle.match.ended","seq":71,"ts":1763712071000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000503","status":"completed","results":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","outcome":"no_contest","score":80,"correct_count":8,"competition_points":4}],"end_reason":"finished","rated":false,"review_available":true,"top":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","rank":1,"score":100},{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","rank":2,"score":90},{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","rank":3,"score":80}],"my_rank":3}}
       summary: Kết quả đã được ghi bền vững (MatchResult unique theo match_id). Rating/XP cập nhật bất đồng bộ qua event.
       payload:
         allOf:

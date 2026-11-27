@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "type": "battle.countdown.started",
+  "seq": 53,
+  "ts": 1763712053000,
+  "payload": {
+    "match_id": "0193b0a0-0000-7000-8000-000000000501",
+    "starts_at": 1763712056000,
+    "question_count": 3,
+    "rounds": 1
+  }
+}

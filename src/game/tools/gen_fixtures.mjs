@@ -50,13 +50,23 @@ const RESPONSES = [['listMyAssignments', '200'], ['listNotifications', '200'],
   ['startPartySession', '201'],
   // F119: chat panel (channels, history page, quick messages, stickers, GIFs, report answer).
   ['listMyChannels', '200'], ['listChannelMessages', '200'], ['listQuickMessages', '200'], ['listStickerPacks', '200'],
-  ['listGifs', '200'], ['createReport', '201']];
+  ['listGifs', '200'], ['createReport', '201'],
+  // F109: arena (modes, subjects/topics of the picker, ticket, bot match, tiers), match history, leaderboards (named
+  // examples per visibility), tournaments + bracket + entry, grade challenges, friend duels.
+  ['listCompetitionModes', '200'], ['listSubjects', '200'], ['listTopics', '200'], ['createMatchmakingTicket', '201'],
+  ['getMatchmakingTicket', '200'], ['startBotMatch', '201'], ['getMyRatings', '200'], ['listMyMatches', '200'],
+  ['getMatch', '200'], ['listLeaderboards', '200'], ['getLeaderboard', '200'], ['listTournaments', '200'],
+  ['getTournament', '200'], ['registerTournamentEntry', '201'], ['checkInTournamentEntry', '200'],
+  ['getTournamentBracket', '200'], ['listMyChallenges', '200'], ['joinChallenge', '200'], ['createDuel', '201'],
+  ['acceptDuel', '200']];
 // specs/examples documents the game never receives: CMS-only curriculum, server-side chat policy and the
 // sensitive-term catalog (never sent to clients, AGENTS R15).
 const NOT_FOR_CLIENT = [/^curriculum\./, /^chat-policy\./, /^sensitive-term-catalog\./];
 // Realtime messages of the game client (F092): system, session, hub, presence; F123 notification; F102 party; F119 chat.
 const ASYNCAPI = 'specs/asyncapi/eduworld-realtime.v1.yaml';
-const ASYNC_PREFIXES = ['system.', 'session.', 'hub.', 'presence.', 'notification.', 'party.', 'chat.'];
+// F109: matchmaking, battle, tier and tournament messages of the arena.
+const ASYNC_PREFIXES = ['system.', 'session.', 'hub.', 'presence.', 'notification.', 'party.', 'chat.', 'matchmaking.',
+  'battle.', 'competition.', 'tournament.'];
 const Ajv = require(path.join(root, 'scripts', 'node_modules', 'ajv'));
 const addFormats = require(path.join(root, 'scripts', 'node_modules', 'ajv-formats'));
 
@@ -167,7 +177,17 @@ function render() {
   }
   for (const [operationId, status] of RESPONSES) {
     const op = Object.values(spec.paths ?? {}).flatMap((item) => Object.values(item)).find((o) => o?.operationId === operationId);
-    const example = op?.responses?.[status]?.content?.['application/json']?.example;
+    const media = op?.responses?.[status]?.content?.['application/json'];
+    // Named `examples` (F109: one per leaderboard visibility) → openapi/<operationId>.<status>.<name>.json.
+    if (media?.example === undefined && media?.examples) {
+      for (const [name, ex] of Object.entries(media.examples)) {
+        const named = `openapi/${operationId}.${status}.${name}.json`;
+        files[named] = JSON.stringify(ex.value, null, 2) + '\n';
+        manifest[named] = { source: `${SPEC}#${operationId}/responses/${status}/examples/${name}` };
+      }
+      continue;
+    }
+    const example = media?.example;
     if (example === undefined) throw new Error(`no example for ${operationId} ${status} in ${SPEC}`);
     const rel = `openapi/${operationId}.${status}.json`;
     files[rel] = JSON.stringify(example, null, 2) + '\n';
