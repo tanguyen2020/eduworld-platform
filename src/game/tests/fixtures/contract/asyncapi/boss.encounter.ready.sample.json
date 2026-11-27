@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "type": "boss.encounter.ready",
+  "id": "0192f3a4-5b6c-7d8e-9f01-23456789ab10",
+  "ts": 1763712000000,
+  "payload": {
+    "encounter_id": "00000000-0000-4000-8000-000000000001",
+    "ready": false
+  }
+}

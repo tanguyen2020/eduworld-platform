@@ -1,0 +1,24 @@
+{
+  "quest_progress_id": "00000000-0000-4000-8000-000000000001",
+  "quest_id": "00000000-0000-4000-8000-000000000001",
+  "quest_version_id": "00000000-0000-4000-8000-000000000001",
+  "status": "active",
+  "step_states": {},
+  "start_trigger": "sample",
+  "period_key": "sample",
+  "completion_no": 1,
+  "party_id": "00000000-0000-4000-8000-000000000001",
+  "started_at": "2026-11-15T07:30:00Z",
+  "completed_at": "2026-11-15T07:30:00Z",
+  "expires_at": "2026-11-15T07:30:00Z",
+  "deadline_at": "2026-11-15T07:30:00Z",
+  "failed_at": "2026-11-15T07:30:00Z",
+  "party_progress": [
+    {
+      "step_id": "sample",
+      "shared_completed": false,
+      "collective_progress": 0,
+      "my_contribution_met": false
+    }
+  ]
+}

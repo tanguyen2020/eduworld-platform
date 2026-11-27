@@ -1,0 +1,35 @@
+{
+  "v": 1,
+  "type": "quest.progress.updated",
+  "seq": 1,
+  "ts": 1763712000000,
+  "payload": {
+    "quest_id": "00000000-0000-4000-8000-000000000001",
+    "quest_progress_id": "00000000-0000-4000-8000-000000000001",
+    "quest_version_id": "00000000-0000-4000-8000-000000000001",
+    "status": "active",
+    "step_id": "sample",
+    "step_status": "locked",
+    "count": 0,
+    "target": 1,
+    "passed": false,
+    "hint": {
+      "vi": "sample",
+      "en": "sample"
+    },
+    "next_step_ids": [
+      "sample"
+    ],
+    "progress_label": {
+      "vi": "sample",
+      "en": "sample"
+    },
+    "completed_at": "2026-11-15T07:30:00Z",
+    "party_progress": {
+      "step_id": "sample",
+      "collective_progress": 0,
+      "my_contribution_met": false,
+      "shared_completed": false
+    }
+  }
+}

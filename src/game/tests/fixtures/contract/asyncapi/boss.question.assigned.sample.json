@@ -1,0 +1,30 @@
+{
+  "v": 1,
+  "type": "boss.question.assigned",
+  "seq": 1,
+  "ts": 1763712000000,
+  "payload": {
+    "encounter_id": "00000000-0000-4000-8000-000000000001",
+    "phase_id": "sample",
+    "requirement_id": "sample",
+    "questions": [
+      {
+        "question_instance_id": "sample",
+        "question_type": "single_choice",
+        "stem": {},
+        "options": [
+          {
+            "id": "sample",
+            "option_id": "sample",
+            "content": {}
+          }
+        ],
+        "media": [
+          {}
+        ],
+        "time_limit_ms": 1
+      }
+    ],
+    "deadline_at": "2026-11-15T07:30:00Z"
+  }
+}

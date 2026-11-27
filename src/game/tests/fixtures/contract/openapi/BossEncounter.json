@@ -1,0 +1,41 @@
+{
+  "encounter_id": "00000000-0000-4000-8000-000000000001",
+  "boss_id": "00000000-0000-4000-8000-000000000001",
+  "boss_version": 1,
+  "mode": "solo",
+  "party_id": "00000000-0000-4000-8000-000000000001",
+  "status": "lobby",
+  "current_phase": 0,
+  "phase_id": "sample",
+  "phase_count": 1,
+  "energy_remaining_pct": 0,
+  "phase_progress": 0,
+  "phase_deadline_at": "2026-11-15T07:30:00Z",
+  "deadline_at": "2026-11-15T07:30:00Z",
+  "phase_retries_left": 0,
+  "phases_cleared": 0,
+  "state_version": 0,
+  "outcome": "defeated",
+  "server_time": "2026-11-15T07:30:00Z",
+  "members": [
+    {
+      "student_id": "00000000-0000-4000-8000-000000000001",
+      "nickname": "sample",
+      "ready": false,
+      "present": false,
+      "contribution_met": false
+    }
+  ],
+  "my_questions": [
+    {
+      "question_instance_id": "sample",
+      "requirement_id": "sample",
+      "question_type": "sample",
+      "time_limit_seconds": 0,
+      "answered": false,
+      "render": {}
+    }
+  ],
+  "started_at": "2026-11-15T07:30:00Z",
+  "ended_at": "2026-11-15T07:30:00Z"
+}

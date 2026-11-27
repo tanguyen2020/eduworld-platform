@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "type": "boss.answer.evaluated",
+  "seq": 1,
+  "ts": 1763712000000,
+  "payload": {
+    "encounter_id": "00000000-0000-4000-8000-000000000001",
+    "question_instance_id": "sample",
+    "is_correct": false,
+    "counted": false,
+    "explanation": {
+      "vi": "sample",
+      "en": "sample"
+    }
+  }
+}

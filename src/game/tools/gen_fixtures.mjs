@@ -42,6 +42,10 @@ const SCHEMAS = [
   'Party', 'PartyInvitation', 'PartyEligibleActivity', 'PartySessionStart', 'PlayerCard',
   // F119: gameplay chat (channel, message, quick message, sticker pack, GIF, report body).
   'Channel', 'Message', 'QuickMessage', 'StickerPack', 'GifAsset', 'ReportCreate',
+  // F110: boss (summary, encounter with my_questions), co-op quest (clues, roles, party progress), friends (request, code,
+  // block / mute rows).
+  'BossSummary', 'BossEncounter', 'BossQuestion', 'QuestStepClues', 'QuestStepRoles', 'QuestPartyStepProgress',
+  'QuestProgress', 'FriendRequest', 'FriendCode', 'PlayerRelation',
 ];
 // Response examples the client parses as a whole: [operationId, status] → openapi/<operationId>.<status>.json.
 const RESPONSES = [['listMyAssignments', '200'], ['listNotifications', '200'],
@@ -62,23 +66,30 @@ const RESPONSES = [['listMyAssignments', '200'], ['listNotifications', '200'],
 // specs/examples documents the game never receives: CMS-only curriculum, server-side chat policy and the
 // sensitive-term catalog (never sent to clients, AGENTS R15).
 const NOT_FOR_CLIENT = [/^curriculum\./, /^chat-policy\./, /^sensitive-term-catalog\./];
-// Realtime messages of the game client (F092): system, session, hub, presence; F123 notification; F102 party; F119 chat.
+// Realtime messages of the game client (F092): system, session, hub, presence; F123 notification; F102 party; F119 chat;
+// F110 boss and co-op quest.
 const ASYNCAPI = 'specs/asyncapi/eduworld-realtime.v1.yaml';
 // F109: matchmaking, battle, tier and tournament messages of the arena.
 const ASYNC_PREFIXES = ['system.', 'session.', 'hub.', 'presence.', 'notification.', 'party.', 'chat.', 'matchmaking.',
-  'battle.', 'competition.', 'tournament.'];
+  'battle.', 'competition.', 'tournament.', 'boss.', 'quest.'];
+// F110: messages the client handles whose AsyncAPI entry has no `examples` yet get one deterministic sample built from the
+// payload schema (`asyncapi/<type>.sample.json`, validated like an example). Only these: another message without examples
+// stays out of the fixtures until its owner writes examples.
+const SAMPLED_MESSAGES = ['boss.encounter.ready', 'boss.answer.submit', 'boss.encounter.updated', 'boss.phase.started',
+  'boss.phase.completed', 'boss.encounter.ended', 'boss.question.assigned', 'boss.answer.evaluated', 'quest.roles.assigned',
+  'quest.clue.shared', 'quest.progress.updated', 'presence.friend.updated'];
 const Ajv = require(path.join(root, 'scripts', 'node_modules', 'ajv'));
 const addFormats = require(path.join(root, 'scripts', 'node_modules', 'ajv-formats'));
 
 const spec = yaml.load(fs.readFileSync(path.join(root, SPEC), 'utf8'));
 const components = spec.components?.schemas ?? {};
 
-function deref(schema, seen = new Set()) {
+function deref(schema, seen = new Set(), defs = components) {
   if (schema && schema.$ref) {
     const name = schema.$ref.split('/').pop();
     if (seen.has(name)) return {};
     seen.add(name);
-    return deref(components[name], seen);
+    return deref(defs[name], seen, defs);
   }
   return schema ?? {};
 }
@@ -93,7 +104,7 @@ const FORMAT_SAMPLES = {
 
 // A string matching `pattern` (codes such as CatalogCode `^[a-z0-9_]+$` get a valid lowercase code; F069).
 function patternSample(pattern) {
-  for (const candidate of ['sample1', 'SAMPLE1', 'sample', '1']) {
+  for (const candidate of ['sample1', 'SAMPLE1', 'sample', '1', 'a_sample1']) {
     try {
       if (new RegExp(pattern, 'u').test(candidate)) return candidate;
     } catch {
@@ -103,25 +114,26 @@ function patternSample(pattern) {
   return 'SAMPLE1';
 }
 
-function sample(schemaIn, depth = 0, seen = new Set()) {
-  const schema = deref(schemaIn, seen);
+function sample(schemaIn, depth = 0, seen = new Set(), defs = components) {
+  const schema = deref(schemaIn, seen, defs);
+  if (schema.const !== undefined) return schema.const;
   if (schema.example !== undefined) return schema.example;
   if (Array.isArray(schema.examples) && schema.examples.length) return schema.examples[0];
   if (schema.default !== undefined) return schema.default;
-  if (schema.allOf) return Object.assign({}, ...schema.allOf.map((s) => sample(s, depth + 1, new Set(seen))));
-  if (schema.anyOf) return sample(schema.anyOf[0], depth + 1, new Set(seen));
-  if (schema.oneOf) return sample(schema.oneOf[0], depth + 1, new Set(seen));
+  if (schema.allOf) return Object.assign({}, ...schema.allOf.map((s) => sample(s, depth + 1, new Set(seen), defs)));
+  if (schema.anyOf) return sample(schema.anyOf[0], depth + 1, new Set(seen), defs);
+  if (schema.oneOf) return sample(schema.oneOf[0], depth + 1, new Set(seen), defs);
   if (schema.enum) return schema.enum[0];
   const type = Array.isArray(schema.type) ? schema.type.find((t) => t !== 'null') : schema.type;
   switch (type ?? (schema.properties ? 'object' : 'string')) {
     case 'object': {
       const out = {};
       if (depth > 6) return out;
-      for (const [k, v] of Object.entries(schema.properties ?? {})) out[k] = sample(v, depth + 1, new Set(seen));
+      for (const [k, v] of Object.entries(schema.properties ?? {})) out[k] = sample(v, depth + 1, new Set(seen), defs);
       return out;
     }
     case 'array':
-      return depth > 6 ? [] : [sample(schema.items ?? {}, depth + 1, new Set(seen))];
+      return depth > 6 ? [] : [sample(schema.items ?? {}, depth + 1, new Set(seen), defs)];
     case 'integer':
       return schema.minimum ?? 1;
     case 'number':
@@ -153,8 +165,20 @@ function asyncExamples() {
   addFormats(ajv);
   const out = [];
   for (const [key, msg] of Object.entries(doc.components?.messages ?? {}).sort(([a], [b]) => a.localeCompare(b))) {
-    if (!msg?.name || !ASYNC_PREFIXES.some((p) => msg.name.startsWith(p)) || !Array.isArray(msg.examples)) continue;
+    if (!msg?.name || !ASYNC_PREFIXES.some((p) => msg.name.startsWith(p))) continue;
+    if (!Array.isArray(msg.examples) && !SAMPLED_MESSAGES.includes(msg.name)) continue;
     const validate = ajv.compile({ ...toDefs(msg.payload), $defs: toDefs(schemas) });
+    if (!Array.isArray(msg.examples)) {
+      const env = sample(msg.payload, 0, new Set(), schemas);
+      delete env.ref;
+      if ('seq' in env) env.seq = 1;
+      if ('id' in env) env.id = '0192f3a4-5b6c-7d8e-9f01-23456789ab10';
+      env.ts = 1763712000000;
+      if (!validate(env)) throw new Error(`${ASYNCAPI} ${msg.name} sample: ${ajv.errorsText(validate.errors)}`);
+      out.push([`asyncapi/${msg.name}.sample.json`, JSON.stringify(env, null, 2) + '\n',
+        `${ASYNCAPI}#/components/messages/${key}/payload (deterministic sample, no examples)`]);
+      continue;
+    }
     for (const ex of msg.examples) {
       if (!validate(ex.payload)) {
         throw new Error(`${ASYNCAPI} ${msg.name} example ${ex.name}: ${ajv.errorsText(validate.errors)}`);

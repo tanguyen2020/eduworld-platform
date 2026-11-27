@@ -1,0 +1,25 @@
+{
+  "v": 1,
+  "type": "boss.encounter.updated",
+  "seq": 1,
+  "ts": 1763712000000,
+  "payload": {
+    "encounter_id": "00000000-0000-4000-8000-000000000001",
+    "state_version": 0,
+    "status": "lobby",
+    "current_phase": 0,
+    "phase_id": "sample",
+    "energy_remaining_pct": 0,
+    "phase_progress": 0,
+    "phase_deadline_at": "2026-11-15T07:30:00Z",
+    "members": [
+      {
+        "student_id": "00000000-0000-4000-8000-000000000001",
+        "nickname": "sample",
+        "ready": false,
+        "connected": false,
+        "contribution_met": false
+      }
+    ]
+  }
+}

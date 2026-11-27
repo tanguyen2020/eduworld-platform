@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "type": "quest.clue.shared",
+  "seq": 1,
+  "ts": 1763712000000,
+  "payload": {
+    "quest_id": "00000000-0000-4000-8000-000000000001",
+    "step_id": "sample",
+    "role": "sample",
+    "shared_by_nickname": "sample"
+  }
+}

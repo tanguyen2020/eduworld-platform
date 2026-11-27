@@ -1,0 +1,20 @@
+{
+  "quest_id": "00000000-0000-4000-8000-000000000001",
+  "step_id": "sample",
+  "my_roles": [
+    "sample"
+  ],
+  "clues": [
+    {
+      "role": "sample",
+      "title": {
+        "vi": "sample",
+        "en": "sample"
+      },
+      "icon_key": "sample",
+      "shared": false,
+      "shared_by_nickname": "sample",
+      "content": {}
+    }
+  ]
+}

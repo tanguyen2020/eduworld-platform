@@ -193,6 +193,46 @@
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ReportCreate",
       "sha256": "77df6425e87ab9b6f2dc30c8c0314706a6270a2041e57c3536c226bb09cd711f"
     },
+    "openapi/BossSummary.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/BossSummary",
+      "sha256": "529e0098cf6c255fff754c4ce8b8213f73625e12a7dae87cb3249c52da91827f"
+    },
+    "openapi/BossEncounter.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/BossEncounter",
+      "sha256": "918208464f254b4c0cb4a11f47428e958dbe40dea93b97220d6ed63ae3324da1"
+    },
+    "openapi/BossQuestion.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/BossQuestion",
+      "sha256": "5d9bb3a879fc31821cf70e21bc8f8be8cc7530208a68adb11c850d5e5b54480a"
+    },
+    "openapi/QuestStepClues.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/QuestStepClues",
+      "sha256": "fb0472dda83e8250d4dddd77e7b1344f8e0d2fbd363933e74f8c0e1a537c7550"
+    },
+    "openapi/QuestStepRoles.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/QuestStepRoles",
+      "sha256": "82aa064789a7f14e44ea3e08f3aff91aa4919beecd334c41cee9692ce12f16cb"
+    },
+    "openapi/QuestPartyStepProgress.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/QuestPartyStepProgress",
+      "sha256": "ea2c1fc72c8cbfe4687e3dae39da5898e8a6e1884baffe369296332a4422f5fd"
+    },
+    "openapi/QuestProgress.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/QuestProgress",
+      "sha256": "201492db57684a4943237714061ae5f98f73cfa5b04ee03d0a81f1d8d186b209"
+    },
+    "openapi/FriendRequest.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/FriendRequest",
+      "sha256": "66fc9a721ef8eb7e1b025065ebdd44082947c4d7397d3ea432e07d8f0e6a2f95"
+    },
+    "openapi/FriendCode.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/FriendCode",
+      "sha256": "94af21f7db30c385d18fe82a5c542df5a7ab1c4ba2a7a9a36f5b8a1614be1831"
+    },
+    "openapi/PlayerRelation.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/PlayerRelation",
+      "sha256": "b01ce8308d3dca8993e63b493011115a159fbdfd268feaced2c7349b5ceb3532"
+    },
     "openapi/listMyAssignments.200.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#listMyAssignments/responses/200/example",
       "sha256": "054178f9c2cf3876d11cdfce9a71c88f7b85e1c243f62e040ebcc4ebb54d9fbd"
@@ -501,6 +541,38 @@
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleStateSnapshot/examples/ended",
       "sha256": "628252d44166a5d6838a193086570a7f98035fb1e3e310aceda1a792ab5d87ee"
     },
+    "asyncapi/boss.answer.evaluated.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BossAnswerEvaluated/payload (deterministic sample, no examples)",
+      "sha256": "917a398d0075b720a21e803376fe8eceee8fd3ffa3bece4084a8a78b121b7aea"
+    },
+    "asyncapi/boss.answer.submit.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BossAnswerSubmit/payload (deterministic sample, no examples)",
+      "sha256": "863d5690b037924463082568febbe4a0097eaaff60d4e7f392168af138096848"
+    },
+    "asyncapi/boss.encounter.ended.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BossEncounterEnded/payload (deterministic sample, no examples)",
+      "sha256": "b6fe48aec925b0c6b6905ec38e4876e13cc9f4c088fb38bf20b18fe2aad34dad"
+    },
+    "asyncapi/boss.encounter.ready.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BossEncounterReady/payload (deterministic sample, no examples)",
+      "sha256": "1612cc56dea80e8a55450b385ff6484f870e43f4d7a64d4cb4bc11919fa823e7"
+    },
+    "asyncapi/boss.encounter.updated.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BossEncounterUpdated/payload (deterministic sample, no examples)",
+      "sha256": "60a406b837b6d155bf37099b911ce3f0e518a997fb19efa86973877008227423"
+    },
+    "asyncapi/boss.phase.completed.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BossPhaseCompleted/payload (deterministic sample, no examples)",
+      "sha256": "5977e0465a44fa7ceed98e8da00b4ed4fb57da4feab76e22940b0c8f02516c9f"
+    },
+    "asyncapi/boss.phase.started.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BossPhaseStarted/payload (deterministic sample, no examples)",
+      "sha256": "4b905c6e4c8a8d1bb72f73d3a5771595510b74bfd3f262d91e7c610895123aea"
+    },
+    "asyncapi/boss.question.assigned.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BossQuestionAssigned/payload (deterministic sample, no examples)",
+      "sha256": "ed2e15c577f091ef84bbb0ae97a0d9bc80fecbfffaedd14f7df1cc568a1bc841"
+    },
     "asyncapi/chat.channel.membership_changed.dm_frozen.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatChannelMembershipChanged/examples/dm_frozen",
       "sha256": "ce5adbc8aa37ec8116535c822c549f43cecd1f6dc5a785905c915e7b88bff67c"
@@ -793,9 +865,25 @@
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/PartyStateSnapshot/examples/in_activity",
       "sha256": "9fe461e651b9fbe54ac5e30614aa7e1619b8a0457351e86ef10922161c74d375"
     },
+    "asyncapi/presence.friend.updated.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/PresenceFriendUpdated/payload (deterministic sample, no examples)",
+      "sha256": "dc10aac8ed68ab7365b0621ae591fa4cc476632d75b8b8a4b0f12190582e3fe3"
+    },
     "asyncapi/presence.status.set.in_activity.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/PresenceStatusSet/examples/in_activity",
       "sha256": "1fd6450c24356047b4818bc20d96d8e17279d69a355c560f7acaa9eb8f7c5fef"
+    },
+    "asyncapi/quest.clue.shared.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/QuestClueShared/payload (deterministic sample, no examples)",
+      "sha256": "f9edc68326aa39c0eadfafe6a1a818af602c4d447e11d74eddda28ff753765f3"
+    },
+    "asyncapi/quest.progress.updated.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/QuestProgressUpdated/payload (deterministic sample, no examples)",
+      "sha256": "365204409fe6a6c57e88ce1fdaf6922713f4fbd0f876614a90b4e54aaea9bc0e"
+    },
+    "asyncapi/quest.roles.assigned.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/QuestRolesAssigned/payload (deterministic sample, no examples)",
+      "sha256": "7ed0a0fea91fb696c098c42b5a1e652ee8b356c7e10593f925ff90ad52519322"
     },
     "asyncapi/session.session.ended.curfew.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SessionEnded/examples/curfew",

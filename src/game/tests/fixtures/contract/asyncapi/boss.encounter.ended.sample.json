@@ -1,0 +1,25 @@
+{
+  "v": 1,
+  "type": "boss.encounter.ended",
+  "seq": 1,
+  "ts": 1763712000000,
+  "payload": {
+    "encounter_id": "00000000-0000-4000-8000-000000000001",
+    "outcome": "defeated",
+    "phases_cleared": 0,
+    "phase_count": 1,
+    "eligible": false,
+    "rewards": [
+      {
+        "kind": "xp",
+        "amount": 0,
+        "currency_code": "sample",
+        "item_id": "00000000-0000-4000-8000-000000000001",
+        "label": {
+          "vi": "sample",
+          "en": "sample"
+        }
+      }
+    ]
+  }
+}

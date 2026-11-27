@@ -1,0 +1,21 @@
+{
+  "v": 1,
+  "type": "quest.roles.assigned",
+  "seq": 1,
+  "ts": 1763712000000,
+  "payload": {
+    "quest_id": "00000000-0000-4000-8000-000000000001",
+    "step_id": "sample",
+    "assignments": [
+      {
+        "role": "sample",
+        "student_id": "00000000-0000-4000-8000-000000000001",
+        "nickname": "sample"
+      }
+    ],
+    "my_roles": [
+      "sample"
+    ],
+    "pending_leader": false
+  }
+}

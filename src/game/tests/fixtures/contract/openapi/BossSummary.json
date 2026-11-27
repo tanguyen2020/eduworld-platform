@@ -1,0 +1,17 @@
+{
+  "boss_id": "00000000-0000-4000-8000-000000000001",
+  "code": "sample",
+  "title": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "area_id": "sample",
+  "subject_id": "00000000-0000-4000-8000-000000000001",
+  "phase_count": 1,
+  "modes": [
+    "solo"
+  ],
+  "party_size_min": 1,
+  "party_size_max": 1,
+  "defeated_before": false
+}
