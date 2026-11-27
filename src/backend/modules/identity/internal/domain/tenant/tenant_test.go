@@ -80,7 +80,7 @@ func TestTenantQAFlag(t *testing.T) {
 	if c, err := tn.Apply(Patch{IsQA: &on}); err != nil || !c.QAChanged || !tn.IsQA {
 		t.Fatalf("flag: %+v %v", c, err)
 	}
-	if _, err := tn.Apply(Patch{IsQA: &on}); err != ErrNoChange {
+	if _, err := tn.Apply(Patch{IsQA: &on}); !errors.Is(err, ErrNoChange) {
 		t.Fatalf("same flag: %v", err)
 	}
 	if c, err := tn.Apply(Patch{IsQA: &off}); err != nil || !c.QAChanged || tn.IsQA {

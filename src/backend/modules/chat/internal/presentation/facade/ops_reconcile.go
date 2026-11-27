@@ -2,7 +2,6 @@ package facade
 
 import (
 	"context"
-	"time"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
@@ -16,7 +15,7 @@ func (f Facade) ListOutboxEventIds(ctx context.Context, req api.ListOutboxEventI
 		return nil, problem.New(problem.Unavailable, "reconciliation not loaded in this binary").Retry()
 	}
 	p := req.Params
-	q := reconcile.OutboxQuery{From: time.Time(p.From), To: time.Time(p.To)}
+	q := reconcile.OutboxQuery{From: p.From, To: p.To}
 	if p.EventTypes != nil {
 		q.EventTypes = *p.EventTypes
 	}
@@ -48,7 +47,7 @@ func (f Facade) ListProcessedEventIds(ctx context.Context, req api.ListProcessed
 		return nil, problem.New(problem.Unavailable, "reconciliation not loaded in this binary").Retry()
 	}
 	p := req.Params
-	q := reconcile.ProcessedQuery{SourceModule: string(p.SourceModule), From: time.Time(p.From), To: time.Time(p.To)}
+	q := reconcile.ProcessedQuery{SourceModule: string(p.SourceModule), From: p.From, To: p.To}
 	if p.Cursor != nil {
 		q.Cursor = *p.Cursor
 	}

@@ -299,7 +299,7 @@ func (q GameAnalytics) GetMetrics(ctx context.Context, codes []string, f Analyti
 			return err
 		}
 		out = MetricsView{Data: series, GeneratedAt: q.now(), SuppressionThreshold: q.Config.MinCellSize, Meta: q.meta(rg, macc, af)}
-		out.Meta.ExcludedTenantIDs = excluded
+		out.ExcludedTenantIDs = excluded
 		return nil
 	})
 	return out, err
@@ -527,7 +527,7 @@ func (q GameAnalytics) GetRetention(ctx context.Context, f AnalyticsFilter) (out
 			out.Cohorts = append(out.Cohorts, c)
 		}
 		out.Meta = q.meta(rg, macc, nil)
-		out.Meta.ExcludedTenantIDs = excluded
+		out.ExcludedTenantIDs = excluded
 		return nil
 	})
 	return out, err
@@ -601,7 +601,7 @@ func (q GameAnalytics) GetFunnel(ctx context.Context, code string, f AnalyticsFi
 			out.Steps = append(out.Steps, v)
 		}
 		out.Meta = q.meta(rg, macc, nil)
-		out.Meta.ExcludedTenantIDs = excluded
+		out.ExcludedTenantIDs = excluded
 		return nil
 	})
 	return out, err
@@ -692,7 +692,7 @@ func (q GameAnalytics) GetContentStats(ctx context.Context, kind, sortKey string
 			out.Page.NextCursor = &s
 		}
 		out.Meta = q.meta(rg, macc, nil)
-		out.Meta.ExcludedTenantIDs = excluded
+		out.ExcludedTenantIDs = excluded
 		out.Grain = string(analytics.Week)
 		return nil
 	})
@@ -821,7 +821,7 @@ func (q GameAnalytics) GetPerformance(ctx context.Context, f AnalyticsFilter) (o
 			out.Data = append(out.Data, v)
 		}
 		out.Meta = q.meta(rg, macc, nil)
-		out.Meta.ExcludedTenantIDs = excluded
+		out.ExcludedTenantIDs = excluded
 		return nil
 	})
 	return out, err

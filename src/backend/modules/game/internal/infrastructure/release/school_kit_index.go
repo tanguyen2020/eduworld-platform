@@ -125,7 +125,7 @@ func Verify(key *rsa.PublicKey, body, sig []byte, channel string) (installer.Ind
 	dec := json.NewDecoder(bytes.NewReader(body))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&ix); err != nil {
-		return ix, fmt.Errorf("%w: %v", installer.ErrInvalidIndex, err)
+		return ix, fmt.Errorf("%w: %w", installer.ErrInvalidIndex, err)
 	}
 	if err := ix.Validate(channel); err != nil {
 		return ix, err
@@ -174,7 +174,7 @@ func (s *SchoolKitIndex) get(ctx context.Context, path string, limit int64) ([]b
 		}
 		resp, err := s.http.Do(req)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %v", errTransient, err)
+			return nil, fmt.Errorf("%w: %w", errTransient, err)
 		}
 		defer func() { _ = resp.Body.Close() }()
 		switch {
@@ -185,7 +185,7 @@ func (s *SchoolKitIndex) get(ctx context.Context, path string, limit int64) ([]b
 		}
 		b, err := io.ReadAll(io.LimitReader(resp.Body, limit+1))
 		if err != nil {
-			return nil, fmt.Errorf("%w: %v", errTransient, err)
+			return nil, fmt.Errorf("%w: %w", errTransient, err)
 		}
 		if int64(len(b)) > limit {
 			return nil, fmt.Errorf("release: %s larger than %d bytes", path, limit)
