@@ -19,6 +19,9 @@ const UPDATE_REQUIRED_KEY: String = "ui.activity_player.update_required"
 const INBOX_SCREEN: StringName = &"notification_inbox"
 ## F102: the Party screen (lobby, invitations, session countdown).
 const PARTY_SCREEN: StringName = &"party"
+## F109: the arena and the match screen (UiScreenRegistry).
+const ARENA_SCREEN: StringName = &"arena"
+const BATTLE_SCREEN: StringName = &"battle"
 ## Stable area_id of Quảng trường Tia Sáng (WORLD_DESIGN §3, the spawn of a first entry).
 const HUB_AREA_ID: String = "main_hub"
 const QUEST_TRACKER_SCENE: PackedScene = preload("res://scenes/quest/QuestTracker.tscn")
@@ -33,6 +36,8 @@ var hub: HubSync = null
 ## F071: return point of a learning activity opened from an NPC/station and the start of a zone change.
 var activity_return: ActivityReturn = ActivityReturn.new()
 var _area_started_ms: int = 0
+## F109: queue bar, ready check and tournament toasts over the HUD (Overlays layer).
+var arena_hud: ArenaHud = null
 
 @onready var _hud: CanvasLayer = %MainHud
 @onready var _panel_root: Control = %PanelRoot
@@ -80,6 +85,7 @@ func _ready() -> void:
 	# F123-AC-15: the unread notifications of the student (bell badge) on entering the world.
 	services.notifications.load_unread()
 	_bind_party(services)
+	_bind_arena(services)
 	_start_hub(services)
 	_benchmark.connect("finished", _on_benchmark_finished)
 	_start_quality()
@@ -88,6 +94,7 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	_stop_hub()
 	_unbind_party()
+	_unbind_arena()
 	_unbind_progression()
 	for pair: Array in [[SceneRouter.area_entered, _on_area_entered], [SceneRouter.area_change_failed, _on_area_change_failed]]:
 		if (pair[0] as Signal).is_connected(pair[1] as Callable):
@@ -269,6 +276,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif open_screen.is_empty() and event.is_action_pressed("open_party"):
 		_on_party_requested({})
+		get_viewport().set_input_as_handled()
+	elif open_screen.is_empty() and event.is_action_pressed("open_arena"):
+		_on_arena_requested({})
 		get_viewport().set_input_as_handled()
 
 
@@ -638,3 +648,33 @@ func _inset_activity() -> void:
 
 func _on_progression_for_modal(progression: ProgressionModel) -> void:
 	_level_up.call("update_progression", progression)
+
+
+# ---------- F109 arena ----------
+
+## The queue bar / ready check / tournament toasts over the HUD; a match the server assigned (queue, robot, duel,
+## grade challenge) opens the battle screen.
+func _bind_arena(services: ServiceLocator) -> void:
+	if services.matchmaking == null:
+		return
+	arena_hud = ArenaHud.new()
+	var overlays: Node = get_node_or_null("Overlays")
+	(overlays if overlays != null else self).add_child(arena_hud)
+	arena_hud.bind(services.matchmaking, services.tournaments)
+	arena_hud.arena_requested.connect(_on_arena_requested)
+	services.matchmaking.match_assigned.connect(_on_match_assigned)
+
+
+func _unbind_arena() -> void:
+	var services: ServiceLocator = AppState.services
+	if services != null and services.matchmaking != null and services.matchmaking.match_assigned.is_connected(_on_match_assigned):
+		services.matchmaking.match_assigned.disconnect(_on_match_assigned)
+
+
+## HUD "Thêm" → Đấu trường / K / the queue bar "Chọn chế độ khác" / a tournament toast.
+func _on_arena_requested(args: Dictionary) -> void:
+	EventBus.ui_requested.emit(ARENA_SCREEN, args)
+
+
+func _on_match_assigned(match_id: String, mode: String) -> void:
+	EventBus.ui_requested.emit(BATTLE_SCREEN, {"match_id": match_id, "mode": mode})

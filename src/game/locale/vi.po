@@ -3315,3 +3315,615 @@ msgstr "Gõ chữ"
 
 msgid "ui.chat.empty_closed"
 msgstr "Chưa có tin nhắn nào trong kênh này."
+
+msgid "ui.arena.title"
+msgstr "Đấu trường"
+
+msgid "ui.arena.coach"
+msgstr "Chọn chế độ em thích rồi bấm Tìm trận nhé!"
+
+msgid "ui.arena.tab.play"
+msgstr "Thi đấu"
+
+msgid "ui.arena.tab.leaderboard"
+msgstr "Bảng xếp hạng"
+
+msgid "ui.arena.tab.history"
+msgstr "Lịch sử"
+
+msgid "ui.arena.tab.tournaments"
+msgstr "Giải đấu"
+
+msgid "ui.arena.find_match"
+msgstr "Tìm trận"
+
+msgid "ui.arena.modes.empty"
+msgstr "Hiện chưa có chế độ thi đấu nào mở. Em quay lại sau nhé!"
+
+msgid "ui.arena.mode.battle_1v1"
+msgstr "1v1 Đấu trí"
+
+msgid "ui.arena.mode.battle_1v1.hint"
+msgstr "Đấu với một bạn"
+
+msgid "ui.arena.mode.team_battle"
+msgstr "Đấu đội"
+
+msgid "ui.arena.mode.team_battle.hint"
+msgstr "Cùng đội thi đấu"
+
+msgid "ui.arena.mode.coop_challenge"
+msgstr "Thử thách hợp tác"
+
+msgid "ui.arena.mode.coop_challenge.hint"
+msgstr "Cùng nhau vượt thử thách"
+
+msgid "ui.arena.mode.timed_quiz"
+msgstr "Đố vui tính giờ"
+
+msgid "ui.arena.mode.timed_quiz.hint"
+msgstr "Cả khối cùng chơi"
+
+msgid "ui.arena.mode.tournament"
+msgstr "Giải đấu"
+
+msgid "ui.arena.mode.tournament.hint"
+msgstr "Theo lịch của trường"
+
+msgid "ui.arena.mode.other"
+msgstr "Thi đấu"
+
+msgid "ui.arena.mode.ranked"
+msgstr "Tính hạng"
+
+msgid "ui.arena.mode.unranked"
+msgstr "Luyện tập, không tính hạng"
+
+msgid "ui.arena.mode.chosen"
+msgstr "Đã chọn"
+
+msgid "ui.arena.subject.title"
+msgstr "Môn học"
+
+msgid "ui.arena.subject.unknown"
+msgstr "Môn học"
+
+msgid "ui.arena.topic.title"
+msgstr "Chủ đề"
+
+msgid "ui.arena.topic.all"
+msgstr "Tất cả chủ đề"
+
+msgid "ui.arena.tier.label"
+msgstr "Hạng: {tier}"
+
+msgid "ui.arena.tier.provisional"
+msgstr "Đang xếp hạng ({played}/{required})"
+
+msgid "ui.arena.tier.updating"
+msgstr "Đang cập nhật hạng"
+
+msgid "ui.arena.queue.searching"
+msgstr "Đang tìm bạn đấu… {time} · {mode}"
+
+msgid "ui.arena.queue.cancel"
+msgstr "Hủy"
+
+msgid "ui.arena.queue.widened"
+msgstr "Đang tìm rộng hơn một chút cho em."
+
+msgid "ui.arena.queue.requeued"
+msgstr "Trận trước chưa đủ bạn, em vẫn giữ chỗ trong hàng chờ."
+
+msgid "ui.arena.queue.found"
+msgstr "Đã tìm thấy trận!"
+
+msgid "ui.arena.queue.robot_hint"
+msgstr "Chờ hơi lâu? Em có thể luyện với Robot (không tính hạng)."
+
+msgid "ui.arena.queue.robot"
+msgstr "Luyện với Robot"
+
+msgid "ui.arena.queue.timeout"
+msgstr "Chưa tìm được bạn đấu lần này."
+
+msgid "ui.arena.queue.timeout_hint"
+msgstr "Em thử chế độ khác hoặc tìm lại nhé!"
+
+msgid "ui.arena.queue.other_mode"
+msgstr "Chọn chế độ khác"
+
+msgid "ui.arena.queue.again"
+msgstr "Tìm lại"
+
+msgid "ui.arena.queue.lost"
+msgstr "Hàng chờ đã kết thúc, em tìm lại nhé."
+
+msgid "ui.arena.ready.title"
+msgstr "Đã tìm thấy trận!"
+
+msgid "ui.arena.ready.accept"
+msgstr "Vào trận"
+
+msgid "ui.arena.ready.decline"
+msgstr "Để lần sau"
+
+msgid "ui.arena.ready.seconds"
+msgstr "Vào trận trong {seconds} giây"
+
+msgid "ui.arena.ready.press"
+msgstr "Bấm Vào trận nhé!"
+
+msgid "ui.arena.ready.waiting"
+msgstr "Đang chờ các bạn khác… ({accepted}/{total})"
+
+msgid "ui.arena.ready.opponent_hidden"
+msgstr "Một bạn đang chờ em!"
+
+msgid "ui.arena.battle.progress"
+msgstr "Câu {n}/{total}"
+
+msgid "ui.arena.battle.seconds"
+msgstr "{seconds} giây"
+
+msgid "ui.arena.battle.score"
+msgstr "{score} điểm"
+
+msgid "ui.arena.battle.score_hidden"
+msgstr "Đang thi"
+
+msgid "ui.arena.battle.robot"
+msgstr "Robot Học Giỏi"
+
+msgid "ui.arena.battle.my_team"
+msgstr "Đội của em"
+
+msgid "ui.arena.battle.other_team"
+msgstr "Đội bạn"
+
+msgid "ui.arena.battle.role_primary"
+msgstr "Lượt của em"
+
+msgid "ui.arena.battle.role_support"
+msgstr "Em hỗ trợ"
+
+msgid "ui.arena.battle.reconnecting"
+msgstr "Đang kết nối lại…"
+
+msgid "ui.arena.battle.teammate_reconnecting"
+msgstr "Một bạn đang kết nối lại…"
+
+msgid "ui.arena.battle.opponent_reconnecting"
+msgstr "{nickname} đang kết nối lại… Em chờ một chút nhé."
+
+msgid "ui.arena.battle.self_reconnecting"
+msgstr "Em đang kết nối lại… Trận vẫn giữ cho em."
+
+msgid "ui.arena.battle.recorded"
+msgstr "Đã ghi nhận! Chờ kết quả nhé."
+
+msgid "ui.arena.battle.preparing"
+msgstr "Đang chuẩn bị trận…"
+
+msgid "ui.arena.battle.next_soon"
+msgstr "Câu tiếp theo sắp tới!"
+
+msgid "ui.arena.battle.finishing"
+msgstr "Đang tính kết quả…"
+
+msgid "ui.arena.battle.paused"
+msgstr "Trận tạm dừng một chút, em chờ nhé."
+
+msgid "ui.arena.battle.submit"
+msgstr "Gửi đáp án"
+
+msgid "ui.arena.reveal.correct"
+msgstr "Đúng rồi!"
+
+msgid "ui.arena.reveal.try"
+msgstr "Chưa đúng lần này, không sao!"
+
+msgid "ui.arena.reveal.no_answer"
+msgstr "Câu này em chưa trả lời kịp."
+
+msgid "ui.arena.reveal.points"
+msgstr "+{points} điểm"
+
+msgid "ui.arena.reveal.speed_bonus"
+msgstr "Thưởng tốc độ +{bonus}"
+
+msgid "ui.arena.result.win"
+msgstr "Em thắng rồi! Giỏi quá!"
+
+msgid "ui.arena.result.draw"
+msgstr "Hòa! Cả hai đều giỏi!"
+
+msgid "ui.arena.result.not_won"
+msgstr "Chưa thắng lần này, em đã làm rất tốt ở {topic}!"
+
+msgid "ui.arena.result.abandoned"
+msgstr "Trận đã kết thúc sớm."
+
+msgid "ui.arena.result.no_contest"
+msgstr "Trận này không tính kết quả."
+
+msgid "ui.arena.result.void"
+msgstr "Trận đã hủy, không tính kết quả."
+
+msgid "ui.arena.result.quiz_done"
+msgstr "Em đã hoàn thành phần thi! Cảm ơn em đã góp sức."
+
+msgid "ui.arena.result.quiz_rank"
+msgstr "Em xếp thứ {rank} trong lượt này"
+
+msgid "ui.arena.result.quiz_top"
+msgstr "Các bạn đứng đầu: {names}"
+
+msgid "ui.arena.result.topic_any"
+msgstr "các câu hỏi"
+
+msgid "ui.arena.result.score"
+msgstr "Em được {score} · đúng {correct}/{total} câu"
+
+msgid "ui.arena.result.points"
+msgstr "+{points} điểm thi đấu"
+
+msgid "ui.arena.result.encouragement"
+msgstr "Em đã cố gắng lắm! Mình cùng ôn lại chủ đề này rồi thử tiếp nhé."
+
+msgid "ui.arena.result.again"
+msgstr "Chơi lại"
+
+msgid "ui.arena.result.back"
+msgstr "Về Đấu trường"
+
+msgid "ui.arena.review.title"
+msgstr "Xem lại các câu"
+
+msgid "ui.arena.review.to_practice"
+msgstr "Câu cần ôn"
+
+msgid "ui.arena.review.question"
+msgstr "Câu {n}: {text}"
+
+msgid "ui.arena.review.right"
+msgstr "Em đã trả lời đúng"
+
+msgid "ui.arena.review.try"
+msgstr "Em ôn lại câu này nhé"
+
+msgid "ui.arena.review.skipped"
+msgstr "Em chưa trả lời câu này"
+
+msgid "ui.arena.safety.title"
+msgstr "Người chơi cùng em"
+
+msgid "ui.arena.safety.reported"
+msgstr "Cảm ơn em đã báo cho thầy cô."
+
+msgid "ui.arena.safety.blocked"
+msgstr "Đã chặn bạn này."
+
+msgid "ui.arena.history.all"
+msgstr "Tất cả"
+
+msgid "ui.arena.history.empty"
+msgstr "Em chưa có trận nào. Vào Thi đấu để bắt đầu nhé!"
+
+msgid "ui.arena.history.more"
+msgstr "Xem thêm"
+
+msgid "ui.arena.history.view"
+msgstr "Xem"
+
+msgid "ui.arena.history.back"
+msgstr "Quay lại"
+
+msgid "ui.arena.history.void"
+msgstr "Trận đã hủy"
+
+msgid "ui.arena.history.with"
+msgstr "Cùng: {names}"
+
+msgid "ui.arena.history.you"
+msgstr "Em"
+
+msgid "ui.arena.duel.open"
+msgstr "Thách đấu bạn"
+
+msgid "ui.arena.duel.title"
+msgstr "Thách đấu bạn"
+
+msgid "ui.arena.duel.pick_friend"
+msgstr "Chọn một bạn"
+
+msgid "ui.arena.duel.no_friends"
+msgstr "Em chưa có bạn nào trong danh sách."
+
+msgid "ui.arena.duel.send"
+msgstr "Gửi lời thách đấu"
+
+msgid "ui.arena.duel.later"
+msgstr "Để lần sau"
+
+msgid "ui.arena.duel.sent"
+msgstr "Đã gửi! Bạn có {seconds} giây để trả lời."
+
+msgid "ui.arena.duel.incoming_title"
+msgstr "Lời thách đấu"
+
+msgid "ui.arena.duel.incoming"
+msgstr "{nickname} thách đấu em môn {subject}!"
+
+msgid "ui.arena.duel.accept"
+msgstr "Nhận lời"
+
+msgid "ui.arena.duel.decline"
+msgstr "Để lần sau"
+
+msgid "ui.arena.error.generic"
+msgstr "Có lỗi nhỏ, em thử lại sau nhé."
+
+msgid "ui.arena.error.MM_TICKET_ALREADY_ACTIVE"
+msgstr "Em đang trong hàng chờ rồi."
+
+msgid "ui.arena.error.POLICY_DENIED"
+msgstr "Chế độ này hiện chưa mở cho em."
+
+msgid "ui.arena.error.PARTY_NOT_LEADER"
+msgstr "Chỉ trưởng nhóm mới tìm trận cho cả nhóm."
+
+msgid "ui.arena.error.PARTY_MEMBER_NOT_ONLINE"
+msgstr "Có bạn trong nhóm chưa trực tuyến."
+
+msgid "ui.arena.error.ANSWER_LATE"
+msgstr "Hết giờ rồi, câu này chưa được tính. Không sao!"
+
+msgid "ui.arena.error.ANSWER_ALREADY_SUBMITTED"
+msgstr "Em đã trả lời câu này rồi."
+
+msgid "ui.arena.error.MATCH_NOT_ACTIVE"
+msgstr "Trận đã sang phần khác, em chờ chút nhé."
+
+msgid "ui.arena.error.PROPOSAL_EXPIRED"
+msgstr "Lời mời vào trận đã hết hạn."
+
+msgid "ui.arena.error.DUEL_EXPIRED"
+msgstr "Lời thách đấu đã hết hạn."
+
+msgid "ui.arena.error.SOCIAL_SCOPE_VIOLATION"
+msgstr "Chưa gửi được lời thách đấu này."
+
+msgid "ui.arena.error.RATE_LIMITED"
+msgstr "Em thử lại sau một chút nhé."
+
+msgid "ui.arena.error.CONFLICT"
+msgstr "Đã có thay đổi, em thử lại nhé."
+
+msgid "ui.arena.error.NOT_FOUND"
+msgstr "Không tìm thấy."
+
+msgid "ui.arena.error.UNAVAILABLE"
+msgstr "Đấu trường đang bận, em thử lại sau nhé."
+
+msgid "ui.arena.error.NETWORK_ERROR"
+msgstr "Mất kết nối, em thử lại khi có mạng nhé."
+
+msgid "ui.leaderboard.empty"
+msgstr "Hiện chưa có bảng xếp hạng nào cho em."
+
+msgid "ui.leaderboard.refresh"
+msgstr "Làm mới"
+
+msgid "ui.leaderboard.stale"
+msgstr "Đang cập nhật"
+
+msgid "ui.leaderboard.closed"
+msgstr "Bảng này hiện không mở."
+
+msgid "ui.leaderboard.rank"
+msgstr "#{rank}"
+
+msgid "ui.leaderboard.value"
+msgstr "{value} điểm"
+
+msgid "ui.leaderboard.me"
+msgstr "Em"
+
+msgid "ui.leaderboard.around_me"
+msgstr "Quanh em"
+
+msgid "ui.leaderboard.no_rows"
+msgstr "Bảng chưa có ai, em là người đầu tiên nhé!"
+
+msgid "ui.leaderboard.percentile"
+msgstr "Em đang ở nhóm {bucket}%, cố lên nhé!"
+
+msgid "ui.leaderboard.goal.title"
+msgstr "Mục tiêu của khối"
+
+msgid "ui.leaderboard.goal.title_grade"
+msgstr "Mục tiêu của khối {grade}"
+
+msgid "ui.leaderboard.goal.value"
+msgstr "Cả khối: {current}/{target}"
+
+msgid "ui.leaderboard.goal.mine"
+msgstr "Em đã góp {value}"
+
+msgid "ui.leaderboard.goal.helpers"
+msgstr "{count} bạn đã góp sức"
+
+msgid "ui.leaderboard.goal.reached"
+msgstr "Đã đạt!"
+
+msgid "ui.leaderboard.goal.coach"
+msgstr "Mỗi câu đúng của em giúp cả khối tiến gần mục tiêu!"
+
+msgid "ui.tournament.title"
+msgstr "Giải đấu"
+
+msgid "ui.tournament.empty"
+msgstr "Hiện chưa có giải đấu nào cho em."
+
+msgid "ui.tournament.more"
+msgstr "Xem thêm"
+
+msgid "ui.tournament.view"
+msgstr "Xem"
+
+msgid "ui.tournament.back"
+msgstr "Quay lại"
+
+msgid "ui.tournament.starts"
+msgstr "Bắt đầu: {time}"
+
+msgid "ui.tournament.registration_closes"
+msgstr "Hạn đăng ký: {time}"
+
+msgid "ui.tournament.check_in_opens"
+msgstr "Mở check-in: {time}"
+
+msgid "ui.tournament.entries"
+msgstr "Đã đăng ký: {count}/{max}"
+
+msgid "ui.tournament.register"
+msgstr "Đăng ký"
+
+msgid "ui.tournament.withdraw"
+msgstr "Rút tên"
+
+msgid "ui.tournament.check_in"
+msgstr "Check-in"
+
+msgid "ui.tournament.check_in_wait"
+msgstr "Check-in sẽ mở đúng giờ nhé."
+
+msgid "ui.tournament.registered_done"
+msgstr "Em đã đăng ký giải!"
+
+msgid "ui.tournament.checked_in_done"
+msgstr "Em đã check-in, sẵn sàng thi đấu!"
+
+msgid "ui.tournament.status.published"
+msgstr "Sắp mở"
+
+msgid "ui.tournament.status.registration_open"
+msgstr "Đang mở đăng ký"
+
+msgid "ui.tournament.status.registration_closed"
+msgstr "Đã đóng đăng ký"
+
+msgid "ui.tournament.status.seeding"
+msgstr "Đang xếp cặp"
+
+msgid "ui.tournament.status.scheduled"
+msgstr "Đã có lịch"
+
+msgid "ui.tournament.status.in_progress"
+msgstr "Đang diễn ra"
+
+msgid "ui.tournament.status.completed"
+msgstr "Đã kết thúc"
+
+msgid "ui.tournament.status.cancelled"
+msgstr "Đã hủy"
+
+msgid "ui.tournament.entry.registered"
+msgstr "Em đã đăng ký"
+
+msgid "ui.tournament.entry.confirmed"
+msgstr "Đã xác nhận"
+
+msgid "ui.tournament.entry.checked_in"
+msgstr "Đã check-in"
+
+msgid "ui.tournament.entry.withdrawn"
+msgstr "Không tham gia"
+
+msgid "ui.tournament.entry.eliminated"
+msgstr "Đã thi xong"
+
+msgid "ui.tournament.entry.champion"
+msgstr "Vô địch!"
+
+msgid "ui.tournament.node.pending"
+msgstr "Chờ đối thủ"
+
+msgid "ui.tournament.node.scheduled"
+msgstr "Đã có lịch"
+
+msgid "ui.tournament.node.in_match"
+msgstr "Đang thi đấu"
+
+msgid "ui.tournament.node.awaiting_confirm"
+msgstr "Chờ xác nhận"
+
+msgid "ui.tournament.node.confirmed"
+msgstr "Đã xong"
+
+msgid "ui.tournament.node.bye"
+msgstr "Được đi tiếp"
+
+msgid "ui.tournament.node.void"
+msgstr "Không diễn ra"
+
+msgid "ui.tournament.bracket.title"
+msgstr "Sơ đồ thi đấu"
+
+msgid "ui.tournament.bracket.empty"
+msgstr "Sơ đồ sẽ có khi giải bắt đầu."
+
+msgid "ui.tournament.bracket.round"
+msgstr "Vòng {round}"
+
+msgid "ui.tournament.bracket.versus"
+msgstr "Gặp {name}"
+
+msgid "ui.tournament.bracket.tbd"
+msgstr "Sẽ biết sau"
+
+msgid "ui.tournament.bracket.winner"
+msgstr "Thắng"
+
+msgid "ui.tournament.bracket.won"
+msgstr "Em đã thắng!"
+
+msgid "ui.tournament.bracket.done"
+msgstr "Em đã thi xong"
+
+msgid "ui.tournament.challenge.when"
+msgstr "Bắt đầu: {time}"
+
+msgid "ui.tournament.challenge.join"
+msgstr "Vào phòng"
+
+msgid "ui.tournament.challenge.not_open"
+msgstr "Phòng sẽ mở trước giờ thi một chút."
+
+msgid "ui.tournament.error.not_eligible"
+msgstr "Giải này chưa dành cho em."
+
+msgid "ui.tournament.error.registration_closed"
+msgstr "Đã hết thời gian đăng ký."
+
+msgid "ui.tournament.error.full"
+msgstr "Giải đã đủ người rồi."
+
+msgid "ui.tournament.error.check_in_closed"
+msgstr "Đã hết giờ check-in."
+
+msgid "ui.tournament.error.window_closed"
+msgstr "Chưa tới giờ hoặc đã hết giờ cho việc này."
+
+msgid "ui.tournament.toast.match_soon"
+msgstr "Trận giải {name} của em bắt đầu sau {minutes} phút!"
+
+msgid "ui.tournament.toast.open"
+msgstr "Xem"
+
+msgid "ui.menu.arena"
+msgstr "Đấu trường"
+
+msgid "ui.menu.leaderboard"
+msgstr "Bảng xếp hạng"

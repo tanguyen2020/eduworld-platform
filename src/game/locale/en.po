@@ -3315,3 +3315,615 @@ msgstr "Type"
 
 msgid "ui.chat.empty_closed"
 msgstr "No messages in this chat."
+
+msgid "ui.arena.title"
+msgstr "Arena"
+
+msgid "ui.arena.coach"
+msgstr "Pick a mode you like, then press Find match!"
+
+msgid "ui.arena.tab.play"
+msgstr "Play"
+
+msgid "ui.arena.tab.leaderboard"
+msgstr "Leaderboards"
+
+msgid "ui.arena.tab.history"
+msgstr "History"
+
+msgid "ui.arena.tab.tournaments"
+msgstr "Tournaments"
+
+msgid "ui.arena.find_match"
+msgstr "Find match"
+
+msgid "ui.arena.modes.empty"
+msgstr "No match modes are open right now. Come back later!"
+
+msgid "ui.arena.mode.battle_1v1"
+msgstr "1v1 Brain Battle"
+
+msgid "ui.arena.mode.battle_1v1.hint"
+msgstr "Play against one friend"
+
+msgid "ui.arena.mode.team_battle"
+msgstr "Team Battle"
+
+msgid "ui.arena.mode.team_battle.hint"
+msgstr "Play together as a team"
+
+msgid "ui.arena.mode.coop_challenge"
+msgstr "Co-op Challenge"
+
+msgid "ui.arena.mode.coop_challenge.hint"
+msgstr "Beat the challenge together"
+
+msgid "ui.arena.mode.timed_quiz"
+msgstr "Timed Quiz"
+
+msgid "ui.arena.mode.timed_quiz.hint"
+msgstr "The whole grade plays"
+
+msgid "ui.arena.mode.tournament"
+msgstr "Tournament"
+
+msgid "ui.arena.mode.tournament.hint"
+msgstr "On the school schedule"
+
+msgid "ui.arena.mode.other"
+msgstr "Match"
+
+msgid "ui.arena.mode.ranked"
+msgstr "Ranked"
+
+msgid "ui.arena.mode.unranked"
+msgstr "Practice, not ranked"
+
+msgid "ui.arena.mode.chosen"
+msgstr "Chosen"
+
+msgid "ui.arena.subject.title"
+msgstr "Subject"
+
+msgid "ui.arena.subject.unknown"
+msgstr "Subject"
+
+msgid "ui.arena.topic.title"
+msgstr "Topic"
+
+msgid "ui.arena.topic.all"
+msgstr "All topics"
+
+msgid "ui.arena.tier.label"
+msgstr "Tier: {tier}"
+
+msgid "ui.arena.tier.provisional"
+msgstr "Placement ({played}/{required})"
+
+msgid "ui.arena.tier.updating"
+msgstr "Updating tier"
+
+msgid "ui.arena.queue.searching"
+msgstr "Finding a match… {time} · {mode}"
+
+msgid "ui.arena.queue.cancel"
+msgstr "Cancel"
+
+msgid "ui.arena.queue.widened"
+msgstr "Looking a little wider for you."
+
+msgid "ui.arena.queue.requeued"
+msgstr "The last match was not ready, you kept your place in line."
+
+msgid "ui.arena.queue.found"
+msgstr "Match found!"
+
+msgid "ui.arena.queue.robot_hint"
+msgstr "Waiting a while? You can practise with the Robot (not ranked)."
+
+msgid "ui.arena.queue.robot"
+msgstr "Practise with Robot"
+
+msgid "ui.arena.queue.timeout"
+msgstr "No match this time."
+
+msgid "ui.arena.queue.timeout_hint"
+msgstr "Try another mode or search again!"
+
+msgid "ui.arena.queue.other_mode"
+msgstr "Choose another mode"
+
+msgid "ui.arena.queue.again"
+msgstr "Search again"
+
+msgid "ui.arena.queue.lost"
+msgstr "The queue has ended, please search again."
+
+msgid "ui.arena.ready.title"
+msgstr "Match found!"
+
+msgid "ui.arena.ready.accept"
+msgstr "Join match"
+
+msgid "ui.arena.ready.decline"
+msgstr "Not now"
+
+msgid "ui.arena.ready.seconds"
+msgstr "Join within {seconds} seconds"
+
+msgid "ui.arena.ready.press"
+msgstr "Press Join match!"
+
+msgid "ui.arena.ready.waiting"
+msgstr "Waiting for the others… ({accepted}/{total})"
+
+msgid "ui.arena.ready.opponent_hidden"
+msgstr "A friend is waiting for you!"
+
+msgid "ui.arena.battle.progress"
+msgstr "Question {n}/{total}"
+
+msgid "ui.arena.battle.seconds"
+msgstr "{seconds} s"
+
+msgid "ui.arena.battle.score"
+msgstr "{score} points"
+
+msgid "ui.arena.battle.score_hidden"
+msgstr "Playing"
+
+msgid "ui.arena.battle.robot"
+msgstr "Study Robot"
+
+msgid "ui.arena.battle.my_team"
+msgstr "Your team"
+
+msgid "ui.arena.battle.other_team"
+msgstr "Other team"
+
+msgid "ui.arena.battle.role_primary"
+msgstr "Your turn"
+
+msgid "ui.arena.battle.role_support"
+msgstr "You help"
+
+msgid "ui.arena.battle.reconnecting"
+msgstr "Reconnecting…"
+
+msgid "ui.arena.battle.teammate_reconnecting"
+msgstr "A teammate is reconnecting…"
+
+msgid "ui.arena.battle.opponent_reconnecting"
+msgstr "{nickname} is reconnecting… Please wait a moment."
+
+msgid "ui.arena.battle.self_reconnecting"
+msgstr "Reconnecting… Your match is kept for you."
+
+msgid "ui.arena.battle.recorded"
+msgstr "Got it! Wait for the result."
+
+msgid "ui.arena.battle.preparing"
+msgstr "Getting the match ready…"
+
+msgid "ui.arena.battle.next_soon"
+msgstr "Next question coming!"
+
+msgid "ui.arena.battle.finishing"
+msgstr "Working out the result…"
+
+msgid "ui.arena.battle.paused"
+msgstr "The match is paused for a moment, please wait."
+
+msgid "ui.arena.battle.submit"
+msgstr "Send answer"
+
+msgid "ui.arena.reveal.correct"
+msgstr "Correct!"
+
+msgid "ui.arena.reveal.try"
+msgstr "Not this time, that is okay!"
+
+msgid "ui.arena.reveal.no_answer"
+msgstr "You did not answer this one in time."
+
+msgid "ui.arena.reveal.points"
+msgstr "+{points} points"
+
+msgid "ui.arena.reveal.speed_bonus"
+msgstr "Speed bonus +{bonus}"
+
+msgid "ui.arena.result.win"
+msgstr "You won! Great job!"
+
+msgid "ui.arena.result.draw"
+msgstr "A draw! You both did great!"
+
+msgid "ui.arena.result.not_won"
+msgstr "Not this time, you did great on {topic}!"
+
+msgid "ui.arena.result.abandoned"
+msgstr "The match ended early."
+
+msgid "ui.arena.result.no_contest"
+msgstr "This match does not count."
+
+msgid "ui.arena.result.void"
+msgstr "The match was cancelled and does not count."
+
+msgid "ui.arena.result.quiz_done"
+msgstr "You finished the quiz! Thanks for helping out."
+
+msgid "ui.arena.result.quiz_rank"
+msgstr "You placed {rank} this round"
+
+msgid "ui.arena.result.quiz_top"
+msgstr "Top players: {names}"
+
+msgid "ui.arena.result.topic_any"
+msgstr "these questions"
+
+msgid "ui.arena.result.score"
+msgstr "You scored {score} · {correct}/{total} correct"
+
+msgid "ui.arena.result.points"
+msgstr "+{points} competition points"
+
+msgid "ui.arena.result.encouragement"
+msgstr "You tried really hard! Let us review this topic and try again."
+
+msgid "ui.arena.result.again"
+msgstr "Play again"
+
+msgid "ui.arena.result.back"
+msgstr "Back to Arena"
+
+msgid "ui.arena.review.title"
+msgstr "Question review"
+
+msgid "ui.arena.review.to_practice"
+msgstr "Questions to review"
+
+msgid "ui.arena.review.question"
+msgstr "Question {n}: {text}"
+
+msgid "ui.arena.review.right"
+msgstr "You got it right"
+
+msgid "ui.arena.review.try"
+msgstr "Let us review this one"
+
+msgid "ui.arena.review.skipped"
+msgstr "You did not answer this one"
+
+msgid "ui.arena.safety.title"
+msgstr "Players with you"
+
+msgid "ui.arena.safety.reported"
+msgstr "Thanks for telling the teachers."
+
+msgid "ui.arena.safety.blocked"
+msgstr "This player is blocked."
+
+msgid "ui.arena.history.all"
+msgstr "All"
+
+msgid "ui.arena.history.empty"
+msgstr "No matches yet. Go to Play to start!"
+
+msgid "ui.arena.history.more"
+msgstr "Show more"
+
+msgid "ui.arena.history.view"
+msgstr "View"
+
+msgid "ui.arena.history.back"
+msgstr "Back"
+
+msgid "ui.arena.history.void"
+msgstr "Cancelled match"
+
+msgid "ui.arena.history.with"
+msgstr "With: {names}"
+
+msgid "ui.arena.history.you"
+msgstr "You"
+
+msgid "ui.arena.duel.open"
+msgstr "Challenge a friend"
+
+msgid "ui.arena.duel.title"
+msgstr "Challenge a friend"
+
+msgid "ui.arena.duel.pick_friend"
+msgstr "Pick a friend"
+
+msgid "ui.arena.duel.no_friends"
+msgstr "You have no friends on your list yet."
+
+msgid "ui.arena.duel.send"
+msgstr "Send challenge"
+
+msgid "ui.arena.duel.later"
+msgstr "Not now"
+
+msgid "ui.arena.duel.sent"
+msgstr "Sent! Your friend has {seconds} seconds to answer."
+
+msgid "ui.arena.duel.incoming_title"
+msgstr "A challenge"
+
+msgid "ui.arena.duel.incoming"
+msgstr "{nickname} challenges you in {subject}!"
+
+msgid "ui.arena.duel.accept"
+msgstr "Accept"
+
+msgid "ui.arena.duel.decline"
+msgstr "Not now"
+
+msgid "ui.arena.error.generic"
+msgstr "Something went wrong, please try again later."
+
+msgid "ui.arena.error.MM_TICKET_ALREADY_ACTIVE"
+msgstr "You are already in the queue."
+
+msgid "ui.arena.error.POLICY_DENIED"
+msgstr "This mode is not open for you right now."
+
+msgid "ui.arena.error.PARTY_NOT_LEADER"
+msgstr "Only the party leader can find a match for the party."
+
+msgid "ui.arena.error.PARTY_MEMBER_NOT_ONLINE"
+msgstr "A party member is not online."
+
+msgid "ui.arena.error.ANSWER_LATE"
+msgstr "Time was up, this answer did not count. That is okay!"
+
+msgid "ui.arena.error.ANSWER_ALREADY_SUBMITTED"
+msgstr "You already answered this one."
+
+msgid "ui.arena.error.MATCH_NOT_ACTIVE"
+msgstr "The match has moved on, please wait."
+
+msgid "ui.arena.error.PROPOSAL_EXPIRED"
+msgstr "The match invite has expired."
+
+msgid "ui.arena.error.DUEL_EXPIRED"
+msgstr "The challenge has expired."
+
+msgid "ui.arena.error.SOCIAL_SCOPE_VIOLATION"
+msgstr "This challenge could not be sent."
+
+msgid "ui.arena.error.RATE_LIMITED"
+msgstr "Please try again in a moment."
+
+msgid "ui.arena.error.CONFLICT"
+msgstr "Something changed, please try again."
+
+msgid "ui.arena.error.NOT_FOUND"
+msgstr "Not found."
+
+msgid "ui.arena.error.UNAVAILABLE"
+msgstr "The arena is busy, please try again later."
+
+msgid "ui.arena.error.NETWORK_ERROR"
+msgstr "No connection, please try again when you are online."
+
+msgid "ui.leaderboard.empty"
+msgstr "There are no leaderboards for you right now."
+
+msgid "ui.leaderboard.refresh"
+msgstr "Refresh"
+
+msgid "ui.leaderboard.stale"
+msgstr "Updating"
+
+msgid "ui.leaderboard.closed"
+msgstr "This board is not open now."
+
+msgid "ui.leaderboard.rank"
+msgstr "#{rank}"
+
+msgid "ui.leaderboard.value"
+msgstr "{value} pts"
+
+msgid "ui.leaderboard.me"
+msgstr "You"
+
+msgid "ui.leaderboard.around_me"
+msgstr "Around you"
+
+msgid "ui.leaderboard.no_rows"
+msgstr "Nobody here yet, you can be the first!"
+
+msgid "ui.leaderboard.percentile"
+msgstr "You are in the top {bucket}%, keep going!"
+
+msgid "ui.leaderboard.goal.title"
+msgstr "Grade goal"
+
+msgid "ui.leaderboard.goal.title_grade"
+msgstr "Grade {grade} goal"
+
+msgid "ui.leaderboard.goal.value"
+msgstr "Whole grade: {current}/{target}"
+
+msgid "ui.leaderboard.goal.mine"
+msgstr "You added {value}"
+
+msgid "ui.leaderboard.goal.helpers"
+msgstr "{count} classmates helped"
+
+msgid "ui.leaderboard.goal.reached"
+msgstr "Reached!"
+
+msgid "ui.leaderboard.goal.coach"
+msgstr "Every right answer helps your grade reach the goal!"
+
+msgid "ui.tournament.title"
+msgstr "Tournament"
+
+msgid "ui.tournament.empty"
+msgstr "There are no tournaments for you right now."
+
+msgid "ui.tournament.more"
+msgstr "Show more"
+
+msgid "ui.tournament.view"
+msgstr "View"
+
+msgid "ui.tournament.back"
+msgstr "Back"
+
+msgid "ui.tournament.starts"
+msgstr "Starts: {time}"
+
+msgid "ui.tournament.registration_closes"
+msgstr "Sign-up closes: {time}"
+
+msgid "ui.tournament.check_in_opens"
+msgstr "Check-in opens: {time}"
+
+msgid "ui.tournament.entries"
+msgstr "Signed up: {count}/{max}"
+
+msgid "ui.tournament.register"
+msgstr "Sign up"
+
+msgid "ui.tournament.withdraw"
+msgstr "Withdraw"
+
+msgid "ui.tournament.check_in"
+msgstr "Check in"
+
+msgid "ui.tournament.check_in_wait"
+msgstr "Check-in opens on time."
+
+msgid "ui.tournament.registered_done"
+msgstr "You signed up!"
+
+msgid "ui.tournament.checked_in_done"
+msgstr "You are checked in and ready!"
+
+msgid "ui.tournament.status.published"
+msgstr "Coming soon"
+
+msgid "ui.tournament.status.registration_open"
+msgstr "Sign-up open"
+
+msgid "ui.tournament.status.registration_closed"
+msgstr "Sign-up closed"
+
+msgid "ui.tournament.status.seeding"
+msgstr "Making pairs"
+
+msgid "ui.tournament.status.scheduled"
+msgstr "Scheduled"
+
+msgid "ui.tournament.status.in_progress"
+msgstr "In progress"
+
+msgid "ui.tournament.status.completed"
+msgstr "Finished"
+
+msgid "ui.tournament.status.cancelled"
+msgstr "Cancelled"
+
+msgid "ui.tournament.entry.registered"
+msgstr "You signed up"
+
+msgid "ui.tournament.entry.confirmed"
+msgstr "Confirmed"
+
+msgid "ui.tournament.entry.checked_in"
+msgstr "Checked in"
+
+msgid "ui.tournament.entry.withdrawn"
+msgstr "Not taking part"
+
+msgid "ui.tournament.entry.eliminated"
+msgstr "Finished playing"
+
+msgid "ui.tournament.entry.champion"
+msgstr "Champion!"
+
+msgid "ui.tournament.node.pending"
+msgstr "Waiting for players"
+
+msgid "ui.tournament.node.scheduled"
+msgstr "Scheduled"
+
+msgid "ui.tournament.node.in_match"
+msgstr "Playing now"
+
+msgid "ui.tournament.node.awaiting_confirm"
+msgstr "Waiting to confirm"
+
+msgid "ui.tournament.node.confirmed"
+msgstr "Done"
+
+msgid "ui.tournament.node.bye"
+msgstr "Moves on"
+
+msgid "ui.tournament.node.void"
+msgstr "Not played"
+
+msgid "ui.tournament.bracket.title"
+msgstr "Bracket"
+
+msgid "ui.tournament.bracket.empty"
+msgstr "The bracket appears when the tournament starts."
+
+msgid "ui.tournament.bracket.round"
+msgstr "Round {round}"
+
+msgid "ui.tournament.bracket.versus"
+msgstr "Versus {name}"
+
+msgid "ui.tournament.bracket.tbd"
+msgstr "To be decided"
+
+msgid "ui.tournament.bracket.winner"
+msgstr "Winner"
+
+msgid "ui.tournament.bracket.won"
+msgstr "You won!"
+
+msgid "ui.tournament.bracket.done"
+msgstr "You played"
+
+msgid "ui.tournament.challenge.when"
+msgstr "Starts: {time}"
+
+msgid "ui.tournament.challenge.join"
+msgstr "Join room"
+
+msgid "ui.tournament.challenge.not_open"
+msgstr "The room opens a little before the start."
+
+msgid "ui.tournament.error.not_eligible"
+msgstr "This tournament is not for you."
+
+msgid "ui.tournament.error.registration_closed"
+msgstr "Sign-up has closed."
+
+msgid "ui.tournament.error.full"
+msgstr "The tournament is full."
+
+msgid "ui.tournament.error.check_in_closed"
+msgstr "Check-in has closed."
+
+msgid "ui.tournament.error.window_closed"
+msgstr "It is not the right time for this."
+
+msgid "ui.tournament.toast.match_soon"
+msgstr "Your {name} match starts in {minutes} minutes!"
+
+msgid "ui.tournament.toast.open"
+msgstr "View"
+
+msgid "ui.menu.arena"
+msgstr "Arena"
+
+msgid "ui.menu.leaderboard"
+msgstr "Leaderboards"

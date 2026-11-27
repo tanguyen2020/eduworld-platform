@@ -12,8 +12,9 @@ signal activity_opened(screen_id: StringName)
 
 const CODE_UNAVAILABLE: String = "QUEST_API_UNAVAILABLE"
 const NOTICE_UNAVAILABLE: String = "ui.world.dialogue.unavailable"
+## F109: "arena" — NPC Trọng tài Sấm opens the Competition Arena.
 const UI_SCREENS: Dictionary = {"quest_journal": &"quest_journal", "practice_board": &"practice_board",
-	"leaderboard": &"leaderboard", "wardrobe": &"wardrobe"}
+	"leaderboard": &"leaderboard", "wardrobe": &"wardrobe", "arena": &"arena"}
 const SCREEN_ACTIVITY: StringName = &"activity_host"
 const SCREEN_MINIGAME: StringName = &"minigame_host"
 

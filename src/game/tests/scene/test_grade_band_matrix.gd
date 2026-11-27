@@ -10,7 +10,9 @@ extends GdUnitTestSuite
 ## tab Thông báo; F102: the Party screen (lobby, alone + invitation, invite picker, activity choice, leave, countdown) and
 ## the HUD with the party strip + invitation popup; F119: the party lobby with its chat (PC column, phone overlay) and
 ## the chat dock of a match (team tabs, message menu, report + thanks, smile board, moderation notice, mute lock, closed
-## match with the retention days, care message, 2-line strip). FakeHttp + contract fixtures (TEST-ONLY).
+## match with the retention days, care message, 2-line strip); F109: the arena (modes, leaderboards per visibility,
+## history, bracket, duel), the HUD queue bar and ready check, the battle screen and its results. FakeHttp + contract
+## fixtures (TEST-ONLY).
 
 const HOST: String = "res://scenes/learning/ActivityHost.tscn"
 const SETTLE_FRAMES: int = 6
@@ -560,6 +562,56 @@ func test_chat_list_shows_three_messages_in_every_band() -> void:
 			return lobby, false, BandLayoutProbe.SIZES, true))
 		failures.append_array(await _matrix("space_team_" + next, func(vp: SubViewport, _band: String) -> Node:
 			return await _chat(vp, "team"), false, BandLayoutProbe.SIZES, true))
+		# F109: the real match placement — the chat column of the battle screen between two questions (team battle).
+		failures.append_array(await _matrix("space_battle_" + next, func(vp: SubViewport, _band: String) -> Node:
+			return await _arena(vp, "battle_team_reveal"), false, BandLayoutProbe.SIZES, true))
+	Settings.set_locale(locale, false)
+	_assert_none(failures)
+
+
+## F109 (F109-AC-01…AC-27 layout; STUDENT_GAME_UX_SOCIAL §8): the arena, its tabs (a leaderboard per server visibility,
+## history detail, tournament bracket — tree / path by band), the friend duel, the HUD queue bar and ready check, and the
+## battle screen (question, reveal, team battle, result win / Timed Quiz grade goal) in every band × window.
+const ARENA_MATRIX_VIEWS: PackedStringArray = ["arena", "leaderboard_goal", "leaderboard_ranked", "history_detail",
+	"tournament_bracket", "duel", "queue", "ready_check", "battle_question", "battle_reveal", "battle_team", "result_win",
+	"result_quiz_goal"]
+
+
+func _arena(vp: SubViewport, view: String) -> Node:
+	var root: Control = Control.new()
+	root.name = "ArenaScreenRoot"
+	_mount(vp, root)
+	root.position = Vector2.ZERO
+	root.size = Vector2(vp.size)
+	var real: String = view
+	if view == "battle_team_reveal":
+		real = "battle_team"
+	await CompetitionScreens.build(real, root, s.services, s.h.http)
+	if view == "battle_team_reveal":
+		# Between two questions: the dock is open (the question strip rule is checked by the scene test).
+		s.services.battle.handle_message("battle.question.revealed", {"match_id": CompetitionFixtures.TEAM_MATCH_ID,
+			"question_instance_id": "qi_502_2", "scoreboard": []})
+		for i: int in 6:
+			await await_idle_frame()
+	return root
+
+
+func test_arena_screens_fit_every_band() -> void:
+	var failures: PackedStringArray = []
+	for view: String in ARENA_MATRIX_VIEWS:
+		failures.append_array(await _matrix("arena_" + view, func(vp: SubViewport, _band: String) -> Node:
+			return await _arena(vp, view)))
+	_assert_none(failures)
+
+
+## F109-AC-30: the pseudo-locale (+35% text) still fits the arena — wraps, nothing cut or outside.
+func test_arena_screens_fit_every_band_with_long_text() -> void:
+	var locale: String = String(Settings.locale)
+	Settings.set_locale(L10n.pseudo_locale(), false)
+	var failures: PackedStringArray = []
+	for view: String in ["arena", "leaderboard_ranked", "queue", "battle_reveal", "result_win"]:
+		failures.append_array(await _matrix("arena_pseudo_" + view, func(vp: SubViewport, _band: String) -> Node:
+			return await _arena(vp, view)))
 	Settings.set_locale(locale, false)
 	_assert_none(failures)
 

@@ -1,6 +1,6 @@
 extends Control
 ## "Thêm" menu of the HUD (STUDENT_GAME_UX §3 ☰, F069; AC-UX-0301 every function ≤ 2 taps): big picture tiles with an
-## icon and a word — Cửa hàng (S08 Shop), Thành tựu & Bộ sưu tập (S09), Núi Thử Thách (S06), Hành trình của tôi.
+## icon and a word — Cửa hàng (S08 Shop), Thành tựu & Bộ sưu tập (S09), Núi Thử Thách (S06), Hành trình của tôi; F109: Đấu trường and Bảng xếp hạng.
 ## Each tile opens its screen through `EventBus.ui_requested`; no rule, no network (AGENTS R1).
 
 signal closed()
@@ -11,6 +11,9 @@ const TILES: Array = [
 	[&"achievements", {}, "ui.menu.achievements", "medal"],
 	[&"challenge_board", {}, "ui.menu.challenges", "area_challenge_mountain"],
 	[&"journey", {}, "ui.menu.journey", "flag"],
+	# F109: Đấu trường (also K) and its leaderboards.
+	[&"arena", {}, "ui.menu.arena", "arena"],
+	[&"arena", {"tab": "leaderboard"}, "ui.menu.leaderboard", "podium"],
 ]
 
 var _grid: GridContainer = null
@@ -21,7 +24,7 @@ func _ready() -> void:
 	var ui: Dictionary = UiBuild.window(self, "ui.menu.title", "menu")
 	(ui["close"] as Button).pressed.connect(close)
 	var win: PanelContainer = ui["window"] as PanelContainer
-	# The window hugs its four tiles, centred (no empty card on a tall or small screen).
+	# The window hugs its tiles, centred (no empty card on a tall or small screen).
 	for side: Side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
 		win.set_anchor(side, 0.5)
 		win.set_offset(side, 0.0)
@@ -36,7 +39,7 @@ func _ready() -> void:
 	center.add_child(_grid)
 	for t: Array in TILES:
 		var b: Button = UiBuild.button(String(t[2]), String(t[3]), &"SecondaryButton")
-		b.name = "Tile_%s" % String(t[0])
+		b.name = "Tile_%s" % String(t[2]).get_slice(".", 2)
 		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		b.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 		b.expand_icon = false

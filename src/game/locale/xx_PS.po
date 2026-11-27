@@ -179,6 +179,399 @@ msgstr "[!! Ţĥïš áçţïvïţý ñëëđš á ñëŵëŕ vëŕšïöñ öƒ
 msgid "ui.activity_player.waiting"
 msgstr "[!! Šëñđïñğ… ~~~~ !!]"
 
+msgid "ui.arena.battle.finishing"
+msgstr "[!! Ŵöŕķïñğ öüţ ţĥë ŕëšüĺţ… ~~~~~~~~~~ !!]"
+
+msgid "ui.arena.battle.my_team"
+msgstr "[!! Ýöüŕ ţëáɱ ~~~~ !!]"
+
+msgid "ui.arena.battle.next_soon"
+msgstr "[!! Ñëxţ qüëšţïöñ çöɱïñğ! ~~~~~~~~~ !!]"
+
+msgid "ui.arena.battle.opponent_reconnecting"
+msgstr "[!! {nickname} ïš ŕëçöññëçţïñğ… Pĺëášë ŵáïţ á ɱöɱëñţ. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.battle.other_team"
+msgstr "[!! Öţĥëŕ ţëáɱ ~~~~ !!]"
+
+msgid "ui.arena.battle.paused"
+msgstr "[!! Ţĥë ɱáţçĥ ïš þáüšëđ ƒöŕ á ɱöɱëñţ, þĺëášë ŵáïţ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.battle.preparing"
+msgstr "[!! Ğëţţïñğ ţĥë ɱáţçĥ ŕëáđý… ~~~~~~~~~~ !!]"
+
+msgid "ui.arena.battle.progress"
+msgstr "[!! Qüëšţïöñ {n}/{total} ~~~~~~~~ !!]"
+
+msgid "ui.arena.battle.reconnecting"
+msgstr "[!! Ŕëçöññëçţïñğ… ~~~~~~ !!]"
+
+msgid "ui.arena.battle.recorded"
+msgstr "[!! Ğöţ ïţ! Ŵáïţ ƒöŕ ţĥë ŕëšüĺţ. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.battle.robot"
+msgstr "[!! Šţüđý Ŕöƀöţ ~~~~~ !!]"
+
+msgid "ui.arena.battle.role_primary"
+msgstr "[!! Ýöüŕ ţüŕñ ~~~~ !!]"
+
+msgid "ui.arena.battle.role_support"
+msgstr "[!! Ýöü ĥëĺþ ~~~~ !!]"
+
+msgid "ui.arena.battle.score"
+msgstr "[!! {score} þöïñţš ~~~~~~ !!]"
+
+msgid "ui.arena.battle.score_hidden"
+msgstr "[!! Pĺáýïñğ ~~~ !!]"
+
+msgid "ui.arena.battle.seconds"
+msgstr "[!! {seconds} š ~~~~~ !!]"
+
+msgid "ui.arena.battle.self_reconnecting"
+msgstr "[!! Ŕëçöññëçţïñğ… Ýöüŕ ɱáţçĥ ïš ķëþţ ƒöŕ ýöü. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.battle.submit"
+msgstr "[!! Šëñđ áñšŵëŕ ~~~~~ !!]"
+
+msgid "ui.arena.battle.teammate_reconnecting"
+msgstr "[!! Å ţëáɱɱáţë ïš ŕëçöññëçţïñğ… ~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.coach"
+msgstr "[!! Pïçķ á ɱöđë ýöü ĺïķë, ţĥëñ þŕëšš Fïñđ ɱáţçĥ! ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.duel.accept"
+msgstr "[!! Åççëþţ ~~~ !!]"
+
+msgid "ui.arena.duel.decline"
+msgstr "[!! Ñöţ ñöŵ ~~~ !!]"
+
+msgid "ui.arena.duel.incoming"
+msgstr "[!! {nickname} çĥáĺĺëñğëš ýöü ïñ {subject}! ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.duel.incoming_title"
+msgstr "[!! Å çĥáĺĺëñğë ~~~~~ !!]"
+
+msgid "ui.arena.duel.later"
+msgstr "[!! Ñöţ ñöŵ ~~~ !!]"
+
+msgid "ui.arena.duel.no_friends"
+msgstr "[!! Ýöü ĥávë ñö ƒŕïëñđš öñ ýöüŕ ĺïšţ ýëţ. ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.duel.open"
+msgstr "[!! Çĥáĺĺëñğë á ƒŕïëñđ ~~~~~~~~ !!]"
+
+msgid "ui.arena.duel.pick_friend"
+msgstr "[!! Pïçķ á ƒŕïëñđ ~~~~~~ !!]"
+
+msgid "ui.arena.duel.send"
+msgstr "[!! Šëñđ çĥáĺĺëñğë ~~~~~~ !!]"
+
+msgid "ui.arena.duel.sent"
+msgstr "[!! Šëñţ! Ýöüŕ ƒŕïëñđ ĥáš {seconds} šëçöñđš ţö áñšŵëŕ. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.duel.title"
+msgstr "[!! Çĥáĺĺëñğë á ƒŕïëñđ ~~~~~~~~ !!]"
+
+msgid "ui.arena.error.ANSWER_ALREADY_SUBMITTED"
+msgstr "[!! Ýöü áĺŕëáđý áñšŵëŕëđ ţĥïš öñë. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.ANSWER_LATE"
+msgstr "[!! Ţïɱë ŵáš üþ, ţĥïš áñšŵëŕ đïđ ñöţ çöüñţ. Ţĥáţ ïš öķáý! ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.CONFLICT"
+msgstr "[!! Šöɱëţĥïñğ çĥáñğëđ, þĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.DUEL_EXPIRED"
+msgstr "[!! Ţĥë çĥáĺĺëñğë ĥáš ëxþïŕëđ. ~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.MATCH_NOT_ACTIVE"
+msgstr "[!! Ţĥë ɱáţçĥ ĥáš ɱövëđ öñ, þĺëášë ŵáïţ. ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.MM_TICKET_ALREADY_ACTIVE"
+msgstr "[!! Ýöü áŕë áĺŕëáđý ïñ ţĥë qüëüë. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.NETWORK_ERROR"
+msgstr "[!! Ñö çöññëçţïöñ, þĺëášë ţŕý áğáïñ ŵĥëñ ýöü áŕë öñĺïñë. ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.NOT_FOUND"
+msgstr "[!! Ñöţ ƒöüñđ. ~~~~ !!]"
+
+msgid "ui.arena.error.PARTY_MEMBER_NOT_ONLINE"
+msgstr "[!! Å þáŕţý ɱëɱƀëŕ ïš ñöţ öñĺïñë. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.PARTY_NOT_LEADER"
+msgstr "[!! Öñĺý ţĥë þáŕţý ĺëáđëŕ çáñ ƒïñđ á ɱáţçĥ ƒöŕ ţĥë þáŕţý. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.POLICY_DENIED"
+msgstr "[!! Ţĥïš ɱöđë ïš ñöţ öþëñ ƒöŕ ýöü ŕïğĥţ ñöŵ. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.PROPOSAL_EXPIRED"
+msgstr "[!! Ţĥë ɱáţçĥ ïñvïţë ĥáš ëxþïŕëđ. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.RATE_LIMITED"
+msgstr "[!! Pĺëášë ţŕý áğáïñ ïñ á ɱöɱëñţ. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.SOCIAL_SCOPE_VIOLATION"
+msgstr "[!! Ţĥïš çĥáĺĺëñğë çöüĺđ ñöţ ƀë šëñţ. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.UNAVAILABLE"
+msgstr "[!! Ţĥë áŕëñá ïš ƀüšý, þĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.error.generic"
+msgstr "[!! Šöɱëţĥïñğ ŵëñţ ŵŕöñğ, þĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.find_match"
+msgstr "[!! Fïñđ ɱáţçĥ ~~~~ !!]"
+
+msgid "ui.arena.history.all"
+msgstr "[!! Åĺĺ ~~ !!]"
+
+msgid "ui.arena.history.back"
+msgstr "[!! Ɓáçķ ~~ !!]"
+
+msgid "ui.arena.history.empty"
+msgstr "[!! Ñö ɱáţçĥëš ýëţ. Ğö ţö Pĺáý ţö šţáŕţ! ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.history.more"
+msgstr "[!! Šĥöŵ ɱöŕë ~~~~ !!]"
+
+msgid "ui.arena.history.view"
+msgstr "[!! Vïëŵ ~~ !!]"
+
+msgid "ui.arena.history.void"
+msgstr "[!! Çáñçëĺĺëđ ɱáţçĥ ~~~~~~ !!]"
+
+msgid "ui.arena.history.with"
+msgstr "[!! Ŵïţĥ: {names} ~~~~~~ !!]"
+
+msgid "ui.arena.history.you"
+msgstr "[!! Ýöü ~~ !!]"
+
+msgid "ui.arena.mode.battle_1v1"
+msgstr "[!! 1v1 Ɓŕáïñ Ɓáţţĺë ~~~~~~~ !!]"
+
+msgid "ui.arena.mode.battle_1v1.hint"
+msgstr "[!! Pĺáý áğáïñšţ öñë ƒŕïëñđ ~~~~~~~~~~ !!]"
+
+msgid "ui.arena.mode.chosen"
+msgstr "[!! Çĥöšëñ ~~~ !!]"
+
+msgid "ui.arena.mode.coop_challenge"
+msgstr "[!! Çö-öþ Çĥáĺĺëñğë ~~~~~~ !!]"
+
+msgid "ui.arena.mode.coop_challenge.hint"
+msgstr "[!! Ɓëáţ ţĥë çĥáĺĺëñğë ţöğëţĥëŕ ~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.mode.other"
+msgstr "[!! Máţçĥ ~~ !!]"
+
+msgid "ui.arena.mode.ranked"
+msgstr "[!! Ŕáñķëđ ~~~ !!]"
+
+msgid "ui.arena.mode.team_battle"
+msgstr "[!! Ţëáɱ Ɓáţţĺë ~~~~~ !!]"
+
+msgid "ui.arena.mode.team_battle.hint"
+msgstr "[!! Pĺáý ţöğëţĥëŕ áš á ţëáɱ ~~~~~~~~~~ !!]"
+
+msgid "ui.arena.mode.timed_quiz"
+msgstr "[!! Ţïɱëđ Qüïž ~~~~ !!]"
+
+msgid "ui.arena.mode.timed_quiz.hint"
+msgstr "[!! Ţĥë ŵĥöĺë ğŕáđë þĺáýš ~~~~~~~~~ !!]"
+
+msgid "ui.arena.mode.tournament"
+msgstr "[!! Ţöüŕñáɱëñţ ~~~~ !!]"
+
+msgid "ui.arena.mode.tournament.hint"
+msgstr "[!! Öñ ţĥë šçĥööĺ šçĥëđüĺë ~~~~~~~~~ !!]"
+
+msgid "ui.arena.mode.unranked"
+msgstr "[!! Pŕáçţïçë, ñöţ ŕáñķëđ ~~~~~~~~ !!]"
+
+msgid "ui.arena.modes.empty"
+msgstr "[!! Ñö ɱáţçĥ ɱöđëš áŕë öþëñ ŕïğĥţ ñöŵ. Çöɱë ƀáçķ ĺáţëŕ! ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.queue.again"
+msgstr "[!! Šëáŕçĥ áğáïñ ~~~~~ !!]"
+
+msgid "ui.arena.queue.cancel"
+msgstr "[!! Çáñçëĺ ~~~ !!]"
+
+msgid "ui.arena.queue.found"
+msgstr "[!! Máţçĥ ƒöüñđ! ~~~~~ !!]"
+
+msgid "ui.arena.queue.lost"
+msgstr "[!! Ţĥë qüëüë ĥáš ëñđëđ, þĺëášë šëáŕçĥ áğáïñ. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.queue.other_mode"
+msgstr "[!! Çĥööšë áñöţĥëŕ ɱöđë ~~~~~~~~ !!]"
+
+msgid "ui.arena.queue.requeued"
+msgstr "[!! Ţĥë ĺášţ ɱáţçĥ ŵáš ñöţ ŕëáđý, ýöü ķëþţ ýöüŕ þĺáçë ïñ ĺïñë. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.queue.robot"
+msgstr "[!! Pŕáçţïšë ŵïţĥ Ŕöƀöţ ~~~~~~~~ !!]"
+
+msgid "ui.arena.queue.robot_hint"
+msgstr "[!! Ŵáïţïñğ á ŵĥïĺë? Ýöü çáñ þŕáçţïšë ŵïţĥ ţĥë Ŕöƀöţ (ñöţ ŕáñķëđ). ~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.queue.searching"
+msgstr "[!! Fïñđïñğ á ɱáţçĥ… {time} · {mode} ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.queue.timeout"
+msgstr "[!! Ñö ɱáţçĥ ţĥïš ţïɱë. ~~~~~~~~ !!]"
+
+msgid "ui.arena.queue.timeout_hint"
+msgstr "[!! Ţŕý áñöţĥëŕ ɱöđë öŕ šëáŕçĥ áğáïñ! ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.queue.widened"
+msgstr "[!! Ĺööķïñğ á ĺïţţĺë ŵïđëŕ ƒöŕ ýöü. ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.ready.accept"
+msgstr "[!! Ĵöïñ ɱáţçĥ ~~~~ !!]"
+
+msgid "ui.arena.ready.decline"
+msgstr "[!! Ñöţ ñöŵ ~~~ !!]"
+
+msgid "ui.arena.ready.opponent_hidden"
+msgstr "[!! Å ƒŕïëñđ ïš ŵáïţïñğ ƒöŕ ýöü! ~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.ready.press"
+msgstr "[!! Pŕëšš Ĵöïñ ɱáţçĥ! ~~~~~~~ !!]"
+
+msgid "ui.arena.ready.seconds"
+msgstr "[!! Ĵöïñ ŵïţĥïñ {seconds} šëçöñđš ~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.ready.title"
+msgstr "[!! Máţçĥ ƒöüñđ! ~~~~~ !!]"
+
+msgid "ui.arena.ready.waiting"
+msgstr "[!! Ŵáïţïñğ ƒöŕ ţĥë öţĥëŕš… ({accepted}/{total}) ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.result.abandoned"
+msgstr "[!! Ţĥë ɱáţçĥ ëñđëđ ëáŕĺý. ~~~~~~~~~ !!]"
+
+msgid "ui.arena.result.again"
+msgstr "[!! Pĺáý áğáïñ ~~~~ !!]"
+
+msgid "ui.arena.result.back"
+msgstr "[!! Ɓáçķ ţö Åŕëñá ~~~~~~ !!]"
+
+msgid "ui.arena.result.draw"
+msgstr "[!! Å đŕáŵ! Ýöü ƀöţĥ đïđ ğŕëáţ! ~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.result.encouragement"
+msgstr "[!! Ýöü ţŕïëđ ŕëáĺĺý ĥáŕđ! Ĺëţ üš ŕëvïëŵ ţĥïš ţöþïç áñđ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.result.no_contest"
+msgstr "[!! Ţĥïš ɱáţçĥ đöëš ñöţ çöüñţ. ~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.result.not_won"
+msgstr "[!! Ñöţ ţĥïš ţïɱë, ýöü đïđ ğŕëáţ öñ {topic}! ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.result.points"
+msgstr "[!! +{points} çöɱþëţïţïöñ þöïñţš ~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.result.quiz_done"
+msgstr "[!! Ýöü ƒïñïšĥëđ ţĥë qüïž! Ţĥáñķš ƒöŕ ĥëĺþïñğ öüţ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.result.quiz_rank"
+msgstr "[!! Ýöü þĺáçëđ {rank} ţĥïš ŕöüñđ ~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.result.quiz_top"
+msgstr "[!! Ţöþ þĺáýëŕš: {names} ~~~~~~~~ !!]"
+
+msgid "ui.arena.result.score"
+msgstr "[!! Ýöü šçöŕëđ {score} · {correct}/{total} çöŕŕëçţ ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.result.topic_any"
+msgstr "[!! ţĥëšë qüëšţïöñš ~~~~~~ !!]"
+
+msgid "ui.arena.result.void"
+msgstr "[!! Ţĥë ɱáţçĥ ŵáš çáñçëĺĺëđ áñđ đöëš ñöţ çöüñţ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.result.win"
+msgstr "[!! Ýöü ŵöñ! Ğŕëáţ ĵöƀ! ~~~~~~~~ !!]"
+
+msgid "ui.arena.reveal.correct"
+msgstr "[!! Çöŕŕëçţ! ~~~~ !!]"
+
+msgid "ui.arena.reveal.no_answer"
+msgstr "[!! Ýöü đïđ ñöţ áñšŵëŕ ţĥïš öñë ïñ ţïɱë. ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.reveal.points"
+msgstr "[!! +{points} þöïñţš ~~~~~~~ !!]"
+
+msgid "ui.arena.reveal.speed_bonus"
+msgstr "[!! Šþëëđ ƀöñüš +{bonus} ~~~~~~~~ !!]"
+
+msgid "ui.arena.reveal.try"
+msgstr "[!! Ñöţ ţĥïš ţïɱë, ţĥáţ ïš öķáý! ~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.review.question"
+msgstr "[!! Qüëšţïöñ {n}: {text} ~~~~~~~~ !!]"
+
+msgid "ui.arena.review.right"
+msgstr "[!! Ýöü ğöţ ïţ ŕïğĥţ ~~~~~~~ !!]"
+
+msgid "ui.arena.review.skipped"
+msgstr "[!! Ýöü đïđ ñöţ áñšŵëŕ ţĥïš öñë ~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.review.title"
+msgstr "[!! Qüëšţïöñ ŕëvïëŵ ~~~~~~ !!]"
+
+msgid "ui.arena.review.to_practice"
+msgstr "[!! Qüëšţïöñš ţö ŕëvïëŵ ~~~~~~~~ !!]"
+
+msgid "ui.arena.review.try"
+msgstr "[!! Ĺëţ üš ŕëvïëŵ ţĥïš öñë ~~~~~~~~~ !!]"
+
+msgid "ui.arena.safety.blocked"
+msgstr "[!! Ţĥïš þĺáýëŕ ïš ƀĺöçķëđ. ~~~~~~~~~~ !!]"
+
+msgid "ui.arena.safety.reported"
+msgstr "[!! Ţĥáñķš ƒöŕ ţëĺĺïñğ ţĥë ţëáçĥëŕš. ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.safety.title"
+msgstr "[!! Pĺáýëŕš ŵïţĥ ýöü ~~~~~~~ !!]"
+
+msgid "ui.arena.subject.title"
+msgstr "[!! Šüƀĵëçţ ~~~ !!]"
+
+msgid "ui.arena.subject.unknown"
+msgstr "[!! Šüƀĵëçţ ~~~ !!]"
+
+msgid "ui.arena.tab.history"
+msgstr "[!! Ĥïšţöŕý ~~~ !!]"
+
+msgid "ui.arena.tab.leaderboard"
+msgstr "[!! Ĺëáđëŕƀöáŕđš ~~~~~ !!]"
+
+msgid "ui.arena.tab.play"
+msgstr "[!! Pĺáý ~~ !!]"
+
+msgid "ui.arena.tab.tournaments"
+msgstr "[!! Ţöüŕñáɱëñţš ~~~~~ !!]"
+
+msgid "ui.arena.tier.label"
+msgstr "[!! Ţïëŕ: {tier} ~~~~~ !!]"
+
+msgid "ui.arena.tier.provisional"
+msgstr "[!! Pĺáçëɱëñţ ({played}/{required}) ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.arena.tier.updating"
+msgstr "[!! Üþđáţïñğ ţïëŕ ~~~~~~ !!]"
+
+msgid "ui.arena.title"
+msgstr "[!! Åŕëñá ~~ !!]"
+
+msgid "ui.arena.topic.all"
+msgstr "[!! Åĺĺ ţöþïçš ~~~~ !!]"
+
+msgid "ui.arena.topic.title"
+msgstr "[!! Ţöþïç ~~ !!]"
+
 msgid "ui.audio.coach_again"
 msgstr "[!! Pŕëšš Ĺïšţëñ áğáïñ ţö ĥëáŕ ïţ öñçë ɱöŕë! ~~~~~~~~~~~~~~~~ !!]"
 
@@ -1823,6 +2216,57 @@ msgstr "[!! Fïñïšĥëđ á ŵëëķĺý qüëšţ ~~~~~~~~~~ !!]"
 msgid "ui.journey.title"
 msgstr "[!! Mý ĵöüŕñëý ~~~~ !!]"
 
+msgid "ui.leaderboard.around_me"
+msgstr "[!! Åŕöüñđ ýöü ~~~~ !!]"
+
+msgid "ui.leaderboard.closed"
+msgstr "[!! Ţĥïš ƀöáŕđ ïš ñöţ öþëñ ñöŵ. ~~~~~~~~~~~ !!]"
+
+msgid "ui.leaderboard.empty"
+msgstr "[!! Ţĥëŕë áŕë ñö ĺëáđëŕƀöáŕđš ƒöŕ ýöü ŕïğĥţ ñöŵ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.leaderboard.goal.coach"
+msgstr "[!! Ẹvëŕý ŕïğĥţ áñšŵëŕ ĥëĺþš ýöüŕ ğŕáđë ŕëáçĥ ţĥë ğöáĺ! ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.leaderboard.goal.helpers"
+msgstr "[!! {count} çĺáššɱáţëš ĥëĺþëđ ~~~~~~~~~~ !!]"
+
+msgid "ui.leaderboard.goal.mine"
+msgstr "[!! Ýöü áđđëđ {value} ~~~~~~~ !!]"
+
+msgid "ui.leaderboard.goal.reached"
+msgstr "[!! Ŕëáçĥëđ! ~~~~ !!]"
+
+msgid "ui.leaderboard.goal.title"
+msgstr "[!! Ğŕáđë ğöáĺ ~~~~ !!]"
+
+msgid "ui.leaderboard.goal.title_grade"
+msgstr "[!! Ğŕáđë {grade} ğöáĺ ~~~~~~~~ !!]"
+
+msgid "ui.leaderboard.goal.value"
+msgstr "[!! Ŵĥöĺë ğŕáđë: {current}/{target} ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.leaderboard.me"
+msgstr "[!! Ýöü ~~ !!]"
+
+msgid "ui.leaderboard.no_rows"
+msgstr "[!! Ñöƀöđý ĥëŕë ýëţ, ýöü çáñ ƀë ţĥë ƒïŕšţ! ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.leaderboard.percentile"
+msgstr "[!! Ýöü áŕë ïñ ţĥë ţöþ {bucket}%, ķëëþ ğöïñğ! ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.leaderboard.rank"
+msgstr "[!! #{rank} ~~~ !!]"
+
+msgid "ui.leaderboard.refresh"
+msgstr "[!! Ŕëƒŕëšĥ ~~~ !!]"
+
+msgid "ui.leaderboard.stale"
+msgstr "[!! Üþđáţïñğ ~~~~ !!]"
+
+msgid "ui.leaderboard.value"
+msgstr "[!! {value} þţš ~~~~~ !!]"
+
 msgid "ui.learning.no_translation"
 msgstr "[!! Ẹñğĺïšĥ vëŕšïöñ ñöţ áváïĺáƀĺë ~~~~~~~~~~~~ !!]"
 
@@ -2069,11 +2513,17 @@ msgstr "[!! Ŵáţçĥ áğáïñ ~~~~~ !!]"
 msgid "ui.menu.achievements"
 msgstr "[!! Åçĥïëvëɱëñţš & Çöĺĺëçţïöñš ~~~~~~~~~~~ !!]"
 
+msgid "ui.menu.arena"
+msgstr "[!! Åŕëñá ~~ !!]"
+
 msgid "ui.menu.challenges"
 msgstr "[!! Çĥáĺĺëñğë Möüñţáïñ ~~~~~~~~ !!]"
 
 msgid "ui.menu.journey"
 msgstr "[!! Mý ĵöüŕñëý ~~~~ !!]"
+
+msgid "ui.menu.leaderboard"
+msgstr "[!! Ĺëáđëŕƀöáŕđš ~~~~~ !!]"
 
 msgid "ui.menu.shop"
 msgstr "[!! Šĥöþ ~~ !!]"
@@ -3157,6 +3607,168 @@ msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ ŕüñš. Åñšŵëŕ ţĥ�
 
 msgid "ui.simulation.steps"
 msgstr "[!! Šţëþš ~~ !!]"
+
+msgid "ui.tournament.back"
+msgstr "[!! Ɓáçķ ~~ !!]"
+
+msgid "ui.tournament.bracket.done"
+msgstr "[!! Ýöü þĺáýëđ ~~~~ !!]"
+
+msgid "ui.tournament.bracket.empty"
+msgstr "[!! Ţĥë ƀŕáçķëţ áþþëáŕš ŵĥëñ ţĥë ţöüŕñáɱëñţ šţáŕţš. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.tournament.bracket.round"
+msgstr "[!! Ŕöüñđ {round} ~~~~~~ !!]"
+
+msgid "ui.tournament.bracket.tbd"
+msgstr "[!! Ţö ƀë đëçïđëđ ~~~~~~ !!]"
+
+msgid "ui.tournament.bracket.title"
+msgstr "[!! Ɓŕáçķëţ ~~~ !!]"
+
+msgid "ui.tournament.bracket.versus"
+msgstr "[!! Vëŕšüš {name} ~~~~~~ !!]"
+
+msgid "ui.tournament.bracket.winner"
+msgstr "[!! Ŵïññëŕ ~~~ !!]"
+
+msgid "ui.tournament.bracket.won"
+msgstr "[!! Ýöü ŵöñ! ~~~~ !!]"
+
+msgid "ui.tournament.challenge.join"
+msgstr "[!! Ĵöïñ ŕööɱ ~~~~ !!]"
+
+msgid "ui.tournament.challenge.not_open"
+msgstr "[!! Ţĥë ŕööɱ öþëñš á ĺïţţĺë ƀëƒöŕë ţĥë šţáŕţ. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.tournament.challenge.when"
+msgstr "[!! Šţáŕţš: {time} ~~~~~~ !!]"
+
+msgid "ui.tournament.check_in"
+msgstr "[!! Çĥëçķ ïñ ~~~~ !!]"
+
+msgid "ui.tournament.check_in_opens"
+msgstr "[!! Çĥëçķ-ïñ öþëñš: {time} ~~~~~~~~~ !!]"
+
+msgid "ui.tournament.check_in_wait"
+msgstr "[!! Çĥëçķ-ïñ öþëñš öñ ţïɱë. ~~~~~~~~~~ !!]"
+
+msgid "ui.tournament.checked_in_done"
+msgstr "[!! Ýöü áŕë çĥëçķëđ ïñ áñđ ŕëáđý! ~~~~~~~~~~~~ !!]"
+
+msgid "ui.tournament.empty"
+msgstr "[!! Ţĥëŕë áŕë ñö ţöüŕñáɱëñţš ƒöŕ ýöü ŕïğĥţ ñöŵ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.tournament.entries"
+msgstr "[!! Šïğñëđ üþ: {count}/{max} ~~~~~~~~~~ !!]"
+
+msgid "ui.tournament.entry.champion"
+msgstr "[!! Çĥáɱþïöñ! ~~~~ !!]"
+
+msgid "ui.tournament.entry.checked_in"
+msgstr "[!! Çĥëçķëđ ïñ ~~~~ !!]"
+
+msgid "ui.tournament.entry.confirmed"
+msgstr "[!! Çöñƒïŕɱëđ ~~~~ !!]"
+
+msgid "ui.tournament.entry.eliminated"
+msgstr "[!! Fïñïšĥëđ þĺáýïñğ ~~~~~~~ !!]"
+
+msgid "ui.tournament.entry.registered"
+msgstr "[!! Ýöü šïğñëđ üþ ~~~~~~ !!]"
+
+msgid "ui.tournament.entry.withdrawn"
+msgstr "[!! Ñöţ ţáķïñğ þáŕţ ~~~~~~ !!]"
+
+msgid "ui.tournament.error.check_in_closed"
+msgstr "[!! Çĥëçķ-ïñ ĥáš çĺöšëđ. ~~~~~~~~ !!]"
+
+msgid "ui.tournament.error.full"
+msgstr "[!! Ţĥë ţöüŕñáɱëñţ ïš ƒüĺĺ. ~~~~~~~~~~ !!]"
+
+msgid "ui.tournament.error.not_eligible"
+msgstr "[!! Ţĥïš ţöüŕñáɱëñţ ïš ñöţ ƒöŕ ýöü. ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.tournament.error.registration_closed"
+msgstr "[!! Šïğñ-üþ ĥáš çĺöšëđ. ~~~~~~~~ !!]"
+
+msgid "ui.tournament.error.window_closed"
+msgstr "[!! Ïţ ïš ñöţ ţĥë ŕïğĥţ ţïɱë ƒöŕ ţĥïš. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.tournament.more"
+msgstr "[!! Šĥöŵ ɱöŕë ~~~~ !!]"
+
+msgid "ui.tournament.node.awaiting_confirm"
+msgstr "[!! Ŵáïţïñğ ţö çöñƒïŕɱ ~~~~~~~~ !!]"
+
+msgid "ui.tournament.node.bye"
+msgstr "[!! Mövëš öñ ~~~~ !!]"
+
+msgid "ui.tournament.node.confirmed"
+msgstr "[!! Đöñë ~~ !!]"
+
+msgid "ui.tournament.node.in_match"
+msgstr "[!! Pĺáýïñğ ñöŵ ~~~~~ !!]"
+
+msgid "ui.tournament.node.pending"
+msgstr "[!! Ŵáïţïñğ ƒöŕ þĺáýëŕš ~~~~~~~~ !!]"
+
+msgid "ui.tournament.node.scheduled"
+msgstr "[!! Šçĥëđüĺëđ ~~~~ !!]"
+
+msgid "ui.tournament.node.void"
+msgstr "[!! Ñöţ þĺáýëđ ~~~~ !!]"
+
+msgid "ui.tournament.register"
+msgstr "[!! Šïğñ üþ ~~~ !!]"
+
+msgid "ui.tournament.registered_done"
+msgstr "[!! Ýöü šïğñëđ üþ! ~~~~~~ !!]"
+
+msgid "ui.tournament.registration_closes"
+msgstr "[!! Šïğñ-üþ çĺöšëš: {time} ~~~~~~~~~ !!]"
+
+msgid "ui.tournament.starts"
+msgstr "[!! Šţáŕţš: {time} ~~~~~~ !!]"
+
+msgid "ui.tournament.status.cancelled"
+msgstr "[!! Çáñçëĺĺëđ ~~~~ !!]"
+
+msgid "ui.tournament.status.completed"
+msgstr "[!! Fïñïšĥëđ ~~~~ !!]"
+
+msgid "ui.tournament.status.in_progress"
+msgstr "[!! Ïñ þŕöğŕëšš ~~~~~ !!]"
+
+msgid "ui.tournament.status.published"
+msgstr "[!! Çöɱïñğ šööñ ~~~~~ !!]"
+
+msgid "ui.tournament.status.registration_closed"
+msgstr "[!! Šïğñ-üþ çĺöšëđ ~~~~~~ !!]"
+
+msgid "ui.tournament.status.registration_open"
+msgstr "[!! Šïğñ-üþ öþëñ ~~~~~ !!]"
+
+msgid "ui.tournament.status.scheduled"
+msgstr "[!! Šçĥëđüĺëđ ~~~~ !!]"
+
+msgid "ui.tournament.status.seeding"
+msgstr "[!! Máķïñğ þáïŕš ~~~~~ !!]"
+
+msgid "ui.tournament.title"
+msgstr "[!! Ţöüŕñáɱëñţ ~~~~ !!]"
+
+msgid "ui.tournament.toast.match_soon"
+msgstr "[!! Ýöüŕ {name} ɱáţçĥ šţáŕţš ïñ {minutes} ɱïñüţëš! ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.tournament.toast.open"
+msgstr "[!! Vïëŵ ~~ !!]"
+
+msgid "ui.tournament.view"
+msgstr "[!! Vïëŵ ~~ !!]"
+
+msgid "ui.tournament.withdraw"
+msgstr "[!! Ŵïţĥđŕáŵ ~~~~ !!]"
 
 msgid "ui.video.coach_branch"
 msgstr "[!! Ĥöŵ šĥöüĺđ ţĥë šţöŕý ğö öñ? ~~~~~~~~~~~ !!]"

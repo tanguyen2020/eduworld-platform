@@ -40,7 +40,10 @@ const MARK_READ_MAX: int = 100
 ## The badge text caps at "99+" (HUD).
 const BADGE_CAP: int = 99
 ## Kinds that pop a short toast (F123-AC-16); the others go to the inbox + badge only (SOCIAL_SYSTEM §8).
-const POPUP_KINDS: PackedStringArray = ["friend_request", "party_invitation", "assignment_new", "assignment_results_released"]
+## F109-AC-26: `tournament_update` too (the toast opens the tournament tab of the arena).
+const POPUP_KINDS: PackedStringArray = [
+	"friend_request", "party_invitation", "assignment_new", "assignment_results_released", "tournament_update",
+]
 const STATUS_NOT_STARTED: String = "not_started"
 const CODE_PENDING: String = "assignments_pending"
 const KIND_LOCAL_PENDING: String = "assignment_new"
@@ -56,6 +59,9 @@ const ACTION_SCREENS: Dictionary = {
 	"open_friend_requests": [&"friend_requests", {}],
 	"open_party_invitation": [&"party", {"view": "invitations"}],
 }
+## F109-AC-26: kinds that open a screen without an `action` — the screen gets the `ref_id` as `tournament_id`
+## (`ref_type = tournament`).
+const KIND_SCREENS: Dictionary = {"tournament_update": [&"arena", {"tab": "tournaments"}]}
 ## Actions whose target screen needs the action id (F102: the invitation to show, or "Lời mời đã hết hạn").
 const ACTION_WITH_ID: PackedStringArray = ["open_party_invitation"]
 
@@ -200,6 +206,9 @@ func can_open(item: NotificationModel) -> bool:
 
 ## Screen id of the item's action in this client, or &"" (no action, or a screen still to come).
 func target_screen(item: NotificationModel) -> StringName:
+	if item != null and not ACTION_SCREENS.has(item.action_kind) and KIND_SCREENS.has(item.kind):
+		var by_kind: StringName = (KIND_SCREENS[item.kind] as Array)[0] as StringName
+		return by_kind if UiScreenRegistry.has(by_kind) else &""
 	if item == null or not ACTION_SCREENS.has(item.action_kind):
 		return &""
 	var screen: StringName = (ACTION_SCREENS[item.action_kind] as Array)[0] as StringName
@@ -217,6 +226,12 @@ func open(item: NotificationModel) -> bool:
 	var screen: StringName = target_screen(item)
 	if screen.is_empty():
 		return false
+	if not ACTION_SCREENS.has(item.action_kind):
+		var kind_args: Dictionary = ((KIND_SCREENS[item.kind] as Array)[1] as Dictionary).duplicate()
+		if item.ref_type == "tournament" and Uuid.is_valid(item.ref_id):
+			kind_args["tournament_id"] = item.ref_id
+		_emit_ui(screen, kind_args)
+		return true
 	var args: Dictionary = ((ACTION_SCREENS[item.action_kind] as Array)[1] as Dictionary).duplicate()
 	if item.action_kind in ACTION_WITH_ID and not item.action_id.is_empty():
 		args["id"] = item.action_id

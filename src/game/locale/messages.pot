@@ -177,6 +177,399 @@ msgstr ""
 msgid "ui.activity_player.waiting"
 msgstr ""
 
+msgid "ui.arena.battle.finishing"
+msgstr ""
+
+msgid "ui.arena.battle.my_team"
+msgstr ""
+
+msgid "ui.arena.battle.next_soon"
+msgstr ""
+
+msgid "ui.arena.battle.opponent_reconnecting"
+msgstr ""
+
+msgid "ui.arena.battle.other_team"
+msgstr ""
+
+msgid "ui.arena.battle.paused"
+msgstr ""
+
+msgid "ui.arena.battle.preparing"
+msgstr ""
+
+msgid "ui.arena.battle.progress"
+msgstr ""
+
+msgid "ui.arena.battle.reconnecting"
+msgstr ""
+
+msgid "ui.arena.battle.recorded"
+msgstr ""
+
+msgid "ui.arena.battle.robot"
+msgstr ""
+
+msgid "ui.arena.battle.role_primary"
+msgstr ""
+
+msgid "ui.arena.battle.role_support"
+msgstr ""
+
+msgid "ui.arena.battle.score"
+msgstr ""
+
+msgid "ui.arena.battle.score_hidden"
+msgstr ""
+
+msgid "ui.arena.battle.seconds"
+msgstr ""
+
+msgid "ui.arena.battle.self_reconnecting"
+msgstr ""
+
+msgid "ui.arena.battle.submit"
+msgstr ""
+
+msgid "ui.arena.battle.teammate_reconnecting"
+msgstr ""
+
+msgid "ui.arena.coach"
+msgstr ""
+
+msgid "ui.arena.duel.accept"
+msgstr ""
+
+msgid "ui.arena.duel.decline"
+msgstr ""
+
+msgid "ui.arena.duel.incoming"
+msgstr ""
+
+msgid "ui.arena.duel.incoming_title"
+msgstr ""
+
+msgid "ui.arena.duel.later"
+msgstr ""
+
+msgid "ui.arena.duel.no_friends"
+msgstr ""
+
+msgid "ui.arena.duel.open"
+msgstr ""
+
+msgid "ui.arena.duel.pick_friend"
+msgstr ""
+
+msgid "ui.arena.duel.send"
+msgstr ""
+
+msgid "ui.arena.duel.sent"
+msgstr ""
+
+msgid "ui.arena.duel.title"
+msgstr ""
+
+msgid "ui.arena.error.ANSWER_ALREADY_SUBMITTED"
+msgstr ""
+
+msgid "ui.arena.error.ANSWER_LATE"
+msgstr ""
+
+msgid "ui.arena.error.CONFLICT"
+msgstr ""
+
+msgid "ui.arena.error.DUEL_EXPIRED"
+msgstr ""
+
+msgid "ui.arena.error.MATCH_NOT_ACTIVE"
+msgstr ""
+
+msgid "ui.arena.error.MM_TICKET_ALREADY_ACTIVE"
+msgstr ""
+
+msgid "ui.arena.error.NETWORK_ERROR"
+msgstr ""
+
+msgid "ui.arena.error.NOT_FOUND"
+msgstr ""
+
+msgid "ui.arena.error.PARTY_MEMBER_NOT_ONLINE"
+msgstr ""
+
+msgid "ui.arena.error.PARTY_NOT_LEADER"
+msgstr ""
+
+msgid "ui.arena.error.POLICY_DENIED"
+msgstr ""
+
+msgid "ui.arena.error.PROPOSAL_EXPIRED"
+msgstr ""
+
+msgid "ui.arena.error.RATE_LIMITED"
+msgstr ""
+
+msgid "ui.arena.error.SOCIAL_SCOPE_VIOLATION"
+msgstr ""
+
+msgid "ui.arena.error.UNAVAILABLE"
+msgstr ""
+
+msgid "ui.arena.error.generic"
+msgstr ""
+
+msgid "ui.arena.find_match"
+msgstr ""
+
+msgid "ui.arena.history.all"
+msgstr ""
+
+msgid "ui.arena.history.back"
+msgstr ""
+
+msgid "ui.arena.history.empty"
+msgstr ""
+
+msgid "ui.arena.history.more"
+msgstr ""
+
+msgid "ui.arena.history.view"
+msgstr ""
+
+msgid "ui.arena.history.void"
+msgstr ""
+
+msgid "ui.arena.history.with"
+msgstr ""
+
+msgid "ui.arena.history.you"
+msgstr ""
+
+msgid "ui.arena.mode.battle_1v1"
+msgstr ""
+
+msgid "ui.arena.mode.battle_1v1.hint"
+msgstr ""
+
+msgid "ui.arena.mode.chosen"
+msgstr ""
+
+msgid "ui.arena.mode.coop_challenge"
+msgstr ""
+
+msgid "ui.arena.mode.coop_challenge.hint"
+msgstr ""
+
+msgid "ui.arena.mode.other"
+msgstr ""
+
+msgid "ui.arena.mode.ranked"
+msgstr ""
+
+msgid "ui.arena.mode.team_battle"
+msgstr ""
+
+msgid "ui.arena.mode.team_battle.hint"
+msgstr ""
+
+msgid "ui.arena.mode.timed_quiz"
+msgstr ""
+
+msgid "ui.arena.mode.timed_quiz.hint"
+msgstr ""
+
+msgid "ui.arena.mode.tournament"
+msgstr ""
+
+msgid "ui.arena.mode.tournament.hint"
+msgstr ""
+
+msgid "ui.arena.mode.unranked"
+msgstr ""
+
+msgid "ui.arena.modes.empty"
+msgstr ""
+
+msgid "ui.arena.queue.again"
+msgstr ""
+
+msgid "ui.arena.queue.cancel"
+msgstr ""
+
+msgid "ui.arena.queue.found"
+msgstr ""
+
+msgid "ui.arena.queue.lost"
+msgstr ""
+
+msgid "ui.arena.queue.other_mode"
+msgstr ""
+
+msgid "ui.arena.queue.requeued"
+msgstr ""
+
+msgid "ui.arena.queue.robot"
+msgstr ""
+
+msgid "ui.arena.queue.robot_hint"
+msgstr ""
+
+msgid "ui.arena.queue.searching"
+msgstr ""
+
+msgid "ui.arena.queue.timeout"
+msgstr ""
+
+msgid "ui.arena.queue.timeout_hint"
+msgstr ""
+
+msgid "ui.arena.queue.widened"
+msgstr ""
+
+msgid "ui.arena.ready.accept"
+msgstr ""
+
+msgid "ui.arena.ready.decline"
+msgstr ""
+
+msgid "ui.arena.ready.opponent_hidden"
+msgstr ""
+
+msgid "ui.arena.ready.press"
+msgstr ""
+
+msgid "ui.arena.ready.seconds"
+msgstr ""
+
+msgid "ui.arena.ready.title"
+msgstr ""
+
+msgid "ui.arena.ready.waiting"
+msgstr ""
+
+msgid "ui.arena.result.abandoned"
+msgstr ""
+
+msgid "ui.arena.result.again"
+msgstr ""
+
+msgid "ui.arena.result.back"
+msgstr ""
+
+msgid "ui.arena.result.draw"
+msgstr ""
+
+msgid "ui.arena.result.encouragement"
+msgstr ""
+
+msgid "ui.arena.result.no_contest"
+msgstr ""
+
+msgid "ui.arena.result.not_won"
+msgstr ""
+
+msgid "ui.arena.result.points"
+msgstr ""
+
+msgid "ui.arena.result.quiz_done"
+msgstr ""
+
+msgid "ui.arena.result.quiz_rank"
+msgstr ""
+
+msgid "ui.arena.result.quiz_top"
+msgstr ""
+
+msgid "ui.arena.result.score"
+msgstr ""
+
+msgid "ui.arena.result.topic_any"
+msgstr ""
+
+msgid "ui.arena.result.void"
+msgstr ""
+
+msgid "ui.arena.result.win"
+msgstr ""
+
+msgid "ui.arena.reveal.correct"
+msgstr ""
+
+msgid "ui.arena.reveal.no_answer"
+msgstr ""
+
+msgid "ui.arena.reveal.points"
+msgstr ""
+
+msgid "ui.arena.reveal.speed_bonus"
+msgstr ""
+
+msgid "ui.arena.reveal.try"
+msgstr ""
+
+msgid "ui.arena.review.question"
+msgstr ""
+
+msgid "ui.arena.review.right"
+msgstr ""
+
+msgid "ui.arena.review.skipped"
+msgstr ""
+
+msgid "ui.arena.review.title"
+msgstr ""
+
+msgid "ui.arena.review.to_practice"
+msgstr ""
+
+msgid "ui.arena.review.try"
+msgstr ""
+
+msgid "ui.arena.safety.blocked"
+msgstr ""
+
+msgid "ui.arena.safety.reported"
+msgstr ""
+
+msgid "ui.arena.safety.title"
+msgstr ""
+
+msgid "ui.arena.subject.title"
+msgstr ""
+
+msgid "ui.arena.subject.unknown"
+msgstr ""
+
+msgid "ui.arena.tab.history"
+msgstr ""
+
+msgid "ui.arena.tab.leaderboard"
+msgstr ""
+
+msgid "ui.arena.tab.play"
+msgstr ""
+
+msgid "ui.arena.tab.tournaments"
+msgstr ""
+
+msgid "ui.arena.tier.label"
+msgstr ""
+
+msgid "ui.arena.tier.provisional"
+msgstr ""
+
+msgid "ui.arena.tier.updating"
+msgstr ""
+
+msgid "ui.arena.title"
+msgstr ""
+
+msgid "ui.arena.topic.all"
+msgstr ""
+
+msgid "ui.arena.topic.title"
+msgstr ""
+
 msgid "ui.audio.coach_again"
 msgstr ""
 
@@ -1815,6 +2208,57 @@ msgstr ""
 msgid "ui.journey.title"
 msgstr ""
 
+msgid "ui.leaderboard.around_me"
+msgstr ""
+
+msgid "ui.leaderboard.closed"
+msgstr ""
+
+msgid "ui.leaderboard.empty"
+msgstr ""
+
+msgid "ui.leaderboard.goal.coach"
+msgstr ""
+
+msgid "ui.leaderboard.goal.helpers"
+msgstr ""
+
+msgid "ui.leaderboard.goal.mine"
+msgstr ""
+
+msgid "ui.leaderboard.goal.reached"
+msgstr ""
+
+msgid "ui.leaderboard.goal.title"
+msgstr ""
+
+msgid "ui.leaderboard.goal.title_grade"
+msgstr ""
+
+msgid "ui.leaderboard.goal.value"
+msgstr ""
+
+msgid "ui.leaderboard.me"
+msgstr ""
+
+msgid "ui.leaderboard.no_rows"
+msgstr ""
+
+msgid "ui.leaderboard.percentile"
+msgstr ""
+
+msgid "ui.leaderboard.rank"
+msgstr ""
+
+msgid "ui.leaderboard.refresh"
+msgstr ""
+
+msgid "ui.leaderboard.stale"
+msgstr ""
+
+msgid "ui.leaderboard.value"
+msgstr ""
+
 msgid "ui.learning.no_translation"
 msgstr ""
 
@@ -2061,10 +2505,16 @@ msgstr ""
 msgid "ui.menu.achievements"
 msgstr ""
 
+msgid "ui.menu.arena"
+msgstr ""
+
 msgid "ui.menu.challenges"
 msgstr ""
 
 msgid "ui.menu.journey"
+msgstr ""
+
+msgid "ui.menu.leaderboard"
 msgstr ""
 
 msgid "ui.menu.shop"
@@ -3106,6 +3556,168 @@ msgid "ui.simulation.runs_exhausted"
 msgstr ""
 
 msgid "ui.simulation.steps"
+msgstr ""
+
+msgid "ui.tournament.back"
+msgstr ""
+
+msgid "ui.tournament.bracket.done"
+msgstr ""
+
+msgid "ui.tournament.bracket.empty"
+msgstr ""
+
+msgid "ui.tournament.bracket.round"
+msgstr ""
+
+msgid "ui.tournament.bracket.tbd"
+msgstr ""
+
+msgid "ui.tournament.bracket.title"
+msgstr ""
+
+msgid "ui.tournament.bracket.versus"
+msgstr ""
+
+msgid "ui.tournament.bracket.winner"
+msgstr ""
+
+msgid "ui.tournament.bracket.won"
+msgstr ""
+
+msgid "ui.tournament.challenge.join"
+msgstr ""
+
+msgid "ui.tournament.challenge.not_open"
+msgstr ""
+
+msgid "ui.tournament.challenge.when"
+msgstr ""
+
+msgid "ui.tournament.check_in"
+msgstr ""
+
+msgid "ui.tournament.check_in_opens"
+msgstr ""
+
+msgid "ui.tournament.check_in_wait"
+msgstr ""
+
+msgid "ui.tournament.checked_in_done"
+msgstr ""
+
+msgid "ui.tournament.empty"
+msgstr ""
+
+msgid "ui.tournament.entries"
+msgstr ""
+
+msgid "ui.tournament.entry.champion"
+msgstr ""
+
+msgid "ui.tournament.entry.checked_in"
+msgstr ""
+
+msgid "ui.tournament.entry.confirmed"
+msgstr ""
+
+msgid "ui.tournament.entry.eliminated"
+msgstr ""
+
+msgid "ui.tournament.entry.registered"
+msgstr ""
+
+msgid "ui.tournament.entry.withdrawn"
+msgstr ""
+
+msgid "ui.tournament.error.check_in_closed"
+msgstr ""
+
+msgid "ui.tournament.error.full"
+msgstr ""
+
+msgid "ui.tournament.error.not_eligible"
+msgstr ""
+
+msgid "ui.tournament.error.registration_closed"
+msgstr ""
+
+msgid "ui.tournament.error.window_closed"
+msgstr ""
+
+msgid "ui.tournament.more"
+msgstr ""
+
+msgid "ui.tournament.node.awaiting_confirm"
+msgstr ""
+
+msgid "ui.tournament.node.bye"
+msgstr ""
+
+msgid "ui.tournament.node.confirmed"
+msgstr ""
+
+msgid "ui.tournament.node.in_match"
+msgstr ""
+
+msgid "ui.tournament.node.pending"
+msgstr ""
+
+msgid "ui.tournament.node.scheduled"
+msgstr ""
+
+msgid "ui.tournament.node.void"
+msgstr ""
+
+msgid "ui.tournament.register"
+msgstr ""
+
+msgid "ui.tournament.registered_done"
+msgstr ""
+
+msgid "ui.tournament.registration_closes"
+msgstr ""
+
+msgid "ui.tournament.starts"
+msgstr ""
+
+msgid "ui.tournament.status.cancelled"
+msgstr ""
+
+msgid "ui.tournament.status.completed"
+msgstr ""
+
+msgid "ui.tournament.status.in_progress"
+msgstr ""
+
+msgid "ui.tournament.status.published"
+msgstr ""
+
+msgid "ui.tournament.status.registration_closed"
+msgstr ""
+
+msgid "ui.tournament.status.registration_open"
+msgstr ""
+
+msgid "ui.tournament.status.scheduled"
+msgstr ""
+
+msgid "ui.tournament.status.seeding"
+msgstr ""
+
+msgid "ui.tournament.title"
+msgstr ""
+
+msgid "ui.tournament.toast.match_soon"
+msgstr ""
+
+msgid "ui.tournament.toast.open"
+msgstr ""
+
+msgid "ui.tournament.view"
+msgstr ""
+
+msgid "ui.tournament.withdraw"
 msgstr ""
 
 msgid "ui.video.coach_branch"

@@ -41,6 +41,13 @@ const SCREENS: PackedStringArray = [
 	# F119: the party lobby with its chat open (phone overlay / PC column) and the chat dock of a team battle in each state.
 	"party_chat", "chat_team", "chat_menu", "chat_report", "chat_thanks", "chat_picker", "chat_blocked", "chat_muted",
 	"chat_closed", "chat_care", "chat_mini",
+	# F109: the Competition Arena (modes, leaderboards per server visibility, history, tournaments + bracket, duel), the
+	# HUD queue bar / ready check and the battle screen (question, answer recorded, reveal, team, reconnect, results).
+	"arena", "arena_leaderboard_goal", "arena_leaderboard_top", "arena_leaderboard_ranked", "arena_history",
+	"arena_history_detail", "arena_tournaments", "arena_tournament_bracket", "arena_duel", "arena_queue",
+	"arena_queue_timeout", "arena_ready_check", "arena_battle_question", "arena_battle_recorded", "arena_battle_reveal",
+	"arena_battle_team", "arena_battle_reconnect", "arena_result_win", "arena_result_loss", "arena_result_quiz_goal",
+	"arena_result_quiz_rank", "arena_result_cancelled",
 ]
 ## Sample look of the local player (catalog codes of the F070 fixture; display only).
 const SAMPLE_AVATAR: Dictionary = {
@@ -98,7 +105,12 @@ func run(args: PackedStringArray) -> int:
 				get_tree().root.size = size
 				AppState.set_grade_band(_band)
 				Settings.set_locale(locale, false)
-				var node: Node = await call("_screen_" + screen) as Node
+				var node: Node = null
+				if screen.begins_with("arena"):
+					# F109: every arena screen is one CompetitionScreens view.
+					node = await _arena_world("arena" if screen == "arena" else screen.trim_prefix("arena_"))
+				else:
+					node = await call("_screen_" + screen) as Node
 				if node == null:
 					printerr("capture_screens: %s could not be built" % screen)
 					continue
@@ -504,6 +516,26 @@ func _screen_chat_care() -> Node:
 
 func _screen_chat_mini() -> Node:
 	return await _chat_world("mini")
+
+
+# ---------- F109 arena ----------
+
+## The world with one arena state (CompetitionScreens) on a layer above it: the arena window / HUD queue bar / ready
+## check over the world, the battle screen covering it.
+func _arena_world(view: String) -> Node:
+	var world: Node = await _world()
+	var layer: CanvasLayer = CanvasLayer.new()
+	layer.name = "ArenaLayer"
+	layer.layer = 20
+	world.add_child(layer)
+	var screen: Control = Control.new()
+	screen.set_anchors_preset(Control.PRESET_FULL_RECT)
+	screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(screen)
+	await CompetitionScreens.build(view, screen, AppState.get_services(), _harness.http)
+	for i: int in 20:
+		await get_tree().process_frame
+	return world
 
 
 func _screen_about() -> Node:

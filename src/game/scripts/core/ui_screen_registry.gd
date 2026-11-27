@@ -9,16 +9,21 @@ extends RefCounted
 ## stays the F070 CustomizationStudio ("Phối đồ" in S08). F123: `notification_inbox` (HUD bell, a toast without a screen).
 ## F102: `party` (Party Lobby: HUD "Nhóm" / P, the pending invitations, the session countdown and summary; also the
 ## target of a `party_invitation` notification — args `{view: "invitations", id}`).
+## F109: `arena` (Đấu trường: HUD "Thêm" / K / NPC Trọng tài Sấm — args `{tab, tournament_id, duel}`), `leaderboard`
+## (the same screen on its "Bảng xếp hạng" tab — NPC `open_ui`), `battle` (the match screen — args `{match_id, mode}`).
 
 const SCREENS: Dictionary = {
 	&"achievements": "res://scenes/achievement/AchievementCollectionScreen.tscn",
 	&"activity_host": "res://scenes/learning/ActivityHost.tscn",
+	&"arena": "res://scenes/competition/ArenaScreen.tscn",
+	&"battle": "res://scenes/competition/BattleArena.tscn",
 	&"challenge_board": "res://scenes/challenge/ChallengeBoard.tscn",
 	&"challenge_result": "res://scenes/challenge/ChallengeResult.tscn",
 	&"exam_lobby": "res://scenes/exam/ExamLobby.tscn",
 	&"game_menu": "res://scenes/ui/hud/GameMenu.tscn",
 	&"inventory": "res://scenes/inventory/InventoryShopScreen.tscn",
 	&"journey": "res://scenes/progression/JourneyScreen.tscn",
+	&"leaderboard": "res://scenes/competition/LeaderboardScreen.tscn",
 	&"minigame_host": "res://scenes/minigames/MiniGameHost.tscn",
 	&"notification_inbox": "res://scenes/ui/notifications/NotificationInbox.tscn",
 	&"party": "res://scenes/social/PartyLobby.tscn",

@@ -31,6 +31,13 @@ var party: PartyService = null
 var chat: ChatService = null
 var social: SocialService = null
 var reports: ReportService = null
+## Competition arena (F109): modes, queue, ready check, duels (MatchmakingService); the match on screen (BattleClient);
+## boards + tiers (LeaderboardService); tournaments + grade challenges (TournamentService); match history (MatchHistoryService).
+var matchmaking: MatchmakingService = null
+var battle: BattleClient = null
+var leaderboards: LeaderboardService = null
+var tournaments: TournamentService = null
+var match_history: MatchHistoryService = null
 ## World of the student: areas, exploration, chapters, level sessions, discoveries, NPC dialogues (F071).
 var world: WorldService = null
 ## Quests of the student: list, delivery, accept/abandon, step reports, learning steps, realtime progress (F072).
@@ -98,6 +105,15 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	social.relation_changed.connect(func(user_id: String, _kind: String) -> void: chat.store.hide_user(user_id))
 	reports = ReportService.new(rest, telemetry)
 	reports.access_denied.connect(_on_access_denied)
+	matchmaking = MatchmakingService.new(rest, realtime, app_state, telemetry)
+	matchmaking.access_denied.connect(_on_access_denied)
+	battle = BattleClient.new(realtime, app_state)
+	leaderboards = LeaderboardService.new(rest, realtime, telemetry)
+	leaderboards.access_denied.connect(_on_access_denied)
+	tournaments = TournamentService.new(rest, realtime, telemetry)
+	tournaments.access_denied.connect(_on_access_denied)
+	match_history = MatchHistoryService.new(rest, reports, social, telemetry)
+	match_history.access_denied.connect(_on_access_denied)
 	if realtime != null:
 		realtime.resync_required.connect(resync)
 		if app_state != null:
@@ -111,6 +127,7 @@ func start_session(bootstrap: Dictionary) -> void:
 	party.clear()
 	chat.clear()
 	reports.clear()
+	_clear_competition()
 	play_time.configure(bootstrap.get("policies", {}) as Dictionary)
 	var flags: Variant = bootstrap.get("feature_flags", {})
 	# CONFIG_DEFAULTS `analytics_product_telemetry_enabled` (default on) as published in the bootstrap feature flags.
@@ -127,6 +144,7 @@ func end_session() -> void:
 	party.clear()
 	chat.clear()
 	reports.clear()
+	_clear_competition()
 	learning.clear()
 	exam.clear()
 	media.clear()
@@ -155,6 +173,15 @@ func resync() -> void:
 		await hub.join()
 	if realtime != null:
 		realtime.finish_resync()
+
+
+## F109: nothing of the previous student's queue, match, boards or tournaments is kept.
+func _clear_competition() -> void:
+	matchmaking.clear()
+	battle.clear()
+	leaderboards.clear()
+	tournaments.clear()
+	match_history.clear()
 
 
 static func _realtime_autoload() -> GameRealtimeClient:
