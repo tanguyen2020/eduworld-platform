@@ -34,6 +34,7 @@ var migrations = map[string][]string{
 	"20261222000001_f042_exam_engine.sql":      {},
 	"20261229000003_f105_question_plans.sql":   {"question_plans"},
 	"20270101000073_f073_minigame.sql":         {},
+	"20270102000028_f028_import_items.sql":     {"import_items"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -91,7 +92,7 @@ func schemas() map[string]string {
 		"curricula":                   c.Curriculum, "curriculum_versions": c.CurriculumVersion, "subjects": c.Subject, "subject_grades": c.SubjectGrade,
 		"topics": c.Topic, "learning_objectives": c.LearningObjective, "competencies": c.Competency,
 		"lo_version_mappings": c.LoVersionMapping, "textbook_series": c.TextbookSeries, "textbooks": c.Textbook,
-		"textbook_sections": c.TextbookSection, "textbook_section_objectives": c.TextbookSectionObjective, "import_jobs": c.ImportJob,
+		"textbook_sections": c.TextbookSection, "textbook_section_objectives": c.TextbookSectionObjective, "import_jobs": c.ImportJob, "import_items": c.ImportItem,
 		"questions": c.Question, "question_versions": c.QuestionVersion, "question_version_objectives": c.QuestionVersionObjective,
 		"media_assets": c.MediaAsset, "media_usages": c.MediaUsage, "math_svgs": c.MathSvg,
 		"question_sets": c.QuestionSet, "question_set_versions": c.QuestionSetVersion, "question_set_items": c.QuestionSetItem,

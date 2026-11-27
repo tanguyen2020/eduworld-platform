@@ -818,6 +818,18 @@
     ]
   },
   {
+    "operation_id": "createDraftFromImportItem",
+    "module": "learning",
+    "method": "POST",
+    "path": "/cms/learning/imports/{import_id}/items/{item_no}:create-draft",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "createDuel",
     "module": "competition",
     "method": "POST",
@@ -3708,6 +3720,18 @@
     "method": "GET",
     "path": "/competition/modes",
     "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listContentImportItems",
+    "module": "learning",
+    "method": "GET",
+    "path": "/cms/learning/imports/{import_id}/items",
+    "tenant_scoped": true,
+    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"

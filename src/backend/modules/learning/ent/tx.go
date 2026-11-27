@@ -36,6 +36,8 @@ type Tx struct {
 	CurriculumVersion *CurriculumVersionClient
 	// Evaluation is the client for interacting with the Evaluation builders.
 	Evaluation *EvaluationClient
+	// ImportItem is the client for interacting with the ImportItem builders.
+	ImportItem *ImportItemClient
 	// ImportJob is the client for interacting with the ImportJob builders.
 	ImportJob *ImportJobClient
 	// LearningMaterial is the client for interacting with the LearningMaterial builders.
@@ -235,6 +237,7 @@ func (tx *Tx) init() {
 	tx.Curriculum = NewCurriculumClient(tx.config)
 	tx.CurriculumVersion = NewCurriculumVersionClient(tx.config)
 	tx.Evaluation = NewEvaluationClient(tx.config)
+	tx.ImportItem = NewImportItemClient(tx.config)
 	tx.ImportJob = NewImportJobClient(tx.config)
 	tx.LearningMaterial = NewLearningMaterialClient(tx.config)
 	tx.LearningMaterialVersion = NewLearningMaterialVersionClient(tx.config)

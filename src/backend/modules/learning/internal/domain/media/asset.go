@@ -75,14 +75,16 @@ var limits = map[Kind]Limits{
 	KindSubtitle: {MaxBytes: 10 * mb},
 }
 
-// allowed lists the MIME types accepted per kind (CONTENT_MODEL §7 inputs; documents are the import formats).
+// allowed lists the MIME types accepted per kind (CONTENT_MODEL §7 inputs; documents are the import formats, .docx for
+// lessons_docx — F028).
 var allowed = map[Kind][]string{
 	KindImage:   {"image/png", "image/jpeg", "image/webp", "image/svg+xml"},
 	KindAudio:   {"audio/mpeg", "audio/wav", "audio/x-wav", "audio/ogg"},
 	KindVideo:   {"video/mp4", "video/webm"},
 	KindModel3D: {"model/gltf-binary", "application/x-godot-pck"},
 	KindDocument: {"text/csv", "application/json", "application/x-yaml", "application/yaml", "text/yaml", "application/xml", "text/xml",
-		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/zip"},
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/zip"},
 	KindSubtitle: {"text/vtt"},
 }
 

@@ -29,6 +29,8 @@ var cmsCurriculumRoutes = map[string]func(Handlers, http.ResponseWriter, *http.R
 	"putCurriculumVersionLoMappings": Handlers.putCurriculumVersionLoMappings,
 	"createContentImport":            Handlers.createContentImport,
 	"getContentImport":               Handlers.getContentImport,
+	"listContentImportItems":         Handlers.listContentImportItems,
+	"createDraftFromImportItem":      Handlers.createDraftFromImportItem,
 }
 
 func date(s *string, field string) (*time.Time, error) {

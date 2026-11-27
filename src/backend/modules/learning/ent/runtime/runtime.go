@@ -18,6 +18,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculum"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculumversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/evaluation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterial"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterialversion"
@@ -779,6 +780,69 @@ func init() {
 	evaluationDescID := evaluationMixinFields0[0].Descriptor()
 	// evaluation.DefaultID holds the default value on creation for the id field.
 	evaluation.DefaultID = evaluationDescID.Default.(func() uuid.UUID)
+	importitemMixin := schema.ImportItem{}.Mixin()
+	importitemMixinHooks0 := importitemMixin[0].Hooks()
+	importitem.Hooks[0] = importitemMixinHooks0[0]
+	importitemMixinInters0 := importitemMixin[0].Interceptors()
+	importitem.Interceptors[0] = importitemMixinInters0[0]
+	importitemMixinFields0 := importitemMixin[0].Fields()
+	_ = importitemMixinFields0
+	importitemFields := schema.ImportItem{}.Fields()
+	_ = importitemFields
+	// importitemDescCreatedAt is the schema descriptor for created_at field.
+	importitemDescCreatedAt := importitemMixinFields0[2].Descriptor()
+	// importitem.DefaultCreatedAt holds the default value on creation for the created_at field.
+	importitem.DefaultCreatedAt = importitemDescCreatedAt.Default.(func() time.Time)
+	// importitemDescUpdatedAt is the schema descriptor for updated_at field.
+	importitemDescUpdatedAt := importitemMixinFields0[4].Descriptor()
+	// importitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	importitem.DefaultUpdatedAt = importitemDescUpdatedAt.Default.(func() time.Time)
+	// importitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	importitem.UpdateDefaultUpdatedAt = importitemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// importitemDescDeleteReason is the schema descriptor for delete_reason field.
+	importitemDescDeleteReason := importitemMixinFields0[8].Descriptor()
+	// importitem.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	importitem.DeleteReasonValidator = importitemDescDeleteReason.Validators[0].(func(string) error)
+	// importitemDescVersion is the schema descriptor for version field.
+	importitemDescVersion := importitemMixinFields0[9].Descriptor()
+	// importitem.DefaultVersion holds the default value on creation for the version field.
+	importitem.DefaultVersion = importitemDescVersion.Default.(int64)
+	// importitemDescSourceLabel is the schema descriptor for source_label field.
+	importitemDescSourceLabel := importitemFields[2].Descriptor()
+	// importitem.SourceLabelValidator is a validator for the "source_label" field. It is called by the builders before save.
+	importitem.SourceLabelValidator = importitemDescSourceLabel.Validators[0].(func(string) error)
+	// importitemDescStatus is the schema descriptor for status field.
+	importitemDescStatus := importitemFields[3].Descriptor()
+	// importitem.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	importitem.StatusValidator = importitemDescStatus.Validators[0].(func(string) error)
+	// importitemDescQuestionType is the schema descriptor for question_type field.
+	importitemDescQuestionType := importitemFields[4].Descriptor()
+	// importitem.QuestionTypeValidator is a validator for the "question_type" field. It is called by the builders before save.
+	importitem.QuestionTypeValidator = importitemDescQuestionType.Validators[0].(func(string) error)
+	// importitemDescStemPreview is the schema descriptor for stem_preview field.
+	importitemDescStemPreview := importitemFields[5].Descriptor()
+	// importitem.StemPreviewValidator is a validator for the "stem_preview" field. It is called by the builders before save.
+	importitem.StemPreviewValidator = importitemDescStemPreview.Validators[0].(func(string) error)
+	// importitemDescIssues is the schema descriptor for issues field.
+	importitemDescIssues := importitemFields[6].Descriptor()
+	// importitem.DefaultIssues holds the default value on creation for the issues field.
+	importitem.DefaultIssues = importitemDescIssues.Default.([]map[string]interface{})
+	// importitemDescFormulas is the schema descriptor for formulas field.
+	importitemDescFormulas := importitemFields[7].Descriptor()
+	// importitem.DefaultFormulas holds the default value on creation for the formulas field.
+	importitem.DefaultFormulas = importitemDescFormulas.Default.([]map[string]interface{})
+	// importitemDescImages is the schema descriptor for images field.
+	importitemDescImages := importitemFields[8].Descriptor()
+	// importitem.DefaultImages holds the default value on creation for the images field.
+	importitem.DefaultImages = importitemDescImages.Default.([]map[string]interface{})
+	// importitemDescPayload is the schema descriptor for payload field.
+	importitemDescPayload := importitemFields[9].Descriptor()
+	// importitem.DefaultPayload holds the default value on creation for the payload field.
+	importitem.DefaultPayload = importitemDescPayload.Default.(map[string]interface{})
+	// importitemDescID is the schema descriptor for id field.
+	importitemDescID := importitemMixinFields0[0].Descriptor()
+	// importitem.DefaultID holds the default value on creation for the id field.
+	importitem.DefaultID = importitemDescID.Default.(func() uuid.UUID)
 	importjobMixin := schema.ImportJob{}.Mixin()
 	importjobMixinHooks0 := importjobMixin[0].Hooks()
 	importjob.Hooks[0] = importjobMixinHooks0[0]

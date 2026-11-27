@@ -90,7 +90,7 @@ func TestCurriculumOperationsMatchSpec(t *testing.T) {
 		"createObjective", "updateObjective", "deleteObjective", "listCmsCompetencies", "createCompetency", "updateCompetency",
 		"listTextbookSeries", "createTextbookSeries", "listTextbooks", "createTextbook", "listTextbookSections", "createTextbookSection",
 		"updateTextbookSection", "putTextbookSectionObjectives", "createContentImport", "getContentImport", "listCurricula", "listSubjects",
-		"listTopics", "listLearningObjectives", "getLearningObjective"} {
+		"listTopics", "listLearningObjectives", "getLearningObjective", "listContentImportItems", "createDraftFromImportItem"} {
 		if _, ok := learninghttp.Operations[id]; !ok {
 			t.Errorf("%s is not served", id)
 		}

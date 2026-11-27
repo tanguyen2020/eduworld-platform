@@ -598,6 +598,55 @@ var (
 			},
 		},
 	}
+	// ImportItemsColumns holds the columns for the "import_items" table.
+	ImportItemsColumns = []*schema.Column{
+		{Name: "import_item_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "import_id", Type: field.TypeUUID},
+		{Name: "item_no", Type: field.TypeInt32},
+		{Name: "source_label", Type: field.TypeString, Size: 32},
+		{Name: "status", Type: field.TypeString, Size: 32},
+		{Name: "question_type", Type: field.TypeString, Nullable: true, Size: 32},
+		{Name: "stem_preview", Type: field.TypeString, Size: 200},
+		{Name: "issues", Type: field.TypeJSON},
+		{Name: "formulas", Type: field.TypeJSON},
+		{Name: "images", Type: field.TypeJSON},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "question_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "question_version_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// ImportItemsTable holds the schema information for the "import_items" table.
+	ImportItemsTable = &schema.Table{
+		Name:       "import_items",
+		Columns:    ImportItemsColumns,
+		PrimaryKey: []*schema.Column{ImportItemsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "import_items_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ImportItemsColumns[10], ImportItemsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "import_items_status_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ImportItemsColumns[10], ImportItemsColumns[13], ImportItemsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// ImportJobsColumns holds the columns for the "import_jobs" table.
 	ImportJobsColumns = []*schema.Column{
 		{Name: "import_id", Type: field.TypeUUID},
@@ -1832,6 +1881,7 @@ var (
 		CurriculaTable,
 		CurriculumVersionsTable,
 		EvaluationsTable,
+		ImportItemsTable,
 		ImportJobsTable,
 		LearningMaterialsTable,
 		LearningMaterialVersionsTable,
@@ -1899,6 +1949,9 @@ func init() {
 	}
 	EvaluationsTable.Annotation = &entsql.Annotation{
 		Table: "evaluations",
+	}
+	ImportItemsTable.Annotation = &entsql.Annotation{
+		Table: "import_items",
 	}
 	ImportJobsTable.Annotation = &entsql.Annotation{
 		Table: "import_jobs",

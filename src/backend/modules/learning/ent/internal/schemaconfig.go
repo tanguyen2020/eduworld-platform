@@ -19,6 +19,7 @@ type SchemaConfig struct {
 	Curriculum                 string // Curriculum table.
 	CurriculumVersion          string // CurriculumVersion table.
 	Evaluation                 string // Evaluation table.
+	ImportItem                 string // ImportItem table.
 	ImportJob                  string // ImportJob table.
 	LearningMaterial           string // LearningMaterial table.
 	LearningMaterialVersion    string // LearningMaterialVersion table.

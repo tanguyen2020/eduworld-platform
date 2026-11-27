@@ -56,13 +56,13 @@ type CreateImportInput struct {
 func (h Curriculum) CreateImport(ctx context.Context, in CreateImportInput) (out dto.ImportJob, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.command.CreateContentImport")
 	defer func() { done(err) }()
-	content := slices.Contains(QuestionImportKinds, in.Kind)
+	content := slices.Contains(QuestionImportKinds, in.Kind) || in.Kind == KindLessonsDocx
 	switch {
-	case in.Kind == "lessons_docx":
-		return out, problem.Invalid("kind", SubImportKindNotSupported, "lessons_docx is not supported in this release")
+	case in.Kind == KindLessonsDocx && h.Docx == nil:
+		return out, problem.Invalid("kind", SubImportKindNotSupported, "Word imports are not enabled")
 	case in.Kind != port.KindCurriculumYAML && in.Kind != port.KindCurriculumCSV && !content:
 		return out, problem.Invalid("kind", problem.SubInvalid, "unknown import kind")
-	case content && h.Content == nil:
+	case content && in.Kind != KindLessonsDocx && h.Content == nil:
 		return out, problem.Invalid("kind", SubImportKindNotSupported, "question imports are not enabled")
 	}
 	perm := authz.PermCurriculumWrite
@@ -169,6 +169,9 @@ func (h Curriculum) RunImportJob(ctx context.Context, jobID uuid.UUID, o content
 	if slices.Contains(QuestionImportKinds, job.Kind) {
 		return h.runContentImport(ctx, job)
 	}
+	if job.Kind == KindLessonsDocx {
+		return h.runDocxImport(ctx, job)
+	}
 	file, rowErrs := h.readImport(ctx, job)
 	var res ImportResult
 	if len(rowErrs) == 0 {
@@ -237,14 +240,19 @@ func (h Curriculum) runContentImport(ctx context.Context, job dto.ImportJob) err
 		if err := h.Imports.UpdateImportJob(ctx, job); err != nil {
 			return err
 		}
-		r := audit.ResultSuccess
-		if job.Status == ImportFailed {
-			r = audit.ResultFailure
-		}
-		return h.recordCurriculum(ctx, job.Owner, audit.Event{Action: ActionContentImported, TargetID: job.ID.String(), Result: r,
-			Metadata: map[string]any{"kind": job.Kind, "dry_run": job.DryRun, "status": job.Status, "created": job.CreatedCount,
-				"rejected": job.RejectedCount}})
+		return h.recordImported(ctx, job)
 	})
+}
+
+// recordImported records the audit content.imported of a finished job (caller, created, rejected — R10).
+func (h Curriculum) recordImported(ctx context.Context, job dto.ImportJob) error {
+	r := audit.ResultSuccess
+	if job.Status == ImportFailed {
+		r = audit.ResultFailure
+	}
+	return h.recordCurriculum(ctx, job.Owner, audit.Event{Action: ActionContentImported, TargetID: job.ID.String(), Result: r,
+		Metadata: map[string]any{"kind": job.Kind, "dry_run": job.DryRun, "status": job.Status, "created": job.CreatedCount,
+			"rejected": job.RejectedCount}})
 }
 
 // readBytes reads the file of a job (≤ csv_import_max).

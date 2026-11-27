@@ -66,6 +66,8 @@ type CurriculumReadModel interface {
 	// Sections is one keyset page ordered by (lesson_no, section_id).
 	Sections(ctx context.Context, textbookID uuid.UUID, seek Seek) ([]dto.TextbookSection, error)
 	ImportJob(ctx context.Context, id uuid.UUID) (dto.ImportJob, error)
+	// ImportItems pages the items of a job by item_no (status filter optional, F028).
+	ImportItems(ctx context.Context, importID uuid.UUID, status string, seek Seek) ([]dto.ImportItem, error)
 }
 
 // SchoolCurriculumSettings reads the default curriculum version of a school (lms.school_curriculum_settings,

@@ -29,6 +29,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/reporting"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/cache"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/docximport"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/export"
 	learninghealth "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/health"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/i18n"
@@ -373,6 +374,11 @@ func build(r *module.Registry) (*wiring, error) {
 		Docs: write.DocRepo{}, Schema: schema, Media: write.MediaRepo{}, Guard: readiness.Default(), Events: events, Audit: auditor,
 		Metrics: observability.WorkflowCounter{}}
 	cur.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
+	// F028: Word import lessons_docx — Pandoc of eduworld/media-tools (stage media-tools of the worker image) as an external
+	// process; EW_PANDOC_BIN overrides the program (default pandoc on PATH).
+	docx := &command.DocxImport{Items: write.ImportItemRepo{}, Jobs: write.ImportJobRepo{}, Assets: assets, Content: cur.Content, Media: &media,
+		Converter: docximport.Pandoc{Command: []string{cfg.StringOr("EW_PANDOC_BIN", "pandoc")}}}
+	cur.Docx = docx
 	snapshots := cache.SnapshotCache{C: vk}
 	rel := command.Releases{UoW: core.UoW, Workflow: wf, Store: write.ReleaseRepo{}, Schedules: write.ReleaseRepo{}, Events: events,
 		Audit: auditor, Metrics: observability.ReleaseCounter{}, Cache: snapshots, CDN: s3, Signer: signer,
@@ -425,7 +431,7 @@ func build(r *module.Registry) (*wiring, error) {
 		Registry: activities, Cursors: cursors, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: signer, Assignments: asgq, Runs: read.SimulationRunModel{},
 		Recommendations: read.SelfStudyModel{}, Minigames: read.MinigameConfigModel{}, Students: read.SchoolSettings{}}
 
-	h := learninghttp.Handlers{Commands: cur,
+	h := learninghttp.Handlers{Commands: cur, DocxImports: docx,
 		Queries:          query.Curriculum{Session: core.ReadSession, Model: read.CurriculumModel{}, Settings: read.SchoolSettings{}, Codec: importer.Codec{}, Cursors: cursors},
 		QuestionCommands: qcmd, QuestionQueries: query.Questions{Session: core.ReadSession, Model: read.QuestionModel{}, Cursors: cursors},
 		Media: media, MediaQueries: query.MediaLibrary{Session: core.ReadSession, Model: read.MediaModel{}, Signer: signer, Cursors: cursors},

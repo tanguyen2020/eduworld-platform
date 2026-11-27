@@ -62,11 +62,11 @@ func TestQuestionImport(t *testing.T) {
 	if n := c.audits(ctx, t, command.ActionContentImported, &c.tenantA); n != 2 {
 		t.Fatalf("audit content.imported %d", n)
 	}
-	// AC-15: lessons_docx, oversized and malformed files.
+	// AC-15: an unknown kind, oversized and malformed files (lessons_docx is supported since F028: TestDocxImport*).
 	r := must(t, c.do(t, http.MethodPost, "/cms/learning/imports", qlcmA, idem(), map[string]any{"asset_id": c.assets.put([]byte("x")).String(),
-		"kind": "lessons_docx"}), http.StatusUnprocessableEntity, "docx")
-	if !strings.Contains(r.raw, "IMPORT_KIND_NOT_SUPPORTED") {
-		t.Fatalf("docx %s", r.raw)
+		"kind": "lessons_pdf"}), http.StatusUnprocessableEntity, "unknown kind")
+	if !strings.Contains(r.raw, "VALIDATION_FAILED") {
+		t.Fatalf("unknown kind %s", r.raw)
 	}
 	big := c.assets.put(file)
 	c.assets.sizes[big] = 11 << 20

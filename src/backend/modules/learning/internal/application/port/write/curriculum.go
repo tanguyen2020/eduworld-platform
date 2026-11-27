@@ -106,6 +106,15 @@ type ImportJobStore interface {
 	QueuedImportJobs(ctx context.Context, limit int) ([]dto.ImportJob, error)
 }
 
+// ImportItemStore persists content.import_items (F028): the questions of a lessons_docx job.
+type ImportItemStore interface {
+	InsertImportItems(ctx context.Context, items []dto.ImportItem) error
+	// ImportItem returns the item no of a job visible to the scope (404 problem otherwise).
+	ImportItem(ctx context.Context, importID uuid.UUID, no int) (dto.ImportItem, error)
+	// UpdateImportItem saves status, issues and the created question.
+	UpdateImportItem(ctx context.Context, it dto.ImportItem) error
+}
+
 // CurriculumTrashStore reads and restores soft-deleted curriculum rows (Thùng rác, resource_type curriculum:
 // curricula, topics and objectives, F021-AC-10). ctx carries tenancy.Bypass(trash).
 type CurriculumTrashStore interface {

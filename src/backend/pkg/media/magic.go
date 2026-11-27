@@ -100,7 +100,7 @@ var mimeFamily = map[string][]string{
 	"model/gltf-binary":        {"model/gltf-binary"},
 	"application/x-godot-pck":  {"application/x-godot-pck", "application/octet-stream"},
 	"application/pdf":          {"application/pdf"},
-	"application/zip":          {"application/zip", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+	"application/zip":          {"application/zip", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
 	"text/vtt":                 {"text/vtt"},
 	"text/plain":               {"text/plain", "text/csv", "application/json", "application/x-yaml", "application/yaml", "text/yaml", "application/xml", "text/xml"},
 	"application/octet-stream": {"application/octet-stream"},

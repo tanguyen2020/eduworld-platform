@@ -42,6 +42,9 @@ type CurriculumVersion func(*sql.Selector)
 // Evaluation is the predicate function for evaluation builders.
 type Evaluation func(*sql.Selector)
 
+// ImportItem is the predicate function for importitem builders.
+type ImportItem func(*sql.Selector)
+
 // ImportJob is the predicate function for importjob builders.
 type ImportJob func(*sql.Selector)
 

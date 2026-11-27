@@ -341,3 +341,36 @@ func (ImportJob) Indexes() []ent.Index {
 		index.Fields("status", "created_at").StorageKey("import_jobs_status_idx"),
 	}
 }
+
+// ImportItem — content.import_items (T*, F028): one question of a Word file of a lessons_docx job with its analysis
+// (status, issues, formulas, pictures, parsed authoring fields) and the draft created from it. Same owner as its job.
+type ImportItem struct{ ent.Schema }
+
+func (ImportItem) Annotations() []schema.Annotation {
+	return []schema.Annotation{entsql.Annotation{Schema: "content", Table: "import_items"}}
+}
+func (ImportItem) Mixin() []ent.Mixin {
+	return []ent.Mixin{entx.TenantOptional{PK: entx.PK{Column: "import_item_id"}}}
+}
+func (ImportItem) Fields() []ent.Field {
+	return []ent.Field{
+		field.UUID("import_id", uuid.UUID{}).Immutable(),
+		field.Int32("item_no").Immutable(),
+		field.String("source_label").MaxLen(32).Immutable(),
+		field.String("status").MaxLen(32),
+		field.String("question_type").MaxLen(32).Optional().Nillable().Immutable(),
+		field.String("stem_preview").MaxLen(200).Immutable(),
+		field.JSON("issues", []map[string]any{}).Default([]map[string]any{}),
+		field.JSON("formulas", []map[string]any{}).Default([]map[string]any{}).Immutable(),
+		field.JSON("images", []map[string]any{}).Default([]map[string]any{}).Immutable(),
+		field.JSON("payload", map[string]any{}).Default(map[string]any{}).Immutable(),
+		field.UUID("question_id", uuid.UUID{}).Optional().Nillable(),
+		field.UUID("question_version_id", uuid.UUID{}).Optional().Nillable(),
+	}
+}
+func (ImportItem) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("import_id", "item_no").Unique().StorageKey("import_items_no_uq").Annotations(live()),
+		index.Fields("import_id", "status", "item_no").StorageKey("import_items_status_idx").Annotations(live()),
+	}
+}

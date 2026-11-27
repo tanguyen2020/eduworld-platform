@@ -54,6 +54,7 @@ type Curriculum struct {
 	Assets    port.AssetReader
 	Codec     port.CurriculumCodec
 	Content   *ContentImport // question imports of F024 (nil: only curriculum kinds)
+	Docx      *DocxImport    // Word import lessons_docx of F028 (nil: refused with IMPORT_KIND_NOT_SUPPORTED)
 	Metrics   CurriculumMetrics
 	Clock     func() time.Time
 }

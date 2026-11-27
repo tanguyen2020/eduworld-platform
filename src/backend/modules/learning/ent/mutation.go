@@ -25,6 +25,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculum"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculumversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/evaluation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterial"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterialversion"
@@ -77,6 +78,7 @@ const (
 	TypeCurriculum                 = "Curriculum"
 	TypeCurriculumVersion          = "CurriculumVersion"
 	TypeEvaluation                 = "Evaluation"
+	TypeImportItem                 = "ImportItem"
 	TypeImportJob                  = "ImportJob"
 	TypeLearningMaterial           = "LearningMaterial"
 	TypeLearningMaterialVersion    = "LearningMaterialVersion"
@@ -23774,6 +23776,1709 @@ func (m *EvaluationMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *EvaluationMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Evaluation edge %s", name)
+}
+
+// ImportItemMutation represents an operation that mutates the ImportItem nodes in the graph.
+type ImportItemMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *uuid.UUID
+	tenant_id           *uuid.UUID
+	created_at          *time.Time
+	created_by          *uuid.UUID
+	updated_at          *time.Time
+	updated_by          *uuid.UUID
+	deleted_at          *time.Time
+	deleted_by          *uuid.UUID
+	delete_reason       *string
+	version             *int64
+	addversion          *int64
+	import_id           *uuid.UUID
+	item_no             *int32
+	additem_no          *int32
+	source_label        *string
+	status              *string
+	question_type       *string
+	stem_preview        *string
+	issues              *[]map[string]interface{}
+	appendissues        []map[string]interface{}
+	formulas            *[]map[string]interface{}
+	appendformulas      []map[string]interface{}
+	images              *[]map[string]interface{}
+	appendimages        []map[string]interface{}
+	payload             *map[string]interface{}
+	question_id         *uuid.UUID
+	question_version_id *uuid.UUID
+	clearedFields       map[string]struct{}
+	done                bool
+	oldValue            func(context.Context) (*ImportItem, error)
+	predicates          []predicate.ImportItem
+}
+
+var _ ent.Mutation = (*ImportItemMutation)(nil)
+
+// importitemOption allows management of the mutation configuration using functional options.
+type importitemOption func(*ImportItemMutation)
+
+// newImportItemMutation creates new mutation for the ImportItem entity.
+func newImportItemMutation(c config, op Op, opts ...importitemOption) *ImportItemMutation {
+	m := &ImportItemMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeImportItem,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withImportItemID sets the ID field of the mutation.
+func withImportItemID(id uuid.UUID) importitemOption {
+	return func(m *ImportItemMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ImportItem
+		)
+		m.oldValue = func(ctx context.Context) (*ImportItem, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ImportItem.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withImportItem sets the old ImportItem of the mutation.
+func withImportItem(node *ImportItem) importitemOption {
+	return func(m *ImportItemMutation) {
+		m.oldValue = func(context.Context) (*ImportItem, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ImportItemMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ImportItemMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ImportItem entities.
+func (m *ImportItemMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ImportItemMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ImportItemMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ImportItem.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *ImportItemMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *ImportItemMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldTenantID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ClearTenantID clears the value of the "tenant_id" field.
+func (m *ImportItemMutation) ClearTenantID() {
+	m.tenant_id = nil
+	m.clearedFields[importitem.FieldTenantID] = struct{}{}
+}
+
+// TenantIDCleared returns if the "tenant_id" field was cleared in this mutation.
+func (m *ImportItemMutation) TenantIDCleared() bool {
+	_, ok := m.clearedFields[importitem.FieldTenantID]
+	return ok
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *ImportItemMutation) ResetTenantID() {
+	m.tenant_id = nil
+	delete(m.clearedFields, importitem.FieldTenantID)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ImportItemMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ImportItemMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ImportItemMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *ImportItemMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *ImportItemMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *ImportItemMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[importitem.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *ImportItemMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[importitem.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *ImportItemMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, importitem.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ImportItemMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ImportItemMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ImportItemMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *ImportItemMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *ImportItemMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *ImportItemMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[importitem.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *ImportItemMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[importitem.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *ImportItemMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, importitem.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ImportItemMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ImportItemMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ImportItemMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[importitem.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ImportItemMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[importitem.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ImportItemMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, importitem.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *ImportItemMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *ImportItemMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *ImportItemMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[importitem.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *ImportItemMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[importitem.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *ImportItemMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, importitem.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *ImportItemMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *ImportItemMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *ImportItemMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[importitem.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *ImportItemMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[importitem.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *ImportItemMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, importitem.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *ImportItemMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *ImportItemMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *ImportItemMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *ImportItemMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *ImportItemMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetImportID sets the "import_id" field.
+func (m *ImportItemMutation) SetImportID(u uuid.UUID) {
+	m.import_id = &u
+}
+
+// ImportID returns the value of the "import_id" field in the mutation.
+func (m *ImportItemMutation) ImportID() (r uuid.UUID, exists bool) {
+	v := m.import_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImportID returns the old "import_id" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldImportID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImportID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImportID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImportID: %w", err)
+	}
+	return oldValue.ImportID, nil
+}
+
+// ResetImportID resets all changes to the "import_id" field.
+func (m *ImportItemMutation) ResetImportID() {
+	m.import_id = nil
+}
+
+// SetItemNo sets the "item_no" field.
+func (m *ImportItemMutation) SetItemNo(i int32) {
+	m.item_no = &i
+	m.additem_no = nil
+}
+
+// ItemNo returns the value of the "item_no" field in the mutation.
+func (m *ImportItemMutation) ItemNo() (r int32, exists bool) {
+	v := m.item_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldItemNo returns the old "item_no" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldItemNo(ctx context.Context) (v int32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldItemNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldItemNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldItemNo: %w", err)
+	}
+	return oldValue.ItemNo, nil
+}
+
+// AddItemNo adds i to the "item_no" field.
+func (m *ImportItemMutation) AddItemNo(i int32) {
+	if m.additem_no != nil {
+		*m.additem_no += i
+	} else {
+		m.additem_no = &i
+	}
+}
+
+// AddedItemNo returns the value that was added to the "item_no" field in this mutation.
+func (m *ImportItemMutation) AddedItemNo() (r int32, exists bool) {
+	v := m.additem_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetItemNo resets all changes to the "item_no" field.
+func (m *ImportItemMutation) ResetItemNo() {
+	m.item_no = nil
+	m.additem_no = nil
+}
+
+// SetSourceLabel sets the "source_label" field.
+func (m *ImportItemMutation) SetSourceLabel(s string) {
+	m.source_label = &s
+}
+
+// SourceLabel returns the value of the "source_label" field in the mutation.
+func (m *ImportItemMutation) SourceLabel() (r string, exists bool) {
+	v := m.source_label
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceLabel returns the old "source_label" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldSourceLabel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceLabel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceLabel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceLabel: %w", err)
+	}
+	return oldValue.SourceLabel, nil
+}
+
+// ResetSourceLabel resets all changes to the "source_label" field.
+func (m *ImportItemMutation) ResetSourceLabel() {
+	m.source_label = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *ImportItemMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ImportItemMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ImportItemMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetQuestionType sets the "question_type" field.
+func (m *ImportItemMutation) SetQuestionType(s string) {
+	m.question_type = &s
+}
+
+// QuestionType returns the value of the "question_type" field in the mutation.
+func (m *ImportItemMutation) QuestionType() (r string, exists bool) {
+	v := m.question_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestionType returns the old "question_type" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldQuestionType(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestionType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestionType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestionType: %w", err)
+	}
+	return oldValue.QuestionType, nil
+}
+
+// ClearQuestionType clears the value of the "question_type" field.
+func (m *ImportItemMutation) ClearQuestionType() {
+	m.question_type = nil
+	m.clearedFields[importitem.FieldQuestionType] = struct{}{}
+}
+
+// QuestionTypeCleared returns if the "question_type" field was cleared in this mutation.
+func (m *ImportItemMutation) QuestionTypeCleared() bool {
+	_, ok := m.clearedFields[importitem.FieldQuestionType]
+	return ok
+}
+
+// ResetQuestionType resets all changes to the "question_type" field.
+func (m *ImportItemMutation) ResetQuestionType() {
+	m.question_type = nil
+	delete(m.clearedFields, importitem.FieldQuestionType)
+}
+
+// SetStemPreview sets the "stem_preview" field.
+func (m *ImportItemMutation) SetStemPreview(s string) {
+	m.stem_preview = &s
+}
+
+// StemPreview returns the value of the "stem_preview" field in the mutation.
+func (m *ImportItemMutation) StemPreview() (r string, exists bool) {
+	v := m.stem_preview
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStemPreview returns the old "stem_preview" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldStemPreview(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStemPreview is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStemPreview requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStemPreview: %w", err)
+	}
+	return oldValue.StemPreview, nil
+}
+
+// ResetStemPreview resets all changes to the "stem_preview" field.
+func (m *ImportItemMutation) ResetStemPreview() {
+	m.stem_preview = nil
+}
+
+// SetIssues sets the "issues" field.
+func (m *ImportItemMutation) SetIssues(value []map[string]interface{}) {
+	m.issues = &value
+	m.appendissues = nil
+}
+
+// Issues returns the value of the "issues" field in the mutation.
+func (m *ImportItemMutation) Issues() (r []map[string]interface{}, exists bool) {
+	v := m.issues
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIssues returns the old "issues" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldIssues(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIssues is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIssues requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIssues: %w", err)
+	}
+	return oldValue.Issues, nil
+}
+
+// AppendIssues adds value to the "issues" field.
+func (m *ImportItemMutation) AppendIssues(value []map[string]interface{}) {
+	m.appendissues = append(m.appendissues, value...)
+}
+
+// AppendedIssues returns the list of values that were appended to the "issues" field in this mutation.
+func (m *ImportItemMutation) AppendedIssues() ([]map[string]interface{}, bool) {
+	if len(m.appendissues) == 0 {
+		return nil, false
+	}
+	return m.appendissues, true
+}
+
+// ResetIssues resets all changes to the "issues" field.
+func (m *ImportItemMutation) ResetIssues() {
+	m.issues = nil
+	m.appendissues = nil
+}
+
+// SetFormulas sets the "formulas" field.
+func (m *ImportItemMutation) SetFormulas(value []map[string]interface{}) {
+	m.formulas = &value
+	m.appendformulas = nil
+}
+
+// Formulas returns the value of the "formulas" field in the mutation.
+func (m *ImportItemMutation) Formulas() (r []map[string]interface{}, exists bool) {
+	v := m.formulas
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFormulas returns the old "formulas" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldFormulas(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFormulas is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFormulas requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFormulas: %w", err)
+	}
+	return oldValue.Formulas, nil
+}
+
+// AppendFormulas adds value to the "formulas" field.
+func (m *ImportItemMutation) AppendFormulas(value []map[string]interface{}) {
+	m.appendformulas = append(m.appendformulas, value...)
+}
+
+// AppendedFormulas returns the list of values that were appended to the "formulas" field in this mutation.
+func (m *ImportItemMutation) AppendedFormulas() ([]map[string]interface{}, bool) {
+	if len(m.appendformulas) == 0 {
+		return nil, false
+	}
+	return m.appendformulas, true
+}
+
+// ResetFormulas resets all changes to the "formulas" field.
+func (m *ImportItemMutation) ResetFormulas() {
+	m.formulas = nil
+	m.appendformulas = nil
+}
+
+// SetImages sets the "images" field.
+func (m *ImportItemMutation) SetImages(value []map[string]interface{}) {
+	m.images = &value
+	m.appendimages = nil
+}
+
+// Images returns the value of the "images" field in the mutation.
+func (m *ImportItemMutation) Images() (r []map[string]interface{}, exists bool) {
+	v := m.images
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImages returns the old "images" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldImages(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImages is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImages requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImages: %w", err)
+	}
+	return oldValue.Images, nil
+}
+
+// AppendImages adds value to the "images" field.
+func (m *ImportItemMutation) AppendImages(value []map[string]interface{}) {
+	m.appendimages = append(m.appendimages, value...)
+}
+
+// AppendedImages returns the list of values that were appended to the "images" field in this mutation.
+func (m *ImportItemMutation) AppendedImages() ([]map[string]interface{}, bool) {
+	if len(m.appendimages) == 0 {
+		return nil, false
+	}
+	return m.appendimages, true
+}
+
+// ResetImages resets all changes to the "images" field.
+func (m *ImportItemMutation) ResetImages() {
+	m.images = nil
+	m.appendimages = nil
+}
+
+// SetPayload sets the "payload" field.
+func (m *ImportItemMutation) SetPayload(value map[string]interface{}) {
+	m.payload = &value
+}
+
+// Payload returns the value of the "payload" field in the mutation.
+func (m *ImportItemMutation) Payload() (r map[string]interface{}, exists bool) {
+	v := m.payload
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPayload returns the old "payload" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldPayload(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPayload is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPayload requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPayload: %w", err)
+	}
+	return oldValue.Payload, nil
+}
+
+// ResetPayload resets all changes to the "payload" field.
+func (m *ImportItemMutation) ResetPayload() {
+	m.payload = nil
+}
+
+// SetQuestionID sets the "question_id" field.
+func (m *ImportItemMutation) SetQuestionID(u uuid.UUID) {
+	m.question_id = &u
+}
+
+// QuestionID returns the value of the "question_id" field in the mutation.
+func (m *ImportItemMutation) QuestionID() (r uuid.UUID, exists bool) {
+	v := m.question_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestionID returns the old "question_id" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldQuestionID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestionID: %w", err)
+	}
+	return oldValue.QuestionID, nil
+}
+
+// ClearQuestionID clears the value of the "question_id" field.
+func (m *ImportItemMutation) ClearQuestionID() {
+	m.question_id = nil
+	m.clearedFields[importitem.FieldQuestionID] = struct{}{}
+}
+
+// QuestionIDCleared returns if the "question_id" field was cleared in this mutation.
+func (m *ImportItemMutation) QuestionIDCleared() bool {
+	_, ok := m.clearedFields[importitem.FieldQuestionID]
+	return ok
+}
+
+// ResetQuestionID resets all changes to the "question_id" field.
+func (m *ImportItemMutation) ResetQuestionID() {
+	m.question_id = nil
+	delete(m.clearedFields, importitem.FieldQuestionID)
+}
+
+// SetQuestionVersionID sets the "question_version_id" field.
+func (m *ImportItemMutation) SetQuestionVersionID(u uuid.UUID) {
+	m.question_version_id = &u
+}
+
+// QuestionVersionID returns the value of the "question_version_id" field in the mutation.
+func (m *ImportItemMutation) QuestionVersionID() (r uuid.UUID, exists bool) {
+	v := m.question_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestionVersionID returns the old "question_version_id" field's value of the ImportItem entity.
+// If the ImportItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ImportItemMutation) OldQuestionVersionID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestionVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestionVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestionVersionID: %w", err)
+	}
+	return oldValue.QuestionVersionID, nil
+}
+
+// ClearQuestionVersionID clears the value of the "question_version_id" field.
+func (m *ImportItemMutation) ClearQuestionVersionID() {
+	m.question_version_id = nil
+	m.clearedFields[importitem.FieldQuestionVersionID] = struct{}{}
+}
+
+// QuestionVersionIDCleared returns if the "question_version_id" field was cleared in this mutation.
+func (m *ImportItemMutation) QuestionVersionIDCleared() bool {
+	_, ok := m.clearedFields[importitem.FieldQuestionVersionID]
+	return ok
+}
+
+// ResetQuestionVersionID resets all changes to the "question_version_id" field.
+func (m *ImportItemMutation) ResetQuestionVersionID() {
+	m.question_version_id = nil
+	delete(m.clearedFields, importitem.FieldQuestionVersionID)
+}
+
+// Where appends a list predicates to the ImportItemMutation builder.
+func (m *ImportItemMutation) Where(ps ...predicate.ImportItem) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ImportItemMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ImportItemMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ImportItem, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ImportItemMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ImportItemMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ImportItem).
+func (m *ImportItemMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ImportItemMutation) Fields() []string {
+	fields := make([]string, 0, 21)
+	if m.tenant_id != nil {
+		fields = append(fields, importitem.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, importitem.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, importitem.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, importitem.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, importitem.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, importitem.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, importitem.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, importitem.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, importitem.FieldVersion)
+	}
+	if m.import_id != nil {
+		fields = append(fields, importitem.FieldImportID)
+	}
+	if m.item_no != nil {
+		fields = append(fields, importitem.FieldItemNo)
+	}
+	if m.source_label != nil {
+		fields = append(fields, importitem.FieldSourceLabel)
+	}
+	if m.status != nil {
+		fields = append(fields, importitem.FieldStatus)
+	}
+	if m.question_type != nil {
+		fields = append(fields, importitem.FieldQuestionType)
+	}
+	if m.stem_preview != nil {
+		fields = append(fields, importitem.FieldStemPreview)
+	}
+	if m.issues != nil {
+		fields = append(fields, importitem.FieldIssues)
+	}
+	if m.formulas != nil {
+		fields = append(fields, importitem.FieldFormulas)
+	}
+	if m.images != nil {
+		fields = append(fields, importitem.FieldImages)
+	}
+	if m.payload != nil {
+		fields = append(fields, importitem.FieldPayload)
+	}
+	if m.question_id != nil {
+		fields = append(fields, importitem.FieldQuestionID)
+	}
+	if m.question_version_id != nil {
+		fields = append(fields, importitem.FieldQuestionVersionID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ImportItemMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case importitem.FieldTenantID:
+		return m.TenantID()
+	case importitem.FieldCreatedAt:
+		return m.CreatedAt()
+	case importitem.FieldCreatedBy:
+		return m.CreatedBy()
+	case importitem.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case importitem.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case importitem.FieldDeletedAt:
+		return m.DeletedAt()
+	case importitem.FieldDeletedBy:
+		return m.DeletedBy()
+	case importitem.FieldDeleteReason:
+		return m.DeleteReason()
+	case importitem.FieldVersion:
+		return m.Version()
+	case importitem.FieldImportID:
+		return m.ImportID()
+	case importitem.FieldItemNo:
+		return m.ItemNo()
+	case importitem.FieldSourceLabel:
+		return m.SourceLabel()
+	case importitem.FieldStatus:
+		return m.Status()
+	case importitem.FieldQuestionType:
+		return m.QuestionType()
+	case importitem.FieldStemPreview:
+		return m.StemPreview()
+	case importitem.FieldIssues:
+		return m.Issues()
+	case importitem.FieldFormulas:
+		return m.Formulas()
+	case importitem.FieldImages:
+		return m.Images()
+	case importitem.FieldPayload:
+		return m.Payload()
+	case importitem.FieldQuestionID:
+		return m.QuestionID()
+	case importitem.FieldQuestionVersionID:
+		return m.QuestionVersionID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ImportItemMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case importitem.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case importitem.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case importitem.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case importitem.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case importitem.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case importitem.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case importitem.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case importitem.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case importitem.FieldVersion:
+		return m.OldVersion(ctx)
+	case importitem.FieldImportID:
+		return m.OldImportID(ctx)
+	case importitem.FieldItemNo:
+		return m.OldItemNo(ctx)
+	case importitem.FieldSourceLabel:
+		return m.OldSourceLabel(ctx)
+	case importitem.FieldStatus:
+		return m.OldStatus(ctx)
+	case importitem.FieldQuestionType:
+		return m.OldQuestionType(ctx)
+	case importitem.FieldStemPreview:
+		return m.OldStemPreview(ctx)
+	case importitem.FieldIssues:
+		return m.OldIssues(ctx)
+	case importitem.FieldFormulas:
+		return m.OldFormulas(ctx)
+	case importitem.FieldImages:
+		return m.OldImages(ctx)
+	case importitem.FieldPayload:
+		return m.OldPayload(ctx)
+	case importitem.FieldQuestionID:
+		return m.OldQuestionID(ctx)
+	case importitem.FieldQuestionVersionID:
+		return m.OldQuestionVersionID(ctx)
+	}
+	return nil, fmt.Errorf("unknown ImportItem field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ImportItemMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case importitem.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case importitem.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case importitem.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case importitem.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case importitem.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case importitem.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case importitem.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case importitem.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case importitem.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case importitem.FieldImportID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImportID(v)
+		return nil
+	case importitem.FieldItemNo:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetItemNo(v)
+		return nil
+	case importitem.FieldSourceLabel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceLabel(v)
+		return nil
+	case importitem.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case importitem.FieldQuestionType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestionType(v)
+		return nil
+	case importitem.FieldStemPreview:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStemPreview(v)
+		return nil
+	case importitem.FieldIssues:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIssues(v)
+		return nil
+	case importitem.FieldFormulas:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFormulas(v)
+		return nil
+	case importitem.FieldImages:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImages(v)
+		return nil
+	case importitem.FieldPayload:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPayload(v)
+		return nil
+	case importitem.FieldQuestionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestionID(v)
+		return nil
+	case importitem.FieldQuestionVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestionVersionID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ImportItem field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ImportItemMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, importitem.FieldVersion)
+	}
+	if m.additem_no != nil {
+		fields = append(fields, importitem.FieldItemNo)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ImportItemMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case importitem.FieldVersion:
+		return m.AddedVersion()
+	case importitem.FieldItemNo:
+		return m.AddedItemNo()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ImportItemMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case importitem.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case importitem.FieldItemNo:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddItemNo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ImportItem numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ImportItemMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(importitem.FieldTenantID) {
+		fields = append(fields, importitem.FieldTenantID)
+	}
+	if m.FieldCleared(importitem.FieldCreatedBy) {
+		fields = append(fields, importitem.FieldCreatedBy)
+	}
+	if m.FieldCleared(importitem.FieldUpdatedBy) {
+		fields = append(fields, importitem.FieldUpdatedBy)
+	}
+	if m.FieldCleared(importitem.FieldDeletedAt) {
+		fields = append(fields, importitem.FieldDeletedAt)
+	}
+	if m.FieldCleared(importitem.FieldDeletedBy) {
+		fields = append(fields, importitem.FieldDeletedBy)
+	}
+	if m.FieldCleared(importitem.FieldDeleteReason) {
+		fields = append(fields, importitem.FieldDeleteReason)
+	}
+	if m.FieldCleared(importitem.FieldQuestionType) {
+		fields = append(fields, importitem.FieldQuestionType)
+	}
+	if m.FieldCleared(importitem.FieldQuestionID) {
+		fields = append(fields, importitem.FieldQuestionID)
+	}
+	if m.FieldCleared(importitem.FieldQuestionVersionID) {
+		fields = append(fields, importitem.FieldQuestionVersionID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ImportItemMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ImportItemMutation) ClearField(name string) error {
+	switch name {
+	case importitem.FieldTenantID:
+		m.ClearTenantID()
+		return nil
+	case importitem.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case importitem.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case importitem.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case importitem.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case importitem.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case importitem.FieldQuestionType:
+		m.ClearQuestionType()
+		return nil
+	case importitem.FieldQuestionID:
+		m.ClearQuestionID()
+		return nil
+	case importitem.FieldQuestionVersionID:
+		m.ClearQuestionVersionID()
+		return nil
+	}
+	return fmt.Errorf("unknown ImportItem nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ImportItemMutation) ResetField(name string) error {
+	switch name {
+	case importitem.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case importitem.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case importitem.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case importitem.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case importitem.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case importitem.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case importitem.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case importitem.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case importitem.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case importitem.FieldImportID:
+		m.ResetImportID()
+		return nil
+	case importitem.FieldItemNo:
+		m.ResetItemNo()
+		return nil
+	case importitem.FieldSourceLabel:
+		m.ResetSourceLabel()
+		return nil
+	case importitem.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case importitem.FieldQuestionType:
+		m.ResetQuestionType()
+		return nil
+	case importitem.FieldStemPreview:
+		m.ResetStemPreview()
+		return nil
+	case importitem.FieldIssues:
+		m.ResetIssues()
+		return nil
+	case importitem.FieldFormulas:
+		m.ResetFormulas()
+		return nil
+	case importitem.FieldImages:
+		m.ResetImages()
+		return nil
+	case importitem.FieldPayload:
+		m.ResetPayload()
+		return nil
+	case importitem.FieldQuestionID:
+		m.ResetQuestionID()
+		return nil
+	case importitem.FieldQuestionVersionID:
+		m.ResetQuestionVersionID()
+		return nil
+	}
+	return fmt.Errorf("unknown ImportItem field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ImportItemMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ImportItemMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ImportItemMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ImportItemMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ImportItemMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ImportItemMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ImportItemMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown ImportItem unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ImportItemMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown ImportItem edge %s", name)
 }
 
 // ImportJobMutation represents an operation that mutates the ImportJob nodes in the graph.

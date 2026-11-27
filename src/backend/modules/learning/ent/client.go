@@ -27,6 +27,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculum"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculumversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/evaluation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterial"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterialversion"
@@ -88,6 +89,8 @@ type Client struct {
 	CurriculumVersion *CurriculumVersionClient
 	// Evaluation is the client for interacting with the Evaluation builders.
 	Evaluation *EvaluationClient
+	// ImportItem is the client for interacting with the ImportItem builders.
+	ImportItem *ImportItemClient
 	// ImportJob is the client for interacting with the ImportJob builders.
 	ImportJob *ImportJobClient
 	// LearningMaterial is the client for interacting with the LearningMaterial builders.
@@ -167,6 +170,7 @@ func (c *Client) init() {
 	c.Curriculum = NewCurriculumClient(c.config)
 	c.CurriculumVersion = NewCurriculumVersionClient(c.config)
 	c.Evaluation = NewEvaluationClient(c.config)
+	c.ImportItem = NewImportItemClient(c.config)
 	c.ImportJob = NewImportJobClient(c.config)
 	c.LearningMaterial = NewLearningMaterialClient(c.config)
 	c.LearningMaterialVersion = NewLearningMaterialVersionClient(c.config)
@@ -302,6 +306,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Curriculum:                 NewCurriculumClient(cfg),
 		CurriculumVersion:          NewCurriculumVersionClient(cfg),
 		Evaluation:                 NewEvaluationClient(cfg),
+		ImportItem:                 NewImportItemClient(cfg),
 		ImportJob:                  NewImportJobClient(cfg),
 		LearningMaterial:           NewLearningMaterialClient(cfg),
 		LearningMaterialVersion:    NewLearningMaterialVersionClient(cfg),
@@ -361,6 +366,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Curriculum:                 NewCurriculumClient(cfg),
 		CurriculumVersion:          NewCurriculumVersionClient(cfg),
 		Evaluation:                 NewEvaluationClient(cfg),
+		ImportItem:                 NewImportItemClient(cfg),
 		ImportJob:                  NewImportJobClient(cfg),
 		LearningMaterial:           NewLearningMaterialClient(cfg),
 		LearningMaterialVersion:    NewLearningMaterialVersionClient(cfg),
@@ -421,13 +427,14 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Activity, c.ActivityVersion, c.AssessmentBlueprint,
 		c.AssessmentBlueprintVersion, c.Attempt, c.AttemptItem, c.Competency,
 		c.ContentRelease, c.ContentTransition, c.Curriculum, c.CurriculumVersion,
-		c.Evaluation, c.ImportJob, c.LearningMaterial, c.LearningMaterialVersion,
-		c.LearningObjective, c.Lesson, c.LessonVersion, c.LoVersionMapping, c.MathSvg,
-		c.MediaAsset, c.MediaUsage, c.Question, c.QuestionPlan, c.QuestionSet,
-		c.QuestionSetItem, c.QuestionSetVersion, c.QuestionVersion,
-		c.QuestionVersionObjective, c.ReviewTask, c.ScheduledPublication, c.Subject,
-		c.SubjectGrade, c.TenantResourceAssignment, c.Textbook, c.TextbookSection,
-		c.TextbookSectionObjective, c.TextbookSeries, c.Topic, c.TranslationJob,
+		c.Evaluation, c.ImportItem, c.ImportJob, c.LearningMaterial,
+		c.LearningMaterialVersion, c.LearningObjective, c.Lesson, c.LessonVersion,
+		c.LoVersionMapping, c.MathSvg, c.MediaAsset, c.MediaUsage, c.Question,
+		c.QuestionPlan, c.QuestionSet, c.QuestionSetItem, c.QuestionSetVersion,
+		c.QuestionVersion, c.QuestionVersionObjective, c.ReviewTask,
+		c.ScheduledPublication, c.Subject, c.SubjectGrade, c.TenantResourceAssignment,
+		c.Textbook, c.TextbookSection, c.TextbookSectionObjective, c.TextbookSeries,
+		c.Topic, c.TranslationJob,
 	} {
 		n.Use(hooks...)
 	}
@@ -440,13 +447,14 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Activity, c.ActivityVersion, c.AssessmentBlueprint,
 		c.AssessmentBlueprintVersion, c.Attempt, c.AttemptItem, c.Competency,
 		c.ContentRelease, c.ContentTransition, c.Curriculum, c.CurriculumVersion,
-		c.Evaluation, c.ImportJob, c.LearningMaterial, c.LearningMaterialVersion,
-		c.LearningObjective, c.Lesson, c.LessonVersion, c.LoVersionMapping, c.MathSvg,
-		c.MediaAsset, c.MediaUsage, c.Question, c.QuestionPlan, c.QuestionSet,
-		c.QuestionSetItem, c.QuestionSetVersion, c.QuestionVersion,
-		c.QuestionVersionObjective, c.ReviewTask, c.ScheduledPublication, c.Subject,
-		c.SubjectGrade, c.TenantResourceAssignment, c.Textbook, c.TextbookSection,
-		c.TextbookSectionObjective, c.TextbookSeries, c.Topic, c.TranslationJob,
+		c.Evaluation, c.ImportItem, c.ImportJob, c.LearningMaterial,
+		c.LearningMaterialVersion, c.LearningObjective, c.Lesson, c.LessonVersion,
+		c.LoVersionMapping, c.MathSvg, c.MediaAsset, c.MediaUsage, c.Question,
+		c.QuestionPlan, c.QuestionSet, c.QuestionSetItem, c.QuestionSetVersion,
+		c.QuestionVersion, c.QuestionVersionObjective, c.ReviewTask,
+		c.ScheduledPublication, c.Subject, c.SubjectGrade, c.TenantResourceAssignment,
+		c.Textbook, c.TextbookSection, c.TextbookSectionObjective, c.TextbookSeries,
+		c.Topic, c.TranslationJob,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -479,6 +487,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.CurriculumVersion.mutate(ctx, m)
 	case *EvaluationMutation:
 		return c.Evaluation.mutate(ctx, m)
+	case *ImportItemMutation:
+		return c.ImportItem.mutate(ctx, m)
 	case *ImportJobMutation:
 		return c.ImportJob.mutate(ctx, m)
 	case *LearningMaterialMutation:
@@ -2157,6 +2167,141 @@ func (c *EvaluationClient) mutate(ctx context.Context, m *EvaluationMutation) (V
 		return (&EvaluationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Evaluation mutation op: %q", m.Op())
+	}
+}
+
+// ImportItemClient is a client for the ImportItem schema.
+type ImportItemClient struct {
+	config
+}
+
+// NewImportItemClient returns a client for the ImportItem from the given config.
+func NewImportItemClient(c config) *ImportItemClient {
+	return &ImportItemClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `importitem.Hooks(f(g(h())))`.
+func (c *ImportItemClient) Use(hooks ...Hook) {
+	c.hooks.ImportItem = append(c.hooks.ImportItem, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `importitem.Intercept(f(g(h())))`.
+func (c *ImportItemClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ImportItem = append(c.inters.ImportItem, interceptors...)
+}
+
+// Create returns a builder for creating a ImportItem entity.
+func (c *ImportItemClient) Create() *ImportItemCreate {
+	mutation := newImportItemMutation(c.config, OpCreate)
+	return &ImportItemCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ImportItem entities.
+func (c *ImportItemClient) CreateBulk(builders ...*ImportItemCreate) *ImportItemCreateBulk {
+	return &ImportItemCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ImportItemClient) MapCreateBulk(slice any, setFunc func(*ImportItemCreate, int)) *ImportItemCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ImportItemCreateBulk{err: fmt.Errorf("calling to ImportItemClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ImportItemCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ImportItemCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ImportItem.
+func (c *ImportItemClient) Update() *ImportItemUpdate {
+	mutation := newImportItemMutation(c.config, OpUpdate)
+	return &ImportItemUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ImportItemClient) UpdateOne(_m *ImportItem) *ImportItemUpdateOne {
+	mutation := newImportItemMutation(c.config, OpUpdateOne, withImportItem(_m))
+	return &ImportItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ImportItemClient) UpdateOneID(id uuid.UUID) *ImportItemUpdateOne {
+	mutation := newImportItemMutation(c.config, OpUpdateOne, withImportItemID(id))
+	return &ImportItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ImportItem.
+func (c *ImportItemClient) Delete() *ImportItemDelete {
+	mutation := newImportItemMutation(c.config, OpDelete)
+	return &ImportItemDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ImportItemClient) DeleteOne(_m *ImportItem) *ImportItemDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ImportItemClient) DeleteOneID(id uuid.UUID) *ImportItemDeleteOne {
+	builder := c.Delete().Where(importitem.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ImportItemDeleteOne{builder}
+}
+
+// Query returns a query builder for ImportItem.
+func (c *ImportItemClient) Query() *ImportItemQuery {
+	return &ImportItemQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeImportItem},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ImportItem entity by its id.
+func (c *ImportItemClient) Get(ctx context.Context, id uuid.UUID) (*ImportItem, error) {
+	return c.Query().Where(importitem.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ImportItemClient) GetX(ctx context.Context, id uuid.UUID) *ImportItem {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ImportItemClient) Hooks() []Hook {
+	hooks := c.hooks.ImportItem
+	return append(hooks[:len(hooks):len(hooks)], importitem.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ImportItemClient) Interceptors() []Interceptor {
+	inters := c.inters.ImportItem
+	return append(inters[:len(inters):len(inters)], importitem.Interceptors[:]...)
+}
+
+func (c *ImportItemClient) mutate(ctx context.Context, m *ImportItemMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ImportItemCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ImportItemUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ImportItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ImportItemDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ImportItem mutation op: %q", m.Op())
 	}
 }
 
@@ -5945,23 +6090,23 @@ type (
 	hooks struct {
 		Activity, ActivityVersion, AssessmentBlueprint, AssessmentBlueprintVersion,
 		Attempt, AttemptItem, Competency, ContentRelease, ContentTransition,
-		Curriculum, CurriculumVersion, Evaluation, ImportJob, LearningMaterial,
-		LearningMaterialVersion, LearningObjective, Lesson, LessonVersion,
-		LoVersionMapping, MathSvg, MediaAsset, MediaUsage, Question, QuestionPlan,
-		QuestionSet, QuestionSetItem, QuestionSetVersion, QuestionVersion,
-		QuestionVersionObjective, ReviewTask, ScheduledPublication, Subject,
-		SubjectGrade, TenantResourceAssignment, Textbook, TextbookSection,
+		Curriculum, CurriculumVersion, Evaluation, ImportItem, ImportJob,
+		LearningMaterial, LearningMaterialVersion, LearningObjective, Lesson,
+		LessonVersion, LoVersionMapping, MathSvg, MediaAsset, MediaUsage, Question,
+		QuestionPlan, QuestionSet, QuestionSetItem, QuestionSetVersion,
+		QuestionVersion, QuestionVersionObjective, ReviewTask, ScheduledPublication,
+		Subject, SubjectGrade, TenantResourceAssignment, Textbook, TextbookSection,
 		TextbookSectionObjective, TextbookSeries, Topic, TranslationJob []ent.Hook
 	}
 	inters struct {
 		Activity, ActivityVersion, AssessmentBlueprint, AssessmentBlueprintVersion,
 		Attempt, AttemptItem, Competency, ContentRelease, ContentTransition,
-		Curriculum, CurriculumVersion, Evaluation, ImportJob, LearningMaterial,
-		LearningMaterialVersion, LearningObjective, Lesson, LessonVersion,
-		LoVersionMapping, MathSvg, MediaAsset, MediaUsage, Question, QuestionPlan,
-		QuestionSet, QuestionSetItem, QuestionSetVersion, QuestionVersion,
-		QuestionVersionObjective, ReviewTask, ScheduledPublication, Subject,
-		SubjectGrade, TenantResourceAssignment, Textbook, TextbookSection,
+		Curriculum, CurriculumVersion, Evaluation, ImportItem, ImportJob,
+		LearningMaterial, LearningMaterialVersion, LearningObjective, Lesson,
+		LessonVersion, LoVersionMapping, MathSvg, MediaAsset, MediaUsage, Question,
+		QuestionPlan, QuestionSet, QuestionSetItem, QuestionSetVersion,
+		QuestionVersion, QuestionVersionObjective, ReviewTask, ScheduledPublication,
+		Subject, SubjectGrade, TenantResourceAssignment, Textbook, TextbookSection,
 		TextbookSectionObjective, TextbookSeries, Topic,
 		TranslationJob []ent.Interceptor
 	}
@@ -5982,6 +6127,7 @@ var (
 		Curriculum:                 tableSchemas[2],
 		CurriculumVersion:          tableSchemas[2],
 		Evaluation:                 tableSchemas[0],
+		ImportItem:                 tableSchemas[1],
 		ImportJob:                  tableSchemas[1],
 		LearningMaterial:           tableSchemas[1],
 		LearningMaterialVersion:    tableSchemas[1],

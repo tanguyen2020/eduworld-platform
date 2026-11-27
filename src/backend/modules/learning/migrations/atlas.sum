@@ -1,4 +1,4 @@
-h1:oBpeZcmq8jkcQpmmCy2adTnJN4xfPXMOID6zyadOqOE=
+h1:2i5tX1QBImPiWG7q5NuCqnDt9jdamSlk1LK1Iv69tDc=
 00000000000001_baseline.sql h1:V+RVDz3UEtGF7iZgjrvxor6e/BKQrfoOtRtOiI3rPRg=
 20261118000001_infra.sql h1:UYIO1YaVfAbTd0wW/x+b2X72bbf64ReWEsVYVT2aJ1M=
 20261119000010_infra_platform_grants.sql h1:7/0pq0LI7ubjoqTTP3umbcLxCUX0+IobbmQVQXbcwzM=
@@ -39,4 +39,5 @@ h1:oBpeZcmq8jkcQpmmCy2adTnJN4xfPXMOID6zyadOqOE=
 20270101000073_f073_minigame.sql h1:m+TGdbxUaBgiCWl52VE4v40aLNk2TilT3wkTGNgU6bg=
 20270101000078_f078_minigame_pointer.sql h1:Gv/MyTuB1a1ufzqZDeBnn8vJ5xcoHWbdIVWKmtHmfgs=
 20270101000103_f103_boss_question_plans.sql h1:s43covqRRnonFPjWq1NyD0/j+hQDsGeHL+DJGvtcwPU=
-20270201000134_infra_reconcile_grants.sql h1:pSapZsMoIfLHEJDBUHty7BQElTFVQSlYNy6NPvFS6Zg=
+20270102000028_f028_import_items.sql h1:RMpEkkMsEgEtprIdrKxeWdQCvJBlgMiGqqdl1xzcgvs=
+20270201000134_infra_reconcile_grants.sql h1:2golv4U0fZbYIl8T/g9t8WNLe0vkzmjF4sv2IBbEotg=

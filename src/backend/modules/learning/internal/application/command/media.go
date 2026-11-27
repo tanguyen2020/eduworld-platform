@@ -531,6 +531,8 @@ func extOf(mime string) string {
 		return ".xml"
 	case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
 		return ".xlsx"
+	case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+		return ".docx"
 	case "application/zip":
 		return ".zip"
 	case "text/vtt":

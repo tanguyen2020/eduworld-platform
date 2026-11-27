@@ -15,10 +15,10 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
-// Question import kinds handled by ContentImport (F024 US4); lessons_docx is refused (IMPORT_KIND_NOT_SUPPORTED).
+// Question import kinds handled by ContentImport (F024 US4); lessons_docx is the Word import of DocxImport (F028).
 var QuestionImportKinds = []string{"questions_csv", "questions_xlsx", "questions_qti_lite", "content_json"}
 
-// SubImportKindNotSupported is errors[].code of an import kind outside the release (lessons_docx).
+// SubImportKindNotSupported is errors[].code of an import kind that is not enabled in a binary.
 const SubImportKindNotSupported = "IMPORT_KIND_NOT_SUPPORTED"
 
 // QuestionImportCodec parses question import files (infrastructure/importer).
@@ -203,6 +203,11 @@ func (h ContentImport) fields(ctx context.Context, o contentmodel.Owner, r dto.Q
 // createDraft creates a question with version 1 in draft for owner o (the core of CreateQuestion without the
 // authorization of an HTTP principal: the import job was authorized when it was created).
 func (h Questions) createDraft(ctx context.Context, o contentmodel.Owner, author uuid.UUID, f QuestionFields) (QuestionResult, error) {
+	return h.createDraftWith(ctx, o, author, f, nil)
+}
+
+// createDraftWith is createDraft with extra audit metadata (the import job and question of a Word import, F028).
+func (h Questions) createDraftWith(ctx context.Context, o contentmodel.Owner, author uuid.UUID, f QuestionFields, meta map[string]any) (QuestionResult, error) {
 	q := dto.Question{ID: ids.New(), Owner: o, LatestVersionNo: 1}
 	v := dto.QuestionVersion{ID: ids.New(), QuestionID: q.ID, VersionNo: 1, Status: contentmodel.StatusDraft, MaxScore: 1, ContentLanguage: "vi",
 		AuthorID: author, Owner: o}
@@ -222,8 +227,11 @@ func (h Questions) createDraft(ctx context.Context, o contentmodel.Owner, author
 	if err := h.recordUsages(ctx, v); err != nil {
 		return QuestionResult{}, err
 	}
-	if err := h.recordQuestion(ctx, o, audit.Event{Action: ActionContentVersionCreated, TargetID: q.ID.String(),
-		Metadata: map[string]any{"question_version_id": v.ID.String(), "version": 1, "type": v.Type, "source": "import"}}); err != nil {
+	md := map[string]any{"question_version_id": v.ID.String(), "version": 1, "type": v.Type, "source": "import"}
+	for k, x := range meta {
+		md[k] = x
+	}
+	if err := h.recordQuestion(ctx, o, audit.Event{Action: ActionContentVersionCreated, TargetID: q.ID.String(), Metadata: md}); err != nil {
 		return QuestionResult{}, err
 	}
 	return h.load(ctx, q.ID, 1)

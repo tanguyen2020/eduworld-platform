@@ -153,6 +153,18 @@ func (f EvaluationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EvaluationMutation", m)
 }
 
+// The ImportItemFunc type is an adapter to allow the use of ordinary
+// function as ImportItem mutator.
+type ImportItemFunc func(context.Context, *ent.ImportItemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ImportItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ImportItemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ImportItemMutation", m)
+}
+
 // The ImportJobFunc type is an adapter to allow the use of ordinary
 // function as ImportJob mutator.
 type ImportJobFunc func(context.Context, *ent.ImportJobMutation) (ent.Value, error)

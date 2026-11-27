@@ -24,6 +24,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculum"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/curriculumversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/evaluation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/importjob"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterial"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterialversion"
@@ -124,6 +125,7 @@ func checkColumn(t, c string) error {
 			curriculum.Table:                 curriculum.ValidColumn,
 			curriculumversion.Table:          curriculumversion.ValidColumn,
 			evaluation.Table:                 evaluation.ValidColumn,
+			importitem.Table:                 importitem.ValidColumn,
 			importjob.Table:                  importjob.ValidColumn,
 			learningmaterial.Table:           learningmaterial.ValidColumn,
 			learningmaterialversion.Table:    learningmaterialversion.ValidColumn,

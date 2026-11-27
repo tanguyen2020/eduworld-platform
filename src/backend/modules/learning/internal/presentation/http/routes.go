@@ -55,6 +55,7 @@ type CurriculumQueries interface {
 	ListCurricula(ctx context.Context, ownerScope string, in query.PageInput) (query.Page[dto.Curriculum], error)
 	GetCurriculum(ctx context.Context, id uuid.UUID) (dto.Curriculum, error)
 	ListVersions(ctx context.Context, curriculumID uuid.UUID, in query.PageInput) (query.Page[dto.CurriculumVersion], error)
+	ListImportItems(ctx context.Context, in query.ImportItemsInput) (query.Page[dto.ImportItem], error)
 	GetVersion(ctx context.Context, curriculumID uuid.UUID, versionNo int) (dto.CurriculumVersion, error)
 	ListSubjects(ctx context.Context, grade *int, in query.PageInput) (query.Page[dto.Subject], error)
 	ListTopics(ctx context.Context, versionID uuid.UUID, subject *uuid.UUID, grade *int, in query.PageInput) (query.Page[dto.Topic], error)
@@ -118,6 +119,8 @@ type Handlers struct {
 	Efficacy EfficacyHandlers
 	// Experiments serves the A/B experiments of F035 US5.
 	Experiments ExperimentHandlers
+	// DocxImports creates the drafts of a Word import (F028).
+	DocxImports DocxImportCommands
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -172,11 +175,14 @@ var Operations = map[string]httpx.Operation{
 	"putTextbookSectionObjectives":   op("putTextbookSectionObjectives", http.MethodPut, "/cms/learning/textbook-sections/{section_id}/objectives", httpx.TenantOptional, httpx.IdempotencyRequired, 200),
 	"createContentImport":            op("createContentImport", http.MethodPost, "/cms/learning/imports", httpx.TenantOptional, httpx.IdempotencyRequired, 202),
 	"getContentImport":               op("getContentImport", http.MethodGet, "/cms/learning/imports/{import_id}", httpx.TenantOptional, httpx.IdempotencyNone, 200),
-	"listCurricula":                  op("listCurricula", http.MethodGet, "/learning/curricula", httpx.TenantRequired, httpx.IdempotencyNone, 200),
-	"listSubjects":                   op("listSubjects", http.MethodGet, "/learning/subjects", httpx.TenantRequired, httpx.IdempotencyNone, 200),
-	"listTopics":                     op("listTopics", http.MethodGet, "/learning/topics", httpx.TenantRequired, httpx.IdempotencyNone, 200),
-	"listLearningObjectives":         op("listLearningObjectives", http.MethodGet, "/learning/objectives", httpx.TenantRequired, httpx.IdempotencyNone, 200),
-	"getLearningObjective":           op("getLearningObjective", http.MethodGet, "/learning/objectives/{objective_id}", httpx.TenantRequired, httpx.IdempotencyNone, 200),
+	"listContentImportItems":         op("listContentImportItems", http.MethodGet, "/cms/learning/imports/{import_id}/items", httpx.TenantOptional, httpx.IdempotencyNone, 200),
+	"createDraftFromImportItem": op("createDraftFromImportItem", http.MethodPost, "/cms/learning/imports/{import_id}/items/{item_no}:create-draft",
+		httpx.TenantOptional, httpx.IdempotencyRequired, 201),
+	"listCurricula":          op("listCurricula", http.MethodGet, "/learning/curricula", httpx.TenantRequired, httpx.IdempotencyNone, 200),
+	"listSubjects":           op("listSubjects", http.MethodGet, "/learning/subjects", httpx.TenantRequired, httpx.IdempotencyNone, 200),
+	"listTopics":             op("listTopics", http.MethodGet, "/learning/topics", httpx.TenantRequired, httpx.IdempotencyNone, 200),
+	"listLearningObjectives": op("listLearningObjectives", http.MethodGet, "/learning/objectives", httpx.TenantRequired, httpx.IdempotencyNone, 200),
+	"getLearningObjective":   op("getLearningObjective", http.MethodGet, "/learning/objectives/{objective_id}", httpx.TenantRequired, httpx.IdempotencyNone, 200),
 }
 
 // Register mounts every F021 operation on the server.

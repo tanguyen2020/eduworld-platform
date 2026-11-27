@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -27,6 +28,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/examquality"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/docximport"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/examsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/i18n"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/importer"
@@ -95,6 +97,7 @@ type curEnv struct {
 	users   map[string]authz.PrincipalData
 	tokens  map[string]string
 	media   *mediaKit               // F027 (newCurEnv(..., withMedia))
+	docx    *command.DocxImport     // F028
 	att     command.Attempts        // F030
 	attq    query.Attempts          // F030
 	clk     *testClock              // F030
@@ -314,13 +317,22 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	rgd := command.Regrades{UoW: e.uow, Store: write.RegradeRepo{}, Attempts: att, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Exams: exams}
 	handlers.Regrades, handlers.RegradeQueries = rgd, query.Regrades{Session: e.read, Model: read.RegradeModel{}, Cursors: codec}
 	cmd.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
+	// F028: the Word import with the Pandoc of EW_PANDOC_CMD (docker run of eduworld/media-tools) or pandoc on PATH.
+	docx := &command.DocxImport{Items: write.ImportItemRepo{}, Jobs: write.ImportJobRepo{}, Assets: assets, Content: cmd.Content}
+	if pc := pandocCommand(); pc != nil {
+		docx.Converter = docximport.Pandoc{Command: pc, Env: os.Environ(), Timeout: 2 * time.Minute}
+	}
+	if mk != nil {
+		docx.Media = &mk.cmd
+	}
+	cmd.Docx, handlers.DocxImports = docx, docx
 	handlers.Commands = cmd
 	if err := learninghttp.Register(srv, handlers); err != nil {
 		t.Fatal(err)
 	}
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
-	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
+	ce := &curEnv{env: e, srv: hs, docx: docx, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons, recs: recs,
 		asg: asg, asgq: asgq, exams: exams, examq: examq, dashq: dashq,
 		reports: reports, quality: quality, reportq: reportq, eff: eff, exps: exps}
