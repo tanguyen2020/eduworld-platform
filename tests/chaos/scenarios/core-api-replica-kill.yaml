@@ -1,0 +1,26 @@
+# F132-AC-25 (part 2): one core-api replica killed (SIGKILL by a one-off Pumba job on its node). REST availability
+# stays within the SLO `availability`; Swarm replaces the task.
+id: CORE-API-REPLICA-KILL
+name: core-api-replica-kill
+acceptance: [F132-AC-25]
+tool: chaos
+load: { scenario: ccu_10k, factor: 0.3, of: target_ccu }
+fault:
+  type: replica_kill
+  target: core-api
+  duration: 120
+recovery_timeout: 300
+expect:
+  during:
+    - name: REST availability within the SLO availability (gateway 5xx ratio <= 0.5 %)
+      promql: (sum(rate(apisix_http_status{job="apisix",code=~"5.."}[2m])) or vector(0)) / sum(rate(apisix_http_status{job="apisix"}[2m]))
+      op: "<="
+      value: 0.005
+  after:
+    - name: core-api back at its desired replicas (task replaced)
+      promql: max(swarm_service_replicas_running{service="core-api"}) - max(swarm_service_replicas_desired{service="core-api"})
+      op: ">="
+      value: 0
+alerts:
+  - { name: SwarmReplicasBelowDesired, runbook: docs/11-operations/runbooks/SwarmReplicasBelowDesired.md }
+reconcile: attempts

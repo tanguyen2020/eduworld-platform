@@ -1,0 +1,35 @@
+# F132-AC-26 (TC-SVC-004): timeouts injected in an external integration (TARGET = keycloak-admin | sis |
+# object-storage) by a temporary Toxiproxy service. The adapter applies its timeout, retries only idempotent calls,
+# opens its circuit breaker by external_api_resilience and answers 503 UNAVAILABLE retryable; routes not using that
+# integration keep their latency. Facade calls between modules have no retry/breaker (module_call_deadline).
+#  keycloak-admin / object-storage: core-api's EW_KC_ADMIN_BASE_URL / EW_S3_ENDPOINT point at the proxy for the window
+#  and are restored afterwards. sis: the SIS connection of a perf-* tenant must already point at chaos-toxiproxy:18083
+#  and EW_CHAOS_SIS_UPSTREAM name the SIS sandbox host:port (precondition, checked before injecting).
+id: TC-SVC-004
+name: external-fault
+acceptance: [F132-AC-26]
+tool: chaos
+load: { scenario: ccu_10k, factor: 0.3, of: target_ccu }
+fault:
+  type: external_fault
+  target: "${TARGET}"
+  duration: 300
+  params: { toxic: timeout, timeout_ms: 0 }
+recovery_timeout: 300
+expect:
+  during:
+    - name: the circuit breaker of the integration opened (eduworld_external_client_circuit_state == 2)
+      promql: max(eduworld_external_client_circuit_state) or vector(0)
+      op: "=="
+      value: 2
+    - name: controlled errors only (503 UNAVAILABLE, no other 5xx)
+      promql: (sum(rate(eduworld_http_server_requests_total{status_class="5xx",code!="UNAVAILABLE"}[3m])) or vector(0)) / sum(rate(eduworld_http_server_requests_total[3m]))
+      op: "<"
+      value: 0.005
+    - name: routes of module learning keep their latency (p95 < 400 ms, NFR-PERF-002)
+      promql: histogram_quantile(0.95, sum by (le) (rate(eduworld_http_server_duration_seconds_bucket{module="learning"}[3m])))
+      op: "<"
+      value: 0.4
+alerts:
+  - { name: CircuitBreakerOpen, runbook: docs/11-operations/runbooks/CircuitBreakerOpen.md }
+reconcile: none

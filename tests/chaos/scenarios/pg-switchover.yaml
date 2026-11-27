@@ -1,0 +1,27 @@
+# F132-AC-11 (TC-SVC-013, part 2): Patroni switchover under load - write interruption < 60 s, no committed row lost.
+# Reuses the F130 drill scripts/ops/patroni-switchover.sh (heartbeat writes through PgBouncer, exit 1 on a gap >= 60 s
+# or a lost row) as an ops job; a switchover leaves the cluster healthy, recovery only waits for readiness.
+id: TC-SVC-013
+name: pg-switchover
+acceptance: [F132-AC-11]
+tool: chaos
+load: { scenario: ccu_10k, factor: 0.3, of: target_ccu }
+fault:
+  type: db_failover
+  target: pg
+  duration: 120
+  params: { max_gap_seconds: 60 }
+recovery_timeout: 300
+expect:
+  after:
+    - name: replication healthy again (lag < 30 s)
+      promql: max(pg_replication_lag_seconds) or vector(0)
+      op: "<"
+      value: 30
+    - name: no backend task restarted (PgBouncer/pg-router reconnect)
+      promql: sum(increase(swarm_task_restarts_total{service=~"core-api|worker"}[10m])) or vector(0)
+      op: "=="
+      value: 0
+alerts:
+  - { name: PostgresReplicationLag, runbook: docs/11-operations/runbooks/PostgresReplicationLag.md }
+reconcile: attempts

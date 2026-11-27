@@ -1,0 +1,33 @@
+# F132-AC-08 (TC-SVC-010): database eduworld_learning unreachable while students do quests (load 0.3x target_ccu).
+# Fault: the Patroni leader refuses new connections to eduworld_learning and kills its sessions (ALTER DATABASE ...
+# ALLOW_CONNECTIONS false + pg_terminate_backend), through an ops job with the admin pgpass (F130 run-ops-job.sh).
+# Every other module database keeps serving. Recovery: ALLOW_CONNECTIONS true.
+id: TC-SVC-010
+name: learning-db-down
+acceptance: [F132-AC-08]
+tool: chaos
+load: { scenario: ccu_10k, factor: 0.3, of: target_ccu }
+fault:
+  type: module_db_down
+  target: eduworld_learning
+  duration: 300
+recovery_timeout: 300
+expect:
+  during:
+    - name: learning routes answer 503 UNAVAILABLE (game quest steps degrade with a friendly message)
+      promql: sum(increase(eduworld_http_server_requests_total{module=~"learning|game",code="UNAVAILABLE"}[3m]))
+      op: ">"
+      value: 0
+    - name: routes of the other modules keep serving (5xx ratio < 0.5 %)
+      promql: (sum(rate(eduworld_http_server_requests_total{module=~"identity|competition|chat",status_class="5xx"}[3m])) or vector(0)) / sum(rate(eduworld_http_server_requests_total{module=~"identity|competition|chat"}[3m]))
+      op: "<"
+      value: 0.005
+  after:
+    - name: learning serves again (5xx ratio < 0.5 % after recovery)
+      promql: (sum(rate(eduworld_http_server_requests_total{module="learning",status_class="5xx"}[2m])) or vector(0)) / sum(rate(eduworld_http_server_requests_total{module="learning"}[2m]))
+      op: "<"
+      value: 0.005
+alerts:
+  - { name: ModuleDatabaseUnavailable, runbook: docs/11-operations/runbooks/ModuleDatabaseUnavailable.md }
+  - { name: ModuleHighErrorRate, runbook: docs/11-operations/runbooks/ModuleHighErrorRate.md }
+reconcile: attempts

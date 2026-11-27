@@ -1,0 +1,28 @@
+# TEST_STRATEGY §3 (Toxiproxy/Pumba latency): 200 ms +/- 50 ms network delay on the NATS nodes or on pg-router
+# (TARGET = nats | pg-router) by a one-off Pumba netem job on the nodes running them. Degrades without cascading 5xx;
+# facade deadlines (module_call_deadline) and NATS request timeouts answer UNAVAILABLE instead of hanging.
+id: LATENCY
+name: latency
+acceptance: [F132-AC-08, F132-AC-10]
+tool: chaos
+load: { scenario: ccu_10k, factor: 0.3, of: target_ccu }
+fault:
+  type: latency
+  target: "${TARGET}"
+  duration: 300
+  params: { delay_ms: 200, jitter_ms: 50 }
+recovery_timeout: 300
+expect:
+  during:
+    - name: no cascading 5xx (ratio < 2 %, ModuleHighErrorRate threshold)
+      promql: (sum(rate(eduworld_http_server_requests_total{status_class="5xx",code!="UNAVAILABLE"}[3m])) or vector(0)) / sum(rate(eduworld_http_server_requests_total[3m]))
+      op: "<"
+      value: 0.02
+  after:
+    - name: REST read latency back under NFR-PERF-001 (p95 < 200 ms)
+      promql: histogram_quantile(0.95, sum by (le) (rate(eduworld_http_server_duration_seconds_bucket{method="GET"}[2m])))
+      op: "<"
+      value: 0.2
+alerts:
+  - { name: APILatencyP95High, runbook: docs/11-operations/runbooks/APILatencyP95High.md }
+reconcile: none

@@ -1,0 +1,29 @@
+# F132-AC-11 (TC-SVC-013, part 1): database eduworld_competition unreachable - only competition features stop.
+id: TC-SVC-013
+name: competition-db-down
+acceptance: [F132-AC-11]
+tool: chaos
+load: { scenario: ccu_10k, factor: 0.3, of: target_ccu }
+fault:
+  type: module_db_down
+  target: eduworld_competition
+  duration: 300
+recovery_timeout: 300
+expect:
+  during:
+    - name: competition answers 503 UNAVAILABLE
+      promql: sum(increase(eduworld_http_server_requests_total{module="competition",code="UNAVAILABLE"}[3m]))
+      op: ">"
+      value: 0
+    - name: the other modules stay normal (5xx ratio < 0.5 %)
+      promql: (sum(rate(eduworld_http_server_requests_total{module=~"identity|learning|game|chat",status_class="5xx"}[3m])) or vector(0)) / sum(rate(eduworld_http_server_requests_total{module=~"identity|learning|game|chat"}[3m]))
+      op: "<"
+      value: 0.005
+  after:
+    - name: competition serves again
+      promql: (sum(rate(eduworld_http_server_requests_total{module="competition",status_class="5xx"}[2m])) or vector(0)) / sum(rate(eduworld_http_server_requests_total{module="competition"}[2m]))
+      op: "<"
+      value: 0.005
+alerts:
+  - { name: ModuleDatabaseUnavailable, runbook: docs/11-operations/runbooks/ModuleDatabaseUnavailable.md }
+reconcile: attempts

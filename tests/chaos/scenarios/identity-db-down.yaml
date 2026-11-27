@@ -1,0 +1,30 @@
+# F132-AC-09 (TC-SVC-011): database eduworld_identity unreachable for 5 minutes. Requests whose Principal is cached
+# keep working; a request that needs a Principal not in cache gets 503 UNAVAILABLE, never a pass (fail closed, R7).
+id: TC-SVC-011
+name: identity-db-down
+acceptance: [F132-AC-09]
+tool: chaos
+load: { scenario: ccu_10k, factor: 0.3, of: target_ccu }
+fault:
+  type: module_db_down
+  target: eduworld_identity
+  duration: 300
+recovery_timeout: 300
+expect:
+  during:
+    - name: cached principals keep the learning and game routes serving (2xx keeps flowing)
+      promql: sum(rate(eduworld_http_server_requests_total{module=~"learning|game",status_class="2xx"}[2m]))
+      op: ">"
+      value: 0
+    - name: uncached requests answer 503 UNAVAILABLE (fail closed)
+      promql: sum(increase(eduworld_http_server_requests_total{code="UNAVAILABLE"}[4m]))
+      op: ">"
+      value: 0
+  after:
+    - name: identity serves again
+      promql: (sum(rate(eduworld_http_server_requests_total{module="identity",status_class="5xx"}[2m])) or vector(0)) / sum(rate(eduworld_http_server_requests_total{module="identity"}[2m]))
+      op: "<"
+      value: 0.005
+alerts:
+  - { name: ModuleDatabaseUnavailable, runbook: docs/11-operations/runbooks/ModuleDatabaseUnavailable.md }
+reconcile: attempts

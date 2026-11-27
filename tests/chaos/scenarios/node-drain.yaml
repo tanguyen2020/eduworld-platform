@@ -1,0 +1,26 @@
+# F132-AC-13: one `app` node drained (docker node update --availability drain). Stateless tasks move to the other
+# nodes; REST availability over the window stays within the SLO `availability` (CONFIG_DEFAULTS). TARGET = node name.
+id: NODE-DRAIN
+name: node-drain
+acceptance: [F132-AC-13]
+tool: chaos
+load: { scenario: ccu_10k, factor: 0.3, of: target_ccu }
+fault:
+  type: node_drain
+  target: "${TARGET}"
+  duration: 300
+recovery_timeout: 600
+expect:
+  during:
+    - name: REST availability over the window within the SLO availability (gateway 5xx ratio <= 0.5 %)
+      promql: (sum(rate(apisix_http_status{job="apisix",code=~"5.."}[5m])) or vector(0)) / sum(rate(apisix_http_status{job="apisix"}[5m]))
+      op: "<="
+      value: 0.005
+  after:
+    - name: every backend service back at its desired replicas
+      promql: count(max by (swarm_service) (swarm_service_replicas_running{service=~"core-api|realtime|worker"}) < max by (swarm_service) (swarm_service_replicas_desired{service=~"core-api|realtime|worker"})) or vector(0)
+      op: "=="
+      value: 0
+alerts:
+  - { name: SwarmReplicasBelowDesired, runbook: docs/11-operations/runbooks/SwarmReplicasBelowDesired.md }
+reconcile: none

@@ -1,0 +1,26 @@
+# F132-AC-12 (TC-PERF-008): Valkey (cache primary + replica) lost under load. REST continues; every attempt the bots
+# got a 2xx for is in PostgreSQL (0 lost, ADR-0004); realtime recovers <= 5 minutes after Valkey is back.
+id: TC-PERF-008
+name: valkey-down
+acceptance: [F132-AC-12]
+tool: chaos
+load: { scenario: ccu_10k, factor: 0.3, of: target_ccu }
+fault:
+  type: valkey_down
+  target: valkey-cache,valkey-cache-replica
+  duration: 300
+recovery_timeout: 300
+expect:
+  during:
+    - name: REST continues (5xx ratio < 0.5 %)
+      promql: (sum(rate(eduworld_http_server_requests_total{status_class="5xx"}[3m])) or vector(0)) / sum(rate(eduworld_http_server_requests_total[3m]))
+      op: "<"
+      value: 0.005
+  after:
+    - name: realtime accepts connections again (connect failures < 10 %)
+      promql: (sum(rate(eduworld_ws_connect_total{result!="ok"}[2m])) or vector(0)) / sum(rate(eduworld_ws_connect_total[2m]))
+      op: "<"
+      value: 0.10
+alerts:
+  - { name: ValkeyDown, runbook: docs/11-operations/runbooks/ValkeyDown.md }
+reconcile: attempts

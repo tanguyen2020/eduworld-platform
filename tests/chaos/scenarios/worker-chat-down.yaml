@@ -1,0 +1,35 @@
+# F132-AC-25 (part 1): every worker-chat replica stopped for 5 minutes under load. core-api REST and realtime keep
+# serving; every chat message acked by JetStream is written by chat-persister once worker-chat is back (0 lost).
+id: WORKER-CHAT-DOWN
+name: worker-chat-down
+acceptance: [F132-AC-25]
+tool: chaos
+load: { scenario: ccu_10k, factor: 0.3, of: target_ccu }
+fault:
+  type: swarm_service_down
+  target: worker-chat
+  duration: 300
+recovery_timeout: 600
+expect:
+  during:
+    - name: core-api REST keeps serving (5xx ratio < 0.5 %)
+      promql: (sum(rate(eduworld_http_server_requests_total{status_class="5xx"}[3m])) or vector(0)) / sum(rate(eduworld_http_server_requests_total[3m]))
+      op: "<"
+      value: 0.005
+    - name: realtime keeps its connections (connect failures < 10 %)
+      promql: (sum(rate(eduworld_ws_connect_total{result!="ok"}[3m])) or vector(0)) / sum(rate(eduworld_ws_connect_total[3m]))
+      op: "<"
+      value: 0.10
+    - name: persister backlog accumulates in JetStream (nothing lost, nothing written)
+      promql: max(nats_consumer_num_pending{consumer=~".*persister"}) or vector(0)
+      op: ">"
+      value: 0
+  after:
+    - name: persister backlog drained
+      promql: max(nats_consumer_num_pending{consumer=~".*persister"}) or vector(0)
+      op: "<"
+      value: 100
+alerts:
+  - { name: ServiceDown, runbook: docs/11-operations/runbooks/ServiceDown.md }
+  - { name: ChatPersistLagHigh, runbook: docs/11-operations/runbooks/ChatPersistLagHigh.md }
+reconcile: chat

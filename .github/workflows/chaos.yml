@@ -1,0 +1,116 @@
+# Chaos lane (F132 T016, T021; F132-AC-08…AC-14, AC-25, AC-26; TEST_STRATEGY §2: weekly on staging and before each
+# release). Pull requests run the runner's unit tests (stubbed docker/Prometheus/psql) and the scenario schema check;
+# the staging job injects real faults (tests/chaos/run-chaos.sh) under 0.3× target_ccu of background load, always
+# recovers, and uploads docs/12-project/chaos-reports/<date>.md (commit it with the release evidence).
+name: chaos
+
+on:
+  pull_request:
+    paths:
+      - "tests/chaos/**"
+      - "tests/ops/helpers.mjs"
+      - ".github/workflows/chaos.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tests/chaos/**"
+      - "tests/ops/helpers.mjs"
+      - ".github/workflows/chaos.yml"
+  schedule:
+    - cron: "0 20 * * 6" # Saturday 03:00 ICT, outside school hours (NFR-AVAIL-001 window 06:30–22:00 ICT)
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Scenario name of tests/chaos/scenarios, or all
+        required: true
+        default: all
+      target:
+        description: Target of node-drain (app node), external-fault (keycloak-admin|sis|object-storage), latency (nats|pg-router)
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chaos-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # T016: recovery always runs, unrecoverable → failed, production refused, report fields; scenario schema + F131 alerts.
+  chaos-unit:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: scenario schema, F131 alert names, runbooks
+        run: node tests/chaos/lib/scenario.mjs validate
+      - name: runner unit tests
+        run: node --test tests/chaos/
+      - name: shellcheck
+        run: docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.10.0 -x tests/chaos/run-chaos.sh
+
+  # F132-AC-14: weekly + manual (pre-release) run on staging, self-hosted runner `deploy` (DOCKER_HOST = manager over
+  # TLS, DEPLOYMENT §10.3), never for forks. Pending environment until staging exists (F130).
+  chaos-staging:
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && vars.DEPLOY_ENABLED == 'true' && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: staging
+    timeout-minutes: 240
+    concurrency: { group: chaos-staging, cancel-in-progress: false }
+    env:
+      EW_ENV: staging
+      DOCKER_HOST: ${{ vars.SWARM_MANAGER_HOST }}
+      DOCKER_TLS_VERIFY: "1"
+      DOCKER_CERT_PATH: ${{ github.workspace }}/.docker-tls
+      EW_PROMETHEUS_URL: ${{ vars.PROMETHEUS_URL }}
+      EW_CHAOS_LEDGER_DIR: ${{ runner.temp }}/ledger
+      EW_CHAOS_RECONCILE_DSN_LEARNING_FILE: ${{ runner.temp }}/chaos-secrets/learning_reader_dsn
+      EW_CHAOS_RECONCILE_DSN_CHAT_FILE: ${{ runner.temp }}/chaos-secrets/chat_reader_dsn
+      EW_CHAOS_SIS_UPSTREAM: ${{ vars.CHAOS_SIS_UPSTREAM }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: Docker API client certificate (manager over TLS)
+        env:
+          CA: ${{ secrets.SWARM_TLS_CA }}
+          CERT: ${{ secrets.SWARM_TLS_CERT }}
+          KEY: ${{ secrets.SWARM_TLS_KEY }}
+        run: bash scripts/deploy/write-docker-tls.sh
+      - name: read-only reconciliation DSNs (bastion tunnel, never committed)
+        env:
+          LEARNING_DSN: ${{ secrets.CHAOS_LEARNING_READER_DSN }}
+          CHAT_DSN: ${{ secrets.CHAOS_CHAT_READER_DSN }}
+        run: |
+          umask 077; mkdir -p "$RUNNER_TEMP/chaos-secrets" "$EW_CHAOS_LEDGER_DIR"
+          printf '%s' "$LEARNING_DSN" > "$EW_CHAOS_RECONCILE_DSN_LEARNING_FILE"
+          printf '%s' "$CHAT_DSN" > "$EW_CHAOS_RECONCILE_DSN_CHAT_FILE"
+      - name: background load 0.3× target_ccu (bots write their 2xx ledger to EW_CHAOS_LEDGER_DIR)
+        run: |
+          # Ledger: loadbot must write the ids it got 2xx/ack for to $EW_CHAOS_LEDGER_DIR/<scenario>-{attempts,chat}.txt
+          # (EXTRA_LOADBOT_ARGS); until it does, reconciliation reports "NOT RUN" and the scenario fails (never a silent pass).
+          nohup make perf RUN=ccu_10k ENV=staging SCALE=0.3 > "$RUNNER_TEMP/load.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/load.pid"
+      - name: chaos scenarios
+        env:
+          SCENARIO: ${{ github.event_name == 'schedule' && 'all' || inputs.scenario }}
+          TARGET: ${{ inputs.target }}
+        run: bash tests/chaos/run-chaos.sh --scenario="$SCENARIO" ${TARGET:+--target="$TARGET"}
+      - name: stop background load
+        if: always()
+        run: kill "$(cat "$RUNNER_TEMP/load.pid" 2>/dev/null)" 2>/dev/null || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: chaos-report
+          path: docs/12-project/chaos-reports/
+      - name: remove credentials
+        if: always()
+        run: rm -rf "$DOCKER_CERT_PATH" "$RUNNER_TEMP/chaos-secrets"

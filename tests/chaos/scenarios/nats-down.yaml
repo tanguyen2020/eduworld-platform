@@ -1,0 +1,40 @@
+# F132-AC-10 (TC-SVC-012): the three NATS nodes stopped for 5 minutes (docker service scale nats-N=0). Outboxes
+# accumulate and relay afterwards without duplicates (Nats-Msg-Id = event_id); chat answers
+# CHAT_TEMPORARILY_UNAVAILABLE; WS commands time out with a message.
+id: TC-SVC-012
+name: nats-down
+acceptance: [F132-AC-10]
+tool: chaos
+load: { scenario: ccu_10k, factor: 0.3, of: target_ccu }
+fault:
+  type: nats_down
+  target: nats-1,nats-2,nats-3
+  duration: 300
+recovery_timeout: 600
+expect:
+  during:
+    - name: outbox lag grows (events kept in PostgreSQL)
+      promql: max(eduworld_outbox_lag_seconds)
+      op: ">"
+      value: 60
+    - name: chat answers CHAT_TEMPORARILY_UNAVAILABLE
+      promql: sum(increase(eduworld_http_server_requests_total{module="chat",code="CHAT_TEMPORARILY_UNAVAILABLE"}[4m]))
+      op: ">"
+      value: 0
+    - name: REST outside chat keeps serving (5xx ratio < 0.5 %)
+      promql: (sum(rate(eduworld_http_server_requests_total{module!="chat",status_class="5xx"}[3m])) or vector(0)) / sum(rate(eduworld_http_server_requests_total{module!="chat"}[3m]))
+      op: "<"
+      value: 0.005
+  after:
+    - name: outbox drained (lag < 60 s)
+      promql: max(eduworld_outbox_lag_seconds)
+      op: "<"
+      value: 60
+    - name: consumers caught up (pending < 10000)
+      promql: max(nats_consumer_num_pending) or vector(0)
+      op: "<"
+      value: 10000
+alerts:
+  - { name: ChatJetStreamUnavailable, runbook: docs/11-operations/runbooks/ChatJetStreamUnavailable.md }
+  - { name: OutboxLagHigh, runbook: docs/11-operations/runbooks/OutboxLagHigh.md }
+reconcile: attempts
