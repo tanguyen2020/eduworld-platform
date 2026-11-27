@@ -28,7 +28,7 @@
 ### Implementation cho User Story 1
 
 - [x] T011 [US1] `ChatPanel`, `ChannelTabs`, `MessageList` (ảo hóa), `MessageBubble`, `RetentionNotice` — file: `src/game/scenes/chat/` — dựng bằng code: `chat_dock.gd` (tab, thu gọn, dải 2 dòng, lưu giữ), `chat_message_list.gd` (ảo hóa), `chat_bubble.gd`
-- [x] T012 [US1] Gắn `ChatDock` vào `PartyLobby.tscn`, `BattleArena.tscn`, màn boss (theo `chat_channel_id`/`chat_channel_ids`) — file: `src/game/scenes/social/PartyLobby.tscn`, `src/game/scenes/competition/BattleArena.tscn` — `PartyLobby` (slot `EmbeddedChat`: PC cột hoạt động, điện thoại nút "Chat nhóm" + overlay); `BattleArena` chưa có (F109 Ready) → F109 gọi `ChatDock.show_match()` — chờ F109
+- [x] T012 [US1] Gắn `ChatDock` vào `PartyLobby.tscn`, `BattleArena.tscn`, màn boss (theo `chat_channel_id`/`chat_channel_ids`) — file: `src/game/scenes/social/PartyLobby.tscn`, `src/game/scenes/competition/BattleArena.tscn` — `PartyLobby` (slot `EmbeddedChat`: PC cột hoạt động, điện thoại nút "Chat nhóm" + overlay); `BattleArena` (F109, 2026-11-27) gọi `ChatDock.show_match()` theo channel `match`/`team` đang mở, cột phải giữa hai câu, dải 2 dòng cạnh header khi câu hỏi hiện; màn boss chờ F110
 
 **Checkpoint**: US1 chạy và kiểm độc lập được.
 
@@ -55,7 +55,7 @@
 ### Implementation cho User Story 3
 
 - [x] T020 [US3] `MessageActionMenu` (mục an toàn), `ReportDialog`, `ReportService`, `SocialService` — file: `src/game/scenes/chat/MessageActionMenu.tscn`, `src/game/scenes/chat/ReportDialog.tscn`, `src/game/scripts/chat/report_service.gd`, `src/game/scripts/social/social_service.gd` — `chat_dialogs.gd` + `chat_sheet.gd` (menu, báo cáo), `report_service.gd`, `scripts/social/social_service.gd`
-- [x] T021 [US3] Nút "Báo cáo người chơi"/"Chặn" ở màn kết quả trận và lịch sử party — file: `src/game/scenes/competition/BattleResult.tscn` — `chat_player_safety.gd` (thành phần cho `BattleResult` của F109) + nút "Người chơi cùng em" trong dock; nhúng vào `BattleResult` chờ F109
+- [x] T021 [US3] Nút "Báo cáo người chơi"/"Chặn" ở màn kết quả trận và lịch sử party — file: `src/game/scenes/competition/BattleResult.tscn` — `chat_player_safety.gd` (thành phần cho `BattleResult` của F109) + nút "Người chơi cùng em" trong dock; nhúng vào màn kết quả và chi tiết lịch sử trận của F109 (2026-11-27, `match_result_view.gd`, `match_history_view.gd`)
 
 ## Phase 6: User Story 4 — Emoji, sticker, GIF và thao tác trên tin (Priority: P2)
 

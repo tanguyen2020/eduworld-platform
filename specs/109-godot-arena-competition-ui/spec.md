@@ -1,6 +1,6 @@
 # Feature Specification: F109 — Giao diện Arena, trận đấu, bảng xếp hạng, giải đấu trong Godot
 
-**Feature Branch**: `109-godot-arena-competition-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M4b · **Phụ thuộc**: F102, F105, F106, F107 (+ F063 renderer câu hỏi, F092 `RealtimeClient`, F119 chat trận)
+**Feature Branch**: `109-godot-arena-competition-ui` · **Created**: 2026-11-16 · **Status**: In progress · **Module**: `src/game/` · **Mốc**: M4b · **Phụ thuộc**: F102, F105, F106, F107 (+ F063 renderer câu hỏi, F092 `RealtimeClient`, F119 chat trận)
 **Input**: Màn Competition Arena của học sinh: chọn chế độ, hàng chờ, ready check, chơi trận 1v1/đội theo message server, màn kết quả chỉ hiển thị tier, lịch sử trận, bảng xếp hạng theo khối và chính sách trường, danh sách/chi tiết/đăng ký/check-in giải đấu, bracket, thách đấu bạn. FR nguồn: FR-CMP-001, FR-CMP-006, FR-RNK-003, FR-LDB-003, FR-LDB-004.
 
 ## Clarifications
@@ -22,6 +22,17 @@
 - Q: Bảng lớp trong game đổi thế nào? → A: Theo [ADR-0095 mục 5 (D5)](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md#5-game-xã-hội-chat-d2-d5-d7-confirmed--owner-2026-11-21) không còn "Mục tiêu lớp", "Lớp em tuần này", "Nhiệm vụ của lớp"; thay bằng "Mục tiêu của khối" — `display_mode = grade_goal` render bằng **`GradeGoalBar`** (thay `ClassGoalBar`): tiến độ tập thể của khối trong trường, phần em đã góp, số bạn đã góp sức (ẩn khi < 5); không thứ hạng cá nhân, không nickname người khác ([COMPETITION_SYSTEM §9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#92-danh-mục-bảng-mặc-định-confirmed), FR-LDB-005). "Bạn nổi bật tuần này" (`highlights`) bị bỏ theo F106 [Proposed].
 - Q: Dòng bảng còn tên lớp? → A: Không — chỉ nickname + avatar (R16, FR-LDB-003).
 - Q: Giải trong game? → A: Giải khối/thử thách khối của trường (`grade_challenge`, F107) thay giải lớp; học sinh chỉ thấy giải mà mình thuộc đối tượng (khối ± học sinh, trừ danh sách loại trừ) — server lọc, client không tự lọc theo khối.
+
+### Session 2026-11-27 (triển khai client — đối chiếu contract trên main)
+
+- Q: Delta contracts/README §6 đã được F105–F107 áp dưới tên nào? → A: Client dùng đúng contract hiện có, không tự thêm trường: `listCompetitionModes` (`CompetitionMode`: `mode`, `matchmaking_types`, `ranked`, `min_grade`, `subjects` — server chỉ trả chế độ khả dụng nên **không có thẻ "khóa kèm lý do"**), `getMyRatings` (`tier_code`/`tier_name`/`provisional`, không số rating), `LeaderboardPage.visibility` (`grade_goal` / `top_n_percentile` / `ranked` — tên contract của `display_mode`), `registerTournamentEntry` (= `createTournamentEntry`), lỗi giải là 404 / 403 `POLICY_DENIED` / 409 `CONFLICT` (đủ chỗ) / 422 `INVALID_STATE_TRANSITION` (ngoài cửa sổ) vì chưa có `ProblemCode` `TOURNAMENT_*`. [Confirmed — contract main]
+- Q: `speed_bonus_enabled`, `primary_user_ids`, `encouragement` chưa có trong AsyncAPI — client làm gì? → A: Đọc khi server gửi (tên đúng delta §6), vắng = cách đọc an toàn: không chỉ dẫn/hiệu ứng tốc độ, không nhãn lượt chính, không lời động viên riêng; "Thưởng tốc độ" chỉ hiện khi `time_bonus > 0` của `battle.answer.evaluated`. Owner F105 bổ sung trường vào AsyncAPI. [Proposed]
+- Q: Kênh chat của trận lấy từ đâu khi contract chưa có `chat_channel_ids`? → A: Channel `match` / `team` đang mở (`status = open`) trong `listMyChannels` — học sinh chỉ ở một trận một lúc; không tự dựng id kênh. Owner F105/F117 thêm `chat_channel_ids` vào `matchmaking.match.assigned` / `battle.state.snapshot`. [Proposed]
+- Q: Câu hỏi trong trận dùng khóa lựa chọn nào? → A: AsyncAPI `QuestionRender.options[].option_id`, render của module learning dùng `id` — client nhận cả hai (chuẩn hóa về `id` cho renderer F063), gửi `{option_id}` như `AnswerResponse`. Owner F105 thống nhất một tên. [Proposed]
+- Q: Chat trận nằm đâu khi câu hỏi hiện (AC-13)? → A: Giữa hai câu: cột phải cao hết màn (quy tắc "≥ 3 tin"); khi câu hỏi hiện: dải 2 dòng cạnh `MatchHeader` (góc trên phải), câu hỏi chiếm cả chiều ngang — không che đáp án; cửa sổ hẹp/chữ dài: dải dưới câu hỏi, câu hỏi cuộn. [Confirmed — F109, theo ma trận khối]
+- Q: `409 MM_TICKET_ALREADY_ACTIVE` không kèm `ticket_id` — mở thanh hàng chờ hiện có thế nào? → A: Đọc lại ticket đang giữ trong RAM (`getMatchmakingTicket`); không có (vd. vừa mở lại app) → "Em đang trong hàng chờ rồi." và chờ `matchmaking.ticket.updated`. Owner F104 thêm `ticket_id` vào Problem. [Proposed]
+- Q: Ô ghi chú báo cáo (AC-16 `note` ≤ maxLength, bộ đếm)? → A: Màn kết quả/lịch sử dùng bảng báo cáo F119 (`ChatPlayerSafety` + `ChatDialogs`, lý do bằng hình + chữ, ngữ cảnh `match_id`) — F119 không gửi chữ tự do của trẻ (MODERATION §5, CHILD_SAFETY); không thêm ô ghi chú. [Proposed — chờ owner xác nhận bỏ `note` khỏi AC-16]
+- Q: Người nhận biết có lời thách đấu bằng cách nào? → A: Contract chưa có message/notification cho lời thách đấu đến (`duel.sent` chỉ là event NATS) — client có hộp nhận lời (`ui_requested("arena", {duel, nickname})`) nhưng chưa có nguồn giao; đề xuất `notification.item.created` kind `duel_invitation` hoặc WS `duel.received`. [Proposed]
 
 ## User Scenarios & Testing *(bắt buộc)*
 

@@ -1,6 +1,6 @@
 # Competition System — Thi đấu, Ranking, Leaderboard, Tournament
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director + Multiplayer Engineer · Cập nhật: 2026-11-26 (F108: §13 invariant cấu hình, phát hành theo `effective_from`, dòng thời gian release, `competition-rewards`) · 2026-11-21 (ADR-0095 WP-S: mục tiêu tập thể khối `grade_goal` thay bảng lớp, 12 loại bảng xếp hạng, thử thách khối/giải khối của trường) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director + Multiplayer Engineer · Cập nhật: 2026-11-27 (F109: §14.2 ghi chú client Godot) · 2026-11-26 (F108: §13 invariant cấu hình, phát hành theo `effective_from`, dòng thời gian release, `competition-rewards`) · 2026-11-21 (ADR-0095 WP-S: mục tiêu tập thể khối `grade_goal` thay bảng lớp, 12 loại bảng xếp hạng, thử thách khối/giải khối của trường) · 2026-11-15
 > Liên quan: [GAME_DESIGN](GAME_DESIGN.md) · [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) · [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [ADR-0011](../adr/ADR-0011-realtime-transport-websocket-qua-go-realtime-server.md) · [ADR-0016](../adr/ADR-0016-server-authoritative-scoring-answer-key-khong-bao-gio-roi-se.md) · [ADR-0018](../adr/ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md) · [ADR-0027](../adr/ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md)
 
 > [!IMPORTANT]
@@ -448,6 +448,8 @@ Matchmaking configuration, Ranking Rules (tham số Glicko, ngưỡng provisiona
 | `POST /api/v1/competition/tournaments/{id}:generate-bracket`, `GET .../bracket`, `POST .../nodes/{node_id}:confirm` / `:override` | Người tổ chức (audit) |
 
 Phân quyền leaderboard: học sinh chỉ đọc scope chứa mình; School Admin/Academic Manager đọc bảng trường/khối và mục tiêu của khối trong trường mình. Scope ngoài phạm vi → 404 ([MULTITENANCY](../06-architecture/MULTITENANCY.md)).
+
+**Client Godot (F109).** Màn Đấu trường đọc đúng các operation trên (`listCompetitionModes`, `createMatchmakingTicket`/`getMatchmakingTicket`/`cancelMatchmakingTicket`, `startBotMatch`, `acceptMatchProposal`/`declineMatchProposal`, `createDuel`/`acceptDuel`/`declineDuel`, `getMyRatings`, `listMyMatches`/`getMatch`, `listLeaderboards`/`getLeaderboard`, `listTournaments`/`getTournament`/`getTournamentBracket`, `registerTournamentEntry`/`withdrawTournamentEntry`/`checkInTournamentEntry`, `listMyChallenges`/`joinChallenge`) và message `matchmaking.*`, `battle.*`, `competition.tier.updated`, `tournament.*`; không tự quyết chế độ, bonus tốc độ, hạng hay cách hiển thị bảng theo khối (`visibility` do server chọn theo `leaderboard_visibility`); model bỏ `rating`/`rd`/`rating_delta`. Bố cục ở [STUDENT_GAME_UX_SOCIAL §8](../05-ux/STUDENT_GAME_UX_SOCIAL.md#8-competition-arena), kiến trúc ở [GODOT_ARCHITECTURE §4](../08-game-client/GODOT_ARCHITECTURE.md).
 
 ### 14.3. Event
 
