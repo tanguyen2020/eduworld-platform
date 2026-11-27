@@ -512,9 +512,9 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
         path: "/school-lms/installers",
         labelKey: "portal.menu.school_lms.installers",
         order: 200,
-        requiredPermissions: ["school.settings.read", "tenant.settings.read"],
+        requiredPermissions: ["school.installer.read"],
         actions: [
-          { key: "action.school_lms.installers.view", labelKey: "portal.action.school_lms.installers.view", requiredPermissions: ["school.settings.read", "tenant.settings.read"] },
+          { key: "action.school_lms.installers.view", labelKey: "portal.action.school_lms.installers.view", requiredPermissions: ["school.installer.read"] },
         ],
       },
       {

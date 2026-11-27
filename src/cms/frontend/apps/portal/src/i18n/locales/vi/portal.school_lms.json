@@ -592,5 +592,54 @@
       "mid": "Trung bình",
       "high": "Cao"
     }
+  },
+  "installers": {
+    "intro": "Gói cài Android (APK) bản production mới nhất cho các khối của trường, để phân phối qua MDM hoặc USB. Không có bộ cài Windows: PC phòng máy chơi bản Web.",
+    "pickSchool": "Chọn một trường để xem bộ cài phù hợp với các khối của trường.",
+    "noSchool": "Không có trường đang hoạt động trong phạm vi của bạn.",
+    "loading": "Đang tải danh sách bộ cài…",
+    "tableCaption": "Bộ cài cho trường",
+    "indexGeneratedAt": "Chỉ mục kênh production cập nhật lúc {{time}}",
+    "empty": "Chưa có bộ cài nào cho các khối của trường.",
+    "shaHelp": "Sau khi tải, so khớp mã SHA-256 của tệp với giá trị trong bảng trước khi cài đặt.",
+    "col": {
+      "platform": "Nền tảng",
+      "version": "Phiên bản",
+      "gradeBands": "Nhóm khối",
+      "minOs": "Hệ điều hành tối thiểu",
+      "size": "Kích thước",
+      "sha256": "SHA-256",
+      "releasedAt": "Phát hành lúc",
+      "download": "Tải về"
+    },
+    "platform": {
+      "android": "Android (APK)"
+    },
+    "copy": "Sao chép",
+    "copySha": "Sao chép SHA-256",
+    "copied": "Đã sao chép SHA-256.",
+    "copyFailed": "Không sao chép được. Hãy chọn mã SHA-256 và sao chép thủ công.",
+    "download": "Tải về",
+    "downloadOf": "Tải bộ cài {{version}} cho {{grades}}",
+    "errors": {
+      "UNAVAILABLE": "Chưa tải được danh sách bộ cài: chỉ mục phát hành tạm thời không truy cập được hoặc không qua kiểm tra chữ ký. Không có link tải nào được hiển thị. Vui lòng thử lại sau.",
+      "NOT_FOUND": "Không tìm thấy trường này trong phạm vi của bạn."
+    },
+    "web": {
+      "title": "Bản Web cho PC phòng máy",
+      "description": "PC phòng máy không cần cài đặt: mở bản Web bằng trình duyệt hỗ trợ WebGL 2 (Chrome, Edge hoặc Firefox bản mới). Học sinh đăng nhập lại mỗi lần mở game.",
+      "open": "Mở bản Web",
+      "supported": "Trình duyệt này hỗ trợ WebGL 2: có thể chơi bản Web.",
+      "unsupported": "Trình duyệt này không hỗ trợ WebGL 2 hoặc đang tắt tăng tốc đồ họa. Hãy dùng Chrome, Edge hoặc Firefox bản mới và bật tăng tốc phần cứng."
+    },
+    "deviceCfg": {
+      "title": "Cấu hình device.cfg cho tablet Android dùng chung",
+      "intro": "MDM của trường đẩy tệp device.cfg tới ứng dụng qua managed configuration. Chỉ cần cấu hình cho tablet dùng chung (của lớp, phòng máy).",
+      "sharedDevice": "— đặt true cho máy dùng chung: không lưu phiên đăng nhập, không nhớ tên đăng nhập, thoát game là đăng xuất và tự đăng xuất khi không hoạt động. Đặt false cho thiết bị cá nhân của một học sinh.",
+      "lanCache": "— địa chỉ máy cache nội dung trong LAN của trường (tùy chọn). Ứng dụng thử cache LAN trước, kiểm tra SHA-256 của mọi gói và quay về CDN khi lỗi. Để trống nếu trường không có cache LAN.",
+      "exampleTitle": "Ví dụ",
+      "example": "shared_device: true\nlan_cache_url: http://<địa-chỉ-máy-cache>:<cổng>",
+      "note": "Chỉ áp dụng cho thiết bị Android. Bản Web không đọc device.cfg."
+    }
   }
 }

@@ -4,7 +4,8 @@
 //   one tenant only see its name.
 // - TenantFilter (F051-AC-22/26/27): System Admin only (`platform.cross_tenant.read`): searchable multi-select over
 //   `listTenants`, default "Tất cả tenant", kept for the browser session, search cut at the OpenAPI `maxLength`;
-//   pages follow the cursor while scrolling and a disabled tenant stays listed with "đã tắt" (F057 edge cases).
+//   pages follow the cursor while scrolling and a disabled tenant stays listed with "đã tắt" (F057 edge cases); a QA
+//   tenant (`is_qa` of listTenants, F134-AC-11) carries a "QA" tag next to its name (display only, nothing computed).
 // - TenantTargetField (F051-AC-25): mandatory target tenant of a System Admin write (optionally "Platform"), no
 //   "all tenants" choice. tenantColumn (F051-AC-23): standard "Tenant" column (name + type) for lists.
 import { SearchSelect } from '@eduworld/ops-ui';
@@ -55,12 +56,32 @@ export function TenantSwitcher({ workspace }: { workspace?: WorkspaceDef }) {
   return <TenantSwitcherView tenants={choices} value={scope.tenantId} onChange={onChange} />;
 }
 
-type TenantLike = Pick<TenantSummary, 'tenant_id' | 'name' | 'code'> & Partial<Pick<TenantSummary, 'status'>>;
+type TenantLike = Pick<TenantSummary, 'tenant_id' | 'name' | 'code'> & Partial<Pick<TenantSummary, 'status' | 'is_qa'>>;
 type Translate = (key: string) => string;
 /** "Name (code)", plus "đã tắt" for a disabled tenant (F057 edge case: it keeps its place, clearly marked). */
 export const tenantLabel = (x: TenantLike, t: Translate): string =>
   x.status === 'disabled' ? `${x.name} (${x.code}) · ${t('shell.tenantFilter.disabled')}` : `${x.name} (${x.code})`;
-const tenantOption = (x: TenantLike, t: Translate) => ({ value: x.tenant_id, label: tenantLabel(x, t) });
+/** "QA" tag of a QA tenant (F134-AC-11): the flag comes from listTenants `is_qa`, the portal only shows it. */
+export function QaTenantTag({ tenant }: { tenant: Pick<TenantLike, 'is_qa'> }) {
+  const { t } = useTranslation();
+  return tenant.is_qa ? <Tag data-testid="tenant-qa-tag">{t('shell.tenantFilter.qa')}</Tag> : null;
+}
+
+/** Option of a tenant dropdown: plain label, plus the "QA" tag for a QA tenant (`title` keeps the searchable text). */
+const tenantOption = (x: TenantLike, t: Translate) => {
+  const text = tenantLabel(x, t);
+  return {
+    value: x.tenant_id,
+    title: text,
+    label: x.is_qa ? (
+      <span>
+        {text} <QaTenantTag tenant={x} />
+      </span>
+    ) : (
+      text
+    ),
+  };
+};
 
 /** Presentational switcher (stories, tests): one working tenant among several. */
 export function TenantSwitcherView({ tenants, value, onChange }: { tenants: readonly TenantLike[]; value: string; onChange: (tenantId: string) => void }) {

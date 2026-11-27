@@ -8,8 +8,9 @@
 // F122 (chat safety of the school): safety_notifications, chat_safety (school chat policy, tenant categories), clubs.
 // F081: school_events (school events from an assigned template, their progress).
 // F108 (US3): challenges — grade challenges / school tournaments from assigned templates (backend F107).
+// F134 (US3): installers — "Tải bộ cài" (Android APK/MDM kits of the school, link to the Web client, device.cfg guide).
 import { lazy } from 'react';
-import { placeholderScreen, WorkspaceRoutes, type MenuScreens } from '../../permissions/RequirePermission';
+import { WorkspaceRoutes, type MenuScreens } from '../../permissions/RequirePermission';
 import { AuditScreen } from './audit/AuditScreen';
 import { ChallengesScreen } from './challenges/routes';
 import { ReportsScreen } from './dashboard/reports/ReportsScreen';
@@ -31,6 +32,8 @@ const ClubsScreen = lazy(() => import('./safety/ClubsScreen').then((m) => ({ def
 const SafetyNotificationsScreen = lazy(() => import('./safety/SafetyNotificationsScreen').then((m) => ({ default: m.SafetyNotificationsScreen })));
 // F081 screen loads on first use (own chunk), like the F122 screens.
 const SchoolEventsScreen = lazy(() => import('./school-events/SchoolEventsScreen').then((m) => ({ default: m.SchoolEventsScreen })));
+// F134 screen loads on first use (own chunk), like the F122/F081 screens.
+const InstallerListPage = lazy(() => import('./installers/InstallerListPage').then((m) => ({ default: m.InstallerListPage })));
 
 export const screens = {
   'menu.school_lms.schools': SchoolsScreen,
@@ -48,7 +51,7 @@ export const screens = {
   'menu.school_lms.chat_safety': ChatSafetyScreen, // F122 US6, US8
   'menu.school_lms.student_activity': StudentActivityScreen,
   'menu.school_lms.access_control': AccessControlScreen,
-  'menu.school_lms.installers': placeholderScreen,
+  'menu.school_lms.installers': InstallerListPage, // F134 US3
   'menu.school_lms.settings': SettingsScreen,
   'menu.school_lms.trash': TenantTrashPage, // F054 US5
   'menu.school_lms.audit_logs': AuditScreen,

@@ -136,7 +136,8 @@
     "tenantFilter": {
       "label": "Lọc tenant",
       "all": "Tất cả tenant",
-      "disabled": "đã tắt"
+      "disabled": "đã tắt",
+      "qa": "QA"
     },
     "tenantTarget": {
       "label": "Tenant",

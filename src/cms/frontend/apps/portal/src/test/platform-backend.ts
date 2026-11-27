@@ -59,7 +59,7 @@ export const IDS = {
 
 export const DISABLED_TENANT = { tenant_id: '0193a4d2-0000-7000-8000-00000000000d', code: 'th-ngung', name: 'TH Ngừng HĐ', tenant_type: 'school', status: 'disabled' } as const;
 
-type Tenant = { tenant_id: string; code: string; name: string; tenant_type: string; status: string; school_count?: number };
+type Tenant = { tenant_id: string; code: string; name: string; tenant_type: string; status: string; school_count?: number; is_qa?: boolean };
 
 export interface PlatformState {
   tenants: Tenant[];
@@ -152,7 +152,9 @@ export function withPlatformMock(backend: MockPortalBackend, state: PlatformStat
       if (bad) return bad;
       const t = s.tenants.find((x) => x.tenant_id === tenantPatch[1]);
       if (!t) return problem(404, 'NOT_FOUND');
-      Object.assign(t, body.name ? { name: body.name } : {}, body.status ? { status: body.status } : {});
+      // F134: is_qa of the merge patch; the MOCK mirrors the 422 of the common tenant (F134-AC-07) to exercise the screen
+      if (typeof body.is_qa === 'boolean' && t.tenant_type === 'common') return problem(422, 'VALIDATION_FAILED', { errors: [{ field: 'is_qa', code: 'invalid', message: 'common tenant' }] });
+      Object.assign(t, body.name ? { name: body.name } : {}, body.status ? { status: body.status } : {}, typeof body.is_qa === 'boolean' ? { is_qa: body.is_qa } : {});
       const v = (s.versions.get(rec.path) ?? 1) + 1;
       s.versions.set(rec.path, v);
       return json(200, { ...t, keycloak_org_alias: 'x-alias', created_at: '2026-11-19T08:00:00Z', updated_at: '2026-11-19T09:00:00Z' }, { ETag: `W/"${v}"` });

@@ -592,5 +592,54 @@
       "mid": "Mid",
       "high": "High"
     }
+  },
+  "installers": {
+    "intro": "The latest production Android kits (APK) for the grades of the school, to distribute through MDM or USB. There is no Windows installer: lab PCs play the Web version.",
+    "pickSchool": "Choose a school to see the kits that match its grades.",
+    "noSchool": "There is no active school in your scope.",
+    "loading": "Loading the kits…",
+    "tableCaption": "Kits for the school",
+    "indexGeneratedAt": "Production channel index updated at {{time}}",
+    "empty": "There is no kit for the grades of the school yet.",
+    "shaHelp": "After downloading, compare the SHA-256 of the file with the value in the table before installing.",
+    "col": {
+      "platform": "Platform",
+      "version": "Version",
+      "gradeBands": "Grade bands",
+      "minOs": "Minimum OS",
+      "size": "Size",
+      "sha256": "SHA-256",
+      "releasedAt": "Released at",
+      "download": "Download"
+    },
+    "platform": {
+      "android": "Android (APK)"
+    },
+    "copy": "Copy",
+    "copySha": "Copy SHA-256",
+    "copied": "SHA-256 copied.",
+    "copyFailed": "Could not copy. Select the SHA-256 and copy it by hand.",
+    "download": "Download",
+    "downloadOf": "Download kit {{version}} for {{grades}}",
+    "errors": {
+      "UNAVAILABLE": "The kit list could not be loaded: the release index is temporarily unreachable or failed its signature check. No download link is shown. Please try again later.",
+      "NOT_FOUND": "This school was not found in your scope."
+    },
+    "web": {
+      "title": "Web version for lab PCs",
+      "description": "Lab PCs need no installation: open the Web version in a browser with WebGL 2 (a recent Chrome, Edge or Firefox). Students sign in again each time they open the game.",
+      "open": "Open the Web version",
+      "supported": "This browser supports WebGL 2: the Web version can be played.",
+      "unsupported": "This browser does not support WebGL 2 or graphics acceleration is off. Use a recent Chrome, Edge or Firefox and turn on hardware acceleration."
+    },
+    "deviceCfg": {
+      "title": "device.cfg for shared Android tablets",
+      "intro": "The school MDM pushes device.cfg to the app through managed configuration. Only shared tablets (class sets, labs) need it.",
+      "sharedDevice": "— set true on a shared device: no saved sign-in, no remembered username, leaving the game signs out and inactivity signs out. Set false on the personal device of one student.",
+      "lanCache": "— address of the content cache in the school LAN (optional). The app tries the LAN cache first, checks the SHA-256 of every package and falls back to the CDN on error. Leave empty when the school has no LAN cache.",
+      "exampleTitle": "Example",
+      "example": "shared_device: true\nlan_cache_url: http://<cache-host>:<port>",
+      "note": "Android devices only. The Web version does not read device.cfg."
+    }
   }
 }

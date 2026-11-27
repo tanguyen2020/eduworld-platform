@@ -1,6 +1,7 @@
 // Tenant screen (F057 T039, F057-AC-17, ADMIN_PORTAL §10.1 "Quản lý tenant"): listTenants filtered by `q`/`tenant_type`
 // with cursor paging, create/edit through TenantForm, activate/disable after a confirmation with reason. Write actions
-// are wrapped in <ActionGate action.platform_admin.tenants.edit> and hidden on small screens (read only).
+// are wrapped in <ActionGate action.platform_admin.tenants.edit> and hidden on small screens (read only). A QA tenant
+// (listTenants `is_qa`, F134-AC-11) shows the "QA" tag next to its name; the flag is edited in TenantForm.
 import { Alert, Button, Input, Space, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
@@ -8,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { ActionGate } from '../../../permissions/ActionGate';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { ReasonDialog } from '../../../shell/ReasonDialog';
+import { QaTenantTag } from '../../../shell/TenantControls';
 import { TENANT_TYPES, useTenantList, useUpdateTenant, type TenantSummary, type TenantType } from '../api/tenants';
 import { LIMITS } from '../limits';
 import { PageTitle, useLargeScreen } from '../ui';
@@ -26,7 +28,15 @@ export function TenantListPage({ title }: { title: string }) {
 
   const columns: ColumnsType<TenantSummary> = [
     { key: 'code', title: t('platform.tenants.code'), dataIndex: 'code' },
-    { key: 'name', title: t('platform.tenants.name'), dataIndex: 'name' },
+    {
+      key: 'name',
+      title: t('platform.tenants.name'),
+      render: (_, r) => (
+        <span>
+          {r.name} <QaTenantTag tenant={r} />
+        </span>
+      ),
+    },
     { key: 'type', title: t('platform.tenants.type'), render: (_, r) => <Tag>{t(`shell.tenantType.${r.tenant_type}`)}</Tag> },
     {
       key: 'status',

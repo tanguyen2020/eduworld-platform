@@ -136,7 +136,8 @@
     "tenantFilter": {
       "label": "Filter tenants",
       "all": "All tenants",
-      "disabled": "disabled"
+      "disabled": "disabled",
+      "qa": "QA"
     },
     "tenantTarget": {
       "label": "Tenant",

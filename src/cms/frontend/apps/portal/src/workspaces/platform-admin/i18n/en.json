@@ -65,7 +65,19 @@
     "enableTitle": "Activate tenant {{name}}",
     "created": "Tenant created.",
     "updated": "Tenant updated.",
-    "duplicate": "The tenant code or alias already exists."
+    "duplicate": "The tenant code or alias already exists.",
+    "qa": {
+      "label": "QA tenant",
+      "help": "The tenant only holds test accounts (synthetic monitoring). Its data is not counted in Game Analytics or the platform learning summary.",
+      "commonDisabled": "The common tenant cannot be flagged as QA.",
+      "confirmOnTitle": "Flag {{name}} as a QA tenant?",
+      "confirmOnContent": "All data of this tenant, including data written before the flag, will be excluded from Game Analytics and the platform learning summary. While flagged, the tenant's events are not recorded in analytics: if the flag is removed later, the data of the flagged period is not filled in again (no backfill).",
+      "confirmOffTitle": "Remove the QA flag of {{name}}?",
+      "confirmOffContent": "Data written before the flag (still within retention) will show again in dashboards. Data of the flagged period does not exist and is not filled in again (no backfill).",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "saveHint": "The change is applied only when you click Save (a reason is required)."
+    }
   },
   "tenantData": {
     "assignTab": "Assign to tenants",

@@ -65,7 +65,19 @@
     "enableTitle": "Kích hoạt tenant {{name}}",
     "created": "Đã tạo tenant.",
     "updated": "Đã cập nhật tenant.",
-    "duplicate": "Mã tenant hoặc alias đã tồn tại."
+    "duplicate": "Mã tenant hoặc alias đã tồn tại.",
+    "qa": {
+      "label": "Tenant QA",
+      "help": "Tenant chỉ chứa tài khoản kiểm thử (synthetic monitoring). Dữ liệu của tenant không tính vào Game Analytics và tổng hợp học tập platform.",
+      "commonDisabled": "Tenant chung không thể đánh dấu QA.",
+      "confirmOnTitle": "Đánh dấu {{name}} là tenant QA?",
+      "confirmOnContent": "Toàn bộ dữ liệu của tenant này, kể cả dữ liệu đã ghi trước khi đánh dấu, sẽ bị loại khỏi Game Analytics và tổng hợp học tập platform. Trong thời gian đánh dấu, sự kiện của tenant không được ghi vào analytics: nếu sau này bỏ cờ, dữ liệu của khoảng thời gian đã đánh dấu sẽ không được bổ sung lại (không backfill).",
+      "confirmOffTitle": "Bỏ đánh dấu QA của {{name}}?",
+      "confirmOffContent": "Dữ liệu ghi trước khi đánh dấu (còn trong thời hạn lưu) sẽ xuất hiện lại trong dashboard. Dữ liệu trong thời gian đã đánh dấu không có và không được bổ sung lại (không backfill).",
+      "confirm": "Xác nhận",
+      "cancel": "Hủy",
+      "saveHint": "Thay đổi chỉ được áp dụng khi bấm Lưu (cần nhập lý do)."
+    }
   },
   "tenantData": {
     "assignTab": "Gán cho tenant",

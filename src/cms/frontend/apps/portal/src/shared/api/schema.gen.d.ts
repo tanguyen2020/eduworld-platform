@@ -1863,6 +1863,7 @@ export interface paths {
          * @description Quyền `platform.tenant.manage` (gateway nội bộ). `tenant_type`, `code`, `keycloak_org_alias` không đổi được.
          *     `status = disabled` → worker đặt Organization `enabled=false`, mọi thành viên nhận `403 TENANT_ACCESS_DISABLED` ở lần resolve kế tiếp (F010-AC-03).
          *     Ghi audit `tenant.updated`, phát `tenant.updated` (F010-AC-05). Không gửi `X-Tenant-Id` (tenant đích là `tenant_id` trên path).
+         *     `is_qa` (F134): đánh dấu tenant QA — loại khỏi Game Analytics và tổng hợp học tập platform; thêm audit `tenant.qa_flag_changed` (trước/sau), `tenant.updated` mang `is_qa`; tenant `common` → `422 VALIDATION_FAILED`.
          */
         patch: operations["updateTenant"];
         trace?: never;
@@ -9222,6 +9223,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenant/client-installers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gói cài Android cho trường theo khối + link bản Web (school.installer.read — F134, ADR-0101)
+         * @description Trang "Tải bộ cài" của workspace C (DEPLOYMENT §9, PERFORMANCE_BUDGET §10.1). Module game tải chỉ mục `school-kit/production.json`
+         *     trên CDN phát hành, **kiểm chữ ký RSA-SHA256 và schema** (`specs/schemas/school-kit-index.schema.json`) trước khi trả bất kỳ link
+         *     nào (cache 5 phút); lọc bộ cài có `grade_bands` giao với khối của trường (khối của học sinh đang hoạt động trong trường —
+         *     ADR-0095 không còn lớp; trường chưa có học sinh → mọi bộ cài) và trả bản `released_at` mới nhất mỗi nền tảng × nhóm khối.
+         *     Chỉ gói APK Android (không có bộ cài Windows — ADR-0101 mục 7); `web_client_url` là link mở bản Web cho PC phòng máy (mục 8).
+         *     Response chỉ chứa dữ liệu công khai của bộ cài (không dữ liệu tenant, secret, đường dẫn nội bộ). Trường ngoài phạm vi người gọi
+         *     (cùng hoặc khác tenant) → `404`; thiếu `school.installer.read` → `403 PERMISSION_DENIED`; chỉ mục không tải được hoặc sai
+         *     chữ ký/schema → `503 UNAVAILABLE` (không trả link chưa kiểm).
+         */
+        get: operations["listSchoolClientInstallers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenant/permissions": {
         parameters: {
             query?: never;
@@ -13049,6 +13077,8 @@ export interface components {
             sem?: number | null;
             variant_no: number;
         };
+        /** @description Tenant QA bị loại khỏi kết quả liên tenant, kể cả khi `tenant_ids` chỉ định chúng (F134-AC-09, GAME_ANALYTICS §5); vắng mặt = không loại tenant nào */
+        ExcludedTenantIds: components["schemas"]["Uuid"][];
         ExperimentArm: {
             allocation_pct: number;
             code: string;
@@ -13158,6 +13188,7 @@ export interface components {
         FunnelReport: {
             /** @description `computed_at` cũ nhất trong kết quả (DASHBOARD_DATA §8) */
             data_as_of: components["schemas"]["Timestamp"];
+            excluded_tenant_ids?: components["schemas"]["ExcludedTenantIds"];
             funnel_code: string;
             grain: components["schemas"]["DashboardGrain"];
             /** @description true nếu có dòng chưa chốt (hôm nay) */
@@ -13505,6 +13536,7 @@ export interface components {
             data: components["schemas"]["GameMetricSeries"][];
             /** @description `computed_at` cũ nhất trong kết quả (DASHBOARD_DATA §8) */
             data_as_of: components["schemas"]["Timestamp"];
+            excluded_tenant_ids?: components["schemas"]["ExcludedTenantIds"];
             generated_at?: components["schemas"]["Timestamp"];
             grain: components["schemas"]["DashboardGrain"];
             /** @description true nếu có dòng chưa chốt (hôm nay) */
@@ -16297,6 +16329,7 @@ export interface components {
             }[];
             /** @description `computed_at` cũ nhất trong kết quả (DASHBOARD_DATA §8) */
             data_as_of: components["schemas"]["Timestamp"];
+            excluded_tenant_ids?: components["schemas"]["ExcludedTenantIds"];
             grain: components["schemas"]["DashboardGrain"];
             /** @description true nếu có dòng chưa chốt (hôm nay) */
             is_partial: boolean;
@@ -16452,6 +16485,37 @@ export interface components {
             start_date: string;
             /** @description Học kỳ của năm học theo thứ tự thời gian; hiện luôn rỗng (chưa có nguồn dữ liệu học kỳ — câu hỏi mở F010-4) */
             terms: components["schemas"]["AcademicTerm"][];
+        };
+        /** @description Một gói cài trường (APK Android kèm gói vùng theo khối) đã qua kiểm chữ ký chỉ mục (F134-AC-13, AC-16) */
+        SchoolClientInstaller: {
+            client_version: string;
+            grade_bands: components["schemas"]["GradeBand"][];
+            kit_id: string;
+            min_os: string;
+            /**
+             * @description Chỉ Android (ADR-0101 bỏ windows)
+             * @enum {string}
+             */
+            platform: "android";
+            released_at: components["schemas"]["Timestamp"];
+            sha256: string;
+            size_bytes: number;
+            /**
+             * Format: uri
+             * @description URL https công khai trên CDN phát hành
+             */
+            url: string;
+        };
+        SchoolClientInstallerList: {
+            /** @enum {string} */
+            channel: "production";
+            data: components["schemas"]["SchoolClientInstaller"][];
+            index_generated_at: components["schemas"]["Timestamp"];
+            /**
+             * Format: uri
+             * @description Link mở bản Web (`play.<domain>`) cho PC phòng máy (ADR-0101 mục 8); `null` khi môi trường chưa cấu hình
+             */
+            web_client_url?: string | null;
         };
         SchoolCurriculumSettings: {
             items: {
@@ -17542,6 +17606,8 @@ export interface components {
         };
         TenantSummary: {
             code: string;
+            /** @description Tenant QA (synthetic monitoring F131): dữ liệu không tính vào Game Analytics và tổng hợp học tập platform (F134, TEST_STRATEGY §4); portal hiện nhãn QA */
+            is_qa?: boolean;
             name: string;
             school_count?: number;
             /** @enum {string} */
@@ -17558,6 +17624,8 @@ export interface components {
         TenantType: "school" | "unit" | "common";
         /** @description JSON Merge Patch cho tenant; `tenant_type`, `code`, `keycloak_org_alias` không đổi được. */
         TenantUpdate: {
+            /** @description Đánh dấu/bỏ đánh dấu tenant QA (chỉ System Admin; tenant common → 422 VALIDATION_FAILED); audit tenant.qa_flag_changed (F134-AC-07); dữ liệu trong thời gian đánh dấu không được backfill khi bỏ cờ */
+            is_qa?: boolean;
             name?: string;
             reason: string;
             /** @enum {string} */
@@ -18456,6 +18524,7 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["ContentStatsItem"][];
                         data_as_of?: components["schemas"]["Timestamp"];
+                        excluded_tenant_ids?: components["schemas"]["ExcludedTenantIds"];
                         grain?: components["schemas"]["DashboardGrain"];
                         is_partial?: boolean;
                         page: components["schemas"]["PageInfo"];
@@ -18671,6 +18740,7 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["PerformanceReportRow"][];
                         data_as_of?: components["schemas"]["Timestamp"];
+                        excluded_tenant_ids?: components["schemas"]["ExcludedTenantIds"];
                         grain?: components["schemas"]["DashboardGrain"];
                         is_partial?: boolean;
                     };
@@ -42182,6 +42252,40 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+        };
+    };
+    listSchoolClientInstallers: {
+        parameters: {
+            query: {
+                school_id: components["schemas"]["Uuid"];
+            };
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolClientInstallerList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     listTenantPermissions: {
