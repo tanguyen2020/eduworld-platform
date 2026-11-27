@@ -73,8 +73,10 @@ type GameMergeOps interface {
 
 // Gateway implements port.OwnerServiceGateway. A nil facade means the module is not wired in this binary:
 // every call to it is 503 UNAVAILABLE, never a silent success (F045-AC-25). Module learning has every adapter; module game
-// serves mergeUserData (F070) and its assignments (F078); competition serves mergeUserData (F100) and the template assignments
-// (F107); chat serves the sticker pack assignments (F082 T040).
+// serves mergeUserData (F070), its assignments (F078) and its trash (F057); competition serves mergeUserData (F100), the
+// template assignments (F107) and their trash (F057); chat serves the sticker pack assignments (F082 T040) and their trash
+// (F057). A trash listing names one resource_type (required by the public API), so each page comes from exactly one owner
+// with its own keyset cursor: there is nothing to merge across modules.
 type Gateway struct {
 	Learning      LearningPlatformOps
 	LearningMerge LearningMergeOps
@@ -87,6 +89,10 @@ type Gateway struct {
 	CompetitionAssign CompetitionAssignmentOps
 	// ChatAssign assigns the sticker packs of module chat (F082 T040).
 	ChatAssign ChatAssignmentOps
+	// GameTrash, CompetitionTrash and ChatTrash list and restore the soft-deleted resources of those modules (F057).
+	GameTrash        GameTrashOps
+	CompetitionTrash CompetitionTrashOps
+	ChatTrash        ChatTrashOps
 	// Deadlines override module_call_deadline per kind (configuration, tests); zero = modcall defaults.
 	Deadlines map[modcall.Kind]time.Duration
 }
@@ -133,23 +139,20 @@ func unexpected(module, op string, res any) error {
 
 // ListTrash implements port.OwnerServiceGateway.
 func (g Gateway) ListTrash(ctx context.Context, module string, q port.TrashQuery) (port.TrashPage, error) {
+	switch module {
+	case "game":
+		return g.gameListTrash(ctx, q)
+	case "competition":
+		return g.competitionListTrash(ctx, q)
+	case "chat":
+		return g.chatListTrash(ctx, q)
+	}
 	if module != "learning" || g.Learning == nil {
 		return port.TrashPage{}, notWired(module, "listTrash")
 	}
+	p := paramsOf(q)
 	rt := learningapi.CommonInternalCommonV1ResourceType(q.ResourceType)
-	params := learningapi.ListTrashParams{ResourceType: &rt}
-	if len(q.TenantIDs) > 0 {
-		ids := append([]uuid.UUID(nil), q.TenantIDs...)
-		params.TenantIds = &ids
-	}
-	if q.Cursor != "" {
-		c := q.Cursor
-		params.Cursor = &c
-	}
-	if q.Limit > 0 {
-		l := q.Limit
-		params.Limit = &l
-	}
+	params := learningapi.ListTrashParams{ResourceType: &rt, TenantIds: p.tenants, Cursor: p.cursor, Limit: p.limit}
 	res, err := call(ctx, g.learningOp("listTrash", modcall.Read), func(ctx context.Context) (learningapi.ListTrashResponseObject, error) {
 		return g.Learning.ListTrash(ctx, learningapi.ListTrashRequestObject{Params: params})
 	})
@@ -162,27 +165,22 @@ func (g Gateway) ListTrash(ctx context.Context, module string, q port.TrashQuery
 	}
 	out := port.TrashPage{Data: make([]port.TrashEntry, 0, len(page.Data)), HasMore: page.Page.HasMore, NextCursor: page.Page.NextCursor}
 	for _, it := range page.Data {
-		e := port.TrashEntry{ResourceType: string(it.ResourceType), ResourceID: it.ResourceId, TenantID: it.TenantId, DeletedAt: it.DeletedAt,
-			Restorable: true}
-		if it.DeletedBy != nil {
-			e.DeletedBy = *it.DeletedBy
-		}
-		if it.Title != nil {
-			e.Title = *it.Title
-		}
-		if it.DeleteReason != nil {
-			e.DeleteReason = *it.DeleteReason
-		}
-		if it.Restorable != nil {
-			e.Restorable = *it.Restorable
-		}
-		out.Data = append(out.Data, e)
+		out.Data = append(out.Data, trashEntry(string(it.ResourceType), it.ResourceId, it.TenantId, it.DeletedAt, it.DeletedBy, it.Title,
+			it.DeleteReason, it.Restorable))
 	}
 	return out, nil
 }
 
 // RestoreTrashItem implements port.OwnerServiceGateway.
 func (g Gateway) RestoreTrashItem(ctx context.Context, module, resourceType string, id uuid.UUID, reason string) error {
+	switch module {
+	case "game":
+		return g.gameRestoreTrash(ctx, resourceType, id, reason)
+	case "competition":
+		return g.competitionRestoreTrash(ctx, resourceType, id, reason)
+	case "chat":
+		return g.chatRestoreTrash(ctx, resourceType, id, reason)
+	}
 	if module != "learning" || g.Learning == nil {
 		return notWired(module, "restoreTrashItem")
 	}

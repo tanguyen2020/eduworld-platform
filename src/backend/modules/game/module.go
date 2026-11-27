@@ -72,9 +72,10 @@ import (
 const Name = "game"
 
 // Facade is the part of the game facade (api.StrictServerInterface, specs/openapi/modules/game.internal.v1.yaml)
-// implemented in this release: the student lifecycle operations of the identity sagas (F016) and mergeUserData (F070 T039). The other
-// platform-ops operations (assignments, trash, clone) are not implemented by module game yet (OQ F045-3): the
-// identity gateway answers 503 UNAVAILABLE for them, never a silent success.
+// implemented in this release: the student lifecycle operations of the identity sagas (F016), mergeUserData (F070 T039), the
+// tenant assignments (F078) and the trash of the game resources (listTrash, restoreTrashItem — F057). Clone
+// (executeTenantCloneStep) is not implemented by module game: the identity gateway answers 503 UNAVAILABLE for it, never a
+// silent success.
 type Facade interface {
 	// listOutboxEventIds / listProcessedEventIds (worker reconcile, F134).
 	ListOutboxEventIds(ctx context.Context, req api.ListOutboxEventIdsRequestObject) (api.ListOutboxEventIdsResponseObject, error)
@@ -87,6 +88,9 @@ type Facade interface {
 	ApplyTenantAssignments(ctx context.Context, req api.ApplyTenantAssignmentsRequestObject) (api.ApplyTenantAssignmentsResponseObject, error)
 	RevokeTenantAssignments(ctx context.Context, req api.RevokeTenantAssignmentsRequestObject) (api.RevokeTenantAssignmentsResponseObject, error)
 	ListResourceAssignments(ctx context.Context, req api.ListResourceAssignmentsRequestObject) (api.ListResourceAssignmentsResponseObject, error)
+	// F057: the trash of the game resources (caller identity, ADR-0028).
+	ListTrash(ctx context.Context, req api.ListTrashRequestObject) (api.ListTrashResponseObject, error)
+	RestoreTrashItem(ctx context.Context, req api.RestoreTrashItemRequestObject) (api.RestoreTrashItemResponseObject, error)
 	ListAssignedGameActivities(ctx context.Context, req api.ListAssignedGameActivitiesRequestObject) (api.ListAssignedGameActivitiesResponseObject, error)
 	// F103: the party activities of the Party Lobby (caller competition).
 	ListPartyActivityCandidates(ctx context.Context, req api.ListPartyActivityCandidatesRequestObject) (api.ListPartyActivityCandidatesResponseObject, error)
@@ -399,6 +403,9 @@ func Register(r *module.Registry) (*Module, error) {
 	m := &Module{hub: hub, learning: learningLate, chat: chatLate, facade: facade.Facade{Ops: r.ReconcileSource(Name), Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
 		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC, Analytics: anonymizer},
 		GameAdmin: facade.GameAdmin{Assignments: assignUC, Catalog: adminQueries},
+		Trash: facade.Trash{TrashList: query.Trash{Read: core.ReadSession, Model: read.Trash{}, Cursors: cursors},
+			TrashRestore: command.RestoreTrash{UoW: core.UoW, Store: write.TrashRepo{}, Events: write.Publisher{W: core.Writer},
+				Audit: write.Auditor{R: core.Recorder}}, Idempotency: core.Idempotency},
 		PartyActivities: facade.PartyActivities{Queries: query.PartyActivities{Read: core.ReadSession, Bosses: bosssql.Content{},
 			BossReads: bosssql.Reads{}, Party: questsql.Content{}, Quests: questsql.Content{}, World: worldsql.Content{},
 			AttemptsPerDay: bossCfg.AttemptsPerDay, Reset: bossCfg.Reset}, Bosses: bossUC, Quests: coopUC}}}

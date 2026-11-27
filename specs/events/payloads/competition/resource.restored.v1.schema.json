@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/resource.restored.v1.schema.json",
+  "title": "Payload <resource_type>.restored v1 (module competition, owner F057, ADR-0028)",
+  "description": "Một mẫu giải/thử thách (`competition.game_configs`) được khôi phục từ Thùng rác (facade `restoreTrashItem`, module identity điều phối). Event type là `<resource_type>.restored`; mọi loại của module dùng chung schema này. Dữ liệu platform: envelope tenant_id = null và `tenant_id` = null. Consumer: AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["resource_type", "resource_id", "tenant_id", "restored_by"],
+  "properties": {
+    "resource_type": { "type": "string", "enum": ["tournament_template", "challenge_template"] },
+    "resource_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid" },
+    "restored_by": { "type": ["string", "null"], "format": "uuid" },
+    "reason": { "type": "string", "maxLength": 1000 }
+  },
+  "examples": [
+    { "resource_type": "tournament_template", "resource_id": "0193a5f4-6c1e-7b2a-9d1f-000000000301", "tenant_id": null, "restored_by": "0193a5f4-6c1e-7b2a-9d1f-000000000202", "reason": "deleted by mistake" }
+  ]
+}

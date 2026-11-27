@@ -56,7 +56,8 @@ const Name = "chat"
 
 // Facade is the part of the chat facade (api.StrictServerInterface, specs/openapi/modules/chat.internal.v1.yaml)
 // implemented: moderateDisplayText (F116, x-allowed-callers: competition — party and team names) and screenText (F077,
-// x-allowed-callers: game — school event texts).
+// x-allowed-callers: game — school event texts), the sticker pack assignments (F082) and the trash of the sticker packs
+// (listTrash, restoreTrashItem — F057; x-allowed-callers: identity).
 type Facade interface {
 	// listOutboxEventIds / listProcessedEventIds (worker reconcile, F134).
 	ListOutboxEventIds(ctx context.Context, req chatapi.ListOutboxEventIdsRequestObject) (chatapi.ListOutboxEventIdsResponseObject, error)
@@ -67,6 +68,9 @@ type Facade interface {
 	ApplyTenantAssignments(ctx context.Context, req chatapi.ApplyTenantAssignmentsRequestObject) (chatapi.ApplyTenantAssignmentsResponseObject, error)
 	RevokeTenantAssignments(ctx context.Context, req chatapi.RevokeTenantAssignmentsRequestObject) (chatapi.RevokeTenantAssignmentsResponseObject, error)
 	ListResourceAssignments(ctx context.Context, req chatapi.ListResourceAssignmentsRequestObject) (chatapi.ListResourceAssignmentsResponseObject, error)
+	// F057: the trash of the sticker packs (x-allowed-callers: identity, ADR-0028).
+	ListTrash(ctx context.Context, req chatapi.ListTrashRequestObject) (chatapi.ListTrashResponseObject, error)
+	RestoreTrashItem(ctx context.Context, req chatapi.RestoreTrashItemRequestObject) (chatapi.RestoreTrashItemResponseObject, error)
 }
 
 // Module is the registered module; Facade() serves the facade operations of module chat.
@@ -236,7 +240,11 @@ func Register(r *module.Registry) (*Module, error) {
 		}
 		// F082 T040: tenant assignments of the sticker packs, called by module identity (platform operations, ADR-0029).
 		mod.facade = chatfacade.Facade{Ops: r.ReconcileSource(Name), Moderation: pipe.Validator, Assignments: command.ChatAssignments{UoW: core.UoW, Store: persistence.Assignments{},
-			Audit: persistence.Auditor{R: core.Recorder}, Cursors: cursors}}
+			Audit: persistence.Auditor{R: core.Recorder}, Cursors: cursors},
+			// F057: the trash of the sticker packs (soft-deleted platform library rows, restore under tenancy.Bypass(trash)).
+			Trash: chatfacade.Trash{TrashList: query.Trash{Read: core.ReadSession, Reader: persistence.Trash{}, Cursors: cursors},
+				TrashRestore: command.RestoreTrash{UoW: core.UoW, Store: persistence.Trash{}, Events: persistence.Publisher{W: core.Writer},
+					Audit: persistence.Auditor{R: core.Recorder}}, Idempotency: core.Idempotency}}
 		var js jetstream.JetStream
 		if r.NATS() != nil {
 			if js, err = r.JetStream(); err != nil {

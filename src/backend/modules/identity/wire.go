@@ -95,6 +95,7 @@ type GameFacade interface {
 	AnonymizeUserData(ctx context.Context, req gameapi.AnonymizeUserDataRequestObject) (gameapi.AnonymizeUserDataResponseObject, error)
 	MergeUserData(ctx context.Context, req gameapi.MergeUserDataRequestObject) (gameapi.MergeUserDataResponseObject, error)
 	modules.GameAssignmentOps
+	modules.GameTrashOps // F057: trash of the game resources
 }
 
 // CompetitionFacade is what module identity calls on module competition (x-allowed-callers: identity, F100 T042).
@@ -103,6 +104,7 @@ type CompetitionFacade interface {
 	participants.CompetitionAnonymizer
 	modules.CompetitionMergeOps
 	modules.CompetitionAssignmentOps
+	modules.CompetitionTrashOps // F057: trash of the templates
 }
 
 // Imports are the facades of the other modules called by the sagas and platform operations of identity.
@@ -118,6 +120,7 @@ type Imports struct {
 // ChatFacade is what module identity calls on module chat (x-allowed-callers: identity, F082 T040).
 type ChatFacade interface {
 	modules.ChatAssignmentOps
+	modules.ChatTrashOps // F057: trash of the sticker packs
 }
 
 // build constructs every use case of module identity on the real adapters and declares its entry points.
@@ -185,15 +188,16 @@ func build(r *module.Registry, m *Module, in Imports) error {
 			Memberships: query.CheckMemberships{Model: principals}}}
 
 	// Facades of learning and game (sagas F016, platform operations F045); mergeUserData is served by learning
-	// (F030) and game (F070); competition serves its template assignments (F107); chat answers 503 UNAVAILABLE (OQ F045-3).
-	gw := modules.Gateway{Learning: in.Learning, LearningMerge: in.Learning, GameMerge: in.Game, GameAssign: in.Game}
+	// (F030), game (F070) and competition (F100); game, competition and chat serve their assignments (F078, F107, F082) and
+	// their trash (F057); clone is served by learning only (the other owners answer 503 UNAVAILABLE).
+	gw := modules.Gateway{Learning: in.Learning, LearningMerge: in.Learning, GameMerge: in.Game, GameAssign: in.Game, GameTrash: in.Game}
 	studentParts := []port.StudentDataParticipant{participants.Game{F: in.Game}, participants.Learning{F: in.Learning}}
 	anonymizers := []port.UserDataAnonymizer{participants.GameAnonymize{F: in.Game}, participants.LearningAnonymize{F: in.Learning}}
 	if in.Chat != nil {
-		gw.ChatAssign = in.Chat
+		gw.ChatAssign, gw.ChatTrash = in.Chat, in.Chat
 	}
 	if in.Competition != nil {
-		gw.CompetitionMerge, gw.CompetitionAssign = in.Competition, in.Competition
+		gw.CompetitionMerge, gw.CompetitionAssign, gw.CompetitionTrash = in.Competition, in.Competition, in.Competition
 		studentParts = append(studentParts, participants.Competition{F: in.Competition})
 		anonymizers = append(anonymizers, participants.CompetitionAnonymize{F: in.Competition})
 	}

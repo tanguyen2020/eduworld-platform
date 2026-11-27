@@ -21,6 +21,8 @@ type Facade struct {
 	GameAdmin
 	// PartyActivities serves the party activities of the Party Lobby (competition, F103).
 	PartyActivities
+	// Trash serves listTrash and restoreTrashItem of the game resources (identity, ADR-0028, F057).
+	Trash
 }
 
 // CleanupStudentData implements gameapi.StrictServerInterface (x-allowed-callers: identity).

@@ -34,45 +34,52 @@ func assignmentList(views []command.AssignmentView) api.CommonInternalCommonV1Te
 // idempotent replays the result of a facade write called again with the same Idempotency-Key of the saga (stored with
 // the result in the transaction of the use case, idempotency.SetResult).
 func (f Facade) idempotent(ctx context.Context, op string, req any, fn func(ctx context.Context) ([]command.AssignmentView, error)) ([]command.AssignmentView, error) {
+	return replayOr(ctx, f.Idempotency, op, req, fn)
+}
+
+// replayOr runs fn once per Idempotency-Key of the caller and replays its stored result afterwards (another body with
+// the key is 409 IDEMPOTENCY_KEY_REUSED); a nil store is 503 UNAVAILABLE.
+func replayOr[T any](ctx context.Context, store *idempotency.Store, op string, req any, fn func(ctx context.Context) (T, error)) (T, error) {
+	var zero T
 	raw, ok := modcall.IdempotencyKeyFrom(ctx)
 	if !ok {
-		return nil, problem.New(problem.IdempotencyKeyRequired, "")
+		return zero, problem.New(problem.IdempotencyKeyRequired, "")
 	}
-	if f.Idempotency == nil {
-		return nil, problem.New(problem.Unavailable, "idempotency store not loaded in this binary").Retry()
+	if store == nil {
+		return zero, problem.New(problem.Unavailable, "idempotency store not loaded in this binary").Retry()
 	}
 	p, ok := authz.PrincipalFrom(ctx)
 	if !ok {
-		return nil, problem.New(problem.Unauthenticated, "")
+		return zero, problem.New(problem.Unauthenticated, "")
 	}
-	key, issued, err := idempotency.ParseKey(raw, f.Idempotency.Clock().Now(), f.Idempotency.TTL())
+	key, issued, err := idempotency.ParseKey(raw, store.Clock().Now(), store.TTL())
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 	k := idempotency.Key{UserID: p.UserID, Method: facadeMethod, Route: "competition." + op, Key: key, IssuedOn: issued}
 	body, err := json.Marshal(req)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 	hash := idempotency.Hash(body)
-	replay := func() ([]command.AssignmentView, bool, error) {
-		rec, err := f.Idempotency.Lookup(ctx, k)
+	replay := func() (T, bool, error) {
+		rec, err := store.Lookup(ctx, k)
 		if err != nil || rec == nil {
-			return nil, false, err
+			return zero, false, err
 		}
 		if rec.Hash != hash {
-			return nil, false, problem.New(problem.IdempotencyKeyReused, "")
+			return zero, false, problem.New(problem.IdempotencyKeyReused, "")
 		}
-		var v []command.AssignmentView
+		var v T
 		if err := json.Unmarshal(rec.Body, &v); err != nil {
-			return nil, false, err
+			return zero, false, err
 		}
 		return v, true, nil
 	}
 	if v, found, err := replay(); err != nil || found {
 		return v, err
 	}
-	v, err := fn(idempotency.WithPending(ctx, f.Idempotency.NewPending(k, hash, 200)))
+	v, err := fn(idempotency.WithPending(ctx, store.NewPending(k, hash, 200)))
 	if errors.Is(err, idempotency.ErrDuplicate) {
 		if v, found, rerr := replay(); rerr == nil && found {
 			return v, nil

@@ -67,6 +67,8 @@ type Facade struct {
 	Moderation DisplayTextChecker
 	// Assignments serves the tenant assignments of the sticker packs (F082 T040); nil = 503 UNAVAILABLE.
 	Assignments Assignments
+	// Trash serves listTrash and restoreTrashItem of the sticker packs (ADR-0028, F057); zero = 503 UNAVAILABLE.
+	Trash
 }
 
 // ModerateDisplayText implements chatapi.StrictServerInterface (x-allowed-callers: competition, x-context-required:

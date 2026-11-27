@@ -26,6 +26,9 @@ type Facade struct {
 	Assign      *command.TemplateAssignments
 	AssignList  *query.Assignments
 	Idempotency *idempotency.Store
+	// TrashList and TrashRestore serve listTrash and restoreTrashItem of the templates (ADR-0028, F057); nil → 503 UNAVAILABLE.
+	TrashList    *query.Trash
+	TrashRestore *command.RestoreTrash
 }
 
 // CleanupStudentData implements api.StrictServerInterface (x-allowed-callers: identity).

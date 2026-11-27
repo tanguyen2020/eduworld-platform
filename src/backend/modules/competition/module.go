@@ -58,8 +58,9 @@ type Imports struct {
 
 // Facade is the part of the competition facade (api.StrictServerInterface, specs/openapi/modules/competition.internal.v1.yaml)
 // implemented in this release: the student lifecycle and user merge operations of the identity sagas (F100 T042, OQ
-// F016-2, F045-3). The other platform-ops operations (assignments, trash, clone) are not implemented yet: the identity
-// gateway answers 503 UNAVAILABLE for them, never a silent success.
+// F016-2, F045-3), the template assignments (F107) and the trash of the templates (listTrash, restoreTrashItem — F057).
+// Clone (executeTenantCloneStep) is not implemented: the identity gateway answers 503 UNAVAILABLE for it, never a silent
+// success.
 type Facade interface {
 	// listOutboxEventIds / listProcessedEventIds (worker reconcile, F134).
 	ListOutboxEventIds(ctx context.Context, req api.ListOutboxEventIdsRequestObject) (api.ListOutboxEventIdsResponseObject, error)
@@ -75,6 +76,9 @@ type Facade interface {
 	ApplyTenantAssignments(ctx context.Context, req api.ApplyTenantAssignmentsRequestObject) (api.ApplyTenantAssignmentsResponseObject, error)
 	RevokeTenantAssignments(ctx context.Context, req api.RevokeTenantAssignmentsRequestObject) (api.RevokeTenantAssignmentsResponseObject, error)
 	ListResourceAssignments(ctx context.Context, req api.ListResourceAssignmentsRequestObject) (api.ListResourceAssignmentsResponseObject, error)
+	// ListTrash and RestoreTrashItem serve the trash of the tournament and challenge templates (module identity, ADR-0028).
+	ListTrash(ctx context.Context, req api.ListTrashRequestObject) (api.ListTrashResponseObject, error)
+	RestoreTrashItem(ctx context.Context, req api.RestoreTrashItemRequestObject) (api.RestoreTrashItemResponseObject, error)
 }
 
 // Module is the registered module.
@@ -284,7 +288,10 @@ func Register(r *module.Registry) (*Module, error) {
 		return consumer.HubAccessRevokedOptions(consumer.HubAccessRevoked{Hub: hub}, core.UoW, core.App, js)
 	})
 	m.facade = facade.Facade{Ops: r.ReconcileSource(Name), Lifecycle: command.PartyLifecycle{Parties: parties}, Hub: &query.HubPosition{Rooms: reg, Positions: reg},
-		Assign: &assignments, AssignList: &assignList, Idempotency: core.Idempotency}
+		Assign: &assignments, AssignList: &assignList, Idempotency: core.Idempotency,
+		TrashList: &query.Trash{Read: core.ReadSession, Reader: persistence.TrashStore{}},
+		TrashRestore: &command.RestoreTrash{UoW: core.UoW, Store: persistence.TrashStore{}, Events: persistence.Publisher{W: core.Writer},
+			Audit: persistence.Auditor{R: core.Recorder}}}
 	safety := command.PartySafety{Parties: parties, Sanctions: persistence.Sanctions{}}
 	r.Consumer("competition.party_safety_chat", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.PartySafetyChatOptions(consumer.PartySafetyChat{S: safety}, core.UoW, core.App, js)

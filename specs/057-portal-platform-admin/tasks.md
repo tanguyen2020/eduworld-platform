@@ -75,6 +75,7 @@
 ### Implementation cho User Story 4
 
 - [x] T028 [US4] Hook + trang Thùng rác — file: `…/platform/api/trash.ts`, `…/platform/trash/TrashPage.tsx` — **2026-11-19:** `api/trash.ts`, `trash/TrashPage.tsx`
+- [x] T055 [US4] Backend Thùng rác cho loại game/thi đấu/chat (Clarifications 2026-11-28; owner F045/F078/F082/F108): facade `listTrash`/`restoreTrashItem` ở module `game` (`game.config_items`), `competition` (`competition.game_configs`), `chat` (`chat.sticker_packs`) + nối `GameTrash`/`CompetitionTrash`/`ChatTrash` vào gateway identity — file: `src/backend/modules/{game,competition,chat}/internal/{domain,application,infrastructure,presentation}/**/trash*.go`, `src/backend/modules/identity/internal/infrastructure/modules/owner_gateway_trash.go`, `specs/events/payloads/{game,competition,chat}/resource.restored.v1.schema.json` — **2026-11-28:** facade test hai phía PASS (`TestGameTrashFacadeList`, `TestGameTrashRestore`, `TestCompetitionTrashFacadeList`, `TestCompetitionTrashRestore`, `TestChatTrashFacadeList`, `TestChatTrashRestore`, `TestOwnerGatewayTrashFanout`); integration PASS trên database thật: `TestGameTrashFacade`, `TestCompetitionTrashFacade`, `TestChatTrashFacade` (keyset, `restorable`, 409, 404 tenant, audit, event + schema, replay `Idempotency-Key`) và `TestPlatformAdminTrashOwnerModules` (chuỗi httpx identity, 9 loại)
 
 ## Phase 7: User Story 5 — Danh mục (Priority: P2)
 
