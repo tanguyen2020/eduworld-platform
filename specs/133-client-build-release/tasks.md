@@ -17,7 +17,7 @@
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T004 Delta contract: `TelemetryEvent` thêm `content_download` (`source`, `bytes`, `bundle_id` maxLength 128) rồi chạy `split-public.mjs`; báo F080 — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`
+- [x] T004 Delta contract: `TelemetryEvent` thêm `content_download` (`source`, `bytes`, `bundle_id` maxLength 128) rồi chạy `split-public.mjs`; báo F080 — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint` — ✅ đã có trên main từ F131 (`df48cb4c`, server F080 ingest + metric `eduworld_client_content_download_bytes_total{source}`) với `source` + `bytes`, **không có `bundle_id`** (Clarifications 2026-11-28)
 - [ ] T005 [P] Schema `client-release-manifest.schema.json`, `bundle-index.schema.json` (maxLength/pattern) + ví dụ — file: `specs/schemas/client-release-manifest.schema.json` — kiểm: `make specs-lint`
 - [ ] T006 Workflow khung `godot.yml` theo path filter (DEPLOYMENT §10.2, ADR-0088), job export/scan/size/bundles/smoke/sign/publish, action ghim SHA, `permissions: contents: read` mặc định — file: `.github/workflows/godot.yml`
 
@@ -108,7 +108,7 @@
 
 - [ ] T031 [P] [US4] Test F133-AC-18: `DeviceConfig.parse` bỏ `lan_cache_url` sai/quá dài; `ContentDownloader` thử preinstalled → LAN → CDN, từ chối hash lệch, không bao giờ gửi URL API qua LAN — file: `src/game/tests/unit/test_content_downloader.gd` — phải FAIL trước khi code
 - [ ] T032 [P] [US4] Test F133-AC-19, F133-AC-20: `PrefetchScheduler` chỉ chạy khi `shared_device` + trong `offhours_prefetch_window`, không gọi endpoint cần token; `low_data_mode` tắt tải trước — file: `src/game/tests/unit/test_prefetch_scheduler.gd`
-- [ ] T033 [P] [US4] Test F133-AC-21 (TC-ANL-003): event `content_download` đúng schema, không có trường định danh — file: `src/game/tests/unit/test_download_telemetry.gd`
+- [x] T033 [P] [US4] Test F133-AC-21 (TC-ANL-003): event `content_download` đúng schema, không có trường định danh — file: `src/game/tests/unit/test_download_telemetry.gd` — ✅ 2026-11-28 (viết trước code, FAIL rồi PASS): `tests/unit/networking/test_content_download_telemetry.gd` (mỗi nguồn một event, cộng dồn cùng nguồn tới lô kế tiếp, kẹp 0–10 GiB, nguồn lạ bỏ, `VideoFileCache` tải xong → `cdn` + kích thước file, cache hit/tải lỗi không gửi, không URL/hash/`bundle_id`/định danh) + `tests/contract/test_telemetry_fixtures.gd` (lô thật khớp fixture `TelemetryBatch` sinh từ contract và enum/khoảng của `TelemetryEvent`)
 - [ ] T034 [P] [US4] Test F133-AC-17: `build-kit.sh` quét gói APK trường không có secret/dữ liệu tenant/câu hỏi đề, trong `build_size` — file: `deploy/installer/school-kit/tests/kit.bats`
 - [ ] T035 [P] [US4] Kịch bản F133-AC-22: 40 client headless + giới hạn băng thông `classroom_reference_bandwidth` (tc netem) với cache LAN — file: `tests/classroom/simulate-40.sh`
 - [ ] T049 [P] [US4] ~~Test F133-AC-27 trên runner Windows: cài mặc định và `/SHARED=0` (im lặng) → `device.cfg` đúng; máy dùng chung sau đăng nhập + thoát không còn bản ghi DPAPI — file: `ci/tests/windows_installer_shared_device.ps1`~~ — **không làm** (ADR-0101, 2026-11-24: bỏ bản Windows); mã giữ để truy vết
@@ -116,7 +116,7 @@
 ### Implementation cho User Story 4
 
 - [ ] T036 [US4] `DeviceConfig` (đọc `device.cfg` theo nền tảng) — file: `src/game/scripts/core/device_config.gd`
-- [ ] T037 [US4] `ContentDownloader` (nguồn, SHA-256, LRU, telemetry) + `BandwidthProbe` — file: `src/game/scripts/networking/content_downloader.gd`
+- [ ] T037 [US4] `ContentDownloader` (nguồn, SHA-256, LRU, telemetry) + `BandwidthProbe` — file: `src/game/scripts/networking/content_downloader.gd` — ⏳ phần telemetry có sẵn từ 2026-11-28: gọi `TelemetryService.queue_content_download(source, bytes)` (hằng `DOWNLOAD_SOURCE_*`) khi một gói tải xong; `VideoFileCache` đã gọi với `cdn` (Clarifications 2026-11-28)
 - [ ] T038 [US4] `PrefetchScheduler` (chỉ mục gói có chữ ký + media công khai đã biết) — file: `src/game/scripts/networking/prefetch_scheduler.gd`
 - [ ] T039 [US4] Gói APK trường (APK kèm gói theo khối, delta theo hash; không installer Windows — ADR-0101) — file: `deploy/installer/school-kit/build-kit.sh`
 - [ ] T050 [US4] ~~Trang chọn "Máy dùng chung"/"Máy cá nhân" + tham số im lặng trong script bộ cài Windows ghi `device.cfg` — file: `src/game/export/windows/installer.iss`~~ — **không làm** (ADR-0101, 2026-11-24: bỏ bản Windows); mã giữ để truy vết

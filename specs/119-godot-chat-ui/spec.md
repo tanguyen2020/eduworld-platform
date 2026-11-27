@@ -40,6 +40,11 @@
 - Q: `Channel` của `listMyChannels` có `features` và `max_text_length`? → A: Có. `Channel` (cả `openDirectChannel`) trả `max_text_length` của chat policy hiệu lực, `features` (`ChatFeatures` đã có trong contract — giữ kiểu object để không phá vỡ, thay cho mảng enum đề xuất ban đầu) thêm `edit_window_minutes`, `recall_window_hours`, và `sendable_kinds` = `allowed_kinds` thu hẹp theo sanction đang hiệu lực của người gọi. `features` là những gì người gọi dùng được lúc này (preset `quick_message_emote_only` tắt sticker/GIF/sửa/mention; bị tắt tiếng thì không còn tính năng tạo nội dung). Quy tắc ở [CHAT_SYSTEM §7.1](../../docs/03-social-multiplayer/CHAT_SYSTEM.md#71-ma-trận-tính-năng--loại-channel-mặc-định-platform). Client dùng các trường này khi có, giữ mặc định cũ cho server cũ (Clarification 2026-11-27 phía trên); việc client đọc trường mới là việc tiếp theo của F119. [Confirmed]
 - Q: Thời hạn sửa/thu hồi cho client? → A: `features.edit_window_minutes`/`recall_window_hours` (từ policy, CHAT_SYSTEM §7.2–7.3). Danh sách emoji/reaction qua API vẫn là câu hỏi mở. [Confirmed]
 
+### Session 2026-11-28 (telemetry `chat_seq_gap` — metric `eduworld_chat_seq_gaps_total{channel_type}`)
+
+- Q: Server đã nhận telemetry `chat_seq_gap` (GAME_ANALYTICS §3.2, MONITORING §3), client báo khi nào và gửi gì? → A: [Proposed] Mỗi lần `ChatStore.gap_detected` (seq vượt con trỏ liên tục + 1, một lần cho mỗi khoảng trống — F119-AC-04), `ChatService` gọi `TelemetryService.queue_chat_seq_gap(channel_type, count)`: chỉ `channel_type` (một trong 6 `ChannelType`, loại lạ thì bỏ) và `gap_count` kẹp 1–1.000. Không gửi channel id (kể cả DM), user id, biệt danh, seq hay nội dung tin (R14).
+- Q: Mạng chập chờn sinh nhiều khoảng trống — có gửi dồn dập không? → A: [Proposed] Không: khoảng trống cùng `channel_type` được cộng vào event còn chờ lô kế tiếp (tối đa một event mỗi loại channel mỗi lần flush, ≥ 30 s theo MONITORING §10; chạm 1.000 thì mở event mới; event đã nằm trong lô đang gửi không bị sửa). Theo luật lô/hàng đợi offline của `TelemetryService` (F062), không lọc bởi cờ telemetry sản phẩm (metric vận hành). Test: `tests/unit/networking/test_chat_seq_gap_telemetry.gd`, `tests/contract/test_telemetry_fixtures.gd`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Panel chat luôn có trong party và trận (Priority: P1)

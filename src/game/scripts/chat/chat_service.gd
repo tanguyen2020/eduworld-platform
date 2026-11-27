@@ -773,11 +773,15 @@ func _on_sanction(payload: Dictionary) -> void:
 
 
 ## A gap of `count` messages after `after_seq`: one `chat.channel.sync`, or the newest REST page when more than
-## `chat_recent_buffer` are missing. Whatever is still missing afterwards is given up (F119-AC-04).
+## `chat_recent_buffer` are missing. Whatever is still missing afterwards is given up (F119-AC-04). The gap is counted
+## in telemetry `chat_seq_gap` (channel type + count only, never the channel id — R14, F119 Clarifications 2026-11-28).
 func _on_gap_detected(channel_id: String, after_seq: int, count: int) -> void:
 	store.begin_sync(channel_id)
 	_sync_started[channel_id] = _mono_ms()
 	Log.info("chat_gap", {"count": count})
+	var gap_channel: ChatChannelModel = store.channel(channel_id)
+	if telemetry != null and gap_channel != null:
+		telemetry.queue_chat_seq_gap(gap_channel.channel_type, count)
 	if count > ChatStore.RECENT_BUFFER or realtime == null or not realtime.can_write():
 		await load_history(channel_id)
 		_finish_sync(channel_id, false)

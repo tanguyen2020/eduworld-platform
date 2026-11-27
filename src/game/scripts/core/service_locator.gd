@@ -66,6 +66,7 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	math_svg.failure_handler = func(_reason: String) -> void: learning.report_math_failed()
 	media = MediaLoader.new(transport)
 	video_files = VideoFileCache.new(rest)
+	video_files.telemetry = telemetry
 	profile = ProfileService.new(rest, app_state)
 	profile.access_denied.connect(_on_access_denied)
 	realtime = realtime_client if realtime_client != null else _realtime_autoload()

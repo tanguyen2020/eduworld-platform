@@ -11,6 +11,8 @@ const TIMEOUT_SEC: float = 120.0
 var host: Node = null
 ## Coroutine `(url: String, path: String) -> bool` replacing the download (tests, TEST-ONLY fakes).
 var downloader: Callable = Callable()
+## Each finished download is counted as `content_download` (source `cdn`, file size only — F133-AC-21, R14).
+var telemetry: TelemetryService = null
 
 
 func _init(host_node: Node = null) -> void:
@@ -43,7 +45,20 @@ func fetch(url: String) -> String:
 		ok = bool(await downloader.call(url, path))
 	else:
 		ok = await _download(url, path)
-	return path if ok and FileAccess.file_exists(path) else ""
+	if not ok or not FileAccess.file_exists(path):
+		return ""
+	if telemetry != null:
+		telemetry.queue_content_download(TelemetryService.DOWNLOAD_SOURCE_CDN, _file_size(path))
+	return path
+
+
+static func _file_size(path: String) -> int:
+	var f: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return 0
+	var size: int = f.get_length()
+	f.close()
+	return size
 
 
 func _download(url: String, path: String) -> bool:
