@@ -298,8 +298,99 @@ paths:
         '403': { $ref: '#/components/responses/CallerNotAllowed' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+# Đối soát event liên module sau khôi phục một database (F134, BACKUP_RECOVERY §3.5): mọi module có database hiện thực
+# hai operation chỉ đọc này; được chép vào cả 5 file `<module>.internal.v1.yaml` bởi scripts/openapi/sync-platform-ops.mjs
+# (khối `ops-reconcile`). Chỉ trả ID event + metadata từ `infra.*` của database module (không `envelope`, không PII — R14).
+x-ops-reconcile-paths:
+  /internal/v1/ops/outbox-events:
+    get:
+      tags: [ops-reconcile]
+      operationId: listOutboxEventIds
+      summary: Liệt kê ID event trong `infra.outbox_events` của module này trong một cửa sổ thời gian (đối soát F134)
+      description: |
+        Gọi bởi lệnh `worker reconcile --module=<module được khôi phục>` (F134-AC-02) để so `processed_events` của module được
+        khôi phục với outbox của module nguồn. Cửa sổ lọc theo thời điểm trong UUIDv7 của `event_id` (`from` ≤ t < `to`), sắp theo
+        `event_id`; `event_types` (tùy chọn) thu hẹp loại event. Ngữ cảnh: PlatformScope của job (`tenancy.Bypass`
+        lý do `platform_job`, có audit + metric). Không bao giờ trả `envelope`/payload.
+      x-allowed-callers: [identity, learning, game, competition, chat]
+      x-context-required: [tenant_scope]
+      parameters:
+        - $ref: '#/components/parameters/ReconcileFrom'
+        - $ref: '#/components/parameters/ReconcileTo'
+        - name: event_types
+          in: query
+          required: false
+          description: Loại event cần liệt kê; vắng mặt = mọi loại (consumer đăng ký subject wildcard)
+          style: form
+          explode: true
+          schema:
+            type: array
+            minItems: 1
+            maxItems: 100
+            items: { type: string, maxLength: 64, pattern: '^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$' }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/ReconcileLimit'
+      responses:
+        '200':
+          description: Một trang ID event của outbox
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OutboxEventIdPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CallerNotAllowed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '503': { $ref: '#/components/responses/DependencyUnavailable' }
+  /internal/v1/ops/processed-events:
+    get:
+      tags: [ops-reconcile]
+      operationId: listProcessedEventIds
+      summary: Liệt kê ID event của một module nguồn mà consumer của module này đã xử lý hoặc đưa vào DLQ (đối soát F134)
+      description: |
+        Gọi bởi lệnh `worker reconcile --module=<module được khôi phục>` (F134-AC-01): trả danh sách consumer của module này đăng ký
+        event của `source_module` (`consumers[]`, kèm loại event) và các dòng `infra.processed_events` (`status = processed`) cùng
+        `infra.dead_letters` (`status = dead_lettered`) của các consumer đó, lọc theo thời điểm UUIDv7 của `event_id`, sắp theo
+        `(consumer, event_id, status)`. Ngữ cảnh như `listOutboxEventIds`.
+      x-allowed-callers: [identity, learning, game, competition, chat]
+      x-context-required: [tenant_scope]
+      parameters:
+        - name: source_module
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/ReconcileModule' }
+        - $ref: '#/components/parameters/ReconcileFrom'
+        - $ref: '#/components/parameters/ReconcileTo'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/ReconcileLimit'
+      responses:
+        '200':
+          description: Một trang ID event đã xử lý/DLQ
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProcessedEventIdPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CallerNotAllowed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '503': { $ref: '#/components/responses/DependencyUnavailable' }
+
 components:
   parameters:
+    ReconcileFrom:
+      name: from
+      in: query
+      required: true
+      description: Đầu cửa sổ (bao gồm), so với thời điểm UUIDv7 của `event_id`
+      schema: { type: string, format: date-time }
+    ReconcileTo:
+      name: to
+      in: query
+      required: true
+      description: Cuối cửa sổ (không bao gồm); `to − from` ≤ `outbox_retention`
+      schema: { type: string, format: date-time }
+    ReconcileLimit:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 5000, default: 5000 }
     Cursor:
       name: cursor
       in: query
@@ -379,6 +470,59 @@ components:
           schema: { $ref: '#/components/schemas/Problem' }
 
   schemas:
+    ReconcileModule:
+      type: string
+      description: Module có database (ADR-0074); `realtime` không có database nên không bao giờ là nguồn/đích đối soát.
+      enum: [identity, learning, game, competition, chat]
+    OutboxEventId:
+      type: object
+      required: [event_id, event_type, created_at]
+      properties:
+        event_id: { type: string, format: uuid }
+        event_type: { type: string, maxLength: 64 }
+        tenant_id: { type: [string, 'null'], format: uuid }
+        created_at: { type: string, format: date-time }
+        published_at: { type: [string, 'null'], format: date-time, description: '`null` = relay chưa phát lên JetStream' }
+    OutboxEventIdPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 5000
+          items: { $ref: '#/components/schemas/OutboxEventId' }
+        next_cursor: { type: [string, 'null'], maxLength: 512, description: '`null` = trang cuối' }
+    ReconcileConsumer:
+      type: object
+      required: [consumer, event_types]
+      properties:
+        consumer: { type: string, maxLength: 128, description: 'Tên consumer `<module>.<handler>`' }
+        event_types:
+          type: array
+          maxItems: 100
+          description: Loại event của nguồn mà consumer đăng ký; `["*"]` = mọi loại (subject wildcard)
+          items: { type: string, maxLength: 64 }
+    ProcessedEventId:
+      type: object
+      required: [consumer, event_id, processed_at, status]
+      properties:
+        consumer: { type: string, maxLength: 128 }
+        event_id: { type: string, format: uuid }
+        processed_at: { type: string, format: date-time, description: 'Thời điểm xử lý (`processed`) hoặc vào DLQ (`dead_lettered`)' }
+        status: { type: string, enum: [processed, dead_lettered] }
+    ProcessedEventIdPage:
+      type: object
+      required: [consumers, items]
+      properties:
+        consumers:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/ReconcileConsumer' }
+        items:
+          type: array
+          maxItems: 5000
+          items: { $ref: '#/components/schemas/ProcessedEventId' }
+        next_cursor: { type: [string, 'null'], maxLength: 512, description: '`null` = trang cuối' }
     Problem:
       type: object
       description: RFC 9457 Problem Details, dùng chung catalog mã lỗi với API public (API_DESIGN §4.1).

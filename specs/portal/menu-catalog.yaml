@@ -354,14 +354,14 @@ workspaces:
         title: Bộ cài game cho trường
         path: /school-lms/installers
         order: 200
-        required_permissions: [school.settings.read, tenant.settings.read]
+        required_permissions: [school.installer.read]
         can_disable: true
         actions:
           - key: action.school_lms.installers.view
             label_key: portal.action.school_lms.installers.view
             title: Xem và tải bộ cài game
-            required_permissions: [school.settings.read, tenant.settings.read]
-            operation_ids: []
+            required_permissions: [school.installer.read]
+            operation_ids: [listSchoolClientInstallers]
             can_disable: true
       - key: menu.school_lms.settings
         label_key: portal.menu.school_lms.settings

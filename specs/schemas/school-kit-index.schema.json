@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:school-kit-index:1",
+  "title": "SchoolKitIndex",
+  "description": "Chỉ mục bộ cài trường `play.<domain>/releases/school-kit/<channel>.json` + chữ ký RSA-SHA256 (PKCS#1 v1.5, base64) `<channel>.json.sig` bằng khóa phát hành của F133 (F134-AC-12, DEPLOYMENT §9). Chỉ gói APK Android kèm gói vùng theo khối (ADR-0101 bỏ windows); chỉ trỏ tới bộ cài đã ký. Module game kiểm chữ ký + schema trước khi trả link (listSchoolClientInstallers, F134-AC-13/14). Không chứa dữ liệu tenant hay secret (F133-AC-17).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "channel", "generated_at", "kits"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "channel": { "type": "string", "enum": ["staging", "production"] },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "kits": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kit_id", "platform", "client_version", "grade_bands", "url", "sha256", "size_bytes", "min_os", "released_at"],
+        "properties": {
+          "kit_id": { "type": "string", "maxLength": 64, "pattern": "^[a-z0-9-]{1,64}$" },
+          "platform": { "type": "string", "enum": ["android"] },
+          "client_version": { "type": "string", "maxLength": 32, "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$" },
+          "grade_bands": { "type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true, "items": { "type": "string", "enum": ["g1_3", "g4_5", "g6_7", "g8_9"] } },
+          "url": { "type": "string", "format": "uri", "maxLength": 2048, "pattern": "^https://" },
+          "sha256": { "type": "string", "maxLength": 64, "pattern": "^[a-f0-9]{64}$" },
+          "size_bytes": { "type": "integer", "minimum": 0 },
+          "min_os": { "type": "string", "maxLength": 32 },
+          "released_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schema_version": 1,
+      "channel": "production",
+      "generated_at": "2026-11-27T02:00:00Z",
+      "kits": [
+        {
+          "kit_id": "android-g1-3-0-4-0",
+          "platform": "android",
+          "client_version": "0.4.0",
+          "grade_bands": ["g1_3"],
+          "url": "https://play.example.vn/releases/school-kit/0.4.0/eduworld-school-g1_3.apk",
+          "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+          "size_bytes": 412000000,
+          "min_os": "Android 8.0",
+          "released_at": "2026-11-27T01:30:00Z"
+        }
+      ]
+    }
+  ]
+}

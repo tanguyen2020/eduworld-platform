@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:ops:reconcile-report:1",
+  "title": "ReconcileReport",
+  "description": "Báo cáo của lệnh `worker reconcile --module=<module>` (job một lần `reconcile-<module>`, F134-AC-03, BACKUP_RECOVERY §3.5, §8). Chỉ ID event, loại event, consumer, tenant, thời điểm và phân loại — không payload, không PII (AGENTS R14). Không lưu DB: file JSON + audit `ops.reconcile.completed`. Exit code: 0 khi đủ module và unexplained = 0, 2 khi unexplained > 0, 3 khi status = incomplete (và unexplained = 0), 1 khi tham số sai.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "module", "restore_point", "window_from", "window_to", "settle_seconds", "generated_at", "status", "peers", "counts", "mismatches", "truncated"],
+  "properties": {
+    "run_id": { "type": "string", "format": "uuid" },
+    "module": { "$ref": "#/$defs/module" },
+    "restore_point": { "type": "string", "format": "date-time", "description": "Điểm khôi phục T (lệch có event time ≤ T → unexplained)" },
+    "window_from": { "type": "string", "format": "date-time" },
+    "window_to": { "type": "string", "format": "date-time" },
+    "settle_seconds": { "type": "integer", "minimum": 0, "description": "--settle (CONFIG_DEFAULTS reconcile_settle_minutes): event đã phát trong khoảng này mà chưa xử lý → pending_delivery" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "status": { "type": "string", "enum": ["complete", "incomplete"], "description": "incomplete = có module không đọc được (database lỗi, facade lỗi)" },
+    "compensation_hint": { "type": "string", "enum": ["reset_consumer", "relay_outbox"], "description": "Cách bù chiều inbound: T trong event_stream_retention → reset consumer về T; cũ hơn → relay outbox của module nguồn (BACKUP_RECOVERY §3.5)" },
+    "peers": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["module", "direction", "status"],
+        "properties": {
+          "module": { "$ref": "#/$defs/module" },
+          "direction": { "$ref": "#/$defs/direction" },
+          "status": { "type": "string", "enum": ["ok", "failed"] },
+          "consumers": { "type": "array", "maxItems": 100, "items": { "type": "string", "maxLength": 128 } },
+          "error_code": { "type": "string", "maxLength": 64 }
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lost_after_restore", "pending_publish", "pending_delivery", "dead_lettered", "unexplained"],
+      "properties": {
+        "lost_after_restore": { "type": "integer", "minimum": 0 },
+        "pending_publish": { "type": "integer", "minimum": 0 },
+        "pending_delivery": { "type": "integer", "minimum": 0 },
+        "dead_lettered": { "type": "integer", "minimum": 0 },
+        "unexplained": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "mismatches": {
+      "type": "array",
+      "maxItems": 100000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event_id", "consumer", "event_time", "classification", "direction"],
+        "properties": {
+          "event_id": { "type": "string", "format": "uuid" },
+          "event_type": { "type": "string", "maxLength": 64, "description": "Vắng mặt khi nguồn đã mất event và consumer đăng ký nhiều loại" },
+          "consumer": { "type": "string", "maxLength": 128 },
+          "tenant_id": { "type": "string", "format": "uuid" },
+          "event_time": { "type": "string", "format": "date-time", "description": "Thời điểm trong UUIDv7 của event_id" },
+          "classification": { "$ref": "#/$defs/classification" },
+          "direction": { "$ref": "#/$defs/direction" }
+        }
+      }
+    },
+    "truncated": { "type": "boolean", "description": "true khi số lệch vượt 100 000 (counts vẫn đầy đủ)" }
+  },
+  "$defs": {
+    "module": { "type": "string", "enum": ["identity", "learning", "game", "competition", "chat"] },
+    "direction": { "type": "string", "enum": ["outbound", "inbound"], "description": "outbound = event của module được đối soát mà peer tiêu thụ; inbound = event của peer mà module được đối soát tiêu thụ" },
+    "classification": { "type": "string", "enum": ["lost_after_restore", "pending_publish", "pending_delivery", "dead_lettered", "unexplained"] }
+  },
+  "examples": [
+    {
+      "run_id": "01937a00-0000-7000-8000-000000000001",
+      "module": "learning",
+      "restore_point": "2026-11-20T01:14:00Z",
+      "window_from": "2026-11-20T00:00:00Z",
+      "window_to": "2026-11-20T03:00:00Z",
+      "settle_seconds": 600,
+      "generated_at": "2026-11-20T03:05:00Z",
+      "status": "complete",
+      "compensation_hint": "reset_consumer",
+      "peers": [{ "module": "game", "direction": "outbound", "status": "ok", "consumers": ["game.quest_on_activity_graded"] }],
+      "counts": { "lost_after_restore": 1, "pending_publish": 0, "pending_delivery": 0, "dead_lettered": 0, "unexplained": 0 },
+      "mismatches": [
+        {
+          "event_id": "01939f7a-6a80-7000-8000-000000000005",
+          "event_type": "activity.graded",
+          "consumer": "game.quest_on_activity_graded",
+          "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+          "event_time": "2026-11-20T01:30:00Z",
+          "classification": "lost_after_restore",
+          "direction": "outbound"
+        }
+      ],
+      "truncated": false
+    }
+  ]
+}

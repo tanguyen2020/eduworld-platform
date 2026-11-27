@@ -1275,6 +1275,47 @@ paths:
           $ref: '#/components/responses/DashboardBusy'
         '504':
           $ref: '#/components/responses/DashboardTimeout'
+  /tenant/client-installers:
+    get:
+      x-service: game
+      tags:
+        - tenant
+      operationId: listSchoolClientInstallers
+      x-portal-action: action.school_lms.installers.view
+      summary: Gói cài Android cho trường theo khối + link bản Web (school.installer.read — F134, ADR-0101)
+      description: |
+        Trang "Tải bộ cài" của workspace C (DEPLOYMENT §9, PERFORMANCE_BUDGET §10.1). Module game tải chỉ mục `school-kit/production.json`
+        trên CDN phát hành, **kiểm chữ ký RSA-SHA256 và schema** (`specs/schemas/school-kit-index.schema.json`) trước khi trả bất kỳ link
+        nào (cache 5 phút); lọc bộ cài có `grade_bands` giao với khối của trường (khối của học sinh đang hoạt động trong trường —
+        ADR-0095 không còn lớp; trường chưa có học sinh → mọi bộ cài) và trả bản `released_at` mới nhất mỗi nền tảng × nhóm khối.
+        Chỉ gói APK Android (không có bộ cài Windows — ADR-0101 mục 7); `web_client_url` là link mở bản Web cho PC phòng máy (mục 8).
+        Response chỉ chứa dữ liệu công khai của bộ cài (không dữ liệu tenant, secret, đường dẫn nội bộ). Trường ngoài phạm vi người gọi
+        (cùng hoặc khác tenant) → `404`; thiếu `school.installer.read` → `403 PERMISSION_DENIED`; chỉ mục không tải được hoặc sai
+        chữ ký/schema → `503 UNAVAILABLE` (không trả link chưa kiểm).
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: school_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchoolClientInstallerList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /game-admin/{config_type}:
     get:
       x-service: game
@@ -4883,6 +4924,8 @@ paths:
                     $ref: '#/components/schemas/Timestamp'
                   is_partial:
                     type: boolean
+                  excluded_tenant_ids:
+                    $ref: '#/components/schemas/ExcludedTenantIds'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
@@ -4980,6 +5023,8 @@ paths:
                     $ref: '#/components/schemas/Timestamp'
                   is_partial:
                     type: boolean
+                  excluded_tenant_ids:
+                    $ref: '#/components/schemas/ExcludedTenantIds'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
@@ -8903,6 +8948,83 @@ components:
         is_partial:
           type: boolean
           description: true nếu có dòng chưa chốt (hôm nay)
+    SchoolClientInstallerList:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+        - channel
+        - index_generated_at
+      properties:
+        data:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/SchoolClientInstaller'
+        channel:
+          type: string
+          enum:
+            - production
+        index_generated_at:
+          $ref: '#/components/schemas/Timestamp'
+        web_client_url:
+          type:
+            - string
+            - 'null'
+          format: uri
+          maxLength: 2048
+          description: Link mở bản Web (`play.<domain>`) cho PC phòng máy (ADR-0101 mục 8); `null` khi môi trường chưa cấu hình
+    SchoolClientInstaller:
+      type: object
+      additionalProperties: false
+      required:
+        - kit_id
+        - platform
+        - client_version
+        - grade_bands
+        - url
+        - sha256
+        - size_bytes
+        - min_os
+        - released_at
+      description: Một gói cài trường (APK Android kèm gói vùng theo khối) đã qua kiểm chữ ký chỉ mục (F134-AC-13, AC-16)
+      properties:
+        kit_id:
+          type: string
+          maxLength: 64
+          pattern: ^[a-z0-9-]{1,64}$
+        platform:
+          type: string
+          enum:
+            - android
+          description: Chỉ Android (ADR-0101 bỏ windows)
+        client_version:
+          type: string
+          maxLength: 32
+          pattern: ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$
+        grade_bands:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items:
+            $ref: '#/components/schemas/GradeBand'
+        url:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: URL https công khai trên CDN phát hành
+        sha256:
+          type: string
+          maxLength: 64
+          pattern: ^[a-f0-9]{64}$
+        size_bytes:
+          type: integer
+          minimum: 0
+        min_os:
+          type: string
+          maxLength: 32
+        released_at:
+          $ref: '#/components/schemas/Timestamp'
     ContentStatus:
       type: string
       enum:
@@ -11401,6 +11523,8 @@ components:
         is_partial:
           type: boolean
           description: true nếu có dòng chưa chốt (hôm nay)
+        excluded_tenant_ids:
+          $ref: '#/components/schemas/ExcludedTenantIds'
     GameMetricSeries:
       type: object
       required:
@@ -11442,6 +11566,12 @@ components:
               suppressed:
                 type: boolean
                 description: true khi ô < 5 học sinh bị ẩn
+    ExcludedTenantIds:
+      type: array
+      maxItems: 500
+      description: Tenant QA bị loại khỏi kết quả liên tenant, kể cả khi `tenant_ids` chỉ định chúng (F134-AC-09, GAME_ANALYTICS §5); vắng mặt = không loại tenant nào
+      items:
+        $ref: '#/components/schemas/Uuid'
     RetentionMatrix:
       type: object
       required:
@@ -11487,6 +11617,8 @@ components:
         is_partial:
           type: boolean
           description: true nếu có dòng chưa chốt (hôm nay)
+        excluded_tenant_ids:
+          $ref: '#/components/schemas/ExcludedTenantIds'
     FunnelReport:
       type: object
       required:
@@ -11526,6 +11658,8 @@ components:
         is_partial:
           type: boolean
           description: true nếu có dòng chưa chốt (hôm nay)
+        excluded_tenant_ids:
+          $ref: '#/components/schemas/ExcludedTenantIds'
     ContentStatsItem:
       type: object
       required:
@@ -12140,6 +12274,15 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: Dịch vụ phụ thuộc tạm thời không sẵn sàng (vd. CHAT_TEMPORARILY_UNAVAILABLE khi NATS JetStream lỗi) — client thử lại theo Retry-After
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
     PreconditionFailed:
       description: VERSION_MISMATCH
       content:
@@ -12154,15 +12297,6 @@ components:
             $ref: '#/components/schemas/Problem'
     UnsupportedMediaType:
       description: MEDIA_TYPE_NOT_ALLOWED — loại file không được phép hoặc magic bytes không khớp
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-    ServiceUnavailable:
-      description: Dịch vụ phụ thuộc tạm thời không sẵn sàng (vd. CHAT_TEMPORARILY_UNAVAILABLE khi NATS JetStream lỗi) — client thử lại theo Retry-After
-      headers:
-        Retry-After:
-          $ref: '#/components/headers/RetryAfter'
       content:
         application/problem+json:
           schema:

@@ -10753,6 +10753,7 @@ paths:
         Quyền `platform.tenant.manage` (gateway nội bộ). `tenant_type`, `code`, `keycloak_org_alias` không đổi được.
         `status = disabled` → worker đặt Organization `enabled=false`, mọi thành viên nhận `403 TENANT_ACCESS_DISABLED` ở lần resolve kế tiếp (F010-AC-03).
         Ghi audit `tenant.updated`, phát `tenant.updated` (F010-AC-05). Không gửi `X-Tenant-Id` (tenant đích là `tenant_id` trên path).
+        `is_qa` (F134): đánh dấu tenant QA — loại khỏi Game Analytics và tổng hợp học tập platform; thêm audit `tenant.qa_flag_changed` (trước/sau), `tenant.updated` mang `is_qa`; tenant `common` → `422 VALIDATION_FAILED`.
       x-internal: true
       security:
         - keycloakAdminBearer: []
@@ -14612,6 +14613,39 @@ paths:
         "422": { $ref: '#/components/responses/ValidationFailed' }
         "429": { $ref: '#/components/responses/DashboardBusy' }
         "504": { $ref: '#/components/responses/DashboardTimeout' }
+  /tenant/client-installers:
+    get:
+      x-service: game
+      tags: [tenant]
+      operationId: listSchoolClientInstallers
+      x-portal-action: action.school_lms.installers.view
+      summary: Gói cài Android cho trường theo khối + link bản Web (school.installer.read — F134, ADR-0101)
+      description: |
+        Trang "Tải bộ cài" của workspace C (DEPLOYMENT §9, PERFORMANCE_BUDGET §10.1). Module game tải chỉ mục `school-kit/production.json`
+        trên CDN phát hành, **kiểm chữ ký RSA-SHA256 và schema** (`specs/schemas/school-kit-index.schema.json`) trước khi trả bất kỳ link
+        nào (cache 5 phút); lọc bộ cài có `grade_bands` giao với khối của trường (khối của học sinh đang hoạt động trong trường —
+        ADR-0095 không còn lớp; trường chưa có học sinh → mọi bộ cài) và trả bản `released_at` mới nhất mỗi nền tảng × nhóm khối.
+        Chỉ gói APK Android (không có bộ cài Windows — ADR-0101 mục 7); `web_client_url` là link mở bản Web cho PC phòng máy (mục 8).
+        Response chỉ chứa dữ liệu công khai của bộ cài (không dữ liệu tenant, secret, đường dẫn nội bộ). Trường ngoài phạm vi người gọi
+        (cùng hoặc khác tenant) → `404`; thiếu `school.installer.read` → `403 PERMISSION_DENIED`; chỉ mục không tải được hoặc sai
+        chữ ký/schema → `503 UNAVAILABLE` (không trả link chưa kiểm).
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - name: school_id
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/Uuid' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SchoolClientInstallerList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /tenant/analytics/learning/summary:
     get:
       x-service: learning
@@ -18042,6 +18076,7 @@ paths:
                   grain: { $ref: '#/components/schemas/DashboardGrain' }
                   data_as_of: { $ref: '#/components/schemas/Timestamp' }
                   is_partial: { type: boolean }
+                  excluded_tenant_ids: { $ref: '#/components/schemas/ExcludedTenantIds' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         "422": { $ref: '#/components/responses/ValidationFailed' }
@@ -18120,6 +18155,7 @@ paths:
                   grain: { $ref: '#/components/schemas/DashboardGrain' }
                   data_as_of: { $ref: '#/components/schemas/Timestamp' }
                   is_partial: { type: boolean }
+                  excluded_tenant_ids: { $ref: '#/components/schemas/ExcludedTenantIds' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         "422": { $ref: '#/components/responses/ValidationFailed' }
@@ -24557,6 +24593,7 @@ components:
         status: { type: string, enum: [active, disabled] }
         school_count: { type: integer }
         version: { type: integer, minimum: 1, description: 'Version hiện tại của bản ghi = giá trị `If-Match` của updateTenant (OQ F057-3)' }
+        is_qa: { type: boolean, description: 'Tenant QA (synthetic monitoring F131): dữ liệu không tính vào Game Analytics và tổng hợp học tập platform (F134, TEST_STRATEGY §4); portal hiện nhãn QA' }
     ResourceType:
       type: string
       description: Loại tài nguyên dùng cho Thùng rác, gán và clone (ADR-0028, ADR-0029)
@@ -25099,6 +25136,7 @@ components:
       properties:
         name: { type: string, minLength: 1, maxLength: 255 }
         status: { type: string, enum: [active, disabled] }
+        is_qa: { type: boolean, description: 'Đánh dấu/bỏ đánh dấu tenant QA (chỉ System Admin; tenant common → 422 VALIDATION_FAILED); audit tenant.qa_flag_changed (F134-AC-07); dữ liệu trong thời gian đánh dấu không được backfill khi bỏ cờ' }
         reason: { type: string, minLength: 3, maxLength: 500 }
     TenantDetail:
       allOf:
@@ -28672,6 +28710,46 @@ components:
               period_start: { type: string, format: date }
               value: { type: [number, 'null'] }
               suppressed: { type: boolean, description: true khi ô < 5 học sinh bị ẩn }
+    ExcludedTenantIds:
+      type: array
+      maxItems: 500
+      description: Tenant QA bị loại khỏi kết quả liên tenant, kể cả khi `tenant_ids` chỉ định chúng (F134-AC-09, GAME_ANALYTICS §5); vắng mặt = không loại tenant nào
+      items: { $ref: '#/components/schemas/Uuid' }
+    SchoolClientInstaller:
+      type: object
+      additionalProperties: false
+      required: [kit_id, platform, client_version, grade_bands, url, sha256, size_bytes, min_os, released_at]
+      description: Một gói cài trường (APK Android kèm gói vùng theo khối) đã qua kiểm chữ ký chỉ mục (F134-AC-13, AC-16)
+      properties:
+        kit_id: { type: string, maxLength: 64, pattern: '^[a-z0-9-]{1,64}$' }
+        platform: { type: string, enum: [android], description: Chỉ Android (ADR-0101 bỏ windows) }
+        client_version: { type: string, maxLength: 32, pattern: '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$' }
+        grade_bands:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items: { $ref: '#/components/schemas/GradeBand' }
+        url: { type: string, format: uri, maxLength: 2048, description: URL https công khai trên CDN phát hành }
+        sha256: { type: string, maxLength: 64, pattern: '^[a-f0-9]{64}$' }
+        size_bytes: { type: integer, minimum: 0 }
+        min_os: { type: string, maxLength: 32 }
+        released_at: { $ref: '#/components/schemas/Timestamp' }
+    SchoolClientInstallerList:
+      type: object
+      additionalProperties: false
+      required: [data, channel, index_generated_at]
+      properties:
+        data:
+          type: array
+          maxItems: 50
+          items: { $ref: '#/components/schemas/SchoolClientInstaller' }
+        channel: { type: string, enum: [production] }
+        index_generated_at: { $ref: '#/components/schemas/Timestamp' }
+        web_client_url:
+          type: [string, 'null']
+          format: uri
+          maxLength: 2048
+          description: Link mở bản Web (`play.<domain>`) cho PC phòng máy (ADR-0101 mục 8); `null` khi môi trường chưa cấu hình
     GameMetricsResponse:
       type: object
       required: [data, grain, data_as_of, is_partial]
@@ -28688,6 +28766,7 @@ components:
           $ref: '#/components/schemas/Timestamp'
           description: "`computed_at` cũ nhất trong kết quả (DASHBOARD_DATA §8)"
         is_partial: { type: boolean, description: true nếu có dòng chưa chốt (hôm nay) }
+        excluded_tenant_ids: { $ref: '#/components/schemas/ExcludedTenantIds' }
     RetentionMatrix:
       type: object
       required: [cohorts, grain, data_as_of, is_partial]
@@ -28714,6 +28793,7 @@ components:
           $ref: '#/components/schemas/Timestamp'
           description: "`computed_at` cũ nhất trong kết quả (DASHBOARD_DATA §8)"
         is_partial: { type: boolean, description: true nếu có dòng chưa chốt (hôm nay) }
+        excluded_tenant_ids: { $ref: '#/components/schemas/ExcludedTenantIds' }
     FunnelReport:
       type: object
       required: [funnel_code, steps, grain, data_as_of, is_partial]
@@ -28734,6 +28814,7 @@ components:
           $ref: '#/components/schemas/Timestamp'
           description: "`computed_at` cũ nhất trong kết quả (DASHBOARD_DATA §8)"
         is_partial: { type: boolean, description: true nếu có dòng chưa chốt (hôm nay) }
+        excluded_tenant_ids: { $ref: '#/components/schemas/ExcludedTenantIds' }
     ContentStatsItem:
       type: object
       required: [kind, content_id]

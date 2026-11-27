@@ -1772,6 +1772,7 @@ paths:
         Quyền `platform.tenant.manage` (gateway nội bộ). `tenant_type`, `code`, `keycloak_org_alias` không đổi được.
         `status = disabled` → worker đặt Organization `enabled=false`, mọi thành viên nhận `403 TENANT_ACCESS_DISABLED` ở lần resolve kế tiếp (F010-AC-03).
         Ghi audit `tenant.updated`, phát `tenant.updated` (F010-AC-05). Không gửi `X-Tenant-Id` (tenant đích là `tenant_id` trên path).
+        `is_qa` (F134): đánh dấu tenant QA — loại khỏi Game Analytics và tổng hợp học tập platform; thêm audit `tenant.qa_flag_changed` (trước/sau), `tenant.updated` mang `is_qa`; tenant `common` → `422 VALIDATION_FAILED`.
       x-internal: true
       security:
         - keycloakAdminBearer: []
@@ -6078,6 +6079,9 @@ components:
           type: integer
           minimum: 1
           description: Version hiện tại của bản ghi = giá trị `If-Match` của updateTenant (OQ F057-3)
+        is_qa:
+          type: boolean
+          description: 'Tenant QA (synthetic monitoring F131): dữ liệu không tính vào Game Analytics và tổng hợp học tập platform (F134, TEST_STRATEGY §4); portal hiện nhãn QA'
     Country:
       type: object
       required:
@@ -7226,6 +7230,9 @@ components:
           enum:
             - active
             - disabled
+        is_qa:
+          type: boolean
+          description: Đánh dấu/bỏ đánh dấu tenant QA (chỉ System Admin; tenant common → 422 VALIDATION_FAILED); audit tenant.qa_flag_changed (F134-AC-07); dữ liệu trong thời gian đánh dấu không được backfill khi bỏ cờ
         reason:
           type: string
           minLength: 3
