@@ -1,6 +1,6 @@
 # Test Strategy
 
-> Trạng thái: Draft · Phiên bản: 0.9 · Owner: QA Engineer · Cập nhật: 2026-11-26 (§6.10 ma trận khối 1–9 backend) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-21 (ADR-0095: TC lớp/enrollment/nhóm học tập viết lại theo khối, TC-ORG-105/106 Removed) · 2026-11-17 (ADR-0091: đăng nhập portal bằng form riêng qua backend TC-AUTH-093…101, sửa TC-AUTH-067/070/072/089, TC-TEN-011d; ADR-0090: bật/tắt menu/action TC-CMS-MENU-01…06; ADR-0074: contract test HTTP giữa service thay bằng facade test + kiểm tra kiến trúc, TC-SVC viết lại cho modular monolith, thêm TC-SVC-016/017; TC giờ giới nghiêm, PII/grooming luôn chạy, tenant `common`, preset chat — ADR-0078; "Tiếp tục là…" và Windows máy dùng chung — ADR-0086; bỏ TC QR/PIN — ADR-0076 Rejected; object storage ADR-0075; CI GitHub Actions; mốc pilot ADR-0073/0080)
+> Trạng thái: Draft · Phiên bản: 1.0 · Owner: QA Engineer · Cập nhật: 2026-11-27 (F132: công cụ load/chaos/security sweep/anti-cheat ở §3, §5, §7, §8; tham số đo §8.3 [Proposed]) · 2026-11-26 (§6.10 ma trận khối 1–9 backend) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-21 (ADR-0095: TC lớp/enrollment/nhóm học tập viết lại theo khối, TC-ORG-105/106 Removed) · 2026-11-17 (ADR-0091: đăng nhập portal bằng form riêng qua backend TC-AUTH-093…101, sửa TC-AUTH-067/070/072/089, TC-TEN-011d; ADR-0090: bật/tắt menu/action TC-CMS-MENU-01…06; ADR-0074: contract test HTTP giữa service thay bằng facade test + kiểm tra kiến trúc, TC-SVC viết lại cho modular monolith, thêm TC-SVC-016/017; TC giờ giới nghiêm, PII/grooming luôn chạy, tenant `common`, preset chat — ADR-0078; "Tiếp tục là…" và Windows máy dùng chung — ADR-0086; bỏ TC QR/PIN — ADR-0076 Rejected; object storage ADR-0075; CI GitHub Actions; mốc pilot ADR-0073/0080)
 > Liên quan: [ROADMAP](ROADMAP.md) · [SYSTEM_ARCHITECTURE §7](../06-architecture/SYSTEM_ARCHITECTURE.md#7-non-functional-baseline) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [LOCAL_DEVELOPMENT](../11-operations/LOCAL_DEVELOPMENT.md)
 
 **Mục đích.** Nguồn duy nhất về chiến lược kiểm thử và ma trận test case của EduWorld.
@@ -47,9 +47,9 @@ flowchart TB
 | Godot unit/scene | GdUnit4 headless | Logic thuần (`RefCounted`), API client với HTTP giả, state machine UI |
 | Godot E2E | Bot client headless (GDScript) điều khiển qua hook test, chạy nhiều instance | Kịch bản quest, party, battle |
 | Web | Vitest + Testing Library; Playwright cho E2E CMS/LMS | |
-| Load | **k6** (HTTP + WebSocket, xk6 nếu cần) [Confirmed]; bot Go cho realtime quy mô lớn | |
-| Chaos | Toxiproxy (độ trễ/mất gói giữa binary và PostgreSQL/NATS/Valkey) + Pumba (kill/pause/netem container trên Docker Swarm) + `docker node update --availability drain` để mô phỏng mất node [Confirmed] | Replica `core-api`/`realtime`, profile worker, NATS, Valkey, database module down/chậm |
-| Security | gitleaks, govulncheck, Trivy, npm audit, OWASP ZAP (DAST), Semgrep | |
+| Load | **k6** (HTTP + WebSocket, xk6 nếu cần) [Confirmed]; bot Go cho realtime quy mô lớn | F132: kịch bản `tests/load/k6/*.js` ánh xạ từ `tests/load/scenarios.yaml` (nguồn ngưỡng), bot `src/backend/tools/loadbot` (đăng nhập như game: `429 LOGIN_QUEUE_BUSY` → `Retry-After` + jitter), `make perf RUN=<run>` → báo cáo [perf-reports](perf-reports/README.md); workflow `perf.yml` |
+| Chaos | Toxiproxy (độ trễ/mất gói giữa binary và PostgreSQL/NATS/Valkey) + Pumba (kill/pause/netem container trên Docker Swarm) + `docker node update --availability drain` để mô phỏng mất node [Confirmed] | Replica `core-api`/`realtime`, profile worker, NATS, Valkey, database module down/chậm; runner `tests/chaos/run-chaos.sh` (11 kịch bản `tests/chaos/scenarios/`, luôn khôi phục — khôi phục cưỡng bức = thất bại), đối soát chỉ đọc `tests/chaos/reconcile/`, báo cáo `docs/12-project/chaos-reports/<YYYY-MM-DD>.md`, workflow `chaos.yml` (F132) |
+| Security | gitleaks, govulncheck, Trivy, npm audit, OWASP ZAP (DAST), Semgrep | F132: `authz-matrix` (ma trận operation × role × quan hệ phạm vi từ OpenAPI public), `wsfuzz`, ZAP baseline/authenticated, quét lại digest đang chạy — workflow `security-sweep.yml`; harness chống gian lận `src/backend/test/anticheat` (`make anticheat`, workflow `anticheat.yml`) |
 | Chat filter | Bộ dataset gắn nhãn tiếng Việt + script đánh giá precision/recall | Lưu trong repo nội bộ hạn chế quyền |
 | Accessibility | Checklist + axe (web) | UI cho lớp 1–5 |
 | Nhất quán enum giữa specs | Script kiểm tra enum [Confirmed] so enum trong OpenAPI, AsyncAPI, JSON Schema, event schema với nguồn chung `specs/schemas/common` | TC-LRN-017; chạy trong `make specs-lint` |
@@ -80,7 +80,7 @@ Mỗi release candidate chạy smoke E2E trên **toàn bộ thiết bị hạng 
 
 ## 5. Dữ liệu kiểm thử
 
-- **Generator** (`src/backend/tools/datagen`, sinh dữ liệu và đẩy qua API/CSV của module identity để các module khác nhận qua event): sinh N tổ chức × M trường × lớp 1–9 × học sinh và nhân sự nhà trường với tên giả tiếng Việt, enrollment, chuyển lớp/trường, trạng thái khóa; xuất CSV cho `csv_import` và JSON theo DTO của EduWorld SIS Contract (dùng cho `sis-mock`).
+- **Generator** (`src/backend/tools/datagen`, sinh dữ liệu và đẩy qua API/CSV của module identity để các module khác nhận qua event): sinh N tổ chức × M trường × lớp 1–9 × học sinh và nhân sự nhà trường với tên giả tiếng Việt, enrollment, chuyển lớp/trường, trạng thái khóa; xuất CSV cho `csv_import` và JSON theo DTO của EduWorld SIS Contract (dùng cho `sis-mock`). **Đã có (F132):** `make datagen ENV=<local|dev|staging>` xuất `schools.csv`/`students.csv` đúng cột `csv_import`, `staff.csv`, `bots.json` (không mật khẩu), `device_id` riêng mỗi học sinh, tenant tiền tố `perf`; từ chối mọi `EW_ENV` khác (`src/backend/tools/envguard`, F132-AC-07). Xuất JSON SIS Contract cho `sis-mock` chưa làm.
 - Bộ nội dung chuẩn: câu hỏi đủ 11 loại, mỗi loại có trường hợp biên (đáp án số thập phân dấu phẩy/chấm, khoảng trắng, chữ hoa/thường, có/không dấu tiếng Việt).
 - Bộ tài khoản persona: học sinh mỗi khối 1–9 (seed demo, §6.10); `school_admin` hai trường (`ad.truong.a`, `ad.truong.b`); `academic_manager` theo môn (`qlcm.truong.a`); tenant content editor/reviewer; content admin/reviewer; `safety_moderator`; system admin.
 - Không bao giờ sao chép dữ liệu production xuống môi trường thấp hơn. Nếu cần tái hiện lỗi, dùng dữ liệu đã ẩn danh có phê duyệt.
@@ -665,6 +665,8 @@ Quyết định ghi lại khi lập ma trận (lệnh thường trực "chốt h
 
 Nguồn duy nhất: [SECURITY_ARCHITECTURE §16](../10-security/SECURITY_ARCHITECTURE.md) (SAST, dependency/secret scan, authorization matrix, DAST, WebSocket fuzz, anti-cheat, privacy review, pentest). Các test case bảo mật nghiệp vụ nằm trong §6 (TC-TEN, TC-SVC, TC-CMS-AUTHZ, TC-CMS-MENU, TC-AUTH-009/010; đăng nhập portal qua backend, cookie refresh và CSRF: TC-AUTH-094, TC-AUTH-098…100).
 
+Quét định kỳ trên staging (F132): `make authz-matrix ENV=staging STRICT=1` (operation × role × quan hệ phạm vi sinh từ OpenAPI public + `src/backend/test/authz/matrix_gen.json`; `SCOPE=internal`; `MODE=maxlength`), `make wsfuzz` nightly, ZAP baseline + authenticated hằng tuần (không alert High), quét lại Trivy digest đang chạy + govulncheck/OSV hằng ngày → issue hạn `critical_vuln_fix`; lịch trong `.github/workflows/security-sweep.yml`; quy trình pentest P3 và checklist ASVS L2: [pentest/README](../10-security/pentest/README.md). Chống gian lận: 10 kịch bản §11 [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) chạy bằng `make anticheat ENV=staging` (workflow `anticheat.yml`, trước mỗi release, SC-005 cần 10/10 — kịch bản bỏ qua không tính đạt).
+
 ## 8. Performance & load test plan
 
 Mục tiêu tải Release 1.0: **10.000 CCU** [Confirmed] (NFR-SCAL-002, ADR-0045); bão đăng nhập 5.000 lượt/10 phút, đỉnh 100 đăng nhập mật khẩu/giây (thiết kế giữ nguyên ADR-0064 mục 6 làm biên an toàn, dù ADR-0086 cho phép thiết bị cá nhân vào lại bằng refresh token), 500 refresh/giây gồm cả lượt khởi động `mode=resume` (NFR-SCAL-005) [Confirmed]. Pilot dùng NFR-SCAL-001 (1.000 CCU). "1× CCU" trong bảng dưới = 10.000.
@@ -711,7 +713,20 @@ Mục tiêu tải Release 1.0: **10.000 CCU** [Confirmed] (NFR-SCAL-002, ADR-004
 | TC-PERF-017 | Warm-up theo lịch học: `ops-scheduler` chạy `docker service scale` 15 phút trước khung giờ cao điểm | staging | Replica đạt số tối thiểu và healthy trước giờ cao điểm; không cold start trong TC-PERF-002 |
 | TC-PERF-025 | **Tải dashboard trên dữ liệu 2 năm** (ADR-0062): sinh dữ liệu 50.000 học sinh × 730 ngày (rollup + `learning_events` tương ứng), 1.500 nhân sự nhà trường mở School Learning Dashboard ở cấp khối trong 10 phút + 200 phiên trường/tenant chọn khoảng 1–2 năm; chạy cùng lúc với TC-PERF-014; lặp lại với cache lạnh; chạy job chốt ngày và 20 export song song | k6 + script sinh dữ liệu | NFR-PERF-017/018: API dashboard p95 ≤ 2 s, không truy vấn > 5 s; p95 ghi primary tăng < 20%; replica lag < 60 s; chốt ngày < 30 phút cho 50.000 học sinh; error < 0.5% ([DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) §15) |
 
-Kết quả lưu `docs/12-project/perf-reports/<ngày>.md` gồm cấu hình, số liệu, biểu đồ, điểm nghẽn. **Chỉ công bố năng lực đã đo được.**
+Kết quả lưu `docs/12-project/perf-reports/<YYYY-MM-DD>-<run>.md` gồm cấu hình, tag backend + digest image, số liệu, biểu đồ, điểm nghẽn, đạt/không đạt ([mẫu](perf-reports/README.md)). **Chỉ công bố năng lực đã đo được:** báo cáo chỉ in "đạt `target_ccu`" khi TC-PERF-014 đạt trên staging; máy tải bão hòa (§8.3) → lần chạy "không hợp lệ". Ngưỡng và tải của từng TC nằm ở `tests/load/scenarios.yaml` (mỗi số kèm tên tham số/NFR); TC phía client (TC-PERF-009, 018–024) thuộc F133. Chaos: báo cáo `docs/12-project/chaos-reports/<YYYY-MM-DD>.md` ([mẫu](chaos-reports/README.md)); ánh xạ kịch bản: TC-SVC-010 `learning-db-down`, TC-SVC-011 `identity-db-down`, TC-SVC-012 `nats-down`, TC-SVC-013 `competition-db-down` + `pg-switchover`, TC-SVC-016/017 `core-api-replica-kill`/`worker-chat-down`, TC-SVC-004 `external-fault`, TC-PERF-008 `valkey-down`.
+
+### 8.3. Tham số của bộ đo
+
+[Proposed — F132, hiệu chỉnh ở lần chạy staging đầu tiên.]
+
+| Tham số | Giá trị | Dùng để |
+|---|---|---|
+| `perf_generator_cpu_max` | 80% CPU máy tải | Vượt → lần chạy `invalid` (phân biệt giới hạn target với giới hạn máy tải) |
+| `perf_soak_latency_drift_max` | 20% | TC-PERF-006: p95 30 phút cuối so với 30 phút đầu sau ramp |
+| `perf_soak_memory_trend_max` | 1 MiB/s | TC-PERF-006: xu hướng RSS mỗi binary trong soak |
+| `perf_scale_throughput_gain_min` | +20% | F132-AC-05: throughput Swarm service tăng sau khi scale từ baseline lên peak |
+| `chaos_fault_duration` | 300 s | Thời lượng tiêm lỗi mặc định (5 phút như F132-AC-09, AC-10, AC-25) |
+| `chaos_settle_seconds` | 120 s | Chờ trước kiểm tra sau khôi phục; quá hạn → khôi phục cưỡng bức, kịch bản `failed` |
 
 ## 9. UAT
 

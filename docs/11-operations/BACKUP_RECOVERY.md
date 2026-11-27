@@ -131,6 +131,8 @@ Khôi phục toàn bộ hệ thống về cùng thời điểm T chỉ dùng khi
 | Khôi phục object storage từ bản sao ngoài cụm/ngoài nhà cung cấp (ADR-0075, RB-05); với cụm tự host: thêm diễn tập mất 1 node `storage` | Hằng quý | Hoàn thành ≤ 4 giờ; checksum khớp 100% object được `media_assets` tham chiếu; game và portal tải được media qua CDN |
 | Diễn tập thảm họa toàn site (DR drill) | Hằng năm | Đạt RTO ≤ 4h trên site dự phòng |
 
+Diễn tập Patroni switchover, mất Valkey và mất NATS cũng chạy **dưới tải** như kịch bản chaos của F132 (`pg-switchover`, `valkey-down`, `nats-down` — [chaos-reports](../12-project/chaos-reports/README.md), hằng tuần trên staging); `valkey-down` và `worker-chat-down` đối soát bằng `tests/chaos/reconcile/{attempts,chat_messages}.sql` (chỉ đọc, tenant `perf-*`): 0 attempt/tin chat đã xác nhận bị mất.
+
 Kết quả mỗi lần kiểm thử ghi vào `docs/11-operations/restore-tests/<YYYY-MM>.md` (thời gian, người thực hiện, kết quả, vấn đề) — mẫu ở [restore-tests/README](restore-tests/README.md). Restore test tháng/quý: `make restore-test ENV=<env> MODE=full|module [DB=…]` (`scripts/backup/restore_test.sh`: T ngẫu nhiên trong 7 ngày, cụm tạm chỉ socket cục bộ, đối soát attempt đã submit với replica live, ngưỡng thời gian, tự ghi biên bản, xóa cụm tạm); switchover: `scripts/ops/patroni-switchover.sh`; RB-04: `rb04-keycloak-restore.sh`; RB-05: `rb05-object-storage-restore.sh`; DR: `rb03-cluster-restore.sh`.
 
 ## 9. Runbook khôi phục

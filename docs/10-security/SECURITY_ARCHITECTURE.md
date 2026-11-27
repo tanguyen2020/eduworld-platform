@@ -520,7 +520,7 @@ Chi tiết biện pháp gian lận: [ANTI_CHEAT](ANTI_CHEAT.md). Biện pháp an
 
 ### 12.2. OWASP ASVS 4.0 — mục tiêu Level 2 [Confirmed]
 
-Các chương trọng tâm: V2 Authentication (do Keycloak, cấu hình theo KEYCLOAK_SSO), V3 Session, V4 Access Control, V5 Validation/Encoding, V7 Error Handling & Logging, V8 Data Protection, V9 Communications, V13 API, V14 Configuration. Checklist chi tiết duy trì trong `docs/10-security/asvs-checklist.md` (tạo trong Phase 1) với cột: requirement, áp dụng?, bằng chứng, owner.
+Các chương trọng tâm: V2 Authentication (do Keycloak, cấu hình theo KEYCLOAK_SSO), V3 Session, V4 Access Control, V5 Validation/Encoding, V7 Error Handling & Logging, V8 Data Protection, V9 Communications, V13 API, V14 Configuration. Checklist chi tiết duy trì trong [pentest/README §6](pentest/README.md) (F132) với cột: requirement, áp dụng?, bằng chứng, owner.
 
 ## 13. Lập trình an toàn
 
@@ -603,6 +603,8 @@ Header trả về: `RateLimit-Limit`, `RateLimit-Remaining`, `Retry-After`. Metr
 
 Renovate/Dependabot mở MR cập nhật hằng tuần; base image distroless/`alpine` pin digest.
 
+**Quét lại hằng ngày (F132-AC-19):** digest image **đang chạy** trên staging và production (lấy từ `docker service inspect`, không phải image vừa build) được Trivy quét lại mỗi ngày, cùng `govulncheck`/OSV trên `main` (`.github/workflows/security-sweep.yml`, job `rescan-daily-*`, `deps-daily`; `scripts/security/rescan.sh`). Mỗi CVE Critical đã có bản vá mở một issue (nhãn `security`, `cve-critical`) với hạn xử lý `critical_vuln_fix` = **≤ 72 giờ** kể từ lần phát hiện đầu [Confirmed]; issue đang mở được cập nhật, không tạo trùng.
+
 ## 16. Kiểm thử bảo mật bắt buộc và pentest
 
 | Hạng mục | Công cụ / phương pháp | Khi nào |
@@ -619,6 +621,8 @@ Renovate/Dependabot mở MR cập nhật hằng tuần; base image distroless/`a
 | Privacy review (luồng dữ liệu, retention, PII trong log) | [DATA_PRIVACY](DATA_PRIVACY.md) | Mỗi phase |
 | DAST có đăng nhập (authenticated) cho API và Admin Portal | OWASP ZAP | Hằng tuần trên staging |
 
+Công cụ hiện thực (F132): ma trận phân quyền chạy trên staging `make authz-matrix ENV=staging` (operation × role × quan hệ phạm vi, `SCOPE=internal`, `MODE=maxlength` — `src/backend/test/security/authz-matrix`; mỗi MR vẫn là `routematrix check`), WebSocket fuzz `make wsfuzz` (`src/backend/test/security/wsfuzz`), ZAP baseline + authenticated (`tests/security/zap/`, cổng: không alert High), lịch chạy trong `.github/workflows/security-sweep.yml`.
+
 **Kế hoạch pentest**
 
 | Đợt | Thời điểm | Phạm vi | Thực hiện |
@@ -627,7 +631,7 @@ Renovate/Dependabot mở MR cập nhật hằng tuần; base image distroless/`a
 | P2 | Cuối Phase 5 | Realtime/WS, chat & moderation bypass, lạm dụng quyền đọc liên tenant của `safety_moderator` ngoài module moderation, party, matchmaking abuse, Godot client tampering (memory edit, packet replay), **lateral movement giữa module/binary** (NATS subject ngoài quyền, truy cập database module khác bằng credential của một module, lạm dụng facade platform) | Bên thứ ba độc lập [Confirmed] |
 | P3 | Trước Production (Phase 6) | Toàn bộ + hạ tầng, Keycloak, APISIX, cấu hình cloud | Bên thứ ba |
 
-Tiêu chí: không còn lỗ hổng Critical/High; Medium có kế hoạch xử lý. Báo cáo lưu nội bộ (không commit vào repo).
+Tiêu chí: không còn lỗ hổng Critical/High; Medium có kế hoạch xử lý. Báo cáo lưu nội bộ (không commit vào repo). Quy trình P3, rules of engagement, mẫu tóm tắt được commit và checklist ASVS L2: [pentest/README.md](pentest/README.md).
 
 ## 17. Incident response
 

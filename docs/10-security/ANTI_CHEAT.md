@@ -1,6 +1,6 @@
 # Anti-cheat
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Multiplayer Engineer + Identity & Security Engineer · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Multiplayer Engineer + Identity & Security Engineer · Cập nhật: 2026-11-27 (F132: harness §11, metric speed hack §10, mã từ chối đề §3) · 2026-11-15
 > Liên quan: [ADR-0016, ADR-0018, ADR-0010, ADR-0011](../adr/README.md) · [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) · [EXERCISE_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) · [RANKING](../01-game-design/COMPETITION_SYSTEM.md) · [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) · [SECURITY_ARCHITECTURE §14](SECURITY_ARCHITECTURE.md)
 
 **Mục đích & phạm vi.** Nguồn duy nhất về chống gian lận game, học tập và thi đấu: server-authoritative, kiểm tra thời gian, chống trùng/replay, rate limit đặc thù gameplay, phát hiện bất thường, **quy tắc và giá trị chống farm XP/Xu**, xử lý vi phạm. Rate limit chung của API → [SECURITY_ARCHITECTURE §14](SECURITY_ARCHITECTURE.md).
@@ -28,7 +28,7 @@ Answer key không bao giờ có trong render payload; `explanation` chỉ trả 
 
 | Kiểm tra | Quy tắc [Confirmed] | Hành động |
 |---|---|---|
-| Deadline | `answered_at > deadline_at + grace(2s)` | Từ chối (`ATTEMPT_DEADLINE_PASSED`); exam tự động submit tại deadline bởi worker |
+| Deadline | `answered_at > deadline_at + grace(2s)` | Từ chối (`ATTEMPT_DEADLINE_PASSED` với attempt có thời hạn; đề thi trả `422 EXAM_TIME_OVER` theo `exam_offline_sync_grace` — [EXAM_ENGINE §6](../02-learning/EXAM_ENGINE.md)); exam tự động submit tại deadline bởi worker |
 | Thời gian tối thiểu hợp lý | `min_plausible_ms` theo loại câu + độ dài stem: đọc 2 từ/giây cho lớp 1–3, 4 từ/giây lớp 4–9, tối thiểu 800 ms; matching/ordering nhân số mục | Không từ chối; gắn cờ `too_fast` vào answer; ≥ 30% câu `too_fast` và đúng trong một attempt → tín hiệu anomaly |
 | Battle | Câu trả lời trước khi server gửi câu hỏi (`answered_at < question_sent_at + RTT_min`) | Bỏ qua; tín hiệu |
 | Speed hack (hub) | Khoảng cách / thời gian > `max_speed × 1.2` | Snap back; ≥ 5 lần/phút → tín hiệu |
@@ -106,7 +106,7 @@ Không công khai tên học sinh vi phạm; không trừ điểm học tập t�
 ## 10. Audit & quan sát
 
 - Audit: void match, rollback rating, điều chỉnh kết quả tournament, xử lý vi phạm.
-- Metrics: `eduworld_integrity_signals_total{type}`, `eduworld_idempotency_replays_total{route}`, `eduworld_answers_too_fast_ratio`, `eduworld_matches_voided_total{mode}`, `eduworld_rt_speed_violations_total`.
+- Metrics: `eduworld_integrity_signals_total{type}`, `eduworld_idempotency_replays_total{route}`, `eduworld_answers_too_fast_ratio`, `eduworld_matches_voided_total{mode}`, `eduworld_rt_speed_violations_total` (module competition, F132; danh mục và nhãn: [MONITORING §3](../11-operations/MONITORING.md#3-metric-bắt-buộc-master-prompt-18)). `eduworld_answers_too_fast_ratio` và `eduworld_matches_voided_total` chưa phát (tín hiệu tương ứng ghi ở `integrity_signals`; void trận chưa có use case).
 - Dashboard cho Multiplayer Engineer/Safety; báo cáo tuần cho tổ chức giải.
 
 ## 11. Kiểm thử
@@ -123,3 +123,5 @@ Không công khai tên học sinh vi phạm; không trừ điểm học tập t�
 | AC-CMP-208 | Sửa client tăng tốc chạy | Server snap back, tín hiệu ghi nhận |
 | AC-CMP-209 | Làm lại cùng bài 5 lần | XP: 100%, 50%, 25%, 0, 0 |
 | AC-CMP-210 | Replay WS message cũ | Bỏ qua theo `id`/`seq` |
+
+Harness tự động (F132): `src/backend/test/anticheat` gửi request của "client bị sửa" qua API public và giao thức realtime (không import module), chạy 10 kịch bản trên bằng `make anticheat ENV=staging` với học sinh QA của tenant QA (workflow `anticheat.yml`, trước mỗi release); báo cáo đạt chỉ khi 10/10 đạt, kịch bản thiếu fixture bị đánh dấu bỏ qua. Spec: rule Spectral `no-client-authoritative-fields` (`specs/spectral-functions/noClientAuthoritativeFields.js`, chạy trong `make specs-lint`).
