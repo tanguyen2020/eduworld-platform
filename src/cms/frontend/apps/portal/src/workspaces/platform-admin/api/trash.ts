@@ -11,7 +11,8 @@ export type TrashItem = Schemas['TrashItem'];
 /** Types listed in the trash filter: every ResourceType of the contract. */
 export const TRASH_TYPES: readonly ResourceType[] = [
   'curriculum', 'lesson', 'learning_material', 'question', 'question_set', 'assessment_blueprint', 'media', 'assignment',
-  'activity', 'challenge', 'challenge_template', 'tournament_template', 'quest', 'minigame_config', 'item', 'school_settings',
+  'activity', 'challenge', 'challenge_template', 'tournament_template', 'quest', 'minigame_config', 'item', 'shop_item',
+  'event_template', 'sticker_pack', 'school_settings',
   'tenant_settings', 'user', 'student',
 ];
 
