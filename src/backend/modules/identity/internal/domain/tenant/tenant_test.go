@@ -69,3 +69,29 @@ func TestCommonIDs(t *testing.T) {
 		t.Fatal("common tenant id drifted from the seed migration")
 	}
 }
+
+// F134-AC-07: the QA flag is a patch field; the common tenant can never be flagged.
+func TestTenantQAFlag(t *testing.T) {
+	tn, err := New(uuid.New(), "qa-probe", "Tenant QA", TypeSchool, "qa-probe", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	on, off := true, false
+	if c, err := tn.Apply(Patch{IsQA: &on}); err != nil || !c.QAChanged || !tn.IsQA {
+		t.Fatalf("flag: %+v %v", c, err)
+	}
+	if _, err := tn.Apply(Patch{IsQA: &on}); err != ErrNoChange {
+		t.Fatalf("same flag: %v", err)
+	}
+	if c, err := tn.Apply(Patch{IsQA: &off}); err != nil || !c.QAChanged || tn.IsQA {
+		t.Fatalf("unflag: %+v %v", c, err)
+	}
+	common := &Tenant{ID: CommonTenantID, Type: TypeCommon, Name: "Common", Status: StatusActive}
+	if _, err := common.Apply(Patch{IsQA: &on}); err == nil || common.IsQA {
+		t.Fatal("the common tenant was flagged QA")
+	}
+	var inv ErrInvalid
+	if err := common.SetQA(true); !errors.As(err, &inv) || inv.Field != "is_qa" {
+		t.Fatalf("SetQA(common) = %v", err)
+	}
+}

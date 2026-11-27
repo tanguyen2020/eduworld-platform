@@ -9,10 +9,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/reconcile"
 )
 
 // Facade serves the student lifecycle operations of module game (F016).
 type Facade struct {
+	// Ops serves listOutboxEventIds and listProcessedEventIds for `worker reconcile` (F134); nil = 503 UNAVAILABLE.
+	Ops       *reconcile.Source
 	Lifecycle command.StudentLifecycle
 	// GameAdmin serves the tenant assignments (identity) and the school catalog (learning) of F078.
 	GameAdmin

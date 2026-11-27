@@ -15,10 +15,6 @@ linters:
         module-chat:
           files: ["**/modules/chat/**"]
           deny:
-            - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/api"
-              desc: "chat is not in x-allowed-callers of competition"
-            - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/api"
-              desc: "chat is not in x-allowed-callers of game"
             - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/api"
               desc: "chat is not in x-allowed-callers of realtime"
         module-competition:
@@ -39,10 +35,6 @@ linters:
         module-learning:
           files: ["**/modules/learning/**"]
           deny:
-            - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/api"
-              desc: "learning is not in x-allowed-callers of chat"
-            - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/api"
-              desc: "learning is not in x-allowed-callers of competition"
             - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/api"
               desc: "learning is not in x-allowed-callers of realtime"
         module-realtime:

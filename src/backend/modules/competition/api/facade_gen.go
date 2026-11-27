@@ -20,6 +20,51 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for CommonInternalCommonV1ProcessedEventIdStatus.
+const (
+	DeadLettered CommonInternalCommonV1ProcessedEventIdStatus = "dead_lettered"
+	Processed    CommonInternalCommonV1ProcessedEventIdStatus = "processed"
+)
+
+// Valid indicates whether the value is a known member of the CommonInternalCommonV1ProcessedEventIdStatus enum.
+func (e CommonInternalCommonV1ProcessedEventIdStatus) Valid() bool {
+	switch e {
+	case DeadLettered:
+		return true
+	case Processed:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CommonInternalCommonV1ReconcileModule.
+const (
+	Chat        CommonInternalCommonV1ReconcileModule = "chat"
+	Competition CommonInternalCommonV1ReconcileModule = "competition"
+	Game        CommonInternalCommonV1ReconcileModule = "game"
+	Identity    CommonInternalCommonV1ReconcileModule = "identity"
+	Learning    CommonInternalCommonV1ReconcileModule = "learning"
+)
+
+// Valid indicates whether the value is a known member of the CommonInternalCommonV1ReconcileModule enum.
+func (e CommonInternalCommonV1ReconcileModule) Valid() bool {
+	switch e {
+	case Chat:
+		return true
+	case Competition:
+		return true
+	case Game:
+		return true
+	case Identity:
+		return true
+	case Learning:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CommonInternalCommonV1ResourceType.
 const (
 	Activity            CommonInternalCommonV1ResourceType = "activity"
@@ -264,6 +309,25 @@ type HubPosition struct {
 	StudentId openapi_types.UUID `json:"student_id"`
 }
 
+// CommonInternalCommonV1OutboxEventId defines model for common_internal-common.v1_OutboxEventId.
+type CommonInternalCommonV1OutboxEventId struct {
+	CreatedAt time.Time          `json:"created_at"`
+	EventId   openapi_types.UUID `json:"event_id"`
+	EventType string             `json:"event_type"`
+
+	// PublishedAt `null` = relay chưa phát lên JetStream
+	PublishedAt *time.Time          `json:"published_at,omitempty"`
+	TenantId    *openapi_types.UUID `json:"tenant_id,omitempty"`
+}
+
+// CommonInternalCommonV1OutboxEventIdPage defines model for common_internal-common.v1_OutboxEventIdPage.
+type CommonInternalCommonV1OutboxEventIdPage struct {
+	Items []CommonInternalCommonV1OutboxEventId `json:"items"`
+
+	// NextCursor `null` = trang cuối
+	NextCursor *string `json:"next_cursor,omitempty"`
+}
+
 // CommonInternalCommonV1PageInfo defines model for common_internal-common.v1_PageInfo.
 type CommonInternalCommonV1PageInfo struct {
 	HasMore    bool    `json:"has_more"`
@@ -285,6 +349,40 @@ type CommonInternalCommonV1Problem struct {
 	TraceId  *string `json:"trace_id,omitempty"`
 	Type     string  `json:"type"`
 }
+
+// CommonInternalCommonV1ProcessedEventId defines model for common_internal-common.v1_ProcessedEventId.
+type CommonInternalCommonV1ProcessedEventId struct {
+	Consumer string             `json:"consumer"`
+	EventId  openapi_types.UUID `json:"event_id"`
+
+	// ProcessedAt Thời điểm xử lý (`processed`) hoặc vào DLQ (`dead_lettered`)
+	ProcessedAt time.Time                                    `json:"processed_at"`
+	Status      CommonInternalCommonV1ProcessedEventIdStatus `json:"status"`
+}
+
+// CommonInternalCommonV1ProcessedEventIdStatus defines model for CommonInternalCommonV1ProcessedEventId.Status.
+type CommonInternalCommonV1ProcessedEventIdStatus string
+
+// CommonInternalCommonV1ProcessedEventIdPage defines model for common_internal-common.v1_ProcessedEventIdPage.
+type CommonInternalCommonV1ProcessedEventIdPage struct {
+	Consumers []CommonInternalCommonV1ReconcileConsumer `json:"consumers"`
+	Items     []CommonInternalCommonV1ProcessedEventId  `json:"items"`
+
+	// NextCursor `null` = trang cuối
+	NextCursor *string `json:"next_cursor,omitempty"`
+}
+
+// CommonInternalCommonV1ReconcileConsumer defines model for common_internal-common.v1_ReconcileConsumer.
+type CommonInternalCommonV1ReconcileConsumer struct {
+	// Consumer Tên consumer `<module>.<handler>`
+	Consumer string `json:"consumer"`
+
+	// EventTypes Loại event của nguồn mà consumer đăng ký; `["*"]` = mọi loại (subject wildcard)
+	EventTypes []string `json:"event_types"`
+}
+
+// CommonInternalCommonV1ReconcileModule Module có database (ADR-0074); `realtime` không có database nên không bao giờ là nguồn/đích đối soát.
+type CommonInternalCommonV1ReconcileModule string
 
 // CommonInternalCommonV1ResourceType Loại tài nguyên dùng chung cho Thùng rác, gán và clone — giữ đồng bộ với `ResourceType` của API public (eduworld-api.v1.yaml).
 type CommonInternalCommonV1ResourceType string
@@ -476,6 +574,15 @@ type CommonInternalCommonV1JobIdPath = openapi_types.UUID
 // CommonInternalCommonV1Limit defines model for common_internal-common.v1_Limit.
 type CommonInternalCommonV1Limit = int
 
+// CommonInternalCommonV1ReconcileFrom defines model for common_internal-common.v1_ReconcileFrom.
+type CommonInternalCommonV1ReconcileFrom = time.Time
+
+// CommonInternalCommonV1ReconcileLimit defines model for common_internal-common.v1_ReconcileLimit.
+type CommonInternalCommonV1ReconcileLimit = int
+
+// CommonInternalCommonV1ReconcileTo defines model for common_internal-common.v1_ReconcileTo.
+type CommonInternalCommonV1ReconcileTo = time.Time
+
 // CommonInternalCommonV1ResourceIdPath defines model for common_internal-common.v1_ResourceIdPath.
 type CommonInternalCommonV1ResourceIdPath = openapi_types.UUID
 
@@ -508,6 +615,33 @@ type CommonInternalCommonV1Unauthorized = CommonInternalCommonV1Problem
 
 // CommonInternalCommonV1ValidationFailed RFC 9457 Problem Details, dùng chung catalog mã lỗi với API public (API_DESIGN §4.1).
 type CommonInternalCommonV1ValidationFailed = CommonInternalCommonV1Problem
+
+// ListOutboxEventIdsParams defines parameters for ListOutboxEventIds.
+type ListOutboxEventIdsParams struct {
+	// From Đầu cửa sổ (bao gồm), so với thời điểm UUIDv7 của `event_id`
+	From CommonInternalCommonV1ReconcileFrom `form:"from" json:"from"`
+
+	// To Cuối cửa sổ (không bao gồm); `to − from` ≤ `outbox_retention`
+	To CommonInternalCommonV1ReconcileTo `form:"to" json:"to"`
+
+	// EventTypes Loại event cần liệt kê; vắng mặt = mọi loại (consumer đăng ký subject wildcard)
+	EventTypes *[]string                             `form:"event_types,omitempty" json:"event_types,omitempty"`
+	Cursor     *CommonInternalCommonV1Cursor         `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit      *CommonInternalCommonV1ReconcileLimit `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListProcessedEventIdsParams defines parameters for ListProcessedEventIds.
+type ListProcessedEventIdsParams struct {
+	SourceModule CommonInternalCommonV1ReconcileModule `form:"source_module" json:"source_module"`
+
+	// From Đầu cửa sổ (bao gồm), so với thời điểm UUIDv7 của `event_id`
+	From CommonInternalCommonV1ReconcileFrom `form:"from" json:"from"`
+
+	// To Cuối cửa sổ (không bao gồm); `to − from` ≤ `outbox_retention`
+	To     CommonInternalCommonV1ReconcileTo     `form:"to" json:"to"`
+	Cursor *CommonInternalCommonV1Cursor         `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit  *CommonInternalCommonV1ReconcileLimit `form:"limit,omitempty" json:"limit,omitempty"`
+}
 
 // ListResourceAssignmentsParams defines parameters for ListResourceAssignments.
 type ListResourceAssignmentsParams struct {
@@ -555,6 +689,12 @@ type ServerInterface interface {
 	// GetHubPosition Vị trí hub hiện tại của một học sinh (room host F091) — kiểm khoảng cách tương tác có giá trị (F071)
 	// (GET /internal/v1/hub/students/{student_id}/position)
 	GetHubPosition(w http.ResponseWriter, r *http.Request, studentId CommonInternalCommonV1StudentIdPath)
+	// ListOutboxEventIds Liệt kê ID event trong `infra.outbox_events` của module này trong một cửa sổ thời gian (đối soát F134)
+	// (GET /internal/v1/ops/outbox-events)
+	ListOutboxEventIds(w http.ResponseWriter, r *http.Request, params ListOutboxEventIdsParams)
+	// ListProcessedEventIds Liệt kê ID event của một module nguồn mà consumer của module này đã xử lý hoặc đưa vào DLQ (đối soát F134)
+	// (GET /internal/v1/ops/processed-events)
+	ListProcessedEventIds(w http.ResponseWriter, r *http.Request, params ListProcessedEventIdsParams)
 	// CleanupStudentData Soft-delete dữ liệu của học sinh trong module này khi bị dọn do không đăng nhập (ADR-0032)
 	// (POST /internal/v1/platform/students/{student_id}:cleanup)
 	CleanupStudentData(w http.ResponseWriter, r *http.Request, studentId CommonInternalCommonV1StudentIdPath)
@@ -613,6 +753,176 @@ func (siw *ServerInterfaceWrapper) GetHubPosition(w http.ResponseWriter, r *http
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetHubPosition(w, r, studentId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListOutboxEventIds operation middleware
+func (siw *ServerInterfaceWrapper) ListOutboxEventIds(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListOutboxEventIdsParams
+
+	// ------------- Required query parameter "from" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "from", r.URL.Query(), &params.From, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "from"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "from", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "to" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "to", r.URL.Query(), &params.To, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "to"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "to", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "event_types" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "event_types", r.URL.Query(), &params.EventTypes, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "event_types"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_types", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListOutboxEventIds(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListProcessedEventIds operation middleware
+func (siw *ServerInterfaceWrapper) ListProcessedEventIds(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListProcessedEventIdsParams
+
+	// ------------- Required query parameter "source_module" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "source_module", r.URL.Query(), &params.SourceModule, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "source_module"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "source_module", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "from" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "from", r.URL.Query(), &params.From, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "from"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "from", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "to" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "to", r.URL.Query(), &params.To, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "to"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "to", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListProcessedEventIds(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1080,6 +1390,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	}
 
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/hub/students/{student_id}/position", wrapper.GetHubPosition)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/ops/outbox-events", wrapper.ListOutboxEventIds)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/ops/processed-events", wrapper.ListProcessedEventIds)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:cleanup", wrapper.CleanupStudentData)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:restore", wrapper.RestoreStudentData)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/platform/tenant-assignments", wrapper.ListResourceAssignments)
@@ -1174,6 +1486,178 @@ func (response GetHubPosition404ApplicationProblemPlusJSONResponse) VisitGetHubP
 	}
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListOutboxEventIdsRequestObject struct {
+	Params ListOutboxEventIdsParams
+}
+
+type ListOutboxEventIdsResponseObject interface {
+	VisitListOutboxEventIdsResponse(w http.ResponseWriter) error
+}
+
+type ListOutboxEventIds200JSONResponse CommonInternalCommonV1OutboxEventIdPage
+
+func (response ListOutboxEventIds200JSONResponse) VisitListOutboxEventIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListOutboxEventIds401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response ListOutboxEventIds401ApplicationProblemPlusJSONResponse) VisitListOutboxEventIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListOutboxEventIds403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response ListOutboxEventIds403ApplicationProblemPlusJSONResponse) VisitListOutboxEventIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListOutboxEventIds422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response ListOutboxEventIds422ApplicationProblemPlusJSONResponse) VisitListOutboxEventIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListOutboxEventIds503ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1DependencyUnavailableApplicationProblemPlusJSONResponse
+}
+
+func (response ListOutboxEventIds503ApplicationProblemPlusJSONResponse) VisitListOutboxEventIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListProcessedEventIdsRequestObject struct {
+	Params ListProcessedEventIdsParams
+}
+
+type ListProcessedEventIdsResponseObject interface {
+	VisitListProcessedEventIdsResponse(w http.ResponseWriter) error
+}
+
+type ListProcessedEventIds200JSONResponse CommonInternalCommonV1ProcessedEventIdPage
+
+func (response ListProcessedEventIds200JSONResponse) VisitListProcessedEventIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListProcessedEventIds401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response ListProcessedEventIds401ApplicationProblemPlusJSONResponse) VisitListProcessedEventIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListProcessedEventIds403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response ListProcessedEventIds403ApplicationProblemPlusJSONResponse) VisitListProcessedEventIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListProcessedEventIds422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response ListProcessedEventIds422ApplicationProblemPlusJSONResponse) VisitListProcessedEventIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListProcessedEventIds503ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1DependencyUnavailableApplicationProblemPlusJSONResponse
+}
+
+func (response ListProcessedEventIds503ApplicationProblemPlusJSONResponse) VisitListProcessedEventIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -1986,6 +2470,12 @@ type StrictServerInterface interface {
 	// GetHubPosition Vị trí hub hiện tại của một học sinh (room host F091) — kiểm khoảng cách tương tác có giá trị (F071)
 	// (GET /internal/v1/hub/students/{student_id}/position)
 	GetHubPosition(ctx context.Context, request GetHubPositionRequestObject) (GetHubPositionResponseObject, error)
+	// ListOutboxEventIds Liệt kê ID event trong `infra.outbox_events` của module này trong một cửa sổ thời gian (đối soát F134)
+	// (GET /internal/v1/ops/outbox-events)
+	ListOutboxEventIds(ctx context.Context, request ListOutboxEventIdsRequestObject) (ListOutboxEventIdsResponseObject, error)
+	// ListProcessedEventIds Liệt kê ID event của một module nguồn mà consumer của module này đã xử lý hoặc đưa vào DLQ (đối soát F134)
+	// (GET /internal/v1/ops/processed-events)
+	ListProcessedEventIds(ctx context.Context, request ListProcessedEventIdsRequestObject) (ListProcessedEventIdsResponseObject, error)
 	// CleanupStudentData Soft-delete dữ liệu của học sinh trong module này khi bị dọn do không đăng nhập (ADR-0032)
 	// (POST /internal/v1/platform/students/{student_id}:cleanup)
 	CleanupStudentData(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
@@ -2076,6 +2566,58 @@ func (sh *strictHandler) GetHubPosition(w http.ResponseWriter, r *http.Request, 
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetHubPositionResponseObject); ok {
 		if err := validResponse.VisitGetHubPositionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListOutboxEventIds operation middleware
+func (sh *strictHandler) ListOutboxEventIds(w http.ResponseWriter, r *http.Request, params ListOutboxEventIdsParams) {
+	var request ListOutboxEventIdsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListOutboxEventIds(ctx, request.(ListOutboxEventIdsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListOutboxEventIds")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListOutboxEventIdsResponseObject); ok {
+		if err := validResponse.VisitListOutboxEventIdsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListProcessedEventIds operation middleware
+func (sh *strictHandler) ListProcessedEventIds(w http.ResponseWriter, r *http.Request, params ListProcessedEventIdsParams) {
+	var request ListProcessedEventIdsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListProcessedEventIds(ctx, request.(ListProcessedEventIdsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListProcessedEventIds")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListProcessedEventIdsResponseObject); ok {
+		if err := validResponse.VisitListProcessedEventIdsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -2402,6 +2944,8 @@ var ErrNotFaked = errors.New("api: operation not faked")
 // Fake implements StrictServerInterface for caller tests: each method calls its <Name>Func.
 type Fake struct {
 	GetHubPositionFunc          func(ctx context.Context, request GetHubPositionRequestObject) (GetHubPositionResponseObject, error)
+	ListOutboxEventIdsFunc      func(ctx context.Context, request ListOutboxEventIdsRequestObject) (ListOutboxEventIdsResponseObject, error)
+	ListProcessedEventIdsFunc   func(ctx context.Context, request ListProcessedEventIdsRequestObject) (ListProcessedEventIdsResponseObject, error)
 	CleanupStudentDataFunc      func(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
 	RestoreStudentDataFunc      func(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
 	ListResourceAssignmentsFunc func(ctx context.Context, request ListResourceAssignmentsRequestObject) (ListResourceAssignmentsResponseObject, error)
@@ -2422,6 +2966,22 @@ func (f *Fake) GetHubPosition(a0 context.Context, a1 GetHubPositionRequestObject
 		return nil, ErrNotFaked
 	}
 	return f.GetHubPositionFunc(a0, a1)
+}
+
+// ListOutboxEventIds calls ListOutboxEventIdsFunc.
+func (f *Fake) ListOutboxEventIds(a0 context.Context, a1 ListOutboxEventIdsRequestObject) (ListOutboxEventIdsResponseObject, error) {
+	if f.ListOutboxEventIdsFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ListOutboxEventIdsFunc(a0, a1)
+}
+
+// ListProcessedEventIds calls ListProcessedEventIdsFunc.
+func (f *Fake) ListProcessedEventIds(a0 context.Context, a1 ListProcessedEventIdsRequestObject) (ListProcessedEventIdsResponseObject, error) {
+	if f.ListProcessedEventIdsFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ListProcessedEventIdsFunc(a0, a1)
 }
 
 // CleanupStudentData calls CleanupStudentDataFunc.

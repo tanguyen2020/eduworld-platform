@@ -256,6 +256,17 @@ func TestPlatformReport(t *testing.T) {
 	if c.audits(ctx, t, audit.ActionCrossTenantAccessed, nil) <= before || c.audits(ctx, t, "report.exported", nil) < 1 {
 		t.Fatal("cross_tenant.accessed / report.exported not audited")
 	}
+	// F134-AC-09: tenant B flagged QA — the export leaves it out even when named (rows written before the flag included).
+	c.exec(ctx, t, `UPDATE ref.tenants SET is_qa = true WHERE tenant_id = $1`, c.tenantB)
+	job = must(t, c.do(t, http.MethodPost, "/admin/reports", saDsh, idem(), body), http.StatusAccepted, "platform report with a QA tenant").str("report_id")
+	c.runReports(ctx, t)
+	got = must(t, c.do(t, http.MethodGet, "/admin/reports/"+job, saDsh, nil, nil), http.StatusOK, "platform report QA done")
+	if got.str("status") != "succeeded" || got.num("row_count") != 1 {
+		t.Fatalf("platform report with QA tenant = %s", got.raw)
+	}
+	if _, file = download(t, got.str("download_url")); strings.Contains(string(file), c.tenantB.String()) {
+		t.Fatalf("QA tenant in the export: %s", file)
+	}
 }
 
 // TestGradeReports checks F044 after ADR-0095 (TC-DASH-009): school_monthly of a school by grade × subject, grade_progress

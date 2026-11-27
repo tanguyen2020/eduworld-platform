@@ -58,6 +58,9 @@ const Name = "chat"
 // implemented: moderateDisplayText (F116, x-allowed-callers: competition — party and team names) and screenText (F077,
 // x-allowed-callers: game — school event texts).
 type Facade interface {
+	// listOutboxEventIds / listProcessedEventIds (worker reconcile, F134).
+	ListOutboxEventIds(ctx context.Context, req chatapi.ListOutboxEventIdsRequestObject) (chatapi.ListOutboxEventIdsResponseObject, error)
+	ListProcessedEventIds(ctx context.Context, req chatapi.ListProcessedEventIdsRequestObject) (chatapi.ListProcessedEventIdsResponseObject, error)
 	ModerateDisplayText(ctx context.Context, req chatapi.ModerateDisplayTextRequestObject) (chatapi.ModerateDisplayTextResponseObject, error)
 	ScreenText(ctx context.Context, req chatapi.ScreenTextRequestObject) (chatapi.ScreenTextResponseObject, error)
 	// F082 T040: the tenant assignments of the sticker packs (x-allowed-callers: identity).
@@ -116,7 +119,7 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(db))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(db, migrations.Latest()))
 	runsChat := r.Binary() == "worker" && (r.Profile() == "chat" || r.Profile() == "all")
-	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() && !runsChat {
+	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() && !r.Reconciles() && !runsChat {
 		// Outbox relay declared (inactive here): EVT_CHAT also carries the identity audit sink (OQ F010-2).
 		if err := r.Relay(Name); err != nil {
 			return nil, fmt.Errorf("chat: %w", err)
@@ -161,7 +164,7 @@ func Register(r *module.Registry) (*Module, error) {
 	}
 	var validator port.ContentValidator = pipe.Validator
 	learning := &chatmodules.LateLearning{}
-	mod := &Module{facade: chatfacade.Facade{Moderation: pipe.Validator}, principals: &chatmodules.LatePrincipals{}, learning: learning}
+	mod := &Module{facade: chatfacade.Facade{Ops: r.ReconcileSource(Name), Moderation: pipe.Validator}, principals: &chatmodules.LatePrincipals{}, learning: learning}
 	opsCfg, err := chatconfig.SafetyOpsFrom(r.Config())
 	if err != nil {
 		return nil, fmt.Errorf("chat: %w", err)
@@ -232,7 +235,7 @@ func Register(r *module.Registry) (*Module, error) {
 			return nil, fmt.Errorf("chat: %w", err)
 		}
 		// F082 T040: tenant assignments of the sticker packs, called by module identity (platform operations, ADR-0029).
-		mod.facade = chatfacade.Facade{Moderation: pipe.Validator, Assignments: command.ChatAssignments{UoW: core.UoW, Store: persistence.Assignments{},
+		mod.facade = chatfacade.Facade{Ops: r.ReconcileSource(Name), Moderation: pipe.Validator, Assignments: command.ChatAssignments{UoW: core.UoW, Store: persistence.Assignments{},
 			Audit: persistence.Auditor{R: core.Recorder}, Cursors: cursors}}
 		var js jetstream.JetStream
 		if r.NATS() != nil {

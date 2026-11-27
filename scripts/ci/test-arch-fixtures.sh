@@ -32,9 +32,11 @@ fixture modules/game/internal/zz_archfixture "package zz_archfixture
 import _ \"$MOD/modules/learning/internal/domain\""
 expect "AC-21 game imports learning/internal → go build fails" fail go build ./modules/...
 
-fixture modules/learning/internal/zz_archfixture "package zz_archfixture
-import _ \"$MOD/modules/chat/api\""
-expect "AC-22 learning (not an allowed caller of chat) imports chat/api → arch-check fails" fail go run ./tools/archgen --check
+# F134 made every module with a database an allowed caller of every other one (listOutboxEventIds/listProcessedEventIds);
+# realtime (no database) stays outside x-allowed-callers of the reconciliation facades (F134-AC-05).
+fixture modules/realtime/internal/zz_archfixture "package zz_archfixture
+import _ \"$MOD/modules/learning/api\""
+expect "AC-22, F134-AC-05 realtime (not an allowed caller of learning) imports learning/api → arch-check fails" fail go run ./tools/archgen --check
 
 fixture modules/identity/internal/zz_archfixture "package zz_archfixture
 import _ \"$MOD/modules/chat/api\""

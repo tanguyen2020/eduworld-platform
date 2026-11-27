@@ -4366,6 +4366,17 @@
     ]
   },
   {
+    "operation_id": "listSchoolClientInstallers",
+    "module": "game",
+    "method": "GET",
+    "path": "/tenant/client-installers",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listSchoolClubMembers",
     "module": "chat",
     "method": "GET",

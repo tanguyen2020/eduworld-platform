@@ -142,6 +142,7 @@ func (m *memTickets) Save(_ context.Context, hash string, c rt.TicketClaims, _ t
 // env is the game integration environment of one test: pools, UnitOfWork, ReadSession, outbox writer, audit
 // recorder, the use cases, the real pkg/httpx chain with a fake OIDC issuer, and tenants A, B with schools.
 type env struct {
+	installers                     *query.SchoolInstallers // F134: set by the installer tests (nil → 503)
 	cl                             *testkit.Cluster
 	app, platform, migrator, relay *sql.DB
 	uow                            *entx.UnitOfWork
@@ -304,7 +305,8 @@ func (e *env) server(ctx context.Context, t *testing.T) {
 		Admin:         gamehttp.GameAdminHandlers{Commands: adminProxy{e}, Queries: adminQueryProxy{e}, Media: mediaProxy{e}},
 		Analytics:     gamehttp.AnalyticsHandlers{Ingest: anaIngestProxy{e}, Queries: anaQueryProxy{e}, Exports: anaExportProxy{e}, Overview: anaOverviewProxy{e}},
 		TelemetryFlag: anaFlagProxy{e},
-		Translations:  gamehttp.TranslationHandlers{Commands: translationProxy{e}, Queries: translationQueryProxy{e}}}
+		Translations:  gamehttp.TranslationHandlers{Commands: translationProxy{e}, Queries: translationQueryProxy{e}},
+		Installers:    installerProxy{e}}
 	if err := gamehttp.Register(s, h); err != nil {
 		t.Fatal(err)
 	}

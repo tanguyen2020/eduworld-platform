@@ -61,6 +61,9 @@ type Imports struct {
 // F016-2, F045-3). The other platform-ops operations (assignments, trash, clone) are not implemented yet: the identity
 // gateway answers 503 UNAVAILABLE for them, never a silent success.
 type Facade interface {
+	// listOutboxEventIds / listProcessedEventIds (worker reconcile, F134).
+	ListOutboxEventIds(ctx context.Context, req api.ListOutboxEventIdsRequestObject) (api.ListOutboxEventIdsResponseObject, error)
+	ListProcessedEventIds(ctx context.Context, req api.ListProcessedEventIdsRequestObject) (api.ListProcessedEventIdsResponseObject, error)
 	CleanupStudentData(ctx context.Context, req api.CleanupStudentDataRequestObject) (api.CleanupStudentDataResponseObject, error)
 	RestoreStudentData(ctx context.Context, req api.RestoreStudentDataRequestObject) (api.RestoreStudentDataResponseObject, error)
 	AnonymizeUserData(ctx context.Context, req api.AnonymizeUserDataRequestObject) (api.AnonymizeUserDataResponseObject, error)
@@ -117,7 +120,7 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(db))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(db, migrations.Latest()))
 	m := &Module{moderator: &modules.LateModerator{}, screener: &modules.LateScreener{}, game: &modules.LateGame{}, learning: &modules.LateLearning{}}
-	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() {
+	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() && !r.Reconciles() {
 		return m, nil
 	}
 	core, err := r.Core(Name)
@@ -280,7 +283,7 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("competition.hub_access_revoked", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.HubAccessRevokedOptions(consumer.HubAccessRevoked{Hub: hub}, core.UoW, core.App, js)
 	})
-	m.facade = facade.Facade{Lifecycle: command.PartyLifecycle{Parties: parties}, Hub: &query.HubPosition{Rooms: reg, Positions: reg},
+	m.facade = facade.Facade{Ops: r.ReconcileSource(Name), Lifecycle: command.PartyLifecycle{Parties: parties}, Hub: &query.HubPosition{Rooms: reg, Positions: reg},
 		Assign: &assignments, AssignList: &assignList, Idempotency: core.Idempotency}
 	safety := command.PartySafety{Parties: parties, Sanctions: persistence.Sanctions{}}
 	r.Consumer("competition.party_safety_chat", func(js jetstream.JetStream) outbox.ConsumerOptions {

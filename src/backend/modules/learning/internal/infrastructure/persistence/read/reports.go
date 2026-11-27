@@ -318,7 +318,9 @@ func summaryQuery(s read.ReportSpec) (*reportQuery, error) {
 	q.where = []string{"r.tenant_id = infra.current_tenant_id()"}
 	if s.TenantID == nil {
 		group, table = "r.tenant_id", "learning.rollup_tenant_daily"
-		q.where = []string{"r.tenant_id = ANY(" + q.arg(uuids(p.TenantIDs)) + "::uuid[])"}
+		// QA tenants never count in a cross-tenant export, even when named (F134-AC-09, DASHBOARD_DATA §3.4).
+		q.where = []string{"r.tenant_id = ANY(" + q.arg(uuids(p.TenantIDs)) + "::uuid[])",
+			"NOT EXISTS (SELECT 1 FROM ref.tenants qa WHERE qa.tenant_id = r.tenant_id AND qa.is_qa)"}
 	}
 	minCell := q.arg(max(s.MinCellSize, 1))
 	q.sel = group + `, r.subject_id, max(COALESCE(r.active_students, 0)),

@@ -65,6 +65,10 @@ func (r *Registry) RunsEvents() bool {
 	return r.binary == "worker" && (r.profile == "events" || r.profile == "all")
 }
 
+// Reconciles reports the one-off composition of `worker reconcile --module=<m>` (profile reconcile, F134): modules
+// compose their facades and declare their entry points, nothing runs (no relay, consumer, job nor HTTP).
+func (r *Registry) Reconciles() bool { return r.binary == "worker" && r.profile == "reconcile" }
+
 // RunsJobs reports whether the binary runs scheduled jobs (worker jobs|all).
 func (r *Registry) RunsJobs() bool {
 	return r.binary == "worker" && (r.profile == "jobs" || r.profile == "all")
@@ -236,6 +240,7 @@ type ConsumerFactory func(js jetstream.JetStream) outbox.ConsumerOptions
 func (r *Registry) Consumer(name string, build ConsumerFactory) {
 	module, _, _ := strings.Cut(name, ".")
 	r.declare(Declaration{Module: module, Kind: KindConsumer, Name: name, Active: r.RunsEvents()})
+	r.recordConsumer(module, name, build)
 	if !r.RunsEvents() {
 		return
 	}

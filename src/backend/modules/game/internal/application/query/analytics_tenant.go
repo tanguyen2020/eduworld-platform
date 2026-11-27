@@ -165,6 +165,16 @@ func (q GameAnalytics) GetTenantSummary(ctx context.Context, in TenantSummaryInp
 		if len(schools) == 0 {
 			schools = scope
 		}
+		// A QA tenant (F134-AC-10) answers 200 with an empty summary, data written before the flag included: no school
+		// matches uuid.Nil, so every section keeps its shape with no row.
+		if qa, err := q.Model.QATenants(ctx, []uuid.UUID{tenant}); err != nil {
+			return err
+		} else if len(qa) > 0 {
+			out, err = q.tenantSummary(ctx, tenant, rg, []uuid.UUID{uuid.Nil}, in.GradeBands)
+			out.AvailableFrom = nil
+			cached = true // never cache the empty answer under the real key
+			return err
+		}
 		if q.Cache != nil {
 			if ver, err := q.Cache.Version(ctx, tenant); err == nil {
 				key = cacheKey(tenant, ver, "tenant_game_summary", rg, schools, in.GradeBands)

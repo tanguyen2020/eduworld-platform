@@ -1,4 +1,4 @@
-h1:KrVWwG1pebtCC2hURcNlE/1pY3j1jEmaaykxdkaqRLs=
+h1:C3SI3i0yAwEU6a9PpSLUD3B/roIY8eUsw9s/Qklfu2k=
 00000000000001_baseline.sql h1:mL8cMl2vAGJa3QB6izUDIwZBpoiEr+YbpjQDl/fA6AM=
 20261118000001_infra.sql h1:V50K9lGOLvlg6QWneL/iztcTu/2epvp54pF/M+7Jym4=
 20261119000001_f010_org.sql h1:Tr5cc7N3NPEZRb0GCj1T6gb7+g8D1I7DcNZjRVdmgAk=
@@ -20,3 +20,4 @@ h1:KrVWwG1pebtCC2hURcNlE/1pY3j1jEmaaykxdkaqRLs=
 20261130000002_adr0095_membership_from_students.sql h1:8laaL7d6TGh4HzoqStWjFDsNw1+2OK/gti8BdZMVJSs=
 20261201000001_adr0095_drop_class_enrollment.sql h1:IQgeUSkfZgcj607BXr3/daVEhQcVF59UH7A2+hMPs18=
 20261202000001_f124_account_locks_email.sql h1:+cbBGE/3Z9Cwg9NhX4T4fePYBLjJp/vOA1nMQXn7pm4=
+20270201000134_infra_reconcile_grants.sql h1:Qvi+kanzxKuaYgB7MAMAxSR3V/Wa09Atmp0KjNWcUM8=

@@ -28,7 +28,7 @@ const settingDefaultLocale = "default_locale"
 
 func tenantToDomain(r *ent.Tenant) *tenant.Tenant {
 	t := &tenant.Tenant{ID: r.ID, Code: r.Code, Name: r.Name, Type: tenant.Type(r.TenantType), Status: tenant.Status(r.Status),
-		OrgID: r.KeycloakOrgID, Version: r.Version, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt}
+		OrgID: r.KeycloakOrgID, IsQA: r.IsQa, Version: r.Version, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt}
 	if r.KeycloakOrgAlias != nil {
 		t.OrgAlias = *r.KeycloakOrgAlias
 	}
@@ -66,10 +66,10 @@ func (TenantRepo) Get(ctx context.Context, id uuid.UUID) (*tenant.Tenant, error)
 	return tenantToDomain(row), nil
 }
 
-// Save updates name and status where version = t.Version (a concurrent change → 409 CONFLICT).
+// Save updates name, status and the QA flag where version = t.Version (a concurrent change → 409 CONFLICT).
 func (TenantRepo) Save(ctx context.Context, t *tenant.Tenant) error {
 	n, err := client(ctx).Tenant.Update().Where(enttenant.ID(t.ID), enttenant.Version(t.Version)).
-		SetName(t.Name).SetStatus(string(t.Status)).AddVersion(1).Save(ctx)
+		SetName(t.Name).SetStatus(string(t.Status)).SetIsQa(t.IsQA).AddVersion(1).Save(ctx)
 	if err != nil {
 		return err
 	}

@@ -18,10 +18,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/modcall"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/reconcile"
 )
 
 // Facade serves the platform-ops operations of module learning (F020).
 type Facade struct {
+	// Ops serves listOutboxEventIds and listProcessedEventIds for `worker reconcile` (F134); nil = 503 UNAVAILABLE.
+	Ops         *reconcile.Source
 	Apply       command.ApplyTenantAssignmentsHandler
 	Revoke      command.RevokeTenantAssignmentsHandler
 	Assignments query.ListResourceAssignmentsHandler

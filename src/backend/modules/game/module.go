@@ -43,6 +43,7 @@ import (
 	promsource "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/prometheus"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/questschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/realtime"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/release"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/render"
 	rewardinfra "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/reward"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/room"
@@ -75,6 +76,9 @@ const Name = "game"
 // platform-ops operations (assignments, trash, clone) are not implemented by module game yet (OQ F045-3): the
 // identity gateway answers 503 UNAVAILABLE for them, never a silent success.
 type Facade interface {
+	// listOutboxEventIds / listProcessedEventIds (worker reconcile, F134).
+	ListOutboxEventIds(ctx context.Context, req api.ListOutboxEventIdsRequestObject) (api.ListOutboxEventIdsResponseObject, error)
+	ListProcessedEventIds(ctx context.Context, req api.ListProcessedEventIdsRequestObject) (api.ListProcessedEventIdsResponseObject, error)
 	CleanupStudentData(ctx context.Context, req api.CleanupStudentDataRequestObject) (api.CleanupStudentDataResponseObject, error)
 	RestoreStudentData(ctx context.Context, req api.RestoreStudentDataRequestObject) (api.RestoreStudentDataResponseObject, error)
 	AnonymizeUserData(ctx context.Context, req api.AnonymizeUserDataRequestObject) (api.AnonymizeUserDataResponseObject, error)
@@ -144,7 +148,7 @@ func Register(r *module.Registry) (*Module, error) {
 	}
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(pool))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(pool, migrations.Latest()))
-	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() {
+	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() && !r.Reconciles() {
 		return &Module{hub: &modules.LateHub{}, learning: &modules.LateLearning{}, chat: &modules.LateChat{}}, nil
 	}
 	core, err := r.Core(Name)
@@ -348,6 +352,21 @@ func Register(r *module.Registry) (*Module, error) {
 		return nil, fmt.Errorf("game: %w", err)
 	}
 	observability.RegisterAnalytics(r.Metrics())
+	// School installer page (F134 US3): the signed school-kit index of the release CDN, filtered by the school grades.
+	instCfg, err := gameconfig.InstallerFrom(r.Config())
+	if err != nil {
+		return nil, err
+	}
+	observability.RegisterInstaller(r.Metrics())
+	installers := query.SchoolInstallers{Read: core.ReadSession, Reads: read.Installers{}, Metrics: observability.InstallerMetrics{},
+		WebClientURL: instCfg.WebClientURL}
+	if instCfg.ReleasesBaseURL != "" {
+		ix, err := release.New(release.Config{BaseURL: instCfg.ReleasesBaseURL, PublicKeyPEM: instCfg.PublicKeyPEM}, nil, cache.Dashboard{C: vk})
+		if err != nil {
+			return nil, fmt.Errorf("game: %w", err)
+		}
+		installers.Index = ix
+	}
 	// DB performance KPI of the Live dashboard (FR-OPS-003): pool statistics go_sql_* of the game database (label db_name).
 	_ = r.Metrics().Register(collectors.NewDBStatsCollector(core.App, "eduworld_game"))
 	ingest := command.AnalyticsIngest{UoW: core.UoW, Store: analyticssql.Store{}, Keys: anaCfg.Keys, Rate: cache.RateLimiter{C: vk},
@@ -377,7 +396,7 @@ func Register(r *module.Registry) (*Module, error) {
 	if len(anaCfg.Keys.All()) > 0 {
 		anonymizer = ingest
 	}
-	m := &Module{hub: hub, learning: learningLate, chat: chatLate, facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
+	m := &Module{hub: hub, learning: learningLate, chat: chatLate, facade: facade.Facade{Ops: r.ReconcileSource(Name), Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
 		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC, Analytics: anonymizer},
 		GameAdmin: facade.GameAdmin{Assignments: assignUC, Catalog: adminQueries},
 		PartyActivities: facade.PartyActivities{Queries: query.PartyActivities{Read: core.ReadSession, Bosses: bosssql.Content{},
@@ -412,7 +431,7 @@ func Register(r *module.Registry) (*Module, error) {
 		Admin:         gamehttp.GameAdminHandlers{Commands: adminUC, Queries: adminQueries, Media: mediaUC},
 		Analytics:     gamehttp.AnalyticsHandlers{Ingest: ingest, Queries: gameAnalytics, Exports: exportsUC, Overview: overview},
 		TelemetryFlag: query.ProductTelemetryFlag{Read: core.ReadSession, Flags: analyticssql.Store{}, Platform: anaCfg.Config.ProductTelemetry},
-		Translations:  gamehttp.TranslationHandlers{Commands: translationsUC, Queries: translationQueries}}
+		Translations:  gamehttp.TranslationHandlers{Commands: translationsUC, Queries: translationQueries}, Installers: installers}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
 	}

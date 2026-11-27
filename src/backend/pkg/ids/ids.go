@@ -36,3 +36,20 @@ func Time(id uuid.UUID) (time.Time, bool) {
 	sec, nsec := id.Time().UnixTime()
 	return time.Unix(sec, nsec), true
 }
+
+// Floor returns the smallest UUIDv7 of the millisecond of t: every UUIDv7 generated at or after t compares ≥ Floor(t)
+// (PostgreSQL and bytes compare UUIDs byte-wise), so [Floor(from), Floor(to)) selects the ids of a time window (F134
+// reconciliation, DATABASE_DESIGN §3.9).
+func Floor(t time.Time) uuid.UUID {
+	var u uuid.UUID
+	ms := uint64(t.UnixMilli())
+	if t.UnixMilli() < 0 {
+		ms = 0
+	}
+	for i := 0; i < 6; i++ {
+		u[i] = byte(ms >> (8 * (5 - i)))
+	}
+	u[6] = 0x70 // version 7
+	u[8] = 0x80 // RFC 9562 variant
+	return u
+}

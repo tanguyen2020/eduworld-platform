@@ -65,6 +65,9 @@ const (
 // Facade is the identity facade (identityapi.StrictServerInterface) implemented in this release: projection
 // snapshots (F010) and Principal resolution (F012). getTenant is not implemented yet and no module calls it.
 type Facade interface {
+	// listOutboxEventIds / listProcessedEventIds (worker reconcile, F134).
+	ListOutboxEventIds(ctx context.Context, req identityapi.ListOutboxEventIdsRequestObject) (identityapi.ListOutboxEventIdsResponseObject, error)
+	ListProcessedEventIds(ctx context.Context, req identityapi.ListProcessedEventIdsRequestObject) (identityapi.ListProcessedEventIdsResponseObject, error)
 	ResolvePrincipal(ctx context.Context, req identityapi.ResolvePrincipalRequestObject) (identityapi.ResolvePrincipalResponseObject, error)
 	GetPrincipal(ctx context.Context, req identityapi.GetPrincipalRequestObject) (identityapi.GetPrincipalResponseObject, error)
 	CheckMemberships(ctx context.Context, req identityapi.CheckMembershipsRequestObject) (identityapi.CheckMembershipsResponseObject, error)
@@ -177,7 +180,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 	m.toggles, m.hasToggles = toggles, true
 
 	// Facade of identity (F010 snapshots, F012 principals).
-	m.facade = identityFacade{Facade: facade.Facade{Snapshot: query.ProjectionSnapshot{Model: read.SnapshotModel{Session: core.ReadSession}, Cursors: cursors}},
+	m.facade = identityFacade{Facade: facade.Facade{Ops: r.ReconcileSource(Name), Snapshot: query.ProjectionSnapshot{Model: read.SnapshotModel{Session: core.ReadSession}, Cursors: cursors}},
 		Principals: facade.Principals{Resolve: query.ResolvePrincipal{Model: principals},
 			Memberships: query.CheckMemberships{Model: principals}}}
 

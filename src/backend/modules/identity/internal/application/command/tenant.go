@@ -52,13 +52,13 @@ func tenantPayload(t *tenant.Tenant, changed []string) TenantPayload {
 		changed = []string{}
 	}
 	return TenantPayload{TenantID: t.ID.String(), Code: t.Code, Name: t.Name, TenantType: string(t.Type), Status: string(t.Status),
-		Alias: t.OrgAlias, ChangedFields: changed, SourceVersion: t.Version}
+		Alias: t.OrgAlias, IsQA: t.IsQA, ChangedFields: changed, SourceVersion: t.Version}
 }
 
 // TenantView maps the aggregate to TenantDetail.
 func TenantView(t *tenant.Tenant) dto.Tenant {
 	return dto.Tenant{TenantID: t.ID, Code: t.Code, Name: t.Name, TenantType: string(t.Type), Status: string(t.Status),
-		Alias: t.OrgAlias, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt, Version: t.Version}
+		Alias: t.OrgAlias, IsQA: t.IsQA, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt, Version: t.Version}
 }
 
 // platformWrite authorizes perm for platform staff and returns ctx with the platform scope (G tables).
@@ -130,7 +130,7 @@ func (h UpdateTenant) Handle(ctx context.Context, in dto.UpdateTenant) (out dto.
 	if err != nil {
 		return out, err
 	}
-	patch := tenant.Patch{Name: in.Name}
+	patch := tenant.Patch{Name: in.Name, IsQA: in.IsQA}
 	if in.Status != nil {
 		st, err := tenant.ParseStatus(*in.Status)
 		if err != nil {
@@ -146,6 +146,7 @@ func (h UpdateTenant) Handle(ctx context.Context, in dto.UpdateTenant) (out dto.
 		if in.IfMatch != t.Version {
 			return problem.New(problem.VersionMismatch, "")
 		}
+		wasQA := t.IsQA
 		ch, err := t.Apply(patch)
 		if errors.Is(err, tenant.ErrNoChange) {
 			out = TenantView(t)
@@ -164,6 +165,9 @@ func (h UpdateTenant) Handle(ctx context.Context, in dto.UpdateTenant) (out dto.
 		if ch.StatusChanged {
 			changed = append(changed, "status")
 		}
+		if ch.QAChanged {
+			changed = append(changed, "is_qa")
+		}
 		id := t.ID
 		if err := h.Events.Publish(ctx, write.Event{Type: "tenant.updated", SubjectType: "tenant", SubjectID: id.String(),
 			TenantID: &id, Payload: tenantPayload(t, changed)}); err != nil {
@@ -173,8 +177,14 @@ func (h UpdateTenant) Handle(ctx context.Context, in dto.UpdateTenant) (out dto.
 			Result: audit.ResultSuccess, Reason: in.Reason, Metadata: map[string]any{"changed_fields": changed, "status": string(t.Status)}}); err != nil {
 			return err
 		}
+		if ch.QAChanged { // F134-AC-07: the QA flag has its own audit with the value before and after
+			if err := h.Audit.Record(ctx, audit.Event{Action: "tenant.qa_flag_changed", TargetType: "tenant", TargetID: id.String(),
+				Result: audit.ResultSuccess, Reason: in.Reason, Metadata: map[string]any{"is_qa_before": wasQA, "is_qa_after": t.IsQA}}); err != nil {
+				return err
+			}
+		}
 		out = TenantView(t)
-		return nil
+		return idempotency.SetResult(ctx, out) // replay of the same Idempotency-Key (F134-AC-07)
 	})
 	return out, err
 }

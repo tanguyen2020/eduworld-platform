@@ -9,6 +9,7 @@ import (
 
 	identityapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/reconcile"
 )
 
 // Snapshots is the facade part implemented by F010.
@@ -18,6 +19,8 @@ type Snapshots interface {
 
 // Facade serves the identity facade operations of F010.
 type Facade struct {
+	// Ops serves listOutboxEventIds and listProcessedEventIds for `worker reconcile` (F134); nil = 503 UNAVAILABLE.
+	Ops      *reconcile.Source
 	Snapshot query.ProjectionSnapshot
 }
 

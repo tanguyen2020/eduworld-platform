@@ -177,6 +177,8 @@ type AnalyticsDashboard interface {
 	SchoolsInTenant(ctx context.Context, tenant uuid.UUID, schools []uuid.UUID) ([]uuid.UUID, error)
 	// NonQATenants filters the given tenants (nil = all) to the tenants that are not QA (GAME_ANALYTICS A-8).
 	NonQATenants(ctx context.Context, tenants []uuid.UUID) ([]uuid.UUID, error)
+	// QATenants returns the QA tenants among the given tenants (nil = every QA tenant): excluded_tenant_ids (F134-AC-09).
+	QATenants(ctx context.Context, tenants []uuid.UUID) ([]uuid.UUID, error)
 }
 
 // PerfFilter narrows the performance report.

@@ -155,7 +155,7 @@ db-restore: ## Restore one module database locally: MOD=<module> FILE=<dump>
 
 # ---------- staging/production on Docker Swarm (F130, DEPLOYMENT §4–§13, BACKUP_RECOVERY) ----------
 # Run on the self-hosted runner `deploy` (DOCKER_HOST = Swarm manager over TLS); swarm-validate and test-ops need no swarm.
-.PHONY: swarm-validate swarm-up deploy-service deploy-rollback secrets-sync restore-test ops-job test-ops test-ops-integration acl-check acl-validate nats-accounts
+.PHONY: swarm-validate swarm-up deploy-service deploy-rollback secrets-sync restore-test reconcile ops-job test-ops test-ops-integration acl-check acl-validate nats-accounts
 ENV ?= staging
 SERVICE ?=
 VERSION ?=
@@ -183,6 +183,9 @@ secrets-sync: ## SOPS → versioned Docker secrets (<name>_v<N>, previous versio
 
 restore-test: ## Restore test in an isolated scratch cluster with the restore credential: ENV=<env> MODE=full|module [DB=eduworld_<module>]
 	bash scripts/ops/run-ops-job.sh --env=$(ENV) --like=backup-tools --restore -- restore_test.sh --mode=$(MODE) $(if $(filter module,$(MODE)),--db=$(DB)) --actor="$(or $(EW_ACTOR),$(USER))" --purpose="$(or $(EW_PURPOSE),monthly restore test)"
+
+reconcile: ## Job reconcile-<module> after a module restore (F134, RB-01 step 7): ENV=<env> MOD=<module> RESTORE_POINT=<T> FROM=<RFC3339> [TO=…] [SETTLE=10m]
+	bash scripts/ops/reconcile.sh --env=$(ENV) --module=$(MOD) --restore-point=$(RESTORE_POINT) --from=$(FROM) $(if $(TO),--to=$(TO)) $(if $(SETTLE),--settle=$(SETTLE))
 
 ops-job: ## One-off runbook job copying a service: ENV=<env> LIKE=<swarm-service> CMD="…" [RESTORE=1] [SECRET=<name>]
 	bash scripts/ops/run-ops-job.sh --env=$(ENV) --like=$(LIKE) $(if $(RESTORE),--restore) $(if $(SECRET),--secret=$(SECRET)) -- $(CMD)

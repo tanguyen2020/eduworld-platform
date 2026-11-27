@@ -92,6 +92,8 @@ type Meta struct {
 	DataAsOf      time.Time `json:"data_as_of"`
 	IsPartial     bool      `json:"is_partial"`
 	AvailableFrom *string   `json:"available_from"`
+	// ExcludedTenantIDs are the QA tenants left out of a cross-tenant answer, named in tenant_ids or not (F134-AC-09).
+	ExcludedTenantIDs []uuid.UUID `json:"excluded_tenant_ids,omitempty"`
 }
 
 type metaAcc struct {
@@ -119,6 +121,20 @@ func (q GameAnalytics) meta(rg analytics.Range, m metaAcc, from *time.Time) Meta
 		out.AvailableFrom = &s
 	}
 	return out
+}
+
+// scopeTenants returns the non-QA tenants of the scope (every non-QA tenant when none is named; [uuid.Nil] when only QA
+// tenants are named, so the answer is empty, never every tenant) and the QA tenants left out (F134-AC-09).
+func (q GameAnalytics) scopeTenants(ctx context.Context, named []uuid.UUID) ([]uuid.UUID, []uuid.UUID, error) {
+	tenants, err := q.Model.NonQATenants(ctx, named)
+	if err != nil {
+		return nil, nil, err
+	}
+	qa, err := q.Model.QATenants(ctx, named)
+	if err != nil {
+		return nil, nil, err
+	}
+	return tenants, qa, nil
 }
 
 func (q GameAnalytics) dashRange(from, to time.Time, grain string) (analytics.Range, error) {
@@ -269,7 +285,7 @@ func (q GameAnalytics) GetMetrics(ctx context.Context, codes []string, f Analyti
 		return out, problem.Invalid("metric_codes", problem.SubInvalid, "too many series: narrow the metrics or the dimension values")
 	}
 	err = q.run(ctx, "game_metrics", p.UserID, uuid.Nil, func(ctx context.Context) error {
-		tenants, err := q.Model.NonQATenants(ctx, f.TenantIDs)
+		tenants, excluded, err := q.scopeTenants(ctx, f.TenantIDs)
 		if err != nil {
 			return err
 		}
@@ -283,6 +299,7 @@ func (q GameAnalytics) GetMetrics(ctx context.Context, codes []string, f Analyti
 			return err
 		}
 		out = MetricsView{Data: series, GeneratedAt: q.now(), SuppressionThreshold: q.Config.MinCellSize, Meta: q.meta(rg, macc, af)}
+		out.Meta.ExcludedTenantIDs = excluded
 		return nil
 	})
 	return out, err
@@ -459,7 +476,7 @@ func (q GameAnalytics) GetRetention(ctx context.Context, f AnalyticsFilter) (out
 		return out, err
 	}
 	err = q.run(ctx, "game_retention", p.UserID, uuid.Nil, func(ctx context.Context) error {
-		tenants, err := q.Model.NonQATenants(ctx, f.TenantIDs)
+		tenants, excluded, err := q.scopeTenants(ctx, f.TenantIDs)
 		if err != nil {
 			return err
 		}
@@ -510,6 +527,7 @@ func (q GameAnalytics) GetRetention(ctx context.Context, f AnalyticsFilter) (out
 			out.Cohorts = append(out.Cohorts, c)
 		}
 		out.Meta = q.meta(rg, macc, nil)
+		out.Meta.ExcludedTenantIDs = excluded
 		return nil
 	})
 	return out, err
@@ -557,7 +575,7 @@ func (q GameAnalytics) GetFunnel(ctx context.Context, code string, f AnalyticsFi
 		return out, err
 	}
 	err = q.run(ctx, "game_funnel", p.UserID, uuid.Nil, func(ctx context.Context) error {
-		tenants, err := q.Model.NonQATenants(ctx, f.TenantIDs)
+		tenants, excluded, err := q.scopeTenants(ctx, f.TenantIDs)
 		if err != nil {
 			return err
 		}
@@ -583,6 +601,7 @@ func (q GameAnalytics) GetFunnel(ctx context.Context, code string, f AnalyticsFi
 			out.Steps = append(out.Steps, v)
 		}
 		out.Meta = q.meta(rg, macc, nil)
+		out.Meta.ExcludedTenantIDs = excluded
 		return nil
 	})
 	return out, err
@@ -648,7 +667,7 @@ func (q GameAnalytics) GetContentStats(ctx context.Context, kind, sortKey string
 		}
 	}
 	err = q.run(ctx, "game_content_stats", p.UserID, uuid.Nil, func(ctx context.Context) error {
-		tenants, err := q.Model.NonQATenants(ctx, f.TenantIDs)
+		tenants, excluded, err := q.scopeTenants(ctx, f.TenantIDs)
 		if err != nil {
 			return err
 		}
@@ -673,6 +692,7 @@ func (q GameAnalytics) GetContentStats(ctx context.Context, kind, sortKey string
 			out.Page.NextCursor = &s
 		}
 		out.Meta = q.meta(rg, macc, nil)
+		out.Meta.ExcludedTenantIDs = excluded
 		out.Grain = string(analytics.Week)
 		return nil
 	})
@@ -768,7 +788,7 @@ func (q GameAnalytics) GetPerformance(ctx context.Context, f AnalyticsFilter) (o
 		return out, err
 	}
 	err = q.run(ctx, "game_performance", p.UserID, uuid.Nil, func(ctx context.Context) error {
-		tenants, err := q.Model.NonQATenants(ctx, f.TenantIDs)
+		tenants, excluded, err := q.scopeTenants(ctx, f.TenantIDs)
 		if err != nil {
 			return err
 		}
@@ -801,6 +821,7 @@ func (q GameAnalytics) GetPerformance(ctx context.Context, f AnalyticsFilter) (o
 			out.Data = append(out.Data, v)
 		}
 		out.Meta = q.meta(rg, macc, nil)
+		out.Meta.ExcludedTenantIDs = excluded
 		return nil
 	})
 	return out, err

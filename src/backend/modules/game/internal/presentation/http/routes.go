@@ -95,6 +95,8 @@ type Handlers struct {
 	TelemetryFlag TelemetryFlag
 	// Translations are the translation files of game content (F082); nil Commands = not mounted.
 	Translations TranslationHandlers
+	// Installers answers the school installer page (F134); nil = not mounted.
+	Installers SchoolInstallersQuery
 	// IPHasher hashes the client address for game.login_events.ip_hash (nil = no hash). The raw IP stops here.
 	IPHasher port.IPHasher
 }
@@ -231,6 +233,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		routes[id] = fn
 	}
 	for id, fn := range h.analyticsRoutes() {
+		routes[id] = fn
+	}
+	for id, fn := range h.installerRoutes() {
 		routes[id] = fn
 	}
 	if h.Admin.Commands != nil {

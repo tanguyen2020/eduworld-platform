@@ -12,10 +12,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/reconcile"
 )
 
 // Facade serves the lifecycle operations of module competition (F100 T042, OQ F016-2, F045-3).
 type Facade struct {
+	// Ops serves listOutboxEventIds and listProcessedEventIds for `worker reconcile` (F134); nil = 503 UNAVAILABLE.
+	Ops       *reconcile.Source
 	Lifecycle command.PartyLifecycle
 	// Hub answers getHubPosition (F071 T049); nil in a binary without the room host registry → 503 UNAVAILABLE.
 	Hub *query.HubPosition

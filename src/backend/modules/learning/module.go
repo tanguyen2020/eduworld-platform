@@ -106,6 +106,9 @@ const DashboardPoolSize = 10
 // revealPlanItem; caller module competition, F105), the mini-game source check validateMinigameQuestionSource (caller
 // module game, F073) and listAssignmentRecipients (caller module chat, F123).
 type Facade interface {
+	// listOutboxEventIds / listProcessedEventIds (worker reconcile, F134).
+	ListOutboxEventIds(ctx context.Context, req api.ListOutboxEventIdsRequestObject) (api.ListOutboxEventIdsResponseObject, error)
+	ListProcessedEventIds(ctx context.Context, req api.ListProcessedEventIdsRequestObject) (api.ListProcessedEventIdsResponseObject, error)
 	ApplyTenantAssignments(ctx context.Context, req api.ApplyTenantAssignmentsRequestObject) (api.ApplyTenantAssignmentsResponseObject, error)
 	RevokeTenantAssignments(ctx context.Context, req api.RevokeTenantAssignmentsRequestObject) (api.RevokeTenantAssignmentsResponseObject, error)
 	ListResourceAssignments(ctx context.Context, req api.ListResourceAssignmentsRequestObject) (api.ListResourceAssignmentsResponseObject, error)
@@ -154,7 +157,7 @@ func Register(r *module.Registry) (*Module, error) {
 	}
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(pool))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(pool, migrations.Latest()))
-	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() {
+	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() && !r.Reconciles() {
 		return &Module{}, nil
 	}
 	w, err := build(r)
@@ -473,7 +476,7 @@ func build(r *module.Registry) (*wiring, error) {
 	deps := command.AssignmentDeps{UoW: core.UoW, Assignments: write.AssignmentRepo{}, Tenants: read.TenantDirectory{}, Resources: resources,
 		Audit: auditor, Cache: cache.Invalidator{C: vk}, Metrics: observability.AssignmentCounter{}}
 	trash := command.TrashDeps{UoW: core.UoW, Resources: resources, Events: events, Audit: auditor}
-	f := facade.Facade{Apply: command.ApplyTenantAssignments{AssignmentDeps: deps}, Revoke: command.RevokeTenantAssignments{AssignmentDeps: deps},
+	f := facade.Facade{Ops: r.ReconcileSource(Name), Apply: command.ApplyTenantAssignments{AssignmentDeps: deps}, Revoke: command.RevokeTenantAssignments{AssignmentDeps: deps},
 		Assignments: query.ListResourceAssignments{Session: core.ReadSession, Assignments: read.AssignmentReadModel{}, Cursors: cursors},
 		Trash:       query.ListTrash{Session: core.ReadSession, Resources: resources, Cursors: cursors},
 		Restore:     command.RestoreResource{TrashDeps: trash},

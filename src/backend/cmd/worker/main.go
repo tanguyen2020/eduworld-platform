@@ -35,6 +35,12 @@ func main() {
 		}
 		return
 	}
+	if len(os.Args) > 1 && os.Args[1] == "reconcile" { // job reconcile-<module> (F134, BACKUP_RECOVERY §3.5)
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		code := runReconcile(ctx, os.Args[2:], reconcileDeps{Getenv: os.Getenv, Peers: composeReconcile(os.Getenv)}, os.Stdout, os.Stderr)
+		stop()
+		os.Exit(code)
+	}
 	fs := flag.NewFlagSet("worker", flag.ExitOnError)
 	profileFlag := fs.String("profile", "", "events | chat | jobs | all (default: $EW_WORKER_PROFILE)")
 	_ = fs.Parse(os.Args[1:])

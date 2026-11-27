@@ -24,6 +24,7 @@ type UpdateTenant struct {
 	IfMatch int64     `json:"-"`
 	Name    *string   `json:"name,omitempty"`
 	Status  *string   `json:"status,omitempty"`
+	IsQA    *bool     `json:"is_qa,omitempty"`
 	Reason  string    `json:"reason"`
 }
 
@@ -36,6 +37,7 @@ type Tenant struct {
 	TenantType  string    `json:"tenant_type"`
 	Status      string    `json:"status"`
 	SchoolCount *int      `json:"school_count,omitempty"`
+	IsQA        bool      `json:"is_qa"`
 	Alias       string    `json:"keycloak_org_alias"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`

@@ -45,7 +45,7 @@ func (m *Module) Wire(in Imports) error {
 		return fmt.Errorf("identity: Wire called twice")
 	}
 	m.wired = true
-	if !m.r.ServesHTTP() && !m.r.RunsEvents() && !m.r.RunsJobs() {
+	if !m.r.ServesHTTP() && !m.r.RunsEvents() && !m.r.RunsJobs() && !m.r.Reconciles() {
 		return nil
 	}
 	return build(m.r, m, in)

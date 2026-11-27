@@ -12,6 +12,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/reconcile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
@@ -61,6 +62,8 @@ func (f Facade) ScreenText(ctx context.Context, req api.ScreenTextRequestObject)
 
 // Facade serves the operations of module chat called by other modules.
 type Facade struct {
+	// Ops serves listOutboxEventIds and listProcessedEventIds for `worker reconcile` (F134); nil = 503 UNAVAILABLE.
+	Ops        *reconcile.Source
 	Moderation DisplayTextChecker
 	// Assignments serves the tenant assignments of the sticker packs (F082 T040); nil = 503 UNAVAILABLE.
 	Assignments Assignments

@@ -342,6 +342,33 @@ func (Dashboard) SchoolsInTenant(ctx context.Context, tenant uuid.UUID, schools 
 	return out, dashErr("schools", closeRows(rows))
 }
 
+// QATenants implements port.AnalyticsDashboard: the QA tenants named (or every QA tenant), for excluded_tenant_ids.
+func (Dashboard) QATenants(ctx context.Context, tenants []uuid.UUID) ([]uuid.UUID, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok tenant registry projection (G, no deleted_at)
+	rows, err := t.QueryContext(ctx, `SELECT tenant_id FROM ref.tenants WHERE is_qa AND (cardinality($1::uuid[]) = 0 OR tenant_id = ANY($1::uuid[]))
+		ORDER BY tenant_id LIMIT 500`, "{"+strings.Join(ids(tenants), ",")+"}")
+	if err != nil {
+		return nil, dashErr("tenants", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out = append(out, id)
+	}
+	if err := closeRows(rows); err != nil {
+		return nil, dashErr("tenants", err)
+	}
+	return out, nil
+}
+
 // NonQATenants implements port.AnalyticsDashboard (GAME_ANALYTICS A-8: QA tenants never counted, even when named).
 func (Dashboard) NonQATenants(ctx context.Context, tenants []uuid.UUID) ([]uuid.UUID, error) {
 	t, err := tx(ctx)

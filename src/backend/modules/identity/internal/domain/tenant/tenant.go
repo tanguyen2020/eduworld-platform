@@ -58,6 +58,7 @@ type Tenant struct {
 	OrgAlias      string
 	OrgID         *uuid.UUID
 	DefaultLocale string
+	IsQA          bool // QA tenant (synthetic monitoring, F131): excluded from analytics (F134)
 	Version       int64
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
@@ -115,12 +116,14 @@ func New(id uuid.UUID, code, name string, typ Type, alias, locale string) (*Tena
 type Patch struct {
 	Name   *string
 	Status *Status
+	IsQA   *bool
 }
 
 // Change describes what an applied patch changed (for tenant.updated and the Organization sync).
 type Change struct {
 	NameChanged   bool
 	StatusChanged bool
+	QAChanged     bool
 }
 
 // Apply applies p. It returns ErrNoChange when nothing changes.
@@ -142,10 +145,26 @@ func (t *Tenant) Apply(p Patch) (Change, error) {
 			t.Status, c.StatusChanged = *p.Status, true
 		}
 	}
-	if !c.NameChanged && !c.StatusChanged {
+	if p.IsQA != nil && *p.IsQA != t.IsQA {
+		if err := t.SetQA(*p.IsQA); err != nil {
+			return c, err
+		}
+		c.QAChanged = true
+	}
+	if !c.NameChanged && !c.StatusChanged && !c.QAChanged {
 		return c, ErrNoChange
 	}
 	return c, nil
+}
+
+// SetQA flags or unflags the tenant as a QA tenant (F134-AC-07, TEST_STRATEGY §4). The common tenant can never be
+// a QA tenant (CHECK tenants_qa_chk): its students are real.
+func (t *Tenant) SetQA(qa bool) error {
+	if qa && t.Type == TypeCommon {
+		return ErrInvalid{Field: "is_qa", Reason: "the common tenant cannot be a QA tenant"}
+	}
+	t.IsQA = qa
+	return nil
 }
 
 // OrgAttributes are the Keycloak Organization attributes of the tenant (KEYCLOAK_SSO §2.1).

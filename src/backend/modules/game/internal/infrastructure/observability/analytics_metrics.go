@@ -147,3 +147,6 @@ func ClientLabels(platform, clientVersion string) (string, string) {
 	}
 	return platform, strconv.Itoa(v.Major) + "." + strconv.Itoa(v.Minor) + "." + strconv.Itoa(v.Patch)
 }
+
+// AnalyticsDroppedCounter exposes eduworld_analytics_events_dropped_total (tests of F080/F134 read it with testutil).
+func AnalyticsDroppedCounter() *prometheus.CounterVec { return analyticsDropped }

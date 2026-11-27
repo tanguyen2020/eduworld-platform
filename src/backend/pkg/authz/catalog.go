@@ -104,6 +104,7 @@ const (
 	PermPlatformUserRoleWrite                    Permission = "platform.user_role.write"
 	PermReportExport                             Permission = "report.export"
 	PermSchoolPeopleRead                         Permission = "school.people.read"
+	PermSchoolInstallerRead                      Permission = "school.installer.read"
 	PermSchoolSettingsRead                       Permission = "school.settings.read"
 	PermSchoolSettingsWrite                      Permission = "school.settings.write"
 	PermSocialClubApprove                        Permission = "social.club.approve"
@@ -225,6 +226,7 @@ var catalog = []Permission{
 	PermPlatformUserRoleWrite,
 	PermReportExport,
 	PermSchoolPeopleRead,
+	PermSchoolInstallerRead,
 	PermSchoolSettingsRead,
 	PermSchoolSettingsWrite,
 	PermSocialClubApprove,

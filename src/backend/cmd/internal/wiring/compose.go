@@ -19,10 +19,12 @@ var Modules = []string{identity.Name, learning.Name, game.Name, competition.Name
 
 // Composition is the result of Compose: the registered modules of the binary.
 type Composition struct {
-	Identity *identity.Module
-	Learning *learning.Module
-	Game     *game.Module
-	Server   *httpx.Server // core-api only
+	Identity    *identity.Module
+	Learning    *learning.Module
+	Game        *game.Module
+	Competition *competition.Module
+	Chat        *chat.Module
+	Server      *httpx.Server // core-api only
 }
 
 // Compose registers the five domain modules on r and wires their facades in process (BACKEND_DESIGN §3.3, OQ
@@ -106,7 +108,7 @@ func Compose(r *module.Registry) (*Composition, error) {
 		chi.Learning = f
 	}
 	cht.Wire(chi)
-	return &Composition{Identity: idm, Learning: lrn, Game: gam}, nil
+	return &Composition{Identity: idm, Learning: lrn, Game: gam, Competition: cmp, Chat: cht}, nil
 }
 
 // ComposeCoreAPI is Compose plus the public HTTP server of core-api.

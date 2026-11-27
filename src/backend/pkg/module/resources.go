@@ -39,15 +39,16 @@ type Worker struct {
 }
 
 type resources struct {
-	sqls    map[string]*sql.DB
-	nc      *nats.Conn
-	js      jetstream.JetStream
-	valkey  valkey.Client
-	workers []Worker
-	public  http.Handler
-	cores   map[string]*Core
-	decls   []Declaration
-	mounts  []namedMount
+	sqls          map[string]*sql.DB
+	nc            *nats.Conn
+	js            jetstream.JetStream
+	valkey        valkey.Client
+	workers       []Worker
+	public        http.Handler
+	cores         map[string]*Core
+	decls         []Declaration
+	consumerInfos []ConsumerInfo
+	mounts        []namedMount
 }
 
 // Config is the configuration of the binary (the getenv of bootstrap.Options, X_FILE secrets).

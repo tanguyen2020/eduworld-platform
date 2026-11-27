@@ -830,7 +830,11 @@ func (q Dashboards) GetPlatformSummary(ctx context.Context, in PlatformSummaryIn
 		}
 	}
 	excluded := []uuid.UUID{}
-	for _, id := range requested {
+	named := requested
+	if len(named) == 0 { // every tenant asked: every QA tenant is left out (F134-AC-09)
+		named = ts.qa
+	}
+	for _, id := range named {
 		if containsUUID(ts.qa, id) {
 			excluded = append(excluded, id)
 		}

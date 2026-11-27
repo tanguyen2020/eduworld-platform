@@ -583,6 +583,16 @@ func TestTenantAndPlatformSummary(t *testing.T) {
 	if len(r.items("cells")) != 0 || fmt.Sprint(r.body["excluded_tenant_ids"]) != "["+c.tenantB.String()+"]" {
 		t.Fatalf("QA tenant: %s", r.raw)
 	}
+	// F134-AC-09: every tenant asked → the QA tenant is left out (data written before the flag included) and listed.
+	r = must(t, c.do(t, http.MethodGet, "/admin/analytics/learning/summary?from=2026-12-01&to=2026-12-10", saDsh, nil, nil), http.StatusOK, "all tenants, B is QA")
+	for _, cell := range r.items("cells") {
+		if cell["tenant_id"] == c.tenantB.String() {
+			t.Fatalf("QA tenant counted: %s", r.raw)
+		}
+	}
+	if fmt.Sprint(r.body["excluded_tenant_ids"]) != "["+c.tenantB.String()+"]" {
+		t.Fatalf("excluded_tenant_ids of every tenant: %s", r.raw)
+	}
 	// Tenant roles on the platform route → 403.
 	for _, sub := range []string{taDash, adS} {
 		if r := c.do(t, http.MethodGet, p, sub, hdr{"X-Tenant-Id": ""}, nil); r.status != http.StatusForbidden {

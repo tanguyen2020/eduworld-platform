@@ -1,6 +1,7 @@
 package ids_test
 
 import (
+	"bytes"
 	"testing"
 	"time"
 
@@ -39,5 +40,24 @@ func TestTime(t *testing.T) {
 	ts, ok := ids.Time(id)
 	if !ok || ts.Before(before) || ts.After(time.Now().Add(time.Second)) {
 		t.Fatalf("Time(%s) = %v, %v", id, ts, ok)
+	}
+}
+
+func TestFloor(t *testing.T) {
+	base := time.Date(2026, 11, 20, 1, 2, 3, 4_000_000, time.UTC)
+	f := ids.Floor(base)
+	if f.Version() != 7 {
+		t.Fatalf("version %d", f.Version())
+	}
+	if got, _ := ids.Time(f); !got.Equal(base.Truncate(time.Millisecond)) {
+		t.Fatalf("time %v", got)
+	}
+	for i := 0; i < 100; i++ { // ids of the same millisecond or later compare ≥ ids.Floor(t)
+		id := ids.New()
+		at, _ := ids.Time(id)
+		lo, hi := ids.Floor(at), ids.Floor(at.Add(time.Millisecond))
+		if bytes.Compare(id[:], lo[:]) < 0 || bytes.Compare(hi[:], id[:]) <= 0 {
+			t.Fatalf("%s outside [ids.Floor(%v), ids.Floor(+1ms))", id, at)
+		}
 	}
 }

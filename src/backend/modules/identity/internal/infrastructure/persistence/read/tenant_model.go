@@ -44,7 +44,7 @@ func (m TenantModel) ListTenants(ctx context.Context, f read.TenantFilter) (out 
 		out = make([]dto.Tenant, 0, len(rows))
 		for _, r := range rows {
 			t := dto.Tenant{TenantID: r.ID, Code: r.Code, Name: r.Name, TenantType: r.TenantType, Status: r.Status,
-				CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt, Version: r.Version}
+				IsQA: r.IsQa, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt, Version: r.Version}
 			if r.KeycloakOrgAlias != nil {
 				t.Alias = *r.KeycloakOrgAlias
 			}
