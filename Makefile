@@ -316,7 +316,7 @@ test-anticheat: ## Unit tests of the anti-cheat harness against labelled stand-i
 	node scripts/specs/check-client-authoritative.mjs
 
 # ---------- code generation / checks ----------
-.PHONY: gen gen-check arch-check lint test test-integration test-contract
+.PHONY: gen gen-check arch-check lint test test-integration test-latency test-contract
 gen: ## Generate code: architecture rules from x-allowed-callers, problem codes from ProblemCode (later: ent, oapi-codegen)
 	$(GO) run ./tools/archgen
 	$(GO) generate ./pkg/problem
@@ -359,6 +359,11 @@ lint: ## gofmt, go vet, golangci-lint + generated depguard rules (MOD=<module> t
 RACE := $(if $(filter 1,$(shell go env CGO_ENABLED)),-race,)
 test: ## Unit tests (MOD=<module> to scope; -race when cgo is available)
 	$(GO) test $(RACE) -count=1 $(if $(MOD),./modules/$(MOD)/...,./...)
+
+# Latency budget tests (Test*LatencyBudget) without -race: the race detector instruments every memory access, so make
+# test does not assert wall-clock budgets under -race; CI (go.yml, job test) runs it for every module that has one (chat).
+test-latency: ## Latency budget tests without -race, e.g. moderation_pipeline_latency (MOD=<module> to scope)
+	$(GO) test -count=1 -run LatencyBudget $(if $(MOD),./modules/$(MOD)/...,./...)
 
 test-integration: ## Integration tests with testcontainers (Docker required)
 	$(GO) test -count=1 -tags integration $(if $(MOD),./modules/$(MOD)/...,./...)

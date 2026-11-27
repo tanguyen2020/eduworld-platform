@@ -91,6 +91,12 @@ jobs:
           echo "EW_PANDOC_CMD=docker run --rm -i --network none eduworld/media-tools:ci pandoc" >> "$GITHUB_ENV"
       - name: test
         run: make test MOD=${{ matrix.module }}
+      # make test runs with -race, which distorts wall-clock timings, so Test*LatencyBudget only asserts its budget in
+      # a build without the race detector: moderation_pipeline_latency (F116-AC-10, p95 < 20 ms, p99 < 50 ms) is
+      # enforced here. A module that adds a latency budget test joins the condition.
+      - name: latency budget (no -race)
+        if: matrix.module == 'chat'
+        run: make test-latency MOD=${{ matrix.module }}
       - name: test-integration
         run: make test-integration MOD=${{ matrix.module }}
       - name: migrate-lint

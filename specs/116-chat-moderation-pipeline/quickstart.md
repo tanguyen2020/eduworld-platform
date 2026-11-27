@@ -36,7 +36,8 @@
 ```bash
 make test MOD=chat
 make test-integration MOD=chat
-go -C src/backend test -bench=Pipeline ./modules/chat/tests/bench/...   # p95 theo moderation_pipeline_latency
+make test-latency MOD=chat                                                # p95/p99 theo moderation_pipeline_latency (không -race)
+go -C src/backend test -run XXX -bench=Pipeline ./modules/chat/tests/bench/...  # ns/op, allocs/op
 go -C src/backend test ./modules/chat/tests/static/...                  # không cờ tắt trong code/env, không từ thật trong seed
 ```
 

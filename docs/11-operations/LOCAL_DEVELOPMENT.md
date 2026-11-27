@@ -428,6 +428,7 @@ postman collection run specs/postman/eduworld-api.postman_collection.json \
 | `make lint [MOD=<module>]` | gofmt, golangci-lint, go-arch-lint (tầng Clean Architecture), gdlint, eslint, spectral |
 | `make arch-check` | Ranh giới module trên toàn repository: không import `internal/` của module khác, chỉ import `src/backend/modules/<khác>/api` khi có trong `x-allowed-callers`, `src/backend/cmd/` chỉ nối module qua `Register` (ADR-0074 mục 1) |
 | `make test [MOD=<module>]` | Unit test |
+| `make test-latency [MOD=<module>]` | Test ngân sách độ trễ `Test*LatencyBudget` không `-race` (CI job `test (chat)`), xem [TEST_STRATEGY §3](../12-project/TEST_STRATEGY.md#3-tooling) |
 | `make test-integration [MOD=<module>]` | Integration (testcontainers: PostgreSQL, NATS, Valkey) |
 | `make test-contract` | Facade test: module đích hiện thực đúng interface sinh từ spec internal (lỗi ánh xạ sang `problem`, `maxLength`, ngữ cảnh `src/backend/pkg/modcall`), kèm test của mọi module trong `x-allowed-callers` dùng facade đó; chạy trong tiến trình, không HTTP |
 | `make test-e2e` | E2E toàn hệ thống trên compose |
