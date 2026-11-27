@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
 
 // Admin API calls of the portal account setup and password reset (ADR-0091 §3, F012 US8), on the same
@@ -146,6 +147,7 @@ func (a *Admin) callRaw(ctx context.Context, op, method, path string, payload []
 		}
 		return res, nil
 	})
+	observability.ObserveRequest("identity", observability.IntegrationKeycloakAdmin, err, port.ErrKCNotFound, port.ErrKCConflict)
 	if err != nil {
 		span.SetStatus(codes.Error, op)
 		span.SetAttributes(attribute.String("error.kind", errKind(err)))

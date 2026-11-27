@@ -513,10 +513,14 @@ func (h Attempts) graded(ctx context.Context, a attempt.Attempt, r activity.Resu
 	if err := h.learningEvent(ctx, a, EventActivityGraded, "grd:"+evaluationID.String(), at, a.ObjectiveIDs, "system", gradedPayload); err != nil {
 		return err
 	}
+	rapid, err := h.rapidGuessCount(ctx, a.ID)
+	if err != nil {
+		return err
+	}
 	if err := h.publish(ctx, a, EventActivitySubmitted, map[string]any{"attempt_id": a.ID, "student_id": a.StudentID, "school_id": a.SchoolID,
 		"activity_id": nullableID(a.ActivityID), "activity_type": a.ActivityType, "content_version_id": a.SourceVersionID, "mode": a.Mode,
 		"context_type": a.ContextType, "context_id": a.ContextID, "status": string(attempt.StatusGraded), "score": *a.Score,
-		"max_score": *a.MaxScore, "correct_count": correct, "item_count": len(a.Items), "hints_used": 0, "rapid_guess_count": 0,
+		"max_score": *a.MaxScore, "correct_count": correct, "item_count": len(a.Items), "hints_used": 0, "rapid_guess_count": rapid,
 		"duration_ms": *a.DurationMS, "submit_reason": *a.SubmitReason, "objective_ids": nonNilUUIDs(a.ObjectiveIDs),
 		"assignment_id": assignmentOf(a)}); err != nil {
 		return err

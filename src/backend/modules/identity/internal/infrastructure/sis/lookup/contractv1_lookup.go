@@ -79,7 +79,7 @@ func (a *Adapter) guard(id uuid.UUID) failsafe.Executor[map[string]any] {
 		delay = DefaultBreakerDelay
 	}
 	cb := observability.ObserveCircuit(circuitbreaker.NewBuilder[map[string]any](), "identity", observability.IntegrationSIS).HandleIf(counted).WithFailureThreshold(uint(th)).WithDelay(delay).Build()
-	bh := bulkhead.NewBuilder[map[string]any](uint(n)).Build() // no wait: a full bulkhead refuses at once
+	bh := observability.ObserveBulkhead(bulkhead.NewBuilder[map[string]any](uint(n)), "identity", observability.IntegrationSIS).Build() // no wait: a full bulkhead refuses at once
 	g := failsafe.With[map[string]any](cb, bh)
 	a.guards[id] = g
 	return g
@@ -115,6 +115,7 @@ func (a *Adapter) Lookup(ctx context.Context, connectionID uuid.UUID, school, us
 		}
 		return rec, err
 	})
+	observeLookup(rec, err)
 	switch {
 	case errors.Is(err, bulkhead.ErrFull), errors.Is(err, circuitbreaker.ErrOpen):
 		return nil, ErrThrottled
@@ -122,4 +123,17 @@ func (a *Adapter) Lookup(ctx context.Context, connectionID uuid.UUID, school, us
 		return nil, port.ErrSisBadResponse
 	}
 	return rec, err
+}
+
+// observeLookup counts one lookup in eduworld_external_client_requests_total{module="identity", integration="sis"}:
+// "student not found" is an answer of the SIS (ok), the lookup timeout is a timeout, a record without
+// student_external_id an error of the SIS.
+func observeLookup(rec map[string]any, err error) {
+	switch {
+	case errors.Is(err, port.ErrSisLookupTimeout):
+		err = context.DeadlineExceeded
+	case err == nil && sis.Str(rec, "student_external_id") == "":
+		err = port.ErrSisBadResponse
+	}
+	observability.ObserveRequest("identity", observability.IntegrationSIS, err, port.ErrSisLookupNotFound)
 }

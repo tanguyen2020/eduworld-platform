@@ -125,7 +125,7 @@ func NewPortalTokens(cfg PortalConfig, client *http.Client) (*PortalTokens, erro
 	}
 	cb := observability.ObserveCircuit(circuitbreaker.NewBuilder[tokenResult](), "identity", observability.IntegrationKeycloakToken).HandleIf(transient).
 		WithFailureRateThreshold(cfg.FailureRatio, 10, time.Minute).WithDelay(30 * time.Second).WithSuccessThreshold(2).Build()
-	rp := retrypolicy.NewBuilder[tokenResult]().HandleIf(transient).
+	rp := observability.ObserveRetry(retrypolicy.NewBuilder[tokenResult](), "identity", observability.IntegrationKeycloakToken).HandleIf(transient).
 		WithMaxRetries(cfg.MaxRetries).WithBackoff(100*time.Millisecond, time.Second).ReturnLastFailure().Build()
 	return &PortalTokens{cfg: cfg, http: client, once: failsafe.With[tokenResult](cb), retry: failsafe.With[tokenResult](rp, cb)}, nil
 }
@@ -239,6 +239,7 @@ func (p *PortalTokens) post(ctx context.Context, op, url string, form []byte, ex
 		}
 		return r, nil
 	})
+	observability.ObserveRequest("identity", observability.IntegrationKeycloakToken, err)
 	if err != nil {
 		span.SetStatus(codes.Error, op)
 		span.SetAttributes(attribute.String("error.kind", errKind(err)))

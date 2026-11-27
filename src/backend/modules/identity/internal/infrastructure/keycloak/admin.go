@@ -105,7 +105,7 @@ func New(cfg Config, client *http.Client) (*Admin, error) {
 	}
 	cb := observability.ObserveCircuit(circuitbreaker.NewBuilder[result](), "identity", observability.IntegrationKeycloakAdmin).HandleIf(transient).
 		WithFailureRateThreshold(cfg.FailureRatio, 10, time.Minute).WithDelay(30 * time.Second).WithSuccessThreshold(2).Build()
-	rp := retrypolicy.NewBuilder[result]().HandleIf(transient).
+	rp := observability.ObserveRetry(retrypolicy.NewBuilder[result](), "identity", observability.IntegrationKeycloakAdmin).HandleIf(transient).
 		WithMaxRetries(cfg.MaxRetries).WithBackoff(100*time.Millisecond, time.Second).ReturnLastFailure().Build()
 	return &Admin{
 		cfg:      cfg,
@@ -204,6 +204,7 @@ func (a *Admin) call(ctx context.Context, op, method, path string, body, out any
 		}
 		return res, nil
 	})
+	observability.ObserveRequest("identity", observability.IntegrationKeycloakAdmin, err, port.ErrKCNotFound, port.ErrKCConflict)
 	if err != nil {
 		if !errors.Is(err, port.ErrKCNotFound) {
 			span.SetStatus(codes.Error, op)

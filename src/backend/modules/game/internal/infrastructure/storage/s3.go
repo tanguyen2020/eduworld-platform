@@ -69,7 +69,7 @@ func New(cfg Config, client *http.Client) (*S3, error) {
 	transient := func(_ result, err error) bool { return errors.Is(err, errTransient) }
 	cb := observability.ObserveCircuit(circuitbreaker.NewBuilder[result](), "game", observability.IntegrationS3).HandleIf(transient).WithFailureThresholdRatio(5, 10).
 		WithDelay(30 * time.Second).Build()
-	rp := retrypolicy.NewBuilder[result]().HandleIf(transient).WithMaxRetries(2).
+	rp := observability.ObserveRetry(retrypolicy.NewBuilder[result](), "game", observability.IntegrationS3).HandleIf(transient).WithMaxRetries(2).
 		WithBackoff(100*time.Millisecond, time.Second).ReturnLastFailure().Build()
 	return &S3{cfg: cfg, base: u, http: client, exec: failsafe.With[result](rp, cb), clock: time.Now}, nil
 }
@@ -111,6 +111,7 @@ func (s *S3) Put(ctx context.Context, bucket, key string, body io.Reader, size i
 	seeker, retryable := body.(io.ReadSeeker)
 	if !retryable {
 		resp, err := s.once(ctx, http.MethodPut, bucket, key, body, size, hdr)
+		observability.ObserveRequest("game", observability.IntegrationS3, err, port.ErrObjectNotFound)
 		if err != nil {
 			return err
 		}
@@ -124,6 +125,7 @@ func (s *S3) Put(ctx context.Context, bucket, key string, body io.Reader, size i
 		resp, err := s.once(ctx, http.MethodPut, bucket, key, seeker, size, hdr) //nolint:bodyclose // closed by Put after the retries
 		return result{resp: resp}, err
 	})
+	observability.ObserveRequest("game", observability.IntegrationS3, err, port.ErrObjectNotFound)
 	if err != nil {
 		return err
 	}
@@ -139,6 +141,7 @@ func (s *S3) do(ctx context.Context, method, bucket, key string) (*http.Response
 		resp, err := s.once(ctx, method, bucket, key, nil, 0, nil) //nolint:bodyclose // closed by the caller of do
 		return result{resp: resp}, err
 	})
+	observability.ObserveRequest("game", observability.IntegrationS3, err, port.ErrObjectNotFound)
 	return r.resp, err
 }
 

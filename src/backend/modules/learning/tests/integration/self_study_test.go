@@ -158,6 +158,11 @@ func TestSelfStudyPracticeHintsRapidGuess(t *testing.T) {
 	if n, s := metricSum(t, observability.AnswersTooFast(), practice)-tooFastN, histogramSum(t, observability.AnswersTooFast(), practice)-tooFastSum; n != 1 || s < 0.333 || s > 0.334 {
 		t.Fatalf("eduworld_answers_too_fast_ratio: +%v observations, +%v sum; want 1, 1/3", n, s)
 	}
+	// ACTIVITY_ENGINE §11.1: activity.submitted carries the real rapid_guess_count (1 flagged scored answer), not 0.
+	if n := count(ctx, t, c.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'activity.submitted'
+		AND envelope->'payload'->>'attempt_id' = $1 AND (envelope->'payload'->>'rapid_guess_count')::int = 1`, id); n != 1 {
+		t.Fatalf("outbox activity.submitted with rapid_guess_count 1: %d", n)
+	}
 	// AC-18: the rapid guess is no evidence (2 of 3 scored answers).
 	k.gradedOnly(ctx, t, id)
 	if m := c.masteryOf(ctx, t, c.users[hsAn].UserID, s.qc.lo); m.evidence != 2 {

@@ -103,14 +103,17 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 	if err != nil {
 		return fmt.Errorf("docker api %s %s: %w", method, path, err)
 	}
-	defer resp.Body.Close()
-	b, _ := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
+	defer func() { _ = resp.Body.Close() }() // read fully below; a close error after the read changes nothing
+	b, readErr := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
 	if resp.StatusCode/100 != 2 {
-		msg := string(b)
+		msg := string(b) // what could be read: the status is the error the callers check
 		if len(msg) > 256 {
 			msg = msg[:256]
 		}
 		return &Error{Method: method, Path: path, Status: resp.StatusCode, Body: msg}
+	}
+	if readErr != nil {
+		return fmt.Errorf("docker api %s %s: read body: %w", method, path, readErr)
 	}
 	if out != nil {
 		if err := json.Unmarshal(b, out); err != nil {

@@ -5,7 +5,7 @@
 ## Triệu chứng
 
 - Thông báo: _Chat cannot publish to JetStream (errors above 5% or NATS quorum lost)_
-- Điều kiện (MONITORING §5): `rate(eduworld_chat_jetstream_publish_errors_total[5m]) > 0.05 * rate(eduworld_chat_messages_total[5m])` trong 5' hoặc NATS cluster mất quorum
+- Điều kiện (MONITORING §5): `rate(eduworld_chat_jetstream_publish_errors_total[5m]) > 0.05 * rate(eduworld_chat_messages_total[5m])` trong 5' hoặc NATS cluster mất quorum (`max(gnatsd_varz_routes{job="nats"}) < 1`: `nats-1` — node duy nhất `nats-exporter` scrape — không còn route tới node nào)
 
 ## Tác động
 
@@ -14,6 +14,7 @@ Chat không gửi được (`CHAT_TEMPORARILY_UNAVAILABLE`).
 ## Chẩn đoán
 
 1. Cụm NATS (3 node), `nats_*`, lỗi publish theo `reason`
+2. Vế quorum: `gnatsd_varz_routes{job="nats"}` (số route của `nats-1`; bình thường > 0, với route pool có thể là bội số của 2 peer) và `http://nats-1:8222/routez` — route mất dần theo node nào. Exporter chỉ nhìn `nats-1`: khi `nats-1` chết series vắng và vế này không bắn; xem `/healthz` của `nats-2`/`nats-3` và [NatsClusterDown](NatsClusterDown.md)
 
 ## Xử lý
 

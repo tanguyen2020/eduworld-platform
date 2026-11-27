@@ -68,7 +68,7 @@ func New(cfg Config, client *http.Client) (*S3, error) {
 	transient := func(_ result, err error) bool { return errors.Is(err, errTransient) }
 	cb := observability.ObserveCircuit(circuitbreaker.NewBuilder[result](), "chat", observability.IntegrationS3).HandleIf(transient).WithFailureThresholdRatio(5, 10).
 		WithDelay(30 * time.Second).Build()
-	rp := retrypolicy.NewBuilder[result]().HandleIf(transient).WithMaxRetries(2).
+	rp := observability.ObserveRetry(retrypolicy.NewBuilder[result](), "chat", observability.IntegrationS3).HandleIf(transient).WithMaxRetries(2).
 		WithBackoff(100*time.Millisecond, time.Second).ReturnLastFailure().Build()
 	return &S3{cfg: cfg, base: u, http: client, exec: failsafe.With[result](rp, cb), clock: time.Now}, nil
 }
@@ -144,6 +144,7 @@ func (s *S3) do(ctx context.Context, method, key string) (*http.Response, error)
 		resp.Body = &cancelOnClose{ReadCloser: resp.Body, cancel: cancel}
 		return result{resp: resp}, nil
 	})
+	observability.ObserveRequest("chat", observability.IntegrationS3, err, port.ErrObjectNotFound)
 	return r.resp, err
 }
 

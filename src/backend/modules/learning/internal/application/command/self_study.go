@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"slices"
 	"time"
 
@@ -269,4 +270,15 @@ func (h Attempts) tooFastRatio(ctx context.Context, a attempt.Attempt) (*float64
 	}
 	r := float64(rapid) / float64(scored)
 	return &r, nil
+}
+
+// rapidGuessCount is activity.submitted.rapid_guess_count (ACTIVITY_ENGINE §11.1): the scored answers of the attempt
+// flagged rapid_guess. Without SelfStudy (F030 behaviour) no answer is ever flagged, so the count is 0 from the same
+// store query.
+func (h Attempts) rapidGuessCount(ctx context.Context, attemptID uuid.UUID) (int, error) {
+	_, rapid, err := h.Store.ScoredAnswerCounts(ctx, attemptID)
+	if err != nil {
+		return 0, fmt.Errorf("rapid guess count: %w", err)
+	}
+	return rapid, nil
 }

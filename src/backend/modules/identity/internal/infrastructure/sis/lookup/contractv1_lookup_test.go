@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
@@ -17,6 +18,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/sis/contractv1client"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/sis/lookup"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/tests/fakesis"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
 
 type secrets map[string]string // test double of port.SecretStore
@@ -52,6 +54,10 @@ func newEnv(t *testing.T, timeout time.Duration, concurrency int, servers ...*fa
 // F017-AC-22, AC-23: one call within the timeout, no retry; not found; timeout and 5xx are temporary;
 // unsupported connections are never called (TC-SIS-102, TC-SIS-104, TC-SIS-107).
 func TestLookup(t *testing.T) {
+	sisReqT := func(o string) float64 {
+		return testutil.ToFloat64(observability.ExternalRequests().WithLabelValues("identity", observability.IntegrationSIS, o))
+	}
+	ok0, err0, to0 := sisReqT(observability.OutcomeOK), sisReqT(observability.OutcomeError), sisReqT(observability.OutcomeTimeout)
 	s := fakesis.New() // MOCK
 	defer s.Close()
 	s.Lock()
@@ -82,6 +88,11 @@ func TestLookup(t *testing.T) {
 	if _, err := e.adapter.Lookup(ctx, ids[0], "TH-DEMO-001", "hs.an.3a"); !errors.Is(err, port.ErrSisLookupTimeout) || time.Since(start) > 900*time.Millisecond {
 		t.Fatalf("timeout: %v after %v", err, time.Since(start))
 	}
+	// MONITORING §3: found + not found are ok, the 503 an error, the slow SIS a timeout; unsupported lookups below make
+	// no call and are not counted.
+	if ok, e5, to := sisReqT(observability.OutcomeOK)-ok0, sisReqT(observability.OutcomeError)-err0, sisReqT(observability.OutcomeTimeout)-to0; ok != 2 || e5 != 1 || to != 1 {
+		t.Fatalf("requests: ok += %v, error += %v, timeout += %v; want 2, 1, 1", ok, e5, to)
+	}
 	// Unsupported: no student_lookup capability, or not active → no network call.
 	n = s.CallsOf(fakesis.OpLookup)
 	e.conns[ids[0]].Capabilities = []string{sis.CapFullSync}
@@ -92,6 +103,9 @@ func TestLookup(t *testing.T) {
 	e.conns[ids[0]].State.Status = sis.StatusPaused
 	if _, err := e.adapter.Lookup(ctx, ids[0], "TH-DEMO-001", "hs.an.3a"); !errors.Is(err, port.ErrSisLookupUnsupported) || s.CallsOf(fakesis.OpLookup) != n {
 		t.Fatalf("paused: %v, calls %d → %d", err, n, s.CallsOf(fakesis.OpLookup))
+	}
+	if ok := sisReqT(observability.OutcomeOK) - ok0; ok != 2 {
+		t.Fatalf("unsupported lookups counted: ok += %v", ok)
 	}
 }
 
@@ -111,6 +125,13 @@ func TestLookupBulkheadAndBreaker(t *testing.T) {
 	slow.Unlock()
 	e, ids := newEnv(t, 2*time.Second, 2, slow, fast)
 	ctx := context.Background()
+	sisReq := func(o string) float64 {
+		return testutil.ToFloat64(observability.ExternalRequests().WithLabelValues("identity", observability.IntegrationSIS, o))
+	}
+	rejected := func() float64 {
+		return testutil.ToFloat64(observability.ExternalBulkheadRejected().WithLabelValues("identity", observability.IntegrationSIS))
+	}
+	full0, rej0, open0 := sisReq(observability.OutcomeBulkheadFull), rejected(), sisReq(observability.OutcomeCircuitOpen)
 	var wg sync.WaitGroup
 	var throttled, ok atomic.Int32
 	for range 6 {
@@ -135,6 +156,10 @@ func TestLookupBulkheadAndBreaker(t *testing.T) {
 	if ok.Load() != 2 || throttled.Load() != 4 || slow.CallsOf(fakesis.OpLookup) != 2 {
 		t.Fatalf("bulkhead: ok %d throttled %d calls %d (want 2/4/2)", ok.Load(), throttled.Load(), slow.CallsOf(fakesis.OpLookup))
 	}
+	// MONITORING §3: the 4 refused lookups in eduworld_external_client_bulkhead_rejected_total and as outcome bulkhead_full.
+	if r, o := rejected()-rej0, sisReq(observability.OutcomeBulkheadFull)-full0; r != 4 || o != 4 {
+		t.Fatalf("bulkhead metrics: rejected += %v, bulkhead_full += %v; want 4, 4", r, o)
+	}
 	// Breaker: 3 consecutive failures open the circuit of this connection only.
 	slow.Lock()
 	slow.Delay[fakesis.OpLookup] = 0
@@ -146,6 +171,9 @@ func TestLookupBulkheadAndBreaker(t *testing.T) {
 	calls := slow.CallsOf(fakesis.OpLookup)
 	if _, err := e.adapter.Lookup(ctx, ids[0], "TH-DEMO-001", "hs.an.3a"); !errors.Is(err, lookup.ErrThrottled) || slow.CallsOf(fakesis.OpLookup) != calls {
 		t.Fatalf("open circuit: %v", err)
+	}
+	if d := sisReq(observability.OutcomeCircuitOpen) - open0; d != 1 {
+		t.Fatalf("circuit_open += %v, want 1", d)
 	}
 	if _, err := e.adapter.Lookup(ctx, ids[1], "TH-DEMO-001", "hs.an.3a"); err != nil {
 		t.Fatalf("other connection: %v", err)

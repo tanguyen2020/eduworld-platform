@@ -264,6 +264,8 @@ tests:
               description: Check the lag of the chat.notify_* consumers and the Valkey publish of ew:rt:user:<id>.
               runbook_url: docs/11-operations/runbooks/NotificationDeliverySlow.md
               source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  # Real scrape topology: one nats-exporter target (job nats) scraping nats-1 only; gnatsd_varz_routes counts the
+  # routes of nats-1 (2 peers × route pool of 3 = 6).
   - name: ChatJetStreamUnavailable
     interval: 1m
     input_series:
@@ -271,12 +273,10 @@ tests:
         values: 0x10 0+10x20
       - series: eduworld_chat_messages_total{channel_type="match",kind="text",decision="allowed"}
         values: 0+100x30
-      - series: up{job="nats",instance="nats-1"}
+      - series: up{job="nats",instance="nats-exporter:7777"}
         values: 1x30
-      - series: up{job="nats",instance="nats-2"}
-        values: 1x30
-      - series: up{job="nats",instance="nats-3"}
-        values: 1x30
+      - series: gnatsd_varz_routes{job="nats",instance="nats-exporter:7777",server_id="nats-1"}
+        values: 6x30
     alert_rule_test:
       - eval_time: 8m
         alertname: ChatJetStreamUnavailable
@@ -291,15 +291,34 @@ tests:
               summary: Chat cannot publish to JetStream (errors above 5% or NATS quorum lost)
               runbook_url: docs/11-operations/runbooks/ChatJetStreamUnavailable.md
               source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  # Regression of the former `count(up{job="nats"} == 1) < 2`, always true with the single exporter target: a healthy
+  # cluster with chat traffic and no publish error never fires.
+  - name: ChatJetStreamUnavailable healthy cluster single exporter
+    interval: 1m
+    input_series:
+      - series: eduworld_chat_jetstream_publish_errors_total{reason="timeout"}
+        values: 0x30
+      - series: eduworld_chat_messages_total{channel_type="match",kind="text",decision="allowed"}
+        values: 0+100x30
+      - series: up{job="nats",instance="nats-exporter:7777"}
+        values: 1x30
+      - series: gnatsd_varz_routes{job="nats",instance="nats-exporter:7777",server_id="nats-1"}
+        values: 6x30
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ChatJetStreamUnavailable
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: ChatJetStreamUnavailable
+        exp_alerts: []
+  # nats-1 loses every route (nats-2 and nats-3 down or partitioned away): no quorum for the R3 streams.
   - name: ChatJetStreamUnavailable NATS quorum lost
     interval: 1m
     input_series:
-      - series: up{job="nats",instance="nats-1"}
+      - series: up{job="nats",instance="nats-exporter:7777"}
         values: 1x30
-      - series: up{job="nats",instance="nats-2"}
-        values: 1x10 0x20
-      - series: up{job="nats",instance="nats-3"}
-        values: 1x10 0x20
+      - series: gnatsd_varz_routes{job="nats",instance="nats-exporter:7777",server_id="nats-1"}
+        values: 6x10 3x2 0x18
     alert_rule_test:
       - eval_time: 8m
         alertname: ChatJetStreamUnavailable
@@ -314,6 +333,22 @@ tests:
               summary: Chat cannot publish to JetStream (errors above 5% or NATS quorum lost)
               runbook_url: docs/11-operations/runbooks/ChatJetStreamUnavailable.md
               source: docs/11-operations/MONITORING.md#5-alert-rules--confirmed
+  # One peer down (nats-1 keeps one peer: quorum 2/3), then nats-1 itself down (series absent; nats-2 + nats-3 keep
+  # the quorum): the quorum clause does not fire.
+  - name: ChatJetStreamUnavailable one node down
+    interval: 1m
+    input_series:
+      - series: up{job="nats",instance="nats-exporter:7777"}
+        values: 1x30
+      - series: gnatsd_varz_routes{job="nats",instance="nats-exporter:7777",server_id="nats-1"}
+        values: 6x5 3x10 _x15
+    alert_rule_test:
+      - eval_time: 12m
+        alertname: ChatJetStreamUnavailable
+        exp_alerts: []
+      - eval_time: 28m
+        alertname: ChatJetStreamUnavailable
+        exp_alerts: []
   - name: ChatPersistLagHigh
     interval: 1m
     input_series:

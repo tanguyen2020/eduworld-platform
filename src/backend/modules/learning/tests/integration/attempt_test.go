@@ -227,6 +227,13 @@ func TestAttemptRespondSubmitReview(t *testing.T) {
 			t.Fatalf("outbox %s: %d", typ, n)
 		}
 	}
+	// activity.submitted.rapid_guess_count is the number of scored answers of the attempt flagged rapid_guess (counted,
+	// not a constant): it equals the scored rapid_guess answers that attempt_answers holds for the attempt.
+	rapid := count(ctx, t, c.platform, `SELECT count(*) FROM assessment.attempt_answers WHERE attempt_id = $1 AND is_scored AND rapid_guess`, id)
+	if n := count(ctx, t, c.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'activity.submitted'
+		AND envelope->'payload'->>'attempt_id' = $1 AND (envelope->'payload'->>'rapid_guess_count')::int = $2`, id, rapid); n != 1 {
+		t.Fatalf("outbox activity.submitted with rapid_guess_count %d (scored rapid answers): %d", rapid, n)
+	}
 	// AC-15: the review after grading.
 	rv := must(t, c.do(t, http.MethodGet, "/learning/activity-attempts/"+id+"/review", hsAn, nil, nil), http.StatusOK, "review")
 	ri := rv.items("items")

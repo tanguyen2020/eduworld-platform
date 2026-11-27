@@ -115,10 +115,15 @@ groups:
   # Chat over NATS JetStream (ADR-0035) and the gameplay chat purge (ADR-0033).
   - name: chat-delivery
     rules:
+      # Quorum clause: the stacks run ONE nats-exporter (job nats) that scrapes only nats-1 (-routez/-varz of
+      # http://nats-1:8222), so `up{job="nats"}` is a single target and says nothing about the cluster. nats-1 with no
+      # route to any peer (gnatsd_varz_routes, any route pool size) means at most one node in its cluster: R3 streams have
+      # no quorum. nats-1 itself down leaves the series absent and does not fire (nats-2 + nats-3 keep the quorum); nats-1
+      # plus another node down is caught by the publish-error clause, the whole cluster by NatsClusterDown.
       - alert: ChatJetStreamUnavailable
         expr: |
           sum(rate(eduworld_chat_jetstream_publish_errors_total[5m])) > 0.05 * sum(rate(eduworld_chat_messages_total[5m]))
-          or on() count(up{job="nats"} == 1) < 2
+          or on() max(gnatsd_varz_routes{job="nats"}) < 1
         for: 5m
         labels: { severity: critical, module: chat }
         annotations:

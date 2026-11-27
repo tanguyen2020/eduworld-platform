@@ -120,6 +120,13 @@
 - [x] T047 Alert `NatsClusterDown`, `PatroniSwitchover` (MONITORING §5) + runbook + ca `promtool` bắn/không bắn; deploy label job `patroni` cho `pg-N` (staging, production) — file: `deploy/observability/prometheus/rules/{async,datastore}.yaml`
 - [x] T048 Anti-cheat ANTI_CHEAT §10: `eduworld_answers_too_fast_ratio{mode}` (learning, khi học sinh nộp attempt) và `eduworld_matches_voided_total{mode}` (competition, series 0; use case vô hiệu trận thuộc feature xử lý vi phạm sau); sửa Spectral `array-items` của `MatchingResponse.pairs` — file: `src/backend/modules/learning/internal/infrastructure/observability/attempt_metrics.go` — `TestAnswersTooFastRatio`, `TestMatchesVoidedMetric`, integration `TestSelfStudyPracticeHintsRapidGuess` (1 rapid / 3 câu tính điểm → +1 quan sát, tổng 1/3); Spectral 0 lỗi, oasdiff 0 breaking
 
+### Follow-up 2026-11-27 — obsfix 2
+
+- [x] T049 [P] Phát `eduworld_external_client_requests_total{module,integration,outcome}`, `eduworld_external_client_retries_total`, `eduworld_external_client_bulkhead_rejected_total` (MONITORING §3) — file: `src/backend/pkg/observability/external.go` — `ObserveRequest`/`ObserveRetry`/`ObserveBulkhead` gắn vào 7 adapter (S3 ×4 module, Keycloak Admin, Keycloak token, SIS lookup), series 0 từ khi dựng; test `pkg/observability/external_test.go` (`TestExternalOutcome`, `TestObserveRequest`, `TestObserveRetry`, `TestObserveBulkhead`), `identity/.../storage/s3_test.go` `TestExternalClientMetrics`, `keycloak/admin_test.go` `TestRetries`, `sis/lookup` `TestLookup`/`TestLookupBulkheadAndBreaker`
+- [x] T050 Vế quorum của `ChatJetStreamUnavailable` theo topology scrape thật (một `nats-exporter` scrape `nats-1`): `max(gnatsd_varz_routes{job="nats"}) < 1` thay `count(up{job="nats"} == 1) < 2` (luôn đúng) — file: `deploy/observability/prometheus/rules/chat.yaml` — 4 ca `promtool` trong `tests/chat.test.yaml` (bắn: lỗi publish, mất route; không bắn: cụm khỏe một exporter, một node chết rồi `nats-1` chết)
+- [x] T051 `activity.submitted.rapid_guess_count` thật (module learning, port `ScoredAnswerCounts`) — file: `src/backend/modules/learning/internal/application/command/attempts.go` — unit `TestRapidGuessCount`; integration `TestSelfStudyPracticeHintsRapidGuess` (= 1), `TestAttemptRespondSubmitReview` (= số câu tính điểm `rapid_guess` trong `attempt_answers`)
+- [x] T052 2 lỗi errcheck golangci của `tools/ops-scheduler` — file: `src/backend/tools/ops-scheduler/internal/dockerapi/client.go`, `internal/scaler/scaler_test.go`
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 (cần Prometheus/Alertmanager của US1) → US3 → US4 → Polish.

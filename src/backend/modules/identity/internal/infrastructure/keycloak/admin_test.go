@@ -17,6 +17,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
 
 // fakeKC is a minimal Keycloak Admin API (Keycloak 26 paths) recording requests.
@@ -225,12 +226,23 @@ func TestRetries(t *testing.T) {
 	f := newFake()
 	a := newAdmin(t, f)
 	ctx := context.Background()
+	kcReq := func(o string) float64 {
+		return testutil.ToFloat64(observability.ExternalRequests().WithLabelValues("identity", observability.IntegrationKeycloakAdmin, o))
+	}
+	kcRetries := func() float64 {
+		return testutil.ToFloat64(observability.ExternalRetries().WithLabelValues("identity", observability.IntegrationKeycloakAdmin))
+	}
+	ok0, err0, r0 := kcReq(observability.OutcomeOK), kcReq(observability.OutcomeError), kcRetries()
 	f.failNext.Store(2)
 	if err := a.LogoutUser(ctx, "u1"); err != nil {
 		t.Fatalf("logout after 2× 503: %v", err)
 	}
 	if n := len(f.calls); n != 3 {
 		t.Fatalf("calls = %d, want 3 (2 retries)", n)
+	}
+	// MONITORING §3: one logical call (ok) and its 2 retries.
+	if d, r := kcReq(observability.OutcomeOK)-ok0, kcRetries()-r0; d != 1 || r != 2 {
+		t.Fatalf("external client metrics: ok += %v, retries += %v; want 1, 2", d, r)
 	}
 	f.failNext.Store(5)
 	if err := a.LogoutUser(ctx, "u1"); err == nil || errors.Is(err, port.ErrKCNotFound) {
@@ -248,6 +260,10 @@ func TestRetries(t *testing.T) {
 	f.calls = nil
 	if _, err := a.call(ctx, "bad", http.MethodGet, "/bad", nil, nil, true); !errors.Is(err, errClient) || len(f.calls) != 1 {
 		t.Fatalf("400: %v after %d calls", err, len(f.calls))
+	}
+	// Exhausted retries, the create user that is not retried and the 400 are 3 failed calls.
+	if d := kcReq(observability.OutcomeError) - err0; d != 3 {
+		t.Fatalf("external client error += %v, want 3", d)
 	}
 }
 
