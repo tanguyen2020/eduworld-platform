@@ -137,6 +137,7 @@ const PermPlatformUserManage Permission
 const PermPlatformUserMerge Permission
 const PermPlatformUserRoleWrite Permission
 const PermReportExport Permission
+const PermSchoolInstallerRead Permission
 const PermSchoolPeopleRead Permission
 const PermSchoolSettingsRead Permission
 const PermSchoolSettingsWrite Permission
