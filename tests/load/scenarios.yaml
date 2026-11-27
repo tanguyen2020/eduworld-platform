@@ -1,0 +1,245 @@
+# Load scenarios of F132 (US1, F132-AC-01…07): one entry per TC-PERF of TEST_STRATEGY §8.2 → tool, script, load,
+# duration and pass criteria. This file is the source of the k6 thresholds (tests/load/k6/lib/thresholds.js reads
+# tests/load/k6/scenarios.gen.json, rendered by `node scripts/perf/render-scenarios.mjs`) and of the Prometheus checks
+# of scripts/perf/run.sh. Every number sits next to the name of its parameter/NFR; the owner document holds the value
+# (AGENTS R33) — change it there, then here, in the same MR.
+#
+# k6 thresholds use tags set by tests/load/k6/lib/auth.js: kind = read|write|login|session|refresh|dashboard|search,
+# name = operationId. Prometheus checks run over the run window [start, end] against the staging Prometheus (F131);
+# `$window` is replaced by the run duration, `$run` by the run id.
+version: 1
+
+parameters:
+  target_ccu:            { value: 10000, owner: docs/00-overview/CONFIG_DEFAULTS.md, ref: NFR-SCAL-002 }
+  login_capacity_peak_rps: { value: 100, owner: docs/09-identity/KEYCLOAK_SSO.md, ref: "login_capacity_target (peak 100 password logins/s)" }
+  login_capacity_storm:  { value: 5000, unit: logins/10 min, owner: docs/09-identity/KEYCLOAK_SSO.md, ref: "login_capacity_target" }
+  login_capacity_refresh_rps: { value: 500, owner: docs/09-identity/KEYCLOAK_SSO.md, ref: "login_capacity_target (500 refresh/s)" }
+  ws_per_gateway_node:   { value: 4000, owner: docs/06-architecture/REALTIME_ARCHITECTURE.md, ref: "ws_per_gateway_node" }
+  hub_instance_capacity: { value: 40, owner: docs/01-game-design/WORLD_DESIGN.md, ref: "hub_instance_capacity" }
+  error_budget:          { value: 0.005, owner: docs/12-project/TEST_STRATEGY.md, ref: "§8.2 error < 0.5%" }
+  generator_cpu_max:     { value: 0.8, owner: docs/00-overview/CONFIG_DEFAULTS.md, ref: "perf_generator_cpu_max [Proposed] (F132 edge case: CPU runner > 80% → run invalid)" }
+  soak_latency_drift_max: { value: 0.2, owner: docs/00-overview/CONFIG_DEFAULTS.md, ref: "perf_soak_latency_drift_max [Proposed] (TC-PERF-006 'không tăng latency')" }
+
+scenarios:
+  - id: TC-PERF-001
+    run: baseline_api
+    title: Baseline API — ramp to 1× CCU in 10 min, hold 30 min
+    tool: k6
+    script: tests/load/k6/baseline_api.js
+    load: { vus: target_ccu, ramp: 10m, hold: 30m }
+    k6:
+      - { metric: "http_req_duration{kind:read}", expr: "p(95)<200", ref: NFR-PERF-001 }
+      - { metric: "http_req_duration{kind:write}", expr: "p(95)<400", ref: NFR-PERF-002 }
+      - { metric: http_req_failed, expr: "rate<0.005", ref: error_budget }
+    prom:
+      - { name: no_restart, query: 'sum(increase(swarm_task_restarts_total{swarm_service=~"core-api|realtime"}[$window]))', op: "==", value: 0, ref: "TC-PERF-014 no unrecovered panic" }
+
+  - id: TC-PERF-002
+    run: login_storm
+    title: School-start login storm — login_capacity_target (worst case all passwords) + 50% refresh mode=resume variant
+    tool: k6
+    also: keycloak-benchmark (TC-PERF-015 parameters fixed first)
+    script: tests/load/k6/login_storm.js
+    precondition: ops-scheduler scaled every service to `peak` (TC-PERF-017, warm_up_windows, F130)
+    load: { logins: login_capacity_storm, peak_rps: login_capacity_peak_rps, refresh_rps: login_capacity_refresh_rps, duration: 10m }
+    k6:
+      - { metric: eduworld_login_until_in, expr: "p(95)<3000", ref: "login_slo (password → hub p95 ≤ 3 s)" }
+      - { metric: "http_req_duration{name:gameLogin}", expr: "p(95)<400", ref: "login_slo (auth/game/login p95 ≤ 400 ms)" }
+      - { metric: "http_req_duration{name:createGameSession}", expr: "p(95)<150", ref: "login_slo (game/sessions p95 ≤ 150 ms)" }
+      - { metric: "http_req_duration{name:refreshGameToken}", expr: "p(95)<200", ref: "login_slo (refresh p95 ≤ 200 ms)" }
+      - { metric: eduworld_http_5xx, expr: "count==0", ref: "TC-PERF-002 0 lỗi 5xx" }
+    prom:
+      - { name: keycloak_cpu, query: 'max(sum by (name) (rate(container_cpu_usage_seconds_total{swarm_service="keycloak"}[1m])) / sum by (name) (container_spec_cpu_quota{swarm_service="keycloak"} / container_spec_cpu_period{swarm_service="keycloak"}))', op: "<", value: 0.7, ref: "TC-PERF-002 Keycloak CPU < 70%" }
+      - { name: login_server_p95, query: 'histogram_quantile(0.95, sum by (le) (rate(eduworld_auth_login_duration_seconds_bucket{method="password"}[$window])))', op: "<", value: 3, ref: "login_slo (server side, alert LoginLatencyHigh)" }
+    report: Keycloak p95 ≤ 800 ms (login_slo) comes from keycloak-benchmark of the same run
+
+  - id: TC-PERF-003
+    run: hub
+    title: Realtime hub — N instances × hub_instance_capacity players moving at 10 Hz
+    tool: loadbot
+    args: "-scenario hub"
+    load: { bots: target_ccu, ramp: 10m, hold: 30m }
+    prom:
+      - { name: tick_p95, query: 'histogram_quantile(0.95, sum by (le) (rate(eduworld_room_tick_duration_seconds_bucket{room_type="hub"}[$window])))', op: "<", value: 0.02, ref: "TC-PERF-003 tick p95 < 20 ms" }
+      - { name: delivery_p95, query: 'max_over_time(eduworld:sli_realtime_delivery:p95_5m[$window])', op: "<", value: 0.25, ref: NFR-PERF-003 }
+      - { name: hub_corrections, query: 'sum(increase(eduworld_loadbot_errors_total{kind="hub_corrected"}[$window]))', op: "==", value: 0, ref: "legit bots are never snapped back" }
+
+  - id: TC-PERF-004
+    run: matchmaking
+    title: Matchmaking — 20% of CCU in queue
+    tool: loadbot
+    args: "-scenario battle"
+    also: tests/perf/matchmaking_queue.js (F104, queue only)
+    load: { bots: "0.2 × target_ccu", ramp: 5m, hold: 20m }
+    prom:
+      - { name: mm_wait_p95, query: 'histogram_quantile(0.95, sum by (le) (rate(eduworld_mm_wait_seconds_bucket{result="matched"}[$window])))', op: "<", value: 30, ref: "TC-PERF-004 wait p95 < 30 s (same grade)" }
+
+  - id: TC-PERF-005
+    run: exam_burst
+    title: Simultaneous exam submit — one grade of 500 students submits within 60 s
+    tool: k6
+    script: tests/load/k6/exam_burst.js
+    load: { students: 500, window: 60s }
+    k6:
+      - { metric: "http_req_duration{name:submitExamAttempt}", expr: "p(95)<1000", ref: "TC-PERF-005 p95 < 1 s" }
+      - { metric: eduworld_exam_submit_lost, expr: "count==0", ref: "TC-PERF-005 không mất bài" }
+      - { metric: eduworld_exam_submit_duplicate, expr: "count==0", ref: "TC-PERF-005 không duplicate" }
+      - { metric: eduworld_http_5xx, expr: "count==0", ref: "TC-PERF-005" }
+
+  - id: TC-PERF-006
+    run: soak
+    title: Soak 4 h at 0.7× CCU
+    tool: k6
+    script: tests/load/k6/soak.js
+    load: { vus: "0.7 × target_ccu", ramp: 10m, hold: 4h }
+    k6:
+      - { metric: "http_req_duration{kind:read}", expr: "p(95)<200", ref: NFR-PERF-001 }
+      - { metric: "http_req_duration{kind:write}", expr: "p(95)<400", ref: NFR-PERF-002 }
+      - { metric: http_req_failed, expr: "rate<0.005", ref: error_budget }
+    prom:
+      - { name: memory_growth, query: 'max(deriv(process_resident_memory_bytes{job=~"core-api|realtime|worker.*"}[1h]))', op: "<", value: 1048576, ref: "TC-PERF-006 không rò bộ nhớ (≤ 1 MiB/s trend over the last hour)" }
+    drift: { metric: "http_req_duration{kind:read}", max: soak_latency_drift_max, ref: "TC-PERF-006 không tăng latency (p95 last 30 min vs first 30 min after ramp)" }
+
+  - id: TC-PERF-007
+    run: stress
+    title: Stress until saturation — degrade with 429, no cascading 5xx
+    tool: k6
+    script: tests/load/k6/stress.js
+    load: { vus: "ramp to 2× target_ccu", stages: "+0.25× every 5 min" }
+    k6:
+      - { metric: eduworld_http_5xx_rate, expr: "rate<0.005", ref: "F132-AC-04 không 5xx dây chuyền" }
+      - { metric: eduworld_http_429, expr: "count>0", ref: "F132-AC-04 suy giảm bằng 429" }
+    report: saturation point = first stage whose p95 read > NFR-PERF-001 or 429 rate > 1%
+
+  - id: TC-PERF-008
+    run: valkey-down
+    title: Valkey lost under load — owned by the chaos runner
+    tool: chaos
+    script: tests/chaos/scenarios/valkey-down.yaml
+
+  - id: TC-PERF-010
+    run: chat_load
+    title: Chat load — 1× CCU, 6 messages/min each + typing/receipts in party/match
+    tool: loadbot
+    args: "-scenario chat -chat-interval 10s"
+    script: tests/load/k6/chat_load.js
+    load: { bots: target_ccu, ramp: 10m, hold: 30m }
+    k6:
+      - { metric: eduworld_chat_ack_ms, expr: "p(95)<300", ref: "TC-PERF-010 send latency (acked) p95 < 300 ms" }
+    prom:
+      - { name: send_p95, query: 'histogram_quantile(0.95, sum by (le) (rate(eduworld_chat_send_latency_seconds_bucket[$window])))', op: "<", value: 0.3, ref: "TC-PERF-010" }
+      - { name: persist_lag_p95, query: 'histogram_quantile(0.95, sum by (le) (rate(eduworld_chat_persist_lag_seconds_bucket[$window])))', op: "<", value: 0.5, ref: "TC-PERF-010 persist lag p95 < 500 ms" }
+      - { name: delivery_p95, query: 'max_over_time(eduworld:sli_realtime_delivery:p95_5m[$window])', op: "<", value: 0.25, ref: NFR-PERF-003 }
+
+  - id: TC-PERF-011
+    run: chat_burst
+    title: Chat burst — 200 hot channels × 20 messages/s for 5 min
+    tool: k6
+    script: tests/load/k6/chat_burst.js
+    load: { channels: 200, rate_per_channel: 20, duration: 5m }
+    k6:
+      - { metric: eduworld_chat_seq_duplicate, expr: "count==0", ref: "TC-PERF-011 không trùng seq" }
+      - { metric: eduworld_chat_lost, expr: "count==0", ref: "TC-PERF-011 không mất tin" }
+    prom:
+      - { name: nats_valkey_cpu, query: 'max(sum by (name) (rate(container_cpu_usage_seconds_total{swarm_service=~"nats|valkey"}[1m])) / sum by (name) (container_spec_cpu_quota{swarm_service=~"nats|valkey"} / container_spec_cpu_period{swarm_service=~"nats|valkey"}))', op: "<", value: 0.7, ref: "TC-PERF-011 NATS/Valkey CPU < 70%" }
+
+  - id: TC-PERF-012
+    run: chat_search
+    title: Chat search over 10 million messages
+    tool: k6
+    script: tests/load/k6/chat_search.js
+    load: { vus: 200, duration: 10m, dataset: "10M messages in perf-* tenants" }
+    k6:
+      - { metric: "http_req_duration{name:searchMessages}", expr: "p(95)<500", ref: "TC-PERF-012 p95 < 500 ms" }
+      - { metric: http_req_failed, expr: "rate<0.005", ref: error_budget }
+
+  - id: TC-PERF-013
+    run: inter_module
+    title: Inter-module load — quest (game → learning facade) and battle (competition → learning facade) at 1× CCU
+    tool: k6
+    script: tests/load/k6/inter_module.js
+    also: loadbot -scenario battle; tests/perf/quest_flow.js (F072)
+    load: { vus: target_ccu, ramp: 10m, hold: 30m }
+    k6:
+      - { metric: http_req_failed, expr: "rate<0.005", ref: error_budget }
+    prom:
+      - { name: facade_p95, query: 'histogram_quantile(0.95, sum by (le) (rate(eduworld_internal_client_duration_seconds_bucket[$window])))', op: "<", value: 0.05, ref: NFR-PERF-011 }
+      - { name: event_lag_p95, query: 'max(max_over_time(eduworld_outbox_lag_seconds[$window]))', op: "<", value: 1, ref: NFR-PERF-012 }
+      - { name: pool_wait_p95, query: 'histogram_quantile(0.95, sum by (le, module) (rate(eduworld_db_pool_acquire_duration_seconds_bucket[$window])))', op: "<", value: 0.05, ref: "TC-PERF-013 pool không cạn" }
+
+  - id: TC-PERF-014
+    run: ccu_10k
+    title: 10,000 CCU whole system (70% hub, 20% match/co-op, 10% learning) for 60 min
+    tool: loadbot
+    args: "-scenario ccu"
+    script: tests/load/k6/ccu_10k.js
+    precondition: ops-scheduler at `peak` (TC-PERF-017); generator VMs outside the cluster
+    load: { bots: target_ccu, mix: { hub: 0.7, match: 0.2, learning: 0.1 }, ramp: 10m, hold: 60m }
+    k6:
+      - { metric: "http_req_duration{kind:read}", expr: "p(95)<200", ref: NFR-PERF-001 }
+      - { metric: "http_req_duration{kind:write}", expr: "p(95)<400", ref: NFR-PERF-002 }
+      - { metric: http_req_failed, expr: "rate<0.005", ref: error_budget }
+    prom:
+      - { name: ws_per_replica, query: 'max(max_over_time(eduworld_ws_connections[$window]))', op: "<=", value: 4000, ref: ws_per_gateway_node }
+      - { name: delivery_p95, query: 'max_over_time(eduworld:sli_realtime_delivery:p95_5m[$window])', op: "<", value: 0.25, ref: NFR-PERF-003 }
+      - { name: facade_p95, query: 'histogram_quantile(0.95, sum by (le) (rate(eduworld_internal_client_duration_seconds_bucket[$window])))', op: "<", value: 0.05, ref: NFR-PERF-011 }
+      - { name: event_lag, query: 'max(max_over_time(eduworld_outbox_lag_seconds[$window]))', op: "<", value: 1, ref: NFR-PERF-012 }
+      - { name: circuit_open, query: 'max(max_over_time(eduworld_external_client_circuit_state[$window]))', op: "<", value: 2, ref: "F132-AC-01 no external circuit breaker open (2 = open)" }
+      - { name: no_restart, query: 'sum(increase(swarm_task_restarts_total{swarm_service=~"core-api|realtime|worker-.*"}[$window]))', op: "==", value: 0, ref: "TC-PERF-014 no unrecovered panic" }
+      - { name: bot_errors, query: 'sum(increase(eduworld_loadbot_logins_total{result="failed"}[$window]))', op: "==", value: 0, ref: "every bot logs in" }
+
+  - id: TC-PERF-015
+    run: password_hash
+    title: Keycloak password hashing benchmark on the real node
+    tool: keycloak-benchmark
+    command: "keycloak-benchmark (kcb.sh --scenario=keycloak.scenario.authentication.AuthorizationCode) per KEYCLOAK_SSO §12; record argon2id/pbkdf2 parameters"
+    criteria: "≤ 80 ms per hash; parameters + result written in the perf report"
+
+  - id: TC-PERF-016
+    run: login_overload
+    title: Login overload — 2× peak (200 password logins/s) for 5 min, queue answers 429 LOGIN_QUEUE_BUSY + Retry-After
+    tool: k6
+    script: tests/load/k6/login_overload.js
+    also: loadbot -scenario login (every bot reaches the WebSocket after the peak); tests/perf/login_queue.js (F013)
+    load: { peak_rps: "2 × login_capacity_peak_rps", duration: 5m }
+    k6:
+      - { metric: eduworld_http_5xx, expr: "count==0", ref: "FR-AUTH-027 no cascading 5xx" }
+      - { metric: eduworld_login_queue_busy, expr: "count>0", ref: "F132-AC-03 the queue answered 429 LOGIN_QUEUE_BUSY" }
+      - { metric: eduworld_login_retry_after_missing, expr: "count==0", ref: "F132-AC-03 every 429 carries Retry-After" }
+      - { metric: eduworld_login_gave_up, expr: "count==0", ref: "SC-002 100% of bots get in after the peak" }
+
+  - id: TC-PERF-017
+    run: warm_up
+    title: Warm-up by schedule — ops-scheduler scales 15 min before peak windows
+    tool: staging
+    owner: F130 (precondition checked by scripts/perf/run.sh before TC-PERF-002 and TC-PERF-014)
+
+  - id: TC-PERF-025
+    run: dashboard_2y
+    title: School dashboard on 2 years of data — 1,500 staff at grade level in 10 min + 200 long-range sessions
+    tool: k6
+    script: tests/load/k6/dashboard_2y.js
+    precondition: datagen + dashboard data generator (50,000 students × 730 days), run together with TC-PERF-014
+    load: { staff: 1500, long_range_sessions: 200, duration: 10m }
+    k6:
+      - { metric: "http_req_duration{kind:dashboard}", expr: "p(95)<2000", ref: NFR-PERF-017 }
+      - { metric: "http_req_duration{kind:dashboard}", expr: "max<5000", ref: "NFR-PERF-018 no query > 5 s" }
+      - { metric: http_req_failed, expr: "rate<0.005", ref: error_budget }
+    prom:
+      - { name: replica_lag, query: 'max(max_over_time(pg_replication_lag_seconds[$window]))', op: "<", value: 60, ref: "TC-PERF-025 replica lag < 60 s" }
+
+  - id: F132-AC-05
+    run: scale_independent
+    title: Independent scaling — scale core-api (then worker-chat) during load, throughput of that service rises, others not redeployed
+    tool: k6
+    script: tests/load/k6/scale_independent.js
+    also: "run.sh --scale core-api=<peak>@<offset> (docker service scale on the staging manager through the bastion)"
+    load: { rps: "constant arrival rate above one replica's capacity", duration: 20m, scale_at: 10m }
+    k6:
+      - { metric: http_req_failed, expr: "rate<0.005", ref: error_budget }
+    prom:
+      - { name: throughput_gain, query: '(sum(rate(eduworld_http_server_requests_total{service="core-api",status_class="2xx"}[5m] @ $end)) / sum(rate(eduworld_http_server_requests_total{service="core-api",status_class="2xx"}[5m] @ $scale_at)))', op: ">", value: 1.2, ref: "NFR-SCAL-003 throughput rises after scaling (≥ +20%)" }
+      - { name: realtime_untouched, query: 'sum(changes(swarm_service_replicas_desired{swarm_service="realtime"}[$window]))', op: "==", value: 0, ref: "realtime scales independently of core-api (ADR-0074)" }
+
+out_of_scope:
+  - { ids: [TC-PERF-009, TC-PERF-018, TC-PERF-019, TC-PERF-020, TC-PERF-021, TC-PERF-022, TC-PERF-023, TC-PERF-024], owner: F133, reason: client performance on lab devices / Godot headless }

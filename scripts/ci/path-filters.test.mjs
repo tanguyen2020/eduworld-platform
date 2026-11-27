@@ -27,6 +27,10 @@ const cases = [
   { files: ['design/admin-tokens/seed.json'], workflows: ['design', 'security', 'web'], modules: [] },
   { files: ['design/game-tokens/semantic.json'], workflows: ['design', 'godot', 'security'], modules: [] },
   { files: ['src/backend/modules/learning/x.go', 'src/backend/modules/game/y.go'], workflows: ['go', 'security'], modules: ['game', 'learning'] },
+  // F132 T015: the load tooling triggers the perf lane (unit tests + k6 smoke); a perf report alone only docs.
+  { files: ['src/backend/tools/loadbot/cmd/loadbot/main.go'], workflows: ['go', 'perf', 'security'], modules: ALL },
+  { files: ['tests/load/k6/ccu_10k.js'], workflows: ['perf', 'security'], modules: [] },
+  { files: ['docs/12-project/perf-reports/README.md'], workflows: ['docs', 'security'], modules: [] },
 ];
 
 for (const c of cases) {

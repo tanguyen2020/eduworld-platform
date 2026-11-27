@@ -1,0 +1,343 @@
+{
+  "generated_from": "tests/load/scenarios.yaml",
+  "parameters": {
+    "target_ccu": 10000,
+    "login_capacity_peak_rps": 100,
+    "login_capacity_storm": 5000,
+    "login_capacity_refresh_rps": 500,
+    "ws_per_gateway_node": 4000,
+    "hub_instance_capacity": 40,
+    "error_budget": 0.005,
+    "generator_cpu_max": 0.8,
+    "soak_latency_drift_max": 0.2
+  },
+  "runs": {
+    "baseline_api": {
+      "id": "TC-PERF-001",
+      "tool": "k6",
+      "script": "tests/load/k6/baseline_api.js",
+      "args": null,
+      "precondition": null,
+      "k6": [
+        {
+          "metric": "http_req_duration{kind:read}",
+          "expr": "p(95)<200",
+          "ref": "NFR-PERF-001"
+        },
+        {
+          "metric": "http_req_duration{kind:write}",
+          "expr": "p(95)<400",
+          "ref": "NFR-PERF-002"
+        },
+        {
+          "metric": "http_req_failed",
+          "expr": "rate<0.005",
+          "ref": "error_budget"
+        }
+      ]
+    },
+    "login_storm": {
+      "id": "TC-PERF-002",
+      "tool": "k6",
+      "script": "tests/load/k6/login_storm.js",
+      "args": null,
+      "precondition": "ops-scheduler scaled every service to `peak` (TC-PERF-017, warm_up_windows, F130)",
+      "k6": [
+        {
+          "metric": "eduworld_login_until_in",
+          "expr": "p(95)<3000",
+          "ref": "login_slo (password → hub p95 ≤ 3 s)"
+        },
+        {
+          "metric": "http_req_duration{name:gameLogin}",
+          "expr": "p(95)<400",
+          "ref": "login_slo (auth/game/login p95 ≤ 400 ms)"
+        },
+        {
+          "metric": "http_req_duration{name:createGameSession}",
+          "expr": "p(95)<150",
+          "ref": "login_slo (game/sessions p95 ≤ 150 ms)"
+        },
+        {
+          "metric": "http_req_duration{name:refreshGameToken}",
+          "expr": "p(95)<200",
+          "ref": "login_slo (refresh p95 ≤ 200 ms)"
+        },
+        {
+          "metric": "eduworld_http_5xx",
+          "expr": "count==0",
+          "ref": "TC-PERF-002 0 lỗi 5xx"
+        }
+      ]
+    },
+    "hub": {
+      "id": "TC-PERF-003",
+      "tool": "loadbot",
+      "script": null,
+      "args": "-scenario hub",
+      "precondition": null,
+      "k6": []
+    },
+    "matchmaking": {
+      "id": "TC-PERF-004",
+      "tool": "loadbot",
+      "script": null,
+      "args": "-scenario battle",
+      "precondition": null,
+      "k6": []
+    },
+    "exam_burst": {
+      "id": "TC-PERF-005",
+      "tool": "k6",
+      "script": "tests/load/k6/exam_burst.js",
+      "args": null,
+      "precondition": null,
+      "k6": [
+        {
+          "metric": "http_req_duration{name:submitExamAttempt}",
+          "expr": "p(95)<1000",
+          "ref": "TC-PERF-005 p95 < 1 s"
+        },
+        {
+          "metric": "eduworld_exam_submit_lost",
+          "expr": "count==0",
+          "ref": "TC-PERF-005 không mất bài"
+        },
+        {
+          "metric": "eduworld_exam_submit_duplicate",
+          "expr": "count==0",
+          "ref": "TC-PERF-005 không duplicate"
+        },
+        {
+          "metric": "eduworld_http_5xx",
+          "expr": "count==0",
+          "ref": "TC-PERF-005"
+        }
+      ]
+    },
+    "soak": {
+      "id": "TC-PERF-006",
+      "tool": "k6",
+      "script": "tests/load/k6/soak.js",
+      "args": null,
+      "precondition": null,
+      "k6": [
+        {
+          "metric": "http_req_duration{kind:read}",
+          "expr": "p(95)<200",
+          "ref": "NFR-PERF-001"
+        },
+        {
+          "metric": "http_req_duration{kind:write}",
+          "expr": "p(95)<400",
+          "ref": "NFR-PERF-002"
+        },
+        {
+          "metric": "http_req_failed",
+          "expr": "rate<0.005",
+          "ref": "error_budget"
+        }
+      ]
+    },
+    "stress": {
+      "id": "TC-PERF-007",
+      "tool": "k6",
+      "script": "tests/load/k6/stress.js",
+      "args": null,
+      "precondition": null,
+      "k6": [
+        {
+          "metric": "eduworld_http_5xx_rate",
+          "expr": "rate<0.005",
+          "ref": "F132-AC-04 không 5xx dây chuyền"
+        },
+        {
+          "metric": "eduworld_http_429",
+          "expr": "count>0",
+          "ref": "F132-AC-04 suy giảm bằng 429"
+        }
+      ]
+    },
+    "valkey-down": {
+      "id": "TC-PERF-008",
+      "tool": "chaos",
+      "script": "tests/chaos/scenarios/valkey-down.yaml",
+      "args": null,
+      "precondition": null,
+      "k6": []
+    },
+    "chat_load": {
+      "id": "TC-PERF-010",
+      "tool": "loadbot",
+      "script": "tests/load/k6/chat_load.js",
+      "args": "-scenario chat -chat-interval 10s",
+      "precondition": null,
+      "k6": [
+        {
+          "metric": "eduworld_chat_ack_ms",
+          "expr": "p(95)<300",
+          "ref": "TC-PERF-010 send latency (acked) p95 < 300 ms"
+        }
+      ]
+    },
+    "chat_burst": {
+      "id": "TC-PERF-011",
+      "tool": "k6",
+      "script": "tests/load/k6/chat_burst.js",
+      "args": null,
+      "precondition": null,
+      "k6": [
+        {
+          "metric": "eduworld_chat_seq_duplicate",
+          "expr": "count==0",
+          "ref": "TC-PERF-011 không trùng seq"
+        },
+        {
+          "metric": "eduworld_chat_lost",
+          "expr": "count==0",
+          "ref": "TC-PERF-011 không mất tin"
+        }
+      ]
+    },
+    "chat_search": {
+      "id": "TC-PERF-012",
+      "tool": "k6",
+      "script": "tests/load/k6/chat_search.js",
+      "args": null,
+      "precondition": null,
+      "k6": [
+        {
+          "metric": "http_req_duration{name:searchMessages}",
+          "expr": "p(95)<500",
+          "ref": "TC-PERF-012 p95 < 500 ms"
+        },
+        {
+          "metric": "http_req_failed",
+          "expr": "rate<0.005",
+          "ref": "error_budget"
+        }
+      ]
+    },
+    "inter_module": {
+      "id": "TC-PERF-013",
+      "tool": "k6",
+      "script": "tests/load/k6/inter_module.js",
+      "args": null,
+      "precondition": null,
+      "k6": [
+        {
+          "metric": "http_req_failed",
+          "expr": "rate<0.005",
+          "ref": "error_budget"
+        }
+      ]
+    },
+    "ccu_10k": {
+      "id": "TC-PERF-014",
+      "tool": "loadbot",
+      "script": "tests/load/k6/ccu_10k.js",
+      "args": "-scenario ccu",
+      "precondition": "ops-scheduler at `peak` (TC-PERF-017); generator VMs outside the cluster",
+      "k6": [
+        {
+          "metric": "http_req_duration{kind:read}",
+          "expr": "p(95)<200",
+          "ref": "NFR-PERF-001"
+        },
+        {
+          "metric": "http_req_duration{kind:write}",
+          "expr": "p(95)<400",
+          "ref": "NFR-PERF-002"
+        },
+        {
+          "metric": "http_req_failed",
+          "expr": "rate<0.005",
+          "ref": "error_budget"
+        }
+      ]
+    },
+    "password_hash": {
+      "id": "TC-PERF-015",
+      "tool": "keycloak-benchmark",
+      "script": null,
+      "args": null,
+      "precondition": null,
+      "k6": []
+    },
+    "login_overload": {
+      "id": "TC-PERF-016",
+      "tool": "k6",
+      "script": "tests/load/k6/login_overload.js",
+      "args": null,
+      "precondition": null,
+      "k6": [
+        {
+          "metric": "eduworld_http_5xx",
+          "expr": "count==0",
+          "ref": "FR-AUTH-027 no cascading 5xx"
+        },
+        {
+          "metric": "eduworld_login_queue_busy",
+          "expr": "count>0",
+          "ref": "F132-AC-03 the queue answered 429 LOGIN_QUEUE_BUSY"
+        },
+        {
+          "metric": "eduworld_login_retry_after_missing",
+          "expr": "count==0",
+          "ref": "F132-AC-03 every 429 carries Retry-After"
+        },
+        {
+          "metric": "eduworld_login_gave_up",
+          "expr": "count==0",
+          "ref": "SC-002 100% of bots get in after the peak"
+        }
+      ]
+    },
+    "warm_up": {
+      "id": "TC-PERF-017",
+      "tool": "staging",
+      "script": null,
+      "args": null,
+      "precondition": null,
+      "k6": []
+    },
+    "dashboard_2y": {
+      "id": "TC-PERF-025",
+      "tool": "k6",
+      "script": "tests/load/k6/dashboard_2y.js",
+      "args": null,
+      "precondition": "datagen + dashboard data generator (50,000 students × 730 days), run together with TC-PERF-014",
+      "k6": [
+        {
+          "metric": "http_req_duration{kind:dashboard}",
+          "expr": "p(95)<2000",
+          "ref": "NFR-PERF-017"
+        },
+        {
+          "metric": "http_req_duration{kind:dashboard}",
+          "expr": "max<5000",
+          "ref": "NFR-PERF-018 no query > 5 s"
+        },
+        {
+          "metric": "http_req_failed",
+          "expr": "rate<0.005",
+          "ref": "error_budget"
+        }
+      ]
+    },
+    "scale_independent": {
+      "id": "F132-AC-05",
+      "tool": "k6",
+      "script": "tests/load/k6/scale_independent.js",
+      "args": null,
+      "precondition": null,
+      "k6": [
+        {
+          "metric": "http_req_failed",
+          "expr": "rate<0.005",
+          "ref": "error_budget"
+        }
+      ]
+    }
+  }
+}

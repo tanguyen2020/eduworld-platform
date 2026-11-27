@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "k6 load scenarios (F132). Node tests import lib/*.js as ES modules; k6 ignores this file."
+}

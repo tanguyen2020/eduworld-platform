@@ -1,0 +1,143 @@
+# Load lane (F132 US1, T015, F132-AC-01…07; TEST_STRATEGY §8; ADR-0088).
+#   load-tools  every change of the load tooling: unit tests of datagen/loadbot/envguard (-race), scripts/perf and the
+#               k6 helpers, scenarios.gen.json freshness, shellcheck, k6 inspect + smoke against the labelled stub
+#               (tests/load/stub, never capacity evidence).
+#   staging     scheduled baseline (weekly, outside school hours) and workflow_dispatch before a release for any run of
+#               tests/load/scenarios.yaml, on the load-generator runners [self-hosted, deploy, loadgen] outside the
+#               cluster; gated by vars.PERF_ENABLED until a production-sized staging exists (F130/F131 pending env).
+#               The perf report is uploaded as an artifact; the Tech Lead commits it under docs/12-project/perf-reports/.
+name: perf
+
+on:
+  pull_request:
+    paths:
+      - "src/backend/tools/datagen/**"
+      - "src/backend/tools/loadbot/**"
+      - "src/backend/tools/gameclient/**"
+      - "src/backend/tools/envguard/**"
+      - "tests/load/**"
+      - "scripts/perf/**"
+      - ".github/workflows/perf.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/backend/tools/datagen/**"
+      - "src/backend/tools/loadbot/**"
+      - "src/backend/tools/gameclient/**"
+      - "src/backend/tools/envguard/**"
+      - "tests/load/**"
+      - "scripts/perf/**"
+      - ".github/workflows/perf.yml"
+  schedule:
+    - cron: "0 17 * * 0" # Sunday 00:00 ICT: weekly TC-PERF-001 baseline, outside school hours (availability window)
+  workflow_dispatch:
+    inputs:
+      run:
+        description: "Run of tests/load/scenarios.yaml (ccu_10k, login_storm, login_overload, baseline_api, exam_burst, soak, stress, inter_module, chat_load, chat_burst, chat_search, dashboard_2y, scale_independent, hub, matchmaking)"
+        required: true
+        default: baseline_api
+      scale:
+        description: "Load factor (1 = full scenario)"
+        required: false
+        default: "1"
+      scale_service:
+        description: "F132-AC-05 only: <swarm-service>=<replicas>@<offset_s>, e.g. core-api=6@600"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: perf-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  K6_IMAGE: grafana/k6:0.57.0
+  SHELLCHECK_IMAGE: koalaman/shellcheck:v0.10.0
+
+jobs:
+  load-tools:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: stable # latest patched release (stdlib CVEs are fixed in patches)
+          check-latest: true
+          cache-dependency-path: src/backend/go.sum
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: Go unit tests (datagen, loadbot, envguard; F132-AC-03, AC-07)
+        run: go -C src/backend test -race -count=1 ./tools/envguard/... ./tools/gameclient/... ./tools/datagen/... ./tools/loadbot/...
+      - name: scenarios.gen.json fresh, every TC-PERF covered (T010, T013)
+        run: node scripts/perf/render-scenarios.mjs --check
+      - name: report, Prometheus checks, warm-up, k6 helpers (T009, F132-AC-06)
+        run: node --test scripts/perf/ tests/load/k6/lib/
+      - name: shellcheck
+        run: docker run --rm -v "$PWD:/mnt" -w /mnt "$SHELLCHECK_IMAGE" scripts/perf/run.sh scripts/perf/check-generator-saturation.sh scripts/perf/k6-smoke.sh
+      - name: k6 inspect + smoke against the stub (thresholds pass on ok, fail on slow)
+        run: bash scripts/perf/k6-smoke.sh
+
+  staging:
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && vars.PERF_ENABLED == 'true' && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy, loadgen]
+    environment: staging
+    timeout-minutes: 360
+    concurrency: { group: perf-staging, cancel-in-progress: false }
+    env:
+      EW_ENV: staging
+      BASE_URL: ${{ vars.STAGING_API_BASE_URL }}
+      EW_PROMETHEUS_URL: ${{ vars.PROMETHEUS_URL }}
+      EW_GRAFANA_URL: ${{ vars.GRAFANA_URL }}
+      K6_PROMETHEUS_RW_SERVER_URL: ${{ vars.PROMETHEUS_RW_URL }}
+      EW_SWARM_STACK: eduworld
+      DOCKER_HOST: ${{ vars.SWARM_MANAGER_HOST }}
+      DOCKER_TLS_VERIFY: "1"
+      DOCKER_CERT_PATH: ${{ github.workspace }}/.docker-tls
+      RUN: ${{ github.event.inputs.run || 'baseline_api' }}
+      SCALE: ${{ github.event.inputs.scale || '1' }}
+      SCALE_SERVICE: ${{ github.event.inputs.scale_service || '' }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: stable
+          cache-dependency-path: src/backend/go.sum
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: Docker API client certificate (image digests, F132-AC-05 scaling)
+        env:
+          CA: ${{ secrets.SWARM_TLS_CA }}
+          CERT: ${{ secrets.SWARM_TLS_CERT }}
+          KEY: ${{ secrets.SWARM_TLS_KEY }}
+        run: bash scripts/deploy/write-docker-tls.sh
+      - name: loadbot binary and bot list (same seed as the data loaded into staging by make datagen)
+        run: |
+          go -C src/backend build -o "$RUNNER_TEMP/loadbot" ./tools/loadbot/cmd/loadbot
+          make datagen ENV=staging TENANTS="${{ vars.PERF_TENANTS || 20 }}" SCHOOLS_PER_TENANT="${{ vars.PERF_SCHOOLS_PER_TENANT || 5 }}" \
+            STUDENTS="${{ vars.PERF_STUDENTS || 50000 }}" SEED="${{ vars.PERF_SEED || 1 }}" OUT="$RUNNER_TEMP/datagen"
+      - name: run ${{ env.RUN }}
+        env:
+          EW_LOADBOT_PASSWORD: ${{ secrets.LOADBOT_PASSWORD }}
+          LOADBOT_BIN: ${{ runner.temp }}/loadbot
+          BOTS_FILE: ${{ runner.temp }}/datagen/bots.json
+          EW_SIZING_FILE: ${{ github.workspace }}/tests/load/runner/staging-sizing.json
+          EXTRA_K6_ARGS: ${{ vars.PERF_K6_ARGS }}
+          EXTRA_LOADBOT_ARGS: ${{ vars.PERF_LOADBOT_ARGS }}
+        run: bash scripts/perf/run.sh --run "$RUN" --env staging --scale "$SCALE" ${SCALE_SERVICE:+--scale-service "$SCALE_SERVICE"}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: perf-${{ env.RUN }}-${{ github.run_id }}
+          path: |
+            tmp/perf/
+            docs/12-project/perf-reports/*.md
+      - name: remove credentials
+        if: always()
+        run: rm -rf "$DOCKER_CERT_PATH"
