@@ -4336,7 +4336,9 @@ export interface paths {
         /**
          * Vào hàng đợi (solo hoặc party leader). Ràng buộc khối được áp trước rating.
          * @description Khối, trường, tenant và rating do server lấy từ dữ liệu của phiên, không nhận từ body (F104-AC-01). Ticket chỉ
-         *     ở Valkey (ADR-0004). Đã có ticket active (kể cả của party) → `409 MM_TICKET_ALREADY_ACTIVE`; bị hạn chế thi đấu,
+         *     ở Valkey (ADR-0004). Đã có ticket active (kể cả của party) → `409 MM_TICKET_ALREADY_ACTIVE`, kèm extension `ticket_id`
+         *     khi ticket đang giữ có chính người gọi (mở lại thanh hàng chờ bằng `getMatchmakingTicket`; ticket chỉ của thành viên
+         *     khác trong party → không kèm id); bị hạn chế thi đấu,
          *     khối không có mode (vd. `team_battle` lớp < 4) hoặc party có thành viên khác khối → `403 POLICY_DENIED`; không phải
          *     leader → `403 PARTY_NOT_LEADER`; thành viên offline → `409 PARTY_MEMBER_NOT_ONLINE`; `matchmaking_type` `friend`
          *     (dùng `createDuel`) hoặc `tournament` (proposal trực tiếp của giải), `topic` thiếu `topic_id`, môn/chủ đề không
@@ -4611,8 +4613,10 @@ export interface paths {
         /**
          * Đăng ký giải (học sinh, leader đội) hoặc đăng ký hộ (người tổ chức)
          * @description F107-AC-08, AC-09, AC-24. Học sinh (token game): đăng ký chính em (`party_id` khi giải đội — mọi thành viên đủ điều kiện,
-         *     cùng trường). Ngoài phạm vi → `404`; bị hạn chế thi đấu → `403 POLICY_DENIED`; đủ `max_entries` → `409 CONFLICT`; ngoài
-         *     cửa sổ đăng ký → `422 INVALID_STATE_TRANSITION`. Người tổ chức (portal): đăng ký hộ `student_ids` hoặc cả đối tượng của
+         *     cùng trường). Ngoài phạm vi → `404`; bị hạn chế thi đấu → `403 TOURNAMENT_NOT_ELIGIBLE`; đủ `max_entries` (kể cả đóng
+         *     sớm vì đủ chỗ) → `409 TOURNAMENT_FULL`; đã đăng ký → `409 CONFLICT`; ngoài cửa sổ đăng ký → `422 TOURNAMENT_REGISTRATION_CLOSED`
+         *     (HTTP status giữ như trước 2026-11-27, chỉ `code` cụ thể hơn — client chấp nhận mã lạ). Người tổ chức: giải không mở đăng
+         *     ký → `422 INVALID_STATE_TRANSITION` (không đổi). Người tổ chức (portal): đăng ký hộ `student_ids` hoặc cả đối tượng của
          *     thử thách khi `student_ids` rỗng (khối ± học sinh − loại trừ, ADR-0095); học sinh không đủ điều kiện bị bỏ qua.
          */
         post: operations["registerTournamentEntry"];
@@ -4673,7 +4677,7 @@ export interface paths {
         put?: never;
         /**
          * Check-in của chính học sinh trong cửa sổ check-in
-         * @description F107-AC-10. Chỉ `game_player`; ngoài cửa sổ (`tournament_timers`) → `422 INVALID_STATE_TRANSITION`; entry của người khác → `404`.
+         * @description F107-AC-10. Chỉ `game_player`; ngoài cửa sổ (`tournament_timers`) hoặc entry chưa được xác nhận → `422 TOURNAMENT_CHECK_IN_CLOSED` (trước 2026-11-27 là `INVALID_STATE_TRANSITION`, cùng HTTP status); entry của người khác → `404`.
          */
         post: operations["checkInTournamentEntry"];
         delete?: never;
@@ -15592,6 +15596,11 @@ export interface components {
             /** @description Có khi lỗi tạm thời (vd. `503 UNAVAILABLE` khi module identity không trả Principal): client được phép thử lại với backoff (F002-AC-09) */
             retryable?: boolean;
             status: number;
+            /**
+             * Format: uuid
+             * @description Chỉ có khi `code = MM_TICKET_ALREADY_ACTIVE` và ticket đang giữ có chính người gọi: id ticket để mở lại thanh hàng chờ (`getMatchmakingTicket`, F104, delta F109 2026-11-27)
+             */
+            ticket_id?: string;
             title: string;
             trace_id?: string;
             /** Format: uri */
@@ -15601,7 +15610,7 @@ export interface components {
          * @description Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
          * @enum {string}
          */
-        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "QUEST_PREREQUISITE_NOT_MET" | "QUEST_ACTIVE_LIMIT" | "QUEST_STEP_ATTEMPT_LIMIT" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_REACTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ACCOUNT_LOCK_HELD_BY_SAFETY" | "ONCALL_SHIFT_OVERLAP" | "BREAK_GLASS_NOT_PENDING" | "BREAK_GLASS_NOT_ACTIVE" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
+        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "QUEST_PREREQUISITE_NOT_MET" | "QUEST_ACTIVE_LIMIT" | "QUEST_STEP_ATTEMPT_LIMIT" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "TOURNAMENT_NOT_ELIGIBLE" | "TOURNAMENT_REGISTRATION_CLOSED" | "TOURNAMENT_FULL" | "TOURNAMENT_CHECK_IN_CLOSED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_REACTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ACCOUNT_LOCK_HELD_BY_SAFETY" | "ONCALL_SHIFT_OVERLAP" | "BREAK_GLASS_NOT_PENDING" | "BREAK_GLASS_NOT_ACTIVE" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
         ProgressionLevel: {
             level: number;
             rewards?: components["schemas"]["RewardGrantSummary"][];
@@ -18057,7 +18066,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED, CHAT_CHANNEL_CLOSED, ACCOUNT_LOCK_HELD_BY_SAFETY, ONCALL_SHIFT_OVERLAP, BREAK_GLASS_NOT_PENDING) */
+        /** @description Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE (kèm `ticket_id`), TOURNAMENT_FULL, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED, CHAT_CHANNEL_CLOSED, ACCOUNT_LOCK_HELD_BY_SAFETY, ONCALL_SHIFT_OVERLAP, BREAK_GLASS_NOT_PENDING) */
         Conflict: {
             headers: {
                 [name: string]: unknown;
@@ -18085,7 +18094,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED, BREAK_GLASS_NOT_ACTIVE */
+        /** @description PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TOURNAMENT_NOT_ELIGIBLE, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED, BREAK_GLASS_NOT_ACTIVE */
         Forbidden: {
             headers: {
                 [name: string]: unknown;
@@ -18206,7 +18215,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description VALIDATION_FAILED, SIS_CONTRACT_VERSION_UNSUPPORTED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform */
+        /** @description VALIDATION_FAILED, SIS_CONTRACT_VERSION_UNSUPPORTED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, TOURNAMENT_REGISTRATION_CLOSED, TOURNAMENT_CHECK_IN_CLOSED, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform */
         ValidationFailed: {
             headers: {
                 [name: string]: unknown;
@@ -29721,6 +29730,39 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "challenge_id": "0193b0a0-0000-7000-8000-000000000905",
+                     *           "name": "Thử thách khối 3: Bảng cửu chương",
+                     *           "kind": "grade_challenge",
+                     *           "format": "timed_quiz",
+                     *           "starts_at": "2026-11-25T08:00:00Z",
+                     *           "ends_at": "2026-11-25T08:15:00Z",
+                     *           "join_window_opens_at": "2026-11-25T07:55:00Z",
+                     *           "status": "scheduled",
+                     *           "tournament_id": null
+                     *         },
+                     *         {
+                     *           "challenge_id": "0193b0a0-0000-7000-8000-000000000904",
+                     *           "name": "Giải Toán khối 4 tuần này",
+                     *           "kind": "school_tournament",
+                     *           "format": "tournament",
+                     *           "starts_at": "2026-11-25T08:00:00Z",
+                     *           "ends_at": null,
+                     *           "join_window_opens_at": "2026-11-25T07:30:00Z",
+                     *           "status": "scheduled",
+                     *           "tournament_id": "0193b0a0-0000-7000-8000-000000000901"
+                     *         }
+                     *       ],
+                     *       "page": {
+                     *         "next_cursor": null,
+                     *         "has_more": false,
+                     *         "limit": 20
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["CompetitionChallenge"][];
                         page: components["schemas"]["PageInfo"];
@@ -29763,6 +29805,14 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "challenge_id": "0193b0a0-0000-7000-8000-000000000905",
+                     *       "match_id": "0193b0a0-0000-7000-8000-000000000503",
+                     *       "room_id": "0193b0a0-0000-7000-8000-000000000503",
+                     *       "starts_at": "2026-11-25T08:00:00Z"
+                     *     }
+                     */
                     "application/json": components["schemas"]["ChallengeJoinResult"];
                 };
             };
@@ -29812,6 +29862,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "duel_id": "0193b0a0-0000-7000-8000-000000000a01",
+                     *       "challenger_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *       "opponent_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *       "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *       "status": "pending",
+                     *       "expires_at": "2026-11-21T08:01:00Z"
+                     *     }
+                     */
                     "application/json": components["schemas"]["Duel"];
                 };
             };
@@ -29857,6 +29917,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "duel_id": "0193b0a0-0000-7000-8000-000000000a01",
+                     *       "challenger_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *       "opponent_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *       "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *       "status": "accepted",
+                     *       "match_id": "0193b0a0-0000-7000-8000-000000000506",
+                     *       "expires_at": "2026-11-21T08:01:00Z"
+                     *     }
+                     */
                     "application/json": components["schemas"]["Duel"];
                 };
             };
@@ -29930,6 +30001,147 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "match_id": "0193b0a0-0000-7000-8000-000000000501",
+                     *           "mode": "battle_1v1",
+                     *           "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *           "grade_level": 4,
+                     *           "status": "completed",
+                     *           "matchmaking_type": "skill",
+                     *           "ranked": true,
+                     *           "is_bot": false,
+                     *           "started_at": "2026-11-20T08:00:00Z",
+                     *           "ended_at": "2026-11-20T08:04:10Z",
+                     *           "end_reason": "finished",
+                     *           "rated": true,
+                     *           "question_count": 3,
+                     *           "participants": [
+                     *             {
+                     *               "player": {
+                     *                 "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *                 "nickname": "MeoXanh42",
+                     *                 "level": 12,
+                     *                 "avatar_config": {
+                     *                   "schema_version": 1,
+                     *                   "body_type": "kid_a",
+                     *                   "skin_tone": "tone_02",
+                     *                   "hair": {
+                     *                     "item_id": "hair_bob_01",
+                     *                     "color": "hair_col_02"
+                     *                   },
+                     *                   "outfit": {
+                     *                     "item_id": "outfit_school_01"
+                     *                   }
+                     *                 }
+                     *               },
+                     *               "team_no": 1,
+                     *               "outcome": "win",
+                     *               "score": 420,
+                     *               "correct_count": 3,
+                     *               "competition_points": 12
+                     *             },
+                     *             {
+                     *               "player": {
+                     *                 "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *                 "nickname": "CaHeoVui07",
+                     *                 "level": 10,
+                     *                 "avatar_config": {
+                     *                   "schema_version": 1,
+                     *                   "body_type": "kid_a",
+                     *                   "skin_tone": "tone_02",
+                     *                   "hair": {
+                     *                     "item_id": "hair_bob_01",
+                     *                     "color": "hair_col_02"
+                     *                   },
+                     *                   "outfit": {
+                     *                     "item_id": "outfit_school_01"
+                     *                   }
+                     *                 }
+                     *               },
+                     *               "team_no": 2,
+                     *               "outcome": "loss",
+                     *               "score": 350,
+                     *               "correct_count": 2,
+                     *               "competition_points": 6
+                     *             }
+                     *           ]
+                     *         },
+                     *         {
+                     *           "match_id": "0193b0a0-0000-7000-8000-000000000505",
+                     *           "mode": "battle_1v1",
+                     *           "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *           "grade_level": 4,
+                     *           "status": "cancelled",
+                     *           "matchmaking_type": "skill",
+                     *           "ranked": true,
+                     *           "is_bot": false,
+                     *           "started_at": "2026-11-19T09:00:00Z",
+                     *           "ended_at": "2026-11-19T09:01:00Z",
+                     *           "end_reason": "all_left",
+                     *           "rated": false,
+                     *           "question_count": 3,
+                     *           "participants": [
+                     *             {
+                     *               "player": {
+                     *                 "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *                 "nickname": "MeoXanh42",
+                     *                 "level": 12,
+                     *                 "avatar_config": {
+                     *                   "schema_version": 1,
+                     *                   "body_type": "kid_a",
+                     *                   "skin_tone": "tone_02",
+                     *                   "hair": {
+                     *                     "item_id": "hair_bob_01",
+                     *                     "color": "hair_col_02"
+                     *                   },
+                     *                   "outfit": {
+                     *                     "item_id": "outfit_school_01"
+                     *                   }
+                     *                 }
+                     *               },
+                     *               "team_no": 1,
+                     *               "outcome": "no_contest",
+                     *               "score": null,
+                     *               "correct_count": null,
+                     *               "competition_points": null
+                     *             },
+                     *             {
+                     *               "player": {
+                     *                 "user_id": "0193b0a0-0000-7000-8000-0000000000a3",
+                     *                 "nickname": "GauNau15",
+                     *                 "level": 11,
+                     *                 "avatar_config": {
+                     *                   "schema_version": 1,
+                     *                   "body_type": "kid_a",
+                     *                   "skin_tone": "tone_02",
+                     *                   "hair": {
+                     *                     "item_id": "hair_bob_01",
+                     *                     "color": "hair_col_02"
+                     *                   },
+                     *                   "outfit": {
+                     *                     "item_id": "outfit_school_01"
+                     *                   }
+                     *                 }
+                     *               },
+                     *               "team_no": 2,
+                     *               "outcome": "no_contest",
+                     *               "score": null,
+                     *               "correct_count": null,
+                     *               "competition_points": null
+                     *             }
+                     *           ]
+                     *         }
+                     *       ],
+                     *       "page": {
+                     *         "next_cursor": "eyJrIjoiMjAyNi0xMS0xOSJ9",
+                     *         "has_more": true,
+                     *         "limit": 20
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["Match"][];
                         page: components["schemas"]["PageInfo"];
@@ -29967,6 +30179,133 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "match_id": "0193b0a0-0000-7000-8000-000000000501",
+                     *       "mode": "battle_1v1",
+                     *       "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *       "grade_level": 4,
+                     *       "status": "completed",
+                     *       "matchmaking_type": "skill",
+                     *       "ranked": true,
+                     *       "is_bot": false,
+                     *       "room_id": "0193b0a0-0000-7000-8000-000000000501",
+                     *       "started_at": "2026-11-20T08:00:00Z",
+                     *       "ended_at": "2026-11-20T08:04:10Z",
+                     *       "end_reason": "finished",
+                     *       "rated": true,
+                     *       "question_count": 3,
+                     *       "participants": [
+                     *         {
+                     *           "player": {
+                     *             "user_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *             "nickname": "MeoXanh42",
+                     *             "level": 12,
+                     *             "avatar_config": {
+                     *               "schema_version": 1,
+                     *               "body_type": "kid_a",
+                     *               "skin_tone": "tone_02",
+                     *               "hair": {
+                     *                 "item_id": "hair_bob_01",
+                     *                 "color": "hair_col_02"
+                     *               },
+                     *               "outfit": {
+                     *                 "item_id": "outfit_school_01"
+                     *               }
+                     *             }
+                     *           },
+                     *           "team_no": 1,
+                     *           "outcome": "win",
+                     *           "score": 420,
+                     *           "correct_count": 3,
+                     *           "competition_points": 12
+                     *         },
+                     *         {
+                     *           "player": {
+                     *             "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *             "nickname": "CaHeoVui07",
+                     *             "level": 10,
+                     *             "avatar_config": {
+                     *               "schema_version": 1,
+                     *               "body_type": "kid_a",
+                     *               "skin_tone": "tone_02",
+                     *               "hair": {
+                     *                 "item_id": "hair_bob_01",
+                     *                 "color": "hair_col_02"
+                     *               },
+                     *               "outfit": {
+                     *                 "item_id": "outfit_school_01"
+                     *               }
+                     *             }
+                     *           },
+                     *           "team_no": 2,
+                     *           "outcome": "loss",
+                     *           "score": 350,
+                     *           "correct_count": 2,
+                     *           "competition_points": 6
+                     *         }
+                     *       ],
+                     *       "review": [
+                     *         {
+                     *           "index": 0,
+                     *           "question": {
+                     *             "stem": {
+                     *               "blocks": [
+                     *                 {
+                     *                   "type": "paragraph",
+                     *                   "text": "6 × 3 = ?"
+                     *                 }
+                     *               ]
+                     *             }
+                     *           },
+                     *           "correct_response": {
+                     *             "option_id": "o_b"
+                     *           },
+                     *           "explanation": "Sáu nhân ba bằng mười tám.",
+                     *           "my_answer_correct": true,
+                     *           "my_points": 150
+                     *         },
+                     *         {
+                     *           "index": 1,
+                     *           "question": {
+                     *             "stem": {
+                     *               "blocks": [
+                     *                 {
+                     *                   "type": "paragraph",
+                     *                   "text": "24 : 4 = ?"
+                     *                 }
+                     *               ]
+                     *             }
+                     *           },
+                     *           "correct_response": {
+                     *             "option_id": "o_a"
+                     *           },
+                     *           "explanation": null,
+                     *           "my_answer_correct": true,
+                     *           "my_points": 140
+                     *         },
+                     *         {
+                     *           "index": 2,
+                     *           "question": {
+                     *             "stem": {
+                     *               "blocks": [
+                     *                 {
+                     *                   "type": "paragraph",
+                     *                   "text": "7 × 8 = ?"
+                     *                 }
+                     *               ]
+                     *             }
+                     *           },
+                     *           "correct_response": {
+                     *             "option_id": "o_c"
+                     *           },
+                     *           "explanation": null,
+                     *           "my_answer_correct": false,
+                     *           "my_points": 0
+                     *         }
+                     *       ]
+                     *     }
+                     */
                     "application/json": components["schemas"]["Match"];
                 };
             };
@@ -30077,6 +30416,20 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "ticket_id": "0193b0a0-0000-7000-8000-000000000401",
+                     *       "status": "queued",
+                     *       "mode": "battle_1v1",
+                     *       "matchmaking_type": "skill",
+                     *       "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *       "created_at": "2026-11-21T08:00:00Z",
+                     *       "wait_seconds": 0,
+                     *       "estimated_wait_seconds": 30,
+                     *       "search_widened": false,
+                     *       "bot_offer_available": false
+                     *     }
+                     */
                     "application/json": components["schemas"]["MatchmakingTicket"];
                 };
             };
@@ -30115,6 +30468,20 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "ticket_id": "0193b0a0-0000-7000-8000-000000000401",
+                     *       "status": "queued",
+                     *       "mode": "battle_1v1",
+                     *       "matchmaking_type": "skill",
+                     *       "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *       "created_at": "2026-11-21T08:00:00Z",
+                     *       "wait_seconds": 24,
+                     *       "estimated_wait_seconds": 30,
+                     *       "search_widened": true,
+                     *       "bot_offer_available": false
+                     *     }
+                     */
                     "application/json": components["schemas"]["MatchmakingTicket"];
                 };
             };
@@ -30189,6 +30556,20 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "match_id": "0193b0a0-0000-7000-8000-000000000504",
+                     *       "mode": "battle_1v1",
+                     *       "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *       "grade_level": 4,
+                     *       "status": "lobby",
+                     *       "matchmaking_type": "bot",
+                     *       "ranked": false,
+                     *       "is_bot": true,
+                     *       "room_id": "0193b0a0-0000-7000-8000-000000000504",
+                     *       "question_count": 5
+                     *     }
+                     */
                     "application/json": components["schemas"]["Match"];
                 };
             };
@@ -30223,6 +30604,53 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "mode": "battle_1v1",
+                     *           "matchmaking_types": [
+                     *             "skill",
+                     *             "subject",
+                     *             "topic"
+                     *           ],
+                     *           "ranked": true,
+                     *           "ranked_matchmaking_types": [
+                     *             "skill"
+                     *           ],
+                     *           "min_grade": 1,
+                     *           "subjects": [
+                     *             "0193b0a0-0000-7000-8000-000000000601",
+                     *             "0193b0a0-0000-7000-8000-000000000602"
+                     *           ]
+                     *         },
+                     *         {
+                     *           "mode": "team_battle",
+                     *           "matchmaking_types": [
+                     *             "team"
+                     *           ],
+                     *           "ranked": true,
+                     *           "ranked_matchmaking_types": [
+                     *             "team"
+                     *           ],
+                     *           "min_grade": 4,
+                     *           "subjects": [
+                     *             "0193b0a0-0000-7000-8000-000000000601"
+                     *           ]
+                     *         },
+                     *         {
+                     *           "mode": "coop_challenge",
+                     *           "matchmaking_types": [
+                     *             "random"
+                     *           ],
+                     *           "ranked": false,
+                     *           "ranked_matchmaking_types": [],
+                     *           "min_grade": 1,
+                     *           "subjects": []
+                     *         }
+                     *       ]
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["CompetitionMode"][];
                     };
@@ -30260,6 +30688,34 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "mode": "battle_1v1",
+                     *           "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *           "season_id": "0193b0a0-0000-7000-8000-000000000701",
+                     *           "tier_code": "silver_2",
+                     *           "tier_name": "Bạc II",
+                     *           "peak_tier_code": "silver_1",
+                     *           "provisional": false,
+                     *           "provisional_games_required": 5,
+                     *           "games_played": 14
+                     *         },
+                     *         {
+                     *           "mode": "team_battle",
+                     *           "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *           "season_id": "0193b0a0-0000-7000-8000-000000000701",
+                     *           "tier_code": null,
+                     *           "tier_name": null,
+                     *           "peak_tier_code": null,
+                     *           "provisional": true,
+                     *           "provisional_games_required": 5,
+                     *           "games_played": 2
+                     *         }
+                     *       ]
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["Rating"][];
                     };
@@ -30379,6 +30835,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+                     *           "template_id": "0193b0a0-0000-7000-8000-000000000902",
+                     *           "name": "Giải Toán khối 4 tuần này",
+                     *           "format": "single_elim",
+                     *           "scope_type": "school",
+                     *           "scope_id": "0193b0a0-0000-7000-8000-000000000903",
+                     *           "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *           "grade_level": 4,
+                     *           "registration_open_at": "2026-11-20T00:00:00Z",
+                     *           "registration_closes_at": "2026-11-24T10:00:00Z",
+                     *           "check_in_opens_at": "2026-11-25T07:30:00Z",
+                     *           "starts_at": "2026-11-25T08:00:00Z",
+                     *           "max_entries": 16,
+                     *           "status": "registration_open",
+                     *           "entry_count": 4,
+                     *           "challenge_id": "0193b0a0-0000-7000-8000-000000000904",
+                     *           "school_id": "0193b0a0-0000-7000-8000-000000000903",
+                     *           "participant_type": "individual",
+                     *           "team_size": null,
+                     *           "mode": "battle_1v1",
+                     *           "grade_levels": [
+                     *             4
+                     *           ],
+                     *           "seeding_policy": "rating",
+                     *           "auto_confirm": true,
+                     *           "reward_summary": "Huy hiệu Nhà vô địch Toán",
+                     *           "cancel_reason": null,
+                     *           "my_entry": null
+                     *         }
+                     *       ],
+                     *       "page": {
+                     *         "next_cursor": null,
+                     *         "has_more": false,
+                     *         "limit": 20
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["Tournament"][];
                         page: components["schemas"]["PageInfo"];
@@ -30414,6 +30911,49 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+                     *       "template_id": "0193b0a0-0000-7000-8000-000000000902",
+                     *       "name": "Giải Toán khối 4 tuần này",
+                     *       "format": "single_elim",
+                     *       "scope_type": "school",
+                     *       "scope_id": "0193b0a0-0000-7000-8000-000000000903",
+                     *       "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *       "grade_level": 4,
+                     *       "registration_open_at": "2026-11-20T00:00:00Z",
+                     *       "registration_closes_at": "2026-11-24T10:00:00Z",
+                     *       "check_in_opens_at": "2026-11-25T07:30:00Z",
+                     *       "starts_at": "2026-11-25T08:00:00Z",
+                     *       "max_entries": 16,
+                     *       "status": "registration_open",
+                     *       "entry_count": 4,
+                     *       "challenge_id": "0193b0a0-0000-7000-8000-000000000904",
+                     *       "school_id": "0193b0a0-0000-7000-8000-000000000903",
+                     *       "participant_type": "individual",
+                     *       "team_size": null,
+                     *       "mode": "battle_1v1",
+                     *       "grade_levels": [
+                     *         4
+                     *       ],
+                     *       "seeding_policy": "rating",
+                     *       "auto_confirm": true,
+                     *       "reward_summary": "Huy hiệu Nhà vô địch Toán",
+                     *       "cancel_reason": null,
+                     *       "my_entry": {
+                     *         "entry_id": "0193b0a0-0000-7000-8000-000000000911",
+                     *         "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+                     *         "status": "registered",
+                     *         "seed": null,
+                     *         "players": [
+                     *           {
+                     *             "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *             "nickname": "MeoXanh42"
+                     *           }
+                     *         ]
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["Tournament"];
                 };
             };
@@ -30574,6 +31114,107 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+                     *       "format": "single_elim",
+                     *       "status": "in_progress",
+                     *       "entries": [
+                     *         {
+                     *           "entry_id": "0193b0a0-0000-7000-8000-000000000911",
+                     *           "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+                     *           "status": "confirmed",
+                     *           "seed": 1,
+                     *           "players": [
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *               "nickname": "MeoXanh42"
+                     *             }
+                     *           ]
+                     *         },
+                     *         {
+                     *           "entry_id": "0193b0a0-0000-7000-8000-000000000912",
+                     *           "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+                     *           "status": "confirmed",
+                     *           "seed": 4,
+                     *           "players": [
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a2",
+                     *               "nickname": "CaHeoVui07"
+                     *             }
+                     *           ]
+                     *         },
+                     *         {
+                     *           "entry_id": "0193b0a0-0000-7000-8000-000000000913",
+                     *           "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+                     *           "status": "confirmed",
+                     *           "seed": 2,
+                     *           "players": [
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a3",
+                     *               "nickname": "GauNau15"
+                     *             }
+                     *           ]
+                     *         },
+                     *         {
+                     *           "entry_id": "0193b0a0-0000-7000-8000-000000000914",
+                     *           "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+                     *           "status": "confirmed",
+                     *           "seed": 3,
+                     *           "players": [
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a4",
+                     *               "nickname": "SaoBang09"
+                     *             }
+                     *           ]
+                     *         }
+                     *       ],
+                     *       "nodes": [
+                     *         {
+                     *           "node_id": "0193b0a0-0000-7000-8000-000000000921",
+                     *           "bracket": "winners",
+                     *           "round": 1,
+                     *           "position": 0,
+                     *           "entry_a_id": "0193b0a0-0000-7000-8000-000000000911",
+                     *           "entry_b_id": "0193b0a0-0000-7000-8000-000000000912",
+                     *           "winner_entry_id": "0193b0a0-0000-7000-8000-000000000911",
+                     *           "is_draw": false,
+                     *           "match_id": "0193b0a0-0000-7000-8000-000000000501",
+                     *           "scheduled_at": "2026-11-25T08:00:00Z",
+                     *           "next_win_node_id": "0193b0a0-0000-7000-8000-000000000923",
+                     *           "status": "confirmed"
+                     *         },
+                     *         {
+                     *           "node_id": "0193b0a0-0000-7000-8000-000000000922",
+                     *           "bracket": "winners",
+                     *           "round": 1,
+                     *           "position": 1,
+                     *           "entry_a_id": "0193b0a0-0000-7000-8000-000000000913",
+                     *           "entry_b_id": "0193b0a0-0000-7000-8000-000000000914",
+                     *           "winner_entry_id": null,
+                     *           "is_draw": false,
+                     *           "match_id": null,
+                     *           "scheduled_at": "2026-11-25T08:10:00Z",
+                     *           "next_win_node_id": "0193b0a0-0000-7000-8000-000000000923",
+                     *           "status": "scheduled"
+                     *         },
+                     *         {
+                     *           "node_id": "0193b0a0-0000-7000-8000-000000000923",
+                     *           "bracket": "winners",
+                     *           "round": 2,
+                     *           "position": 0,
+                     *           "entry_a_id": "0193b0a0-0000-7000-8000-000000000911",
+                     *           "entry_b_id": null,
+                     *           "winner_entry_id": null,
+                     *           "is_draw": false,
+                     *           "match_id": null,
+                     *           "scheduled_at": "2026-11-25T08:30:00Z",
+                     *           "status": "pending"
+                     *         }
+                     *       ],
+                     *       "groups": []
+                     *     }
+                     */
                     "application/json": components["schemas"]["Bracket"];
                 };
             };
@@ -30617,6 +31258,24 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "entries": [
+                     *         {
+                     *           "entry_id": "0193b0a0-0000-7000-8000-000000000911",
+                     *           "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+                     *           "status": "registered",
+                     *           "seed": null,
+                     *           "players": [
+                     *             {
+                     *               "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *               "nickname": "MeoXanh42"
+                     *             }
+                     *           ]
+                     *         }
+                     *       ]
+                     *     }
+                     */
                     "application/json": components["schemas"]["TournamentEntryResult"];
                 };
             };
@@ -30728,6 +31387,21 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "entry_id": "0193b0a0-0000-7000-8000-000000000911",
+                     *       "tournament_id": "0193b0a0-0000-7000-8000-000000000901",
+                     *       "status": "checked_in",
+                     *       "seed": 1,
+                     *       "players": [
+                     *         {
+                     *           "student_id": "0193b0a0-0000-7000-8000-0000000000a1",
+                     *           "nickname": "MeoXanh42"
+                     *         }
+                     *       ],
+                     *       "checked_in_at": "2026-11-25T07:35:00Z"
+                     *     }
+                     */
                     "application/json": components["schemas"]["TournamentEntry"];
                 };
             };
@@ -35055,6 +35729,52 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "leaderboard_id": "0193b0a0-0000-7000-8000-000000000801",
+                     *           "code": "grade_goal_weekly",
+                     *           "title": "Mục tiêu của khối",
+                     *           "metric": "grade_goal",
+                     *           "scope_type": "grade",
+                     *           "period": "weekly",
+                     *           "scope_id": "0193b0a0-0000-7000-8000-000000000903",
+                     *           "grade_level": 4
+                     *         },
+                     *         {
+                     *           "leaderboard_id": "0193b0a0-0000-7000-8000-000000000802",
+                     *           "code": "school_arena_weekly",
+                     *           "title": "Đấu trường trường",
+                     *           "metric": "competition_points",
+                     *           "scope_type": "school",
+                     *           "period": "weekly",
+                     *           "scope_id": "0193b0a0-0000-7000-8000-000000000903",
+                     *           "grade_level": 4,
+                     *           "filters": {
+                     *             "subject_id": null,
+                     *             "topic_id": null,
+                     *             "mode": null
+                     *           }
+                     *         },
+                     *         {
+                     *           "leaderboard_id": "0193b0a0-0000-7000-8000-000000000803",
+                     *           "code": "rating_season",
+                     *           "title": "Xếp hạng thi đấu",
+                     *           "metric": "rating",
+                     *           "scope_type": "school",
+                     *           "period": "season",
+                     *           "scope_id": "0193b0a0-0000-7000-8000-000000000903",
+                     *           "grade_level": 4,
+                     *           "filters": {
+                     *             "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *             "topic_id": null,
+                     *             "mode": "battle_1v1"
+                     *           }
+                     *         }
+                     *       ]
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["LeaderboardSummary"][];
                     };
@@ -36112,6 +36832,48 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "items": [
+                     *         {
+                     *           "subject_id": "0193b0a0-0000-7000-8000-000000000601",
+                     *           "code": "math",
+                     *           "name": {
+                     *             "vi": "Toán",
+                     *             "en": "Math"
+                     *           },
+                     *           "grade_levels": [
+                     *             1,
+                     *             2,
+                     *             3,
+                     *             4,
+                     *             5,
+                     *             6,
+                     *             7,
+                     *             8,
+                     *             9
+                     *           ],
+                     *           "icon_key": "math"
+                     *         },
+                     *         {
+                     *           "subject_id": "0193b0a0-0000-7000-8000-000000000602",
+                     *           "code": "vietnamese",
+                     *           "name": {
+                     *             "vi": "Tiếng Việt",
+                     *             "en": "Vietnamese"
+                     *           },
+                     *           "grade_levels": [
+                     *             1,
+                     *             2,
+                     *             3,
+                     *             4,
+                     *             5
+                     *           ],
+                     *           "icon_key": "vietnamese"
+                     *         }
+                     *       ]
+                     *     }
+                     */
                     "application/json": {
                         items: components["schemas"]["Subject"][];
                     };
@@ -36149,6 +36911,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "topic_id": "0193b0a0-0000-7000-8000-000000000611",
+                     *           "name": "Phép nhân",
+                     *           "code": "multiplication"
+                     *         },
+                     *         {
+                     *           "topic_id": "0193b0a0-0000-7000-8000-000000000612",
+                     *           "name": "Phép chia",
+                     *           "code": "division"
+                     *         }
+                     *       ]
+                     *     }
+                     */
                     "application/json": {
                         data: components["schemas"]["Topic"][];
                     };

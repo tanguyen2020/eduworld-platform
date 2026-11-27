@@ -1,6 +1,6 @@
 # Multiplayer Gameplay — Chơi cùng nhau trong thế giới
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Game Director + Multiplayer Engineer · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Game Director + Multiplayer Engineer · Cập nhật: 2026-11-27 (delta F109: §8 trường realtime của room `battle`) · 2026-11-15
 > Liên quan: [ADR-0011](../adr/ADR-0011-realtime-transport-websocket-qua-go-realtime-server.md) · [ADR-0012](../adr/ADR-0012-the-gioi-game-hybrid-hub-instance-private-instance-match-roo.md) · [ADR-0016](../adr/ADR-0016-server-authoritative-scoring-answer-key-khong-bao-gio-roi-se.md) · [ADR-0031](../adr/ADR-0031-game-chi-danh-cho-hoc-sinh-luu-lich-su-dang-nhap-mot-thiet-b.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [PARTY_SYSTEM](PARTY_SYSTEM.md) · [MATCHMAKING](MATCHMAKING.md) · [SOCIAL_SYSTEM](SOCIAL_SYSTEM.md) · [CHAT_SYSTEM](CHAT_SYSTEM.md) · [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md)
 
 ## 1. Mục đích & phạm vi
@@ -127,7 +127,7 @@ Bất biến **[Confirmed]**: kết quả học tập (attempt, điểm, mastery
 |---|---|---|
 | `hub_instance`, `private_instance` | Vị trí, hướng, animation, emote của người khác, mượt nhờ nội suy | Tốc độ tối đa, biên bản đồ; vi phạm → đưa về vị trí hợp lệ |
 | `private_instance` (quest) | Trạng thái object tương tác, bước quest chung | Server quyết định trạng thái |
-| `battle`, `coop`, `boss` | Câu hỏi, đếm ngược, kết quả từng câu, điểm/thanh máu boss | State machine server; câu hỏi không kèm đáp án (ADR-0016) |
+| `battle`, `coop`, `boss` | Câu hỏi, đếm ngược, kết quả từng câu, điểm/thanh máu boss; trận có bonus tốc độ không (`speed_bonus_enabled`), lượt chính của mỗi đội ở Team Battle (`primary_user_ids`), kênh chat trận/đội (`chat_channel_ids`), lời động viên riêng sau chuỗi thua ([COMPETITION_SYSTEM §12](../01-game-design/COMPETITION_SYSTEM.md#12-giảm-áp-lực-tiêu-cực)) | State machine server; câu hỏi không kèm đáp án (ADR-0016); mọi cờ trên do server quyết theo luật đã ghim, client chỉ hiển thị |
 | `lobby` | Danh sách người, ready, đội | Server |
 
 Tần suất, interest grid, envelope: [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md), [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md).

@@ -11,6 +11,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/view"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/battle"
 	mm "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/matchmaking"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -225,9 +226,32 @@ func (h Matchmaking) finalize(ctx context.Context, p port.Proposal, now time.Tim
 	return nil
 }
 
+// assignedTo pushes matchmaking.match.assigned to every participant with its own chat channels: one message per team
+// (the team channel differs), F109 delta 2026-11-27.
+func (h Matchmaking) assignedTo(ctx context.Context, p port.Proposal) {
+	teams := map[uuid.UUID]int{}
+	for _, s := range p.Students() {
+		teams[s] = p.TeamOf(s)
+	}
+	chats := battle.ChatChannelsOf(p.ID, teams)
+	byTeam := map[int][]uuid.UUID{}
+	order := []int{}
+	for _, s := range p.Students() {
+		t := teams[s]
+		if _, ok := byTeam[t]; !ok {
+			order = append(order, t)
+		}
+		byTeam[t] = append(byTeam[t], s)
+	}
+	for _, t := range order {
+		to := byTeam[t]
+		h.send(ctx, to, rtMatchAssigned, view.MatchAssignedFor(p.ID, p.Mode, chats[to[0]]))
+	}
+}
+
 // assigned pushes the match to every participant and the matched tickets.
 func (h Matchmaking) assigned(ctx context.Context, p port.Proposal, now time.Time) {
-	h.send(ctx, p.Students(), rtMatchAssigned, view.MatchAssigned(p.ID, p.Mode))
+	h.assignedTo(ctx, p)
 	for _, t := range p.Tickets {
 		if p.Direct {
 			continue

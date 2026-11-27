@@ -17,6 +17,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/cache"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/persistence"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/chatid"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 )
 
@@ -178,6 +179,10 @@ func TestMMProposalAccept(t *testing.T) {
 		if len(as) != 1 || as[0]["match_id"] != pid {
 			t.Fatalf("match.assigned to %s: %v", k.nickname, as)
 		}
+		// delta F109 2026-11-27: the match chat channel of module chat (F117 id), no team channel in a 1v1.
+		if c, _ := as[0]["chat_channel_ids"].(map[string]any); c["match"] != chatid.Match(uuid.MustParse(pid)).String() || c["team"] != nil {
+			t.Fatalf("match.assigned chat_channel_ids of %s: %v", k.nickname, as[0])
+		}
 	}
 	if g := m.getTicket(an, ta); g.str("status") != "matched" || g.str("match_id") != pid {
 		t.Fatalf("ticket after match %s", g.raw)
@@ -237,13 +242,14 @@ func TestMMDeclineTimeoutCooldown(t *testing.T) {
 	}
 }
 
-// T016 — F104-AC-07: a second ticket is 409 MM_TICKET_ALREADY_ACTIVE, also for concurrent requests with other keys.
+// T016 — F104-AC-07: a second ticket is 409 MM_TICKET_ALREADY_ACTIVE (with the ticket_id of the caller's own active
+// ticket — delta F109 2026-11-27), also for concurrent requests with other keys.
 func TestMMOneTicketPerStudent(t *testing.T) {
 	m := setupMM(t)
 	a := m.kid(m.tenantA, m.schoolA, 3)
-	m.ticket(a, http.StatusCreated, nil)
-	if r := m.ticket(a, http.StatusConflict, nil); r.code() != "MM_TICKET_ALREADY_ACTIVE" {
-		t.Fatalf("second ticket %s", r.raw)
+	first := m.ticket(a, http.StatusCreated, nil).str("ticket_id")
+	if r := m.ticket(a, http.StatusConflict, nil); r.code() != "MM_TICKET_ALREADY_ACTIVE" || first == "" || r.str("ticket_id") != first {
+		t.Fatalf("second ticket %s (own ticket %s)", r.raw, first)
 	}
 	b := m.kid(m.tenantA, m.schoolA, 3)
 	var wg sync.WaitGroup

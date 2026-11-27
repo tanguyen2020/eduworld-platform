@@ -252,6 +252,36 @@ func (Battle) Abandons(ctx context.Context, student uuid.UUID, since time.Time) 
 	return n, err
 }
 
+// RecentOutcomes implements write.BattleRepository: outcomes of the latest completed matches of the student in the
+// session tenant, newest first (no_contest left out; cancelled/aborted matches never count).
+func (Battle) RecentOutcomes(ctx context.Context, student uuid.UUID, limit int) ([]string, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if limit <= 0 {
+		return nil, nil
+	}
+	// tenancyguard:ok participant rows of the session tenant (RLS T + infra.current_tenant_id()); matches joined by id, live rows
+	rows, err := t.QueryContext(ctx, `SELECT p.outcome FROM competition.match_participants p JOIN competition.matches m ON m.match_id = p.match_id
+		AND m.deleted_at IS NULL WHERE p.tenant_id = infra.current_tenant_id() AND p.student_id = $1 AND p.deleted_at IS NULL
+		AND p.outcome IS NOT NULL AND p.outcome <> 'no_contest' AND m.status = 'completed'
+		ORDER BY m.ended_at DESC NULLS LAST, m.match_id DESC LIMIT $2`, student, limit)
+	if err != nil {
+		return nil, fmt.Errorf("competition: recent outcomes: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []string
+	for rows.Next() {
+		var o string
+		if err := rows.Scan(&o); err != nil {
+			return nil, fmt.Errorf("competition: recent outcomes: %w", err)
+		}
+		out = append(out, o)
+	}
+	return out, rows.Err()
+}
+
 // RestrictedUntil implements write.BattleRepository.
 func (Battle) RestrictedUntil(ctx context.Context, student uuid.UUID, kind string, at time.Time) (*time.Time, error) {
 	t, err := tx(ctx)

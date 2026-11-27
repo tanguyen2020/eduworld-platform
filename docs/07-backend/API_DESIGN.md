@@ -258,9 +258,13 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 | 409 | `PARTY_ACTIVITY_NOT_ELIGIBLE` | Có member không đủ điều kiện activity (trạng thái party/thành viên hiện tại không cho bắt đầu); kèm `ineligible_members` (mã lý do) (F101-AC-08) |
 | 409 | `PARTY_NOT_READY` | Bắt đầu phiên party khi còn thành viên online chưa Ready hoặc số thành viên online ngoài khoảng tối thiểu–tối đa của hoạt động (F101-AC-09) |
 | 403 | `ROOM_NOT_MEMBER` | Truy cập room không phải thành viên |
-| 409 | `MM_TICKET_ALREADY_ACTIVE` | Đã có matchmaking ticket |
+| 409 | `MM_TICKET_ALREADY_ACTIVE` | Đã có matchmaking ticket; kèm extension `ticket_id` khi ticket đang giữ có chính người gọi (delta F109, 2026-11-27) |
 | 409 | `MATCH_RESULT_ALREADY_RECORDED` | Ghi kết quả trận lần 2 |
 | 410 | `DUEL_EXPIRED` | Lời thách đấu bạn (friend duel) đã hết hạn 60 s hoặc bị hủy |
+| 403 | `TOURNAMENT_NOT_ELIGIBLE` | Học sinh (hoặc thành viên đội) thuộc đối tượng giải nhưng đang bị hạn chế thi đấu khi tự đăng ký (F107; ngoài đối tượng vẫn `404`) |
+| 422 | `TOURNAMENT_REGISTRATION_CLOSED` | Học sinh tự đăng ký ngoài cửa sổ đăng ký của giải — trước 2026-11-27 là `INVALID_STATE_TRANSITION`, cùng HTTP status |
+| 409 | `TOURNAMENT_FULL` | Giải đã đủ `max_entries` (kể cả đóng đăng ký sớm vì đủ chỗ) |
+| 422 | `TOURNAMENT_CHECK_IN_CLOSED` | Check-in ngoài cửa sổ check-in hoặc entry chưa được xác nhận — trước 2026-11-27 là `INVALID_STATE_TRANSITION`, cùng HTTP status |
 
 **Social** ([SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md))
 

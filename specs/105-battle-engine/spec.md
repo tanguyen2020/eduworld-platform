@@ -39,6 +39,14 @@ Quyết định khi triển khai, chọn phương án bảo thủ nhất (công 
 - Vào Timed Quiz/thử thách khối (T034 `JoinTimedQuizRoom`): không có command riêng — F107 tạo trận với danh sách học sinh (≤ 40, mỗi người một `match_participants`) và học sinh vào room bằng `battle.state.request` như mọi trận; vào muộn chỉ trả lời được câu đang mở và các câu sau. Co-op Challenge dùng `coop.*` (task = câu hỏi); `coop.action.perform` của thành viên → `VALIDATION_FAILED` (không có puzzle; puzzle co-op là quest của module game).
 - Biến môi trường mới: `EW_BATTLE_TICK_HZ` (10), `EW_BATTLE_ROOM_CHECKPOINT` (5 s, làm mới checkpoint ngoài mỗi lần chuyển trạng thái), `EW_BATTLE_PLAN_DEADLINE` (3 s), `EW_BATTLE_SCORE_DEADLINE` (2 s).
 
+### Session 2026-11-27 (delta client F109 — [Confirmed], chốt phương án an toàn nhất)
+
+- Q: Client biết trận có bonus tốc độ thế nào (F109-AC-09)? → A: `speed_bonus_enabled` (= luật trận đã ghim: khối ≥ `speed_bonus_min_grade`) trong `battle.countdown.started` và `battle.state.snapshot`; không gửi công thức, mức tối đa hay thời gian dùng để tính (R6). Test: `TestBattleDeltaSpeedBonusEnabled`, `TestBattleFlow1v1`.
+- Q: Lượt chính của Team Battle (F109-AC-10)? → A: `primary_user_ids` (mỗi đội một người, theo số đội, = lượt chính xoay vòng của câu) trong `battle.question.shown` và `battle.state.snapshot` khi đang có câu; chỉ `team_battle`. Test: `TestBattleDeltaPrimaryTurns`.
+- Q: Lời động viên sau chuỗi thua (COMPETITION_SYSTEM §12)? → A: Sau khi kết quả đã ghi (`RecordMatchResult` commit, hoặc `MATCH_RESULT_ALREADY_RECORDED` khi failover), use case `MatchEncouragements` đọc trong TenantScope của trận tối đa `loss_streak_encouragement` (CONFIG_DEFAULTS 3; cấu hình matchmaking `battle.loss_streak_encouragement` 2–10) kết quả gần nhất của từng người thua: trận `completed` của tenant, bỏ `no_contest`, bỏ trận hủy/aborted, bỏ dòng đã soft-delete; `loss`/`forfeit`/`abandoned` là thua, `win`/`draw` ngắt chuỗi. Đủ chuỗi → `battle.match.ended` **riêng** người đó có `encouragement` {`code` `loss_streak_review`, `message_code` khóa dịch, `subject_id`, `topic_id`? của trận}; người khác nhận bản của phòng không có trường. Không ghi DB, không event; lỗi đọc → trận vẫn kết thúc, không có lời động viên (best effort). Không áp dụng Timed Quiz/Co-op; checkpoint cũ không có tham số → không có lời động viên. Test: `TestBattleDeltaLossStreak`, `TestBattleDeltaEncouragementPrivate`, `TestBattleDeltaRecentOutcomesTenantScope` (tenant A/B), `TestBattleFlow1v1`.
+- Q: Khóa lựa chọn của câu (`option_id` của AsyncAPI hay `id` của render learning)? → A: `id` là khóa chuẩn; room thêm `option_id` cùng giá trị (alias tương thích ngược, deprecated, giữ hết v1) cho mọi `options[]` của `battle.question.shown`, `battle.state.snapshot`, `coop.task.assigned`; `AnswerResponse` không đổi. Test: `TestBattleDeltaOptionAlias`, `TestBattleFlow1v1`.
+- Q: Kênh chat của trận trong snapshot? → A: `battle.state.snapshot` có `chat_channel_ids` {`match`, `team`?} của người xem (id `pkg/chatid`, cùng luật đội với F117). Test: `TestBattleDeltaChatChannels`, `TestBattleFlow1v1`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Trận 1v1 Knowledge Battle do server điều khiển (Priority: P1) 🎯 MVP
@@ -183,6 +191,7 @@ Học sinh xem lại trận của mình với câu hỏi và giải thích; Scho
 | `speed_bonus_min_grade` | Khối tối thiểu có bonus tốc độ |
 | `disconnect_grace` | Grace theo mode |
 | `abandon_penalty` | Hạn chế ranked khi bỏ trận lặp lại |
+| `loss_streak_encouragement` | Số trận thua liên tiếp trước lời động viên + gợi ý luyện chủ đề (delta F109 2026-11-27) |
 | `cheat_fast_answer_flag` | Ngưỡng trả lời quá nhanh |
 | `tournament_timers` | Grace trận giải |
 | `xp_competition_matches_per_day` | (module game dùng; F105 chỉ phát event) |

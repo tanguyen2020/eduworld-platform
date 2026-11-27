@@ -111,22 +111,24 @@ type BotProfile struct {
 // Config is the battle configuration: the `battle` and `bot_profiles` sections of the published matchmaking
 // configuration pinned by the match (ruleset_version_id). A missing key takes the CONFIG_DEFAULTS value.
 type Config struct {
-	SpeedBonusMinGrade int             `json:"speed_bonus_min_grade"`
-	Battle1v1          Format          `json:"battle_1v1"`
-	Team               TeamFormat      `json:"team_battle"`
-	TimedQuiz          TimedQuizFormat `json:"timed_quiz"`
-	Coop               CoopFormat      `json:"coop_challenge"`
-	Graces             Graces          `json:"disconnect_grace"`
-	Timing             Timing          `json:"timing"`
-	FastAnswer         FastAnswer      `json:"fast_answer"`
-	AbandonPenalty     AbandonPenalty  `json:"abandon_penalty"`
-	BotProfiles        []BotProfile    `json:"-"`
+	SpeedBonusMinGrade int `json:"speed_bonus_min_grade"`
+	// LossStreak is loss_streak_encouragement (COMPETITION_SYSTEM §12): lost matches in a row before the encouragement.
+	LossStreak     int             `json:"loss_streak_encouragement"`
+	Battle1v1      Format          `json:"battle_1v1"`
+	Team           TeamFormat      `json:"team_battle"`
+	TimedQuiz      TimedQuizFormat `json:"timed_quiz"`
+	Coop           CoopFormat      `json:"coop_challenge"`
+	Graces         Graces          `json:"disconnect_grace"`
+	Timing         Timing          `json:"timing"`
+	FastAnswer     FastAnswer      `json:"fast_answer"`
+	AbandonPenalty AbandonPenalty  `json:"abandon_penalty"`
+	BotProfiles    []BotProfile    `json:"-"`
 }
 
 // DefaultConfig is CONFIG_DEFAULTS: battle_1v1_format (7 × 20 s, g1_3 30 s, 100 + bonus ≤ 50, last ×2),
 // team_battle_format (10 questions, support 30 %, grade ≥ 4), speed_bonus_min_grade 6, disconnect_grace (1v1 30 s,
 // team 45 s, tournament 60 s × 2), cheat_fast_answer_flag (400 ms, g1_5 600 ms, 3 in a row), abandon_penalty
-// (3 / 24 h → 15 min) and the bot of MATCHMAKING §9 (60–85 % accuracy). Timed quiz, co-op and the timers of the state
+// (3 / 24 h → 15 min), loss_streak_encouragement (3) and the bot of MATCHMAKING §9 (60–85 % accuracy). Timed quiz, co-op and the timers of the state
 // machine are [Proposed F105] (spec Clarifications 2026-11-21).
 func DefaultConfig() Config {
 	f := Format{Questions: 7, TimeS: 20, TimeG13S: 30, Points: 100, BonusMax: 50, LastMultiplier: 2}
@@ -134,6 +136,7 @@ func DefaultConfig() Config {
 	tq.Questions = 10
 	return Config{
 		SpeedBonusMinGrade: 6,
+		LossStreak:         3,
 		Battle1v1:          f,
 		Team:               TeamFormat{Format: Format{Questions: 10, TimeS: 20, TimeG13S: 30, Points: 100, BonusMax: 50, LastMultiplier: 2}, SupportPercent: 30, MinGrade: 4},
 		TimedQuiz:          TimedQuizFormat{Format: tq, MaxPlayers: 40, Top: 5, GoalPercent: 60, RankMinGrade: 4},

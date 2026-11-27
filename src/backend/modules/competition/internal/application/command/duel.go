@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/view"
 	mm "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/matchmaking"
@@ -98,7 +99,20 @@ func (h Matchmaking) CreateDuel(ctx context.Context, in DuelInput) (res map[stri
 			return err
 		}
 		res = view.Duel(d)
-		return idempotency.SetResult(ctx, res)
+		if err := idempotency.SetResult(ctx, res); err != nil {
+			return err
+		}
+		cards, err := h.Directory.Cards(ctx, tenant, []uuid.UUID{me})
+		if err != nil {
+			return err
+		}
+		challenger, ok := cards[me]
+		if !ok {
+			challenger = port.Card{UserID: me, Level: 1}
+		}
+		return h.later(ctx, func(ctx context.Context) {
+			h.send(ctx, []uuid.UUID{d.OpponentID}, rtDuelReceived, view.DuelReceived(d, challenger))
+		})
 	})
 	return res, mmError(err)
 }

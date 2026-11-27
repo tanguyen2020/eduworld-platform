@@ -123,6 +123,29 @@ func TestMMDuel(t *testing.T) {
 	if len(m.events("duel.sent")) != 1 || len(m.audits("duel.sent")) != 1 {
 		t.Fatal("duel.sent event and audit")
 	}
+	// delta F109 2026-11-27: only the opponent of a committed duel gets competition.duel.received, with the public card
+	// of the challenger (R16); refused duels and the challenger get nothing.
+	got := m.push.of(b.id, "competition.duel.received")
+	if len(got) != 1 || got[0]["duel_id"] != d.str("duel_id") || got[0]["subject_id"] != m.subject.String() {
+		t.Fatalf("duel.received %v", got)
+	}
+	if at, _ := got[0]["expires_at"].(float64); int64(at) != exp.UnixMilli() {
+		t.Fatalf("duel.received expires_at %v, want %d", got[0]["expires_at"], exp.UnixMilli())
+	}
+	card, _ := got[0]["challenger"].(map[string]any)
+	if card["user_id"] != a.id.String() || card["nickname"] != a.nickname {
+		t.Fatalf("challenger card %v", card)
+	}
+	for _, k := range []string{"real_name", "full_name", "school_id", "grade_level", "class_id"} {
+		if _, ok := card[k]; ok {
+			t.Fatalf("challenger card leaks %s: %v", k, card)
+		}
+	}
+	for _, k := range []kid{a, stranger, older, foe} {
+		if n := len(m.push.of(k.id, "competition.duel.received")); n != 0 {
+			t.Fatalf("%s got %d duel.received", k.nickname, n)
+		}
+	}
 	if r := m.call(a, http.MethodPost, "/competition/duels/"+d.str("duel_id")+":accept", key(), nil); r.status != http.StatusNotFound {
 		t.Fatalf("challenger accepts %d", r.status)
 	}

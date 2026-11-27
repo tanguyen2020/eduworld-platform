@@ -47,6 +47,7 @@ type App interface {
 	Score(ctx context.Context, info command.BattleInfo, plan uuid.UUID, p battle.Pending) (bool, error)
 	Reveal(ctx context.Context, info command.BattleInfo, plan uuid.UUID, index int, closedAt time.Time) (battle.Reveal, error)
 	Finish(ctx context.Context, info command.BattleInfo, room *battle.Room) error
+	Encouragements(ctx context.Context, info command.BattleInfo, room *battle.Room) (map[uuid.UUID]battle.Encouragement, error)
 	Abort(ctx context.Context, info command.BattleInfo, room *battle.Room, reason string) error
 	AbortUnhosted(ctx context.Context, matchID, tenant uuid.UUID) (command.BattleInfo, error)
 	Memberships(ctx context.Context, info command.BattleInfo, room *battle.Room, ms []battle.Membership, at time.Time) error
@@ -710,8 +711,13 @@ func (r *hosted) finish(ctx context.Context) {
 		return // the room asks again (finalizing retry)
 	}
 	r.finished = true
+	enc, err := r.h.app.Encouragements(fctx, r.info, snap)
+	if err != nil { // best effort: the match ends without the encouragement
+		slog.Warn("battlehost: encouragements unavailable", "error", err)
+		enc = nil
+	}
 	r.mu.Lock()
-	step := r.room.Ended(r.h.now())
+	step := r.room.EndedWith(r.h.now(), enc)
 	r.mu.Unlock()
 	r.exec(ctx, step)
 	r.stop(true)

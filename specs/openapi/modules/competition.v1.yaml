@@ -1003,7 +1003,9 @@ paths:
       summary: Vào hàng đợi (solo hoặc party leader). Ràng buộc khối được áp trước rating.
       description: |
         Khối, trường, tenant và rating do server lấy từ dữ liệu của phiên, không nhận từ body (F104-AC-01). Ticket chỉ
-        ở Valkey (ADR-0004). Đã có ticket active (kể cả của party) → `409 MM_TICKET_ALREADY_ACTIVE`; bị hạn chế thi đấu,
+        ở Valkey (ADR-0004). Đã có ticket active (kể cả của party) → `409 MM_TICKET_ALREADY_ACTIVE`, kèm extension `ticket_id`
+        khi ticket đang giữ có chính người gọi (mở lại thanh hàng chờ bằng `getMatchmakingTicket`; ticket chỉ của thành viên
+        khác trong party → không kèm id); bị hạn chế thi đấu,
         khối không có mode (vd. `team_battle` lớp < 4) hoặc party có thành viên khác khối → `403 POLICY_DENIED`; không phải
         leader → `403 PARTY_NOT_LEADER`; thành viên offline → `409 PARTY_MEMBER_NOT_ONLINE`; `matchmaking_type` `friend`
         (dùng `createDuel`) hoặc `tournament` (proposal trực tiếp của giải), `topic` thiếu `topic_id`, môn/chủ đề không
@@ -1897,8 +1899,10 @@ paths:
       summary: Đăng ký giải (học sinh, leader đội) hoặc đăng ký hộ (người tổ chức)
       description: |
         F107-AC-08, AC-09, AC-24. Học sinh (token game): đăng ký chính em (`party_id` khi giải đội — mọi thành viên đủ điều kiện,
-        cùng trường). Ngoài phạm vi → `404`; bị hạn chế thi đấu → `403 POLICY_DENIED`; đủ `max_entries` → `409 CONFLICT`; ngoài
-        cửa sổ đăng ký → `422 INVALID_STATE_TRANSITION`. Người tổ chức (portal): đăng ký hộ `student_ids` hoặc cả đối tượng của
+        cùng trường). Ngoài phạm vi → `404`; bị hạn chế thi đấu → `403 TOURNAMENT_NOT_ELIGIBLE`; đủ `max_entries` (kể cả đóng
+        sớm vì đủ chỗ) → `409 TOURNAMENT_FULL`; đã đăng ký → `409 CONFLICT`; ngoài cửa sổ đăng ký → `422 TOURNAMENT_REGISTRATION_CLOSED`
+        (HTTP status giữ như trước 2026-11-27, chỉ `code` cụ thể hơn — client chấp nhận mã lạ). Người tổ chức: giải không mở đăng
+        ký → `422 INVALID_STATE_TRANSITION` (không đổi). Người tổ chức (portal): đăng ký hộ `student_ids` hoặc cả đối tượng của
         thử thách khi `student_ids` rỗng (khối ± học sinh − loại trừ, ADR-0095); học sinh không đủ điều kiện bị bỏ qua.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
@@ -2007,7 +2011,7 @@ paths:
         - competition
       operationId: checkInTournamentEntry
       summary: Check-in của chính học sinh trong cửa sổ check-in
-      description: F107-AC-10. Chỉ `game_player`; ngoài cửa sổ (`tournament_timers`) → `422 INVALID_STATE_TRANSITION`; entry của người khác → `404`.
+      description: F107-AC-10. Chỉ `game_player`; ngoài cửa sổ (`tournament_timers`) hoặc entry chưa được xác nhận → `422 TOURNAMENT_CHECK_IN_CLOSED` (trước 2026-11-27 là `INVALID_STATE_TRANSITION`, cùng HTTP status); entry của người khác → `404`.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/TournamentId'
@@ -4372,6 +4376,10 @@ components:
           type: string
           format: date-time
           description: Chỉ có khi `code = CURFEW_ACTIVE` (thời điểm hết giờ giới nghiêm hiệu lực, giờ server, ADR-0078) hoặc `code = DAILY_PLAY_LIMIT_REACHED` (00:00 ICT hôm sau, CHILD_SAFETY §4.2)
+        ticket_id:
+          type: string
+          format: uuid
+          description: 'Chỉ có khi `code = MM_TICKET_ALREADY_ACTIVE` và ticket đang giữ có chính người gọi: id ticket để mở lại thanh hàng chờ (`getMatchmakingTicket`, F104, delta F109 2026-11-27)'
     ProblemCode:
       type: string
       description: Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
@@ -4506,6 +4514,10 @@ components:
         - MM_TICKET_ALREADY_ACTIVE
         - MATCH_RESULT_ALREADY_RECORDED
         - DUEL_EXPIRED
+        - TOURNAMENT_NOT_ELIGIBLE
+        - TOURNAMENT_REGISTRATION_CLOSED
+        - TOURNAMENT_FULL
+        - TOURNAMENT_CHECK_IN_CLOSED
         - SOCIAL_SCOPE_VIOLATION
         - FRIEND_LIMIT_REACHED
         - FRIEND_CODE_INVALID
@@ -6690,19 +6702,19 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
     Forbidden:
-      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED, BREAK_GLASS_NOT_ACTIVE
+      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TOURNAMENT_NOT_ELIGIBLE, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED, BREAK_GLASS_NOT_ACTIVE
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
     Conflict:
-      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED, CHAT_CHANNEL_CLOSED, ACCOUNT_LOCK_HELD_BY_SAFETY, ONCALL_SHIFT_OVERLAP, BREAK_GLASS_NOT_PENDING)
+      description: Xung đột trạng thái (vd. CONTENT_VERSION_CONFLICT, CONTENT_NOT_PUBLISHED, SIS_SCHOOL_ALREADY_CONNECTED, SIS_SYNC_ALREADY_RUNNING, SIS_CONNECTION_NOT_ACTIVE, ATTEMPT_ALREADY_SUBMITTED, EXAM_ALREADY_SUBMITTED, PARTY_ALREADY_IN_PARTY, PARTY_FULL, MM_TICKET_ALREADY_ACTIVE (kèm `ticket_id`), TOURNAMENT_FULL, IDEMPOTENCY_KEY_REUSED, IDENTITY_CONFLICT, USERNAME_TAKEN, EMAIL_TAKEN, HINTS_EXHAUSTED, ASSIGNMENT_NOT_EDITABLE, MODERATION_CASE_CLOSED, CHAT_CHANNEL_CLOSED, ACCOUNT_LOCK_HELD_BY_SAFETY, ONCALL_SHIFT_OVERLAP, BREAK_GLASS_NOT_PENDING)
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
     ValidationFailed:
-      description: VALIDATION_FAILED, SIS_CONTRACT_VERSION_UNSUPPORTED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform
+      description: VALIDATION_FAILED, SIS_CONTRACT_VERSION_UNSUPPORTED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, TOURNAMENT_REGISTRATION_CLOSED, TOURNAMENT_CHECK_IN_CLOSED, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform
       content:
         application/problem+json:
           schema:

@@ -39,6 +39,12 @@ Quyết định khi triển khai, chọn phương án bảo thủ nhất (an to�
 - Q: Trọng số `same_class` (hơi ưu tiên khác lớp ở trận ranked) và "ưu tiên bạn cùng lớp" khi chia đội? → A: bỏ, không thay thế (ADR-0095 mục 5). Cấu hình matchmaking xuất bản **version 2** (migration `20261231000002_adr0095_noclass.sql`, cùng `effective_from`, reader lấy `version_no` cao nhất) không có khóa `cost_weights.same_class`; payload cũ còn khóa này vẫn đọc được (bỏ qua). Ticket Valkey không còn trường `classes`.
 - Q: Khối/trường của người chơi lấy từ đâu? → A: `ref.students` (`student.synced`, `student.placement_changed` — owner F010); không đọc `ref.enrollments`. Ràng buộc khối/trường H1–H5 (FR-MM-002/003, ADR-0054) giữ nguyên. AC giữ mã; F104-AC-01, AC-04, AC-05 sửa chữ.
 
+### Session 2026-11-27 (delta client F109 — [Confirmed], chốt phương án an toàn nhất)
+
+- Q: `409 MM_TICKET_ALREADY_ACTIVE` có cho client biết ticket nào đang giữ không? → A: Có: Problem kèm extension `ticket_id` **chỉ khi** ticket đang giữ có chính người gọi (ticket solo của em hoặc ticket đội có em); ticket chỉ của bạn khác trong party (leader tạo ticket đội khi thành viên còn ticket riêng) → không kèm id (không lộ ticket của người khác). HTTP status/mã không đổi. Test: `TestMMOneTicketPerStudent`, `TestMMPartyTicket`.
+- Q: Người được thách đấu biết có lời mời bằng cách nào? → A: WS `competition.duel.received` gửi riêng người được thách sau commit `createDuel` (chỉ khi đã qua luật F104-AC-19: bạn bè cùng tenant, cùng nhóm khối, không chặn nhau, cả hai được chơi): `duel_id`, `challenger` (thẻ công khai: user_id, nickname, avatar, level — R16), `subject_id`, `topic_id`?, `expires_at`. Không tạo thông báo lưu trữ F123 (duel sống 60 s; không thêm `NotificationKind`); replay idempotent không gửi lại. Test: `TestMMDuel`.
+- Q: `matchmaking.match.assigned` có id kênh chat trận không? → A: Có `chat_channel_ids` {`match`, `team`?} = id tất định `pkg/chatid` (F117): proposal gửi theo từng đội (kênh đội của chính người nhận khi trận có ≥ 2 đội và một đội ≥ 2 người — cùng luật với module chat), bot/duel/thử thách khối chỉ có `match`. Không đọc DB của module chat (R13). Test: `TestMMProposalAccept` (1v1), `TestMMAllowFill` (đội).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Ghép 1v1 cùng khối theo rating (Priority: P1) 🎯 MVP

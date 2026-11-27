@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/presentation/consumer"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/chatid"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
 )
 
@@ -74,8 +75,8 @@ func TestMMPartyTicket(t *testing.T) {
 	}
 	m.setOnline(c)
 	own := m.ticket(c, http.StatusCreated, nil).str("ticket_id")
-	if r := m.ticket(lead, http.StatusConflict, teamBody(pid, false)); r.code() != "MM_TICKET_ALREADY_ACTIVE" {
-		t.Fatalf("member with its own ticket: %s", r.raw)
+	if r := m.ticket(lead, http.StatusConflict, teamBody(pid, false)); r.code() != "MM_TICKET_ALREADY_ACTIVE" || r.str("ticket_id") != "" {
+		t.Fatalf("member with its own ticket (never named to the leader): %s", r.raw)
 	}
 	m.call(c, http.MethodDelete, "/competition/matchmaking/tickets/"+own, "", nil)
 	r := m.ticket(lead, http.StatusCreated, teamBody(pid, false))
@@ -88,8 +89,8 @@ func TestMMPartyTicket(t *testing.T) {
 			t.Fatalf("%s not told: %v", k.nickname, u)
 		}
 	}
-	if x := m.ticket(b, http.StatusConflict, nil); x.code() != "MM_TICKET_ALREADY_ACTIVE" {
-		t.Fatalf("member of a queued party: %s", x.raw)
+	if x := m.ticket(b, http.StatusConflict, nil); x.code() != "MM_TICKET_ALREADY_ACTIVE" || x.str("ticket_id") != r.str("ticket_id") {
+		t.Fatalf("member of a queued party (its team ticket): %s", x.raw)
 	}
 	if x := m.call(b, http.MethodDelete, "/competition/matchmaking/tickets/"+r.str("ticket_id"), "", nil); x.code() != "PARTY_NOT_LEADER" {
 		t.Fatalf("member cancels the team ticket: %d %s", x.status, x.raw)
@@ -201,6 +202,28 @@ func TestMMAllowFill(t *testing.T) {
 	for _, s := range solos {
 		if m.mustProposal(s) != prop["proposal_id"] {
 			t.Fatal("solo not in the proposal")
+		}
+	}
+	// delta F109 2026-11-27: once everyone accepted, each player gets matchmaking.match.assigned with the match channel
+	// and the channel of its own team (F117 ids) — never the channel of the other team.
+	proposal := prop["proposal_id"].(string)
+	everyone := append([]kid{l, x}, solos...)
+	for _, k := range everyone {
+		m.acceptProposal(k, proposal, http.StatusNoContent)
+	}
+	match := uuid.MustParse(proposal)
+	for _, k := range everyone {
+		team := 0
+		if slices.Contains(teams[1].([]any), any(k.id.String())) {
+			team = 1
+		}
+		as := m.push.of(k.id, "matchmaking.match.assigned")
+		if len(as) != 1 {
+			t.Fatalf("match.assigned to %s: %v", k.nickname, as)
+		}
+		c, _ := as[0]["chat_channel_ids"].(map[string]any)
+		if c["match"] != chatid.Match(match).String() || c["team"] != chatid.Team(match, team).String() {
+			t.Fatalf("%s (team %d) chat channels %v", k.nickname, team, c)
 		}
 	}
 }

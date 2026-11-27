@@ -175,6 +175,10 @@ const (
 	TenantNotSelected                Code = "TENANT_NOT_SELECTED"
 	TenantToggleNotAllowed           Code = "TENANT_TOGGLE_NOT_ALLOWED"
 	TokenExpired                     Code = "TOKEN_EXPIRED"
+	TournamentCheckInClosed          Code = "TOURNAMENT_CHECK_IN_CLOSED"
+	TournamentFull                   Code = "TOURNAMENT_FULL"
+	TournamentNotEligible            Code = "TOURNAMENT_NOT_ELIGIBLE"
+	TournamentRegistrationClosed     Code = "TOURNAMENT_REGISTRATION_CLOSED"
 	TradeDisabled                    Code = "TRADE_DISABLED"
 	TranslationIncomplete            Code = "TRANSLATION_INCOMPLETE"
 	Unauthenticated                  Code = "UNAUTHENTICATED"
@@ -358,6 +362,10 @@ var statusByCode = map[Code]int{
 	TenantNotSelected:                403,
 	TenantToggleNotAllowed:           403,
 	TokenExpired:                     401,
+	TournamentCheckInClosed:          422,
+	TournamentFull:                   409,
+	TournamentNotEligible:            403,
+	TournamentRegistrationClosed:     422,
 	TradeDisabled:                    403,
 	TranslationIncomplete:            422,
 	Unauthenticated:                  401,
@@ -541,6 +549,10 @@ var allCodes = []Code{
 	TenantNotSelected,
 	TenantToggleNotAllowed,
 	TokenExpired,
+	TournamentCheckInClosed,
+	TournamentFull,
+	TournamentNotEligible,
+	TournamentRegistrationClosed,
 	TradeDisabled,
 	TranslationIncomplete,
 	Unauthenticated,

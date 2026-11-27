@@ -296,6 +296,12 @@
           "maximum": 10,
           "description": "Khối nhỏ nhất có bonus tốc độ — không hạ dưới CONFIG_DEFAULTS speed_bonus_min_grade (lớp 1–5 không có bonus tốc độ)"
         },
+        "loss_streak_encouragement": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 10,
+          "description": "Số trận thua liên tiếp để gửi lời động viên + gợi ý luyện chủ đề trong battle.match.ended (CONFIG_DEFAULTS loss_streak_encouragement, COMPETITION_SYSTEM §12)"
+        },
         "battle_1v1": {
           "$ref": "#/$defs/format"
         },

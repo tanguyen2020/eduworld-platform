@@ -56,6 +56,7 @@ type BattleInfo struct {
 	Mode             string                `json:"mode"`
 	Type             string                `json:"matchmaking_type"`
 	SubjectID        uuid.UUID             `json:"subject_id"`
+	TopicID          *uuid.UUID            `json:"topic_id,omitempty"`
 	Grade            int                   `json:"grade_level"`
 	Ranked           bool                  `json:"ranked"`
 	IsBot            bool                  `json:"is_bot"`
@@ -64,6 +65,8 @@ type BattleInfo struct {
 	RulesetVersionID uuid.UUID             `json:"ruleset_version_id"`
 	RoomType         string                `json:"room_type"`
 	AbandonPenalty   battle.AbandonPenalty `json:"abandon_penalty"`
+	// LossStreak is battle.loss_streak_encouragement of the pinned configuration (0: no encouragement, old checkpoints).
+	LossStreak int `json:"loss_streak_encouragement,omitempty"`
 }
 
 // CardReader reads the public cards of students (ref.player_profiles: nickname only, R16).
@@ -147,7 +150,7 @@ func (h Battles) Open(ctx context.Context, matchID, tenant uuid.UUID) (info Batt
 		return info, nil, ErrMatchOver
 	}
 	tournament := m.Mode == battle.ModeTournament || m.TournamentNodeID != nil
-	info = BattleInfo{MatchID: m.ID, Tenant: tenant, Mode: m.Mode, Type: m.Type, SubjectID: m.SubjectID, Grade: m.Grade, Ranked: m.Ranked,
+	info = BattleInfo{MatchID: m.ID, Tenant: tenant, Mode: m.Mode, Type: m.Type, SubjectID: m.SubjectID, TopicID: m.TopicID, Grade: m.Grade, Ranked: m.Ranked,
 		IsBot: m.IsBot, TournamentID: m.TournamentID, TournamentNodeID: m.TournamentNodeID, RulesetVersionID: m.RulesetVersionID,
 		RoomType: "battle"}
 	if m.Mode == battle.ModeCoop {
@@ -168,6 +171,7 @@ func (h Battles) Open(ctx context.Context, matchID, tenant uuid.UUID) (info Batt
 		return abort(err)
 	}
 	info.AbandonPenalty = cfg.AbandonPenalty
+	info.LossStreak = cfg.LossStreak
 	rules, err := cfg.RulesFor(m.Mode, m.Grade, tournament)
 	if err != nil {
 		return abort(err)
@@ -349,6 +353,46 @@ func (h Battles) Finish(ctx context.Context, info BattleInfo, room *battle.Room)
 		}
 	}
 	return err
+}
+
+// Encouragements returns the private encouragement of each player whose recorded result ends a loss streak of
+// loss_streak_encouragement matches (COMPETITION_SYSTEM §12, delta F109 2026-11-27): practise the subject (topic) of
+// the match. It reads the durable outcomes after RecordMatchResult committed, so a retry after a failover gives the same
+// answer; it never writes and never blocks the end of the match (the room host sends battle.match.ended without it on
+// an error).
+func (h Battles) Encouragements(ctx context.Context, info BattleInfo, room *battle.Room) (out map[uuid.UUID]battle.Encouragement, err error) {
+	if info.LossStreak <= 0 || room == nil || info.Mode == battle.ModeTimedQuiz || info.Mode == battle.ModeCoop {
+		return nil, nil
+	}
+	res := room.Result()
+	if res.Status != "completed" {
+		return nil, nil
+	}
+	ctx, done := observability.UseCase(ctx, "competition.command.MatchEncouragements")
+	defer func() { done(err) }()
+	err = h.tx(ctx, info.Tenant, func(ctx context.Context) error {
+		for _, p := range res.Players {
+			if p.Tenant != info.Tenant || !battle.Lost(p.Outcome) {
+				continue
+			}
+			outcomes, err := h.Repo.RecentOutcomes(ctx, p.ID, info.LossStreak)
+			if err != nil {
+				return err
+			}
+			if !battle.LossStreak(outcomes, info.LossStreak) {
+				continue
+			}
+			if out == nil {
+				out = map[uuid.UUID]battle.Encouragement{}
+			}
+			out[p.ID] = battle.LossStreakEncouragement(info.SubjectID, info.TopicID)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (h Battles) recorder() string {

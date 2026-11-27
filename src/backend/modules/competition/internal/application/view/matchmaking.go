@@ -7,7 +7,9 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/battle"
 	mm "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/matchmaking"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/chatid"
 )
 
 // Ticket is the MatchmakingTicket of the contract (REST) and the payload of matchmaking.ticket.updated (realtime):
@@ -108,10 +110,17 @@ func ProposalCancelled(id uuid.UUID, reason string, requeued bool) map[string]an
 	return map[string]any{"proposal_id": id, "reason": reason, "requeued": requeued}
 }
 
-// MatchAssigned is the payload of matchmaking.match.assigned: the room of the match is opened by the battle engine
-// (F105) with room_id = match_id.
+// MatchAssigned is the payload of matchmaking.match.assigned for a match without team channels (1v1, bot, duel, timed
+// quiz): the room of the match is opened by the battle engine (F105) with room_id = match_id; chat_channel_ids is the
+// match channel module chat opens on match.started (F117, pkg/chatid).
 func MatchAssigned(id uuid.UUID, mode string) map[string]any {
-	return map[string]any{"match_id": id, "room_id": id.String(), "mode": mode}
+	return MatchAssignedFor(id, mode, battle.ChatChannels{Match: chatid.Match(id)})
+}
+
+// MatchAssignedFor is matchmaking.match.assigned for one recipient with its gameplay chat channels (its own team
+// channel in a team battle).
+func MatchAssignedFor(id uuid.UUID, mode string, chat battle.ChatChannels) map[string]any {
+	return map[string]any{"match_id": id, "room_id": id.String(), "mode": mode, "chat_channel_ids": chat.Payload()}
 }
 
 // Match is the Match of the contract for a participant (no rating, no school — R16).
@@ -133,6 +142,16 @@ func Duel(d mm.Duel) map[string]any {
 	}
 	if d.MatchID != nil {
 		m["match_id"] = *d.MatchID
+	}
+	return m
+}
+
+// DuelReceived is the payload of competition.duel.received for the opponent of a duel (delta F109 2026-11-27): the public
+// card of the challenger (nickname, avatar, level — R16), the subject (topic) and the deadline to answer.
+func DuelReceived(d mm.Duel, challenger port.Card) map[string]any {
+	m := map[string]any{"duel_id": d.ID, "challenger": CardBody(challenger), "subject_id": d.SubjectID, "expires_at": d.ExpiresAt.UnixMilli()}
+	if d.TopicID != nil {
+		m["topic_id"] = *d.TopicID
 	}
 	return m
 }

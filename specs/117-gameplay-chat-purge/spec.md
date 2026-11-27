@@ -42,6 +42,10 @@ Quyết định khi triển khai, chọn phương án bảo thủ nhất (an to�
 - Q: `chat_channel_id` trong payload party/trận của competition? → A: Ngoài phạm vi (F101/F105; module competition không sửa trong feature này); `src/backend/pkg/chatid` sẵn để competition dùng.
 - Q: Payload `chat.daily_stats` (EVENT_DESIGN ghi `school_id`, `grade_band`, `active_senders`)? → A: Theo bảng `gameplay_chat_daily_stats`: `tenant_id`, `stat_date`, `channel_type`, `channels`, `messages`, `masked`, `blocked`, `reported` (phần cộng thêm của lượt purge) — không theo trường/khối/người (R14, R16); EVENT_DESIGN đã sửa.
 
+### Session 2026-11-27 (delta client F109 — [Confirmed])
+
+- Q: Client lấy id kênh `match`/`team` ở đâu? → A: Module competition gửi `chat_channel_ids` trong `matchmaking.match.assigned` và `battle.state.snapshot`, tính bằng `pkg/chatid` (cùng vector cố định) và cùng luật kênh đội của `ApplyMatch` (≥ 2 đội, một đội ≥ 2 người) — không gọi facade, không đọc DB chat (R13, R29). Module chat không đổi: kênh vẫn được tạo/thêm thành viên khi tiêu thụ `match.started`; quyền đọc/gửi vẫn theo thành viên (biết id không cho quyền). Câu "`chat_channel_id` trong payload trận — ngoài phạm vi" của phiên 2026-11-22 nay đã có (owner F105).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Chat có ngay khi vào party hoặc trận (Priority: P1)

@@ -1,6 +1,6 @@
 # Matchmaking
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Multiplayer Engineer · Cập nhật: 2026-11-26 (F108: §5.1 đọc version hiệu lực theo dòng thời gian release, invariant khối) · 2026-11-21 (triển khai [F104](../../specs/104-matchmaking/spec.md): quyết định ở Clarifications 2026-11-21) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Multiplayer Engineer · Cập nhật: 2026-11-27 (delta F109: `409 MM_TICKET_ALREADY_ACTIVE` kèm `ticket_id`, `chat_channel_ids` trong `matchmaking.match.assigned`, WS `competition.duel.received`) · 2026-11-26 (F108: §5.1 đọc version hiệu lực theo dòng thời gian release, invariant khối) · 2026-11-21 (triển khai [F104](../../specs/104-matchmaking/spec.md): quyết định ở Clarifications 2026-11-21) · 2026-11-15
 > Liên quan: [MULTIPLAYER_GAMEPLAY](MULTIPLAYER_GAMEPLAY.md) · [PARTY_SYSTEM](PARTY_SYSTEM.md) · [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) · [RANKING](../01-game-design/COMPETITION_SYSTEM.md) · [TOURNAMENT](../01-game-design/COMPETITION_SYSTEM.md) · [ADR-0018](../adr/ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)
 
 > [!IMPORTANT]
@@ -86,13 +86,13 @@ Hard constraints **không bao giờ** nới, kể cả khi chờ lâu.
 
 | Thao tác | Endpoint | Ghi chú |
 |---|---|---|
-| Tạo ticket | `POST /api/v1/competition/matchmaking/tickets` (`Idempotency-Key`) | Body: `mode`, `subject_id`, `topic_id?`, `party_id?`; server tự lấy grade, school, rating |
+| Tạo ticket | `POST /api/v1/competition/matchmaking/tickets` (`Idempotency-Key`) | Body: `mode`, `subject_id`, `topic_id?`, `party_id?`; server tự lấy grade, school, rating. Đã có ticket active → `409 MM_TICKET_ALREADY_ACTIVE`, kèm `ticket_id` chỉ khi ticket đó có chính người gọi (không bao giờ nêu ticket riêng của bạn khác trong party) |
 | Xem ticket | `GET /api/v1/competition/matchmaking/tickets/{ticket_id}` | Trạng thái, thời gian chờ ước tính |
 | Hủy ticket | `DELETE /api/v1/competition/matchmaking/tickets/{ticket_id}` hoặc WS `matchmaking.ticket.cancel` | |
-| Thách đấu bạn | `POST /api/v1/competition/duels` (+ `:accept`, `:decline`) | Friend mode. Đề xuất, **chưa có trong OpenAPI**; dùng tên `duels` để không trùng "challenge" PvE của module game [Confirmed] |
+| Thách đấu bạn | `POST /api/v1/competition/duels` (+ `:accept`, `:decline`) | Friend mode (F104); dùng tên `duels` để không trùng "challenge" PvE của module game [Confirmed]. Người được thách nhận WS `competition.duel.received` (chỉ người đó, sau commit, chỉ khi qua luật thách đấu; thẻ công khai của người thách — R16) [Confirmed — delta F109 2026-11-27] |
 | Ready check | WS `matchmaking.proposal.accept` / `matchmaking.proposal.decline` | |
 
-Sự kiện WS gửi client (tên theo [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)): `matchmaking.ticket.updated` (status `queued`/`searching`/`cancelled`/`expired`, window mở rộng, ước tính chờ), `matchmaking.proposal.created`, `matchmaking.proposal.updated`, `matchmaking.proposal.cancelled`, `matchmaking.match.assigned` (kèm `room_id` lobby/battle).
+Sự kiện WS gửi client (tên theo [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)): `matchmaking.ticket.updated` (status `queued`/`searching`/`cancelled`/`expired`, window mở rộng, ước tính chờ), `matchmaking.proposal.created`, `matchmaking.proposal.updated`, `matchmaking.proposal.cancelled`, `matchmaking.match.assigned` (kèm `room_id` lobby/battle và `chat_channel_ids` {`match`, `team`?} — id tất định `pkg/chatid` của kênh chat trận/đội F117, gửi riêng theo đội; `team` chỉ ở Team Battle), `competition.duel.received` (lời thách đấu đến).
 
 ### 4.2. Lifecycle
 
@@ -188,7 +188,7 @@ sequenceDiagram
 
 - Party `competition_team` đủ size mode → một ticket; thiếu người → server cho phép "fill" bằng ticket lẻ cùng queue nếu leader bật `allow_fill` **[Confirmed]**.
 - Rating đội dùng để ghép: `μ_team = Σ μ_i / n`, `RD_team = sqrt(Σ RD_i²) / n` **[Confirmed]**; cách cập nhật rating sau trận thuộc [RANKING](../01-game-design/COMPETITION_SYSTEM.md).
-- Friend duel: lời thách đấu (event `duel.sent`) hết hạn 60 s, unranked, không tính Competition Points, vẫn tính XP theo cap và learning evidence; người đã block nhau không thách đấu được ([SOCIAL_SYSTEM §5](SOCIAL_SYSTEM.md#5-block-mute-report-điểm-vào)).
+- Friend duel: lời thách đấu (event `duel.sent`; người được thách nhận WS `competition.duel.received`, không có thông báo lưu trữ) hết hạn 60 s, unranked, không tính Competition Points, vẫn tính XP theo cap và learning evidence; người đã block nhau không thách đấu được ([SOCIAL_SYSTEM §5](SOCIAL_SYSTEM.md#5-block-mute-report-điểm-vào)).
 
 ## 9. Bot luyện tập (fallback)
 

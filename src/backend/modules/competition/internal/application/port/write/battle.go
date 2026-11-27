@@ -115,6 +115,9 @@ type BattleRepository interface {
 	InsertSignal(ctx context.Context, s IntegritySignalRow) error
 	// Abandons counts the ranked matches the student abandoned since (outcome abandoned).
 	Abandons(ctx context.Context, student uuid.UUID, since time.Time) (int, error)
+	// RecentOutcomes returns the outcomes of the latest completed matches of the student (newest first, at most limit;
+	// no_contest left out): the loss streak of COMPETITION_SYSTEM §12.
+	RecentOutcomes(ctx context.Context, student uuid.UUID, limit int) ([]string, error)
 	// RestrictedUntil returns the end of a restriction of kind in force at (nil when none).
 	RestrictedUntil(ctx context.Context, student uuid.UUID, kind string, at time.Time) (*time.Time, error)
 	InsertRestriction(ctx context.Context, r Restriction) (uuid.UUID, error)

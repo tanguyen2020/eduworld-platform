@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"time"
 
@@ -479,20 +480,51 @@ func (r *Room) Snapshot(viewer uuid.UUID) Message {
 		}
 	}
 	payload := map[string]any{"match_id": r.ID.String(), "mode": r.R.Mode, "state": state, "state_version": r.Version, "round": 1,
-		"question_index": r.Cur, "question_count": len(r.Items), "participants": parts}
+		"question_index": r.Cur, "question_count": len(r.Items), "participants": parts, "speed_bonus_enabled": r.R.SpeedBonus}
+	if chat := r.chatChannels(viewer); chat != nil {
+		payload["chat_channel_ids"] = chat
+	}
 	if r.St == StateQuestion {
 		payload["current_question"] = r.render(r.Cur)
 		payload["deadline_at"] = ms(r.Deadline)
 		_, locked := r.Answers[r.Cur][viewer]
 		payload["my_answer_locked"] = locked
+		if primary := r.primaryTurns(); primary != nil {
+			payload["primary_user_ids"] = primary
+		}
 	}
 	return Message{Type: "battle.state.snapshot", Payload: payload, To: []uuid.UUID{viewer}}
 }
 
+// primaryTurns are the players answering the main turn of the current question, one per team in team order (team
+// battle rotation, F105-AC-17); nil outside a team battle.
+func (r *Room) primaryTurns() []string {
+	if !r.R.Rotation {
+		return nil
+	}
+	var teams []int
+	for _, p := range r.Players {
+		if !slices.Contains(teams, p.Team) {
+			teams = append(teams, p.Team)
+		}
+	}
+	slices.Sort(teams)
+	out := make([]string, 0, len(teams))
+	for _, t := range teams {
+		if id := r.MainTurn(t); id != uuid.Nil {
+			out = append(out, id.String())
+		}
+	}
+	return out
+}
+
+// render is the QuestionRender of question i: the render payload of module learning (no answer data, ADR-0016) with
+// both option keys (id canonical, option_id alias).
 func (r *Room) render(i int) map[string]any {
 	it := r.Items[i]
 	q := map[string]any{}
 	_ = json.Unmarshal(it.Render, &q)
+	aliasOptions(q)
 	q["question_instance_id"] = it.Instance
 	q["question_type"] = it.Type
 	q["time_limit_ms"] = it.Limit.Milliseconds()
@@ -692,7 +724,7 @@ func (r *Room) tickLobby(now time.Time) Step {
 		return s
 	}
 	s.push("battle.countdown.started", map[string]any{"match_id": r.ID.String(), "starts_at": ms(r.NextAt),
-		"question_count": len(r.Items), "rounds": 1})
+		"question_count": len(r.Items), "rounds": 1, "speed_bonus_enabled": r.R.SpeedBonus})
 	return s
 }
 
@@ -717,8 +749,12 @@ func (r *Room) show(i int, now time.Time) Step {
 		}
 		return s
 	}
-	s.push("battle.question.shown", map[string]any{"match_id": r.ID.String(), "round": 1, "question_index": i, "question": q,
-		"shown_at": ms(r.Shown), "deadline_at": ms(r.Deadline)})
+	shown := map[string]any{"match_id": r.ID.String(), "round": 1, "question_index": i, "question": q,
+		"shown_at": ms(r.Shown), "deadline_at": ms(r.Deadline)}
+	if primary := r.primaryTurns(); primary != nil {
+		shown["primary_user_ids"] = primary
+	}
+	s.push("battle.question.shown", shown)
 	return s
 }
 
@@ -922,7 +958,11 @@ func (r *Room) Abort(reason string, now time.Time) Step {
 }
 
 // Ended closes the room once the result is durable (F105-AC-07: battle.match.ended only after the commit).
-func (r *Room) Ended(now time.Time) Step {
+func (r *Room) Ended(now time.Time) Step { return r.EndedWith(now, nil) }
+
+// EndedWith is Ended with the private encouragements of the players who ended a loss streak (COMPETITION_SYSTEM §12):
+// each of them gets its own battle.match.ended with `encouragement`, the others the message of the room.
+func (r *Room) EndedWith(now time.Time, enc map[uuid.UUID]Encouragement) Step {
 	var s Step
 	if r.St != StateFinalizing {
 		return s
@@ -964,7 +1004,24 @@ func (r *Room) Ended(now time.Time) Step {
 				"correct_count": r.Bot.Correct})
 		}
 		m["results"] = results
-		s.push("battle.match.ended", m)
+		if len(enc) == 0 {
+			s.push("battle.match.ended", m)
+			return s
+		}
+		var others []uuid.UUID
+		for _, p := range r.Players {
+			e, ok := enc[p.ID]
+			if !ok {
+				others = append(others, p.ID)
+				continue
+			}
+			own := maps.Clone(m)
+			own["encouragement"] = e.Payload()
+			s.push("battle.match.ended", own, p.ID)
+		}
+		if len(others) > 0 {
+			s.push("battle.match.ended", m, others...)
+		}
 		return s
 	}
 	// Timed quiz: one message per student — from grade 4 the top and its own rank, grades 1–3 their own result and the grade goal only (ADR-0095).
@@ -993,6 +1050,9 @@ func (r *Room) Ended(now time.Time) Step {
 				goal["contributors_count"] = len(res.Players)
 			}
 			m["grade_goal"] = goal
+		}
+		if e, ok := enc[p.ID]; ok {
+			m["encouragement"] = e.Payload()
 		}
 		s.push("battle.match.ended", m, p.ID)
 	}

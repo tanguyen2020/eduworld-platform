@@ -27,6 +27,7 @@ const (
 	rtProposalUpdated   = "matchmaking.proposal.updated"
 	rtProposalCancelled = "matchmaking.proposal.cancelled"
 	rtMatchAssigned     = "matchmaking.match.assigned"
+	rtDuelReceived      = "competition.duel.received"
 )
 
 // Audit actions of matchmaking (ids only — R14). Tickets are ephemeral and not audited (plan F104).
@@ -144,10 +145,33 @@ func rateLimited(wait time.Duration) error {
 	return RetryAfter{Err: problem.New(problem.RateLimited, "").Retry(), After: max(wait, time.Second)}
 }
 
+// ActiveTicketError is ErrTicketActive with the ticket held by the caller itself (409 MM_TICKET_ALREADY_ACTIVE +
+// ticket_id, delta F109 2026-11-27).
+type ActiveTicketError struct{ ID uuid.UUID }
+
+func (e ActiveTicketError) Error() string { return port.ErrTicketActive.Error() + ": " + e.ID.String() }
+
+// Unwrap keeps errors.Is(err, port.ErrTicketActive).
+func (e ActiveTicketError) Unwrap() error { return port.ErrTicketActive }
+
+// ticketActive returns the refusal of a new ticket while held is active: with its id only when the caller is one of its
+// students (a ticket of another member of the party is never named — it is not the caller's to open).
+func (h Matchmaking) ticketActive(ctx context.Context, me, held uuid.UUID, cause error) error {
+	if held == uuid.Nil {
+		return cause
+	}
+	cur, err := h.Store.Ticket(ctx, held)
+	if err != nil || cur == nil || !cur.Has(me) {
+		return cause
+	}
+	return ActiveTicketError{ID: held}
+}
+
 // mmError maps the errors of matchmaking to the problem codes of the contract.
 func mmError(err error) error {
 	var ve mm.ValidationError
 	var pe mm.PolicyError
+	var active ActiveTicketError
 	switch {
 	case err == nil:
 		return nil
@@ -155,6 +179,8 @@ func mmError(err error) error {
 		return problem.Invalid(ve.Field, problem.SubInvalid, ve.Message)
 	case errors.As(err, &pe):
 		return problem.New(problem.PolicyDenied, "")
+	case errors.As(err, &active):
+		return problem.New(problem.MmTicketAlreadyActive, "").With("ticket_id", active.ID.String()).Wrap(err)
 	case errors.Is(err, port.ErrTicketActive):
 		return problem.New(problem.MmTicketAlreadyActive, "")
 	case errors.Is(err, mm.ErrNotParticipant), errors.Is(err, mm.ErrNotDuelOpponent):
@@ -250,7 +276,10 @@ func (h Matchmaking) CreateTicket(ctx context.Context, in mm.Request) (res view.
 			t.Students = append(t.Students, p.ID)
 			t.Schools = append(t.Schools, p.SchoolID)
 		}
-		if _, err := h.Store.Create(ctx, t); err != nil {
+		if held, err := h.Store.Create(ctx, t); err != nil {
+			if errors.Is(err, port.ErrTicketActive) {
+				return h.ticketActive(ctx, me, held, err)
+			}
 			return err
 		}
 		if h.Tracker != nil {

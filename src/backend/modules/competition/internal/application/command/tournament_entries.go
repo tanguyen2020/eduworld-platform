@@ -78,9 +78,10 @@ func (h Tournaments) tournamentScope(ctx context.Context, tenant, id uuid.UUID) 
 
 // RegisterTournamentEntry implements registerTournamentEntry (F107-AC-08, AC-09, AC-24). A student registers itself (or
 // its party for a team tournament: the leader, every member eligible and of the school, team_size−1 to team_size
-// members): outside the scope → 404; restricted → 403 POLICY_DENIED; full → 409 CONFLICT; outside the registration
-// window → 422 INVALID_STATE_TRANSITION. The organizer registers students on their behalf (student_ids, or the whole
-// audience of the challenge when empty): the students who are not eligible are skipped. Idempotent (Idempotency-Key).
+// members): outside the scope → 404; restricted → 403 TOURNAMENT_NOT_ELIGIBLE; full → 409 TOURNAMENT_FULL; outside the
+// registration window → 422 TOURNAMENT_REGISTRATION_CLOSED (same HTTP statuses as before the codes of 2026-11-27).
+// The organizer registers students on their behalf (student_ids, or the whole audience of the challenge when empty):
+// the students who are not eligible are skipped. Idempotent (Idempotency-Key).
 func (h Tournaments) RegisterTournamentEntry(ctx context.Context, id uuid.UUID, in EntryInput) (out EntryResult, err error) {
 	ctx, done := observability.UseCase(ctx, "competition.command.RegisterTournamentEntry")
 	defer func() { done(err) }()
@@ -152,14 +153,14 @@ func (h Tournaments) registerSelf(ctx context.Context, id uuid.UUID, in EntryInp
 				return problem.Invalid("party_id", problem.SubInvalid, "every member is eligible and of the school of the tournament")
 			}
 			if s.Restricted {
-				return problem.New(problem.PolicyDenied, "")
+				return problem.New(problem.TournamentNotEligible, "")
 			}
 		}
 		if t.Status == trn.StatusRegistrationClosed && now.Before(t.RegCloseAt) {
-			return problem.New(problem.Conflict, "the tournament is full") // closed early by max_entries (F107-AC-08)
+			return problem.New(problem.TournamentFull, "") // closed early by max_entries (F107-AC-08)
 		}
 		if t.Status != trn.StatusRegistrationOpen || now.Before(t.RegOpenAt) || !now.Before(t.RegCloseAt) {
-			return trn.ErrInvalidTransition
+			return problem.New(problem.TournamentRegistrationClosed, "")
 		}
 		var revive *write.EntryRow
 		for _, m := range members {
@@ -180,7 +181,7 @@ func (h Tournaments) registerSelf(ctx context.Context, id uuid.UUID, in EntryInp
 		}
 		active := activeCount(entries)
 		if active >= t.MaxEntries {
-			return problem.New(problem.Conflict, "the tournament is full")
+			return problem.New(problem.TournamentFull, "")
 		}
 		var e write.EntryRow
 		if revive != nil {
@@ -480,7 +481,8 @@ func (h Tournaments) WithdrawTournamentEntry(ctx context.Context, id, entryID uu
 }
 
 // CheckInTournamentEntry implements checkInTournamentEntry (F107-AC-10): a member of a confirmed entry checks in while
-// the check-in window is open (check_in_opens_at to starts_at of a scheduled tournament); otherwise 422.
+// the check-in window is open (check_in_opens_at to starts_at of a scheduled tournament); otherwise 422
+// TOURNAMENT_CHECK_IN_CLOSED.
 func (h Tournaments) CheckInTournamentEntry(ctx context.Context, id, entryID uuid.UUID) (out map[string]any, err error) {
 	ctx, done := observability.UseCase(ctx, "competition.command.CheckInTournamentEntry")
 	defer func() { done(err) }()
@@ -506,7 +508,7 @@ func (h Tournaments) CheckInTournamentEntry(ctx context.Context, id, entryID uui
 		}
 		if t.Status != trn.StatusScheduled || now.Before(t.CheckInOpensAt) || !now.Before(t.StartsAt) ||
 			(e.Status != trn.EntryConfirmed && e.Status != trn.EntryCheckedIn) {
-			return trn.ErrInvalidTransition
+			return problem.New(problem.TournamentCheckInClosed, "")
 		}
 		if e.Status == trn.EntryConfirmed {
 			at := now

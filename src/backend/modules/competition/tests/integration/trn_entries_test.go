@@ -14,7 +14,7 @@ import (
 
 // T015 / F107-AC-07, AC-08, AC-09 (TC-TEN-003): the lifecycle moves by command and job (generate-bracket before the
 // seeding → 422); a student of the audience registers (same key → same entry; again → 409), out of the scope 404 (other
-// school, excluded, other tenant), restricted 403 POLICY_DENIED, full 409; the organizer registers the audience on their
+// school, excluded, other tenant), restricted 403 TOURNAMENT_NOT_ELIGIBLE, full 409 TOURNAMENT_FULL; the organizer registers the audience on their
 // behalf (excluded and ineligible students skipped) and confirms the entries; withdraw is soft and the student may come
 // back; an auto-confirm template confirms at the close.
 func TestF107Entries(t *testing.T) {
@@ -59,7 +59,7 @@ func TestF107Entries(t *testing.T) {
 	if r2.status != 201 || len(ents1) != 1 || e.rawJSON(ents1[0]) != e.rawJSON(ents2[0]) {
 		t.Fatalf("replay: %s", r2.raw)
 	}
-	if r := e.call(an, http.MethodPost, path+"/entries", key(), nil); r.status != 409 {
+	if r := e.call(an, http.MethodPost, path+"/entries", key(), nil); r.status != 409 || r.code() != "CONFLICT" {
 		t.Fatalf("registered twice: %d", r.status)
 	}
 	for _, k := range []kid{far, chi, g5} {
@@ -73,7 +73,7 @@ func TestF107Entries(t *testing.T) {
 	e.exec(`INSERT INTO competition.competition_restrictions (restriction_id, tenant_id, created_at, updated_at, school_id, student_id, kind, reason,
 		starts_at, ends_at) VALUES ($1, $2, now(), now(), $3, $4, 'restrict_competition', 'test', $5, $6)`, uuid.New(), e.tenantA, e.schoolA, binh.id,
 		e.clock.Now().Add(-time.Hour), e.clock.Now().Add(24*time.Hour))
-	if r := e.call(binh, http.MethodPost, path+"/entries", key(), nil); r.status != 403 || r.code() != "POLICY_DENIED" {
+	if r := e.call(binh, http.MethodPost, path+"/entries", key(), nil); r.status != 403 || r.code() != "TOURNAMENT_NOT_ELIGIBLE" {
 		t.Fatalf("restricted: %d %s", r.status, r.raw)
 	}
 	// withdraw (soft) and come back.
@@ -104,7 +104,7 @@ func TestF107Entries(t *testing.T) {
 		t.Fatalf("full: the registration closes (%s)", e.tstatus(tid))
 	}
 	late := e.kid(e.tenantA, e.schoolA, 3)
-	if r := e.call(late, http.MethodPost, path+"/entries", key(), nil); r.status != 409 || r.code() != "CONFLICT" {
+	if r := e.call(late, http.MethodPost, path+"/entries", key(), nil); r.status != 409 || r.code() != "TOURNAMENT_FULL" {
 		t.Fatalf("full: %d %s", r.status, r.raw)
 	}
 	_ = extra
@@ -130,6 +130,11 @@ func TestF107Entries(t *testing.T) {
 	if e.tstatus(rid) != "seeding" || e.count(`SELECT count(*) FROM competition.tournament_entries WHERE tournament_id = $1 AND status = 'confirmed'`, rid) != 3 {
 		t.Fatalf("auto-confirm: %s", e.tstatus(rid))
 	}
+	// delta F109 2026-11-27: after the registration window the code says so (same 422 as before).
+	if r := e.call(e.kid(e.tenantA, e.schoolA, 4), http.MethodPost, "/competition/tournaments/"+rid+"/entries", key(), nil); r.status != 422 ||
+		r.code() != "TOURNAMENT_REGISTRATION_CLOSED" {
+		t.Fatalf("after the registration window: %d %s", r.status, r.raw)
+	}
 	if r := e.call(em, http.MethodDelete, "/competition/tournaments/"+rid+"/entries/"+e.entryOf(rid, em), "", nil); r.status != 204 {
 		t.Fatalf("withdraw before the lock: %d", r.status)
 	}
@@ -151,7 +156,7 @@ func TestF107CheckIn(t *testing.T) {
 	path := "/competition/tournaments/" + tid
 	entry := e.entryOf(tid, kids[0])
 	e.clock.Add(-30 * time.Minute) // before the window
-	if r := e.call(kids[0], http.MethodPost, path+"/entries/"+entry+":check-in", "", nil); r.status != 422 {
+	if r := e.call(kids[0], http.MethodPost, path+"/entries/"+entry+":check-in", "", nil); r.status != 422 || r.code() != "TOURNAMENT_CHECK_IN_CLOSED" {
 		t.Fatalf("check-in before the window: %d %s", r.status, r.raw)
 	}
 	e.clock.Add(30 * time.Minute)

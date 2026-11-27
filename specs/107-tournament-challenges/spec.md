@@ -40,6 +40,10 @@ Các khoảng trống gặp khi code, chốt theo hướng an toàn nhất:
 - **Học sinh bị dọn/khóa giữa giải** (`student.cleaned_up`): không cần consumer riêng — lúc tới giờ trận, entry không còn đủ thành viên active → `forfeit` [Confirmed].
 - **Biến môi trường mới**: `EW_TOURNAMENT_TICK` (mặc định `15s`, 5 s – 5 phút) — chu kỳ job `tournament-scheduler`; các thời hạn nghiệp vụ nằm trong template (`timers`), mặc định code chỉ bù khóa thiếu theo `tournament_timers` của CONFIG_DEFAULTS [Confirmed].
 
+### Session 2026-11-27 (delta client F109 — [Confirmed], chốt phương án an toàn nhất)
+
+- Q: Mã lỗi riêng cho giải? → A: Catalog thêm `TOURNAMENT_NOT_ELIGIBLE` (403 — học sinh/thành viên đội bị hạn chế thi đấu khi tự đăng ký; ngoài đối tượng vẫn `404`), `TOURNAMENT_FULL` (409 — đủ `max_entries`, kể cả đóng sớm vì đủ chỗ), `TOURNAMENT_REGISTRATION_CLOSED` (422 — ngoài cửa sổ đăng ký), `TOURNAMENT_CHECK_IN_CLOSED` (422 — ngoài cửa sổ check-in hoặc entry chưa xác nhận). HTTP status giữ như trước (client cũ xử lý theo status vẫn đúng; client phải chấp nhận mã lạ); đã đăng ký → vẫn `409 CONFLICT`; rút entry sau khi khóa và mọi đường của người tổ chức giữ `INVALID_STATE_TRANSITION`. Test: `TestF107Entries`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — School Admin tạo thử thách khối/giải trường từ template (Priority: P1) 🎯 MVP

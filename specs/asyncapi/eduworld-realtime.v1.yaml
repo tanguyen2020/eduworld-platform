@@ -168,6 +168,7 @@ channels:
       MatchmakingProposalUpdated: { $ref: '#/components/messages/MatchmakingProposalUpdated' }
       MatchmakingProposalCancelled: { $ref: '#/components/messages/MatchmakingProposalCancelled' }
       MatchmakingMatchAssigned: { $ref: '#/components/messages/MatchmakingMatchAssigned' }
+      CompetitionDuelReceived: { $ref: '#/components/messages/CompetitionDuelReceived' }
       # ---------- ranking (F106) ----------
       CompetitionTierUpdated: { $ref: '#/components/messages/CompetitionTierUpdated' }
       # ---------- tournament (F107) ----------
@@ -361,6 +362,7 @@ operations:
       - $ref: '#/channels/realtime/messages/MatchmakingProposalUpdated'
       - $ref: '#/channels/realtime/messages/MatchmakingProposalCancelled'
       - $ref: '#/channels/realtime/messages/MatchmakingMatchAssigned'
+      - $ref: '#/channels/realtime/messages/CompetitionDuelReceived'
   sendRankingEvents:
     action: send
     channel: { $ref: '#/channels/realtime' }
@@ -722,6 +724,33 @@ components:
         kind: { $ref: '#/components/schemas/PartyActivityType' }
         id: { type: string, maxLength: 64, pattern: '^[a-z0-9_.-]{1,64}$', description: 'area_id (explore) / quest_id (quest) / boss_id (boss)' }
         title: { type: string, maxLength: 255 }
+    MatchChatChannelIds:
+      type: object
+      description: |
+        Kênh chat gameplay của trận cho người nhận (F117, ADR-0020 mục 6 — luôn có): id tất định `pkg/chatid`
+        (UUIDv5 `match:<match_id>`, `team:<match_id>:<team_no>`) nên có ngay khi trận được ghép; module chat tạo kênh và
+        thêm thành viên khi tiêu thụ `match.started` (trước đó gửi tin bị từ chối, client chờ `chat.channel.*`/thử lại).
+        Không có kênh `team` khi trận không chia đội ≥ 2 người (1v1, bot, Timed Quiz). Quyền vào kênh do module chat kiểm
+        tra theo thành viên — biết id không cho quyền đọc/gửi.
+      required: [match]
+      additionalProperties: false
+      properties:
+        match: { $ref: '#/components/schemas/Uuid' }
+        team: { $ref: '#/components/schemas/Uuid', description: 'Kênh đội của chính người nhận (chỉ Team Battle).' }
+    BattleEncouragement:
+      type: object
+      description: |
+        Thông điệp động viên sau chuỗi thua (COMPETITION_SYSTEM §12): chỉ gửi riêng người nhận khi `battle.match.ended`
+        kết thúc chuỗi ≥ `loss_streak_encouragement` trận thua liên tiếp (CONFIG_DEFAULTS, cấu hình matchmaking
+        `battle.loss_streak_encouragement`). Lời hiển thị là khóa dịch `message_code` (không có nội dung học tập trong
+        message); `subject_id`/`topic_id` là môn/chủ đề của trận để mở gợi ý luyện tập. Không có thứ hạng, điểm hay số trận thua.
+      required: [code, message_code, subject_id]
+      additionalProperties: false
+      properties:
+        code: { type: string, enum: [loss_streak_review] }
+        message_code: { type: string, maxLength: 128, pattern: '^[a-z][a-z0-9_.]{0,127}$', description: 'Khóa dịch của client, vd. competition.encouragement.loss_streak_review.' }
+        subject_id: { $ref: '#/components/schemas/Uuid' }
+        topic_id: { $ref: '#/components/schemas/Uuid', description: 'Chủ đề của trận khi trận có chủ đề (matchmaking_type topic hoặc thách đấu có chủ đề).' }
     QuestionRender:
       type: object
       description: Render payload câu hỏi — KHÔNG chứa answer key / scoring rule (ADR-0016).
@@ -732,11 +761,18 @@ components:
         stem: { type: object, description: 'Rich content (text/latex/media refs).' }
         options:
           type: array
+          description: |
+            Lựa chọn của câu theo render payload của module learning (`specs/schemas/question.schema.json#/$defs/option`,
+            không `feedback`/`misconception_tag`). Khóa **chuẩn (canonical) là `id`** — cùng tên với render của learning và
+            renderer F063. Message `battle.*`/`coop.*` của module competition luôn gửi thêm `option_id` cùng giá trị làm
+            alias tương thích ngược (deprecated, giữ hết v1); client mới đọc `id`. Câu trả lời (`AnswerResponse`) không đổi:
+            `{option_id}`/`{option_ids}` mang giá trị `id` (delta F109, 2026-11-27).
           items:
             type: object
-            required: [option_id]
+            required: [id]
             properties:
-              option_id: { type: string, maxLength: 64 }
+              id: { type: string, maxLength: 64, description: 'Khóa chuẩn của lựa chọn.' }
+              option_id: { type: string, maxLength: 64, deprecated: true, description: 'Alias của `id` (cùng giá trị) cho client cũ.' }
               content: { type: object }
         media: { type: array, items: { type: object } }
         time_limit_ms: { type: integer }
@@ -2417,7 +2453,10 @@ components:
       name: matchmaking.match.assigned
       examples:
         - name: battle_1v1
-          payload: {"v":1,"type":"matchmaking.match.assigned","seq":48,"ts":1763712048000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","room_id":"0193b0a0-0000-7000-8000-000000000501","mode":"battle_1v1","scene_ref":"res://scenes/competition/BattleArena.tscn"}}
+          payload: {"v":1,"type":"matchmaking.match.assigned","seq":48,"ts":1763712048000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","room_id":"0193b0a0-0000-7000-8000-000000000501","mode":"battle_1v1","scene_ref":"res://scenes/competition/BattleArena.tscn","chat_channel_ids":{"match":"5bc7f014-e25a-5bc9-b357-7c1090ed139b"}}}
+        - name: team_battle
+          payload: {"v":1,"type":"matchmaking.match.assigned","seq":49,"ts":1763712049000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000502","room_id":"0193b0a0-0000-7000-8000-000000000502","mode":"team_battle","chat_channel_ids":{"match":"4cf706cf-d9ed-54c4-ada6-d38bbb9140cf","team":"a8bf5cd0-c9b5-5c6f-916f-392612711d25"}}}
+      summary: 'Gửi riêng từng người (team channel là của đội người nhận). `chat_channel_ids` = id kênh chat trận/đội do module chat mở khi trận bắt đầu (F117, id tất định pkg/chatid).'
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2432,6 +2471,34 @@ components:
                   room_id: { type: string, maxLength: 64 }
                   mode: { type: string, maxLength: 64 }
                   scene_ref: { type: string, maxLength: 255 }
+                  chat_channel_ids: { $ref: '#/components/schemas/MatchChatChannelIds' }
+    CompetitionDuelReceived:
+      name: competition.duel.received
+      examples:
+        - name: friend_duel
+          payload: {"v":1,"type":"competition.duel.received","seq":73,"ts":1763712073000,"payload":{"duel_id":"0193b0a0-0000-7000-8000-000000000801","challenger":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07"},"subject_id":"0193b0a0-0000-7000-8000-000000000601","expires_at":1763712133000}}
+      summary: |
+        Lời thách đấu đến (F104 `createDuel`, F109 US — hộp nhận lời): chỉ gửi riêng người được thách (`ew:rt:user:<opponent>`)
+        sau khi duel đã commit, và chỉ khi `createDuel` đã qua luật thách đấu (bạn bè cùng tenant, cùng nhóm khối, không chặn
+        nhau, cả hai được chơi — SOCIAL_SYSTEM, F104-AC-19). Chỉ nickname người thách (R16), không tên thật/trường/khối.
+        Người nhận trả lời bằng REST `acceptDuel`/`declineDuel` trước `expires_at`; offline thì không nhận (duel sống 60 s,
+        không có thông báo lưu trữ). Đã có trong phiên: client dùng `duel_id` để mở hộp nhận lời.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: competition.duel.received }
+              payload:
+                type: object
+                additionalProperties: false
+                required: [duel_id, challenger, subject_id, expires_at]
+                properties:
+                  duel_id: { $ref: '#/components/schemas/Uuid' }
+                  challenger: { $ref: '#/components/schemas/PublicPlayer' }
+                  subject_id: { $ref: '#/components/schemas/Uuid' }
+                  topic_id: { $ref: '#/components/schemas/Uuid' }
+                  expires_at: { $ref: '#/components/schemas/EpochMs' }
 
     # ======================= HUB =======================
     HubInstanceJoin:
@@ -2696,11 +2763,11 @@ components:
       name: battle.state.snapshot
       examples:
         - name: question_1v1
-          payload: {"v":1,"type":"battle.state.snapshot","seq":50,"ts":1763712050000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","mode":"battle_1v1","state":"question_shown","state_version":7,"round":1,"question_index":0,"question_count":3,"current_question":{"question_instance_id":"qi_501_0","question_type":"single_choice","stem":{"blocks":[{"type":"paragraph","text":"6 × 3 = ?"}]},"options":[{"option_id":"o_a","content":{"blocks":[{"type":"paragraph","text":"9"}]}},{"option_id":"o_b","content":{"blocks":[{"type":"paragraph","text":"18"}]}},{"option_id":"o_c","content":{"blocks":[{"type":"paragraph","text":"12"}]}},{"option_id":"o_d","content":{"blocks":[{"type":"paragraph","text":"63"}]}}],"time_limit_ms":20000},"deadline_at":1763712070000,"my_answer_locked":false,"participants":[{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42"},"team":1,"score":0,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07"},"team":2,"score":0,"connected":true}]}}
+          payload: {"v":1,"type":"battle.state.snapshot","seq":50,"ts":1763712050000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","mode":"battle_1v1","state":"question_shown","state_version":7,"round":1,"question_index":0,"question_count":3,"current_question":{"question_instance_id":"qi_501_0","question_type":"single_choice","stem":{"blocks":[{"type":"paragraph","text":"6 × 3 = ?"}]},"options":[{"id":"o_a","option_id":"o_a","content":{"blocks":[{"type":"paragraph","text":"9"}]}},{"id":"o_b","option_id":"o_b","content":{"blocks":[{"type":"paragraph","text":"18"}]}},{"id":"o_c","option_id":"o_c","content":{"blocks":[{"type":"paragraph","text":"12"}]}},{"id":"o_d","option_id":"o_d","content":{"blocks":[{"type":"paragraph","text":"63"}]}}],"time_limit_ms":20000},"deadline_at":1763712070000,"my_answer_locked":false,"speed_bonus_enabled":true,"chat_channel_ids":{"match":"5bc7f014-e25a-5bc9-b357-7c1090ed139b"},"participants":[{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42"},"team":1,"score":0,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07"},"team":2,"score":0,"connected":true}]}}
         - name: team_battle
-          payload: {"v":1,"type":"battle.state.snapshot","seq":51,"ts":1763712051000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000502","mode":"team_battle","state":"question_shown","state_version":12,"round":1,"question_index":2,"question_count":7,"current_question":{"question_instance_id":"qi_502_2","question_type":"single_choice","stem":{"blocks":[{"type":"paragraph","text":"6 × 3 = ?"}]},"options":[{"option_id":"o_a","content":{"blocks":[{"type":"paragraph","text":"9"}]}},{"option_id":"o_b","content":{"blocks":[{"type":"paragraph","text":"18"}]}},{"option_id":"o_c","content":{"blocks":[{"type":"paragraph","text":"12"}]}},{"option_id":"o_d","content":{"blocks":[{"type":"paragraph","text":"63"}]}}],"time_limit_ms":20000},"deadline_at":1763712071000,"my_answer_locked":false,"participants":[{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42"},"team":1,"score":240,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15"},"team":1,"score":150,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07"},"team":2,"score":200,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a4","nickname":"SaoBang09"},"team":2,"score":130,"connected":false}]}}
+          payload: {"v":1,"type":"battle.state.snapshot","seq":51,"ts":1763712051000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000502","mode":"team_battle","state":"question_shown","state_version":12,"round":1,"question_index":2,"question_count":7,"current_question":{"question_instance_id":"qi_502_2","question_type":"single_choice","stem":{"blocks":[{"type":"paragraph","text":"6 × 3 = ?"}]},"options":[{"id":"o_a","option_id":"o_a","content":{"blocks":[{"type":"paragraph","text":"9"}]}},{"id":"o_b","option_id":"o_b","content":{"blocks":[{"type":"paragraph","text":"18"}]}},{"id":"o_c","option_id":"o_c","content":{"blocks":[{"type":"paragraph","text":"12"}]}},{"id":"o_d","option_id":"o_d","content":{"blocks":[{"type":"paragraph","text":"63"}]}}],"time_limit_ms":20000},"deadline_at":1763712071000,"my_answer_locked":false,"speed_bonus_enabled":false,"primary_user_ids":["0193b0a0-0000-7000-8000-0000000000a1","0193b0a0-0000-7000-8000-0000000000a2"],"chat_channel_ids":{"match":"4cf706cf-d9ed-54c4-ada6-d38bbb9140cf","team":"a8bf5cd0-c9b5-5c6f-916f-392612711d25"},"participants":[{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42"},"team":1,"score":240,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a3","nickname":"GauNau15"},"team":1,"score":150,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07"},"team":2,"score":200,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a4","nickname":"SaoBang09"},"team":2,"score":130,"connected":false}]}}
         - name: ended
-          payload: {"v":1,"type":"battle.state.snapshot","seq":52,"ts":1763712052000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","mode":"battle_1v1","state":"ended","state_version":30,"round":1,"question_index":2,"question_count":3,"participants":[{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42"},"team":1,"score":420,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07"},"team":2,"score":350,"connected":true}]}}
+          payload: {"v":1,"type":"battle.state.snapshot","seq":52,"ts":1763712052000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","mode":"battle_1v1","state":"ended","state_version":30,"round":1,"question_index":2,"question_count":3,"speed_bonus_enabled":true,"chat_channel_ids":{"match":"5bc7f014-e25a-5bc9-b357-7c1090ed139b"},"participants":[{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","nickname":"MeoXanh42"},"team":1,"score":420,"connected":true},{"player":{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","nickname":"CaHeoVui07"},"team":2,"score":350,"connected":true}]}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2721,6 +2788,14 @@ components:
                   current_question: { $ref: '#/components/schemas/QuestionRender' }
                   deadline_at: { $ref: '#/components/schemas/EpochMs' }
                   my_answer_locked: { type: boolean }
+                  speed_bonus_enabled: { type: boolean, description: 'Trận có bonus tốc độ (khối ≥ speed_bonus_min_grade theo luật trận đã ghim, COMPETITION_SYSTEM §3.1). false → client không hiển thị chỉ dẫn/hiệu ứng khuyến khích trả lời nhanh (F109-AC-09). Không kèm công thức hay số điểm bonus (R6).' }
+                  primary_user_ids:
+                    type: array
+                    maxItems: 8
+                    uniqueItems: true
+                    description: 'Chỉ team_battle khi đang có câu: người trả lời lượt chính của câu hiện tại, mỗi đội một người (xoay vòng, COMPETITION_SYSTEM §3.2); người khác trong đội là lượt hỗ trợ.'
+                    items: { $ref: '#/components/schemas/Uuid' }
+                  chat_channel_ids: { $ref: '#/components/schemas/MatchChatChannelIds' }
                   participants:
                     type: array
                     items:
@@ -2734,7 +2809,7 @@ components:
       name: battle.countdown.started
       examples:
         - name: battle_1v1
-          payload: {"v":1,"type":"battle.countdown.started","seq":53,"ts":1763712053000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","starts_at":1763712056000,"question_count":3,"rounds":1}}
+          payload: {"v":1,"type":"battle.countdown.started","seq":53,"ts":1763712053000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","starts_at":1763712056000,"question_count":3,"rounds":1,"speed_bonus_enabled":true}}
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -2749,11 +2824,14 @@ components:
                   starts_at: { $ref: '#/components/schemas/EpochMs' }
                   question_count: { type: integer }
                   rounds: { type: integer }
+                  speed_bonus_enabled: { type: boolean, description: 'Như battle.state.snapshot.speed_bonus_enabled (F109-AC-09).' }
     BattleQuestionShown:
       name: battle.question.shown
       examples:
         - name: single_choice
-          payload: {"v":1,"type":"battle.question.shown","seq":54,"ts":1763712054000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","round":1,"question_index":0,"question":{"question_instance_id":"qi_501_0","question_type":"single_choice","stem":{"blocks":[{"type":"paragraph","text":"6 × 3 = ?"}]},"options":[{"option_id":"o_a","content":{"blocks":[{"type":"paragraph","text":"9"}]}},{"option_id":"o_b","content":{"blocks":[{"type":"paragraph","text":"18"}]}},{"option_id":"o_c","content":{"blocks":[{"type":"paragraph","text":"12"}]}},{"option_id":"o_d","content":{"blocks":[{"type":"paragraph","text":"63"}]}}],"time_limit_ms":20000},"shown_at":1763712050000,"deadline_at":1763712070000}}
+          payload: {"v":1,"type":"battle.question.shown","seq":54,"ts":1763712054000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","round":1,"question_index":0,"question":{"question_instance_id":"qi_501_0","question_type":"single_choice","stem":{"blocks":[{"type":"paragraph","text":"6 × 3 = ?"}]},"options":[{"id":"o_a","option_id":"o_a","content":{"blocks":[{"type":"paragraph","text":"9"}]}},{"id":"o_b","option_id":"o_b","content":{"blocks":[{"type":"paragraph","text":"18"}]}},{"id":"o_c","option_id":"o_c","content":{"blocks":[{"type":"paragraph","text":"12"}]}},{"id":"o_d","option_id":"o_d","content":{"blocks":[{"type":"paragraph","text":"63"}]}}],"time_limit_ms":20000},"shown_at":1763712050000,"deadline_at":1763712070000}}
+        - name: team_battle
+          payload: {"v":1,"type":"battle.question.shown","seq":54,"ts":1763712054000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000502","round":1,"question_index":2,"question":{"question_instance_id":"qi_502_2","question_type":"single_choice","stem":{"blocks":[{"type":"paragraph","text":"6 × 3 = ?"}]},"options":[{"id":"o_a","option_id":"o_a","content":{"blocks":[{"type":"paragraph","text":"9"}]}},{"id":"o_b","option_id":"o_b","content":{"blocks":[{"type":"paragraph","text":"18"}]}}],"time_limit_ms":20000},"shown_at":1763712050000,"deadline_at":1763712070000,"primary_user_ids":["0193b0a0-0000-7000-8000-0000000000a1","0193b0a0-0000-7000-8000-0000000000a2"]}}
       summary: Render payload không có đáp án (ADR-0016). Server time của message này là mốc tính bonus thời gian.
       payload:
         allOf:
@@ -2771,6 +2849,12 @@ components:
                   question: { $ref: '#/components/schemas/QuestionRender' }
                   shown_at: { $ref: '#/components/schemas/EpochMs' }
                   deadline_at: { $ref: '#/components/schemas/EpochMs' }
+                  primary_user_ids:
+                    type: array
+                    maxItems: 8
+                    uniqueItems: true
+                    description: 'Chỉ team_battle: người trả lời lượt chính của câu này, mỗi đội một người (xoay vòng, bỏ qua người đã rời — COMPETITION_SYSTEM §3.2); thành viên khác là lượt hỗ trợ (30% điểm).'
+                    items: { $ref: '#/components/schemas/Uuid' }
     BattleAnswerRecorded:
       name: battle.answer.recorded
       examples:
@@ -2934,6 +3018,8 @@ components:
       examples:
         - name: win
           payload: {"v":1,"type":"battle.match.ended","seq":65,"ts":1763712065000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","status":"completed","results":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","team":1,"outcome":"win","score":420,"correct_count":3,"competition_points":12},{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","team":2,"outcome":"loss","score":350,"correct_count":2,"competition_points":6}],"end_reason":"finished","rated":true,"review_available":true}}
+        - name: loss_streak_encouragement
+          payload: {"v":1,"type":"battle.match.ended","seq":65,"ts":1763712065000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","status":"completed","results":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","team":1,"outcome":"win","score":420,"correct_count":3,"competition_points":12},{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","team":2,"outcome":"loss","score":350,"correct_count":2,"competition_points":6}],"end_reason":"finished","rated":true,"review_available":true,"encouragement":{"code":"loss_streak_review","message_code":"competition.encouragement.loss_streak_review","subject_id":"0193b0a0-0000-7000-8000-000000000601","topic_id":"0193b0a0-0000-7000-8000-000000000602"}}}
         - name: loss
           payload: {"v":1,"type":"battle.match.ended","seq":66,"ts":1763712066000,"payload":{"match_id":"0193b0a0-0000-7000-8000-000000000501","status":"completed","results":[{"user_id":"0193b0a0-0000-7000-8000-0000000000a1","team":1,"outcome":"loss","score":300,"correct_count":2,"competition_points":6},{"user_id":"0193b0a0-0000-7000-8000-0000000000a2","team":2,"outcome":"win","score":410,"correct_count":3,"competition_points":12}],"end_reason":"finished","rated":true,"review_available":true}}
         - name: draw
@@ -2992,6 +3078,10 @@ components:
                       target: { type: integer, minimum: 0 }
                       reached: { type: boolean }
                       contributors_count: { type: integer, minimum: 5 }
+                  encouragement:
+                    allOf:
+                      - $ref: '#/components/schemas/BattleEncouragement'
+                    description: 'Chỉ trong bản gửi riêng người vừa kết thúc chuỗi thua (message còn lại của phòng không có trường này); vắng = không có lời động viên riêng.'
 
     # ======================= COOP =======================
     # ---------- boss / challenge / progression (CHALLENGE_BOSS_SYSTEM, PROGRESSION_SYSTEM) — module game qua ew.cmd.game.*

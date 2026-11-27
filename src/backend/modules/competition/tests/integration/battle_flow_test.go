@@ -17,6 +17,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/battle"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/chatid"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 	rt "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/realtime"
 )
@@ -32,6 +33,12 @@ func TestBattleFlow1v1(t *testing.T) {
 	ctx := context.Background()
 	an, binh := b.kid(b.tenantA, b.schoolA, 3), b.kid(b.tenantA, b.schoolA, 3)
 	chi, dung := b.kid(b.tenantA, b.schoolA, 3), b.kid(b.tenantB, b.schoolB, 3)
+	// delta F109 2026-11-27: binh lost its two previous matches (a cancelled one and a no_contest in between never
+	// count), so losing this one ends a loss streak of loss_streak_encouragement (3).
+	b.pastOutcome(binh, battle.OutcomeLoss, "completed", 3*time.Hour)
+	b.pastOutcome(binh, battle.OutcomeNoContest, "completed", 2*time.Hour)
+	b.pastOutcome(binh, battle.OutcomeWin, "cancelled", 90*time.Minute)
+	b.pastOutcome(binh, battle.OutcomeLoss, "completed", time.Hour)
 	match := b.match(matchOpts{mode: battle.Mode1v1, grade: 3, ranked: true, teams: [][]kid{{an}, {binh}}})
 	if err := h.Open(ctx, match, b.tenantA); err != nil {
 		t.Fatal(err)
@@ -69,6 +76,17 @@ func TestBattleFlow1v1(t *testing.T) {
 		}
 	}
 	waitFor(t, 10*time.Second, "countdown", func() bool { return len(b.out.of(an.id, "battle.countdown.started")) == 1 })
+	// delta F109: grade 3 → no speed bonus hint; the snapshot names the match chat channel of module chat (no team).
+	if cd := b.out.of(an.id, "battle.countdown.started")[0]; cd["speed_bonus_enabled"] != false {
+		t.Fatalf("countdown speed_bonus_enabled: %+v", cd)
+	}
+	snaps := b.out.of(binh.id, "battle.state.snapshot")
+	if len(snaps) == 0 {
+		t.Fatal("no snapshot")
+	}
+	if c, _ := snaps[0]["chat_channel_ids"].(map[string]any); c["match"] != chatid.Match(match).String() || c["team"] != nil {
+		t.Fatalf("snapshot chat_channel_ids: %+v", snaps[0])
+	}
 	b.clock.Add(3 * time.Second)
 	right := map[uuid.UUID]int{}
 	for i := 0; i < 7; i++ {
@@ -79,6 +97,11 @@ func TestBattleFlow1v1(t *testing.T) {
 		for _, k := range []kid{an, binh} {
 			for _, m := range b.out.of(k.id, "battle.question.shown") {
 				noAnswerKeys(t, "battle.question.shown", m)
+				for _, o := range m["question"].(map[string]any)["options"].([]any) { // delta F109: id canonical + option_id alias
+					if op := o.(map[string]any); op["id"] == nil || op["id"] != op["option_id"] {
+						t.Fatalf("option keys: %+v", op)
+					}
+				}
 			}
 		}
 		if r := b.answer(h, match, an, sa, inst, rightOption); !r.OK {
@@ -106,9 +129,18 @@ func TestBattleFlow1v1(t *testing.T) {
 		t.Fatalf("question.revealed: %d", len(rev))
 	}
 	waitFor(t, 10*time.Second, "match ended", func() bool { return len(b.out.of(an.id, "battle.match.ended")) == 1 })
+	waitFor(t, 10*time.Second, "match ended (binh)", func() bool { return len(b.out.of(binh.id, "battle.match.ended")) == 1 })
 	end := b.out.of(binh.id, "battle.match.ended")[0]
 	if end["status"] != "completed" || end["rated"] != true || end["end_reason"] != battle.EndFinished {
 		t.Fatalf("match.ended: %+v", end)
+	}
+	// delta F109: the third loss in a row → a private encouragement (locale key + subject of the match), never to an.
+	if enc, _ := end["encouragement"].(map[string]any); enc["code"] != battle.EncouragementLossStreak ||
+		enc["message_code"] != battle.EncouragementLossStreakMessage || enc["subject_id"] != b.subject.String() || enc["topic_id"] != nil {
+		t.Fatalf("encouragement of binh: %+v", end)
+	}
+	if mine := b.out.of(an.id, "battle.match.ended"); len(mine) != 1 || mine[0]["encouragement"] != nil {
+		t.Fatalf("an (winner) sees an encouragement: %+v", mine)
 	}
 	if b.status(match) != "completed" || b.count(`SELECT count(*) FROM competition.match_results WHERE match_id = $1 AND rated
 		AND status = 'completed' AND winner_team = 0`, match) != 1 {
