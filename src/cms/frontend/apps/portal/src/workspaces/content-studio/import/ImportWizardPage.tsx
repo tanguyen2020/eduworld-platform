@@ -1,8 +1,9 @@
 // ImportWizardPage (F054-AC-27, AC-28, AC-30, FR-QB-011, SC-003): question import from Excel / CSV in four steps —
 // ① choose the file (read in the browser), ② formulas rendered with MathJax 4 and errors listed by row before anything
 // is sent, ③ upload + dry run (`dry_run = true`): server errors by row (`row`, `field`, `code`, `message`; a full list
-// of 500 says it was cut), ④ real run creating drafts. Needs `learning_content.import` (ActionGate) and ≥ 1024 px.
-import { Alert, App as AntApp, Button, Card, Flex, Form, Input, Progress, Steps, Table, Typography, Upload } from 'antd';
+// of 500 says it was cut), ④ real run creating drafts. Needs `learning_content.import` (ActionGate) and ≥ 1024 px. The
+// source "Word (.docx)" switches to the Word import of F028 (DocxImportPanel).
+import { Alert, App as AntApp, Button, Card, Flex, Form, Input, Progress, Segmented, Steps, Table, Typography, Upload } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +16,7 @@ import { EDITOR_MIN_WIDTH_QUERY, LIMITS } from '../shared/config';
 import { ImportParseError, parseImportFile, type ImportTable } from './parseImportFile';
 import { renderImportMath, type MathRenderResult, type RowIssue } from './renderImportMath';
 import { IMPORT_ERRORS_MAX, useContentImport, type ContentImportJob } from './useContentImport';
+import { DocxImportPanel } from './docx/DocxImportPanel';
 
 type Phase = 'choose' | 'checked' | 'dry_run' | 'reviewed' | 'running' | 'done';
 
@@ -36,6 +38,7 @@ export function ImportWizardPage({ pollMs }: { pollMs?: number }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [parseError, setParseError] = useState<string | null>(null);
+  const [source, setSource] = useState<'sheet' | 'docx'>('sheet');
 
   if (!wide) return <LargeScreenRequired />;
 
@@ -128,7 +131,18 @@ export function ImportWizardPage({ pollMs }: { pollMs?: number }) {
           </Typography.Title>
           <Button onClick={() => navigate('..')}>{t('content_studio.import.back')}</Button>
         </Flex>
-        <Steps current={step} items={(['choose', 'math', 'dryRun', 'run'] as const).map((s) => ({ title: t(`content_studio.import.steps.${s}`) }))} />
+        <Segmented
+          aria-label={t('content_studio.import.source')}
+          value={source}
+          onChange={(v) => setSource(v as 'sheet' | 'docx')}
+          options={[
+            { value: 'sheet', label: t('content_studio.import.sourceSheet') },
+            { value: 'docx', label: t('content_studio.import.sourceDocx') },
+          ]}
+        />
+        {source === 'docx' ? <DocxImportPanel pollMs={pollMs} /> : null}
+        {source === 'sheet' && <Steps current={step} items={(['choose', 'math', 'dryRun', 'run'] as const).map((s) => ({ title: t(`content_studio.import.steps.${s}`) }))} />}
+        {source === 'sheet' && (
         <Card>
           <Flex vertical gap="middle">
             <Upload.Dragger
@@ -194,6 +208,7 @@ export function ImportWizardPage({ pollMs }: { pollMs?: number }) {
             )}
           </Flex>
         </Card>
+        )}
       </Flex>
     </section>
   );

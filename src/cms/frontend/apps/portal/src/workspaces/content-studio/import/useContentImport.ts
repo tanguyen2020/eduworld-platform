@@ -1,4 +1,4 @@
-// useContentImport (F054-AC-27, FR-QB-011, ADR-0044): upload of the normalized CSV as a `document` media asset
+// useContentImport (F054-AC-27, F028-AC-15, FR-QB-011, ADR-0044): upload of the normalized CSV (or the Word .docx) as a `document` media asset
 // (presign → PUT → complete, Idempotency-Key) waited until `ready`, then createContentImport (`dry_run` first,
 // Idempotency-Key per run) and getContentImport polled until `succeeded` / `failed`. Nothing is created before the
 // user starts the real run (SC-003, SC-005: one intent = one import).
@@ -9,6 +9,7 @@ import { sha256OfFile, useMediaUpload, type MediaAsset } from '../media/useMedia
 import { MEDIA_POLL_MS, TRANSLATION_JOB_POLL_MS } from '../shared/config';
 
 export type ContentImportJob = components['schemas']['ContentImportJob'];
+export type ImportKind = components['schemas']['ContentImportRequest']['kind'];
 
 /** Server cap of `ContentImportJob.errors` (maxItems): a full list means it was cut. */
 export const IMPORT_ERRORS_MAX = 500;
@@ -36,9 +37,9 @@ export function useContentImport(opts: { pollMs?: number } = {}) {
   };
 
   /** Starts an import run (dry run or real) and waits for its report. */
-  const run = async (assetId: string, dryRun: boolean): Promise<ContentImportJob> => {
+  const run = async (assetId: string, dryRun: boolean, kind: ImportKind = 'questions_csv'): Promise<ContentImportJob> => {
     const job = await api.call<ContentImportJob>(
-      api.client.POST('/cms/learning/imports', { body: { asset_id: assetId, kind: 'questions_csv', dry_run: dryRun }, headers: { [INTENT_HEADER]: `import:${assetId}:${dryRun ? 'dry' : 'run'}` } as never }),
+      api.client.POST('/cms/learning/imports', { body: { asset_id: assetId, kind, dry_run: dryRun }, headers: { [INTENT_HEADER]: `import:${kind}:${assetId}:${dryRun ? 'dry' : 'run'}` } as never }),
     );
     let current = job;
     for (let i = 0; i < IMPORT_MAX_POLLS && (current.status === 'queued' || current.status === 'running'); i++) {

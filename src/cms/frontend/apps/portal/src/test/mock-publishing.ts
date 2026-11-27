@@ -90,6 +90,8 @@ export class MockPublishing {
   curriculumVersions: Record<string, unknown>[] = [];
   imports = new Map<string, Record<string, unknown>>();
   importErrors: Record<string, unknown>[] = [];
+  /** Questions of a Word import (F028): ContentImportItem rows of listContentImportItems. */
+  importItems: Record<string, unknown>[] = [];
   readonly fail: { method: string; path: RegExp; response: () => Response; once?: boolean }[] = [];
   private n = 500;
   /** Largest page the content lists answer (tests lower it to exercise the cursor; the backend allows 100). */
@@ -395,9 +397,40 @@ export class MockPublishing {
       this.imports.set(id, job);
       return json(202, job);
     }
+    if ((m = p.match(/^\/cms\/learning\/imports\/([^/]+)\/items$/)) && r.method === 'GET') {
+      if (!perms.includes('learning_content.import')) return problem(403, 'PERMISSION_DENIED');
+      if (!this.imports.get(m[1]!)) return problem(404, 'NOT_FOUND');
+      const q = new URLSearchParams(r.search);
+      const rows = this.importItems.filter((it) => !q.get('status') || it.status === q.get('status'));
+      const start = Number(q.get('cursor') ?? 0);
+      const limit = Number(q.get('limit') ?? 20);
+      const more = start + limit < rows.length;
+      return json(200, { data: rows.slice(start, start + limit), page: { has_more: more, limit, ...(more ? { next_cursor: String(start + limit) } : {}) } });
+    }
+    if ((m = p.match(/^\/cms\/learning\/imports\/([^/]+)\/items\/(\d+):create-draft$/)) && r.method === 'POST') {
+      if (!perms.includes('learning_content.import')) return problem(403, 'PERMISSION_DENIED');
+      const it = this.importItems.find((x) => x.item_no === Number(m![2]));
+      if (!it) return problem(404, 'NOT_FOUND');
+      if (it.status === 'created' || it.status === 'error') {
+        return problem(409, 'CONFLICT', { errors: [{ field: 'item_no', code: it.status === 'created' ? 'IMPORT_ITEM_ALREADY_CREATED' : 'IMPORT_ITEM_NOT_IMPORTABLE' }] });
+      }
+      const sent = ((body.math_assets as { latex: string }[] | undefined) ?? []).map((a) => a.latex).sort();
+      const want = ((it.formulas as { latex: string }[] | undefined) ?? []).map((f) => f.latex).sort();
+      if (JSON.stringify(sent) !== JSON.stringify(want)) return problem(422, 'MATH_RENDER_FAILED');
+      it.status = 'created';
+      it.question_id = P(this.n++);
+      return json(201, it);
+    }
     if ((m = p.match(/^\/cms\/learning\/imports\/([^/]+)$/)) && r.method === 'GET') {
       const job = this.imports.get(m[1]!);
       if (!job) return problem(404, 'NOT_FOUND');
+      if (job.kind === 'lessons_docx') {
+        const ok = this.importItems.filter((it) => it.status === 'ready' || it.status === 'warning').length;
+        const n = this.importItems.length;
+        Object.assign(job, { status: n ? 'succeeded' : 'failed', created_count: ok, rejected_count: n - ok, result: { items_total: n, items_importable: ok },
+          errors: n ? [] : [{ row: 1, field: 'file', code: 'NO_QUESTIONS', message: 'no question' }] });
+        return json(200, job);
+      }
       job.status = 'succeeded';
       job.errors = this.importErrors;
       job.rejected_count = new Set(this.importErrors.map((e) => e.row)).size;

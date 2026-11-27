@@ -184,8 +184,9 @@ export class MockPortalBackend {
     return this;
   }
 
-  calls(method: string, path: string): RecordedRequest[] {
-    return this.requests.filter((r) => r.method === method && r.path === path);
+  /** Requests of method to path (exact path, or a RegExp tested on the path). */
+  calls(method: string, path: string | RegExp): RecordedRequest[] {
+    return this.requests.filter((r) => r.method === method && (typeof path === 'string' ? r.path === path : path.test(r.path)));
   }
 
   private newCsrf() {

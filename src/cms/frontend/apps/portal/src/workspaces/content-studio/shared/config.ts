@@ -47,6 +47,9 @@ export const MEDIA_RULES = {
 /** Rows of one question import (importer `MaxImportRows`, F024). */
 export const IMPORT_MAX_ROWS = 5000;
 
+/** csv_import_max (CONFIG_DEFAULTS): the largest import file, also of the Word import lessons_docx (F028). */
+export const IMPORT_FILE_MAX_BYTES = 10 * 1024 * 1024;
+
 /** OpenAPI limits used by the forms (ADR-0041); new limits go to fieldSchemas.ts (checked against the spec). */
 export const LIMITS = {
   /** RollbackRequest.reason, ReasonRequest.reason, delete* reason. */

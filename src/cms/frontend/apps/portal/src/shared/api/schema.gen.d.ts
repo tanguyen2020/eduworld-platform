@@ -3406,6 +3406,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/cms/learning/imports/{import_id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Báo cáo từng câu của job import Word lessons_docx (F028) — theo số thứ tự câu, phân trang keyset (learning_content.import) */
+        get: operations["listContentImportItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/imports/{import_id}/items/{item_no}:create-draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tạo câu hỏi version 1 trạng thái draft từ một câu đã phân tích của job lessons_docx, kèm SVG công thức render trên portal (F028, learning_content.import)
+         * @description Nội dung câu (đề, phương án, đáp án, gợi ý, giải thích, metadata) là nội dung server đã phân tích; client chỉ gửi
+         *     math_assets cho đúng các công thức của câu (ContentImportItem.formulas, render MathJax 4 — ADR-0055 §4). Thiếu hoặc
+         *     thừa công thức, SVG không hợp lệ → 422 MATH_RENDER_FAILED; câu error/đã created hoặc job chưa phân tích xong →
+         *     409 CONFLICT (errors[].code = IMPORT_ITEM_NOT_IMPORTABLE | IMPORT_ITEM_ALREADY_CREATED); validator của
+         *     createQuestion từ chối → 422 VALIDATION_FAILED và câu chuyển draft_failed. Ảnh nhúng của câu được đưa vào media
+         *     pipeline (F027). Không bao giờ publish.
+         */
+        post: operations["createDraftFromImportItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/cms/learning/learning-materials": {
         parameters: {
             query?: never;
@@ -12015,6 +12057,61 @@ export interface components {
             url: string;
             version: number;
         };
+        /** @description Một câu của file Word (content.import_items, F028) */
+        ContentImportItem: {
+            /** @description Công thức khác nhau của câu (LaTeX đã qua allowlist); portal render MathJax 4 rồi gửi math_assets cho đúng danh sách này */
+            formulas: {
+                display: boolean;
+                latex: string;
+            }[];
+            /** @description Ảnh nhúng của câu; đưa vào media pipeline khi tạo Draft */
+            images: {
+                alt: string;
+                mime?: string;
+                ref: components["schemas"]["Uuid"];
+            }[];
+            import_id: components["schemas"]["Uuid"];
+            issues: components["schemas"]["ContentImportItemIssue"][];
+            item_no: number;
+            /** @description Nội dung đã phân tích để xem trước (type, stem, render_payload, answer_key, scoring_rule, hints, explanation theo question.schema.json; mã môn/curriculum/topic/LO, khối, độ khó) */
+            question?: Record<string, never>;
+            question_id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            question_type?: "single_choice" | "multiple_choice";
+            question_version_id?: components["schemas"]["Uuid"];
+            /** @description Nhãn trong file, vd. "Câu 12" */
+            source_label?: string;
+            status: components["schemas"]["ContentImportItemStatus"];
+            stem_preview?: string;
+            updated_at?: components["schemas"]["Timestamp"];
+        };
+        ContentImportItemDraftRequest: {
+            /** @description SVG + speech text (MathJax 4 trên portal) của mỗi công thức trong ContentImportItem.formulas — cùng dạng math_assets của createQuestion (F027) */
+            math_assets: {
+                latex: string;
+                speech_text: string;
+                /** @description SVG ≤ 256 KB (math_svg_max) */
+                svg: string;
+            }[];
+        };
+        ContentImportItemIssue: {
+            /** @description Mã vấn đề (contracts F028 §1), vd. ANSWER_MISSING, MATH_NOT_ALLOWED, FORMULA_NEEDS_REWRITE, EXTERNAL_LINK_REMOVED */
+            code: string;
+            field?: string;
+            message?: string;
+            /** @enum {string} */
+            severity: "error" | "warning";
+            /**
+             * @description Lỗi validator của createQuestion khi tạo Draft (câu draft_failed)
+             * @enum {string}
+             */
+            source?: "validator";
+        };
+        /**
+         * @description Trạng thái một câu của job lessons_docx (F028 data-model §2): ready/warning tạo Draft được, error không, created đã tạo, draft_failed validator từ chối (tạo lại được)
+         * @enum {string}
+         */
+        ContentImportItemStatus: "ready" | "warning" | "error" | "created" | "draft_failed";
         ContentImportJob: {
             created_at: components["schemas"]["Timestamp"];
             created_count?: number;
@@ -12029,10 +12126,14 @@ export interface components {
             import_id: components["schemas"]["Uuid"];
             kind?: string;
             rejected_count?: number;
-            /** @description Bản ghi đã tạo (import curriculum, F021) */
+            /** @description Bản ghi đã tạo (import curriculum, F021); số câu của job lessons_docx (F028) */
             result?: {
                 curriculum_id?: components["schemas"]["Uuid"];
                 curriculum_version_id?: components["schemas"]["Uuid"];
+                /** @description Số câu ready/warning (tạo Draft được) */
+                items_importable?: number;
+                /** @description Số câu tách được từ file Word */
+                items_total?: number;
             };
             /** @enum {string} */
             status: "queued" | "running" | "succeeded" | "failed";
@@ -12044,7 +12145,7 @@ export interface components {
             dry_run: boolean;
             grade_level?: components["schemas"]["GradeLevel"];
             /**
-             * @description curriculum_yaml/curriculum_csv cần curriculum.write (F021); questions_*\/content_json cần learning_content.import (F024, specs/schemas/import/questions-row.schema.json); lessons_docx chưa hỗ trợ (422 VALIDATION_FAILED, errors[].code = IMPORT_KIND_NOT_SUPPORTED)
+             * @description curriculum_yaml/curriculum_csv cần curriculum.write (F021); questions_*\/content_json cần learning_content.import (F024, specs/schemas/import/questions-row.schema.json); lessons_docx (Word .docx theo mẫu CONTENT_PRODUCTION_PLAN §8, F028) cần learning_content.import: job chỉ phân tích, báo cáo từng câu qua listContentImportItems, Draft tạo bằng createDraftFromImportItem — dry_run không đổi hành vi
              * @enum {string}
              */
             kind: "questions_xlsx" | "questions_csv" | "questions_qti_lite" | "content_json" | "lessons_docx" | "curriculum_yaml" | "curriculum_csv";
@@ -18371,6 +18472,8 @@ export interface components {
         /** @description ETag của manifest client đang có; trùng → 304 */
         IfNoneMatch: string;
         ImportIdPath: components["schemas"]["Uuid"];
+        /** @description Số thứ tự câu trong file Word (ContentImportItem.item_no) */
+        ImportItemNoPath: number;
         InvitationId: components["schemas"]["Uuid"];
         /** @description Vị trí item trong attempt (bắt đầu từ 1) */
         ItemPositionPath: number;
@@ -27368,6 +27471,93 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    listContentImportItems: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+                status?: components["schemas"]["ContentImportItemStatus"];
+            };
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                import_id: components["parameters"]["ImportIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ContentImportItem"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    createDraftFromImportItem: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                import_id: components["parameters"]["ImportIdPath"];
+                /** @description Số thứ tự câu trong file Word (ContentImportItem.item_no) */
+                item_no: components["parameters"]["ImportItemNoPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentImportItemDraftRequest"];
+            };
+        };
+        responses: {
+            /** @description Đã tạo Draft */
+            201: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentImportItem"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     listCmsLearningMaterials: {
