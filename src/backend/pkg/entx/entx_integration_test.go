@@ -21,19 +21,44 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit/sample/ent/widget"
 )
 
-// One cluster for all cases (each subtest uses its own business keys).
+// One cluster for all cases. The cases run in a fixed order (a slice, not a map), and each case gets its own
+// pair of fresh tenants, so the tenant-scoped rows one case writes (widgets, logs) are never counted by
+// another: the cases pass in any order and with -count=N.
 func TestEntx(t *testing.T) {
 	e := sample.Setup(context.Background(), t)
 	tenancy.Configure(tenancy.Hooks{Recorder: e.Audit})
 	t.Cleanup(func() { tenancy.Configure(tenancy.Hooks{}) })
-	a := authztest.Ctx(context.Background(), authztest.Staff(authztest.TenantA, "school_admin"))
-	b := authztest.Ctx(context.Background(), authztest.Staff(authztest.TenantB, "school_admin"))
-	for name, fn := range map[string]func(*testing.T, *sample.Env, context.Context, context.Context){
-		"TenantFilterAndScope": tenantFilterAndScope, "PlatformScopeAndGlobal": platformScopeAndGlobal,
-		"SoftDelete": softDelete, "UnitOfWorkCommitRollback": unitOfWorkCommitRollback, "ReadSessionIsReadOnly": readSessionIsReadOnly,
-	} {
-		t.Run(name, func(t *testing.T) { fn(t, e, a, b) })
+	cases := []struct {
+		name string
+		fn   func(*testing.T, *sample.Env, context.Context, context.Context)
+	}{
+		{"TenantFilterAndScope", tenantFilterAndScope},
+		{"PlatformScopeAndGlobal", platformScopeAndGlobal},
+		{"SoftDelete", softDelete},
+		{"UnitOfWorkCommitRollback", unitOfWorkCommitRollback},
+		{"ReadSessionIsReadOnly", readSessionIsReadOnly},
 	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			a := authztest.Ctx(context.Background(), authztest.Staff(uuid.New(), "school_admin"))
+			b := authztest.Ctx(context.Background(), authztest.Staff(uuid.New(), "school_admin"))
+			c.fn(t, e, a, b)
+		})
+	}
+}
+
+// tenantOf returns the session tenant of a tenant-scoped ctx.
+func tenantOf(t *testing.T, ctx context.Context) uuid.UUID {
+	t.Helper()
+	s, ok := tenancy.ScopeFrom(ctx)
+	if !ok {
+		t.Fatal("ctx has no scope")
+	}
+	id, ok := s.SessionTenantID()
+	if !ok {
+		t.Fatal("ctx has no session tenant")
+	}
+	return id
 }
 
 func outboxMsg() outbox.Message {
@@ -75,7 +100,7 @@ func countWidgets(t *testing.T, e *sample.Env, ctx context.Context) int {
 func tenantFilterAndScope(t *testing.T, e *sample.Env, a, b context.Context) {
 	wa := createWidget(t, e, a, "a-1")
 	createWidget(t, e, b, "b-1")
-	if wa.TenantID != authztest.TenantA {
+	if wa.TenantID != tenantOf(t, a) {
 		t.Fatalf("tenant_id not taken from the scope: %v", wa.TenantID)
 	}
 	if n := countWidgets(t, e, a); n != 1 {
@@ -100,7 +125,7 @@ func tenantFilterAndScope(t *testing.T, e *sample.Env, a, b context.Context) {
 		if err := tx.QueryRowContext(ctx, "SELECT current_user, current_setting('app.tenant_id', true)").Scan(&role, &tenant); err != nil {
 			return err
 		}
-		if role != "learning_app" || tenant != authztest.TenantA.String() {
+		if role != "learning_app" || tenant != tenantOf(t, a).String() {
 			t.Errorf("role %s tenant %s", role, tenant)
 		}
 		return nil
@@ -116,7 +141,7 @@ func tenantFilterAndScope(t *testing.T, e *sample.Env, a, b context.Context) {
 	}
 	// Create with a tenant outside the scope is refused by the hook.
 	err = e.UoW.Do(a, func(ctx context.Context) error {
-		_, err := sample.Client(ctx).Widget.Create().SetTenantID(authztest.TenantB).SetCode("x").SetName("x").Save(ctx)
+		_, err := sample.Client(ctx).Widget.Create().SetTenantID(tenantOf(t, b)).SetCode("x").SetName("x").Save(ctx)
 		return err
 	})
 	if !errors.Is(err, entx.ErrTenantOutOfScope) {

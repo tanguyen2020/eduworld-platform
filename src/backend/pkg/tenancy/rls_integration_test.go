@@ -21,7 +21,7 @@ func connect(t *testing.T, dsn string) *pgx.Conn {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { c.Close(context.Background()) })
+	t.Cleanup(func() { _ = c.Close(context.Background()) })
 	return c
 }
 
@@ -40,7 +40,7 @@ func countAs(t *testing.T, c *pgx.Conn, tenant *uuid.UUID, sql string) int {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	if tenant != nil {
 		if _, err := tx.Exec(ctx, "SELECT set_config('app.tenant_id', $1, true)", tenant.String()); err != nil {
 			t.Fatal(err)
@@ -124,6 +124,8 @@ func TestRLSPoliciesIsolateTenants(t *testing.T) {
 
 // F002-AC-29: soft-delete UPDATE … RETURNING as <module>_app succeeds under the generated policies; the
 // row disappears from deleted_at IS NULL reads and from the _live view; _readonly cannot read the base table.
+// The table is a test-only fixture (k_ prefix, like TestRLSPoliciesIsolateTenants): it must never share a
+// name with a table of the module migrations (assessment.attempts belongs to F030, migration 20261130000001).
 func TestSoftDeleteUnderRLS(t *testing.T) {
 	ctx := context.Background()
 	cl := testkit.StartCluster(ctx, t, true)
@@ -132,9 +134,16 @@ func TestSoftDeleteUnderRLS(t *testing.T) {
 	ro := connect(t, cl.ModuleDSN("learning", "readonly"))
 	a := uuid.New()
 
-	exec(t, mig, `CREATE TABLE assessment.attempts (id uuid PRIMARY KEY, tenant_id uuid NOT NULL, deleted_at timestamptz, deleted_by uuid)`)
-	pol, _ := tenancy.RLSPolicies("assessment.attempts", tenancy.KindT)
-	view, _ := tenancy.LiveView("assessment.attempts", "learning")
+	const table = "assessment.k_softdelete"
+	exec(t, mig, `CREATE TABLE `+table+` (id uuid PRIMARY KEY, tenant_id uuid NOT NULL, deleted_at timestamptz, deleted_by uuid)`)
+	pol, err := tenancy.RLSPolicies(table, tenancy.KindT)
+	if err != nil {
+		t.Fatal(err)
+	}
+	view, err := tenancy.LiveView(table, "learning")
+	if err != nil {
+		t.Fatal(err)
+	}
 	exec(t, mig, pol)
 	exec(t, mig, view)
 
@@ -143,31 +152,33 @@ func TestSoftDeleteUnderRLS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	exec(t, app, "SELECT 1") // keep conn warm
 	if _, err := tx.Exec(ctx, "SELECT set_config('app.tenant_id', $1, true)", a.String()); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO assessment.attempts (id, tenant_id) VALUES ($1, $2)`, id, a); err != nil {
+	if _, err := tx.Exec(ctx, `INSERT INTO `+table+` (id, tenant_id) VALUES ($1, $2)`, id, a); err != nil {
 		t.Fatal(err)
 	}
 	var got uuid.UUID
-	if err := tx.QueryRow(ctx, `UPDATE assessment.attempts SET deleted_at = now(), deleted_by = $2 WHERE id = $1 RETURNING id`, id, uuid.New()).Scan(&got); err != nil {
+	if err := tx.QueryRow(ctx, `UPDATE `+table+` SET deleted_at = now(), deleted_by = $2 WHERE id = $1 RETURNING id`, id, uuid.New()).Scan(&got); err != nil {
 		t.Fatalf("soft-delete under RLS failed: %v", err)
+	}
+	if got != id {
+		t.Fatalf("soft-delete RETURNING id = %v, want %v", got, id)
 	}
 	if err := tx.Commit(ctx); err != nil {
 		t.Fatal(err)
 	}
 
-	if n := countAs(t, app, &a, "SELECT count(*) FROM assessment.attempts WHERE deleted_at IS NULL"); n != 0 {
+	if n := countAs(t, app, &a, "SELECT count(*) FROM "+table+" WHERE deleted_at IS NULL"); n != 0 {
 		t.Fatalf("soft-deleted row still read: %d", n)
 	}
-	if n := countAs(t, app, &a, "SELECT count(*) FROM assessment.attempts"); n != 1 {
+	if n := countAs(t, app, &a, "SELECT count(*) FROM "+table); n != 1 {
 		t.Fatalf("row physically missing (must be soft-deleted only): %d", n)
 	}
-	if n := countAs(t, ro, &a, "SELECT count(*) FROM assessment.attempts_live"); n != 0 {
+	if n := countAs(t, ro, &a, "SELECT count(*) FROM "+table+"_live"); n != 0 {
 		t.Fatalf("_live view shows deleted row: %d", n)
 	}
-	_, err = ro.Exec(ctx, "SELECT count(*) FROM assessment.attempts")
+	_, err = ro.Exec(ctx, "SELECT count(*) FROM "+table)
 	var pgErr *pgconn.PgError
 	if !errors.As(err, &pgErr) || pgErr.Code != "42501" {
 		t.Fatalf("_readonly read the base table: %v", err)
