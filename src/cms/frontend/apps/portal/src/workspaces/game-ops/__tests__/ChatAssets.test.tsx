@@ -6,7 +6,7 @@
 // AC-04: rollback to a version published before, unpublish warns, "Gán tenant" only with platform.tenant_data.assign.
 // AC-05/06: GIF grid (static preview, click to play), filters to the server, Approve hidden for the uploader, server reason,
 //           no external URL / third-party GIF search. AC-07: preview as a student sees it. AC-19: tag cap + counter.
-import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GAME_ACCOUNTS, renderGameOps } from '../../../test/game-ops-mock';
 import { problem, stopPortals } from '../../../test/portal-harness';
@@ -232,6 +232,7 @@ describe('Thư viện GIF (F082-AC-05, AC-06, AC-19)', () => {
     await screen.findByTestId('chat-asset-preview');
     expect(screen.queryByRole('button', { name: 'Duyệt' })).toBeNull();
     stopPortals();
+    cleanup(); // unmount the uploader's portal before the reviewer's one (one portal in the document)
     const rev = await renderGameOps('/', {
       account: 'cm.duyet',
       setup: (m, b) => {

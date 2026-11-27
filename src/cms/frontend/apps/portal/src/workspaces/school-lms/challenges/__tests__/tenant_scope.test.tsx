@@ -2,12 +2,16 @@
 // creating or acting: without one the create button is disabled and no challenge API is called; with one every call
 // carries its X-Tenant-Id (and createChallenge its `tenant_id`); switching the tenant while the wizard is open resets
 // the wizard and reloads the templates of the new tenant (edge case of the spec). Backend = MOCK (challenges-mock.ts).
-import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, configure, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { tenantFilterStore } from '../../../../shell/tenantFilterStore';
 import type { RecordedRequest } from '../../../../test/portal-harness';
 import { renderChallenges, stopPortals, TENANTS } from './challenges-mock';
 import { fillWizard, next, pickOption } from './wizard-helpers';
+
+// the wizard is a lazy chunk that loads the templates of the tenant: 10 s is too short on a shared CPU (failed with 4
+// workers, passes alone in 45 s)
+configure({ asyncUtilTimeout: 60_000 });
 
 afterEach(() => {
   stopPortals();

@@ -11,7 +11,8 @@ import { stopPortals, TENANTS } from '../../../test/portal-harness';
 import { IDS, platformState, renderPlatform } from '../../../test/platform-backend';
 
 // whole-portal flows with several Ant Design selects and dialogs are slow on the throttled shared CPU (2 workers max)
-vi.setConfig({ testTimeout: 300_000 });
+// the cursor test of countries takes ~230 s alone on a shared CPU (55 rows, user-event on Ant Design): 600 s like ChatAssets
+vi.setConfig({ testTimeout: 600_000 });
 configure({ asyncUtilTimeout: 30_000 });
 
 afterEach(() => {
@@ -31,7 +32,11 @@ async function openTab(name: string, state?: ReturnType<typeof platformState>) {
 describe('Quốc gia (F057-AC-11)', () => {
   it('lists countries; toggling status needs a reason and calls updateCountry with If-Match = row version; no delete action', async () => {
     const { backend, user } = await openTab('Quốc gia');
-    const row = (await screen.findByText('Việt Nam')).closest('tr')!;
+    const section = await screen.findByRole('region', { name: 'Quốc gia' });
+    await within(section).findByText('Việt Nam');
+    // a refetch keeps the old rows under the table spinner (`.ant-spin-blur`, pointer-events: none): click once it is done
+    await waitFor(() => expect(section.querySelector('.ant-spin-blur')).toBeNull());
+    const row = within(section).getByText('Việt Nam').closest('tr')!;
     expect(within(row).queryByRole('button', { name: /xóa/i })).toBeNull();
     await user.click(within(row).getByRole('button', { name: 'Tắt' }));
     const dialog = await screen.findByRole('dialog');
