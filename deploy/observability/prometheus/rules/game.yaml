@@ -22,6 +22,16 @@ groups:
           description: "GAME_ANALYTICS §10 threshold (rollup ngày > 2 h). Check the job analytics-rollup-hourly / dashboard-day-close-game and the size of events_raw."
           runbook_url: "docs/11-operations/runbooks/AnalyticsRollupSlow.md"
           source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
+  - name: game-installers
+    rules:
+      - alert: SchoolKitIndexInvalid
+        expr: sum(increase(eduworld_school_kit_index_fetch_total{result="invalid"}[15m])) > 0
+        labels: { severity: warning, module: game }
+        annotations:
+          summary: "The signed school-kit index cannot be loaded or verified (installer page answers 503)"
+          description: "F134-AC-14: check school-kit/production.json and .sig on the release CDN and EW_CLIENT_RELEASE_PUBKEY_FILE; rerun publish-index.sh."
+          runbook_url: "docs/11-operations/runbooks/SchoolKitIndexInvalid.md"
+          source: "docs/11-operations/MONITORING.md#5-alert-rules--confirmed"
   - name: game-sessions
     rules:
       - alert: GameTakeoverSpike
