@@ -15,7 +15,7 @@ import { PageTitle } from '../common/ui';
 import { useEventTemplates, useEventTenant, useSchoolEvent } from './api';
 import { CancelSchoolEventDialog } from './CancelSchoolEventDialog';
 import { SchoolEventProgressPanel } from './SchoolEventProgressPanel';
-import { AudienceText, eventPath } from './SchoolEventListPage';
+import { AudienceText, eventPath, SCHOOL_EVENTS_BASE } from './SchoolEventListPage';
 import { EventStatusTag, isCancelable, isEditable, isHidden } from './ui';
 
 export function SchoolEventDetailPage() {
@@ -28,7 +28,7 @@ export function SchoolEventDetailPage() {
   const templates = useEventTemplates(tenant.headers, tenant.key, tenant.ready);
   const [cancelling, setCancelling] = useState(false);
   const back = (
-    <Link to="/school-lms/school-events">
+    <Link to={SCHOOL_EVENTS_BASE}>
       <Button>{t('portal.school_lms.common.back')}</Button>
     </Link>
   );

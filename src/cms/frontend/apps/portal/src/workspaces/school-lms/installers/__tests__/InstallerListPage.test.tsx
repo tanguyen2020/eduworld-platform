@@ -55,7 +55,9 @@ describe('Tải bộ cài (F134-AC-17)', () => {
 
   it('copy button puts the SHA-256 on the clipboard', async () => {
     const { user } = await renderInstallers(URL);
-    const row = (await screen.findByRole('link', { name: 'Tải bộ cài 1.4.0 cho Khối 1–3' })).closest('tr')!;
+    // the page is a lazy chunk: wait for it, then for its rows (slow on a shared CPU, like the test without Web link)
+    const page = await screen.findByTestId('installers-page', {}, { timeout: 60_000 });
+    const row = (await within(page).findByRole('link', { name: 'Tải bộ cài 1.4.0 cho Khối 1–3' }, { timeout: 60_000 })).closest('tr')!;
     await user.click(within(row).getByRole('button', { name: 'Sao chép SHA-256' }));
     expect(await screen.findByText('Đã sao chép SHA-256.')).toBeInTheDocument();
     await expect(navigator.clipboard.readText()).resolves.toBe(INST.sha);

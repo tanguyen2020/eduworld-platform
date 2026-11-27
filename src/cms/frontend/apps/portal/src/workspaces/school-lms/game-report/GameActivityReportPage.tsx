@@ -1,5 +1,5 @@
 // "Hoạt động game" of workspace C (F080 T055, T061, F080-AC-27…AC-30, GAME_ANALYTICS §7.2, ADMIN_PORTAL §3.14): route
-// `/school-lms/reports/game-activity` inside the `menu.school_lms.reports` screen (no hand-registered menu, ADR-0090).
+// sub-path `game-activity` of the `menu.school_lms.reports` screen (no hand-registered menu, ADR-0090).
 // Filters: range presets / custom ≤ dashboard_max_range_days, schools (only for a `unit` tenant, only the schools of the
 // user's scope — every page, searchable) and grade bands. Five independent widgets on one shared getTenantGameSummary
 // query; `suppressed_cells` explains how many cells < 5 students are hidden; dashboard rules of §3.14.1 (grain label,

@@ -7,6 +7,7 @@ import { Card, Flex, Table, Typography } from 'antd';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAllConfigs } from '../../api/gameConfigs';
+import { menuPathOf } from '../../registry/configTypes';
 import { GenericSchemaBuilder } from '../GenericSchemaBuilder';
 import type { BuilderProps } from '../types';
 import { SimulationPanel } from './SimulationPanel';
@@ -19,7 +20,7 @@ export function XpSourceCatalog() {
     return { key: r.config_id, code: String(r.payload.code ?? ''), source: String(r.payload.source_code ?? ''), cap: caps.xp_per_day as number | undefined };
   });
   return (
-    <Card size="small" title={t('gameOps.progression.sources')} extra={<Link to="/game-ops/rewards/reward-rules">{t('gameOps.progression.editSources')}</Link>}>
+    <Card size="small" title={t('gameOps.progression.sources')} extra={<Link to={`${menuPathOf('rewards')}/reward-rules`}>{t('gameOps.progression.editSources')}</Link>}>
       <Table
         size="small"
         loading={rules.isPending}

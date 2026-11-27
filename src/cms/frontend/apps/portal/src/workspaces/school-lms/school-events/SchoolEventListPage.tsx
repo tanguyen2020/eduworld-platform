@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ActionGate } from '../../../permissions/ActionGate';
+import { menuByKey } from '../../../permissions/menuRegistry';
 import { useTenantOptions } from '../../../shared/api/hooks/useTenantOptions';
 import { formatIct } from '../../../shared/release/ict';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
@@ -20,9 +21,12 @@ import { PageTitle } from '../common/ui';
 import { LIST_STATUSES, TENANT_PARAM, useEventTemplates, useSchoolEvents, type SchoolEvent, type SchoolEventStatus } from './api';
 import { EventStatusTag } from './ui';
 
+/** Path of the "Sự kiện trường" screen, from the generated menu catalog (ADR-0090, F051-AC-34). */
+export const SCHOOL_EVENTS_BASE = menuByKey('menu.school_lms.school_events')!.path;
+
 /** Link of one event (System Admin keeps the tenant of the row in the URL). */
 export const eventPath = (e: Pick<SchoolEvent, 'event_id' | 'tenant_id'>, crossTenant: boolean, suffix = '') =>
-  `/school-lms/school-events/${e.event_id}${suffix}${crossTenant && e.tenant_id ? `?${TENANT_PARAM}=${e.tenant_id}` : ''}`;
+  `${SCHOOL_EVENTS_BASE}/${e.event_id}${suffix}${crossTenant && e.tenant_id ? `?${TENANT_PARAM}=${e.tenant_id}` : ''}`;
 
 export function AudienceText({ audience }: { audience: SchoolEvent['audience'] }) {
   const { t } = useTranslation();
@@ -68,7 +72,7 @@ export function SchoolEventListPage({ title }: { title: string }) {
         title={title}
         extra={
           <ActionGate actionKey="action.school_lms.school_events.edit">
-            <Link to="/school-lms/school-events/new">
+            <Link to={`${SCHOOL_EVENTS_BASE}/new`}>
               <Button type="primary">{t('portal.school_lms.schoolEvents.create')}</Button>
             </Link>
           </ActionGate>
