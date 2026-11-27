@@ -34,6 +34,8 @@ func _init(row: Control = null) -> void:
 	if row != null:
 		scroll.add_child(row)
 		row.resized.connect(_refresh)
+		# Chips that get narrower (a chosen tab, a translation) may fit again without any resize of the row.
+		row.minimum_size_changed.connect(func() -> void: _refresh.call_deferred())
 	scroll.resized.connect(_refresh)
 	scroll.get_h_scroll_bar().value_changed.connect(func(_v: float) -> void: _refresh())
 	# The bar learns its range after the row is laid out.
@@ -45,13 +47,26 @@ func _init(row: Control = null) -> void:
 ## Whether the chips are wider than the room of the row (the arrows are shown).
 func overflows() -> bool:
 	var row: Control = scroll.get_child(0) as Control if scroll.get_child_count() > 0 else null
-	return row != null and row.get_combined_minimum_size().x > scroll.size.x + 1.0
+	if row == null:
+		return false
+	# The room of the whole row: the arrows shown now give their width back when the chips fit without them (a row
+	# laid out narrow first must not keep its arrows once it is wide enough).
+	var room: float = scroll.size.x
+	var sep: float = float(get_theme_constant(&"separation"))
+	for arrow: Button in [prev, next]:
+		if arrow.visible:
+			room += arrow.size.x + sep
+	return row.get_combined_minimum_size().x > room + 1.0
 
 
 func _refresh() -> void:
 	var more: bool = overflows()
-	prev.visible = more
-	next.visible = more
+	if prev.visible != more:
+		prev.visible = more
+		next.visible = more
+		# Shown / hidden while this row was being laid out (a resize signal): lay it out again afterwards, else the
+		# scroll box keeps the room of the arrows.
+		queue_sort.call_deferred()
 	if not more:
 		return
 	var bar: HScrollBar = scroll.get_h_scroll_bar()
