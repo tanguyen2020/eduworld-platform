@@ -22,8 +22,8 @@ func (b *benv) pastOutcome(k kid, outcome, status string, ago time.Duration) uui
 	id := uuid.New()
 	at := b.clock.Now().Add(-ago)
 	b.exec(`INSERT INTO competition.matches (match_id, mode, matchmaking_type, subject_id, grade_level, ranked, is_bot, scope_kind,
-		ruleset_version_id, tenant_ids, status, started_at, ended_at) VALUES ($1, 'battle_1v1', 'skill', $2, $3, true, false, 'school',
-		'01936a00-0000-7000-8000-000000001041', ARRAY[$4]::uuid[], $5, $6, $6)`, id, b.subject, k.grade, k.tenant, status, at)
+		ruleset_version_id, tenant_ids, status, started_at, ended_at, end_reason) VALUES ($1, 'battle_1v1', 'skill', $2, $3, true, false, 'school',
+		'01936a00-0000-7000-8000-000000001041', ARRAY[$4]::uuid[], $5, $6, $6, 'finished')`, id, b.subject, k.grade, k.tenant, status, at)
 	b.exec(`INSERT INTO competition.match_participants (participant_id, tenant_id, match_id, student_id, school_id, team_no, outcome)
 		VALUES ($1, $2, $3, $4, $5, 0, $6)`, uuid.New(), k.tenant, id, k.id, k.school, outcome)
 	return id
