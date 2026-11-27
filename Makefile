@@ -239,6 +239,79 @@ alert-drill: ## Fire each critical alert (or ALERT=<name>) on the Alertmanager o
 test-obs: ## Unit tests of scripts/obs and of the synthetic probe logic
 	node --test scripts/obs/ tests/synthetic/k6/
 
+# ---------- load, chaos, security sweep, anti-cheat (F132, TEST_STRATEGY §8, SECURITY_ARCHITECTURE §16) ----------
+# Every runner refuses EW_ENV outside local|dev|staging (src/backend/tools/envguard, F132-AC-07). Staging runs need
+# the secrets of GitHub Environment `staging` (bot/QA credentials) and run on the self-hosted `deploy` runner.
+# F132_ENV defaults to local so a forgotten ENV never targets a shared environment (ENV itself keeps its meaning
+# for the deploy targets above).
+F132_ENV = $(or $(ENV),local)
+.PHONY: datagen perf k6-smoke test-load-tools
+datagen: ## Synthetic perf-* tenants/schools/students (CSV import + bots.json): ENV=staging [TENANTS= SCHOOLS_PER_TENANT= STUDENTS= SEED= OUT=]
+	EW_ENV=$(F132_ENV) $(GO) run ./tools/datagen/cmd/datagen -tenants $(or $(TENANTS),1) -schools-per-tenant $(or $(SCHOOLS_PER_TENANT),1) \
+	  -students $(or $(STUDENTS),100) -seed $(or $(SEED),1) -out $(abspath $(or $(OUT),tmp/datagen))
+
+perf: ## Load scenario of tests/load/scenarios.yaml + perf report: RUN=<run> ENV=staging [SCALE=<f> DURATION_SCALE=<f> SCALE_SERVICE=<svc>=<n>@<s>] (BASE_URL, BOTS_FILE, EW_LOADBOT_PASSWORD, EW_PROMETHEUS_URL)
+	$(if $(RUN),,$(error RUN=<run of tests/load/scenarios.yaml> required))
+	bash scripts/perf/run.sh --run $(RUN) --env $(F132_ENV) $(if $(SCALE),--scale $(SCALE)) $(if $(DURATION_SCALE),--duration-scale $(DURATION_SCALE)) \
+	  $(if $(SCALE_SERVICE),--scale-service $(SCALE_SERVICE))
+
+k6-smoke: ## k6 inspect of every load script + smoke against the labelled stub (thresholds pass/fail as expected), throwaway ew-f132-load-* containers
+	bash scripts/perf/k6-smoke.sh
+
+test-load-tools: ## Unit tests of datagen, loadbot, envguard, scripts/perf and the k6 helpers; scenarios.gen.json fresh; shellcheck
+	$(GO) test -count=1 ./tools/envguard/... ./tools/gameclient/... ./tools/datagen/... ./tools/loadbot/...
+	node scripts/perf/render-scenarios.mjs --check
+	node --test scripts/perf/ tests/load/k6/lib/
+	docker run --rm -v "$(CURDIR):/mnt" -w /mnt $(SHELLCHECK_IMAGE) scripts/perf/run.sh scripts/perf/check-generator-saturation.sh scripts/perf/k6-smoke.sh
+.PHONY: chaos test-chaos
+SHELLCHECK_IMAGE ?= koalaman/shellcheck:v0.10.0
+chaos: ## Chaos scenario(s) of tests/chaos/scenarios with recovery + report: SCENARIO=<name>|all ENV=staging [TARGET=<node|integration|nats|pg-router>] [DRY=1]
+	$(if $(SCENARIO),,$(error SCENARIO=<name>|all required))
+	EW_ENV=$(F132_ENV) bash tests/chaos/run-chaos.sh --scenario=$(SCENARIO) $(if $(TARGET),--target=$(TARGET)) $(if $(DRY),--dry-run)
+
+test-chaos: ## Chaos runner unit tests (stubbed docker/Prometheus/psql), scenario schema + F131 alerts, shellcheck
+	node tests/chaos/lib/scenario.mjs validate
+	node --test tests/chaos/
+	docker run --rm --name ew-f132-chaos-shellcheck -v "$(CURDIR):/mnt" -w /mnt $(SHELLCHECK_IMAGE) -x tests/chaos/run-chaos.sh
+.PHONY: authz-matrix wsfuzz zap-baseline security-sweep test-security-tools
+SECURITY_OUT ?= $(CURDIR)/tmp/security
+ZAP_IMAGE ?= ghcr.io/zaproxy/zaproxy:2.16.1
+authz-matrix: ## Authz/tenant matrix of every public operation (F132-AC-15): ENV=staging [SCOPE=internal | MODE=maxlength] [STRICT=1] (EW_BASE_URL, EW_AUTHZ_FIXTURES, EW_AUTHZ_PASSWORD_FILE_<ROLE>)
+	EW_ENV=$(F132_ENV) $(GO) run ./test/security/authz-matrix/cmd/authz-matrix -mode $(or $(SCOPE),$(MODE),matrix) -out $(or $(OUT),$(SECURITY_OUT)) $(if $(STRICT),-strict)
+
+wsfuzz: ## Hostile WebSocket frames to the realtime gateway, crash/leak fails (F132-AC-18): ENV=staging (EW_BASE_URL, EW_WSFUZZ_*)
+	EW_ENV=$(F132_ENV) $(GO) run ./test/security/wsfuzz -out $(or $(OUT),$(SECURITY_OUT))
+
+zap-baseline: ## OWASP ZAP baseline (passive) of EW_BASE_URL, any High fails (F132-AC-18): ENV=staging
+	@case "$(F132_ENV)" in local|dev|staging) ;; *) echo "zap-baseline: ENV=$(F132_ENV) refused (local|dev|staging)"; exit 1 ;; esac
+	mkdir -p $(SECURITY_OUT) && chmod 777 $(SECURITY_OUT)
+	docker run --rm --name ew-zap-baseline -v "$(CURDIR):/zap/wrk" $(ZAP_IMAGE) zap-baseline.py -t "$${EW_BASE_URL:?EW_BASE_URL required}" \
+	  -c tests/security/zap/baseline.conf -J tmp/security/zap-baseline.json -I || true
+	node tests/security/zap/check-report.mjs $(SECURITY_OUT)/zap-baseline.json
+
+security-sweep: ## Every sweep runnable from a workstation/runner: authz-matrix (3 modes), wsfuzz, ZAP baseline: ENV=staging [STRICT=1]
+	rc=0; \
+	$(MAKE) --no-print-directory authz-matrix ENV=$(F132_ENV) STRICT=$(STRICT) || rc=1; \
+	$(MAKE) --no-print-directory authz-matrix ENV=$(F132_ENV) SCOPE=internal STRICT=$(STRICT) || rc=1; \
+	$(MAKE) --no-print-directory authz-matrix ENV=$(F132_ENV) MODE=maxlength STRICT=$(STRICT) || rc=1; \
+	$(MAKE) --no-print-directory wsfuzz ENV=$(F132_ENV) || rc=1; \
+	$(MAKE) --no-print-directory zap-baseline ENV=$(F132_ENV) || rc=1; \
+	exit $$rc
+
+test-security-tools: ## Unit tests of the sweep tooling: authz-matrix, wsfuzz, envguard (Go), ZAP gate and rescan scripts (node)
+	$(GO) test -count=1 ./test/security/... ./tools/envguard/...
+	node --test tests/security/zap/ scripts/security/
+.PHONY: anticheat test-anticheat
+ANTICHEAT_OUT ?= $(CURDIR)/tmp/anticheat
+anticheat: ## The 10 scenarios of ANTI_CHEAT §11 against a live environment, report tmp/anticheat/report.md (F132 US4): ENV=staging (EW_API_BASE_URL, EW_ANTICHEAT_PASSWORD, EW_ANTICHEAT_FIXTURES, [EW_PROMETHEUS_URL])
+	mkdir -p $(ANTICHEAT_OUT)
+	EW_ENV=$(F132_ENV) EW_ANTICHEAT_REPORT=$(ANTICHEAT_OUT)/report.md $(GO) test -tags anticheat -count=1 -timeout 60m -v ./test/anticheat/scenarios/
+
+test-anticheat: ## Unit tests of the anti-cheat harness against labelled stand-ins + the Spectral rule no-client-authoritative-fields
+	$(GO) test -count=1 ./test/anticheat/... ./tools/gameclient/...
+	node --test specs/spectral-functions/
+	node scripts/specs/check-client-authoritative.mjs
+
 # ---------- code generation / checks ----------
 .PHONY: gen gen-check arch-check lint test test-integration test-contract
 gen: ## Generate code: architecture rules from x-allowed-callers, problem codes from ProblemCode (later: ent, oapi-codegen)
@@ -474,6 +547,8 @@ specs-lint: ## Contract checks (Spectral/AsyncAPI added with the spec toolchain)
 	node scripts/specs/check-portal-catalog.mjs
 	node scripts/specs/check-problem-codes.mjs
 	node scripts/specs/check-maxlength.mjs
+	node scripts/specs/check-client-authoritative.mjs # Spectral rule no-client-authoritative-fields (F132-AC-21)
+	node --test specs/spectral-functions/
 	node scripts/specs/check-enums.mjs
 	node scripts/specs/validate-schemas.mjs
 	node scripts/openapi/split-public.mjs --check
