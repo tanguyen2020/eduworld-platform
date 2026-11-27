@@ -32,6 +32,8 @@ EW_PANDOC_CMD="docker run --rm -i --network none eduworld/media-tools:local pand
 cd src/cms/frontend && npx vitest run apps/portal/src/workspaces/content-studio/import/docx
 ```
 
+CI: lane `go.yml` (matrix `learning`) build stage `media-tools` (Alpine 3.22.8 ghim digest, `pandoc-cli~3.6.4`), kiểm `pandoc --version` = `pandoc 3.6.4` và đặt `EW_PANDOC_CMD` như trên với tag `eduworld/media-tools:ci` — test Word không còn bị bỏ qua trong CI (2026-11-28).
+
 ## 4. Bằng chứng cần nộp
 
 - Kết quả test (số pass/fail) ghi trong tasks.md; bảng §2.6 (số file, số công thức, % đúng, số câu sai đáp án, ngày, người đo).

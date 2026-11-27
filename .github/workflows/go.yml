@@ -13,6 +13,7 @@ on:
       - "specs/asyncapi/**"
       - "deploy/postgres/**"
       - "deploy/apisix/routes/routes.yaml"
+      - "deploy/docker/worker.Dockerfile" # stage media-tools = Pandoc of the F028 Word import tests (learning)
       - ".github/workflows/go.yml"
       - ".github/module-filters.yml"
   push:
@@ -26,6 +27,7 @@ on:
       - "specs/asyncapi/**"
       - "deploy/postgres/**"
       - "deploy/apisix/routes/routes.yaml"
+      - "deploy/docker/worker.Dockerfile" # stage media-tools = Pandoc of the F028 Word import tests (learning)
       - ".github/workflows/go.yml"
       - ".github/module-filters.yml"
 
@@ -76,6 +78,17 @@ jobs:
         run: make gen-check MOD=${{ matrix.module }}
       - name: lint
         run: make lint MOD=${{ matrix.module }}
+      # F028: the Word import tests (TestPandocReal, TestDocxImport*) skip without a Pandoc. Provide Pandoc 3.6.4 the way
+      # the F028 quickstart §3 runs it: the media-tools stage of the worker image (Alpine pinned by digest,
+      # pandoc-cli~3.6.4), called through docker with no network; the version is asserted so a drift fails here.
+      - name: Pandoc 3.6.4 (media-tools stage, F028)
+        if: matrix.module == 'learning'
+        run: |
+          docker build --target media-tools -t eduworld/media-tools:ci -f deploy/docker/worker.Dockerfile .
+          v="$(docker run --rm --network none eduworld/media-tools:ci pandoc --version | head -n 1)"
+          echo "$v"
+          if [ "$v" != "pandoc 3.6.4" ]; then echo "::error::media-tools must ship pandoc 3.6.4, got: $v"; exit 1; fi
+          echo "EW_PANDOC_CMD=docker run --rm -i --network none eduworld/media-tools:ci pandoc" >> "$GITHUB_ENV"
       - name: test
         run: make test MOD=${{ matrix.module }}
       - name: test-integration

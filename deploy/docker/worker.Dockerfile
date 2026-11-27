@@ -23,8 +23,10 @@ RUN CGO_ENABLED=0 go build -trimpath \
 # CONTENT_MODEL §7) and Pandoc 3.6 (Word import lessons_docx: .docx with OMML formulas → JSON AST, run as an external
 # process with --sandbox and a timeout, never linked into Go — F028). Images are processed in pure Go (no libvips/cgo).
 #   docker build --target media-tools -t eduworld/media-tools:<version> -f deploy/docker/worker.Dockerfile .
-FROM alpine:3.22 AS media-tools
-RUN apk add --no-cache ffmpeg pandoc-cli ca-certificates tzdata && addgroup -S -g 10001 app && adduser -S -D -H -u 10001 -G app app
+# Pinned: Alpine 3.22.8 by digest and Pandoc 3.6.4 (`pandoc-cli~3.6.4`); the F028 golden AST and the "Pandoc" step of
+# .github/workflows/go.yml (asserts `pandoc --version`) depend on it — bump them together.
+FROM alpine:3.22.8@sha256:49340b346798875b5592e5d420241f2f9cfba5f47e62ebb1446a1b34734e898f AS media-tools
+RUN apk add --no-cache ffmpeg 'pandoc-cli~3.6.4' ca-certificates tzdata && addgroup -S -g 10001 app && adduser -S -D -H -u 10001 -G app app
 LABEL org.opencontainers.image.title="eduworld/media-tools"
 USER 10001:10001
 

@@ -21,6 +21,7 @@ identity:
 learning:
   - "src/backend/modules/learning/**"
   - "specs/openapi/modules/learning.*"
+  - "deploy/docker/worker.Dockerfile" # stage media-tools: Pandoc of the F028 Word import tests
 game:
   - "src/backend/modules/game/**"
   - "specs/openapi/modules/game.*"

@@ -15,6 +15,8 @@ const cases = [
   { files: ['src/backend/go.mod'], workflows: ['go', 'security'], modules: ALL },
   { files: ['deploy/postgres/init/02-roles.sh'], workflows: ['deploy-config', 'go', 'security'], modules: ALL },
   { files: ['deploy/compose/docker-compose.yml'], workflows: ['deploy-config', 'security'], modules: [] },
+  // F028: the media-tools stage is the Pandoc of the learning Word import tests (go.yml step "Pandoc 3.6.4").
+  { files: ['deploy/docker/worker.Dockerfile'], workflows: ['deploy-config', 'go', 'security'], modules: ['learning'] },
   { files: ['docs/README.md'], workflows: ['docs', 'security'], modules: [] },
   { files: ['README.md'], workflows: ['docs', 'security'], modules: [] },
   { files: ['specs/001-monorepo-compose-ci-skeleton/spec.md'], workflows: ['docs', 'godot', 'security', 'specs'], modules: [] },
