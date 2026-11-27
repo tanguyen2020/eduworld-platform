@@ -121,7 +121,7 @@
 ## Definition of Done
 
 - [x] Mọi tiêu chí F109-AC-* có test pass với fake + fixture contract (quickstart §5.1) — phần chạy thật còn chờ
-- [ ] `make godot-test` xanh; integration hai client với backend thật
+- [ ] `make godot-test` xanh; integration hai client với backend thật — GdUnit toàn bộ 1387 test: 0 lỗi, chỉ ngân sách thời gian dao động khi máy bận (quickstart §5.1); integration hai client **chờ backend thật**
 - [x] Constitution Check trong plan.md vẫn đạt; fake/fixture chỉ trong `tests/` (R17)
 - [x] Tài liệu sở hữu, CHANGELOG cập nhật (CONFIG_DEFAULTS không đổi — không thêm tham số)
 - [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật (In progress)
