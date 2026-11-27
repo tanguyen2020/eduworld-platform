@@ -78,6 +78,53 @@
       "status": "open",
       "capabilities": {
         "voice": false
+      },
+      "notification_level": "none",
+      "muted": true
+    },
+    {
+      "channel_id": "0193b0a0-0000-7000-8000-000000000503",
+      "channel_type": "direct",
+      "allowed_kinds": [
+        "text",
+        "emoji",
+        "quick",
+        "sticker",
+        "gif"
+      ],
+      "sendable_kinds": [
+        "text",
+        "emoji",
+        "quick",
+        "sticker",
+        "gif"
+      ],
+      "max_text_length": 200,
+      "unread_count": 0,
+      "last_seq": 9,
+      "my_read_seq": 9,
+      "status": "open",
+      "capabilities": {
+        "voice": false
+      },
+      "notification_level": "all",
+      "muted": false,
+      "peer": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a2",
+        "nickname": "CaHeoVui07",
+        "level": 10,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_b",
+          "skin_tone": "tone_04",
+          "hair": {
+            "item_id": "hair_spiky_01",
+            "color": "hair_col_01"
+          },
+          "outfit": {
+            "item_id": "outfit_sport_01"
+          }
+        }
       }
     }
   ]

@@ -171,7 +171,7 @@
     },
     "openapi/Channel.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Channel",
-      "sha256": "4132090f7d6e50b35af707a01ddfd893876e169eb270999ba75dd1295a10398c"
+      "sha256": "0adfa226a33238425cca2daf6d08ac2c3fa0952382aef3296ab821243cd63683"
     },
     "openapi/Message.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Message",
@@ -223,7 +223,7 @@
     },
     "openapi/listMyChannels.200.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#listMyChannels/responses/200/example",
-      "sha256": "e3057211bef64707ac3be2599f103db2ef24b160578e2fcdfe372b6d228615e8"
+      "sha256": "38411f6ed986fe557054320c270fadba77e094823bb7fcf237ed510932007965"
     },
     "openapi/listChannelMessages.200.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#listChannelMessages/responses/200/example",
@@ -492,6 +492,18 @@
     "asyncapi/battle.state.snapshot.ended.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/BattleStateSnapshot/examples/ended",
       "sha256": "628252d44166a5d6838a193086570a7f98035fb1e3e310aceda1a792ab5d87ee"
+    },
+    "asyncapi/chat.channel.membership_changed.dm_frozen.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatChannelMembershipChanged/examples/dm_frozen",
+      "sha256": "ce5adbc8aa37ec8116535c822c549f43cecd1f6dc5a785905c915e7b88bff67c"
+    },
+    "asyncapi/chat.channel.membership_changed.club_read_only.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatChannelMembershipChanged/examples/club_read_only",
+      "sha256": "36197a105f8faf8e0aa9873c9cef707d1fd5145a86311346b94e426074a522f7"
+    },
+    "asyncapi/chat.channel.membership_changed.club_left.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatChannelMembershipChanged/examples/club_left",
+      "sha256": "8c0126d3c56633a2fe2a9de090a5e800bd59d5213d9d047871a63b39f42a4a8c"
     },
     "asyncapi/chat.history.loaded.sync.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/ChatHistoryLoaded/examples/sync",
@@ -820,6 +832,18 @@
     "asyncapi/system.command.failed.chat_muted.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/chat_muted",
       "sha256": "fba0af713ca68423b7740f62a51003f780289b734596ee3bf2c8dea4a00d38eb"
+    },
+    "asyncapi/system.command.failed.chat_not_allowed_hours.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/chat_not_allowed_hours",
+      "sha256": "6ea9c1f38e476d733db1aec8db81da65a34f48540a13e626431dff89ef6fe73c"
+    },
+    "asyncapi/system.command.failed.chat_not_allowed.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/chat_not_allowed",
+      "sha256": "9a77fba1c900ef7199e207ec404fe16989455c04f06557720033021916a011e4"
+    },
+    "asyncapi/system.command.failed.curfew_active.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/curfew_active",
+      "sha256": "99aaecf564a63e3fc732f05e11bc44c9e6c783b88dc6005edf80c472afc55835"
     },
     "asyncapi/system.command.failed.room_full.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SystemError/examples/room_full",

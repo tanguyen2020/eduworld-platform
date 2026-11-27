@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "type": "chat.channel.membership_changed",
+  "seq": 82,
+  "ts": 1763712142000,
+  "payload": {
+    "channel_id": "0193b0a0-0000-7000-8000-000000000502",
+    "channel_type": "team",
+    "op": "removed",
+    "status": "open"
+  }
+}

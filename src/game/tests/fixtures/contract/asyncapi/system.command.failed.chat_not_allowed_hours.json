@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "type": "system.command.failed",
+  "seq": 74,
+  "ts": 1763712134000,
+  "ref": "0193b0a0-0000-7000-8000-000000000d0a",
+  "payload": {
+    "code": "CHAT_NOT_ALLOWED",
+    "message": "Kênh này đang nghỉ, em quay lại sau nhé.",
+    "details": {
+      "reopen_at": "2026-11-29T00:00:00Z"
+    }
+  }
+}

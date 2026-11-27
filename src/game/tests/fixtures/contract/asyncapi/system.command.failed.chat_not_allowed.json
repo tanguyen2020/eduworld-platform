@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "system.command.failed",
+  "seq": 75,
+  "ts": 1763712135000,
+  "ref": "0193b0a0-0000-7000-8000-000000000d0b",
+  "payload": {
+    "code": "CHAT_NOT_ALLOWED",
+    "message": "Em chưa nhắn riêng được với bạn này lúc này."
+  }
+}
