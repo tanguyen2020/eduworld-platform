@@ -1,6 +1,6 @@
 # Dashboard Data — cơ chế dữ liệu cho mọi dashboard
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Backend Architect + Data/Analytics · Cập nhật: 2026-11-17 (loại tenant QA; rollup game theo `dims_hash`)
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Backend Architect + Data/Analytics · Cập nhật: 2026-11-27 (F134: `excluded_tenant_ids` khi hỏi mọi tenant, export liên tenant loại tenant QA — §3.4) · 2026-11-17 (loại tenant QA; rollup game theo `dims_hash`)
 > Liên quan: [ADR-0062](../adr/ADR-0062-kien-truc-du-lieu-dashboard-khong-truy-van-du-lieu-tho.md) · [ADR-0058](../adr/ADR-0058-game-analytics-tong-hop-trong-postgresql-qua-su-kien-nats.md) · [ADR-0037](../adr/ADR-0037-moi-service-mot-database-postgresql-thay-mot-phan-adr-0003.md) · [ADR-0042](../adr/ADR-0042-domain-event-qua-transactional-outbox-nats-jetstream-thay-tr.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [DATABASE_DESIGN](DATABASE_DESIGN.md) · [VALKEY_DESIGN](VALKEY_DESIGN.md) · [MONITORING](../11-operations/MONITORING.md) · [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md)
 
 > [!IMPORTANT]
@@ -91,7 +91,7 @@ Không lưu tích Descartes của mọi chiều. Mỗi module khai báo **tập 
 
 ### 3.4. Loại tenant QA
 
-Tenant có cờ `is_qa = true` (cột của tenant ở module identity, chỉ System Admin đặt, tenant `common` không được đánh dấu; các module nhận qua projection `ref.tenants.is_qa`) chỉ chứa tài khoản kiểm thử và probe synthetic ([MONITORING](../11-operations/MONITORING.md)). Mọi dashboard và export **cấp platform hoặc liên tenant** (Platform học tập, Game Analytics, báo cáo platform) loại tenant QA, kể cả dữ liệu ghi trước khi đánh dấu; khi bộ lọc `tenant_ids` chỉ định tenant QA, API trả rỗng kèm `excluded_tenant_ids`. Game Analytics không ghi sự kiện của tenant QA ngay từ consumer ([GAME_ANALYTICS §2](../11-operations/GAME_ANALYTICS.md), nguyên tắc A-8). Dữ liệu của tenant QA vẫn cô lập như mọi tenant khác.
+Tenant có cờ `is_qa = true` (cột của tenant ở module identity, chỉ System Admin đặt, tenant `common` không được đánh dấu; các module nhận qua projection `ref.tenants.is_qa`) chỉ chứa tài khoản kiểm thử và probe synthetic ([MONITORING](../11-operations/MONITORING.md)). Mọi dashboard và export **cấp platform hoặc liên tenant** (Platform học tập, Game Analytics, báo cáo platform) loại tenant QA, kể cả dữ liệu ghi trước khi đánh dấu; khi bộ lọc `tenant_ids` chỉ định tenant QA, API trả rỗng kèm `excluded_tenant_ids`; không có `tenant_ids` (mọi tenant) thì `excluded_tenant_ids` liệt kê mọi tenant QA bị loại (F134). Export liên tenant (`createPlatformReport`, `createGameAnalyticsExport`) cũng loại tenant QA kể cả khi được chỉ định. Tenant Admin của chính tenant QA đọc báo cáo game tenant (`getTenantGameSummary`) nhận `200` với số liệu rỗng. Game Analytics không ghi sự kiện của tenant QA ngay từ consumer ([GAME_ANALYTICS §2](../11-operations/GAME_ANALYTICS.md), nguyên tắc A-8). Dữ liệu của tenant QA vẫn cô lập như mọi tenant khác.
 
 ## 4. Pipeline gia tăng
 
