@@ -5,7 +5,9 @@ extends PanelContainer
 ## members' nicknames — the member answering this question for each team (server `primary_user_ids`) has a star and
 ## stronger text, and the student reads "Lượt của em" / "Em hỗ trợ" in words), the
 ## question progress "Câu 2/3" and the time bar from `deadline_at − server now`. Lớp 1–3 see the bar only (no seconds
-## — AC-09); lớp 4–9 also see "12 giây". A player away has a grey card with the wifi sign; the words are in the reconnect banner (not colour only).
+## — AC-09); lớp 4–9 also see "12 giây". A player away has a grey card (team battle: before the nickname) with the wifi sign, its
+## sentence as tooltip + accessible name; the words are also in the reconnect banner (not colour only) except on the compact
+## canvas while a question shows (F125 polish: the banner folds into the sign).
 ## UI only: values are BattleClient's (server).
 
 var _left: VBoxContainer = null
@@ -195,11 +197,9 @@ func _player_side(p: BattlePlayer, mine: bool) -> Control:
 		row.add_child(texts)
 		row.add_child(thumb)
 	if not p.connected:
-		# Grey card + the wifi sign; the words are in the reconnect banner of the screen (the header stays one line).
-		var away: TextureRect = UiBuild.icon_rect("wifi_off", 0.8)
-		away.name = "Away"
-		away.tooltip_text = "ui.arena.battle.reconnecting"
-		away.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		# Grey card + the wifi sign; the words are in the reconnect banner of the screen (the header stays one line) —
+		# on the compact canvas while a question shows, the sign alone says it (its sentence as tooltip + accessible name).
+		var away: TextureRect = _away_sign(p)
 		row.add_child(away)
 		row.move_child(away, 0 if not mine else row.get_child_count() - 1)
 	return card
@@ -227,7 +227,8 @@ func _team_side(view: BattleView, team: int, mine: bool) -> Control:
 	box.add_child(members)
 	for p: BattlePlayer in view.members(team):
 		members.add_child(_member_item(p, p.user_id in view.primary_user_ids))
-	# A player away is said in words by the reconnect banner of the screen (the header stays short on a phone).
+	# A player away: the wifi sign before the nickname; the words are in the reconnect banner of the screen (on the
+	# compact canvas while a question shows, the sign alone — F125 polish).
 	return card
 
 
@@ -241,12 +242,27 @@ func _member_item(p: BattlePlayer, primary: bool) -> HBoxContainer:
 		star.tooltip_text = "ui.arena.battle.primary_marker"
 		star.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		item.add_child(star)
+	if not p.connected:
+		item.add_child(_away_sign(p))
 	var nick: String = p.nickname if not p.bot else TranslationServer.translate("ui.arena.battle.robot")
 	var l: Label = UiBuild.data_label(nick, &"InstructionLabel" if primary else &"MutedLabel", false)
 	l.name = "Nickname"
 	l.tooltip_text = nick
 	item.add_child(l)
 	return item
+
+
+## The wifi sign of a player reconnecting: its sentence ("{nickname} đang kết nối lại…") is the tooltip and the
+## accessible name, so the state is never said by the icon alone (F125 polish: the banner folds into it on a phone).
+func _away_sign(p: BattlePlayer) -> TextureRect:
+	var away: TextureRect = UiBuild.icon_rect("wifi_off", 0.8)
+	away.name = "Away"
+	var nick: String = p.nickname if not p.bot else TranslationServer.translate("ui.arena.battle.robot")
+	var sentence: String = TranslationServer.translate("ui.arena.battle.opponent_reconnecting").format({"nickname": nick})
+	away.tooltip_text = sentence
+	away.accessibility_name = sentence
+	away.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return away
 
 
 ## Nicknames the server marked primary for this question (tests / accessibility).

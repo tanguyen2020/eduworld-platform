@@ -3502,9 +3502,6 @@ msgstr "Trả lời đúng và nhanh để được thêm điểm nhé!"
 msgid "ui.arena.battle.primary_marker"
 msgstr "Bạn trả lời chính câu này cho đội"
 
-msgid "ui.arena.battle.reconnecting"
-msgstr "Đang kết nối lại…"
-
 msgid "ui.arena.battle.teammate_reconnecting"
 msgstr "Một bạn đang kết nối lại…"
 

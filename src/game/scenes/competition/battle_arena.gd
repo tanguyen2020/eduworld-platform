@@ -9,10 +9,13 @@ extends Control
 ## - the always-on match chat (F119 ChatDock on the server's `chat_channel_ids` {match, team?}, no option to turn it
 ##   off): the right column, shrunk to its 2-line strip while a question is on screen (`EventBus.question_shown` / `question_hidden`)
 ##   so it never covers the answers (AC-13);
-## - banners "Đối thủ đang kết nối lại…" (until the server `grace_until`), "Em đang kết nối lại…"; the pause overlay;
+## - banners "Đối thủ đang kết nối lại…" (until the server `grace_until`), "Em đang kết nối lại…"; on the compact phone
+##   canvas while a question shows, the other player's banner folds into the wifi sign on their card (its sentence as
+##   tooltip + accessible name) so every answer stays in view (F125 polish); the pause overlay;
 ##   the start countdown 3-2-1 from the server `starts_at` (AC-11) with "Trả lời đúng và nhanh…" only when the server
 ##   says `speed_bonus_enabled` (AC-09);
-## - MatchResultView at the end (AC-14…AC-16).
+## - MatchResultView at the end (AC-14…AC-16); on the compact phone canvas it takes the whole column (the match header —
+##   "Câu 1/3", the stale time bar — hides) so the outcome and the score are read at once above the buttons (F125 polish).
 ## UI only: BattleClient / MatchmakingService / LeaderboardService / MatchHistoryService do the work (R1).
 
 signal closed()
@@ -41,6 +44,7 @@ var _banner: Dictionary = {}
 var _status: Dictionary = {}
 var _stage: PanelContainer = null
 var _stage_box: VBoxContainer = null
+var _stage_scroll: ScrollContainer = null
 var _question_slot: VBoxContainer = null
 var _submit: Button = null
 var _countdown: Label = null
@@ -66,6 +70,13 @@ func _ready() -> void:
 	visible = false
 	_build()
 	resized.connect(_layout)
+	AppState.compact_changed.connect(_on_compact_changed)
+
+
+func _on_compact_changed(_compact: bool) -> void:
+	_fit_result()
+	if battle != null:
+		_render_banner(battle.now_ms())
 
 
 func _exit_tree() -> void:
@@ -87,6 +98,7 @@ func open(args: Dictionary = {}) -> void:
 	QualityManager.suspend_world(SUSPEND_REASON)
 	AppState.begin_blocking(BLOCKING_ACTIVITY)
 	_result.visible = false
+	_fit_result()
 	_stage.visible = true
 	_reveal.hide()
 	_clear_question()
@@ -268,6 +280,15 @@ func _on_evaluated(e: AnswerEvaluation) -> void:
 		question.show_verdict(e.to_result())
 	ArenaUi.show_notice(_status, "")
 	_reveal.show_evaluation(e)
+	_show_reveal.call_deferred()
+
+
+## F125 polish: the feedback strip ("Đúng rồi! +150 điểm") is scrolled into view once laid out — on the compact canvas it
+## may sit just under the question's visible part.
+func _show_reveal() -> void:
+	await get_tree().process_frame
+	if is_inside_tree() and _reveal.visible:
+		_stage_scroll.ensure_control_visible(_reveal)
 
 
 func _on_revealed(view: BattleView) -> void:
@@ -297,6 +318,7 @@ func _on_match_ended(summary: MatchSummary) -> void:
 	_clear_question()
 	_stage.visible = false
 	_result.visible = true
+	_fit_result()
 	_result.self_id = battle.self_id
 	var again: bool = services != null and not services.matchmaking.last_search.is_empty() \
 			and battle.view != null and battle.view.mode in ["battle_1v1", "team_battle"]
@@ -363,6 +385,11 @@ func _render_banner(now: int) -> void:
 	var args: Dictionary = {}
 	if services != null and services.realtime != null and services.realtime.is_reconnecting():
 		key = "ui.arena.battle.self_reconnecting"
+	elif AppState.compact and _question_on:
+		# F125 polish: on the 540 tall canvas the banner row would push the answers out of view; the wifi sign on the
+		# card of the player away says it (its sentence as tooltip + accessible name). The student's own reconnect
+		# banner stays (their answers are locked meanwhile).
+		key = ""
 	elif battle != null and battle.view != null:
 		for p: BattlePlayer in battle.view.participants:
 			if p.user_id != battle.self_id and not p.connected and (p.grace_until <= 0 or p.grace_until > now):
@@ -438,6 +465,8 @@ func _set_question_on(on: bool) -> void:
 	else:
 		EventBus.question_hidden.emit()
 	_place_chat(on)
+	if battle != null:
+		_render_banner(battle.now_ms())
 
 
 ## F109-AC-13 / F119-AC-03: while a question is on screen the dock (its 2-line strip) sits beside the match header and
@@ -450,19 +479,28 @@ func _place_chat(strip: bool) -> void:
 		var w: float = row.size.x if row.size.x > 0.0 else get_viewport_rect().size.x - float(UiTokens.SIZE_SPACE_24) * 2.0
 		# Room for the strip beside the header, with a little slack (separation, rounding).
 		var room: float = w - _header.get_combined_minimum_size().x - float(UiTokens.SIZE_SPACE_16)
-		# F125: the strip beside the header is as wide as the chat column share (_layout), so that is the room it needs.
+		# F125: the strip beside the header is as wide as the chat column share (_layout), so that is the room it needs;
+		# on the compact canvas the folded dock (its header row) needs only its own width (F125 polish).
 		var full: float = size.x if size.x > 0.0 else get_viewport_rect().size.x
-		target = _strip_slot if room >= maxf(_dock_panel_min().x, full * CHAT_SHARE) else _strip_bottom
+		if AppState.compact:
+			# F125 polish: the folded dock shows its chat icon (title as its tooltip), the unread count and "Mở chat" —
+			# narrow enough to sit beside the match header, so the header row is the only row above the question.
+			_chat_dock.allow_title(false)
+		var need: float = _dock_panel_min().x if AppState.compact else maxf(_dock_panel_min().x, full * CHAT_SHARE)
+		target = _strip_slot if room >= need else _strip_bottom
 	if _chat_dock.get_parent() != target:
 		_chat_dock.get_parent().remove_child(_chat_dock)
 		target.add_child(_chat_dock)
-	_chat_dock.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# F125 polish: the folded dock beside the header keeps its own height (no tall empty panel).
+	_chat_dock.size_flags_vertical = Control.SIZE_SHRINK_BEGIN if strip and AppState.compact and target == _strip_slot \
+			else Control.SIZE_EXPAND_FILL
 	_strip_slot.visible = strip and target == _strip_slot
 	_strip_bottom.visible = strip and target == _strip_bottom
 	_chat_column.visible = not strip
-	# F125: on the compact phone canvas (540 tall) a strip under the question would take the answers' row: the chat
-	# folds to its header (title, unread count, "Mở chat") until the question is answered.
-	var fold: bool = strip and target == _strip_bottom and AppState.compact
+	# F125: on the compact phone canvas (540 tall) a 2-line strip would take the answers' row: the chat folds to its
+	# header (title, unread count, "Mở chat") until the question is answered — under the question, or beside the match
+	# header when that row has room for it (F125 polish: the header row then stays as tall as the header).
+	var fold: bool = strip and AppState.compact
 	if fold and _chat_dock.mode == ChatDock.Mode.MINI:
 		_chat_dock.set_mode(ChatDock.Mode.COLLAPSED)
 		_folded_strip = true
@@ -479,6 +517,13 @@ func _fit_strip() -> void:
 	var h: float = _dock_panel_min().y if _strip_slot.visible or _strip_bottom.visible else 0.0
 	if not is_equal_approx(_chat_dock.custom_minimum_size.y, h):
 		_chat_dock.custom_minimum_size.y = h
+
+
+## F125 polish: on the compact canvas the result takes the whole question column — the header row (sides, "Câu 1/3", the
+## time bar of the last question, the chat strip slot) hides while the result shows; a PC window keeps it.
+func _fit_result() -> void:
+	var top: Control = _header.get_parent() as Control
+	top.visible = not (_result.visible and AppState.compact)
 
 
 ## Minimum width of the question side (its scroll box takes the column's minimum width).
@@ -571,7 +616,9 @@ func _layout() -> void:
 			_layout.call_deferred()
 	var column: float = clampf(maxf(minf(w * CHAT_SHARE, room), dock_min), UiBuild.target() * 5.0, w * CHAT_SHARE_MAX)
 	_chat_column.custom_minimum_size.x = column
-	_strip_slot.custom_minimum_size.x = maxf(column, _dock_panel_min().x)
+	# F125 polish: the folded dock beside the header (compact, question on screen) takes only its own width.
+	_strip_slot.custom_minimum_size.x = _dock_panel_min().x if AppState.compact and _question_on \
+			else maxf(column, _dock_panel_min().x)
 
 
 func _build() -> void:
@@ -621,6 +668,7 @@ func _build() -> void:
 	left.add_child(_stage)
 	# The question scrolls only when it cannot fit (very long text, the +35% pseudo-locale) — the screen never overflows.
 	var stage_scroll: ScrollContainer = ScrollContainer.new()
+	_stage_scroll = stage_scroll
 	stage_scroll.name = "StageScroll"
 	stage_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	UiBuild.expand(stage_scroll, true, true)

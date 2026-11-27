@@ -204,9 +204,6 @@ msgstr ""
 msgid "ui.arena.battle.progress"
 msgstr ""
 
-msgid "ui.arena.battle.reconnecting"
-msgstr ""
-
 msgid "ui.arena.battle.recorded"
 msgstr ""
 

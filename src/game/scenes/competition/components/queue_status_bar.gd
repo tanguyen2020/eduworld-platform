@@ -12,6 +12,9 @@ var service: MatchmakingService = null
 var _status: Label = null
 var _note: Label = null
 var _cancel: Button = null
+var _box: VBoxContainer = null
+var _row: HBoxContainer = null
+var _buttons: HFlowContainer = null
 var _robot: Button = null
 var _other_mode: Button = null
 var _again: Button = null
@@ -24,8 +27,11 @@ func _init() -> void:
 	name = "QueueStatusBar"
 	theme_type_variation = &"HudPanel"
 	visible = false
+	_box = UiBuild.vbox()
+	add_child(_box)
 	var row: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
-	add_child(row)
+	_row = row
+	_box.add_child(row)
 	var icon: TextureRect = UiBuild.icon_rect("search")
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(icon)
@@ -46,6 +52,7 @@ func _init() -> void:
 	buttons.alignment = FlowContainer.ALIGNMENT_END
 	buttons.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(buttons)
+	_buttons = buttons
 	_robot = UiBuild.button("ui.arena.queue.robot", "robot", &"SecondaryButton")
 	_robot.name = "Robot"
 	_robot.pressed.connect(_on_robot)
@@ -62,6 +69,15 @@ func _init() -> void:
 	_cancel.name = "Cancel"
 	_cancel.pressed.connect(_on_cancel)
 	buttons.add_child(_cancel)
+
+
+## F125 polish: on the compact canvas the buttons go under the words (one narrow card) so the bar fits between the HUD's
+## left column and its "Về Quảng trường" button; a PC window keeps them beside the words.
+func set_stacked(on: bool) -> void:
+	var target: Control = _box if on else _row
+	if _buttons.get_parent() != target:
+		_buttons.get_parent().remove_child(_buttons)
+		target.add_child(_buttons)
 
 
 func bind(next: MatchmakingService) -> void:

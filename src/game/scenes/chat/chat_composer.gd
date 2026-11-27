@@ -425,6 +425,7 @@ func _build() -> void:
 	_send.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_send.pressed.connect(submit)
 	_input_row.add_child(_send)
+	_input.resized.connect(_fit_send)
 	_lock = UiBuild.panel(&"WarningBannerPanel")
 	_lock.name = "Lock"
 	_lock.visible = false
@@ -437,3 +438,32 @@ func _build() -> void:
 	UiBuild.expand(_lock_label)
 	lock_row.add_child(_lock_label)
 	_update_counter()
+
+
+## F125 polish: in a narrow chat column (the match column on a phone, a long translation) the input would cut its hint
+## ("Nhập tin nhắn…" → "Nhập tin"): the send button then shows its paper plane alone — its word stays as tooltip and
+## accessible name — and the input gets that room. Decided from the widths with the word shown (no flicker).
+func _fit_send() -> void:
+	if _input == null or _send == null:
+		return
+	var font: Font = _input.get_theme_font(&"font")
+	var send_font: Font = _send.get_theme_font(&"font")
+	if font == null or send_font == null:
+		return
+	var word: String = tr("ui.chat.send")
+	var box: StyleBox = _input.get_theme_stylebox(&"normal")
+	var pad: float = box.get_margin(SIDE_LEFT) + box.get_margin(SIDE_RIGHT) if box != null else 0.0
+	# The input keeps room for its scroll bar and the caret.
+	pad += _input.get_v_scroll_bar().get_combined_minimum_size().x + float(UiTokens.SIZE_SPACE_8)
+	var hint: float = font.get_string_size(tr(_input.placeholder_text), HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+			_input.get_theme_font_size(&"font_size")).x + pad
+	var label: float = send_font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+			_send.get_theme_font_size(&"font_size")).x + float(_send.get_theme_constant(&"h_separation"))
+	var with_word: float = _input.size.x - (label if _send.text.is_empty() else 0.0)
+	var show_word: bool = with_word >= hint
+	var shown: bool = not _send.text.is_empty()
+	if show_word == shown:
+		return
+	_send.text = "ui.chat.send" if show_word else ""
+	_send.tooltip_text = "" if show_word else "ui.chat.send"
+	_send.accessibility_name = "" if show_word else word

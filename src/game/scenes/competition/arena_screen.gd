@@ -37,6 +37,8 @@ var _mode_cards: Dictionary = {}
 var _mode_group: ButtonGroup = ButtonGroup.new()
 var _picker: SubjectTopicPicker = null
 var _find: Button = null
+var _play_row: HBoxContainer = null
+var _play_actions: HFlowContainer = null
 var _duel: Button = null
 var _empty_modes: Label = null
 var _leaderboard: LeaderboardView = null
@@ -49,11 +51,18 @@ func _ready() -> void:
 	visible = false
 	_build()
 	EventBus.locale_changed.connect(_on_locale_changed)
+	AppState.compact_changed.connect(_on_compact_changed)
 
 
 func _exit_tree() -> void:
 	if EventBus.locale_changed.is_connected(_on_locale_changed):
 		EventBus.locale_changed.disconnect(_on_locale_changed)
+	if AppState.compact_changed.is_connected(_on_compact_changed):
+		AppState.compact_changed.disconnect(_on_compact_changed)
+
+
+func _on_compact_changed(_compact: bool) -> void:
+	_fit_play()
 
 
 ## WorldRoot: `ui_requested("arena", {tab, tournament_id, duel})`.
@@ -310,8 +319,14 @@ func _build_play() -> Control:
 	var page: VBoxContainer = UiBuild.vbox(&"FormBox")
 	page.name = "PlayPage"
 	UiBuild.expand(page, true, true)
+	# F125 polish: on the compact canvas the action buttons stand in a column right of the modes (a row under them would
+	# cut the mode cards); a PC window keeps the row under the scroll box.
+	_play_row = UiBuild.hbox(&"ToolbarBox")
+	_play_row.name = "PlayRow"
+	UiBuild.expand(_play_row, true, true)
+	page.add_child(_play_row)
 	var sb: Dictionary = ArenaUi.scroll_box()
-	page.add_child(sb["scroll"] as ScrollContainer)
+	_play_row.add_child(sb["scroll"] as ScrollContainer)
 	var box: VBoxContainer = sb["box"] as VBoxContainer
 	var hint: Label = UiBuild.label("ui.arena.coach", &"InstructionLabel")
 	hint.name = "Hint"
@@ -329,6 +344,7 @@ func _build_play() -> Control:
 	buttons.name = "Actions"
 	buttons.alignment = FlowContainer.ALIGNMENT_END
 	page.add_child(buttons)
+	_play_actions = buttons
 	_duel = UiBuild.button("ui.arena.duel.open", "invite", &"SecondaryButton")
 	_duel.name = "Duel"
 	_duel.pressed.connect(_on_duel)
@@ -337,7 +353,22 @@ func _build_play() -> Control:
 	_find.name = "FindMatch"
 	_find.pressed.connect(_on_find)
 	buttons.add_child(_find)
+	_fit_play()
 	return page
+
+
+## F125 polish: the Play actions under the modes (PC) or in a column at their right, at the bottom (compact canvas).
+func _fit_play() -> void:
+	if _play_actions == null:
+		return
+	var side: bool = AppState.compact
+	var target: Control = _play_row if side else _play_row.get_parent() as Control
+	if _play_actions.get_parent() != target:
+		_play_actions.get_parent().remove_child(_play_actions)
+		target.add_child(_play_actions)
+	_play_actions.vertical = side
+	for b: Button in [_duel, _find]:
+		b.size_flags_horizontal = Control.SIZE_FILL
 
 
 func _on_challenge_match(match_id: String, mode: String) -> void:

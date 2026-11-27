@@ -3502,9 +3502,6 @@ msgstr "Answer right and fast to earn bonus points!"
 msgid "ui.arena.battle.primary_marker"
 msgstr "Answers this question for the team"
 
-msgid "ui.arena.battle.reconnecting"
-msgstr "Reconnecting…"
-
 msgid "ui.arena.battle.teammate_reconnecting"
 msgstr "A teammate is reconnecting…"
 

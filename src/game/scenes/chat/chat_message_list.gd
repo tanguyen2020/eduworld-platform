@@ -119,7 +119,12 @@ func scroll_to_key(key: String) -> void:
 func relayout() -> void:
 	if _content == null:
 		return
-	_width = maxf(size.x - float(get_v_scroll_bar().size.x if get_v_scroll_bar().visible else 0.0), 0.0)
+	var width: float = maxf(size.x - float(get_v_scroll_bar().size.x if get_v_scroll_bar().visible else 0.0), 0.0)
+	# F125 polish: a new width (column resized, title dropped, band / compact change) wraps every card again — measure
+	# the cards on screen at that width instead of keeping the estimate.
+	if not is_equal_approx(width, _width):
+		_measure = true
+	_width = width
 	_offsets.resize(entries.size())
 	var y: float = 0.0
 	for i: int in entries.size():
@@ -201,6 +206,8 @@ func _take() -> ChatBubble:
 	if b == null:
 		b = ChatBubble.new()
 		b.menu_requested.connect(func(m: ChatMessageModel) -> void: menu_requested.emit(m))
+		# F125 polish: a card whose real height changed after it was laid out is measured again (no overlap).
+		b.minimum_size_changed.connect(func() -> void: _measure = true)
 		_content.add_child(b)
 	b.visible = true
 	return b
@@ -242,6 +249,13 @@ func _process(_delta: float) -> void:
 		relayout()
 		if keep:
 			_apply_bottom()
+		return
+	# F125 polish: a card sized while its old (taller) minimum still held keeps that height — size it again to its
+	# measured height so it does not reach over the next card.
+	for i: Variant in _active.keys():
+		var b: ChatBubble = _active[i] as ChatBubble
+		if b.message != null and absf(b.size.y - _height_of(b.message)) > 0.5:
+			_place(b, int(i))
 
 
 func _apply_bottom() -> void:

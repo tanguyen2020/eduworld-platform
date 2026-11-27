@@ -37,13 +37,16 @@ func _init() -> void:
 	_list_scroll = sb["scroll"] as ScrollContainer
 	_list_scroll.name = "ListScroll"
 	add_child(_list_scroll)
-	_list_box = sb["box"] as VBoxContainer
+	# F125 polish: "Xem thêm" ends the list inside its scroll box (a button row under the list would cut the last card
+	# on the compact canvas, STUDENT_GAME_UX_SOCIAL §8).
+	_list_box = UiBuild.vbox(&"FormBox")
 	_list_box.name = "Matches"
+	(sb["box"] as VBoxContainer).add_child(_list_box)
 	_more = UiBuild.button("ui.arena.history.more", "arrow_down", &"SecondaryButton")
 	_more.name = "More"
 	_more.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_more.pressed.connect(func() -> void: _load(true))
-	add_child(_more)
+	(sb["box"] as VBoxContainer).add_child(_more)
 	var db: Dictionary = ArenaUi.scroll_box()
 	_detail_scroll = db["scroll"] as ScrollContainer
 	_detail_scroll.name = "DetailScroll"

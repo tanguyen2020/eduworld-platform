@@ -81,6 +81,9 @@ func _ready() -> void:
 	_emotes.anim_driver = local.anim_driver if local != null else null
 	_apply_avatar(services.profile.avatar_config())
 	_emotes.emote_selected.connect(_on_emote_selected)
+	# F125 polish: the HUD invitation popup keeps clear of the emote button (another layer on the right edge).
+	var clear: Array[Control] = [_emotes.touch_button()]
+	_hud.set("keep_clear", clear)
 	_bind_progression(services)
 	# F123-AC-15: the unread notifications of the student (bell badge) on entering the world.
 	services.notifications.load_unread()

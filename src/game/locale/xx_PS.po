@@ -206,9 +206,6 @@ msgstr "[!! Åñšŵëŕš ţĥïš qüëšţïöñ ƒöŕ ţĥë ţëáɱ ~~~~~
 msgid "ui.arena.battle.progress"
 msgstr "[!! Qüëšţïöñ {n}/{total} ~~~~~~~~ !!]"
 
-msgid "ui.arena.battle.reconnecting"
-msgstr "[!! Ŕëçöññëçţïñğ… ~~~~~~ !!]"
-
 msgid "ui.arena.battle.recorded"
 msgstr "[!! Ğöţ ïţ! Ŵáïţ ƒöŕ ţĥë ŕëšüĺţ. ~~~~~~~~~~~~ !!]"
 

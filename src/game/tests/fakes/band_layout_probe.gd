@@ -118,6 +118,8 @@ static func check(root: Node, vp: Viewport, band: String, label: String, compact
 			out.append("%s: trimmed text \"%s\"" % [where, trimmed])
 	for line: String in overlapping_siblings(root, vp):
 		out.append("%s %s: %s" % [label, band, line])
+	for line: String in overlapping_messages(root, vp):
+		out.append("%s %s: %s" % [label, band, line])
 	return out
 
 
@@ -208,6 +210,62 @@ static func overlapping_siblings(root: Node, vp: Viewport) -> PackedStringArray:
 				var c: Rect2 = (list[j] as Control).get_global_rect().grow(-TOLERANCE_PX)
 				if a.intersects(c):
 					out.append("%s and %s overlap" % [_short(root, list[i]), _short(root, list[j])])
+	return out
+
+
+## F125 polish (STUDENT_GAME_UX_SOCIAL §7 MessageList): the message cards of every visible chat list of `root` in `vp`
+## never overlap — each card (at least its own minimum height, the real text height) ends above the next one — so no
+## card is drawn over another card's name row or time. One line per pair.
+static func overlapping_messages(root: Node, vp: Viewport) -> PackedStringArray:
+	var out: PackedStringArray = []
+	var lists: Array[Node] = root.find_children("*", "ChatMessageList", true, false)
+	if root is ChatMessageList:
+		lists.append(root)
+	for node: Node in lists:
+		var list: ChatMessageList = node as ChatMessageList
+		if list.get_viewport() != vp or not list.is_visible_in_tree():
+			continue
+		var shown: Array[ChatBubble] = []
+		for b: ChatBubble in list.bubbles():
+			if b.visible and b.message != null:
+				shown.append(b)
+		shown.sort_custom(func(a: ChatBubble, c: ChatBubble) -> bool: return a.position.y < c.position.y)
+		for i: int in range(1, shown.size()):
+			var above: ChatBubble = shown[i - 1]
+			var below: ChatBubble = shown[i]
+			var bottom: float = above.position.y + maxf(above.size.y, above.get_combined_minimum_size().y)
+			if bottom > below.position.y + TOLERANCE_PX:
+				out.append("%s: message \"%s\" is drawn %.0f px over \"%s\"" % [_short(root, list),
+						above.shown_text().left(24), bottom - below.position.y, below.shown_text().left(24)])
+	return out
+
+
+## F125 polish (STUDENT_GAME_UX_SOCIAL §8 ResultScreen): the button row `footer` under the scroll box `scroll` never
+## covers it, and every control of `keep` (what the student must read at once, e.g. the outcome and the score of a
+## result) is wholly inside the part of `scroll` seen at rest — not cut by its bottom edge just above the buttons, nor
+## hidden under them. The seen part is the scroll box clipped by the scroll boxes around it and by the view.
+static func footer_cuts(scroll: ScrollContainer, footer: Control, keep: Array[Control], vp: Viewport,
+		label: String) -> PackedStringArray:
+	var out: PackedStringArray = []
+	var seen: Rect2 = scroll.get_global_rect().intersection(
+			Rect2(Vector2.ZERO, Vector2(vp.size if vp is SubViewport else vp.get_visible_rect().size)))
+	var p: Node = scroll.get_parent()
+	while p != null:
+		if p is ScrollContainer:
+			seen = seen.intersection((p as Control).get_global_rect())
+		p = p.get_parent()
+	if footer != null and footer.is_visible_in_tree():
+		for node: Node in footer.find_children("*", "BaseButton", true, false):
+			var b: Control = node as Control
+			if b.is_visible_in_tree() and b.get_global_rect().grow(-TOLERANCE_PX).intersects(seen):
+				out.append("%s: button %s covers the scroll box %s" % [label, b.name, seen])
+	for c: Control in keep:
+		if c == null or not c.is_visible_in_tree() or c.size.y <= 0.0:
+			continue
+		var r: Rect2 = c.get_global_rect()
+		if r.end.y > seen.end.y + TOLERANCE_PX:
+			out.append("%s: %s cut at the bottom of the scroll box (%.0f px hidden above the buttons)" % [label, c.name,
+					r.end.y - maxf(seen.end.y, r.position.y)])
 	return out
 
 

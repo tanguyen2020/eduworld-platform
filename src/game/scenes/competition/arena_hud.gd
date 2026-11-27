@@ -37,6 +37,8 @@ func _init() -> void:
 	_bar.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_bar.arena_requested.connect(func() -> void: arena_requested.emit({}))
 	add_child(_bar)
+	_fit_bar(AppState.compact)
+	AppState.compact_changed.connect(_fit_bar)
 	_toast = UiBuild.panel(&"HudPanel")
 	_toast.name = "TournamentToast"
 	_toast.visible = false
@@ -72,6 +74,14 @@ func _init() -> void:
 	_duel_prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_duel_prompt.custom_minimum_size.x = float(UiTokens.SIZE_LAYOUT_660)
 	add_child(_duel_prompt)
+
+
+## F125 polish: on the compact canvas the HUD's left column (next step card, joystick) and its bottom-right "Về Quảng
+## trường" take a larger share of the width — the bar keeps to the band between them so it never covers either.
+func _fit_bar(compact: bool) -> void:
+	_bar.anchor_left = 0.3 if compact else 0.2
+	_bar.anchor_right = 0.75 if compact else 0.8
+	_bar.set_stacked(compact)
 
 
 func bind(mm: MatchmakingService, tours: TournamentService) -> void:

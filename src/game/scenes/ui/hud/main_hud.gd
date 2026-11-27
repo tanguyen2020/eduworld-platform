@@ -82,6 +82,9 @@ var banner_args: Dictionary = {}
 ## F102: PartyHud ("Nhóm" + member strip) and the invitation popup.
 @onready var _party: PartyHud = %PartyChip
 @onready var _invite_toast: InvitationToast = %InvitationToast
+## F125 polish: controls of other layers on the right edge the invitation popup must not cover (WorldRoot sets the emote
+## button) — the popup ends left of them and of the side bar.
+var keep_clear: Array[Control] = []
 
 ## F096: the current "Việc tiếp theo" suggestion (NextStepHint.for_assignments).
 var next_step: Dictionary = {}
@@ -291,8 +294,27 @@ func _place_invite_toast() -> void:
 		return
 	var gap: float = float(UiTokens.SIZE_SPACE_8)
 	var top_bar: Control = find_child("TopBar", true, false) as Control
-	_invite_toast.offset_right = -gap
-	_invite_toast.offset_left = -gap - float(UiTokens.SIZE_LAYOUT_660)
+	# F125 polish: between the left column (next step, XP) and the right edge controls (side bar, emote button) — on the
+	# compact canvas the popup would otherwise hide "Vào nhóm" under the side bar / emote button. It never gets narrower
+	# than the side bar would allow alone (a too narrow window keeps the old width).
+	var root: Control = _invite_toast.get_parent() as Control
+	var origin: float = root.get_global_rect().position.x
+	var right: float = root.size.x - gap
+	var avoid: Array[Control] = [find_child("SideBar", true, false) as Control]
+	avoid.append_array(keep_clear)
+	for c: Control in avoid:
+		if c != null and c.is_visible_in_tree() and c.size.x > 0.0:
+			right = minf(right, c.get_global_rect().position.x - origin - gap)
+	var left: float = gap
+	for c: Control in [_next_step_card, _xp_panel]:
+		if c != null and c.is_visible_in_tree():
+			left = maxf(left, c.get_global_rect().end.x - origin + gap)
+	var width: float = minf(float(UiTokens.SIZE_LAYOUT_660), right - left)
+	if width < float(UiTokens.SIZE_LAYOUT_280) * 1.5:
+		right = root.size.x - gap
+		width = float(UiTokens.SIZE_LAYOUT_660)
+	_invite_toast.offset_right = right - root.size.x
+	_invite_toast.offset_left = _invite_toast.offset_right - width
 	_invite_toast.offset_top = (top_bar.size.y if top_bar != null else UiBuild.target()) + gap
 
 
