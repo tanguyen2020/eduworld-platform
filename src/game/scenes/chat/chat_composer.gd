@@ -98,7 +98,8 @@ func configure(next: ChatChannelModel, quick_catalog: QuickMessageCatalog) -> vo
 ## The quick-message row in the viewer's language (rebuilt on a locale change).
 func refresh_quick() -> void:
 	UiBuild.clear(_quick_row)
-	var big: bool = UiBuild.band() == "g1_3"
+	# F125: on the compact phone canvas every button is already the compact touch target; the list keeps its 3 messages.
+	var big: bool = UiBuild.band() == "g1_3" and not AppState.compact
 	if catalog == null:
 		return
 	for it: QuickMessageCatalog.Item in catalog.items:
@@ -134,9 +135,12 @@ func set_lock(key: String, args: Dictionary = {}, allow_quick: bool = false) -> 
 	_update_counter()
 
 
-## The smile board opens by default for g1_3 (AC-08), closed for the other bands until the smile is pressed.
+## The smile board opens by default for g1_3 (AC-08), closed for the other bands until the smile is pressed. F125: on a
+## phone (compact canvas 540 tall) it starts closed for every band so three messages stay readable (F119 "≥ 3 tin"); the
+## big quick messages stay above the input and the smile button opens the board with one tap.
 func apply_band(band: String) -> void:
-	board = band == "g1_3" or (channel != null and not channel.allows(ChatChannelModel.KIND_TEXT))
+	var text_off: bool = channel != null and not channel.allows(ChatChannelModel.KIND_TEXT)
+	board = (band == "g1_3" and not AppState.compact) or text_off
 	_apply_board()
 	refresh_quick()
 
@@ -279,6 +283,9 @@ func _update_counter() -> void:
 	_counter.text = TranslationServer.translate("ui.chat.counter_over" if over else "ui.chat.counter").format(
 			{"count": count, "max": limit})
 	_counter.theme_type_variation = &"InlineErrorLabel" if over else &"ChatMetaLabel"
+	UiBuild.fit_words(_counter)
+	# F125: on the compact phone canvas the counter shows once the student types (the list keeps its 3 messages).
+	_counter.visible = count > 0 or not AppState.compact
 	_send.disabled = locked or count == 0 or over
 	# The white plane is for the blue face; the grey disabled button shows the blue one so it stays readable.
 	_send.icon = UiBuild.icon("send_blue" if _send.disabled else "send")
@@ -408,7 +415,8 @@ func _build() -> void:
 	_input.text_changed.connect(_on_text_changed)
 	_input.submit_requested.connect(submit)
 	field.add_child(_input)
-	_counter = UiBuild.data_label("", &"ChatMetaLabel", false)
+	# F125: the counter wraps between its words (long translations) so the input row fits a narrow phone column.
+	_counter = UiBuild.keep_words(UiBuild.data_label("", &"ChatMetaLabel"))
 	_counter.name = "Counter"
 	_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	field.add_child(_counter)

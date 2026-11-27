@@ -10,12 +10,16 @@ signal grade_band_changed(band: String)
 signal assignments_changed(count: int)
 ## F069: a timed activity started or ended (`challenge`, `exam`, later `boss`); "" = none — holds the level-up modal.
 signal blocking_activity_changed(activity: StringName)
+## F125: compact mode (a phone held sideways, CompactPolicy) switched on or off by OrientationGuard.
+signal compact_changed(compact: bool)
 
 const MOCK_BADGE_SCENE: String = "res://scenes/ui/debug/MockBadge.tscn"
 const TELEMETRY_QUEUE_MAX: int = 100
 
 var player: Dictionary = {}
 var grade_band: String = ""
+## F125 (STUDENT_GAME_UX §2): the window is a phone (short side < 500 density-independent px); set by OrientationGuard.
+var compact: bool = false
 var school_policies: Dictionary = {}
 var feature_flags: Dictionary = {}
 var connectivity: int = 0
@@ -59,6 +63,7 @@ func start_ui(window: Window) -> void:
 		theme_service.high_contrast = bool(settings.get("high_contrast"))
 		_connect_once(settings, "font_scale_changed", theme_service.set_font_scale)
 		_connect_once(settings, "high_contrast_changed", theme_service.set_high_contrast)
+	theme_service.compact = compact
 	theme_service.attach(window)
 	var config: Node = get_node_or_null("/root/Config")
 	if config != null and bool(config.get("is_mock")):
@@ -83,6 +88,16 @@ func set_grade_band(band: String) -> void:
 	grade_band_changed.emit(grade_band)
 	if theme_service != null:
 		theme_service.set_band(grade_band)
+
+
+## F125-AC-01: compact mode on/off (OrientationGuard); the Theme follows without reloading the scene.
+func set_compact(value: bool) -> void:
+	if value == compact:
+		return
+	compact = value
+	if theme_service != null:
+		theme_service.set_compact(value)
+	compact_changed.emit(value)
 
 
 ## F070: the profile read after the game session (nickname chosen in S02, level) replaces the display fields of

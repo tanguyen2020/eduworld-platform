@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scenes/world/world_map.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/cross.svg" id="2_cross"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/map.svg" id="3_title_icon"]
 
 [node name="WorldMap" type="Control"]
 layout_mode = 3
@@ -24,20 +26,40 @@ grow_vertical = 2
 [node name="Box" type="VBoxContainer" parent="Window"]
 layout_mode = 2
 
-[node name="Header" type="HBoxContainer" parent="Window/Box"]
+[node name="TitleBar" type="PanelContainer" parent="Window/Box"]
 layout_mode = 2
+theme_type_variation = &"WindowTitleBar"
 
-[node name="Title" type="Label" parent="Window/Box/Header"]
+[node name="Row" type="HBoxContainer" parent="Window/Box/TitleBar"]
+layout_mode = 2
+theme_type_variation = &"ToolbarBox"
+
+[node name="TitleIcon" type="TextureRect" parent="Window/Box/TitleBar/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_title_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Window/Box/TitleBar/Row"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"HeadingLabel"
+size_flags_vertical = 4
+theme_type_variation = &"WindowTitleLabel"
 text = "ui.worldmap.title"
+autowrap_mode = 3
+uppercase = true
 
-[node name="Close" type="Button" parent="Window/Box/Header"]
+[node name="Close" type="Button" parent="Window/Box/TitleBar/Row"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"DangerButton"
 text = "ui.common.close"
+icon = ExtResource("2_cross")
 
 [node name="Scroll" type="ScrollContainer" parent="Window/Box"]
 layout_mode = 2

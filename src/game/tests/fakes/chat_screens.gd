@@ -37,8 +37,9 @@ static func build(view: String, parent: Control, services: ServiceLocator, http:
 	if view == "mini":
 		_anchor(dock, 0.02, 0.70, 0.46, 0.97)
 	else:
-		# Under the top HUD row, beside the right column (where a match screen keeps its chat).
-		_anchor(dock, 0.55, 0.11, 0.985, 0.97)
+		# Under the top HUD row, beside the right column (where a match screen keeps its chat). F125: on the compact phone
+		# canvas the battle screen gives its chat column the whole height (BattleArena), so does this stand-in.
+		_anchor(dock, 0.55, 0.02 if AppState.compact else 0.11, 0.985, 0.97)
 	parent.add_child(dock)
 	dock.bind_services(chat, services.social, services.reports)
 	dock.show_match(ChatFixtures.MATCH_ID, ChatFixtures.MATCH_CHANNEL, ChatFixtures.TEAM_CHANNEL,

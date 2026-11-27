@@ -64,7 +64,6 @@ var _window: PanelContainer = null
 var _title: Label = null
 var _type_tag: Label = null
 var _settings: Button = null
-var _minimize: Button = null
 var _leave: Button = null
 var _close: Button = null
 var _title_buttons: HFlowContainer = null
@@ -226,8 +225,9 @@ func leave_button() -> Button:
 	return _leave
 
 
+## F125-AC-06: the red ✕ Đóng also "minimises" a party (the party goes on; reopened from the HUD "Nhóm" button).
 func minimize_button() -> Button:
-	return _minimize
+	return _close
 
 
 func settings_button() -> Button:
@@ -396,9 +396,9 @@ func _render_frame() -> void:
 	_type_tag.visible = in_party
 	_type_tag.text = String(TYPE_KEYS.get(p.party_type, "ui.party.type.friend")) if in_party else ""
 	_settings.visible = in_party and service.store.is_leader()
-	_minimize.visible = in_party
 	_leave.visible = in_party
-	_close.visible = not in_party
+	# F125-AC-06: one red close in every state (in a party it closes the window, the party goes on).
+	_close.tooltip_text = "ui.party.minimize_tooltip" if in_party else ""
 	_alone.visible = not in_party
 	_lobby.visible = in_party
 	_bottom.visible = in_party
@@ -500,6 +500,7 @@ func _render_controls() -> void:
 		# A member: what the leader will do (the leader grace already has its banner).
 		_start_hint.visible = true
 		_start_hint.text = tr("ui.party.wait_leader")
+	_fit_start_hint()
 
 
 func _render_invitations() -> void:
@@ -544,7 +545,7 @@ func _focus_default() -> void:
 	elif _ready_toggle.visible and not _ready_toggle.disabled:
 		_ready_toggle.grab_focus(true)
 	else:
-		_minimize.grab_focus(true)
+		_close.grab_focus(true)
 
 
 func _show_summary(info: Dictionary) -> void:
@@ -734,7 +735,9 @@ func _place_chat() -> void:
 
 
 ## The phone overlay (F119 "≥ 3 tin"): the right PHONE_CHAT_SHARE of the window, from the top of the title bar (its own
-## header has "Thu gọn" to give the party buttons back) down to the Ready / Start bar, which stays visible.
+## header has "Thu gọn" to give the party buttons back) down to the Ready / Start bar, which stays visible. F125: on the
+## compact phone canvas (540 tall) the panel is a side sheet from the top to the bottom of the screen — the only way three
+## messages stay readable under its composer; "Thu gọn" brings the Ready / Start bar back.
 func _place_chat_overlay() -> void:
 	var win: Rect2 = _window.get_global_rect()
 	var top: float = (_window.find_child("TitleBar", true, false) as Control).get_global_rect().position.y
@@ -742,6 +745,10 @@ func _place_chat_overlay() -> void:
 	var pad: float = float(UiTokens.SIZE_SPACE_12)
 	var w: float = win.size.x * PHONE_CHAT_SHARE
 	var origin: Vector2 = get_global_rect().position
+	if AppState.compact:
+		var view: Rect2 = get_viewport_rect()
+		top = view.position.y + pad
+		bottom = view.end.y
 	_chat_overlay.position = Vector2(win.end.x - w - pad * 2.0, top) - origin
 	_chat_overlay.size = Vector2(w, maxf(bottom - top - pad, UiBuild.target() * 2.0))
 
@@ -804,6 +811,20 @@ func _place_start_hint() -> void:
 			_bottom_box.move_child(_start_hint, 0)
 	_start_hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER if inline else Control.SIZE_FILL
 	_bottom_spacer.visible = not inline
+	_fit_start_hint()
+
+
+## F125: inline on a phone, the reason is never narrower than its longest word — the flow row moves it onto its own
+## line instead of cutting a word (compact canvas, long translations).
+func _fit_start_hint() -> void:
+	var widest: float = 0.0
+	var font: Font = _start_hint.get_theme_font(&"font")
+	if _phone and font != null:
+		var px: int = _start_hint.get_theme_font_size(&"font_size")
+		for word: String in _start_hint.text.replace("
+", " ").split(" ", false):
+			widest = maxf(widest, font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, px).x)
+	_start_hint.custom_minimum_size.x = ceilf(widest)
 
 
 func _build() -> void:
@@ -919,8 +940,8 @@ func _build_title(box: VBoxContainer) -> void:
 	bar.add_child(row)
 	_title_icon = UiBuild.icon_rect("group")
 	_title_icon.name = "TitleIcon"
-	_title_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(_title_icon)
+	# F125: on the white tile of every window title bar.
+	row.add_child(UiBuild.icon_badge(_title_icon))
 	_title = UiBuild.data_label("", &"WindowTitleLabel", false)
 	_title.name = "Title"
 	_title.uppercase = true
@@ -944,17 +965,12 @@ func _build_title(box: VBoxContainer) -> void:
 	_settings.tooltip_text = "ui.party.settings.title"
 	_settings.pressed.connect(_on_settings_pressed)
 	buttons.add_child(_settings)
-	_minimize = UiBuild.button("ui.party.minimize", "arrow_down", &"SecondaryButton")
-	_minimize.name = "Minimize"
-	_minimize.tooltip_text = "ui.party.minimize_tooltip"
-	_minimize.pressed.connect(close)
-	buttons.add_child(_minimize)
 	_leave = UiBuild.button("ui.party.leave", "exit_light", &"DangerButton")
 	_leave.name = "Leave"
 	_leave.pressed.connect(_on_leave_pressed)
 	buttons.add_child(_leave)
-	_close = UiBuild.button("ui.common.close", "cross", &"DangerButton")
-	_close.name = "Close"
+	# F125: the shared red ✕ Đóng, last on the title bar ("Rời nhóm" stays beside it).
+	_close = UiBuild.close_button()
 	_close.pressed.connect(close)
 	buttons.add_child(_close)
 	for b: Node in buttons.get_children():
@@ -982,8 +998,8 @@ func _fit_title_buttons() -> void:
 	var title_w: float = 0.0
 	if font != null:
 		title_w = font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, _title.get_theme_font_size(&"font_size")).x
-	var icon_w: float = _title_icon.get_combined_minimum_size().x + sep
-	_title_icon.visible = icon_w + title_w + sep + want <= row.size.x
+	var icon_w: float = (_title_icon.get_parent() as Control).get_combined_minimum_size().x + sep
+	(_title_icon.get_parent() as Control).visible = icon_w + title_w + sep + want <= row.size.x
 
 
 func _build_invitations(body: VBoxContainer) -> void:

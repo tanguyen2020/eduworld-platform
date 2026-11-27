@@ -2500,9 +2500,6 @@ msgstr "The leader starts when everyone is ready"
 msgid "ui.party.invite"
 msgstr "Invite"
 
-msgid "ui.party.minimize"
-msgstr "Minimise"
-
 msgid "ui.party.minimize_tooltip"
 msgstr "Your party stays, open it again with the Party button"
 

@@ -40,14 +40,16 @@ func set_players(players: Array[Dictionary]) -> void:
 		if p.get("avatar_config") is Dictionary:
 			thumb.set_look(AvatarConfigModel.from_dict(p["avatar_config"]))
 		row.add_child(thumb)
-		var name_label: Label = UiBuild.data_label(nick, &"HeadingLabel")
-		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		UiBuild.expand(name_label)
-		row.add_child(name_label)
+		# F125: the nickname above its two buttons — a narrow phone column keeps the whole name (never cut) and the row
+		# no wider than its widest button.
+		var texts: VBoxContainer = UiBuild.vbox()
+		texts.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		UiBuild.expand(texts)
+		row.add_child(texts)
+		var name_label: Label = UiBuild.keep_words(UiBuild.data_label(nick, &"HeadingLabel"))
+		texts.add_child(name_label)
 		var buttons: HFlowContainer = HFlowContainer.new()
-		buttons.alignment = FlowContainer.ALIGNMENT_END
-		UiBuild.expand(buttons)
-		row.add_child(buttons)
+		texts.add_child(buttons)
 		var report: Button = UiBuild.button("ui.chat.players.report", "flag", &"SecondaryButton")
 		report.name = "Report"
 		report.pressed.connect(func() -> void: report_requested.emit(id, nick))

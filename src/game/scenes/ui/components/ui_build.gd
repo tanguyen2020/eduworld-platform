@@ -12,9 +12,14 @@ static func band() -> String:
 	return AppState.grade_band if ThemeService.is_valid_band(AppState.grade_band) else ThemeService.default_band()
 
 
-## Touch target height of the current grade band.
+## Touch target height of the current grade band (F125: at least `density.compact.button.min_height` on a phone).
 static func target() -> float:
-	return float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[band()])
+	return target_for(band())
+
+
+## Touch target height of `band_name` in the current mode (compact or not, AppState.compact).
+static func target_for(band_name: String) -> float:
+	return CompactPolicy.button_target(band_name, AppState.compact)
 
 
 static func icon(name: String) -> Texture2D:
@@ -77,6 +82,39 @@ static func icon_rect(icon_name: String, scale: float = 1.0) -> TextureRect:
 	return t
 
 
+## Sizes the title icon of a window built in a scene (.tscn) like `icon_rect` (`component.icon.size`) and puts it on
+## its white tile (`icon_badge`).
+static func fit_icon(t: TextureRect, scale: float = 1.0) -> void:
+	var side: float = float(UiTokens.COMPONENT_ICON_SIZE) * scale
+	t.custom_minimum_size = Vector2(side, side)
+	if t.get_parent() is HBoxContainer:
+		var row: Node = t.get_parent()
+		var at: int = t.get_index()
+		row.remove_child(t)
+		var badge: PanelContainer = icon_badge(t)
+		row.add_child(badge)
+		row.move_child(badge, at)
+
+
+## F125: the icon of a window title bar on a small white tile (`TitleIconBadge`) — every icon colour reads on the blue
+## bar (a blue line icon such as the journal or the map would vanish on it).
+static func icon_badge(t: TextureRect) -> PanelContainer:
+	var badge: PanelContainer = panel(&"TitleIconBadge")
+	badge.name = "TitleIconBadge"
+	badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.add_child(t)
+	return badge
+
+
+## Columns of a choice grid (F097/F099): one column on a portrait board or past 4 choices, else 2; F125: on the compact
+## phone canvas (540 tall, wide) up to 4 choices sit on one row so every answer shows without scrolling.
+static func answer_columns(count: int, tall: bool) -> int:
+	if tall or count > 4:
+		return 1
+	return clampi(count, 2, 4) if AppState.compact else 2
+
+
 static func vbox(variation: StringName = &"") -> VBoxContainer:
 	var v: VBoxContainer = VBoxContainer.new()
 	if variation != &"":
@@ -117,8 +155,9 @@ static func scrim(nested: bool = false) -> Panel:
 	return p
 
 
-## The standard F069 window: a centred PanelContainer (like the quest journal) with a header (icon + title + Close)
-## and a body box, over the modal scrim (F114). Returns `{window, body, title, close}`.
+## The standard F069 window: a centred PanelContainer (like the quest journal) with the shared title bar (icon + title +
+## the red Close, F125) and a body box, over the modal scrim (F114). Returns `{window, body, title, close, header}`
+## (`header` = the row of the title bar; extra buttons go before `close`).
 static func window(root: Control, title_key: String, title_icon: String) -> Dictionary:
 	root.add_child(scrim())
 	var win: PanelContainer = panel()
@@ -136,19 +175,44 @@ static func window(root: Control, title_key: String, title_icon: String) -> Dict
 	var box: VBoxContainer = vbox()
 	box.name = "Box"
 	win.add_child(box)
-	var header: HBoxContainer = hbox()
-	header.name = "Header"
-	box.add_child(header)
-	header.add_child(icon_rect(title_icon, 1.4))
-	var title: Label = label(title_key, &"HeadingLabel", false)
+	var bar: Dictionary = title_bar(title_key, title_icon)
+	box.add_child(bar["bar"] as Control)
+	return {"window": win, "body": box, "title": bar["title"], "close": bar["close"], "header": bar["row"],
+		"icon": bar["icon"]}
+
+
+## F125 (F114-3, DESIGN_SYSTEM §5.1): the title bar of every window — tier 1 blue `WindowTitleBar`, the window icon, an
+## upper-case title and, at its right end, the one close button of the window (`close_button`). Returns
+## `{bar, row, icon, title, close}`; a window adds its own buttons (Rời nhóm, Xu…) to `row` before `close`.
+static func title_bar(title_key: String, icon_name: String) -> Dictionary:
+	var bar: PanelContainer = panel(&"WindowTitleBar")
+	bar.name = "TitleBar"
+	var row: HBoxContainer = hbox(&"ToolbarBox")
+	row.name = "Row"
+	bar.add_child(row)
+	var title_icon: TextureRect = icon_rect(icon_name)
+	title_icon.name = "TitleIcon"
+	row.add_child(icon_badge(title_icon))
+	var title: Label = label(title_key, &"WindowTitleLabel", false)
 	title.name = "Title"
-	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	title.uppercase = true
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	expand(title)
-	header.add_child(title)
-	var close: Button = button("ui.common.close", "exit", &"SecondaryButton")
+	row.add_child(title)
+	var close: Button = close_button()
+	row.add_child(close)
+	return {"bar": bar, "row": row, "icon": title_icon, "title": title, "close": close}
+
+
+## F125-AC-06: the one close button of a window — red `DangerButton`, icon ✕ + "Đóng", the band touch target (compact
+## floor on a phone). Red = leaving (F114); confirmation dialogs keep their neutral "Hủy" and activity/exam screens their
+## guarded "Thoát" (F125-AC-07). The window wires it and `ui_cancel` (Esc/Back) to the same close.
+static func close_button() -> Button:
+	var close: Button = button("ui.common.close", "cross", &"DangerButton")
 	close.name = "Close"
-	header.add_child(close)
-	return {"window": win, "body": box, "title": title, "close": close, "header": header}
+	close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return close
 
 
 ## Removes and frees every child of `node`.
@@ -164,6 +228,32 @@ static func size_buttons(root: Node) -> void:
 	for node: Node in root.find_children("*", "Button", true, false):
 		var b: Button = node as Button
 		b.custom_minimum_size = Vector2(maxf(b.custom_minimum_size.x, t), maxf(t, 0.0))
+
+
+## F125: a wrapping label never narrower than its longest word (names, pseudo-locale words): a narrow column on the
+## compact phone canvas then grows or moves it instead of cutting a word. Re-measured when the Theme changes.
+static func keep_words(l: Label) -> Label:
+	l.ready.connect(fit_words.bind(l))
+	l.theme_changed.connect(fit_words.bind(l))
+	return l
+
+
+## Sets the minimum width of `l` to its longest word (call again after changing its text).
+static func fit_words(l: Label) -> void:
+	var font: Font = l.get_theme_font(&"font")
+	if font == null or not l.is_inside_tree():
+		return
+	var px: int = l.get_theme_font_size(&"font_size")
+	var text: String = l.tr(l.text) if l.can_auto_translate() else l.text
+	if l.uppercase:
+		text = text.to_upper()
+	var widest: float = 0.0
+	for word: String in text.replace("
+", " ").split(" ", false):
+		widest = maxf(widest, font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, px).x)
+	var box: StyleBox = l.get_theme_stylebox(&"normal")
+	var pad: float = box.get_margin(SIDE_LEFT) + box.get_margin(SIDE_RIGHT) if box != null else 0.0
+	l.custom_minimum_size.x = ceilf(widest + pad)
 
 
 ## Mây beside a speech bubble (F097 coach layout): `mood` happy for a celebration, encourage for a "keep going" note

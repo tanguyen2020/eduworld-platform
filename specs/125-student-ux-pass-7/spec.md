@@ -1,6 +1,6 @@
 # Feature Specification: F125 — Student UX pass 7: phóng to giao diện trên điện thoại và nút đóng đỏ cho mọi cửa sổ
 
-**Feature Branch**: `125-student-ux-pass-7` · **Created**: 2026-11-27 · **Status**: Ready · **Module**: `src/game/` (+ `design/game-tokens`) · **Mốc**: M3 · **Phụ thuộc**: F113, F114, F119, F123, F102
+**Feature Branch**: `125-student-ux-pass-7` · **Created**: 2026-11-27 · **Status**: Done · **Module**: `src/game/` (+ `design/game-tokens`) · **Mốc**: M3 · **Phụ thuộc**: F113, F114, F119, F123, F102
 **Input**: Orchestrator xem ảnh 844×390 của F114/F119 và thấy: canvas cơ sở 1280×720 (`canvas_items`, `aspect = expand`) bị thu cả khối xuống cửa sổ điện thoại ngang, nên chữ và nút về vật lý chỉ còn ≈ 54% cỡ token (chữ 18 px hiện như ≈ 10 px; nút 44 px còn ≈ 24 px) — ảnh `specs/114-student-ux-pass-6/screenshots/settings_access-after-844x390-vi-g8_9.png`. F114 để lại câu hỏi mở F114-3: chỉ cửa sổ Cài đặt có nút đóng đỏ "✕ Đóng". Owner duyệt 2026-11-27: "có đổi và có spec phóng to trên điện thoại". Chỉ đổi hiển thị phía client; không đổi API, không đổi luật nghiệp vụ (AGENTS R1, R32, R34). FR nguồn: FR-GAME-010; NFR-A11Y-001, NFR-COMP-001.
 
 ## Clarifications
@@ -16,6 +16,18 @@ Owner có lệnh thường trực "chốt hết": điểm thiếu được chố
 - Q: Kiểm tự động? → A: [Confirmed] Ma trận khối thêm cửa sổ `compact` 844×390 và 740×360 (giả lập cạnh ngắn < 500 bằng hệ số mật độ của test), và probe **vật lý**: đổi kích thước logic sang CSS px theo `content_scale_factor` rồi kiểm 12 px / 40 px. Probe phải báo lỗi trên bố cục hiện tại (kiểm ngược: hệ số 1 ở 844×390).
 - Q: Nút đóng cửa sổ (F114-3)? → A: [Confirmed — owner duyệt 2026-11-27] Mọi **cửa sổ** dựng bằng khung cửa sổ chung (`UiBuild` panel window, thanh tiêu đề tầng 1) — Nhật ký quest, Tủ đồ/Phối đồ, Bản đồ, Cửa hàng, Bộ sưu tập/Thành tựu, Thử thách, Nhóm (nút "Rời nhóm" giữ nguyên, thêm đóng nếu đang dùng nút phụ), Hộp thông báo, Cài đặt, Sự kiện, … — dùng một nút đóng duy nhất `DangerButton` icon ✕ + chữ "Đóng" ở phải thanh tiêu đề, cùng vị trí, cùng phím `Esc`/Back. **Không** áp cho: hộp xác nhận (giữ "Hủy" trung tính), màn làm bài/thi (giữ luồng "Thoát" có xác nhận hiện có), màn toàn khung không phải cửa sổ (đăng nhập, màn chờ, "Xoay ngang"). Quy ước đỏ = rời đi/kết thúc của F114 giữ nguyên.
 - Q: Ảnh trước/sau? → A: [Confirmed] Renderer Compatibility, `tools/capture_screens.gd`: mọi màn chính (đăng nhập, HUD, Cài đặt các tab, Nhật ký, Cửa hàng + hộp mua, Tủ đồ, Bản đồ, Thử thách, màn làm bài câu chọn một, kết quả, Hộp thông báo, Nhóm + chat, Đấu trường nếu đã có) × 4 khối ở 844×390 và 740×360 `vi`, `en` g4_5 844×390 — "trước" bằng bản hiện tại; thêm 1280×720 `vi` cho các cửa sổ đổi nút đóng.
+
+### Session 2026-11-27 (plan — chốt bằng mặc định an toàn nhất, lệnh "chốt hết")
+
+- Q: `density.compact.button.min_height` = 56 có đạt vùng chạm 40 CSS px ở 740×360 không? → A: [Confirmed] **Không**: canvas logic 540 trên cửa sổ cao 360 cho 0,667 CSS px mỗi px logic → 56 chỉ còn 37,3 px. Chốt **60** (60 × 0,667 = 40,0 px; 844×390: 43,3 px), vẫn thỏa "tối thiểu 56" của AC-03; `g1_3` giữ 64.
+- Q: Cỡ chữ theo khối có đủ ≥ 12 CSS px sau phóng to? → A: [Confirmed] **Không** với `g6_7`/`g8_9`: `density.<band>.font.small` = 16 → 10,7 px ở 740×360 (11,6 px ở 844×390). Thêm token `density.compact.font.small` = **18** (18 × 0,667 = 12,0 px): trong `compact` mọi cỡ chữ < 18 được nâng lên 18; cỡ chữ của khối không bao giờ bị hạ (AC-05). Hai sàn `compact` sinh thành Theme `compact` riêng của từng khối (`eduworld_theme_<band>_compact.tres`), không sửa tay.
+- Q: Cửa sổ `compact` hẹp hơn 16:9 (vd. cửa sổ trình duyệt 600×480)? → A: [Confirmed] Hệ số bị chặn để canvas logic không hẹp hơn 540 × 16/9 = 960 (giữ tỉ lệ canvas gốc); khi đó chiều cao logic > 540 (ít phóng hơn), vẫn ≥ 1. Điện thoại ngang (≥ 16:9) luôn đúng 540.
+- Q: Bàn phím ảo? → A: [Confirmed] Chiều cao bàn phím ảo (`DisplayServer.virtual_keyboard_get_height`) được cộng lại vào cửa sổ trước khi quyết định chế độ và hệ số.
+- Q: Ngưỡng 500 đặt ở đâu? → A: [Confirmed] Cài đặt dự án `eduworld/ui/compact_short_side` = 500 (sở hữu `STUDENT_GAME_UX` §2, đăng ký ở CONFIG_DEFAULTS); `component.compact.logical_height` và hai sàn là token.
+- Q: Nhóm đang có nút phụ "Thu nhỏ"? → A: [Confirmed] Bỏ nút phụ "Thu nhỏ"; nút đỏ "✕ Đóng" luôn ở cuối thanh tiêu đề (trong nhóm vẫn chỉ đóng cửa sổ, nhóm còn nguyên — tooltip "Nhóm vẫn còn…"); "Rời nhóm" giữ nguyên bên cạnh.
+- Q: Danh sách "cửa sổ"? → A: [Confirmed] Mọi cửa sổ có thanh tiêu đề của khung chung: Nhật ký quest, Bản đồ, Phối đồ (studio), Tủ đồ/Cửa hàng, Thành tựu/Bộ sưu tập, Thử thách (bảng, kết quả), Hành trình, menu "Thêm", Hộp thông báo, Cài đặt, Nhóm (+ chọn bạn mời, chọn hoạt động), Đấu trường, sảnh đề thi (ExamLobby — cửa sổ trước khi vào thi; màn làm bài thi giữ "Thoát"). Client chưa có màn "Sự kiện". **Không** áp: hộp xác nhận, sheet chat (menu tin nhắn, báo cáo), lời thoại NPC (bong bóng hội thoại), hướng dẫn giải trong màn làm bài, vòng biểu cảm, thông báo giờ nghỉ toàn khung, màn chờ, đăng nhập, "Xoay ngang".
+- Q: Quy tắc "≥ 3 tin" của F119 trên canvas 540 (bảng mặt cười `g1_3` mở sẵn chiếm 2 hàng)? → A: [Confirmed] Trong `compact`: bảng mặt cười đóng mặc định ở mọi khối (hàng tin nhanh + ô nhập vẫn hiện, nút 😊 mở bảng bằng một chạm), nút tin nhanh `g1_3` cao bằng vùng chạm `compact` (không 1,2×); panel chat trượt của màn Nhóm thành tấm phủ cao hết màn hình bên phải (nút "Thu gọn" trả lại thanh Sẵn sàng / Bắt đầu). Chọn đọc được ≥ 3 tin hơn là giữ bảng mở (an toàn hơn cho trẻ: thấy lời bạn nói). Ghi ở `STUDENT_GAME_UX_SOCIAL` §7.
+- Q: Màn không vừa canvas 540 xếp lại thế nào? → A: [Confirmed] Kết quả bài học: phần nội dung cuộn, nút "Về nhiệm vụ" ghim dưới; Đăng nhập: thẻ nhập co theo chỗ giữa hai cột (≤ `component.form_card.width`); cột trái màn trận cuộn cả cột khi bản dịch dài; tên/nhãn không bao giờ hẹp hơn từ dài nhất (`UiBuild.keep_words`); màn làm bài: ≤ 4 đáp án chọn một/chọn nhiều xếp một hàng, bong bóng Mây bỏ câu cổ vũ chung (giữ "Gợi ý" và mọi lời chấm); menu "Thêm" 3 cột; icon thanh tiêu đề trên ô trắng `TitleIconBadge` (icon nét xanh không biến mất trên thanh xanh) — chữ không bao giờ thu nhỏ.
 
 ## Bảng kiểm UX
 
@@ -52,7 +64,7 @@ Học sinh lớp 2 mở Tủ đồ, Bản đồ hay Cửa hàng đều thấy c�
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F125-AC-06 | Mọi cửa sổ dựng bằng khung cửa sổ chung PHẢI có đúng một nút đóng `DangerButton` (icon ✕ + chữ "Đóng") ở phải thanh tiêu đề, cùng vị trí, cùng chiều cao vùng chạm của khối/`compact`; `Esc`/Back PHẢI đóng cửa sổ như nút đó | Owner 2026-11-27 (F114-3) · F114-AC-08 | TC-UI-003 |
-| F125-AC-07 | Hộp xác nhận, màn làm bài/thi và màn toàn khung không phải cửa sổ KHÔNG ĐƯỢC dùng nút đóng đỏ (giữ "Hủy" trung tính / luồng "Thoát" hiện có) | Owner 2026-11-27 · F114 | — |
+| F125-AC-07 | Hộp xác nhận, màn làm bài/thi và màn toàn khung không phải cửa sổ PHẢI giữ "Hủy" trung tính / luồng "Thoát" hiện có và KHÔNG ĐƯỢC dùng nút đóng đỏ | Owner 2026-11-27 · F114 | — |
 
 ---
 
@@ -80,7 +92,7 @@ Học sinh lớp 2 mở Tủ đồ, Bản đồ hay Cửa hàng đều thấy c�
 
 ### Key Entities
 
-- `CompactPolicy` (logic thuần, `scripts/core/`) + nơi áp dụng (`OrientationGuard` hoặc autoload hiện có — chốt ở plan); token `component.compact.logical_height` = 540, `density.compact.button.min_height` = 56; nút đóng chung trong `UiBuild`.
+- `CompactPolicy` (logic thuần, `scripts/core/`) + nơi áp dụng (áp dụng trong `OrientationGuard`, chốt ở plan); token `component.compact.logical_height` = 540, `density.compact.button.min_height` = 60, `density.compact.font.small` = 18 (Clarifications plan); nút đóng chung trong `UiBuild` (`title_bar`, `close_button`).
 - Test `test_compact_policy.gd`, `test_compact_scale.gd`, `test_window_close_button.gd`; probe vật lý trong `band_layout_probe.gd`.
 
 ### Tham số
@@ -89,7 +101,7 @@ Học sinh lớp 2 mở Tủ đồ, Bản đồ hay Cửa hàng đều thấy c�
 |---|---|
 | Ngưỡng `compact`: cạnh ngắn < 500 đơn vị độc lập mật độ (sở hữu: `STUDENT_GAME_UX` §2 — cập nhật trong feature này) | F125-AC-01 |
 | `component.compact.logical_height` = 540 (sở hữu: `DESIGN_SYSTEM` §5.2) | F125-AC-01 |
-| `density.compact.button.min_height` = 56 (sở hữu: `DESIGN_SYSTEM` §5.2) | F125-AC-03 |
+| `density.compact.button.min_height` = 60, `density.compact.font.small` = 18 (sở hữu: `DESIGN_SYSTEM` §5.2; Clarifications plan) | F125-AC-03, F125-AC-05 |
 | Sàn vật lý chữ 12 CSS px, vùng chạm 40 CSS px (sở hữu: `DESIGN_SYSTEM` §9, chỉ trong test) | F125-AC-03, F125-AC-04 |
 
 ### Ràng buộc phi chức năng

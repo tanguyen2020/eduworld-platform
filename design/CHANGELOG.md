@@ -2,6 +2,10 @@
 
 Phiên bản token theo semver (`design/package.json`, DESIGN_SYSTEM §3, §8). Đổi tên hoặc xóa token cần tăng MAJOR; token bị xóa phải mang `$deprecated` ít nhất một phiên bản trước (kiểm bởi `design/checks/semver.mjs`).
 
+## tokens@0.21.0
+
+- 2026-11-27 — Student UX pass 7 (F125, STUDENT_GAME_UX §2, DESIGN_SYSTEM §5.2, §9): **chế độ `compact` trên điện thoại** (cạnh ngắn cửa sổ < 500 đơn vị độc lập mật độ). Component `component.compact.logical_height` = `{size.layout.540}` (chiều cao canvas logic: hệ số `content_scale_factor` 4/3 trên điện thoại ngang); file density mới `game-tokens/density/compact.json`: `density.compact.button.min_height` = `{size.control.60}` (vùng chạm ≥ 40 CSS px ở 740×360) và `density.compact.font.small` = `{size.font.18}` (chữ ≥ 12 CSS px). Primitive mới `size.control.60`, `size.layout.540`. Bộ sinh dựng thêm 4 Theme `eduworld_theme_<band>_compact.tres` (`button.min_height`, `font.small` = max(khối, compact) — không cỡ nào bị hạ); `UiTokens` sinh thêm `COMPONENT_COMPACT_LOGICAL_HEIGHT`, `DENSITY_COMPACT_BUTTON_MIN_HEIGHT`, `DENSITY_COMPACT_FONT_SMALL`, `COMPACT_THEME_PATHS`. Theme sinh thêm biến thể `TitleIconBadge` (PanelContainer tầng 2: ô trắng `component.party_card.bg`, viền mực mảnh, lề `size.space.4` / 2) giữ icon của thanh tiêu đề cửa sổ — icon nét xanh (Nhật ký, Bản đồ…) vẫn đọc được trên thanh xanh. MINOR vì chỉ thêm token/Theme/biến thể.
+
 ## tokens@0.20.0
 
 - 2026-11-27 — Đấu trường trong game (F109, DESIGN_SYSTEM §5.1, STUDENT_GAME_UX_SOCIAL §8): icon game mới `arena`, `podium`, `bracket`, `robot`, `search`, `search_light` và icon tab trắng `tab_podium`, `tab_history`, `tab_bracket` (sinh vào `src/game/resources/ui/icons/`). Không thêm/đổi token nên giữ phiên bản.

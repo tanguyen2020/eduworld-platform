@@ -73,6 +73,8 @@ func _ready() -> void:
 	_render_static_labels()
 	_brand_column.minimum_size_changed.connect(_fit_brand_column, CONNECT_DEFERRED)
 	resized.connect(_fit_brand_column, CONNECT_DEFERRED)
+	resized.connect(_fit_card_width, CONNECT_DEFERRED)
+	_fit_card_width.call_deferred()
 	_focus_first_field.call_deferred()
 
 
@@ -117,6 +119,22 @@ func _apply_layout_tokens() -> void:
 	_spinner.offset_bottom = half
 	# The show/hide toggle is a square touch target as tall as the field.
 	_show_password.custom_minimum_size.x = _show_password.get_combined_minimum_size().y
+
+
+## F125 (compact phone canvas 1110–1168 px wide): the card gives up width before the side columns overflow the window
+## — never narrower than the side column, never wider than `component.form_card.width`; its fields keep their height.
+func _fit_card_width() -> void:
+	var safe: Control = $Safe
+	var columns: Control = safe.get_child(0) as Control
+	var gap: float = float(columns.get_theme_constant(&"separation"))
+	var margins: float = float(safe.get_theme_constant(&"margin_left") + safe.get_theme_constant(&"margin_right"))
+	var side: float = float(UiTokens.COMPONENT_FORM_CARD_SIDE_WIDTH)
+	var room: float = size.x - margins - maxf(_brand_column.get_combined_minimum_size().x, side) \
+			- maxf(_lang_column.get_combined_minimum_size().x, side) - gap * 2.0
+	var width: float = clampf(floorf(room), float(UiTokens.COMPONENT_FORM_CARD_SIDE_WIDTH),
+			float(UiTokens.COMPONENT_FORM_CARD_WIDTH))
+	if absf(_card.custom_minimum_size.x - width) > 0.5:
+		_card.custom_minimum_size.x = width
 
 
 ## Mây steps aside when the brand column (logo, bubble, Mây, version) is taller than the window — long translations,

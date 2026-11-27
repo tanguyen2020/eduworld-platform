@@ -61,6 +61,9 @@ var _header: HBoxContainer = null
 var _head_icon: TextureRect = null
 var _spacer: Control = null
 var _title: Label = null
+## F125: the host may drop the title when its column is too narrow (compact phone, long translation); the chat icon then
+## carries it as tooltip.
+var title_allowed: bool = true
 var _badge: Label = null
 var _mention_badge: Label = null
 var _players: Button = null
@@ -255,7 +258,8 @@ func _apply_mode() -> void:
 	_tab_bar.visible = expanded and channel_ids.size() > 1
 	var tabs_in_header: bool = _tab_bar.visible
 	_head_icon.visible = not tabs_in_header
-	_title.visible = not tabs_in_header
+	_title.visible = not tabs_in_header and title_allowed
+	_head_icon.tooltip_text = "" if title_allowed else _title.text
 	_spacer.visible = not tabs_in_header
 	_pins.visible = expanded and _pins.get_child_count() > 0
 	_list_box.visible = expanded
@@ -271,6 +275,19 @@ func _apply_mode() -> void:
 	_mention_badge.visible = not expanded and _mention_badge.visible
 	_render_mini()
 	_render_badges()
+
+
+## F125: lets the host column drop the header title (see `title_allowed`).
+func allow_title(on: bool) -> void:
+	if on == title_allowed:
+		return
+	title_allowed = on
+	_apply_mode()
+
+
+## F125: width the header title adds to the panel when shown.
+func title_width() -> float:
+	return _title.get_combined_minimum_size().x + float(_header.get_theme_constant(&"separation"))
 
 
 # ---------- notices ----------

@@ -11,6 +11,7 @@ const SETTINGS_PATH: String = "user://capture_screens_settings.cfg"
 ## prompt instead of the game. An unknown size is an error (never a silent fallback).
 const SIZES: Dictionary = {
 	"1280x720": Vector2i(1280, 720), "1024x600": Vector2i(1024, 600), "844x390": Vector2i(844, 390),
+	"740x360": Vector2i(740, 360),
 	"390x844": Vector2i(390, 844),
 }
 ## Screen name → builder method. Order follows the student journey (STUDENT_GAME_UX §11).

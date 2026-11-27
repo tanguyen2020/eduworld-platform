@@ -2500,9 +2500,6 @@ msgstr "Trưởng nhóm sẽ bấm Bắt đầu khi cả nhóm sẵn sàng"
 msgid "ui.party.invite"
 msgstr "Mời bạn"
 
-msgid "ui.party.minimize"
-msgstr "Thu nhỏ"
-
 msgid "ui.party.minimize_tooltip"
 msgstr "Nhóm vẫn còn, em mở lại bằng nút Nhóm"
 

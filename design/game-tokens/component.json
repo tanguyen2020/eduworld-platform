@@ -363,6 +363,9 @@
         ] } }
       }
     },
+    "compact": {
+      "logical_height": { "$type": "dimension", "$value": "{size.layout.540}", "$description": "Logical canvas height in compact mode (a phone): the window content scale is set so the canvas is this tall, never below 1× (STUDENT_GAME_UX §2, DESIGN_SYSTEM §5.2, F125)." }
+    },
     "window": {
       "pop_scale": { "$type": "number", "$value": "{number.ratio.096}", "$description": "Start scale of a window opening (0.96 to 1); no animation while Giảm chuyển động is on (F114)." },
       "pop_duration": { "$type": "duration", "$value": "{duration.base}", "$description": "Window opening duration, at most 0.2 s (F114)." }

@@ -114,3 +114,10 @@ func _on_back_to_board() -> void:
 func _on_locale_changed(_locale: String) -> void:
 	if visible:
 		_render()
+
+
+## F125-AC-06: Esc/Back closes the window like its red ✕ Đóng.
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and event.is_action_pressed("ui_cancel"):
+		close()
+		get_viewport().set_input_as_handled()

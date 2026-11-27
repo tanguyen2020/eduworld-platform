@@ -27,27 +27,10 @@ static func window(root: Control, title_key: String, icon_name: String, margin_x
 	var box: VBoxContainer = UiBuild.vbox(&"FormBox")
 	box.name = "Box"
 	win.add_child(box)
-	var bar: PanelContainer = UiBuild.panel(&"WindowTitleBar")
-	bar.name = "TitleBar"
-	box.add_child(bar)
-	var row: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
-	bar.add_child(row)
-	var icon: TextureRect = UiBuild.icon_rect(icon_name)
-	icon.name = "TitleIcon"
-	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(icon)
-	var title: Label = UiBuild.label(title_key, &"WindowTitleLabel", false)
-	title.name = "Title"
-	title.uppercase = true
-	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	UiBuild.expand(title)
-	row.add_child(title)
-	var close: Button = UiBuild.button("ui.common.close", "cross", &"DangerButton")
-	close.name = "Close"
-	close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(close)
-	return {"window": win, "box": box, "bar_row": row, "title": title, "close": close}
+	# F125: the shared title bar of every window (UiBuild.title_bar: red ✕ Đóng at its right end).
+	var bar: Dictionary = UiBuild.title_bar(title_key, icon_name)
+	box.add_child(bar["bar"] as Control)
+	return {"window": win, "box": box, "bar_row": bar["row"], "title": bar["title"], "close": bar["close"]}
 
 
 ## A player row: portrait + nickname (+ an optional tag in words on the right).

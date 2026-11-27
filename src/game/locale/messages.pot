@@ -2889,9 +2889,6 @@ msgstr ""
 msgid "ui.party.members"
 msgstr ""
 
-msgid "ui.party.minimize"
-msgstr ""
-
 msgid "ui.party.minimize_tooltip"
 msgstr ""
 

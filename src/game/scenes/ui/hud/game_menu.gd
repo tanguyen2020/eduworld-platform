@@ -51,6 +51,8 @@ func _ready() -> void:
 ## WorldRoot: `ui_requested("game_menu", {})`.
 func open(_args: Dictionary = {}) -> void:
 	show()
+	# F125: on the compact phone canvas (540 tall) the six tiles sit in two rows of three.
+	_grid.columns = 3 if AppState.compact else 2
 	var t: float = UiBuild.target()
 	for b: Node in _grid.get_children():
 		# Never narrower than a long word ("Achievements") — no break inside a word.

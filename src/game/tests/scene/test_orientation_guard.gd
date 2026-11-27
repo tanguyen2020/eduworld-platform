@@ -1,7 +1,8 @@
 extends GdUnitTestSuite
 ## F113-AC-03, F113-AC-04, F113-AC-05, F113-AC-07 (STUDENT_GAME_UX §2): OrientationGuard shows the rotate prompt while
 ## the view is taller than wide and hides it in landscape (rotation or resize), pauses the game — never the network —
-## and resumes it with the same scene state, and never resumes a tree paused by someone else.
+## and resumes it with the same scene state, and never resumes a tree paused by someone else. F125: the guard also owns the content scale of compact mode
+## (test_compact_scale.gd); back in landscape the factor of the mode comes back.
 
 const GuardScript := preload("res://scripts/core/orientation_guard.gd")
 
@@ -30,6 +31,9 @@ func before_test() -> void:
 		content_scale = value
 		scale_calls.append(value))
 	guard.set("get_content_scale", func() -> float: return content_scale)
+	guard.set("get_density", func() -> float: return 1.0)
+	guard.set("get_keyboard_height", func() -> float: return 0.0)
+	guard.set("set_compact", func(_value: bool) -> void: pass)
 	add_child(guard)
 
 
@@ -62,13 +66,13 @@ func test_portrait_shows_the_prompt_and_landscape_hides_it() -> void:
 	assert_array(pause_calls).is_equal([true])
 	assert_int(lock_calls).is_equal(1)
 	assert_int(shown[0]).is_equal(1)
-	# Turned back: hidden, resumed, content scale restored.
+	# Turned back: hidden, resumed, content scale of compact mode (F125-AC-02: the phone is compact).
 	guard.call("apply", Vector2(844, 390))
 	assert_bool(bool(guard.get("prompt_visible"))).is_false()
 	assert_bool(_layer().visible).is_false()
 	assert_array(pause_calls).is_equal([true, false])
 	assert_int(hidden[0]).is_equal(1)
-	assert_float(content_scale).is_equal(1.0)
+	assert_float(content_scale).is_equal_approx(720.0 / 540.0, 0.0001)
 	# A square view is landscape.
 	guard.call("apply", Vector2(900, 900))
 	assert_bool(bool(guard.get("prompt_visible"))).is_false()
@@ -90,12 +94,13 @@ func test_a_resize_while_portrait_only_relayouts_the_prompt() -> void:
 	assert_float(content_scale).is_equal(1.0)
 
 
-func test_the_previous_content_scale_is_restored() -> void:
+## F125-AC-02: the factor after the prompt is the factor of the current mode (1 on a PC window), whatever was set before.
+func test_the_mode_content_scale_comes_back() -> void:
 	content_scale = 1.25
 	guard.call("apply", Vector2(390, 844))
 	assert_float(content_scale).is_equal_approx(1280.0 / 720.0, 0.0001)
 	guard.call("apply", Vector2(1280, 720))
-	assert_float(content_scale).is_equal(1.25)
+	assert_float(content_scale).is_equal(1.0)
 
 
 func test_a_tree_paused_by_someone_else_stays_paused() -> void:

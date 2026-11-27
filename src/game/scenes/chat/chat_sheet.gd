@@ -56,6 +56,7 @@ func add_button(action: StringName, label_key: String, icon_name: String, variat
 		_safe = b
 		_safe.grab_focus.call_deferred(true)
 	UiBuild.size_buttons(_footer)
+	_fit.call_deferred()
 	return b
 
 
@@ -102,9 +103,13 @@ func _fit() -> void:
 		global_position = Vector2.ZERO
 		size = view
 	_window.custom_minimum_size.x = minf(float(UiTokens.SIZE_LAYOUT_660), view.x * MAX_WIDTH_SHARE)
-	var room: float = view.y * MAX_HEIGHT_SHARE - _bar.get_combined_minimum_size().y - _footer.get_combined_minimum_size().y \
-			- float(UiTokens.SIZE_LAYOUT_120) * 0.5
+	# F125: everything of the sheet but the scrolling body (frame, title bar, footer, gaps) measured, not estimated —
+	# the compact phone canvas is only 540 tall.
+	var frame: float = _window.get_combined_minimum_size().y - _scroll.get_combined_minimum_size().y
+	var room: float = view.y * MAX_HEIGHT_SHARE - frame
 	_scroll.custom_minimum_size.y = clampf(_body.get_combined_minimum_size().y, 0.0, maxf(room, UiBuild.target()))
+	# The centred frame follows its new height at once (a late footer/body change left it at the old size).
+	(_window.get_parent() as Container).queue_sort()
 
 
 func _build() -> void:

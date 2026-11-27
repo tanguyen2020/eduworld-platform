@@ -7,12 +7,28 @@ extends RefCounted
 ## stem font size, no text or control outside the view (content of a ScrollContainer is checked through its scroll
 ## box), no wrapped text taller than its button/label (it would spill over the next control), and no trimmed
 ## single-line text, no two buttons of the same parent overlapping. Returns one line per problem.
+## F125 (STUDENT_GAME_UX §2, DESIGN_SYSTEM §5.2, §9): the phone windows are in compact mode — logical canvas 540 tall,
+## touch target and smallest font floored by `density.compact.*` (CompactPolicy) — and the physical probe converts the
+## logical sizes to CSS px by the window scale (stretch × content scale): every text ≥ 12 CSS px and every pressable
+## control ≥ 40 CSS px on screen.
 
 ## Reference windows → logical size with `stretch canvas_items` + `aspect expand` on the 1280×720 base. Landscape only
-## (F113, STUDENT_GAME_UX §2): 1280×720, 1024×600 and a phone held sideways (844×390 → 1558×720).
+## (F113, STUDENT_GAME_UX §2): 1280×720, 1024×600 and two phones held sideways in compact mode (F125: 844×390 →
+## 1168×540, 740×360 → 1110×540; `test_compact_policy` checks these against CompactPolicy).
 const SIZES: Dictionary = {
-	"1280x720": Vector2i(1280, 720), "1024x600": Vector2i(1280, 750), "844x390": Vector2i(1558, 720),
+	"1280x720": Vector2i(1280, 720), "1024x600": Vector2i(1280, 750), "844x390": Vector2i(1168, 540),
+	"740x360": Vector2i(1110, 540),
 }
+## The window (CSS px, density 1) of every reference size above.
+const WINDOWS: Dictionary = {
+	"1280x720": Vector2(1280, 720), "1024x600": Vector2(1024, 600), "844x390": Vector2(844, 390),
+	"740x360": Vector2(740, 360),
+}
+## F125-AC-04 negative check: the phone 844×390 before F125 (factor 1: logical 1558×720, 0.54 CSS px per logical px).
+const LEGACY_PHONE: Dictionary = {"844x390-1x": Vector2i(1558, 720)}
+## F125: physical floors on a compact phone (DESIGN_SYSTEM §9, test only).
+const MIN_TEXT_CSS_PX: float = 12.0
+const MIN_TOUCH_CSS_PX: float = 40.0
 ## F113-AC-05: windows taller than wide (720×1280, a phone held upright 390×844) — only the rotate prompt is checked.
 const PORTRAIT_SIZES: Dictionary = {"720x1280": Vector2i(1280, 2276), "390x844": Vector2i(1280, 2770)}
 const TOLERANCE_PX: float = 1.0
@@ -21,17 +37,41 @@ const TOLERANCE_PX: float = 1.0
 static var last_buttons: int = 0
 static var last_texts: int = 0
 static var last_tiles: int = 0
+## Smallest text and pressable control of the last `check` in CSS px (0 = not measured), for the evidence table.
+static var last_min_text_px: float = 0.0
+static var last_min_touch_px: float = 0.0
 
 
-static func check(root: Node, vp: Viewport, band: String, label: String) -> PackedStringArray:
+## F125: the reference window `name` is in compact mode (CompactPolicy at density 1).
+static func compact_of(name: String) -> bool:
+	return WINDOWS.has(name) and CompactPolicy.is_compact(WINDOWS[name] as Vector2)
+
+
+## F125: CSS px per logical px on the reference window `name` (its own content scale); 0 for an unknown name.
+static func css_scale_of(name: String) -> float:
+	if LEGACY_PHONE.has(name):
+		return 844.0 / float((LEGACY_PHONE[name] as Vector2i).x)
+	if not WINDOWS.has(name):
+		return 0.0
+	var window: Vector2 = WINDOWS[name] as Vector2
+	var base: Vector2 = OrientationPolicy.base_size()
+	return CompactPolicy.physical_scale(window, base, CompactPolicy.content_scale(window, base, compact_of(name)))
+
+
+## `compact`: thresholds of compact mode (F125-AC-03); `css_scale` > 0: also the physical floors (12 / 40 CSS px) with
+## that many CSS px per logical px.
+static func check(root: Node, vp: Viewport, band: String, label: String, compact: bool = false,
+		css_scale: float = 0.0) -> PackedStringArray:
 	var out: PackedStringArray = []
 	last_buttons = 0
 	last_texts = 0
 	last_tiles = 0
+	last_min_text_px = 0.0
+	last_min_touch_px = 0.0
 	var view: Rect2 = Rect2(Vector2.ZERO, Vector2(vp.size if vp is SubViewport else vp.get_visible_rect().size)).grow(
 			TOLERANCE_PX)
-	var button_min: float = float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[band])
-	var font_min: int = int(UiTokens.DENSITY_FONT_SMALL[band])
+	var button_min: float = CompactPolicy.button_target(band, compact)
+	var font_min: int = CompactPolicy.font_floor(band, compact)
 	var tile_min: float = float(UiTokens.DENSITY_ANSWER_MIN_HEIGHT[band])
 	var stem: int = int(UiTokens.DENSITY_FONT_STEM[band])
 	for node: Node in root.find_children("*", "Control", true, false):
@@ -44,6 +84,10 @@ static func check(root: Node, vp: Viewport, band: String, label: String) -> Pack
 			var height: float = maxf(c.get_combined_minimum_size().y, c.size.y)
 			if height + 0.5 < button_min:
 				out.append("%s: button %.0f px < %.0f" % [where, height, button_min])
+			if css_scale > 0.0:
+				last_min_touch_px = height * css_scale if last_min_touch_px == 0.0 						else minf(last_min_touch_px, height * css_scale)
+				if height * css_scale + 0.05 < MIN_TOUCH_CSS_PX:
+					out.append("%s: touch target %.1f CSS px < %.0f" % [where, height * css_scale, MIN_TOUCH_CSS_PX])
 			if String(c.theme_type_variation).begins_with("AnswerTile"):
 				last_tiles += 1
 				if height + 0.5 < tile_min:
@@ -55,6 +99,10 @@ static func check(root: Node, vp: Viewport, band: String, label: String) -> Pack
 			last_texts += 1
 		if size > 0 and size < font_min:
 			out.append("%s: font %d px < %d" % [where, size, font_min])
+		if size > 0 and css_scale > 0.0:
+			last_min_text_px = float(size) * css_scale if last_min_text_px == 0.0 					else minf(last_min_text_px, float(size) * css_scale)
+			if float(size) * css_scale + 0.05 < MIN_TEXT_CSS_PX:
+				out.append("%s: text %.1f CSS px < %.0f" % [where, float(size) * css_scale, MIN_TEXT_CSS_PX])
 		if _checked_for_overflow(c) and not _in_scroll(c, root) and not view.encloses(c.get_global_rect()):
 			out.append("%s: outside the view %s (view %s)" % [where, c.get_global_rect(), view.size])
 		if (c is Button or c is Label) and c.get_combined_minimum_size().y > c.size.y + TOLERANCE_PX:

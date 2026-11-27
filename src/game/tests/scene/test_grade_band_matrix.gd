@@ -1,7 +1,8 @@
 extends GdUnitTestSuite
 ## F098-AC-09 (owner "ma trận test khối 1–9"; STUDENT_GAME_UX §4.3, DESIGN_SYSTEM §5.2, LEARNING_EXPERIENCE §8,
-## NFR-A11Y-001): every student screen of the matrix is built for EVERY grade band (g1_3, g4_5, g6_7, g8_9) at the three
-## reference landscape windows (1280×720, 1024×600, 844×390 → logical 1280×720, 1280×750, 1558×720 — F113:
+## NFR-A11Y-001): every student screen of the matrix is built for EVERY grade band (g1_3, g4_5, g6_7, g8_9) at the four
+## reference landscape windows (1280×720, 1024×600 and the compact phones 844×390, 740×360 → logical 1280×720, 1280×750,
+## 1168×540, 1110×540 with the compact Theme and the physical floors 12 / 40 CSS px — F125; F113:
 ## landscape only, STUDENT_GAME_UX §2; windows taller than wide show the rotate prompt, checked alone) inside a
 ## SubViewport of that size with the band's Theme, and BandLayoutProbe checks touch targets, the smallest font, answer tiles and that
 ## nothing is cut off or outside the view. Screens: S01 login, Hub HUD, activity (single choice, true/false, matching,
@@ -57,6 +58,9 @@ func _matrix(label: String, build: Callable, empty: bool = false, sizes: Diction
 	for band: String in UiTokens.DENSITY_BANDS:
 		for window: String in sizes.keys():
 			AppState.set_grade_band(band)
+			# F125: a phone window is in compact mode (compact Theme, touch target and font floors, physical probe).
+			var compact: bool = BandLayoutProbe.compact_of(window)
+			AppState.set_compact(compact)
 			var vp: SubViewport = SubViewport.new()
 			vp.size = sizes[window] as Vector2i
 			vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
@@ -67,14 +71,15 @@ func _matrix(label: String, build: Callable, empty: bool = false, sizes: Diction
 			else:
 				for i: int in SETTLE_FRAMES:
 					await await_idle_frame()
-				failures.append_array(BandLayoutProbe.check(root, vp, band, "%s %s" % [label, window]))
+				failures.append_array(BandLayoutProbe.check(root, vp, band, "%s %s" % [label, window], compact,
+						BandLayoutProbe.css_scale_of(window) if compact else 0.0))
 				var band_note: String = ""
 				if empty:
 					failures.append_array(BandLayoutProbe.empty_bands(root, vp, "%s %s %s" % [label, band, window]))
 					band_note = ", largest empty band %.0f%%" % (BandLayoutProbe.last_largest_band * 100.0)
 				for track: Node in root.find_children("*", "MediaTrack", true, false):
 					var t: MediaTrack = track as MediaTrack
-					if t.is_visible_in_tree() and t.size.y + 0.5 < float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[band]):
+					if t.is_visible_in_tree() and t.size.y + 0.5 < CompactPolicy.button_target(band, compact):
 						failures.append("%s %s %s: media bar %.0f px < touch target" % [label, band, window, t.size.y])
 				if BandLayoutProbe.last_texts == 0:
 					failures.append("%s %s %s: no visible text checked" % [label, band, window])
@@ -84,10 +89,14 @@ func _matrix(label: String, build: Callable, empty: bool = false, sizes: Diction
 						failures.append("%s %s %s: no open chat dock checked" % [label, band, window])
 					band_note += ", chat list %.0f/%.0f px (row %.0f, content %.0f)" % [ChatSpaceProbe.last_list,
 							ChatSpaceProbe.last_need, ChatSpaceProbe.last_row, ChatSpaceProbe.last_content]
+				if compact:
+					band_note += ", smallest text %.1f CSS px, smallest touch target %.1f CSS px" % [
+							BandLayoutProbe.last_min_text_px, BandLayoutProbe.last_min_touch_px]
 				_seen.append("%s %s %s: %d buttons, %d texts, %d tiles%s" % [label, band, window,
 						BandLayoutProbe.last_buttons, BandLayoutProbe.last_texts, BandLayoutProbe.last_tiles, band_note])
 			vp.queue_free()
 			await await_idle_frame()
+	AppState.set_compact(false)
 	return failures
 
 
@@ -730,3 +739,40 @@ func test_probe_flags_an_empty_band() -> void:
 	await await_idle_frame()
 	await await_idle_frame()
 	assert_array(BandLayoutProbe.empty_bands(board, vp, "probe")).is_empty()
+
+
+## F125-AC-04 negative check: the physical probe flags the layout before F125 — the phone 844×390 at factor 1 (logical
+## 1558×720, the regular band Theme, 0.54 CSS px per logical px) — in every band, while the same screens pass in compact
+## mode (the matrix tests above).
+func test_physical_probe_flags_the_unscaled_phone_layout() -> void:
+	await s.services.progression.refresh()
+	await s.services.inventory.load_wallet()
+	var flagged: Dictionary = {}
+	for band: String in UiTokens.DENSITY_BANDS:
+		AppState.set_grade_band(band)
+		AppState.set_compact(false)
+		for build: Callable in [
+			func(vp: SubViewport) -> Node: return _mount(vp, _scene("res://scenes/ui/hud/MainHud.tscn")),
+			func(vp: SubViewport) -> Node: return await _settings(vp, "language"),
+		]:
+			var vp: SubViewport = SubViewport.new()
+			vp.size = BandLayoutProbe.LEGACY_PHONE["844x390-1x"] as Vector2i
+			vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+			add_child(vp)
+			var root: Node = await build.call(vp)
+			for i: int in SETTLE_FRAMES:
+				await await_idle_frame()
+			var lines: PackedStringArray = BandLayoutProbe.check(root, vp, band, "unscaled", false,
+					BandLayoutProbe.css_scale_of("844x390-1x"))
+			_seen.append("unscaled 844x390 %s: smallest text %.1f CSS px, smallest touch target %.1f CSS px" % [band,
+					BandLayoutProbe.last_min_text_px, BandLayoutProbe.last_min_touch_px])
+			for line: String in lines:
+				if line.contains("CSS px"):
+					flagged[band] = int(flagged.get(band, 0)) + 1
+			vp.queue_free()
+			await await_idle_frame()
+	for band: String in UiTokens.DENSITY_BANDS:
+		assert_int(int(flagged.get(band, 0))).override_failure_message("%s: unscaled phone layout not flagged" % band) \
+				.is_greater(0)
+
+

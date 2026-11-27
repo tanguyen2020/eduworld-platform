@@ -23,6 +23,7 @@ var model: WorldMapModel = null
 
 func _ready() -> void:
 	visible = false
+	UiBuild.fit_icon(%TitleIcon as TextureRect)
 	_close.pressed.connect(close)
 
 

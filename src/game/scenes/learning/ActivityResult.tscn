@@ -10,14 +10,24 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_script")
 
-[node name="Celebration" type="HBoxContainer" parent="."]
+[node name="Scroll" type="ScrollContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Celebration" type="HBoxContainer" parent="Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ToolbarBox"
 alignment = 1
 script = ExtResource("2_celebration")
 
-[node name="CelebrationMascot" type="Control" parent="Celebration"]
+[node name="CelebrationMascot" type="Control" parent="Scroll/Content/Celebration"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
@@ -25,20 +35,20 @@ mouse_filter = 2
 script = ExtResource("3_mascot")
 bubble_tail = false
 
-[node name="Bubble" type="PanelContainer" parent="Celebration"]
+[node name="Bubble" type="PanelContainer" parent="Scroll/Content/Celebration"]
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"SpeechBubble"
 
-[node name="Box" type="VBoxContainer" parent="Celebration/Bubble"]
+[node name="Box" type="VBoxContainer" parent="Scroll/Content/Celebration/Bubble"]
 layout_mode = 2
 theme_type_variation = &"FieldBox"
 
-[node name="TitleRow" type="HBoxContainer" parent="Celebration/Bubble/Box"]
+[node name="TitleRow" type="HBoxContainer" parent="Scroll/Content/Celebration/Bubble/Box"]
 layout_mode = 2
 theme_type_variation = &"ToolbarBox"
 
-[node name="PartyIcon" type="TextureRect" parent="Celebration/Bubble/Box/TitleRow"]
+[node name="PartyIcon" type="TextureRect" parent="Scroll/Content/Celebration/Bubble/Box/TitleRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
@@ -46,92 +56,92 @@ texture = ExtResource("4_party")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Title" type="Label" parent="Celebration/Bubble/Box/TitleRow"]
+[node name="Title" type="Label" parent="Scroll/Content/Celebration/Bubble/Box/TitleRow"]
 layout_mode = 2
 theme_type_variation = &"HeadingLabel"
 text = "ui.result.done"
 
-[node name="Cheer" type="Label" parent="Celebration/Bubble/Box"]
+[node name="Cheer" type="Label" parent="Scroll/Content/Celebration/Bubble/Box"]
 layout_mode = 2
 theme_type_variation = &"SpeechBubbleLabel"
 text = "ui.result.celebrate"
 
-[node name="Stars" type="HBoxContainer" parent="Celebration/Bubble/Box"]
+[node name="Stars" type="HBoxContainer" parent="Scroll/Content/Celebration/Bubble/Box"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_type_variation = &"ToolbarBox"
 
-[node name="Regions" type="HBoxContainer" parent="."]
+[node name="Regions" type="HBoxContainer" parent="Scroll/Content"]
 layout_mode = 2
 
-[node name="Learning" type="PanelContainer" parent="Regions"]
+[node name="Learning" type="PanelContainer" parent="Scroll/Content/Regions"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Box" type="VBoxContainer" parent="Regions/Learning"]
+[node name="Box" type="VBoxContainer" parent="Scroll/Content/Regions/Learning"]
 layout_mode = 2
 
-[node name="Heading" type="Label" parent="Regions/Learning/Box"]
+[node name="Heading" type="Label" parent="Scroll/Content/Regions/Learning/Box"]
 layout_mode = 2
 theme_type_variation = &"HeadingLabel"
 text = "ui.result.learning"
 
-[node name="Score" type="Label" parent="Regions/Learning/Box"]
+[node name="Score" type="Label" parent="Scroll/Content/Regions/Learning/Box"]
 unique_name_in_owner = true
 layout_mode = 2
 auto_translate_mode = 2
 autowrap_mode = 3
 
-[node name="Points" type="Label" parent="Regions/Learning/Box"]
+[node name="Points" type="Label" parent="Scroll/Content/Regions/Learning/Box"]
 unique_name_in_owner = true
 layout_mode = 2
 auto_translate_mode = 2
 autowrap_mode = 3
 
-[node name="Weak" type="Label" parent="Regions/Learning/Box"]
+[node name="Weak" type="Label" parent="Scroll/Content/Regions/Learning/Box"]
 unique_name_in_owner = true
 layout_mode = 2
 auto_translate_mode = 2
 autowrap_mode = 3
 
-[node name="Later" type="Label" parent="Regions/Learning/Box"]
+[node name="Later" type="Label" parent="Scroll/Content/Regions/Learning/Box"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "ui.activity_player.results_later"
 autowrap_mode = 3
 
-[node name="Rewards" type="PanelContainer" parent="Regions"]
+[node name="Rewards" type="PanelContainer" parent="Scroll/Content/Regions"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Box" type="VBoxContainer" parent="Regions/Rewards"]
+[node name="Box" type="VBoxContainer" parent="Scroll/Content/Regions/Rewards"]
 layout_mode = 2
 
-[node name="Heading" type="Label" parent="Regions/Rewards/Box"]
+[node name="Heading" type="Label" parent="Scroll/Content/Regions/Rewards/Box"]
 layout_mode = 2
 theme_type_variation = &"HeadingLabel"
 text = "ui.result.rewards"
 
-[node name="RewardList" type="VBoxContainer" parent="Regions/Rewards/Box"]
+[node name="RewardList" type="VBoxContainer" parent="Scroll/Content/Regions/Rewards/Box"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Recommendations" type="VBoxContainer" parent="."]
+[node name="Recommendations" type="VBoxContainer" parent="Scroll/Content"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 
-[node name="Heading" type="Label" parent="Recommendations"]
+[node name="Heading" type="Label" parent="Scroll/Content/Recommendations"]
 layout_mode = 2
 theme_type_variation = &"MutedLabel"
 text = "ui.result.recommendation"
 
-[node name="RecommendationList" type="VBoxContainer" parent="Recommendations"]
+[node name="RecommendationList" type="VBoxContainer" parent="Scroll/Content/Recommendations"]
 unique_name_in_owner = true
 layout_mode = 2
 

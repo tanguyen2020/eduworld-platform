@@ -35,6 +35,9 @@ var results_later: bool = false
 
 func _ready() -> void:
 	_back.pressed.connect(func() -> void: back_requested.emit())
+	# F125: on the compact phone canvas (540 tall) the celebrating Mây is coach-sized so the results show without scrolling.
+	if AppState.compact:
+		(%CelebrationMascot as Control).custom_minimum_size = Vector2.ONE * float(UiTokens.COMPONENT_COACH_SIZE)
 
 
 func show_review(reviewed: AttemptReviewModel, grade_band: String, granted: Array = []) -> void:

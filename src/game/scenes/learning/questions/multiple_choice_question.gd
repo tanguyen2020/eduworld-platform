@@ -15,7 +15,7 @@ func _build() -> void:
 	var model: MultipleChoiceAnswer = answer as MultipleChoiceAnswer
 	var raw: Variant = item.render_payload.get("options", [])
 	var options: Array = raw as Array if raw is Array else []
-	grid.columns = 2 if options.size() <= 4 else 1
+	grid.columns = UiBuild.answer_columns(options.size(), false)
 	var i: int = 0
 	for option: Variant in options:
 		var id: String = String((option as Dictionary).get("id", "")) if option is Dictionary else ""
@@ -55,4 +55,4 @@ func _fit_rows() -> int:
 
 
 func _apply_tall(tall: bool) -> void:
-	(%Answers as GridContainer).columns = 1 if tall or buttons.size() > 4 else 2
+	(%Answers as GridContainer).columns = UiBuild.answer_columns(buttons.size(), tall)

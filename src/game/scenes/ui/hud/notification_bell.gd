@@ -40,7 +40,7 @@ func set_count(value: int) -> void:
 
 ## The button grows to hold the icon and the pill side by side (never over the icon); square again at zero.
 func _fit_width() -> void:
-	var height: float = maxf(custom_minimum_size.y, float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[UiBuild.band()]))
+	var height: float = maxf(custom_minimum_size.y, UiBuild.target())
 	if count <= 0:
 		custom_minimum_size.x = height
 		return

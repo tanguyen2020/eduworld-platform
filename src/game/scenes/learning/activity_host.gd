@@ -662,6 +662,23 @@ func _refresh_coach() -> void:
 		_coach_line.text = hint
 	else:
 		_coach_line.text = CHEER_HINT_KEY if _hints.visible else CHEER_KEY
+		# F125: on the compact phone canvas (540 tall) the plain cheer gives its line to the answers; Mây and "Gợi ý"
+		# stay, and every verdict, hint or "chạm lần nữa" line still shows.
+		if AppState.compact:
+			_coach_line.visible = false
+	var bubble_box: Control = _coach_line.get_parent() as Control
+	var shown: bool = false
+	for child: Node in bubble_box.get_children():
+		shown = shown or (child as Control).visible
+	var bubble: Control = bubble_box.get_parent() as Control
+	bubble.visible = shown
+	# F125: on the compact phone canvas Mây is as tall as the bubble with the "Gợi ý" button (the answers keep their row)
+	# and a bubble holding only that button hugs it instead of spanning the board.
+	var t: float = UiBuild.target()
+	_coach.custom_minimum_size = Vector2.ONE * (t * 1.5 if AppState.compact else float(UiTokens.COMPONENT_COACH_SIZE))
+	var hint_only: bool = not _coach_line.visible and not _feedback.visible and not _action_row.visible
+	var hug: bool = AppState.compact and hint_only
+	bubble.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if hug else Control.SIZE_EXPAND_FILL
 	queue_balance()
 
 

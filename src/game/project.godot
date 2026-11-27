@@ -75,6 +75,7 @@ i18n/default_locale="vi-VN"
 i18n/pseudo_locale="xx-PS"
 i18n/pseudo_locale_path="res://locale/xx_PS.po"
 ui/pre_bootstrap_density="g1_3"
+ui/compact_short_side=500.0
 world/marker_near_fade_m=5.0
 learning/tap_confirm_bands=PackedStringArray()
 device/config_path="user://device.cfg"

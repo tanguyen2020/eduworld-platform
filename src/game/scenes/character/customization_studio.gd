@@ -34,6 +34,7 @@ var _target: float = 0.0
 
 func _ready() -> void:
 	visible = false
+	UiBuild.fit_icon(%TitleIcon as TextureRect)
 	_close.pressed.connect(close)
 	_save.pressed.connect(func() -> void: model.save())
 	_revert.pressed.connect(func() -> void: model.revert())
@@ -54,7 +55,7 @@ func open(_args: Dictionary = {}) -> void:
 	var services: ServiceLocator = AppState.get_services()
 	var band: String = AppState.grade_band if ThemeService.is_valid_band(AppState.grade_band) \
 			else ThemeService.default_band()
-	_target = float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[band])
+	_target = UiBuild.target_for(band)
 	model = WardrobeModel.new(services.profile, services.inventory, band)
 	model.draft_changed.connect(_on_draft_changed)
 	model.state_changed.connect(_on_state_changed)

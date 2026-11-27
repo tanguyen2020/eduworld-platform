@@ -9,6 +9,11 @@ extends Node
 ## timer (ClientClock). While shown, the window `content_scale_factor` lays the prompt out on a canvas whose short
 ## side is the base short side (720), so its text renders at the band size, sharp (font oversampling follows the content
 ## scale); the paused game behind relayouts and is restored with the factor. Rules: OrientationPolicy (pure).
+## F125 (STUDENT_GAME_UX §2 compact breakpoint): the same window content scale also carries compact mode — a window whose
+## short side is below 500 density-independent px (a phone) gets the factor that makes the logical canvas 540 tall
+## (CompactPolicy) and AppState switches to the compact Theme; otherwise the factor is 1. Decided again on every window
+## resize, no scene reload. While the rotate prompt shows its factor wins; when it hides the factor of the current mode
+## comes back (F125-AC-02). The factor is written only when it changes (no flicker between the two landscape sides).
 
 signal prompt_shown()
 signal prompt_hidden()
@@ -27,14 +32,19 @@ var is_paused: Callable = _is_tree_paused
 var set_content_scale: Callable = _set_root_content_scale
 var get_content_scale: Callable = _get_root_content_scale
 var lock_landscape: Callable = _lock_landscape
+## F125 seams: physical px per density-independent px of the screen, height of an open on-screen keyboard (px) and the
+## receiver of the compact mode (defaults: DisplayServer, AppState).
+var get_density: Callable = _screen_density
+var get_keyboard_height: Callable = _keyboard_height
+var set_compact: Callable = _set_app_compact
+## F125: compact mode decided by the last `apply`.
+var compact: bool = false
 ## Reacts to the window size (off in tests that drive `apply` themselves).
 var follow_window: bool = true
 
 var _layer: CanvasLayer = null
 var _prompt: Control = null
 var _paused_by_guard: bool = false
-## Content scale of the window before the prompt (restored when it hides).
-var _saved_content_scale: float = 1.0
 var _theme_service: ThemeService = null
 
 
@@ -51,16 +61,33 @@ func _exit_tree() -> void:
 
 
 func _on_window_resized() -> void:
+	# A headless run (server, test runner) has no screen: its placeholder window is neither a phone nor portrait.
+	if DisplayServer.get_name() == "headless":
+		return
 	if follow_window and is_inside_tree():
 		apply(Vector2(get_tree().root.size))
 
 
 ## F113-AC-03/04/05: shows or hides the prompt for a window of `window` pixels (portrait = taller than wide).
+## F125-AC-01/02: decides compact mode for the window and sets the content scale of the mode (the prompt factor while
+## the prompt shows).
 func apply(window: Vector2) -> void:
+	var keyboard: float = maxf(float(get_keyboard_height.call()), 0.0)
+	var next: bool = CompactPolicy.is_compact(window, float(get_density.call()), keyboard)
+	if next != compact:
+		compact = next
+		set_compact.call(compact)
+		Log.info("compact_mode_changed", {"compact": compact, "w": int(window.x), "h": int(window.y)})
 	if OrientationPolicy.is_portrait(window):
 		_show(window)
 	else:
 		_hide()
+		_write_scale(mode_scale(window + Vector2(0.0, keyboard)))
+
+
+## F125-AC-01: content scale of the current mode for a window of `window` pixels (1 outside compact mode).
+func mode_scale(window: Vector2) -> float:
+	return CompactPolicy.content_scale(window, OrientationPolicy.base_size(), compact)
 
 
 ## The prompt view (null until first shown).
@@ -76,13 +103,8 @@ func _show(window: Vector2) -> void:
 	_ensure_prompt()
 	_prompt.theme = _prompt_theme()
 	var was_visible: bool = prompt_visible
-	if not was_visible:
-		prompt_visible = true
-		_saved_content_scale = float(get_content_scale.call())
-	var factor: float = OrientationPolicy.prompt_content_scale(window, OrientationPolicy.base_size())
-	# Setting the factor resizes the visible rect (size_changed again): write it only when it changes.
-	if not is_equal_approx(float(get_content_scale.call()), factor):
-		set_content_scale.call(factor)
+	prompt_visible = true
+	_write_scale(OrientationPolicy.prompt_content_scale(window, OrientationPolicy.base_size()))
 	if was_visible:
 		return
 	_layer.visible = true
@@ -100,13 +122,17 @@ func _hide() -> void:
 	prompt_visible = false
 	if _layer != null:
 		_layer.visible = false
-	if not is_equal_approx(float(get_content_scale.call()), _saved_content_scale):
-		set_content_scale.call(_saved_content_scale)
 	if _paused_by_guard:
 		_paused_by_guard = false
 		set_paused.call(false)
 	Log.info("orientation_prompt_hidden", {})
 	prompt_hidden.emit()
+
+
+## Setting the factor resizes the visible rect (size_changed again): written only when it changes.
+func _write_scale(factor: float) -> void:
+	if not is_equal_approx(float(get_content_scale.call()), factor):
+		set_content_scale.call(factor)
 
 
 func _ensure_prompt() -> void:
@@ -142,6 +168,20 @@ func _set_root_content_scale(factor: float) -> void:
 
 func _get_root_content_scale() -> float:
 	return get_tree().root.content_scale_factor
+
+
+func _screen_density() -> float:
+	var density: float = DisplayServer.screen_get_scale()
+	return density if density > 0.0 else 1.0
+
+
+func _keyboard_height() -> float:
+	return float(DisplayServer.virtual_keyboard_get_height()) if DisplayServer.has_feature(
+			DisplayServer.FEATURE_VIRTUAL_KEYBOARD) else 0.0
+
+
+func _set_app_compact(value: bool) -> void:
+	AppState.set_compact(value)
 
 
 func _set_tree_paused(paused: bool) -> void:

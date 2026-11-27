@@ -8,6 +8,9 @@ extends RefCounted
 ## (it fell back to the project theme `g1_3` for every band); the service gives those layer roots the current Theme
 ## when they enter the tree and keeps them in step with every change. A layer root with a Theme of its own (the rotate
 ## prompt) is left alone.
+## F125: in compact mode (a phone, CompactPolicy, set by OrientationGuard through AppState) the base is the compact
+## Theme of the band (`UiTokens.COMPACT_THEME_PATHS`: touch target and smallest font floored by `density.compact.*`);
+## a change re-applies the Theme and emits `density_changed` so screens that size controls relayout.
 
 signal theme_applied(band: String)
 signal density_changed(band: String)
@@ -22,6 +25,8 @@ const FONT_SCALES: Array[float] = [
 var band: String = ""
 var font_scale_level: int = 0
 var high_contrast: bool = false
+## F125: compact mode (a phone held sideways).
+var compact: bool = false
 var current_theme: Theme = null
 
 var _window: Window = null
@@ -68,6 +73,15 @@ func set_band(value: String) -> void:
 	density_changed.emit(band)
 
 
+## F125-AC-01: switches the compact Theme of the band on or off (no scene reload).
+func set_compact(enabled: bool) -> void:
+	if enabled == compact:
+		return
+	compact = enabled
+	_apply()
+	density_changed.emit(band)
+
+
 func set_font_scale(level: int) -> void:
 	var next: int = clampi(level, 0, FONT_SCALES.size() - 1)
 	if next == font_scale_level:
@@ -85,10 +99,11 @@ func set_high_contrast(enabled: bool) -> void:
 
 ## Builds (or reuses) the effective Theme for the current band, scale and contrast.
 func build_theme() -> Theme:
-	var key: String = "%s|%d|%s" % [band, font_scale_level, high_contrast]
+	var key: String = "%s|%d|%s|%s" % [band, font_scale_level, high_contrast, compact]
 	if _cache.has(key):
 		return _cache[key] as Theme
-	var base: Theme = load(String(UiTokens.THEME_PATHS[band])) as Theme
+	var paths: Dictionary = UiTokens.COMPACT_THEME_PATHS if compact else UiTokens.THEME_PATHS
+	var base: Theme = load(String(paths[band])) as Theme
 	var theme: Theme = base.duplicate(true) as Theme
 	if high_contrast:
 		_apply_contrast(theme, load(UiTokens.HIGH_CONTRAST_THEME_PATH) as Theme)

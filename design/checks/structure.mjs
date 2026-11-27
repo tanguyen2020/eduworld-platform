@@ -15,6 +15,7 @@ export const REQUIRED = [
   'game-tokens/density/g4_5.json',
   'game-tokens/density/g6_7.json',
   'game-tokens/density/g8_9.json',
+  'game-tokens/density/compact.json',
   'admin-tokens/seed.json',
   'admin-tokens/semantic.json',
   'admin-tokens/modes/light.json',

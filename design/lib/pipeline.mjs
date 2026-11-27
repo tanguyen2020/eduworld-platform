@@ -9,8 +9,8 @@ import { formatAntdTheme } from '../sd/formats/antd-theme.mjs';
 import { formatCssVars } from '../sd/formats/css-vars.mjs';
 import { formatGameShellCss } from '../sd/formats/game-shell-css.mjs';
 import { formatGodotJson } from '../sd/formats/godot-json.mjs';
-import { formatUiTokens, formatArt3dTokens, themeFile, HIGH_CONTRAST_THEME } from '../sd/formats/gdscript-tokens.mjs';
-import { formatTheme, formatEnvironment, formatGradient, formatIcon, godotFontFiles, artPaletteSlots, formatToonMaterial } from '../sd/formats/godot-tres.mjs';
+import { formatUiTokens, formatArt3dTokens, themeFile, compactThemeFile, HIGH_CONTRAST_THEME } from '../sd/formats/gdscript-tokens.mjs';
+import { formatTheme, compactMap, formatEnvironment, formatGradient, formatIcon, godotFontFiles, artPaletteSlots, formatToonMaterial } from '../sd/formats/godot-tres.mjs';
 
 /** Toon material presets (F067, DESIGN_SYSTEM §5.3): with the outline pass, without it for small dense decor, and for skinned characters (F068: the outline follows the skinned NORMAL, not the rest-pose COLOR normal). */
 export const TOON_MATERIALS = { toon: { outline: true }, toon_no_outline: { outline: false }, toon_skinned: { outline: true, smoothNormals: false } };
@@ -52,6 +52,8 @@ export async function generate({ designDir = DESIGN_DIR, loaded = loadContexts(d
   const hc = resolved['game-high-contrast'];
   files.set(`${OUTPUTS.godotThemeDir}/${themeFile()}`, formatTheme(game, BASE_DENSITY, version, `base density ${BASE_DENSITY}`));
   for (const band of DENSITY_BANDS) files.set(`${OUTPUTS.godotThemeDir}/${themeFile(band)}`, formatTheme(game, band, version, `density ${band}`));
+  // F125: compact Theme of every band (a phone held sideways, STUDENT_GAME_UX §2).
+  for (const band of DENSITY_BANDS) files.set(`${OUTPUTS.godotThemeDir}/${compactThemeFile(band)}`, formatTheme(compactMap(game, band), band, version, `density ${band}, compact`));
   files.set(`${OUTPUTS.godotThemeDir}/${HIGH_CONTRAST_THEME}`, formatTheme(hc, BASE_DENSITY, version, `high contrast, density ${BASE_DENSITY}`));
   files.set(OUTPUTS.uiTokens, formatUiTokens(game, variants, version));
   files.set(OUTPUTS.gameShellCss, formatGameShellCss(game, BASE_DENSITY, version));

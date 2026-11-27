@@ -66,8 +66,7 @@ func _ready() -> void:
 	var services: ServiceLocator = AppState.get_services()
 	_profile = services.profile
 	band = AppState.grade_band
-	_target = float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT.get(band, UiTokens.DENSITY_BUTTON_MIN_HEIGHT[
-			ThemeService.default_band()]))
+	_target = UiBuild.target_for(band if ThemeService.is_valid_band(band) else ThemeService.default_band())
 	model = CharacterCreationModel.new(services.profile, services.inventory, band)
 	model.draft_changed.connect(_on_draft_changed)
 	model.step_changed.connect(_on_step_changed)

@@ -151,7 +151,7 @@ func _refresh_touch() -> void:
 
 func _on_band_changed(band: String) -> void:
 	var valid: String = band if ThemeService.is_valid_band(band) else ThemeService.default_band()
-	_target = float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[valid])
+	_target = UiBuild.target_for(valid)
 	_touch.custom_minimum_size = Vector2(_target, _target)
 	_close.custom_minimum_size = Vector2(_target, _target)
 	_ring.custom_minimum_size = Vector2(_target, _target) * (RADIUS_FACTOR * 2.0 + 1.0)

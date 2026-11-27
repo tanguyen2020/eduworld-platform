@@ -128,7 +128,7 @@ func select_tab(next: String) -> void:
 	_tabs.select(tab, false)
 	(_ui["title"] as Label).text = {TAB_WARDROBE: "ui.inventory.title", TAB_SHOP: "ui.shop.title",
 		TAB_HISTORY: "ui.inventory.history.title"}[tab]
-	((_ui["header"] as HBoxContainer).get_child(0) as TextureRect).texture = UiBuild.icon(
+	(_ui["icon"] as TextureRect).texture = UiBuild.icon(
 			{TAB_WARDROBE: "wardrobe", TAB_SHOP: "shop", TAB_HISTORY: "history"}[tab] as String)
 	selected_inventory = null
 	selected_shop = null
@@ -467,7 +467,9 @@ func _render() -> void:
 		_set_rarity(s.rarity)
 		var lines: PackedStringArray = []
 		var desc: String = L10n.pick(s.description)
-		if not desc.is_empty():
+		# F125: on the compact phone canvas (540 tall) the item card keeps name, price and buttons (the flavour line gives
+		# its room to the item grid).
+		if not desc.is_empty() and not AppState.compact:
 			lines.append(desc)
 		lines.append(tr("ui.shop.price").format({"price": LocaleFormat.number(s.price)}))
 		if s.purchase_limit > 1:
@@ -574,7 +576,14 @@ func _build() -> void:
 	_tabs = FilterChips.new()
 	_tabs.name = "Tabs"
 	_tabs.filter_changed.connect(select_tab)
-	body.add_child(_tabs)
+	if AppState.compact:
+		# F125: on the compact phone canvas (540 tall) the Tủ đồ / Cửa hàng / Lịch sử chips sit on the title bar, before the
+		# Xu wallet, so the item grid keeps a full row above the item card.
+		_tabs.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		header.add_child(_tabs)
+		header.move_child(_tabs, wallet_box.get_index())
+	else:
+		body.add_child(_tabs)
 	var columns: HBoxContainer = UiBuild.hbox()
 	UiBuild.expand(columns, true, true)
 	body.add_child(columns)

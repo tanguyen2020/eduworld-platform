@@ -213,6 +213,7 @@
       "44": { "$value": "44px", "$description": "Control height 44." },
       "48": { "$value": "48px", "$description": "Control height 48." },
       "56": { "$value": "56px", "$description": "Control height 56." },
+      "60": { "$value": "60px", "$description": "Control height 60 (touch target of every band in compact mode on a phone, F125)." },
       "64": { "$value": "64px", "$description": "Control height 64." },
       "72": { "$value": "72px", "$description": "Control height 72 (answer tile g6_7, F097)." },
       "80": { "$value": "80px", "$description": "Control height 80 (answer tile g4_5, F097)." },
@@ -235,6 +236,7 @@
       "120": { "$value": "120px", "$description": "Layout 120 (coach Mây beside the activity feedback, F097)." },
       "200": { "$value": "200px", "$description": "Layout 200 (mascot illustration)." },
       "280": { "$value": "280px", "$description": "Layout 280 (side column beside a centred form)." },
+      "540": { "$value": "540px", "$description": "Layout 540 (logical canvas height of a phone in compact mode, F125)." },
       "660": { "$value": "660px", "$description": "Layout 660 (form card width: the S01 hint fits one line)." }
     }
   },

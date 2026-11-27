@@ -11,6 +11,8 @@ export const ART_GROUPS = ['art', 'avatar', 'zone', 'toon', 'outline', 'light', 
 export const resPath = (repoRel) => `res://${repoRel.replace(/^src\/game\//, '')}`;
 
 export const themeFile = (band) => (band ? `eduworld_theme_${band}.tres` : 'eduworld_theme.tres');
+/** Compact Theme of a band (a phone, F125). */
+export const compactThemeFile = (band) => `eduworld_theme_${band}_compact.tres`;
 export const HIGH_CONTRAST_THEME = 'eduworld_theme_high_contrast.tres';
 
 /** GDScript `const` declaration for one token, or null when the type has no constant form. */
@@ -79,6 +81,8 @@ ${dict('DENSITY_DEPTH_PRESSED', DENSITY_BANDS.map((b) => [b, String(Math.round(p
 const BASE_THEME_PATH: String = "${themeDir}/${themeFile()}"
 const HIGH_CONTRAST_THEME_PATH: String = "${themeDir}/${HIGH_CONTRAST_THEME}"
 ${dict('THEME_PATHS', DENSITY_BANDS.map((b) => [b, `"${themeDir}/${themeFile(b)}"`]))}
+# F125: Theme of each band in compact mode (a phone): smallest font and touch target floored by density.compact.*
+${dict('COMPACT_THEME_PATHS', DENSITY_BANDS.map((b) => [b, `"${themeDir}/${compactThemeFile(b)}"`]))}
 `;
 }
 

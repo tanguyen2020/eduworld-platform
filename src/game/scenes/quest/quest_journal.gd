@@ -37,6 +37,7 @@ const ICON_TAB_CHOSEN: Texture2D = preload("res://resources/ui/icons/check.svg")
 
 
 func _ready() -> void:
+	UiBuild.fit_icon(%TitleIcon as TextureRect)
 	_close.pressed.connect(close)
 	_retry.pressed.connect(refresh)
 	_scroll.get_v_scroll_bar().value_changed.connect(_on_scrolled)

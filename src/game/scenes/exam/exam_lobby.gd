@@ -64,6 +64,7 @@ var _retry_action: Callable = Callable()
 
 func _ready() -> void:
 	visible = false
+	UiBuild.fit_icon(%TitleIcon as TextureRect)
 	_close.pressed.connect(close)
 	_retry.pressed.connect(_on_retry_pressed)
 	_start.pressed.connect(start_exam)

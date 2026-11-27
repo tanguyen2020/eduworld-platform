@@ -14,7 +14,7 @@ func _build() -> void:
 	_add_stem(%Stem as Control)
 	var grid: GridContainer = %Answers as GridContainer
 	var options: Array = render_options()
-	grid.columns = 2 if options.size() <= 4 else 1
+	grid.columns = UiBuild.answer_columns(options.size(), false)
 	var i: int = 0
 	for option: Variant in options:
 		var id: String = String((option as Dictionary).get("id", ""))
@@ -88,4 +88,4 @@ func _fit_rows() -> int:
 
 
 func _apply_tall(tall: bool) -> void:
-	(%Answers as GridContainer).columns = 1 if tall or buttons.size() > 4 else 2
+	(%Answers as GridContainer).columns = UiBuild.answer_columns(buttons.size(), tall)

@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/character/customization_studio.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/character/AvatarRig.tscn" id="2_rig"]
 [ext_resource type="Script" path="res://scripts/player/anim_driver.gd" id="3_anim"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/cross.svg" id="4_cross"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/wardrobe.svg" id="5_title_icon"]
 
 [node name="CustomizationStudio" type="Control"]
 layout_mode = 3
@@ -26,20 +28,39 @@ grow_vertical = 2
 [node name="Box" type="VBoxContainer" parent="Window"]
 layout_mode = 2
 
-[node name="Header" type="HBoxContainer" parent="Window/Box"]
+[node name="TitleBar" type="PanelContainer" parent="Window/Box"]
 layout_mode = 2
+theme_type_variation = &"WindowTitleBar"
 
-[node name="Title" type="Label" parent="Window/Box/Header"]
+[node name="Row" type="HBoxContainer" parent="Window/Box/TitleBar"]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"HeadingLabel"
-text = "ui.wardrobe.title"
+theme_type_variation = &"ToolbarBox"
 
-[node name="Close" type="Button" parent="Window/Box/Header"]
+[node name="TitleIcon" type="TextureRect" parent="Window/Box/TitleBar/Row"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"SecondaryButton"
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("5_title_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Window/Box/TitleBar/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"WindowTitleLabel"
+text = "ui.wardrobe.title"
+autowrap_mode = 3
+uppercase = true
+
+[node name="Close" type="Button" parent="Window/Box/TitleBar/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"DangerButton"
 text = "ui.common.close"
+icon = ExtResource("4_cross")
 
 [node name="Body" type="HBoxContainer" parent="Window/Box"]
 layout_mode = 2

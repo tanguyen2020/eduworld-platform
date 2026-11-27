@@ -223,7 +223,7 @@ func _team_side(view: BattleView, team: int, mine: bool) -> Control:
 	var names: PackedStringArray = []
 	for p: BattlePlayer in view.members(team):
 		names.append(p.nickname)
-	var members: Label = UiBuild.data_label(", ".join(names), &"MutedLabel")
+	var members: Label = UiBuild.keep_words(UiBuild.data_label(", ".join(names), &"MutedLabel"))
 	members.name = "Members"
 	box.add_child(members)
 	# A player away is said in words by the reconnect banner of the screen (the header stays short on a phone).

@@ -122,6 +122,7 @@ func _ready() -> void:
 	AppState.player_changed.connect(_on_player_changed)
 	AppState.assignments_changed.connect(_on_assignments_changed)
 	AppState.grade_band_changed.connect(apply_band)
+	AppState.compact_changed.connect(_on_compact_changed)
 	EventBus.locale_changed.connect(_on_locale_changed)
 	apply_band(AppState.grade_band)
 	_render()
@@ -136,17 +137,23 @@ func _exit_tree() -> void:
 	if get_viewport() != null and get_viewport().size_changed.is_connected(_layout_left_column):
 		get_viewport().size_changed.disconnect(_layout_left_column)
 	for pair: Array in [[AppState.player_changed, _on_player_changed], [AppState.assignments_changed,
-			_on_assignments_changed], [AppState.grade_band_changed, apply_band], [EventBus.locale_changed, _on_locale_changed]]:
+			_on_assignments_changed], [AppState.grade_band_changed, apply_band], [AppState.compact_changed, _on_compact_changed],
+			[EventBus.locale_changed, _on_locale_changed]]:
 		var sig: Signal = pair[0] as Signal
 		if sig.is_connected(pair[1] as Callable):
 			sig.disconnect(pair[1] as Callable)
+
+
+## F125: a phone window turned compact (or back): the touch targets follow without reloading the HUD.
+func _on_compact_changed(_compact: bool) -> void:
+	apply_band(band)
 
 
 ## F062-AC-05: density-dependent layout. Theme density is switched by ThemeService; touch targets follow UiTokens.
 func apply_band(value: String) -> void:
 	band = value if ThemeService.is_valid_band(value) else ThemeService.default_band()
 	minimap_allowed = not band in NO_MINIMAP_BANDS
-	var target: float = float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[band])
+	var target: float = UiBuild.target_for(band)
 	for button: Button in touch_buttons():
 		button.custom_minimum_size = Vector2(target, target)
 	_badge.custom_minimum_size = Vector2(target * BADGE_WIDTH_FACTOR, target)

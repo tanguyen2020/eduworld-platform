@@ -1,0 +1,15 @@
+{
+  "density": {
+    "compact": {
+      "$description": "Floors of compact mode (a phone: window short side < 500 density-independent px, STUDENT_GAME_UX §2; DESIGN_SYSTEM §5.2, F125). Applied over the grade-band density: every value is max(band, compact), never smaller than the band.",
+      "font": {
+        "$type": "dimension",
+        "small": { "$value": "{size.font.18}", "$description": "Smallest font size in compact mode, every band (≥ 12 CSS px on a 740×360 phone at the compact canvas height)." }
+      },
+      "button": {
+        "$type": "dimension",
+        "min_height": { "$value": "{size.control.60}", "$description": "Minimum button height in compact mode, every band (≥ 40 CSS px touch target on a 740×360 phone; g1_3 keeps its 64)." }
+      }
+    }
+  }
+}

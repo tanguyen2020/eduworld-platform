@@ -82,6 +82,8 @@ func refresh() -> void:
 			if is_self else member.nickname
 	_name.tooltip_text = _name.text
 	_name.theme_type_variation = text_variation if faded else &"HeadingLabel"
+	# F125: the card grows (or the row scrolls) rather than cutting the nickname on the compact phone canvas.
+	UiBuild.fit_words(_name)
 	_crown.visible = member.is_leader()
 	_leader_tag.visible = member.is_leader()
 	_presence_icon.texture = UiBuild.icon(String(PRESENCE_ICONS.get(member.presence, "presence_online")))
@@ -183,7 +185,7 @@ func _build() -> void:
 	_crown.name = "Crown"
 	_crown.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	name_line.add_child(_crown)
-	_name = UiBuild.data_label("", &"HeadingLabel", false)
+	_name = UiBuild.keep_words(UiBuild.data_label("", &"HeadingLabel", false))
 	_name.name = "Nickname"
 	# Wraps between words on a narrow card (a long translation of "(em)"), never cut.
 	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

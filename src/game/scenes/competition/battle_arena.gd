@@ -47,6 +47,8 @@ var _waiting: Label = null
 var _reveal: AnswerRevealOverlay = null
 var _result: MatchResultView = null
 var _chat_column: Control = null
+## F125: the strip was folded to its header for the compact canvas (unfolded when it moves beside the header again).
+var _folded_strip: bool = false
 var _chat_dock: ChatDock = null
 ## Bottom of the question column: the chat strip while a question is on screen.
 var _strip_slot: VBoxContainer = null
@@ -422,7 +424,9 @@ func _place_chat(strip: bool) -> void:
 		var w: float = row.size.x if row.size.x > 0.0 else get_viewport_rect().size.x - float(UiTokens.SIZE_SPACE_24) * 2.0
 		# Room for the strip beside the header, with a little slack (separation, rounding).
 		var room: float = w - _header.get_combined_minimum_size().x - float(UiTokens.SIZE_SPACE_16)
-		target = _strip_slot if room >= _dock_panel_min().x else _strip_bottom
+		# F125: the strip beside the header is as wide as the chat column share (_layout), so that is the room it needs.
+		var full: float = size.x if size.x > 0.0 else get_viewport_rect().size.x
+		target = _strip_slot if room >= maxf(_dock_panel_min().x, full * CHAT_SHARE) else _strip_bottom
 	if _chat_dock.get_parent() != target:
 		_chat_dock.get_parent().remove_child(_chat_dock)
 		target.add_child(_chat_dock)
@@ -430,6 +434,16 @@ func _place_chat(strip: bool) -> void:
 	_strip_slot.visible = strip and target == _strip_slot
 	_strip_bottom.visible = strip and target == _strip_bottom
 	_chat_column.visible = not strip
+	# F125: on the compact phone canvas (540 tall) a strip under the question would take the answers' row: the chat
+	# folds to its header (title, unread count, "Mở chat") until the question is answered.
+	var fold: bool = strip and target == _strip_bottom and AppState.compact
+	if fold and _chat_dock.mode == ChatDock.Mode.MINI:
+		_chat_dock.set_mode(ChatDock.Mode.COLLAPSED)
+		_folded_strip = true
+	elif not fold and _folded_strip:
+		_folded_strip = false
+		if strip and _chat_dock.mode == ChatDock.Mode.COLLAPSED:
+			_chat_dock.set_mode(ChatDock.Mode.MINI)
 	_fit_strip()
 	_layout()
 
@@ -439,6 +453,13 @@ func _fit_strip() -> void:
 	var h: float = _dock_panel_min().y if _strip_slot.visible or _strip_bottom.visible else 0.0
 	if not is_equal_approx(_chat_dock.custom_minimum_size.y, h):
 		_chat_dock.custom_minimum_size.y = h
+
+
+## Minimum width of the question side (its scroll box takes the column's minimum width).
+func _left_min() -> float:
+	var main: Control = _chat_column.get_parent() as Control
+	var left: Control = main.get_node_or_null("LeftScroll") as Control
+	return left.get_combined_minimum_size().x if left != null else 0.0
 
 
 func _dock_panel_min() -> Vector2:
@@ -488,7 +509,24 @@ func _layout() -> void:
 		return
 	var w: float = size.x if size.x > 0.0 else get_viewport_rect().size.x
 	var dock_min: float = _dock_panel_min().x
-	var column: float = clampf(maxf(w * CHAT_SHARE, dock_min), UiBuild.target() * 5.0, w * CHAT_SHARE_MAX)
+	# F125: between questions (the dock in its own column) the question side keeps its minimum first — compact phone
+	# canvas, long translations; the chat column takes CHAT_SHARE of the rest, never less than the panel needs, and a
+	# column too narrow for the chat header title drops it (the chat icon keeps it as tooltip). While a question is on
+	# screen the dock is a strip inside the question side: the share alone applies (no feedback loop on its width).
+	var room: float = w
+	if _chat_dock.get_parent() == _chat_column:
+		var main: Control = _chat_column.get_parent() as Control
+		room = (main.size.x if main.size.x > 0.0 else w) - _left_min() - float(main.get_theme_constant(&"separation"))
+		var title_w: float = _chat_dock.title_width()
+		if _chat_dock.title_allowed and dock_min > room:
+			_chat_dock.allow_title(false)
+			dock_min = _dock_panel_min().x
+			_layout.call_deferred()
+		elif not _chat_dock.title_allowed and dock_min + title_w + float(UiTokens.SIZE_SPACE_16) <= room:
+			_chat_dock.allow_title(true)
+			dock_min = _dock_panel_min().x
+			_layout.call_deferred()
+	var column: float = clampf(maxf(minf(w * CHAT_SHARE, room), dock_min), UiBuild.target() * 5.0, w * CHAT_SHARE_MAX)
 	_chat_column.custom_minimum_size.x = column
 	_strip_slot.custom_minimum_size.x = maxf(column, _dock_panel_min().x)
 
@@ -507,10 +545,18 @@ func _build() -> void:
 	var main: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
 	main.name = "Main"
 	margin.add_child(main)
+	# F125: on the compact phone canvas (540 tall) a long translation can make the column taller than the screen; it then
+	# scrolls as a whole (when it fits, the column fills the height exactly as before and the question keeps its room).
+	var left_scroll: ScrollContainer = ScrollContainer.new()
+	left_scroll.name = "LeftScroll"
+	left_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	UiBuild.expand(left_scroll, true, true)
+	main.add_child(left_scroll)
+	left_scroll.minimum_size_changed.connect(_layout, CONNECT_DEFERRED)
 	var left: VBoxContainer = UiBuild.vbox(&"FormBox")
 	left.name = "Left"
 	UiBuild.expand(left, true, true)
-	main.add_child(left)
+	left_scroll.add_child(left)
 	var top: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
 	left.add_child(top)
 	_header = MatchHeader.new()

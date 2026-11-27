@@ -16,6 +16,7 @@ export const SETS = {
     'game-tokens/density/g4_5.json',
     'game-tokens/density/g6_7.json',
     'game-tokens/density/g8_9.json',
+    'game-tokens/density/compact.json',
   ],
   gameHighContrast: ['game-tokens/high-contrast.json'],
   admin: ['admin-tokens/seed.json', 'admin-tokens/semantic.json'],
@@ -38,6 +39,8 @@ export const BUSINESS_VARIANTS = ['light', 'dark', 'game'];
 export const DENSITY_BANDS = ['g1_3', 'g4_5', 'g6_7', 'g8_9'];
 /** Density used by the base Theme `eduworld_theme.tres` [Proposed]; each band also gets its own Theme. */
 export const BASE_DENSITY = 'g6_7';
+/** Compact mode (a phone, F125): floors laid over each band; each band also gets a compact Theme. */
+export const COMPACT_DENSITY = 'compact';
 
 /**
  * Resolution contexts. `variant` selects the business color variant used as `$value`.

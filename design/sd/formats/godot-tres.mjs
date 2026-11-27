@@ -86,6 +86,25 @@ export function godotFontFiles() {
   }));
 }
 
+/** Density leaves that compact mode floors (F125, DESIGN_SYSTEM §5.2): `density.compact.<leaf>`. */
+export const COMPACT_FLOORS = ['font.small', 'button.min_height'];
+
+/**
+ * The resolved game context of `band` in compact mode (a phone, F125): every leaf of COMPACT_FLOORS becomes
+ * max(band, compact) — never smaller than the band — so the compact Theme of a band only grows its smallest font and
+ * its touch target (button, field and checkbox padding follow `button.min_height`).
+ */
+export function compactMap(map, band) {
+  const out = new Map(map);
+  for (const leaf of COMPACT_FLOORS) {
+    const bandPath = `density.${band}.${leaf}`;
+    const floorPath = `density.compact.${leaf}`;
+    if (!map.has(bandPath) || !map.has(floorPath)) throw new Error(`compact theme needs ${bandPath} and ${floorPath}`);
+    if (px(map.get(floorPath).value) > px(map.get(bandPath).value)) out.set(bandPath, { ...map.get(bandPath), value: map.get(floorPath).value });
+  }
+  return out;
+}
+
 /**
  * Theme for one density band. `map` is a resolved game context (normal or high contrast).
  * Button and field vertical padding reaches the minimum height: (min_height − body line height) / 2, rounded up.
@@ -253,6 +272,8 @@ export function formatTheme(map, band, version, label) {
     // F123: unread count pill (HUD bell) and "Mới" tag of an unread inbox row — tier 2, thin ink outline.
     styleBox('count_badge', { bg: v('component.count_badge.bg'), border: v('component.count_badge.border'), borderWidth: oi, radius: tileR, padH: halfSpace, padV: Math.round(space4 / 2) }),
     // F102: party member card (tier 2, thin ink outline), its faded state while the member reconnects, warning banner.
+    // F125: white tile holding the icon of a window title bar (any icon colour reads on the blue bar), tier 2.
+    styleBox('title_icon_badge', { bg: v('component.party_card.bg'), border: ink, borderWidth: oi, radius: btnRadius, padH: Math.round(space4 / 2), padV: Math.round(space4 / 2) }),
     styleBox('party_card', { bg: v('component.party_card.bg'), border: v('component.party_card.border'), borderWidth: oi, radius: tileR, padH: halfSpace, padV: halfSpace }),
     styleBox('party_card_away', { bg: v('component.party_card.away_bg'), border: v('component.party_card.away_border'), borderWidth: oi, radius: tileR, padH: halfSpace, padV: halfSpace }),
     styleBox('warning_banner', { ...message, bg: v('component.warning_banner.bg'), border: v('component.warning_banner.border') }),
@@ -642,6 +663,8 @@ export function formatTheme(map, band, version, label) {
     ['CountBadge/font_sizes/font_size', String(small)],
     ['CountBadge/fonts/font', 'ExtResource("2_body_bold")'],
     ['CountBadge/styles/normal', sub('count_badge')],
+    ['TitleIconBadge/base_type', '&"PanelContainer"'],
+    ['TitleIconBadge/styles/panel', sub('title_icon_badge')],
     ['PartyMemberCard/base_type', '&"PanelContainer"'],
     ['PartyMemberCard/styles/panel', sub('party_card')],
     ['PartyMemberCardAway/base_type', '&"PanelContainer"'],

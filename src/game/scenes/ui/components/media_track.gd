@@ -46,12 +46,9 @@ func _init() -> void:
 	changed.connect(queue_redraw)
 
 
-## As tall as the band's touch target (density.<band>.button.min_height).
+## As tall as the band's touch target (density.<band>.button.min_height; F125 compact floor on a phone).
 func _get_minimum_size() -> Vector2:
-	var band: String = String(AppState.grade_band)
-	if not UiTokens.DENSITY_BUTTON_MIN_HEIGHT.has(band):
-		band = ThemeService.default_band()
-	var h: float = float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[band])
+	var h: float = UiBuild.target()
 	return Vector2(h * 2.0, h)
 
 

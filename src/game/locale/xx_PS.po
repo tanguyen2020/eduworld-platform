@@ -2909,9 +2909,6 @@ msgstr "[!! {nickname} (ýöü) ~~~~~~~ !!]"
 msgid "ui.party.members"
 msgstr "[!! Mëɱƀëŕš ({count}/{max}) ~~~~~~~~~~ !!]"
 
-msgid "ui.party.minimize"
-msgstr "[!! Mïñïɱïšë ~~~~ !!]"
-
 msgid "ui.party.minimize_tooltip"
 msgstr "[!! Ýöüŕ þáŕţý šţáýš, öþëñ ïţ áğáïñ ŵïţĥ ţĥë Páŕţý ƀüţţöñ ~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
