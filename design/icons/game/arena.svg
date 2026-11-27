@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <path d="M13 8h22v8c0 7-5 12-11 12s-11-5-11-12z" fill="{color.accent.reward}" stroke="{palette.ink.900}" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M13 11H7c0 6 3 9 7 9M35 11h6c0 6-3 9-7 9" fill="none" stroke="{palette.ink.900}" stroke-width="3" stroke-linecap="round"/>
+  <path d="M21 28h6v6h-6z" fill="{component.icon.primary}" stroke="{palette.ink.900}" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M14 41c0-4 4-7 10-7s10 3 10 7z" fill="{component.icon.primary}" stroke="{palette.ink.900}" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M24 12l1.8 3.6 4 .5-3 2.8.8 4-3.6-2-3.6 2 .8-4-3-2.8 4-.5z" fill="{component.icon.on_accent}"/>
+</svg>

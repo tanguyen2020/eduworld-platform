@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <g fill="none" stroke="{component.icon.on_accent}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17 42V20h14v22M4 42V28h13M31 32h13v10M2 42h44"/>
+    <path d="M24 5l2 4 4.5.6-3.3 3.1.8 4.4-4-2.2-4 2.2.8-4.4-3.3-3.1 4.5-.6z"/>
+  </g>
+</svg>
