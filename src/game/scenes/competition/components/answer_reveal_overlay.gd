@@ -24,15 +24,20 @@ func _init() -> void:
 	var texts: VBoxContainer = UiBuild.vbox()
 	UiBuild.expand(texts)
 	row.add_child(texts)
-	_title = UiBuild.label("", &"HeadingLabel")
+	# Verdict, points and the speed bonus share one flowing line, so the strip stays short on a phone (844×390)
+	# and the answers above it keep their room; a long locale flows onto a second line.
+	var line: HFlowContainer = HFlowContainer.new()
+	texts.add_child(line)
+	_title = UiBuild.label("", &"HeadingLabel", false)
 	_title.name = "Verdict"
-	texts.add_child(_title)
-	_points = UiBuild.data_label("", &"HeadingLabel")
+	line.add_child(_title)
+	_points = UiBuild.data_label("", &"HeadingLabel", false)
 	_points.name = "Points"
-	texts.add_child(_points)
-	_bonus = UiBuild.data_label("", &"MutedLabel")
+	line.add_child(_points)
+	_bonus = UiBuild.data_label("", &"MutedLabel", false)
 	_bonus.name = "SpeedBonus"
-	texts.add_child(_bonus)
+	_bonus.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	line.add_child(_bonus)
 	_explanation = UiBuild.data_label("", &"MutedLabel")
 	_explanation.name = "Explanation"
 	texts.add_child(_explanation)

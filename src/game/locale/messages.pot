@@ -3576,6 +3576,9 @@ msgstr ""
 msgid "ui.tournament.bracket.versus"
 msgstr ""
 
+msgid "ui.tournament.bracket.versus_tbd"
+msgstr ""
+
 msgid "ui.tournament.bracket.winner"
 msgstr ""
 

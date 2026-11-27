@@ -255,7 +255,11 @@ func _render_detail() -> void:
 		actions.add_child(check)
 	var b: BracketModel = service.brackets.get(open_id) as BracketModel
 	if b != null:
-		_detail.add_child(ArenaUi.section("ui.tournament.bracket.title"))
+		var section: Control = ArenaUi.section("ui.tournament.bracket.title")
+		_detail.add_child(section)
+		# A running tournament opens on its bracket: "where am I, who is next" is what the student came for.
+		if t.status == "in_progress":
+			_scroll_to.call_deferred(section)
 		if ArenaUi.band() in ["g1_3", "g4_5"]:
 			var path: BracketPath = BracketPath.new()
 			_detail.add_child(path)
@@ -265,6 +269,15 @@ func _render_detail() -> void:
 			_detail.add_child(tree)
 			tree.show_bracket(b, self_id)
 	UiBuild.size_buttons(_detail)
+
+
+func _scroll_to(target: Control) -> void:
+	if not is_inside_tree():
+		return
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if is_instance_valid(target) and _detail_scroll.visible:
+		_detail_scroll.scroll_vertical = int(target.get_global_rect().position.y - _detail.get_global_rect().position.y)
 
 
 func _info_line(icon: String, text: String) -> HBoxContainer:

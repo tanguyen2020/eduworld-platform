@@ -2229,7 +2229,7 @@ msgid "ui.leaderboard.goal.coach"
 msgstr "[!! Ẹvëŕý ŕïğĥţ áñšŵëŕ ĥëĺþš ýöüŕ ğŕáđë ŕëáçĥ ţĥë ğöáĺ! ~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.leaderboard.goal.helpers"
-msgstr "[!! {count} çĺáššɱáţëš ĥëĺþëđ ~~~~~~~~~~ !!]"
+msgstr "[!! {count} ƒŕïëñđš ïñ ýöüŕ ğŕáđë ĥëĺþëđ ~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.leaderboard.goal.mine"
 msgstr "[!! Ýöü áđđëđ {value} ~~~~~~~ !!]"
@@ -3628,6 +3628,9 @@ msgstr "[!! Ɓŕáçķëţ ~~~ !!]"
 
 msgid "ui.tournament.bracket.versus"
 msgstr "[!! Vëŕšüš {name} ~~~~~~ !!]"
+
+msgid "ui.tournament.bracket.versus_tbd"
+msgstr "[!! Öþþöñëñţ: ţö ƀë đëçïđëđ ~~~~~~~~~~ !!]"
 
 msgid "ui.tournament.bracket.winner"
 msgstr "[!! Ŵïññëŕ ~~~ !!]"

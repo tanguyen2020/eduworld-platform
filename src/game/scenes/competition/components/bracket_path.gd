@@ -36,12 +36,16 @@ func show_bracket(b: BracketModel, self_id: String) -> void:
 		if mine.is_empty():
 			line = "%s · %s" % [_or_wait(b.name_of(String(n["entry_a"]))), _or_wait(b.name_of(String(n["entry_b"])))]
 		else:
-			line = TranslationServer.translate("ui.tournament.bracket.versus").format({"name": _or_wait(other_name)})
+			line = TranslationServer.translate("ui.tournament.bracket.versus").format({"name": other_name}) \
+					if not other_name.is_empty() else TranslationServer.translate("ui.tournament.bracket.versus_tbd")
 		texts.add_child(UiBuild.data_label(line, &"MutedLabel"))
 		var status: String = String(CompetitionText.NODE_STATUS_KEYS.get(String(n["status"]), "ui.tournament.node.pending"))
 		if done and not mine.is_empty():
 			status = "ui.tournament.bracket.won" if won else "ui.tournament.bracket.done"
-		texts.add_child(ArenaUi.tag(status, &"TileTagCorrect" if won else &"TileTagPending"))
+		var tag: Control = ArenaUi.tag(status, &"TileTagCorrect" if won else &"TileTagPending")
+		# The tag hugs its words (a full-width bar reads like a progress bar).
+		tag.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		texts.add_child(tag)
 		add_child(card)
 
 

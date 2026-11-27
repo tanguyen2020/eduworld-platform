@@ -3752,7 +3752,7 @@ msgid "ui.leaderboard.goal.mine"
 msgstr "You added {value}"
 
 msgid "ui.leaderboard.goal.helpers"
-msgstr "{count} classmates helped"
+msgstr "{count} friends in your grade helped"
 
 msgid "ui.leaderboard.goal.reached"
 msgstr "Reached!"
@@ -3879,6 +3879,9 @@ msgstr "Round {round}"
 
 msgid "ui.tournament.bracket.versus"
 msgstr "Versus {name}"
+
+msgid "ui.tournament.bracket.versus_tbd"
+msgstr "Opponent: to be decided"
 
 msgid "ui.tournament.bracket.tbd"
 msgstr "To be decided"
