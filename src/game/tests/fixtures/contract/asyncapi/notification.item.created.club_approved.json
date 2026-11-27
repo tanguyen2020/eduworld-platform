@@ -1,0 +1,19 @@
+{
+  "v": 1,
+  "type": "notification.item.created",
+  "seq": 78,
+  "ts": 1763712090000,
+  "payload": {
+    "notification_id": "0193b0a0-0000-7000-8000-000000000c13",
+    "kind": "club_approved",
+    "message_code": "club.approved",
+    "params": {},
+    "ref_type": "club",
+    "ref_id": "0193b0a0-0000-7000-8000-000000000c01",
+    "action": {
+      "kind": "open_club",
+      "id": "0193b0a0-0000-7000-8000-000000000c01"
+    },
+    "created_at": 1763712090000
+  }
+}

@@ -93,6 +93,11 @@
         "allowed_kinds_by_channel": {},
         "direct_message_enabled": false
       },
+      "social": {
+        "student_club_creation": "requires_approval",
+        "club_creation_eligible": true,
+        "cross_school_enabled": false
+      },
       "party": {
         "max_members": 4
       },

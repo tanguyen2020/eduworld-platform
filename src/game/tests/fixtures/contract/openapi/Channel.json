@@ -69,6 +69,10 @@
         "sample1"
       ]
     },
-    "presence": "offline"
+    "presence": "offline",
+    "title": {
+      "vi": "sample",
+      "en": "sample"
+    }
   }
 }

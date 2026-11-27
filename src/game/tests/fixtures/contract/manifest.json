@@ -11,11 +11,11 @@
     },
     "openapi/GameLoginResponse.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameLoginResponse",
-      "sha256": "ab73c1aad00ccc948a784e791f4be427c7fec068747c36d94afe0fa0f7b2f6d3"
+      "sha256": "8d0597a8ab0943933bf245320d4c82758bd84f25a1ee18950a03a0588f11c784"
     },
     "openapi/GameTokenRefreshResponse.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameTokenRefreshResponse",
-      "sha256": "c0284c187782bccbe0a00ef56c7cd893c5e7c549b1c42d2469418c89d1b64b9d"
+      "sha256": "44220682a7f8076e03cc092a8d637a445394ec09d703ac88e66577e0722901f6"
     },
     "openapi/GameLoginProblem.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameLoginProblem",
@@ -155,7 +155,7 @@
     },
     "openapi/PartyInvitation.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/PartyInvitation",
-      "sha256": "604b96cf531c81631a21e6d7d524f2318959311fbf4e7430192529fa74f0b37e"
+      "sha256": "32f4b587c2683f92b7f524c3f37695ae1aa9154baf8c983f82f65d2c84b4ca97"
     },
     "openapi/PartyEligibleActivity.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/PartyEligibleActivity",
@@ -167,15 +167,15 @@
     },
     "openapi/PlayerCard.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/PlayerCard",
-      "sha256": "b82989fb47130105590309c0e8330b48fd5a53e703525790607628f4485b0524"
+      "sha256": "a000089332e126b4451d36fc05a97c162c7f47c76e5b96064e4396295bce94a6"
     },
     "openapi/Channel.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Channel",
-      "sha256": "0adfa226a33238425cca2daf6d08ac2c3fa0952382aef3296ab821243cd63683"
+      "sha256": "1a1c159d0db9c8355102cca42968737f54c9a0eb9a0d1550e07745edbee9ba75"
     },
     "openapi/Message.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Message",
-      "sha256": "bc2a124913ec13190fcbdcdae2338b5ee482bfbc3bd7dbac08a6edf6afbcc3f8"
+      "sha256": "83817ee492f35b0f817e54fecc5e83e64ba5ee05720ede90b15131ad8e020f1f"
     },
     "openapi/QuickMessage.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/QuickMessage",
@@ -708,6 +708,18 @@
     "asyncapi/notification.item.created.assignment_new.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/NotificationItemCreated/examples/assignment_new",
       "sha256": "259626cde4e1141ee86870a9502937634b5a8ce54b6c6aa0356da7c6f1f0f55d"
+    },
+    "asyncapi/notification.item.created.club_invitation.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/NotificationItemCreated/examples/club_invitation",
+      "sha256": "35e3e5d93a2866b5639bc6149c792fb5e6ae069343e63b48b4014bf593ad11f9"
+    },
+    "asyncapi/notification.item.created.club_join_request.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/NotificationItemCreated/examples/club_join_request",
+      "sha256": "4b3fecabe28993b476b28945f3dd1e691b0c9a163e7df1e443e644d63dd1808b"
+    },
+    "asyncapi/notification.item.created.club_approved.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/NotificationItemCreated/examples/club_approved",
+      "sha256": "fc0a270b8b180ac50309b47903abb91f8ab427bce164617f2a6a5756f7fd9dfb"
     },
     "asyncapi/notification.item.created.tournament_update.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/NotificationItemCreated/examples/tournament_update",

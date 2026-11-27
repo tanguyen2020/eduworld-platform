@@ -1,0 +1,21 @@
+{
+  "v": 1,
+  "type": "notification.item.created",
+  "seq": 76,
+  "ts": 1763712080000,
+  "payload": {
+    "notification_id": "0193b0a0-0000-7000-8000-000000000c11",
+    "kind": "club_invitation",
+    "message_code": "club.invitation_received",
+    "params": {
+      "nickname": "CaHeoVui07"
+    },
+    "ref_type": "club",
+    "ref_id": "0193b0a0-0000-7000-8000-000000000c01",
+    "action": {
+      "kind": "open_club",
+      "id": "0193b0a0-0000-7000-8000-000000000c01"
+    },
+    "created_at": 1763712080000
+  }
+}

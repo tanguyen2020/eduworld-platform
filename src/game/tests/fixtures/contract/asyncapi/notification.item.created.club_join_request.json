@@ -1,0 +1,21 @@
+{
+  "v": 1,
+  "type": "notification.item.created",
+  "seq": 77,
+  "ts": 1763712085000,
+  "payload": {
+    "notification_id": "0193b0a0-0000-7000-8000-000000000c12",
+    "kind": "club_join_request",
+    "message_code": "club.join_request_received",
+    "params": {
+      "nickname": "SaoBang12"
+    },
+    "ref_type": "club",
+    "ref_id": "0193b0a0-0000-7000-8000-000000000c01",
+    "action": {
+      "kind": "open_club",
+      "id": "0193b0a0-0000-7000-8000-000000000c01"
+    },
+    "created_at": 1763712085000
+  }
+}
