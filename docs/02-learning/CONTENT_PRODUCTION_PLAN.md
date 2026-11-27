@@ -140,7 +140,23 @@ Nhiều người soạn có sẵn câu hỏi trong Word với công thức MathT
 | 4. Kết quả | Chỉ tạo **Draft**, kèm báo cáo từng câu (thành công/cảnh báo/lỗi); không bao giờ tự publish; người soạn sửa trong editor rồi gửi duyệt |
 | 5. An toàn | File tải lên quét virus như media; bỏ macro, liên kết ngoài; giới hạn dung lượng |
 
-Công cụ chuyển đổi: **Pandoc** (CLI, đọc `.docx` gồm công thức OMML ra LaTeX) chạy như tiến trình ngoài trong image `eduworld/media-tools` cùng ffmpeg/libvips, không link vào binary Go [Confirmed — owner 2026-11-20]. Đối tượng MathType OLE không có MathML nhúng vẫn đánh dấu "cần soạn lại công thức". Trước khi mở cho người soạn, spike đo tỉ lệ chuyển đổi đúng trên bộ mẫu thật của Toán/Lý/Hóa làm tiêu chí nghiệm thu. Import `lessons_docx` chưa thuộc feature nào (F024, F054 để ngoài phạm vi); cần feature riêng trước khi triển khai.
+Công cụ chuyển đổi: **Pandoc** (CLI, đọc `.docx` gồm công thức OMML ra LaTeX) chạy như tiến trình ngoài trong image `eduworld/media-tools` cùng ffmpeg/libvips, không link vào binary Go [Confirmed — owner 2026-11-20]. Đối tượng MathType OLE không có MathML nhúng vẫn đánh dấu "cần soạn lại công thức". Trước khi mở cho người soạn, spike đo tỉ lệ chuyển đổi đúng trên bộ mẫu thật của Toán/Lý/Hóa làm tiêu chí nghiệm thu.
+
+**Hiện thực — F028** [Confirmed — owner 2026-11-27, lệnh "chốt hết", phương án an toàn; chi tiết [specs/028-docx-math-import](../../specs/028-docx-math-import/spec.md), spike ở research.md]:
+
+- **Image:** `eduworld/media-tools` = stage `media-tools` của `deploy/docker/worker.Dockerfile` (Alpine 3.22: ffmpeg + `pandoc-cli` 3.6); image `worker` dựng trên stage đó, job `import-jobs` (profile `jobs`) chạy `pandoc --sandbox -f docx -t json` qua stdin/stdout, môi trường rỗng, timeout `docx_convert_timeout`, heap `docx_convert_memory`. Ảnh nhúng đọc từ zip bằng Go, Pandoc không ghi file, không truy cập mạng.
+- **Mẫu tài liệu:** khối đầu `Môn:` (mã môn), `Khối:` (một hoặc nhiều khối), `Chương trình:` (mã curriculum), `Phiên bản chương trình:` (tùy chọn), `Chủ đề:` (mã topic), `Ngôn ngữ:` (`vi`/`en`); mỗi câu bắt đầu "Câu n." hoặc "Câu n:"; phương án `A.`…`H.`; đáp án = **chữ cái in đậm** hoặc dòng `Đáp án: B` / `Đáp án: A, C` (khác nhau → lỗi); một đáp án → `single_choice`, nhiều → `multiple_choice` (≥ 3 phương án); `Gợi ý k:` (≤ 5), `Giải thích:`, `LO:`, `Độ khó:` (1–5), `Chủ đề:` trong câu ghi đè khối đầu; đoạn không nhãn nối vào phần đang viết. Loại câu khác soạn trong editor.
+- **Công thức:** LaTeX của Pandoc chỉ qua allowlist chung của §9.1 CONTENT_MODEL (ADR-0055 §7) — không có allowlist riêng; inline thành `\( … \)` trong đoạn, công thức một dòng thành khối `math`. Spike: 22/22 cấu trúc (phân số, căn, lũy thừa/chỉ số, ma trận, hệ phương trình, tổng/tích phân/giới hạn, vector, ký hiệu quan hệ) đúng và render được bằng MathJax 4.
+- **Từ chối/cảnh báo:** MathType OLE → câu lỗi `FORMULA_NEEDS_REWRITE`; ảnh không có alt text hoặc không phải PNG/JPEG/WebP → câu lỗi; bảng → câu lỗi; liên kết ngoài (giữ chữ), chú thích, danh sách tự đánh số, chỉ số định dạng chữ → cảnh báo; macro → **từ chối cả file**; file vượt `csv_import_max`, `docx_zip_entries_max`, `docx_uncompressed_max`, `docx_import_max_questions` → job `failed`.
+- **Hai giai đoạn:** job `lessons_docx` chỉ phân tích, lưu báo cáo từng câu (`content.import_items`: `ready`/`warning`/`error`), không tạo câu hỏi (cờ `dry_run` không đổi hành vi); portal render SVG công thức bằng MathJax 4 (ADR-0055 §4) rồi gọi `createDraftFromImportItem` từng câu (Idempotency-Key mỗi câu): server ghép SVG vào nội dung đã phân tích, đưa ảnh nhúng vào media pipeline (§7 CONTENT_MODEL, giấy phép của file Word), chạy validator của `createQuestion`, tạo **version 1 Draft** (`created`) hoặc ghi lý do (`draft_failed`, tạo lại được).
+- **Tiêu chí bộ mẫu thật:** ≥ 95% công thức OMML chuyển đúng ngữ nghĩa và render được, 0 câu nhập sai đáp án, đo trên ≥ 30 file thật Toán/Lý/Hóa lớp 6–9 (ngoài repo) theo quickstart §2.6 của F028 trước khi mở cho người soạn.
+
+| Tham số | Giá trị | Ghi chú |
+|---|---|---|
+| `docx_import_max_questions` | 200 câu/file | Vượt → job `failed` `TOO_MANY_QUESTIONS` |
+| `docx_convert_timeout` | 60 giây | Một lần chạy Pandoc; quá → `CONVERSION_TIMEOUT` |
+| `docx_convert_memory` | 512 MB | Heap Pandoc (`+RTS -M`) |
+| `docx_uncompressed_max` / `docx_zip_entries_max` | 50 MB / 1.000 phần | Chống zip bomb; vượt → `DOCX_TOO_COMPLEX` |
 
 ## 9. Rủi ro
 

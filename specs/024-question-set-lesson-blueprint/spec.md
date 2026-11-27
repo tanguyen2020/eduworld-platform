@@ -10,7 +10,7 @@
 - Q: `worked_example_ref` của câu hỏi là UUID (schema) hay `{content_item_id, block_id}` (CONTENT_MODEL §9.2)? → A: Theo tài liệu sở hữu [CONTENT_MODEL §9.2](../../docs/02-learning/CONTENT_MODEL.md#92-khối-worked_example-confirmed): đối tượng `{content_item_id, block_id}` (đổi ở Session 2026-11-17); `question.schema.json` và `interactive-exercise.schema.json` sửa ở Phase 2.
 - Q: Khối `activity` trong lesson tham chiếu activity của F030 — F024 kiểm thế nào? → A: Khối `activity` cần validator do F030 đăng ký; trước đó lesson có khối `activity` bị từ chối rõ ràng (`errors[].code = BLOCK_KIND_NOT_ENABLED`).
 - Q: "Tạo đề từ Question Bank theo blueprint" (FR-QB-005) gồm sinh `ExamPaper`? → A: Không. F024 soạn và kiểm blueprint (tổng điểm, pool đủ, ràng buộc phản hồi); sinh đề/biến thể là F042 ([EXAM_ENGINE §4](../../docs/02-learning/EXAM_ENGINE.md#4-sinh-đề)).
-- Q: Import Word/MathType (`lessons_docx`)? → A: Theo [CONTENT_PRODUCTION_PLAN](../../docs/02-learning/CONTENT_PRODUCTION_PLAN.md), ngoài phạm vi F024; `kind = lessons_docx` trả lỗi rõ ràng.
+- Q: Import Word/MathType (`lessons_docx`)? → A: Theo [CONTENT_PRODUCTION_PLAN](../../docs/02-learning/CONTENT_PRODUCTION_PLAN.md), ngoài phạm vi F024; `kind = lessons_docx` trả lỗi rõ ràng — **thay thế 2026-11-27 bởi [F028](../028-docx-math-import/spec.md)**: `lessons_docx` được hỗ trợ (job phân tích + `createDraftFromImportItem`), F024-AC-15 chỉ còn phần file quá lớn/sai định dạng.
 
 ### Session 2026-11-17
 

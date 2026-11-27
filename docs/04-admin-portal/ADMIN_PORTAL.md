@@ -530,7 +530,7 @@ Quản lý chương trình, khối lớp, môn, chủ đề (cây kéo-thả), L
 | Question Set editor | Static hoặc selection rules; hiển thị kích thước pool hiện tại |
 | Assessment Blueprint editor | Ma trận LO × độ khó, kiểm tra tổng điểm, pool đủ, xem trước đề sinh mẫu |
 | Exercise / Learning Activity | Gói question set + feedback policy mặc định |
-| Bulk import | Excel/CSV/JSON mẫu → validate → **render công thức trên trình duyệt** (MathJax 4) → báo lỗi theo dòng (gồm công thức lỗi) → tạo draft |
+| Bulk import | Excel/CSV/JSON mẫu → validate → **render công thức trên trình duyệt** (MathJax 4) → báo lỗi theo dòng (gồm công thức lỗi) → tạo draft. Nguồn **Word (.docx)** (F028): tải file theo mẫu [CONTENT_PRODUCTION_PLAN §8](../02-learning/CONTENT_PRODUCTION_PLAN.md#8-import-wordmathtype-confirmed) → server phân tích → bảng báo cáo từng câu (phân trang, lọc trạng thái) → "Tạo bản nháp" render công thức MathJax 4 rồi tạo draft từng câu |
 
 Người dùng tenant thấy: dữ liệu `tenant_id` = tenant của mình **cộng** dữ liệu platform được gán cho tenant (nhãn "Từ EduWorld", **chỉ đọc**). Muốn chỉnh nội dung được gán thì yêu cầu System Admin clone sang tenant (ADR-0029). Nội dung tenant **không** gắn được vào quest/mini-game; việc gắn question set vào game content chỉ đội platform làm trong Game Studio.
 

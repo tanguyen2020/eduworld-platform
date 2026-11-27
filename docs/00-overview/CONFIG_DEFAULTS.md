@@ -423,6 +423,9 @@ Bảng rate limit đầy đủ theo endpoint nằm ở [SECURITY_ARCHITECTURE §
 | `answer_rate` | 60/phút, tối thiểu 1 s/câu; submit 10/phút | platform | [Confirmed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
 | `ws_ticket_rate` / `ws_connections_per_user` | 10/phút / 1 (kết nối mới đóng kết nối cũ bằng `4409 replaced`) | platform | [Confirmed] rate · [Confirmed] 1 kết nối (ADR-0031) | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
 | `request_body_max` / `csv_import_max` | 256 KB / 10 MB | code | [Confirmed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
+| `docx_import_max_questions` | 200 câu/file import Word `lessons_docx` | code | [Confirmed] (owner 2026-11-27, F028) | [CONTENT_PRODUCTION_PLAN §8](../02-learning/CONTENT_PRODUCTION_PLAN.md#8-import-wordmathtype-confirmed) |
+| `docx_convert_timeout` / `docx_convert_memory` | 60 giây / 512 MB mỗi lần chạy Pandoc | code | [Confirmed] (owner 2026-11-27, F028) | [CONTENT_PRODUCTION_PLAN §8](../02-learning/CONTENT_PRODUCTION_PLAN.md#8-import-wordmathtype-confirmed) |
+| `docx_uncompressed_max` / `docx_zip_entries_max` | 50 MB / 1.000 phần zip của một `.docx` | code | [Confirmed] (owner 2026-11-27, F028) | [CONTENT_PRODUCTION_PLAN §8](../02-learning/CONTENT_PRODUCTION_PLAN.md#8-import-wordmathtype-confirmed) |
 | `secret_rotation` | 90 ngày | code | [Confirmed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
 | `critical_vuln_fix` | ≤ 72 giờ | quy trình | [Confirmed] | [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) |
 | `module_call_deadline` | Deadline gọi facade giữa module trong tiến trình (`src/backend/pkg/modcall`): 800 ms đọc / 2 s ghi / 5 s bước saga; không retry, không circuit breaker giữa module (thay `internal_api_resilience`, đã bỏ) | code | [Confirmed] (ADR-0074) | [API_DESIGN §12.3](../07-backend/API_DESIGN.md) |
