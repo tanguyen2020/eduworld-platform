@@ -458,6 +458,7 @@ Giá trị do [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) sở
 | `classroom_reference_bandwidth` | 20 Mbps cho 40 máy dùng chung | Mbps | code | [Confirmed — Technical Architect 2026-11-15] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §10.1 |
 | `offhours_prefetch_window` | 18:00–06:00 | giờ địa phương | thiết bị | [Confirmed — Technical Architect 2026-11-15] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §10.1 |
 | `lan_cache_url` | Trống (tắt); đặt trong `device.cfg` (Android) khi trường có cache LAN; bản Web: không dùng `device.cfg` — cache LAN là reverse proxy trường cấu hình cho trình duyệt (ADR-0101 mục 8) [Confirmed] | — | thiết bị | [Confirmed — Technical Architect 2026-11-15] | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §10.1 |
+| `low_data_bandwidth_threshold` | 1 Mbps (dưới mức này, trung bình các lần tải nội dung → chế độ dữ liệu thấp: tắt tải trước vùng kế tiếp, giảm chất lượng media) | bit/s | client (project setting `eduworld/content/low_bandwidth_bps`) | [Proposed] (F133, 2026-11-28; = mạng tối thiểu chơi được của PERFORMANCE_BUDGET §10) | [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §10.1 |
 
 ## 17c. Game Analytics (ADR-0058)
 

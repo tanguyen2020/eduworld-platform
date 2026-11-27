@@ -496,10 +496,21 @@ func handle_access_denied(code: String) -> void:
 	_set_state(STATE.LOGIN)
 
 
-## ForceUpdate "Cập nhật": opens the store page given by the server (never a login page).
-func open_store() -> void:
-	if store_url.begins_with("https://"):
-		OS.shell_open(store_url)
+## "Cần cập nhật" (F133 T023, F133-AC-12): how this platform updates — the server store link of the 426, else the
+## store link of the build config; Web reloads the page; a shared school tablet asks the teacher (UpdateService).
+func update_action() -> Dictionary:
+	var service: UpdateService = UpdateService.from_config(_autoload("Config"))
+	service.server_store_url = store_url
+	return service.current()
+
+
+## The button of the update screens: opens the store page / reloads the Web page (never a login page). False when
+## nothing can be done here (ask the teacher).
+func open_store() -> bool:
+	var service: UpdateService = UpdateService.from_config(_autoload("Config"))
+	service.server_store_url = store_url
+	var action: Dictionary = service.current()
+	return service.perform(int(action["action"]), String(action["url"]))
 
 
 # ---------- internals ----------

@@ -43,13 +43,39 @@
 ## 3. Lệnh test tự động
 
 ```bash
-make godot-test                 # GdUnit4: device_config, content_downloader, manifest_verifier, update_service, prefetch_scheduler
-make godot-export-check
-bash scripts/godot/scan-artifact.sh build/
-node scripts/godot/check-build-size.mjs build/
-node scripts/godot/check-secure-storage.mjs build/
+make godot-test                 # GdUnit4: config_release, manifest_verifier, update_service, content_downloader, prefetch_scheduler, …
+make godot-release-test         # node --test scripts/godot/ deploy/installer/school-kit/tests/ + publish_index_test.sh
+bash scripts/godot/export.sh web --godot=<godot>          # đóng dấu version/build, export, check, scan (Android: android --debug)
+bash scripts/godot/scan-artifact.sh --platform=web src/game/build/web
+node scripts/godot/check-build-size.mjs --web=src/game/build/web --report=size-report.md
+node scripts/godot/check-secure-storage.mjs --platform=android src/game/build/android/EduWorld.apk
+bash scripts/godot/smoke.sh --api=http://localhost:9080/api/v1 --client-version=0.1.0   # + EW_SMOKE_USERNAME/PASSWORD
 ```
 
 ## 4. Bằng chứng cần nộp
 
 - Pipeline tag (3 export, scan, size, smoke), báo cáo dung lượng, link kênh phát hành, báo cáo lab `perf-reports/client-*.md`, kết quả phòng giả lập 40 client.
+
+## 5. Bằng chứng local 2026-11-28
+
+Máy Windows, Godot 4.7.2 (Compatibility), Node 20.19, backend compose local đang chạy; không có Android SDK/JDK, Xcode, khóa ký, CDN thật.
+
+| # §2 | Đã kiểm local | Kết quả | Còn |
+|---|---|---|---|
+| 1 | `export.sh web` với `GITHUB_RUN_NUMBER=133`; test `export.test.mjs` (tag `client/v1.2.3`, APK + AAB, iOS ngoài macOS) | `index.pck` chứa `client_version 0.0.0-ci.133`, `build_number 133`; 6/6 | Tag thật trên CI; Android/iOS export thật |
+| 2 | `gen-config.test.mjs` 7/7, `test_config_release.gd` 4/4, `export_presets.cfg` không mật khẩu | Override `user://` bị bỏ ở release | — |
+| 3 | `scan-artifact.test.mjs` 12/12 + bản Web thật | Nhánh thử đỏ, bản thật sạch | Artifact Android/iOS thật |
+| 4 | `check-build-size.test.mjs` 3/3 + bản Web thật | Web 15,13 MB ≤ 40 MB | APK/AAB/IPA thật |
+| 5 | `build-bundles.test.mjs` 5/5, `sign-manifest.test.mjs` 4/4 | Upload lại = no-op (aws giả) | `ew-game-bundles` thật (F130) |
+| 6 | `smoke.sh` với backend local | `getClientConfig OK`, dừng PENDING (exit 3) | Mật khẩu học sinh QA |
+| 9 | `publish-web.test.mjs` 5/5 | `index.html` sau cùng, rollback chỉ đổi `index.html` | `curl` trên `play-staging` (T018) |
+| 12 | `test_update_service.gd` 7/7 + ảnh màn `UpdateRequired` | Không crash, link đúng nền tảng | N-1 với staging (T024) |
+| 17 | `build-kit.test.mjs` 6/6 + `publish_index_test.sh` 8/8 | Gói đúng khối, từ chối dữ liệu tenant/secret/câu hỏi | APK ký thật (T019) |
+| 18–20 | `test_content_downloader.gd` 8/8, `test_prefetch_scheduler.gd` 6/6 | LAN lệch hash → CDN, URL LAN sai bị bỏ, không API qua LAN, ngoài giờ/dữ liệu thấp | Proxy LAN + thiết bị thật |
+| 21 | `test_content_downloader.gd` (cả 3 nguồn), `test_content_download_telemetry.gd` | Chỉ `source` + `bytes` | Dashboard F080 |
+| 24–25 | `check-secure-storage.test.mjs` 7/7, `android-backup-rules.test.mjs` 3/3, bản Web thật `web OK` | Nhánh thử đỏ | `aapt`/`bmgr` trên APK thật, iOS (T046) |
+
+Bước 7, 8, 10, 11, 13–16, 22, 23, 26 cần tag/CI thật, store, lab hoặc 40 client — chưa chạy.
+
+**Cổng chung (2026-11-28):** GdUnit4 toàn bộ 1476 test, 0 lỗi, 0 fail, 16 skip (integration cần backend/mật khẩu); `check_typed`, `lint_theme_overrides`, `lint_layers`, `lint_signals`, `lint_art`, `bake_art --check`, `brand_assets --check`, `extract_pot --check`, `pseudo_locale --check`, `gen_fixtures --check`, `check_no_admin_ui` OK; `scan_artifact_test.sh` với PCK release thật 22/22; node `scripts/godot/` + `school-kit/tests/` 61/61, `publish_index_test.sh` 8/8, `scripts/ci/` 64/64; `check-workflows` 0 lỗi, actionlint 1.7.7 0 lỗi, shellcheck 0; specs (check-features, check-cross-features, check-maxlength, validate-schemas, split-public, oasdiff) 0 lỗi; gitleaks 8.28 trên file đổi: không lộ.
+

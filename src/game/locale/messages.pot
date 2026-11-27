@@ -2490,15 +2490,6 @@ msgstr ""
 msgid "ui.login.title"
 msgstr ""
 
-msgid "ui.login.update_body"
-msgstr ""
-
-msgid "ui.login.update_open_store"
-msgstr ""
-
-msgid "ui.login.update_required"
-msgstr ""
-
 msgid "ui.login.use_other_account"
 msgstr ""
 
@@ -3745,6 +3736,30 @@ msgid "ui.tournament.view"
 msgstr ""
 
 msgid "ui.tournament.withdraw"
+msgstr ""
+
+msgid "ui.update.body_reload"
+msgstr ""
+
+msgid "ui.update.body_store"
+msgstr ""
+
+msgid "ui.update.body_teacher"
+msgstr ""
+
+msgid "ui.update.button_reload"
+msgstr ""
+
+msgid "ui.update.button_retry"
+msgstr ""
+
+msgid "ui.update.button_store"
+msgstr ""
+
+msgid "ui.update.title"
+msgstr ""
+
+msgid "ui.update.version"
 msgstr ""
 
 msgid "ui.video.coach_branch"

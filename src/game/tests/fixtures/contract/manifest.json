@@ -353,9 +353,17 @@
       "source": "specs/examples/boss.math-fraction-dragon.json",
       "sha256": "e10c80d4d5647c2d575dfec0d8eaa8bd672c054c0130d6d9e654892ba2d59d24"
     },
+    "examples/bundle-index.0-9-0.json": {
+      "source": "specs/examples/bundle-index.0-9-0.json",
+      "sha256": "2ae9b60620da9967234fc6c3226725ce891a3b051430501cd49f4ae838f32717"
+    },
     "examples/challenge.math-g3-time-attack.json": {
       "source": "specs/examples/challenge.math-g3-time-attack.json",
       "sha256": "dccb179e852d73636ae92f1966e1bc5372e66231951c3274368b75818760c643"
+    },
+    "examples/client-release-manifest.android-staging.json": {
+      "source": "specs/examples/client-release-manifest.android-staging.json",
+      "sha256": "4f03bfcbd9273a757e99dcacc81d98fa7f4891031f81e71b4aeb64477551319a"
     },
     "examples/collection.math-g3-cards.json": {
       "source": "specs/examples/collection.math-g3-cards.json",

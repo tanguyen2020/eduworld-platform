@@ -8,7 +8,7 @@ const SCENES: PackedStringArray = [
 	"res://scenes/ui/debug/UiGallery.tscn",
 	"res://scenes/bootstrap/Splash.tscn",
 	"res://scenes/bootstrap/ConfigError.tscn",
-	"res://scenes/bootstrap/ForceUpdate.tscn",
+	"res://scenes/bootstrap/UpdateRequired.tscn",
 	"res://scenes/bootstrap/Maintenance.tscn",
 	"res://scenes/auth/Login.tscn",
 	"res://scenes/auth/LoginWaiting.tscn",

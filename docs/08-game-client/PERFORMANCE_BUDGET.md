@@ -167,10 +167,15 @@ Ngân sách trên tính cho **một** học sinh. Phòng máy trường học d�
 | **Gói nội dung cài sẵn** | Bản Android cho trường (MDM/USB) kèm PCK các vùng theo khối của trường; cập nhật delta theo hash | Không có bộ cài Windows (ADR-0101); bản Web (PC phòng máy) dùng cache trình duyệt theo hash (§14) |
 | **Tải trước ngoài giờ** | Thiết bị Android dùng chung (`shared_device: true`) tải PCK/media mới trong khung giờ trường cấu hình (mặc định 18:00–06:00) khi máy bật | Tôn trọng khung giờ truy cập của trường; không đăng nhập học sinh |
 | **Cache LAN tùy chọn theo hash** | Trường có thể đặt một máy chủ cache HTTP trong LAN (reverse proxy) cho CDN nội dung; client Android thử `lan_cache_url` trong `device.cfg` trước, kiểm tra SHA-256 của mọi gói (khóa content-addressed, ADR-0044), lỗi thì về CDN; bản Web không đọc `device.cfg` — cách bản Web trên PC phòng máy dùng cache LAN là [TBD] (câu hỏi mở theo ADR-0101) | Chỉ nội dung công khai (PCK, media công khai); không cache API, câu hỏi đề, answer key hay media private |
-| Chế độ dữ liệu thấp | Tắt tải trước vùng kế tiếp, giảm chất lượng media video/âm thanh | Bật tự động khi đo băng thông thấp hoặc do trường bật |
+| Chế độ dữ liệu thấp | Tắt tải trước vùng kế tiếp, giảm chất lượng media video/âm thanh | Bật tự động khi đo băng thông thấp (trung bình các lần tải nội dung dưới `low_data_bandwidth_threshold` = 1 Mbps, mạng tối thiểu của §10) hoặc do trường bật (`device.cfg` `low_data_mode`) |
 | Đo đạc | Telemetry không PII: dung lượng tải theo nguồn (gói cài sẵn/LAN/CDN), tỷ lệ cache LAN hit | Dashboard trong [MONITORING](../11-operations/MONITORING.md) |
 
-Tham số `classroom_reference_bandwidth` (đường truyền tham chiếu), `offhours_prefetch_window` (khung giờ tải trước), `lan_cache_url` là [Confirmed — Technical Architect 2026-11-15], đăng ký ở [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md). Phân phối bản Android cho trường (MDM/USB): [DEPLOYMENT](../11-operations/DEPLOYMENT.md).
+Tham số `classroom_reference_bandwidth` (đường truyền tham chiếu), `offhours_prefetch_window` (khung giờ tải trước), `lan_cache_url` là [Confirmed — Technical Architect 2026-11-15], `low_data_bandwidth_threshold` là [Proposed] (F133), đăng ký ở [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md). Phân phối bản Android cho trường (MDM/USB): [DEPLOYMENT](../11-operations/DEPLOYMENT.md).
+
+**Hiện thực (F133):**
+- **`device.cfg`** (ConfigFile `[device]`, `user://device.cfg` — đường dẫn từ project setting `eduworld/device/config_path`; MDM/managed config của Android hoặc gói APK trường ghi): `shared_device`, `lan_cache_url`, `low_data_mode`, `preinstalled_bundles_dir` (mặc định `res://preinstalled` — gói APK trường đặt PCK ở `assets/preinstalled/<sha256>.pck`), `grade_bands` (khối mà máy tải trước). Bản Web không có `device.cfg` (ADR-0101).
+- **Chỉ mục gói có chữ ký**: `<bundles CDN>/index/<client_version>.json` + `.sig` (RSA-SHA256, [`bundle-index.schema.json`](../../specs/schemas/bundle-index.schema.json)); client kiểm chữ ký và hình dạng trước khi dùng, sai thì bỏ toàn bộ chỉ mục và gửi `client_error` `bundle_index_invalid`. Gói theo khóa `bundles/<sha256>.pck`, kiểm SHA-256 trước khi giữ.
+- Thứ tự nguồn, cache LRU theo `build_size` (§11) và telemetry nguồn tải: [GODOT_ARCHITECTURE §11](GODOT_ARCHITECTURE.md#11-build--export-pipeline).
 
 ## 11. Thời gian tải và dung lượng
 
@@ -223,10 +228,11 @@ Tham số `classroom_reference_bandwidth` (đường truyền tham chiếu), `of
 
 1. **Ngân sách trong merge request:** asset mới ghi số tam giác/texture/xương; zone mới ghi bảng ngân sách cảnh (§7).
 2. **CI — kiểm tra import:** script Godot headless đọc asset đã import, chặn khi vượt §8.
-3. **CI — cảnh benchmark headless:** mỗi zone có scene benchmark (camera bay theo path, spawn số người chơi giả theo §7). Chạy headless để đo **frame time CPU** (script, physics, animation) và đếm **draw call, tam giác, bộ nhớ** qua `RenderingServer.get_rendering_info()`/`Performance`; so với ngân sách, **chặn merge** khi vượt > 5%. (Frame time GPU chỉ đo được trên thiết bị thật.)
-4. **Thiết bị thật mỗi milestone:** chạy bộ kịch bản hiệu năng (TC-PERF client trong [TEST_STRATEGY](../12-project/TEST_STRATEGY.md)) trên toàn bộ lab §2.1; ghi FPS p10, frame time GPU, RAM, nhiệt, pin; dùng Godot profiler + công cụ GPU của hãng.
-5. **Telemetry thực tế:** client gửi FPS p10, renderer, preset, model thiết bị (không PII) qua `/game/telemetry`; dashboard theo hạng thiết bị trong [MONITORING](../11-operations/MONITORING.md).
-6. **Báo cáo:** mỗi milestone có báo cáo hiệu năng (bảng thiết bị × cảnh × chỉ số), vượt ngân sách phải có kế hoạch xử lý trước khi qua milestone.
+3. **CI — dung lượng:** job `godot / size-check` chạy `scripts/godot/check-build-size.mjs` (ngưỡng đọc từ §11, đo Brotli cho tải đầu Web và gói vùng), thất bại khi vượt và đính báo cáo vào lần chạy (F133-AC-04).
+4. **CI — cảnh benchmark headless:** mỗi zone có scene benchmark (camera bay theo path, spawn số người chơi giả theo §7). Chạy headless để đo **frame time CPU** (script, physics, animation) và đếm **draw call, tam giác, bộ nhớ** qua `RenderingServer.get_rendering_info()`/`Performance`; so với ngân sách, **chặn merge** khi vượt > 5%. (Frame time GPU chỉ đo được trên thiết bị thật.)
+5. **Thiết bị thật mỗi milestone:** chạy bộ kịch bản hiệu năng (TC-PERF client trong [TEST_STRATEGY](../12-project/TEST_STRATEGY.md)) trên toàn bộ lab §2.1; ghi FPS p10, frame time GPU, RAM, nhiệt, pin; dùng Godot profiler + công cụ GPU của hãng.
+6. **Telemetry thực tế:** client gửi FPS p10, renderer, preset, model thiết bị (không PII) qua `/game/telemetry`; dashboard theo hạng thiết bị trong [MONITORING](../11-operations/MONITORING.md).
+7. **Báo cáo:** mỗi milestone có báo cáo hiệu năng (bảng thiết bị × cảnh × chỉ số), vượt ngân sách phải có kế hoạch xử lý trước khi qua milestone.
 
 ## 16. Tiêu chí nghiệm thu
 

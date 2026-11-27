@@ -1,0 +1,18 @@
+{
+  "env": "production",
+  "api_base_url": "https://api.eduworld.example/api/v1",
+  "realtime_url": "wss://api.eduworld.example/realtime/v1",
+  "cdn_base_url": "https://cdn.eduworld.example",
+  "bundles_base_url": "https://bundles.eduworld.example",
+  "releases_base_url": "https://play.eduworld.example/releases",
+  "login_path": "/auth/game/login",
+  "client_version": "1.2.3",
+  "build_number": 77,
+  "store_urls": {
+    "android": "https://play.google.com/store/apps/details?id=vn.eduworld.game",
+    "ios": "https://apps.apple.com/app/id0000000000"
+  },
+  "manifest_public_key": "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAjmLShzlQrrTP+JvPPa0N\nVCjT8fEBDzD3gVtPhKVdrWo3Kl3+5CYszojqNHWtSh92Uhdu2IddoPXgMambXsg7\nNCGF6u6z/jq0PpeYnWIiyexyiuBkTVoDc4JXluBqeAPEfe4mhjBfRkpoJSp0syS4\njqns7xEjPlaQZ3FMjFjk3E9QGl+j0wwIl7rLDu7eJ09Uy3Qz1JJVYf1moS/PGbtW\nFEunVW26pTxnyPdWE2j1hhr1cW1e0o1lJsK+oYoNM7cleJ7qZ/WxjQiSPFSTirMs\naJ69jrnXv7GD7NzYFn2PlfvXzm23snkkK3sMo8WSW47SciHWOavA1T+EQ3IZHr+c\nXn/jhQJ5TRxjS7ujqTNEWCFwNgO810RfcJR1wGsgFhyVbyacB/tJeUthyMk+CLgz\nO2IM9upeC+myjDKE2OVT7xkaCHdTfyPO1h6HquhMtIpgsTcYdvLJEnM8fUu6CCKJ\nGf9fMEvqmNqnKUvMEbGeOc0+gxbDcgHi65DJO3GQ16jvAgMBAAE=\n-----END PUBLIC KEY-----\n",
+  "log_level": "warn",
+  "feature_flags_default": {}
+}

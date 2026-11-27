@@ -2501,15 +2501,6 @@ msgstr "[!! Ţĥë šçĥööĺ çĥöïçë ĥáš ëxþïŕëđ. Pĺëášë �
 msgid "ui.login.title"
 msgstr "[!! Ĥï ţĥëŕë! ~~~~ !!]"
 
-msgid "ui.login.update_body"
-msgstr "[!! Pĺëášë üþđáţë ẸđüŴöŕĺđ ţö vëŕšïöñ {version} öŕ ĺáţëŕ ţö çöñţïñüë. ~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
-
-msgid "ui.login.update_open_store"
-msgstr "[!! Üþđáţë ~~~ !!]"
-
-msgid "ui.login.update_required"
-msgstr "[!! Å ñëŵ vëŕšïöñ ïš áváïĺáƀĺë ~~~~~~~~~~~ !!]"
-
 msgid "ui.login.use_other_account"
 msgstr "[!! Šïğñ ïñ ŵïţĥ áñöţĥëŕ áççöüñţ ~~~~~~~~~~~~ !!]"
 
@@ -3799,6 +3790,30 @@ msgstr "[!! Vïëŵ ~~ !!]"
 
 msgid "ui.tournament.withdraw"
 msgstr "[!! Ŵïţĥđŕáŵ ~~~~ !!]"
+
+msgid "ui.update.body_reload"
+msgstr "[!! Ŕëĺöáđ ţĥë þáğë ţö þĺáý ţĥë ñëŵëšţ vëŕšïöñ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.update.body_store"
+msgstr "[!! Üþđáţë ţĥë ğáɱë ţö ķëëþ þĺáýïñğ ŵïţĥ ýöüŕ ƒŕïëñđš. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.update.body_teacher"
+msgstr "[!! Åšķ ýöüŕ ţëáçĥëŕ ţö üþđáţë ţĥë ğáɱë öñ ţĥïš đëvïçë. ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.update.button_reload"
+msgstr "[!! Ŕëĺöáđ þáğë ~~~~~ !!]"
+
+msgid "ui.update.button_retry"
+msgstr "[!! Ţŕý áğáïñ ~~~~ !!]"
+
+msgid "ui.update.button_store"
+msgstr "[!! Üþđáţë ñöŵ ~~~~ !!]"
+
+msgid "ui.update.title"
+msgstr "[!! Å ñëŵ vëŕšïöñ ïš ĥëŕë! ~~~~~~~~~ !!]"
+
+msgid "ui.update.version"
+msgstr "[!! Ñëëđš vëŕšïöñ {version} öŕ ñëŵëŕ ~~~~~~~~~~~~~ !!]"
 
 msgid "ui.video.coach_branch"
 msgstr "[!! Ĥöŵ šĥöüĺđ ţĥë šţöŕý ğö öñ? ~~~~~~~~~~~ !!]"

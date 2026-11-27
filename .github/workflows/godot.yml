@@ -2,9 +2,17 @@
 # Order: design-tokens-check → lint (gdlint, typed, theme overrides, layers, signals, translation keys, fixtures,
 # no Admin UI) → GdUnit4 headless → native SecureStorage plugin (Android Keystore AAR) → export Android with artifact
 # scan → export Web (F133 T002/T028: Compatibility, single-threaded, EduWorld shell) with check, scan and shell tests →
-# smoke boot (--env=mock) + UiGallery screenshots. No Windows build (ADR-0101). The iOS Xcode project, IPA, signing
-# and store/CDN publishing need the macOS runner and F130 (F133 T001, T011, T019). Also called by design.yml
+# smoke boot (--env=mock) + UiGallery screenshots. No Windows build (ADR-0101). Also called by design.yml
 # (workflow_call) when tokens change.
+# F133 T006 (F133-AC-01…09, F133-AC-17; DEPLOYMENT §9, §10.2): exports go through scripts/godot/export.sh (client_version
+# + build number stamped by gen-config.mjs); `scan-artifact`, `size-check` (PERFORMANCE_BUDGET §11 report attached)
+# and `bundles` (signed bundle index, throwaway key outside a release) gate every build; `release-tools` tests the
+# release scripts. A `client/vX.Y.Z` tag adds the release lane behind vars.CLIENT_RELEASE_ENABLED (off until the CI
+# image/runners T001, signing T019 and the CDN of F130 exist): `smoke-staging` (export with the staging Environment,
+# smoke.sh: client-config → login → session → Hub) → `publish-staging` (zone packs + signed index to ew-game-bundles,
+# Web to play-staging with headers.yaml, signed release manifest, school APK kits + F134 publish-index.sh) →
+# `publish-production` (Environment production: required reviewers = Release Manager). iOS export runs only on macOS
+# behind vars.IOS_BUILD_ENABLED; store uploads (fastlane, T020) are not wired yet.
 name: godot
 
 on:
@@ -16,8 +24,13 @@ on:
       - "design/shared-tokens/**"
       - ".github/workflows/godot.yml"
       - "scripts/ci/setup-godot.sh"
+      - "scripts/godot/**"
+      - "deploy/installer/school-kit/**"
+      - "deploy/cdn/play/**"
   push:
     branches: [main]
+    # Path filters are not evaluated for tag pushes: every client/vX.Y.Z tag runs the release lane (F133-AC-01).
+    tags: ["client/v*"]
     paths:
       - "src/game/**"
       - "specs/**"
@@ -25,6 +38,9 @@ on:
       - "design/shared-tokens/**"
       - ".github/workflows/godot.yml"
       - "scripts/ci/setup-godot.sh"
+      - "scripts/godot/**"
+      - "deploy/installer/school-kit/**"
+      - "deploy/cdn/play/**"
   workflow_call: {}
 
 permissions:
@@ -127,13 +143,14 @@ jobs:
           pattern: eduworld-platform-*
           path: src/game/addons/eduworld_platform/bin
           merge-multiple: true
-      - name: Install client_version and Android SDK paths
+      - name: Android SDK paths for the Godot editor settings
         run: |
-          node -e "const f='src/game/config/env/production.json';const j=require('./'+f);j.client_version='0.0.0-ci.${{ github.run_number }}';require('fs').writeFileSync(f,JSON.stringify(j,null,2)+'\n')"
           mkdir -p "$HOME/.config/godot"
           printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/android_sdk_path = "%s"\nexport/android/java_sdk_path = "%s"\n' \
             "$ANDROID_HOME" "$JAVA_HOME" >"$HOME/.config/godot/editor_settings-4.7.tres"
-      - name: Export Android (debug-signed in CI; release signing belongs to release.yml) + scan
+      # F133 T011: export.sh stamps client_version 0.0.0-ci.<run> (client/vX.Y.Z on a tag) and the build number into
+      # the packed production.json (gen-config.mjs --keep-urls outside a release), then restores the committed file.
+      - name: Export Android APK + AAB (debug-signed here; release signing is F133 T019) + scan
         run: make godot-export-android GODOT="$GODOT_BIN"
       - name: Export Web (Compatibility, single-threaded, EduWorld shell) + check + scan
         run: make godot-export-web GODOT="$GODOT_BIN"
@@ -146,8 +163,106 @@ jobs:
           name: godot-builds
           path: |
             src/game/build/android/*.apk
+            src/game/build/android/*.aab
+            src/game/build/android/build-info.json
             src/game/build/web/
           if-no-files-found: error
+
+  # F133 T008-T013, T014, T022, T034, T044: tests of the release scripts (no Godot, no network).
+  release-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: Release scripts (gen-config, export, scan, size, bundles, sign, smoke, publish-web, secure storage, school kit)
+        run: |
+          node --test scripts/godot/ deploy/installer/school-kit/tests/
+          bash deploy/installer/school-kit/tests/publish_index_test.sh
+
+  # F133-AC-03, F133-AC-24/25: forbidden content + secure storage of each target, on the uploaded artifacts.
+  scan-artifact:
+    needs: export
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: godot-builds
+          path: src/game/build
+      - name: Scan Android + Web artifacts (TC-AUTH-010, TC-AUTH-084)
+        run: |
+          bash scripts/godot/scan-artifact.sh --platform=android src/game/build/android
+          bash scripts/godot/scan-artifact.sh --platform=web src/game/build/web
+
+  # F133-AC-04: build_size of PERFORMANCE_BUDGET §11; the report is attached to the run (and to each release).
+  size-check:
+    needs: export
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: godot-builds
+          path: src/game/build
+      - name: Size gate (Android APK/AAB, Web first download)
+        run: >-
+          node scripts/godot/check-build-size.mjs --android=src/game/build/android/EduWorld.apk
+          --android=src/game/build/android/EduWorld.aab --web=src/game/build/web --report=size-report.md
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: godot-size-report
+          path: size-report.md
+          if-no-files-found: ignore
+
+  # F133-AC-05: zone packs by hash + signed bundle index. Outside a release the index is signed with a throwaway key
+  # generated in the job (proves the pipeline; nothing is uploaded). Zones still ship in the core build (OQ-16), so
+  # src/game/config/bundles.json stays empty until zone packs are exported.
+  bundles:
+    needs: export
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: npm ci --prefix scripts --silent
+      - name: Bundle index signed with a throwaway key + size of each pack
+        run: |
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out "$RUNNER_TEMP/throwaway.pem" 2>/dev/null
+          openssl pkey -in "$RUNNER_TEMP/throwaway.pem" -pubout -out "$RUNNER_TEMP/throwaway.pub.pem"
+          bash scripts/godot/build-bundles.sh --list=src/game/config/bundles.json \
+            --client-version="0.0.0-ci.${{ github.run_number }}" --base-url=https://bundles.ci.invalid \
+            --out="$RUNNER_TEMP/bundles" --signing-key="$RUNNER_TEMP/throwaway.pem" --public-key="$RUNNER_TEMP/throwaway.pub.pem"
+          rm -f -- "$RUNNER_TEMP/throwaway.pem"
+          if compgen -G "$RUNNER_TEMP/bundles/bundles/*.pck" >/dev/null; then
+            node scripts/godot/check-build-size.mjs --bundles="$RUNNER_TEMP/bundles/bundles" --report=bundle-size-report.md
+          fi
+
+  # iOS needs Xcode (macOS runner, billed minutes: tags and main only), switched on with vars.IOS_BUILD_ENABLED once the
+  # CI image/runner (F133 T001: setup-godot.sh for macOS) and signing (T019) exist; TestFlight/App Store are T020.
+  export-ios:
+    needs: test
+    if: vars.IOS_BUILD_ENABLED == 'true' && (startsWith(github.ref, 'refs/tags/client/v') || github.ref == 'refs/heads/main')
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - name: Pinned Godot for macOS (F133 T001)
+        run: bash scripts/ci/setup-godot.sh macos --templates
+      - name: Export iOS (Xcode project + IPA) + scan with the iOS secure storage check
+        run: bash scripts/godot/export.sh ios --godot="$GODOT_BIN"
 
   smoke:
     needs: export
@@ -167,3 +282,157 @@ jobs:
           name: godot-ui-gallery
           path: src/game/tests/scene/screenshots/
           if-no-files-found: ignore
+
+  # ---------- release lane of a client/vX.Y.Z tag (F133 US1/US2/US4), behind vars.CLIENT_RELEASE_ENABLED ----------
+  # Environment staging/production → [self-hosted, deploy] runner (DEPLOYMENT §10.3), never for forks. URLs and the
+  # manifest public key are Environment variables read by gen-config.mjs; private keys and passwords are Environment
+  # secrets, only in the env of the step that needs them, written to files under RUNNER_TEMP and removed (R4).
+  smoke-staging:
+    needs: [export, scan-artifact, size-check, release-tools]
+    if: vars.CLIENT_RELEASE_ENABLED == 'true' && startsWith(github.ref, 'refs/tags/client/v') && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: staging
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: bash scripts/ci/setup-godot.sh linux --templates
+      - name: Web export with the staging Environment (gen-config.mjs, F133-AC-02) + check + scan
+        env:
+          EW_GAME_API_BASE_URL: ${{ vars.EW_GAME_API_BASE_URL }}
+          EW_GAME_REALTIME_URL: ${{ vars.EW_GAME_REALTIME_URL }}
+          EW_GAME_CDN_BASE_URL: ${{ vars.EW_GAME_CDN_BASE_URL }}
+          EW_GAME_BUNDLES_BASE_URL: ${{ vars.EW_GAME_BUNDLES_BASE_URL }}
+          EW_GAME_RELEASES_BASE_URL: ${{ vars.EW_GAME_RELEASES_BASE_URL }}
+          EW_GAME_STORE_URL_ANDROID: ${{ vars.EW_GAME_STORE_URL_ANDROID }}
+          EW_GAME_STORE_URL_IOS: ${{ vars.EW_GAME_STORE_URL_IOS }}
+          EW_GAME_MANIFEST_PUBKEY: ${{ vars.EW_GAME_MANIFEST_PUBKEY }}
+        run: bash scripts/godot/export.sh web --godot="$GODOT_BIN"
+      - name: Smoke boot → client-config → login QA student → session → Hub (F133-AC-06, TC-AUTH-001)
+        env:
+          EW_SMOKE_USERNAME: ${{ secrets.EW_SMOKE_USERNAME }}
+          EW_SMOKE_PASSWORD: ${{ secrets.EW_SMOKE_PASSWORD }}
+        run: bash scripts/godot/smoke.sh --api="${{ vars.EW_GAME_API_BASE_URL }}" --godot="$GODOT_BIN"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: godot-web-staging
+          path: src/game/build/web/
+          if-no-files-found: error
+
+  publish-staging:
+    needs: [smoke-staging, scan-artifact, size-check, bundles]
+    if: vars.CLIENT_RELEASE_ENABLED == 'true' && startsWith(github.ref, 'refs/tags/client/v') && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: staging
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: npm ci --prefix scripts --silent
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: godot-web-staging
+          path: src/game/build/web
+      - name: Zone packs + signed index → ew-game-bundles; Web → play-staging (headers.yaml); signed release manifest
+        env:
+          CLIENT_RELEASE_PRIVATE_KEY: ${{ secrets.CLIENT_RELEASE_PRIVATE_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.EW_CDN_UPLOAD_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.EW_CDN_UPLOAD_SECRET_ACCESS_KEY }}
+          EW_S3_ENDPOINT: ${{ vars.EW_S3_ENDPOINT }}
+        run: |
+          version="${GITHUB_REF#refs/tags/client/v}"
+          umask 077
+          printf '%s\n' "$CLIENT_RELEASE_PRIVATE_KEY" >"$RUNNER_TEMP/release.pem"
+          printf '%s\n' "${{ vars.EW_GAME_MANIFEST_PUBKEY }}" >"$RUNNER_TEMP/release.pub.pem"
+          bash scripts/godot/build-bundles.sh --list=src/game/config/bundles.json --client-version="$version" \
+            --base-url="${{ vars.EW_GAME_BUNDLES_BASE_URL }}" --out="$RUNNER_TEMP/bundles" \
+            --signing-key="$RUNNER_TEMP/release.pem" --public-key="$RUNNER_TEMP/release.pub.pem" --upload="s3://${{ vars.BUNDLES_BUCKET }}"
+          node scripts/godot/publish-web.mjs --dir=src/game/build/web --version="$version" --bucket="s3://${{ vars.PLAY_BUCKET }}"
+          mkdir -p "$RUNNER_TEMP/releases/web"
+          node scripts/godot/sign-manifest.mjs manifest --platform=web --channel=staging --artifact=src/game/build/web/index.html \
+            --url="${{ vars.EW_GAME_WEB_URL }}/v/$version/index.html" --min-os="Chrome/Edge" --out="$RUNNER_TEMP/releases/web/staging.json"
+          node scripts/godot/sign-manifest.mjs sign --in="$RUNNER_TEMP/releases/web/staging.json" \
+            --key="$RUNNER_TEMP/release.pem" --pub="$RUNNER_TEMP/release.pub.pem"
+          rm -f -- "$RUNNER_TEMP/release.pem"
+          aws s3 cp --recursive "$RUNNER_TEMP/releases/" "s3://${{ vars.RELEASES_BUCKET }}/releases/" \
+            --cache-control "public, max-age=60" ${EW_S3_ENDPOINT:+--endpoint-url "$EW_S3_ENDPOINT"}
+      # The release-signed APK comes from the Android signing job (F133 T019, pending): until then this step is off.
+      - name: School APK kits per grade band + F134 school-kit index (F133-AC-17, F134-AC-12)
+        if: vars.ANDROID_SIGNING_ENABLED == 'true'
+        env:
+          CLIENT_RELEASE_PRIVATE_KEY: ${{ secrets.CLIENT_RELEASE_PRIVATE_KEY }}
+          EW_ANDROID_KEYSTORE_BASE64: ${{ secrets.EW_ANDROID_KEYSTORE_BASE64 }}
+          EW_ANDROID_KEYSTORE_PASS: ${{ secrets.EW_ANDROID_KEYSTORE_PASS }}
+          EW_ANDROID_KEY_ALIAS: ${{ vars.EW_ANDROID_KEY_ALIAS }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.EW_CDN_UPLOAD_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.EW_CDN_UPLOAD_SECRET_ACCESS_KEY }}
+          EW_S3_ENDPOINT: ${{ vars.EW_S3_ENDPOINT }}
+        run: |
+          version="${GITHUB_REF#refs/tags/client/v}"
+          umask 077
+          printf '%s\n' "$CLIENT_RELEASE_PRIVATE_KEY" >"$RUNNER_TEMP/release.pem"
+          printf '%s\n' "${{ vars.EW_GAME_MANIFEST_PUBKEY }}" >"$RUNNER_TEMP/release.pub.pem"
+          printf '%s' "$EW_ANDROID_KEYSTORE_BASE64" | base64 -d >"$RUNNER_TEMP/upload.keystore"
+          export EW_ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/upload.keystore"
+          for bands in g1_3 g4_5 g6_7 g8_9; do
+            bash deploy/installer/school-kit/build-kit.sh --apk=src/game/build/android/EduWorld-release.apk \
+              --index="$RUNNER_TEMP/bundles/index/$version.json" --bundles-dir="$RUNNER_TEMP/bundles/bundles" --bands="$bands" \
+              --client-version="$version" --url-base="${{ vars.EW_GAME_RELEASES_BASE_URL }}/school-kit/$version" \
+              --public-key="$RUNNER_TEMP/release.pub.pem" --release-key="$RUNNER_TEMP/release.pem" --out="$RUNNER_TEMP/kits"
+          done
+          bash deploy/installer/school-kit/publish-index.sh --channel=staging --kits="$RUNNER_TEMP/kits/kits.json" \
+            --out="$RUNNER_TEMP/kit-index" --signing-key="$RUNNER_TEMP/release.pem" --public-key="$RUNNER_TEMP/release.pub.pem"
+          rm -f -- "$RUNNER_TEMP/release.pem" "$RUNNER_TEMP/upload.keystore"
+          aws s3 cp --recursive "$RUNNER_TEMP/kits/" "s3://${{ vars.RELEASES_BUCKET }}/releases/school-kit/$version/" \
+            --exclude "*" --include "*.apk" --include "*.apk.sig" ${EW_S3_ENDPOINT:+--endpoint-url "$EW_S3_ENDPOINT"}
+          aws s3 cp --recursive "$RUNNER_TEMP/kit-index/" "s3://${{ vars.RELEASES_BUCKET }}/releases/" \
+            --cache-control "public, max-age=60" ${EW_S3_ENDPOINT:+--endpoint-url "$EW_S3_ENDPOINT"}
+
+  # Promotion (F133-AC-07/08): Environment production has required reviewers (Release Manager). The Web build is
+  # exported again with the production Environment (its own URLs) and published; the production school-kit index is
+  # signed from the kits already published for staging.
+  publish-production:
+    needs: [publish-staging]
+    if: vars.CLIENT_RELEASE_ENABLED == 'true' && startsWith(github.ref, 'refs/tags/client/v') && github.event.pull_request.head.repo.fork != true
+    runs-on: [self-hosted, deploy]
+    environment: production
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: npm ci --prefix scripts --silent
+      - run: bash scripts/ci/setup-godot.sh linux --templates
+      - name: Web export with the production Environment + check + scan + size
+        env:
+          EW_GAME_API_BASE_URL: ${{ vars.EW_GAME_API_BASE_URL }}
+          EW_GAME_REALTIME_URL: ${{ vars.EW_GAME_REALTIME_URL }}
+          EW_GAME_CDN_BASE_URL: ${{ vars.EW_GAME_CDN_BASE_URL }}
+          EW_GAME_BUNDLES_BASE_URL: ${{ vars.EW_GAME_BUNDLES_BASE_URL }}
+          EW_GAME_RELEASES_BASE_URL: ${{ vars.EW_GAME_RELEASES_BASE_URL }}
+          EW_GAME_STORE_URL_ANDROID: ${{ vars.EW_GAME_STORE_URL_ANDROID }}
+          EW_GAME_STORE_URL_IOS: ${{ vars.EW_GAME_STORE_URL_IOS }}
+          EW_GAME_MANIFEST_PUBKEY: ${{ vars.EW_GAME_MANIFEST_PUBKEY }}
+        run: |
+          bash scripts/godot/export.sh web --godot="$GODOT_BIN"
+          node scripts/godot/check-build-size.mjs --web=src/game/build/web --report=size-report-production.md
+      - name: Publish Web to play.<domain> (index.html last; rollback = publish-web.mjs --rollback --version=<previous>)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.EW_CDN_UPLOAD_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.EW_CDN_UPLOAD_SECRET_ACCESS_KEY }}
+          EW_S3_ENDPOINT: ${{ vars.EW_S3_ENDPOINT }}
+        run: node scripts/godot/publish-web.mjs --dir=src/game/build/web --version="${GITHUB_REF#refs/tags/client/v}" --bucket="s3://${{ vars.PLAY_BUCKET }}"
+      - name: School-kit index of the production channel (F134 publish-index.sh)
+        if: vars.ANDROID_SIGNING_ENABLED == 'true'
+        env:
+          CLIENT_RELEASE_PRIVATE_KEY: ${{ secrets.CLIENT_RELEASE_PRIVATE_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.EW_CDN_UPLOAD_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.EW_CDN_UPLOAD_SECRET_ACCESS_KEY }}
+          EW_S3_ENDPOINT: ${{ vars.EW_S3_ENDPOINT }}
+        run: |
+          version="${GITHUB_REF#refs/tags/client/v}"
+          umask 077
+          printf '%s\n' "$CLIENT_RELEASE_PRIVATE_KEY" >"$RUNNER_TEMP/release.pem"
+          printf '%s\n' "${{ vars.EW_GAME_MANIFEST_PUBKEY }}" >"$RUNNER_TEMP/release.pub.pem"
+          mkdir -p "$RUNNER_TEMP/kits"
+          aws s3 cp --recursive "s3://${{ vars.RELEASES_BUCKET }}/releases/school-kit/$version/" "$RUNNER_TEMP/kits/" \
+            ${EW_S3_ENDPOINT:+--endpoint-url "$EW_S3_ENDPOINT"}
+          node scripts/godot/lib/kits-list.mjs scan "$RUNNER_TEMP/kits" "$version" "${{ vars.EW_GAME_RELEASES_BASE_URL }}/school-kit/$version"
+          bash deploy/installer/school-kit/publish-index.sh --channel=production --kits="$RUNNER_TEMP/kits/kits.json" \
+            --out="$RUNNER_TEMP/kit-index" --signing-key="$RUNNER_TEMP/release.pem" --public-key="$RUNNER_TEMP/release.pub.pem"
+          rm -f -- "$RUNNER_TEMP/release.pem"
+          aws s3 cp --recursive "$RUNNER_TEMP/kit-index/" "s3://${{ vars.RELEASES_BUCKET }}/releases/" \
+            --cache-control "public, max-age=60" ${EW_S3_ENDPOINT:+--endpoint-url "$EW_S3_ENDPOINT"}

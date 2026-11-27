@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:bundle-index:1",
+  "title": "BundleIndex",
+  "description": "Chỉ mục gói vùng (PCK) công khai theo `client_version`: `ew-game-bundles/index/<client_version>.json` + chữ ký tách rời `<client_version>.json.sig` (base64 RSA-SHA256 PKCS#1 v1.5, khóa phát hành của F133 — research R2). Sinh bởi `scripts/godot/build-bundles.sh` (F133 T013, F133-AC-05); gói nằm ở khóa theo hash `bundles/<sha256>.pck` (bất biến, upload lại là no-op — ADR-0044). Là vùng thế giới công khai, không theo tenant (spec Clarifications 2026-11-16): không chứa dữ liệu tenant, câu hỏi đề, answer key hay media private (AGENTS R31). Client tải trước ngoài giờ và gói APK trường đọc chỉ mục này, kiểm chữ ký rồi SHA-256 từng gói (F133-AC-18, F133-AC-19); sai chữ ký → bỏ qua toàn bộ chỉ mục.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "client_version", "generated_at", "bundles"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "client_version": { "type": "string", "maxLength": 32, "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "bundles": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["bundle_id", "version", "url", "sha256", "size_bytes", "grade_bands"],
+        "properties": {
+          "bundle_id": { "type": "string", "maxLength": 128, "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$" },
+          "version": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+          "url": { "type": "string", "format": "uri", "maxLength": 2048, "pattern": "^https://[^?#]+/bundles/[a-f0-9]{64}\\.pck$", "description": "URL CDN theo khóa hash, không query string (không URL ký)" },
+          "sha256": { "type": "string", "maxLength": 64, "pattern": "^[a-f0-9]{64}$" },
+          "size_bytes": { "type": "integer", "minimum": 0 },
+          "grade_bands": { "type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true, "items": { "type": "string", "enum": ["g1_3", "g4_5", "g6_7", "g8_9"] } }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schema_version": 1,
+      "client_version": "1.0.0",
+      "generated_at": "2026-12-01T01:30:00Z",
+      "bundles": []
+    }
+  ]
+}

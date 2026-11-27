@@ -978,15 +978,6 @@ msgstr "Phiên chọn trường đã hết, em đăng nhập lại nhé."
 msgid "ui.login.title"
 msgstr "Chào em!"
 
-msgid "ui.login.update_body"
-msgstr "Em cần cập nhật EduWorld lên phiên bản {version} hoặc mới hơn để tiếp tục."
-
-msgid "ui.login.update_open_store"
-msgstr "Cập nhật"
-
-msgid "ui.login.update_required"
-msgstr "Có phiên bản mới"
-
 msgid "ui.login.use_other_account"
 msgstr "Đăng nhập bằng tài khoản khác"
 
@@ -3957,3 +3948,27 @@ msgstr "Đấu trường"
 
 msgid "ui.menu.leaderboard"
 msgstr "Bảng xếp hạng"
+
+msgid "ui.update.title"
+msgstr "Có bản game mới rồi!"
+
+msgid "ui.update.body_store"
+msgstr "Em cập nhật game để chơi tiếp cùng các bạn nhé."
+
+msgid "ui.update.body_reload"
+msgstr "Em tải lại trang để chơi bản mới nhất nhé."
+
+msgid "ui.update.body_teacher"
+msgstr "Em nhờ thầy cô cập nhật game trên máy này nhé."
+
+msgid "ui.update.button_store"
+msgstr "Cập nhật ngay"
+
+msgid "ui.update.button_reload"
+msgstr "Tải lại trang"
+
+msgid "ui.update.button_retry"
+msgstr "Thử lại"
+
+msgid "ui.update.version"
+msgstr "Cần phiên bản {version} trở lên"

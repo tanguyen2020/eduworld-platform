@@ -451,7 +451,7 @@ GDLINT   ?= gdlint
 GAME_DIR := src/game
 GODOT_HL  = "$(GODOT)" --headless --path $(GAME_DIR)
 GAME_ENV ?= mock
-.PHONY: godot-import godot-lint godot-test godot-smoke godot-screenshots godot-fixtures godot-export-check godot-export-android godot-export-web godot-web-preview godot-web-test godot-export-ios godot-art-bake godot-art-capture
+.PHONY: godot-import godot-lint godot-test godot-smoke godot-screenshots godot-fixtures godot-export-check godot-export-android godot-export-web godot-web-preview godot-web-test godot-release-test godot-export-ios godot-art-bake godot-art-capture
 godot-import: ## Import the Godot project headless (global class cache, fonts); needed once after checkout
 	$(GODOT_HL) --import
 
@@ -515,26 +515,26 @@ godot-export-check: godot-import ## Export the release PCK of the Android preset
 	$(GODOT_HL) --export-pack "Android" build/check/EduWorld.pck
 	bash $(GAME_DIR)/tools/scan_artifact.sh $(GAME_DIR)/build/check
 
-godot-export-android: godot-import ## Export the Android APK, debug-signed (templates, Android SDK, JDK 17 required) and scan it
-	mkdir -p $(GAME_DIR)/build/android
-	$(GODOT_HL) --install-android-build-template
-	$(GODOT_HL) --export-debug "Android" build/android/EduWorld.apk
-	bash $(GAME_DIR)/tools/scan_artifact.sh $(GAME_DIR)/build/android
+# F133 T011: scripts/godot/export.sh stamps client_version/build (gen-config.mjs), exports, restores the committed config
+# and runs scan-artifact.sh --platform=<target> (forbidden content + secure storage, F133-AC-03/24/25).
+godot-export-android: godot-import ## Export the Android APK + AAB, debug-signed (templates, Android SDK, JDK 17 required), stamped and scanned
+	bash scripts/godot/export.sh android --debug --godot="$(GODOT)"
 
 # F133 T002/T028: Web release export (Compatibility renderer, single-threaded, custom shell src/game/web/shell.html).
 # The shell stylesheet is generated from design/game-tokens (make design-tokens) and published next to index.html.
-godot-export-web: godot-import ## Export the Web release to build/web (web_nothreads template), add the shell stylesheet, check and scan it
-	mkdir -p $(GAME_DIR)/build/web
-	$(GODOT_HL) --export-release "Web" build/web/index.html
-	cp $(GAME_DIR)/web/shell_tokens.css $(GAME_DIR)/build/web/
-	bash $(GAME_DIR)/tools/ci/check_web_export.sh $(GAME_DIR)/build/web
-	bash $(GAME_DIR)/tools/scan_artifact.sh $(GAME_DIR)/build/web
+godot-export-web: godot-import ## Export the Web release to build/web (web_nothreads template), add the shell stylesheet, stamp, check and scan it
+	bash scripts/godot/export.sh web --godot="$(GODOT)"
 
 godot-web-preview: ## Serve build/web on http://localhost:8060 (the origin the local gateway allows on the game routes)
 	node $(GAME_DIR)/tools/web/serve_web.mjs $(GAME_DIR)/build/web --port=8060
 
 godot-web-test: ## Web shell tests: jsdom (always) + Chromium/WebKit on build/web when Playwright browsers are installed
 	node --test $(GAME_DIR)/web/tests/
+
+godot-release-test: ## F133 release scripts: gen-config, export, scan, size, bundles, sign, smoke, publish-web, secure storage, school kit
+	npm ci --prefix scripts --silent
+	node --test scripts/godot/ deploy/installer/school-kit/tests/
+	bash deploy/installer/school-kit/tests/publish_index_test.sh
 
 # iOS: Godot writes the Xcode project; building, signing and the IPA need Xcode on the macOS runner (F133 T019).
 godot-export-ios: godot-import ## Export the iOS Xcode project to build/ios (no signing; team id comes from the macOS signing job)

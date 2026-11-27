@@ -978,15 +978,6 @@ msgstr "The school choice has expired. Please sign in again."
 msgid "ui.login.title"
 msgstr "Hi there!"
 
-msgid "ui.login.update_body"
-msgstr "Please update EduWorld to version {version} or later to continue."
-
-msgid "ui.login.update_open_store"
-msgstr "Update"
-
-msgid "ui.login.update_required"
-msgstr "A new version is available"
-
 msgid "ui.login.use_other_account"
 msgstr "Sign in with another account"
 
@@ -3957,3 +3948,27 @@ msgstr "Arena"
 
 msgid "ui.menu.leaderboard"
 msgstr "Leaderboards"
+
+msgid "ui.update.title"
+msgstr "A new version is here!"
+
+msgid "ui.update.body_store"
+msgstr "Update the game to keep playing with your friends."
+
+msgid "ui.update.body_reload"
+msgstr "Reload the page to play the newest version."
+
+msgid "ui.update.body_teacher"
+msgstr "Ask your teacher to update the game on this device."
+
+msgid "ui.update.button_store"
+msgstr "Update now"
+
+msgid "ui.update.button_reload"
+msgstr "Reload page"
+
+msgid "ui.update.button_retry"
+msgstr "Try again"
+
+msgid "ui.update.version"
+msgstr "Needs version {version} or newer"

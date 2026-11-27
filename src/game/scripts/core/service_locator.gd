@@ -12,6 +12,9 @@ var learning: LearningService = null
 var math_svg: MathSvgCache = null
 var media: MediaLoader = null
 var video_files: VideoFileCache = null
+## F133 T037/T038: public zone packs (preinstalled → LAN → CDN, SHA-256, LRU) and the off-hours prefetch.
+var content: ContentDownloader = null
+var prefetch: PrefetchScheduler = null
 ## Timed exams of the Exam Zone (F064): sessions, attempt, server countdown, answers queued in RAM.
 var exam: ExamService = null
 ## In-game notifications (F123): REST inbox + realtime `notification.*`, bell badge, toasts (and the F064 grouped
@@ -67,6 +70,7 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	media = MediaLoader.new(transport)
 	video_files = VideoFileCache.new(rest)
 	video_files.telemetry = telemetry
+	_init_content(rest)
 	profile = ProfileService.new(rest, app_state)
 	profile.access_denied.connect(_on_access_denied)
 	realtime = realtime_client if realtime_client != null else _realtime_autoload()
@@ -196,6 +200,21 @@ static func _realtime_autoload() -> GameRealtimeClient:
 static func _autoload(node_name: String) -> Node:
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	return tree.root.get_node_or_null(node_name) if tree != null else null
+
+
+## F133: ContentDownloader + PrefetchScheduler from Config (device.cfg, bundles CDN, release public key). The prefetch
+## timer only runs on shared Android devices (PrefetchScheduler.attach).
+func _init_content(rest: RestApiClient) -> void:
+	var config: Node = _autoload("Config")
+	var device: DeviceConfig = config.get("device") as DeviceConfig if config != null else null
+	content = ContentDownloader.new(device, telemetry, rest)
+	content.probe = BandwidthProbe.new()
+	prefetch = PrefetchScheduler.new(content.device, content, telemetry)
+	if config != null:
+		prefetch.client_version = String(config.get("client_version"))
+		prefetch.bundles_base_url = String(config.get("bundles_base_url"))
+		prefetch.public_key = String(config.get("manifest_public_key"))
+	prefetch.attach(rest)
 
 
 static func _cdn_base_url() -> String:

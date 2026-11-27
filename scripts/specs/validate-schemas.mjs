@@ -34,6 +34,9 @@ const EXAMPLES = {
   'activity.audio-lesson.english-g3-my-name.json': 'schemas/activities/audio-lesson.schema.json',
   'activity.simulation.physics-lever.json': 'schemas/activities/simulation.schema.json',
   'curriculum.gdpt2018-sample-math.json': 'schemas/curriculum-import.schema.json',
+  // F133 T005: release manifest + bundle index (signed with .sig next to the JSON, ADR-0044).
+  'client-release-manifest.android-staging.json': 'schemas/client-release-manifest.schema.json',
+  'bundle-index.0-9-0.json': 'schemas/bundle-index.schema.json',
 };
 
 const warnings = [];

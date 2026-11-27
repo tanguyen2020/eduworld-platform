@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:client-release-manifest:1",
+  "title": "ClientReleaseManifest",
+  "description": "Manifest phát hành client Godot theo nền tảng/kênh `play.<domain>/releases/<platform>/<channel>.json` + chữ ký tách rời `<channel>.json.sig` (base64 RSA-SHA256 PKCS#1 v1.5 trên đúng các byte JSON, khóa phát hành RSA-3072 — F133 research R2). Sinh bởi `scripts/godot/sign-manifest.mjs manifest` trong job phát hành (F133 T013, T023). Chỉ Web, Android, iOS (ADR-0101: không có manifest Windows). Không chứa dữ liệu tenant, secret hay URL ký (F133-AC-17, AGENTS R4). Client sai chữ ký → bỏ qua cả manifest (spec Edge Cases).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "platform", "channel", "client_version", "build", "url", "sha256", "size_bytes", "min_os", "released_at"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "platform": { "type": "string", "enum": ["android", "ios", "web"] },
+    "channel": { "type": "string", "enum": ["staging", "production"] },
+    "client_version": { "type": "string", "maxLength": 32, "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$" },
+    "build": { "type": "integer", "minimum": 1, "maximum": 2147483647, "description": "`github.run_number` của workflow `godot.yml` (F133-AC-01)" },
+    "url": { "type": "string", "format": "uri", "maxLength": 2048, "pattern": "^https://", "description": "Artifact phát hành (APK MDM, IPA, `index.html` của thư mục phiên bản Web)" },
+    "sha256": { "type": "string", "maxLength": 64, "pattern": "^[a-f0-9]{64}$" },
+    "size_bytes": { "type": "integer", "minimum": 0 },
+    "min_os": { "type": "string", "maxLength": 32 },
+    "released_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "schema_version": 1,
+      "platform": "web",
+      "channel": "production",
+      "client_version": "1.0.0",
+      "build": 520,
+      "url": "https://play.example.vn/v/1.0.0/index.html",
+      "sha256": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+      "size_bytes": 41200000,
+      "min_os": "Chrome 120",
+      "released_at": "2026-12-01T01:30:00Z"
+    }
+  ]
+}

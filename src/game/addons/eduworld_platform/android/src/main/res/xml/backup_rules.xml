@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- F133 T047, F133-AC-24, ADR-0086 (Android 9–11, android:fullBackupContent): same exclusions as
+     data_extraction_rules.xml for Auto Backup on older Android versions. -->
+<full-backup-content>
+    <exclude domain="file" path="secure/" />
+    <exclude domain="file" path="cache/" />
+</full-backup-content>

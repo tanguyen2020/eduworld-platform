@@ -16,7 +16,7 @@ const SIZES: Dictionary = {
 }
 ## Screen name → builder method. Order follows the student journey (STUDENT_GAME_UX §11).
 const SCREENS: PackedStringArray = [
-	"splash", "login", "login_busy", "login_busy_cancel", "login_error_busy", "resume", "curfew", "character",
+	"splash", "update_required", "update_required_web", "update_required_teacher", "login", "login_busy", "login_busy_cancel", "login_error_busy", "resume", "curfew", "character",
 	"hub", "hub_onboarding", "hub_onboarding_step2", "hub_offline", "journal", "activity", "activity_selected",
 	"activity_feedback", "activity_incorrect", "activity_hint", "activity_multiple", "activity_true_false",
 	"activity_fill_blank", "activity_numeric", "activity_matching", "activity_ordering", "activity_drag_drop",
@@ -113,6 +113,8 @@ func run(args: PackedStringArray) -> int:
 				if screen.begins_with("arena"):
 					# F109: every arena screen is one CompetitionScreens view.
 					node = await _arena_world("arena" if screen == "arena" else screen.trim_prefix("arena_"))
+				elif screen.begins_with("update_required"):
+					node = _update_required(screen)
 				else:
 					node = await call("_screen_" + screen) as Node
 				if node == null:
@@ -177,6 +179,15 @@ func _add(path: String) -> Node:
 
 func _screen_splash() -> Node:
 	return _add("res://scenes/bootstrap/Splash.tscn")
+
+
+## F133 T023: "Cần cập nhật" — update_required (store page), _web (reload the page), _teacher (ask the teacher).
+func _update_required(screen: String) -> Node:
+	AuthService.min_client_version = "1.3.0"
+	var node: Node = _add("res://scenes/bootstrap/UpdateRequired.tscn")
+	node.call("show_action", {"update_required_web": UpdateService.Action.RELOAD_PAGE,
+		"update_required_teacher": UpdateService.Action.ASK_TEACHER}.get(screen, UpdateService.Action.OPEN_STORE))
+	return node
 
 
 func _screen_login() -> Node:

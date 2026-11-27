@@ -17,7 +17,7 @@ const CHARACTER_CREATION_SCENE: String = "res://scenes/character/CharacterCreati
 ## Scene per state; states without an entry keep the current scene (busy states of the same screen).
 const SCENES: Dictionary = {
 	State.VERSION_CHECK: "res://scenes/bootstrap/Splash.tscn",
-	State.FORCE_UPDATE: "res://scenes/bootstrap/ForceUpdate.tscn",
+	State.FORCE_UPDATE: "res://scenes/bootstrap/UpdateRequired.tscn",
 	State.MAINTENANCE: "res://scenes/bootstrap/Maintenance.tscn",
 	State.RESUMING: "res://scenes/auth/ResumeSplash.tscn",
 	State.RESUME_CONFIRM: "res://scenes/auth/ResumeConfirm.tscn",
