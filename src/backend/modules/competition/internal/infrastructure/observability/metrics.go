@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/hub"
 )
 
 var (
@@ -26,6 +28,10 @@ var (
 		Help: "Join a friend (follow_user_id) outcomes."}, []string{"result"})
 	violations = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_hub_violations_total",
 		Help: "Hub movements refused by the room host."}, []string{"reason"})
+	// speedViolations is the anti-cheat counter of ANTI_CHEAT §10 (F132-AC-24): hub moves above max_speed × 1.2, each
+	// answered with a snap back (hub.player.corrected). No label: never a user, room or tenant.
+	speedViolations = prometheus.NewCounter(prometheus.CounterOpts{Name: "eduworld_rt_speed_violations_total",
+		Help: "Hub moves faster than the area max speed (× tolerance), corrected by the room host (speed hack signal)."})
 	snapshotBytes = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_room_snapshot_bytes_total",
 		Help: "Bytes of snapshot payloads published per room type (bandwidth budget hub_sync_bandwidth)."}, []string{"room_type"})
 	projectionLag = prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "eduworld_competition_projection_lag_seconds",
@@ -40,7 +46,7 @@ func Register(reg prometheus.Registerer) {
 			return
 		}
 		for _, c := range []prometheus.Collector{roomsActive, roomPlayers, assignDuration, tickDuration, joinFriend, violations,
-			snapshotBytes, projectionLag} {
+			speedViolations, snapshotBytes, projectionLag} {
 			_ = reg.Register(c)
 		}
 	})
@@ -56,7 +62,13 @@ func (Hub) AssignDuration(d time.Duration) { assignDuration.Observe(d.Seconds())
 func (Hub) JoinFriend(result string) { joinFriend.WithLabelValues(result).Inc() }
 
 // Violation implements port.HubMetrics.
-func (Hub) Violation(reason string) { violations.WithLabelValues(reason).Inc() }
+// A speed violation also counts in eduworld_rt_speed_violations_total (ANTI_CHEAT §10).
+func (Hub) Violation(reason string) {
+	violations.WithLabelValues(reason).Inc()
+	if reason == hub.ReasonSpeed {
+		speedViolations.Inc()
+	}
+}
 
 // Tick observes one tick.
 func (Hub) Tick(roomType string, d time.Duration) {
