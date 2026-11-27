@@ -4,7 +4,7 @@ extends PanelContainer
 ## portrait, the nickname and the server score (team battle: "Đội của em" / "Đội bạn" with the team score and the
 ## members' nicknames; "Lượt chính" / "Hỗ trợ" in words for the student from the server `primary_user_ids`), the
 ## question progress "Câu 2/3" and the time bar from `deadline_at − server now`. Lớp 1–3 see the bar only (no seconds
-## — AC-09); lớp 4–9 also see "12 giây". A player away shows "Đang kết nối lại…" with the wifi icon (not colour only).
+## — AC-09); lớp 4–9 also see "12 giây". A player away has a grey card with the wifi sign; the words are in the reconnect banner (not colour only).
 ## UI only: values are BattleClient's (server).
 
 var _left: VBoxContainer = null
@@ -171,7 +171,7 @@ func _player_side(p: BattlePlayer, mine: bool) -> Control:
 	card.add_child(row)
 	if not mine:
 		row.alignment = BoxContainer.ALIGNMENT_END
-	var thumb: AvatarThumb = ArenaUi.portrait(p.avatar_config, 0.9)
+	var thumb: AvatarThumb = ArenaUi.portrait(p.avatar_config, 0.7)
 	var texts: VBoxContainer = UiBuild.vbox()
 	texts.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	UiBuild.expand(texts)
@@ -187,17 +187,20 @@ func _player_side(p: BattlePlayer, mine: bool) -> Control:
 	score.horizontal_alignment = name_label.horizontal_alignment
 	_scores[p.user_id] = score
 	texts.add_child(score)
-	if not p.connected:
-		var away: Label = UiBuild.label("ui.arena.battle.reconnecting", &"PartyAwayLabel", false)
-		away.name = "Away"
-		away.horizontal_alignment = name_label.horizontal_alignment
-		texts.add_child(away)
 	if mine:
 		row.add_child(thumb)
 		row.add_child(texts)
 	else:
 		row.add_child(texts)
 		row.add_child(thumb)
+	if not p.connected:
+		# Grey card + the wifi sign; the words are in the reconnect banner of the screen (the header stays one line).
+		var away: TextureRect = UiBuild.icon_rect("wifi_off", 0.8)
+		away.name = "Away"
+		away.tooltip_text = "ui.arena.battle.reconnecting"
+		away.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(away)
+		row.move_child(away, 0 if not mine else row.get_child_count() - 1)
 	return card
 
 
@@ -218,15 +221,12 @@ func _team_side(view: BattleView, team: int, mine: bool) -> Control:
 	box.add_child(score)
 	_scores["team:%d" % team] = score
 	var names: PackedStringArray = []
-	var away: bool = false
 	for p: BattlePlayer in view.members(team):
 		names.append(p.nickname)
-		away = away or not p.connected
 	var members: Label = UiBuild.data_label(", ".join(names), &"MutedLabel")
 	members.name = "Members"
 	box.add_child(members)
-	if away:
-		box.add_child(UiBuild.label("ui.arena.battle.teammate_reconnecting", &"PartyAwayLabel"))
+	# A player away is said in words by the reconnect banner of the screen (the header stays short on a phone).
 	return card
 
 

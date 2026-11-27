@@ -231,9 +231,6 @@ msgstr ""
 msgid "ui.arena.battle.submit"
 msgstr ""
 
-msgid "ui.arena.battle.teammate_reconnecting"
-msgstr ""
-
 msgid "ui.arena.coach"
 msgstr ""
 

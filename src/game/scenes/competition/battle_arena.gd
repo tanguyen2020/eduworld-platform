@@ -420,8 +420,8 @@ func _place_chat(strip: bool) -> void:
 	if strip:
 		var row: Control = _header.get_parent() as Control
 		var w: float = row.size.x if row.size.x > 0.0 else get_viewport_rect().size.x - float(UiTokens.SIZE_SPACE_24) * 2.0
-		# Room for the strip beside the header, with a touch target of slack (separation, rounding).
-		var room: float = w - _header.get_combined_minimum_size().x - UiBuild.target()
+		# Room for the strip beside the header, with a little slack (separation, rounding).
+		var room: float = w - _header.get_combined_minimum_size().x - float(UiTokens.SIZE_SPACE_16)
 		target = _strip_slot if room >= _dock_panel_min().x else _strip_bottom
 	if _chat_dock.get_parent() != target:
 		_chat_dock.get_parent().remove_child(_chat_dock)

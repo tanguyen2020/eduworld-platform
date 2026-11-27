@@ -168,8 +168,7 @@ func test_team_battle_scores_and_primary_marker() -> void:
 	assert_str(sides).contains(tr("ui.arena.battle.my_team"))
 	assert_str(sides).contains(tr("ui.arena.battle.score").format({"score": "390"}))
 	assert_str(arena.header().role_text()).is_equal(tr("ui.arena.battle.role_primary"))
-	# A teammate away is said in words (header + banner).
-	assert_str(sides).contains(tr("ui.arena.battle.teammate_reconnecting"))
+	# A player away is said in words by the banner.
 	arena.advance(0.1)
 	assert_str(arena.banner_text()).contains("SaoBang09")
 

@@ -41,6 +41,7 @@ func _init() -> void:
 	_list_box.name = "Matches"
 	_more = UiBuild.button("ui.arena.history.more", "arrow_down", &"SecondaryButton")
 	_more.name = "More"
+	_more.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_more.pressed.connect(func() -> void: _load(true))
 	add_child(_more)
 	var db: Dictionary = ArenaUi.scroll_box()

@@ -30,8 +30,10 @@ func show_bracket(b: BracketModel, self_id: String) -> void:
 		col.name = "Round%d" % round_no
 		col.alignment = BoxContainer.ALIGNMENT_CENTER
 		col.custom_minimum_size.x = t * 4.2
-		col.add_child(UiBuild.data_label(TranslationServer.translate("ui.tournament.bracket.round").format({"round": round_no}),
-				&"SectionTag", false))
+		var round_tag: Label = UiBuild.data_label(TranslationServer.translate("ui.tournament.bracket.round").format({"round": round_no}),
+				&"SectionTag", false)
+		round_tag.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		col.add_child(round_tag)
 		for n: Dictionary in b.nodes_of_round(round_no):
 			col.add_child(_node_card(b, n, mine))
 		_columns.add_child(col)

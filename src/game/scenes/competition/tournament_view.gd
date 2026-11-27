@@ -34,6 +34,7 @@ func _init() -> void:
 	_list.name = "Tournaments"
 	_more = UiBuild.button("ui.tournament.more", "arrow_down", &"SecondaryButton")
 	_more.name = "More"
+	_more.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_more.pressed.connect(func() -> void: _load_more())
 	add_child(_more)
 	var db: Dictionary = ArenaUi.scroll_box()
@@ -159,7 +160,10 @@ func _challenge_card(c: GradeChallengeModel, now: int) -> PanelContainer:
 	texts.add_child(UiBuild.data_label(TranslationServer.translate("ui.tournament.challenge.when").format({
 		"time": _time(c.starts_ms)}), &"MutedLabel"))
 	var join: Button = UiBuild.button("ui.tournament.challenge.join", "play_light")
-	join.name = "Join"
+	join.disabled = not c.can_join(now)
+	# The white play sign is for the blue face; a disabled (light) button shows the blue one (F102 rule).
+	if join.disabled:
+		join.icon = UiBuild.icon("play")
 	join.disabled = not c.can_join(now)
 	join.tooltip_text = "ui.tournament.challenge.not_open" if join.disabled else ""
 	join.size_flags_vertical = Control.SIZE_SHRINK_CENTER
