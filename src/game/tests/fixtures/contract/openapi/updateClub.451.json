@@ -1,0 +1,7 @@
+{
+  "type": "https://errors.eduworld.vn/chat-content-blocked",
+  "title": "Unavailable For Legal Reasons",
+  "status": 451,
+  "code": "CHAT_CONTENT_BLOCKED",
+  "category_code": "insult"
+}

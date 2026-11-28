@@ -457,6 +457,54 @@
       "source": "specs/openapi/eduworld-api.v1.yaml#listClubGoals/responses/200/example",
       "sha256": "98a030e251d75118e97053ff13ae0d5d13407c819d8db6192ea5ae0e651a2aa4"
     },
+    "openapi/openDirectChannel.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#openDirectChannel/responses/200/example",
+      "sha256": "c142fbef82bab3d5c038ed2c743e8335b23d847d1f1f14c455525129f35f3e8e"
+    },
+    "openapi/openDirectChannel.201.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#openDirectChannel/responses/201/example",
+      "sha256": "5a228a13750ae3da4c381ce030dd9d277b58e918dc5867718ac89bc626b400a6"
+    },
+    "openapi/openDirectChannel.403.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#openDirectChannel/responses/403/example",
+      "sha256": "8652a75188bba7d457a418e5eb6183703a764ef98e7e37e93483ba810c46eb16"
+    },
+    "openapi/searchMessages.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#searchMessages/responses/200/example",
+      "sha256": "0cf87e8b62099a601459edee15d6283d147ccdfb17bff308e6690ba775a5a9c9"
+    },
+    "openapi/updateClub.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#updateClub/responses/200/example",
+      "sha256": "2b4f2ea995a568f2975233c40a32cd009d1419c2328c03d41b0f758e86a2d39d"
+    },
+    "openapi/updateClub.412.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#updateClub/responses/412/example",
+      "sha256": "eaf7f650a8b0dbadbc17fdeccf0d6ca2353862f46680485f35d5d760970ce03f"
+    },
+    "openapi/updateClub.451.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#updateClub/responses/451/example",
+      "sha256": "ef5012bd2952ae03f72cb260f1bdca3fb7ad4377f562249ba60814feb5783256"
+    },
+    "openapi/updateClubMemberRole.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#updateClubMemberRole/responses/200/example",
+      "sha256": "2c19092baadb7ca61fba3fb1a3b7f167a145a43f71fdd9ba795f85f2cf6e2da5"
+    },
+    "openapi/createClubGoal.201.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#createClubGoal/responses/201/example",
+      "sha256": "cd1bf0b3048971acb1fbde8c1df58e545c13b9f2668737ff68d9d2eb5600825d"
+    },
+    "openapi/createClubGoal.422.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#createClubGoal/responses/422/example",
+      "sha256": "5138cfbe5b1263ba2e7be5841eb254558b75a6428b6d96812ef5f4bfa6255455"
+    },
+    "openapi/createClubEvent.201.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#createClubEvent/responses/201/example",
+      "sha256": "3d6c86b698b9301e076284c34632205f6bbb5b344eef3fea9dfce1661cbeffad"
+    },
+    "openapi/createClubEvent.422.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#createClubEvent/responses/422/example",
+      "sha256": "5db2ee26f0d0cdfd81210fc1fd861c5728131e6becdd3e5a41b3ce33184d5bf1"
+    },
     "examples/achievement.explorer-math-zone.json": {
       "source": "specs/examples/achievement.explorer-math-zone.json",
       "sha256": "e6003dc883ec9c39ba5e6d0128b2b04f00c3ab45d63902dfef995b122d3aad9b"

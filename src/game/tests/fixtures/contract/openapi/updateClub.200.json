@@ -1,0 +1,16 @@
+{
+  "club_id": "0193b0a0-0000-7000-8000-000000000c01",
+  "club_type": "interest_group",
+  "name": "Nhà thám hiểm nhí",
+  "description": "Cùng nhau khám phá và học vui mỗi tuần",
+  "icon_id": "club_icon_compass",
+  "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+  "owner_id": "0193b0a0-0000-7000-8000-0000000000a1",
+  "status": "active",
+  "member_count": 6,
+  "max_members": 50,
+  "my_role": "owner",
+  "chat_channel_id": "0193b0a0-0000-7000-8000-000000000502",
+  "version": 4,
+  "created_at": "2026-11-20T08:00:00Z"
+}

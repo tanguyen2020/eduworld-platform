@@ -71,7 +71,12 @@ const RESPONSES = [['listMyAssignments', '200'], ['listNotifications', '200'],
   ['acceptDuel', '200'],
   // F111: friend suggestions, the student's club invitations, a club's goals (the other club / event bodies have no
   // response example: their component schemas above are sampled).
-  ['listFriendSuggestions', '200'], ['listMyClubInvitations', '200'], ['listClubGoals', '200']];
+  ['listFriendSuggestions', '200'], ['listMyClubInvitations', '200'], ['listClubGoals', '200'],
+  // F112: direct messages (open 200 / 201, refused 403), message search, the owner's club tools (edit 200 / 412 / 451,
+  // officer role, weekly goal 201 / 422, club event 201 / 422). Error answers are read from application/problem+json.
+  ['openDirectChannel', '200'], ['openDirectChannel', '201'], ['openDirectChannel', '403'], ['searchMessages', '200'],
+  ['updateClub', '200'], ['updateClub', '412'], ['updateClub', '451'], ['updateClubMemberRole', '200'],
+  ['createClubGoal', '201'], ['createClubGoal', '422'], ['createClubEvent', '201'], ['createClubEvent', '422']];
 // specs/examples documents the game never receives: CMS-only curriculum, server-side chat policy and the
 // sensitive-term catalog (never sent to clients, AGENTS R15).
 const NOT_FOR_CLIENT = [/^curriculum\./, /^chat-policy\./, /^sensitive-term-catalog\./];
@@ -212,7 +217,8 @@ function render() {
   }
   for (const [operationId, status] of RESPONSES) {
     const op = Object.values(spec.paths ?? {}).flatMap((item) => Object.values(item)).find((o) => o?.operationId === operationId);
-    const media = op?.responses?.[status]?.content?.['application/json'];
+    const content = op?.responses?.[status]?.content;
+    const media = content?.['application/json'] ?? content?.['application/problem+json'];
     // Named `examples` (F109: one per leaderboard visibility) → openapi/<operationId>.<status>.<name>.json.
     if (media?.example === undefined && media?.examples) {
       for (const [name, ex] of Object.entries(media.examples)) {

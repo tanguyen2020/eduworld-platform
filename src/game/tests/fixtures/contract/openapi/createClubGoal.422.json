@@ -1,0 +1,14 @@
+{
+  "type": "https://errors.eduworld.vn/validation-failed",
+  "title": "Unprocessable Entity",
+  "status": 422,
+  "code": "VALIDATION_FAILED",
+  "detail": "request validation failed",
+  "errors": [
+    {
+      "field": "metric",
+      "code": "VALUE_NOT_AVAILABLE",
+      "message": "metric not counted from a verified event yet"
+    }
+  ]
+}

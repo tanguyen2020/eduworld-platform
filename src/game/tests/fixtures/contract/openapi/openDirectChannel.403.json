@@ -1,0 +1,6 @@
+{
+  "type": "https://errors.eduworld.vn/chat-not-allowed",
+  "title": "Forbidden",
+  "status": 403,
+  "code": "CHAT_NOT_ALLOWED"
+}

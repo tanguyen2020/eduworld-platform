@@ -1,0 +1,6 @@
+{
+  "type": "https://errors.eduworld.vn/version-mismatch",
+  "title": "Precondition Failed",
+  "status": 412,
+  "code": "VERSION_MISMATCH"
+}
