@@ -5,8 +5,9 @@
 // (ADR-0029). The learning ids of the files (subject, objectives) are placeholders resolved by code through the CMS API
 // before anything is created (learning_refs.json), so the selection rules draw from the DEV pool of `make seed-content`.
 // Accounts: author gd.thietke (game_designer), reviewer cm.duyet (content_reviewer), publisher lo.vanhanh
-// (liveops), System Admin sa.admin for the assignments (demo users of the dev realm). Running it again
-// publishes nothing new. LOCAL_DEVELOPMENT §5: `make seed-game-content` after `make seed-content`.
+// (liveops), cm.noidung (content_author) to read the curriculum codes, System Admin sa.admin for the assignments
+// (demo users of the dev realm). Running it again publishes nothing new. LOCAL_DEVELOPMENT §5: `make seed-game-content`
+// after `make seed-content`.
 //
 // Configuration (no default URL in code, AGENTS R3): EW_SEED_API_URL (public gateway, …/api/v1),
 // EW_SEED_INTERNAL_API_URL (internal gateway, …/api/v1), EW_SEED_PASSWORD (demo password, never logged), EW_ENV=local.
@@ -148,8 +149,13 @@ func run(ctx context.Context, dir string) error {
 	if err != nil {
 		return err
 	}
-	// The learning ids of the files are placeholders: resolve them by code on the running stack (learning_refs.json).
-	resolve, err := learningRefs(ctx, hc, api, reviewer, dir)
+	// The learning ids of the files are placeholders: resolve them by code on the running stack (learning_refs.json), as
+	// the content author of the learning seed (cm.noidung reads the CMS curriculum; the reviewer has no curriculum.read).
+	contentAuthor, err := login(ctx, hc, api, "cm.noidung", pw)
+	if err != nil {
+		return err
+	}
+	resolve, err := learningRefs(ctx, hc, api, contentAuthor, dir)
 	if err != nil {
 		return err
 	}
@@ -163,6 +169,7 @@ func run(ctx context.Context, dir string) error {
 		published += n
 	}
 	tenants := map[string]string{}
+	assigned := 0
 	for id, codes := range assignments {
 		ids := make([]string, 0, len(codes))
 		for _, code := range codes {
@@ -181,13 +188,27 @@ func run(ctx context.Context, dir string) error {
 		}) {
 			rt = "minigame_config"
 		}
+		// Only the tenants without the resource (listTenantAssignments): a second run sends nothing, so assignToTenants
+		// records no new tenant_data.assigned.
+		have, err := listAll(ctx, hc, internal, admin,
+			"/admin/tenant-assignments?resource_type="+url.QueryEscape(rt)+"&resource_id="+url.QueryEscape(id))
+		if err != nil {
+			return err
+		}
+		ids = slices.DeleteFunc(ids, func(t string) bool {
+			return slices.ContainsFunc(have, func(a map[string]any) bool { return a["tenant_id"] == t })
+		})
+		if len(ids) == 0 {
+			continue
+		}
+		assigned++
 		if _, err := do(ctx, hc, internal, admin, http.MethodPost, "/admin/tenant-assignments", nil,
 			map[string]any{"resource_type": rt, "resource_id": id, "tenant_ids": ids}, nil); err != nil {
 			return err
 		}
 	}
 	slog.InfoContext(ctx, "game content seed done", "items", len(items), "learning_refs", len(resolve), "published_now", published,
-		"assigned", len(assignments))
+		"assignments", len(assignments), "assigned_now", assigned)
 	return nil
 }
 

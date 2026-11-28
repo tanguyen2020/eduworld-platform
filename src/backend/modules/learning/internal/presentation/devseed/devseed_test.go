@@ -87,6 +87,17 @@ func TestPortalLoginAndAdminAssigner(t *testing.T) {
 			lookups++
 			_, _ = w.Write([]byte(`{"data":[{"tenant_id":"` + tenantA + `","code":"th-demo-a","status":"active"},
 				{"tenant_id":"` + tenantB + `","code":"pgd-demo","status":"active"},{"tenant_id":"x","code":"th-demo-a-old","status":"disabled"}]}`))
+		case r.Method == http.MethodGet && r.URL.Path == "/api/v1/admin/tenant-assignments":
+			// listTenantAssignments: the tenants already holding the resource (from the assignments recorded so far).
+			var rows []string
+			for _, in := range assigned {
+				if in["resource_type"] == r.URL.Query().Get("resource_type") && in["resource_id"] == r.URL.Query().Get("resource_id") {
+					for _, t := range in["tenant_ids"].([]any) {
+						rows = append(rows, `{"tenant_id":"`+t.(string)+`"}`)
+					}
+				}
+			}
+			_, _ = w.Write([]byte(`{"data":[` + strings.Join(rows, ",") + `],"page":{"has_more":false,"limit":100}}`))
 		case r.Method == http.MethodPost && r.URL.Path == "/api/v1/admin/tenant-assignments":
 			if r.Header.Get("Authorization") != "Bearer tok-sa.admin" || r.Header.Get("Idempotency-Key") == "" {
 				w.WriteHeader(http.StatusForbidden)
@@ -123,6 +134,10 @@ func TestPortalLoginAndAdminAssigner(t *testing.T) {
 	ts, _ := assigned[0]["tenant_ids"].([]any)
 	if assigned[0]["resource_type"] != "curriculum" || assigned[0]["resource_id"] != id.String() || len(ts) != 2 || ts[0] != tenantA || ts[1] != tenantB {
 		t.Fatalf("assignment body %v", assigned[0])
+	}
+	// Already assigned to every demo tenant: nothing is sent again (a second seed run writes no tenant_data.assigned).
+	if err := a.Assign(ctx, "curriculum", id); err != nil || len(assigned) != 2 {
+		t.Fatalf("second assign: %v, assignments %d", err, len(assigned))
 	}
 	missing := &AdminAssigner{HTTP: srv.Client(), BaseURL: base, Token: tok, Codes: []string{"khong-co"}}
 	if err := missing.Assign(ctx, "lesson", id); err == nil {

@@ -27,7 +27,9 @@ func PortalLogin(ctx context.Context, hc *http.Client, base, username, password 
 }
 
 // AdminAssigner assigns through the System Admin API of the internal gateway (assignToTenants, ADR-0029): the demo
-// tenants are looked up by code (listTenants); assignToTenants skips the tenants that already have the resource.
+// tenants are looked up by code (listTenants); only the tenants that do not have the resource yet
+// (listTenantAssignments, every page) are sent, so a second run writes nothing (assignToTenants records
+// tenant_data.assigned for each tenant it is given).
 type AdminAssigner struct {
 	HTTP    *http.Client
 	BaseURL string // internal gateway, ends with /api/v1
@@ -61,7 +63,48 @@ func (a *AdminAssigner) Assign(ctx context.Context, resourceType string, id uuid
 	if err != nil {
 		return err
 	}
-	body := map[string]any{"resource_type": resourceType, "resource_id": id.String(), "tenant_ids": tenants}
+	missing, err := MissingTenants(ctx, a.HTTP, a.BaseURL, a.Token, resourceType, id.String(), tenants)
+	if err != nil || len(missing) == 0 {
+		return err
+	}
+	body := map[string]any{"resource_type": resourceType, "resource_id": id.String(), "tenant_ids": missing}
 	_, err = Do(ctx, a.HTTP, a.BaseURL, a.Token, http.MethodPost, "/admin/tenant-assignments", nil, body, nil)
 	return err
+}
+
+// MissingTenants returns the tenants of want that do not have the resource yet (listTenantAssignments of the System Admin
+// API, every page), in the order of want.
+func MissingTenants(ctx context.Context, hc *http.Client, base, token, resourceType, id string, want []string) ([]string, error) {
+	have := map[string]bool{}
+	cursor := ""
+	for range 100 {
+		q := "/admin/tenant-assignments?limit=100&resource_type=" + url.QueryEscape(resourceType) + "&resource_id=" + url.QueryEscape(id)
+		if cursor != "" {
+			q += "&cursor=" + url.QueryEscape(cursor)
+		}
+		var p struct {
+			Data []map[string]any `json:"data"`
+			Page struct {
+				NextCursor *string `json:"next_cursor"`
+				HasMore    bool    `json:"has_more"`
+			} `json:"page"`
+		}
+		if _, err := Do(ctx, hc, base, token, http.MethodGet, q, nil, nil, &p); err != nil {
+			return nil, err
+		}
+		for _, a := range p.Data {
+			have[str(a, "tenant_id")] = true
+		}
+		if !p.Page.HasMore || p.Page.NextCursor == nil || *p.Page.NextCursor == "" {
+			out := make([]string, 0, len(want))
+			for _, t := range want {
+				if !have[t] {
+					out = append(out, t)
+				}
+			}
+			return out, nil
+		}
+		cursor = *p.Page.NextCursor
+	}
+	return nil, fmt.Errorf("tenant assignments of %s %s: too many pages", resourceType, id)
 }
