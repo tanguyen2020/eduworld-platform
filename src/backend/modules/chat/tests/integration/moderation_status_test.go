@@ -21,6 +21,13 @@ func (e *env) noRole(tenant uuid.UUID) string {
 	return e.idp.Token(sub, httpxtest.PortalClient, time.Now())
 }
 
+// schoolStaff registers portal staff of tenant holding role limited to one school and returns its token.
+func (e *env) schoolStaff(tenant, school uuid.UUID, role string) string {
+	sub := "kc-school-staff-" + uuid.NewString()
+	e.res.Set(sub, authztest.Staff(tenant, role, authztest.AtSchool(school)).PrincipalData)
+	return e.idp.Token(sub, httpxtest.PortalClient, time.Now())
+}
+
 // F122 T005 — F122-AC-13, F122-AC-14 (TC-CHAT-016, TC-TEN-001): getTenantModerationStatus gives the staff of a tenant
 // (tenant.settings.read or school.settings.read) the steps not in force for their tenant and the earliest time they come
 // back — never the reason or who changed it; another tenant sees nothing of it; staff without either permission and
@@ -55,6 +62,12 @@ func TestTenantModerationStatus(t *testing.T) {
 				t.Fatalf("%s status leaks %q: %s", role, leak, r.raw)
 			}
 		}
+	}
+	// The School Admin of ONE school (grant limited to that school, like the demo ad.truong.a) sees the tenant-wide
+	// status too (F122 Clarifications 2026-11-28): it was refused with 403 outside_grant_scope before.
+	if r = status(c.schoolStaff(c.tenantA, c.schoolA, "school_admin"), c.tenantA); r.status != http.StatusOK ||
+		strings.Join(disabledSteps(r), ",") != "spam" || strings.Contains(r.raw, secret) {
+		t.Fatalf("school-limited school_admin status: %d %s", r.status, r.raw)
 	}
 	// Tenant B is not concerned (F122-AC-14).
 	if r = status(c.staff(c.tenantB, "tenant_admin"), c.tenantB); r.status != http.StatusOK || len(disabledSteps(r)) != 0 ||

@@ -2,7 +2,10 @@ package query
 
 import (
 	"context"
+	"slices"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/service"
@@ -46,7 +49,7 @@ func (q Catalog) TenantModerationStatus(ctx context.Context, now time.Time) (out
 	if p.Has(authz.PermTenantSettingsRead) {
 		perm = authz.PermTenantSettingsRead
 	}
-	if err := authz.Require(ctx, p, perm, authz.Resource{TenantID: &tenant}); err != nil {
+	if err := authz.Require(ctx, p, perm, statusResource(p, perm, tenant)); err != nil {
 		return out, err
 	}
 	var platformSw, tenantSw *read.SwitchRow
@@ -58,6 +61,27 @@ func (q Catalog) TenantModerationStatus(ctx context.Context, now time.Time) (out
 		return out, err
 	}
 	return ResolveModerationStatus(service.ToSwitch(platformSw), tenantSw, now), nil
+}
+
+// statusResource is the resource TenantModerationStatus authorizes: the session tenant, within the limits of a grant
+// holding perm. The status is tenant-wide (steps off, earliest expiry — no school data, no reason, ADR-0030), so a grant
+// limited to one school of the tenant is enough: the School Admin of a school sees the banner (F122-AC-13, F122
+// Clarifications 2026-11-28). A tenant-wide grant is preferred; without any grant holding perm Require answers 403.
+func statusResource(p authz.Principal, perm authz.Permission, tenant uuid.UUID) authz.Resource {
+	res := authz.Resource{TenantID: &tenant}
+	found := false
+	for _, g := range p.Grants {
+		if !slices.Contains(g.Permissions, perm) {
+			continue
+		}
+		if g.SchoolID == nil && g.SubjectID == nil {
+			return authz.Resource{TenantID: &tenant}
+		}
+		if !found {
+			res.SchoolID, res.SubjectID, found = g.SchoolID, g.SubjectID, true
+		}
+	}
+	return res
 }
 
 // ResolveModerationStatus combines the platform switch and the tenant row (nil: inherits the platform) at now.

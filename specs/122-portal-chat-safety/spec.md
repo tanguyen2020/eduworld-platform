@@ -67,6 +67,10 @@ Khoảng trống mới phát hiện khi làm T060–T066; chọn mặc định a
 - Q: `listSensitiveCategories`/`listTenantSensitiveCategories` hiển thị trong bảng F122 nhưng không phân trang ([TBD] CODE_PLAN §4.3)? → A: [Confirmed — owner 2026-11-23] Trang keyset `(code, category_id)` trong SQL (`limit`/`cursor` + `page`; `moderation_switches` ở mọi trang); bảng dùng `useCursorPages`, dropdown nhóm từ đọc mọi trang (`fetchAllPages` + `SearchSelect`).
 - Q: Danh sách thành viên club cho nhân sự trả gì? → A: [Confirmed] `ClubMember` (biệt danh, vai trò, thời điểm tham gia — R16, không tên thật/khối); club `pending_approval` không có nút Thành viên; không gỡ chủ club (404, dùng Lưu trữ).
 
+### Session 2026-11-28 (E2E F056 — [Confirmed], owner "chốt hết")
+
+- Q: Playwright E2E (F056 T046) thấy `ad.truong.a` (School Admin, grant giới hạn một trường `DEMOA1`) nhận `403 GET /api/v1/tenant/chat/moderation-status` mỗi 30 giây: portal không nên gọi cho role này, hay role phải được đọc? → A: [Confirmed — owner "chốt hết"] Role được đọc; sửa backend. Portal gọi đúng điều kiện của contract (`tenant.settings.read` hoặc `school.settings.read` trong `getMyPermissions`), F122-AC-13 yêu cầu banner cho School Admin và ADR-0030 bắt buộc banner khi kiểm duyệt tắt — bỏ gọi sẽ làm School Admin của một trường mất banner. Lỗi nằm ở query `TenantModerationStatus` của module chat: `authz.Require` với resource chỉ có tenant nên grant giới hạn trường bị từ chối `outside_grant_scope`. Trạng thái là thông tin cấp tenant (bước đang tắt, thời hạn — không dữ liệu trường, không lý do/người thay đổi), nên grant giữ quyền trong tenant của phiên **ở bất kỳ phạm vi trường nào** là đủ (`statusResource` lấy giới hạn của chính grant đó; grant toàn tenant được ưu tiên). Không cấp quyền mới cho role nào, không có `moderation.case.*` hay quyền platform cho role tenant (R20); tenant khác vẫn `404`, không quyền vẫn `403 PERMISSION_DENIED`. Test: unit `TestStatusResourceAcceptsSchoolLimitedGrant`, integration `TestTenantModerationStatus` (thêm School Admin giới hạn một trường).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Hàng đợi case của Platform Safety Team (Priority: P1) 🎯 MVP
