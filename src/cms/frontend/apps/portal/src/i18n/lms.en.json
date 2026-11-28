@@ -131,7 +131,8 @@
       "extendTitle": "Extend for {{name}}",
       "newDueAt": "New due date",
       "excuse": "Excuse",
-      "excuseTitle": "Excuse {{name}}"
+      "excuseTitle": "Excuse {{name}}",
+      "numbered": "Student {{n}}"
     },
     "accommodations": {
       "tab": "Extra time",

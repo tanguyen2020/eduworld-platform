@@ -440,7 +440,7 @@ func build(r *module.Registry) (*wiring, error) {
 		QuestionCommands: qcmd, QuestionQueries: query.Questions{Session: core.ReadSession, Model: read.QuestionModel{}, Cursors: cursors},
 		Media: media, MediaQueries: query.MediaLibrary{Session: core.ReadSession, Model: read.MediaModel{}, Signer: signer, Cursors: cursors},
 		Preview: command.Preview{UoW: core.UoW, Session: core.ReadSession, Questions: read.QuestionModel{}, Registry: registry, Schema: schema,
-			Store: cache.PreviewStore{C: vk}},
+			Store: cache.PreviewStore{C: vk}, Docs: read.DocModel{}, Activities: activities, QuestionVersions: read.QuestionModel{}},
 		Docs: dcmd, DocQueries: docQueries,
 		Widgets:  query.QuestionWidgets{Widgets: registry.Widgets()},
 		Workflow: wf, Reviews: query.ReviewTasks{Session: core.ReadSession, Model: read.ReviewTaskModel{}, Cursors: cursors},

@@ -44,6 +44,12 @@ type QuestionReadModel interface {
 	Search(ctx context.Context, f QuestionFilter, seek Seek) ([]QuestionHit, error)
 }
 
+// QuestionVersionLookup reads a question version by its id for the CMS (any status, scope of ctx: another tenant's
+// version is NotFound). The activity preview reads the questions an activity version refers to (F058-AC-10).
+type QuestionVersionLookup interface {
+	VersionByID(ctx context.Context, id uuid.UUID) (dto.QuestionVersion, error)
+}
+
 // PoolFilter narrows the pool read from the database (the rule is applied by selection.Select).
 type PoolFilter struct {
 	SubjectID *uuid.UUID

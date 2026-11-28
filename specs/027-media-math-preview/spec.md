@@ -50,6 +50,11 @@
 - OQ F027-2 → **Đã làm** 2026-11-28 ([F002 T059](../002-platform-kit-core/tasks.md)): `media.upload` cho `tenant_admin`, `school_admin`, `academic_manager`, `content_admin`.
 - OQ F027-12 (CDN thật kiểm ở quickstart bước 7) → CDN local nay kiểm được: `deploy/cdn/nginx.conf` + `s3_origin.js` (origin ký SigV4 cho `ew-media-private`), bucket policy công khai chỉ cho `ew-media-public`/`ew-game-bundles` ([LOCAL_DEVELOPMENT §3.1](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 
+### Session 2026-11-28 (preview activity, HLS private — [Confirmed — owner "chốt hết"])
+
+- Q: F027-AC-16 "version bất kỳ" gồm activity? → A: Có — chi tiết ở [F058 Clarifications 2026-11-28](../058-portal-activity-builder/spec.md) (`command/preview_activity.go`).
+- Q: HLS của `ew-media-private`: playlist ký nhưng segment tương đối `seg_*.ts` không ký → 403? → A: [Confirmed — owner "chốt hết"] Token secure_link nằm trong đường dẫn và ký **thư mục biến thể** (`/ew-media-private/t/<md5>/<expires>/media/<sha256>/hls_<n>/index.m3u8`, md5 của `"<expires>/ew-media-private/media/<sha256>/hls_<n>/ <key>"`), cùng hạn `media_signed_url_ttl`: segment tương đối của playlist tự mang token; biến thể/asset khác, token sửa → 403, hết hạn → 410; bucket vẫn private (không public-read). MP4/Theora/WebVTT giữ chữ ký query từng object. Chi tiết: [CONTENT_MODEL §7](../../docs/02-learning/CONTENT_MODEL.md), test `TestCdnSignerHLSDirectoryToken`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Upload media an toàn (Priority: P1)

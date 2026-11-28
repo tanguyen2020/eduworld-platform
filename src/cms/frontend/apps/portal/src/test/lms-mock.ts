@@ -73,10 +73,12 @@ export function lmsAssignment(over: Row = {}): Row & { version: number } {
 export function installLmsMock(backend: MockPortalBackend): LmsMockState {
   const state: LmsMockState = {
     assignments: new Map(),
+    // module learning does not fill AssignmentSubmission.display_name (no PII in its projections): the portal joins the
+    // names of listTenantGradeStudents (F055-AC-08, Clarifications 2026-11-28)
     submissions: [
-      { assignment_id: '', student_id: IDS.studentAn, display_name: 'Nguyễn An', status: 'submitted', attempts_used: 1, score: 8, max_score: 10, rapid_guess_count: 2, submitted_at: '2026-11-21T03:00:00Z' },
-      { assignment_id: '', student_id: LMS_IDS.studentBinh, display_name: 'Lê Bình', status: 'not_started', attempts_used: 0, score: null, max_score: null, rapid_guess_count: 0 },
-      { assignment_id: '', student_id: IDS.studentSapBiDon, display_name: 'Trần Sắp Bị Dọn', status: 'missed', attempts_used: 0, score: null, rapid_guess_count: 0 },
+      { assignment_id: '', student_id: IDS.studentAn, status: 'submitted', attempts_used: 1, score: 8, max_score: 10, rapid_guess_count: 2, submitted_at: '2026-11-21T03:00:00Z' },
+      { assignment_id: '', student_id: LMS_IDS.studentBinh, status: 'not_started', attempts_used: 0, score: null, max_score: null, rapid_guess_count: 0 },
+      { assignment_id: '', student_id: IDS.studentSapBiDon, status: 'missed', attempts_used: 0, score: null, rapid_guess_count: 0 },
     ],
     session: {
       exam_session_id: LMS_IDS.examSession,

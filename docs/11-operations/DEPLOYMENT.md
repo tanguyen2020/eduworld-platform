@@ -437,7 +437,7 @@ Không có prefix `/internal/v1/*`: module gọi nhau trong tiến trình (ADR-0
 |---|---|---|---|
 | `ew-media-quarantine` | CMS qua presigned PUT (≤ 15 phút) | media worker | Private; lifecycle xóa object sau 7 ngày (file tạm, chưa phải dữ liệu nghiệp vụ) |
 | `ew-media-public` | media worker, content-snapshot-builder | CDN | Versioning bật; không ghi đè (khóa theo hash) |
-| `ew-media-private` | media worker | CDN signed URL (5–15 phút) | Versioning bật; SSE |
+| `ew-media-private` | media worker | CDN signed URL (5–15 phút); HLS: token trong đường dẫn ký thư mục biến thể để segment tương đối dùng cùng token ([CONTENT_MODEL §7](../02-learning/CONTENT_MODEL.md)) — CDN được chọn phải hỗ trợ token theo tiền tố đường dẫn | Versioning bật; SSE |
 | `ew-game-bundles` | CI (build Godot, PCK) | CDN | Versioning bật |
 | `ew-exports` | worker xuất báo cáo, import SIS | presigned GET | Lifecycle theo DATA_PRIVACY |
 

@@ -13,6 +13,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/mathx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/preview"
@@ -39,6 +40,11 @@ type Preview struct {
 	Store     port.PreviewStore
 	TTL       time.Duration // preview_token_ttl (0 = PreviewTokenTTL)
 	Clock     func() time.Time
+	// Docs, Activities and QuestionVersions serve the preview of an activity version (F058-AC-10/11): the version of
+	// any status in the scope, its plugin, and the question versions it refers to. Nil Docs = activities are refused.
+	Docs             read.DocReadModel
+	Activities       *activity.Registry
+	QuestionVersions read.QuestionVersionLookup
 }
 
 // PreviewInput is LearningPreviewRequest.
@@ -59,11 +65,12 @@ type PreviewItem struct {
 	MaxScore          float64        `json:"max_score"`
 }
 
-// PreviewView is LearningPreviewSession.
+// PreviewView is LearningPreviewSession (Render only for an activity).
 type PreviewView struct {
-	ID        uuid.UUID     `json:"preview_session_id"`
-	Items     []PreviewItem `json:"items"`
-	ExpiresAt time.Time     `json:"expires_at"`
+	ID        uuid.UUID               `json:"preview_session_id"`
+	Render    *dto.ActivityRenderView `json:"render,omitempty"`
+	Items     []PreviewItem           `json:"items"`
+	ExpiresAt time.Time               `json:"expires_at"`
 }
 
 func (h Preview) ttl() time.Duration {
@@ -78,13 +85,17 @@ func previewRead(ctx context.Context) (authz.Principal, error) {
 }
 
 // CreateSession opens a preview of one version (F027-AC-16, AC-19): another tenant's content is 404, a missing
-// learning_content.read 403. Question previews are supported; other content types come with their features.
+// learning_content.read 403. Questions and activities (F058-AC-10/11) are supported; other content types come with
+// their features.
 func (h Preview) CreateSession(ctx context.Context, in PreviewInput) (out PreviewView, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.command.CreateLearningPreviewSession")
 	defer func() { done(err) }()
 	p, err := previewRead(ctx)
 	if err != nil {
 		return out, err
+	}
+	if in.ContentType == string(contentmodel.TypeActivity) && h.Docs != nil {
+		return h.activitySession(ctx, p, in)
 	}
 	if in.ContentType != string(contentmodel.TypeQuestion) {
 		return out, problem.Invalid("content_type", problem.SubInvalid, "preview of "+in.ContentType+" is not available yet")
@@ -108,13 +119,17 @@ func (h Preview) CreateSession(ctx context.Context, in PreviewInput) (out Previe
 		Version: in.Version, DisplayLanguage: lang, Items: []preview.Item{{Position: 1, QuestionVersionID: v.ID, Seed: seed}},
 		ExpiresAt: now(h.Clock).Add(h.ttl()).Truncate(time.Second)}
 	out = PreviewView{ID: id, Items: []PreviewItem{item}, ExpiresAt: s.ExpiresAt}
-	err = h.UoW.Do(ctx, func(ctx context.Context) error {
+	return out, h.store(ctx, s, out)
+}
+
+// store keeps the session in Valkey and the response as the idempotent result (no learning table is written).
+func (h Preview) store(ctx context.Context, s preview.Session, out PreviewView) error {
+	return h.UoW.Do(ctx, func(ctx context.Context) error {
 		if err := h.Store.Put(ctx, s, h.ttl()); err != nil {
 			return problem.New(problem.Unavailable, "preview store unavailable").Retry().Wrap(err)
 		}
 		return idempotency.SetResult(ctx, out)
 	})
-	return out, err
 }
 
 // content builds the scorer/renderer input of a version of any status (CMS read model: answer key included).
@@ -208,6 +223,10 @@ func (h Preview) SubmitResponse(ctx context.Context, in PreviewResponseInput) (o
 	var v dto.QuestionVersion
 	if err := h.Session.Read(ctx, func(ctx context.Context) error {
 		var err error
+		if s.ContentType == string(contentmodel.TypeActivity) && h.QuestionVersions != nil {
+			v, err = h.QuestionVersions.VersionByID(ctx, it.QuestionVersionID)
+			return err
+		}
 		v, err = h.Questions.Version(ctx, s.ContentID, s.Version)
 		return err
 	}); err != nil {

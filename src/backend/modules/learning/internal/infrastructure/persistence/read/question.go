@@ -89,6 +89,18 @@ func (QuestionModel) Version(ctx context.Context, questionID uuid.UUID, versionN
 	return vs[0], withObjectives(ctx, vs)
 }
 
+var _ read.QuestionVersionLookup = QuestionModel{}
+
+// VersionByID implements read.QuestionVersionLookup (entx filter: tenant scope and live rows).
+func (QuestionModel) VersionByID(ctx context.Context, id uuid.UUID) (dto.QuestionVersion, error) {
+	r, err := client(ctx).QuestionVersion.Query().Where(entqv.ID(id)).Only(ctx)
+	if err != nil {
+		return dto.QuestionVersion{}, notFound(err)
+	}
+	vs := []dto.QuestionVersion{questionVersionOf(r)}
+	return vs[0], withObjectives(ctx, vs)
+}
+
 // Latest implements read.QuestionReadModel.
 func (QuestionModel) Latest(ctx context.Context, questionID uuid.UUID) (dto.QuestionVersion, error) {
 	r, err := client(ctx).QuestionVersion.Query().Where(entqv.QuestionID(questionID)).Order(ent.Desc(entqv.FieldVersionNo)).First(ctx)

@@ -64,6 +64,10 @@ Quyết định khi triển khai, chọn phương án bảo thủ nhất (owner 
 - Q: "Golden dataset F043" cho E2E T021 trên backend compose là gì? → A: [Confirmed — owner "chốt hết"] Golden dataset của F043 (T003) là dữ liệu tổng hợp trong test tích hợp (`dashKit`), không nạp được vào stack. Bản local là `make seed-attempts` ([LOCAL_DEVELOPMENT §5.2](../../docs/11-operations/LOCAL_DEVELOPMENT.md#52-seed-mở-rộng-media-golden-dataset-make-seed-media-make-seed-attempts)): 6 attempt qua API thật (`hs.an.3a` 4/4 + 0/1, `hs.binh.3a` 3/4 + 0/1, `hs.chi.3b` 2/4 có 1 `rapid_guess` + 1/1) trên hai LO không seed/test nào khác dùng (`MATH.G3.NUM.DIV_REMAINDER`, `MATH.G3.GEO.PERIMETER`). Giá trị golden (`DEMOA1` khối 3, 7 ngày mặc định): `active_students` 3, `accuracy` 0.643, `rapid_guess_ratio` 0.067, hai bài 3/8, heatmap như bảng của LOCAL_DEVELOPMENT §5.2 — `VERIFY=1` kiểm lại. Các số tổng quan chỉ đúng khi chưa học sinh nào khác của khối làm bài trong 7 ngày (test Godot/E2E làm bài sẽ đổi); hai hàng heatmap chỉ đổi khi chấm lại (F058 T047).
 - Q: T047 (dữ liệu 2 năm)? → A: [Confirmed] Không seed local (không có biến thể nhỏ được đặc tả): thuộc đường datagen perf/staging (`make datagen`, F132).
 
+### Session 2026-11-28 (định nghĩa "Học sinh hoạt động" — [Confirmed — owner "chốt hết"])
+
+- Q: Cùng nhãn "Học sinh hoạt động" mà tổng quan trường và báo cáo tenant/platform ra số khác định nghĩa? → A: [Confirmed — owner "chốt hết"] Portal không tính lại; backend trả một định nghĩa (distinct trong kỳ đã chọn, [LEARNING_ANALYTICS §4](../../docs/02-learning/LEARNING_ANALYTICS.md#4-progress-metrics), [F043 Clarifications 2026-11-28](../043-school-learning-dashboard/spec.md)). Ô bị che vẫn hiện "< 5".
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Trang tổng quan trường (Priority: P1) 🎯 MVP

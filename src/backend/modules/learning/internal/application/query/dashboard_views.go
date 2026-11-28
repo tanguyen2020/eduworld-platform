@@ -107,8 +107,8 @@ func (q Dashboards) GetSchoolDashboard(ctx context.Context, in SchoolDashboardIn
 					x := float64(p.ActiveSec / 60)
 					return &x
 				}, true)
-				last := q.lastDay(rg)
-				active, err := q.Model.ActiveStudents(ctx, sc, last.AddDate(0, 0, -6), last)
+				// distinct over the selected period (LEARNING_ANALYTICS §7, owner "chốt hết" 2026-11-28; was the 7 days ending at to)
+				active, err := q.Model.ActiveStudents(ctx, sc, rg.From, q.lastDay(rg))
 				if err != nil {
 					return v, err
 				}
@@ -183,6 +183,11 @@ func (q Dashboards) gradeWidgets(ctx context.Context, sc read.DashScope, rg anal
 		return err
 	}
 	m.Merge(am)
+	// active students of a grade: distinct over the selected period, like the widget (owner "chốt hết" 2026-11-28)
+	active, err := q.Model.ActiveByGrade(ctx, sc, rg.From, q.lastDay(rg))
+	if err != nil {
+		return err
+	}
 	levels := make([]int, 0, len(grades))
 	for g := range grades {
 		if g >= 1 && (sc.GradeLevel == nil || *sc.GradeLevel == g) { // grade 0 (unknown) is never a row of the contract
@@ -196,8 +201,8 @@ func (q Dashboards) gradeWidgets(ctx context.Context, sc read.DashScope, rg anal
 		row := dto.DashboardGradeView{GradeLevel: g, Suppressed: mask.Hidden(g)}
 		if !row.Suppressed {
 			s := grades[g]
-			students, active := s.Students, s.Active7d
-			row.Students, row.ActiveStudents = &students, &active
+			students, n := s.Students, active[g]
+			row.Students, row.ActiveStudents = &students, &n
 			row.AssignmentCompletionRate = analytics.Ratio(s.CompNum, s.CompDen)
 			if t, ok := acc[g]; ok {
 				row.Accuracy = analytics.Ratio(t.AccNum, t.AccDen)
@@ -774,7 +779,12 @@ func (q Dashboards) GetTenantSummary(ctx context.Context, in TenantSummaryInput)
 			if err != nil {
 				return dto.LearningSummaryView{}, err
 			}
-			v := q.summary(rg, cells, func(c read.SummaryCell) string { return c.SchoolID.String() }, false)
+			group := func(c read.SummaryCell) string { return c.SchoolID.String() }
+			act, err := q.activeCounts(ctx, rg, cells, group, []uuid.UUID{sc.TenantID}, false)
+			if err != nil {
+				return dto.LearningSummaryView{}, err
+			}
+			v := q.summary(rg, cells, group, false, act)
 			meta, err := q.metaOf(ctx, rg, m, sc)
 			if err != nil {
 				return v, err
@@ -840,7 +850,7 @@ func (q Dashboards) GetPlatformSummary(ctx context.Context, in PlatformSummaryIn
 		}
 	}
 	if len(ids) == 0 {
-		v := q.summary(rg, nil, nil, true)
+		v := q.summary(rg, nil, nil, true, read.ActiveCounts{})
 		v.DashboardMeta, v.ExcludedTenantIDs = q.meta(rg, read.RollupMeta{}), excluded
 		return v, nil
 	}
@@ -854,7 +864,12 @@ func (q Dashboards) GetPlatformSummary(ctx context.Context, in PlatformSummaryIn
 		if err != nil {
 			return dto.LearningSummaryView{}, err
 		}
-		v := q.summary(rg, cells, func(c read.SummaryCell) string { return c.TenantID.String() }, true)
+		group := func(c read.SummaryCell) string { return c.TenantID.String() }
+		act, err := q.activeCounts(ctx, rg, cells, group, ids, true)
+		if err != nil {
+			return dto.LearningSummaryView{}, err
+		}
+		v := q.summary(rg, cells, group, true, act)
 		v.DashboardMeta, v.ExcludedTenantIDs = q.meta(rg, m), excluded
 		return v, nil
 	})
@@ -869,15 +884,40 @@ func containsUUID(xs []uuid.UUID, id uuid.UUID) bool {
 	return false
 }
 
-// summary applies k-anonymity to the cells (groups: school or tenant) and sums the visible ones (F043-AC-25).
-func (q Dashboards) summary(rg analytics.Range, cells []read.SummaryCell, group func(read.SummaryCell) string, platform bool) dto.LearningSummaryView {
-	v := dto.LearningSummaryView{Cells: []dto.SummaryCellView{}}
-	buckets := int64(max(len(rg.Buckets()), 1))
+// hiddenCells applies k-anonymity to the cells of a summary (groups: school or tenant, F043-AC-25).
+func (q Dashboards) hiddenCells(cells []read.SummaryCell, group func(read.SummaryCell) string) []bool {
 	kc := make([]analytics.Cell, len(cells))
 	for i, c := range cells {
 		kc[i] = analytics.Cell{Group: group(c), Students: c.Students}
 	}
-	hidden := analytics.Suppress(kc, q.Config.MinCellSize)
+	return analytics.Suppress(kc, q.Config.MinCellSize)
+}
+
+func cellKey(c read.SummaryCell) read.CellKey {
+	return read.CellKey{TenantID: c.TenantID, SchoolID: c.SchoolID, GradeLevel: c.GradeLevel, SubjectID: c.SubjectID}
+}
+
+// activeCounts are the distinct active students of the visible cells over the selected period [from, to] — per cell, per
+// group and in total (one definition everywhere, LEARNING_ANALYTICS §7, owner "chốt hết" 2026-11-28; it replaces the mean
+// of the active students per bucket). Hidden cells are not counted, so a total never reveals them.
+func (q Dashboards) activeCounts(ctx context.Context, rg analytics.Range, cells []read.SummaryCell, group func(read.SummaryCell) string,
+	tenantIDs []uuid.UUID, platform bool) (read.ActiveCounts, error) {
+	hidden := q.hiddenCells(cells, group)
+	keys := make([]read.CellKey, 0, len(cells))
+	for i, c := range cells {
+		if !hidden[i] {
+			keys = append(keys, cellKey(c))
+		}
+	}
+	return q.Model.ActiveCells(ctx, tenantIDs, keys, !platform, rg.From, q.lastDay(rg))
+}
+
+// summary applies k-anonymity to the cells (groups: school or tenant) and sums the visible ones (F043-AC-25); the active
+// students are the distinct counts of act.
+func (q Dashboards) summary(rg analytics.Range, cells []read.SummaryCell, group func(read.SummaryCell) string, platform bool,
+	act read.ActiveCounts) dto.LearningSummaryView {
+	v := dto.LearningSummaryView{Cells: []dto.SummaryCellView{}}
+	hidden := q.hiddenCells(cells, group)
 	type tot struct{ active, acts, accNum, accDen, actS, due, done int64 }
 	var all tot
 	groups := map[string]*tot{}
@@ -895,10 +935,11 @@ func (q Dashboards) summary(rg analytics.Range, cells []read.SummaryCell, group 
 			v.Cells = append(v.Cells, cv)
 			continue
 		}
-		students, active, acts := c.Students, int(c.ActiveSum/buckets), int(c.Activities)
+		students, active, acts := c.Students, act.Cells[cellKey(c).Key()], int(c.Activities)
 		cv.Students, cv.ActiveStudents, cv.AttemptsComplete = &students, &active, &acts
 		cv.Accuracy = analytics.Ratio(c.AccNum, c.AccDen)
-		if active > 0 {
+		// active_minutes_avg is unchanged: minutes per active student and bucket (ActiveSum), F043.
+		if active > 0 && c.ActiveSum > 0 {
 			avg := float64(c.ActS) / 60 / float64(c.ActiveSum)
 			avg = float64(int(avg*10+0.5)) / 10
 			cv.ActiveMinutesAvg = &avg
@@ -921,11 +962,11 @@ func (q Dashboards) summary(rg analytics.Range, cells []read.SummaryCell, group 
 		}
 	}
 	if len(cells) > v.SuppressedCells {
-		active, acts := int(all.active/buckets), int(all.acts)
+		active, acts := act.Total, int(all.acts)
 		v.ActiveStudents, v.AttemptsCompleted = &active, &acts
 		v.Accuracy = analytics.Ratio(all.accNum, all.accDen)
 		v.AssignmentCompletionRate = analytics.Ratio(all.done, all.due)
-		if all.active > 0 {
+		if active > 0 && all.active > 0 {
 			avg := float64(all.actS) / 60 / float64(all.active)
 			avg = float64(int(avg*10+0.5)) / 10
 			v.ActiveMinutesAvg = &avg
@@ -934,7 +975,7 @@ func (q Dashboards) summary(rg analytics.Range, cells []read.SummaryCell, group 
 	for _, k := range order {
 		g := groups[k]
 		id, _ := uuid.Parse(k)
-		active := int(g.active / buckets)
+		active := act.Groups[id]
 		row := dto.SummaryGroupView{ActiveStudents: &active, Accuracy: analytics.Ratio(g.accNum, g.accDen)}
 		if platform {
 			row.TenantID = &id

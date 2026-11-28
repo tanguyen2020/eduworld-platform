@@ -11232,10 +11232,13 @@ components:
         preview_session_id:
           $ref: '#/components/schemas/Uuid'
         render:
-          $ref: '#/components/schemas/ActivityRender'
+          description: Chỉ với content_type = activity — ActivityRender như học sinh nhận (không nguồn câu hỏi, chấm, ngưỡng đạt; F058-AC-10/11)
+          allOf:
+            - $ref: '#/components/schemas/ActivityRender'
         items:
           type: array
           maxItems: 200
+          description: QuestionRender không đáp án; với activity là các câu cố định của version theo thứ tự (câu rút ngẫu nhiên lúc bắt đầu không được rút trong preview)
           items:
             $ref: '#/components/schemas/QuestionRender'
         expires_at:
@@ -13375,6 +13378,7 @@ components:
         display_name:
           type: string
           maxLength: 128
+          description: Không do module learning điền (projection ref.students không có PII — DATABASE_DESIGN §2.17); Portal ghép tên từ listTenantGradeStudents của trường (F055-AC-08)
         status:
           $ref: '#/components/schemas/AssignmentSubmissionStatus'
         attempts_used:
@@ -13955,7 +13959,7 @@ components:
                     - integer
                     - 'null'
                   minimum: 0
-                  description: Học sinh có hoạt động học trong 7 ngày kết thúc ở `to` (khối hiển thị; null khi bị che)
+                  description: Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) — khối hiển thị; null khi bị che
                 assignments_open:
                   type: integer
                   minimum: 0
@@ -14020,6 +14024,7 @@ components:
                           - integer
                           - 'null'
                         minimum: 0
+                        description: Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) của khối
                       accuracy:
                         type:
                           - number
@@ -14342,6 +14347,7 @@ components:
               type:
                 - integer
                 - 'null'
+              description: Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7), trên các ô hiển thị
             active_minutes_avg:
               type:
                 - number
@@ -14374,6 +14380,7 @@ components:
                     type:
                       - integer
                       - 'null'
+                    description: Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) của trường (ô hiển thị)
                   accuracy:
                     type:
                       - number
@@ -14391,6 +14398,7 @@ components:
                     type:
                       - integer
                       - 'null'
+                    description: Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) của tenant (ô hiển thị)
                   accuracy:
                     type:
                       - number
@@ -14444,7 +14452,7 @@ components:
                     type:
                       - integer
                       - 'null'
-                    description: Học sinh hoạt động trung bình mỗi ngày/tuần/tháng theo grain
+                    description: Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) của ô
                   active_minutes_avg:
                     type:
                       - number

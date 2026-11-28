@@ -32,6 +32,31 @@ describe('Theo dõi nộp bài', () => {
     expect(headers.join(' ')).not.toMatch(/XP|Rating|Nhận xét/i);
   });
 
+  it('student names come from listTenantGradeStudents of the assignment school, not from learning (F055-AC-08)', async () => {
+    const { a, setup } = seed();
+    const { backend } = await renderLms(`/school-lms/assignments/${a.assignment_id}`, { setup });
+    const table = await screen.findByTestId('submission-table');
+    expect(await within(table).findByText('Lê Bình')).toBeInTheDocument();
+    expect(within(table).getByText('Trần Sắp Bị Dọn')).toBeInTheDocument();
+    const calls = backend.requests.filter((r) => /^\/tenant\/schools\/[^/]+\/grades\/\d+\/students$/.test(r.path));
+    expect(calls.length).toBeGreaterThan(0);
+    // only the targeted grade of the assignment school (no extra student from another grade)
+    for (const c of calls) expect(c.path).toBe(`/tenant/schools/${a.school_id}/grades/3/students`);
+  });
+
+  it('without the right to read the students of the school, rows keep a numbered label — never a name or an id (F055-AC-08, R16)', async () => {
+    const { a, setup } = seed();
+    await renderLms(`/school-lms/assignments/${a.assignment_id}`, {
+      setup,
+      overrides: [(r) => (/^\/tenant\/schools\/[^/]+\/grades\/\d+\/students$/.test(r.path) ? problem(403, 'PERMISSION_DENIED') : undefined)],
+    });
+    const table = await screen.findByTestId('submission-table');
+    expect(await within(table).findByText('Học sinh 1')).toBeInTheDocument();
+    expect(within(table).getByText('Học sinh 3')).toBeInTheDocument();
+    expect(within(table).queryByText('Nguyễn An')).toBeNull();
+    expect(within(table).queryByText(LMS_IDS.studentBinh)).toBeNull();
+  });
+
   it('extend and excuse: reason required, Idempotency-Key reused on retry, row updated from the response (F055-AC-09)', async () => {
     const { a, setup } = seed();
     const { backend } = await renderLms(`/school-lms/assignments/${a.assignment_id}`, { setup });

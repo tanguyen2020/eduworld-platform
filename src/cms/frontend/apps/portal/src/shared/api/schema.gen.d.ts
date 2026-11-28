@@ -10431,6 +10431,7 @@ export interface components {
             assignment_id: components["schemas"]["Uuid"];
             attempts_used?: number;
             best_attempt_id?: components["schemas"]["Uuid"];
+            /** @description Không do module learning điền (projection ref.students không có PII — DATABASE_DESIGN §2.17); Portal ghép tên từ listTenantGradeStudents của trường (F055-AC-08) */
             display_name?: string;
             due_at_override?: components["schemas"]["Timestamp"];
             max_score?: number | null;
@@ -14468,8 +14469,10 @@ export interface components {
         };
         LearningPreviewSession: {
             expires_at: components["schemas"]["Timestamp"];
+            /** @description QuestionRender không đáp án; với activity là các câu cố định của version theo thứ tự (câu rút ngẫu nhiên lúc bắt đầu không được rút trong preview) */
             items?: components["schemas"]["QuestionRender"][];
             preview_session_id: components["schemas"]["Uuid"];
+            /** @description Chỉ với content_type = activity — ActivityRender như học sinh nhận (không nguồn câu hỏi, chấm, ngưỡng đạt; F058-AC-10/11) */
             render?: components["schemas"]["ActivityRender"];
         };
         LearningProgress: {
@@ -14492,17 +14495,20 @@ export interface components {
         LearningSummary: components["schemas"]["DashboardMeta"] & {
             accuracy?: number | null;
             active_minutes_avg?: number | null;
+            /** @description Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7), trên các ô hiển thị */
             active_students?: number | null;
             assignment_completion_rate?: number | null;
             attempts_completed?: number | null;
             by_school?: {
                 accuracy?: number | null;
+                /** @description Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) của trường (ô hiển thị) */
                 active_students?: number | null;
                 school_id?: components["schemas"]["Uuid"];
             }[];
             /** @description Chỉ ở `/admin/analytics/learning/summary` */
             by_tenant?: {
                 accuracy?: number | null;
+                /** @description Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) của tenant (ô hiển thị) */
                 active_students?: number | null;
                 tenant_id?: components["schemas"]["Uuid"];
             }[];
@@ -14510,7 +14516,7 @@ export interface components {
             cells?: {
                 accuracy?: number | null;
                 active_minutes_avg?: number | null;
-                /** @description Học sinh hoạt động trung bình mỗi ngày/tuần/tháng theo grain */
+                /** @description Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) của ô */
                 active_students?: number | null;
                 attempts_completed?: number | null;
                 grade_level: number;
@@ -16898,7 +16904,7 @@ export interface components {
             widgets: {
                 accuracy?: number | null;
                 active_minutes_series?: components["schemas"]["AnalyticsPoint"][];
-                /** @description Học sinh có hoạt động học trong 7 ngày kết thúc ở `to` (khối hiển thị; null khi bị che) */
+                /** @description Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) — khối hiển thị; null khi bị che */
                 active_students?: number | null;
                 assignment_completion_rate?: number | null;
                 assignments?: components["schemas"]["DashboardAssignmentProgress"][];
@@ -16908,6 +16914,7 @@ export interface components {
                 /** @description Các khối của trường (ADR-0095) — khối có dưới analytics_min_cell_size học sinh chỉ có grade_level và suppressed (FR-ANL-016) */
                 grades?: {
                     accuracy?: number | null;
+                    /** @description Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) của khối */
                     active_students?: number | null;
                     assignment_completion_rate?: number | null;
                     grade_level: components["schemas"]["GradeLevel"];

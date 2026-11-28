@@ -24,6 +24,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/cache"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/mediaproc"
@@ -82,7 +83,8 @@ func newMediaKit(ctx context.Context, t *testing.T, e *env, codec *page.Codec, s
 		Audit: write.Auditor{R: e.rec}, WorkDir: t.TempDir(), Metrics: observability.MediaCounter{}}
 	k.math = command.MathAssets{Store: write.MathRepo{}, Storage: s3, Metrics: observability.MediaCounter{}}
 	k.qry = query.MediaLibrary{Session: e.read, Model: read.MediaModel{}, Signer: k.signer, Cursors: codec}
-	k.preview = command.Preview{UoW: e.uow, Session: e.read, Questions: read.QuestionModel{}, Registry: question.Full(), Schema: schema, Store: k.store}
+	k.preview = command.Preview{UoW: e.uow, Session: e.read, Questions: read.QuestionModel{}, Registry: question.Full(), Schema: schema, Store: k.store,
+		Docs: read.DocModel{}, Activities: plugins.Registry(), QuestionVersions: read.QuestionModel{}}
 	return k
 }
 

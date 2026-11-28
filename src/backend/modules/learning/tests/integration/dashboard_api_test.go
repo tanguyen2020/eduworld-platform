@@ -123,6 +123,14 @@ func TestSchoolDashboardWidgets(t *testing.T) {
 		num(grades[0], "accuracy") != 0.757 || grades[0]["suppressed"] != false || num(w, "assignment_completion_rate") != 0.143 {
 		t.Fatalf("grades %v completion %v", grades, w["assignment_completion_rate"])
 	}
+	// Active students = distinct students with learning activity over the selected period, everywhere (LEARNING_ANALYTICS §7,
+	// owner "chốt hết" 2026-11-28): 12-08…12-10 holds a2 and b1 only (a1 learnt on 12-07; the former widget counted the 7 days
+	// ending at "to", the grade row the 7 days of the read model).
+	short := must(t, c.do(t, http.MethodGet, "/lms/dashboards/school?school_id="+k.school.String()+"&from=2026-12-08&to=2026-12-10", adS, nil, nil),
+		http.StatusOK, "school dashboard, 3 days").obj("widgets")
+	if sg := list(short, "grades"); num(short, "active_students") != 2 || len(sg) != 1 || num(sg[0], "active_students") != 2 {
+		t.Fatalf("active students of 12-08…12-10: widget %v grades %v", short["active_students"], sg)
+	}
 	weak := list(w, "weak_objectives")
 	if len(weak) != 3 || weak[0]["code"] != "DMATH.G3.NUM.SUB" || num(weak[0], "below_proficient_ratio") != 1 ||
 		fmt.Sprint(weak[0]["grade_levels"]) != "[3]" {
@@ -544,6 +552,21 @@ func TestTenantAndPlatformSummary(t *testing.T) {
 	if num(r.body, "accuracy") != 0.791 || len(r.items("by_school")) != 1 {
 		t.Fatalf("totals %v by_school %v", r.body["accuracy"], r.items("by_school"))
 	}
+	// Active students = distinct over the period (owner "chốt hết" 2026-11-28, LEARNING_ANALYTICS §7), not the mean per day:
+	// math a1, a2 (12-07), b1 + the three new students (12-08) → 6; Vietnamese b1 (12-07), a2 (12-08) → 2; school S and the
+	// totals → 6 distinct (the daily mean of 10 days was 0).
+	for _, cell := range cells {
+		if cell["school_id"] != k.school.String() {
+			continue
+		}
+		want := map[string]float64{k.subjM.String(): 6, k.subjV.String(): 2}[cell["subject_id"].(string)]
+		if num(cell, "active_students") != want {
+			t.Fatalf("active students of cell %v: want %v", cell, want)
+		}
+	}
+	if num(r.body, "active_students") != 6 || num(r.items("by_school")[0], "active_students") != 6 {
+		t.Fatalf("active students total %v by_school %v", r.body["active_students"], r.items("by_school"))
+	}
 	// A School Admin reads its school only.
 	r = must(t, c.do(t, http.MethodGet, q, adS2, nil, nil), http.StatusOK, "school admin summary")
 	for _, cell := range r.items("cells") {
@@ -562,6 +585,11 @@ func TestTenantAndPlatformSummary(t *testing.T) {
 	}
 	authztest.Cover(t, "getTenantLearningSummary", authztest.CrossTenant, authztest.RoleDenied)
 	authztest.Cover(t, "getPlatformLearningSummary", authztest.RoleDenied)
+	// Platform cells of tenant A: grade 4 × M (1 student) is hidden, so k-anonymity also hides the smallest other cell of the
+	// tenant (grade 3 × M); only grade 3 × V stays (b1, a2) → 2 distinct, never counting a hidden cell (accuracy 9/13).
+	if num(r.body, "active_students") != 2 || len(r.items("by_tenant")) != 1 || num(r.items("by_tenant")[0], "active_students") != 2 {
+		t.Fatalf("platform active students %v by_tenant %v", r.body["active_students"], r.items("by_tenant"))
+	}
 	if len(r.items("by_tenant")) != 1 || c.audits(ctx, t, "cross_tenant.accessed", nil) <= audits {
 		t.Fatalf("by_tenant %v audits %d → %d", r.items("by_tenant"), audits, c.audits(ctx, t, "cross_tenant.accessed", nil))
 	}
@@ -663,6 +691,18 @@ func TestDashboardRoleAndQueryCatalog(t *testing.T) {
 			}
 		}
 		if _, err := m.ActiveStudents(ctx, sc, date("2026-12-04"), date("2026-12-10")); err != nil {
+			return err
+		}
+		if _, err := m.ActiveByGrade(ctx, sc, date("2026-12-04"), date("2026-12-10")); err != nil {
+			return err
+		}
+		school := k.school
+		cells := []read.CellKey{{TenantID: c.tenantA, SchoolID: &school, GradeLevel: 3, SubjectID: k.subjM}}
+		if _, err := m.ActiveCells(ctx, []uuid.UUID{c.tenantA}, cells, true, date("2026-12-04"), date("2026-12-10")); err != nil {
+			return err
+		}
+		if _, err := m.ActiveCells(ctx, []uuid.UUID{c.tenantA}, []read.CellKey{{TenantID: c.tenantA, GradeLevel: 3, SubjectID: k.subjM}}, false,
+			date("2026-12-04"), date("2026-12-10")); err != nil {
 			return err
 		}
 		if _, err := m.Grades(ctx, sc); err != nil {

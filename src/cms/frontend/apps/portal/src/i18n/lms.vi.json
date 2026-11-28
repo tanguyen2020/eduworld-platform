@@ -131,7 +131,8 @@
       "extendTitle": "Gia hạn cho {{name}}",
       "newDueAt": "Hạn nộp mới",
       "excuse": "Miễn",
-      "excuseTitle": "Miễn bài cho {{name}}"
+      "excuseTitle": "Miễn bài cho {{name}}",
+      "numbered": "Học sinh {{n}}"
     },
     "accommodations": {
       "tab": "Hỗ trợ thời gian",

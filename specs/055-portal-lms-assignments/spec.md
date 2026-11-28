@@ -37,6 +37,10 @@
 
 - Q: T015 "`hs.an.3a` thấy, `hs.chi.3b` không thấy" — hai học sinh khác khối? → A: [Confirmed] **Không**: trong seed identity cả hai là khối 3 của `DEMOA1` (`hs.chi.3b` = "3B" cũ). Sau ADR-0095 phân biệt hai em bằng `exclude_student_ids` (hoặc target `students`), không bằng khối. Các bài giao khối 3 của `make seed-content` (2 bài) và `make seed-attempts` (2 bài) giao cả hai em; 3 bài của `make seed-media` ("[DEV] Xem video bảng nhân", "[DEV] Nghe đếm số", "[DEV] Mô phỏng đòn bẩy") giao khối 3 **trừ `hs.chi.3b`** — `listMyAssignments` của `hs.an.3a` có, của `hs.chi.3b` không ([LOCAL_DEVELOPMENT §5.2](../../docs/11-operations/LOCAL_DEVELOPMENT.md#52-seed-mở-rộng-media-golden-dataset-make-seed-media-make-seed-attempts)). E2E T015 tự tạo bài qua wizard với khối 3 + loại `hs.chi.3b` (hoặc danh sách học sinh), không cần đổi khối của học sinh seed.
 
+### Session 2026-11-28 (tên học sinh của bảng nộp bài — [Confirmed — owner "chốt hết"])
+
+- Q: Cột "Học sinh" của `listAssignmentSubmissions` trống trên backend thật — module learning điền `display_name` từ đâu? → A: [Confirmed — owner "chốt hết"] Phương án an toàn nhất: **không** chép họ tên vào module learning (event identity và `ref.students` không có PII — DATABASE_DESIGN §2.17; module learning không gọi facade identity, ADR-0037) — Portal ghép tên từ `listTenantGradeStudents` của trường của bài như dashboard khối (F056) và chi tiết thử thách (F108): các khối được giao, mọi khối của trường khi có học sinh thêm tay; identity tự kiểm `tenant.student.read`/`lms.student.read` trong scope trường (tenant khác/ngoài scope → 404, thiếu quyền → 403) — khi không đọc được, dòng hiện "Học sinh n" (không bao giờ id). Học sinh tự đăng ký không có họ tên → tên đăng nhập. Tên chỉ cho nhân sự trường trong portal, không bao giờ tới người chơi khác (R16), không log (R14). `AssignmentSubmission.display_name` giữ trong contract (mô tả: module learning không điền). Test: `detail.test.tsx` AC-08 (3 case, FAIL → PASS), E2E `lms/assign.spec.ts` kiểm cột tên.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Wizard giao bài (Priority: P1) 🎯 MVP

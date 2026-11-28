@@ -4,8 +4,9 @@
 // private origin with its own credential the same way). Local/CI only: the credential comes from the environment of
 // the cdn service (docker-compose.yml), never from this file.
 //
-// Signed: GET/HEAD, the path ($uri — the location regex allows [A-Za-z0-9._/-] only, so it is already its S3 canonical
-// form), no query string (proxy_pass sends $uri without the md5/expires of the CDN URL), headers host,
+// Signed: GET/HEAD, the object path ($s3_path set by each location: $uri, or for an HLS directory token the path without
+// its /t/<md5>/<expires> prefix — the location regexes allow [A-Za-z0-9._/-] only, so it is already its S3 canonical
+// form), no query string (proxy_pass sends the object path without the md5/expires of the CDN URL), headers host,
 // x-amz-content-sha256 (UNSIGNED-PAYLOAD) and x-amz-date.
 const crypto = require('crypto');
 
@@ -28,7 +29,7 @@ function authorization(r) {
   const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
   const canonicalHeaders = 'host:' + v.s3_host + '\n' + 'x-amz-content-sha256:' + payload + '\n' + 'x-amz-date:' + date + '\n';
   const method = r.method === 'HEAD' ? 'HEAD' : 'GET';
-  const canonical = [method, v.uri, '', canonicalHeaders, signedHeaders, payload].join('\n');
+  const canonical = [method, v.s3_path || v.uri, '', canonicalHeaders, signedHeaders, payload].join('\n');
   const scope = day + '/' + v.s3_region + '/s3/aws4_request';
   const toSign = ['AWS4-HMAC-SHA256', date, scope, crypto.createHash('sha256').update(canonical).digest('hex')].join('\n');
   const key = hmac(hmac(hmac(hmac('AWS4' + v.s3_secret_key, day), v.s3_region), 's3'), 'aws4_request');

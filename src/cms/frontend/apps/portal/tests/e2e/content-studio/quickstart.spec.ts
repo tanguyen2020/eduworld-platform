@@ -138,9 +138,7 @@ test.describe('@F058 quickstart — Learning Activity Builder trên stack thật
     expect((await ok).status()).toBe(200);
   });
 
-  // FIXME(backend): createLearningPreviewSession answers 422 "preview of activity is not available yet" (module learning
-  // previews questions only, command/preview.go) — F058-AC-10/11 cannot pass on the real stack yet (2026-11-28)
-  test.fixme('9: preview vi then en — no answer_key or feedback in the network, no attempt', async () => {
+  test('9: preview vi then en — no answer_key or feedback in the network, no attempt', async () => {
     test.setTimeout(3 * 60_000);
     test.skip(!quizId, 'no quiz created');
     const { page } = author;

@@ -26916,7 +26916,7 @@ components:
             widgets:
               type: object
               properties:
-                active_students: { type: [integer, 'null'], minimum: 0, description: Học sinh có hoạt động học trong 7 ngày kết thúc ở `to` (khối hiển thị; null khi bị che) }
+                active_students: { type: [integer, 'null'], minimum: 0, description: 'Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) — khối hiển thị; null khi bị che' }
                 assignments_open: { type: integer, minimum: 0 }
                 assignments_due_soon: { type: integer, minimum: 0, description: Bài đang mở có hạn trong 48 giờ tới }
                 assignment_completion_rate: { type: [number, 'null'], minimum: 0, maximum: 1 }
@@ -26944,7 +26944,7 @@ components:
                     properties:
                       grade_level: { $ref: '#/components/schemas/GradeLevel' }
                       students: { type: [integer, 'null'], minimum: 0 }
-                      active_students: { type: [integer, 'null'], minimum: 0 }
+                      active_students: { type: [integer, 'null'], minimum: 0, description: 'Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) của khối' }
                       accuracy: { type: [number, 'null'], minimum: 0, maximum: 1 }
                       assignment_completion_rate: { type: [number, 'null'], minimum: 0, maximum: 1 }
                       suppressed: { type: boolean }
@@ -27036,7 +27036,7 @@ components:
       properties:
         assignment_id: { $ref: '#/components/schemas/Uuid' }
         student_id: { $ref: '#/components/schemas/Uuid' }
-        display_name: { type: string, maxLength: 128 }
+        display_name: { type: string, maxLength: 128, description: 'Không do module learning điền (projection ref.students không có PII — DATABASE_DESIGN §2.17); Portal ghép tên từ listTenantGradeStudents của trường (F055-AC-08)' }
         status: { $ref: '#/components/schemas/AssignmentSubmissionStatus' }
         attempts_used: { type: integer, minimum: 0 }
         best_attempt_id: { $ref: '#/components/schemas/Uuid' }
@@ -27766,10 +27766,14 @@ components:
       required: [preview_session_id, expires_at]
       properties:
         preview_session_id: { $ref: '#/components/schemas/Uuid' }
-        render: { $ref: '#/components/schemas/ActivityRender' }
+        render:
+          description: Chỉ với content_type = activity — ActivityRender như học sinh nhận (không nguồn câu hỏi, chấm, ngưỡng đạt; F058-AC-10/11)
+          allOf:
+            - $ref: '#/components/schemas/ActivityRender'
         items:
           type: array
           maxItems: 200
+          description: QuestionRender không đáp án; với activity là các câu cố định của version theo thứ tự (câu rút ngẫu nhiên lúc bắt đầu không được rút trong preview)
           items: { $ref: '#/components/schemas/QuestionRender' }
         expires_at: { $ref: '#/components/schemas/Timestamp' }
     PreviewResponseRequest:
@@ -30579,7 +30583,7 @@ components:
         - type: object
           description: Tổng hợp học tập cấp tenant/platform; ô < 5 học sinh bị ẩn (null)
           properties:
-            active_students: { type: [integer, 'null'] }
+            active_students: { type: [integer, 'null'], description: 'Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7), trên các ô hiển thị' }
             active_minutes_avg: { type: [number, 'null'] }
             attempts_completed: { type: [integer, 'null'] }
             accuracy: { type: [number, 'null'], minimum: 0, maximum: 1 }
@@ -30591,7 +30595,7 @@ components:
                 type: object
                 properties:
                   school_id: { $ref: '#/components/schemas/Uuid' }
-                  active_students: { type: [integer, 'null'] }
+                  active_students: { type: [integer, 'null'], description: 'Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) của trường (ô hiển thị)' }
                   accuracy: { type: [number, 'null'] }
             by_tenant:
               type: array
@@ -30601,7 +30605,7 @@ components:
                 type: object
                 properties:
                   tenant_id: { $ref: '#/components/schemas/Uuid' }
-                  active_students: { type: [integer, 'null'] }
+                  active_students: { type: [integer, 'null'], description: 'Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) của tenant (ô hiển thị)' }
                   accuracy: { type: [number, 'null'] }
             series:
               type: array
@@ -30629,7 +30633,7 @@ components:
                   grade_level: { type: integer, minimum: 0, maximum: 12 }
                   subject_id: { $ref: '#/components/schemas/Uuid' }
                   students: { type: [integer, 'null'] }
-                  active_students: { type: [integer, 'null'], description: Học sinh hoạt động trung bình mỗi ngày/tuần/tháng theo grain }
+                  active_students: { type: [integer, 'null'], description: 'Học sinh hoạt động = số học sinh khác nhau có hoạt động học trong kỳ đã chọn [from, to] (LEARNING_ANALYTICS §7) của ô' }
                   active_minutes_avg: { type: [number, 'null'] }
                   attempts_completed: { type: [integer, 'null'] }
                   accuracy: { type: [number, 'null'], minimum: 0, maximum: 1 }

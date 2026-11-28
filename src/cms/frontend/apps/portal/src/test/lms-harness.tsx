@@ -24,6 +24,8 @@ export interface RenderLmsOptions {
   width?: number;
   loaders?: WorkspaceLoaders;
   setup?: (s: LmsMockState) => void;
+  /** Extra MOCK overrides placed before the LMS handlers (e.g. a 403 of another module). */
+  overrides?: MockPortalBackend['overrides'];
 }
 
 export async function renderLms(url: string, opts: RenderLmsOptions = {}) {
@@ -34,6 +36,7 @@ export async function renderLms(url: string, opts: RenderLmsOptions = {}) {
   installSchoolLmsMock(backend);
   const lms = installLmsMock(backend);
   opts.setup?.(lms);
+  if (opts.overrides) backend.overrides.unshift(...opts.overrides);
   setViewportWidth(opts.width ?? 1440);
   const r = await renderPortal({ url, backend, loaders: opts.loaders });
   return { ...r, lms };

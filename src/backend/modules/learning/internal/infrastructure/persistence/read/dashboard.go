@@ -30,7 +30,8 @@ var _ read.DashboardReader = DashboardModel{}
 // Catalog lists the query ids of the dashboards with one representative statement each (EXPLAIN test, TC-DASH-001).
 var Catalog = []string{"school_totals", "grade_totals", "school_series", "active_students", "grades",
 	"objective_stats", "attention", "assignments", "self_study", "grade_students", "profile_subjects", "profile_topics",
-	"profile_trend", "profile_assignments", "profile_recommendations", "school_cells", "tenant_cells", "available_from"}
+	"profile_trend", "profile_assignments", "profile_recommendations", "school_cells", "tenant_cells", "available_from",
+	"active_by_grade", "active_cells"}
 
 var grainTables = map[analytics.Grain]string{analytics.Day: "daily", analytics.Week: "weekly", analytics.Month: "monthly"}
 
@@ -331,6 +332,115 @@ func (DashboardModel) ActiveStudents(ctx context.Context, sc read.DashScope, fro
 			AND p.metric_version = 1`, sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, grades(sc.Grades), strIDs(sc.SubjectIDs), day(from),
 		day(to)).Scan(&n)
 	return n, dashErr("active_students", err)
+}
+
+// ActiveByGrade implements read.DashboardReader (query active_by_grade: progress_daily per grade recorded on the row, same
+// filters and window as active_students).
+func (DashboardModel) ActiveByGrade(ctx context.Context, sc read.DashScope, from, to time.Time) (map[int]int, error) {
+	q, err := dtx(ctx, "active_by_grade")
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok derived progress_daily (no deleted_at): explicit tenant_id, scope and window
+	rows, err := q.query(ctx, `SELECT COALESCE(p.grade_level, 0), count(DISTINCT p.student_id) FROM learning.progress_daily p
+		WHERE p.tenant_id = $1 AND ($2::uuid[] IS NULL OR p.school_id = ANY($2::uuid[]))
+			AND ($3::int IS NULL OR p.grade_level = $3) AND ($4::int[] IS NULL OR COALESCE(p.grade_level, 0) = ANY($4::int[]))
+			AND ($5::uuid[] IS NULL OR p.subject_id = ANY($5::uuid[])) AND p.bucket_date BETWEEN $6::date AND $7::date
+			AND p.metric_version = 1
+		GROUP BY 1 ORDER BY 1 LIMIT 13`, sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, grades(sc.Grades), strIDs(sc.SubjectIDs), day(from),
+		day(to))
+	if err != nil {
+		return nil, dashErr("active_by_grade", err)
+	}
+	defer func() { _ = rows.Close() }()
+	out := map[int]int{}
+	for rows.Next() {
+		var g, n int
+		if err := rows.Scan(&g, &n); err != nil {
+			return nil, dashErr("active_by_grade", err)
+		}
+		out[g] = n
+	}
+	return out, dashErr("active_by_grade", rows.Err())
+}
+
+// pgArray is the text form of a Postgres array (an empty element is NULL), cast in SQL (uuid[], int[]).
+func pgArray(xs []string) string {
+	parts := make([]string, len(xs))
+	for i, x := range xs {
+		if x == "" {
+			parts[i] = "NULL"
+		} else {
+			parts[i] = x
+		}
+	}
+	return "{" + strings.Join(parts, ",") + "}"
+}
+
+// ActiveCells implements read.DashboardReader (query active_cells): the distinct students of progress_daily in [from, to]
+// of the given cells — per cell, per school (bySchool) or tenant, and over every cell — in one GROUPING SETS statement.
+func (DashboardModel) ActiveCells(ctx context.Context, tenantIDs []uuid.UUID, cells []read.CellKey, bySchool bool, from,
+	to time.Time) (read.ActiveCounts, error) {
+	out := read.ActiveCounts{Cells: map[string]int{}, Groups: map[uuid.UUID]int{}}
+	if len(cells) == 0 {
+		return out, nil
+	}
+	q, err := dtx(ctx, "active_cells")
+	if err != nil {
+		return out, err
+	}
+	n := len(cells)
+	ts, ss, gs, subs := make([]string, n), make([]string, n), make([]string, n), make([]string, n)
+	for i, c := range cells {
+		ts[i], gs[i], subs[i] = c.TenantID.String(), strconv.Itoa(c.GradeLevel), c.SubjectID.String()
+		if c.SchoolID != nil {
+			ss[i] = c.SchoolID.String()
+		}
+	}
+	// Constant column lists (never input): the cell grain and the group of the summary.
+	cellSet, group, school := "a.tenant_id", "a.tenant_id", "NULL::uuid"
+	if bySchool {
+		cellSet, group, school = "a.tenant_id, a.school_id", "a.school_id", "a.school_id"
+	}
+	// tenancyguard:ok derived progress_daily (no deleted_at): tenant_id = ANY(tenants of the scope), explicit cells, bounded window
+	rows, err := q.query(ctx, fmt.Sprintf(`WITH v AS (SELECT * FROM unnest($1::uuid[], $2::uuid[], $3::int[], $4::uuid[])
+				AS v(tenant_id, school_id, grade_level, subject_id)),
+			a AS (SELECT DISTINCT p.tenant_id, p.school_id, COALESCE(p.grade_level, 0) AS grade_level, p.subject_id, p.student_id
+				FROM learning.progress_daily p
+				JOIN v ON v.tenant_id = p.tenant_id AND (v.school_id IS NULL OR v.school_id = p.school_id)
+					AND v.grade_level = COALESCE(p.grade_level, 0) AND v.subject_id = p.subject_id
+				WHERE p.tenant_id = ANY($5::uuid[]) AND p.bucket_date BETWEEN $6::date AND $7::date AND p.metric_version = 1)
+		SELECT a.tenant_id, %[3]s, a.grade_level, a.subject_id, GROUPING(a.grade_level), GROUPING(%[2]s), count(DISTINCT a.student_id)
+		FROM a GROUP BY GROUPING SETS ((%[1]s, a.grade_level, a.subject_id), (%[2]s), ()) LIMIT 20000`, cellSet, group, school),
+		pgArray(ts), pgArray(ss), pgArray(gs), pgArray(subs), strIDs(tenantIDs), day(from), day(to))
+	if err != nil {
+		return out, dashErr("active_cells", err)
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var tenant, schoolID, subject uuid.NullUUID
+		var grade sql.NullInt64
+		var cellAgg, groupAgg, count int
+		if err := rows.Scan(&tenant, &schoolID, &grade, &subject, &cellAgg, &groupAgg, &count); err != nil {
+			return out, dashErr("active_cells", err)
+		}
+		switch {
+		case cellAgg == 0:
+			k := read.CellKey{TenantID: tenant.UUID, GradeLevel: int(grade.Int64), SubjectID: subject.UUID}
+			if schoolID.Valid {
+				id := schoolID.UUID
+				k.SchoolID = &id
+			}
+			out.Cells[k.Key()] = count
+		case groupAgg == 0 && bySchool:
+			out.Groups[schoolID.UUID] = count
+		case groupAgg == 0:
+			out.Groups[tenant.UUID] = count
+		default:
+			out.Total = count
+		}
+	}
+	return out, dashErr("active_cells", rows.Err())
 }
 
 // Grades implements read.DashboardReader (query grades: rm_school_grade_summary per grade). Students is the size of the

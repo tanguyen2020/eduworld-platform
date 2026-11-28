@@ -1,7 +1,8 @@
 // @F055 T015 — TC-LMS-001 on the REAL stack: `ad.truong.a` assigns through the 5-step wizard a published activity to
 // grade 3 of TH Demo A leaving `hs.chi.3b` out (`exclude_student_ids`; both students are grade 3 since ADR-0095, spec
 // Clarifications 2026-11-28), publishes it once (createAssignment + publishAssignment with their Idempotency-Key), and:
-// - the submissions of the new assignment (listAssignmentSubmissions, detail page) hold `hs.an.3a` and not `hs.chi.3b`;
+// - the submissions of the new assignment (listAssignmentSubmissions, detail page) hold `hs.an.3a` and not `hs.chi.3b`, and
+//   the "Học sinh" column shows each name (joined from listTenantGradeStudents, F055-AC-08);
 // - the students themselves: `listMyAssignments` of `hs.an.3a` has the new assignment and the seeded
 //   "[DEV] Xem video bảng nhân" (`make seed-media`: grade 3 except hs.chi.3b), the one of `hs.chi.3b` has neither but
 //   still the seeded "[DEV] Phép chia có dư (golden)" given to the whole grade. Each student signs in to the game API
@@ -88,6 +89,8 @@ test.describe('@F055 LMS — giao bài khối 3 trừ một học sinh (TC-LMS-0
   const title = `[E2E] Giao bài khối 3 trừ hs.chi.3b ${Date.now().toString(36)}`;
   let assignmentId: string | undefined;
   const ids: Record<string, string> = {};
+  /** Name shown for a student (display name of listTenantGradeStudents, else the username) — read at run time, never written. */
+  const names: Record<string, string> = {};
 
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(3 * 60_000);
@@ -127,8 +130,10 @@ test.describe('@F055 LMS — giao bài khối 3 trừ một học sinh (TC-LMS-0
     for (const username of ['hs.an.3a', 'hs.chi.3b']) {
       const students = page.waitForResponse((r) => /\/tenant\/schools\/[^/]+\/grades\/3\/students/.test(r.url()) && new URL(r.url()).searchParams.get('q') === username, { timeout: 60_000 });
       await exclude.fill(username);
-      const found = (await (await students).json()) as { items: { student_id: string; username?: string }[] };
-      ids[username] = found.items.find((x) => x.username === username)?.student_id ?? '';
+      const found = (await (await students).json()) as { items: { student_id: string; username?: string; display_name?: string }[] };
+      const hit = found.items.find((x) => x.username === username);
+      ids[username] = hit?.student_id ?? '';
+      names[username] = hit?.display_name || username;
       expect(ids[username], `${username} is a grade 3 student of TH Demo A`).toBeTruthy();
     }
     await openOptions(page).filter({ hasText: '(hs.chi.3b)' }).first().click();
@@ -175,6 +180,13 @@ test.describe('@F055 LMS — giao bài khối 3 trừ một học sinh (TC-LMS-0
     expect(rows.map((r) => r.student_id)).toContain(ids['hs.an.3a']);
     expect(rows.map((r) => r.student_id)).not.toContain(ids['hs.chi.3b']);
     await expect(page.getByTestId('assignment-detail').locator('.ant-table-tbody tr')).not.toHaveCount(0);
+    // F055-AC-08: the "Học sinh" column shows the name joined from listTenantGradeStudents (module learning keeps no name),
+    // no row is left blank or numbered for ad.truong.a (lms.* in the school)
+    const table = page.getByTestId('submission-table');
+    await expect(table.getByRole('cell', { name: names['hs.an.3a'], exact: true })).toBeVisible({ timeout: 60_000 });
+    const firstCells = await table.locator('.ant-table-tbody tr td:first-child').allTextContents();
+    expect(firstCells.length).toBe(rows.length);
+    for (const c of firstCells) expect(c.trim(), 'every submission row has a student name').not.toMatch(/^$|^Học sinh \d+$/);
   });
 
   test('students: hs.an.3a sees it (and the seeded video), hs.chi.3b does not', async () => {

@@ -3,7 +3,8 @@
 // the subjects of the tenant (listSubjects) and the students of one grade of one school (listTenantGradeStudents —
 // `tenant.student.read` or `lms.student.read`, cursor, optional `q` ≥ 2 characters). Options only come from the API; the
 // server checks scope and school (404 outside the scope, 422 for a student of another school on create).
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { fetchAllPages } from '../../../../shared/api/fetchAllPages';
 import { PAGE_SIZE, qk, useApi, usePagedList, type Schemas } from '../../common/api';
 import { useSchoolLmsScope } from '../../common/scope';
 import { useSchoolList } from '../../schools/useSchools';
@@ -56,4 +57,34 @@ export function useGradeStudents(schoolId: string | undefined, grade: number | u
       ),
     scope.ready && !!schoolId && !!grade,
   );
+}
+
+/**
+ * Names of the students of some grades of one school (listTenantGradeStudents, every page of each grade) for the staff
+ * views of module learning, whose rows carry the student id only (AssignmentSubmission: no PII in the ref.* projections of
+ * learning — F055-AC-08, Clarifications 2026-11-28). Identity checks the right (tenant.student.read / lms.student.read in
+ * the scope of the school): without it the map stays empty and the caller shows a numbered label. A self-registered
+ * student has no display name: its username is shown (F135). Names are never logged (R14).
+ */
+export function useStudentNames(schoolId: string | undefined, grades: readonly number[]): Map<string, string> {
+  const api = useApi();
+  const scope = useSchoolLmsScope();
+  const results = useQueries({
+    queries: grades.map((grade) => ({
+      queryKey: [...qk('grade-students', scope, schoolId, grade), 'all-pages'],
+      queryFn: () =>
+        fetchAllPages<GradeStudent>((query) =>
+          api.call(
+            api.client.GET('/tenant/schools/{school_id}/grades/{grade_level}/students', {
+              params: { path: { school_id: schoolId!, grade_level: grade }, query },
+              headers: scope.headers,
+            }),
+          ),
+        ),
+      enabled: scope.ready && !!schoolId,
+      staleTime: 60_000,
+      retry: false,
+    })),
+  });
+  return new Map(results.flatMap((r) => r.data?.items ?? []).map((s) => [s.student_id, s.display_name || s.username || '']));
 }

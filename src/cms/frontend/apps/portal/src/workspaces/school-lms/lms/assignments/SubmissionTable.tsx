@@ -1,7 +1,10 @@
 // Submissions of one assignment (F055 T026; F055-AC-08, AC-09): listAssignmentSubmissions (cursor, status filter) —
 // student, status, auto-graded score, attempts, submitted at, "làm quá nhanh" when rapid_guess_count > 0. No XP, rating
 // or manual comment column (SCHOOL_LMS §8.2, ADR-0072). Per-row extend / excuse inside the catalog ActionGate; the row
-// is updated from the AssignmentSubmission the server returns. Cards below 768 px (ResponsiveTable).
+// is updated from the AssignmentSubmission the server returns. Cards below 768 px (ResponsiveTable). The student name is
+// joined from listTenantGradeStudents of the assignment school (module learning keeps no name, Clarifications
+// 2026-11-28): the targeted grades, every grade of the school when students were added by hand; without the right to read
+// the students (identity 403/404) or for a student no longer listed, the row is numbered "Học sinh n" (never an id).
 import { Button, DatePicker, Flex, Form, Input, Modal, Space, Tag } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import dayjs, { type Dayjs } from 'dayjs';
@@ -13,13 +16,22 @@ import { ReasonModal } from '../../common/ReasonModal';
 import { ResponsiveTable } from '../../common/ResponsiveTable';
 import { useFieldRules } from '../../common/ui';
 import { useStudentAction, useSubmissions, type Assignment, type AssignmentSubmission } from '../api/assignments';
+import { useSchoolGrades, useStudentNames } from '../api/targets';
 import { LMS_ENUMS, LMS_FIELDS } from '../model/fieldSchemas';
 import { LmsProblem, LmsTag } from '../LmsUi';
 import { SearchSelect } from '@eduworld/ops-ui';
 
 type SubStatus = AssignmentSubmission['status'];
 
-function ExtendDialog({ assignment, row, onClose }: { assignment: Assignment; row: AssignmentSubmission; onClose: () => void }) {
+/** Grades whose students may hold a row: the grade targets, or every grade of the school when students were added by hand. */
+function nameGrades(assignment: Assignment, schoolGrades: readonly number[]): number[] {
+  const targets = assignment.targets ?? [];
+  const byHand = targets.some((t) => t.target_type === 'students' || (t.include_student_ids?.length ?? 0) > 0);
+  if (byHand) return [...schoolGrades];
+  return [...new Set(targets.flatMap((t) => (t.target_type === 'grade' && t.grade_level ? [t.grade_level] : [])))].sort((x, y) => x - y);
+}
+
+function ExtendDialog({ assignment, row, name, onClose }: { assignment: Assignment; row: AssignmentSubmission; name: string; onClose: () => void }) {
   const { t } = useTranslation();
   const field = useFieldRules();
   const [form] = Form.useForm<{ dueAt: Dayjs; reason: string }>();
@@ -27,7 +39,7 @@ function ExtendDialog({ assignment, row, onClose }: { assignment: Assignment; ro
   return (
     <Modal
       open
-      title={t('lms.submissions.extendTitle', { name: row.display_name ?? '' })}
+      title={t('lms.submissions.extendTitle', { name })}
       okText={t('lms.submissions.extend')}
       cancelText={t('portal.school_lms.common.cancel')}
       confirmLoading={extend.isPending}
@@ -51,13 +63,13 @@ function ExtendDialog({ assignment, row, onClose }: { assignment: Assignment; ro
   );
 }
 
-function ExcuseDialog({ assignment, row, onClose }: { assignment: Assignment; row: AssignmentSubmission; onClose: () => void }) {
+function ExcuseDialog({ assignment, row, name, onClose }: { assignment: Assignment; row: AssignmentSubmission; name: string; onClose: () => void }) {
   const { t } = useTranslation();
   const excuse = useStudentAction(assignment.assignment_id, 'excuse');
   return (
     <ReasonModal
       open
-      title={t('lms.submissions.excuseTitle', { name: row.display_name ?? '' })}
+      title={t('lms.submissions.excuseTitle', { name })}
       okText={t('lms.submissions.excuse')}
       schema={LMS_FIELDS.reason}
       confirmLoading={excuse.isPending}
@@ -74,6 +86,10 @@ export function SubmissionTable({ assignment }: { assignment: Assignment }) {
   const [status, setStatus] = useState<SubStatus | undefined>();
   const subs = useSubmissions(assignment.assignment_id, status);
   const [dialog, setDialog] = useState<{ kind: 'extend' | 'excuse'; row: AssignmentSubmission } | null>(null);
+  const school = useSchoolGrades(assignment.school_id);
+  const names = useStudentNames(assignment.school_id, nameGrades(assignment, school.grades));
+  const nameOf = (s: AssignmentSubmission) =>
+    names.get(s.student_id) || s.display_name || t('lms.submissions.numbered', { n: subs.items.findIndex((x) => x.student_id === s.student_id) + 1 });
   const live = assignment.status === 'open' || assignment.status === 'scheduled' || assignment.status === 'closed';
   const actions = (s: AssignmentSubmission) =>
     live && s.status !== 'excused' && s.status !== 'submitted' ? (
@@ -89,7 +105,7 @@ export function SubmissionTable({ assignment }: { assignment: Assignment }) {
       </ActionGate>
     ) : null;
   const columns: ColumnType<AssignmentSubmission>[] = [
-    { key: 'student', title: t('lms.submissions.student'), render: (_, s) => s.display_name },
+    { key: 'student', title: t('lms.submissions.student'), render: (_, s) => nameOf(s) },
     { key: 'status', title: t('lms.assignment.status'), render: (_, s) => <LmsTag group="submissionStatus" value={s.status} /> },
     { key: 'score', title: t('lms.submissions.score'), render: (_, s) => (s.score == null ? '' : `${s.score}${s.max_score == null ? '' : `/${s.max_score}`}`) },
     { key: 'attempts', title: t('lms.submissions.attempts'), render: (_, s) => s.attempts_used ?? 0 },
@@ -118,12 +134,12 @@ export function SubmissionTable({ assignment }: { assignment: Assignment }) {
         columns={columns}
         data={subs.items}
         loading={subs.isFetching}
-        cardTitle={(s) => s.display_name}
+        cardTitle={(s) => nameOf(s)}
         hasMore={subs.hasMore}
         onLoadMore={subs.loadMore}
       />
-      {dialog?.kind === 'extend' && <ExtendDialog assignment={assignment} row={dialog.row} onClose={() => setDialog(null)} />}
-      {dialog?.kind === 'excuse' && <ExcuseDialog assignment={assignment} row={dialog.row} onClose={() => setDialog(null)} />}
+      {dialog?.kind === 'extend' && <ExtendDialog assignment={assignment} row={dialog.row} name={nameOf(dialog.row)} onClose={() => setDialog(null)} />}
+      {dialog?.kind === 'excuse' && <ExcuseDialog assignment={assignment} row={dialog.row} name={nameOf(dialog.row)} onClose={() => setDialog(null)} />}
     </Flex>
   );
 }

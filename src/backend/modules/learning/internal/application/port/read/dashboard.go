@@ -2,6 +2,7 @@ package read
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -151,7 +152,7 @@ type RecommendationRow struct {
 
 // SummaryCell is one school × grade × subject (tenant summary) or tenant × grade × subject (platform summary) over the
 // range: Students is the enrolled students of the school/tenant × grade (k-anonymity), ActiveSum the sum of the active
-// students of its buckets.
+// students of its buckets (the denominator of active_minutes_avg; the active students shown are ActiveCells).
 type SummaryCell struct {
 	TenantID                                    uuid.UUID
 	SchoolID                                    *uuid.UUID
@@ -160,6 +161,31 @@ type SummaryCell struct {
 	Students                                    int
 	ActiveSum, Activities, AccNum, AccDen, ActS int64
 	AssignDue, AssignCompleted                  int64
+}
+
+// CellKey is a visible cell of a summary (SchoolID nil for a platform cell: every school of the tenant).
+type CellKey struct {
+	TenantID   uuid.UUID
+	SchoolID   *uuid.UUID
+	GradeLevel int
+	SubjectID  uuid.UUID
+}
+
+// Key is the map key of a cell in ActiveCounts.Cells.
+func (k CellKey) Key() string {
+	school := ""
+	if k.SchoolID != nil {
+		school = k.SchoolID.String()
+	}
+	return k.TenantID.String() + "|" + school + "|" + strconv.Itoa(k.GradeLevel) + "|" + k.SubjectID.String()
+}
+
+// ActiveCounts are the distinct active students over a period of the visible cells of a summary: per cell, per group
+// (school of a tenant summary, tenant of the platform summary) and over every visible cell.
+type ActiveCounts struct {
+	Cells  map[string]int
+	Groups map[uuid.UUID]int
+	Total  int
 }
 
 // DashboardReader is the query catalog of the dashboards (F043 T022, DASHBOARD_DATA §8 rule 6): predefined statements on
@@ -177,6 +203,11 @@ type DashboardReader interface {
 	SchoolSeries(ctx context.Context, sc DashScope, rg analytics.Range) ([]SeriesPoint, RollupMeta, error)
 	// ActiveStudents counts the distinct students of progress_daily in [from, to] (bounded window).
 	ActiveStudents(ctx context.Context, sc DashScope, from, to time.Time) (int, error)
+	// ActiveByGrade counts them per grade (grade at event time, visible grades of the scope).
+	ActiveByGrade(ctx context.Context, sc DashScope, from, to time.Time) (map[int]int, error)
+	// ActiveCells counts the distinct students of progress_daily in [from, to] of the cells of a summary (tenantIDs bound
+	// the scan; bySchool: group by school, else by tenant).
+	ActiveCells(ctx context.Context, tenantIDs []uuid.UUID, cells []CellKey, bySchool bool, from, to time.Time) (ActiveCounts, error)
 	// Grades lists the grades of the schools of the scope (one school) with their size and state facts.
 	Grades(ctx context.Context, sc DashScope) ([]GradeSummary, error)
 	ObjectiveStats(ctx context.Context, sc DashScope) ([]ObjectiveStat, error)

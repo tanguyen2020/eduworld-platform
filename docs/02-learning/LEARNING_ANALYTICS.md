@@ -175,6 +175,7 @@ Giá trị ở bước 1–2 (`diagnostic_prior`: số câu tối đa, ≥ 2 câ
 | `hint_usage_rate` | tỉ lệ item có tính điểm với `hints_used ≥ 1`; trung bình `hints_used` | HS × LO, lớp × LO |
 | `active_learning_time_sec` | Σ thời gian attempt (trừ pause) + thời gian lesson active (heartbeat ≤ 60 giây) — **không** tính thời gian đi lại trong game | HS × ngày |
 | `attempt_count` | số attempt bắt đầu | HS × source |
+| `active_students` ("Học sinh hoạt động") | số học sinh **khác nhau** có ít nhất một dòng `progress_daily` (hoạt động học được chấm, giây học) trong **kỳ đã chọn** `[from, to]` của màn — một định nghĩa cho mọi màn: widget và dòng khối của dashboard trường, ô/trường/tenant/tổng của báo cáo tenant và platform [Confirmed — owner "chốt hết" 2026-11-28]. Không lấy trung bình theo ngày/tuần/tháng (cách cũ: 3 em học một ngày trong 7 ngày → hiện 0); tổng chỉ đếm ô hiển thị (ô < `analytics_min_cell_size` vẫn che "< 5"). Ngoại lệ có tên riêng: `active_students_7d` của dashboard khối (7 ngày kết thúc ở `to`) và chuỗi `active_students` theo kỳ (distinct trong từng ngày/tuần/tháng) | trường × khối × môn, tenant × khối × môn |
 | `objective_mastery_distribution` | số LO theo level | HS, lớp × subject |
 | `weak_objectives` | LO level ≤ `developing` có ≥ 3 evidence | HS |
 | `progress_over_time` | snapshot tuần: mean mastery, số LO mastered | HS × subject × tuần |
