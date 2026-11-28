@@ -428,6 +428,10 @@ type ProjectionSnapshotItem struct {
 	// Deleted true nếu bản ghi nguồn đã soft-delete
 	Deleted bool `json:"deleted"`
 
+	// DeletedAt Thời điểm soft-delete của bản ghi nguồn (null khi còn sống). Job `worker projection rebuild` dùng làm thời điểm của
+	// `student.cleaned_up` để dựng lại `ref.students.deleted_at` idempotent (F003 Clarifications 2026-11-28).
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+
 	// EntityId tenant_id, school_id hoặc student_id
 	EntityId   openapi_types.UUID               `json:"entity_id"`
 	EntityType ProjectionSnapshotItemEntityType `json:"entity_type"`

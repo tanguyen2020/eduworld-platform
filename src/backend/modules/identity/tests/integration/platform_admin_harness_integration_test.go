@@ -313,13 +313,20 @@ func (f *fakeLearningFacade) ApplyTenantAssignments(ctx context.Context, req lea
 	if err := f.platformResource(req.Body.ResourceId); err != nil {
 		return nil, err
 	}
+	created := map[uuid.UUID]bool{}
 	for _, t := range req.Body.TenantIds {
 		k := [2]uuid.UUID{req.Body.ResourceId, t}
 		if a, ok := f.assignments[k]; !ok || !a.active {
 			f.assignments[k] = &fakeAssignment{id: uuid.Must(uuid.NewV7()), active: true, by: p.UserID, at: time.Now().UTC()}
+			created[t] = true
 		}
 	}
-	return learningapi.ApplyTenantAssignments200JSONResponse(f.list(req.Body.ResourceType, req.Body.ResourceId, req.Body.TenantIds)), nil
+	out := f.list(req.Body.ResourceType, req.Body.ResourceId, req.Body.TenantIds)
+	for i := range out.Data { // created flag of the contract (F045 Clarifications 2026-11-28)
+		c := created[out.Data[i].TenantId]
+		out.Data[i].Created = &c
+	}
+	return learningapi.ApplyTenantAssignments200JSONResponse(out), nil
 }
 
 func (f *fakeLearningFacade) RevokeTenantAssignments(ctx context.Context, req learningapi.RevokeTenantAssignmentsRequestObject) (learningapi.RevokeTenantAssignmentsResponseObject, error) {

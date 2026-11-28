@@ -92,9 +92,10 @@ type fakeAssignments struct{}
 
 func (fakeAssignments) Apply(_ context.Context, rt string, id uuid.UUID, tenants []uuid.UUID) ([]command.AssignmentView, error) {
 	out := []command.AssignmentView{}
+	created := true
 	for _, tn := range tenants {
 		out = append(out, command.AssignmentView{AssignmentID: uuid.New(), ResourceType: rt, ResourceID: id, TenantID: tn, AssignedBy: uuid.New(),
-			AssignedAt: time.Now().UTC(), Status: "active"})
+			AssignedAt: time.Now().UTC(), Status: "active", Created: &created})
 	}
 	return out, nil
 }
@@ -122,7 +123,8 @@ func TestTenantAssignmentsFacade(t *testing.T) {
 	ta := uuid.New()
 	ap, err := f.ApplyTenantAssignments(context.Background(), api.ApplyTenantAssignmentsRequestObject{Body: &api.ApplyTenantAssignmentsJSONRequestBody{
 		ResourceType: "quest", ResourceId: uuid.New(), TenantIds: []uuid.UUID{ta}}})
-	if err != nil || len(ap.(api.ApplyTenantAssignments200JSONResponse).Data) != 1 || ap.(api.ApplyTenantAssignments200JSONResponse).Data[0].TenantId != ta {
+	if err != nil || len(ap.(api.ApplyTenantAssignments200JSONResponse).Data) != 1 || ap.(api.ApplyTenantAssignments200JSONResponse).Data[0].TenantId != ta ||
+		ap.(api.ApplyTenantAssignments200JSONResponse).Data[0].Created == nil { // created flag of the contract (F045 Clarifications 2026-11-28)
 		t.Fatalf("apply: %+v %v", ap, err)
 	}
 	rv, err := f.RevokeTenantAssignments(context.Background(), api.RevokeTenantAssignmentsRequestObject{Body: &api.RevokeTenantAssignmentsJSONRequestBody{

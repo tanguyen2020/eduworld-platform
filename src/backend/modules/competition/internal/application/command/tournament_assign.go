@@ -40,6 +40,9 @@ type AssignmentView struct {
 	AssignedBy   uuid.UUID  `json:"assigned_by"`
 	AssignedAt   time.Time  `json:"assigned_at"`
 	RevokedAt    *time.Time `json:"revoked_at,omitempty"`
+	// Created is set by Apply only: true when this call created the active assignment, false when the tenant already had
+	// one (nil: list, revoke, or a result stored before the field existed — the caller treats it as a change).
+	Created *bool `json:"created,omitempty"`
 }
 
 func assignmentView(a write.AssignmentRow) AssignmentView {
@@ -165,6 +168,7 @@ func (h TemplateAssignments) Apply(ctx context.Context, in AssignInput) (out []A
 		out = make([]AssignmentView, 0, len(tenants))
 		for _, t := range tenants {
 			a, ok := have[t]
+			made := !ok
 			if !ok {
 				a = write.AssignmentRow{ID: ids.New(), ResourceType: in.ResourceType, ResourceID: in.ResourceID, Tenant: t, AssignedBy: p.UserID,
 					AssignedAt: now}
@@ -177,7 +181,9 @@ func (h TemplateAssignments) Apply(ctx context.Context, in AssignInput) (out []A
 					return err
 				}
 			}
-			out = append(out, assignmentView(a))
+			v := assignmentView(a)
+			v.Created = &made
+			out = append(out, v)
 		}
 		return idempotency.SetResult(ctx, out)
 	})

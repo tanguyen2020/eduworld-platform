@@ -62,6 +62,21 @@ func TestPlatformAdminAssignments(t *testing.T) {
 	if r = assign(newKey(), body, sa); r.status != 200 || p.learn.assignments[[2]uuid.UUID{qs, ta}].id != first {
 		t.Fatalf("duplicate assignment: %d", r.status)
 	}
+	// F045 Clarifications 2026-11-28: the already assigned tenant is still in the answer, without a new event nor audit; a
+	// request mixing it with a new tenant announces only the new one.
+	if len(r.body["data"].([]any)) != 1 || outboxCount(ctx, t, p, "tenant_data.assigned", a.tenant) != 1 ||
+		outboxCount(ctx, t, p, "audit.recorded", "tenant_data.assigned") != 1 {
+		t.Fatalf("re-assign announced again: %s", r.raw)
+	}
+	mix := p.learn.add(nil, "qs-mix", false)
+	if r = assign(newKey(), map[string]any{"resource_type": "question_set", "resource_id": mix, "tenant_ids": []string{a.tenant}}, sa); r.status != 200 {
+		t.Fatalf("assign mix: %d %s", r.status, r.raw)
+	}
+	both := map[string]any{"resource_type": "question_set", "resource_id": mix, "tenant_ids": []string{a.tenant, b.tenant}}
+	if r = assign(newKey(), both, sa); r.status != 200 || len(r.body["data"].([]any)) != 2 || outboxCount(ctx, t, p, "tenant_data.assigned", a.tenant) != 2 ||
+		outboxCount(ctx, t, p, "tenant_data.assigned", b.tenant) != 1 || outboxCount(ctx, t, p, "audit.recorded", "tenant_data.assigned") != 3 {
+		t.Fatalf("mixed assign: %d %s", r.status, r.raw)
+	}
 	// AC-08: tenant data → 422; unknown → 404; disabled tenant → 422 and nothing assigned (no half assignment).
 	if r = assign(newKey(), map[string]any{"resource_type": "question_set", "resource_id": tenantItem, "tenant_ids": []string{b.tenant}}, sa); r.status != 422 {
 		t.Fatalf("tenant resource: %d %s", r.status, r.raw)

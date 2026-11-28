@@ -32,6 +32,29 @@ func (r *Registry) recordConsumer(module, name string, build ConsumerFactory) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.res.consumerInfos = append(r.res.consumerInfos, info)
+	if r.res.factories == nil {
+		r.res.factories = map[string]ConsumerFactory{}
+	}
+	r.res.factories[info.Name] = build
+}
+
+// ConsumerOptions builds the options of the declared consumer name without JetStream (nil): its handler, unit of work and
+// subjects, for `worker projection rebuild`, which applies the snapshot of the source through the same handler (F003
+// Clarifications 2026-11-28). ok is false for a consumer that is not declared or whose factory needs JetStream.
+func (r *Registry) ConsumerOptions(name string) (o outbox.ConsumerOptions, ok bool) {
+	r.mu.Lock()
+	build := r.res.factories[name]
+	r.mu.Unlock()
+	if build == nil {
+		return o, false
+	}
+	defer func() {
+		if recover() != nil {
+			o, ok = outbox.ConsumerOptions{}, false
+		}
+	}()
+	o = build(nil)
+	return o, o.Handler != nil && o.UoW != nil
 }
 
 // streamSource maps EVT_<SOURCE> and ew.evt.<source>.<event_type> subjects to the source and event types.

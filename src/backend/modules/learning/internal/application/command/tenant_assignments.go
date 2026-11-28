@@ -52,7 +52,12 @@ type AssignmentView struct {
 	AssignedBy   uuid.UUID  `json:"assigned_by"`
 	AssignedAt   time.Time  `json:"assigned_at"`
 	RevokedAt    *time.Time `json:"revoked_at,omitempty"`
+	// Created is set by apply only: true when this call created the active assignment, false when the tenant already had
+	// one (nil: list, revoke, or a result stored before the field existed — the caller treats it as a change).
+	Created *bool `json:"created,omitempty"`
 }
+
+func flag(b bool) *bool { return &b }
 
 func viewOf(a resourceassignment.Assignment) AssignmentView {
 	return AssignmentView{AssignmentID: a.ID, ResourceType: string(a.ResourceType), ResourceID: a.ResourceID, TenantID: a.TenantID,
@@ -202,7 +207,9 @@ func (h ApplyTenantAssignments) Handle(ctx context.Context, in AssignmentsInput)
 		}
 		out = make([]AssignmentView, 0, len(tenants))
 		for _, t := range tenants {
-			out = append(out, viewOf(byTenant[t]))
+			v := viewOf(byTenant[t])
+			v.Created = flag(containsID(created, t))
+			out = append(out, v)
 		}
 		if err := h.invalidateAfterCommit(ctx, created); err != nil {
 			return err

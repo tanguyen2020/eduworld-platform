@@ -65,9 +65,12 @@ func (r *Registry) RunsEvents() bool {
 	return r.binary == "worker" && (r.profile == "events" || r.profile == "all")
 }
 
-// Reconciles reports the one-off composition of `worker reconcile --module=<m>` (profile reconcile, F134): modules
-// compose their facades and declare their entry points, nothing runs (no relay, consumer, job nor HTTP).
-func (r *Registry) Reconciles() bool { return r.binary == "worker" && r.profile == "reconcile" }
+// Reconciles reports the one-off composition of `worker reconcile --module=<m>` (profile reconcile, F134) and of
+// `worker projection rebuild` (profile projection, F003-AC-39): modules compose their facades and declare their entry
+// points, nothing runs (no relay, consumer, job nor HTTP).
+func (r *Registry) Reconciles() bool {
+	return r.binary == "worker" && (r.profile == "reconcile" || r.profile == "projection")
+}
 
 // RunsJobs reports whether the binary runs scheduled jobs (worker jobs|all).
 func (r *Registry) RunsJobs() bool {

@@ -142,6 +142,10 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 
 - [x] T052 Migration `20270203000001_f010_system_rows_events`: `tenant.created` (tenant `common`), `school.updated` (School ảo), `province.updated` (danh mục tỉnh) vào outbox một lần, `NOT EXISTS`, UUIDv7 có thứ tự (Clarifications 2026-11-28) — test: `TestMigrationsAnnounceSystemRows`; projection nhận `common`: `TestProjectionReceivesIdentitySystemRows` (learning, game, chat, competition)
 
+## Việc bổ sung 2026-11-28 (Clarifications "Session 2026-11-28 (`deleted_at` trong snapshot cho rebuild)")
+
+- [x] T053 `ProjectionSnapshotItem.deleted_at` (spec internal identity, bổ sung) đọc từ `deleted_at` của bảng nguồn — file: `specs/openapi/modules/identity.internal.v1.yaml`, `src/backend/modules/identity/internal/infrastructure/persistence/read/snapshot.go` — kiểm: `TestListProjectionSnapshot` — **xong 2026-11-28**
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T003–T009) → US1 → US2, US3 song song → US4 (cần T008, T016) → US5 (cần T008, T027) → Polish.

@@ -15,7 +15,6 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/ids"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/natsx"
@@ -137,30 +136,15 @@ func (c *Consumer) Handle(ctx context.Context, m jetstream.Msg) {
 		c.deadLetter(ctx, m, e, fmt.Sprintf("unsupported schema_version %d", e.SchemaVersion))
 		return
 	}
-	var scope tenancy.Scope
-	switch {
-	case e.TenantID == nil && !c.o.Platform:
-		c.deadLetter(ctx, m, e, "platform event delivered to a tenant consumer")
+	scope, err := eventScope(c.o, e.TenantID)
+	if err != nil {
+		c.deadLetter(ctx, m, e, err.Error())
 		return
-	case e.TenantID == nil:
-		ps, err := authz.SystemPlatformScope("consumer-" + strings.ReplaceAll(strings.ReplaceAll(c.o.Name, ".", "-"), "_", "-"))
-		if err != nil {
-			c.deadLetter(ctx, m, e, err.Error())
-			return
-		}
-		scope = ps
-	default:
-		ts, err := authz.EventScope(*e.TenantID)
-		if err != nil {
-			c.deadLetter(ctx, m, e, err.Error())
-			return
-		}
-		scope = ts
 	}
 	ctx = tenancy.WithModule(ctx, c.o.Module)
 	ctx, done := observability.UseCase(ctx, c.o.Module+".consumer."+c.o.Name[len(c.o.Module)+1:])
 	duplicate := false
-	err := c.inTx(ctx, scope, func(ctx context.Context) error {
+	err = c.inTx(ctx, scope, func(ctx context.Context) error {
 		tx, _ := entx.Tx(ctx)
 		res, err := tx.ExecContext(ctx, `INSERT INTO infra.processed_events (consumer, event_id, event_occurred_at)
 			VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, c.o.Name, e.EventID, e.OccurredAt.UTC())

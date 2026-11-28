@@ -100,6 +100,7 @@ type SnapshotItem struct {
 	TenantID      uuid.UUID
 	SourceVersion int64
 	Deleted       bool
+	DeletedAt     *time.Time // soft-delete time of the source row (nil when live)
 	Data          map[string]any
 }
 

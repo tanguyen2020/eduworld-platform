@@ -235,8 +235,11 @@ func (h AssignToTenants) Handle(ctx context.Context, in AssignInput) (out Assign
 			if !slices.Contains(tenants, a.TenantID) || !a.Active {
 				continue
 			}
-			if err := h.assigned(ctx, module, a, "request"); err != nil {
-				return err
+			// An already assigned tenant stays in the answer (idempotent) but gets no new event nor audit.
+			if a.Changed() {
+				if err := h.assigned(ctx, module, a, "request"); err != nil {
+					return err
+				}
 			}
 			by := a.AssignedBy
 			out.Data = append(out.Data, TenantAssignmentView{ResourceType: in.ResourceType, ResourceID: in.ResourceID, TenantID: a.TenantID,
@@ -393,7 +396,7 @@ func (h ApplyDefaultAssignments) Handle(ctx context.Context, tenantID, eventID u
 		}
 		if err := h.UoW.Do(actx, func(ctx context.Context) error {
 			for _, a := range res {
-				if a.TenantID == tenantID && a.Active {
+				if a.TenantID == tenantID && a.Active && a.Changed() {
 					if err := h.assigned(ctx, d.OwnerModule, a, "default_for_new_tenant"); err != nil {
 						return err
 					}

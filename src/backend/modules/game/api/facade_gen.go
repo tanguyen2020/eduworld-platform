@@ -662,7 +662,12 @@ type CommonInternalCommonV1TenantAssignment struct {
 	AssignedAt   time.Time          `json:"assigned_at"`
 	AssignedBy   openapi_types.UUID `json:"assigned_by"`
 	AssignmentId openapi_types.UUID `json:"assignment_id"`
-	ResourceId   openapi_types.UUID `json:"resource_id"`
+
+	// Created Chỉ `applyTenantAssignments`: `true` khi lần gọi này tạo assignment active cho tenant (chưa được gán hoặc đã gỡ trước đó),
+	// `false` khi tenant đã có assignment active từ trước (không đổi gì). Vắng mặt (list, revoke, kết quả lưu trước khi có trường này)
+	// = không rõ; bên gọi coi như đã thay đổi (F045 Clarifications 2026-11-28).
+	Created    *bool              `json:"created,omitempty"`
+	ResourceId openapi_types.UUID `json:"resource_id"`
 
 	// ResourceType Loại tài nguyên dùng chung cho Thùng rác, gán và clone — giữ đồng bộ với `ResourceType` của API public (eduworld-api.v1.yaml).
 	ResourceType CommonInternalCommonV1ResourceType           `json:"resource_type"`

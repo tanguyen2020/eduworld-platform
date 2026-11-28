@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"sort"
 	"strings"
 	"sync"
 )
@@ -54,7 +53,9 @@ func (r *Registry) Register(t Table) error {
 	return nil
 }
 
-// Select returns the tables of module/source (and table when not empty).
+// Select returns the tables of module/source (and table when not empty) in registration order: a module registers a
+// referenced table before the tables that reference it (ref.tenants before ref.schools and ref.students, FK), so a full
+// rebuild of an empty projection never hits a missing parent.
 func (r *Registry) Select(module, source, table string) []Table {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -64,7 +65,6 @@ func (r *Registry) Select(module, source, table string) []Table {
 			out = append(out, t)
 		}
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out
 }
 

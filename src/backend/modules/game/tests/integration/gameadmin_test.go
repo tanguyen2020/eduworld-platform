@@ -272,10 +272,13 @@ func TestGameAdminReleases(t *testing.T) {
 		t.Fatalf("content.published payload: %+v", last)
 	}
 	// AC-21/AC-22/AC-23: assign to tenant A; the manifest and the catalog of A hold the quest, B never.
-	if res, err := assign(e.tenantA); err != nil || len(res.(api.ApplyTenantAssignments200JSONResponse).Data) != 1 {
+	// F045 Clarifications 2026-11-28: created = true on the first apply, false when the tenant already has it.
+	if res, err := assign(e.tenantA); err != nil || len(res.(api.ApplyTenantAssignments200JSONResponse).Data) != 1 ||
+		!createdFlag(res.(api.ApplyTenantAssignments200JSONResponse).Data[0].Created, true) {
 		t.Fatalf("assign: %v %+v", err, res)
 	}
 	if res, err := assign(e.tenantA); err != nil || len(res.(api.ApplyTenantAssignments200JSONResponse).Data) != 1 ||
+		!createdFlag(res.(api.ApplyTenantAssignments200JSONResponse).Data[0].Created, false) ||
 		count(ctx, t, e.platform, `SELECT count(*) FROM infra.tenant_resource_assignments WHERE resource_id = $1 AND deleted_at IS NULL`, id) != 1 {
 		t.Fatalf("assign again: %v", err)
 	}
@@ -630,3 +633,6 @@ func TestGameMediaAndRenders(t *testing.T) {
 	authztest.Cover(t, "getGameMediaAsset", authztest.RoleDenied, authztest.CrossTenant)
 	e.checkEventSchemas(ctx, t)
 }
+
+// createdFlag reports whether the created flag of an applied assignment is present and equal to want.
+func createdFlag(c *bool, want bool) bool { return c != nil && *c == want }

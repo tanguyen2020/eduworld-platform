@@ -244,8 +244,14 @@ func TestF107Assignments(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if l := res.(api.ApplyTenantAssignments200JSONResponse); len(l.Data) != 2 || l.Data[0].Status != "active" {
+	if l := res.(api.ApplyTenantAssignments200JSONResponse); len(l.Data) != 2 || l.Data[0].Status != "active" || l.Data[0].Created == nil || !*l.Data[0].Created {
 		t.Fatalf("apply: %+v", l)
+	}
+	// F045 Clarifications 2026-11-28: a new key for an assigned template answers created = false, no new row nor audit.
+	if again, err := f.ApplyTenantAssignments(ctxOf(sys, key()), api.ApplyTenantAssignmentsRequestObject{Body: &body}); err != nil {
+		t.Fatal(err)
+	} else if l := again.(api.ApplyTenantAssignments200JSONResponse); len(l.Data) != 2 || l.Data[1].Created == nil || *l.Data[1].Created {
+		t.Fatalf("apply again: %+v", l)
 	}
 	if _, err := f.ApplyTenantAssignments(ctxOf(sys, k), api.ApplyTenantAssignmentsRequestObject{Body: &body}); err != nil {
 		t.Fatal(err)

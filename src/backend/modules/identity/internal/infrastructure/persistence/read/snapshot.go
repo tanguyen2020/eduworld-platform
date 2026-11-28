@@ -2,6 +2,7 @@ package read
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -19,9 +20,9 @@ type SnapshotModel struct{ Session *entx.ReadSession }
 
 var _ read.SnapshotReader = SnapshotModel{}
 
-// Columns common to every query: entity id, tenant id, version, deleted flag, then entity columns.
+// Columns common to every query: entity id, tenant id, version, deleted flag, deleted_at, then entity columns.
 var snapshotSQL = map[string]string{
-	"tenant": `SELECT t.tenant_id, t.tenant_id, t.version, t.deleted_at IS NOT NULL,
+	"tenant": `SELECT t.tenant_id, t.tenant_id, t.version, t.deleted_at IS NOT NULL, t.deleted_at,
 		json_build_object('tenant_id', t.tenant_id, 'code', t.code, 'name', t.name, 'tenant_type', t.tenant_type, 'status', t.status,
 			'keycloak_org_alias', t.keycloak_org_alias, 'is_qa', t.is_qa,
 			-- settings_subset as tenant.updated publishes it (settings.TenantSubset, F015 T044): both social keys, false unless true
@@ -31,14 +32,14 @@ var snapshotSQL = map[string]string{
 		FROM platform.tenants t
 		WHERE ($1::uuid IS NULL OR t.tenant_id = $1) AND ($2::uuid IS NULL OR t.tenant_id > $2)
 		ORDER BY t.tenant_id LIMIT $3`,
-	"school": `SELECT s.school_id, s.tenant_id, s.version, s.deleted_at IS NOT NULL,
+	"school": `SELECT s.school_id, s.tenant_id, s.version, s.deleted_at IS NOT NULL, s.deleted_at,
 		json_build_object('school_id', s.school_id, 'tenant_id', s.tenant_id, 'status', s.status, 'name', s.name,
 			'name_i18n', coalesce(s.name_i18n, json_build_object('vi', s.name)::jsonb), 'province_code', p.code, 'school_level', s.school_level,
 			'is_virtual', s.is_virtual, 'settings_subset', '{}'::json)
 		FROM org.schools s LEFT JOIN catalog.provinces p ON p.province_id = s.province_id
 		WHERE ($1::uuid IS NULL OR s.tenant_id = $1) AND ($2::uuid IS NULL OR s.school_id > $2)
 		ORDER BY s.school_id LIMIT $3`,
-	"student": `SELECT st.student_id, st.tenant_id, st.version, st.deleted_at IS NOT NULL,
+	"student": `SELECT st.student_id, st.tenant_id, st.version, st.deleted_at IS NOT NULL, st.deleted_at,
 		-- the placement as student.placement_changed publishes it (ADR-0095): soft-deleted rows are inactive (deleted = true)
 		json_build_object('student_id', st.student_id, 'tenant_id', st.tenant_id, 'school_id', st.school_id, 'grade_level', st.grade_level,
 			'status', CASE WHEN st.status = 'active' AND st.deleted_at IS NULL THEN 'active' ELSE 'inactive' END,
@@ -69,8 +70,13 @@ func (m SnapshotModel) Snapshot(ctx context.Context, entityType string, tenantID
 		for rows.Next() {
 			it := read.SnapshotItem{EntityType: entityType}
 			var raw []byte
-			if err := rows.Scan(&it.EntityID, &it.TenantID, &it.SourceVersion, &it.Deleted, &raw); err != nil {
+			var deletedAt sql.NullTime
+			if err := rows.Scan(&it.EntityID, &it.TenantID, &it.SourceVersion, &it.Deleted, &deletedAt, &raw); err != nil {
 				return err
+			}
+			if deletedAt.Valid {
+				at := deletedAt.Time.UTC()
+				it.DeletedAt = &at
 			}
 			if err := json.Unmarshal(raw, &it.Data); err != nil {
 				return err

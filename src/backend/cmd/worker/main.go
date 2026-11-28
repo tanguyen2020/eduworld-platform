@@ -28,7 +28,13 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "projection" {
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
-		if err := runProjection(ctx, os.Args[2:], &projections, os.Stdout); err != nil {
+		// F003-AC-39: the ref.* rebuilders of the composed modules (wiring.RegisterIdentityProjections).
+		reg, closeFn, err := composeProjection(os.Getenv)
+		if err == nil {
+			err = runProjection(ctx, os.Args[2:], reg, os.Stdout)
+			closeFn()
+		}
+		if err != nil {
 			fmt.Fprintln(os.Stderr, "worker projection:", err)
 			stop()
 			os.Exit(1)

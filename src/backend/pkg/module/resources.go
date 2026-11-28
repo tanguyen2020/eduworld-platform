@@ -48,6 +48,7 @@ type resources struct {
 	cores         map[string]*Core
 	decls         []Declaration
 	consumerInfos []ConsumerInfo
+	factories     map[string]ConsumerFactory // declared consumers by name (worker projection rebuild replays through them)
 	mounts        []namedMount
 }
 

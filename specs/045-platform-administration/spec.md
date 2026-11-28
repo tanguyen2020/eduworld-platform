@@ -59,6 +59,10 @@
 
 - Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F045-AC-04, bảng tham số `portal_session_sso`, SC-001, plan (middleware `/admin/*`). Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
 
+### Session 2026-11-28 (gán lại không phát event thừa — [Confirmed — owner "chốt hết"])
+
+- Q: `assignToTenants` (và gán mặc định cho tenant mới) phát `tenant_data.assigned` + audit cho **mọi** tenant trong request kể cả tenant đã được gán (seed chạy lại phát 69 event thừa); sửa ở đâu? → A: [Confirmed — owner "chốt hết"] Sửa ở gốc: `TenantAssignment` của thư viện platform-ops (`common/internal-common.v1.yaml`, đồng bộ vào learning, game, competition, chat) thêm trường tùy chọn `created` (bổ sung, oasdiff 0 breaking): `applyTenantAssignments` trả `true` khi lần gọi này tạo assignment active cho tenant, `false` khi tenant đã có. Module identity vẫn trả thành công và liệt kê mọi tenant (idempotent) nhưng chỉ phát `tenant_data.assigned` + audit cho phần tử `created = true`; cờ **vắng mặt** (module cũ, kết quả `Idempotency-Key` lưu trước khi có trường) được coi là đã thay đổi — thà phát thừa còn hơn mất event. Phát lại cùng `Idempotency-Key` ở module sở hữu trả kết quả đã lưu (`created = true`) nên lần thử lại sau khi transaction identity lỗi vẫn phát đủ. Audit `tenant_data.assigned` ở module sở hữu vốn chỉ ghi khi tạo mới (không đổi). Test: `TestPlatformAdminAssignments` (identity), `TestOwnerGatewayGameAssignments`, `TestApplyTenantAssignments` (learning), `TestTenantAssignmentsFacade`, `TestGameAdminReleases` (game), `TestF107Assignments` (competition), `TestChatAssignmentsFacade` (chat).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — System Admin đọc dữ liệu liên tenant có kiểm soát (Priority: P1)

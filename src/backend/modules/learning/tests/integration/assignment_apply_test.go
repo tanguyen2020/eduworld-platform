@@ -37,6 +37,11 @@ func TestApplyTenantAssignments(t *testing.T) {
 		first.Data[0].Status != "active" || first.Data[0].AssignedBy != saP.UserID {
 		t.Fatalf("apply = %+v", first.Data)
 	}
+	for _, d := range first.Data { // F045 Clarifications 2026-11-28: created = true for each new assignment
+		if d.Created == nil || !*d.Created {
+			t.Fatalf("first apply created = %v", d.Created)
+		}
+	}
 	if n := activeAssignments(ctx, t, e, item); n != 2 {
 		t.Fatalf("active assignments = %d", n)
 	}
@@ -61,7 +66,7 @@ func TestApplyTenantAssignments(t *testing.T) {
 	}
 	// New key, already assigned tenant: no new row, the existing assignment is returned.
 	re, err := apply(sa, f, newKey(), "question", item, e.tenantA)
-	if err != nil || len(re.Data) != 1 || re.Data[0].AssignmentId != first.Data[0].AssignmentId {
+	if err != nil || len(re.Data) != 1 || re.Data[0].AssignmentId != first.Data[0].AssignmentId || re.Data[0].Created == nil || *re.Data[0].Created {
 		t.Fatalf("re-assign = %+v %v", re.Data, err)
 	}
 	if n := activeAssignments(ctx, t, e, item); n != 2 {

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	gameapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/api"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/modcall"
@@ -18,7 +19,8 @@ import (
 // tested by module game (tests/integration/gameadmin_test.go).
 type fakeGameAssign struct {
 	fakeLearning
-	last *gameapi.ApplyTenantAssignmentsJSONRequestBody
+	last     *gameapi.ApplyTenantAssignmentsJSONRequestBody
+	assigned map[uuid.UUID]bool // tenants with an active assignment: apply answers created = false for them
 }
 
 func list(rt gameapi.CommonInternalCommonV1ResourceType, id uuid.UUID, tenants []uuid.UUID, status string) gameapi.CommonInternalCommonV1TenantAssignmentList {
@@ -35,7 +37,16 @@ func (f *fakeGameAssign) ApplyTenantAssignments(ctx context.Context, req gameapi
 		return nil, err
 	}
 	f.last = req.Body
-	return gameapi.ApplyTenantAssignments200JSONResponse(list(req.Body.ResourceType, req.Body.ResourceId, req.Body.TenantIds, "active")), nil
+	out := list(req.Body.ResourceType, req.Body.ResourceId, req.Body.TenantIds, "active")
+	if f.assigned == nil {
+		f.assigned = map[uuid.UUID]bool{}
+	}
+	for i := range out.Data {
+		created := !f.assigned[out.Data[i].TenantId]
+		f.assigned[out.Data[i].TenantId] = true
+		out.Data[i].Created = &created
+	}
+	return gameapi.ApplyTenantAssignments200JSONResponse(out), nil
 }
 
 func (f *fakeGameAssign) RevokeTenantAssignments(ctx context.Context, req gameapi.RevokeTenantAssignmentsRequestObject) (gameapi.RevokeTenantAssignmentsResponseObject, error) {
@@ -65,6 +76,19 @@ func TestOwnerGatewayGameAssignments(t *testing.T) {
 	got, err := g.ApplyAssignments(ctx, "game", "minigame_config", id, []uuid.UUID{ta})
 	if err != nil || len(got) != 1 || got[0].TenantID != ta || !got[0].Active || fake.last == nil || fake.last.ResourceType != "minigame_config" {
 		t.Fatalf("apply: %+v %v", got, err)
+	}
+	// F045 Clarifications 2026-11-28: the created flag of the contract reaches the port; a second apply of the same tenant is no
+	// change (identity publishes no tenant_data.assigned for it), a flag the owner did not send counts as a change.
+	if got[0].Created == nil || !got[0].Changed() {
+		t.Fatalf("first apply must be a change: %+v", got[0])
+	}
+	tb := uuid.New()
+	again, err := g.ApplyAssignments(ctx, "game", "minigame_config", id, []uuid.UUID{ta, tb})
+	if err != nil || len(again) != 2 || again[0].Changed() || !again[1].Changed() {
+		t.Fatalf("re-apply: %+v %v", again, err)
+	}
+	if (port.ResourceAssignment{}).Changed() != true {
+		t.Fatal("an unknown created flag must count as a change")
 	}
 	c := fake.seen[0]
 	if c.caller != "identity" || c.principal.UserID != sa.UserID || c.key != key {

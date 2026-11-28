@@ -26,7 +26,7 @@ func assignmentList(views []command.AssignmentView) api.CommonInternalCommonV1Te
 		}
 		out.Data = append(out.Data, api.CommonInternalCommonV1TenantAssignment{AssignmentId: v.AssignmentID,
 			ResourceType: api.CommonInternalCommonV1ResourceType(v.ResourceType), ResourceId: v.ResourceID, TenantId: v.TenantID,
-			AssignedBy: v.AssignedBy, AssignedAt: v.AssignedAt, Status: status, RevokedAt: v.RevokedAt})
+			AssignedBy: v.AssignedBy, AssignedAt: v.AssignedAt, Status: status, RevokedAt: v.RevokedAt, Created: v.Created})
 	}
 	return out
 }

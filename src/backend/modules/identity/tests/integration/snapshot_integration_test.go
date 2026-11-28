@@ -90,6 +90,12 @@ func TestListProjectionSnapshot(t *testing.T) {
 			if it.Data["status"] != "inactive" {
 				t.Fatalf("a soft-deleted student is inactive: %+v", it.Data)
 			}
+			// F003 Clarifications 2026-11-28: the soft-delete time for the rebuild of ref.students.deleted_at.
+			if it.DeletedAt == nil || it.DeletedAt.IsZero() {
+				t.Fatalf("deleted student without deleted_at: %+v", it)
+			}
+		} else if it.DeletedAt != nil {
+			t.Fatalf("live student with deleted_at: %+v", it)
 		}
 	}
 	if deleted != 1 {

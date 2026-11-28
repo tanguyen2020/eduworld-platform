@@ -59,7 +59,14 @@ type ResourceAssignment struct {
 	AssignedBy   uuid.UUID
 	AssignedAt   time.Time
 	Active       bool
+	// Created is the created flag of applyTenantAssignments: true when the call created the assignment, false when the
+	// tenant already had it; nil when the owner did not say (list, revoke, a result stored before the flag existed).
+	Created *bool
 }
+
+// Changed reports whether the assignment is new for its tenant: identity publishes tenant_data.assigned and its audit
+// only then (F045 Clarifications 2026-11-28). An unknown flag counts as a change, never as a silent skip.
+func (a ResourceAssignment) Changed() bool { return a.Created == nil || *a.Created }
 
 // AssignmentPage is a page of assignments.
 type AssignmentPage struct {

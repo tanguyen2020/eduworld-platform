@@ -45,12 +45,14 @@ func TestChatAssignmentsFacade(t *testing.T) {
 		t.Fatal(err)
 	}
 	l := res.(api.ApplyTenantAssignments200JSONResponse)
-	if len(l.Data) != 2 || l.Data[0].Status != "active" {
+	if len(l.Data) != 2 || l.Data[0].Status != "active" || l.Data[0].Created == nil || !*l.Data[0].Created {
 		t.Fatalf("apply: %+v", l)
 	}
-	// idempotent: applying again creates nothing new.
-	if _, err := apply(ctx, "sticker_pack", pub, f.tenantA); err != nil {
+	// idempotent: applying again creates nothing new (created = false, F045 Clarifications 2026-11-28).
+	if res, err := apply(ctx, "sticker_pack", pub, f.tenantA); err != nil {
 		t.Fatal(err)
+	} else if d := res.(api.ApplyTenantAssignments200JSONResponse).Data; len(d) != 1 || d[0].Created == nil || *d[0].Created {
+		t.Fatalf("apply again: %+v", d)
 	}
 	if n := f.count(`SELECT count(*) FROM infra.tenant_resource_assignments WHERE resource_id = $1 AND deleted_at IS NULL`, pub); n != 2 {
 		t.Fatalf("assignments: %d", n)

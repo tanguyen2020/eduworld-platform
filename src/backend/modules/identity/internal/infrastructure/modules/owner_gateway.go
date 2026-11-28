@@ -119,7 +119,7 @@ func gameAssignments(l gameapi.CommonInternalCommonV1TenantAssignmentList) []por
 	out := make([]port.ResourceAssignment, 0, len(l.Data))
 	for _, a := range l.Data {
 		out = append(out, port.ResourceAssignment{AssignmentID: a.AssignmentId, ResourceType: string(a.ResourceType), ResourceID: a.ResourceId,
-			TenantID: a.TenantId, AssignedBy: a.AssignedBy, AssignedAt: a.AssignedAt, Active: a.Status == "active"})
+			TenantID: a.TenantId, AssignedBy: a.AssignedBy, AssignedAt: a.AssignedAt, Active: a.Status == "active", Created: a.Created})
 	}
 	return out
 }
@@ -209,7 +209,7 @@ func assignments(list learningapi.CommonInternalCommonV1TenantAssignmentList) []
 	out := make([]port.ResourceAssignment, 0, len(list.Data))
 	for _, a := range list.Data {
 		out = append(out, port.ResourceAssignment{AssignmentID: a.AssignmentId, ResourceType: string(a.ResourceType), ResourceID: a.ResourceId,
-			TenantID: a.TenantId, AssignedBy: a.AssignedBy, AssignedAt: a.AssignedAt, Active: a.Status == "active"})
+			TenantID: a.TenantId, AssignedBy: a.AssignedBy, AssignedAt: a.AssignedAt, Active: a.Status == "active", Created: a.Created})
 	}
 	return out
 }
@@ -223,7 +223,7 @@ func competitionAssignments(list competitionapi.CommonInternalCommonV1TenantAssi
 	out := make([]port.ResourceAssignment, 0, len(list.Data))
 	for _, a := range list.Data {
 		out = append(out, port.ResourceAssignment{AssignmentID: a.AssignmentId, ResourceType: string(a.ResourceType), ResourceID: a.ResourceId,
-			TenantID: a.TenantId, AssignedBy: a.AssignedBy, AssignedAt: a.AssignedAt, Active: a.Status == "active"})
+			TenantID: a.TenantId, AssignedBy: a.AssignedBy, AssignedAt: a.AssignedAt, Active: a.Status == "active", Created: a.Created})
 	}
 	return out
 }
@@ -301,7 +301,7 @@ func chatAssignments(list chatapi.CommonInternalCommonV1TenantAssignmentList) []
 	out := make([]port.ResourceAssignment, 0, len(list.Data))
 	for _, a := range list.Data {
 		out = append(out, port.ResourceAssignment{AssignmentID: a.AssignmentId, ResourceType: string(a.ResourceType), ResourceID: a.ResourceId,
-			TenantID: a.TenantId, AssignedBy: a.AssignedBy, AssignedAt: a.AssignedAt, Active: a.Status == "active"})
+			TenantID: a.TenantId, AssignedBy: a.AssignedBy, AssignedAt: a.AssignedAt, Active: a.Status == "active", Created: a.Created})
 	}
 	return out
 }

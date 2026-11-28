@@ -195,6 +195,10 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 - [ ] T078 **OQ chốt 2026-11-20** (OQ F020-4) Lint `forbidigo` cấm `UpdateOne`/`UpdateOneID` trong module — file: `src/backend/.golangci.yml` — kiểm: `make lint` — cỡ S
 - [ ] T079 **OQ chốt 2026-11-20** (OQ F014-6) Helper metric `eduworld_projection_lag_seconds{module, projection}` trong `pkg/`; learning (F020) và game (F014) chuyển sang, gỡ metric riêng — file: `src/backend/pkg/outbox/` (hoặc `pkg/observability`), `src/backend/modules/learning/internal/infrastructure/observability/`, `src/backend/modules/game/internal/infrastructure/observability/metrics.go` — kiểm: `make test` — cỡ S
 
+## Việc bổ sung 2026-11-28 (Clarifications "Session 2026-11-28")
+
+- [x] T080 Đăng ký bộ rebuild `ref.tenants`, `ref.schools`, `ref.students` của learning, game, competition, chat từ `listProjectionSnapshot` (identity), áp qua handler consumer `<module>.projection_identity` (`outbox.Replay`, transaction theo tenant, `EventScope`), profile một lần `projection`, thứ tự bảng theo đăng ký — file: `src/backend/cmd/internal/wiring/projection.go`, `src/backend/cmd/worker/projection.go`, `src/backend/pkg/outbox/replay.go`, `src/backend/pkg/module/consumers.go`, `src/backend/pkg/projection/rebuild.go` — kiểm: `TestProjectionRebuildFromIdentity` (xóa bảng → rebuild = trạng thái identity, chạy lại không đổi, bản mới hơn giữ nguyên, dòng tenant khác → exit ≠ 0), `TestSnapshotEnvelopes`, `TestConsumerOptions` — **xong 2026-11-28**
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 (cần `InTenantTx` của T017) → US3, US4 (song song, cần US2) → US5 → US6 → US7 → Polish.

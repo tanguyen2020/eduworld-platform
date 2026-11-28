@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -56,6 +57,9 @@ type AssignmentView struct {
 	AssignedAt   time.Time  `json:"assigned_at"`
 	Status       string     `json:"status"`
 	RevokedAt    *time.Time `json:"revoked_at,omitempty"`
+	// Created is set by Apply only: true when this call created the active assignment, false when the tenant already had
+	// one (nil: list, revoke, or a result stored before the field existed — the caller treats it as a change).
+	Created *bool `json:"created,omitempty"`
 }
 
 func assignmentView(a write.Assignment) AssignmentView {
@@ -184,7 +188,10 @@ func (h GameAssignments) Apply(ctx context.Context, resourceType string, resourc
 		}
 		out = make([]AssignmentView, 0, len(tenants))
 		for _, id := range tenants {
-			out = append(out, assignmentView(by[id]))
+			v := assignmentView(by[id])
+			made := slices.Contains(created, id)
+			v.Created = &made
+			out = append(out, v)
 		}
 		return idempotency.SetResult(ctx, out)
 	})

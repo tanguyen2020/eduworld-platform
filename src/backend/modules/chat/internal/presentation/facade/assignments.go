@@ -23,7 +23,7 @@ func assignmentList(views []command.AssignmentView) api.CommonInternalCommonV1Te
 	for _, v := range views {
 		out.Data = append(out.Data, api.CommonInternalCommonV1TenantAssignment{AssignmentId: v.AssignmentID, AssignedAt: v.AssignedAt,
 			AssignedBy: v.AssignedBy, ResourceId: v.ResourceID, ResourceType: api.CommonInternalCommonV1ResourceType(v.ResourceType),
-			TenantId: v.TenantID, Status: api.CommonInternalCommonV1TenantAssignmentStatus(v.Status), RevokedAt: v.RevokedAt})
+			TenantId: v.TenantID, Status: api.CommonInternalCommonV1TenantAssignmentStatus(v.Status), RevokedAt: v.RevokedAt, Created: v.Created})
 	}
 	return out
 }

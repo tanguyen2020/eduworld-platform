@@ -52,6 +52,9 @@ type AssignmentView struct {
 	AssignedAt   time.Time
 	Status       string
 	RevokedAt    *time.Time
+	// Created is set by Apply only: true when this call created the active assignment, false when the tenant already had
+	// one (nil: list, revoke, or a result stored before the field existed — the caller treats it as a change).
+	Created *bool
 }
 
 func assignmentView(a write.Assignment) AssignmentView {
@@ -153,6 +156,7 @@ func (h ChatAssignments) Apply(ctx context.Context, resourceType string, id uuid
 		for _, a := range existing {
 			by[a.TenantID] = a
 		}
+		made := map[uuid.UUID]bool{}
 		for _, t := range tenants {
 			if _, ok := by[t]; ok {
 				continue
@@ -166,10 +170,14 @@ func (h ChatAssignments) Apply(ctx context.Context, resourceType string, id uuid
 				return err
 			}
 			by[t] = a
+			made[t] = true
 		}
 		out = make([]AssignmentView, 0, len(tenants))
 		for _, t := range tenants {
-			out = append(out, assignmentView(by[t]))
+			v := assignmentView(by[t])
+			c := made[t]
+			v.Created = &c
+			out = append(out, v)
 		}
 		return idempotency.SetResult(ctx, out)
 	})

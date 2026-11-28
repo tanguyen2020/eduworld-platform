@@ -1,11 +1,13 @@
 package module_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
 )
 
@@ -40,5 +42,34 @@ func TestConsumerInfos(t *testing.T) {
 	}
 	if all := r.ConsumerInfos(""); len(all) != 4 {
 		t.Fatalf("all consumers %d", len(all))
+	}
+}
+
+// F003 Clarifications 2026-11-28: `worker projection rebuild` gets the handler and unit of work of a declared consumer; a
+// consumer without them, one whose factory needs JetStream or an unknown name gives ok = false (never a panic).
+func TestConsumerOptions(t *testing.T) {
+	r := newRegistry(t, "worker", "projection", nil)
+	uow := &entx.UnitOfWork{}
+	r.Consumer("learning.projection_identity", func(jetstream.JetStream) outbox.ConsumerOptions {
+		return outbox.ConsumerOptions{Module: "learning", Name: "learning.projection_identity", Stream: "EVT_IDENTITY", UoW: uow,
+			Subjects: []string{"ew.evt.identity.tenant.updated"}, Handler: func(context.Context, outbox.Envelope) error { return nil }}
+	})
+	r.Consumer("learning.no_handler", func(jetstream.JetStream) outbox.ConsumerOptions {
+		return outbox.ConsumerOptions{Module: "learning", Name: "learning.no_handler", Stream: "EVT_IDENTITY"}
+	})
+	r.Consumer("learning.needs_js", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		_ = js.Conn()
+		return outbox.ConsumerOptions{}
+	})
+	if o, ok := r.ConsumerOptions("learning.projection_identity"); !ok || o.UoW != uow || o.Handler == nil {
+		t.Fatalf("declared consumer: %v %+v", ok, o)
+	}
+	for _, name := range []string{"learning.no_handler", "learning.needs_js", "learning.unknown"} {
+		if _, ok := r.ConsumerOptions(name); ok {
+			t.Errorf("%s: ok", name)
+		}
+	}
+	if !r.Reconciles() {
+		t.Fatal("profile projection is a one-off composition")
 	}
 }

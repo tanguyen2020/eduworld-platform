@@ -145,7 +145,9 @@ paths:
         Bước của luồng gán do module identity điều phối. Tài nguyên phải là `owner_scope = platform`, chưa soft-delete;
         mỗi tenant phải `active` trong `ref.tenants` của module nhận. Một phần tử lỗi → `422 VALIDATION_FAILED` liệt kê
         từng phần tử, không ghi gì. Cặp (tài nguyên, tenant) đã có assignment active không tạo dòng mới. Idempotent theo
-        `Idempotency-Key`: gọi lại trả kết quả lần trước. Audit `tenant_data.assigned` (actor = Principal gốc) qua outbox.
+        `Idempotency-Key`: gọi lại trả kết quả lần trước. Audit `tenant_data.assigned` (actor = Principal gốc) qua outbox chỉ cho
+        tenant được gán mới. Mỗi phần tử trả `created` (true = lần gọi này tạo assignment, false = đã có từ trước) để module identity
+        chỉ phát event `tenant_data.assigned` + audit cho thay đổi thật (F045 Clarifications 2026-11-28).
       x-allowed-callers: [identity]
       x-context-required: [idempotency_key]
       requestBody:
@@ -682,6 +684,12 @@ components:
         assigned_at: { type: string, format: date-time }
         status: { type: string, enum: [active, revoked] }
         revoked_at: { type: [string, 'null'], format: date-time }
+        created:
+          type: boolean
+          description: |
+            Chỉ `applyTenantAssignments`: `true` khi lần gọi này tạo assignment active cho tenant (chưa được gán hoặc đã gỡ trước đó),
+            `false` khi tenant đã có assignment active từ trước (không đổi gì). Vắng mặt (list, revoke, kết quả lưu trước khi có trường này)
+            = không rõ; bên gọi coi như đã thay đổi (F045 Clarifications 2026-11-28).
 
     TenantAssignmentList:
       type: object

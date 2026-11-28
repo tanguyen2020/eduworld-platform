@@ -115,7 +115,7 @@ paths:
         Dùng cho job rebuild projection `ref.*` của module nhận (DATABASE_DESIGN §2.17 mục 3, F003-AC-39), gọi trong tiến trình qua `pkg/modcall`.
         Mỗi item là trạng thái hiện hành của một bản ghi, `data` gồm đúng các trường của payload event projection tương ứng
         (`tenant` → `tenant.updated`, `school` → `school.updated`, `student` → `student.placement_changed` — trường, khối, trạng thái
-        hiệu lực, ADR-0095; `specs/events/payloads/identity/`) kèm `source_version`; bản ghi đã soft-delete trả `deleted = true`. Không còn
+        hiệu lực, ADR-0095; `specs/events/payloads/identity/`) kèm `source_version`; bản ghi đã soft-delete trả `deleted = true` và `deleted_at`. Không còn
         `class`/`enrollment` (ADR-0095 mục 2).
         Đọc read model (query, không ghi DB, không phát event); không trả PII ngoài trường của payload event.
         `tenant_id` vắng mặt = phạm vi platform cho job (mọi tenant); có = chỉ tenant đó. Phân trang ổn định theo `cursor`.
@@ -418,6 +418,12 @@ components:
         tenant_id: { type: string, format: uuid }
         source_version: { type: integer, minimum: 0, description: Cùng giá trị với source_version của event projection (consumer chỉ áp bản mới hơn) }
         deleted: { type: boolean, description: true nếu bản ghi nguồn đã soft-delete }
+        deleted_at:
+          type: [string, 'null']
+          format: date-time
+          description: |
+            Thời điểm soft-delete của bản ghi nguồn (null khi còn sống). Job `worker projection rebuild` dùng làm thời điểm của
+            `student.cleaned_up` để dựng lại `ref.students.deleted_at` idempotent (F003 Clarifications 2026-11-28).
         data:
           type: object
           maxProperties: 50

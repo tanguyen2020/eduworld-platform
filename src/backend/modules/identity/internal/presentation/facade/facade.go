@@ -48,7 +48,7 @@ func (f Facade) ListProjectionSnapshot(ctx context.Context, req identityapi.List
 	for _, it := range p.Items {
 		out.Items = append(out.Items, identityapi.ProjectionSnapshotItem{EntityType: identityapi.ProjectionSnapshotItemEntityType(it.EntityType),
 			EntityId: it.EntityID, TenantId: it.TenantID, SourceVersion: int(it.SourceVersion),
-			Deleted: it.Deleted, Data: it.Data})
+			Deleted: it.Deleted, DeletedAt: it.DeletedAt, Data: it.Data})
 	}
 	return out, nil
 }
