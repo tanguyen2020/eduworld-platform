@@ -1,0 +1,19 @@
+{
+  "tier": 1,
+  "points_required": 0,
+  "rewards": [
+    {
+      "kind": "xp",
+      "amount": 0,
+      "currency_code": "sample",
+      "item_id": "sample1",
+      "label": {
+        "vi": "sample",
+        "en": "sample"
+      }
+    }
+  ],
+  "reached": false,
+  "claimed": false,
+  "milestone": false
+}

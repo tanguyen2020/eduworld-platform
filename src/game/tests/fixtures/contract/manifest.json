@@ -233,6 +233,78 @@
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/PlayerRelation",
       "sha256": "b01ce8308d3dca8993e63b493011115a159fbdfd268feaced2c7349b5ceb3532"
     },
+    "openapi/FriendSuggestion.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/FriendSuggestion",
+      "sha256": "dcb04db071d12a9a003badd4cab20765b9988e91b5237a4eeed3251a29cf9b17"
+    },
+    "openapi/Club.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Club",
+      "sha256": "b1af38ab26bef6f2a317f21982427613f6441a5d17ee816f2a808aeb4ebf65ed"
+    },
+    "openapi/ClubCreate.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ClubCreate",
+      "sha256": "d57d795283036289e390d07dd7d06e21fe9c3a383e0c42132f6651dc5df98f96"
+    },
+    "openapi/ClubMember.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ClubMember",
+      "sha256": "05bb6f71fe6cbf6bf30c1357ffb9dd428a0d3ab71aba4a891bb1516160609b8e"
+    },
+    "openapi/ClubJoinRequest.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ClubJoinRequest",
+      "sha256": "c9cf8403c792b0c87e7d184cfb92843a88fe93a368e89dab4f7647f95def2b2c"
+    },
+    "openapi/ClubInvitation.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ClubInvitation",
+      "sha256": "cc789e7991f62adad4987e324525f586e4b39782697270e7eec359d74f14d820"
+    },
+    "openapi/ClubGoal.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ClubGoal",
+      "sha256": "4a9a7a5f5cc933d441052c76b05ee9793aa1fd6f8e7f50c4931794107d237ed3"
+    },
+    "openapi/ClubEvent.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ClubEvent",
+      "sha256": "8b2149fa232f11ac7cd4d72b51d3aba145cc1647d2572d16b4c2b6697c9cd44c"
+    },
+    "openapi/GameEventSummary.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameEventSummary",
+      "sha256": "ad6632ecfaddcf1845313570ba2353cf155c1ef509d170bb8a1bebc84024bb2f"
+    },
+    "openapi/GameEventDetail.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameEventDetail",
+      "sha256": "1a5c7d6f8249f07c953cc9faade8e96fda8b8b3c2f2aa06ad59b74d2889a4101"
+    },
+    "openapi/EventMilestone.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/EventMilestone",
+      "sha256": "f2ff296356b730b95c2df0074d213bf0f833531d30298fe28719a87af3ab1e82"
+    },
+    "openapi/CommunityGoalProgress.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/CommunityGoalProgress",
+      "sha256": "c5e619c3d3af046cfde8012121a5755f05ca014767b608908555e1131d26ff4a"
+    },
+    "openapi/EventJoinResult.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/EventJoinResult",
+      "sha256": "d10c2eee38504a21228f1bfa9684ccacd17743638f606d3fa344d7128fa788c4"
+    },
+    "openapi/RewardClaimResult.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/RewardClaimResult",
+      "sha256": "430f04b829bad488e71ff9d85d42c3f65e2e13190077f25e84ea3aecfa98d41d"
+    },
+    "openapi/SeasonTrack.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/SeasonTrack",
+      "sha256": "2d0cb275a1ed6e117b305d1d662ec6433bcfa64723c54f00c4ca00024d522b83"
+    },
+    "openapi/SeasonTrackTier.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/SeasonTrackTier",
+      "sha256": "d22b6f00b953bd459f5b22c80266c32ceb3d6738af56ec8f59bca80da59ef781"
+    },
+    "openapi/SeasonTrackHistoryItem.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/SeasonTrackHistoryItem",
+      "sha256": "1504ee0fb2fa520f58029ba32836b77a57f8316e6c20060f0a595436800a4357"
+    },
+    "openapi/QuestSummary.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/QuestSummary",
+      "sha256": "79bfabe2cb4b7cf67909ea3e53fb78758b4f6b398851955a5376713bf6565074"
+    },
     "openapi/listMyAssignments.200.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#listMyAssignments/responses/200/example",
       "sha256": "054178f9c2cf3876d11cdfce9a71c88f7b85e1c243f62e040ebcc4ebb54d9fbd"
@@ -372,6 +444,18 @@
     "openapi/acceptDuel.200.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#acceptDuel/responses/200/example",
       "sha256": "88e930aa5ae8b8623813f845348247a666d4f63a03886622a75293527b040ef8"
+    },
+    "openapi/listFriendSuggestions.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listFriendSuggestions/responses/200/example",
+      "sha256": "8ee5f6480a3ec140d51301763cf40ce23001567df624b6d8981c79b1e94f25c9"
+    },
+    "openapi/listMyClubInvitations.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listMyClubInvitations/responses/200/example",
+      "sha256": "33329823c7cb8ff24eade34b3d4f2281625ec2fdc17693ec23d551e2f4231c1e"
+    },
+    "openapi/listClubGoals.200.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#listClubGoals/responses/200/example",
+      "sha256": "98a030e251d75118e97053ff13ae0d5d13407c819d8db6192ea5ae0e651a2aa4"
     },
     "examples/achievement.explorer-math-zone.json": {
       "source": "specs/examples/achievement.explorer-math-zone.json",
@@ -689,6 +773,18 @@
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/CompetitionTierUpdated/examples/silver",
       "sha256": "91d87b7f69d02421c8150ebd818d9e3ff52a1a25c3a16b85579a400285166327"
     },
+    "asyncapi/event.community_goal.updated.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/EventCommunityGoalUpdated/payload (deterministic sample, no examples)",
+      "sha256": "b4f2b2d4df5195e5e6c74cc29290dac2dc60a6b086c52175749a3b4bbe84e446"
+    },
+    "asyncapi/event.progress.updated.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/EventProgressUpdated/payload (deterministic sample, no examples)",
+      "sha256": "7e2ddd894e868c9aa7962e7d897cf7465ae5a9ed2de3601bd1951b5f91d8481a"
+    },
+    "asyncapi/event.status.changed.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/EventStatusChanged/payload (deterministic sample, no examples)",
+      "sha256": "282e658ca95ca1d010d3b86e546ad3862c42bdab11dfcdebe1105559359a525b"
+    },
     "asyncapi/hub.instance.assigned.main_hub.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/HubInstanceAssigned/examples/main_hub",
       "sha256": "4e5c711cbef79df9ed5937ff9a89efcb25a8b42455033fe098ebb11bc376e1d3"
@@ -884,6 +980,10 @@
     "asyncapi/quest.roles.assigned.sample.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/QuestRolesAssigned/payload (deterministic sample, no examples)",
       "sha256": "7ed0a0fea91fb696c098c42b5a1e652ee8b356c7e10593f925ff90ad52519322"
+    },
+    "asyncapi/season.track.updated.sample.json": {
+      "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SeasonTrackUpdated/payload (deterministic sample, no examples)",
+      "sha256": "62ff22ae45edf75ed7de04196195d8715be43d820f2fe6619fe4d2d586830318"
     },
     "asyncapi/session.session.ended.curfew.json": {
       "source": "specs/asyncapi/eduworld-realtime.v1.yaml#/components/messages/SessionEnded/examples/curfew",

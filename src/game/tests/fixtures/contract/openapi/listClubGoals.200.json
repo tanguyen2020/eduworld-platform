@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "goal_id": "0193b0a0-0000-7000-8000-000000000c11",
+      "club_id": "0193b0a0-0000-7000-8000-000000000c01",
+      "title": "Cả club hoàn thành 30 bài",
+      "metric": "activities_completed",
+      "target": 30,
+      "progress": 12,
+      "my_contribution": 3,
+      "week_start": "2026-11-23",
+      "status": "active"
+    }
+  ],
+  "accepted_metrics": [
+    "activities_completed",
+    "quests_completed",
+    "discoveries_found"
+  ]
+}

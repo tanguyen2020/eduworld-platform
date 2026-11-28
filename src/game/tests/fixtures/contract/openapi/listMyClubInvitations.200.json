@@ -1,0 +1,19 @@
+{
+  "data": [
+    {
+      "invitation_id": "0193b0a0-0000-7000-8000-000000000c31",
+      "club_id": "0193b0a0-0000-7000-8000-000000000c01",
+      "club_name": "Nhà thám hiểm nhí",
+      "inviter_id": "0193b0a0-0000-7000-8000-0000000000a1",
+      "inviter_nickname": "CaHeoVui07",
+      "invitee_id": "0193b0a0-0000-7000-8000-0000000000a3",
+      "status": "pending",
+      "expires_at": "2026-12-04T08:00:00Z"
+    }
+  ],
+  "page": {
+    "next_cursor": null,
+    "has_more": false,
+    "limit": 20
+  }
+}

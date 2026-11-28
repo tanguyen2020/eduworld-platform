@@ -1,0 +1,13 @@
+{
+  "season_id": "00000000-0000-4000-8000-000000000001",
+  "season_name": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "final_tier": 0,
+  "points": 0,
+  "auto_granted_tiers": [
+    1
+  ],
+  "ended_at": "2026-11-15T07:30:00Z"
+}

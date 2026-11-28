@@ -1,0 +1,16 @@
+{
+  "claimed": false,
+  "rewards": [
+    {
+      "kind": "xp",
+      "amount": 0,
+      "currency_code": "sample",
+      "item_id": "sample1",
+      "label": {
+        "vi": "sample",
+        "en": "sample"
+      }
+    }
+  ],
+  "claimed_at": "2026-11-15T07:30:00Z"
+}

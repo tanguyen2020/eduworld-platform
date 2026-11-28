@@ -1,0 +1,35 @@
+{
+  "season_id": "00000000-0000-4000-8000-000000000001",
+  "season_name": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "starts_at": "2026-11-15T07:30:00Z",
+  "ends_at": "2026-11-15T07:30:00Z",
+  "points": 0,
+  "tier": 0,
+  "max_tier": 1,
+  "points_per_tier": 1,
+  "daily_points_remaining": 0,
+  "tiers": [
+    {
+      "tier": 1,
+      "points_required": 0,
+      "rewards": [
+        {
+          "kind": "xp",
+          "amount": 0,
+          "currency_code": "sample",
+          "item_id": "sample1",
+          "label": {
+            "vi": "sample",
+            "en": "sample"
+          }
+        }
+      ],
+      "reached": false,
+      "claimed": false,
+      "milestone": false
+    }
+  ]
+}

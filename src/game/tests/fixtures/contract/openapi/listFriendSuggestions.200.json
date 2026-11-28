@@ -1,0 +1,57 @@
+{
+  "data": [
+    {
+      "player": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a6",
+        "nickname": "GauTruc22",
+        "level": 7,
+        "title": {
+          "vi": "Nhà thám hiểm",
+          "en": "Explorer"
+        },
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_a",
+          "skin_tone": "tone_02",
+          "hair": {
+            "item_id": "hair_braids_01",
+            "color": "hair_col_05"
+          },
+          "outfit": {
+            "item_id": "outfit_star_01"
+          }
+        }
+      },
+      "source": "recently_played",
+      "context_kind": "coop",
+      "last_played_at": "2026-11-27T09:15:00Z"
+    },
+    {
+      "player": {
+        "user_id": "0193b0a0-0000-7000-8000-0000000000a7",
+        "nickname": "CaVang15",
+        "level": 5,
+        "avatar_config": {
+          "schema_version": 1,
+          "body_type": "kid_b",
+          "skin_tone": "tone_03",
+          "hair": {
+            "item_id": "hair_spiky_01",
+            "color": "hair_col_04"
+          },
+          "outfit": {
+            "item_id": "outfit_sport_01"
+          }
+        }
+      },
+      "source": "recently_played",
+      "context_kind": "match",
+      "last_played_at": "2026-11-26T14:02:00Z"
+    }
+  ],
+  "page": {
+    "next_cursor": null,
+    "has_more": false,
+    "limit": 20
+  }
+}

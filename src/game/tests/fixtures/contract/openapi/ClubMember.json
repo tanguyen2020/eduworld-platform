@@ -1,0 +1,8 @@
+{
+  "club_id": "00000000-0000-4000-8000-000000000001",
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "nickname": "sample",
+  "avatar_thumbnail_url": "https://example.invalid/resource",
+  "role": "owner",
+  "joined_at": "2026-11-15T07:30:00Z"
+}

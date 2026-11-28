@@ -1,0 +1,12 @@
+{
+  "goal_id": "00000000-0000-4000-8000-000000000001",
+  "club_id": "00000000-0000-4000-8000-000000000001",
+  "title": "sample",
+  "metric": "activities_completed",
+  "subject_id": "00000000-0000-4000-8000-000000000001",
+  "target": 1,
+  "progress": 0,
+  "my_contribution": 0,
+  "week_start": "2026-11-15",
+  "status": "active"
+}

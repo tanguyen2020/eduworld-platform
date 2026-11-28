@@ -1,0 +1,20 @@
+{
+  "goal_id": "00000000-0000-4000-8000-000000000001",
+  "event_run_id": "00000000-0000-4000-8000-000000000001",
+  "metric": "correct_answers",
+  "scope": "school",
+  "scope_id": "00000000-0000-4000-8000-000000000001",
+  "target": 1,
+  "progress": 0,
+  "milestones_reached": [
+    0
+  ],
+  "my_contributed": false,
+  "by_grade": [
+    {
+      "grade_level": 1,
+      "progress": 0
+    }
+  ],
+  "updated_at": "2026-11-15T07:30:00Z"
+}

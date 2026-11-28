@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "type": "event.status.changed",
+  "seq": 1,
+  "ts": 1763712000000,
+  "payload": {
+    "event_id": "00000000-0000-4000-8000-000000000001",
+    "event_run_id": "00000000-0000-4000-8000-000000000001",
+    "status": "live",
+    "name": {
+      "vi": "sample",
+      "en": "sample"
+    }
+  }
+}

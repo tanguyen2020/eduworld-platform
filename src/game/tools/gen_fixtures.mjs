@@ -46,6 +46,12 @@ const SCHEMAS = [
   // block / mute rows).
   'BossSummary', 'BossEncounter', 'BossQuestion', 'QuestStepClues', 'QuestStepRoles', 'QuestPartyStepProgress',
   'QuestProgress', 'FriendRequest', 'FriendCode', 'PlayerRelation',
+  // F111: "Vừa chơi cùng" suggestions, clubs (card, create form, members, requests, invitations, goals, events), the Event
+  // center (event card / detail with milestones and the community goal, join, reward claim), the free season track and
+  // the daily / weekly quest summary (`available_until`).
+  'FriendSuggestion', 'Club', 'ClubCreate', 'ClubMember', 'ClubJoinRequest', 'ClubInvitation', 'ClubGoal', 'ClubEvent',
+  'GameEventSummary', 'GameEventDetail', 'EventMilestone', 'CommunityGoalProgress', 'EventJoinResult', 'RewardClaimResult',
+  'SeasonTrack', 'SeasonTrackTier', 'SeasonTrackHistoryItem', 'QuestSummary',
 ];
 // Response examples the client parses as a whole: [operationId, status] → openapi/<operationId>.<status>.json.
 const RESPONSES = [['listMyAssignments', '200'], ['listNotifications', '200'],
@@ -62,22 +68,27 @@ const RESPONSES = [['listMyAssignments', '200'], ['listNotifications', '200'],
   ['getMatch', '200'], ['listLeaderboards', '200'], ['getLeaderboard', '200'], ['listTournaments', '200'],
   ['getTournament', '200'], ['registerTournamentEntry', '201'], ['checkInTournamentEntry', '200'],
   ['getTournamentBracket', '200'], ['listMyChallenges', '200'], ['joinChallenge', '200'], ['createDuel', '201'],
-  ['acceptDuel', '200']];
+  ['acceptDuel', '200'],
+  // F111: friend suggestions, the student's club invitations, a club's goals (the other club / event bodies have no
+  // response example: their component schemas above are sampled).
+  ['listFriendSuggestions', '200'], ['listMyClubInvitations', '200'], ['listClubGoals', '200']];
 // specs/examples documents the game never receives: CMS-only curriculum, server-side chat policy and the
 // sensitive-term catalog (never sent to clients, AGENTS R15).
 const NOT_FOR_CLIENT = [/^curriculum\./, /^chat-policy\./, /^sensitive-term-catalog\./];
 // Realtime messages of the game client (F092): system, session, hub, presence; F123 notification; F102 party; F119 chat;
-// F110 boss and co-op quest.
+// F110 boss and co-op quest; F111 live-ops events and the season track.
 const ASYNCAPI = 'specs/asyncapi/eduworld-realtime.v1.yaml';
 // F109: matchmaking, battle, tier and tournament messages of the arena.
 const ASYNC_PREFIXES = ['system.', 'session.', 'hub.', 'presence.', 'notification.', 'party.', 'chat.', 'matchmaking.',
-  'battle.', 'competition.', 'tournament.', 'boss.', 'quest.'];
+  'battle.', 'competition.', 'tournament.', 'boss.', 'quest.', 'event.', 'season.'];
 // F110: messages the client handles whose AsyncAPI entry has no `examples` yet get one deterministic sample built from the
 // payload schema (`asyncapi/<type>.sample.json`, validated like an example). Only these: another message without examples
 // stays out of the fixtures until its owner writes examples.
 const SAMPLED_MESSAGES = ['boss.encounter.ready', 'boss.answer.submit', 'boss.encounter.updated', 'boss.phase.started',
   'boss.phase.completed', 'boss.encounter.ended', 'boss.question.assigned', 'boss.answer.evaluated', 'quest.roles.assigned',
-  'quest.clue.shared', 'quest.progress.updated', 'presence.friend.updated'];
+  'quest.clue.shared', 'quest.progress.updated', 'presence.friend.updated',
+  // F111: live-ops event status / points / community goal and the season track (no AsyncAPI examples yet).
+  'event.status.changed', 'event.progress.updated', 'event.community_goal.updated', 'season.track.updated'];
 const Ajv = require(path.join(root, 'scripts', 'node_modules', 'ajv'));
 const addFormats = require(path.join(root, 'scripts', 'node_modules', 'ajv-formats'));
 

@@ -1,0 +1,80 @@
+{
+  "event_id": "00000000-0000-4000-8000-000000000001",
+  "event_run_id": "00000000-0000-4000-8000-000000000001",
+  "event_kind": "world_festival",
+  "owner_scope": "platform",
+  "name": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "short_tagline": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "theme_code": "sample",
+  "banner_url": "https://example.invalid/resource",
+  "starts_at": "2026-11-15T07:30:00Z",
+  "ends_at": "2026-11-15T07:30:00Z",
+  "status": "scheduled",
+  "joined": false,
+  "event_points": 0,
+  "description": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "quest_ids": [
+    "00000000-0000-4000-8000-000000000001"
+  ],
+  "challenge_ids": [
+    "00000000-0000-4000-8000-000000000001"
+  ],
+  "boss_ids": [
+    "00000000-0000-4000-8000-000000000001"
+  ],
+  "shop_item_ids": [
+    "00000000-0000-4000-8000-000000000001"
+  ],
+  "collection_id": "00000000-0000-4000-8000-000000000001",
+  "milestones": [
+    {
+      "milestone_id": "sample",
+      "points_required": 1,
+      "rewards": [
+        {
+          "kind": "xp",
+          "amount": 0,
+          "currency_code": "sample",
+          "item_id": "sample1",
+          "label": {
+            "vi": "sample",
+            "en": "sample"
+          }
+        }
+      ],
+      "reached": false,
+      "claimed": false
+    }
+  ],
+  "community_goal": {
+    "goal_id": "00000000-0000-4000-8000-000000000001",
+    "event_run_id": "00000000-0000-4000-8000-000000000001",
+    "metric": "correct_answers",
+    "scope": "school",
+    "scope_id": "00000000-0000-4000-8000-000000000001",
+    "target": 1,
+    "progress": 0,
+    "milestones_reached": [
+      0
+    ],
+    "my_contributed": false,
+    "by_grade": [
+      {
+        "grade_level": 1,
+        "progress": 0
+      }
+    ],
+    "updated_at": "2026-11-15T07:30:00Z"
+  },
+  "daily_points_remaining": 0,
+  "claim_deadline_at": "2026-11-15T07:30:00Z"
+}

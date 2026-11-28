@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "type": "event.progress.updated",
+  "seq": 1,
+  "ts": 1763712000000,
+  "payload": {
+    "event_id": "00000000-0000-4000-8000-000000000001",
+    "event_run_id": "00000000-0000-4000-8000-000000000001",
+    "delta": 0,
+    "event_points": 0,
+    "daily_points_remaining": 0,
+    "milestones_reached": [
+      "sample"
+    ]
+  }
+}

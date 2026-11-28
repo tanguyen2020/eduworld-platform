@@ -1,0 +1,21 @@
+{
+  "event_id": "00000000-0000-4000-8000-000000000001",
+  "event_run_id": "00000000-0000-4000-8000-000000000001",
+  "event_kind": "world_festival",
+  "owner_scope": "platform",
+  "name": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "short_tagline": {
+    "vi": "sample",
+    "en": "sample"
+  },
+  "theme_code": "sample",
+  "banner_url": "https://example.invalid/resource",
+  "starts_at": "2026-11-15T07:30:00Z",
+  "ends_at": "2026-11-15T07:30:00Z",
+  "status": "scheduled",
+  "joined": false,
+  "event_points": 0
+}
