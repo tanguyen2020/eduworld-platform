@@ -36,6 +36,8 @@ var self_id: String = ""
 var catalog: QuickMessageCatalog = null
 var assets: ChatAssetCache = null
 var budget: ChatAnimationBudget = null
+## F112-AC-17: the card reached from a search, lit for 2 s (ChatMessageList.flash).
+var flashing: bool = false
 var _panel: PanelContainer = null
 var _box: VBoxContainer = null
 var _head: HBoxContainer = null
@@ -77,6 +79,7 @@ func bind(m: ChatMessageModel, ctx: Dictionary) -> void:
 	catalog = ctx.get("catalog") as QuickMessageCatalog
 	assets = ctx.get("assets") as ChatAssetCache
 	budget = ctx.get("budget") as ChatAnimationBudget
+	flashing = String(ctx.get("flash_key", "")) == m.key()
 	_stop_animation()
 	refresh()
 
@@ -87,7 +90,8 @@ func refresh() -> void:
 	var m: ChatMessageModel = message
 	var mine: bool = m.is_mine(self_id)
 	var mentioned: bool = m.mentions.has(self_id) and not mine
-	_panel.theme_type_variation = &"ChatBubbleMention" if mentioned else (&"ChatBubbleMine" if mine else &"ChatBubbleOther")
+	_panel.theme_type_variation = &"ChatBubbleMention" if mentioned or flashing else (&"ChatBubbleMine" if mine \
+			else &"ChatBubbleOther")
 	_name.text = ChatText.sender_text(m, self_id)
 	_name.visible = not mine and not m.is_system()
 	_head.visible = _name.visible

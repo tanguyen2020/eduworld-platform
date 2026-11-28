@@ -48,4 +48,20 @@ make design-tokens-check   # nếu có token mới
 
 ## 5. Bằng chứng
 
-Chưa có — ghi khi triển khai (T040–T043).
+2026-11-28, phần Godot client — máy local, Godot 4.7.2 (headless cho GdUnit4, Compatibility/OpenGL cho ảnh), FakeHttp + FakeWebSocketPeer + fixture contract (TEST-ONLY, AGENTS R17) — **chưa** chạy với backend thật.
+
+**Test (viết trước, đỏ → xanh — chi tiết ở [tasks.md](tasks.md)):** 65 test F112 xanh; GdUnit4 toàn bộ 1760 test — unit 1005, scene 667, contract 37, integration 18 (16 skip), perf 18, tools 11, visual 4 — 0 lỗi; lint Godot, export PCK Android + scan_artifact xanh
+
+**Kịch bản §2 tự động hóa bằng fake:** 1–4 (`test_chat_hub_state`, `test_chat_hub`), 5–7 (`test_direct_channels`, `test_persistent_channel_states`), 8–11 (`test_persistent_channel_states`), 12 (`test_chat_search_service`, `test_highlight_text`, `test_chat_search_panel`), 13–17 (`test_club_manage_service`, `test_club_manage`), 18–19 (`test_f112_band_matrix`), 21 (`test_f112_boundaries`). **Còn chờ môi trường thật:** kịch bản §2 với backend compose và hai client (T038), kịch bản 20 — FPS Android tầm trung (T039, SC-005).
+
+**Ảnh (`screenshots/`, `f112_<màn>-after-<cỡ>-<ngôn ngữ>-<khối>.png`):** 13 màn (`hub_area`, `hub_world`, `hub_club`, `hub_friends`, `hub_dm`, `hub_dm_frozen`, `search_hits`, `search_empty`, `manage_edit`, `manage_officers`, `manage_goal`, `manage_event`, `hud`) × {1280×720, 844×390, 740×360} `vi` `g1_3`; × {844×390, 740×360} `vi` `g4_5`/`g6_7`/`g8_9`; 844×390 `en` `g4_5`; 1280×720 `vi` `g8_9`; màn F111 đổi (`f111_friends_join` — nút "Nhắn tin", `f111_club_page` — nút "Quản lý club") ở 3 cỡ `vi`/`en` `g1_3`.
+
+| Màn | Khối đã xem | Lỗi thấy khi xem ảnh → đã sửa |
+|---|---|---|
+| `hub_*` (điện thoại) | g1_3, g4_5, g6_7, g8_9 | Hàng tab dưới thanh tiêu đề làm "≥ 3 tin" hụt (`message list 151 px < 194`) → tab lên dòng thanh tiêu đề, tấm phủ cả màn; tab đang chọn xanh trên thanh xanh khó thấy → tab sáng, tab chọn vàng + ✓; kính lúp đứng trước tab khi mở lại → thứ tự icon · tab · kính lúp · Đóng; tab DM mới mở bị che một nửa → cuộn tab vào tầm nhìn sau một khung |
+| `hub_*` (PC) | g1_3, g8_9 | Tab chọn mất biểu tượng (nét xanh trên nền xanh) → dấu ✓; khung PC thấp làm "≥ 3 tin" hụt ở `g1_3` → khung cao hết màn, rộng 40% |
+| `hub_dm_frozen` | mọi khối | Mũi tên của hàng tin nhanh còn lại khi khóa → ẩn cả thanh tin nhanh, chỉ còn băng "Cuộc trò chuyện này đang tạm đóng" |
+| `hub_friends` | mọi khối | "Nhắn tin" nút xanh mất biểu tượng → nút phụ (biểu tượng chat thấy được) |
+| `search_*` | mọi khối | Từ khóa in đậm không thấy khi font không có đậm → thêm gạch chân |
+| `hud` | g1_3, g8_9 | Nút chat ở hàng "Sự kiện/Thêm" bị toast "Em có 1 bài…" che → chuyển xuống hàng dưới-phải trước "Về Quảng trường"; badge đè chữ "Chat" → đặt cao hơn |
+| `manage_*` | mọi khối | Không lỗi chặn; nút "Lưu" mờ khi chưa đổi gì (biểu tượng theo kiểu nút mờ của Theme) |

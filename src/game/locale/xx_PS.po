@@ -1085,6 +1085,18 @@ msgstr "[!! {count}/{max} ~~~~~~ !!]"
 msgid "ui.chat.counter_over"
 msgstr "[!! {count}/{max} — ţöö ĺöñğ ~~~~~~~~~~ !!]"
 
+msgid "ui.chat.dm.frozen"
+msgstr "[!! Ţĥïš çöñvëŕšáţïöñ ïš çĺöšëđ ƒöŕ ñöŵ ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.dm.message"
+msgstr "[!! Mëššáğë ~~~ !!]"
+
+msgid "ui.chat.dm.no_friends"
+msgstr "[!! Ñö ƒŕïëñđš ýëţ. Åđđ ƒŕïëñđš ïñ ţĥë Fŕïëñđš ŵïñđöŵ! ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.dm.unavailable"
+msgstr "[!! Ýöü çáññöţ ɱëššáğë ţĥïš ƒŕïëñđ ŕïğĥţ ñöŵ ~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.chat.edited"
 msgstr "[!! ëđïţëđ ~~~ !!]"
 
@@ -1292,6 +1304,42 @@ msgstr "[!! ĞÏF ~~ !!]"
 msgid "ui.chat.held_own"
 msgstr "[!! Ɓëïñğ çĥëçķëđ ~~~~~~ !!]"
 
+msgid "ui.chat.hub.empty"
+msgstr "[!! Ţĥëŕë ïš ñö çĥáţ ƒöŕ ýöü ŕïğĥţ ñöŵ. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.hub.hud"
+msgstr "[!! Çĥáţ ~~ !!]"
+
+msgid "ui.chat.hub.locked_curfew"
+msgstr "[!! Ïţ ïš ŕëšţ ţïɱë. Çĥáţ öþëñš áğáïñ áţ {time} ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.hub.locked_none"
+msgstr "[!! Ýöü çáññöţ šëñđ ɱëššáğëš ĥëŕë ŕïğĥţ ñöŵ ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.hub.locked_not_allowed"
+msgstr "[!! Ţĥïš çĥáţ ïš ŕëšţïñğ, çöɱë ƀáçķ ĺáţëŕ ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.hub.locked_read_only"
+msgstr "[!! Ţĥë çĺüƀ ïš þáüšëđ. Ýöü çáñ šţïĺĺ ŕëáđ öĺđ ɱëššáğëš ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.hub.muted"
+msgstr "[!! Ñöţïƒïçáţïöñš öƒƒ ~~~~~~~ !!]"
+
+msgid "ui.chat.hub.tab.area"
+msgstr "[!! Ţĥïš áŕëá ~~~~ !!]"
+
+msgid "ui.chat.hub.tab.friends"
+msgstr "[!! Fŕïëñđš ~~~ !!]"
+
+msgid "ui.chat.hub.tab.world"
+msgstr "[!! Ŵĥöĺë šçĥööĺ ~~~~~ !!]"
+
+msgid "ui.chat.hub.title"
+msgstr "[!! Çĥáţ ~~ !!]"
+
+msgid "ui.chat.hub.unread"
+msgstr "[!! {count} üñŕëáđ ɱëššáğëš ~~~~~~~~~~ !!]"
+
 msgid "ui.chat.input_placeholder"
 msgstr "[!! Ţýþë á ɱëššáğë… ~~~~~~ !!]"
 
@@ -1483,6 +1531,48 @@ msgstr "[!! Ŕëþöŕţ {nickname} ~~~~~~~ !!]"
 
 msgid "ui.chat.retention_notice"
 msgstr "[!! Máţçĥ ɱëššáğëš áŕë ķëþţ ƒöŕ {days} đáýš. Ïƒ šöɱëţĥïñğ ŵáš ñöţ öķáý, þĺëášë ŕëþöŕţ ïţ ƀëƒöŕë ţĥëñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.search.back"
+msgstr "[!! Ɓáçķ ~~ !!]"
+
+msgid "ui.chat.search.channel_club"
+msgstr "[!! Çĺüƀ ~~ !!]"
+
+msgid "ui.chat.search.channel_dm"
+msgstr "[!! Pŕïváţë ɱëššáğë ~~~~~~ !!]"
+
+msgid "ui.chat.search.counter"
+msgstr "[!! {count}/{max} ~~~~~~ !!]"
+
+msgid "ui.chat.search.empty"
+msgstr "[!! Ñö ɱëššáğëš ƒöüñđ. Ţŕý öţĥëŕ ŵöŕđš! ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.search.go"
+msgstr "[!! Šëáŕçĥ ~~~ !!]"
+
+msgid "ui.chat.search.gone"
+msgstr "[!! Ţĥïš ɱëššáğë çáññöţ ƀë vïëŵëđ áñýɱöŕë ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.chat.search.more"
+msgstr "[!! Šĥöŵ ɱöŕë ~~~~ !!]"
+
+msgid "ui.chat.search.open"
+msgstr "[!! Šëáŕçĥ ɱëššáğëš ~~~~~~ !!]"
+
+msgid "ui.chat.search.open_hit"
+msgstr "[!! Vïëŵ ~~ !!]"
+
+msgid "ui.chat.search.placeholder"
+msgstr "[!! Ţýþë ŵöŕđš ţö ƒïñđ… ~~~~~~~~ !!]"
+
+msgid "ui.chat.search.scope_all"
+msgstr "[!! Åĺĺ ~~ !!]"
+
+msgid "ui.chat.search.scope_channel"
+msgstr "[!! Ţĥïš çĥáţ ~~~~ !!]"
+
+msgid "ui.chat.search.when"
+msgstr "[!! {date} áţ {time} ~~~~~~~ !!]"
 
 msgid "ui.chat.send"
 msgstr "[!! Šëñđ ~~ !!]"
@@ -1681,6 +1771,174 @@ msgstr "[!! Ýöü çáñ ášķ ţö ĵöïñ áğáïñ ĺáţëŕ. ~~~~~~~~~~
 
 msgid "ui.club.left"
 msgstr "[!! Ýöü ĺëƒţ ţĥë çĺüƀ. ~~~~~~~~ !!]"
+
+msgid "ui.club.manage.conflict"
+msgstr "[!! Ţĥë çĺüƀ ïñƒö ĵüšţ çĥáñğëđ. Çĥëçķ ïţ, ţĥëñ šávë áğáïñ ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.event.create"
+msgstr "[!! Çŕëáţë ëvëñţ ~~~~~ !!]"
+
+msgid "ui.club.manage.event.day"
+msgstr "[!! Đáý ~~ !!]"
+
+msgid "ui.club.manage.event.description"
+msgstr "[!! Đëšçŕïþţïöñ ~~~~~ !!]"
+
+msgid "ui.club.manage.event.description_long"
+msgstr "[!! Ţĥë đëšçŕïþţïöñ ïš ţöö ĺöñğ ~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.event.earlier"
+msgstr "[!! Ẹáŕĺïëŕ ~~~ !!]"
+
+msgid "ui.club.manage.event.end_before_start"
+msgstr "[!! Ţĥë ëñđ ɱüšţ ƀë áƒţëŕ ţĥë šţáŕţ ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.event.kind"
+msgstr "[!! Ẹvëñţ ţýþë ~~~~ !!]"
+
+msgid "ui.club.manage.event.kind_needed"
+msgstr "[!! Çĥööšë áñ ëvëñţ ţýþë ~~~~~~~~ !!]"
+
+msgid "ui.club.manage.event.later"
+msgstr "[!! Ĺáţëŕ ~~ !!]"
+
+msgid "ui.club.manage.event.length"
+msgstr "[!! Ĺëñğţĥ ~~~ !!]"
+
+msgid "ui.club.manage.event.length_min"
+msgstr "[!! {minutes} ɱïñ ~~~~~~ !!]"
+
+msgid "ui.club.manage.event.length_none"
+msgstr "[!! Ñöţ šëţ ~~~ !!]"
+
+msgid "ui.club.manage.event.past"
+msgstr "[!! Ţĥïš ţïɱë ĥáš þáššëđ. Çĥööšë áñöţĥëŕ ţïɱë ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.event.time"
+msgstr "[!! Šţáŕţ ţïɱë ~~~~ !!]"
+
+msgid "ui.club.manage.event.title"
+msgstr "[!! Ẹvëñţ ñáɱë ~~~~ !!]"
+
+msgid "ui.club.manage.event.title_needed"
+msgstr "[!! Ğïvë ţĥë ëvëñţ á ñáɱë ~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.event.today"
+msgstr "[!! Ţöđáý ~~ !!]"
+
+msgid "ui.club.manage.event.tomorrow"
+msgstr "[!! Ţöɱöŕŕöŵ ~~~~ !!]"
+
+msgid "ui.club.manage.event.when"
+msgstr "[!! Šţáŕţš: {date} áţ {time} ~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.field_invalid"
+msgstr "[!! Ţĥïš ƒïëĺđ ïš ñöţ ŕïğĥţ ýëţ, þĺëášë ƒïx ïţ ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.goal.create"
+msgstr "[!! Çŕëáţë ğöáĺ ~~~~~ !!]"
+
+msgid "ui.club.manage.goal.hint"
+msgstr "[!! Ţĥë ŵĥöĺë çĺüƀ ŵöŕķš öñ ţĥë ğöáĺ ţöğëţĥëŕ ţĥïš ŵëëķ. ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.goal.invalid"
+msgstr "[!! Çĥööšë á ğöáĺ ţýþë áñđ á ñüɱƀëŕ ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.goal.less"
+msgstr "[!! Ĺëšš ~~ !!]"
+
+msgid "ui.club.manage.goal.metric"
+msgstr "[!! Ğöáĺ ţýþë ~~~~ !!]"
+
+msgid "ui.club.manage.goal.more"
+msgstr "[!! Möŕë ~~ !!]"
+
+msgid "ui.club.manage.goal.target"
+msgstr "[!! Ĥöŵ ɱáñý ~~~~ !!]"
+
+msgid "ui.club.manage.goal.title"
+msgstr "[!! Ğöáĺ ñáɱë (öþţïöñáĺ) ~~~~~~~~ !!]"
+
+msgid "ui.club.manage.goal.title_hint"
+msgstr "[!! Föŕ ëxáɱþĺë: ƒïñïšĥ 30 áçţïvïţïëš ţöğëţĥëŕ ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.kind.boss_raid"
+msgstr "[!! Ɓöšš ţöğëţĥëŕ ~~~~~~ !!]"
+
+msgid "ui.club.manage.kind.coop_quest"
+msgstr "[!! Qüëšţ ţöğëţĥëŕ ~~~~~~ !!]"
+
+msgid "ui.club.manage.kind.other"
+msgstr "[!! Šöɱëţĥïñğ ëĺšë ~~~~~~ !!]"
+
+msgid "ui.club.manage.kind.practice_session"
+msgstr "[!! Pŕáçţïçë ţöğëţĥëŕ ~~~~~~~ !!]"
+
+msgid "ui.club.manage.metric.activities_completed"
+msgstr "[!! Åçţïvïţïëš ƒïñïšĥëđ ~~~~~~~~ !!]"
+
+msgid "ui.club.manage.metric.discoveries_found"
+msgstr "[!! Ñëŵ đïšçövëŕïëš ~~~~~~ !!]"
+
+msgid "ui.club.manage.metric.quests_completed"
+msgstr "[!! Qüëšţš ƒïñïšĥëđ ~~~~~~ !!]"
+
+msgid "ui.club.manage.not_approved"
+msgstr "[!! Ţĥë çĺüƀ ïš ŵáïţïñğ ƒöŕ ţĥë šçĥööĺ ţö áþþŕövë ïţ ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.officer.ask_make"
+msgstr "[!! Máķë {nickname} á çö-ĺëáđëŕ? ~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.officer.ask_remove"
+msgstr "[!! Šţöþ {nickname} ƀëïñğ á çö-ĺëáđëŕ? ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.officer.confirm"
+msgstr "[!! Ýëš ~~ !!]"
+
+msgid "ui.club.manage.officer.hint"
+msgstr "[!! Çö-ĺëáđëŕš ĥëĺþ ýöü áþþŕövë ŕëqüëšţš áñđ ïñvïţë ƒŕïëñđš. ~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.officer.make"
+msgstr "[!! Máķë çö-ĺëáđëŕ ~~~~~~ !!]"
+
+msgid "ui.club.manage.officer.remove"
+msgstr "[!! Ŕëɱövë çö-ĺëáđëŕ ~~~~~~~ !!]"
+
+msgid "ui.club.manage.open"
+msgstr "[!! Máñáğë çĺüƀ ~~~~~ !!]"
+
+msgid "ui.club.manage.revoked"
+msgstr "[!! Ýöü çáñ ñö ĺöñğëŕ ɱáñáğë ţĥïš çĺüƀ ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.manage.save"
+msgstr "[!! Šávë ~~ !!]"
+
+msgid "ui.club.manage.saved.club"
+msgstr "[!! Çĺüƀ ïñƒö šávëđ ~~~~~~ !!]"
+
+msgid "ui.club.manage.saved.event"
+msgstr "[!! Çĺüƀ ëvëñţ çŕëáţëđ ~~~~~~~~ !!]"
+
+msgid "ui.club.manage.saved.goal"
+msgstr "[!! Ŵëëķĺý ğöáĺ çŕëáţëđ ~~~~~~~~ !!]"
+
+msgid "ui.club.manage.saved.role"
+msgstr "[!! Çö-ĺëáđëŕ üþđáţëđ ~~~~~~~ !!]"
+
+msgid "ui.club.manage.section.edit"
+msgstr "[!! Ẹđïţ ïñƒö ~~~~ !!]"
+
+msgid "ui.club.manage.section.event"
+msgstr "[!! Çĺüƀ ëvëñţ ~~~~ !!]"
+
+msgid "ui.club.manage.section.goal"
+msgstr "[!! Ŵëëķĺý ğöáĺ ~~~~~ !!]"
+
+msgid "ui.club.manage.section.officers"
+msgstr "[!! Çö-ĺëáđëŕš ~~~~ !!]"
+
+msgid "ui.club.manage.title"
+msgstr "[!! Máñáğë çĺüƀ ~~~~~ !!]"
 
 msgid "ui.club.members_count"
 msgstr "[!! {count}/{max} ɱëɱƀëŕš ~~~~~~~~~ !!]"
@@ -1931,6 +2189,9 @@ msgstr "[!! Ţĥïš çĥáĺĺëñğë ïš ñöţ öþëñ ƒöŕ ýöü ŕï�
 msgid "ui.error.CHAT_CONTENT_BLOCKED"
 msgstr "[!! Ţĥïš ţëxţ ïš ñöţ öķáý. Pĺëášë çĥáñğë ïţ. ~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.CHAT_NOT_ALLOWED"
+msgstr "[!! Ýöü çáññöţ šëñđ ɱëššáğëš ţö ţĥïš çĥáţ ŕïğĥţ ñöŵ ~~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.CLIENT_VERSION_UNSUPPORTED"
 msgstr "[!! Ţĥë ğáɱë ñëëđš ţö ƀë üþđáţëđ ţö á ñëŵ vëŕšïöñ. ~~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -2104,6 +2365,9 @@ msgstr "[!! Ţĥë šýšţëɱ ïš ƀüšý. Pĺëášë ţŕý áğáïñ ï�
 
 msgid "ui.error.VALIDATION_FAILED"
 msgstr "[!! Šöɱë ïñƒöŕɱáţïöñ ïš ñöţ váĺïđ. Pĺëášë çĥëçķ ïţ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.VERSION_MISMATCH"
+msgstr "[!! Ţĥë ïñƒö ĵüšţ çĥáñğëđ, þĺëášë çĥëçķ ïţ áğáïñ ~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.generic"
 msgstr "[!! Šöɱëţĥïñğ ŵëñţ ŵŕöñğ. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~ !!]"

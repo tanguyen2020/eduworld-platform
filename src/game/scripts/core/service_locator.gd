@@ -59,6 +59,11 @@ var join_friend: JoinFriendService = null
 var clubs: ClubService = null
 var live_events: LiveEventService = null
 var season: SeasonTrackService = null
+## F112: the HUD chat of the persistent channels (tabs, DMs, badge — ChatService + ClubService + SocialService), the
+## message search (`/chat/search`) and the club owner's tools (`/social/clubs/{id}` writes).
+var chat_hub: ChatHubService = null
+var chat_search: ChatSearchService = null
+var club_manage: ClubManageService = null
 ## `(code: String) -> void` for session-ending refusals; default `AuthService.handle_access_denied` (F062-AC-12/23).
 var access_denied_handler: Callable = Callable()
 
@@ -131,6 +136,7 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	coop_quest.access_denied.connect(_on_access_denied)
 	coop_quest.party_store = party.store
 	_init_f111(rest)
+	_init_f112(rest, app_state)
 	matchmaking = MatchmakingService.new(rest, realtime, app_state, telemetry)
 	matchmaking.access_denied.connect(_on_access_denied)
 	battle = BattleClient.new(realtime, app_state)
@@ -157,6 +163,7 @@ func start_session(bootstrap: Dictionary) -> void:
 	chat.clear()
 	reports.clear()
 	_clear_f110()
+	_clear_f112()
 	_clear_competition()
 	play_time.configure(bootstrap.get("policies", {}) as Dictionary)
 	var flags: Variant = bootstrap.get("feature_flags", {})
@@ -175,6 +182,7 @@ func end_session() -> void:
 	chat.clear()
 	reports.clear()
 	_clear_f110()
+	_clear_f112()
 	_clear_competition()
 	learning.clear()
 	exam.clear()
@@ -223,6 +231,25 @@ func _clear_f110() -> void:
 	clubs.clear()
 	live_events.clear()
 	season.clear()
+
+
+## F112 services (GODOT_ARCHITECTURE §4, §6.1): session refusals go to F061 (F112-AC-31).
+func _init_f112(rest: RestApiClient, app_state: Node) -> void:
+	chat_hub = ChatHubService.new(chat, clubs, social, hub, app_state)
+	chat_search = ChatSearchService.new(rest, telemetry)
+	chat_search.access_denied.connect(_on_access_denied)
+	club_manage = ClubManageService.new(rest, telemetry, clubs)
+	club_manage.access_denied.connect(_on_access_denied)
+
+
+## F112-AC-31: the DM links, the search and the club tools of the previous student are not kept.
+func _clear_f112() -> void:
+	if chat_hub != null:
+		chat_hub.clear()
+	if chat_search != null:
+		chat_search.clear()
+	if club_manage != null:
+		club_manage.clear()
 
 
 ## F111 services (GODOT_ARCHITECTURE §4): built with the ApiClient / RealtimeClient; session refusals go to F061.

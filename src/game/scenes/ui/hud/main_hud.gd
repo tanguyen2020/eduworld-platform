@@ -43,7 +43,9 @@ const NEXT_STEP_MIN_TOP: float = 0.14
 const NO_MINIMAP_BANDS: PackedStringArray = ["g1_3"]
 ## F069: XpBar (level · title, XP, moon at the daily cap) in the PlayerBadge and the Xu CurrencyChip + "Thêm" menu on
 ## the right (SideBar) show once their data is loaded (ProgressionStore, WalletStore signals — no polling).
-## Slots owned by later features (F072 quest tracker, F071 minimap, F110 chat). F102: PartyChip is the PartyHud.
+## Slots owned by later features (F072 quest tracker, F071 minimap). F102: PartyChip is the PartyHud. F112: the chat of the
+## persistent channels is the ChatHubButton at the bottom right (before "Về Quảng trường") opening the ChatHub window;
+## the old ChatDock slot stays hidden.
 const FUTURE_SLOTS: PackedStringArray = ["QuestTracker", "Minimap", "ChatDock"]
 const BAND_KEYS: Dictionary = {
 	"g1_3": "ui.hub.grade_band.g1_3", "g4_5": "ui.hub.grade_band.g4_5", "g6_7": "ui.hub.grade_band.g6_7",
@@ -85,6 +87,8 @@ var banner_args: Dictionary = {}
 ## F125 polish: controls of other layers on the right edge the invitation popup must not cover (WorldRoot sets the emote
 ## button) — the popup ends left of them and of the side bar.
 var keep_clear: Array[Control] = []
+## F112: the HUD chat button (ChatHub).
+var _chat: ChatHubButton = null
 ## F111: the calendar button of the Event center (side bar, under "Thêm") with its static "new" dot.
 var _events: EventCenterButton = null
 
@@ -135,10 +139,17 @@ func _ready() -> void:
 	side.remove_child(_menu)
 	row.add_child(_events)
 	row.add_child(_menu)
+	# F112-AC-01, AC-05: the chat button (badge = unread of the clubs and DMs, "@" for mentions) at the bottom right,
+	# before "Về Quảng trường" — clear of the toasts at the top and of the joystick at the bottom left.
+	_chat = ChatHubButton.new()
+	var bottom: Node = _home.get_parent()
+	bottom.add_child(_chat)
+	bottom.move_child(_chat, 0)
 	# Owned by the HUD scene again so find_child / unique names still reach the moved button.
 	row.owner = self
 	_menu.owner = self
 	_events.bind_store(AppState.services.live_events.store if AppState.services != null else null)
+	_chat.bind_hub(AppState.services.chat_hub if AppState.services != null else null)
 	_party.party_pressed.connect(_on_party_pressed)
 	_invite_toast.open_requested.connect(party_requested.emit)
 	EventBus.party_invitation_received.connect(_on_party_invitation)
@@ -160,6 +171,7 @@ func _exit_tree() -> void:
 	bind_notifications(null)
 	bind_party(null)
 	_events.bind_store(null)
+	_chat.bind_hub(null)
 	if EventBus.party_invitation_received.is_connected(_on_party_invitation):
 		EventBus.party_invitation_received.disconnect(_on_party_invitation)
 	bind_progression(null, null)
@@ -255,7 +267,7 @@ func show_hub_notice(key: String, args: Dictionary = {}) -> void:
 func touch_buttons() -> Array[Button]:
 	return [_assignments_chip, _journal, _bell, _settings, _wardrobe, _map, _home, _context_action, _next_step_button,
 		_onboarding.find_child("Skip", true, false) as Button, _onboarding.find_child("Next", true, false) as Button,
-		_currency, _menu, _events, _party.button()]
+		_currency, _menu, _events, _party.button(), _chat]
 
 
 ## F096-AC-10: opens Mây's guide (the owner decides when: first entry on the device or right after S02).

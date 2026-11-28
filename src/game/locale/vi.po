@@ -4965,3 +4965,267 @@ msgstr "Bạn đang làm bài học, chờ chút nhé"
 
 msgid "ui.club.members_more"
 msgstr "Xem thêm thành viên"
+
+msgid "ui.chat.hub.title"
+msgstr "Chat"
+
+msgid "ui.chat.hub.hud"
+msgstr "Chat"
+
+msgid "ui.chat.hub.unread"
+msgstr "{count} tin chưa đọc"
+
+msgid "ui.chat.hub.tab.area"
+msgstr "Khu vực"
+
+msgid "ui.chat.hub.tab.world"
+msgstr "Cả trường"
+
+msgid "ui.chat.hub.tab.friends"
+msgstr "Bạn bè"
+
+msgid "ui.chat.hub.empty"
+msgstr "Chưa có kênh chat nào cho em lúc này."
+
+msgid "ui.chat.hub.muted"
+msgstr "Đã tắt thông báo"
+
+msgid "ui.chat.hub.locked_not_allowed"
+msgstr "Kênh này đang nghỉ, em quay lại sau nhé"
+
+msgid "ui.chat.hub.locked_curfew"
+msgstr "Đã đến giờ nghỉ. Chat mở lại lúc {time} nhé"
+
+msgid "ui.chat.hub.locked_read_only"
+msgstr "Club đang tạm khóa, em vẫn đọc được tin cũ"
+
+msgid "ui.chat.hub.locked_none"
+msgstr "Em chưa gửi tin được ở kênh này lúc này"
+
+msgid "ui.chat.dm.unavailable"
+msgstr "Em chưa nhắn riêng được với bạn này lúc này"
+
+msgid "ui.chat.dm.frozen"
+msgstr "Cuộc trò chuyện này đang tạm đóng"
+
+msgid "ui.chat.dm.message"
+msgstr "Nhắn tin"
+
+msgid "ui.chat.dm.no_friends"
+msgstr "Em chưa có bạn bè. Kết bạn ở cửa sổ Bạn bè nhé!"
+
+msgid "ui.chat.search.open"
+msgstr "Tìm tin nhắn"
+
+msgid "ui.chat.search.back"
+msgstr "Quay lại"
+
+msgid "ui.chat.search.placeholder"
+msgstr "Gõ từ cần tìm…"
+
+msgid "ui.chat.search.counter"
+msgstr "{count}/{max}"
+
+msgid "ui.chat.search.go"
+msgstr "Tìm"
+
+msgid "ui.chat.search.scope_all"
+msgstr "Tất cả"
+
+msgid "ui.chat.search.scope_channel"
+msgstr "Kênh này"
+
+msgid "ui.chat.search.when"
+msgstr "{date} lúc {time}"
+
+msgid "ui.chat.search.open_hit"
+msgstr "Xem"
+
+msgid "ui.chat.search.more"
+msgstr "Xem thêm"
+
+msgid "ui.chat.search.empty"
+msgstr "Không tìm thấy tin nào. Em thử từ khác nhé!"
+
+msgid "ui.chat.search.gone"
+msgstr "Tin này không còn xem được"
+
+msgid "ui.chat.search.channel_dm"
+msgstr "Tin nhắn riêng"
+
+msgid "ui.chat.search.channel_club"
+msgstr "Club"
+
+msgid "ui.club.manage.open"
+msgstr "Quản lý club"
+
+msgid "ui.club.manage.title"
+msgstr "Quản lý club"
+
+msgid "ui.club.manage.section.edit"
+msgstr "Sửa thông tin"
+
+msgid "ui.club.manage.section.officers"
+msgstr "Phó nhóm"
+
+msgid "ui.club.manage.section.goal"
+msgstr "Mục tiêu tuần"
+
+msgid "ui.club.manage.section.event"
+msgstr "Sự kiện club"
+
+msgid "ui.club.manage.save"
+msgstr "Lưu"
+
+msgid "ui.club.manage.conflict"
+msgstr "Thông tin club vừa thay đổi, em xem lại rồi lưu nhé"
+
+msgid "ui.club.manage.not_approved"
+msgstr "Club đang chờ nhà trường duyệt"
+
+msgid "ui.club.manage.revoked"
+msgstr "Em không còn quyền quản lý club này"
+
+msgid "ui.club.manage.field_invalid"
+msgstr "Ô này chưa đúng, em sửa lại nhé"
+
+msgid "ui.club.manage.saved.club"
+msgstr "Đã lưu thông tin club"
+
+msgid "ui.club.manage.saved.role"
+msgstr "Đã cập nhật phó nhóm"
+
+msgid "ui.club.manage.saved.goal"
+msgstr "Đã tạo mục tiêu tuần"
+
+msgid "ui.club.manage.saved.event"
+msgstr "Đã tạo sự kiện club"
+
+msgid "ui.club.manage.officer.hint"
+msgstr "Phó nhóm cùng em duyệt yêu cầu và mời bạn vào club."
+
+msgid "ui.club.manage.officer.make"
+msgstr "Chọn làm phó nhóm"
+
+msgid "ui.club.manage.officer.remove"
+msgstr "Thôi làm phó nhóm"
+
+msgid "ui.club.manage.officer.ask_make"
+msgstr "Chọn {nickname} làm phó nhóm?"
+
+msgid "ui.club.manage.officer.ask_remove"
+msgstr "Thôi để {nickname} làm phó nhóm?"
+
+msgid "ui.club.manage.officer.confirm"
+msgstr "Đồng ý"
+
+msgid "ui.club.manage.goal.hint"
+msgstr "Cả club cùng cố gắng đạt mục tiêu trong tuần này."
+
+msgid "ui.club.manage.goal.metric"
+msgstr "Mục tiêu là"
+
+msgid "ui.club.manage.goal.target"
+msgstr "Số lượng"
+
+msgid "ui.club.manage.goal.less"
+msgstr "Bớt"
+
+msgid "ui.club.manage.goal.more"
+msgstr "Thêm"
+
+msgid "ui.club.manage.goal.title"
+msgstr "Tên mục tiêu (không bắt buộc)"
+
+msgid "ui.club.manage.goal.title_hint"
+msgstr "Ví dụ: Cả club hoàn thành 30 bài"
+
+msgid "ui.club.manage.goal.create"
+msgstr "Tạo mục tiêu"
+
+msgid "ui.club.manage.goal.invalid"
+msgstr "Em chọn loại mục tiêu và số lượng nhé"
+
+msgid "ui.club.manage.metric.activities_completed"
+msgstr "Hoàn thành hoạt động"
+
+msgid "ui.club.manage.metric.quests_completed"
+msgstr "Hoàn thành nhiệm vụ"
+
+msgid "ui.club.manage.metric.discoveries_found"
+msgstr "Khám phá mới"
+
+msgid "ui.club.manage.kind.practice_session"
+msgstr "Luyện tập chung"
+
+msgid "ui.club.manage.kind.coop_quest"
+msgstr "Nhiệm vụ cùng nhau"
+
+msgid "ui.club.manage.kind.boss_raid"
+msgstr "Cùng đánh boss"
+
+msgid "ui.club.manage.kind.other"
+msgstr "Hoạt động khác"
+
+msgid "ui.club.manage.event.kind"
+msgstr "Loại sự kiện"
+
+msgid "ui.club.manage.event.title"
+msgstr "Tên sự kiện"
+
+msgid "ui.club.manage.event.description"
+msgstr "Giới thiệu"
+
+msgid "ui.club.manage.event.day"
+msgstr "Ngày"
+
+msgid "ui.club.manage.event.today"
+msgstr "Hôm nay"
+
+msgid "ui.club.manage.event.tomorrow"
+msgstr "Ngày mai"
+
+msgid "ui.club.manage.event.time"
+msgstr "Giờ bắt đầu"
+
+msgid "ui.club.manage.event.earlier"
+msgstr "Sớm hơn"
+
+msgid "ui.club.manage.event.later"
+msgstr "Muộn hơn"
+
+msgid "ui.club.manage.event.length"
+msgstr "Kéo dài"
+
+msgid "ui.club.manage.event.length_none"
+msgstr "Không đặt"
+
+msgid "ui.club.manage.event.length_min"
+msgstr "{minutes} phút"
+
+msgid "ui.club.manage.event.when"
+msgstr "Bắt đầu: {date} lúc {time}"
+
+msgid "ui.club.manage.event.create"
+msgstr "Tạo sự kiện"
+
+msgid "ui.club.manage.event.title_needed"
+msgstr "Em đặt tên cho sự kiện nhé"
+
+msgid "ui.club.manage.event.description_long"
+msgstr "Phần giới thiệu dài quá rồi"
+
+msgid "ui.club.manage.event.kind_needed"
+msgstr "Em chọn loại sự kiện nhé"
+
+msgid "ui.club.manage.event.past"
+msgstr "Giờ này đã qua rồi, em chọn giờ khác nhé"
+
+msgid "ui.club.manage.event.end_before_start"
+msgstr "Giờ kết thúc phải sau giờ bắt đầu"
+
+msgid "ui.error.VERSION_MISMATCH"
+msgstr "Thông tin vừa thay đổi, em xem lại nhé"
+
+msgid "ui.error.CHAT_NOT_ALLOWED"
+msgstr "Em chưa gửi được tin vào kênh này lúc này"

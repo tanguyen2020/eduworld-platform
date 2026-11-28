@@ -60,6 +60,13 @@ var pinned_count: int = 0
 var max_text_length: int = 0
 ## `muted` = the student's own notification setting of the channel (not a way to turn the channel off).
 var muted: bool = false
+## F112 (F112-AC-12): `sendable_kinds` — what the student may send now (allowed kinds narrowed by a sanction / the DM
+## state); `has_sendable` = the server sent the field (absent → `allowed_kinds` decide, delta F119).
+var sendable_kinds: PackedStringArray = []
+var has_sendable: bool = false
+## F112 (F112-5): the public card of the other student of a `direct` channel (`user_id`, `nickname`, `level`,
+## `avatar_config` — never a real name, a school or a grade, AGENTS R16); {} when absent.
+var peer: Dictionary = {}
 
 
 ## REST `Channel`; null without a valid id or with an unknown `channel_type`.
@@ -80,6 +87,16 @@ static func from_dict(data: Variant) -> ChatChannelModel:
 			c.allowed_kinds.append(String(k))
 	if d.get("features") is Dictionary:
 		c.features = (d["features"] as Dictionary).duplicate()
+	if d.get("sendable_kinds") is Array:
+		c.has_sendable = true
+		for k: Variant in d["sendable_kinds"] as Array:
+			if k is String and String(k) in KINDS and not String(k) in c.sendable_kinds:
+				c.sendable_kinds.append(String(k))
+	if kind == TYPE_DIRECT and d.get("peer") is Dictionary:
+		var p: Dictionary = d["peer"] as Dictionary
+		if Uuid.is_valid(DataRead.str_of(p, "user_id")):
+			c.peer = {"user_id": DataRead.str_of(p, "user_id"), "nickname": DataRead.str_of(p, "nickname").left(64),
+				"level": DataRead.int_of(p, "level"), "avatar_config": DataRead.dict_of(p, "avatar_config")}
 	var st: String = DataRead.str_of(d, "status", STATUS_OPEN)
 	c.status = st if st in [STATUS_OPEN, STATUS_CLOSED, STATUS_READ_ONLY, STATUS_FROZEN] else STATUS_OPEN
 	c.purge_after_ms = ExamCountdown.iso_to_ms(DataRead.str_of(d, "purge_after"))
@@ -123,6 +140,10 @@ func merge(other: ChatChannelModel) -> void:
 	pinned_count = other.pinned_count
 	max_text_length = other.max_text_length
 	muted = other.muted
+	sendable_kinds = other.sendable_kinds.duplicate()
+	has_sendable = other.has_sendable
+	if not other.peer.is_empty():
+		peer = other.peer.duplicate()
 
 
 func is_always_on() -> bool:
@@ -134,8 +155,15 @@ func is_closed() -> bool:
 	return status != STATUS_OPEN
 
 
+## F112-AC-12: an allowed kind the student may send now — `allowed_kinds` narrowed by `sendable_kinds` when the server
+## sent it (the same rule in every grade band — AGENTS R15).
 func allows(kind: String) -> bool:
-	return kind in allowed_kinds
+	return kind in allowed_kinds and (not has_sendable or kind in sendable_kinds)
+
+
+## Nothing may be sent now (`sendable_kinds` = []): the composer is locked.
+func sends_nothing() -> bool:
+	return has_sendable and sendable_kinds.is_empty()
 
 
 ## School preset `quick_message_emote_only` (ADR-0078) as the server applied it: no free text, sticker or GIF.

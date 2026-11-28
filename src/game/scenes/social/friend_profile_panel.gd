@@ -16,10 +16,13 @@ const ACT_MUTE: StringName = &"mute"
 const ACT_BLOCK: StringName = &"block"
 const ACT_REPORT: StringName = &"report"
 const ACT_REMOVE: StringName = &"remove"
+## F112-AC-07: "Nhắn tin" — opens the DM with this friend in the HUD chat (shown per `message_allowed`).
+const ACT_MESSAGE: StringName = &"message"
 ## [action, label key, icon, variation].
 const ACTIONS: Array = [
 	[ACT_JOIN, "ui.friends.join_friend", "forward_light", &""],
 	[ACT_INVITE, "ui.friends.invite_party", "party", &""],
+	[ACT_MESSAGE, "ui.chat.dm.message", "chat", &"SecondaryButton"],
 	[ACT_MUTE, "ui.friends.mute", "sound_off", &"SecondaryButton"],
 	[ACT_BLOCK, "ui.friends.block", "block", &"SecondaryButton"],
 	[ACT_REPORT, "ui.friends.report", "flag", &"SecondaryButton"],
@@ -28,6 +31,8 @@ const ACTIONS: Array = [
 
 var friend: FriendModel = null
 var report_available: bool = true
+## F112-AC-07, AC-08: a current friend, DMs allowed by the school, not refused this session (ChatHubService.can_message).
+var message_allowed: bool = false
 var _thumb: AvatarThumb = null
 var _name: Label = null
 var _level: Label = null
@@ -125,6 +130,7 @@ func show_friend(f: FriendModel, presence_unknown: bool) -> void:
 	_presence_icon.texture = UiBuild.icon("wifi_off" if presence_unknown else f.presence_icon())
 	_presence.text = tr("ui.friends.presence.unknown") if presence_unknown else tr(f.presence_key())
 	(_buttons[ACT_REPORT] as Button).visible = report_available
+	(_buttons[ACT_MESSAGE] as Button).visible = message_allowed
 	UiBuild.size_buttons(self)
 	for b: Button in _buttons.values():
 		UiBuild.fit_wrapping(b, float(UiTokens.SIZE_LAYOUT_280))

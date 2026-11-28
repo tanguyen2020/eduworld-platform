@@ -16,12 +16,15 @@ const ACT_CHAT: StringName = &"chat"
 const ACT_INVITE: StringName = &"invite"
 const ACT_JOIN: StringName = &"join"
 const ACT_LEAVE: StringName = &"leave"
+## F112-AC-18: "Quản lý club" — only the owner of an active club (ClubManageService.can_manage; the server decides).
+const ACT_MANAGE: StringName = &"manage"
 ## [action, label key, icon, variation].
 const ACTIONS: Array = [
 	[ACT_CHAT, "ui.club.chat", "chat", &"SecondaryButton"],
 	[ACT_INVITE, "ui.club.invite", "invite_light", &""],
 	[ACT_JOIN, "ui.club.join_request", "invite_light", &""],
 	[ACT_LEAVE, "ui.club.leave", "exit", &"SecondaryButton"],
+	[ACT_MANAGE, "ui.club.manage.open", "settings", &"SecondaryButton"],
 ]
 ## F111-AC-32: members shown a page at a time ("Xem thêm thành viên" adds the next page) — a 50-member club stays light.
 const MEMBERS_PAGE: int = 20
@@ -166,6 +169,7 @@ func show_page(store: ClubStore, requests_denied: bool, chat_available: bool) ->
 	(_buttons[ACT_INVITE] as Button).visible = open and c.is_officer()
 	(_buttons[ACT_JOIN] as Button).visible = open and not c.is_member() and not store.is_requested(c.club_id) and not c.is_full()
 	(_buttons[ACT_LEAVE] as Button).visible = c.is_member() and not c.is_owner()
+	(_buttons[ACT_MANAGE] as Button).visible = ClubManageService.can_manage(c)
 	var can_requests: bool = c.is_officer() and not requests_denied and not c.is_read_only()
 	(_chips[SECTION_REQUESTS] as Button).visible = can_requests
 	(_chips[SECTION_REQUESTS] as Button).text = tr("ui.club.requests") if store.requests.is_empty() else \

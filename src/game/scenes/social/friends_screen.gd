@@ -196,6 +196,11 @@ func invite_picker() -> ClubInvitePicker:
 	return _clubs.picker
 
 
+## F112: "Quản lý club" (tests).
+func club_manage() -> ClubManage:
+	return _clubs.manage
+
+
 func club_chat_dock() -> ChatDock:
 	return _clubs.chat_dock
 
@@ -306,6 +311,7 @@ func _render_friends() -> void:
 	_profile_scroll.visible = not s.friends.is_empty()
 	# Compact: the profile gets half of the page, so two action buttons fit on a line (fewer lines to scroll).
 	_profile_scroll.size_flags_stretch_ratio = 1.0 if AppState.compact else 0.8
+	_profile.message_allowed = services != null and services.chat_hub != null and services.chat_hub.can_message(selected_id)
 	_profile.show_friend(s.friend(selected_id), s.presence_unknown)
 	_render_join()
 	var hidden: bool = services != null and services.presence != null and services.presence.hidden
@@ -357,6 +363,9 @@ func _on_profile_action(action: StringName, user_id: String) -> void:
 			# F111-AC-01: the world takes over (zone change / hub join); the screen closes so the student sees it.
 			if services != null and services.join_friend != null and await services.join_friend.join(user_id):
 				close()
+		FriendProfilePanel.ACT_MESSAGE:
+			# F112-AC-07: the HUD chat opens on the DM with this friend (WorldRoot closes this window).
+			EventBus.ui_requested.emit(&"chat", {"dm": user_id})
 		FriendProfilePanel.ACT_INVITE:
 			await social.invite_to_party(user_id)
 		FriendProfilePanel.ACT_REPORT:

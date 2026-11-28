@@ -49,6 +49,8 @@ var catalog: QuickMessageCatalog = null
 ## `{user_id, nickname}` of the members (mention list); never the student.
 var members: Array[Dictionary] = []
 var locked: bool = false
+## F112: a persistent lock hides the quick row and the input (set_lock `hide_rows`).
+var rows_hidden: bool = false
 ## Quick messages locked too (a mute; a `restrict_text` sanction keeps them).
 var quick_locked: bool = false
 var reply_to: ChatMessageModel = null
@@ -118,8 +120,11 @@ func refresh_quick() -> void:
 
 ## Locks writing with the reason (`key` + args); "" unlocks. `allow_quick`: a `restrict_text` sanction still lets the
 ## student send quick messages (MODERATION §7).
-func set_lock(key: String, args: Dictionary = {}, allow_quick: bool = false) -> void:
+func set_lock(key: String, args: Dictionary = {}, allow_quick: bool = false, hide_rows: bool = false) -> void:
 	locked = not key.is_empty()
+	# F112: a persistent channel that cannot be written (frozen DM, read-only club, curfew…) shows only its sentence —
+	# the quick row and the input leave their room to the messages ("≥ 3 tin").
+	rows_hidden = locked and hide_rows
 	_lock.visible = locked
 	_lock_label.text = TranslationServer.translate(key).format(args) if locked else ""
 	_input.editable = not locked
@@ -156,8 +161,11 @@ func set_board(on: bool) -> void:
 func _apply_board() -> void:
 	var text_allowed: bool = channel == null or channel.allows(ChatChannelModel.KIND_TEXT)
 	_picker.visible = board and not locked
-	_input_row.visible = text_allowed and not (board and not locked)
+	_input_row.visible = text_allowed and not (board and not locked) and not rows_hidden
 	_keyboard.visible = text_allowed
+	# F112: a persistent lock keeps only its sentence (the quick bar with its arrows leaves its room to the messages).
+	if _quick_scroller != null:
+		_quick_scroller.visible = not rows_hidden
 
 
 func set_members(list: Array[Dictionary]) -> void:

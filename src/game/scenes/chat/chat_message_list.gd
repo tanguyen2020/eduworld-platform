@@ -30,6 +30,9 @@ var _measure: bool = false
 var _gap: float = 0.0
 ## A scroll set by the list itself (pinning to the newest message) — not the student scrolling away.
 var _auto: bool = false
+## F112-AC-17: the message lit after a search jump ("" = none) and the seconds it stays lit.
+var flash_key: String = ""
+var _flash_left: float = 0.0
 
 
 func _ready() -> void:
@@ -104,6 +107,23 @@ func is_at_bottom() -> bool:
 func scroll_to_bottom() -> void:
 	_stick = true
 	_apply_bottom.call_deferred()
+
+
+## F112-AC-17: brings `key` into view and lights its card for `seconds` (the mention style, a static highlight).
+func flash(key: String, seconds: float) -> void:
+	flash_key = key
+	_flash_left = seconds
+	context["flash_key"] = key
+	scroll_to_key(key)
+	_mark_flash()
+
+
+## The cards on screen take the lit state of `flash_key` (the others are bound with it as they scroll in).
+func _mark_flash() -> void:
+	for b: Variant in _active.values():
+		var bubble: ChatBubble = b as ChatBubble
+		bubble.flashing = bubble.message != null and bubble.message.key() == flash_key and not flash_key.is_empty()
+		bubble.refresh()
 
 
 ## Brings the message `key` into view (a pinned message tapped).
@@ -224,6 +244,12 @@ func _recycle(idx: int) -> void:
 
 
 func _process(_delta: float) -> void:
+	if _flash_left > 0.0:
+		_flash_left -= _delta
+		if _flash_left <= 0.0:
+			flash_key = ""
+			context.erase("flash_key")
+			_mark_flash()
 	# The scroll bar learns a new range a frame after the content grew: keep the newest message in view meanwhile.
 	if _stick and _content != null:
 		var bottom: int = int(maxf(0.0, _total - size.y))

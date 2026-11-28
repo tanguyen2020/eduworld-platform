@@ -27,6 +27,10 @@ signal channel_joined(channel_id: String)
 signal quick_messages_loaded()
 signal stickers_loaded()
 signal gifs_loaded(tag: String)
+## F112: every channel of the last `listMyChannels` (persistent ones included) — the HUD chat builds its tabs from it.
+signal channels_listed(list: Array[ChatChannelModel])
+## F112-AC-13: a persistent channel left the student (removed from the club, history `404`): its messages left the RAM.
+signal channel_removed(channel_id: String)
 
 const PREFIX: String = "chat"
 const PATH_CHANNELS: String = "/chat/channels"
@@ -35,6 +39,7 @@ const PATH_PINS: String = "/chat/channels/%s/pins"
 const PATH_QUICK: String = "/chat/quick-messages"
 const PATH_STICKERS: String = "/chat/stickers"
 const PATH_GIFS: String = "/chat/gifs"
+const PATH_DIRECT: String = "/chat/direct-channels"
 const CMD_JOIN: String = "chat.channel.join"
 const CMD_LEAVE: String = "chat.channel.leave"
 const CMD_SYNC: String = "chat.channel.sync"
@@ -71,6 +76,11 @@ const CODE_MUTED: String = "CHAT_MUTED"
 const CODE_BLOCKED: String = "CHAT_CONTENT_BLOCKED"
 const KEY_TOO_LONG: String = "ui.chat.feedback.too_long"
 const KEY_FORWARDED: String = "ui.chat.forward_done"
+const CODE_NOT_ALLOWED: String = "CHAT_NOT_ALLOWED"
+const CODE_CURFEW: String = "CURFEW_ACTIVE"
+## Persistent channel types (F112): a history `404` there means the student is not a member any more.
+const PERSISTENT: PackedStringArray = [ChatChannelModel.TYPE_WORLD, ChatChannelModel.TYPE_AREA, ChatChannelModel.TYPE_TEAM,
+	ChatChannelModel.TYPE_DIRECT]
 
 var realtime: GameRealtimeClient = null
 var app_state: Node = null
@@ -100,6 +110,10 @@ var _receipt_sent: Dictionary = {}
 var _sync_started: Dictionary = {}
 var _gifs_loading: Dictionary = {}
 var _was_reconnecting: bool = false
+## F112-AC-11: channels whose send answered `CHAT_NOT_ALLOWED` — writing stays locked until the next `listMyChannels`.
+var _not_allowed: Dictionary = {}
+## F112-AC-11: `CURFEW_ACTIVE` locks every channel; the end of the curfew comes from the bootstrap.
+var curfew_locked: bool = false
 
 
 func _init(rest: RestApiClient = null, realtime_client: GameRealtimeClient = null, app_state_node: Node = null,
@@ -145,12 +159,68 @@ func open_channel(channel_id: String, channel_type: String) -> void:
 func load_channels() -> ApiResult:
 	var result: ApiResult = await send_request(ApiRequest.make_get(PATH_CHANNELS), "listMyChannels")
 	if result.ok:
+		var listed: Array[ChatChannelModel] = []
 		for raw: Variant in DataRead.arr_of(result.body(), "data"):
 			var c: ChatChannelModel = ChatChannelModel.from_dict(raw)
-			if c != null and (store.channel(c.channel_id) != null or _wanted.has(c.channel_id) or c.channel_type in [
-					ChatChannelModel.TYPE_PARTY, ChatChannelModel.TYPE_MATCH, ChatChannelModel.TYPE_TEAM, ChatChannelModel.TYPE_DIRECT]):
-				store.ensure_channel(c)
+			if c == null:
+				continue
+			listed.append(c)
+			# F112: World / Area are kept too (their "@" mentions; messages only while a tab joins them).
+			store.ensure_channel(c)
+		# F112-AC-11: a fresh list ends the "Kênh này đang nghỉ" lock.
+		var locked: Array = _not_allowed.keys()
+		_not_allowed.clear()
+		for id: Variant in locked:
+			store.channel_changed.emit(String(id))
+		channels_listed.emit(listed)
 	return result
+
+
+## Coroutine (F112-AC-07, AC-08): "Nhắn tin" — `openDirectChannel` for a friend (`200` and `201` alike). Returns
+## `{ok, status, code, channel}`; the channel is known to the store at once.
+func open_direct(user_id: String) -> Dictionary:
+	if not Uuid.is_valid(user_id):
+		return {"ok": false, "status": 0, "code": "VALIDATION_FAILED", "channel": null}
+	var result: ApiResult = await send_request(ApiRequest.make_post(PATH_DIRECT, {"user_id": user_id}), "openDirectChannel")
+	var c: ChatChannelModel = ChatChannelModel.from_dict(result.body()) if result.ok else null
+	if c == null or c.channel_type != ChatChannelModel.TYPE_DIRECT:
+		Log.info("chat_direct_refused", {"status": result.status, "code": result.code})
+		if telemetry != null and not result.code.is_empty():
+			telemetry.queue_client_error(result.code, "chat_dm")
+		return {"ok": false, "status": result.status, "code": result.code, "channel": null}
+	store.ensure_channel(c)
+	return {"ok": true, "status": result.status, "code": "", "channel": c}
+
+
+## Coroutine (F112-AC-17): the history page that ends at `seq` (a search hit), merged into the channel's messages.
+func load_around(channel_id: String, seq: int) -> ApiResult:
+	var query: Dictionary = {"limit": HISTORY_LIMIT, "before_seq": seq + 1}
+	var result: ApiResult = await send_request(ApiRequest.make_get(PATH_MESSAGES % channel_id, query), "listChannelMessages")
+	if result.ok and store.channel(channel_id) != null:
+		store.load_history(channel_id, _models(DataRead.arr_of(result.body(), "data")),
+				DataRead.bool_of(DataRead.dict_of(result.body(), "page"), "has_more"), true)
+	return result
+
+
+## F112-AC-09, AC-11, AC-12, AC-13: the lock of a persistent channel (`{key, args}`, {} = none): the curfew (with the time
+## it ends, from the bootstrap), a frozen DM, a read-only club, "Kênh này đang nghỉ…" after `CHAT_NOT_ALLOWED`, nothing
+## sendable — neutral sentences that never say who blocked whom or why (AGENTS R16).
+func lock_of(channel_id: String) -> Dictionary:
+	var ch: ChatChannelModel = store.channel(channel_id)
+	if ch == null or not ch.channel_type in PERSISTENT:
+		return {}
+	if curfew_locked:
+		return {"key": "ui.chat.hub.locked_curfew", "args": {"time": _curfew_end_text()}}
+	if ch.status == ChatChannelModel.STATUS_FROZEN:
+		return {"key": "ui.chat.dm.frozen", "args": {}}
+	if ch.status == ChatChannelModel.STATUS_READ_ONLY:
+		return {"key": "ui.chat.hub.locked_read_only", "args": {}}
+	if _not_allowed.has(channel_id):
+		return {"key": "ui.chat.dm.unavailable" if ch.channel_type == ChatChannelModel.TYPE_DIRECT
+				else "ui.chat.hub.locked_not_allowed", "args": {}}
+	if ch.sends_nothing():
+		return {"key": "ui.chat.hub.locked_none", "args": {}}
+	return {}
 
 
 ## Coroutine: one history page (`listChannelMessages`): the newest, or the page before `before_seq` (scrolling up).
@@ -163,6 +233,11 @@ func load_history(channel_id: String, before_seq: int = 0) -> ApiResult:
 		var msgs: Array[ChatMessageModel] = _models(DataRead.arr_of(result.body(), "data"))
 		var page: Dictionary = DataRead.dict_of(result.body(), "page")
 		store.load_history(channel_id, msgs, DataRead.bool_of(page, "has_more"), before_seq > 0)
+	elif result.status == 404:
+		# F112-AC-13: not a member any more — the tab and the messages go, no reason shown.
+		var ch: ChatChannelModel = store.channel(channel_id)
+		if ch != null and ch.channel_type in PERSISTENT:
+			remove_channel(channel_id)
 	return result
 
 
@@ -542,7 +617,12 @@ func handle_message(type: String, payload: Dictionary, _envelope: Variant = null
 		"chat.channel.membership_changed":
 			var cid: String = DataRead.str_of(payload, "channel_id")
 			if store.channel(cid) != null:
-				store.set_status(cid, DataRead.str_of(payload, "status", ChatChannelModel.STATUS_OPEN))
+				# F112-AC-13: removed from the club / left → the tab and the messages go; else the new status (frozen
+				# DM, read-only club, open again — F112-AC-09).
+				if DataRead.str_of(payload, "op") in ["removed", "left"]:
+					remove_channel(cid)
+				else:
+					store.set_status(cid, DataRead.str_of(payload, "status", ChatChannelModel.STATUS_OPEN))
 
 
 ## Per-frame tick of the panel host: resends due, join retries, coalesced receipts, sync time-outs.
@@ -573,8 +653,18 @@ func resync() -> void:
 	tick()
 
 
+## F112-AC-13: the channel leaves the student: left, dropped from the RAM, its tab removed (no reason shown).
+func remove_channel(channel_id: String) -> void:
+	leave_channel(channel_id)
+	_not_allowed.erase(channel_id)
+	store.drop_channel(channel_id)
+	channel_removed.emit(channel_id)
+
+
 ## Logout / takeover / new session: nothing of the previous student is kept (data-model §1).
 func clear() -> void:
+	_not_allowed.clear()
+	curfew_locked = false
 	store.clear()
 	quick.clear()
 	assets.clear()
@@ -698,6 +788,14 @@ func _send_failed(cmid: String, code: String, category: String) -> void:
 	elif code == CODE_CLOSED:
 		store.set_status(channel_id, ChatChannelModel.STATUS_CLOSED)
 		load_channels()
+	elif code == CODE_NOT_ALLOWED:
+		# F112-AC-11: the message is dropped (never resent), writing locked until the next `listMyChannels`.
+		_not_allowed[channel_id] = true
+		store.channel_changed.emit(channel_id)
+	elif code == CODE_CURFEW:
+		curfew_locked = true
+		for id: String in store.channel_ids():
+			store.channel_changed.emit(id)
 	var fb: Dictionary = ChatFeedbackMapper.for_code(code, category)
 	feedback_requested.emit(String(fb["key"]), fb["args"] as Dictionary, String(fb["tone"]))
 	Log.info("chat_send_refused", {"code": code})
@@ -864,6 +962,14 @@ func _refresh_self() -> void:
 		if Uuid.is_valid(id):
 			store.self_id = id
 			return
+
+
+## End of the curfew window from the bootstrap (`policies.play_time.curfew.end`), "HH:MM" in the student's locale.
+func _curfew_end_text() -> String:
+	var player: Dictionary = app_state.get("player") as Dictionary if app_state != null and app_state.get("player") is Dictionary else {}
+	var watcher: CurfewWatcher = CurfewWatcher.new()
+	watcher.configure(player, Time.get_unix_time_from_system())
+	return watcher.reopen_text() if watcher.enabled else ""
 
 
 func _self_nickname() -> String:

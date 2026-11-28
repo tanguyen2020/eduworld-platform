@@ -85,8 +85,10 @@ src/game/
 │   ├── chat/        ChatDock.tscn (điểm nhúng duy nhất — F119) + chat_dock.gd, chat_message_list.gd (danh sách ảo hóa), chat_bubble.gd,
 │   │                chat_composer.gd (quick message, ô nhập, nhắc tên), chat_picker.gd (Emoji/Nhãn dán/Ảnh động), chat_sheet.gd +
 │   │                chat_dialogs.gd (menu tin, báo cáo, chuyển tiếp, ai đã xem, thu hồi), chat_player_safety.gd (Báo cáo/Chặn người chơi);
+│   │                F112: ChatHub.tscn + chat_hub.gd (khung chat HUD channel bền vững, mỗi tab một ChatDock.show_channel),
+│   │                chat_hub_button.gd (nút HUD + badge), chat_friends_list.gd (tab Bạn bè), chat_search_panel.gd (tìm kiếm);
 │   │                ChatSearch, tab channel bền vững → F112
-│   ├── social/      FriendsScreen.tscn (F110: friend_list_view.gd ảo hóa + friend_row.gd, friend_profile_panel.gd, friend_request_list.gd, find_friends_tab.gd, friend_code_widget.gd, block_list.gd, friends_ui.gd; F111: nút "Tham gia bạn" trong friend_profile_panel.gd, suggestion_group.gd "Vừa chơi cùng", tab Club friends_clubs.gd → club_tab.gd, club_card.gd, club_page.gd (thành viên/mục tiêu/lịch/yêu cầu), club_create_dialog.gd, club_invite_picker.gd — dựng bằng code),
+│   ├── social/      FriendsScreen.tscn (F110: friend_list_view.gd ảo hóa + friend_row.gd, friend_profile_panel.gd, friend_request_list.gd, find_friends_tab.gd, friend_code_widget.gd, block_list.gd, friends_ui.gd; F111: nút "Tham gia bạn" trong friend_profile_panel.gd, suggestion_group.gd "Vừa chơi cùng", tab Club friends_clubs.gd → club_tab.gd, club_card.gd, club_page.gd (thành viên/mục tiêu/lịch/yêu cầu), club_create_dialog.gd, club_invite_picker.gd — dựng bằng code; F112: club_manage.gd "Quản lý club" của chủ club, nút "Nhắn tin" trong friend_profile_panel.gd),
 │   │                PartyLobby.tscn, PartyMemberCard.tscn, ActivitySelector.tscn, InviteFriendPicker.tscn, InvitationToast.tscn
 │   │                + party_dialog.gd (hộp xác nhận), party_forms.gd (dòng lời mời, chip cài đặt nhóm) (F102)
 │   └── ui/          components/{Button,Card,Dialog,Toast,ProgressBar,...}.tscn, hud/{MainHud,PartyHud,NetworkBanner,BreakReminderDialog,GameMenu,NotificationBell,ToastStack}.tscn + xp_bar.gd, currency_chip.gd (F069), notifications/{NotificationInbox,NotificationToast}.tscn (F123),
@@ -113,13 +115,15 @@ src/game/
 │   ├── achievement/     achievement_service.gd, models/ (F069)
 │   ├── challenge/       challenge_client.gd, challenge_store.gd, models/ (F069), boss_client.gd, boss_store.gd, models/{boss_summary,boss_encounter_model,boss_member_model,boss_question_model}.gd (F110)
 │   ├── liveops/         live_event_service.gd + live_event_store.gd, season_track_service.gd + season_track_store.gd, liveops_time.gd (số ngày, ngày ICT), models/{live_event_model,event_milestone_model,community_goal_model,season_track_model,season_tier_model,season_history_item_model}.gd (F111)
-│   ├── social/          social_service.gd (chặn, tắt tiếng — tạo ở F119; bạn bè thêm ở F110, dùng lại ở club), friends_store.gd, models/{friend_model,friend_request_model,friend_code_model,relation_model}.gd (F110), club_service.gd + club_store.gd + club_form.gd, join_availability.gd, models/{friend_suggestion_model,social_policy_model,club_model,club_member_model,club_goal_model,club_event_model,club_invitation_model,club_join_request_model}.gd (F111)
+│   ├── social/          social_service.gd (chặn, tắt tiếng — tạo ở F119; bạn bè thêm ở F110, dùng lại ở club), friends_store.gd, models/{friend_model,friend_request_model,friend_code_model,relation_model}.gd (F110), club_service.gd + club_store.gd + club_form.gd, club_manage_service.gd + club_form_options.gd (F112), join_availability.gd, models/{friend_suggestion_model,social_policy_model,club_model,club_member_model,club_goal_model,club_event_model,club_invitation_model,club_join_request_model}.gd (F111)
 │   ├── multiplayer/     party_service.gd, party_store.gd, models/{party_model,party_member_model,invitation_model,eligible_activity_model}.gd (F102), presence_service.gd, hub_sync.gd, matchmaking_service.gd, battle_client.gd (F109)
 │   ├── competition/     leaderboard_service.gd, tournament_service.gd, match_history_service.gd, competition_text.gd, competition_player.gd, models/ (arena mode, tier, ticket, proposal, battle view/player, evaluation, match summary/record, leaderboard, tournament, bracket, grade challenge, duel) (F109)
 │   ├── competition/     leaderboard_service.gd
 │   ├── chat/            chat_service.gd, chat_store.gd (seq/gap/unread/receipts), chat_feedback_mapper.gd, quick_message_catalog.gd,
 │   │                    chat_asset_cache.gd (sticker/GIF, chỉ CDN EduWorld), chat_animation_budget.gd (≤ 3 ảnh động), chat_text.gd,
-│   │                    report_service.gd, models/{chat_channel_model,chat_message_model,receipt_state_model}.gd (F119)
+│   │                    report_service.gd, models/{chat_channel_model,chat_message_model,receipt_state_model}.gd (F119);
+│   │                    F112: chat_hub_state.gd (tab thuần), chat_hub_service.gd (tab/DM/badge), direct_peer_map.gd (RAM),
+│   │                    chat_search_service.gd, highlight_text.gd (văn bản thuần), models/persistent_channel_tab.gd
 │   ├── inventory/       inventory_service.gd, wallet_store.gd
 │   └── notifications/   notification_service.gd (F123: hộp thông báo REST + realtime `notification.*`, số chưa đọc, toast, mark_read WS/REST),
 │                        models/notification_model.gd (`Notification` REST / payload WS, chữ theo `ui.notification.<message_code>`)

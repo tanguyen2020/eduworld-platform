@@ -17,6 +17,8 @@ extends RefCounted
 ## args `{quest_id, step_id}`).
 ## F111: `event_center` (Sự kiện: HUD calendar button / "Thêm" / the event board of Quảng trường Tia Sáng / an
 ## `open_event` notification — args `{tab, id}`); the club tab is `friends` with `{tab: "clubs", id}`.
+## F112: `chat` (the HUD chat of the persistent channels: HUD chat button / `Enter` / `T` / "Nhắn tin" of a friend —
+## args `{tab}`, `{dm: user_id}` or `{channel_id}`).
 
 const SCREENS: Dictionary = {
 	&"achievements": "res://scenes/achievement/AchievementCollectionScreen.tscn",
@@ -28,6 +30,7 @@ const SCREENS: Dictionary = {
 	&"coop_step": "res://scenes/quest/InterdependentStepPanel.tscn",
 	&"event_center": "res://scenes/liveops/EventCenterScreen.tscn",
 	&"friends": "res://scenes/social/FriendsScreen.tscn",
+	&"chat": "res://scenes/chat/ChatHub.tscn",
 	&"challenge_board": "res://scenes/challenge/ChallengeBoard.tscn",
 	&"challenge_result": "res://scenes/challenge/ChallengeResult.tscn",
 	&"exam_lobby": "res://scenes/exam/ExamLobby.tscn",

@@ -1074,6 +1074,18 @@ msgstr ""
 msgid "ui.chat.counter_over"
 msgstr ""
 
+msgid "ui.chat.dm.frozen"
+msgstr ""
+
+msgid "ui.chat.dm.message"
+msgstr ""
+
+msgid "ui.chat.dm.no_friends"
+msgstr ""
+
+msgid "ui.chat.dm.unavailable"
+msgstr ""
+
 msgid "ui.chat.edited"
 msgstr ""
 
@@ -1281,6 +1293,42 @@ msgstr ""
 msgid "ui.chat.held_own"
 msgstr ""
 
+msgid "ui.chat.hub.empty"
+msgstr ""
+
+msgid "ui.chat.hub.hud"
+msgstr ""
+
+msgid "ui.chat.hub.locked_curfew"
+msgstr ""
+
+msgid "ui.chat.hub.locked_none"
+msgstr ""
+
+msgid "ui.chat.hub.locked_not_allowed"
+msgstr ""
+
+msgid "ui.chat.hub.locked_read_only"
+msgstr ""
+
+msgid "ui.chat.hub.muted"
+msgstr ""
+
+msgid "ui.chat.hub.tab.area"
+msgstr ""
+
+msgid "ui.chat.hub.tab.friends"
+msgstr ""
+
+msgid "ui.chat.hub.tab.world"
+msgstr ""
+
+msgid "ui.chat.hub.title"
+msgstr ""
+
+msgid "ui.chat.hub.unread"
+msgstr ""
+
 msgid "ui.chat.input_placeholder"
 msgstr ""
 
@@ -1473,6 +1521,48 @@ msgstr ""
 msgid "ui.chat.retention_notice"
 msgstr ""
 
+msgid "ui.chat.search.back"
+msgstr ""
+
+msgid "ui.chat.search.channel_club"
+msgstr ""
+
+msgid "ui.chat.search.channel_dm"
+msgstr ""
+
+msgid "ui.chat.search.counter"
+msgstr ""
+
+msgid "ui.chat.search.empty"
+msgstr ""
+
+msgid "ui.chat.search.go"
+msgstr ""
+
+msgid "ui.chat.search.gone"
+msgstr ""
+
+msgid "ui.chat.search.more"
+msgstr ""
+
+msgid "ui.chat.search.open"
+msgstr ""
+
+msgid "ui.chat.search.open_hit"
+msgstr ""
+
+msgid "ui.chat.search.placeholder"
+msgstr ""
+
+msgid "ui.chat.search.scope_all"
+msgstr ""
+
+msgid "ui.chat.search.scope_channel"
+msgstr ""
+
+msgid "ui.chat.search.when"
+msgstr ""
+
 msgid "ui.chat.send"
 msgstr ""
 
@@ -1654,6 +1744,162 @@ msgid "ui.club.leave_hint"
 msgstr ""
 
 msgid "ui.club.left"
+msgstr ""
+
+msgid "ui.club.manage.conflict"
+msgstr ""
+
+msgid "ui.club.manage.event.create"
+msgstr ""
+
+msgid "ui.club.manage.event.day"
+msgstr ""
+
+msgid "ui.club.manage.event.description"
+msgstr ""
+
+msgid "ui.club.manage.event.description_long"
+msgstr ""
+
+msgid "ui.club.manage.event.earlier"
+msgstr ""
+
+msgid "ui.club.manage.event.end_before_start"
+msgstr ""
+
+msgid "ui.club.manage.event.kind"
+msgstr ""
+
+msgid "ui.club.manage.event.kind_needed"
+msgstr ""
+
+msgid "ui.club.manage.event.later"
+msgstr ""
+
+msgid "ui.club.manage.event.length"
+msgstr ""
+
+msgid "ui.club.manage.event.length_min"
+msgstr ""
+
+msgid "ui.club.manage.event.length_none"
+msgstr ""
+
+msgid "ui.club.manage.event.past"
+msgstr ""
+
+msgid "ui.club.manage.event.time"
+msgstr ""
+
+msgid "ui.club.manage.event.title"
+msgstr ""
+
+msgid "ui.club.manage.event.title_needed"
+msgstr ""
+
+msgid "ui.club.manage.event.today"
+msgstr ""
+
+msgid "ui.club.manage.event.tomorrow"
+msgstr ""
+
+msgid "ui.club.manage.event.when"
+msgstr ""
+
+msgid "ui.club.manage.field_invalid"
+msgstr ""
+
+msgid "ui.club.manage.goal.create"
+msgstr ""
+
+msgid "ui.club.manage.goal.hint"
+msgstr ""
+
+msgid "ui.club.manage.goal.invalid"
+msgstr ""
+
+msgid "ui.club.manage.goal.less"
+msgstr ""
+
+msgid "ui.club.manage.goal.metric"
+msgstr ""
+
+msgid "ui.club.manage.goal.more"
+msgstr ""
+
+msgid "ui.club.manage.goal.target"
+msgstr ""
+
+msgid "ui.club.manage.goal.title"
+msgstr ""
+
+msgid "ui.club.manage.goal.title_hint"
+msgstr ""
+
+msgid "ui.club.manage.kind.boss_raid"
+msgstr ""
+
+msgid "ui.club.manage.kind.coop_quest"
+msgstr ""
+
+msgid "ui.club.manage.kind.other"
+msgstr ""
+
+msgid "ui.club.manage.kind.practice_session"
+msgstr ""
+
+msgid "ui.club.manage.metric.activities_completed"
+msgstr ""
+
+msgid "ui.club.manage.metric.discoveries_found"
+msgstr ""
+
+msgid "ui.club.manage.metric.quests_completed"
+msgstr ""
+
+msgid "ui.club.manage.not_approved"
+msgstr ""
+
+msgid "ui.club.manage.officer.ask_make"
+msgstr ""
+
+msgid "ui.club.manage.officer.ask_remove"
+msgstr ""
+
+msgid "ui.club.manage.officer.confirm"
+msgstr ""
+
+msgid "ui.club.manage.officer.hint"
+msgstr ""
+
+msgid "ui.club.manage.officer.make"
+msgstr ""
+
+msgid "ui.club.manage.officer.remove"
+msgstr ""
+
+msgid "ui.club.manage.open"
+msgstr ""
+
+msgid "ui.club.manage.revoked"
+msgstr ""
+
+msgid "ui.club.manage.save"
+msgstr ""
+
+msgid "ui.club.manage.section.edit"
+msgstr ""
+
+msgid "ui.club.manage.section.event"
+msgstr ""
+
+msgid "ui.club.manage.section.goal"
+msgstr ""
+
+msgid "ui.club.manage.section.officers"
+msgstr ""
+
+msgid "ui.club.manage.title"
 msgstr ""
 
 msgid "ui.club.members_count"

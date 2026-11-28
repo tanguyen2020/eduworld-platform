@@ -4965,3 +4965,267 @@ msgstr "Your friend is in a lesson, wait a little"
 
 msgid "ui.club.members_more"
 msgstr "Show more members"
+
+msgid "ui.chat.hub.title"
+msgstr "Chat"
+
+msgid "ui.chat.hub.hud"
+msgstr "Chat"
+
+msgid "ui.chat.hub.unread"
+msgstr "{count} unread messages"
+
+msgid "ui.chat.hub.tab.area"
+msgstr "This area"
+
+msgid "ui.chat.hub.tab.world"
+msgstr "Whole school"
+
+msgid "ui.chat.hub.tab.friends"
+msgstr "Friends"
+
+msgid "ui.chat.hub.empty"
+msgstr "There is no chat for you right now."
+
+msgid "ui.chat.hub.muted"
+msgstr "Notifications off"
+
+msgid "ui.chat.hub.locked_not_allowed"
+msgstr "This chat is resting, come back later"
+
+msgid "ui.chat.hub.locked_curfew"
+msgstr "It is rest time. Chat opens again at {time}"
+
+msgid "ui.chat.hub.locked_read_only"
+msgstr "The club is paused. You can still read old messages"
+
+msgid "ui.chat.hub.locked_none"
+msgstr "You cannot send messages here right now"
+
+msgid "ui.chat.dm.unavailable"
+msgstr "You cannot message this friend right now"
+
+msgid "ui.chat.dm.frozen"
+msgstr "This conversation is closed for now"
+
+msgid "ui.chat.dm.message"
+msgstr "Message"
+
+msgid "ui.chat.dm.no_friends"
+msgstr "No friends yet. Add friends in the Friends window!"
+
+msgid "ui.chat.search.open"
+msgstr "Search messages"
+
+msgid "ui.chat.search.back"
+msgstr "Back"
+
+msgid "ui.chat.search.placeholder"
+msgstr "Type words to find…"
+
+msgid "ui.chat.search.counter"
+msgstr "{count}/{max}"
+
+msgid "ui.chat.search.go"
+msgstr "Search"
+
+msgid "ui.chat.search.scope_all"
+msgstr "All"
+
+msgid "ui.chat.search.scope_channel"
+msgstr "This chat"
+
+msgid "ui.chat.search.when"
+msgstr "{date} at {time}"
+
+msgid "ui.chat.search.open_hit"
+msgstr "View"
+
+msgid "ui.chat.search.more"
+msgstr "Show more"
+
+msgid "ui.chat.search.empty"
+msgstr "No messages found. Try other words!"
+
+msgid "ui.chat.search.gone"
+msgstr "This message cannot be viewed anymore"
+
+msgid "ui.chat.search.channel_dm"
+msgstr "Private message"
+
+msgid "ui.chat.search.channel_club"
+msgstr "Club"
+
+msgid "ui.club.manage.open"
+msgstr "Manage club"
+
+msgid "ui.club.manage.title"
+msgstr "Manage club"
+
+msgid "ui.club.manage.section.edit"
+msgstr "Edit info"
+
+msgid "ui.club.manage.section.officers"
+msgstr "Co-leaders"
+
+msgid "ui.club.manage.section.goal"
+msgstr "Weekly goal"
+
+msgid "ui.club.manage.section.event"
+msgstr "Club event"
+
+msgid "ui.club.manage.save"
+msgstr "Save"
+
+msgid "ui.club.manage.conflict"
+msgstr "The club info just changed. Check it, then save again"
+
+msgid "ui.club.manage.not_approved"
+msgstr "The club is waiting for the school to approve it"
+
+msgid "ui.club.manage.revoked"
+msgstr "You can no longer manage this club"
+
+msgid "ui.club.manage.field_invalid"
+msgstr "This field is not right yet, please fix it"
+
+msgid "ui.club.manage.saved.club"
+msgstr "Club info saved"
+
+msgid "ui.club.manage.saved.role"
+msgstr "Co-leader updated"
+
+msgid "ui.club.manage.saved.goal"
+msgstr "Weekly goal created"
+
+msgid "ui.club.manage.saved.event"
+msgstr "Club event created"
+
+msgid "ui.club.manage.officer.hint"
+msgstr "Co-leaders help you approve requests and invite friends."
+
+msgid "ui.club.manage.officer.make"
+msgstr "Make co-leader"
+
+msgid "ui.club.manage.officer.remove"
+msgstr "Remove co-leader"
+
+msgid "ui.club.manage.officer.ask_make"
+msgstr "Make {nickname} a co-leader?"
+
+msgid "ui.club.manage.officer.ask_remove"
+msgstr "Stop {nickname} being a co-leader?"
+
+msgid "ui.club.manage.officer.confirm"
+msgstr "Yes"
+
+msgid "ui.club.manage.goal.hint"
+msgstr "The whole club works on the goal together this week."
+
+msgid "ui.club.manage.goal.metric"
+msgstr "Goal type"
+
+msgid "ui.club.manage.goal.target"
+msgstr "How many"
+
+msgid "ui.club.manage.goal.less"
+msgstr "Less"
+
+msgid "ui.club.manage.goal.more"
+msgstr "More"
+
+msgid "ui.club.manage.goal.title"
+msgstr "Goal name (optional)"
+
+msgid "ui.club.manage.goal.title_hint"
+msgstr "For example: finish 30 activities together"
+
+msgid "ui.club.manage.goal.create"
+msgstr "Create goal"
+
+msgid "ui.club.manage.goal.invalid"
+msgstr "Choose a goal type and a number"
+
+msgid "ui.club.manage.metric.activities_completed"
+msgstr "Activities finished"
+
+msgid "ui.club.manage.metric.quests_completed"
+msgstr "Quests finished"
+
+msgid "ui.club.manage.metric.discoveries_found"
+msgstr "New discoveries"
+
+msgid "ui.club.manage.kind.practice_session"
+msgstr "Practice together"
+
+msgid "ui.club.manage.kind.coop_quest"
+msgstr "Quest together"
+
+msgid "ui.club.manage.kind.boss_raid"
+msgstr "Boss together"
+
+msgid "ui.club.manage.kind.other"
+msgstr "Something else"
+
+msgid "ui.club.manage.event.kind"
+msgstr "Event type"
+
+msgid "ui.club.manage.event.title"
+msgstr "Event name"
+
+msgid "ui.club.manage.event.description"
+msgstr "Description"
+
+msgid "ui.club.manage.event.day"
+msgstr "Day"
+
+msgid "ui.club.manage.event.today"
+msgstr "Today"
+
+msgid "ui.club.manage.event.tomorrow"
+msgstr "Tomorrow"
+
+msgid "ui.club.manage.event.time"
+msgstr "Start time"
+
+msgid "ui.club.manage.event.earlier"
+msgstr "Earlier"
+
+msgid "ui.club.manage.event.later"
+msgstr "Later"
+
+msgid "ui.club.manage.event.length"
+msgstr "Length"
+
+msgid "ui.club.manage.event.length_none"
+msgstr "Not set"
+
+msgid "ui.club.manage.event.length_min"
+msgstr "{minutes} min"
+
+msgid "ui.club.manage.event.when"
+msgstr "Starts: {date} at {time}"
+
+msgid "ui.club.manage.event.create"
+msgstr "Create event"
+
+msgid "ui.club.manage.event.title_needed"
+msgstr "Give the event a name"
+
+msgid "ui.club.manage.event.description_long"
+msgstr "The description is too long"
+
+msgid "ui.club.manage.event.kind_needed"
+msgstr "Choose an event type"
+
+msgid "ui.club.manage.event.past"
+msgstr "This time has passed. Choose another time"
+
+msgid "ui.club.manage.event.end_before_start"
+msgstr "The end must be after the start"
+
+msgid "ui.error.VERSION_MISMATCH"
+msgstr "The info just changed, please check it again"
+
+msgid "ui.error.CHAT_NOT_ALLOWED"
+msgstr "You cannot send messages to this chat right now"

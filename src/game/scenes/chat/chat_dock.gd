@@ -27,10 +27,14 @@ const CONTEXT_PARTY: StringName = &"party"
 const CONTEXT_MATCH: StringName = &"match"
 ## F111: the fixed `team` channel of a club (`Club.chat_channel_id`), opened by "Chat club" of the club page.
 const CONTEXT_CLUB: StringName = &"club"
+## F112: a persistent channel of the HUD chat (ChatHub: Khu vực, Cả trường, a club, a DM) — `show_channel`.
+const CONTEXT_PERSISTENT: StringName = &"persistent"
 ## Seconds a notice stays (≥ 3 s reading time, STUDENT_GAME_UX §4); the care message stays until closed.
 const NOTICE_SEC: float = 5.0
 ## Typing / receipt redraws at most once a second (STUDENT_GAME_UX_SOCIAL §7 "gộp cập nhật 1 lần/giây").
 const COALESCE_SEC: float = 1.0
+## F112-AC-17: how long a message reached from the search stays lit.
+const FLASH_SEC: float = 2.0
 const MINI_LINES: int = 2
 const NOTICE_PANELS: Dictionary = {
 	ChatFeedbackMapper.TONE_INFO: [&"InfoBannerPanel", &"InfoBannerLabel", "info"],
@@ -66,6 +70,9 @@ var _title: Label = null
 ## F125: the host may drop the title when its column is too narrow (compact phone, long translation); the chat icon then
 ## carries it as tooltip.
 var title_allowed: bool = true
+## F112: the dock is the page of a ChatHub tab — the hub has the title, the tabs and the close button, so the dock's own
+## header (title, collapse) is hidden and the dock stays expanded.
+var hub_mode: bool = false
 var _badge: Label = null
 var _mention_badge: Label = null
 var _players: Button = null
@@ -168,6 +175,24 @@ func show_party(party_id: String, channel_id: String, others: Array[Dictionary] 
 ## server closes writing, ChatChannelModel).
 func show_club(club_id: String, channel_id: String) -> void:
 	_open(CONTEXT_CLUB, club_id, [[channel_id, ChatChannelModel.TYPE_TEAM]], [] as Array[Dictionary])
+
+
+## F112 (F112-AC-02): a persistent channel of the HUD chat — every F119 part (list, bubbles, composer by
+## `sendable_kinds`, menu by `features`, Tắt tiếng · Chặn · Báo cáo with `context.channel_id`, "≥ 3 tin").
+func show_channel(channel_id: String, channel_type: String, title_text: String = "") -> void:
+	_open(CONTEXT_PERSISTENT, channel_id, [[channel_id, channel_type]], [] as Array[Dictionary])
+	if not title_text.is_empty():
+		_title.text = title_text
+
+
+## F112-AC-17: shows the message `key` (a search hit) and lights it for 2 s.
+func jump_to(key: String) -> void:
+	_list.flash(key, FLASH_SEC)
+
+
+## The lock of the channel on screen is read again (a club locked / a DM frozen while open).
+func refresh_lock() -> void:
+	_refresh_lock()
 
 
 ## Match: `match_channel_id` ("Cả trận") and, in a team battle, the student's `team_channel_id` ("Đội").
@@ -284,6 +309,7 @@ func _apply_mode() -> void:
 	_mention_badge.visible = not expanded and _mention_badge.visible
 	_render_mini()
 	_render_badges()
+	_header.visible = not hub_mode
 
 
 ## F125: lets the host column drop the header title (see `title_allowed`).
@@ -450,7 +476,8 @@ func _on_messages_changed(channel_id: String) -> void:
 	_list.set_entries(entries)
 	_empty.visible = entries.is_empty()
 	var ch: ChatChannelModel = service.store.channel(current_channel)
-	_empty.text = "ui.chat.empty_closed" if ch != null and ch.is_closed() else "ui.chat.empty"
+	_empty.text = "ui.chat.empty_closed" if ch != null and ch.is_closed() and context_kind != CONTEXT_PERSISTENT \
+			else "ui.chat.empty"
 	_render_mini()
 	_render_pins()
 
@@ -544,6 +571,13 @@ func _refresh_lock() -> void:
 		return
 	var ch: ChatChannelModel = service.store.channel(current_channel)
 	_retention_label.text = ""
+	# F112: the locks of a persistent channel (curfew, frozen DM, read-only club, "Kênh này đang nghỉ…", nothing
+	# sendable) — neutral sentences, nobody named (F112-AC-09, AC-11, AC-12, AC-13).
+	var persistent: Dictionary = service.lock_of(current_channel)
+	if not persistent.is_empty():
+		_composer.set_lock(String(persistent["key"]), persistent["args"] as Dictionary, false, true)
+		_retention.visible = false
+		return
 	if ch != null and ch.is_closed():
 		var key: String = "ui.chat.closed_party" if ch.channel_type == ChatChannelModel.TYPE_PARTY else "ui.chat.closed_match"
 		_composer.set_lock(key)

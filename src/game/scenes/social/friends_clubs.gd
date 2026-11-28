@@ -9,6 +9,8 @@ var screen: FriendsScreen = null
 var tab: ClubTab = null
 var form: ClubCreateDialog = null
 var picker: ClubInvitePicker = null
+## F112: "Quản lý club" of the owner (ClubManageService).
+var manage: ClubManage = null
 var chat_window: Control = null
 var chat_dock: ChatDock = null
 var clubs: ClubService = null
@@ -31,17 +33,26 @@ func _init(owner: FriendsScreen) -> void:
 	picker = ClubInvitePicker.new()
 	picker.name = "ClubInvitePicker"
 	picker.send_requested.connect(_on_invite)
+	manage = ClubManage.new()
+	manage.name = "ClubManage"
 
 
 ## Adds the dialogs over the screen (after its own children so they cover it).
 func attach() -> void:
 	screen.add_child(form)
 	screen.add_child(picker)
+	screen.add_child(manage)
 
 
 func bind(service: ClubService) -> void:
 	unbind()
 	clubs = service
+	var tools: ClubManageService = screen.services.club_manage if screen.services != null else null
+	manage.bind(tools)
+	if tools != null and not tools.notice_requested.is_connected(screen.show_notice):
+		tools.notice_requested.connect(screen.show_notice)
+	if screen.services != null and screen.services.live_events != null:
+		manage.now_source = screen.services.live_events.now_unix
 	if clubs == null:
 		return
 	for pair: Array in _pairs():
@@ -92,6 +103,7 @@ func open_club(club_id: String) -> void:
 func close() -> void:
 	form.hide()
 	picker.hide()
+	manage.hide()
 	_close_chat()
 	if clubs != null:
 		clubs.store.close_page()
@@ -175,6 +187,9 @@ func _on_action(action: StringName, club_id: String) -> void:
 			picker.open_for(club_id, friends)
 		ClubPage.ACT_CHAT:
 			_open_chat(club)
+		ClubPage.ACT_MANAGE:
+			if ClubManageService.can_manage(club):
+				manage.open_for(club_id)
 
 
 func _on_request(request_id: String, accept: bool) -> void:

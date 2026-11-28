@@ -49,7 +49,7 @@ const SCREENS: PackedStringArray = [
 	"arena_queue_timeout", "arena_ready_check", "arena_battle_question", "arena_battle_recorded", "arena_battle_reveal",
 	"arena_battle_team", "arena_battle_reconnect", "arena_result_win", "arena_result_loss", "arena_result_quiz_goal",
 	"arena_result_quiz_rank", "arena_result_cancelled",
-	# F109 server deltas (2026-11-27): a friend's duel prompt on the HUD, the loss-streak encouragement, a tournament problem with its own sentence (`409 TOURNAMENT_FULL`). F110: F110Screens.CAPTURES. F111: F111Screens.CAPTURES.
+	# F109 server deltas (2026-11-27): a friend's duel prompt on the HUD, the loss-streak encouragement, a tournament problem with its own sentence (`409 TOURNAMENT_FULL`). F110: F110Screens.CAPTURES. F111: F111Screens.CAPTURES. F112: F112Screens.CAPTURES (HUD chat, search, Quản lý club).
 	"arena_duel_incoming", "arena_result_encouragement", "arena_tournament_error",
 ]
 ## Sample look of the local player (catalog codes of the F070 fixture; display only).
@@ -96,7 +96,7 @@ func run(args: PackedStringArray) -> int:
 		AppState.theme_service = ThemeService.new(_band)
 	AppState.theme_service.attach(get_tree().root)
 	var count: int = 0
-	for screen: String in SCREENS + F110Screens.CAPTURES + F111Screens.CAPTURES:
+	for screen: String in SCREENS + F110Screens.CAPTURES + F111Screens.CAPTURES + F112Screens.CAPTURES:
 		if not only.is_empty() and not screen in only:
 			continue
 		for size_name: String in sizes:
@@ -110,7 +110,9 @@ func run(args: PackedStringArray) -> int:
 				AppState.set_grade_band(_band)
 				Settings.set_locale(locale, false)
 				var node: Node = null
-				if screen.begins_with("f111_"):
+				if screen.begins_with("f112_"):
+					node = await F112Screens.capture(await _world(), screen.trim_prefix("f112_"), _harness.http)
+				elif screen.begins_with("f111_"):
 					node = await F111Screens.capture(await _world(), screen.trim_prefix("f111_"), _harness.http)
 				elif screen.begins_with("f110_"):
 					node = await F110Screens.capture(await _world(), screen.trim_prefix("f110_"), _harness.http)
