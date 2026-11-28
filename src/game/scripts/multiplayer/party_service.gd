@@ -48,6 +48,8 @@ const PATH_FRIENDS: String = "/social/friends"
 const CMD_READY: String = "party.member.ready_set"
 const CMD_SELECT: String = "party.activity.select"
 const PARTY_TYPE_FRIEND: String = "friend"
+## F110: `party.session.started.room_type` of a party boss (the room id is the boss encounter).
+const ROOM_BOSS: String = "boss"
 ## `PartyCreate.name` maxLength (the server also filters the name, PARTY_SYSTEM §3).
 const NAME_MAX_LENGTH: int = 40
 const CODE_ALREADY_IN_PARTY: String = "PARTY_ALREADY_IN_PARTY"
@@ -102,6 +104,9 @@ var invited: Dictionary = {}
 var eligible: Array[EligibleActivityModel] = []
 ## `(scene_ref: String, room_id: String) -> Error`: enters the session room (default SceneRouter.enter_party_session).
 var session_router: Callable = Callable()
+## F110: `(encounter_id: String, visual_ref: String) -> Error` for a boss session (`room_type = boss`, `room_id` = the
+## encounter): default SceneRouter.enter_boss_encounter (the BossArena screen, F110-AC-02).
+var boss_router: Callable = Callable()
 var _intent_keys: Dictionary = {}
 var _busy: int = 0
 var _was_reconnecting: bool = false
@@ -387,6 +392,10 @@ func update_settings(changes: Dictionary) -> ApiResult:
 func enter_session() -> Error:
 	var scene_ref: String = String(store.session.get("scene_ref", ""))
 	var room: String = String(store.session.get("room_id", ""))
+	if String(store.session.get("room_type", "")) == ROOM_BOSS and not room.is_empty():
+		if boss_router.is_valid():
+			return boss_router.call(room, scene_ref) as Error
+		return SceneRouter.enter_boss_encounter(room, scene_ref)
 	if room.is_empty() or scene_ref.is_empty():
 		return ERR_UNAVAILABLE
 	if session_router.is_valid():

@@ -3972,3 +3972,471 @@ msgstr "Thử lại"
 
 msgid "ui.update.version"
 msgstr "Cần phiên bản {version} trở lên"
+
+msgid "ui.boss.back_hub"
+msgstr "Về Quảng trường"
+
+msgid "ui.boss.back_lobby"
+msgstr "Về nhóm"
+
+msgid "ui.boss.back_zone"
+msgstr "Về vùng đất"
+
+msgid "ui.boss.chat"
+msgstr "Chat nhóm"
+
+msgid "ui.boss.default_title"
+msgstr "Boss"
+
+msgid "ui.boss.defeated"
+msgstr "Hạ {boss}!"
+
+msgid "ui.boss.defeated_before"
+msgstr "Em đã từng hạ boss này"
+
+msgid "ui.boss.defeated_no_reward"
+msgstr "Cả nhóm đã hạ {boss}! Lần sau em trả lời thêm vài câu để nhận thưởng nhé."
+
+msgid "ui.boss.energy"
+msgstr "Năng lượng {pct}%"
+
+msgid "ui.boss.get_ready"
+msgstr "Chuẩn bị nhé, boss sắp xuất hiện!"
+
+msgid "ui.boss.gone"
+msgstr "Trận boss này đã kết thúc. Mình về Quảng trường nhé!"
+
+msgid "ui.boss.hit"
+msgstr "Tia sáng trúng boss rồi! Giỏi lắm!"
+
+msgid "ui.boss.info_title"
+msgstr "Boss của vùng đất"
+
+msgid "ui.boss.invite_friends"
+msgstr "Rủ bạn"
+
+msgid "ui.boss.leave"
+msgstr "Rời"
+
+msgid "ui.boss.leave_confirm"
+msgstr "Em sẽ rời trận boss. Các bạn trong nhóm vẫn chơi tiếp được."
+
+msgid "ui.boss.leave_confirm_title"
+msgstr "Rời trận boss?"
+
+msgid "ui.boss.line.phase_cleared"
+msgstr "{boss}: Ôi, các em giỏi quá! Ta đổi dạng đây!"
+
+msgid "ui.boss.line.phase_start"
+msgstr "{boss}: Thử trả lời câu đố của ta nào!"
+
+msgid "ui.boss.load_failed"
+msgstr "Chưa tải được boss. Em thử lại sau nhé."
+
+msgid "ui.boss.loading"
+msgstr "Đang tìm boss…"
+
+msgid "ui.boss.member.me"
+msgstr "Em"
+
+msgid "ui.boss.member.met"
+msgstr "Đã đạt phần"
+
+msgid "ui.boss.member.ready"
+msgstr "Sẵn sàng"
+
+msgid "ui.boss.member.reconnecting"
+msgstr "Đang kết nối lại"
+
+msgid "ui.boss.member.trying"
+msgstr "Đang cố gắng"
+
+msgid "ui.boss.member.waiting"
+msgstr "Đang chờ"
+
+msgid "ui.boss.modes.party"
+msgstr "Chơi cùng bạn"
+
+msgid "ui.boss.modes.solo"
+msgstr "Chơi một mình"
+
+msgid "ui.boss.modes.solo_party"
+msgstr "Chơi một mình hoặc cùng bạn"
+
+msgid "ui.boss.my_correct"
+msgstr "{n} câu đúng"
+
+msgid "ui.boss.need_contribution"
+msgstr "Mỗi bạn trả lời đúng đủ phần của mình thì cả nhóm cùng nhận thưởng."
+
+msgid "ui.boss.next_phase_soon"
+msgstr "Giỏi lắm! Phần tiếp theo sắp bắt đầu…"
+
+msgid "ui.boss.none"
+msgstr "Vùng đất này chưa có boss nào cho em."
+
+msgid "ui.boss.party_size"
+msgstr "Nhóm {min}–{max} bạn"
+
+msgid "ui.boss.phase"
+msgstr "Phase {n}/{total}"
+
+msgid "ui.boss.phase_count"
+msgstr "{n} phase"
+
+msgid "ui.boss.reached_phase"
+msgstr "Em đã tới phase {n}/{total}. Cố lên, lần sau sẽ hạ được {boss}!"
+
+msgid "ui.boss.reconnecting"
+msgstr "Đang kết nối lại… Em chờ một chút nhé."
+
+msgid "ui.boss.result_title"
+msgstr "Kết quả trận boss"
+
+msgid "ui.boss.retry_phase"
+msgstr "Thử lại phase với câu hỏi mới"
+
+msgid "ui.boss.review_hint"
+msgstr "Ôn lại bài một chút rồi thử lại nhé, em làm được mà!"
+
+msgid "ui.boss.sending"
+msgstr "Đang gửi câu trả lời…"
+
+msgid "ui.boss.solo"
+msgstr "Chơi một mình"
+
+msgid "ui.boss.stay"
+msgstr "Ở lại"
+
+msgid "ui.boss.strike_back"
+msgstr "Boss phản đòn vui rồi! Mình xem lại nhé:"
+
+msgid "ui.boss.submit"
+msgstr "Gửi đáp án"
+
+msgid "ui.boss.time_left"
+msgstr "Thời gian còn lại của phase"
+
+msgid "ui.boss.waiting_party"
+msgstr "Đang chờ cả nhóm sẵn sàng…"
+
+msgid "ui.boss.waiting_question"
+msgstr "Câu hỏi của em đang tới…"
+
+msgid "ui.error.BOSS_ENCOUNTER_FULL"
+msgstr "Trận boss này đã đủ người rồi."
+
+msgid "ui.error.BOSS_PHASE_CLOSED"
+msgstr "Phần này đã xong, câu hỏi mới sắp tới nhé."
+
+msgid "ui.error.FRIEND_CODE_INVALID"
+msgstr "Mã không đúng hoặc đã hết hạn"
+
+msgid "ui.error.FRIEND_LIMIT_REACHED"
+msgstr "Em đã có nhiều bạn hoặc nhiều lời mời đang chờ rồi."
+
+msgid "ui.error.PARTY_NOT_LEADER"
+msgstr "Chỉ trưởng nhóm mới chọn được việc này."
+
+msgid "ui.error.PERMISSION_DENIED"
+msgstr "Em chưa làm được việc này."
+
+msgid "ui.error.ROOM_NOT_MEMBER"
+msgstr "Em không còn ở trong trận này."
+
+msgid "ui.error.SOCIAL_SCOPE_VIOLATION"
+msgstr "Em chỉ kết bạn được với bạn cùng trường"
+
+msgid "ui.friendcode.create"
+msgstr "Tạo mã"
+
+msgid "ui.friendcode.create_again"
+msgstr "Tạo mã mới"
+
+msgid "ui.friendcode.enter_title"
+msgstr "Nhập mã của bạn"
+
+msgid "ui.friendcode.expires_in"
+msgstr "Còn {time}"
+
+msgid "ui.friendcode.instructions"
+msgstr "Đọc mã này cho bạn ngồi cạnh, mã hết hạn sau {minutes} phút"
+
+msgid "ui.friendcode.mine"
+msgstr "Mã bạn bè của em"
+
+msgid "ui.friendcode.placeholder"
+msgstr "Ví dụ: K7M2QX"
+
+msgid "ui.friendcode.read_aloud"
+msgstr "Đọc to"
+
+msgid "ui.friendcode.send"
+msgstr "Gửi"
+
+msgid "ui.friends.accept"
+msgstr "Đồng ý"
+
+msgid "ui.friends.add"
+msgstr "Kết bạn"
+
+msgid "ui.friends.block"
+msgstr "Chặn"
+
+msgid "ui.friends.block_confirm"
+msgstr "Chặn {nickname}?"
+
+msgid "ui.friends.block_hint"
+msgstr "Bạn ấy sẽ không nhắn tin, mời hay ghép trận với em nữa. Bạn ấy không được báo."
+
+msgid "ui.friends.blocked.blocks"
+msgstr "Em đã chặn"
+
+msgid "ui.friends.blocked.mutes"
+msgstr "Em đã tắt tiếng"
+
+msgid "ui.friends.blocked.none_blocks"
+msgstr "Em chưa chặn ai."
+
+msgid "ui.friends.blocked.none_mutes"
+msgstr "Em chưa tắt tiếng ai."
+
+msgid "ui.friends.blocked_done"
+msgstr "Đã chặn {nickname}."
+
+msgid "ui.friends.empty"
+msgstr "Em chưa có bạn nào. Hãy chào một bạn đang ở gần nhé!"
+
+msgid "ui.friends.find.nearby"
+msgstr "Ở gần đây"
+
+msgid "ui.friends.find.nearby_none"
+msgstr "Chưa có bạn nào ở gần em."
+
+msgid "ui.friends.gone"
+msgstr "Danh sách vừa được cập nhật."
+
+msgid "ui.friends.group.offline"
+msgstr "Không trực tuyến ({count})"
+
+msgid "ui.friends.group.online"
+msgstr "Đang trực tuyến ({count})"
+
+msgid "ui.friends.hidden_off"
+msgstr "Bạn bè thấy em đang chơi"
+
+msgid "ui.friends.hidden_on"
+msgstr "Đang ẩn"
+
+msgid "ui.friends.hide_status"
+msgstr "Ẩn trạng thái"
+
+msgid "ui.friends.invite_party"
+msgstr "Mời vào nhóm"
+
+msgid "ui.friends.level"
+msgstr "Cấp {level}"
+
+msgid "ui.friends.mute"
+msgstr "Tắt tiếng"
+
+msgid "ui.friends.mute_confirm"
+msgstr "Tắt tiếng {nickname}?"
+
+msgid "ui.friends.mute_hint"
+msgstr "Em sẽ không thấy tin nhắn của bạn ấy nữa. Bạn ấy không được báo."
+
+msgid "ui.friends.muted_done"
+msgstr "Đã tắt tiếng {nickname}."
+
+msgid "ui.friends.offline"
+msgstr "Mất kết nối. Em thử lại sau nhé."
+
+msgid "ui.friends.party_invited"
+msgstr "Đã gửi lời mời vào nhóm."
+
+msgid "ui.friends.pick_friend"
+msgstr "Chạm vào một bạn để xem nhé!"
+
+msgid "ui.friends.presence.away"
+msgstr "Đang vắng"
+
+msgid "ui.friends.presence.in_activity"
+msgstr "Đang học"
+
+msgid "ui.friends.presence.in_match"
+msgstr "Đang trong trận"
+
+msgid "ui.friends.presence.offline"
+msgstr "Không trực tuyến"
+
+msgid "ui.friends.presence.online"
+msgstr "Đang trực tuyến"
+
+msgid "ui.friends.presence.unknown"
+msgstr "—"
+
+msgid "ui.friends.rate_limited"
+msgstr "Em gửi nhiều lời mời quá rồi. Thử lại sau {minutes} phút nhé."
+
+msgid "ui.friends.reason_question"
+msgstr "Vì sao vậy em? Chạm vào một hình:"
+
+msgid "ui.friends.reject"
+msgstr "Từ chối"
+
+msgid "ui.friends.remove"
+msgstr "Hủy kết bạn"
+
+msgid "ui.friends.remove_confirm"
+msgstr "Hủy kết bạn với {nickname}?"
+
+msgid "ui.friends.remove_hint"
+msgstr "Em vẫn có thể kết bạn lại sau."
+
+msgid "ui.friends.removed_done"
+msgstr "Đã hủy kết bạn."
+
+msgid "ui.friends.report"
+msgstr "Báo cáo"
+
+msgid "ui.friends.request_incoming"
+msgstr "Muốn kết bạn với em"
+
+msgid "ui.friends.request_pending"
+msgstr "Đang chờ"
+
+msgid "ui.friends.request_sent"
+msgstr "Đã gửi lời mời kết bạn."
+
+msgid "ui.friends.requests.incoming"
+msgstr "Lời mời cho em"
+
+msgid "ui.friends.requests.none_incoming"
+msgstr "Chưa có lời mời nào."
+
+msgid "ui.friends.requests.none_outgoing"
+msgstr "Em chưa gửi lời mời nào."
+
+msgid "ui.friends.requests.outgoing"
+msgstr "Em đã gửi"
+
+msgid "ui.friends.tab.blocked"
+msgstr "Đã chặn"
+
+msgid "ui.friends.tab.find"
+msgstr "Tìm bạn"
+
+msgid "ui.friends.tab.friends"
+msgstr "Bạn bè"
+
+msgid "ui.friends.tab.friends_count"
+msgstr "Bạn bè {count}"
+
+msgid "ui.friends.tab.requests"
+msgstr "Lời mời"
+
+msgid "ui.friends.tab.requests_count"
+msgstr "Lời mời {count}"
+
+msgid "ui.friends.title"
+msgstr "Bạn bè"
+
+msgid "ui.friends.unblock"
+msgstr "Bỏ chặn"
+
+msgid "ui.friends.unmute"
+msgstr "Bỏ tắt tiếng"
+
+msgid "ui.menu.friends"
+msgstr "Bạn bè"
+
+msgid "ui.quest.clue.answer_final"
+msgstr "Trả lời câu cuối"
+
+msgid "ui.quest.clue.board"
+msgstr "Bảng chung của nhóm"
+
+msgid "ui.quest.clue.board_empty"
+msgstr "Chưa có dữ kiện nào trên bảng. Hãy chia sẻ thẻ của em!"
+
+msgid "ui.quest.clue.extra_role"
+msgstr "Em giữ thêm vai {role}"
+
+msgid "ui.quest.clue.only_you"
+msgstr "Chỉ em thấy thẻ này"
+
+msgid "ui.quest.clue.share"
+msgstr "Chia sẻ dữ kiện"
+
+msgid "ui.quest.clue.shared"
+msgstr "Đã chia sẻ"
+
+msgid "ui.quest.clue.shared_by"
+msgstr "{nickname} đã chia sẻ"
+
+msgid "ui.quest.coop.alone"
+msgstr "Em đang làm một mình, mọi vai là của em."
+
+msgid "ui.quest.coop.assign"
+msgstr "Gán vai"
+
+msgid "ui.quest.coop.assign_none"
+msgstr "Chưa có vai nào để chọn."
+
+msgid "ui.quest.coop.assign_roles"
+msgstr "Chọn vai"
+
+msgid "ui.quest.coop.assign_title"
+msgstr "Trưởng nhóm chọn vai"
+
+msgid "ui.quest.coop.chat"
+msgstr "Chat nhóm"
+
+msgid "ui.quest.coop.group_progress"
+msgstr "Cả nhóm {pct}%"
+
+msgid "ui.quest.coop.how"
+msgstr "Mỗi bạn giữ một vai và một thẻ dữ kiện. Chia sẻ thẻ lên bảng chung rồi mỗi bạn tự trả lời câu cuối."
+
+msgid "ui.quest.coop.loading_card"
+msgstr "Đang tải thẻ…"
+
+msgid "ui.quest.coop.member_role"
+msgstr "{nickname}: {role}"
+
+msgid "ui.quest.coop.my_part_done"
+msgstr "Em đã góp đủ phần"
+
+msgid "ui.quest.coop.my_part_needed"
+msgstr "Em góp thêm phần của mình nhé"
+
+msgid "ui.quest.coop.my_role"
+msgstr "Vai của em"
+
+msgid "ui.quest.coop.no_role_yet"
+msgstr "Em sắp nhận vai…"
+
+msgid "ui.quest.coop.offline"
+msgstr "Mất kết nối. Em thử lại sau nhé."
+
+msgid "ui.quest.coop.role_secret"
+msgstr "đang giữ một vai"
+
+msgid "ui.quest.coop.role_unnamed"
+msgstr "Một vai"
+
+msgid "ui.quest.coop.shared_done"
+msgstr "Cả nhóm đã xong bước này"
+
+msgid "ui.quest.coop.team"
+msgstr "Cả nhóm"
+
+msgid "ui.quest.coop.title"
+msgstr "Cùng nhóm giải đố"
+
+msgid "ui.quest.coop_step"
+msgstr "Cùng nhóm giải"
+
+msgid "ui.friends.view"
+msgstr "Xem"

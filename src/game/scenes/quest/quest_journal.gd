@@ -237,6 +237,12 @@ func _on_quest_action(quest_id: String, action: String) -> void:
 				await quests.start_activity(quest_id, String(q.activity_step().get("step_id", "")))
 		"track":
 			quests.track(quest_id)
+		"coop_step":
+			# F110 US3: the roles and clue cards of the party quest's interdependent step.
+			var cq: QuestModel = quests.quest(quest_id)
+			if cq != null:
+				EventBus.ui_requested.emit(&"coop_step", {"quest_id": quest_id,
+					"step_id": String(cq.interdependent_step().get("step_id", ""))})
 	if tab != TAB_ASSIGNED:
 		_render_quests()
 

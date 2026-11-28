@@ -1,6 +1,6 @@
 # Feature Specification: F110 — Godot — màn boss co-op, thẻ dữ kiện bước `interdependent`, danh sách bạn bè
 
-**Feature Branch**: `110-godot-boss-coop-friends` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M4a · **Phụ thuộc**: F095, F102, F103 (và F063 renderer câu hỏi, F072 quest tracker, F092 `RealtimeClient`, F069 `LevelUpQueue`)
+**Feature Branch**: `110-godot-boss-coop-friends` · **Created**: 2026-11-16 · **Status**: In progress · **Module**: `src/game/` · **Mốc**: M4a · **Phụ thuộc**: F095, F102, F103 (và F063 renderer câu hỏi, F072 quest tracker, F092 `RealtimeClient`, F069 `LevelUpQueue`)
 **Input**: Học sinh đánh boss nhiều phase một mình hoặc cùng party (HUD năng lượng, phase, đồng hồ server, câu hỏi riêng theo khối, đóng góp không xếp hạng); thấy tiến độ quest co-op chung; nhận vai và thẻ dữ kiện ở bước `interdependent`, chia sẻ thẻ, tự trả lời câu cuối; quản lý bạn bè (danh sách, trạng thái online, lời mời, mã bạn bè, mời party, chặn, tắt tiếng). Màn S06 (phần boss), S11 (phần bạn bè) của [STUDENT_GAME_UX](../../docs/05-ux/STUDENT_GAME_UX.md). FR nguồn: FR-CHL-002, FR-CHL-003, FR-QST-002, FR-QST-007, FR-QST-009, FR-PTY-013, FR-SOC-001…003, FR-MP-003.
 
 ## Clarifications
@@ -22,6 +22,25 @@
 - Q: Danh sách bạn và tab "Tìm bạn" đổi gì? → A: Theo [ADR-0095 mục 5](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md#5-game-xã-hội-chat-d2-d5-d7-confirmed--owner-2026-11-21): không còn nhóm/gợi ý "Bạn cùng lớp" (gợi ý chỉ còn "Vừa chơi cùng" — thuộc feature khác); `FriendsScreen` nhóm Online/Offline, không nhóm theo lớp; người khác chỉ thấy nickname + avatar (+ level), không trường/khối (R16) — F110-AC-19.
 - Q: Presence của ai được hiện? → A: Chỉ bạn bè/party/club theo policy (FR-MP-003 viết lại — không theo lớp); F110 chỉ hiện presence bạn bè do server trả.
 - Q: "Mời party" từ hồ sơ bạn? → A: Giữ nút; điều kiện mời (lớp 1–3 cùng khối với leader, cùng tenant, liên trường theo ADR-0054, party `friend` chỉ mời bạn bè) do server áp theo [PARTY_SYSTEM](../../docs/03-social-multiplayer/PARTY_SYSTEM.md); lỗi hiển thị thân thiện như F102-AC-05.
+
+### Session 2026-11-28 (triển khai client — [Confirmed — owner "chốt hết"])
+
+Mọi điểm `[Proposed]`/thiếu trong contract được chốt theo phương án an toàn nhất, không mở rộng phạm vi (R34):
+
+- Q: Arena boss là zone 3D riêng (`scenes/world/zones/boss_arena/Zone.tscn`, T016) hay màn 2D? → A: Màn `BossArena` 2D trên thế giới tạm dừng (`QualityManager.suspend_world("boss")`), giống `BattleArena` F109: sân khấu cố định (không camera, joystick bị che), boss vẽ vector bằng token, tia sáng `CPUParticles2D` ≤ 200 hạt (Trung bình 120, Thấp tắt), panel câu hỏi là Control — an toàn nhất cho AC-11/SC-004. Không tạo zone 3D boss.
+- Q: Boss party vào thế nào khi `party.session.started.scene_ref` của boss là khóa hình (`boss/<code>`), không phải đường scene? → A: `room_type = boss` ⇒ `room_id` là `encounter_id`; `PartyService.enter_session` → `SceneRouter.enter_boss_encounter(encounter_id, visual_ref)` mở màn `boss_arena` (sau đếm ngược 3-2-1 của Party Lobby F102); vào lại sau mất kết nối dùng đường resync F102.
+- Q: Câu thoại boss theo `presentation_ref` từ gói nội dung đã ghim? → A: Client chưa có kho câu thoại boss trong gói nội dung; hiện câu thoại chung song ngữ `ui.boss.line.phase_start`/`phase_cleared` (có tên boss), giữ `presentation_ref` trong `BossStore` để nối khi gói nội dung có mục này (không hardcode nội dung — R2).
+- Q: "Em cần thêm N câu" (Independent Test US2) và số `min_contribution` không có trong contract (chỉ `my_contribution_met`)? → A: Không hiện số: ✓ "Em đã góp đủ phần" / đồng hồ "Em góp thêm phần của mình nhé"; yêu cầu nói bằng lời `ui.boss.need_contribution`. Không suy số ở client (R5).
+- Q: `share_mode` và tên vai của bạn không có trong `QuestStepView`/`quest.roles.assigned`? → A: Mặc định `clue_card` (không nút chat) trừ khi bước có `share_mode = clue_card_and_chat`; tên vai lấy từ thẻ của vai đó khi server đã gửi (vai mình, thẻ đã chia sẻ), không thì "{nickname}: đang giữ một vai". "Chọn vai" chỉ hiện cho leader khi `pending_leader = true`, danh sách vai lấy từ `assignments` server gửi (rỗng → "Chưa có vai nào để chọn").
+- Q: `party.session.ended` tới cùng lúc `boss.encounter.ended`? → A: Kết quả vẫn hiện cho học sinh đọc; nút "Về nhóm" (và ✕ Đóng) mở Party Lobby; nếu phiên kết thúc khi chưa có kết quả → về lobby ngay.
+- Q: Thẻ người chơi khi chạm nhân vật trong Hub (nút "Kết bạn")? → A: Chưa có thẻ người chơi chạm-chọn trong Hub (cần chọn nhân vật 3D, ngoài lát này); AC-22 đáp ứng bằng nhóm "Ở gần đây" của tab Tìm bạn (người chơi cùng instance F092). Không có ô tìm theo tên/ID.
+- Q: Lý do khi Chặn/Tắt tiếng ("xác nhận một bước có lý do bằng biểu tượng")? → A: Chạm "Chặn"/"Tắt tiếng" (1) mở hộp xác nhận có 3 chip lý do bằng hình; chạm một chip là xác nhận (2) — ≤ 2 chạm. API không nhận lý do nên lý do chỉ ở client (không gửi, không lưu).
+- Q: "Đọc to" mã bạn bè? → A: Đọc lần lượt từng ký tự, ký tự đang đọc được tô sáng; có giọng TTS của thiết bị (khi `audio/general/text_to_speech` bật) thì đọc thành tiếng, không có thì chỉ tô sáng.
+- Q: "Ẩn trạng thái" sau khi kết nối lại? → A: Gửi lại `hidden = true` trên kết nối mới (gateway mặc định không ẩn).
+- Q: `BossEncounter.members[].present` (REST) và `connected` (WS)? → A: Một trường `connected` trong model, đọc từ cả hai.
+- Q: Fixture contract cho message `boss.*`/`quest.*`/`presence.friend.updated` khi AsyncAPI chưa có `examples`? → A: `gen_fixtures.mjs` sinh một mẫu tất định từ payload schema, kiểm bằng ajv (`asyncapi/<type>.sample.json`); đề xuất owner backend bổ sung `examples` (không chặn).
+- Q: Lối vào Bạn bè trên HUD? → A: Ô "Bạn bè" trong menu "Thêm" (≤ 2 chạm) + phím `F` + NPC qua `open_ui` `friends`; thông báo `open_friend_requests` mở tab Lời mời. Menu "Thêm" 7 ô xếp 4 cột.
+- Phát hiện khi làm: trước F110 không service nào đăng ký tiền tố `quest` với dispatcher nên `QuestService` (F072) không nhận `quest.progress.updated`; `CoopQuestService` đăng ký `quest` nên tin này tới cả hai.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

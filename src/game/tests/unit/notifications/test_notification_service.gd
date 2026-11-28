@@ -327,7 +327,12 @@ func test_an_item_without_a_screen_in_this_client_only_gets_read() -> void:
 	h.http.reply(ROUTE_LIST, 200, _list_fixture())
 	h.http.reply(ROUTE_READ, 200, {})
 	await svc.refresh_inbox()
+	# F110: a friend request opens the Bạn bè screen on its "Lời mời" tab; an action this client has no screen for only
+	# gets read.
+	assert_bool(svc.can_open(svc.items[0])).is_true()
+	assert_str(String(svc.target_screen(svc.items[0]))).is_equal("friends")
 	var friend: NotificationModel = svc.items[0]
+	friend.action_kind = "open_club_page"
 	assert_bool(svc.can_open(friend)).is_false()
 	var intents: Array = []
 	var record: Callable = func(screen: StringName, _args: Dictionary) -> void: intents.append(screen)

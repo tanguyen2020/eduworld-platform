@@ -714,6 +714,156 @@ msgstr ""
 msgid "ui.boot.loading"
 msgstr ""
 
+msgid "ui.boss.back_hub"
+msgstr ""
+
+msgid "ui.boss.back_lobby"
+msgstr ""
+
+msgid "ui.boss.back_zone"
+msgstr ""
+
+msgid "ui.boss.chat"
+msgstr ""
+
+msgid "ui.boss.default_title"
+msgstr ""
+
+msgid "ui.boss.defeated"
+msgstr ""
+
+msgid "ui.boss.defeated_before"
+msgstr ""
+
+msgid "ui.boss.defeated_no_reward"
+msgstr ""
+
+msgid "ui.boss.energy"
+msgstr ""
+
+msgid "ui.boss.get_ready"
+msgstr ""
+
+msgid "ui.boss.gone"
+msgstr ""
+
+msgid "ui.boss.hit"
+msgstr ""
+
+msgid "ui.boss.info_title"
+msgstr ""
+
+msgid "ui.boss.invite_friends"
+msgstr ""
+
+msgid "ui.boss.leave"
+msgstr ""
+
+msgid "ui.boss.leave_confirm"
+msgstr ""
+
+msgid "ui.boss.leave_confirm_title"
+msgstr ""
+
+msgid "ui.boss.line.phase_cleared"
+msgstr ""
+
+msgid "ui.boss.line.phase_start"
+msgstr ""
+
+msgid "ui.boss.load_failed"
+msgstr ""
+
+msgid "ui.boss.loading"
+msgstr ""
+
+msgid "ui.boss.member.me"
+msgstr ""
+
+msgid "ui.boss.member.met"
+msgstr ""
+
+msgid "ui.boss.member.ready"
+msgstr ""
+
+msgid "ui.boss.member.reconnecting"
+msgstr ""
+
+msgid "ui.boss.member.trying"
+msgstr ""
+
+msgid "ui.boss.member.waiting"
+msgstr ""
+
+msgid "ui.boss.modes.party"
+msgstr ""
+
+msgid "ui.boss.modes.solo"
+msgstr ""
+
+msgid "ui.boss.modes.solo_party"
+msgstr ""
+
+msgid "ui.boss.my_correct"
+msgstr ""
+
+msgid "ui.boss.need_contribution"
+msgstr ""
+
+msgid "ui.boss.next_phase_soon"
+msgstr ""
+
+msgid "ui.boss.none"
+msgstr ""
+
+msgid "ui.boss.party_size"
+msgstr ""
+
+msgid "ui.boss.phase"
+msgstr ""
+
+msgid "ui.boss.phase_count"
+msgstr ""
+
+msgid "ui.boss.reached_phase"
+msgstr ""
+
+msgid "ui.boss.reconnecting"
+msgstr ""
+
+msgid "ui.boss.result_title"
+msgstr ""
+
+msgid "ui.boss.retry_phase"
+msgstr ""
+
+msgid "ui.boss.review_hint"
+msgstr ""
+
+msgid "ui.boss.sending"
+msgstr ""
+
+msgid "ui.boss.solo"
+msgstr ""
+
+msgid "ui.boss.stay"
+msgstr ""
+
+msgid "ui.boss.strike_back"
+msgstr ""
+
+msgid "ui.boss.submit"
+msgstr ""
+
+msgid "ui.boss.time_left"
+msgstr ""
+
+msgid "ui.boss.waiting_party"
+msgstr ""
+
+msgid "ui.boss.waiting_question"
+msgstr ""
+
 msgid "ui.challenge.attempts_left"
 msgstr ""
 
@@ -1524,6 +1674,12 @@ msgstr ""
 msgid "ui.error.ATTEMPT_NOT_IN_PROGRESS"
 msgstr ""
 
+msgid "ui.error.BOSS_ENCOUNTER_FULL"
+msgstr ""
+
+msgid "ui.error.BOSS_PHASE_CLOSED"
+msgstr ""
+
 msgid "ui.error.CHALLENGE_ATTEMPT_LIMIT"
 msgstr ""
 
@@ -1564,6 +1720,12 @@ msgid "ui.error.EXAM_TIME_OVER"
 msgstr ""
 
 msgid "ui.error.EXAM_WINDOW_CLOSED"
+msgstr ""
+
+msgid "ui.error.FRIEND_CODE_INVALID"
+msgstr ""
+
+msgid "ui.error.FRIEND_LIMIT_REACHED"
 msgstr ""
 
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
@@ -1617,6 +1779,12 @@ msgstr ""
 msgid "ui.error.NO_ACTIVE_ENROLLMENT"
 msgstr ""
 
+msgid "ui.error.PARTY_NOT_LEADER"
+msgstr ""
+
+msgid "ui.error.PERMISSION_DENIED"
+msgstr ""
+
 msgid "ui.error.PURCHASE_LIMIT_REACHED"
 msgstr ""
 
@@ -1632,7 +1800,13 @@ msgstr ""
 msgid "ui.error.REFRESH_TOKEN_REUSED"
 msgstr ""
 
+msgid "ui.error.ROOM_NOT_MEMBER"
+msgstr ""
+
 msgid "ui.error.SHOP_ITEM_UNAVAILABLE"
+msgstr ""
+
+msgid "ui.error.SOCIAL_SCOPE_VIOLATION"
 msgstr ""
 
 msgid "ui.error.TENANT_ACCESS_DISABLED"
@@ -1897,6 +2071,207 @@ msgid "ui.format.pm"
 msgstr ""
 
 msgid "ui.format.time"
+msgstr ""
+
+msgid "ui.friendcode.create"
+msgstr ""
+
+msgid "ui.friendcode.create_again"
+msgstr ""
+
+msgid "ui.friendcode.enter_title"
+msgstr ""
+
+msgid "ui.friendcode.expires_in"
+msgstr ""
+
+msgid "ui.friendcode.instructions"
+msgstr ""
+
+msgid "ui.friendcode.mine"
+msgstr ""
+
+msgid "ui.friendcode.placeholder"
+msgstr ""
+
+msgid "ui.friendcode.read_aloud"
+msgstr ""
+
+msgid "ui.friendcode.send"
+msgstr ""
+
+msgid "ui.friends.accept"
+msgstr ""
+
+msgid "ui.friends.add"
+msgstr ""
+
+msgid "ui.friends.block"
+msgstr ""
+
+msgid "ui.friends.block_confirm"
+msgstr ""
+
+msgid "ui.friends.block_hint"
+msgstr ""
+
+msgid "ui.friends.blocked.blocks"
+msgstr ""
+
+msgid "ui.friends.blocked.mutes"
+msgstr ""
+
+msgid "ui.friends.blocked.none_blocks"
+msgstr ""
+
+msgid "ui.friends.blocked.none_mutes"
+msgstr ""
+
+msgid "ui.friends.blocked_done"
+msgstr ""
+
+msgid "ui.friends.empty"
+msgstr ""
+
+msgid "ui.friends.find.nearby"
+msgstr ""
+
+msgid "ui.friends.find.nearby_none"
+msgstr ""
+
+msgid "ui.friends.gone"
+msgstr ""
+
+msgid "ui.friends.group.offline"
+msgstr ""
+
+msgid "ui.friends.group.online"
+msgstr ""
+
+msgid "ui.friends.hidden_off"
+msgstr ""
+
+msgid "ui.friends.hidden_on"
+msgstr ""
+
+msgid "ui.friends.hide_status"
+msgstr ""
+
+msgid "ui.friends.invite_party"
+msgstr ""
+
+msgid "ui.friends.level"
+msgstr ""
+
+msgid "ui.friends.mute"
+msgstr ""
+
+msgid "ui.friends.mute_confirm"
+msgstr ""
+
+msgid "ui.friends.mute_hint"
+msgstr ""
+
+msgid "ui.friends.muted_done"
+msgstr ""
+
+msgid "ui.friends.offline"
+msgstr ""
+
+msgid "ui.friends.party_invited"
+msgstr ""
+
+msgid "ui.friends.pick_friend"
+msgstr ""
+
+msgid "ui.friends.presence.away"
+msgstr ""
+
+msgid "ui.friends.presence.in_activity"
+msgstr ""
+
+msgid "ui.friends.presence.in_match"
+msgstr ""
+
+msgid "ui.friends.presence.offline"
+msgstr ""
+
+msgid "ui.friends.presence.online"
+msgstr ""
+
+msgid "ui.friends.presence.unknown"
+msgstr ""
+
+msgid "ui.friends.rate_limited"
+msgstr ""
+
+msgid "ui.friends.reason_question"
+msgstr ""
+
+msgid "ui.friends.reject"
+msgstr ""
+
+msgid "ui.friends.remove"
+msgstr ""
+
+msgid "ui.friends.remove_confirm"
+msgstr ""
+
+msgid "ui.friends.remove_hint"
+msgstr ""
+
+msgid "ui.friends.removed_done"
+msgstr ""
+
+msgid "ui.friends.report"
+msgstr ""
+
+msgid "ui.friends.request_incoming"
+msgstr ""
+
+msgid "ui.friends.request_pending"
+msgstr ""
+
+msgid "ui.friends.request_sent"
+msgstr ""
+
+msgid "ui.friends.requests.incoming"
+msgstr ""
+
+msgid "ui.friends.requests.none_incoming"
+msgstr ""
+
+msgid "ui.friends.requests.none_outgoing"
+msgstr ""
+
+msgid "ui.friends.requests.outgoing"
+msgstr ""
+
+msgid "ui.friends.tab.blocked"
+msgstr ""
+
+msgid "ui.friends.tab.find"
+msgstr ""
+
+msgid "ui.friends.tab.friends"
+msgstr ""
+
+msgid "ui.friends.tab.friends_count"
+msgstr ""
+
+msgid "ui.friends.tab.requests"
+msgstr ""
+
+msgid "ui.friends.tab.requests_count"
+msgstr ""
+
+msgid "ui.friends.title"
+msgstr ""
+
+msgid "ui.friends.unblock"
+msgstr ""
+
+msgid "ui.friends.unmute"
 msgstr ""
 
 msgid "ui.gallery.button.hint"
@@ -2535,6 +2910,9 @@ msgstr ""
 msgid "ui.menu.challenges"
 msgstr ""
 
+msgid "ui.menu.friends"
+msgstr ""
+
 msgid "ui.menu.journey"
 msgstr ""
 
@@ -3136,6 +3514,93 @@ msgid "ui.quality.title"
 msgstr ""
 
 msgid "ui.quest.accept"
+msgstr ""
+
+msgid "ui.quest.clue.answer_final"
+msgstr ""
+
+msgid "ui.quest.clue.board"
+msgstr ""
+
+msgid "ui.quest.clue.board_empty"
+msgstr ""
+
+msgid "ui.quest.clue.extra_role"
+msgstr ""
+
+msgid "ui.quest.clue.only_you"
+msgstr ""
+
+msgid "ui.quest.clue.share"
+msgstr ""
+
+msgid "ui.quest.clue.shared"
+msgstr ""
+
+msgid "ui.quest.clue.shared_by"
+msgstr ""
+
+msgid "ui.quest.coop.alone"
+msgstr ""
+
+msgid "ui.quest.coop.assign"
+msgstr ""
+
+msgid "ui.quest.coop.assign_none"
+msgstr ""
+
+msgid "ui.quest.coop.assign_roles"
+msgstr ""
+
+msgid "ui.quest.coop.assign_title"
+msgstr ""
+
+msgid "ui.quest.coop.chat"
+msgstr ""
+
+msgid "ui.quest.coop.group_progress"
+msgstr ""
+
+msgid "ui.quest.coop.how"
+msgstr ""
+
+msgid "ui.quest.coop.loading_card"
+msgstr ""
+
+msgid "ui.quest.coop.member_role"
+msgstr ""
+
+msgid "ui.quest.coop.my_part_done"
+msgstr ""
+
+msgid "ui.quest.coop.my_part_needed"
+msgstr ""
+
+msgid "ui.quest.coop.my_role"
+msgstr ""
+
+msgid "ui.quest.coop.no_role_yet"
+msgstr ""
+
+msgid "ui.quest.coop.offline"
+msgstr ""
+
+msgid "ui.quest.coop.role_secret"
+msgstr ""
+
+msgid "ui.quest.coop.role_unnamed"
+msgstr ""
+
+msgid "ui.quest.coop.shared_done"
+msgstr ""
+
+msgid "ui.quest.coop.team"
+msgstr ""
+
+msgid "ui.quest.coop.title"
+msgstr ""
+
+msgid "ui.quest.coop_step"
 msgstr ""
 
 msgid "ui.quest.due"

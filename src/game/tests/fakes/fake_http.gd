@@ -4,6 +4,8 @@ extends HttpTransport
 ## Routes are "METHOD /path" globs (`*` = any characters except `?`); each route keeps a queue of replies and the
 ## last reply repeats until a new reply is queued for the route. Every request is recorded (method, path, query,
 ## headers, decoded body). Lives under tests/ (excluded from every export preset).
+## F110: a route that names a query ("GET /social/friend-requests?direction=outgoing") is matched against the path AND
+## the query first, before the routes of the path alone.
 
 
 const METHOD_NAMES: Dictionary = {
@@ -66,7 +68,7 @@ func send(method: HTTPClient.Method, url: String, headers: PackedStringArray, bo
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	for i: int in delay_frames:
 		await tree.process_frame
-	var spec: Dictionary = _next("%s %s" % [rec.method, rec.path])
+	var spec: Dictionary = _next("%s %s" % [rec.method, rec.path], rec.query)
 	var response: HttpTransport.Response = HttpTransport.Response.new()
 	if bool(spec.get("network_error", true)):
 		response.result = HTTPRequest.RESULT_CANT_CONNECT
@@ -136,8 +138,14 @@ func _route(route: String) -> Array:
 	return replies
 
 
-func _next(key: String) -> Dictionary:
+func _next(key: String, query: String = "") -> Dictionary:
+	if not query.is_empty():
+		for r: Dictionary in _routes:
+			if String(r["route"]).contains("?") and (r["re"] as RegEx).search("%s?%s" % [key, query]) != null and not (r["replies"] as Array).is_empty():
+				return _serve(r["replies"] as Array)
 	for r: Dictionary in _routes:
+		if String(r["route"]).contains("?"):
+			continue
 		if (r["re"] as RegEx).search(key) != null:
 			var replies: Array = r["replies"] as Array
 			if replies.is_empty():
@@ -146,6 +154,12 @@ func _next(key: String) -> Dictionary:
 			spec["served"] = true
 			return spec
 	return {"network_error": true}
+
+
+func _serve(replies: Array) -> Dictionary:
+	var spec: Dictionary = (replies.pop_front() if replies.size() > 1 else replies[0]) as Dictionary
+	spec["served"] = true
+	return spec
 
 
 static func _glob(route: String) -> RegEx:

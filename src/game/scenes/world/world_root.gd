@@ -22,6 +22,8 @@ const PARTY_SCREEN: StringName = &"party"
 ## F109: the arena and the match screen (UiScreenRegistry).
 const ARENA_SCREEN: StringName = &"arena"
 const BATTLE_SCREEN: StringName = &"battle"
+## F110: the friends screen (F key, HUD "Thêm", NPC Chú Ong Kết Nối).
+const FRIENDS_SCREEN: StringName = &"friends"
 ## Stable area_id of Quảng trường Tia Sáng (WORLD_DESIGN §3, the spawn of a first entry).
 const HUB_AREA_ID: String = "main_hub"
 const QUEST_TRACKER_SCENE: PackedScene = preload("res://scenes/quest/QuestTracker.tscn")
@@ -282,6 +284,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif open_screen.is_empty() and event.is_action_pressed("open_arena"):
 		_on_arena_requested({})
+		get_viewport().set_input_as_handled()
+	elif open_screen.is_empty() and event.is_action_pressed("open_friends"):
+		# F110-AC-19: F opens Bạn bè.
+		EventBus.ui_requested.emit(FRIENDS_SCREEN, {})
 		get_viewport().set_input_as_handled()
 
 

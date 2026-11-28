@@ -9,6 +9,7 @@ const STATUS_ACTIVE: String = "active"
 const STATUS_COMPLETED: String = "completed"
 const STEP_ACTIVE: String = "active"
 const STEP_COMPLETED: String = "completed"
+const STEP_TYPE_INTERDEPENDENT: String = "interdependent"
 
 var quest_id: String = ""
 var quest_version_id: String = ""
@@ -26,6 +27,8 @@ var progress_id: String = ""
 var steps: Array[Dictionary] = []
 ## step_id → `QuestStepState` (`{status, count?, target?}`).
 var step_states: Dictionary = {}
+## F110: `QuestProgress.party_progress` of a party quest session (`QuestPartyStepProgress` rows: group share + own part).
+var party_progress: Array = []
 
 
 static func from_dict(d: Variant) -> QuestModel:
@@ -73,6 +76,8 @@ func apply_progress(p: Dictionary) -> void:
 		step_states = (p["step_states"] as Dictionary).duplicate(true)
 	if p.has("status") and p.has("quest_progress_id"):
 		status = String(p["status"])
+	if p.get("party_progress") is Array:
+		party_progress = (p["party_progress"] as Array).duplicate(true)
 
 
 ## Applies a `quest.progress.updated` message (status and the state of one step).
@@ -127,6 +132,14 @@ func step_for(target_area: String, interactable_id: String, npc_id: String) -> D
 			"go_to", "collect":
 				if not interactable_id.is_empty() and interactable_id in targets:
 					return s
+	return {}
+
+
+## F110: the first active `interdependent` step (roles + clue cards of a party quest), or empty.
+func interdependent_step() -> Dictionary:
+	for s: Dictionary in active_steps():
+		if String(s.get("step_type", "")) == STEP_TYPE_INTERDEPENDENT:
+			return s
 	return {}
 
 

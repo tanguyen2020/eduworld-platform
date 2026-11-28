@@ -49,6 +49,10 @@ var quest: QuestService = null
 var progression: ProgressionService = null
 var achievements: AchievementService = null
 var challenge: ChallengeClient = null
+## F110: boss battles (solo + party, `boss.*`), party quests (shared progress, roles, clue cards); friends live in
+## `social` (SocialService + FriendsStore) and their presence comes through `presence`.
+var boss: BossClient = null
+var coop_quest: CoopQuestService = null
 ## `(code: String) -> void` for session-ending refusals; default `AuthService.handle_access_denied` (F062-AC-12/23).
 var access_denied_handler: Callable = Callable()
 
@@ -95,21 +99,31 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	notifications.bind(assignments)
 	notifications.access_denied.connect(_on_access_denied)
 	# F123-AC-16: badge only (no toast) during a timed exam or a solo challenge.
-	notifications.quiet_check = func() -> bool: return exam.in_progress() or challenge.is_running()
+	notifications.quiet_check = func() -> bool: return exam.in_progress() or challenge.is_running() or boss_running()
 	# F102: the party invitation popup is the InvitationToast (accept / decline in place); the inbox keeps the row.
 	notifications.delegated_popup_kinds = PackedStringArray(["party_invitation"])
 	party = PartyService.new(rest, realtime, app_state, _autoload("Settings"), telemetry)
 	party.access_denied.connect(_on_access_denied)
 	# F102 edge case: an invitation during an exam, a challenge or the activity player only raises the bell count.
-	party.quiet_check = func() -> bool: return exam.in_progress() or challenge.is_running() or presence.activity_status == PresenceService.IN_ACTIVITY
+	# F110 edge case: an invitation during a boss phase only raises the bell count too.
+	party.quiet_check = func() -> bool: return exam.in_progress() or challenge.is_running() or boss_running() or presence.activity_status == PresenceService.IN_ACTIVITY
 	chat = ChatService.new(rest, realtime, app_state, telemetry, _cdn_base_url())
 	chat.access_denied.connect(_on_access_denied)
-	social = SocialService.new(rest, telemetry)
+	social = SocialService.new(rest, telemetry, realtime)
 	social.access_denied.connect(_on_access_denied)
+	social.party = party
+	social.now_source = party.now_ms
+	presence.friend_presence_received.connect(func(user_id: String, status: String, activity: String, area_id: String) -> void:
+		social.store.apply_presence(user_id, status, activity, area_id))
 	# F119-AC-15: once the server confirmed a block / mute, the player's messages leave the chat at once.
 	social.relation_changed.connect(func(user_id: String, _kind: String) -> void: chat.store.hide_user(user_id))
 	reports = ReportService.new(rest, telemetry)
 	reports.access_denied.connect(_on_access_denied)
+	boss = BossClient.new(rest, app_state, clock, realtime, telemetry)
+	boss.access_denied.connect(_on_access_denied)
+	coop_quest = CoopQuestService.new(rest, realtime, quest, app_state, telemetry)
+	coop_quest.access_denied.connect(_on_access_denied)
+	coop_quest.party_store = party.store
 	matchmaking = MatchmakingService.new(rest, realtime, app_state, telemetry)
 	matchmaking.access_denied.connect(_on_access_denied)
 	battle = BattleClient.new(realtime, app_state)
@@ -135,6 +149,7 @@ func start_session(bootstrap: Dictionary) -> void:
 	party.clear()
 	chat.clear()
 	reports.clear()
+	_clear_f110()
 	_clear_competition()
 	play_time.configure(bootstrap.get("policies", {}) as Dictionary)
 	var flags: Variant = bootstrap.get("feature_flags", {})
@@ -152,6 +167,7 @@ func end_session() -> void:
 	party.clear()
 	chat.clear()
 	reports.clear()
+	_clear_f110()
 	_clear_competition()
 	learning.clear()
 	exam.clear()
@@ -177,10 +193,24 @@ func resync() -> void:
 	chat.resync()
 	if challenge.is_running():
 		challenge.resume(challenge.attempt().challenge_attempt_id)
+	boss.resync()
 	if not hub.desired_area.is_empty():
 		await hub.join()
 	if realtime != null:
 		realtime.finish_resync()
+
+
+## F110: a boss encounter of this student is on (Lobby … Result): popups wait (bell count only, spec edge case).
+func boss_running() -> bool:
+	return boss != null and boss.store.encounter != null and not boss.store.encounter.is_over()
+
+
+## F110-AC-29: nothing of the previous student's boss, party quest, friends, requests, code or hidden switch is kept.
+func _clear_f110() -> void:
+	boss.clear()
+	coop_quest.clear()
+	social.clear()
+	presence.clear()
 
 
 ## F109: nothing of the previous student's queue, match, boards or tournaments is kept.

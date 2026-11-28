@@ -144,6 +144,18 @@ func enter_party_session(scene_ref: String, room_id: String) -> Error:
 	return OK
 
 
+## F110-AC-02: a party boss session started (`room_type = boss`, `room_id` = the encounter): the BossArena screen opens
+## on the world for `encounter_id` (a 2D arena over the suspended world, F110 plan); `visual_ref` is the boss visual key
+## of the pinned content (`boss/<code>`), not a scene path.
+func enter_boss_encounter(encounter_id: String, visual_ref: String = "") -> Error:
+	if not Uuid.is_valid(encounter_id):
+		return ERR_INVALID_PARAMETER
+	party_room_id = encounter_id
+	EventBus.ui_requested.emit(&"boss_arena", {"encounter_id": encounter_id, "mode": "party",
+		"visual_ref": visual_ref.left(128)})
+	return OK
+
+
 ## The party session ended or the party is gone: the next zone change is an ordinary one.
 func leave_party_session() -> void:
 	party_room_id = ""

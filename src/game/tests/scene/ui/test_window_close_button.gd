@@ -1,7 +1,8 @@
 extends GdUnitTestSuite
 ## F125-AC-06, F125-AC-07 (owner 2026-11-27, F114-3; DESIGN_SYSTEM §5.1, STUDENT_GAME_UX_SOCIAL §10): every window built
 ## on the shared window frame — quest journal, wardrobe studio, world map, exam lobby, wardrobe/shop, achievements,
-## solo challenge (board, result), journey, the "Thêm" menu, notification inbox, Settings, party, arena — has exactly one
+## solo challenge (board, result), journey, the "Thêm" menu, notification inbox, Settings, party, arena, F110 friends /
+## boss card / interdependent step — has exactly one
 ## close button: the red `DangerButton` ✕ "Đóng" at the right end of its blue title bar at the top of the window, with
 ## the band touch target (the compact floor on a phone), and Esc/Back closes the window the same way as that button.
 ## Confirmation dialogs (neutral "Hủy"), the activity screen (guarded "Thoát") and full-frame screens (login) have no
@@ -127,6 +128,25 @@ func _windows() -> Dictionary:
 			vp.add_child(root)
 			root.size = Vector2(vp.size)
 			return await CompetitionScreens.build("arena", root, s.services, s.h.http),
+		# F110: Bạn bè, the boss card, the interdependent step.
+		"friends": func(vp: SubViewport) -> Control:
+			var root: Control = Control.new()
+			root.theme = AppState.theme_service.current_theme
+			vp.add_child(root)
+			root.size = Vector2(vp.size)
+			return await F110Screens.build("friends", root, s.services, s.h.http),
+		"boss_info": func(vp: SubViewport) -> Control:
+			var root: Control = Control.new()
+			root.theme = AppState.theme_service.current_theme
+			vp.add_child(root)
+			root.size = Vector2(vp.size)
+			return await F110Screens.build("boss_info", root, s.services, s.h.http),
+		"coop_step": func(vp: SubViewport) -> Control:
+			var root: Control = Control.new()
+			root.theme = AppState.theme_service.current_theme
+			vp.add_child(root)
+			root.size = Vector2(vp.size)
+			return await F110Screens.build("coop_step", root, s.services, s.h.http),
 	}
 
 

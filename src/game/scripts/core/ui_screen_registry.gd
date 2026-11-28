@@ -11,12 +11,20 @@ extends RefCounted
 ## target of a `party_invitation` notification — args `{view: "invitations", id}`).
 ## F109: `arena` (Đấu trường: HUD "Thêm" / K / NPC Trọng tài Sấm — args `{tab, tournament_id, duel}`), `leaderboard`
 ## (the same screen on its "Bảng xếp hạng" tab — NPC `open_ui`), `battle` (the match screen — args `{match_id, mode}`).
+## F110: `friends` (Bạn bè: HUD "Thêm" / F / NPC Chú Ong Kết Nối / a friend request notification — args `{tab}`),
+## `boss_info` (the boss card of a gate / NPC `open_ui` — args `{area_id}` or `{boss_id}`), `boss_arena` (the boss
+## screen — args `{encounter_id, mode, visual_ref}`), `coop_step` (the roles + clue cards of an `interdependent` step —
+## args `{quest_id, step_id}`).
 
 const SCREENS: Dictionary = {
 	&"achievements": "res://scenes/achievement/AchievementCollectionScreen.tscn",
 	&"activity_host": "res://scenes/learning/ActivityHost.tscn",
 	&"arena": "res://scenes/competition/ArenaScreen.tscn",
 	&"battle": "res://scenes/competition/BattleArena.tscn",
+	&"boss_arena": "res://scenes/challenge/boss/BossArena.tscn",
+	&"boss_info": "res://scenes/challenge/boss/BossInfoCard.tscn",
+	&"coop_step": "res://scenes/quest/InterdependentStepPanel.tscn",
+	&"friends": "res://scenes/social/FriendsScreen.tscn",
 	&"challenge_board": "res://scenes/challenge/ChallengeBoard.tscn",
 	&"challenge_result": "res://scenes/challenge/ChallengeResult.tscn",
 	&"exam_lobby": "res://scenes/exam/ExamLobby.tscn",

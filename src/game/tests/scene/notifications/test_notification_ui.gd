@@ -213,8 +213,9 @@ func test_inbox_lists_marks_read_and_opens_school_work() -> void:
 	assert_bool(bool(inbox.call("is_marked_new", 2))).is_false()
 	assert_int(h.http.count(ROUTE_READ)).is_equal(2)
 	assert_int(services.notifications.badge).is_equal(0)
-	# "Xem" only where this client has the screen: school work and the level (Hành trình), not friend requests (F095).
-	assert_object(inbox.call("open_button", 0)).is_null()
+	# "Xem" where this client has the screen: school work, the level (Hành trình) and, since F110, a friend request (the
+	# Bạn bè screen on its "Lời mời" tab).
+	assert_object(inbox.call("open_button", 0)).is_not_null()
 	var open_work: Button = inbox.call("open_button", 1) as Button
 	assert_object(open_work).is_not_null()
 	assert_object(open_work.icon).is_not_null()

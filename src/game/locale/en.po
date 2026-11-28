@@ -3972,3 +3972,471 @@ msgstr "Try again"
 
 msgid "ui.update.version"
 msgstr "Needs version {version} or newer"
+
+msgid "ui.boss.back_hub"
+msgstr "Back to the Square"
+
+msgid "ui.boss.back_lobby"
+msgstr "Back to the party"
+
+msgid "ui.boss.back_zone"
+msgstr "Back to the land"
+
+msgid "ui.boss.chat"
+msgstr "Party chat"
+
+msgid "ui.boss.default_title"
+msgstr "Boss"
+
+msgid "ui.boss.defeated"
+msgstr "{boss} defeated!"
+
+msgid "ui.boss.defeated_before"
+msgstr "You beat this boss before"
+
+msgid "ui.boss.defeated_no_reward"
+msgstr "The party defeated {boss}! Next time answer a few more to earn the reward."
+
+msgid "ui.boss.energy"
+msgstr "Energy {pct}%"
+
+msgid "ui.boss.get_ready"
+msgstr "Get ready, the boss is coming!"
+
+msgid "ui.boss.gone"
+msgstr "This boss battle is over. Let us go back to the Square!"
+
+msgid "ui.boss.hit"
+msgstr "Your light hit the boss! Great job!"
+
+msgid "ui.boss.info_title"
+msgstr "Bosses of this land"
+
+msgid "ui.boss.invite_friends"
+msgstr "Invite friends"
+
+msgid "ui.boss.leave"
+msgstr "Leave"
+
+msgid "ui.boss.leave_confirm"
+msgstr "You will leave the boss battle. Your party can keep playing."
+
+msgid "ui.boss.leave_confirm_title"
+msgstr "Leave the boss battle?"
+
+msgid "ui.boss.line.phase_cleared"
+msgstr "{boss}: Wow, you are good! Watch me change!"
+
+msgid "ui.boss.line.phase_start"
+msgstr "{boss}: Try to answer my riddles!"
+
+msgid "ui.boss.load_failed"
+msgstr "Could not load the bosses. Please try again later."
+
+msgid "ui.boss.loading"
+msgstr "Looking for bosses…"
+
+msgid "ui.boss.member.me"
+msgstr "You"
+
+msgid "ui.boss.member.met"
+msgstr "Part done"
+
+msgid "ui.boss.member.ready"
+msgstr "Ready"
+
+msgid "ui.boss.member.reconnecting"
+msgstr "Reconnecting"
+
+msgid "ui.boss.member.trying"
+msgstr "Working on it"
+
+msgid "ui.boss.member.waiting"
+msgstr "Waiting"
+
+msgid "ui.boss.modes.party"
+msgstr "Play with friends"
+
+msgid "ui.boss.modes.solo"
+msgstr "Play alone"
+
+msgid "ui.boss.modes.solo_party"
+msgstr "Play alone or with friends"
+
+msgid "ui.boss.my_correct"
+msgstr "{n} right"
+
+msgid "ui.boss.need_contribution"
+msgstr "When each of you answers enough questions right, everyone gets the reward."
+
+msgid "ui.boss.next_phase_soon"
+msgstr "Well done! The next part starts soon…"
+
+msgid "ui.boss.none"
+msgstr "There is no boss for you in this land yet."
+
+msgid "ui.boss.party_size"
+msgstr "Party of {min}–{max}"
+
+msgid "ui.boss.phase"
+msgstr "Phase {n}/{total}"
+
+msgid "ui.boss.phase_count"
+msgstr "{n} phases"
+
+msgid "ui.boss.reached_phase"
+msgstr "You reached phase {n}/{total}. Keep going, next time you will beat {boss}!"
+
+msgid "ui.boss.reconnecting"
+msgstr "Reconnecting… Please wait a moment."
+
+msgid "ui.boss.result_title"
+msgstr "Boss battle result"
+
+msgid "ui.boss.retry_phase"
+msgstr "Try the phase again with new questions"
+
+msgid "ui.boss.review_hint"
+msgstr "Review a little and try again, you can do it!"
+
+msgid "ui.boss.sending"
+msgstr "Sending your answer…"
+
+msgid "ui.boss.solo"
+msgstr "Play alone"
+
+msgid "ui.boss.stay"
+msgstr "Stay"
+
+msgid "ui.boss.strike_back"
+msgstr "The boss bounced back! Let us look again:"
+
+msgid "ui.boss.submit"
+msgstr "Send answer"
+
+msgid "ui.boss.time_left"
+msgstr "Time left in this phase"
+
+msgid "ui.boss.waiting_party"
+msgstr "Waiting for the party to be ready…"
+
+msgid "ui.boss.waiting_question"
+msgstr "Your question is on its way…"
+
+msgid "ui.error.BOSS_ENCOUNTER_FULL"
+msgstr "This boss battle is full."
+
+msgid "ui.error.BOSS_PHASE_CLOSED"
+msgstr "This part is over, new questions are coming."
+
+msgid "ui.error.FRIEND_CODE_INVALID"
+msgstr "The code is wrong or has expired"
+
+msgid "ui.error.FRIEND_LIMIT_REACHED"
+msgstr "You already have many friends or pending requests."
+
+msgid "ui.error.PARTY_NOT_LEADER"
+msgstr "Only the party leader can choose this."
+
+msgid "ui.error.PERMISSION_DENIED"
+msgstr "You cannot do this yet."
+
+msgid "ui.error.ROOM_NOT_MEMBER"
+msgstr "You are no longer in this battle."
+
+msgid "ui.error.SOCIAL_SCOPE_VIOLATION"
+msgstr "You can only add friends from your school"
+
+msgid "ui.friendcode.create"
+msgstr "Make a code"
+
+msgid "ui.friendcode.create_again"
+msgstr "Make a new code"
+
+msgid "ui.friendcode.enter_title"
+msgstr "Enter a friend's code"
+
+msgid "ui.friendcode.expires_in"
+msgstr "{time} left"
+
+msgid "ui.friendcode.instructions"
+msgstr "Read this code to the friend next to you; it expires in {minutes} minutes"
+
+msgid "ui.friendcode.mine"
+msgstr "Your friend code"
+
+msgid "ui.friendcode.placeholder"
+msgstr "For example: K7M2QX"
+
+msgid "ui.friendcode.read_aloud"
+msgstr "Read aloud"
+
+msgid "ui.friendcode.send"
+msgstr "Send"
+
+msgid "ui.friends.accept"
+msgstr "Accept"
+
+msgid "ui.friends.add"
+msgstr "Add friend"
+
+msgid "ui.friends.block"
+msgstr "Block"
+
+msgid "ui.friends.block_confirm"
+msgstr "Block {nickname}?"
+
+msgid "ui.friends.block_hint"
+msgstr "They will not message, invite or meet you in matches. They are not told."
+
+msgid "ui.friends.blocked.blocks"
+msgstr "You blocked"
+
+msgid "ui.friends.blocked.mutes"
+msgstr "You muted"
+
+msgid "ui.friends.blocked.none_blocks"
+msgstr "You have not blocked anyone."
+
+msgid "ui.friends.blocked.none_mutes"
+msgstr "You have not muted anyone."
+
+msgid "ui.friends.blocked_done"
+msgstr "{nickname} is blocked."
+
+msgid "ui.friends.empty"
+msgstr "No friends yet. Say hi to someone nearby!"
+
+msgid "ui.friends.find.nearby"
+msgstr "Nearby"
+
+msgid "ui.friends.find.nearby_none"
+msgstr "No one is near you right now."
+
+msgid "ui.friends.gone"
+msgstr "The list was just updated."
+
+msgid "ui.friends.group.offline"
+msgstr "Offline ({count})"
+
+msgid "ui.friends.group.online"
+msgstr "Online ({count})"
+
+msgid "ui.friends.hidden_off"
+msgstr "Friends can see you are playing"
+
+msgid "ui.friends.hidden_on"
+msgstr "Hidden"
+
+msgid "ui.friends.hide_status"
+msgstr "Hide my status"
+
+msgid "ui.friends.invite_party"
+msgstr "Invite to party"
+
+msgid "ui.friends.level"
+msgstr "Level {level}"
+
+msgid "ui.friends.mute"
+msgstr "Mute"
+
+msgid "ui.friends.mute_confirm"
+msgstr "Mute {nickname}?"
+
+msgid "ui.friends.mute_hint"
+msgstr "You will not see their messages. They are not told."
+
+msgid "ui.friends.muted_done"
+msgstr "{nickname} is muted."
+
+msgid "ui.friends.offline"
+msgstr "No connection. Please try again later."
+
+msgid "ui.friends.party_invited"
+msgstr "Party invitation sent."
+
+msgid "ui.friends.pick_friend"
+msgstr "Tap a friend to see more!"
+
+msgid "ui.friends.presence.away"
+msgstr "Away"
+
+msgid "ui.friends.presence.in_activity"
+msgstr "Learning"
+
+msgid "ui.friends.presence.in_match"
+msgstr "In a match"
+
+msgid "ui.friends.presence.offline"
+msgstr "Offline"
+
+msgid "ui.friends.presence.online"
+msgstr "Online"
+
+msgid "ui.friends.presence.unknown"
+msgstr "—"
+
+msgid "ui.friends.rate_limited"
+msgstr "Too many requests. Try again in {minutes} minutes."
+
+msgid "ui.friends.reason_question"
+msgstr "Why? Tap a picture:"
+
+msgid "ui.friends.reject"
+msgstr "Decline"
+
+msgid "ui.friends.remove"
+msgstr "Unfriend"
+
+msgid "ui.friends.remove_confirm"
+msgstr "Unfriend {nickname}?"
+
+msgid "ui.friends.remove_hint"
+msgstr "You can add them again later."
+
+msgid "ui.friends.removed_done"
+msgstr "Friend removed."
+
+msgid "ui.friends.report"
+msgstr "Report"
+
+msgid "ui.friends.request_incoming"
+msgstr "Wants to be your friend"
+
+msgid "ui.friends.request_pending"
+msgstr "Pending"
+
+msgid "ui.friends.request_sent"
+msgstr "Friend request sent."
+
+msgid "ui.friends.requests.incoming"
+msgstr "Requests for you"
+
+msgid "ui.friends.requests.none_incoming"
+msgstr "No requests yet."
+
+msgid "ui.friends.requests.none_outgoing"
+msgstr "You have not sent any requests."
+
+msgid "ui.friends.requests.outgoing"
+msgstr "You sent"
+
+msgid "ui.friends.tab.blocked"
+msgstr "Blocked"
+
+msgid "ui.friends.tab.find"
+msgstr "Find friends"
+
+msgid "ui.friends.tab.friends"
+msgstr "Friends"
+
+msgid "ui.friends.tab.friends_count"
+msgstr "Friends {count}"
+
+msgid "ui.friends.tab.requests"
+msgstr "Requests"
+
+msgid "ui.friends.tab.requests_count"
+msgstr "Requests {count}"
+
+msgid "ui.friends.title"
+msgstr "Friends"
+
+msgid "ui.friends.unblock"
+msgstr "Unblock"
+
+msgid "ui.friends.unmute"
+msgstr "Unmute"
+
+msgid "ui.menu.friends"
+msgstr "Friends"
+
+msgid "ui.quest.clue.answer_final"
+msgstr "Answer the last question"
+
+msgid "ui.quest.clue.board"
+msgstr "Party board"
+
+msgid "ui.quest.clue.board_empty"
+msgstr "No clues on the board yet. Share your card!"
+
+msgid "ui.quest.clue.extra_role"
+msgstr "You now also hold the role {role}"
+
+msgid "ui.quest.clue.only_you"
+msgstr "Only you can see this card"
+
+msgid "ui.quest.clue.share"
+msgstr "Share the clue"
+
+msgid "ui.quest.clue.shared"
+msgstr "Shared"
+
+msgid "ui.quest.clue.shared_by"
+msgstr "Shared by {nickname}"
+
+msgid "ui.quest.coop.alone"
+msgstr "You are playing alone; every role is yours."
+
+msgid "ui.quest.coop.assign"
+msgstr "Give roles"
+
+msgid "ui.quest.coop.assign_none"
+msgstr "No roles to choose yet."
+
+msgid "ui.quest.coop.assign_roles"
+msgstr "Choose roles"
+
+msgid "ui.quest.coop.assign_title"
+msgstr "Leader chooses the roles"
+
+msgid "ui.quest.coop.chat"
+msgstr "Party chat"
+
+msgid "ui.quest.coop.group_progress"
+msgstr "Party {pct}%"
+
+msgid "ui.quest.coop.how"
+msgstr "Each of you holds a role and a clue card. Share your card on the board, then each answers the last question."
+
+msgid "ui.quest.coop.loading_card"
+msgstr "Loading the card…"
+
+msgid "ui.quest.coop.member_role"
+msgstr "{nickname}: {role}"
+
+msgid "ui.quest.coop.my_part_done"
+msgstr "You did your part"
+
+msgid "ui.quest.coop.my_part_needed"
+msgstr "Add a bit more of your part"
+
+msgid "ui.quest.coop.my_role"
+msgstr "Your role"
+
+msgid "ui.quest.coop.no_role_yet"
+msgstr "Your role is coming…"
+
+msgid "ui.quest.coop.offline"
+msgstr "No connection. Please try again later."
+
+msgid "ui.quest.coop.role_secret"
+msgstr "holds a role"
+
+msgid "ui.quest.coop.role_unnamed"
+msgstr "A role"
+
+msgid "ui.quest.coop.shared_done"
+msgstr "The party finished this step"
+
+msgid "ui.quest.coop.team"
+msgstr "The party"
+
+msgid "ui.quest.coop.title"
+msgstr "Solve it together"
+
+msgid "ui.quest.coop_step"
+msgstr "Solve together"
+
+msgid "ui.friends.view"
+msgstr "View"

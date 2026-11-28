@@ -45,3 +45,32 @@ make design-tokens-check
 ## 4. Bằng chứng cần nộp
 
 - Kết quả `make godot-test` (pass/fail), video kịch bản 3–7 và 11–13 trên hai thiết bị, ảnh `FriendsScreen`/`BossHud` ở `vi`/`en`, PC/mobile, số đo FPS kịch bản 9.
+
+## 5. Bằng chứng 2026-11-28 (phần Godot client)
+
+Chạy trên máy local, Godot 4.7.2 (headless cho GdUnit4, Compatibility/OpenGL cho ảnh), FakeHttp + FakeWebSocketPeer + fixture contract (TEST-ONLY, AGENTS R17) — **chưa** chạy với backend thật.
+
+| Tiêu chí | Test (pass) |
+|---|---|
+| F110-AC-01, AC-10 | `tests/unit/boss/test_boss_client.gd` (7) |
+| F110-AC-02, AC-03, AC-09 | `tests/unit/boss/test_boss_store.gd` (7) |
+| F110-AC-04, AC-05 | `tests/scene/test_question_panel_host.gd` (5) |
+| F110-AC-02, AC-03, AC-06, AC-07 | `tests/scene/test_boss_hud.gd` (6) |
+| F110-AC-08 | `tests/scene/test_boss_result.gd` (4) |
+| F110-AC-11 (CI guard) | `tests/perf/test_boss_arena_budget.gd` (1) — FPS lab chưa đo |
+| F110-AC-12, AC-13 | `tests/scene/test_party_progress_strip.gd` (4) |
+| F110-AC-14, AC-15, AC-16 | `tests/unit/quest/test_coop_quest_service.gd` (6) |
+| F110-AC-14, AC-16, AC-17, AC-18 | `tests/scene/test_interdependent_panel.gd` (8) |
+| F110-AC-19, AC-20, AC-21 | `tests/unit/social/test_social_service.gd` (5) |
+| F110-AC-22, AC-24, AC-25 | `tests/unit/social/test_social_actions.gd` (7) |
+| F110-AC-23 | `tests/scene/test_friend_code_widget.gd` (3) |
+| F110-AC-19, AC-24, AC-26 | `tests/scene/test_friends_screen.gd` (8) |
+| F110-AC-27 | `tests/scene/test_f110_i18n_layout.gd` (3) |
+| F110-AC-28 | `tests/scene/test_f110_theme.gd` (3), `tests/scene/test_f110_band_matrix.gd` (4: 19 màn × 4 khối × 4 cửa sổ, probe vật lý 12/40 CSS px), `tests/scene/ui/test_window_close_button.gd` (thêm friends, boss_info, coop_step) |
+| F110-AC-29 | `tests/unit/test_f110_privacy_arch.gd` (5) |
+| F110-AC-30 | `tests/unit/test_f110_auth_errors.gd` (4) |
+| Contract | `tests/contract/test_f110_fixtures.gd` (5) |
+
+Ảnh review (`screenshots/`, 75 ảnh): mọi màn F110 ở 1280×720, 844×390, 740×360, `vi`, `g1_3`; mẫu `en` ở 1280×720 và 844×390 (`friends`, `friends_find`, `boss_info`, `boss_question`, `boss_result_time_up`, `coop_step`). Lệnh: `godot --path src/game --rendering-method gl_compatibility --rendering-driver opengl3 -s res://tools/capture_screens.gd -- --out=<dir> --screens=f110_… --sizes=1280x720,844x390,740x360 --locales=vi-VN --band=g1_3`.
+
+Còn chờ: kịch bản §2 với backend thật và hai thiết bị (T035, T037), số đo FPS kịch bản 9 (SC-004).

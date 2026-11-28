@@ -14,6 +14,8 @@ const TILES: Array = [
 	# F109: Đấu trường (also K) and its leaderboards.
 	[&"arena", {}, "ui.menu.arena", "arena"],
 	[&"arena", {"tab": "leaderboard"}, "ui.menu.leaderboard", "podium"],
+	# F110: Bạn bè (also F).
+	[&"friends", {}, "ui.menu.friends", "group"],
 ]
 
 var _grid: GridContainer = null
@@ -51,8 +53,9 @@ func _ready() -> void:
 ## WorldRoot: `ui_requested("game_menu", {})`.
 func open(_args: Dictionary = {}) -> void:
 	show()
-	# F125: on the compact phone canvas (540 tall) the six tiles sit in two rows of three.
-	_grid.columns = 3 if AppState.compact else 2
+	# F125: on the compact phone canvas (540 tall) the tiles sit in rows of three; F110: seven tiles sit in two rows
+	# of four (a third row of two would not fit 720 tall at lớp 1–3).
+	_grid.columns = 4 if TILES.size() > 6 else (3 if AppState.compact else 2)
 	var t: float = UiBuild.target()
 	for b: Node in _grid.get_children():
 		# Never narrower than a long word ("Achievements") — no break inside a word.

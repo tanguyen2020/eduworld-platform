@@ -725,6 +725,156 @@ msgstr "[!! Ĺöáđïñğ… ~~~~ !!]"
 msgid "ui.boot.title"
 msgstr "[!! ẸđüŴöŕĺđ ~~~~ !!]"
 
+msgid "ui.boss.back_hub"
+msgstr "[!! Ɓáçķ ţö ţĥë Šqüáŕë ~~~~~~~~ !!]"
+
+msgid "ui.boss.back_lobby"
+msgstr "[!! Ɓáçķ ţö ţĥë þáŕţý ~~~~~~~ !!]"
+
+msgid "ui.boss.back_zone"
+msgstr "[!! Ɓáçķ ţö ţĥë ĺáñđ ~~~~~~~ !!]"
+
+msgid "ui.boss.chat"
+msgstr "[!! Páŕţý çĥáţ ~~~~ !!]"
+
+msgid "ui.boss.default_title"
+msgstr "[!! Ɓöšš ~~ !!]"
+
+msgid "ui.boss.defeated"
+msgstr "[!! {boss} đëƒëáţëđ! ~~~~~~~ !!]"
+
+msgid "ui.boss.defeated_before"
+msgstr "[!! Ýöü ƀëáţ ţĥïš ƀöšš ƀëƒöŕë ~~~~~~~~~~ !!]"
+
+msgid "ui.boss.defeated_no_reward"
+msgstr "[!! Ţĥë þáŕţý đëƒëáţëđ {boss}! Ñëxţ ţïɱë áñšŵëŕ á ƒëŵ ɱöŕë ţö ëáŕñ ţĥë ŕëŵáŕđ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.energy"
+msgstr "[!! Ẹñëŕğý {pct}% ~~~~~~ !!]"
+
+msgid "ui.boss.get_ready"
+msgstr "[!! Ğëţ ŕëáđý, ţĥë ƀöšš ïš çöɱïñğ! ~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.gone"
+msgstr "[!! Ţĥïš ƀöšš ƀáţţĺë ïš övëŕ. Ĺëţ üš ğö ƀáçķ ţö ţĥë Šqüáŕë! ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.hit"
+msgstr "[!! Ýöüŕ ĺïğĥţ ĥïţ ţĥë ƀöšš! Ğŕëáţ ĵöƀ! ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.info_title"
+msgstr "[!! Ɓöššëš öƒ ţĥïš ĺáñđ ~~~~~~~~ !!]"
+
+msgid "ui.boss.invite_friends"
+msgstr "[!! Ïñvïţë ƒŕïëñđš ~~~~~~ !!]"
+
+msgid "ui.boss.leave"
+msgstr "[!! Ĺëávë ~~ !!]"
+
+msgid "ui.boss.leave_confirm"
+msgstr "[!! Ýöü ŵïĺĺ ĺëávë ţĥë ƀöšš ƀáţţĺë. Ýöüŕ þáŕţý çáñ ķëëþ þĺáýïñğ. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.leave_confirm_title"
+msgstr "[!! Ĺëávë ţĥë ƀöšš ƀáţţĺë? ~~~~~~~~~ !!]"
+
+msgid "ui.boss.line.phase_cleared"
+msgstr "[!! {boss}: Ŵöŵ, ýöü áŕë ğööđ! Ŵáţçĥ ɱë çĥáñğë! ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.line.phase_start"
+msgstr "[!! {boss}: Ţŕý ţö áñšŵëŕ ɱý ŕïđđĺëš! ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.load_failed"
+msgstr "[!! Çöüĺđ ñöţ ĺöáđ ţĥë ƀöššëš. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.loading"
+msgstr "[!! Ĺööķïñğ ƒöŕ ƀöššëš… ~~~~~~~~ !!]"
+
+msgid "ui.boss.member.me"
+msgstr "[!! Ýöü ~~ !!]"
+
+msgid "ui.boss.member.met"
+msgstr "[!! Páŕţ đöñë ~~~~ !!]"
+
+msgid "ui.boss.member.ready"
+msgstr "[!! Ŕëáđý ~~ !!]"
+
+msgid "ui.boss.member.reconnecting"
+msgstr "[!! Ŕëçöññëçţïñğ ~~~~~ !!]"
+
+msgid "ui.boss.member.trying"
+msgstr "[!! Ŵöŕķïñğ öñ ïţ ~~~~~~ !!]"
+
+msgid "ui.boss.member.waiting"
+msgstr "[!! Ŵáïţïñğ ~~~ !!]"
+
+msgid "ui.boss.modes.party"
+msgstr "[!! Pĺáý ŵïţĥ ƒŕïëñđš ~~~~~~~ !!]"
+
+msgid "ui.boss.modes.solo"
+msgstr "[!! Pĺáý áĺöñë ~~~~ !!]"
+
+msgid "ui.boss.modes.solo_party"
+msgstr "[!! Pĺáý áĺöñë öŕ ŵïţĥ ƒŕïëñđš ~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.my_correct"
+msgstr "[!! {n} ŕïğĥţ ~~~~ !!]"
+
+msgid "ui.boss.need_contribution"
+msgstr "[!! Ŵĥëñ ëáçĥ öƒ ýöü áñšŵëŕš ëñöüğĥ qüëšţïöñš ŕïğĥţ, ëvëŕýöñë ğëţš ţĥë ŕëŵáŕđ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.next_phase_soon"
+msgstr "[!! Ŵëĺĺ đöñë! Ţĥë ñëxţ þáŕţ šţáŕţš šööñ… ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.none"
+msgstr "[!! Ţĥëŕë ïš ñö ƀöšš ƒöŕ ýöü ïñ ţĥïš ĺáñđ ýëţ. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.party_size"
+msgstr "[!! Páŕţý öƒ {min}–{max} ~~~~~~~~ !!]"
+
+msgid "ui.boss.phase"
+msgstr "[!! Pĥášë {n}/{total} ~~~~~~~ !!]"
+
+msgid "ui.boss.phase_count"
+msgstr "[!! {n} þĥášëš ~~~~ !!]"
+
+msgid "ui.boss.reached_phase"
+msgstr "[!! Ýöü ŕëáçĥëđ þĥášë {n}/{total}. Ķëëþ ğöïñğ, ñëxţ ţïɱë ýöü ŵïĺĺ ƀëáţ {boss}! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.reconnecting"
+msgstr "[!! Ŕëçöññëçţïñğ… Pĺëášë ŵáïţ á ɱöɱëñţ. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.result_title"
+msgstr "[!! Ɓöšš ƀáţţĺë ŕëšüĺţ ~~~~~~~~ !!]"
+
+msgid "ui.boss.retry_phase"
+msgstr "[!! Ţŕý ţĥë þĥášë áğáïñ ŵïţĥ ñëŵ qüëšţïöñš ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.review_hint"
+msgstr "[!! Ŕëvïëŵ á ĺïţţĺë áñđ ţŕý áğáïñ, ýöü çáñ đö ïţ! ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.sending"
+msgstr "[!! Šëñđïñğ ýöüŕ áñšŵëŕ… ~~~~~~~~ !!]"
+
+msgid "ui.boss.solo"
+msgstr "[!! Pĺáý áĺöñë ~~~~ !!]"
+
+msgid "ui.boss.stay"
+msgstr "[!! Šţáý ~~ !!]"
+
+msgid "ui.boss.strike_back"
+msgstr "[!! Ţĥë ƀöšš ƀöüñçëđ ƀáçķ! Ĺëţ üš ĺööķ áğáïñ: ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.submit"
+msgstr "[!! Šëñđ áñšŵëŕ ~~~~~ !!]"
+
+msgid "ui.boss.time_left"
+msgstr "[!! Ţïɱë ĺëƒţ ïñ ţĥïš þĥášë ~~~~~~~~~~ !!]"
+
+msgid "ui.boss.waiting_party"
+msgstr "[!! Ŵáïţïñğ ƒöŕ ţĥë þáŕţý ţö ƀë ŕëáđý… ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.boss.waiting_question"
+msgstr "[!! Ýöüŕ qüëšţïöñ ïš öñ ïţš ŵáý… ~~~~~~~~~~~~ !!]"
+
 msgid "ui.challenge.attempts_left"
 msgstr "[!! {n} ţŕïëš ĺëƒţ ţöđáý ~~~~~~~~ !!]"
 
@@ -1535,6 +1685,12 @@ msgstr "[!! Ţĥïš áţţëɱþţ ĥáš ëxþïŕëđ. ~~~~~~~~~~ !!]"
 msgid "ui.error.ATTEMPT_NOT_IN_PROGRESS"
 msgstr "[!! Ţĥïš áçţïvïţý ĥáš ëñđëđ; ñö ɱöŕë áñšŵëŕš çáñ ƀë šëñţ. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.BOSS_ENCOUNTER_FULL"
+msgstr "[!! Ţĥïš ƀöšš ƀáţţĺë ïš ƒüĺĺ. ~~~~~~~~~~ !!]"
+
+msgid "ui.error.BOSS_PHASE_CLOSED"
+msgstr "[!! Ţĥïš þáŕţ ïš övëŕ, ñëŵ qüëšţïöñš áŕë çöɱïñğ. ~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.CHALLENGE_ATTEMPT_LIMIT"
 msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ ţŕïëš ţöđáý, çöɱë ƀáçķ ţöɱöŕŕöŵ! ~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -1576,6 +1732,12 @@ msgstr "[!! Ţïɱë ïš üþ. ~~~~~ !!]"
 
 msgid "ui.error.EXAM_WINDOW_CLOSED"
 msgstr "[!! Ţĥïš ţëšţ ïš çĺöšëđ. ~~~~~~~~ !!]"
+
+msgid "ui.error.FRIEND_CODE_INVALID"
+msgstr "[!! Ţĥë çöđë ïš ŵŕöñğ öŕ ĥáš ëxþïŕëđ ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.FRIEND_LIMIT_REACHED"
+msgstr "[!! Ýöü áĺŕëáđý ĥávë ɱáñý ƒŕïëñđš öŕ þëñđïñğ ŕëqüëšţš. ~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
 msgstr "[!! Ţĥïš áççöüñţ ïš ƒöŕ šçĥööĺ šţáƒƒ áñđ çáññöţ ƀë üšëđ ţö þĺáý. Pĺëášë üšë ţĥë ẸđüŴöŕĺđ áđɱïñ þöŕţáĺ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
@@ -1628,6 +1790,12 @@ msgstr "[!! Ţĥïš áçţïvïţý çöüĺđñ'ţ ƀë ƒöüñđ. ~~~~~~~~~~
 msgid "ui.error.NO_ACTIVE_ENROLLMENT"
 msgstr "[!! Ýöüŕ šçĥööĺ áñđ ğŕáđë ƒöŕ ţĥïš šçĥööĺ ýëáŕ áŕë ñöţ šëţ ýëţ. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.PARTY_NOT_LEADER"
+msgstr "[!! Öñĺý ţĥë þáŕţý ĺëáđëŕ çáñ çĥööšë ţĥïš. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.PERMISSION_DENIED"
+msgstr "[!! Ýöü çáññöţ đö ţĥïš ýëţ. ~~~~~~~~~~ !!]"
+
 msgid "ui.error.PURCHASE_LIMIT_REACHED"
 msgstr "[!! Ýöü ĥávë ƀöüğĥţ áš ɱáñý öƒ ţĥïš áš ýöü çáñ. ~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -1643,8 +1811,14 @@ msgstr "[!! Ýöüŕ šëššïöñ ĥáš ëñđëđ, þĺëášë šïğñ ï�
 msgid "ui.error.REFRESH_TOKEN_REUSED"
 msgstr "[!! Ýöüŕ šëššïöñ ĥáš ëñđëđ, þĺëášë šïğñ ïñ áğáïñ. ~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.ROOM_NOT_MEMBER"
+msgstr "[!! Ýöü áŕë ñö ĺöñğëŕ ïñ ţĥïš ƀáţţĺë. ~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.SHOP_ITEM_UNAVAILABLE"
 msgstr "[!! Ţĥïš ïţëɱ ŵïĺĺ ƀë ƀáçķ ñëxţ šëášöñ. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.SOCIAL_SCOPE_VIOLATION"
+msgstr "[!! Ýöü çáñ öñĺý áđđ ƒŕïëñđš ƒŕöɱ ýöüŕ šçĥööĺ ~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.TENANT_ACCESS_DISABLED"
 msgstr "[!! Ýöüŕ šçĥööĺ ĥáš ñöţ öþëñëđ ẸđüŴöŕĺđ ýëţ. ~~~~~~~~~~~~~~~~ !!]"
@@ -1909,6 +2083,207 @@ msgstr "PM"
 
 msgid "ui.format.time"
 msgstr "{h}:{MM} {ampm}"
+
+msgid "ui.friendcode.create"
+msgstr "[!! Máķë á çöđë ~~~~~ !!]"
+
+msgid "ui.friendcode.create_again"
+msgstr "[!! Máķë á ñëŵ çöđë ~~~~~~ !!]"
+
+msgid "ui.friendcode.enter_title"
+msgstr "[!! Ẹñţëŕ á ƒŕïëñđ'š çöđë ~~~~~~~~~ !!]"
+
+msgid "ui.friendcode.expires_in"
+msgstr "[!! {time} ĺëƒţ ~~~~~ !!]"
+
+msgid "ui.friendcode.instructions"
+msgstr "[!! Ŕëáđ ţĥïš çöđë ţö ţĥë ƒŕïëñđ ñëxţ ţö ýöü; ïţ ëxþïŕëš ïñ {minutes} ɱïñüţëš ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friendcode.mine"
+msgstr "[!! Ýöüŕ ƒŕïëñđ çöđë ~~~~~~~ !!]"
+
+msgid "ui.friendcode.placeholder"
+msgstr "[!! Föŕ ëxáɱþĺë: Ķ7M2QX ~~~~~~~~ !!]"
+
+msgid "ui.friendcode.read_aloud"
+msgstr "[!! Ŕëáđ áĺöüđ ~~~~ !!]"
+
+msgid "ui.friendcode.send"
+msgstr "[!! Šëñđ ~~ !!]"
+
+msgid "ui.friends.accept"
+msgstr "[!! Åççëþţ ~~~ !!]"
+
+msgid "ui.friends.add"
+msgstr "[!! Åđđ ƒŕïëñđ ~~~~ !!]"
+
+msgid "ui.friends.block"
+msgstr "[!! Ɓĺöçķ ~~ !!]"
+
+msgid "ui.friends.block_confirm"
+msgstr "[!! Ɓĺöçķ {nickname}? ~~~~~~~ !!]"
+
+msgid "ui.friends.block_hint"
+msgstr "[!! Ţĥëý ŵïĺĺ ñöţ ɱëššáğë, ïñvïţë öŕ ɱëëţ ýöü ïñ ɱáţçĥëš. Ţĥëý áŕë ñöţ ţöĺđ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.blocked.blocks"
+msgstr "[!! Ýöü ƀĺöçķëđ ~~~~~ !!]"
+
+msgid "ui.friends.blocked.mutes"
+msgstr "[!! Ýöü ɱüţëđ ~~~~ !!]"
+
+msgid "ui.friends.blocked.none_blocks"
+msgstr "[!! Ýöü ĥávë ñöţ ƀĺöçķëđ áñýöñë. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.blocked.none_mutes"
+msgstr "[!! Ýöü ĥávë ñöţ ɱüţëđ áñýöñë. ~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.blocked_done"
+msgstr "[!! {nickname} ïš ƀĺöçķëđ. ~~~~~~~~~ !!]"
+
+msgid "ui.friends.empty"
+msgstr "[!! Ñö ƒŕïëñđš ýëţ. Šáý ĥï ţö šöɱëöñë ñëáŕƀý! ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.find.nearby"
+msgstr "[!! Ñëáŕƀý ~~~ !!]"
+
+msgid "ui.friends.find.nearby_none"
+msgstr "[!! Ñö öñë ïš ñëáŕ ýöü ŕïğĥţ ñöŵ. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.gone"
+msgstr "[!! Ţĥë ĺïšţ ŵáš ĵüšţ üþđáţëđ. ~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.group.offline"
+msgstr "[!! Öƒƒĺïñë ({count}) ~~~~~~~ !!]"
+
+msgid "ui.friends.group.online"
+msgstr "[!! Öñĺïñë ({count}) ~~~~~~~ !!]"
+
+msgid "ui.friends.hidden_off"
+msgstr "[!! Fŕïëñđš çáñ šëë ýöü áŕë þĺáýïñğ ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.hidden_on"
+msgstr "[!! Ĥïđđëñ ~~~ !!]"
+
+msgid "ui.friends.hide_status"
+msgstr "[!! Ĥïđë ɱý šţáţüš ~~~~~~ !!]"
+
+msgid "ui.friends.invite_party"
+msgstr "[!! Ïñvïţë ţö þáŕţý ~~~~~~ !!]"
+
+msgid "ui.friends.level"
+msgstr "[!! Ĺëvëĺ {level} ~~~~~~ !!]"
+
+msgid "ui.friends.mute"
+msgstr "[!! Müţë ~~ !!]"
+
+msgid "ui.friends.mute_confirm"
+msgstr "[!! Müţë {nickname}? ~~~~~~~ !!]"
+
+msgid "ui.friends.mute_hint"
+msgstr "[!! Ýöü ŵïĺĺ ñöţ šëë ţĥëïŕ ɱëššáğëš. Ţĥëý áŕë ñöţ ţöĺđ. ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.muted_done"
+msgstr "[!! {nickname} ïš ɱüţëđ. ~~~~~~~~ !!]"
+
+msgid "ui.friends.offline"
+msgstr "[!! Ñö çöññëçţïöñ. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.party_invited"
+msgstr "[!! Páŕţý ïñvïţáţïöñ šëñţ. ~~~~~~~~~ !!]"
+
+msgid "ui.friends.pick_friend"
+msgstr "[!! Ţáþ á ƒŕïëñđ ţö šëë ɱöŕë! ~~~~~~~~~~ !!]"
+
+msgid "ui.friends.presence.away"
+msgstr "[!! Åŵáý ~~ !!]"
+
+msgid "ui.friends.presence.in_activity"
+msgstr "[!! Ĺëáŕñïñğ ~~~~ !!]"
+
+msgid "ui.friends.presence.in_match"
+msgstr "[!! Ïñ á ɱáţçĥ ~~~~ !!]"
+
+msgid "ui.friends.presence.offline"
+msgstr "[!! Öƒƒĺïñë ~~~ !!]"
+
+msgid "ui.friends.presence.online"
+msgstr "[!! Öñĺïñë ~~~ !!]"
+
+msgid "ui.friends.presence.unknown"
+msgstr "[!! — ~ !!]"
+
+msgid "ui.friends.rate_limited"
+msgstr "[!! Ţöö ɱáñý ŕëqüëšţš. Ţŕý áğáïñ ïñ {minutes} ɱïñüţëš. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.reason_question"
+msgstr "[!! Ŵĥý? Ţáþ á þïçţüŕë: ~~~~~~~~ !!]"
+
+msgid "ui.friends.reject"
+msgstr "[!! Đëçĺïñë ~~~ !!]"
+
+msgid "ui.friends.remove"
+msgstr "[!! Üñƒŕïëñđ ~~~~ !!]"
+
+msgid "ui.friends.remove_confirm"
+msgstr "[!! Üñƒŕïëñđ {nickname}? ~~~~~~~~ !!]"
+
+msgid "ui.friends.remove_hint"
+msgstr "[!! Ýöü çáñ áđđ ţĥëɱ áğáïñ ĺáţëŕ. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.removed_done"
+msgstr "[!! Fŕïëñđ ŕëɱövëđ. ~~~~~~ !!]"
+
+msgid "ui.friends.report"
+msgstr "[!! Ŕëþöŕţ ~~~ !!]"
+
+msgid "ui.friends.request_incoming"
+msgstr "[!! Ŵáñţš ţö ƀë ýöüŕ ƒŕïëñđ ~~~~~~~~~~ !!]"
+
+msgid "ui.friends.request_pending"
+msgstr "[!! Pëñđïñğ ~~~ !!]"
+
+msgid "ui.friends.request_sent"
+msgstr "[!! Fŕïëñđ ŕëqüëšţ šëñţ. ~~~~~~~~ !!]"
+
+msgid "ui.friends.requests.incoming"
+msgstr "[!! Ŕëqüëšţš ƒöŕ ýöü ~~~~~~~ !!]"
+
+msgid "ui.friends.requests.none_incoming"
+msgstr "[!! Ñö ŕëqüëšţš ýëţ. ~~~~~~~ !!]"
+
+msgid "ui.friends.requests.none_outgoing"
+msgstr "[!! Ýöü ĥávë ñöţ šëñţ áñý ŕëqüëšţš. ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.requests.outgoing"
+msgstr "[!! Ýöü šëñţ ~~~~ !!]"
+
+msgid "ui.friends.tab.blocked"
+msgstr "[!! Ɓĺöçķëđ ~~~ !!]"
+
+msgid "ui.friends.tab.find"
+msgstr "[!! Fïñđ ƒŕïëñđš ~~~~~ !!]"
+
+msgid "ui.friends.tab.friends"
+msgstr "[!! Fŕïëñđš ~~~ !!]"
+
+msgid "ui.friends.tab.friends_count"
+msgstr "[!! Fŕïëñđš {count} ~~~~~~ !!]"
+
+msgid "ui.friends.tab.requests"
+msgstr "[!! Ŕëqüëšţš ~~~~ !!]"
+
+msgid "ui.friends.tab.requests_count"
+msgstr "[!! Ŕëqüëšţš {count} ~~~~~~~ !!]"
+
+msgid "ui.friends.title"
+msgstr "[!! Fŕïëñđš ~~~ !!]"
+
+msgid "ui.friends.unblock"
+msgstr "[!! Üñƀĺöçķ ~~~ !!]"
+
+msgid "ui.friends.unmute"
+msgstr "[!! Üñɱüţë ~~~ !!]"
 
 msgid "ui.gallery.button.hint"
 msgstr "[!! Ĥïñţ ~~ !!]"
@@ -2546,6 +2921,9 @@ msgstr "[!! Åŕëñá ~~ !!]"
 msgid "ui.menu.challenges"
 msgstr "[!! Çĥáĺĺëñğë Möüñţáïñ ~~~~~~~~ !!]"
 
+msgid "ui.menu.friends"
+msgstr "[!! Fŕïëñđš ~~~ !!]"
+
 msgid "ui.menu.journey"
 msgstr "[!! Mý ĵöüŕñëý ~~~~ !!]"
 
@@ -3157,6 +3535,93 @@ msgstr "[!! Ğŕáþĥïçš ~~~~ !!]"
 
 msgid "ui.quest.accept"
 msgstr "[!! Åççëþţ ~~~ !!]"
+
+msgid "ui.quest.clue.answer_final"
+msgstr "[!! Åñšŵëŕ ţĥë ĺášţ qüëšţïöñ ~~~~~~~~~~ !!]"
+
+msgid "ui.quest.clue.board"
+msgstr "[!! Páŕţý ƀöáŕđ ~~~~~ !!]"
+
+msgid "ui.quest.clue.board_empty"
+msgstr "[!! Ñö çĺüëš öñ ţĥë ƀöáŕđ ýëţ. Šĥáŕë ýöüŕ çáŕđ! ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.clue.extra_role"
+msgstr "[!! Ýöü ñöŵ áĺšö ĥöĺđ ţĥë ŕöĺë {role} ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.clue.only_you"
+msgstr "[!! Öñĺý ýöü çáñ šëë ţĥïš çáŕđ ~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.clue.share"
+msgstr "[!! Šĥáŕë ţĥë çĺüë ~~~~~~ !!]"
+
+msgid "ui.quest.clue.shared"
+msgstr "[!! Šĥáŕëđ ~~~ !!]"
+
+msgid "ui.quest.clue.shared_by"
+msgstr "[!! Šĥáŕëđ ƀý {nickname} ~~~~~~~~ !!]"
+
+msgid "ui.quest.coop.alone"
+msgstr "[!! Ýöü áŕë þĺáýïñğ áĺöñë; ëvëŕý ŕöĺë ïš ýöüŕš. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.coop.assign"
+msgstr "[!! Ğïvë ŕöĺëš ~~~~ !!]"
+
+msgid "ui.quest.coop.assign_none"
+msgstr "[!! Ñö ŕöĺëš ţö çĥööšë ýëţ. ~~~~~~~~~~ !!]"
+
+msgid "ui.quest.coop.assign_roles"
+msgstr "[!! Çĥööšë ŕöĺëš ~~~~~ !!]"
+
+msgid "ui.quest.coop.assign_title"
+msgstr "[!! Ĺëáđëŕ çĥööšëš ţĥë ŕöĺëš ~~~~~~~~~~ !!]"
+
+msgid "ui.quest.coop.chat"
+msgstr "[!! Páŕţý çĥáţ ~~~~ !!]"
+
+msgid "ui.quest.coop.group_progress"
+msgstr "[!! Páŕţý {pct}% ~~~~~ !!]"
+
+msgid "ui.quest.coop.how"
+msgstr "[!! Ẹáçĥ öƒ ýöü ĥöĺđš á ŕöĺë áñđ á çĺüë çáŕđ. Šĥáŕë ýöüŕ çáŕđ öñ ţĥë ƀöáŕđ, ţĥëñ ëáçĥ áñšŵëŕš ţĥë ĺášţ qüëšţïöñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.coop.loading_card"
+msgstr "[!! Ĺöáđïñğ ţĥë çáŕđ… ~~~~~~~ !!]"
+
+msgid "ui.quest.coop.member_role"
+msgstr "[!! {nickname}: {role} ~~~~~~~~ !!]"
+
+msgid "ui.quest.coop.my_part_done"
+msgstr "[!! Ýöü đïđ ýöüŕ þáŕţ ~~~~~~~ !!]"
+
+msgid "ui.quest.coop.my_part_needed"
+msgstr "[!! Åđđ á ƀïţ ɱöŕë öƒ ýöüŕ þáŕţ ~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.coop.my_role"
+msgstr "[!! Ýöüŕ ŕöĺë ~~~~ !!]"
+
+msgid "ui.quest.coop.no_role_yet"
+msgstr "[!! Ýöüŕ ŕöĺë ïš çöɱïñğ… ~~~~~~~~ !!]"
+
+msgid "ui.quest.coop.offline"
+msgstr "[!! Ñö çöññëçţïöñ. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.coop.role_secret"
+msgstr "[!! ĥöĺđš á ŕöĺë ~~~~~ !!]"
+
+msgid "ui.quest.coop.role_unnamed"
+msgstr "[!! Å ŕöĺë ~~~ !!]"
+
+msgid "ui.quest.coop.shared_done"
+msgstr "[!! Ţĥë þáŕţý ƒïñïšĥëđ ţĥïš šţëþ ~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.coop.team"
+msgstr "[!! Ţĥë þáŕţý ~~~~ !!]"
+
+msgid "ui.quest.coop.title"
+msgstr "[!! Šöĺvë ïţ ţöğëţĥëŕ ~~~~~~~ !!]"
+
+msgid "ui.quest.coop_step"
+msgstr "[!! Šöĺvë ţöğëţĥëŕ ~~~~~~ !!]"
 
 msgid "ui.quest.due"
 msgstr "[!! Đüë: {date} {time} ~~~~~~~~ !!]"

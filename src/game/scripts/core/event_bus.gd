@@ -36,3 +36,7 @@ signal level_up_shown(to_level: int)
 ## F069: the Xu balance changed (server value: `getWallet` or `balance_after`).
 @warning_ignore("unused_signal")
 signal wallet_changed(balance: int)
+## F110: a friend request arrived (realtime `notification.item.created` kind `friend_request`) — the friends screen reads
+## its requests again; only the bell count rises during a boss phase / an exam.
+@warning_ignore("unused_signal")
+signal friend_request_received(request_id: String)

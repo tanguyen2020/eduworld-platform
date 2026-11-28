@@ -56,7 +56,7 @@ const ACTION_SCREENS: Dictionary = {
 	"open_assignment_result": [&"quest_journal", {"tab": "assigned"}],
 	"open_achievements": [&"achievements", {}],
 	"open_profile": [&"journey", {}],
-	"open_friend_requests": [&"friend_requests", {}],
+	"open_friend_requests": [&"friends", {"tab": "requests"}],
 	"open_party_invitation": [&"party", {"view": "invitations"}],
 }
 ## F109-AC-26: kinds that open a screen without an `action` — the screen gets the `ref_id` as `tournament_id`
