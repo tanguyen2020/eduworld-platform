@@ -95,6 +95,34 @@ func refresh() -> ApiResult:
 	return last
 
 
+## F111-AC-15 (Event center "Hôm nay" / "Tuần này"): `listQuests` with `quest_type` (daily / weekly), merged into the
+## list (a known quest keeps its steps). The progress shown is the server's `QuestProgress`; nothing is counted here.
+func load_type(quest_type: String) -> ApiResult:
+	var result: ApiResult = await _send(ApiRequest.make_get(PATH, {"quest_type": quest_type, "limit": PAGE_LIMIT}))
+	if not result.ok or not result.body().get("data") is Array:
+		return result
+	for d: Variant in result.body()["data"] as Array:
+		var q: QuestModel = QuestModel.from_dict(d)
+		if q == null:
+			continue
+		var old: QuestModel = quest(q.quest_id)
+		if old == null:
+			quests.append(q)
+		else:
+			old.apply(d as Dictionary)
+	quests_updated.emit(quests.size())
+	return result
+
+
+## The quests of `quest_type` the list holds (server order).
+func of_type(quest_type: String) -> Array[QuestModel]:
+	var out: Array[QuestModel] = []
+	for q: QuestModel in quests:
+		if q.quest_type == quest_type:
+			out.append(q)
+	return out
+
+
 ## `getQuest`: merges the delivery (steps, texts, progress) into the list.
 func fetch_detail(quest_id: String) -> ApiResult:
 	var result: ApiResult = await _send(ApiRequest.make_get("%s/%s" % [PATH, quest_id.uri_encode()]))

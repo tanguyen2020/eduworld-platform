@@ -40,6 +40,10 @@ var _notice: PanelContainer = null
 var _notice_label: Label = null
 var _notice_left: float = 0.0
 var _cards: Dictionary = {}
+var _today: QuestDayTab = null
+var _week: QuestDayTab = null
+var _season: SeasonTab = null
+var season_service: SeasonTrackService = null
 
 
 func _ready() -> void:
@@ -110,6 +114,8 @@ func select_tab(next: String) -> void:
 		b.set_pressed_no_signal(id == tab)
 	for id: String in _pages.keys():
 		(_pages[id] as Control).visible = id == tab
+	if visible:
+		_load_tab()
 	render()
 
 
@@ -117,6 +123,35 @@ func render() -> void:
 	if live == null:
 		return
 	_render_events()
+	_render_quests()
+	_render_season()
+
+
+## Coroutine: the data of the tab on screen (quests by type through QuestService, the season track).
+func _load_tab() -> void:
+	match tab:
+		TAB_TODAY, TAB_WEEK:
+			if services != null and services.quest != null:
+				await services.quest.load_type("daily" if tab == TAB_TODAY else "weekly")
+				_render_quests()
+		TAB_SEASON:
+			if season_service != null:
+				await season_service.load_track()
+				if season_service != null:
+					await season_service.load_history()
+
+
+func _render_quests() -> void:
+	if services == null or services.quest == null:
+		return
+	var now: int = live.now_unix() if live != null else 0
+	_today.show_quests(services.quest.of_type("daily"), now)
+	_week.show_quests(services.quest.of_type("weekly"), now)
+
+
+func _render_season() -> void:
+	if season_service != null:
+		_season.show_track(season_service.store, UiBuild.band())
 
 
 ## Coroutine: the detail of `event_id` (the list stays under it).
@@ -142,6 +177,18 @@ func tab_button(id: String) -> Button:
 
 func card(event_id: String) -> EventCard:
 	return _cards.get(event_id) as EventCard
+
+
+func today_view() -> QuestDayTab:
+	return _today
+
+
+func week_view() -> QuestDayTab:
+	return _week
+
+
+func season_view() -> SeasonTab:
+	return _season
 
 
 func detail_view() -> EventDetailPanel:
@@ -196,6 +243,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _bind() -> void:
 	_unbind()
 	live = services.live_events if services != null else null
+	season_service = services.season if services != null else null
 	if live == null:
 		return
 	for pair: Array in _pairs():
@@ -209,12 +257,18 @@ func _unbind() -> void:
 		if (pair[0] as Signal).is_connected(pair[1] as Callable):
 			(pair[0] as Signal).disconnect(pair[1] as Callable)
 	live = null
+	season_service = null
 
 
 func _pairs() -> Array:
-	return [[live.store.events_changed, render], [live.store.detail_changed, _on_detail_changed],
+	var out: Array = [[live.store.events_changed, render], [live.store.detail_changed, _on_detail_changed],
 		[live.notice_requested, show_notice], [live.detail_closed, _on_detail_closed], [live.reward_claimed, _on_rewards],
 		[live.busy_changed, _on_busy]]
+	if season_service != null:
+		out.append_array([[season_service.store.track_changed, _render_season], [season_service.store.history_changed, _render_season],
+			[season_service.notice_requested, show_notice], [season_service.reward_claimed, _on_rewards],
+			[season_service.busy_changed, _on_season_busy]])
+	return out
 
 
 # ---------- events tab ----------
@@ -272,6 +326,15 @@ func _on_rewards(rewards: Array) -> void:
 
 func _on_busy(busy: bool) -> void:
 	_detail.set_busy(busy)
+
+
+func _on_season_busy(busy: bool) -> void:
+	_season.set_busy(busy)
+
+
+func _on_tier_claim(tier: int) -> void:
+	if season_service != null:
+		await season_service.claim_tier(tier)
 
 
 func _on_join(event_id: String) -> void:
@@ -333,6 +396,30 @@ func _build() -> void:
 
 
 func _build_pages(pages: Control) -> void:
+	_today = QuestDayTab.new("daily")
+	_today.go_requested.connect(_on_go)
+	_pages[TAB_TODAY] = _scroll_page(pages, _today, "TodayPage")
+	_week = QuestDayTab.new("weekly")
+	_week.go_requested.connect(_on_go)
+	_pages[TAB_WEEK] = _scroll_page(pages, _week, "WeekPage")
+	_build_events(pages)
+	_season = SeasonTab.new()
+	_season.claim_requested.connect(_on_tier_claim)
+	_pages[TAB_SEASON] = _scroll_page(pages, _season, "SeasonPage")
+
+
+func _scroll_page(parent: Control, content: Control, page_name: String) -> Control:
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.name = page_name
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	UiBuild.expand(scroll, true, true)
+	UiBuild.expand(content)
+	scroll.add_child(content)
+	parent.add_child(scroll)
+	return scroll
+
+
+func _build_events(pages: Control) -> void:
 	var events: VBoxContainer = UiBuild.vbox()
 	events.name = "EventsPage"
 	UiBuild.expand(events, true, true)

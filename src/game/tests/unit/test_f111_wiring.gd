@@ -52,7 +52,7 @@ func test_services_are_built_dispatched_and_cleared() -> void:
 	h.http.reply(F111Fixtures.ROUTE_EVENTS, 200, F111Fixtures.events(now))
 	h.http.reply(F111Fixtures.ROUTE_SEASON, 200, F111Fixtures.season())
 	await services.live_events.load_list()
-	await services.season.load()
+	await services.season.load_track()
 	rt.push(rt.envelope("event.progress.updated", F111Fixtures.ws("event.progress.updated", {
 		"event_id": F111Fixtures.EVENT_FESTIVAL, "event_run_id": F111Fixtures.RUN_FESTIVAL, "event_points": 140,
 		"daily_points_remaining": 60, "milestones_reached": []})))
