@@ -353,7 +353,7 @@ lint: ## gofmt, go vet, golangci-lint + generated depguard rules (MOD=<module> t
 	$(GO) vet -tags integration ./...
 	$(GO) run ./tools/lint/ewlint $(if $(MOD),./modules/$(MOD)/...,./...)
 	cd $(BACKEND) && golangci-lint run --build-tags integration $(if $(MOD),./modules/$(MOD)/...,./...)
-	cd $(BACKEND) && golangci-lint run --config .golangci.arch.yml $(if $(MOD),./modules/$(MOD)/...,./...)
+	cd $(BACKEND) && golangci-lint run --build-tags integration --config .golangci.arch.yml $(if $(MOD),./modules/$(MOD)/...,./...)
 
 # -race needs cgo (always on in CI/Linux; often off on Windows without gcc).
 RACE := $(if $(filter 1,$(shell go env CGO_ENABLED)),-race,)
