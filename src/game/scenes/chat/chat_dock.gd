@@ -25,6 +25,8 @@ enum Mode { EXPANDED, COLLAPSED, MINI }
 
 const CONTEXT_PARTY: StringName = &"party"
 const CONTEXT_MATCH: StringName = &"match"
+## F111: the fixed `team` channel of a club (`Club.chat_channel_id`), opened by "Chat club" of the club page.
+const CONTEXT_CLUB: StringName = &"club"
 ## Seconds a notice stays (≥ 3 s reading time, STUDENT_GAME_UX §4); the care message stays until closed.
 const NOTICE_SEC: float = 5.0
 ## Typing / receipt redraws at most once a second (STUDENT_GAME_UX_SOCIAL §7 "gộp cập nhật 1 lần/giây").
@@ -162,6 +164,12 @@ func show_party(party_id: String, channel_id: String, others: Array[Dictionary] 
 	_open(CONTEXT_PARTY, party_id, [[channel_id, ChatChannelModel.TYPE_PARTY]], others)
 
 
+## F111 (F111-AC-24): a club page — the club's fixed `team` channel; reading only when the club is archived (the
+## server closes writing, ChatChannelModel).
+func show_club(club_id: String, channel_id: String) -> void:
+	_open(CONTEXT_CLUB, club_id, [[channel_id, ChatChannelModel.TYPE_TEAM]], [] as Array[Dictionary])
+
+
 ## Match: `match_channel_id` ("Cả trận") and, in a team battle, the student's `team_channel_id` ("Đội").
 func show_match(match_id: String, match_channel_id: String, team_channel_id: String = "",
 		others: Array[Dictionary] = []) -> void:
@@ -204,7 +212,8 @@ func _open(kind: StringName, id: String, list: Array, others: Array[Dictionary])
 	channel_ids = ids
 	set_members(others)
 	_build_tabs()
-	_title.text = "ui.chat.title.match" if kind == CONTEXT_MATCH else "ui.chat.title.party"
+	_title.text = "ui.chat.title.match" if kind == CONTEXT_MATCH else ("ui.chat.title.club" if kind == CONTEXT_CLUB
+			else "ui.chat.title.party")
 	if service == null or ids.is_empty():
 		return
 	for pair: Array in list:

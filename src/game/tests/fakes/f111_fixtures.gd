@@ -417,11 +417,12 @@ static func script(http: FakeHttp, self_id: String, now_sec: int) -> void:
 	http.reply(ROUTE_CLUBS_MINE, 200, mine())
 	http.reply(ROUTE_CLUBS_DISCOVER, 200, discoverable())
 	http.reply(ROUTE_INVITATIONS, 200, invitations())
-	http.reply(ROUTE_CLUB, 200, club(CLUB_OWN, "Nhà thám hiểm nhí", "interest_group", "active", "owner", 6))
+	# The sub-resources first: ROUTE_CLUB (`/social/clubs/*`) would also match `/social/clubs/<id>/members`.
 	http.reply(ROUTE_CLUB_MEMBERS, 200, members(self_id))
 	http.reply(ROUTE_CLUB_GOALS, 200, goals())
 	http.reply(ROUTE_CLUB_EVENTS, 200, club_events(now_sec))
 	http.reply(ROUTE_CLUB_REQUESTS, 200, join_requests())
+	http.reply(ROUTE_CLUB, 200, club(CLUB_OWN, "Nhà thám hiểm nhí", "interest_group", "active", "owner", 6))
 	http.reply(ROUTE_REQUEST_JOIN, 201, join_request(REQUEST_ID, "MeoXanh42", self_id))
 	http.reply(ROUTE_ACCEPT_REQUEST, 200, member(FRIEND_OFFLINE, "ThoTrang03"))
 	http.reply(ROUTE_REJECT_REQUEST, 204)

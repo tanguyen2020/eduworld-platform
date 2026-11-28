@@ -9,6 +9,9 @@ extends Control
 ## - "Lời mời": incoming with Đồng ý / Từ chối, sent ones always "Đang chờ" (AC-21);
 ## - "Tìm bạn": "Ở gần đây" with "Kết bạn" and the friend code — no search field (AC-22, AC-23);
 ## - "Đã chặn": blocks and mutes with undo (AC-25).
+## F111: "Tham gia bạn" on the profile (JoinFriendService), "Vừa chơi cùng" in Tìm bạn (SuggestionGroup) and the "Club"
+## tab (FriendsClubs → ClubTab / ClubPage / the create form / the invite picker / the club chat; deep link
+## `{tab: "clubs", id}`).
 ## Only nicknames, portraits, levels and level titles of other players (R16); nothing on disk. UI only: SocialService /
 ## PresenceService / PartyService do the work (AGENTS R1).
 
@@ -18,11 +21,13 @@ const TAB_FRIENDS: String = "friends"
 const TAB_REQUESTS: String = "requests"
 const TAB_FIND: String = "find"
 const TAB_BLOCKED: String = "blocked"
+const TAB_CLUBS: String = "clubs"
 ## [id, label key, icon, icon on the selected (blue) tab].
 const TABS: Array = [
 	[TAB_FRIENDS, "ui.friends.tab.friends", "group", "group"],
 	[TAB_REQUESTS, "ui.friends.tab.requests", "invite", "invite_light"],
 	[TAB_FIND, "ui.friends.tab.find", "search", "search_light"],
+	[TAB_CLUBS, "ui.friends.tab.clubs", "flag", "flag"],
 	[TAB_BLOCKED, "ui.friends.tab.blocked", "block", "block"],
 ]
 const NOTICE_SEC: float = 4.0
@@ -57,6 +62,8 @@ var _sheet: ChatSheet = null
 var _confirm: ChatSheet = null
 var _dialogs: ChatDialogs = null
 var _pending: Dictionary = {}
+var _clubs: FriendsClubs = null
+var _club_open_id: String = ""
 
 
 func _ready() -> void:
@@ -77,6 +84,8 @@ func open(args: Dictionary = {}) -> void:
 	if services == null and AppState.services != null:
 		services = AppState.get_services()
 	_bind(services.social if services != null else null)
+	_clubs.bind(services.clubs if services != null else null)
+	_club_open_id = String(args.get("id", "")) if String(args.get("tab", "")) == TAB_CLUBS else ""
 	show()
 	UiMotion.pop_in(_ui["window"] as Control, Settings.reduce_motion)
 	select_tab(String(args.get("tab", TAB_FRIENDS)))
@@ -87,8 +96,10 @@ func open(args: Dictionary = {}) -> void:
 func close() -> void:
 	_sheet.dismiss()
 	_confirm.dismiss()
+	_clubs.close()
 	hide()
 	_unbind()
+	_clubs.unbind()
 	closed.emit()
 
 
@@ -125,6 +136,10 @@ func select_tab(next: String) -> void:
 		social.load_relations()
 	if tab == TAB_FIND and social != null and visible:
 		_load_find()
+	if tab == TAB_CLUBS and visible:
+		var id: String = _club_open_id
+		_club_open_id = ""
+		_clubs.load_tab(id)
 	render()
 
 
@@ -139,6 +154,7 @@ func render() -> void:
 	_requests.set_requests(s.incoming, s.outgoing)
 	_render_find()
 	_blocks.set_relations(s.blocks, s.mutes)
+	_clubs.render()
 
 
 # ---------- test hooks ----------
@@ -157,6 +173,23 @@ func requests_view() -> FriendRequestList:
 
 func find_view() -> FindFriendsTab:
 	return _find
+
+
+## F111: the club tab and its dialogs (tests).
+func club_view() -> ClubTab:
+	return _clubs.tab
+
+
+func club_form() -> ClubCreateDialog:
+	return _clubs.form
+
+
+func invite_picker() -> ClubInvitePicker:
+	return _clubs.picker
+
+
+func club_chat_dock() -> ChatDock:
+	return _clubs.chat_dock
 
 
 func block_view() -> BlockList:
@@ -369,11 +402,26 @@ func _ask_remove(f: FriendModel) -> void:
 	body.add_child(UiBuild.keep_words(UiBuild.label("ui.friends.remove_hint")))
 	_confirm.add_button(ChatSheet.CANCEL, "ui.common.cancel", "cancel")
 	_confirm.add_button(ACT_CONFIRM, "ui.friends.remove", "check", &"")
+	_confirm.set_meta("confirm_kind", "remove")
 	_confirm.set_meta("remove_id", f.user_id)
+
+
+## F111-AC-24: "Rời club" asks once (one confirmation, then ClubService.leave).
+func ask_leave_club(club: ClubModel) -> void:
+	var body: VBoxContainer = _confirm.open_sheet(TranslationServer.translate("ui.club.leave_confirm").format(
+			{"club": club.name}), true)
+	body.add_child(UiBuild.keep_words(UiBuild.label("ui.club.leave_hint")))
+	_confirm.add_button(ChatSheet.CANCEL, "ui.common.cancel", "cancel")
+	_confirm.add_button(ACT_CONFIRM, "ui.club.leave", "exit_light", &"")
+	_confirm.set_meta("confirm_kind", "leave_club")
+	_confirm.set_meta("club_id", club.club_id)
 
 
 func _on_confirm_chosen(action: StringName) -> void:
 	if action != ACT_CONFIRM or social == null:
+		return
+	if String(_confirm.get_meta("confirm_kind", "")) == "leave_club":
+		_clubs.confirm_leave(String(_confirm.get_meta("club_id", "")))
 		return
 	var id: String = String(_confirm.get_meta("remove_id", ""))
 	var result: ApiResult = await social.remove_friend(id)
@@ -504,6 +552,8 @@ func _build() -> void:
 	_blocks = BlockList.new()
 	_blocks.unblock_requested.connect(_on_unblock)
 	_blocks.unmute_requested.connect(_on_unmute)
+	_clubs = FriendsClubs.new(self)
+	_pages[TAB_CLUBS] = _scroll_page(pages, _clubs.tab, "ClubsPage")
 	_pages[TAB_BLOCKED] = _scroll_page(pages, _blocks, "BlockedPage")
 	_requests.accept_requested.connect(_on_accept)
 	_requests.reject_requested.connect(_on_reject)
@@ -514,6 +564,7 @@ func _build() -> void:
 	_confirm.name = "ConfirmSheet"
 	_confirm.chosen.connect(_on_confirm_chosen)
 	add_child(_confirm)
+	_clubs.attach()
 	UiBuild.size_buttons(self)
 
 
