@@ -75,6 +75,9 @@ func (_u *NicknameChangeUpdate) sqlSave(ctx context.Context) (_node int, err err
 	if _u.mutation.OldNicknameCleared() {
 		_spec.ClearField(nicknamechange.FieldOldNickname, field.TypeString)
 	}
+	if _u.mutation.SourceRefIDCleared() {
+		_spec.ClearField(nicknamechange.FieldSourceRefID, field.TypeUUID)
+	}
 	_spec.Node.Schema = _u.schemaConfig.NicknameChange
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
@@ -173,6 +176,9 @@ func (_u *NicknameChangeUpdateOne) sqlSave(ctx context.Context) (_node *Nickname
 	}
 	if _u.mutation.OldNicknameCleared() {
 		_spec.ClearField(nicknamechange.FieldOldNickname, field.TypeString)
+	}
+	if _u.mutation.SourceRefIDCleared() {
+		_spec.ClearField(nicknamechange.FieldSourceRefID, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.NicknameChange
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

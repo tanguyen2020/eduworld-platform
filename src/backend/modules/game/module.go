@@ -106,6 +106,9 @@ type Imports struct {
 	Learning modules.LearningFacade
 	// Chat is screenText of the chat facade (F077: school event texts); nil = createSchoolEvent/updateSchoolEvent 503.
 	Chat modules.ChatScreening
+	// ChatNickname is moderateDisplayText of the chat facade (F136: typed nicknames, context nickname); nil = a typed
+	// nickname is 503 UNAVAILABLE (fail-closed), the suggestions keep working.
+	ChatNickname modules.ChatNicknameModeration
 }
 
 // Module is the registered module.
@@ -114,6 +117,7 @@ type Module struct {
 	hub      *modules.LateHub
 	learning *modules.LateLearning
 	chat     *modules.LateChat
+	nick     *modules.LateNicknameScreens
 }
 
 // Facade returns the in-process facade of module game (nil in a binary that does not load its use cases).
@@ -129,6 +133,17 @@ func (m *Module) Wire(in Imports) {
 	}
 	if m.chat != nil {
 		m.chat.Set(in.Chat)
+	}
+	if m.nick != nil {
+		m.nick.SetChat(in.ChatNickname)
+	}
+}
+
+// WireIdentity connects screenNicknamePersonalData of the identity facade (F136), built after module game by the
+// composition root (identity calls game in its sagas); until then a typed nickname is 503 UNAVAILABLE.
+func (m *Module) WireIdentity(f modules.IdentityNicknameScreen) {
+	if m.nick != nil {
+		m.nick.SetIdentity(f)
 	}
 }
 
@@ -153,7 +168,7 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(pool))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(pool, migrations.Latest()))
 	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() && !r.Reconciles() {
-		return &Module{hub: &modules.LateHub{}, learning: &modules.LateLearning{}, chat: &modules.LateChat{}}, nil
+		return &Module{hub: &modules.LateHub{}, learning: &modules.LateLearning{}, chat: &modules.LateChat{}, nick: &modules.LateNicknameScreens{}}, nil
 	}
 	core, err := r.Core(Name)
 	if err != nil {
@@ -253,6 +268,7 @@ func Register(r *module.Registry) (*Module, error) {
 		Quests: questsql.Content{}, LiveOps: liveopssql.Store{}, Events: write.Publisher{W: core.Writer}, Metrics: observability.ManifestMetrics{},
 		BuildSeconds: observability.ManifestBuild}
 	chatLate := &modules.LateChat{}
+	nickScreens := &modules.LateNicknameScreens{}
 	liveOpsUC := &command.LiveOps{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: liveopssql.Store{}, Students: worldsql.Content{},
 		Tenants: write.ManifestRepo{}, Manifests: gameManifest, Grants: write.ProgressionRepo{}, Registry: appliers, EventSchema: liveopsschema.Event{},
 		Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder}, Screener: chatLate, Counter: cache.GoalCounter{C: vk},
@@ -400,8 +416,8 @@ func Register(r *module.Registry) (*Module, error) {
 	if len(anaCfg.Keys.All()) > 0 {
 		anonymizer = ingest
 	}
-	m := &Module{hub: hub, learning: learningLate, chat: chatLate, facade: facade.Facade{Ops: r.ReconcileSource(Name), Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
-		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC, Analytics: anonymizer},
+	m := &Module{hub: hub, learning: learningLate, chat: chatLate, nick: nickScreens, facade: facade.Facade{Ops: r.ReconcileSource(Name), Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
+		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC, Analytics: anonymizer, Audit: write.Auditor{R: core.Recorder}},
 		GameAdmin: facade.GameAdmin{Assignments: assignUC, Catalog: adminQueries},
 		Trash: facade.Trash{TrashList: query.Trash{Read: core.ReadSession, Model: read.Trash{}, Cursors: cursors},
 			TrashRestore: command.RestoreTrash{UoW: core.UoW, Store: write.TrashRepo{}, Events: write.Publisher{W: core.Writer},
@@ -410,9 +426,14 @@ func Register(r *module.Registry) (*Module, error) {
 			BossReads: bosssql.Reads{}, Party: questsql.Content{}, Quests: questsql.Content{}, World: worldsql.Content{},
 			AttemptsPerDay: bossCfg.AttemptsPerDay, Reset: bossCfg.Reset}, Bosses: bossUC, Quests: coopUC}}}
 	options := cache.NicknameOptionStore{C: vk}
+	// F136: typed nicknames go through the chat moderation and the identity screen (facades wired after Register, fail-closed
+	// until then) and the attempt counter nickname_attempt_rate.
 	profiles := command.Profiles{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: write.ProfileRepo{}, Catalog: write.CatalogRepo{},
 		Owned: write.OwnershipRepo{}, Presets: write.PresetRepo{}, Directory: write.Directory{}, Schools: write.Directory{},
-		Options: options, Events: write.Publisher{W: core.Writer}, Metrics: observability.ProfileMetrics{}, Config: profileCfg}
+		Options: options, Events: write.Publisher{W: core.Writer}, Metrics: observability.ProfileMetrics{}, Config: profileCfg,
+		Audit: write.Auditor{R: core.Recorder}, Moderation: nickScreens, Personal: nickScreens,
+		Attempts:        cache.NicknameAttempts{C: vk, Limit: profileCfg.AttemptLimit, Window: profileCfg.AttemptWindow},
+		NicknameMetrics: observability.ProfileMetrics{}}
 
 	h := gamehttp.Handlers{Sessions: sessions, ClientConfig: cfg.ClientConfig,
 		Manifest: query.GetContentManifest{Read: core.ReadSession, Manifests: read.Manifests{}, MinClientVersion: cfg.UseCase.MinClientVersion,
@@ -420,7 +441,7 @@ func Register(r *module.Registry) (*Module, error) {
 		LoginEvents: query.LoginEvents{Read: core.ReadSession, Events: read.LoginEvents{}, Students: read.Students{}, Cursors: cursors},
 		Tickets:     command.RealtimeTickets{Sessions: sessions, Store: realtime.TicketStore{C: vk}, Config: cfg.Tickets},
 		Profiles:    profiles, ProfileQueries: query.Profile{Read: core.ReadSession, Profiles: read.Profiles{}, Catalog: read.Catalogs{},
-			Options: options, TTL: profileCfg.SuggestionTTL},
+			Options: options, TTL: profileCfg.SuggestionTTL, Policy: profileCfg.Nickname},
 		World: worldUC, WorldQueries: query.World{Read: core.ReadSession, Content: worldsql.Content{}, Manifests: read.Manifests{}},
 		Quests: questUC, QuestQueries: query.Quests{Read: core.ReadSession, Content: questsql.Content{}, World: worldsql.Content{}, Pages: read.Quests{}, Cursors: cursors,
 			Reset: questCfg.Reset},
@@ -463,6 +484,9 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("game.projection_identity", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.IdentityProjectionOptions(consumer.IdentityProjection{Upsert: command.UpsertProjection{Refs: write.RefRepo{}}},
 			core.UoW, core.App, js)
+	})
+	r.Consumer(messaging.SanctionNicknameResetName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.SanctionNicknameResetOptions(consumer.SanctionNicknameReset{Reset: profiles}, core.UoW, core.App, js)
 	})
 	r.Consumer("game.session_end_on_revoke", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.SessionEndOnRevokeOptions(consumer.SessionEndOnRevoke{Sessions: sessions, Challenges: challengeUC}, core.UoW, core.App, js)

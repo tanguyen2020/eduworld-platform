@@ -138,12 +138,14 @@ func (h Safety) ActOnCase(ctx context.Context, id uuid.UUID, version int64, in A
 		note := in.Note
 		var sanctionID, messageID *uuid.UUID
 		switch in.Action {
-		case safety.ActionWarn, safety.ActionMute, safety.ActionRestrict:
+		case safety.ActionWarn, safety.ActionMute, safety.ActionRestrict, safety.ActionNicknameReset:
 			s, err := h.caseSanction(ctx, p, c, in, now)
 			if err != nil {
 				return err
 			}
-			applied = append(applied, s)
+			if !safety.Immediate(s.Type) { // nickname_reset: nothing to cache or push (module game reacts to the event)
+				applied = append(applied, s)
+			}
 			sid := s.ID
 			sanctionID = &sid
 		case safety.ActionRemoveMessage:
@@ -247,6 +249,8 @@ func (h Safety) ActOnCase(ctx context.Context, id uuid.UUID, version int64, in A
 func (h Safety) caseSanction(ctx context.Context, p authz.Principal, c *read.CaseRow, in ActInput, now time.Time) (write.SafetySanction, error) {
 	typ := safety.SanctionWarning
 	switch in.Action {
+	case safety.ActionNicknameReset:
+		typ = safety.SanctionNicknameReset
 	case safety.ActionMute:
 		typ = safety.SanctionMute
 	case safety.ActionRestrict:
@@ -294,6 +298,13 @@ func (h Safety) newSanction(ctx context.Context, p authz.Principal, tenant, user
 	}
 	if d > 0 && typ != safety.SanctionWarning {
 		e := now.Add(d)
+		end = &e
+	}
+	if safety.Immediate(typ) { // nickname_reset: applied at once and done (ends_at = starts_at), no duration
+		if minutes != nil {
+			return write.SafetySanction{}, problem.Invalid("duration_minutes", problem.SubInvalid, "nickname_reset has no duration")
+		}
+		e := now
 		end = &e
 	}
 	if safety.RequiresLead(typ, d, end != nil) && !isLead(p) {

@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 
@@ -12,7 +14,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/catalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/profile"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/ids"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
@@ -27,6 +31,13 @@ type ProfileConfig struct {
 	SuggestionTTL   time.Duration
 	// SupportedLocales are the values accepted for preferred_language (supported_locales).
 	SupportedLocales []string
+	// NicknameRules are nickname_min_length and nickname_max_digits of a typed nickname (F136, ADR-0105).
+	NicknameRules profile.NicknameRules
+	// ScreenDeadline is nickname_moderation_deadline: the deadline of each facade call of a typed nickname.
+	ScreenDeadline time.Duration
+	// AttemptLimit and AttemptWindow are nickname_attempt_rate (typed submissions per window and student).
+	AttemptLimit  int
+	AttemptWindow time.Duration
 }
 
 // MaxSettingsBytes is the size limit of GameProfile.settings (CHECK octet_length <= 8192).
@@ -48,6 +59,16 @@ type Profiles struct {
 	Metrics     port.ProfileMetrics // nil: no metrics
 	Config      ProfileConfig
 	Now         func() time.Time
+	// Audit records the nickname changes, resets and refusals (F136-AC-21, AC-30); nil = audit.Discard is refused at
+	// wiring (the module always sets it).
+	Audit write.Auditor
+	// Moderation, Personal and Attempts check a typed nickname (F136 US3); nil = every typed nickname is 503 UNAVAILABLE
+	// (fail-closed), the suggestion path keeps working.
+	Moderation port.NicknameModeration
+	Personal   port.NicknamePersonalDataScreen
+	Attempts   port.NicknameAttemptCounter
+	// NicknameMetrics records eduworld_nickname_checks_total (nil: no metrics).
+	NicknameMetrics port.NicknameMetrics
 }
 
 func (h Profiles) now() time.Time {
@@ -271,15 +292,21 @@ func (h Profiles) afterCommit(ctx context.Context, fn func(ctx context.Context))
 // ProfileUpdate is the body of updateGameProfile (merge patch): the nickname only through a suggestion option
 // (F070-AC-10), settings merged (null removes a key), preferred_language (null clears it).
 type ProfileUpdate struct {
+	// Nickname is a typed nickname (F136); exclusive with NicknameOptionID. SetNickname reports a present field (a JSON
+	// null is refused).
+	Nickname          *string
+	SetNickname       bool
 	NicknameOptionID  *uuid.UUID
 	Settings          map[string]any // nil: absent
 	SetLanguage       bool
 	PreferredLanguage *string
 }
 
-// UpdateProfile implements updateGameProfile (F070 US2): sets the nickname of a suggestion option the student
-// received (409 NICKNAME_UNAVAILABLE when expired, of another student or taken meanwhile; 409 NICKNAME_CHANGE_LIMIT
-// beyond nickname_change_monthly_limit), records the history and publishes game_profile.updated (F070-AC-08…11).
+// UpdateProfile implements updateGameProfile (F070 US2, F136 US1–US3): the nickname comes from exactly one of a
+// suggestion option the student received (409 NICKNAME_UNAVAILABLE when expired, of another student or taken meanwhile)
+// or a typed nickname checked by typedNickname (format, monthly limit, attempt rate, chat moderation, identity screen —
+// fail-closed); 409 NICKNAME_CHANGE_LIMIT beyond nickname_change_monthly_limit; the history, game_profile.updated and the
+// audit are written in the same transaction (F070-AC-08…11, F136-AC-03…AC-16).
 func (h Profiles) UpdateProfile(ctx context.Context, in ProfileUpdate) (out *profile.Profile, err error) {
 	ctx, done := observability.UseCase(ctx, "game.command.UpdateGameProfile")
 	defer func() { done(err) }()
@@ -287,11 +314,17 @@ func (h Profiles) UpdateProfile(ctx context.Context, in ProfileUpdate) (out *pro
 	if err != nil {
 		return nil, err
 	}
+	if in.SetNickname && (in.Nickname == nil || in.NicknameOptionID != nil) {
+		// nickname null, or both ways at once (F136-AC-03)
+		return nil, problem.Invalid("nickname", problem.SubInvalid, "exactly one of nickname or nickname_option_id")
+	}
 	if in.SetLanguage && in.PreferredLanguage != nil && !h.supported(*in.PreferredLanguage) {
 		return nil, problem.Invalid("preferred_language", problem.SubInvalid, "unsupported locale")
 	}
 	var nickname string
-	if in.NicknameOptionID != nil {
+	typedText := false
+	switch {
+	case in.NicknameOptionID != nil:
 		n, ok, err := h.Options.Get(ctx, id, *in.NicknameOptionID)
 		if err != nil {
 			return nil, problem.New(problem.Unavailable, "").Retry().Wrap(err)
@@ -301,6 +334,14 @@ func (h Profiles) UpdateProfile(ctx context.Context, in ProfileUpdate) (out *pro
 			return nil, problem.New(problem.NicknameUnavailable, "")
 		}
 		nickname = n
+	case in.Nickname != nil:
+		n, unchanged, err := h.typedNickname(ctx, tenant, id, *in.Nickname)
+		if err != nil {
+			return nil, err
+		}
+		if !unchanged {
+			nickname, typedText = n.String(), true
+		}
 	}
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
 		p, err := h.load(ctx, tenant, id)
@@ -354,10 +395,146 @@ func (h Profiles) UpdateProfile(ctx context.Context, in ProfileUpdate) (out *pro
 		if err := h.profileUpdated(ctx, p, now); err != nil {
 			return err
 		}
+		if err := h.audit(ctx, audit.Event{Action: AuditNicknameChanged, TargetType: "student", TargetID: id.String(),
+			Result: audit.ResultSuccess, SchoolID: p.SchoolID.String(), Metadata: map[string]any{"old_nickname": change.Old,
+				"new_nickname": change.New, "reason": change.Reason, "source": nicknameSource(typedText)}}); err != nil {
+			return err
+		}
 		h.afterCommit(ctx, func(ctx context.Context) { _ = h.Options.Clear(ctx, id) })
 		return nil
 	})
+	if err != nil && typedText {
+		var pe *problem.Error
+		if errors.As(err, &pe) && pe.Code == problem.NicknameUnavailable {
+			h.refused(ctx, id, port.NicknameTaken)
+		}
+		return out, err
+	}
+	if err == nil && typedText {
+		h.check(port.NicknameAllowed)
+	}
 	return out, err
+}
+
+func nicknameSource(typed bool) string {
+	if typed {
+		return "typed"
+	}
+	return "suggestion"
+}
+
+func (h Profiles) audit(ctx context.Context, e audit.Event) error {
+	if h.Audit == nil {
+		return nil
+	}
+	return h.Audit.Record(ctx, e)
+}
+
+func (h Profiles) check(result string) {
+	if h.NicknameMetrics != nil {
+		h.NicknameMetrics.NicknameCheck(result)
+	}
+}
+
+// refused counts and audits a refused typed nickname with its result code only — never the text (F136-AC-30, R14). The
+// audit is best effort: the refusal is returned to the student whatever happens to it.
+func (h Profiles) refused(ctx context.Context, student uuid.UUID, result string) {
+	h.check(result)
+	_ = h.UoW.Do(ctx, func(ctx context.Context) error {
+		return h.audit(ctx, audit.Event{Action: AuditNicknameRefused, TargetType: "student", TargetID: student.String(),
+			Result: audit.ResultDenied, Metadata: map[string]any{"result": result}})
+	})
+}
+
+// notAllowed is 422 NICKNAME_NOT_ALLOWED: one code for every content reason, no field, no position, no echo (R15).
+func (h Profiles) notAllowed(ctx context.Context, student uuid.UUID, result string) error {
+	h.refused(ctx, student, result)
+	return problem.New(problem.NicknameNotAllowed, "")
+}
+
+func (h Profiles) unavailable(cause error) error {
+	h.check(port.NicknameUnavailable)
+	return problem.New(problem.Unavailable, "").Retry().Wrap(cause)
+}
+
+// typedNickname runs the checks of a typed nickname outside the write transaction (no facade call inside a
+// UnitOfWork, constitution II), in the order of F136 Clarifications: attempt counter (every typed submission, 429 before
+// any facade call — AC-15), format (AC-10), monthly limit of a player change (409 before moderation — AC-08), chat
+// moderation (AC-11), identity screen (AC-12). A facade or counter failure is 503 and nothing is stored (fail-closed,
+// AC-14). unchanged reports the current nickname typed again (nothing to check or store, F070 behaviour). Uniqueness is
+// the unique index on save (AC-13).
+func (h Profiles) typedNickname(ctx context.Context, tenant, student uuid.UUID, raw string) (n profile.Nickname, unchanged bool, err error) {
+	if h.Attempts == nil {
+		return n, false, h.unavailable(errors.New("game: nickname attempt counter not wired"))
+	}
+	allowed, wait, err := h.Attempts.Hit(ctx, tenant, student, h.now())
+	if err != nil {
+		return n, false, h.unavailable(err)
+	}
+	if !allowed {
+		h.check(port.NicknameRateLimited)
+		return n, false, RetryAfter{Err: problem.New(problem.RateLimited, "").Retry(), After: wait}
+	}
+	n, err = profile.ParseNickname(raw, h.Config.NicknameRules)
+	if err != nil {
+		return n, false, h.notAllowed(ctx, student, port.NicknameFormat)
+	}
+	err = h.UoW.Do(ctx, func(ctx context.Context) error {
+		p, err := h.load(ctx, tenant, student)
+		if err != nil {
+			return err
+		}
+		if p.Nickname != nil && *p.Nickname == n.String() {
+			unchanged = true
+			return nil
+		}
+		if p.Nickname != nil { // a player change (the first nickname and the one after a reset are not counted)
+			return h.checkLimit(ctx, p, h.now())
+		}
+		return nil
+	})
+	if err != nil || unchanged {
+		return n, unchanged, err
+	}
+	if ok, err := h.screen(ctx, "chat", func(ctx context.Context) (bool, error) {
+		if h.Moderation == nil {
+			return false, port.ErrNicknameScreenUnavailable
+		}
+		return h.Moderation.CheckNickname(ctx, tenant, student, n.String())
+	}); err != nil {
+		return n, false, h.unavailable(err)
+	} else if !ok {
+		return n, false, h.notAllowed(ctx, student, port.NicknameModerated)
+	}
+	if ok, err := h.screen(ctx, "identity", func(ctx context.Context) (bool, error) {
+		if h.Personal == nil {
+			return false, port.ErrNicknameScreenUnavailable
+		}
+		return h.Personal.ScreenNickname(ctx, tenant, student, n.String())
+	}); err != nil {
+		return n, false, h.unavailable(err)
+	} else if !ok {
+		return n, false, h.notAllowed(ctx, student, port.NicknamePersonal)
+	}
+	return n, false, nil
+}
+
+// screen runs one facade check under nickname_moderation_deadline and records its latency.
+func (h Profiles) screen(ctx context.Context, facade string, fn func(ctx context.Context) (bool, error)) (bool, error) {
+	if d := h.Config.ScreenDeadline; d > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, d)
+		defer cancel()
+	}
+	start := time.Now()
+	ok, err := fn(ctx)
+	if h.NicknameMetrics != nil {
+		h.NicknameMetrics.NicknameScreenLatency(facade, time.Since(start))
+	}
+	if err == nil && ctx.Err() != nil {
+		err = ctx.Err() // a late answer is no answer (fail-closed)
+	}
+	return ok, err
 }
 
 func (h Profiles) conflict() {
@@ -429,4 +606,173 @@ func (h Profiles) SavePreset(ctx context.Context, slot int, name *string, cfg pr
 		return nil
 	})
 	return out, err
+}
+
+// Audit actions of the nickname (F136-AC-21, AC-30).
+const (
+	AuditNicknameChanged = "game_profile.nickname_changed"
+	AuditNicknameRefused = "game_profile.nickname_refused"
+	AuditNicknameReset   = "game_profile.nickname_reset"
+	// AuditNicknameHistoryAnonymized: the history of a student anonymized (anonymizeUserData, F136-AC-31).
+	AuditNicknameHistoryAnonymized = "game_profile.nickname_history_anonymized"
+)
+
+// SanctionReset is a nickname_reset sanction of module chat (sanction.applied, F136-AC-20).
+type SanctionReset struct {
+	TenantID   uuid.UUID
+	StudentID  uuid.UUID
+	SanctionID uuid.UUID
+	IssuedBy   *uuid.UUID
+	At         time.Time
+}
+
+// ResetResult is StudentNicknameResetResult of resetStudentNickname.
+type ResetResult struct {
+	StudentID uuid.UUID `json:"student_id"`
+	Nickname  *string   `json:"nickname"`
+	ResetAt   time.Time `json:"reset_at"`
+}
+
+// Sources of a nickname reset (audit metadata).
+const (
+	ResetBySchool     = "school_admin"
+	ResetByModeration = "moderation"
+)
+
+// nicknameResetCovered: a grant holding lms.student.nickname_reset without a school limit, or limited to school.
+func nicknameResetCovered(p authz.Principal, school uuid.UUID) bool {
+	for _, g := range p.Grants {
+		for _, perm := range g.Permissions {
+			if perm == authz.PermLmsStudentNicknameReset && (g.SchoolID == nil || *g.SchoolID == school) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// ResetStudentNickname implements resetStudentNickname (F136-AC-21): lms.student.nickname_reset (authz.Require, 403 for
+// a role without it, a student or a platform role outside its tenant permissions — R20) in the tenant of the session; a
+// student of another tenant or of a school outside the caller's grants is 404 NOT_FOUND. The nickname becomes NULL
+// (setup_required), the history gets "reset", game_profile.updated and the audit (actor, reason, old nickname) are written
+// in the same transaction; the result is stored for the Idempotency-Key replay. A student without nickname is 200
+// without change.
+func (h Profiles) ResetStudentNickname(ctx context.Context, student uuid.UUID, reason string) (out ResetResult, err error) {
+	ctx, done := observability.UseCase(ctx, "game.command.ResetStudentNickname")
+	defer func() { done(err) }()
+	p, err := principal(ctx)
+	if err != nil {
+		return out, err
+	}
+	if p.TenantID == nil || p.UserType == authz.UserTypeStudent {
+		return out, problem.New(problem.PermissionDenied, "")
+	}
+	tenant := *p.TenantID
+	if !p.Has(authz.PermLmsStudentNicknameReset) {
+		// no grant holds the permission: 403 PERMISSION_DENIED, audited by Require
+		return out, authz.Require(ctx, p, authz.PermLmsStudentNicknameReset, authz.Resource{TenantID: &tenant})
+	}
+	if n := utf8.RuneCountInString(strings.TrimSpace(reason)); n < 3 || n > 500 {
+		return out, problem.Invalid("reason", problem.SubInvalid, "3 to 500 characters")
+	}
+	now := h.now()
+	out = ResetResult{StudentID: student, ResetAt: now}
+	err = h.UoW.Do(ctx, func(ctx context.Context) error {
+		st, err := h.Directory.Student(ctx, tenant, student)
+		if err != nil {
+			return err
+		}
+		if st == nil || st.Deleted || !nicknameResetCovered(p, st.SchoolID) {
+			return problem.New(problem.NotFound, "")
+		}
+		prof, err := h.Repo.Get(ctx, tenant, student)
+		if err != nil {
+			return err
+		}
+		if prof != nil {
+			if _, err := h.reset(ctx, prof, p.UserID, ResetBySchool, reason, nil, now); err != nil {
+				return err
+			}
+		}
+		return idempotency.SetResult(ctx, out)
+	})
+	if err != nil {
+		return ResetResult{}, err
+	}
+	return out, nil
+}
+
+// ResetNicknameBySanction applies sanction.applied of type nickname_reset (consumer game.sanction_nickname_reset,
+// F136-AC-20) in the transaction of the consumer: once per sanction_id (the history row keeps the sanction as
+// source_ref_id, so a redelivery after the student chose a new nickname changes nothing), changed_by = the moderator
+// (uuid.Nil for a system sanction). A student without a profile has nothing to reset.
+func (h Profiles) ResetNicknameBySanction(ctx context.Context, in SanctionReset) (err error) {
+	ctx, done := observability.UseCase(ctx, "game.command.ResetNicknameBySanction")
+	defer func() { done(err) }()
+	if in.TenantID == uuid.Nil || in.StudentID == uuid.Nil || in.SanctionID == uuid.Nil {
+		return problem.New(problem.Internal, "nickname reset needs tenant, student and sanction")
+	}
+	at := in.At
+	if at.IsZero() {
+		at = h.now()
+	}
+	actor := uuid.Nil
+	if in.IssuedBy != nil {
+		actor = *in.IssuedBy
+	}
+	return h.UoW.Do(ctx, func(ctx context.Context) error {
+		done, err := h.Repo.ResetBySource(ctx, in.TenantID, in.StudentID, in.SanctionID)
+		if err != nil || done {
+			return err
+		}
+		prof, err := h.Repo.Get(ctx, in.TenantID, in.StudentID)
+		if err != nil || prof == nil {
+			return err
+		}
+		ref := in.SanctionID
+		changed, err := h.reset(ctx, prof, actor, ResetByModeration, "", &ref, at)
+		if err != nil || changed {
+			return err
+		}
+		// No nickname to reset: the sanction is still recorded, so it is never applied to a nickname chosen later.
+		return h.Repo.AppendNicknameChange(ctx, write.NicknameChange{ID: ids.New(), TenantID: in.TenantID, StudentID: in.StudentID,
+			New: "", Reason: profile.ReasonReset, ChangedBy: actor, ChangedAt: at, SourceRefID: &ref})
+	})
+}
+
+// reset clears the nickname of p inside the transaction of ctx: history "reset" (new_nickname empty — the F070 column is
+// NOT NULL), game_profile.updated with nickname null (other players see the neutral ui.player.unnamed) and the audit.
+func (h Profiles) reset(ctx context.Context, p *profile.Profile, actor uuid.UUID, source, reason string, ref *uuid.UUID,
+	at time.Time) (bool, error) {
+	old, changed := p.ResetNickname()
+	if !changed {
+		return false, nil
+	}
+	if err := h.Repo.Save(ctx, p); err != nil {
+		return false, err
+	}
+	if err := h.Repo.AppendNicknameChange(ctx, write.NicknameChange{ID: ids.New(), TenantID: p.TenantID, StudentID: p.StudentID,
+		Old: old, New: "", Reason: profile.ReasonReset, ChangedBy: actor, ChangedAt: at, SourceRefID: ref}); err != nil {
+		return false, err
+	}
+	if err := h.profileUpdated(ctx, p, at); err != nil {
+		return false, err
+	}
+	meta := map[string]any{"old_nickname": *old, "source": source}
+	if reason != "" {
+		meta["reason"] = reason
+	}
+	if ref != nil {
+		meta["sanction_id"] = ref.String()
+	}
+	if actor != uuid.Nil {
+		meta["changed_by"] = actor.String()
+	}
+	if err := h.audit(ctx, audit.Event{Action: AuditNicknameReset, TargetType: "student", TargetID: p.StudentID.String(),
+		Result: audit.ResultSuccess, SchoolID: p.SchoolID.String(), Metadata: meta}); err != nil {
+		return false, err
+	}
+	sid := p.StudentID
+	h.afterCommit(ctx, func(ctx context.Context) { _ = h.Options.Clear(ctx, sid) })
+	return true, nil
 }

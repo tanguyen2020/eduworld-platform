@@ -6067,7 +6067,20 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Đổi nickname (từ danh sách đã duyệt) và settings */
+        /**
+         * Đặt/đổi nickname (tự gõ qua kiểm duyệt hoặc chọn gợi ý) và settings
+         * @description Nickname đặt bằng **đúng một** trong hai trường (F136, ADR-0105): `nickname` (chuỗi tự gõ) hoặc `nickname_option_id`
+         *     (gợi ý của `suggestNicknames`); gửi cả hai, hoặc `nickname: null` → `422 VALIDATION_FAILED`. Chuỗi tự gõ đi qua, theo
+         *     thứ tự: giới hạn lần thử `nickname_attempt_rate` (mọi lần gửi đều đếm; `429 RATE_LIMITED` + `Retry-After`) → định dạng
+         *     (NFC, bỏ/gộp khoảng trắng, `nickname_min_length`–32 điểm mã, chữ Latin kể cả tiếng Việt, chữ số ≤ `nickname_max_digits`,
+         *     ≥ 1 chữ cái) → giới hạn đổi tháng (`409 NICKNAME_CHANGE_LIMIT`, trước mọi kiểm duyệt) → kiểm duyệt của module chat (`moderateDisplayText`,
+         *     `context = nickname`, bước PII luôn chạy) → dữ liệu cá nhân của module identity (`screenNicknamePersonalData`) → trùng
+         *     không phân biệt hoa thường trong tenant (`409 NICKNAME_UNAVAILABLE`). Mọi lý do nội dung trả **một** mã
+         *     `422 NICKNAME_NOT_ALLOWED` với thông điệp chung theo `Accept-Language`: không echo chuỗi, không từ khớp, vị trí, danh mục,
+         *     loại PII hay họ tên (R15, R16). Kiểm duyệt/identity lỗi hoặc quá `nickname_moderation_deadline` → `503 UNAVAILABLE`,
+         *     không lưu (fail-closed); đường `nickname_option_id` không gọi kiểm duyệt nên vẫn dùng được. Chuỗi bị từ chối không được
+         *     ghi vào log, audit hay telemetry (R14).
+         */
         patch: operations["updateGameProfile"];
         trace?: never;
     };
@@ -9708,6 +9721,32 @@ export interface paths {
         get: operations["previewTenantStudentCleanup"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenant/students/{student_id}/game-profile/nickname:reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Đặt lại nickname của học sinh — nickname về null, học sinh chọn lại ở bước Tên (F136 US5)
+         * @description Quyền `lms.student.nickname_reset` (permission tenant): School Admin của trường học sinh, Tenant Admin của tenant, System Admin
+         *     (tenant đích qua `X-Tenant-Id`, gồm tenant `common` qua gateway nội bộ). Học sinh ngoài tenant/scope → `404`; học sinh tự gọi
+         *     hoặc role thiếu permission → `403`. `reason` và `Idempotency-Key` bắt buộc; replay cùng key trả kết quả đã lưu.
+         *     Module game đặt `nickname` = null (người chơi khác thấy chuỗi trung tính `ui.player.unnamed`), `setup_required = true`, ghi
+         *     `game.nickname_changes` (`reason = reset`), phát `game_profile.updated` và ghi audit (actor, lý do, nickname cũ). Lần học
+         *     sinh chọn lại không tính vào `nickname_change_monthly_limit` (CHARACTER_SYSTEM §5.3, ADR-0105). Học sinh chưa có nickname →
+         *     `200` không đổi gì.
+         */
+        post: operations["resetStudentNickname"];
         delete?: never;
         options?: never;
         head?: never;
@@ -13867,19 +13906,28 @@ export interface components {
             avatar_created_at?: string | null;
             last_area_id?: string;
             level: number;
-            /** @description null tới khi chọn từ gợi ý (suggestNicknames) */
+            /** @description null tới khi học sinh đặt (tự gõ hoặc chọn gợi ý) và sau khi nickname bị đặt lại (F136 US5) */
             nickname: string | null;
+            /**
+             * Format: date-time
+             * @description Khi nickname_changes_left = 0: thời điểm đổi lại được (đầu tháng sau theo Asia/Ho_Chi_Minh); null khi còn lượt — client hiện ngày, không đếm ngược (F136-AC-07, R19)
+             */
+            nickname_change_available_at?: string | null;
+            /** @description Số lần học sinh còn được đổi nickname trong tháng dương lịch (nickname_change_monthly_limit, trường chỉ siết thêm); lần đặt đầu và lần chọn lại sau khi bị đặt lại không tính (F136-AC-07, AC-08) */
+            nickname_changes_left?: number;
             preferred_language?: components["schemas"]["Locale"];
             settings?: {
                 [key: string]: unknown;
             };
-            /** @description true khi chưa có avatar hoặc nickname — game mở màn Tạo nhân vật (S02) trước Main Hub (F070-AC-01) */
+            /** @description true khi chưa có avatar hoặc nickname (kể cả sau khi nickname bị đặt lại) — game mở màn Tạo nhân vật (S02) trước Main Hub (F070-AC-01, F136-AC-23) */
             setup_required: boolean;
             student_id: components["schemas"]["Uuid"];
             xp_total: number;
         };
-        /** @description Nickname chỉ đặt qua nickname_option_id của suggestNicknames; trường nickname tự do bị từ chối 422 (F070-AC-10, R16). */
+        /** @description Nickname đặt bằng đúng một trong hai: `nickname` (tự gõ, kiểm duyệt phía server — F136, ADR-0105) hoặc `nickname_option_id` (gợi ý của suggestNicknames, F070); gửi cả hai hoặc `nickname: null` → 422 VALIDATION_FAILED. Server không tin cờ "đã kiểm tra" nào của client (R5). */
         GameProfileUpdate: {
+            /** @description Nickname tự gõ; server chuẩn hóa (NFC, bỏ/gộp khoảng trắng) rồi kiểm `nickname_min_length`–32 điểm mã */
+            nickname?: string;
             nickname_option_id?: components["schemas"]["Uuid"];
             preferred_language?: components["schemas"]["Locale"];
             settings?: {
@@ -15081,8 +15129,11 @@ export interface components {
          */
         MiniGameType: "multiple_choice" | "true_false" | "fill_in_blank" | "drag_and_drop" | "matching" | "ordering" | "calculation" | "puzzle" | "word_game" | "science_simulation" | "timed_challenge";
         ModerationActionRequest: {
-            /** @enum {string} */
-            action: "warn" | "mute" | "restrict" | "remove_message" | "escalate" | "dismiss" | "close" | "reopen";
+            /**
+             * @description nickname_reset (F136-AC-19): sanction tức thời nickname_reset cho một học sinh của case — module game đặt nickname về null qua sanction.applied
+             * @enum {string}
+             */
+            action: "warn" | "mute" | "restrict" | "remove_message" | "escalate" | "dismiss" | "close" | "reopen" | "nickname_reset";
             duration_minutes?: number;
             message_id?: components["schemas"]["Uuid"];
             note: string;
@@ -15156,6 +15207,8 @@ export interface components {
             evidence?: {
                 created_at: components["schemas"]["Timestamp"];
                 evidence_id: components["schemas"]["Uuid"];
+                /** @description Bản chụp nickname phía server lúc báo cáo nickname (context.reported_field = nickname, F136-AC-18, AC-22) — văn bản thuần */
+                reported_nickname?: string;
             }[];
             evidence_message_ids?: components["schemas"]["Uuid"][];
             /** @description Báo cáo đã gộp vào case (người báo cáo chỉ hiển thị cho Safety Team, không bao giờ cho người bị báo cáo) */
@@ -16001,7 +16054,7 @@ export interface components {
          * @description Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
          * @enum {string}
          */
-        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "QUEST_PREREQUISITE_NOT_MET" | "QUEST_ACTIVE_LIMIT" | "QUEST_STEP_ATTEMPT_LIMIT" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "TOURNAMENT_NOT_ELIGIBLE" | "TOURNAMENT_REGISTRATION_CLOSED" | "TOURNAMENT_FULL" | "TOURNAMENT_CHECK_IN_CLOSED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_REACTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ACCOUNT_LOCK_HELD_BY_SAFETY" | "ONCALL_SHIFT_OVERLAP" | "BREAK_GLASS_NOT_PENDING" | "BREAK_GLASS_NOT_ACTIVE" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
+        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "NICKNAME_NOT_ALLOWED" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "QUEST_PREREQUISITE_NOT_MET" | "QUEST_ACTIVE_LIMIT" | "QUEST_STEP_ATTEMPT_LIMIT" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "TOURNAMENT_NOT_ELIGIBLE" | "TOURNAMENT_REGISTRATION_CLOSED" | "TOURNAMENT_FULL" | "TOURNAMENT_CHECK_IN_CLOSED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_REACTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ACCOUNT_LOCK_HELD_BY_SAFETY" | "ONCALL_SHIFT_OVERLAP" | "BREAK_GLASS_NOT_PENDING" | "BREAK_GLASS_NOT_ACTIVE" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
         ProgressionLevel: {
             level: number;
             rewards?: components["schemas"]["RewardGrantSummary"][];
@@ -16580,6 +16633,11 @@ export interface components {
                 channel_id?: components["schemas"]["Uuid"];
                 match_id?: components["schemas"]["Uuid"];
                 party_id?: components["schemas"]["Uuid"];
+                /**
+                 * @description Báo cáo nickname của người bị báo cáo (F136 US4: target_type = user, reason = inappropriate_content); module chat tự chụp nickname hiện tại từ ref.player_profiles vào bằng chứng của case — không nhận nickname từ client (R5)
+                 * @enum {string}
+                 */
+                reported_field?: "nickname";
             };
             note?: string;
             /**
@@ -16810,7 +16868,7 @@ export interface components {
          * @description MODERATION §7
          * @enum {string}
          */
-        SanctionType: "warning" | "mute" | "restrict_text" | "restrict_dm" | "restrict_multiplayer" | "restrict_competition" | "account_lock";
+        SanctionType: "warning" | "mute" | "restrict_text" | "restrict_dm" | "restrict_multiplayer" | "restrict_competition" | "account_lock" | "nickname_reset";
         School: {
             address?: string | null;
             code: string;
@@ -17656,6 +17714,16 @@ export interface components {
                 /** Format: date */
                 week_start: string;
             }[];
+        };
+        StudentNicknameResetRequest: {
+            /** @description Lý do (audit; không gửi cho học sinh) */
+            reason: string;
+        };
+        StudentNicknameResetResult: {
+            /** @description Luôn null sau khi đặt lại */
+            nickname: null;
+            reset_at: components["schemas"]["Timestamp"];
+            student_id: components["schemas"]["Uuid"];
         };
         StudentPasswordResetRequest: {
             /** @description Lý do (audit) */
@@ -35079,7 +35147,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
-            /** @description NICKNAME_UNAVAILABLE (nickname_option_id hết hạn, không thuộc học sinh hoặc nickname vừa bị học sinh khác cùng tenant lấy — client lấy gợi ý mới), NICKNAME_CHANGE_LIMIT (vượt nickname_change_monthly_limit, kèm retry_after) */
+            /** @description NICKNAME_UNAVAILABLE (nickname_option_id hết hạn, không thuộc học sinh, hoặc nickname — so không phân biệt hoa thường — đã có học sinh khác cùng tenant dùng; client lấy gợi ý mới), NICKNAME_CHANGE_LIMIT (vượt nickname_change_monthly_limit, kèm retry_after) */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -35088,7 +35156,17 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            422: components["responses"]["ValidationFailed"];
+            /** @description VALIDATION_FAILED (cả `nickname` và `nickname_option_id`, `nickname = null`, settings/ngôn ngữ sai), NICKNAME_NOT_ALLOWED (nickname tự gõ không dùng được — một mã chung cho mọi lý do nội dung, không mã con, không vị trí, F136-AC-10…AC-12, AC-16) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            503: components["responses"]["ServiceUnavailable"];
             default: components["responses"]["Problem"];
         };
     };
@@ -44151,6 +44229,53 @@ export interface operations {
                 };
             };
             403: components["responses"]["Forbidden"];
+        };
+    };
+    resetStudentNickname: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                student_id: components["parameters"]["StudentId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudentNicknameResetRequest"];
+            };
+        };
+        responses: {
+            /** @description Đã đặt lại nickname (hoặc học sinh chưa có nickname) */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentNicknameResetResult"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     listTenantStudentLoginEvents: {

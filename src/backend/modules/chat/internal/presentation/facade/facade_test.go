@@ -68,7 +68,7 @@ func TestModerateDisplayTextFacade(t *testing.T) {
 		"no body":      {},
 		"empty text":   req("", api.PartyName, tenant),
 		"long text":    req(string(make([]rune, 256)), api.PartyName, tenant),
-		"bad context":  req("Nhóm", "nickname", tenant),
+		"bad context":  req("Nhóm", "class_name", tenant),
 		"other tenant": req("Nhóm", api.PartyName, uuid.New()),
 	} {
 		if _, err := f.ModerateDisplayText(ctx, r); !errors.As(err, &pe) {

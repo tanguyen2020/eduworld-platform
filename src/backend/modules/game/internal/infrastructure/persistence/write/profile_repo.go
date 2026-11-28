@@ -124,9 +124,21 @@ func (ProfileRepo) Get(ctx context.Context, tenant, student uuid.UUID) (*profile
 	return p, nil
 }
 
+// nicknameTaken reports a unique violation of the nickname in the tenant: the F136 key index (case-insensitive, NFC,
+// collapsed spaces) or the F070 index on lower(nickname).
 func nicknameTaken(err error) bool {
 	var pe *pgconn.PgError
-	return errors.As(err, &pe) && pe.Code == "23505" && pe.ConstraintName == "game_profiles_nickname_uq"
+	return errors.As(err, &pe) && pe.Code == "23505" &&
+		(pe.ConstraintName == "game_profiles_nickname_key_uq" || pe.ConstraintName == "game_profiles_nickname_uq")
+}
+
+// nicknameKey is nickname_key of a stored nickname (nil with the nickname).
+func nicknameKey(n *string) *string {
+	if n == nil {
+		return nil
+	}
+	k := profile.NicknameKey(profile.NormalizeNickname(*n))
+	return &k
 }
 
 // Save implements write.ProfileRepository.
@@ -148,12 +160,12 @@ func (ProfileRepo) Save(ctx context.Context, p *profile.Profile) error {
 		return err
 	}
 	// tenancyguard:ok TenantScope (RLS) plus the explicit tenant_id; deleted_at filtered; optimistic version
-	res, err := t.ExecContext(ctx, `UPDATE game.game_profiles SET nickname = $4, avatar_config = $5::jsonb,
+	res, err := t.ExecContext(ctx, `UPDATE game.game_profiles SET nickname = $4, nickname_key = $11, avatar_config = $5::jsonb,
 			avatar_config_hash = $6, avatar_created_at = $7, settings = $8::jsonb, preferred_language = $9,
 			updated_at = now(), updated_by = $10, version = version + 1
 		WHERE tenant_id = $1 AND game_profile_id = $2 AND version = $3 AND deleted_at IS NULL`,
 		p.TenantID, p.ID, p.Version, p.Nickname, avatar, p.AvatarHash, p.AvatarCreatedAt, string(settings), p.PreferredLanguage,
-		actor(ctx))
+		actor(ctx), nicknameKey(p.Nickname))
 	if nicknameTaken(err) {
 		return write.ErrNicknameTaken
 	}
@@ -175,12 +187,42 @@ func (ProfileRepo) AppendNicknameChange(ctx context.Context, c write.NicknameCha
 	}
 	// tenancyguard:ok append-only TA insert under the TenantScope (RLS WITH CHECK on tenant_id)
 	if _, err := t.ExecContext(ctx, `INSERT INTO game.nickname_changes (nickname_change_id, tenant_id, created_at, created_by,
-			student_id, old_nickname, new_nickname, reason, changed_by, changed_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $3)`,
-		c.ID, c.TenantID, c.ChangedAt, c.ChangedBy, c.StudentID, c.Old, c.New, c.Reason, c.ChangedBy); err != nil {
+			student_id, old_nickname, new_nickname, reason, changed_by, changed_at, source_ref_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $3, $10)`,
+		c.ID, c.TenantID, c.ChangedAt, c.ChangedBy, c.StudentID, c.Old, c.New, c.Reason, c.ChangedBy, c.SourceRefID); err != nil {
 		return fmt.Errorf("nickname changes: %w", err)
 	}
 	return nil
+}
+
+// ResetBySource implements write.ProfileRepository.
+func (ProfileRepo) ResetBySource(ctx context.Context, tenant, student, source uuid.UUID) (bool, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return false, err
+	}
+	var n int
+	// tenancyguard:ok append-only TA table (no deleted_at); TenantScope (RLS) plus the explicit tenant_id
+	if err := t.QueryRowContext(ctx, `SELECT count(*) FROM game.nickname_changes
+		WHERE tenant_id = $1 AND student_id = $2 AND reason = 'reset' AND source_ref_id = $3`, tenant, student, source).Scan(&n); err != nil {
+		return false, fmt.Errorf("nickname changes: reset by source: %w", err)
+	}
+	return n > 0, nil
+}
+
+// AnonymizeHistory implements write.ProfileRepository through game.anonymize_nickname_changes (SECURITY DEFINER, the
+// only UPDATE path of the append-only history — F136-AC-31).
+func (ProfileRepo) AnonymizeHistory(ctx context.Context, tenant, student uuid.UUID, anon string) (int, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return 0, err
+	}
+	var n int
+	// tenancyguard:ok SECURITY DEFINER function checking tenant_id = infra.current_tenant_id() (RLS policy tenant_anonymize)
+	if err := t.QueryRowContext(ctx, `SELECT game.anonymize_nickname_changes($1, $2, $3)`, tenant, student, anon).Scan(&n); err != nil {
+		return 0, fmt.Errorf("nickname changes: anonymize: %w", err)
+	}
+	return n, nil
 }
 
 // PlayerChangesSince implements write.ProfileRepository.
@@ -224,7 +266,9 @@ func (ProfileRepo) Restore(ctx context.Context, tenant, student uuid.UUID, reaso
 	ok, err := exec(ctx, `UPDATE game.game_profiles g SET deleted_at = NULL, deleted_by = NULL, delete_reason = NULL,
 			updated_at = now(), version = g.version + 1,
 			nickname = CASE WHEN EXISTS (SELECT 1 FROM game.game_profiles o WHERE o.tenant_id = g.tenant_id
-				AND o.deleted_at IS NULL AND lower(o.nickname) = lower(g.nickname)) THEN NULL ELSE g.nickname END
+				AND o.deleted_at IS NULL AND (lower(o.nickname) = lower(g.nickname) OR o.nickname_key = g.nickname_key)) THEN NULL ELSE g.nickname END,
+			nickname_key = CASE WHEN EXISTS (SELECT 1 FROM game.game_profiles o WHERE o.tenant_id = g.tenant_id
+				AND o.deleted_at IS NULL AND (lower(o.nickname) = lower(g.nickname) OR o.nickname_key = g.nickname_key)) THEN NULL ELSE g.nickname_key END
 		WHERE g.game_profile_id = (SELECT p.game_profile_id FROM game.game_profiles p
 			WHERE p.tenant_id = $1 AND p.student_id = $2 AND p.deleted_at IS NOT NULL AND p.delete_reason = $3
 			ORDER BY p.deleted_at DESC LIMIT 1)
@@ -252,6 +296,7 @@ func (ProfileRepo) Anonymize(ctx context.Context, tenant, student uuid.UUID, ano
 	// Personal data is overwritten wherever it is, live or soft-deleted (ADR-0028 §8).
 	// tenancyguard:ok anonymization of every profile row of the student under the TenantScope (RLS) plus tenant_id
 	ok, err := exec(ctx, `UPDATE game.game_profiles SET nickname = CASE WHEN nickname IS NULL THEN NULL ELSE $3 END,
+			nickname_key = CASE WHEN nickname IS NULL THEN NULL ELSE lower($3) END,
 			avatar_config = NULL, avatar_config_hash = NULL, settings = '{}'::jsonb, preferred_language = NULL, last_area_id = NULL,
 			updated_at = now(), version = version + 1
 		WHERE tenant_id = $1 AND student_id = $2 AND ((nickname IS NOT NULL AND nickname <> $3) OR avatar_config IS NOT NULL)`,

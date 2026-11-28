@@ -79,6 +79,12 @@ func (p *profiles) Anonymize(_ context.Context, _, s uuid.UUID, anon string) (bo
 	return true, nil
 }
 
+// AnonymizeHistory: the history of the TEST DOUBLE has no row (the SQL function is covered by
+// tests/integration/nickname_privacy_test.go).
+func (p *profiles) AnonymizeHistory(context.Context, uuid.UUID, uuid.UUID, string) (int, error) {
+	return 0, nil
+}
+
 func (p *profiles) Reassign(_ context.Context, _, from, into uuid.UUID) (bool, error) {
 	if !p.live[from] {
 		return false, nil

@@ -106,6 +106,9 @@ type SafetyStore interface {
 	Window(ctx context.Context, tenant, channel uuid.UUID, seq int64, before, after int) ([]read.CaseMessage, error)
 	Student(ctx context.Context, tenant, id uuid.UUID) (*SafetyStudent, error)
 	TenantType(ctx context.Context, tenant uuid.UUID) (string, error)
+	// PlayerNickname returns the current nickname of the public card of student (ref.player_profiles), nil when none —
+	// the server snapshot of a nickname report (F136-AC-18).
+	PlayerNickname(ctx context.Context, tenant, student uuid.UUID) (*string, error)
 
 	// OpenCase returns the open/in_review case of the target created since (locked), nil when none.
 	OpenCase(ctx context.Context, tenant uuid.UUID, targetType string, target uuid.UUID, since time.Time) (*read.CaseRow, error)

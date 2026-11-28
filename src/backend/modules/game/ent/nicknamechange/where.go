@@ -100,6 +100,11 @@ func ChangedAt(v time.Time) predicate.NicknameChange {
 	return predicate.NicknameChange(sql.FieldEQ(FieldChangedAt, v))
 }
 
+// SourceRefID applies equality check predicate on the "source_ref_id" field. It's identical to SourceRefIDEQ.
+func SourceRefID(v uuid.UUID) predicate.NicknameChange {
+	return predicate.NicknameChange(sql.FieldEQ(FieldSourceRefID, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.NicknameChange {
 	return predicate.NicknameChange(sql.FieldEQ(FieldTenantID, v))
@@ -553,6 +558,56 @@ func ChangedAtLT(v time.Time) predicate.NicknameChange {
 // ChangedAtLTE applies the LTE predicate on the "changed_at" field.
 func ChangedAtLTE(v time.Time) predicate.NicknameChange {
 	return predicate.NicknameChange(sql.FieldLTE(FieldChangedAt, v))
+}
+
+// SourceRefIDEQ applies the EQ predicate on the "source_ref_id" field.
+func SourceRefIDEQ(v uuid.UUID) predicate.NicknameChange {
+	return predicate.NicknameChange(sql.FieldEQ(FieldSourceRefID, v))
+}
+
+// SourceRefIDNEQ applies the NEQ predicate on the "source_ref_id" field.
+func SourceRefIDNEQ(v uuid.UUID) predicate.NicknameChange {
+	return predicate.NicknameChange(sql.FieldNEQ(FieldSourceRefID, v))
+}
+
+// SourceRefIDIn applies the In predicate on the "source_ref_id" field.
+func SourceRefIDIn(vs ...uuid.UUID) predicate.NicknameChange {
+	return predicate.NicknameChange(sql.FieldIn(FieldSourceRefID, vs...))
+}
+
+// SourceRefIDNotIn applies the NotIn predicate on the "source_ref_id" field.
+func SourceRefIDNotIn(vs ...uuid.UUID) predicate.NicknameChange {
+	return predicate.NicknameChange(sql.FieldNotIn(FieldSourceRefID, vs...))
+}
+
+// SourceRefIDGT applies the GT predicate on the "source_ref_id" field.
+func SourceRefIDGT(v uuid.UUID) predicate.NicknameChange {
+	return predicate.NicknameChange(sql.FieldGT(FieldSourceRefID, v))
+}
+
+// SourceRefIDGTE applies the GTE predicate on the "source_ref_id" field.
+func SourceRefIDGTE(v uuid.UUID) predicate.NicknameChange {
+	return predicate.NicknameChange(sql.FieldGTE(FieldSourceRefID, v))
+}
+
+// SourceRefIDLT applies the LT predicate on the "source_ref_id" field.
+func SourceRefIDLT(v uuid.UUID) predicate.NicknameChange {
+	return predicate.NicknameChange(sql.FieldLT(FieldSourceRefID, v))
+}
+
+// SourceRefIDLTE applies the LTE predicate on the "source_ref_id" field.
+func SourceRefIDLTE(v uuid.UUID) predicate.NicknameChange {
+	return predicate.NicknameChange(sql.FieldLTE(FieldSourceRefID, v))
+}
+
+// SourceRefIDIsNil applies the IsNil predicate on the "source_ref_id" field.
+func SourceRefIDIsNil() predicate.NicknameChange {
+	return predicate.NicknameChange(sql.FieldIsNull(FieldSourceRefID))
+}
+
+// SourceRefIDNotNil applies the NotNil predicate on the "source_ref_id" field.
+func SourceRefIDNotNil() predicate.NicknameChange {
+	return predicate.NicknameChange(sql.FieldNotNull(FieldSourceRefID))
 }
 
 // And groups predicates with the AND operator between them.

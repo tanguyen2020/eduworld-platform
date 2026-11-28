@@ -42,6 +42,7 @@ var migrations = map[string][]string{
 	"20270101000103_f103_boss_coop.sql": {"boss_definitions", "boss_versions", "boss_encounters", "boss_encounter_members",
 		"boss_encounter_contributions", "boss_phase_plans", "boss_answer_results", "party_quest_sessions", "party_quest_contributions"},
 	"20270102000082_f082_translations.sql": {"config_translation_states", "translation_jobs"},
+	"20270204000136_f136_nickname.sql":     {},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -53,6 +54,8 @@ type addition struct {
 
 var added = map[string][]addition{
 	"20261228000001_f074_progression.sql": {{"game_profiles", []string{"grade_transition_year"}, nil}},
+	"20270204000136_f136_nickname.sql": {{"game_profiles", []string{"nickname_key"}, []string{"game_profiles_nickname_key_uq"}},
+		{"nickname_changes", []string{"source_ref_id"}, nil}},
 	"20261229000001_f075_economy.sql": {{"item_definition_versions", []string{"stackable", "max_stack", "payload", "payload_sha256", "change_note",
 		"snapshot_key", "snapshot_sha256", "published_at", "published_by"}, nil}},
 }

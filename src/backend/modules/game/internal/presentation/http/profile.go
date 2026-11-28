@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -23,6 +24,7 @@ import (
 type ProfileCommands interface {
 	UpdateAvatar(ctx context.Context, cfg profile.AvatarConfig) (profile.AvatarConfig, error)
 	UpdateProfile(ctx context.Context, in command.ProfileUpdate) (*profile.Profile, error)
+	ResetStudentNickname(ctx context.Context, student uuid.UUID, reason string) (command.ResetResult, error)
 	SavePreset(ctx context.Context, slot int, name *string, cfg profile.AvatarConfig) (command.PresetResult, error)
 }
 
@@ -38,6 +40,9 @@ type ProfileQueries interface {
 var ProfileOperations = []string{"getGameProfile", "updateGameProfile", "suggestNicknames", "updateAvatar", "listAvatarPresets",
 	"saveAvatarPreset", "getCharacterCatalog"}
 
+// NicknameResetOperations is the tenant route of F136 (portal staff; lms.student.nickname_reset checked by the use case).
+var NicknameResetOperations = []string{"resetStudentNickname"}
+
 func (h Handlers) profileRoutes() map[string]http.HandlerFunc {
 	return map[string]http.HandlerFunc{
 		"getGameProfile":      h.getGameProfile,
@@ -47,6 +52,8 @@ func (h Handlers) profileRoutes() map[string]http.HandlerFunc {
 		"listAvatarPresets":   h.listAvatarPresets,
 		"saveAvatarPreset":    h.saveAvatarPreset,
 		"getCharacterCatalog": h.getCharacterCatalog,
+		// F136: tenant route of the portal (school_admin, tenant_admin, System Admin).
+		"resetStudentNickname": h.resetStudentNickname,
 	}
 }
 
@@ -85,8 +92,28 @@ func (h Handlers) getGameProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Cache-Control", "private, no-store")
-	writeJSON(w, http.StatusOK, gameProfile(p.StudentID, p.Nickname, p.Level, p.XPTotal, p.SetupRequired, p.AvatarCreatedAt,
-		p.AvatarConfigHash, p.AvatarConfig, p.LastAreaID, p.Settings, p.PreferredLanguage))
+	body := gameProfile(p.StudentID, p.Nickname, p.Level, p.XPTotal, p.SetupRequired, p.AvatarCreatedAt,
+		p.AvatarConfigHash, p.AvatarConfig, p.LastAreaID, p.Settings, p.PreferredLanguage)
+	body["nickname_changes_left"] = p.NicknameChangesLeft
+	body["nickname_change_available_at"] = optTime(p.NicknameChangeAvailableAt)
+	writeJSON(w, http.StatusOK, body)
+}
+
+// nicknameNotAllowed is the one generic message of 422 NICKNAME_NOT_ALLOWED per language (F136-AC-05, AC-10): never the
+// rule that failed, the matched term or the typed text (R15).
+var nicknameNotAllowed = map[string]string{
+	"vi": "Tên này chưa dùng được, em thử tên khác hoặc chọn tên gợi ý nhé.",
+	"en": "This name can't be used. Try another one or pick a suggested name.",
+}
+
+// failNickname writes err; NICKNAME_NOT_ALLOWED gets the generic message of Accept-Language.
+func failNickname(w http.ResponseWriter, r *http.Request, err error) {
+	var pe *problem.Error
+	if errors.As(err, &pe) && pe.Code == problem.NicknameNotAllowed {
+		w.Header().Set("Content-Language", profile.Language(r.Header.Get("Accept-Language")))
+		err = problem.New(problem.NicknameNotAllowed, nicknameNotAllowed[profile.Language(r.Header.Get("Accept-Language"))])
+	}
+	fail(w, r, err)
 }
 
 func (h Handlers) updateGameProfile(w http.ResponseWriter, r *http.Request) {
@@ -96,6 +123,17 @@ func (h Handlers) updateGameProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in command.ProfileUpdate
+	if raw, ok := body["nickname"]; ok {
+		in.SetNickname = true
+		if string(bytes.TrimSpace(raw)) != "null" {
+			var s string
+			if err := json.Unmarshal(raw, &s); err != nil {
+				fail(w, r, problem.Invalid("nickname", problem.SubInvalid, "must be a string"))
+				return
+			}
+			in.Nickname = &s
+		}
+	}
 	if raw, ok := body["nickname_option_id"]; ok {
 		var id uuid.UUID
 		if err := json.Unmarshal(raw, &id); err != nil {
@@ -122,7 +160,7 @@ func (h Handlers) updateGameProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	p, err := h.Profiles.UpdateProfile(r.Context(), in)
 	if err != nil {
-		fail(w, r, err)
+		failNickname(w, r, err)
 		return
 	}
 	var avatar json.RawMessage
@@ -132,6 +170,33 @@ func (h Handlers) updateGameProfile(w http.ResponseWriter, r *http.Request) {
 	settings, _ := json.Marshal(p.Settings)
 	writeJSON(w, http.StatusOK, gameProfile(p.StudentID, p.Nickname, p.Level, p.XPTotal, p.NeedsSetup(), p.AvatarCreatedAt,
 		p.AvatarHash, avatar, p.LastAreaID, settings, p.PreferredLanguage))
+}
+
+// resetStudentNickname is POST /tenant/students/{student_id}/game-profile/nickname:reset (F136-AC-21; portal staff,
+// X-Tenant-Id, Idempotency-Key from the route chain).
+func (h Handlers) resetStudentNickname(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "student_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var body struct {
+		Reason *string `json:"reason"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		fail(w, r, problem.New(problem.BadRequest, "invalid JSON body"))
+		return
+	}
+	if body.Reason == nil {
+		fail(w, r, problem.Invalid("reason", problem.SubRequired, "required"))
+		return
+	}
+	out, err := h.Profiles.ResetStudentNickname(r.Context(), id, *body.Reason)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 func decodeAvatar(raw []byte) (profile.AvatarConfig, error) {

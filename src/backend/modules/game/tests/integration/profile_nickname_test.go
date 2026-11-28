@@ -88,14 +88,16 @@ func TestSuggestNicknames(t *testing.T) {
 func (e *env) setNickname(ctx context.Context, t *testing.T, o student, n string) {
 	t.Helper()
 	if _, err := e.platform.ExecContext(ctx, `INSERT INTO game.game_profiles (game_profile_id, tenant_id, student_id, school_id, created_at,
-		updated_at, settings, nickname) VALUES ($1, $2, $3, $4, now(), now(), '{}', $5)`, uuid.New(), o.tenant, o.id, o.school, n); err != nil {
+		updated_at, settings, nickname, nickname_key) VALUES ($1, $2, $3, $4, now(), now(), '{}', $5::varchar, lower($5::varchar))`, uuid.New(), o.tenant, o.id,
+		o.school, n); err != nil {
 		t.Fatal(err)
 	}
 }
 
 // T020 (F070-AC-08, AC-09, AC-10): a received option sets the nickname (history "initial", game_profile.updated,
 // setup_required false with an avatar); an unknown, expired or other student's option, or a name taken meanwhile in
-// the tenant, is 409 NICKNAME_UNAVAILABLE; a free "nickname" field is 422 VALIDATION_FAILED.
+// the tenant, is 409 NICKNAME_UNAVAILABLE. F136 (ADR-0105) replaces F070-AC-10: a typed "nickname" is accepted through
+// moderation (nickname_free_text_test.go); "nickname" together with "nickname_option_id" is 422 VALIDATION_FAILED.
 func TestChangeNickname(t *testing.T) {
 	ctx := context.Background()
 	e := setup(ctx, t, envOpts{})
@@ -107,9 +109,9 @@ func TestChangeNickname(t *testing.T) {
 	r := e.suggest(t, an, 6, "vi")
 	data := r.body["data"].([]any)
 	first := data[0].(map[string]any)
-	if r := e.patchProfile(t, an, map[string]any{"nickname": "Tên tự gõ"}); r.status != http.StatusUnprocessableEntity ||
+	if r := e.patchProfile(t, an, map[string]any{"nickname": "Tên tự gõ", "nickname_option_id": first["nickname_option_id"]}); r.status != http.StatusUnprocessableEntity ||
 		r.code() != string(problem.ValidationFailed) {
-		t.Fatalf("free nickname: %d %s", r.status, r.raw)
+		t.Fatalf("nickname and option together: %d %s", r.status, r.raw)
 	}
 	if r := e.patchProfile(t, binh, map[string]any{"nickname_option_id": first["nickname_option_id"]}); r.status != http.StatusConflict ||
 		r.code() != string(problem.NicknameUnavailable) {

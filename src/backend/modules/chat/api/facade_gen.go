@@ -22,6 +22,7 @@ import (
 
 // Defines values for DisplayTextCheckRequestContext.
 const (
+	Nickname  DisplayTextCheckRequestContext = "nickname"
 	PartyName DisplayTextCheckRequestContext = "party_name"
 	TeamName  DisplayTextCheckRequestContext = "team_name"
 )
@@ -29,6 +30,8 @@ const (
 // Valid indicates whether the value is a known member of the DisplayTextCheckRequestContext enum.
 func (e DisplayTextCheckRequestContext) Valid() bool {
 	switch e {
+	case Nickname:
+		return true
 	case PartyName:
 		return true
 	case TeamName:
@@ -353,7 +356,7 @@ func (e CommonInternalCommonV1UserLifecycleResultStatus) Valid() bool {
 	}
 }
 
-// DisplayTextCheckRequest Examples: {"author_id":"0193a5f4-6c1e-7b2a-9d1f-000000000005","context":"party_name","tenant_id":"0193a5f4-6c1e-7b2a-9d1f-000000000001","text":"Nhóm Sao Băng"}
+// DisplayTextCheckRequest Examples: {"author_id":"0193a5f4-6c1e-7b2a-9d1f-000000000005","context":"party_name","tenant_id":"0193a5f4-6c1e-7b2a-9d1f-000000000001","text":"Nhóm Sao Băng"}, {"author_id":"0193a5f4-6c1e-7b2a-9d1f-000000000005","context":"nickname","tenant_id":"0193a5f4-6c1e-7b2a-9d1f-000000000001","text":"Siêu Nhân Sao Băng"}
 type DisplayTextCheckRequest struct {
 	AuthorId openapi_types.UUID             `json:"author_id"`
 	Context  DisplayTextCheckRequestContext `json:"context"`
@@ -778,7 +781,7 @@ type MergeUserDataJSONRequestBody = CommonInternalCommonV1UserMergeRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// ModerateDisplayText Kiểm duyệt tên hiển thị do học sinh tự đặt (tên party, tên đội) qua pipeline của module chat
+	// ModerateDisplayText Kiểm duyệt tên hiển thị do học sinh tự đặt (tên party, tên đội, nickname) qua pipeline của module chat
 	// (POST /internal/v1/moderation/display-text:check)
 	ModerateDisplayText(w http.ResponseWriter, r *http.Request)
 	// ScreenText Kiểm tra từ nhạy cảm của văn bản nhà trường nhập (tên, mô tả sự kiện trường) qua pipeline của module chat
@@ -2635,7 +2638,7 @@ func (response MergeUserData409ApplicationProblemPlusJSONResponse) VisitMergeUse
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
-	// ModerateDisplayText Kiểm duyệt tên hiển thị do học sinh tự đặt (tên party, tên đội) qua pipeline của module chat
+	// ModerateDisplayText Kiểm duyệt tên hiển thị do học sinh tự đặt (tên party, tên đội, nickname) qua pipeline của module chat
 	// (POST /internal/v1/moderation/display-text:check)
 	ModerateDisplayText(ctx context.Context, request ModerateDisplayTextRequestObject) (ModerateDisplayTextResponseObject, error)
 	// ScreenText Kiểm tra từ nhạy cảm của văn bản nhà trường nhập (tên, mô tả sự kiện trường) qua pipeline của module chat

@@ -107,6 +107,20 @@ func (_c *NicknameChangeCreate) SetNillableChangedAt(v *time.Time) *NicknameChan
 	return _c
 }
 
+// SetSourceRefID sets the "source_ref_id" field.
+func (_c *NicknameChangeCreate) SetSourceRefID(v uuid.UUID) *NicknameChangeCreate {
+	_c.mutation.SetSourceRefID(v)
+	return _c
+}
+
+// SetNillableSourceRefID sets the "source_ref_id" field if the given value is not nil.
+func (_c *NicknameChangeCreate) SetNillableSourceRefID(v *uuid.UUID) *NicknameChangeCreate {
+	if v != nil {
+		_c.SetSourceRefID(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *NicknameChangeCreate) SetID(v uuid.UUID) *NicknameChangeCreate {
 	_c.mutation.SetID(v)
@@ -291,6 +305,10 @@ func (_c *NicknameChangeCreate) createSpec() (*NicknameChange, *sqlgraph.CreateS
 	if value, ok := _c.mutation.ChangedAt(); ok {
 		_spec.SetField(nicknamechange.FieldChangedAt, field.TypeTime, value)
 		_node.ChangedAt = value
+	}
+	if value, ok := _c.mutation.SourceRefID(); ok {
+		_spec.SetField(nicknamechange.FieldSourceRefID, field.TypeUUID, value)
+		_node.SourceRefID = &value
 	}
 	return _node, _spec
 }

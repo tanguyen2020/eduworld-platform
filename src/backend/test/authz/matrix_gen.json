@@ -5604,6 +5604,18 @@
     "required": []
   },
   {
+    "operation_id": "resetStudentNickname",
+    "module": "game",
+    "method": "POST",
+    "path": "/tenant/students/{student_id}/game-profile/nickname:reset",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "resetStudentPassword",
     "module": "identity",
     "method": "POST",

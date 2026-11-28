@@ -23,6 +23,7 @@ export const FIELDS = {
   grantReason: { source: 'schemas/UserRoleGrantRequest/properties/reason', maxLength: 1000 },
   revokeReason: { source: 'parameters/ReasonQuery', minLength: 3, maxLength: 1000 },
   passwordResetReason: { source: 'schemas/StudentPasswordResetRequest/properties/reason', minLength: 3, maxLength: 500 },
+  nicknameResetReason: { source: 'schemas/StudentNicknameResetRequest/properties/reason', minLength: 3, maxLength: 500 },
   resolveReason: { source: 'schemas/SchoolReconciliationResolve/properties/reason', minLength: 3, maxLength: 500 },
   cleanupReason: { source: 'schemas/CleanupExclusionRequest/properties/reason', minLength: 3, maxLength: 500 },
   schoolSettingsReason: { source: 'schemas/SchoolSettings/properties/reason', minLength: 3, maxLength: 500 },

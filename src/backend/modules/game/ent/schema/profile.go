@@ -15,7 +15,9 @@ import (
 // (nickname, avatar, level read from F074). Created by EnsureGameProfile in the transaction of createGameSession
 // (F014). One live profile per (tenant, student): a surrogate key game_profile_id replaces the student_id key of
 // DATABASE_DESIGN §2.8 because a student may hold memberships in several tenants.
-// The nickname is unique in the tenant (case-insensitive partial index written by hand: ent cannot express lower()). Never returns or stores a real name, username, school or class (R16).
+// The nickname is unique in the tenant, case-insensitive: nickname_key (F136, ADR-0105: lower case of the NFC, trimmed,
+// collapsed nickname) under a partial unique index; the F070 index on lower(nickname) stays (written by hand: ent cannot
+// express lower()). Never returns or stores a real name, username, school or class (R16).
 type GameProfile struct{ ent.Schema }
 
 func (GameProfile) Annotations() []schema.Annotation {
@@ -41,6 +43,7 @@ func (GameProfile) Fields() []ent.Field {
 		field.String("preferred_language").MaxLen(64).Optional().Nillable(),
 		field.Time("last_game_login_at").Optional().Nillable(),
 		field.String("grade_transition_year").MaxLen(16).Optional().Nillable(), // F074: school year of the last ApplyGradeTransition
+		field.String("nickname_key").MaxLen(32).Optional().Nillable(),          // F136: case-insensitive uniqueness key
 	}
 }
 func (GameProfile) Indexes() []ent.Index {
@@ -48,6 +51,8 @@ func (GameProfile) Indexes() []ent.Index {
 		index.Fields("tenant_id", "student_id").Unique().StorageKey("game_profiles_student_uq").
 			Annotations(entsql.IndexWhere("deleted_at IS NULL")),
 		index.Fields("tenant_id", "school_id").StorageKey("game_profiles_tenant_school_idx"),
+		index.Fields("tenant_id", "nickname_key").Unique().StorageKey("game_profiles_nickname_key_uq").
+			Annotations(entsql.IndexWhere("deleted_at IS NULL AND nickname_key IS NOT NULL")),
 	}
 }
 
@@ -69,6 +74,8 @@ func (NicknameChange) Fields() []ent.Field {
 		field.String("reason").MaxLen(64).Immutable(),
 		field.UUID("changed_by", uuid.UUID{}).Immutable(),
 		field.Time("changed_at").Default(nowUTC).Immutable(),
+		// F136: the sanction of a reset by the Safety Team (sanction.applied nickname_reset), so it is applied once.
+		field.UUID("source_ref_id", uuid.UUID{}).Optional().Nillable().Immutable(),
 	}
 }
 func (NicknameChange) Indexes() []ent.Index {

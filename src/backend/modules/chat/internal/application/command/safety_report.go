@@ -30,8 +30,13 @@ type ReportInput struct {
 	ChannelID  *uuid.UUID
 	MatchID    *uuid.UUID
 	PartyID    *uuid.UUID
-	Lang       string // Accept-Language of the thank-you
+	// ReportedField is context.reported_field ("nickname", F136-AC-18): only with target_type user.
+	ReportedField string
+	Lang          string // Accept-Language of the thank-you
 }
+
+// ReportedNickname is the only value of context.reported_field.
+const ReportedNickname = "nickname"
 
 // ReportResult is the result of createReport.
 type ReportResult struct {
@@ -61,11 +66,14 @@ type snapshot struct {
 	ChannelID *uuid.UUID         `json:"channel_id,omitempty"`
 	Context   map[string]string  `json:"context,omitempty"`
 	Messages  []read.CaseMessage `json:"messages"`
-	TakenAt   time.Time          `json:"taken_at"`
+	// ReportedNickname is the nickname of the reported student read on the server at the time of a nickname report
+	// (ref.player_profiles, F136-AC-18) — never a value sent by the client (R5).
+	ReportedNickname *string   `json:"reported_nickname,omitempty"`
+	TakenAt          time.Time `json:"taken_at"`
 }
 
 func (h Safety) evidence(ctx context.Context, c *read.CaseRow, id uuid.UUID, report, school *uuid.UUID, s snapshot) (*uuid.UUID, error) {
-	if len(s.Messages) == 0 {
+	if len(s.Messages) == 0 && s.ReportedNickname == nil {
 		return nil, nil
 	}
 	b, err := json.Marshal(s)
@@ -104,6 +112,9 @@ func (h Safety) CreateReport(ctx context.Context, in ReportInput) (res ReportRes
 	}
 	if in.TargetType != safety.TargetMessage && in.TargetType != safety.TargetUser {
 		return res, problem.Invalid("target_type", problem.SubInvalid, "message or user")
+	}
+	if in.ReportedField != "" && (in.ReportedField != ReportedNickname || in.TargetType != safety.TargetUser) {
+		return res, problem.Invalid("context.reported_field", problem.SubInvalid, "nickname of a user report only")
 	}
 	now := h.now()
 	var held []write.SafetySanction
@@ -154,6 +165,11 @@ func (h Safety) CreateReport(ctx context.Context, in ReportInput) (res ReportRes
 				return notFound()
 			}
 			targetUser = in.TargetID
+			if in.ReportedField == ReportedNickname {
+				if snap.ReportedNickname, err = h.Store.PlayerNickname(ctx, tenant, in.TargetID); err != nil {
+					return err
+				}
+			}
 			if in.ChannelID != nil {
 				member, err := h.Store.Member(ctx, tenant, *in.ChannelID, me, now)
 				if err != nil {
@@ -199,7 +215,7 @@ func (h Safety) CreateReport(ctx context.Context, in ReportInput) (res ReportRes
 		}
 		reportID := ids.New()
 		var evidence *uuid.UUID
-		if len(snap.Messages) > 0 {
+		if len(snap.Messages) > 0 || snap.ReportedNickname != nil {
 			eid := ids.New()
 			evidence = &eid
 		}
@@ -277,6 +293,9 @@ func reportContext(in ReportInput) map[string]string {
 		if v != nil {
 			m[k] = v.String()
 		}
+	}
+	if in.ReportedField != "" {
+		m["reported_field"] = in.ReportedField
 	}
 	if len(m) == 0 {
 		return nil

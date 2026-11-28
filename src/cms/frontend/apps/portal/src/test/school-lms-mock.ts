@@ -156,6 +156,11 @@ export function installSchoolLmsMock(backend: MockPortalBackend): SchoolLmsMockS
       if (tenantOf(r) !== T_A) return problem(404, 'NOT_FOUND');
       return json(200, { student_id: x[1], username: 'hs.an.3a', initial_password: 'Mock-Pass-0001', password_temporary: true, password_redacted: false, reset_at: '2026-11-19T08:00:00Z' });
     }
+    if ((x = /^\/tenant\/students\/([^/]+)\/game-profile\/nickname:reset$/.exec(p)) && m === 'POST') {
+      // MOCK resetStudentNickname (F136): the nickname is always null after the reset
+      if (tenantOf(r) !== T_A) return problem(404, 'NOT_FOUND');
+      return json(200, { student_id: x[1], nickname: null, reset_at: '2026-11-28T08:00:00Z' });
+    }
     if ((x = /^\/schools\/([^/]+)\/sis-imports$/.exec(p)) && m === 'POST') {
       if (!schoolIn(r, x[1]!)) return problem(404, 'NOT_FOUND');
       return json(202, { import_id: IDS.importId, school_id: x[1], status: 'awaiting_upload', upload_url: 'https://storage.test/upload/sis.csv?sig=mock', upload_expires_at: '2099-01-01T00:00:00Z', created_at: '2026-11-19T08:00:00Z' });

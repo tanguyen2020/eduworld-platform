@@ -5354,7 +5354,7 @@ components:
             - string
             - 'null'
           maxLength: 32
-          description: null tới khi chọn từ gợi ý (suggestNicknames)
+          description: null tới khi học sinh đặt (tự gõ hoặc chọn gợi ý) và sau khi nickname bị đặt lại (F136 US5)
         level:
           type: integer
           minimum: 1
@@ -5363,7 +5363,17 @@ components:
           minimum: 0
         setup_required:
           type: boolean
-          description: true khi chưa có avatar hoặc nickname — game mở màn Tạo nhân vật (S02) trước Main Hub (F070-AC-01)
+          description: true khi chưa có avatar hoặc nickname (kể cả sau khi nickname bị đặt lại) — game mở màn Tạo nhân vật (S02) trước Main Hub (F070-AC-01, F136-AC-23)
+        nickname_changes_left:
+          type: integer
+          minimum: 0
+          description: Số lần học sinh còn được đổi nickname trong tháng dương lịch (nickname_change_monthly_limit, trường chỉ siết thêm); lần đặt đầu và lần chọn lại sau khi bị đặt lại không tính (F136-AC-07, AC-08)
+        nickname_change_available_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: 'Khi nickname_changes_left = 0: thời điểm đổi lại được (đầu tháng sau theo Asia/Ho_Chi_Minh); null khi còn lượt — client hiện ngày, không đếm ngược (F136-AC-07, R19)'
         avatar_created_at:
           type:
             - string
@@ -5633,6 +5643,7 @@ components:
         - EQUIP_SLOT_INVALID
         - NICKNAME_UNAVAILABLE
         - NICKNAME_CHANGE_LIMIT
+        - NICKNAME_NOT_ALLOWED
         - QUEST_ALREADY_COMPLETED
         - QUEST_COOLDOWN
         - QUEST_PREREQUISITE_NOT_MET

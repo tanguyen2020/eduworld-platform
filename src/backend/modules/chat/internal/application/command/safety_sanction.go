@@ -62,8 +62,10 @@ func (h Safety) CreateSanction(ctx context.Context, in SanctionInput) (out read.
 		if s, err = h.newSanction(ctx, p, tenant, in.UserID, in.CaseID, in.Type, in.DurationMinutes, in.ChannelID, in.Reason, now); err != nil {
 			return err
 		}
-		if err := h.later(ctx, s.UserID, &s); err != nil {
-			return err
+		if !safety.Immediate(s.Type) { // nickname_reset: no cache, no realtime notice (module game reacts to the event)
+			if err := h.later(ctx, s.UserID, &s); err != nil {
+				return err
+			}
 		}
 		if c != nil {
 			act := safety.ActionRestrict
@@ -72,6 +74,8 @@ func (h Safety) CreateSanction(ctx context.Context, in SanctionInput) (out read.
 				act = safety.ActionWarn
 			case safety.SanctionMute:
 				act = safety.ActionMute
+			case safety.SanctionNicknameReset:
+				act = safety.ActionNicknameReset
 			}
 			sid := s.ID
 			if err := h.action(ctx, c, act, &p.UserID, "moderator", nil, &sid, nil, now); err != nil {

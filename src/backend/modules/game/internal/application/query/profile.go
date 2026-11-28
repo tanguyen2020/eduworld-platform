@@ -30,6 +30,9 @@ type Profile struct {
 	TTL time.Duration
 	// Rand draws the nickname words (nil: math/rand/v2 seeded per call).
 	Rand profile.Rand
+	// Policy is nickname_change_monthly_limit (getGameProfile nickname_changes_left, F136-AC-07); Now the clock (nil: wall).
+	Policy profile.NicknamePolicy
+	Now    func() time.Time
 }
 
 func studentOf(ctx context.Context) (uuid.UUID, uuid.UUID, error) {
@@ -47,6 +50,10 @@ func studentOf(ctx context.Context) (uuid.UUID, uuid.UUID, error) {
 type GameProfile struct {
 	read.Profile
 	SetupRequired bool
+	// NicknameChangesLeft and NicknameChangeAvailableAt (nil while changes are left) — F136-AC-07, AC-08: the first
+	// nickname and the one after a reset are not counted.
+	NicknameChangesLeft       int
+	NicknameChangeAvailableAt *time.Time
 }
 
 // GetGameProfile implements getGameProfile (F070-AC-01): the own profile of the student; setup_required while the
@@ -59,9 +66,18 @@ func (q Profile) GetGameProfile(ctx context.Context) (out GameProfile, err error
 	if err != nil {
 		return out, err
 	}
+	now := time.Now().UTC()
+	if q.Now != nil {
+		now = q.Now().UTC()
+	}
 	var p *read.Profile
+	changes := 0
+	var school *int
 	if err = q.Read.Read(ctx, func(ctx context.Context) error {
-		p, err = q.Profiles.Profile(ctx, tenant, id)
+		if p, err = q.Profiles.Profile(ctx, tenant, id); err != nil || p == nil {
+			return err
+		}
+		changes, school, err = q.Profiles.NicknameAllowance(ctx, tenant, id, q.Policy.Effective(nil).MonthStart(now))
 		return err
 	}); err != nil {
 		return out, err
@@ -69,7 +85,13 @@ func (q Profile) GetGameProfile(ctx context.Context) (out GameProfile, err error
 	if p == nil {
 		p = &read.Profile{StudentID: id, Level: 1}
 	}
-	out = GameProfile{Profile: *p, SetupRequired: p.AvatarCreatedAt == nil || len(p.AvatarConfig) == 0 || p.Nickname == nil}
+	policy := q.Policy.Effective(school)
+	out = GameProfile{Profile: *p, SetupRequired: p.AvatarCreatedAt == nil || len(p.AvatarConfig) == 0 || p.Nickname == nil,
+		NicknameChangesLeft: policy.Left(changes)}
+	if out.NicknameChangesLeft == 0 {
+		next := policy.NextMonth(now).UTC()
+		out.NicknameChangeAvailableAt = &next
+	}
 	return out, nil
 }
 

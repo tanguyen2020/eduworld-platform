@@ -87,7 +87,14 @@
       "searchInCase": "Search in this case",
       "take": "Take the case",
       "targetUser": "Student concerned",
-      "title": "Case …{{id}}"
+      "title": "Case …{{id}}",
+      "reportedNickname": "Reported nickname",
+      "nicknameReset": "Reset nickname",
+      "nicknameResetHint": "Removes the student's nickname: next time in the game the student picks a new name (the reporter is never named) and other players see a neutral name. The note is internal only.",
+      "nicknameTarget": "Student whose nickname is reset",
+      "nicknameTargetRequired": "Choose the student whose nickname is reset.",
+      "nicknameNote": "Nickname reset note",
+      "nicknameResetDone": "Nickname reset. The student will pick a new name in the game."
     },
     "action": {
       "warn": "Warn",
@@ -98,7 +105,8 @@
       "dismiss": "Dismiss",
       "close": "Close",
       "reopen": "Reopen",
-      "created": "Case created"
+      "created": "Case created",
+      "nickname_reset": "Nickname reset"
     },
     "sanctionType": {
       "warning": "Warning",
@@ -107,7 +115,8 @@
       "restrict_dm": "No direct messages",
       "restrict_multiplayer": "No multiplayer",
       "restrict_competition": "No competition",
-      "account_lock": "Account lock"
+      "account_lock": "Account lock",
+      "nickname_reset": "Nickname reset"
     },
     "messageState": {
       "allowed": "Allowed",

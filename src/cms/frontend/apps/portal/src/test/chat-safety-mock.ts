@@ -66,6 +66,12 @@ export const SAFETY_ACCOUNTS: Record<string, MockAccount> = {
     username: 'sm.antoan', email: 'sm.antoan@eduworld.test', password: ACCOUNTS['sa.admin']!.password, platform: true, sub: CS.moderator,
     displayName: 'Safety Moderator', tenants: [], perms: { platform: { workspaces: catalogWorkspaces(SAFETY_PERMS), permissions: SAFETY_PERMS } },
   },
+  /** Read-only Safety Team member (F136 test): every SAFETY_PERMS but moderation.case.act. */
+  'sm.chixem': {
+    username: 'sm.chixem', email: 'sm.chixem@eduworld.test', password: ACCOUNTS['sa.admin']!.password, platform: true, sub: '0193a4d2-1111-7000-8000-0000000000e4',
+    displayName: 'Safety Viewer', tenants: [],
+    perms: { platform: { workspaces: catalogWorkspaces(SAFETY_PERMS.filter((p) => p !== 'moderation.case.act')), permissions: SAFETY_PERMS.filter((p) => p !== 'moderation.case.act') } },
+  },
   'sa.admin2': {
     ...ACCOUNTS['sa.admin']!, username: 'sa.admin2', email: 'sa.admin2@eduworld.test', sub: '0193a4d2-1111-7000-8000-0000000000e2', displayName: 'System Admin 2',
   },

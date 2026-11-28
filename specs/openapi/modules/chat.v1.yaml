@@ -6697,6 +6697,7 @@ components:
         - EQUIP_SLOT_INVALID
         - NICKNAME_UNAVAILABLE
         - NICKNAME_CHANGE_LIMIT
+        - NICKNAME_NOT_ALLOWED
         - QUEST_ALREADY_COMPLETED
         - QUEST_COOLDOWN
         - QUEST_PREREQUISITE_NOT_MET
@@ -7286,6 +7287,11 @@ components:
               $ref: '#/components/schemas/Uuid'
             party_id:
               $ref: '#/components/schemas/Uuid'
+            reported_field:
+              type: string
+              enum:
+                - nickname
+              description: 'Báo cáo nickname của người bị báo cáo (F136 US4: target_type = user, reason = inappropriate_content); module chat tự chụp nickname hiện tại từ ref.player_profiles vào bằng chứng của case — không nhận nickname từ client (R5)'
     FriendSuggestion:
       type: object
       description: Một gợi ý kết bạn của `listFriendSuggestions` (delta F095) — không tên thật, trường, khối (R16)
@@ -8838,6 +8844,10 @@ components:
                 properties:
                   evidence_id:
                     $ref: '#/components/schemas/Uuid'
+                  reported_nickname:
+                    type: string
+                    maxLength: 32
+                    description: Bản chụp nickname phía server lúc báo cáo nickname (context.reported_field = nickname, F136-AC-18, AC-22) — văn bản thuần
                   created_at:
                     $ref: '#/components/schemas/Timestamp'
             support_guide:
@@ -9031,6 +9041,8 @@ components:
             - dismiss
             - close
             - reopen
+            - nickname_reset
+          description: 'nickname_reset (F136-AC-19): sanction tức thời nickname_reset cho một học sinh của case — module game đặt nickname về null qua sanction.applied'
         target_user_id:
           $ref: '#/components/schemas/Uuid'
         message_id:
@@ -9134,6 +9146,7 @@ components:
         - restrict_multiplayer
         - restrict_competition
         - account_lock
+        - nickname_reset
     SanctionCreate:
       type: object
       required:

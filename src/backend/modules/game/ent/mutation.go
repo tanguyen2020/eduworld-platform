@@ -55259,6 +55259,7 @@ type GameProfileMutation struct {
 	preferred_language    *string
 	last_game_login_at    *time.Time
 	grade_transition_year *string
+	nickname_key          *string
 	clearedFields         map[string]struct{}
 	done                  bool
 	oldValue              func(context.Context) (*GameProfile, error)
@@ -56509,6 +56510,55 @@ func (m *GameProfileMutation) ResetGradeTransitionYear() {
 	delete(m.clearedFields, gameprofile.FieldGradeTransitionYear)
 }
 
+// SetNicknameKey sets the "nickname_key" field.
+func (m *GameProfileMutation) SetNicknameKey(s string) {
+	m.nickname_key = &s
+}
+
+// NicknameKey returns the value of the "nickname_key" field in the mutation.
+func (m *GameProfileMutation) NicknameKey() (r string, exists bool) {
+	v := m.nickname_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNicknameKey returns the old "nickname_key" field's value of the GameProfile entity.
+// If the GameProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GameProfileMutation) OldNicknameKey(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNicknameKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNicknameKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNicknameKey: %w", err)
+	}
+	return oldValue.NicknameKey, nil
+}
+
+// ClearNicknameKey clears the value of the "nickname_key" field.
+func (m *GameProfileMutation) ClearNicknameKey() {
+	m.nickname_key = nil
+	m.clearedFields[gameprofile.FieldNicknameKey] = struct{}{}
+}
+
+// NicknameKeyCleared returns if the "nickname_key" field was cleared in this mutation.
+func (m *GameProfileMutation) NicknameKeyCleared() bool {
+	_, ok := m.clearedFields[gameprofile.FieldNicknameKey]
+	return ok
+}
+
+// ResetNicknameKey resets all changes to the "nickname_key" field.
+func (m *GameProfileMutation) ResetNicknameKey() {
+	m.nickname_key = nil
+	delete(m.clearedFields, gameprofile.FieldNicknameKey)
+}
+
 // Where appends a list predicates to the GameProfileMutation builder.
 func (m *GameProfileMutation) Where(ps ...predicate.GameProfile) {
 	m.predicates = append(m.predicates, ps...)
@@ -56543,7 +56593,7 @@ func (m *GameProfileMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GameProfileMutation) Fields() []string {
-	fields := make([]string, 0, 24)
+	fields := make([]string, 0, 25)
 	if m.tenant_id != nil {
 		fields = append(fields, gameprofile.FieldTenantID)
 	}
@@ -56616,6 +56666,9 @@ func (m *GameProfileMutation) Fields() []string {
 	if m.grade_transition_year != nil {
 		fields = append(fields, gameprofile.FieldGradeTransitionYear)
 	}
+	if m.nickname_key != nil {
+		fields = append(fields, gameprofile.FieldNicknameKey)
+	}
 	return fields
 }
 
@@ -56672,6 +56725,8 @@ func (m *GameProfileMutation) Field(name string) (ent.Value, bool) {
 		return m.LastGameLoginAt()
 	case gameprofile.FieldGradeTransitionYear:
 		return m.GradeTransitionYear()
+	case gameprofile.FieldNicknameKey:
+		return m.NicknameKey()
 	}
 	return nil, false
 }
@@ -56729,6 +56784,8 @@ func (m *GameProfileMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldLastGameLoginAt(ctx)
 	case gameprofile.FieldGradeTransitionYear:
 		return m.OldGradeTransitionYear(ctx)
+	case gameprofile.FieldNicknameKey:
+		return m.OldNicknameKey(ctx)
 	}
 	return nil, fmt.Errorf("unknown GameProfile field %s", name)
 }
@@ -56906,6 +56963,13 @@ func (m *GameProfileMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetGradeTransitionYear(v)
 		return nil
+	case gameprofile.FieldNicknameKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNicknameKey(v)
+		return nil
 	}
 	return fmt.Errorf("unknown GameProfile field %s", name)
 }
@@ -57032,6 +57096,9 @@ func (m *GameProfileMutation) ClearedFields() []string {
 	if m.FieldCleared(gameprofile.FieldGradeTransitionYear) {
 		fields = append(fields, gameprofile.FieldGradeTransitionYear)
 	}
+	if m.FieldCleared(gameprofile.FieldNicknameKey) {
+		fields = append(fields, gameprofile.FieldNicknameKey)
+	}
 	return fields
 }
 
@@ -57090,6 +57157,9 @@ func (m *GameProfileMutation) ClearField(name string) error {
 		return nil
 	case gameprofile.FieldGradeTransitionYear:
 		m.ClearGradeTransitionYear()
+		return nil
+	case gameprofile.FieldNicknameKey:
+		m.ClearNicknameKey()
 		return nil
 	}
 	return fmt.Errorf("unknown GameProfile nullable field %s", name)
@@ -57170,6 +57240,9 @@ func (m *GameProfileMutation) ResetField(name string) error {
 		return nil
 	case gameprofile.FieldGradeTransitionYear:
 		m.ResetGradeTransitionYear()
+		return nil
+	case gameprofile.FieldNicknameKey:
+		m.ResetNicknameKey()
 		return nil
 	}
 	return fmt.Errorf("unknown GameProfile field %s", name)
@@ -79223,6 +79296,7 @@ type NicknameChangeMutation struct {
 	reason        *string
 	changed_by    *uuid.UUID
 	changed_at    *time.Time
+	source_ref_id *uuid.UUID
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*NicknameChange, error)
@@ -79683,6 +79757,55 @@ func (m *NicknameChangeMutation) ResetChangedAt() {
 	m.changed_at = nil
 }
 
+// SetSourceRefID sets the "source_ref_id" field.
+func (m *NicknameChangeMutation) SetSourceRefID(u uuid.UUID) {
+	m.source_ref_id = &u
+}
+
+// SourceRefID returns the value of the "source_ref_id" field in the mutation.
+func (m *NicknameChangeMutation) SourceRefID() (r uuid.UUID, exists bool) {
+	v := m.source_ref_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceRefID returns the old "source_ref_id" field's value of the NicknameChange entity.
+// If the NicknameChange object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NicknameChangeMutation) OldSourceRefID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceRefID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceRefID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceRefID: %w", err)
+	}
+	return oldValue.SourceRefID, nil
+}
+
+// ClearSourceRefID clears the value of the "source_ref_id" field.
+func (m *NicknameChangeMutation) ClearSourceRefID() {
+	m.source_ref_id = nil
+	m.clearedFields[nicknamechange.FieldSourceRefID] = struct{}{}
+}
+
+// SourceRefIDCleared returns if the "source_ref_id" field was cleared in this mutation.
+func (m *NicknameChangeMutation) SourceRefIDCleared() bool {
+	_, ok := m.clearedFields[nicknamechange.FieldSourceRefID]
+	return ok
+}
+
+// ResetSourceRefID resets all changes to the "source_ref_id" field.
+func (m *NicknameChangeMutation) ResetSourceRefID() {
+	m.source_ref_id = nil
+	delete(m.clearedFields, nicknamechange.FieldSourceRefID)
+}
+
 // Where appends a list predicates to the NicknameChangeMutation builder.
 func (m *NicknameChangeMutation) Where(ps ...predicate.NicknameChange) {
 	m.predicates = append(m.predicates, ps...)
@@ -79717,7 +79840,7 @@ func (m *NicknameChangeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *NicknameChangeMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.tenant_id != nil {
 		fields = append(fields, nicknamechange.FieldTenantID)
 	}
@@ -79745,6 +79868,9 @@ func (m *NicknameChangeMutation) Fields() []string {
 	if m.changed_at != nil {
 		fields = append(fields, nicknamechange.FieldChangedAt)
 	}
+	if m.source_ref_id != nil {
+		fields = append(fields, nicknamechange.FieldSourceRefID)
+	}
 	return fields
 }
 
@@ -79771,6 +79897,8 @@ func (m *NicknameChangeMutation) Field(name string) (ent.Value, bool) {
 		return m.ChangedBy()
 	case nicknamechange.FieldChangedAt:
 		return m.ChangedAt()
+	case nicknamechange.FieldSourceRefID:
+		return m.SourceRefID()
 	}
 	return nil, false
 }
@@ -79798,6 +79926,8 @@ func (m *NicknameChangeMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldChangedBy(ctx)
 	case nicknamechange.FieldChangedAt:
 		return m.OldChangedAt(ctx)
+	case nicknamechange.FieldSourceRefID:
+		return m.OldSourceRefID(ctx)
 	}
 	return nil, fmt.Errorf("unknown NicknameChange field %s", name)
 }
@@ -79870,6 +80000,13 @@ func (m *NicknameChangeMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetChangedAt(v)
 		return nil
+	case nicknamechange.FieldSourceRefID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceRefID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown NicknameChange field %s", name)
 }
@@ -79906,6 +80043,9 @@ func (m *NicknameChangeMutation) ClearedFields() []string {
 	if m.FieldCleared(nicknamechange.FieldOldNickname) {
 		fields = append(fields, nicknamechange.FieldOldNickname)
 	}
+	if m.FieldCleared(nicknamechange.FieldSourceRefID) {
+		fields = append(fields, nicknamechange.FieldSourceRefID)
+	}
 	return fields
 }
 
@@ -79925,6 +80065,9 @@ func (m *NicknameChangeMutation) ClearField(name string) error {
 		return nil
 	case nicknamechange.FieldOldNickname:
 		m.ClearOldNickname()
+		return nil
+	case nicknamechange.FieldSourceRefID:
+		m.ClearSourceRefID()
 		return nil
 	}
 	return fmt.Errorf("unknown NicknameChange nullable field %s", name)
@@ -79960,6 +80103,9 @@ func (m *NicknameChangeMutation) ResetField(name string) error {
 		return nil
 	case nicknamechange.FieldChangedAt:
 		m.ResetChangedAt()
+		return nil
+	case nicknamechange.FieldSourceRefID:
+		m.ResetSourceRefID()
 		return nil
 	}
 	return fmt.Errorf("unknown NicknameChange field %s", name)

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -57,6 +58,33 @@ func (Profiles) Profile(ctx context.Context, tenant, student uuid.UUID) (*read.P
 	}
 	p.Settings = settings
 	return &p, nil
+}
+
+// NicknameAllowance implements read.ProfileReadModel.
+func (Profiles) NicknameAllowance(ctx context.Context, tenant, student uuid.UUID, since time.Time) (int, *int, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return 0, nil, err
+	}
+	var n int
+	var limit sql.NullInt64
+	// tenancyguard:ok TenantScope (RLS) plus the explicit tenant_id; game_profiles deleted_at filtered; nickname_changes is
+	// append-only (no deleted_at); ref.schools is a projection without deleted_at
+	err = t.QueryRowContext(ctx, `SELECT
+			(SELECT count(*) FROM game.nickname_changes c WHERE c.tenant_id = $1 AND c.student_id = $2 AND c.reason = 'player_change'
+				AND c.changed_at >= $3),
+			(SELECT CASE WHEN jsonb_typeof(s.settings_subset->'nickname_change_monthly_limit') = 'number'
+				THEN (s.settings_subset->>'nickname_change_monthly_limit')::numeric::bigint END
+			 FROM game.game_profiles g JOIN ref.schools s ON s.tenant_id = g.tenant_id AND s.school_id = g.school_id
+			 WHERE g.tenant_id = $1 AND g.student_id = $2 AND g.deleted_at IS NULL)`, tenant, student, since.UTC()).Scan(&n, &limit)
+	if err != nil {
+		return 0, nil, fmt.Errorf("game profile: nickname allowance: %w", err)
+	}
+	if !limit.Valid {
+		return n, nil, nil
+	}
+	l := int(limit.Int64)
+	return n, &l, nil
 }
 
 // Presets implements read.ProfileReadModel.

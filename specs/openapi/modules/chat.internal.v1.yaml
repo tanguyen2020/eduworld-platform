@@ -392,12 +392,16 @@ paths:
     post:
       tags: [moderation]
       operationId: moderateDisplayText
-      summary: Kiểm duyệt tên hiển thị do học sinh tự đặt (tên party, tên đội) qua pipeline của module chat
+      summary: Kiểm duyệt tên hiển thị do học sinh tự đặt (tên party, tên đội, nickname) qua pipeline của module chat
       description: |
         Gọi trong tiến trình trước khi lưu tên (MODERATION §1, AGENTS R15). Chỉ trả quyết định `allowed`/`blocked`:
-        **không** trả từ đã khớp, vị trí khớp hay danh mục (R15). Bên gọi dùng deadline của request; hết deadline hoặc
-        `503` → bên gọi dùng tên mặc định sinh tự động (F100 research R2). Hiện thực bởi F116 (pipeline kiểm duyệt).
-      x-allowed-callers: [competition]
+        **không** trả từ đã khớp, vị trí khớp hay danh mục (R15). Cùng chuẩn hóa tiếng Việt, danh mục hiệu lực (platform +
+        tenant), công tắc hiệu lực (ADR-0030) và bước PII/grooming luôn chạy (ADR-0078) như tin nhắn; mọi quyết định khác
+        `allow`/`unchecked` (mask, hold_for_review, block…) là `blocked`. Hiện thực bởi F116 (pipeline kiểm duyệt).
+        `party_name`/`team_name` (caller competition): hết deadline hoặc `503` → bên gọi dùng tên mặc định sinh tự động (F100
+        research R2). `nickname` (caller game, F136, ADR-0105): bên gọi chỉ gửi chuỗi ≤ 32 ký tự đã chuẩn hóa; hết
+        `nickname_moderation_deadline` hoặc lỗi → bên gọi trả `503` và không lưu (fail-closed).
+      x-allowed-callers: [competition, game]
       x-context-required: [tenant_scope]
       requestBody:
         required: true
@@ -575,11 +579,12 @@ components:
       required: [text, context, tenant_id, author_id]
       properties:
         text: { type: string, minLength: 1, maxLength: 255 }
-        context: { type: string, enum: [party_name, team_name] }
+        context: { type: string, enum: [party_name, team_name, nickname] }
         tenant_id: { type: string, format: uuid }
         author_id: { type: string, format: uuid }
       examples:
         - { text: Nhóm Sao Băng, context: party_name, tenant_id: 0193a5f4-6c1e-7b2a-9d1f-000000000001, author_id: 0193a5f4-6c1e-7b2a-9d1f-000000000005 }
+        - { text: Siêu Nhân Sao Băng, context: nickname, tenant_id: 0193a5f4-6c1e-7b2a-9d1f-000000000001, author_id: 0193a5f4-6c1e-7b2a-9d1f-000000000005 }
     DisplayTextCheckResult:
       type: object
       additionalProperties: false

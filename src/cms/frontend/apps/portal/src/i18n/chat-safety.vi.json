@@ -87,7 +87,14 @@
       "searchInCase": "Tìm trong case này",
       "take": "Nhận case",
       "targetUser": "Học sinh liên quan",
-      "title": "Case …{{id}}"
+      "title": "Case …{{id}}",
+      "reportedNickname": "Nickname bị báo cáo",
+      "nicknameReset": "Đặt lại nickname",
+      "nicknameResetHint": "Xóa nickname của học sinh: lần vào game tới học sinh chọn tên mới (không nêu ai báo cáo), người chơi khác thấy tên trung tính. Ghi chú chỉ dùng nội bộ.",
+      "nicknameTarget": "Học sinh cần đặt lại nickname",
+      "nicknameTargetRequired": "Chọn học sinh cần đặt lại nickname.",
+      "nicknameNote": "Ghi chú đặt lại nickname",
+      "nicknameResetDone": "Đã đặt lại nickname. Học sinh sẽ chọn tên mới khi vào game."
     },
     "action": {
       "warn": "Cảnh báo",
@@ -98,7 +105,8 @@
       "dismiss": "Không vi phạm",
       "close": "Đóng case",
       "reopen": "Mở lại",
-      "created": "Tạo case"
+      "created": "Tạo case",
+      "nickname_reset": "Đặt lại nickname"
     },
     "sanctionType": {
       "warning": "Cảnh báo",
@@ -107,7 +115,8 @@
       "restrict_dm": "Chặn nhắn riêng",
       "restrict_multiplayer": "Chặn chơi nhiều người",
       "restrict_competition": "Chặn thi đấu",
-      "account_lock": "Khóa tài khoản"
+      "account_lock": "Khóa tài khoản",
+      "nickname_reset": "Đặt lại nickname"
     },
     "messageState": {
       "allowed": "Đã cho phép",

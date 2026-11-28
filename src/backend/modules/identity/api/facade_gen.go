@@ -92,6 +92,24 @@ func (e MembershipCheckResultResultsUserType) Valid() bool {
 	}
 }
 
+// Defines values for NicknameScreenResultDecision.
+const (
+	Allowed NicknameScreenResultDecision = "allowed"
+	Blocked NicknameScreenResultDecision = "blocked"
+)
+
+// Valid indicates whether the value is a known member of the NicknameScreenResultDecision enum.
+func (e NicknameScreenResultDecision) Valid() bool {
+	switch e {
+	case Allowed:
+		return true
+	case Blocked:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PrincipalStatus.
 const (
 	PrincipalStatusActive      PrincipalStatus = "active"
@@ -335,6 +353,20 @@ type MembershipCheckResultResultsStatus string
 
 // MembershipCheckResultResultsUserType defines model for MembershipCheckResult.Results.UserType.
 type MembershipCheckResultResultsUserType string
+
+// NicknameScreenRequest Examples: {"text":"Siêu Nhân Sao Băng"}
+type NicknameScreenRequest struct {
+	// Text Nickname tự gõ đã chuẩn hóa bởi module game (không log
+	Text string `json:"text"`
+}
+
+// NicknameScreenResult Examples: {"decision":"allowed"}
+type NicknameScreenResult struct {
+	Decision NicknameScreenResultDecision `json:"decision"`
+}
+
+// NicknameScreenResultDecision defines model for NicknameScreenResult.Decision.
+type NicknameScreenResultDecision string
 
 // Principal defines model for Principal.
 type Principal struct {
@@ -653,6 +685,9 @@ type CheckMembershipsJSONRequestBody = MembershipCheckRequest
 // ResolvePrincipalJSONRequestBody defines body for ResolvePrincipal for application/json ContentType.
 type ResolvePrincipalJSONRequestBody = PrincipalResolveRequest
 
+// ScreenNicknamePersonalDataJSONRequestBody defines body for ScreenNicknamePersonalData for application/json ContentType.
+type ScreenNicknamePersonalDataJSONRequestBody = NicknameScreenRequest
+
 // AsPrincipalResolveRequest0 returns the union data inside the PrincipalResolveRequest as a PrincipalResolveRequest0
 func (t PrincipalResolveRequest) AsPrincipalResolveRequest0() (PrincipalResolveRequest0, error) {
 	var body PrincipalResolveRequest0
@@ -825,6 +860,9 @@ type ServerInterface interface {
 	// ListProjectionSnapshot Trang trạng thái hiện hành của tenant/trường/học sinh để rebuild projection ref.* (F010-AC-27)
 	// (GET /internal/v1/projection-snapshots/{entity_type})
 	ListProjectionSnapshot(w http.ResponseWriter, r *http.Request, entityType ListProjectionSnapshotParamsEntityType, params ListProjectionSnapshotParams)
+	// ScreenNicknamePersonalData Kiểm nickname tự gõ có chứa họ tên hay tên trường của chính học sinh (F136, ADR-0105)
+	// (POST /internal/v1/students/{student_id}/nickname:screen)
+	ScreenNicknamePersonalData(w http.ResponseWriter, r *http.Request, studentId openapi_types.UUID)
 	// GetTenant Lấy thông tin tenant, danh sách trường và cài đặt hiệu lực
 	// (GET /internal/v1/tenants/{tenant_id})
 	GetTenant(w http.ResponseWriter, r *http.Request, tenantId CommonInternalCommonV1TenantIdPath)
@@ -1147,6 +1185,32 @@ func (siw *ServerInterfaceWrapper) ListProjectionSnapshot(w http.ResponseWriter,
 	handler.ServeHTTP(w, r)
 }
 
+// ScreenNicknamePersonalData operation middleware
+func (siw *ServerInterfaceWrapper) ScreenNicknamePersonalData(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "student_id" -------------
+	var studentId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "student_id", r.PathValue("student_id"), &studentId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "student_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ScreenNicknamePersonalData(w, r, studentId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetTenant operation middleware
 func (siw *ServerInterfaceWrapper) GetTenant(w http.ResponseWriter, r *http.Request) {
 
@@ -1299,6 +1363,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/principals/{user_id}", wrapper.GetPrincipal)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/principals:resolve", wrapper.ResolvePrincipal)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/projection-snapshots/{entity_type}", wrapper.ListProjectionSnapshot)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/students/{student_id}/nickname:screen", wrapper.ScreenNicknamePersonalData)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/tenants/{tenant_id}", wrapper.GetTenant)
 
 	return m
@@ -1792,6 +1857,93 @@ func (response ListProjectionSnapshot422ApplicationProblemPlusJSONResponse) Visi
 	return err
 }
 
+type ScreenNicknamePersonalDataRequestObject struct {
+	StudentId openapi_types.UUID `json:"student_id"`
+	Body      *ScreenNicknamePersonalDataJSONRequestBody
+}
+
+type ScreenNicknamePersonalDataResponseObject interface {
+	VisitScreenNicknamePersonalDataResponse(w http.ResponseWriter) error
+}
+
+type ScreenNicknamePersonalData200JSONResponse NicknameScreenResult
+
+func (response ScreenNicknamePersonalData200JSONResponse) VisitScreenNicknamePersonalDataResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ScreenNicknamePersonalData401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response ScreenNicknamePersonalData401ApplicationProblemPlusJSONResponse) VisitScreenNicknamePersonalDataResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ScreenNicknamePersonalData403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response ScreenNicknamePersonalData403ApplicationProblemPlusJSONResponse) VisitScreenNicknamePersonalDataResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ScreenNicknamePersonalData404ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response ScreenNicknamePersonalData404ApplicationProblemPlusJSONResponse) VisitScreenNicknamePersonalDataResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ScreenNicknamePersonalData422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response ScreenNicknamePersonalData422ApplicationProblemPlusJSONResponse) VisitScreenNicknamePersonalDataResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetTenantRequestObject struct {
 	TenantId CommonInternalCommonV1TenantIdPath `json:"tenant_id"`
 }
@@ -1884,6 +2036,9 @@ type StrictServerInterface interface {
 	// ListProjectionSnapshot Trang trạng thái hiện hành của tenant/trường/học sinh để rebuild projection ref.* (F010-AC-27)
 	// (GET /internal/v1/projection-snapshots/{entity_type})
 	ListProjectionSnapshot(ctx context.Context, request ListProjectionSnapshotRequestObject) (ListProjectionSnapshotResponseObject, error)
+	// ScreenNicknamePersonalData Kiểm nickname tự gõ có chứa họ tên hay tên trường của chính học sinh (F136, ADR-0105)
+	// (POST /internal/v1/students/{student_id}/nickname:screen)
+	ScreenNicknamePersonalData(ctx context.Context, request ScreenNicknamePersonalDataRequestObject) (ScreenNicknamePersonalDataResponseObject, error)
 	// GetTenant Lấy thông tin tenant, danh sách trường và cài đặt hiệu lực
 	// (GET /internal/v1/tenants/{tenant_id})
 	GetTenant(ctx context.Context, request GetTenantRequestObject) (GetTenantResponseObject, error)
@@ -2096,6 +2251,39 @@ func (sh *strictHandler) ListProjectionSnapshot(w http.ResponseWriter, r *http.R
 	}
 }
 
+// ScreenNicknamePersonalData operation middleware
+func (sh *strictHandler) ScreenNicknamePersonalData(w http.ResponseWriter, r *http.Request, studentId openapi_types.UUID) {
+	var request ScreenNicknamePersonalDataRequestObject
+
+	request.StudentId = studentId
+
+	var body ScreenNicknamePersonalDataJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ScreenNicknamePersonalData(ctx, request.(ScreenNicknamePersonalDataRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ScreenNicknamePersonalData")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ScreenNicknamePersonalDataResponseObject); ok {
+		if err := validResponse.VisitScreenNicknamePersonalDataResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetTenant operation middleware
 func (sh *strictHandler) GetTenant(w http.ResponseWriter, r *http.Request, tenantId CommonInternalCommonV1TenantIdPath) {
 	var request GetTenantRequestObject
@@ -2127,13 +2315,14 @@ var ErrNotFaked = errors.New("api: operation not faked")
 
 // Fake implements StrictServerInterface for caller tests: each method calls its <Name>Func.
 type Fake struct {
-	CheckMembershipsFunc       func(ctx context.Context, request CheckMembershipsRequestObject) (CheckMembershipsResponseObject, error)
-	ListOutboxEventIdsFunc     func(ctx context.Context, request ListOutboxEventIdsRequestObject) (ListOutboxEventIdsResponseObject, error)
-	ListProcessedEventIdsFunc  func(ctx context.Context, request ListProcessedEventIdsRequestObject) (ListProcessedEventIdsResponseObject, error)
-	GetPrincipalFunc           func(ctx context.Context, request GetPrincipalRequestObject) (GetPrincipalResponseObject, error)
-	ResolvePrincipalFunc       func(ctx context.Context, request ResolvePrincipalRequestObject) (ResolvePrincipalResponseObject, error)
-	ListProjectionSnapshotFunc func(ctx context.Context, request ListProjectionSnapshotRequestObject) (ListProjectionSnapshotResponseObject, error)
-	GetTenantFunc              func(ctx context.Context, request GetTenantRequestObject) (GetTenantResponseObject, error)
+	CheckMembershipsFunc           func(ctx context.Context, request CheckMembershipsRequestObject) (CheckMembershipsResponseObject, error)
+	ListOutboxEventIdsFunc         func(ctx context.Context, request ListOutboxEventIdsRequestObject) (ListOutboxEventIdsResponseObject, error)
+	ListProcessedEventIdsFunc      func(ctx context.Context, request ListProcessedEventIdsRequestObject) (ListProcessedEventIdsResponseObject, error)
+	GetPrincipalFunc               func(ctx context.Context, request GetPrincipalRequestObject) (GetPrincipalResponseObject, error)
+	ResolvePrincipalFunc           func(ctx context.Context, request ResolvePrincipalRequestObject) (ResolvePrincipalResponseObject, error)
+	ListProjectionSnapshotFunc     func(ctx context.Context, request ListProjectionSnapshotRequestObject) (ListProjectionSnapshotResponseObject, error)
+	ScreenNicknamePersonalDataFunc func(ctx context.Context, request ScreenNicknamePersonalDataRequestObject) (ScreenNicknamePersonalDataResponseObject, error)
+	GetTenantFunc                  func(ctx context.Context, request GetTenantRequestObject) (GetTenantResponseObject, error)
 }
 
 var _ StrictServerInterface = (*Fake)(nil)
@@ -2184,6 +2373,14 @@ func (f *Fake) ListProjectionSnapshot(a0 context.Context, a1 ListProjectionSnaps
 		return nil, ErrNotFaked
 	}
 	return f.ListProjectionSnapshotFunc(a0, a1)
+}
+
+// ScreenNicknamePersonalData calls ScreenNicknamePersonalDataFunc.
+func (f *Fake) ScreenNicknamePersonalData(a0 context.Context, a1 ScreenNicknamePersonalDataRequestObject) (ScreenNicknamePersonalDataResponseObject, error) {
+	if f.ScreenNicknamePersonalDataFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ScreenNicknamePersonalDataFunc(a0, a1)
 }
 
 // GetTenant calls GetTenantFunc.

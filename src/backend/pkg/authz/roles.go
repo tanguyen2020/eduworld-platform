@@ -67,7 +67,7 @@ func SystemRoles() []RoleDef {
 	return []RoleDef{
 		{Name: "tenant_admin", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
 			"tenant.*", "school.*", "lms.student.read", "lms.assignment.read", "lms.report.read", "lms.school_event.write",
-			"lms.student.password_reset", "learning_content.*", "curriculum.read", "analytics.tenant.read",
+			"lms.student.password_reset", "lms.student.nickname_reset", "learning_content.*", "curriculum.read", "analytics.tenant.read",
 			"moderation.school_notification.read", "moderation.school_notification.acknowledge", "chat.sensitive_terms.read",
 			"report.export", "media.upload",
 		}, PermLearningContentReEvaluate)},

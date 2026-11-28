@@ -35,7 +35,9 @@ type NicknameChange struct {
 	// ChangedBy holds the value of the "changed_by" field.
 	ChangedBy uuid.UUID `json:"changed_by,omitempty"`
 	// ChangedAt holds the value of the "changed_at" field.
-	ChangedAt    time.Time `json:"changed_at,omitempty"`
+	ChangedAt time.Time `json:"changed_at,omitempty"`
+	// SourceRefID holds the value of the "source_ref_id" field.
+	SourceRefID  *uuid.UUID `json:"source_ref_id,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -44,7 +46,7 @@ func (*NicknameChange) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case nicknamechange.FieldCreatedBy:
+		case nicknamechange.FieldCreatedBy, nicknamechange.FieldSourceRefID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case nicknamechange.FieldOldNickname, nicknamechange.FieldNewNickname, nicknamechange.FieldReason:
 			values[i] = new(sql.NullString)
@@ -129,6 +131,13 @@ func (_m *NicknameChange) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ChangedAt = value.Time
 			}
+		case nicknamechange.FieldSourceRefID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field source_ref_id", values[i])
+			} else if value.Valid {
+				_m.SourceRefID = new(uuid.UUID)
+				*_m.SourceRefID = *value.S.(*uuid.UUID)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -195,6 +204,11 @@ func (_m *NicknameChange) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("changed_at=")
 	builder.WriteString(_m.ChangedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	if v := _m.SourceRefID; v != nil {
+		builder.WriteString("source_ref_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -1507,6 +1507,7 @@ var (
 		{Name: "preferred_language", Type: field.TypeString, Nullable: true, Size: 64},
 		{Name: "last_game_login_at", Type: field.TypeTime, Nullable: true},
 		{Name: "grade_transition_year", Type: field.TypeString, Nullable: true, Size: 16},
+		{Name: "nickname_key", Type: field.TypeString, Nullable: true, Size: 32},
 	}
 	// GameProfilesTable holds the schema information for the "game_profiles" table.
 	GameProfilesTable = &schema.Table{
@@ -1526,6 +1527,14 @@ var (
 				Name:    "game_profiles_tenant_school_idx",
 				Unique:  false,
 				Columns: []*schema.Column{GameProfilesColumns[1], GameProfilesColumns[11]},
+			},
+			{
+				Name:    "game_profiles_nickname_key_uq",
+				Unique:  true,
+				Columns: []*schema.Column{GameProfilesColumns[1], GameProfilesColumns[25]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL AND nickname_key IS NOT NULL",
+				},
 			},
 		},
 	}
@@ -2105,6 +2114,7 @@ var (
 		{Name: "reason", Type: field.TypeString, Size: 64},
 		{Name: "changed_by", Type: field.TypeUUID},
 		{Name: "changed_at", Type: field.TypeTime},
+		{Name: "source_ref_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// NicknameChangesTable holds the schema information for the "nickname_changes" table.
 	NicknameChangesTable = &schema.Table{

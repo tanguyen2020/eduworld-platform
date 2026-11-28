@@ -141,6 +141,9 @@ var Operations = map[string]httpx.Operation{
 		Tenant: httpx.TenantRequired, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardGamePlayer},
 	"getCharacterCatalog": {ID: "getCharacterCatalog", Module: "game", Method: http.MethodGet, Pattern: "/game/character/catalog",
 		Tenant: httpx.TenantRequired, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardGamePlayer},
+	// F136 reset of a nickname by the school (portal staff, X-Tenant-Id, Idempotency-Key; lms.student.nickname_reset).
+	"resetStudentNickname": op("resetStudentNickname", http.MethodPost, "/tenant/students/{student_id}/game-profile/nickname:reset",
+		httpx.TenantRequired, httpx.IdempotencyRequired, http.StatusOK, httpx.GuardPortalStaff),
 	// F071 world (game_player, X-Tenant-Id; startLevel, endLevelSession and reportDiscovery take an Idempotency-Key).
 	"getWorldManifest": op("getWorldManifest", http.MethodGet, "/game/world/manifest", httpx.TenantRequired, httpx.IdempotencyNone,
 		http.StatusOK, httpx.GuardGamePlayer),

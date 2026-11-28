@@ -267,6 +267,26 @@ func (Safety) Student(ctx context.Context, tenant, id uuid.UUID) (*write.SafetyS
 	return &s, nil
 }
 
+// PlayerNickname implements write.SafetyStore: the current nickname of the public card of student (ref.player_profiles,
+// projection of game_profile.updated) — the server-side snapshot of a nickname report (F136-AC-18); nil when none.
+func (Safety) PlayerNickname(ctx context.Context, tenant, student uuid.UUID) (*string, error) {
+	t, err := readTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var n sql.NullString
+	// tenancyguard:ok projection ref.player_profiles of the session tenant (public card only, R16; no deleted_at)
+	err = t.QueryRowContext(ctx, `SELECT p.nickname FROM ref.player_profiles p WHERE p.tenant_id = $1 AND p.student_id = $2`,
+		tenant, student).Scan(&n)
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && !n.Valid) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("chat: player nickname: %w", err)
+	}
+	return &n.String, nil
+}
+
 // TenantType implements write.SafetyStore (ref.tenants: school, unit, common).
 func (Safety) TenantType(ctx context.Context, tenant uuid.UUID) (string, error) {
 	t, err := readTx(ctx)
@@ -804,8 +824,10 @@ func (Safety) DueNotifications(ctx context.Context, now time.Time, limit int) ([
 // ExpiredSanctions implements write.SafetyStore.
 func (Safety) ExpiredSanctions(ctx context.Context, now time.Time, limit int) ([]read.SanctionDetail, error) {
 	// tenancyguard:ok cross-tenant work list of sanction-expirer under tenancy.Bypass(platform_job); deleted_at IS NULL
+	// nickname_reset is immediate (ends_at = starts_at): applied once, never lifted (no sanction.lifted, F136).
 	return sanctions(ctx, `SELECT `+sanctionCols+` FROM chat.sanctions s WHERE s.deleted_at IS NULL AND s.lifted_at IS NULL
-		AND s.revoked_at IS NULL AND s.ends_at IS NOT NULL AND s.ends_at <= $1 ORDER BY s.ends_at LIMIT $2`, now, limit)
+		AND s.revoked_at IS NULL AND s.ends_at IS NOT NULL AND s.ends_at <= $1 AND s.type <> 'nickname_reset'
+		ORDER BY s.ends_at LIMIT $2`, now, limit)
 }
 
 // StaleHolds implements write.SafetyStore.

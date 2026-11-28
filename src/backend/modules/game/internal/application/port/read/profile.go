@@ -41,6 +41,9 @@ type ProfileReadModel interface {
 	Presets(ctx context.Context, tenant, student uuid.UUID) ([]Preset, error)
 	// TakenNicknames returns, lower-cased, the names among candidates used by a live profile of tenant.
 	TakenNicknames(ctx context.Context, tenant uuid.UUID, candidates []string) (map[string]bool, error)
+	// NicknameAllowance returns the player_change rows of student since since and the nickname_change_monthly_limit of
+	// the school of its live profile (nil when the school sets none) — F136-AC-07.
+	NicknameAllowance(ctx context.Context, tenant, student uuid.UUID, since time.Time) (changes int, schoolLimit *int, err error)
 }
 
 // CatalogReadModel reads the published character catalog (platform content).

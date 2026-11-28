@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
@@ -41,7 +42,9 @@ type StudentLifecycle struct {
 	XP XPMerger
 	// Analytics clears the pseudonymous keys of the student in analytics.events_raw/player_days (F080-AC-07); nil = none.
 	Analytics AnalyticsAnonymizer
-	Now       func() time.Time
+	// Audit records the anonymization of the nickname history (F136-AC-31); nil = no audit (tests of other steps).
+	Audit write.Auditor
+	Now   func() time.Time
 }
 
 // AnalyticsAnonymizer is the analytics step of anonymizeUserData (AnalyticsIngest.AnonymizeStudent).
@@ -129,8 +132,9 @@ func AnonymousNickname(user uuid.UUID) string {
 }
 
 // Anonymize answers anonymizeUserData: the nickname becomes AnonymousNickname, the custom avatar, settings and
-// outfit names are removed; level and avatar_created_at stay for statistics. game.nickname_changes is append-only
-// and keeps the generated nicknames (words of the approved catalog, never typed by the student).
+// outfit names are removed; level and avatar_created_at stay for statistics. A typed nickname may hold personal data
+// (F136-AC-31, ADR-0105 §8): every nickname of the append-only history game.nickname_changes is replaced too, through
+// the SECURITY DEFINER function game.anonymize_nickname_changes (no row deleted), with an audit.
 func (h StudentLifecycle) Anonymize(ctx context.Context, userID uuid.UUID) (status string, err error) {
 	ctx, done := observability.UseCase(ctx, "game.command.AnonymizeUserData")
 	defer func() { done(err) }()
@@ -139,9 +143,23 @@ func (h StudentLifecycle) Anonymize(ctx context.Context, userID uuid.UUID) (stat
 		return "", err
 	}
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
-		changed, err := h.Profiles.Anonymize(ctx, tenant, userID, AnonymousNickname(userID))
+		anon := AnonymousNickname(userID)
+		changed, err := h.Profiles.Anonymize(ctx, tenant, userID, anon)
 		if err != nil {
 			return err
+		}
+		rows, err := h.Profiles.AnonymizeHistory(ctx, tenant, userID, anon)
+		if err != nil {
+			return err
+		}
+		if rows > 0 {
+			changed = true
+			if h.Audit != nil {
+				if err := h.Audit.Record(ctx, audit.Event{Action: AuditNicknameHistoryAnonymized, TargetType: "student",
+					TargetID: userID.String(), Result: audit.ResultSuccess, Metadata: map[string]any{"rows": rows}}); err != nil {
+					return err
+				}
+			}
 		}
 		if h.Analytics != nil {
 			raw, days, err := h.Analytics.AnonymizeStudent(ctx, userID)

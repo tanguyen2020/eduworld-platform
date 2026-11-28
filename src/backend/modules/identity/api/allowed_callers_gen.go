@@ -5,19 +5,21 @@ package api
 // AllowedCallers maps each facade operationId to the modules allowed to call it (x-allowed-callers,
 // ADR-0074); pkg/modcall answers 403 CALLER_NOT_ALLOWED to any other caller.
 var AllowedCallers = map[string][]string{
-	"checkMemberships":       {"chat", "competition", "game", "learning"},
-	"getPrincipal":           {"chat", "competition", "game", "learning"},
-	"getTenant":              {"chat", "competition", "game", "learning"},
-	"listOutboxEventIds":     {"chat", "competition", "game", "identity", "learning"},
-	"listProcessedEventIds":  {"chat", "competition", "game", "identity", "learning"},
-	"listProjectionSnapshot": {"chat", "competition", "game", "learning"},
-	"resolvePrincipal":       {"chat", "competition", "game", "learning"},
+	"checkMemberships":           {"chat", "competition", "game", "learning"},
+	"getPrincipal":               {"chat", "competition", "game", "learning"},
+	"getTenant":                  {"chat", "competition", "game", "learning"},
+	"listOutboxEventIds":         {"chat", "competition", "game", "identity", "learning"},
+	"listProcessedEventIds":      {"chat", "competition", "game", "identity", "learning"},
+	"listProjectionSnapshot":     {"chat", "competition", "game", "learning"},
+	"resolvePrincipal":           {"chat", "competition", "game", "learning"},
+	"screenNicknamePersonalData": {"game"},
 }
 
 // ContextRequired maps facade operationIds to their x-context-required (tenant_scope, idempotency_key);
 // pkg/modcall refuses a call whose context lacks them.
 var ContextRequired = map[string][]string{
-	"checkMemberships":      {"tenant_scope"},
-	"listOutboxEventIds":    {"tenant_scope"},
-	"listProcessedEventIds": {"tenant_scope"},
+	"checkMemberships":           {"tenant_scope"},
+	"listOutboxEventIds":         {"tenant_scope"},
+	"listProcessedEventIds":      {"tenant_scope"},
+	"screenNicknamePersonalData": {"tenant_scope"},
 }

@@ -76,11 +76,13 @@ const (
 	ActionSchoolAck        = "school_acknowledged"
 	ActionSchoolReminder   = "school_reminder"
 	ActionSchoolReminderLd = "school_reminder_lead"
+	// ActionNicknameReset resets the nickname of a student of the case (sanction nickname_reset, F136-AC-19).
+	ActionNicknameReset = "nickname_reset"
 )
 
 // ModeratorActions are the actions accepted by actOnModerationCase.
 var ModeratorActions = []string{ActionWarn, ActionMute, ActionRestrict, ActionRemoveMessage, ActionEscalate, ActionDismiss,
-	ActionClose, ActionReopen}
+	ActionClose, ActionReopen, ActionNicknameReset}
 
 // Sanction types (MODERATION §7).
 const (
@@ -91,11 +93,17 @@ const (
 	SanctionRestrictMultiplayer = "restrict_multiplayer"
 	SanctionRestrictCompetition = "restrict_competition"
 	SanctionAccountLock         = "account_lock"
+	// SanctionNicknameReset is immediate (ends_at = starts_at, scope all, never lifted): module game sets the nickname of
+	// the student to NULL on sanction.applied (F136, ADR-0105 §7). It restricts nothing else.
+	SanctionNicknameReset = "nickname_reset"
 )
 
 // SanctionTypes is the closed list of sanction types.
 var SanctionTypes = []string{SanctionWarning, SanctionMute, SanctionRestrictText, SanctionRestrictDM,
-	SanctionRestrictMultiplayer, SanctionRestrictCompetition, SanctionAccountLock}
+	SanctionRestrictMultiplayer, SanctionRestrictCompetition, SanctionAccountLock, SanctionNicknameReset}
+
+// Immediate reports a sanction applied once and done (nickname_reset): no duration, no lift, no realtime notice.
+func Immediate(typ string) bool { return typ == SanctionNicknameReset }
 
 // RestrictTypes are the sanction types of the action restrict.
 var RestrictTypes = []string{SanctionRestrictText, SanctionRestrictDM, SanctionRestrictMultiplayer,
@@ -306,7 +314,7 @@ func Act(status, action string) (string, error) {
 		return StatusEscalate, nil
 	case ActionClose, ActionDismiss:
 		return StatusResolved, nil
-	case ActionWarn, ActionMute, ActionRestrict, ActionRemoveMessage:
+	case ActionWarn, ActionMute, ActionRestrict, ActionRemoveMessage, ActionNicknameReset:
 		return status, nil
 	}
 	return "", ErrInvalid

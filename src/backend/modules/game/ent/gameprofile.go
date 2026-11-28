@@ -67,7 +67,9 @@ type GameProfile struct {
 	LastGameLoginAt *time.Time `json:"last_game_login_at,omitempty"`
 	// GradeTransitionYear holds the value of the "grade_transition_year" field.
 	GradeTransitionYear *string `json:"grade_transition_year,omitempty"`
-	selectValues        sql.SelectValues
+	// NicknameKey holds the value of the "nickname_key" field.
+	NicknameKey  *string `json:"nickname_key,omitempty"`
+	selectValues sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -81,7 +83,7 @@ func (*GameProfile) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case gameprofile.FieldVersion, gameprofile.FieldLevel, gameprofile.FieldXpTotal, gameprofile.FieldCurveVersion:
 			values[i] = new(sql.NullInt64)
-		case gameprofile.FieldDeleteReason, gameprofile.FieldNickname, gameprofile.FieldTitleCode, gameprofile.FieldAvatarConfigHash, gameprofile.FieldLastAreaID, gameprofile.FieldPreferredLanguage, gameprofile.FieldGradeTransitionYear:
+		case gameprofile.FieldDeleteReason, gameprofile.FieldNickname, gameprofile.FieldTitleCode, gameprofile.FieldAvatarConfigHash, gameprofile.FieldLastAreaID, gameprofile.FieldPreferredLanguage, gameprofile.FieldGradeTransitionYear, gameprofile.FieldNicknameKey:
 			values[i] = new(sql.NullString)
 		case gameprofile.FieldCreatedAt, gameprofile.FieldUpdatedAt, gameprofile.FieldDeletedAt, gameprofile.FieldAvatarCreatedAt, gameprofile.FieldLastGameLoginAt:
 			values[i] = new(sql.NullTime)
@@ -270,6 +272,13 @@ func (_m *GameProfile) assignValues(columns []string, values []any) error {
 				_m.GradeTransitionYear = new(string)
 				*_m.GradeTransitionYear = value.String
 			}
+		case gameprofile.FieldNicknameKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field nickname_key", values[i])
+			} else if value.Valid {
+				_m.NicknameKey = new(string)
+				*_m.NicknameKey = value.String
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -403,6 +412,11 @@ func (_m *GameProfile) String() string {
 	builder.WriteString(", ")
 	if v := _m.GradeTransitionYear; v != nil {
 		builder.WriteString("grade_transition_year=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.NicknameKey; v != nil {
+		builder.WriteString("nickname_key=")
 		builder.WriteString(*v)
 	}
 	builder.WriteByte(')')

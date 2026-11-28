@@ -1,8 +1,9 @@
 // Screen of `menu.school_lms.students` — "Học sinh theo khối" (F052 T017, T059; F052-AC-04, F052-AC-06, F052-AC-07,
 // F052-AC-27, F052-AC-31; ADR-0095): school → grade (the grades the school teaches) → students of that grade
 // (listTenantGradeStudents, cursor, optional search), read-only with the "SIS" tag (SIS/CSV owns them, ADR-0060), last
-// game login and days without the game. Actions: login history (ActionGate student_activity.view) and password reset
-// (ActionGate students.reset_password). No class, no "học sinh chưa có lớp" (gone with the class concept).
+// game login and days without the game. Actions: login history (ActionGate student_activity.view), password reset
+// (ActionGate students.reset_password) and nickname reset (ActionGate students.reset_nickname, F136-AC-22). No class, no
+// "học sinh chưa có lớp" (gone with the class concept).
 import { Button, Flex, Form, Input, Space, Typography } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useCallback, useState } from 'react';
@@ -19,6 +20,7 @@ import { SingleTenantGate } from '../common/scope';
 import { PageTitle, SourceTag, StatusTag } from '../common/ui';
 import { useGradeStudents, useSchoolGrades, type GradeStudent } from '../lms/api/targets';
 import { ResetStudentPasswordDialog } from './ResetStudentPasswordDialog';
+import { StudentNicknameReset } from './StudentNicknameReset';
 import { SearchSelect } from '@eduworld/ops-ui';
 
 /** Path of a student's login history in the `menu.school_lms.student_activity` screen (path from the catalog). */
@@ -65,6 +67,7 @@ function StudentsByGradePage() {
   const [search, setSearch] = useState('');
   const students = useGradeStudents(picker.schoolId, picker.grade, search);
   const [resetting, setResetting] = useState<GradeStudent | null>(null);
+  const [renaming, setRenaming] = useState<GradeStudent | null>(null);
   const columns: ColumnType<GradeStudent>[] = [
     { key: 'title', title: t('portal.school_lms.students.name'), render: (_, s) => s.display_name },
     { key: 'username', title: t('portal.school_lms.students.username'), dataIndex: 'username' },
@@ -88,6 +91,11 @@ function StudentsByGradePage() {
           <ActionGate actionKey="action.school_lms.students.reset_password">
             <Button size="small" onClick={() => setResetting(s)}>
               {t('portal.school_lms.passwordReset.action')}
+            </Button>
+          </ActionGate>
+          <ActionGate actionKey="action.school_lms.students.reset_nickname">
+            <Button size="small" onClick={() => setRenaming(s)}>
+              {t('portal.school_lms.nicknameReset.action')}
             </Button>
           </ActionGate>
         </Space>
@@ -120,6 +128,7 @@ function StudentsByGradePage() {
         onLoadMore={students.loadMore}
       />
       {resetting ? <ResetStudentPasswordDialog student={resetting} open onClose={() => setResetting(null)} /> : null}
+      {renaming ? <StudentNicknameReset student={renaming} open onClose={() => setRenaming(null)} /> : null}
     </Space>
   );
 }

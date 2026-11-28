@@ -118,6 +118,7 @@ const (
 	ModerationSwitchSelfApproval     Code = "MODERATION_SWITCH_SELF_APPROVAL"
 	ModerationSwitchStepNotAllowed   Code = "MODERATION_SWITCH_STEP_NOT_ALLOWED"
 	NicknameChangeLimit              Code = "NICKNAME_CHANGE_LIMIT"
+	NicknameNotAllowed               Code = "NICKNAME_NOT_ALLOWED"
 	NicknameUnavailable              Code = "NICKNAME_UNAVAILABLE"
 	NotFound                         Code = "NOT_FOUND"
 	NoActiveEnrollment               Code = "NO_ACTIVE_ENROLLMENT"
@@ -305,6 +306,7 @@ var statusByCode = map[Code]int{
 	ModerationSwitchSelfApproval:     403,
 	ModerationSwitchStepNotAllowed:   422,
 	NicknameChangeLimit:              409,
+	NicknameNotAllowed:               422,
 	NicknameUnavailable:              409,
 	NotFound:                         404,
 	NoActiveEnrollment:               403,
@@ -492,6 +494,7 @@ var allCodes = []Code{
 	ModerationSwitchSelfApproval,
 	ModerationSwitchStepNotAllowed,
 	NicknameChangeLimit,
+	NicknameNotAllowed,
 	NicknameUnavailable,
 	NotFound,
 	NoActiveEnrollment,

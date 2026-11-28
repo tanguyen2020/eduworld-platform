@@ -213,6 +213,7 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 | 422 | `EQUIP_SLOT_INVALID` | Vật phẩm không hợp với slot trang bị |
 | 409 | `NICKNAME_UNAVAILABLE` | `nickname_option_id` hết hạn, không thuộc học sinh hoặc nickname vừa bị học sinh khác cùng tenant lấy (F070) |
 | 409 | `NICKNAME_CHANGE_LIMIT` | Vượt `nickname_change_monthly_limit` trong tháng, kèm `retry_after` (F070) |
+| 422 | `NICKNAME_NOT_ALLOWED` | Nickname tự gõ không dùng được — **một** mã chung cho mọi lý do nội dung (định dạng, từ nhạy cảm, PII, họ tên/tên trường của chính học sinh); không mã con, không vị trí, không echo chuỗi (F136, ADR-0105) |
 | 409 | `QUEST_ALREADY_COMPLETED` | Nhận lại quest `once` đã hoàn thành |
 | 409 | `QUEST_COOLDOWN` | Nhận quest `repeatable` khi đang cooldown (kèm `retry_after`) |
 | 403 | `QUEST_PREREQUISITE_NOT_MET` | Nhận quest khi chưa thỏa `prerequisites` (quest trước, khu đã mở, `min_level`) hoặc `learning_requirements`; kèm `missing_requirements` thân thiện (F072) |
@@ -999,6 +1000,7 @@ Webhook từ SIS **không** nằm trong `/api/v1/sis/*`. Đây là luồng machi
 |---|---|---|---|---|---|
 | GET/PATCH | `/tenant/settings` | Cài đặt tenant (khung giờ, chat policy tenant, thông báo, `inactive_student_cleanup_days` khi platform cho phép ghi đè — ADR-0032; `gameplay_chat_retention_days` ≥ 3 khi được phép — ADR-0033) — `If-Match` | TA (`tenant.settings.write`; cleanup cần `tenant.student_cleanup.configure`) | T | P3 |
 | GET | `/tenant/students/{student_id}/login-events?from=&to=` | **→ module `game`.** Lịch sử đăng nhập game của học sinh (thời điểm, nền tảng, thiết bị rút gọn, lý do kết thúc; không có IP) (ADR-0031) | TA, SA (trường) · `lms.student_activity.read` | T | P1 |
+| POST | `/tenant/students/{student_id}/game-profile/nickname:reset` | Đặt lại nickname học sinh: nickname về null, `setup_required`, người khác thấy chuỗi trung tính; `reason` + `Idempotency-Key` bắt buộc, audit; lần chọn lại không tính giới hạn tháng — `resetStudentNickname`, quy tắc [CHARACTER_SYSTEM §5.3](../01-game-design/CHARACTER_SYSTEM.md#53-nickname) (F136) | SA (trường), TA, SYS · `lms.student.nickname_reset` | B | P1 |
 | POST | `/tenant/students/{student_id}/password:reset` | Đặt lại mật khẩu học sinh: mật khẩu mới sinh ngẫu nhiên trả một lần (`no-store`, replay không có mật khẩu), thu hồi phiên game (`password_changed`), phát `user.access_revoked`; System Admin gửi `X-Tenant-Id` = tenant đích (gồm `common`) — `resetStudentPassword`, quy tắc [ACCOUNT_PROVISIONING §6d](../09-identity/ACCOUNT_PROVISIONING.md#6d-đặt-lại-mật-khẩu-học-sinh) | SA (trường), TA, SYS · `lms.student.password_reset` | B | P1 |
 | GET | `/tenant/student-cleanup/preview` | Danh sách học sinh **sắp bị dọn** (last login, ngày dự kiến dọn) (ADR-0032) | TA, SA · `tenant.student_cleanup.read` | T | P2 |
 | POST / DELETE | `/tenant/student-cleanup/exclusions` | Loại trừ học sinh khỏi đợt dọn hoặc gia hạn `{student_ids[], until?, reason}` / gỡ loại trừ | TA, SA · `tenant.student_cleanup.exclude` | B | P2 |

@@ -117,3 +117,10 @@ type UserRoleView struct {
 type UserRoleReader interface {
 	UserRoles(ctx context.Context, f UserRoleFilter) ([]UserRoleView, error)
 }
+
+// NicknamePersonalReader reads the personal data a typed nickname is screened against (screenNicknamePersonalData,
+// F136-AC-12): the real names (org.students.full_name, identity.users.display_name) and the school names (org.schools
+// name and translations) of a student of the scope tenant. found is false when the student is not in the tenant.
+type NicknamePersonalReader interface {
+	NicknamePersonal(ctx context.Context, tenantID, studentID uuid.UUID) (names, schools []string, found bool, err error)
+}

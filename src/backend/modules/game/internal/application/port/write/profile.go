@@ -27,6 +27,8 @@ type NicknameChange struct {
 	Reason    string
 	ChangedBy uuid.UUID
 	ChangedAt time.Time
+	// SourceRefID is the sanction of a reset by the Safety Team (applied once per sanction, F136-AC-20); nil otherwise.
+	SourceRefID *uuid.UUID
 }
 
 // ProfileRepository persists the GameProfile aggregate (game.game_profiles) and its nickname history under the
@@ -42,6 +44,11 @@ type ProfileRepository interface {
 	Save(ctx context.Context, p *profile.Profile) error
 	// AppendNicknameChange appends one history row.
 	AppendNicknameChange(ctx context.Context, c NicknameChange) error
+	// ResetBySource reports whether a reset of student by source (a sanction id) is already in the history.
+	ResetBySource(ctx context.Context, tenant, student, source uuid.UUID) (bool, error)
+	// AnonymizeHistory replaces every nickname of the history of student by anon (game.anonymize_nickname_changes,
+	// F136-AC-31) and returns the number of rows changed; never deletes a row.
+	AnonymizeHistory(ctx context.Context, tenant, student uuid.UUID, anon string) (int, error)
 	// PlayerChangesSince counts the player_change rows of student since since.
 	PlayerChangesSince(ctx context.Context, tenant, student uuid.UUID, since time.Time) (int, error)
 	// SoftDelete soft-deletes the live profile and the saved outfits of student (student cleanup, ADR-0032).

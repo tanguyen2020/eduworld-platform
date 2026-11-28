@@ -130,6 +130,14 @@
     "print": "In thẻ đăng nhập",
     "redacted": "Mật khẩu đã hiển thị ở lần trước nên không xem lại được. Nếu chưa ghi lại, hãy đặt lại mật khẩu thêm một lần."
   },
+  "nicknameReset": {
+    "action": "Đặt lại nickname",
+    "title": "Đặt lại nickname của {{name}}",
+    "current": "Nickname hiện tại",
+    "description": "Nickname của {{name}} ({{username}}) sẽ bị xóa. Lần vào game tới, học sinh được mời chọn tên mới; trong lúc đó người chơi khác thấy một tên trung tính. Lý do chỉ ghi vào nhật ký, không gửi cho học sinh.",
+    "confirm": "Đặt lại",
+    "done": "Đã đặt lại nickname của {{name}}. Học sinh sẽ chọn tên mới khi vào game."
+  },
   "sis": {
     "tab": "Nhập CSV",
     "help": "File CSV theo EduWorld SIS Contract (tên cột = tên trường dữ liệu), mỗi file một loại dữ liệu, tối đa 10 MB. Lịch đồng bộ SIS tự động do EduWorld cấu hình cho từng kết nối; trường dùng CSV cập nhật bằng cách tải file mới.",

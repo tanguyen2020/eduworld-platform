@@ -68,6 +68,7 @@ const (
 	PermLmsResultRelease                         Permission = "lms.result.release"
 	PermLmsSchoolEventWrite                      Permission = "lms.school_event.write"
 	PermLmsStudentPasswordReset                  Permission = "lms.student.password_reset"
+	PermLmsStudentNicknameReset                  Permission = "lms.student.nickname_reset"
 	PermLmsStudentActivityRead                   Permission = "lms.student_activity.read"
 	PermMediaUpload                              Permission = "media.upload"
 	PermModerationCaseAct                        Permission = "moderation.case.act"
@@ -190,6 +191,7 @@ var catalog = []Permission{
 	PermLmsResultRelease,
 	PermLmsSchoolEventWrite,
 	PermLmsStudentPasswordReset,
+	PermLmsStudentNicknameReset,
 	PermLmsStudentActivityRead,
 	PermMediaUpload,
 	PermModerationCaseAct,

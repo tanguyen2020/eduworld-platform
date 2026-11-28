@@ -165,6 +165,11 @@ func GradeTransitionYear(v string) predicate.GameProfile {
 	return predicate.GameProfile(sql.FieldEQ(FieldGradeTransitionYear, v))
 }
 
+// NicknameKey applies equality check predicate on the "nickname_key" field. It's identical to NicknameKeyEQ.
+func NicknameKey(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldEQ(FieldNicknameKey, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.GameProfile {
 	return predicate.GameProfile(sql.FieldEQ(FieldTenantID, v))
@@ -1368,6 +1373,81 @@ func GradeTransitionYearEqualFold(v string) predicate.GameProfile {
 // GradeTransitionYearContainsFold applies the ContainsFold predicate on the "grade_transition_year" field.
 func GradeTransitionYearContainsFold(v string) predicate.GameProfile {
 	return predicate.GameProfile(sql.FieldContainsFold(FieldGradeTransitionYear, v))
+}
+
+// NicknameKeyEQ applies the EQ predicate on the "nickname_key" field.
+func NicknameKeyEQ(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldEQ(FieldNicknameKey, v))
+}
+
+// NicknameKeyNEQ applies the NEQ predicate on the "nickname_key" field.
+func NicknameKeyNEQ(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldNEQ(FieldNicknameKey, v))
+}
+
+// NicknameKeyIn applies the In predicate on the "nickname_key" field.
+func NicknameKeyIn(vs ...string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldIn(FieldNicknameKey, vs...))
+}
+
+// NicknameKeyNotIn applies the NotIn predicate on the "nickname_key" field.
+func NicknameKeyNotIn(vs ...string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldNotIn(FieldNicknameKey, vs...))
+}
+
+// NicknameKeyGT applies the GT predicate on the "nickname_key" field.
+func NicknameKeyGT(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldGT(FieldNicknameKey, v))
+}
+
+// NicknameKeyGTE applies the GTE predicate on the "nickname_key" field.
+func NicknameKeyGTE(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldGTE(FieldNicknameKey, v))
+}
+
+// NicknameKeyLT applies the LT predicate on the "nickname_key" field.
+func NicknameKeyLT(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldLT(FieldNicknameKey, v))
+}
+
+// NicknameKeyLTE applies the LTE predicate on the "nickname_key" field.
+func NicknameKeyLTE(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldLTE(FieldNicknameKey, v))
+}
+
+// NicknameKeyContains applies the Contains predicate on the "nickname_key" field.
+func NicknameKeyContains(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldContains(FieldNicknameKey, v))
+}
+
+// NicknameKeyHasPrefix applies the HasPrefix predicate on the "nickname_key" field.
+func NicknameKeyHasPrefix(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldHasPrefix(FieldNicknameKey, v))
+}
+
+// NicknameKeyHasSuffix applies the HasSuffix predicate on the "nickname_key" field.
+func NicknameKeyHasSuffix(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldHasSuffix(FieldNicknameKey, v))
+}
+
+// NicknameKeyIsNil applies the IsNil predicate on the "nickname_key" field.
+func NicknameKeyIsNil() predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldIsNull(FieldNicknameKey))
+}
+
+// NicknameKeyNotNil applies the NotNil predicate on the "nickname_key" field.
+func NicknameKeyNotNil() predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldNotNull(FieldNicknameKey))
+}
+
+// NicknameKeyEqualFold applies the EqualFold predicate on the "nickname_key" field.
+func NicknameKeyEqualFold(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldEqualFold(FieldNicknameKey, v))
+}
+
+// NicknameKeyContainsFold applies the ContainsFold predicate on the "nickname_key" field.
+func NicknameKeyContainsFold(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldContainsFold(FieldNicknameKey, v))
 }
 
 // And groups predicates with the AND operator between them.

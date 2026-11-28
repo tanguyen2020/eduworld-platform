@@ -127,9 +127,10 @@ func (h SafetyHandlers) createReport(w http.ResponseWriter, r *http.Request) {
 		Reason     string    `json:"reason"`
 		Note       *string   `json:"note"`
 		Context    *struct {
-			ChannelID *uuid.UUID `json:"channel_id"`
-			MatchID   *uuid.UUID `json:"match_id"`
-			PartyID   *uuid.UUID `json:"party_id"`
+			ChannelID     *uuid.UUID `json:"channel_id"`
+			MatchID       *uuid.UUID `json:"match_id"`
+			PartyID       *uuid.UUID `json:"party_id"`
+			ReportedField string     `json:"reported_field"`
 		} `json:"context"`
 	}
 	if err := decode(r, &b); err != nil {
@@ -139,6 +140,7 @@ func (h SafetyHandlers) createReport(w http.ResponseWriter, r *http.Request) {
 	in := command.ReportInput{TargetType: b.TargetType, TargetID: b.TargetID, Reason: b.Reason, Note: b.Note}
 	if b.Context != nil {
 		in.ChannelID, in.MatchID, in.PartyID = b.Context.ChannelID, b.Context.MatchID, b.Context.PartyID
+		in.ReportedField = b.Context.ReportedField
 	}
 	in.Lang = service.ReportLang(r.Header.Get("Accept-Language"))
 	res, err := h.Commands.CreateReport(r.Context(), in)
@@ -252,8 +254,12 @@ func (h SafetyHandlers) getCase(w http.ResponseWriter, r *http.Request) {
 			Messages []struct {
 				MessageID uuid.UUID `json:"message_id"`
 			} `json:"messages"`
+			ReportedNickname *string `json:"reported_nickname"`
 		}
 		if json.Unmarshal(e.Snapshot, &snap) == nil {
+			if snap.ReportedNickname != nil { // server snapshot of a nickname report (F136-AC-18, AC-22)
+				evidence[i]["reported_nickname"] = *snap.ReportedNickname
+			}
 			for _, msg := range snap.Messages {
 				if len(messageIDs) < 200 && !containsID(messageIDs, msg.MessageID) {
 					messageIDs = append(messageIDs, msg.MessageID)

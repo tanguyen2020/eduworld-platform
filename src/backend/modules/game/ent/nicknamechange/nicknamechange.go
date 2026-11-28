@@ -33,6 +33,8 @@ const (
 	FieldChangedBy = "changed_by"
 	// FieldChangedAt holds the string denoting the changed_at field in the database.
 	FieldChangedAt = "changed_at"
+	// FieldSourceRefID holds the string denoting the source_ref_id field in the database.
+	FieldSourceRefID = "source_ref_id"
 	// Table holds the table name of the nicknamechange in the database.
 	Table = "nickname_changes"
 )
@@ -49,6 +51,7 @@ var Columns = []string{
 	FieldReason,
 	FieldChangedBy,
 	FieldChangedAt,
+	FieldSourceRefID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -134,4 +137,9 @@ func ByChangedBy(opts ...sql.OrderTermOption) OrderOption {
 // ByChangedAt orders the results by the changed_at field.
 func ByChangedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldChangedAt, opts...).ToFunc()
+}
+
+// BySourceRefID orders the results by the source_ref_id field.
+func BySourceRefID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSourceRefID, opts...).ToFunc()
 }

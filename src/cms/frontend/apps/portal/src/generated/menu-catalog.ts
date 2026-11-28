@@ -89,6 +89,7 @@ export type ActionKey =
   | "action.school_lms.schools.edit"
   | "action.school_lms.students.view"
   | "action.school_lms.students.reset_password"
+  | "action.school_lms.students.reset_nickname"
   | "action.school_lms.students.lock"
   | "action.school_lms.sis_sync.view"
   | "action.school_lms.sis_sync.import"
@@ -357,6 +358,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
         actions: [
           { key: "action.school_lms.students.view", labelKey: "portal.action.school_lms.students.view", requiredPermissions: ["tenant.student.read", "lms.student.read"] },
           { key: "action.school_lms.students.reset_password", labelKey: "portal.action.school_lms.students.reset_password", requiredPermissions: ["lms.student.password_reset"] },
+          { key: "action.school_lms.students.reset_nickname", labelKey: "portal.action.school_lms.students.reset_nickname", requiredPermissions: ["lms.student.nickname_reset"] },
           { key: "action.school_lms.students.lock", labelKey: "portal.action.school_lms.students.lock", requiredPermissions: ["tenant.user.lock"] },
         ],
       },

@@ -68,7 +68,19 @@ paths:
       tags:
         - game
       operationId: updateGameProfile
-      summary: Đổi nickname (từ danh sách đã duyệt) và settings
+      summary: Đặt/đổi nickname (tự gõ qua kiểm duyệt hoặc chọn gợi ý) và settings
+      description: |
+        Nickname đặt bằng **đúng một** trong hai trường (F136, ADR-0105): `nickname` (chuỗi tự gõ) hoặc `nickname_option_id`
+        (gợi ý của `suggestNicknames`); gửi cả hai, hoặc `nickname: null` → `422 VALIDATION_FAILED`. Chuỗi tự gõ đi qua, theo
+        thứ tự: giới hạn lần thử `nickname_attempt_rate` (mọi lần gửi đều đếm; `429 RATE_LIMITED` + `Retry-After`) → định dạng
+        (NFC, bỏ/gộp khoảng trắng, `nickname_min_length`–32 điểm mã, chữ Latin kể cả tiếng Việt, chữ số ≤ `nickname_max_digits`,
+        ≥ 1 chữ cái) → giới hạn đổi tháng (`409 NICKNAME_CHANGE_LIMIT`, trước mọi kiểm duyệt) → kiểm duyệt của module chat (`moderateDisplayText`,
+        `context = nickname`, bước PII luôn chạy) → dữ liệu cá nhân của module identity (`screenNicknamePersonalData`) → trùng
+        không phân biệt hoa thường trong tenant (`409 NICKNAME_UNAVAILABLE`). Mọi lý do nội dung trả **một** mã
+        `422 NICKNAME_NOT_ALLOWED` với thông điệp chung theo `Accept-Language`: không echo chuỗi, không từ khớp, vị trí, danh mục,
+        loại PII hay họ tên (R15, R16). Kiểm duyệt/identity lỗi hoặc quá `nickname_moderation_deadline` → `503 UNAVAILABLE`,
+        không lưu (fail-closed); đường `nickname_option_id` không gọi kiểm duyệt nên vẫn dùng được. Chuỗi bị từ chối không được
+        ghi vào log, audit hay telemetry (R14).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -93,13 +105,21 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
         '409':
-          description: NICKNAME_UNAVAILABLE (nickname_option_id hết hạn, không thuộc học sinh hoặc nickname vừa bị học sinh khác cùng tenant lấy — client lấy gợi ý mới), NICKNAME_CHANGE_LIMIT (vượt nickname_change_monthly_limit, kèm retry_after)
+          description: NICKNAME_UNAVAILABLE (nickname_option_id hết hạn, không thuộc học sinh, hoặc nickname — so không phân biệt hoa thường — đã có học sinh khác cùng tenant dùng; client lấy gợi ý mới), NICKNAME_CHANGE_LIMIT (vượt nickname_change_monthly_limit, kèm retry_after)
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
         '422':
-          $ref: '#/components/responses/ValidationFailed'
+          description: VALIDATION_FAILED (cả `nickname` và `nickname_option_id`, `nickname = null`, settings/ngôn ngữ sai), NICKNAME_NOT_ALLOWED (nickname tự gõ không dùng được — một mã chung cho mọi lý do nội dung, không mã con, không vị trí, F136-AC-10…AC-12, AC-16)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblem'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
         default:
           $ref: '#/components/responses/Problem'
   /game/character/catalog:
@@ -1157,6 +1177,56 @@ paths:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+  /tenant/students/{student_id}/game-profile/nickname:reset:
+    post:
+      x-service: game
+      tags:
+        - tenant
+      operationId: resetStudentNickname
+      x-portal-action: action.school_lms.students.reset_nickname
+      summary: Đặt lại nickname của học sinh — nickname về null, học sinh chọn lại ở bước Tên (F136 US5)
+      description: |
+        Quyền `lms.student.nickname_reset` (permission tenant): School Admin của trường học sinh, Tenant Admin của tenant, System Admin
+        (tenant đích qua `X-Tenant-Id`, gồm tenant `common` qua gateway nội bộ). Học sinh ngoài tenant/scope → `404`; học sinh tự gọi
+        hoặc role thiếu permission → `403`. `reason` và `Idempotency-Key` bắt buộc; replay cùng key trả kết quả đã lưu.
+        Module game đặt `nickname` = null (người chơi khác thấy chuỗi trung tính `ui.player.unnamed`), `setup_required = true`, ghi
+        `game.nickname_changes` (`reason = reset`), phát `game_profile.updated` và ghi audit (actor, lý do, nickname cũ). Lần học
+        sinh chọn lại không tính vào `nickname_change_monthly_limit` (CHARACTER_SYSTEM §5.3, ADR-0105). Học sinh chưa có nickname →
+        `200` không đổi gì.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/StudentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentNicknameResetRequest'
+      responses:
+        '200':
+          description: Đã đặt lại nickname (hoặc học sinh chưa có nickname)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentNicknameResetResult'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /tenant/students/{student_id}/login-events:
     get:
       x-service: game
@@ -5661,7 +5731,7 @@ components:
             - string
             - 'null'
           maxLength: 32
-          description: null tới khi chọn từ gợi ý (suggestNicknames)
+          description: null tới khi học sinh đặt (tự gõ hoặc chọn gợi ý) và sau khi nickname bị đặt lại (F136 US5)
         level:
           type: integer
           minimum: 1
@@ -5670,7 +5740,17 @@ components:
           minimum: 0
         setup_required:
           type: boolean
-          description: true khi chưa có avatar hoặc nickname — game mở màn Tạo nhân vật (S02) trước Main Hub (F070-AC-01)
+          description: true khi chưa có avatar hoặc nickname (kể cả sau khi nickname bị đặt lại) — game mở màn Tạo nhân vật (S02) trước Main Hub (F070-AC-01, F136-AC-23)
+        nickname_changes_left:
+          type: integer
+          minimum: 0
+          description: Số lần học sinh còn được đổi nickname trong tháng dương lịch (nickname_change_monthly_limit, trường chỉ siết thêm); lần đặt đầu và lần chọn lại sau khi bị đặt lại không tính (F136-AC-07, AC-08)
+        nickname_change_available_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: 'Khi nickname_changes_left = 0: thời điểm đổi lại được (đầu tháng sau theo Asia/Ho_Chi_Minh); null khi còn lượt — client hiện ngày, không đếm ngược (F136-AC-07, R19)'
         avatar_created_at:
           type:
             - string
@@ -5936,6 +6016,7 @@ components:
         - EQUIP_SLOT_INVALID
         - NICKNAME_UNAVAILABLE
         - NICKNAME_CHANGE_LIMIT
+        - NICKNAME_NOT_ALLOWED
         - QUEST_ALREADY_COMPLETED
         - QUEST_COOLDOWN
         - QUEST_PREREQUISITE_NOT_MET
@@ -6024,8 +6105,17 @@ components:
     GameProfileUpdate:
       type: object
       additionalProperties: false
-      description: Nickname chỉ đặt qua nickname_option_id của suggestNicknames; trường nickname tự do bị từ chối 422 (F070-AC-10, R16).
+      description: 'Nickname đặt bằng đúng một trong hai: `nickname` (tự gõ, kiểm duyệt phía server — F136, ADR-0105) hoặc `nickname_option_id` (gợi ý của suggestNicknames, F070); gửi cả hai hoặc `nickname: null` → 422 VALIDATION_FAILED. Server không tin cờ "đã kiểm tra" nào của client (R5).'
+      not:
+        required:
+          - nickname
+          - nickname_option_id
       properties:
+        nickname:
+          type: string
+          minLength: 1
+          maxLength: 32
+          description: Nickname tự gõ; server chuẩn hóa (NFC, bỏ/gộp khoảng trắng) rồi kiểm `nickname_min_length`–32 điểm mã
         nickname_option_id:
           $ref: '#/components/schemas/Uuid'
         settings:
@@ -8697,6 +8787,31 @@ components:
                 type: integer
               cap:
                 type: integer
+    StudentNicknameResetRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+          description: Lý do (audit; không gửi cho học sinh)
+    StudentNicknameResetResult:
+      type: object
+      required:
+        - student_id
+        - nickname
+        - reset_at
+      properties:
+        student_id:
+          $ref: '#/components/schemas/Uuid'
+        nickname:
+          type: 'null'
+          description: Luôn null sau khi đặt lại
+        reset_at:
+          $ref: '#/components/schemas/Timestamp'
     LoginEventPage:
       type: object
       required:
@@ -12169,17 +12284,6 @@ components:
       schema:
         type: string
         maxLength: 16
-    IdempotentReplayed:
-      description: |
-        Có giá trị `true` khi response được phát lại từ kho idempotency (cùng `Idempotency-Key` + cùng body trong `idempotency_record_ttl`);
-        vắng mặt khi request được xử lý lần đầu (API_DESIGN §6, F003).
-      schema:
-        type: string
-        enum:
-          - 'true'
-    RetryAfter:
-      schema:
-        type: integer
     RateLimitLimit:
       schema:
         type: integer
@@ -12189,6 +12293,17 @@ components:
     RateLimitReset:
       schema:
         type: integer
+    RetryAfter:
+      schema:
+        type: integer
+    IdempotentReplayed:
+      description: |
+        Có giá trị `true` khi response được phát lại từ kho idempotency (cùng `Idempotency-Key` + cùng body trong `idempotency_record_ttl`);
+        vắng mặt khi request được xử lý lần đầu (API_DESIGN §6, F003).
+      schema:
+        type: string
+        enum:
+          - 'true'
     ETag:
       description: Phiên bản tài nguyên cho optimistic concurrency
       schema:
@@ -12213,24 +12328,6 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
-    ValidationFailed:
-      description: VALIDATION_FAILED, SIS_CONTRACT_VERSION_UNSUPPORTED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, TOURNAMENT_REGISTRATION_CLOSED, TOURNAMENT_CHECK_IN_CLOSED, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/ValidationProblem'
-    PreconditionRequired:
-      description: IDEMPOTENCY_KEY_REQUIRED hoặc PRECONDITION_REQUIRED
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-    NotFound:
-      description: Không tồn tại hoặc ngoài tenant scope (NOT_FOUND)
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problem'
     RateLimited:
       description: RATE_LIMITED, LOGIN_QUEUE_BUSY (hàng chờ đăng nhập game, ADR-0045/0068), CHAT_RATE_LIMITED (giới hạn chat theo policy)
       headers:
@@ -12242,6 +12339,27 @@ components:
           $ref: '#/components/headers/RateLimitReset'
         Retry-After:
           $ref: '#/components/headers/RetryAfter'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: Dịch vụ phụ thuộc tạm thời không sẵn sàng (vd. CHAT_TEMPORARILY_UNAVAILABLE khi NATS JetStream lỗi) — client thử lại theo Retry-After
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PreconditionRequired:
+      description: IDEMPOTENCY_KEY_REQUIRED hoặc PRECONDITION_REQUIRED
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Không tồn tại hoặc ngoài tenant scope (NOT_FOUND)
       content:
         application/problem+json:
           schema:
@@ -12259,6 +12377,12 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
+    ValidationFailed:
+      description: VALIDATION_FAILED, SIS_CONTRACT_VERSION_UNSUPPORTED, ATTEMPT_DEADLINE_PASSED, INVALID_STATE_TRANSITION, TOURNAMENT_REGISTRATION_CLOSED, TOURNAMENT_CHECK_IN_CLOSED, MODERATION_SWITCH_REASON_REQUIRED, SENSITIVE_TERM_INVALID, SENSITIVE_CATALOG_REGRESSION_FAILED, DASHBOARD_RANGE_TOO_LARGE, ROLE_NOT_FOUND; sub-code `errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE` khi role tenant chứa permission platform
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ValidationProblem'
     DashboardBusy:
       description: DASHBOARD_BUSY — người dùng đã có quá số truy vấn dashboard đồng thời, hoặc EXPORT_LIMIT_REACHED với export; thử lại theo Retry-After
       headers:
@@ -12270,15 +12394,6 @@ components:
             $ref: '#/components/schemas/Problem'
     DashboardTimeout:
       description: DASHBOARD_QUERY_TIMEOUT — truy vấn bị hủy ở database sau statement_timeout 5 giây (DASHBOARD_DATA §8)
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-    ServiceUnavailable:
-      description: Dịch vụ phụ thuộc tạm thời không sẵn sàng (vd. CHAT_TEMPORARILY_UNAVAILABLE khi NATS JetStream lỗi) — client thử lại theo Retry-After
-      headers:
-        Retry-After:
-          $ref: '#/components/headers/RetryAfter'
       content:
         application/problem+json:
           schema:

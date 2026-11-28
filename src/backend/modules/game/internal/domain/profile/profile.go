@@ -92,6 +92,22 @@ func (p *Profile) SetNickname(n string) NicknameChange {
 	return c
 }
 
+// ResetNickname clears the nickname (reset by the school or the Safety Team, F136 US5): setup is required again and the
+// next nickname is "initial", not counted by nickname_change_monthly_limit. It returns the old nickname; changed is false
+// when there was none.
+func (p *Profile) ResetNickname() (old *string, changed bool) {
+	if p.Nickname == nil {
+		return nil, false
+	}
+	old, p.Nickname = p.Nickname, nil
+	return old, true
+}
+
+// Left returns the player changes left this month after changesThisMonth (never negative).
+func (n NicknamePolicy) Left(changesThisMonth int) int {
+	return max(n.MonthlyLimit-changesThisMonth, 0)
+}
+
 // NicknamePolicy is nickname_change_monthly_limit (CONFIG_DEFAULTS, CHARACTER_SYSTEM §5.3): changes by the player
 // per calendar month in Location (a school policy may only lower it).
 type NicknamePolicy struct {

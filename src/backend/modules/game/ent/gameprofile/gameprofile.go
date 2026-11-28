@@ -63,6 +63,8 @@ const (
 	FieldLastGameLoginAt = "last_game_login_at"
 	// FieldGradeTransitionYear holds the string denoting the grade_transition_year field in the database.
 	FieldGradeTransitionYear = "grade_transition_year"
+	// FieldNicknameKey holds the string denoting the nickname_key field in the database.
+	FieldNicknameKey = "nickname_key"
 	// Table holds the table name of the gameprofile in the database.
 	Table = "game_profiles"
 )
@@ -94,6 +96,7 @@ var Columns = []string{
 	FieldPreferredLanguage,
 	FieldLastGameLoginAt,
 	FieldGradeTransitionYear,
+	FieldNicknameKey,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -142,6 +145,8 @@ var (
 	PreferredLanguageValidator func(string) error
 	// GradeTransitionYearValidator is a validator for the "grade_transition_year" field. It is called by the builders before save.
 	GradeTransitionYearValidator func(string) error
+	// NicknameKeyValidator is a validator for the "nickname_key" field. It is called by the builders before save.
+	NicknameKeyValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -262,4 +267,9 @@ func ByLastGameLoginAt(opts ...sql.OrderTermOption) OrderOption {
 // ByGradeTransitionYear orders the results by the grade_transition_year field.
 func ByGradeTransitionYear(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldGradeTransitionYear, opts...).ToFunc()
+}
+
+// ByNicknameKey orders the results by the nickname_key field.
+func ByNicknameKey(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNicknameKey, opts...).ToFunc()
 }

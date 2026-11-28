@@ -59,6 +59,12 @@ workspaces:
             required_permissions: [lms.student.password_reset]
             operation_ids: [resetStudentPassword]
             can_disable: true
+          - key: action.school_lms.students.reset_nickname
+            label_key: portal.action.school_lms.students.reset_nickname
+            title: Đặt lại nickname học sinh (lý do bắt buộc; học sinh chọn lại tên ở bước Tên, người khác thấy "Bạn mới")
+            required_permissions: [lms.student.nickname_reset]
+            operation_ids: [resetStudentNickname]
+            can_disable: true
           - key: action.school_lms.students.lock
             label_key: portal.action.school_lms.students.lock
             title: Khóa/mở khóa tài khoản học sinh (lý do bắt buộc, học sinh thấy thông điệp trung tính)

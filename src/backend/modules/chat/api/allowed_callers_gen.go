@@ -14,7 +14,7 @@ var AllowedCallers = map[string][]string{
 	"listResourceAssignments": {"identity"},
 	"listTrash":               {"identity"},
 	"mergeUserData":           {"identity"},
-	"moderateDisplayText":     {"competition"},
+	"moderateDisplayText":     {"competition", "game"},
 	"restoreStudentData":      {"identity"},
 	"restoreTrashItem":        {"identity"},
 	"revokeTenantAssignments": {"identity"},

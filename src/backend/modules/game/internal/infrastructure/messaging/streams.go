@@ -262,3 +262,10 @@ const (
 	AnalyticsLearningName    = "game.analytics_learning"
 	AnalyticsChatName        = "game.analytics_chat"
 )
+
+// SanctionNicknameResetName is the durable consumer of the nickname resets of the Safety Team (F136-AC-20): sanction.applied
+// of module chat (owner F116), only type nickname_reset is applied.
+const SanctionNicknameResetName = "game.sanction_nickname_reset"
+
+// SanctionNicknameResetEvents are the chat events of game.sanction_nickname_reset.
+var SanctionNicknameResetEvents = []string{"sanction.applied"}

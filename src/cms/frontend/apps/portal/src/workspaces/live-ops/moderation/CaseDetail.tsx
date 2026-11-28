@@ -4,6 +4,7 @@
 // If-Match = case version and X-Tenant-Id = tenant of the case; note mandatory with a counter; `account_lock` needs a second
 // confirmation), notify the school (NotifySchoolDrawer; hidden for a tenant `common` case → "Liên hệ trực tiếp").
 // Errors are shown by `code` with the trace id; 412 reloads the case; nothing is retried automatically (F122-AC-04).
+// F136-AC-22: the reported nickname snapshot (plain text) and the case action "Đặt lại nickname" (CaseNicknameAction.tsx).
 import { Alert, Button, Card, Checkbox, Descriptions, Flex, Form, Input, InputNumber, List, Modal, Space, Tag, Timeline, Typography } from 'antd';
 import { openapiInputProps, openapiRules, OPS_UI_NS, SearchSelect, SlaBadge } from '@eduworld/ops-ui';
 import { useState } from 'react';
@@ -11,10 +12,10 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { ActionGate } from '../../../permissions/ActionGate';
 import { useMe } from '../../../shared/api/hooks/useMe';
-import { ApiError } from '../../../shared/api/middleware/problem';
 import { LIMITS, SafetyError, SeverityTag } from '../../../shared/chatSafety/ui';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { useActOnCase, useAssignCase, useCase, useCaseMessages, type CaseMessage, type ModerationAction, type ModerationCaseDetail } from './api';
+import { CaseNicknameAction, CaseWriteError, ReportedNicknames } from './CaseNicknameAction';
 import { formatTime } from './CasesScreen';
 import { NotifySchoolDrawer } from './NotifySchoolDrawer';
 
@@ -86,13 +87,6 @@ interface ActForm {
   note: string;
 }
 
-/** Translated message of a write error (own text for the codes the case screen handles). */
-function writeErrorMessage(error: unknown, t: (k: string) => string): string {
-  if (!(error instanceof ApiError)) return t('error.generic');
-  if (error.code === 'VERSION_MISMATCH' || error.status === 412) return t('chatSafety.case.reloaded');
-  return t(error.i18nKey);
-}
-
 function CaseActions({ c }: { c: ModerationCaseDetail }) {
   const { t } = useTranslation();
   const ops = useTranslation(OPS_UI_NS);
@@ -118,15 +112,6 @@ function CaseActions({ c }: { c: ModerationCaseDetail }) {
     }
     act.mutate(body, { onSuccess: () => form.resetFields() });
   };
-  const error = act.error ? (
-    <Alert
-      type="error"
-      showIcon
-      role="alert"
-      message={writeErrorMessage(act.error, t)}
-      description={act.error instanceof ApiError && act.error.traceId ? t('shell.problem.traceId', { traceId: act.error.traceId }) : undefined}
-    />
-  ) : null;
   return (
     <Card title={t('chatSafety.case.act')} size="small">
       <Form form={form} layout="vertical" name="case_act" onFinish={submit} initialValues={{ action: 'warn' }}>
@@ -163,7 +148,7 @@ function CaseActions({ c }: { c: ModerationCaseDetail }) {
           </Button>
         </ActionGate>
       </Form>
-      {error}
+      <CaseWriteError error={act.error} />
       <Modal
         open={!!confirm}
         title={t('chatSafety.case.lockConfirmTitle')}
@@ -234,8 +219,10 @@ export function CaseDetail() {
         </Space>
         {assign.error ? <ProblemMessage error={assign.error} /> : null}
       </Card>
+      <ReportedNicknames c={c} />
       <EvidencePanel caseId={c.case_id} />
       <CaseActions c={c} />
+      <CaseNicknameAction c={c} />
       <Card size="small" title={t('chatSafety.case.history')}>
         <Timeline
           items={(c.actions ?? []).map((a, i) => ({

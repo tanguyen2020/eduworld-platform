@@ -1943,6 +1943,10 @@ func init() {
 	gameprofileDescGradeTransitionYear := gameprofileFields[14].Descriptor()
 	// gameprofile.GradeTransitionYearValidator is a validator for the "grade_transition_year" field. It is called by the builders before save.
 	gameprofile.GradeTransitionYearValidator = gameprofileDescGradeTransitionYear.Validators[0].(func(string) error)
+	// gameprofileDescNicknameKey is the schema descriptor for nickname_key field.
+	gameprofileDescNicknameKey := gameprofileFields[15].Descriptor()
+	// gameprofile.NicknameKeyValidator is a validator for the "nickname_key" field. It is called by the builders before save.
+	gameprofile.NicknameKeyValidator = gameprofileDescNicknameKey.Validators[0].(func(string) error)
 	// gameprofileDescID is the schema descriptor for id field.
 	gameprofileDescID := gameprofileMixinFields0[0].Descriptor()
 	// gameprofile.DefaultID holds the default value on creation for the id field.

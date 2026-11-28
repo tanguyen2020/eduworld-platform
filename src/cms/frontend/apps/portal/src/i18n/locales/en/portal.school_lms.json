@@ -130,6 +130,14 @@
     "print": "Print login card",
     "redacted": "The password was already shown before and cannot be displayed again. If it was not noted, reset the password once more."
   },
+  "nicknameReset": {
+    "action": "Reset nickname",
+    "title": "Reset the nickname of {{name}}",
+    "current": "Current nickname",
+    "description": "The nickname of {{name}} ({{username}}) will be removed. Next time in the game the student is asked to pick a new name; meanwhile other players see a neutral name. The reason is only written to the audit log and never sent to the student.",
+    "confirm": "Reset",
+    "done": "The nickname of {{name}} was reset. The student will pick a new name in the game."
+  },
   "sis": {
     "tab": "CSV import",
     "help": "CSV file following the EduWorld SIS Contract (column = data field name), one data kind per file, up to 10 MB. The automatic SIS sync schedule is set by EduWorld per connection; schools using CSV update by uploading a new file.",

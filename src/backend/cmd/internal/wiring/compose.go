@@ -63,7 +63,8 @@ func Compose(r *module.Registry) (*Composition, error) {
 		gin.Learning = f // createAttempt: learning steps of the quests (F072)
 	}
 	if f := cht.Facade(); f != nil {
-		gin.Chat = f // screenText: school event texts (F077)
+		gin.Chat = f         // screenText: school event texts (F077)
+		gin.ChatNickname = f // moderateDisplayText context nickname: typed nicknames (F136)
 	}
 	gam.Wire(gin)
 	// Party and team names go through the chat moderation pipeline (moderateDisplayText, F116); without the chat facade
@@ -97,6 +98,11 @@ func Compose(r *module.Registry) (*Composition, error) {
 	}
 	if err := idm.Wire(in); err != nil {
 		return nil, err
+	}
+	// Typed nicknames are screened against the real name and school of the student by identity (screenNicknamePersonalData,
+	// F136): the identity facade exists only after its Wire.
+	if f := idm.Facade(); f != nil {
+		gam.WireIdentity(f)
 	}
 	// The on-call rotation of module chat checks the moderator through resolvePrincipal of identity (F124-AC-12); the
 	// in-game notifications of bài giao read their recipients from module learning (listAssignmentRecipients, F123).

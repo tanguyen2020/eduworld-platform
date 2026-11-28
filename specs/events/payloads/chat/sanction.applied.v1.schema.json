@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/chat/sanction.applied.v1.schema.json",
   "title": "Payload sanction.applied v1 (module chat, owner F116; mở rộng F121)",
-  "description": "Một sanction được áp cho học sinh (F116: mute hệ thống auto_spam/block_and_alert_hold; F121: hold p1 case_hold và sanction của Safety Team gắn case_id). Trường theo EVENT_DESIGN §4.9 (sanction_type, until). Chỉ mã định danh và mã lý do — không có lý do nội bộ hay nội dung tin (R14). Consumer: competition (ref.sanctions), identity (account_lock, F124), RT, AUD.",
+  "description": "Một sanction được áp cho học sinh (F116: mute hệ thống auto_spam/block_and_alert_hold; F121: hold p1 case_hold và sanction của Safety Team gắn case_id). Trường theo EVENT_DESIGN §4.9 (sanction_type, until). Chỉ mã định danh và mã lý do — không có lý do nội bộ hay nội dung tin (R14). F136: nickname_reset (tức thời, ends_at = starts_at, không có sanction.lifted). Consumer: competition (ref.sanctions), identity (account_lock, F124), game (nickname_reset → nickname về null, F136), RT, AUD.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -44,7 +44,8 @@
         "restrict_dm",
         "restrict_multiplayer",
         "restrict_competition",
-        "account_lock"
+        "account_lock",
+        "nickname_reset"
       ]
     },
     "scope": {

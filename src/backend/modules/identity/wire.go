@@ -72,11 +72,14 @@ type Facade interface {
 	GetPrincipal(ctx context.Context, req identityapi.GetPrincipalRequestObject) (identityapi.GetPrincipalResponseObject, error)
 	CheckMemberships(ctx context.Context, req identityapi.CheckMembershipsRequestObject) (identityapi.CheckMembershipsResponseObject, error)
 	ListProjectionSnapshot(ctx context.Context, req identityapi.ListProjectionSnapshotRequestObject) (identityapi.ListProjectionSnapshotResponseObject, error)
+	// screenNicknamePersonalData (caller game, F136): real name / school name of the student in a typed nickname.
+	ScreenNicknamePersonalData(ctx context.Context, req identityapi.ScreenNicknamePersonalDataRequestObject) (identityapi.ScreenNicknamePersonalDataResponseObject, error)
 }
 
 type identityFacade struct {
 	facade.Facade
 	facade.Principals
+	facade.Nicknames
 }
 
 var _ Facade = identityFacade{}
@@ -190,7 +193,8 @@ func build(r *module.Registry, m *Module, in Imports) error {
 	// Facade of identity (F010 snapshots, F012 principals).
 	m.facade = identityFacade{Facade: facade.Facade{Ops: r.ReconcileSource(Name), Snapshot: query.ProjectionSnapshot{Model: read.SnapshotModel{Session: core.ReadSession}, Cursors: cursors}},
 		Principals: facade.Principals{Resolve: query.ResolvePrincipal{Model: principals},
-			Memberships: query.CheckMemberships{Model: principals}}}
+			Memberships: query.CheckMemberships{Model: principals}},
+		Nicknames: facade.Nicknames{Screen: query.ScreenNicknamePersonalData{Model: read.NicknamePersonalModel{Session: core.ReadSession}}}}
 
 	// Facades of learning and game (sagas F016, platform operations F045); mergeUserData is served by learning
 	// (F030), game (F070), competition (F100) and chat (F115 T042); game, competition and chat serve their assignments

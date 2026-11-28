@@ -317,6 +317,20 @@ func (_c *GameProfileCreate) SetNillableGradeTransitionYear(v *string) *GameProf
 	return _c
 }
 
+// SetNicknameKey sets the "nickname_key" field.
+func (_c *GameProfileCreate) SetNicknameKey(v string) *GameProfileCreate {
+	_c.mutation.SetNicknameKey(v)
+	return _c
+}
+
+// SetNillableNicknameKey sets the "nickname_key" field if the given value is not nil.
+func (_c *GameProfileCreate) SetNillableNicknameKey(v *string) *GameProfileCreate {
+	if v != nil {
+		_c.SetNicknameKey(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *GameProfileCreate) SetID(v uuid.UUID) *GameProfileCreate {
 	_c.mutation.SetID(v)
@@ -472,6 +486,11 @@ func (_c *GameProfileCreate) check() error {
 			return &ValidationError{Name: "grade_transition_year", err: fmt.Errorf(`ent: validator failed for field "GameProfile.grade_transition_year": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.NicknameKey(); ok {
+		if err := gameprofile.NicknameKeyValidator(v); err != nil {
+			return &ValidationError{Name: "nickname_key", err: fmt.Errorf(`ent: validator failed for field "GameProfile.nickname_key": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -603,6 +622,10 @@ func (_c *GameProfileCreate) createSpec() (*GameProfile, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.GradeTransitionYear(); ok {
 		_spec.SetField(gameprofile.FieldGradeTransitionYear, field.TypeString, value)
 		_node.GradeTransitionYear = &value
+	}
+	if value, ok := _c.mutation.NicknameKey(); ok {
+		_spec.SetField(gameprofile.FieldNicknameKey, field.TypeString, value)
+		_node.NicknameKey = &value
 	}
 	return _node, _spec
 }
