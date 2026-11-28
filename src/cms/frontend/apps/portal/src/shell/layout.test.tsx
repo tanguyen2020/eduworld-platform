@@ -104,7 +104,7 @@ describe('user menu and accessibility (F051-AC-16, F051-AC-17, F051-AC-18)', () 
 
   it('account dropdown keeps the user name, compact density and sign out — no language or theme control', async () => {
     const { user } = await qlcmInThDemoA();
-    await user.click(screen.getByRole('button', { name: 'Tài khoản' }));
+    await user.click(screen.getByRole('button', { name: /^Tài khoản/ }));
     const compact = await screen.findByRole('switch', { name: 'Mật độ gọn' });
     const popup = compact.closest('.ant-popover') as HTMLElement;
     expect(within(popup).getByRole('button', { name: 'Đăng xuất' })).toBeInTheDocument();

@@ -123,7 +123,8 @@ test.describe('@ADR0095 Portal theo trường và khối (không còn lớp)', (
     const r = await login;
     expect(r.status()).toBe(403);
     expect(((await r.json()) as { code?: string }).code).toBe('PORTAL_ACCESS_STAFF_ONLY');
-    await expect(page.getByText('Tài khoản học sinh không dùng được cổng quản trị')).toBeVisible();
+    // the /login page is always English (loginLocale.tsx): shell.noAccess.studentTitle in en-US
+    await expect(page.getByText('Student accounts cannot use the admin portal')).toBeVisible();
     await expect(page).toHaveURL(/\/login/);
   });
 

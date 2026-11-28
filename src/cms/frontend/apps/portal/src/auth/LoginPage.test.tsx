@@ -207,7 +207,7 @@ describe('/login is always English (owner 2026-11-23)', () => {
     await signIn(user, 'ad.truong.a');
     await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/schools'), { timeout: 30_000 });
     expect(await screen.findByTestId('locale-toggle')).toHaveTextContent('VI');
-    expect(screen.getByRole('button', { name: i18n.getFixedT('vi-VN')('shell.userMenu.label') })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: new RegExp(`^${i18n.getFixedT('vi-VN')('shell.userMenu.label')}`) })).toBeInTheDocument();
     expect(document.documentElement.lang).toBe('vi-VN');
   });
 });

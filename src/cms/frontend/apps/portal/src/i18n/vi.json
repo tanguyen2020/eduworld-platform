@@ -147,6 +147,7 @@
     },
     "userMenu": {
       "label": "Tài khoản",
+      "labelWithName": "Tài khoản: {{name}}",
       "compact": "Mật độ gọn",
       "logout": "Đăng xuất"
     },

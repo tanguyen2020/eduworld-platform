@@ -142,7 +142,8 @@ export function UserMenu() {
   );
   return (
     <Popover content={content} trigger="click" open={open} onOpenChange={setOpen} placement="bottomRight">
-      <Button icon={<UserOutlined />} aria-label={t('shell.userMenu.label')} aria-expanded={open}>
+      {/* the accessible name holds the visible name (WCAG 2.5.3 label in name, axe label-content-name-mismatch) */}
+      <Button icon={<UserOutlined />} aria-label={me.data?.display_name ? t('shell.userMenu.labelWithName', { name }) : t('shell.userMenu.label')} aria-expanded={open}>
         {name}
       </Button>
     </Popover>

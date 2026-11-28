@@ -101,8 +101,8 @@
 ### Tests cho User Story 6
 
 - [x] T041 [P] [US6] Test F056-AC-19: menu theo `analytics.*`; bộ lọc môn theo scope; `403` → "Ngoài phạm vi quyền" (TC-TEN-002) — file: `…/dashboard/__tests__/permissions.matrix.test.tsx` — phải FAIL trước khi code — ✅ `src/cms/frontend/apps/portal/src/workspaces/school-lms/dashboard/__tests__/permissions.test.tsx` › AC-19 (2 test)
-- [ ] T042 [P] [US6] E2E F056-AC-20: `sm.antoan`, `cm.noidung` mở URL dashboard → 403, không request dashboard (TC-CMS-WS-01) — file: `src/cms/frontend/apps/portal/e2e/dashboard/authz.spec.ts` — chờ backend compose; logic đã có Vitest `permissions.test.tsx` › AC-20 (trang 403, không request dashboard)
-- [ ] T043 [P] [US6] E2E F056-AC-21: `ad.truong.b` mở lớp TH Demo A → "Không tìm thấy"; cache khóa theo tenant (TC-DASH-009, TC-TEN-001) — file: `src/cms/frontend/apps/portal/e2e/dashboard/tenant-isolation.spec.ts` — chờ backend compose; logic đã có Vitest `permissions.test.tsx` › AC-21 (404 → "Không tìm thấy", khóa cache theo tenant)
+- [x] T042 [P] [US6] E2E F056-AC-20: `sm.antoan`, `cm.noidung` mở URL dashboard → 403, không request dashboard (TC-CMS-WS-01) — file: `src/cms/frontend/apps/portal/tests/e2e/dashboard/authz.spec.ts` — logic đã có Vitest `permissions.test.tsx` › AC-20 — **2026-11-28:** `EW_E2E_PORTAL_URL=http://localhost:5173 EW_E2E_PASSWORD=<mật khẩu demo> pnpm exec playwright test -c apps/portal/tests/e2e/playwright.config.ts <file>` (compose local + `pnpm dev`) → 8/8 pass (2 tài khoản × tổng quan, `grades/3`, `students/<id>`, `reference`: `.ant-result-403` "Không có quyền truy cập", log mạng cả phiên không có operation dashboard nào — `/lms/dashboards/*`, `/lms/schools/*/grades/*/dashboard`, `/lms/students/*/analytics`, `reference-levels`, `academic-years`, `/tenant/analytics/*`, báo cáo)
+- [x] T043 [P] [US6] E2E F056-AC-21: `ad.truong.b` mở lớp TH Demo A → "Không tìm thấy"; cache khóa theo tenant (TC-DASH-009, TC-TEN-001) — file: `src/cms/frontend/apps/portal/tests/e2e/dashboard/tenant-isolation.spec.ts` — logic đã có Vitest `permissions.test.tsx` › AC-21 — **2026-11-28** ("lớp" → khối theo ADR-0095): `EW_E2E_PORTAL_URL=http://localhost:5173 EW_E2E_PASSWORD=<mật khẩu demo> pnpm exec playwright test -c apps/portal/tests/e2e/playwright.config.ts <file>` (compose local + `pnpm dev`) → 3/3 pass: `ad.truong.a` lấy trường + học sinh khối 3 của TH Demo A; `ad.truong.b` mở trang khối 3 của trường đó và hồ sơ một học sinh của nó → backend 404, portal "Không tìm thấy", không hiện tên trường, mọi request dashboard cùng `X-Tenant-Id` của mình, không `tenant_ids`; `qlcm.truong.a` đọc tổng quan ở TH Demo A rồi đổi sang PGD Demo bằng bộ chọn đơn vị → tổng quan được đọc lại với `X-Tenant-Id`/`school_id` mới (không lấy từ cache của tenant cũ), không còn trường của TH Demo A
 - [x] T044 [P] [US6] Test F056-AC-22: ô tìm kiếm/bộ lọc theo `maxLength` (TC-TEN-024) — file: `…/dashboard/__tests__/filters.test.tsx` — ✅ `src/cms/frontend/apps/portal/src/workspaces/school-lms/dashboard/__tests__/class-student.test.tsx` › AC-22 (ô tìm học sinh `maxlength=100` = `listTenantClassStudents.q`)
 
 ### Implementation cho User Story 6
@@ -111,7 +111,7 @@
 
 ## Phase N: Polish & Cross-Cutting
 
-- [ ] T046 [P] Visual regression tổng quan/lớp/heatmap sáng/tối/compact/mobile (TC-UI-004) — file: `src/cms/frontend/apps/portal/e2e/dashboard/visual.spec.ts` — chờ Playwright visual với backend compose
+- [x] T046 [P] Visual regression tổng quan/lớp/heatmap sáng/tối/compact/mobile (TC-UI-004) — file: `src/cms/frontend/apps/portal/tests/e2e/dashboard/visual.spec.ts` — **2026-11-28** ("lớp" → trang khối, ADR-0095): `EW_E2E_PORTAL_URL=http://localhost:5173 EW_E2E_PASSWORD=<mật khẩu demo> pnpm exec playwright test -c apps/portal/tests/e2e/playwright.config.ts <file>` (compose local + `pnpm dev`) → 12/12 pass ở lần chạy so với baseline (tổng quan, trang khối 3, widget heatmap × sáng/tối/compact/mobile 390×844; baseline `tests/e2e/__screenshots__/win32/dashboard-*.png`; che vùng phụ thuộc seed/đồng hồ: lời chào theo giờ, khoảng ngày, "Cập nhật lúc", thân widget; trang không cuộn ngang ở mọi kích thước). Golden dataset (T021) đổi số liệu không làm lệch baseline vì thân widget được che; đổi bố cục thì chạy `--grep @visual --update-snapshots` và review ảnh
 - [ ] T047 [P] Đo thời gian tải tổng quan với dữ liệu 2 năm (TC-DASH-010) — file: `src/cms/frontend/apps/portal/e2e/dashboard/perf.spec.ts` — chờ dữ liệu 2 năm trên backend compose
 - [x] T048 [P] Cập nhật CHANGELOG — file: `CHANGELOG.md` — ✅ `CHANGELOG.md`
 - [ ] T049 Chạy [quickstart.md](quickstart.md) với backend thật và ghi bằng chứng — chờ backend compose
@@ -148,7 +148,7 @@ Nguồn: Clarifications "Session 2026-11-21 (ADR-0095 — [Confirmed])" của sp
 
 ## Definition of Done
 
-- [x] Mọi tiêu chí F056-AC-* có test pass (ghi mã test/TC) — Vitest (ops-ui + portal, MOCK) cho AC-01…AC-23; E2E Playwright T021, T042, T043 chờ backend compose
+- [x] Mọi tiêu chí F056-AC-* có test pass (ghi mã test/TC) — Vitest (ops-ui + portal, MOCK) cho AC-01…AC-23; E2E Playwright T042, T043 pass trên backend compose (2026-11-28); T021 chờ golden dataset
 - [ ] `make web-lint`, `make web-test`, `make storybook`, Playwright E2E xanh với backend thật — lint, typecheck, Vitest, `check-modes` xanh; Playwright chờ backend compose
 - [x] Constitution Check trong plan.md vẫn đạt; MSW chỉ trong test (R17) — mock chỉ ở `src/test/` (nhãn MOCK)
 - [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi — SCHOOL_LMS §8.7 (heatmap), CHANGELOG; CONFIG_DEFAULTS không đổi

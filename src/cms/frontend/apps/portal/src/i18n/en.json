@@ -147,6 +147,7 @@
     },
     "userMenu": {
       "label": "Account",
+      "labelWithName": "Account: {{name}}",
       "compact": "Compact density",
       "logout": "Sign out"
     },

@@ -121,7 +121,7 @@ describe('sign-out (F051-AC-08)', () => {
     await screen.findByRole('heading', { level: 1, name: 'Trường' });
     const csrf = backend.csrf;
     if (offline) backend.overrides.push((r) => (r.path === '/auth/portal/logout' ? Promise.reject(new TypeError('offline')) : undefined));
-    await user.click(screen.getByRole('button', { name: 'Tài khoản' }));
+    await user.click(screen.getByRole('button', { name: /^Tài khoản/ }));
     await user.click(await screen.findByRole('button', { name: 'Đăng xuất' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
     const logout = backend.calls('POST', '/auth/portal/logout');

@@ -106,8 +106,8 @@
 ### Tests cho User Story 6
 
 - [x] T038 [P] [US6] Test F055-AC-19: ma trận role × nút ghi (`tenant_admin`, `school_admin`, `academic_manager` scope môn, System Admin); `403` giữ dữ liệu (TC-TEN-002) — file: `…/__tests__/permissions.matrix.test.tsx` — phải FAIL trước khi code — **2026-11-21:** `lms/permissions.test.tsx` › tenant_admin / 403
-- [ ] T039 [P] [US6] E2E F055-AC-20: `sm.antoan` mở URL LMS → trang 403, network log không có chunk workspace C (TC-CMS-WS-01) — file: `src/cms/frontend/apps/portal/e2e/lms/authz.spec.ts`
-- [ ] T040 [P] [US6] E2E tenant isolation F055-AC-21: `ad.truong.b` mở bài TH Demo A → "Không tìm thấy"; header cũ → `TENANT_MISMATCH` về chọn đơn vị; người dùng tenant không gửi `tenant_ids` (TC-CMS-AUTHZ-08, TC-TEN-011) — file: `src/cms/frontend/apps/portal/e2e/lms/tenant-isolation.spec.ts`
+- [x] T039 [P] [US6] E2E F055-AC-20: `sm.antoan` mở URL LMS → trang 403, network log không có chunk workspace C (TC-CMS-WS-01) — file: `src/cms/frontend/apps/portal/tests/e2e/lms/authz.spec.ts` (thư mục e2e thật của portal) — **2026-11-28:** `EW_E2E_PORTAL_URL=http://localhost:5173 EW_E2E_PASSWORD=<mật khẩu demo> pnpm exec playwright test -c apps/portal/tests/e2e/playwright.config.ts <file>` (compose local + `pnpm dev`) → 3/3 pass (`/school-lms/assignments`, `/new`, `/<id>`: `.ant-result-403`, không request `src/workspaces/school-lms/index.tsx` / `workspace-school-lms-*.js`, không gọi `/lms/*`, `/exams/*`; đối chứng: phiên `ad.truong.a` có tải chunk đó — `tenant-isolation.spec.ts`)
+- [x] T040 [P] [US6] E2E tenant isolation F055-AC-21: `ad.truong.b` mở bài TH Demo A → "Không tìm thấy"; header cũ → `TENANT_MISMATCH` về chọn đơn vị; người dùng tenant không gửi `tenant_ids` (TC-CMS-AUTHZ-08, TC-TEN-011) — file: `src/cms/frontend/apps/portal/tests/e2e/lms/tenant-isolation.spec.ts` — **2026-11-28:** `EW_E2E_PORTAL_URL=http://localhost:5173 EW_E2E_PASSWORD=<mật khẩu demo> pnpm exec playwright test -c apps/portal/tests/e2e/playwright.config.ts <file>` (compose local + `pnpm dev`) → 3/3 pass: `ad.truong.a` lấy bài DEV của TH Demo A (mọi request LMS cùng một `X-Tenant-Id`, không `tenant_ids`); `ad.truong.b` mở `/school-lms/assignments/<id>` → `getAssignment` 404 của backend, `school-lms-not-found` "Không tìm thấy", không lộ tiêu đề, header là tenant của mình; `qlcm.truong.a` (2 tenant): `X-Tenant-Id` bị đổi giữa đường sang tenant không là thành viên → backend trả `403 TENANT_MISMATCH` → portal về "Chọn đơn vị làm việc", vào lại đọc danh sách mới với đúng header
 - [x] T041 [P] [US6] Test F055-AC-22: route/menu workspace C không chứa màn sửa quest/mini-game — file: `…/__tests__/routes.test.ts` — **2026-11-21:** `permissions.test.tsx` › AC-22
 
 ### Implementation cho User Story 6
@@ -116,7 +116,7 @@
 
 ## Phase N: Polish & Cross-Cutting
 
-- [ ] T043 [P] axe + visual regression sáng/tối/compact cho wizard, chi tiết bài, lịch (TC-UI-004, TC-UI-006) — file: `src/cms/frontend/apps/portal/e2e/lms/a11y-visual.spec.ts`
+- [ ] T043 [P] axe + visual regression sáng/tối/compact cho wizard, chi tiết bài, lịch (TC-UI-004, TC-UI-006) — file: `src/cms/frontend/apps/portal/tests/e2e/lms/a11y-visual.spec.ts` — **2026-11-28 (còn mở 1 phần):** "lịch" đã bỏ theo ADR-0095. `EW_E2E_PORTAL_URL=http://localhost:5173 EW_E2E_PASSWORD=<mật khẩu demo> pnpm exec playwright test -c apps/portal/tests/e2e/playwright.config.ts <file>` (compose local + `pnpm dev`) → 12/12 pass + 2 `fixme`: visual 6/6 (wizard bước 1, chi tiết bài × sáng/tối/compact, baseline `tests/e2e/__screenshots__/win32/lms-*.png`, che vùng dữ liệu seed); axe WCAG 2.0/2.1 A+AA serious/critical: sáng + compact 4/4 sạch, tối 2/2 sạch mọi rule trừ `color-contrast`. Đã sửa lỗi axe `label-content-name-mismatch` của nút tài khoản ở header (`PortalLayout.tsx`, khóa `shell.userMenu.labelWithName`). **Còn:** `color-contrast` ở giao diện tối (tab đang chọn, link "← Quay lại", chữ nút danger dưới 4,5:1 trên nền tối) — thuộc token tối của `design/admin-tokens` (owner design system), test `fixme` tới khi sửa token
 - [x] T044 [P] Lint chặn hardcode style (TC-UI-003) — kiểm: `make web-lint` — **2026-11-21:** `pnpm lint` (ESLint `ew/no-hardcoded-style` + stylelint)
 - [x] T045 [P] Cập nhật CHANGELOG — file: `CHANGELOG.md` — **2026-11-21:** `CHANGELOG.md`
 - [ ] T046 Chạy [quickstart.md](quickstart.md) với backend thật và ghi bằng chứng
@@ -140,7 +140,7 @@ Nguồn: Clarifications "Session 2026-11-21 (ADR-0095 — [Confirmed])" của sp
 
 ## Definition of Done
 
-- [x] Mọi tiêu chí F055-AC-* có test pass (ghi mã test/TC) — **2026-11-21:** Vitest 79/79 (`school-lms/lms/**`, `content-studio/regrade`, i18n) + Go integration learning 4/4; E2E Playwright còn mở (T015, T039, T040, T043)
+- [x] Mọi tiêu chí F055-AC-* có test pass (ghi mã test/TC) — **2026-11-21:** Vitest 79/79 (`school-lms/lms/**`, `content-studio/regrade`, i18n) + Go integration learning 4/4; E2E Playwright còn mở (T015, T039, T040, T043) — **2026-11-28:** T039, T040 pass trên backend compose; T043 còn `color-contrast` giao diện tối; T015 chờ seed
 - [ ] `make web-lint`, `make web-test`, Playwright E2E xanh với backend thật
 - [x] Constitution Check trong plan.md vẫn đạt; MSW chỉ trong test (R17) — MOCK chỉ ở `src/test/lms-mock.ts`
 - [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi — EXAM_ENGINE §5/§11, CHANGELOG; CONFIG_DEFAULTS không đổi

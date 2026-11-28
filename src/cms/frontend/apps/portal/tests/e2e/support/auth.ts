@@ -7,10 +7,11 @@ export const e2eReady = !!process.env.EW_E2E_PORTAL_URL && !!process.env.EW_E2E_
 
 /** Opens /login, signs in with the demo password of the environment and waits for the outcome. */
 export async function signIn(page: Page, username: string): Promise<void> {
+  // the /login page is always English (owner 2026-11-23, ADMIN_PORTAL §1.3b — `loginLocale.tsx`)
   await page.goto('/login');
-  await page.getByLabel('Tên đăng nhập hoặc email').fill(username);
-  await page.getByLabel('Mật khẩu').fill(process.env.EW_E2E_PASSWORD ?? '');
-  await page.getByRole('button', { name: 'Đăng nhập' }).click();
+  await page.getByLabel('Username or email', { exact: true }).fill(username);
+  await page.getByLabel('Password', { exact: true }).fill(process.env.EW_E2E_PASSWORD ?? '');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   // the sign-in is finished when the portal leaves /login or shows its answer (error, student message)
   await Promise.race([
     page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 }),
