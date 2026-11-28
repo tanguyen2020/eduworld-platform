@@ -53,7 +53,10 @@ type PolicyInput struct {
 // CommonOverrideInput is the body of putCommonTenantSocialOverride.
 type CommonOverrideInput struct {
 	Override policy.CommonOverride
-	Reason   string
+	// Friends is friends_enabled of the body; nil keeps the stored value (the default on when no row yet) so a client
+	// written before the field existed never switches friends off by omission.
+	Friends *bool
+	Reason  string
 }
 
 // PolicyAdmin are the write use cases of the chat policy levels (F120 US2): putChatPolicy (tenant, school),
@@ -392,7 +395,7 @@ func (h PolicyAdmin) upper(ctx context.Context, tenant uuid.UUID, scopeType stri
 		if err != nil {
 			return l, false, err
 		}
-		var ov policy.CommonOverride
+		ov := policy.DefaultCommonOverride()
 		if o != nil {
 			ov = o.Override
 		}
@@ -543,12 +546,20 @@ func (h PolicyAdmin) PutCommonOverride(ctx context.Context, in CommonOverrideInp
 		if err != nil {
 			return err
 		}
-		row, err := h.Store.SaveCommonOverride(ctx, read.CommonOverrideRow{TenantID: tenant, Override: in.Override, Reason: reason,
+		ov := in.Override
+		ov.FriendsEnabled = policy.DefaultCommonOverride().FriendsEnabled
+		if before != nil {
+			ov.FriendsEnabled = before.Override.FriendsEnabled
+		}
+		if in.Friends != nil {
+			ov.FriendsEnabled = *in.Friends
+		}
+		row, err := h.Store.SaveCommonOverride(ctx, read.CommonOverrideRow{TenantID: tenant, Override: ov, Reason: reason,
 			UpdatedBy: &p.UserID, UpdatedAt: now})
 		if err != nil {
 			return err
 		}
-		meta := map[string]any{"after": in.Override, "version": row.Version}
+		meta := map[string]any{"after": ov, "version": row.Version}
 		if before != nil {
 			meta["before"] = before.Override
 		}
@@ -561,7 +572,8 @@ func (h PolicyAdmin) PutCommonOverride(ctx context.Context, in CommonOverrideInp
 		if err := h.Events.Publish(ctx, write.Event{Type: EventCommonOverrideUpdated, SubjectType: "tenant", SubjectID: tenant.String(),
 			PartitionKey: tenant.String(), TenantID: &t, OccurredAt: row.UpdatedAt, Payload: map[string]any{"tenant_id": tenant,
 				"direct_enabled": row.Override.DirectEnabled, "world_enabled": row.Override.WorldEnabled,
-				"area_free_text_enabled": row.Override.AreaFreeTextEnabled, "version": row.Version, "actor_id": p.UserID,
+				"area_free_text_enabled": row.Override.AreaFreeTextEnabled, "friends_enabled": row.Override.FriendsEnabled,
+				"version": row.Version, "actor_id": p.UserID,
 				"occurred_at": row.UpdatedAt}}); err != nil {
 			return err
 		}

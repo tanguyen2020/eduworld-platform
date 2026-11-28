@@ -105,9 +105,9 @@ func (Policies) CommonOverride(ctx context.Context, tenant uuid.UUID) (*read.Com
 	r := read.CommonOverrideRow{TenantID: tenant}
 	var by uuid.NullUUID
 	// tenancyguard:ok chat.common_tenant_social_overrides of the session tenant, live only
-	err = t.QueryRowContext(ctx, `SELECT o.direct_enabled, o.world_enabled, o.area_free_text_enabled, o.reason, o.version, o.updated_by,
+	err = t.QueryRowContext(ctx, `SELECT o.direct_enabled, o.world_enabled, o.area_free_text_enabled, o.friends_enabled, o.reason, o.version, o.updated_by,
 		o.updated_at FROM chat.common_tenant_social_overrides o WHERE o.tenant_id = $1 AND o.deleted_at IS NULL`, tenant).
-		Scan(&r.Override.DirectEnabled, &r.Override.WorldEnabled, &r.Override.AreaFreeTextEnabled, &r.Reason, &r.Version, &by, &r.UpdatedAt)
+		Scan(&r.Override.DirectEnabled, &r.Override.WorldEnabled, &r.Override.AreaFreeTextEnabled, &r.Override.FriendsEnabled, &r.Reason, &r.Version, &by, &r.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -167,12 +167,12 @@ func (Policies) SaveCommonOverride(ctx context.Context, r read.CommonOverrideRow
 		return r, err
 	}
 	err = t.QueryRowContext(ctx, `INSERT INTO chat.common_tenant_social_overrides AS o (tenant_id, direct_enabled, world_enabled,
-		area_free_text_enabled, reason, created_by, updated_by, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $6, $7, $7)
+		area_free_text_enabled, friends_enabled, reason, created_by, updated_by, created_at, updated_at) VALUES ($1, $2, $3, $4, $8, $5, $6, $6, $7, $7)
 		ON CONFLICT (tenant_id) DO UPDATE SET direct_enabled = EXCLUDED.direct_enabled, world_enabled = EXCLUDED.world_enabled,
-			area_free_text_enabled = EXCLUDED.area_free_text_enabled, reason = EXCLUDED.reason, updated_by = EXCLUDED.updated_by,
+			area_free_text_enabled = EXCLUDED.area_free_text_enabled, friends_enabled = EXCLUDED.friends_enabled, reason = EXCLUDED.reason, updated_by = EXCLUDED.updated_by,
 			updated_at = EXCLUDED.updated_at, deleted_at = NULL, deleted_by = NULL, version = o.version + 1
 		RETURNING o.version`, r.TenantID, r.Override.DirectEnabled, r.Override.WorldEnabled, r.Override.AreaFreeTextEnabled, r.Reason,
-		r.UpdatedBy, r.UpdatedAt).Scan(&r.Version)
+		r.UpdatedBy, r.UpdatedAt, r.Override.FriendsEnabled).Scan(&r.Version)
 	if err != nil {
 		return r, fmt.Errorf("chat: save common override: %w", err)
 	}

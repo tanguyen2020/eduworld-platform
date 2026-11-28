@@ -1,9 +1,12 @@
 # ADR-0078 — Mặc định an toàn cho trẻ nhỏ: bước PII/grooming luôn chạy, giờ giới nghiêm platform, siết tenant `common`
 
-> **Trạng thái:** Accepted · một phần supersedes ADR-0030 · Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (mục 5, phần Windows) · **Ngày:** 2026-11-15 · **OQ:** OQ-17 · **Nếu Accepted sẽ thay một phần:** ADR-0030 (công tắc tắt được bước PII) · **Tài liệu:** [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần supersedes ADR-0030 · Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (mục 5, phần Windows) và bởi quyết định owner 2026-11-28 ghi ở [ADR-0104](ADR-0104-hoc-sinh-tu-dang-ky-trong-game-vao-tenant-chung.md) mục 10 (mục 3, phần kết bạn/DM/World) · **Ngày:** 2026-11-15 · **OQ:** OQ-17 · **Nếu Accepted sẽ thay một phần:** ADR-0030 (công tắc tắt được bước PII) · **Tài liệu:** [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Superseded một phần bởi [ADR-0101](ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) (bỏ Windows, 2026-11-24).** Không còn hiệu lực: câu "trên Windows, game client mặc định coi là máy dùng chung … trừ khi bộ cài được chọn máy cá nhân" ở mục 5 (không còn bản Windows hay bộ cài; PC phòng máy chơi bản Web, chỉ giữ refresh token trong RAM). **Còn hiệu lực:** phần còn lại, gồm màn "Tiếp tục là <nickname>?" với nút "Không phải tôi" trên mọi nền tảng tự vào lại bằng refresh token.
+
+> [!WARNING]
+> **Mục 3 bị thay một phần (owner 2026-11-28, ghi ở [ADR-0104](ADR-0104-hoc-sinh-tu-dang-ky-trong-game-vao-tenant-chung.md) mục 10)** [Confirmed — owner 2026-11-28]. Không còn hiệu lực: "tắt mặc định kết bạn, DM và World chat" của tenant `common` — từ nay ba tính năng này **bật mặc định**, System Admin giữ công tắc tắt từng mục khi có sự cố (lý do + audit). **Còn hiệu lực:** phần còn lại của mục 3 (giờ giới nghiêm bắt buộc, kiểm duyệt bởi Platform Safety Team, consent theo ADR-0077 vẫn hoãn), Area chỉ quick + emote, và mục 1, 2, 4 (bước PII/grooming luôn chạy, giờ giới nghiêm platform, preset).
 
 ## Bối cảnh
 
@@ -30,3 +33,4 @@ ADR-0020 áp một bộ quy tắc chat cho mọi lớp; ADR-0030 cho phép Syste
 | 2026-11-17 | Accepted; bổ sung mục 5 (Windows mặc định máy dùng chung, màn Tiếp tục là…) | Technical Architect |
 | 2026-11-17 | Làm rõ phạm vi preset: áp cả channel luôn có, chỉ thu hẹp loại tin, không tắt channel | Technical Architect |
 | 2026-11-24 | Superseded một phần bởi ADR-0101 (mục 5, phần Windows mặc định máy dùng chung) | Owner dự án |
+| 2026-11-28 | Mục 3 bị thay một phần: tenant `common` bật mặc định kết bạn, DM, World chat; System Admin giữ công tắc tắt khi có sự cố (ADR-0104 mục 10) | Owner dự án 2026-11-28 |

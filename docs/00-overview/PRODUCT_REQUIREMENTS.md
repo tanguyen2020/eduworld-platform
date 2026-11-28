@@ -391,7 +391,7 @@
 
 | ID | Yêu cầu | Nhãn | Phase |
 |---|---|---|---|
-| FR-SOC-001 | Friend list, friend request, invitation; tenant `common` tắt mặc định kết bạn (ADR-0078) | [Confirmed] | P5 (cơ bản cho mời party: P4) |
+| FR-SOC-001 | Friend list, friend request, invitation; tenant `common` bật mặc định kết bạn, System Admin tắt được khi có sự cố (owner 2026-11-28, ADR-0078 mục 3 bị thay một phần) | [Confirmed] | P5 (cơ bản cho mời party: P4) |
 | FR-SOC-002 | Mặc định chỉ kết bạn cùng trường (như nhau cho mọi khối); tenant `unit` có thể mở liên trường trong tenant | [Confirmed] | P5 |
 | FR-SOC-003 | Block / Mute người dùng; block chặn chat, mời, ghép party | [Confirmed] | P5 (Block: P4 cùng party) |
 | FR-SOC-004 | Team/club của học sinh theo policy ([SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md)); nhóm học tập LMS (Study Group, ADR-0084) đã bỏ theo ADR-0095 | [Confirmed] (viết lại theo ADR-0095) | P5 |
@@ -403,7 +403,7 @@
 | FR-CHAT-001 | Channel: World, Area, **Match**, Party, Team, Direct Message; cấu hình bằng policy; không có channel Class/Study Group và không có kênh theo khối (ADR-0095) | [Confirmed] | P4 (Match/Party/Team theo trận), P5 (còn lại) |
 | FR-CHAT-002 | Không có rule = deny; quyền vào channel theo quan hệ (cùng trường/instance/nhóm/bạn bè) và policy, như nhau cho mọi khối (ADR-0020, ADR-0095) | [Confirmed] | P5 |
 | FR-CHAT-003 | Text, emoji, reactions, quick messages, group chat, history, unread count, notifications | [Confirmed] | P4 (channel gameplay), P5 (còn lại) |
-| FR-CHAT-004 | **Một bộ quy tắc chat cho mọi lớp 1–9** (không điều kiện theo `grade_level`/`grade_band`): đủ 7 channel; World = cùng trường (tenant `unit` có thể mở rộng toàn tenant); DM chỉ giữa bạn bè không block nhau; mọi học sinh dùng text, emoji, quick message, reaction (ADR-0020). Tenant `common`: tắt mặc định DM và World chat; trường có thể chọn preset "chỉ quick message + emote" cho cả trường (ADR-0078) | [Confirmed] (giá trị số [Confirmed]) | P5 |
+| FR-CHAT-004 | **Một bộ quy tắc chat cho mọi lớp 1–9** (không điều kiện theo `grade_level`/`grade_band`): đủ 7 channel; World = cùng trường (tenant `unit` có thể mở rộng toàn tenant); DM chỉ giữa bạn bè không block nhau; mọi học sinh dùng text, emoji, quick message, reaction (ADR-0020). Tenant `common`: DM và World chat bật mặc định, System Admin tắt được khi có sự cố (owner 2026-11-28); trường có thể chọn preset "chỉ quick message + emote" cho cả trường (ADR-0078) | [Confirmed] (giá trị số [Confirmed]) | P5 |
 | FR-CHAT-005 | **Mọi tin nhắn phải hợp lệ**: pipeline đồng bộ phía server cho mọi `kind` — normalize → định dạng/độ dài → profanity (tiếng Việt có/không dấu, teencode, leetspeak, tiếng Anh) → PII → spam/flood → bắt nạt → allow/mask/block/hold_for_review; `block` không lưu nội dung | [Confirmed] chức năng / [Confirmed] chi tiết pipeline | P5 |
 | FR-CHAT-006 | Lịch sử chat theo quyền và retention job (mặc định 180 ngày; rà soát thời hạn theo luật: Deferred ADR-0082) | [Confirmed] / thời hạn [Confirmed] | P5 |
 | FR-CHAT-007 | Không có voice chat trong Release 1.0; điểm mở rộng chỉ ở mức thiết kế, không hiện thực (ADR-0051, ADR-0070) | [Confirmed] | — |

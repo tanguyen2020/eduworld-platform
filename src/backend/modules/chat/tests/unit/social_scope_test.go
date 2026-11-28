@@ -32,8 +32,10 @@ func TestScopePolicy(t *testing.T) {
 		{"other school, unit tenant off", social.Tenant{Type: social.TenantUnit}, far, false, social.ErrOtherSchool},
 		{"other school, unit tenant on", social.Tenant{Type: social.TenantUnit, CrossSchool: true}, far, false, nil},
 		{"other school, unit on, blocked", social.Tenant{Type: social.TenantUnit, CrossSchool: true}, far, true, social.ErrBlocked},
-		{"common tenant default", social.Tenant{Type: social.TenantCommon}, same, false, social.ErrFriendsDisabled},
-		{"common tenant re-enabled", social.Tenant{Type: social.TenantCommon, CommonEnabled: true}, same, false, nil},
+		{"common tenant default (friends on, owner 2026-11-28)", social.Tenant{Type: social.TenantCommon, CommonFriendsEnabled: true}, same, false, nil},
+		{"common tenant switched off by System Admin", social.Tenant{Type: social.TenantCommon}, same, false, social.ErrFriendsDisabled},
+		{"common tenant on, blocked", social.Tenant{Type: social.TenantCommon, CommonFriendsEnabled: true}, same, true, social.ErrBlocked},
+		{"school tenant ignores the common switch", social.Tenant{Type: social.TenantSchool}, same, false, nil},
 	}
 	for _, c := range cases {
 		if got := (social.ScopePolicy{}).Check(c.tenant, a, c.to, c.blocked); !errors.Is(got, c.want) || (c.want == nil && got != nil) {

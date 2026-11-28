@@ -121,8 +121,8 @@ func TestPolicyGradeKeys(t *testing.T) {
 
 // T023 — F120-AC-10: the effective policy is platform ∩ common defaults ∩ tenant ∩ school (no class level); no platform rule
 // = deny; allowed_hours of every level intersect and are checked at send time (persistent channels only, never
-// match/team/party); the common defaults switch direct/world off and leave quick + emoji in area until System Admin
-// re-enables them (F120-AC-28).
+// match/team/party); the common defaults keep direct/world on and only quick + emoji in area, and the System Admin
+// override switches each off again (F120-AC-28 as changed by the owner 2026-11-28).
 func TestPolicyEffectiveThreeLevels(t *testing.T) {
 	p := seedPlatform(t)
 	tenant := doc(t, `{"scope_type":"tenant","rules":[{"channel_type":"direct","enabled":true,"allowed_kinds":["text","emoji","quick"],
@@ -148,22 +148,32 @@ func TestPolicyEffectiveThreeLevels(t *testing.T) {
 	if _, err := policy.Intersect("direct", false, policy.Levels{}); !errors.Is(err, policy.ErrDenied) {
 		t.Fatalf("no platform: %v", err)
 	}
-	common := policy.CommonDefaults(policy.CommonOverride{})
+	// Owner 2026-11-28 (common_tenant_social_defaults): direct, world and friends on by default, Area quick + emoji only.
+	def := policy.DefaultCommonOverride()
+	if !def.DirectEnabled || !def.WorldEnabled || !def.FriendsEnabled || def.AreaFreeTextEnabled {
+		t.Fatalf("common defaults: %+v", def)
+	}
+	common := policy.CommonDefaults(def)
 	for _, ty := range []string{"direct", "world"} {
-		if _, err := policy.Intersect(ty, false, policy.Levels{Platform: p, Common: common}); !errors.Is(err, policy.ErrDenied) {
-			t.Fatalf("common %s: %v", ty, err)
+		if _, err := policy.Intersect(ty, false, policy.Levels{Platform: p, Common: common}); err != nil {
+			t.Fatalf("common %s by default: %v", ty, err)
 		}
 	}
 	area, err := policy.Intersect("area", false, policy.Levels{Platform: p, Common: common})
 	if err != nil || area.Allows(policy.KindText) || !area.Allows(policy.KindQuick) || !area.Allows(policy.KindEmoji) {
 		t.Fatalf("common area: %+v %v", area, err)
 	}
-	if policy.CommonDefaults(policy.CommonOverride{DirectEnabled: true, WorldEnabled: true, AreaFreeTextEnabled: true}) != nil {
+	if policy.CommonDefaults(policy.CommonOverride{DirectEnabled: true, WorldEnabled: true, AreaFreeTextEnabled: true, FriendsEnabled: true}) != nil {
 		t.Fatal("full override keeps a level")
 	}
-	lifted := policy.CommonDefaults(policy.CommonOverride{DirectEnabled: true})
-	if _, err := policy.Intersect("direct", false, policy.Levels{Platform: p, Common: lifted}); err != nil {
-		t.Fatalf("re-enabled direct: %v", err)
+	// The System Admin incident switch turns direct and world off again.
+	off := def
+	off.DirectEnabled, off.WorldEnabled = false, false
+	switched := policy.CommonDefaults(off)
+	for _, ty := range []string{"direct", "world"} {
+		if _, err := policy.Intersect(ty, false, policy.Levels{Platform: p, Common: switched}); !errors.Is(err, policy.ErrDenied) {
+			t.Fatalf("common %s switched off: %v", ty, err)
+		}
 	}
 	// world_scope tenant only from the tenant level of a unit.
 	wide := doc(t, `{"scope_type":"tenant","world_scope":"tenant","rules":[]}`)

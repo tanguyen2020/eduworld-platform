@@ -351,8 +351,9 @@ func (Directory) Tenant(ctx context.Context, tenant uuid.UUID) (*social.Tenant, 
 	out := social.Tenant{ID: tenant}
 	// tenancyguard:ok tenant registry ref.tenants (key = tenant_id, no deleted_at: projection rule 2)
 	err = t.QueryRowContext(ctx, `SELECT tenant_type, coalesce((settings_subset->>'cross_school_social_enabled')::boolean, false),
-		coalesce((settings_subset->>'common_social_enabled')::boolean, false) FROM ref.tenants WHERE tenant_id = $1`, tenant).
-		Scan(&out.Type, &out.CrossSchool, &out.CommonEnabled)
+		coalesce((SELECT o.friends_enabled FROM chat.common_tenant_social_overrides o WHERE o.tenant_id = ref.tenants.tenant_id
+			AND o.deleted_at IS NULL), true) FROM ref.tenants WHERE tenant_id = $1`, tenant).
+		Scan(&out.Type, &out.CrossSchool, &out.CommonFriendsEnabled)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}

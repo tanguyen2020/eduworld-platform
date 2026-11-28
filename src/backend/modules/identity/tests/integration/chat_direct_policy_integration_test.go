@@ -71,7 +71,7 @@ func directOf(t *testing.T, r gameResp) any {
 
 // Delta F112-7 (F013): PlayerBootstrap.policies.chat.direct_message_enabled comes from the projection of the chat policy
 // events of module chat — absent until the platform level is projected; any level that turns direct off wins (platform,
-// tenant, school of the student; a tenant common stays off until System Admin re-enables direct); an older policy version
+// tenant, school of the student; a tenant common is on by default since the owner decision 2026-11-28 and only the System Admin incident switch turns it off); an older policy version
 // never overwrites a newer one; the rows of a tenant are invisible to another tenant (RLS); a chat_policy.updated
 // published before the delta changes nothing; a payload whose tenant differs from the envelope is refused (DLQ).
 func TestChatDirectPolicyBootstrap(t *testing.T) {
@@ -169,7 +169,8 @@ func TestChatDirectPolicyBootstrap(t *testing.T) {
 		t.Fatal("platform level in a tenant event accepted")
 	}
 	login(true)
-	// Tenant common: off by default (no override projected), on once System Admin re-enabled direct.
+	// Tenant common: on by default (no override projected, owner 2026-11-28), off once System Admin switched direct off, on again
+	// when switched back.
 	common := uuid.MustParse(commonTenant)
 	levels, err = m.ChatDirectLevels(scopeCtx(ctx, t, commonTenant), common, nil)
 	if err != nil || levels.Common != nil {
@@ -181,17 +182,23 @@ func TestChatDirectPolicyBootstrap(t *testing.T) {
 			"actor_id": uuid.NewString(), "occurred_at": time.Now().UTC()})
 	}
 	src := gameauth.ChatDirectPolicy{Reader: m}
-	if v, err := src.DirectMessageEnabled(ctx, common, nil, true); err != nil || v == nil || *v {
+	if v, err := src.DirectMessageEnabled(ctx, common, nil, true); err != nil || v == nil || !*v {
 		t.Fatalf("common default: %v %v", v, err)
 	}
-	if err := override(1, true); err != nil {
+	if err := override(1, false); err != nil {
+		t.Fatal(err)
+	}
+	if v, err := src.DirectMessageEnabled(ctx, common, nil, true); err != nil || v == nil || *v {
+		t.Fatalf("common switched off: %v %v", v, err)
+	}
+	if err := override(2, true); err != nil {
 		t.Fatal(err)
 	}
 	if v, err := src.DirectMessageEnabled(ctx, common, nil, true); err != nil || v == nil || !*v {
-		t.Fatalf("common re-enabled: %v %v", v, err)
+		t.Fatalf("common switched back on: %v %v", v, err)
 	}
 	if err := deliverChat(ctx, t, g.env, c, "chat_policy.common_tenant_social_updated", &ta, map[string]any{"tenant_id": common.String(),
-		"direct_enabled": true, "version": 2}); err == nil {
+		"direct_enabled": true, "version": 3}); err == nil {
 		t.Fatal("common override of another tenant accepted")
 	}
 }

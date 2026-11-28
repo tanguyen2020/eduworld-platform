@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat_policy.common_tenant_social_updated.v1.schema.json",
   "title": "Payload chat_policy.common_tenant_social_updated v1 (module chat, owner F120)",
-  "description": "System Admin lưu cài đặt bật lại DM/World/Area tự do của một tenant common (putCommonTenantSocialOverride, F120-AC-28; delta F112-7 2026-11-28). Không chứa lý do (lý do ở audit). Consumer: identity (bản chiếu direct_message_enabled của PlayerBootstrap), AUD.",
+  "description": "System Admin lưu công tắc DM/World/kết bạn/Area tự do của một tenant common (putCommonTenantSocialOverride, F120-AC-28; delta F112-7 2026-11-28; mặc định DM/World/kết bạn bật theo owner 2026-11-28, ADR-0104). Mỗi cờ là trạng thái hiệu lực. Không chứa lý do (lý do ở audit). Consumer: identity (bản chiếu direct_message_enabled của PlayerBootstrap), AUD.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -29,6 +29,10 @@
     "area_free_text_enabled": {
       "type": "boolean"
     },
+    "friends_enabled": {
+      "type": "boolean",
+      "description": "Kết bạn của tenant common (mặc định true, owner 2026-11-28); thêm 2026-11-28, consumer không đọc thì bỏ qua"
+    },
     "version": {
       "type": "integer",
       "minimum": 1,
@@ -46,9 +50,10 @@
   "examples": [
     {
       "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c0",
-      "direct_enabled": true,
-      "world_enabled": false,
+      "direct_enabled": false,
+      "world_enabled": true,
       "area_free_text_enabled": false,
+      "friends_enabled": false,
       "version": 2,
       "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
       "occurred_at": "2026-11-28T09:00:00.000Z"

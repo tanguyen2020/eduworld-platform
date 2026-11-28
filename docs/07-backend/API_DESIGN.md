@@ -693,7 +693,7 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 | GET/PUT | `/tenant/chat-policies/{scope_type}/{scope_id}` | Chat policy cấp `tenant`/`school` (`getChatPolicy`/`putChatPolicy`, F120): chỉ siết chặt hơn cấp trên, `If-Match` (lần đầu `"0"`), `reason`; `422 CHAT_POLICY_RELAX_NOT_ALLOWED`/`CHAT_POLICY_ALWAYS_ON`/`VALIDATION_FAILED` | TA (`tenant.settings.*`), SA (`school.settings.*`, trường mình) | T | P5 |
 | GET | `/tenant/chat-policies:effective` | Policy hiệu lực của một loại channel trong trường (`?school_id&channel_type`) | SA (`school.settings.read`) | T | P5 |
 | GET/PUT | `/admin/chat/policies/platform` | Chat policy cấp platform (gateway nội bộ) | SYS (`platform.settings.write`) | T | P5 |
-| GET/PUT | `/admin/chat/common-tenant-social` | Bật lại DM/World/Area tự do cho tenant `common` (`X-Tenant-Id`, `reason`, audit; ADR-0078) | SYS | B (PUT) | P5 |
+| GET/PUT | `/admin/chat/common-tenant-social` | Công tắc DM/World/kết bạn/Area tự do của tenant `common` (mặc định bật DM/World/kết bạn — owner 2026-11-28; `X-Tenant-Id`, `reason`, audit; ADR-0078) | SYS | B (PUT) | P5 |
 
 **Kiểm duyệt tập trung — Platform Safety Team (ADR-0072 §4, [MODERATION](../03-social-multiplayer/MODERATION.md)).** Chỉ gateway nội bộ, `azp = eduworld-portal` + role platform `safety_moderator` (không MFA — ADR-0094). Đọc liên tenant **chỉ** trong module moderation qua `tenancy.Bypass(ctx, "moderation_case")` (audit + metric); thao tác ghi gửi `X-Tenant-Id` = tenant của case. Nhà trường không xử lý case, chỉ nhận thông báo tóm tắt (không có chat thô).
 

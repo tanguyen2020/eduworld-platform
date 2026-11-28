@@ -22,8 +22,9 @@ type ChatDirectLevels struct {
 // enabled flag of a channel type (module identity keeps its own copy of the rule — modules never share internals,
 // ADR-0074; same as the curfew rule kept by module chat): an AND across levels, so any level that disables direct wins.
 // nil (field omitted, the client shows the button and the server decides) while the platform level is not projected.
-// A tenant common without a projected override keeps the built-in default of module chat: direct off
-// (common_tenant_social_defaults, ADR-0078, CHILD_SAFETY §3.6).
+// A tenant common without a projected override keeps the built-in default of module chat: direct on
+// (common_tenant_social_defaults, owner decision 2026-11-28, CHILD_SAFETY §3.6); only a projected System Admin override
+// that switched direct off turns it off.
 func DirectMessageEnabled(l ChatDirectLevels, commonTenant bool) *bool {
 	if l.Platform == nil {
 		return nil
@@ -32,7 +33,7 @@ func DirectMessageEnabled(l ChatDirectLevels, commonTenant bool) *bool {
 	if !*l.Platform {
 		return &off
 	}
-	if commonTenant && (l.Common == nil || !*l.Common) {
+	if commonTenant && l.Common != nil && !*l.Common {
 		return &off
 	}
 	for _, v := range []*bool{l.Tenant, l.School} {

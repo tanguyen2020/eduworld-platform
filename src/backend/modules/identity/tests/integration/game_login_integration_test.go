@@ -398,8 +398,9 @@ func TestGameLogin(t *testing.T) {
 		t.Fatalf("common: %d %v", r.code, r.body)
 	}
 	cb := r.body["bootstrap"].(map[string]any)
-	// F095-AC-23: friends are off by default in the common tenant (the client hides the buttons).
-	if ff, _ := cb["feature_flags"].(map[string]any); ff["social.friends_enabled"] != false {
+	// F095-AC-23 as changed by the owner 2026-11-28: friends are on by default in the common tenant too (the System Admin
+	// incident switch lives in module chat, which refuses the requests; a feature flag row still decides the buttons).
+	if ff, _ := cb["feature_flags"].(map[string]any); ff["social.friends_enabled"] != true {
 		t.Fatalf("common bootstrap feature flags: %v", cb["feature_flags"])
 	}
 	if cb["is_common_tenant"] != true || cb["tenant_type"] != "common" || cb["grade_band"] != "g4_5" ||

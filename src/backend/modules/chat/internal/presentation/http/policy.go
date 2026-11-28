@@ -255,7 +255,7 @@ func (h PolicyHandlers) effective(w http.ResponseWriter, r *http.Request) {
 
 func commonOverride(row read.CommonOverrideRow) map[string]any {
 	out := map[string]any{"tenant_id": row.TenantID, "direct_enabled": row.Override.DirectEnabled, "world_enabled": row.Override.WorldEnabled,
-		"area_free_text_enabled": row.Override.AreaFreeTextEnabled, "version": row.Version}
+		"area_free_text_enabled": row.Override.AreaFreeTextEnabled, "friends_enabled": row.Override.FriendsEnabled, "version": row.Version}
 	if row.Reason != "" {
 		out["reason"] = row.Reason
 	}
@@ -277,17 +277,18 @@ func (h PolicyHandlers) getCommon(w http.ResponseWriter, r *http.Request) {
 
 func (h PolicyHandlers) putCommon(w http.ResponseWriter, r *http.Request) {
 	var b struct {
-		Direct *bool  `json:"direct_enabled"`
-		World  *bool  `json:"world_enabled"`
-		Area   *bool  `json:"area_free_text_enabled"`
-		Reason string `json:"reason"`
+		Direct  *bool  `json:"direct_enabled"`
+		World   *bool  `json:"world_enabled"`
+		Area    *bool  `json:"area_free_text_enabled"`
+		Friends *bool  `json:"friends_enabled"`
+		Reason  string `json:"reason"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&b); err != nil || b.Direct == nil || b.World == nil || b.Area == nil {
 		fail(w, r, problem.Invalid("direct_enabled", problem.SubRequired, "direct_enabled, world_enabled, area_free_text_enabled"))
 		return
 	}
 	res, err := h.Commands.PutCommonOverride(r.Context(), command.CommonOverrideInput{Override: policy.CommonOverride{DirectEnabled: *b.Direct,
-		WorldEnabled: *b.World, AreaFreeTextEnabled: *b.Area}, Reason: b.Reason})
+		WorldEnabled: *b.World, AreaFreeTextEnabled: *b.Area}, Friends: b.Friends, Reason: b.Reason})
 	if err != nil {
 		fail(w, r, err)
 		return

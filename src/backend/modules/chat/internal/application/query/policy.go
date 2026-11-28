@@ -220,7 +220,7 @@ func (q Policies) GetCommonOverride(ctx context.Context) (out read.CommonOverrid
 		if err != nil {
 			return err
 		}
-		out = read.CommonOverrideRow{TenantID: tenant}
+		out = read.CommonOverrideRow{TenantID: tenant, Override: policy.DefaultCommonOverride()} // version 0: the defaults
 		if row != nil {
 			out = *row
 		}

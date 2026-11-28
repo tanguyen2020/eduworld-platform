@@ -222,8 +222,8 @@ func (ChatReader) PolicyLevels(ctx context.Context, tenant uuid.UUID, school *uu
 	return withCommon(ctx, tenant, l)
 }
 
-// withCommon adds the built-in level of a tenant common (common_tenant_social_defaults minus the System Admin override,
-// F120-AC-28, ADR-0078).
+// withCommon adds the built-in level of a tenant common (the System Admin override, else common_tenant_social_defaults:
+// direct and world on, Area quick + emoji only — F120-AC-28, owner decision 2026-11-28).
 func withCommon(ctx context.Context, tenant uuid.UUID, l policy.Levels) (policy.Levels, error) {
 	typ, err := Policies{}.TenantType(ctx, tenant)
 	if err != nil || typ != "common" {
@@ -233,7 +233,7 @@ func withCommon(ctx context.Context, tenant uuid.UUID, l policy.Levels) (policy.
 	if err != nil {
 		return l, err
 	}
-	var ov policy.CommonOverride
+	ov := policy.DefaultCommonOverride()
 	if o != nil {
 		ov = o.Override
 	}

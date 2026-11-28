@@ -126,14 +126,14 @@ type Tenant struct {
 	Type string
 	// CrossSchool is settings_subset.cross_school_social_enabled (ADR-0054, only meaningful for a unit tenant).
 	CrossSchool bool
-	// CommonEnabled is settings_subset.common_social_enabled: a System Admin re-enabled friends for this common
-	// tenant (ADR-0078, CHILD_SAFETY §3.6) [Proposed F095].
-	CommonEnabled bool
+	// CommonFriendsEnabled is chat.common_tenant_social_overrides.friends_enabled of a common tenant, true while System
+	// Admin stored no override (common_tenant_social_defaults: friends on, owner 2026-11-28, CHILD_SAFETY §3.6).
+	CommonFriendsEnabled bool
 }
 
-// FriendsEnabled reports whether friend requests and friend codes are allowed in the tenant (F095-AC-23): off by
-// default in a common tenant (common_tenant_social_defaults).
-func (t Tenant) FriendsEnabled() bool { return t.Type != TenantCommon || t.CommonEnabled }
+// FriendsEnabled reports whether friend requests and friend codes are allowed in the tenant (F095-AC-23): always outside a
+// common tenant; in a common tenant unless the System Admin incident switch turned friends off.
+func (t Tenant) FriendsEnabled() bool { return t.Type != TenantCommon || t.CommonFriendsEnabled }
 
 // Scope violations; the API answers all of them with 403 SOCIAL_SCOPE_VIOLATION without telling which one (a block
 // never reveals its direction, F095-AC-02).
@@ -145,7 +145,7 @@ var (
 
 // ScopePolicy decides whether two students of one tenant may become friends (SOCIAL_SYSTEM §4.1, §7, ADR-0054):
 // same school, or another school of a unit tenant with cross_school_social_enabled; never when either blocked the
-// other; never in a common tenant that did not re-enable friends. Different tenants never reach it (404 before).
+// other; never in a common tenant whose friends System Admin switched off. Different tenants never reach it (404 before).
 type ScopePolicy struct{}
 
 // Check returns nil or one of the scope violations.

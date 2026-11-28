@@ -8,8 +8,10 @@ const (
 	// KeyCrossSchoolSocial is cross_school_social_enabled (ADR-0054, CONFIG_DEFAULTS default false, only
 	// meaningful for a unit tenant; written by the Tenant Admin through updateTenantSettings).
 	KeyCrossSchoolSocial = "cross_school_social_enabled"
-	// KeyCommonSocial is common_social_enabled (F095 Clarifications, ADR-0078): the System Admin re-enabled
-	// friends for a common tenant (written by F120 T059, never through updateTenantSettings); absent = off.
+	// KeyCommonSocial is common_social_enabled (F095 Clarifications, ADR-0078): kept in settings_subset for
+	// compatibility only (never written through updateTenantSettings). Since the owner decision 2026-11-28 friends of a
+	// common tenant are on by default and the System Admin switch lives in module chat
+	// (chat.common_tenant_social_overrides.friends_enabled); module chat no longer reads this key.
 	KeyCommonSocial = "common_social_enabled"
 )
 

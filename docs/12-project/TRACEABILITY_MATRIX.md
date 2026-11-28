@@ -504,7 +504,7 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 11 AC, 0 US — [SOCIAL_SYSTEM](..
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-SOC-001 | Friend list, friend request, invitation; tenant common tắt mặc định kết bạn (ADR-0078) | P5 (cơ bản cho mời party: P4) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [ROADMAP](ROADMAP.md) | _suy luận:_ 37 op | _suy luận:_ TC-SOC |
+| FR-SOC-001 | Friend list, friend request, invitation; tenant common bật mặc định kết bạn, System Admin tắt được khi có s… | P5 (cơ bản cho mời party: P4) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [ROADMAP](ROADMAP.md) | _suy luận:_ 37 op | _suy luận:_ TC-SOC |
 | FR-SOC-002 | Mặc định chỉ kết bạn cùng trường (như nhau cho mọi khối); tenant unit có thể mở liên trường trong tenant | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-SOC |
 | FR-SOC-003 | Block / Mute người dùng; block chặn chat, mời, ghép party | P5 (Block: P4 cùng party) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-SOC |
 | FR-SOC-004 | Team/club của học sinh theo policy (SOCIAL_SYSTEM); nhóm học tập LMS (Study Group, ADR-0084) đã bỏ theo ADR… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 37 op | _suy luận:_ TC-SOC |

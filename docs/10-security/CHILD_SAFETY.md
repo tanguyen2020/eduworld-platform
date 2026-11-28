@@ -1,6 +1,6 @@
 # Child Safety — An toàn trẻ em
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Product Manager + Identity & Security Engineer + Platform Safety Team · Cập nhật: 2026-11-28 (§2 nickname tự gõ qua kiểm duyệt — ADR-0105; §3.6 học sinh tự đăng ký vào tenant `common`, bằng chứng xác nhận của phụ huynh, rủi ro pháp lý — ADR-0104) · 2026-11-20 (§4.2 cưỡng chế giới hạn chơi/ngày: module game cưỡng chế chính, module identity chặn đăng nhập bằng projection từ `game_session.ended`, mã `DAILY_PLAY_LIMIT_REACHED` — owner chốt OQ-17, F013/F014/F015) · 2026-11-17 (ADR-0078 Accepted: PII/grooming luôn chạy, giờ giới nghiêm platform, tenant `common`, preset quick message + emote)
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Product Manager + Identity & Security Engineer + Platform Safety Team · Cập nhật: 2026-11-28 (§3.6 tenant `common`: kết bạn, DM, World chat **bật mặc định**, System Admin giữ công tắc tắt khi có sự cố — owner 2026-11-28, ADR-0078 mục 3 bị thay một phần) · 2026-11-28 (§2 nickname tự gõ qua kiểm duyệt — ADR-0105; §3.6 học sinh tự đăng ký vào tenant `common`, bằng chứng xác nhận của phụ huynh, rủi ro pháp lý — ADR-0104) · 2026-11-20 (§4.2 cưỡng chế giới hạn chơi/ngày: module game cưỡng chế chính, module identity chặn đăng nhập bằng projection từ `game_session.ended`, mã `DAILY_PLAY_LIMIT_REACHED` — owner chốt OQ-17, F013/F014/F015) · 2026-11-17 (ADR-0078 Accepted: PII/grooming luôn chạy, giờ giới nghiêm platform, tenant `common`, preset quick message + emote)
 > Liên quan: [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) · [ADR-0030](../adr/ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) · [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [MODERATION](../03-social-multiplayer/MODERATION.md) · [DATA_PRIVACY](DATA_PRIVACY.md) · [SECURITY_ARCHITECTURE](SECURITY_ARCHITECTURE.md) · OQ-09, OQ-12, OQ-17
 
 > [!IMPORTANT]
@@ -27,7 +27,7 @@
 4. **Phân quyền hẹp**: không ai truy cập toàn bộ chat của tất cả trường; Platform Safety Team chỉ đọc nội dung trong ngữ cảnh một moderation case, có audit.
 5. **Không gây nghiện, không ép buộc, không áp lực tiêu cực**.
 6. **Kiểm duyệt tập trung, nhà trường kiểm soát chính sách** (ADR-0072): Platform Safety Team (`safety_moderator`) xử lý mọi vụ việc nhất quán giữa các trường; nhà trường đặt chính sách cấp trường (chat, giờ truy cập) trong giới hạn platform và là đầu mối liên hệ phụ huynh.
-7. **Mặc định an toàn cho trẻ nhỏ, như nhau cho mọi học sinh** (ADR-0078): giờ giới nghiêm cấp platform (§4.1), mặc định siết chặt cho tenant `common` (§3.6), preset "chỉ quick message + emote" cấp trường (§3.5) — không có điều kiện theo khối (R15).
+7. **Mặc định an toàn cho trẻ nhỏ, như nhau cho mọi học sinh** (ADR-0078): giờ giới nghiêm cấp platform (§4.1), mặc định riêng cho tenant `common` (§3.6: Area chỉ quick + emote, Safety Team kiểm duyệt; kết bạn/DM/World bật theo owner 2026-11-28), preset "chỉ quick message + emote" cấp trường (§3.5) — không có điều kiện theo khối (R15).
 
 ## 2. Danh tính hiển thị
 
@@ -42,7 +42,7 @@
 
 ## 3. Chính sách chat: một bộ quy tắc cho mọi lớp
 
-> **Quyết định stakeholder (ADR-0020, Accepted 2026-11-15):** chat **không phân biệt theo lớp** và **mọi tin nhắn phải hợp lệ**. Quyết định này **thay thế** mục "Age/Grade-based Policy" trong Master Prompt §6.3. An toàn cho học sinh nhỏ tuổi được bảo đảm bằng kiểm tra hợp lệ bắt buộc, kiểm duyệt tập trung của Platform Safety Team và chính sách cấp trường, không bằng cách giới hạn chat theo khối. Mặc định chặt hơn cho trẻ nhỏ theo [ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) (Accepted 2026-11-17): bước PII/grooming luôn chạy (§3.3), giờ giới nghiêm cấp platform (§4.1), preset cấp trường (§3.5), siết tenant `common` (§3.6) — đều áp như nhau cho mọi học sinh trong phạm vi.
+> **Quyết định stakeholder (ADR-0020, Accepted 2026-11-15):** chat **không phân biệt theo lớp** và **mọi tin nhắn phải hợp lệ**. Quyết định này **thay thế** mục "Age/Grade-based Policy" trong Master Prompt §6.3. An toàn cho học sinh nhỏ tuổi được bảo đảm bằng kiểm tra hợp lệ bắt buộc, kiểm duyệt tập trung của Platform Safety Team và chính sách cấp trường, không bằng cách giới hạn chat theo khối. Mặc định chặt hơn cho trẻ nhỏ theo [ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) (Accepted 2026-11-17): bước PII/grooming luôn chạy (§3.3), giờ giới nghiêm cấp platform (§4.1), preset cấp trường (§3.5), mặc định tenant `common` (§3.6) — đều áp như nhau cho mọi học sinh trong phạm vi.
 
 ### 3.1. Nội dung được phép (như nhau cho học sinh lớp 1–9)
 
@@ -118,7 +118,7 @@ Khuyến nghị vận hành [Confirmed]: chỉ tắt từng bước có lý do c
 
 | Hành động | Mặc định |
 |---|---|
-| Kết bạn | Cùng trường (như nhau cho mọi lớp); tenant `common`: tắt mặc định (§3.6) |
+| Kết bạn | Cùng trường (như nhau cho mọi lớp); tenant `common`: bật mặc định, System Admin tắt được khi có sự cố (§3.6) |
 | Mời party | Bạn bè (party `friend`) hoặc học sinh cùng trường theo luật party (lớp 1–3 cùng đúng khối, khác trường chỉ trong tenant bật liên trường — ADR-0095, ADR-0054); không mời người lạ ngoài tenant |
 | Party liên trường | Không (mặc định Release 1.0) [Confirmed] |
 | Party khác grade band | Được nếu cùng trường và thỏa điều kiện ghép nhóm ([PARTY_SYSTEM §6.2](../03-social-multiplayer/PARTY_SYSTEM.md#62-kiểm-tra-ở-bước-3--eligibility): cùng band hoặc band liền kề khi activity cho phép); câu hỏi theo khối thấp hơn của nhóm ([COMPETITION_SYSTEM §5](../01-game-design/COMPETITION_SYSTEM.md#5-công-bằng-theo-khối-lớp)). Đây là điều kiện ghép **hoạt động học tập**, không áp vào chat (ADR-0020) |
@@ -141,18 +141,18 @@ Giai đoạn pilot áp mặc định tương đương preset này cho mọi trư
 
 ### 3.6. Tenant `common` (ADR-0078)
 
-Tenant `common` ([MULTITENANCY §8.3](../06-architecture/MULTITENANCY.md)) gom học sinh không thuộc trường độc lập, nên "cùng tenant" là hàng nghìn người lạ và không có `school_admin` thu consent hay nhận thông báo. Mặc định `common_tenant_social_defaults` [Confirmed — Technical Architect 2026-11-17]:
+Tenant `common` ([MULTITENANCY §8.3](../06-architecture/MULTITENANCY.md)) gom học sinh không thuộc trường độc lập, nên "cùng tenant" là hàng nghìn người lạ và không có `school_admin` thu consent hay nhận thông báo. Mặc định `common_tenant_social_defaults` [Confirmed — Technical Architect 2026-11-17; kết bạn/DM/World sửa theo [Confirmed — owner 2026-11-28]]:
 
 | Mục | Mặc định tenant `common` |
 |---|---|
-| Kết bạn, DM, World chat | **Tắt**; chỉ System Admin bật lại cho một tenant `common` cụ thể, có lý do + audit |
-| Channel còn lại | `area` chỉ quick message + emote; `match`/`team`/`party` luôn có theo ADR-0020 mục 6, qua pipeline đầy đủ |
+| Kết bạn, DM, World chat | **Bật** [Confirmed — owner 2026-11-28] — owner: học sinh tenant `common` (kể cả tự đăng ký) phải có đủ tính năng, "không được phép lược bỏ phần nào". System Admin giữ **công tắc sự cố** tắt từng mục cho một tenant `common` cụ thể (lý do + audit), bật lại cũng như vậy. Mọi biện pháp khác giữ nguyên: mọi tin qua pipeline kiểm duyệt, bước PII/grooming luôn chạy (§3.3), giờ giới nghiêm platform (§4.1), chặn/tắt tiếng/báo cáo, một bộ quy tắc cho mọi lớp (R15); DM vẫn chỉ giữa bạn bè không chặn nhau; World vẫn theo trường (School ảo) |
+| Channel còn lại | `area` chỉ quick message + emote (không đổi; System Admin có thể cho chat tự do); `match`/`team`/`party` luôn có theo ADR-0020 mục 6, qua pipeline đầy đủ |
 | Giờ giới nghiêm | Bắt buộc `platform_curfew` (§4.1), không có `school_admin` để siết thêm |
 | Kiểm duyệt | Platform Safety Team (ADR-0072); không có thông báo nhà trường, liên hệ theo [MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-confirmed) |
 | Consent | Platform thu trực tiếp (ADR-0077); pháp lý ngoài version này (ADR-0082). Học sinh **tự đăng ký** trong game có bước xác nhận của phụ huynh (ô "Tôi là phụ huynh và đồng ý" + bằng chứng: phiên bản điều khoản, thời điểm, HMAC thiết bị — [ACCOUNT_PROVISIONING §3.5](../09-identity/ACCOUNT_PROVISIONING.md#35-học-sinh-tự-đăng-ký-trong-game-adr-0104)) |
 | Học sinh tự đăng ký ([ADR-0104](../adr/ADR-0104-hoc-sinh-tu-dang-ky-trong-game-vao-tenant-chung.md)) | Cùng mọi mặc định ở bảng này, không hạn chế thêm, không nới; không thu họ tên; ngày sinh không hiển thị cho ai ngoài System Admin. **Rủi ro được ghi nhận:** đồng ý bằng ô đánh dấu không xác minh được người đánh dấu là phụ huynh hay tuổi của trẻ, có thể chưa đáp ứng yêu cầu pháp luật về sự đồng ý của cha mẹ/người giám hộ — khuyến nghị pháp chế rà soát văn bản và cách xác nhận trước khi mở rộng ngoài pilot (ADR-0104 mục 9). Phụ huynh muốn dừng: liên hệ hỗ trợ, System Admin khóa tài khoản |
 
-Bật lại DM, World và chat tự do ở Area của một tenant `common` (F120-AC-28): `putCommonTenantSocialOverride` (gateway nội bộ, System Admin, `reason` bắt buộc, audit `chat_policy.common_tenant_social_updated`), hiệu lực ngay trên mọi instance; role tenant bị từ chối (`403 PERMISSION_DENIED`). Bật lại kết bạn vẫn qua cài đặt identity (F095). Chi tiết: [CHAT_SYSTEM §3](../03-social-multiplayer/CHAT_SYSTEM.md#3-policy-resolution).
+Công tắc của một tenant `common` (F120-AC-28): `putCommonTenantSocialOverride` (gateway nội bộ, System Admin, `reason` bắt buộc, audit `chat_policy.common_tenant_social_updated`) đặt `direct_enabled`, `world_enabled`, `friends_enabled` (tắt khi có sự cố, bật lại sau) và `area_free_text_enabled`, hiệu lực ngay trên mọi instance; role tenant bị từ chối (`403 PERMISSION_DENIED`). Mỗi cờ là trạng thái hiệu lực: chưa có dòng = mặc định ở bảng trên; dòng lưu trước 2026-11-28 giữ nguyên nghĩa (migration expand `20270204000001_f135_common_social_defaults`, cột mới `friends_enabled` mặc định `true`). Kết bạn không còn đọc khóa `common_social_enabled` của cài đặt identity. Chi tiết: [CHAT_SYSTEM §3](../03-social-multiplayer/CHAT_SYSTEM.md#3-policy-resolution).
 
 ## 4. Thời gian chơi và sức khỏe (OQ-17)
 
@@ -234,8 +234,8 @@ flowchart LR
 | # | Điểm thực thi | Module | Kiểm soát | Mặc định |
 |---|---|---|---|---|
 | EP-01 | Gửi tin nhắn | `chat` | ChatPolicy theo channel (không theo grade, ADR-0020); **mọi tin** qua pipeline kiểm tra hợp lệ normalize → định dạng → danh mục từ nhạy cảm → PII → spam → bắt nạt → allow/mask/block/hold/block_and_alert; PII và grooming luôn chạy, bước khác System Admin tắt được có thời hạn + hai người duyệt (§3.3); giờ giới nghiêm (§4.1), preset (§3.5) — giới hạn độ dài, rate limit, quyền channel, sanction luôn chạy | ADR-0020, ADR-0030, ADR-0078 |
-| EP-02 | Tạo DM channel | `chat`, `social` | Chỉ khi hai người là bạn bè, không block nhau, trường không tắt DM; tenant `common` tắt mặc định (§3.6) | Như nhau cho mọi lớp |
-| EP-03 | Gửi friend request | `social` | Cùng trường (mặc định); rate limit; không với người đã block/bị block; tenant `common` tắt mặc định (§3.6) | Cùng trường, như nhau cho mọi lớp |
+| EP-02 | Tạo DM channel | `chat`, `social` | Chỉ khi hai người là bạn bè, không block nhau, trường không tắt DM; tenant `common` bật mặc định, System Admin tắt được (§3.6) | Như nhau cho mọi lớp |
+| EP-03 | Gửi friend request | `social` | Cùng trường (mặc định); rate limit; không với người đã block/bị block; tenant `common` bật mặc định, System Admin tắt được (§3.6) | Cùng trường, như nhau cho mọi lớp |
 | EP-04 | Mời vào party / join party | `multiplayer/party` | Party policy: school/grade (lớp 1–3 cùng đúng khối — ADR-0095), private cần lời mời; chặn người đã block; rate limit lời mời | Cùng trường |
 | EP-05 | Matchmaking | `multiplayer/matchmaking` | Ràng buộc cứng grade (không ghép lớp 1 với lớp 9); cross-school chỉ hiển thị nickname; chat sau trận theo ChatPolicy chung | Grade exact (1–5), ±1 (6–9) |
 | EP-06 | Nickname & tên party | `game`, `party` | Nickname sinh tự động hoặc chọn từ danh sách duyệt; tên party qua pipeline lọc + danh sách gợi ý cho lớp 1–3 | Không gõ tự do lớp 1–5 |
@@ -386,4 +386,4 @@ Quyền moderation (`moderation.case.*`, `moderation.sanction.*`) chỉ được
 | CS-09 | Luồng thông báo vụ việc cho nhà trường (gửi, xác nhận, nhắc lại) hoạt động và không lộ nội dung chat thô [Confirmed] | 4, 5 |
 | CS-10 | PII và grooming luôn chạy, không tắt được; tắt bước khác cần `expires_at` ≤ 24 giờ + hai người duyệt (ADR-0078; TC-CHAT-044, 045) | Pilot, 4 |
 | CS-11 | Giờ giới nghiêm platform chặn game và chat, trường chỉ siết thêm (TC-AUTH-092, TC-CHAT-046) | Pilot |
-| CS-12 | Tenant `common` tắt kết bạn, DM, World chat; preset "chỉ quick message + emote" hoạt động (TC-CHAT-047, 048) | Pilot, 5 |
+| CS-12 | Tenant `common`: kết bạn, DM, World chat bật mặc định và công tắc System Admin tắt được (owner 2026-11-28), Area chỉ quick + emote; preset "chỉ quick message + emote" hoạt động (TC-CHAT-047, 048) | Pilot, 5 |

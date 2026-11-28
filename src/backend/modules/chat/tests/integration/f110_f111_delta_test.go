@@ -168,14 +168,20 @@ func TestF095FriendSuggestions(t *testing.T) {
 		map[string]string{"X-Tenant-Id": c.tenantB.String()}, nil); r.status != 403 || r.code() != "TENANT_MISMATCH" {
 		t.Fatalf("header mismatch: %d %s", r.status, r.raw)
 	}
-	// A common tenant without friends enabled suggests nobody (F095-AC-23).
+	// A common tenant suggests like a school tenant (friends on by default, owner 2026-11-28); once System Admin switched
+	// friends off for it (incident switch), it suggests nobody (F095-AC-23).
 	common := uuid.New()
 	c.tenant(common, "common", nil)
 	schoolC := uuid.New()
 	ca, cb := c.student(common, schoolC), c.student(common, schoolC)
 	c.partyActivity(t, common, "explore", now.Add(-time.Hour), ca, cb)
+	if r := list(ca, "?source=recently_played"); r.status != 200 || len(r.data()) != 1 {
+		t.Fatalf("common tenant by default: %d %s", r.status, r.raw)
+	}
+	c.exec(`INSERT INTO chat.common_tenant_social_overrides (tenant_id, direct_enabled, world_enabled, area_free_text_enabled,
+		friends_enabled, reason) VALUES ($1, true, true, false, false, 'Su co spam ket ban')`, common)
 	if r := list(ca, "?source=recently_played"); r.status != 200 || len(r.data()) != 0 {
-		t.Fatalf("common tenant: %d %s", r.status, r.raw)
+		t.Fatalf("common tenant friends switched off: %d %s", r.status, r.raw)
 	}
 	// Staff never use the player routes (R23).
 	staff := c.staffAt(c.tenantA, "school_admin", c.schoolA)

@@ -251,9 +251,10 @@ func TestDirectChannel(t *testing.T) {
 	}
 }
 
-// T058 — F120-AC-28 (TC-CHAT-047): in a tenant common not re-enabled by System Admin, direct and World are refused with
-// CHAT_NOT_ALLOWED and Area takes quick + emoji only (CHAT_KIND_NOT_ALLOWED for text); System Admin re-enables them for that
-// tenant with a reason (audit, effective at once); the override of a tenant that is not common is 404.
+// T058 — F120-AC-28 (TC-CHAT-047) as changed by the owner 2026-11-28 (ADR-0078 §3 partly superseded, ADR-0104): in a tenant
+// common, direct and World are ON by default and Area takes quick + emoji only (CHAT_KIND_NOT_ALLOWED for text); System
+// Admin switches direct/World/friends off for that tenant with a reason (incident switch: audit, event, effective at once)
+// and then direct and World are refused with CHAT_NOT_ALLOWED; the override of a tenant that is not common is 404.
 func TestCommonTenantDefaults(t *testing.T) {
 	c := setupPersistent(t, chatOpts{})
 	c.pace = 0
@@ -268,19 +269,25 @@ func TestCommonTenantDefaults(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if r := c.call(x, http.MethodPost, "/chat/direct-channels", "", map[string]any{"user_id": y.id}); r.status != 403 || r.code() != "CHAT_NOT_ALLOWED" {
-		t.Fatalf("common dm: %d %s", r.status, r.raw)
+	open := c.call(x, http.MethodPost, "/chat/direct-channels", "", map[string]any{"user_id": y.id})
+	if open.status != http.StatusCreated {
+		t.Fatalf("common dm by default: %d %s", open.status, open.raw)
+	}
+	dm := uuid.MustParse(str(open.body, "channel_id"))
+	if r := c.wsText(x, dm, "chao ban"); !r.OK {
+		t.Fatalf("common dm send by default: %+v", r.Problem)
 	}
 	world := channel.WorldID(common, &school)
-	if channelOf(c.call(x, http.MethodGet, "/chat/channels", "", nil), "world") != nil {
-		t.Fatal("world listed in a common tenant")
+	if channelOf(c.call(x, http.MethodGet, "/chat/channels", "", nil), "world") == nil {
+		t.Fatal("world not listed in a common tenant by default")
 	}
-	if r := c.wsText(x, world, "xin chao"); replyCode(r) != "CHAT_NOT_ALLOWED" {
-		t.Fatalf("common world: %+v", r)
+	if r := c.wsText(x, world, "xin chao"); !r.OK {
+		t.Fatalf("common world by default: %+v", r.Problem)
 	}
 	area := channel.AreaID(common, "hub:common:01")
-	if r := c.wsText(x, area, "xin chao"); replyCode(r) != "CHAT_KIND_NOT_ALLOWED" {
-		t.Fatalf("common area text: %+v", r)
+	// y: x has just sent in World (another text, another sender keeps the check off the repeat/slow-mode rules).
+	if r := c.wsText(y, area, "chao khu vuc"); replyCode(r) != "CHAT_KIND_NOT_ALLOWED" {
+		t.Fatalf("common area text: %s %+v", replyCode(r), r)
 	}
 	if r := c.ws(x, "cx", "chat.message.send", map[string]any{"channel_id": area, "client_message_id": uuid.New(), "kind": "emoji",
 		"emoji": "smile"}); !r.OK {
@@ -291,17 +298,19 @@ func TestCommonTenantDefaults(t *testing.T) {
 		t.Fatalf("override of a school tenant: %d %s", r.status, r.raw)
 	}
 	g := c.portal(sa, common, http.MethodGet, "/admin/chat/common-tenant-social", nil, nil)
-	if g.status != http.StatusOK || g.body["direct_enabled"] != false {
+	if g.status != http.StatusOK || g.body["direct_enabled"] != true || g.body["world_enabled"] != true || g.body["friends_enabled"] != true ||
+		g.body["area_free_text_enabled"] != false || g.body["version"] != float64(0) {
 		t.Fatalf("defaults: %d %s", g.status, g.raw)
 	}
 	if r := c.portal(sa, common, http.MethodPut, "/admin/chat/common-tenant-social", map[string]string{"Idempotency-Key": newKey()},
-		map[string]any{"direct_enabled": true, "world_enabled": true, "area_free_text_enabled": true}); r.status != 422 {
+		map[string]any{"direct_enabled": false, "world_enabled": false, "area_free_text_enabled": false}); r.status != 422 {
 		t.Fatalf("no reason: %d %s", r.status, r.raw)
 	}
 	p := c.portal(sa, common, http.MethodPut, "/admin/chat/common-tenant-social", map[string]string{"Idempotency-Key": newKey()},
-		map[string]any{"direct_enabled": true, "world_enabled": true, "area_free_text_enabled": true, "reason": "Truong da xac nhan giam sat"})
-	if p.status != http.StatusOK || p.body["direct_enabled"] != true || p.body["version"] != float64(1) {
-		t.Fatalf("re-enable: %d %s", p.status, p.raw)
+		map[string]any{"direct_enabled": false, "world_enabled": false, "area_free_text_enabled": false, "friends_enabled": false,
+			"reason": "Su co: tam tat DM va World"})
+	if p.status != http.StatusOK || p.body["direct_enabled"] != false || p.body["friends_enabled"] != false || p.body["version"] != float64(1) {
+		t.Fatalf("switch off: %d %s", p.status, p.raw)
 	}
 	if countOf(c.audits(), "chat_policy.common_tenant_social_updated") != 1 {
 		t.Fatalf("audit: %v", c.audits())
@@ -310,17 +319,41 @@ func TestCommonTenantDefaults(t *testing.T) {
 	if n := c.checkEvents("chat_policy.common_tenant_social_updated")["chat_policy.common_tenant_social_updated"]; n != 1 {
 		t.Fatalf("common override events: %d", n)
 	}
-	if ev := c.events("chat_policy.common_tenant_social_updated")[0]; ev["direct_enabled"] != true || ev["reason"] != nil || ev["version"] != float64(1) {
+	if ev := c.events("chat_policy.common_tenant_social_updated")[0]; ev["direct_enabled"] != false || ev["friends_enabled"] != false ||
+		ev["reason"] != nil || ev["version"] != float64(1) {
 		t.Fatalf("common override event: %v", ev)
 	}
-	if r := c.call(x, http.MethodPost, "/chat/direct-channels", "", map[string]any{"user_id": y.id}); r.status != http.StatusCreated {
-		t.Fatalf("dm after re-enable: %d %s", r.status, r.raw)
+	// The existing pair channel reopens read-only (no sendable kind); a new pair cannot open a DM.
+	if r := c.call(y, http.MethodPost, "/chat/direct-channels", "", map[string]any{"user_id": x.id}); r.status != http.StatusOK ||
+		len(r.body["sendable_kinds"].([]any)) != 0 {
+		t.Fatalf("reopen dm after switch off: %d %s", r.status, r.raw)
 	}
-	if r := c.wsText(x, world, "chao ca truong"); !r.OK {
-		t.Fatalf("world after re-enable: %+v", r.Problem)
+	z := c.student(common, school)
+	c.exec(`INSERT INTO social.friendships (friendship_id, tenant_id, created_at, updated_at, user_low_id, user_high_id)
+		VALUES ($1, $2, now(), now(), least($3::uuid, $4::uuid), greatest($3::uuid, $4::uuid))`, uuid.New(), common, x.id, z.id)
+	if r := c.call(x, http.MethodPost, "/chat/direct-channels", "", map[string]any{"user_id": z.id}); r.status != 403 || r.code() != "CHAT_NOT_ALLOWED" {
+		t.Fatalf("new dm after switch off: %d %s", r.status, r.raw)
 	}
-	if r := c.wsText(x, area, "chao moi nguoi"); !r.OK {
-		t.Fatalf("area text after re-enable: %+v", r.Problem)
+	if r := c.wsText(x, dm, "chao lan nua"); replyCode(r) != "CHAT_NOT_ALLOWED" {
+		t.Fatalf("dm send after switch off: %+v", r)
+	}
+	if r := c.wsText(x, world, "chao ca truong"); replyCode(r) != "CHAT_NOT_ALLOWED" {
+		t.Fatalf("world after switch off: %+v", r)
+	}
+	// friends_enabled omitted: the stored value is kept (still off).
+	p = c.portal(sa, common, http.MethodPut, "/admin/chat/common-tenant-social", map[string]string{"Idempotency-Key": newKey()},
+		map[string]any{"direct_enabled": true, "world_enabled": true, "area_free_text_enabled": false, "reason": "Het su co, bat lai"})
+	if p.status != http.StatusOK || p.body["direct_enabled"] != true || p.body["friends_enabled"] != false || p.body["version"] != float64(2) {
+		t.Fatalf("switch back on: %d %s", p.status, p.raw)
+	}
+	if r := c.wsText(y, world, "chao ca truong"); !r.OK { // y: x is inside the World slow mode
+		t.Fatalf("world after switch back on: %+v", r.Problem)
+	}
+	// A school tenant is unchanged: no common level.
+	an, binh := c.student(c.tenantA, c.schoolA), c.student(c.tenantA, c.schoolA)
+	c.befriend(an, binh)
+	if r := c.call(an, http.MethodPost, "/chat/direct-channels", "", map[string]any{"user_id": binh.id}); r.status != http.StatusCreated {
+		t.Fatalf("school tenant dm: %d %s", r.status, r.raw)
 	}
 }
 

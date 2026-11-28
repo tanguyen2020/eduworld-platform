@@ -13287,8 +13287,11 @@ paths:
       tags: [admin]
       operationId: getCommonTenantSocialOverride
       x-portal-action: action.platform_admin.chat_safety.policy
-      summary: Trạng thái bật lại DM/World/Area tự do của một tenant `common` (ADR-0078, F120-AC-28)
-      description: Chỉ role platform có `platform.settings.write`; `X-Tenant-Id` là tenant `common` đích (khác loại → `404`).
+      summary: Trạng thái công tắc DM/World/kết bạn/Area tự do của một tenant `common` (ADR-0078, ADR-0104, F120-AC-28)
+      description: |
+        Chỉ role platform có `platform.settings.write`; `X-Tenant-Id` là tenant `common` đích (khác loại → `404`). Chưa có
+        dòng override → trả mặc định `common_tenant_social_defaults` với `version = 0` (owner 2026-11-28: `direct`, `world`,
+        kết bạn bật; `area` chỉ `quick` + `emoji`).
       x-internal: true
       security:
         - keycloakAdminBearer: []
@@ -13307,11 +13310,13 @@ paths:
       tags: [admin]
       operationId: putCommonTenantSocialOverride
       x-portal-action: action.platform_admin.chat_safety.policy
-      summary: System Admin bật lại (hoặc tắt lại) DM, World và chat tự do ở Area cho một tenant `common` (F120-AC-28)
+      summary: System Admin tắt (công tắc sự cố) hoặc bật lại DM, World, kết bạn và chat tự do ở Area cho một tenant `common` (F120-AC-28)
       description: |
-        Mặc định tenant `common` (`common_tenant_social_defaults`): `direct` và `world` tắt, `area` chỉ `quick` + `emoji`.
-        Chỉ System Admin (`platform.settings.write`), `reason` bắt buộc, audit; mọi instance áp dụng trong ≤ 60 giây. Role
-        tenant không gọi được (`403 PERMISSION_DENIED`). Kết bạn của tenant `common` thuộc cài đặt identity (F095).
+        Mặc định tenant `common` (`common_tenant_social_defaults`, owner 2026-11-28, ADR-0104): `direct`, `world` và kết
+        bạn bật; `area` chỉ `quick` + `emoji`. Mỗi trường là trạng thái hiệu lực; `friends_enabled` bỏ trống thì giữ giá trị
+        đang lưu. Chỉ System Admin (`platform.settings.write`), `reason` bắt buộc, audit; mọi instance áp dụng trong ≤ 60
+        giây. Role tenant không gọi được (`403 PERMISSION_DENIED`). Pipeline kiểm duyệt, bước PII/grooming, giờ giới nghiêm,
+        chặn/tắt tiếng/báo cáo không đổi.
       x-internal: true
       security:
         - keycloakAdminBearer: []
@@ -21673,7 +21678,7 @@ components:
                     warning_minutes: { type: integer, minimum: 0, description: curfew_warning_minutes (CONFIG_DEFAULTS) }
         feature_flags:
           type: object
-          description: 'Cờ `feature` hiệu lực của tenant. Luôn có `social.friends_enabled`: `false` ở tenant `common` (kết bạn và mã bạn bè tắt mặc định — ADR-0078, F095-AC-23), client ẩn nút; cờ cùng tên do System Admin đặt (nếu có) quyết định.'
+          description: 'Cờ `feature` hiệu lực của tenant. Luôn có `social.friends_enabled`: mặc định `true` ở mọi tenant, kể cả tenant `common` (owner 2026-11-28, ADR-0104 mục 10, F095-AC-23); cờ cùng tên do System Admin đặt (nếu có) quyết định, `false` thì client ẩn nút. Công tắc sự cố kết bạn của tenant `common` ở module chat (server từ chối `SOCIAL_SCOPE_VIOLATION`).'
           additionalProperties: { type: boolean }
         content_manifest_version: { type: string, maxLength: 64 }
         server_time: { $ref: '#/components/schemas/Timestamp' }
@@ -24389,12 +24394,13 @@ components:
               version: { type: integer, minimum: 0 }
     CommonTenantSocialOverride:
       type: object
-      required: [tenant_id, direct_enabled, world_enabled, area_free_text_enabled, version]
+      required: [tenant_id, direct_enabled, world_enabled, area_free_text_enabled, friends_enabled, version]
       properties:
         tenant_id: { $ref: '#/components/schemas/Uuid' }
         direct_enabled: { type: boolean }
         world_enabled: { type: boolean }
         area_free_text_enabled: { type: boolean, description: 'false: Area chỉ quick + emoji (mặc định tenant common)' }
+        friends_enabled: { type: boolean, description: 'Kết bạn (lời mời, mã bạn bè) của tenant common; mặc định true (owner 2026-11-28)' }
         reason: { type: string, maxLength: 500 }
         version: { type: integer, minimum: 0 }
         updated_by: { $ref: '#/components/schemas/Uuid' }
@@ -24407,6 +24413,7 @@ components:
         direct_enabled: { type: boolean }
         world_enabled: { type: boolean }
         area_free_text_enabled: { type: boolean }
+        friends_enabled: { type: boolean, description: 'Tùy chọn: false tắt kết bạn của tenant common (công tắc sự cố); bỏ trống thì giữ giá trị đang lưu' }
         reason: { type: string, minLength: 10, maxLength: 500 }
     Channel:
       type: object

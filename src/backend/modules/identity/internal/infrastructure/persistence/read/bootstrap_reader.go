@@ -58,10 +58,12 @@ func (r BootstrapReader) Bootstrap(ctx context.Context, userID uuid.UUID) (out d
 		if err := r.featureFlags(ctx, tx, &out); err != nil {
 			return err
 		}
-		// F095-AC-23 (ADR-0078, CHILD_SAFETY §3.6): friends and friend codes are off by default in a common tenant, so the
-		// client hides the buttons; a feature flag row of the same key (System Admin, tenant override) decides when present.
+		// F095-AC-23 (CHILD_SAFETY §3.6): friends and friend codes are on by default in every tenant, a common tenant
+		// included since the owner decision 2026-11-28 (ADR-0104 mục 10); a feature flag row of the same key (System Admin,
+		// tenant override) decides when present. The incident switch of a common tenant lives in module chat
+		// (chat.common_tenant_social_overrides.friends_enabled), which refuses the requests (server decides).
 		if _, set := out.FeatureFlags[FriendsEnabledFlag]; !set {
-			out.FeatureFlags[FriendsEnabledFlag] = !out.IsCommonTenant
+			out.FeatureFlags[FriendsEnabledFlag] = true
 		}
 		return r.student(ctx, tx, userID, &out)
 	})

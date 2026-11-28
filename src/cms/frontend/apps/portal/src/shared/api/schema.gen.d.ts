@@ -363,15 +363,19 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Trạng thái bật lại DM/World/Area tự do của một tenant `common` (ADR-0078, F120-AC-28)
-         * @description Chỉ role platform có `platform.settings.write`; `X-Tenant-Id` là tenant `common` đích (khác loại → `404`).
+         * Trạng thái công tắc DM/World/kết bạn/Area tự do của một tenant `common` (ADR-0078, ADR-0104, F120-AC-28)
+         * @description Chỉ role platform có `platform.settings.write`; `X-Tenant-Id` là tenant `common` đích (khác loại → `404`). Chưa có
+         *     dòng override → trả mặc định `common_tenant_social_defaults` với `version = 0` (owner 2026-11-28: `direct`, `world`,
+         *     kết bạn bật; `area` chỉ `quick` + `emoji`).
          */
         get: operations["getCommonTenantSocialOverride"];
         /**
-         * System Admin bật lại (hoặc tắt lại) DM, World và chat tự do ở Area cho một tenant `common` (F120-AC-28)
-         * @description Mặc định tenant `common` (`common_tenant_social_defaults`): `direct` và `world` tắt, `area` chỉ `quick` + `emoji`.
-         *     Chỉ System Admin (`platform.settings.write`), `reason` bắt buộc, audit; mọi instance áp dụng trong ≤ 60 giây. Role
-         *     tenant không gọi được (`403 PERMISSION_DENIED`). Kết bạn của tenant `common` thuộc cài đặt identity (F095).
+         * System Admin tắt (công tắc sự cố) hoặc bật lại DM, World, kết bạn và chat tự do ở Area cho một tenant `common` (F120-AC-28)
+         * @description Mặc định tenant `common` (`common_tenant_social_defaults`, owner 2026-11-28, ADR-0104): `direct`, `world` và kết
+         *     bạn bật; `area` chỉ `quick` + `emoji`. Mỗi trường là trạng thái hiệu lực; `friends_enabled` bỏ trống thì giữ giá trị
+         *     đang lưu. Chỉ System Admin (`platform.settings.write`), `reason` bắt buộc, audit; mọi instance áp dụng trong ≤ 60
+         *     giây. Role tenant không gọi được (`403 PERMISSION_DENIED`). Pipeline kiểm duyệt, bước PII/grooming, giờ giới nghiêm,
+         *     chặn/tắt tiếng/báo cáo không đổi.
          */
         put: operations["putCommonTenantSocialOverride"];
         post?: never;
@@ -12116,6 +12120,8 @@ export interface components {
             /** @description false: Area chỉ quick + emoji (mặc định tenant common) */
             area_free_text_enabled: boolean;
             direct_enabled: boolean;
+            /** @description Kết bạn (lời mời, mã bạn bè) của tenant common; mặc định true (owner 2026-11-28) */
+            friends_enabled: boolean;
             reason?: string;
             tenant_id: components["schemas"]["Uuid"];
             updated_at?: components["schemas"]["Timestamp"];
@@ -12126,6 +12132,8 @@ export interface components {
         CommonTenantSocialOverrideUpdate: {
             area_free_text_enabled: boolean;
             direct_enabled: boolean;
+            /** @description Tùy chọn: false tắt kết bạn của tenant common (công tắc sự cố); bỏ trống thì giữ giá trị đang lưu */
+            friends_enabled?: boolean;
             reason: string;
             world_enabled: boolean;
         };
@@ -15690,7 +15698,7 @@ export interface components {
          */
         PlayerBootstrap: {
             content_manifest_version?: string;
-            /** @description Cờ `feature` hiệu lực của tenant. Luôn có `social.friends_enabled`: `false` ở tenant `common` (kết bạn và mã bạn bè tắt mặc định — ADR-0078, F095-AC-23), client ẩn nút; cờ cùng tên do System Admin đặt (nếu có) quyết định. */
+            /** @description Cờ `feature` hiệu lực của tenant. Luôn có `social.friends_enabled`: mặc định `true` ở mọi tenant, kể cả tenant `common` (owner 2026-11-28, ADR-0104 mục 10, F095-AC-23); cờ cùng tên do System Admin đặt (nếu có) quyết định, `false` thì client ẩn nút. Công tắc sự cố kết bạn của tenant `common` ở module chat (server từ chối `SOCIAL_SCOPE_VIOLATION`). */
             feature_flags: {
                 [key: string]: boolean;
             };
