@@ -46,3 +46,13 @@ make design-tokens-check
 ## 4. Bằng chứng cần nộp
 
 - Kết quả `make godot-test` (pass/fail), video kịch bản 1–4 trên hai thiết bị, ảnh Event center/Club/Tìm bạn ở `vi`/`en`, PC/mobile, `g1_3`/`g6_7`, số đo FPS kịch bản 21.
+
+## 5. Bằng chứng 2026-11-28 (phần Godot client)
+
+Chạy trên máy local, Godot 4.7.2 (headless cho GdUnit4, Compatibility/OpenGL cho ảnh), FakeHttp + FakeWebSocketPeer + fixture contract (TEST-ONLY, AGENTS R17) — **chưa** chạy với backend thật. GdUnit4 toàn bộ (chia theo thư mục): unit 970, contract 37, integration 18 (16 skip — cần môi trường thật, có sẵn từ trước), perf 17, tools 11, visual 4, scene 633 → **1690 test, 0 lỗi, 0 fail, 16 skip**. F111: 28 file test, 109 test; viết test trước, ghi đỏ → xanh từng nhóm trong [tasks.md](tasks.md). Lint: `check_typed`, `lint_theme_overrides`, `lint_layers`, `lint_signals`, `lint_art`, `bake_art --check`, `brand_assets --check`, `extract_pot --check`, `pseudo_locale --check`, `gen_fixtures --check` (273 file), `check_no_admin_ui` — OK; `check-features`, `check-cross-features`, docs `check-links` — 0 lỗi.
+
+Bảng F111-AC → test: [tasks.md](tasks.md#bằng-chứng-f111-ac--test-2026-11-28-gdunit4-headless-fake--fixture-contract).
+
+Ảnh review (`screenshots/`): 19 màn F111 (`f111_<view>`) ở 1280×720, 844×390, 740×360 `vi` `g1_3`; `g6_7` ở 1280×720 và 844×390 cho `clubs`, `club_create`, `events_week`, `events_season`, `events_no_season`, `event_detail` (tab Mùa/Tuần này không có ở lớp 1–3); mẫu `en` ở 1280×720 và 844×390 (`friends_join`, `friends_suggest`, `club_page`, `events_today`, `event_detail`, `events_list`); `emote_icon_only-hub-*` (nút biểu cảm chỉ biểu tượng, yêu cầu chủ sản phẩm). Lệnh: `godot --path src/game --rendering-method gl_compatibility --rendering-driver opengl3 -s res://tools/capture_screens.gd -- --screens=f111_… --sizes=1280x720,844x390,740x360 --locales=vi-VN --band=g1_3`.
+
+Còn chờ: kịch bản §2 với backend thật và hai thiết bị (T044, T046 — kịch bản 1–4, 9, 15–17, 20), đo FPS kịch bản 21 (SC-005).
