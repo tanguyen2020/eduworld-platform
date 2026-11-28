@@ -34,6 +34,8 @@ describe('Tổng quan trường (US1)', () => {
       expect(meta).toHaveTextContent('Tạm tính');
     }
     expect(screen.getByTestId('metric-completion')).toHaveTextContent('60%');
+    // each submission progress bar has an accessible name (axe aria-progressbar-name, F056 T046 finding 2026-11-28)
+    expect(within(screen.getByTestId('widget-assignments')).getByRole('progressbar', { name: 'Tiến độ nộp bài Bảng nhân 6–9: 2/3 đã nộp' })).toBeInTheDocument();
     expect(screen.getByTestId('metric-avg-minutes')).toHaveTextContent('42 phút');
     expect(screen.getByTestId('metric-reco-started')).toHaveTextContent('68%');
     expect(screen.getByTestId('metric-improved')).toHaveTextContent('37');

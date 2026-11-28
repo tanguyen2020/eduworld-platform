@@ -28,6 +28,44 @@
           "$extensions": { "eduworld": { "contrastWith": [
             { "token": "antd.colorPrimary", "level": "normal" }
           ] } }
+        },
+        "link": {
+          "$value": "{ops.mode.text.link}",
+          "$description": "Link text (antd colorLink): darkAlgorithm would derive a blue below 4.5:1 on the dark container (axe, F055 T043).",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "ops.color.bg.container", "level": "normal" },
+            { "token": "ops.color.bg.layout", "level": "normal" }
+          ] } }
+        },
+        "accent": {
+          "$value": "{ops.mode.text.accent}",
+          "$description": "Selected tab text and ink bar (antd Tabs); colorPrimary stays the fill of primary buttons (white text).",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "ops.color.bg.container", "level": "normal" },
+            { "token": "ops.color.bg.layout", "level": "normal" }
+          ] } }
+        },
+        "danger": {
+          "$value": "{ops.mode.text.danger}",
+          "$description": "Danger button text (outlined, text, link) and solid danger fill (antd Button colorError).",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "ops.color.bg.container", "level": "normal" },
+            { "token": "ops.color.bg.layout", "level": "normal" }
+          ] } }
+        },
+        "on-danger": {
+          "$value": "{ops.mode.text.on-danger}",
+          "$description": "Text of the solid danger button on the danger fill (antd Button dangerColor).",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "ops.color.text.danger", "level": "normal" }
+          ] } }
+        },
+        "warning": {
+          "$value": "{ops.mode.text.warning}",
+          "$description": "Text of the warning tag (antd Tag colorWarning, e.g. \"Tạm tính\"); the status orange is 3:1 on the warning background.",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "banner.warning.bg", "level": "normal" }
+          ] } }
         }
       },
       "bg": {

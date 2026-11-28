@@ -84,7 +84,13 @@ function AssignmentsWidget({ w, f, partial }: { w: Widgets; f: DashboardFilters;
             <Flex vertical gap="small" style={{ width: '100%' }}>
               <Typography.Text strong>{t('dashboard.assignments.item', { title: a.title, due: formatDateTime(a.due_at) })}</Typography.Text>
               {a.total ? (
-                <Progress percent={Math.round((a.submitted / a.total) * 100)} size="small" format={() => t('dashboard.assignments.submitted', { submitted: a.submitted, total: a.total })} />
+                <Progress
+                  percent={Math.round((a.submitted / a.total) * 100)}
+                  size="small"
+                  // accessible name of the progressbar (axe aria-progressbar-name, WCAG 4.1.2)
+                  aria-label={t('dashboard.assignments.progressLabel', { title: a.title, submitted: a.submitted, total: a.total })}
+                  format={() => t('dashboard.assignments.submitted', { submitted: a.submitted, total: a.total })}
+                />
               ) : null}
               {(a.by_grade ?? []).map((g) => (
                 <Flex key={g.grade_level} gap="small" align="center" wrap data-testid="progress-by-grade">

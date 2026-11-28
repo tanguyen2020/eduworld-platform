@@ -6,7 +6,12 @@
       "text": {
         "base": { "$value": "{ops.palette.white}", "$description": "Ant Design colorTextBase (dark)." },
         "primary": { "$value": "{ops.palette.neutral.200}", "$description": "Primary text (dark)." },
-        "secondary": { "$value": "{ops.palette.neutral.500}", "$description": "Secondary text (dark)." }
+        "secondary": { "$value": "{ops.palette.neutral.500}", "$description": "Secondary text (dark)." },
+        "link": { "$value": "{ops.palette.blue.300}", "$description": "Link text (dark)." },
+        "accent": { "$value": "{ops.palette.blue.300}", "$description": "Selected tab text and ink bar (dark)." },
+        "danger": { "$value": "{ops.palette.red.300}", "$description": "Danger button text and solid danger fill (dark)." },
+        "on-danger": { "$value": "{ops.palette.neutral.900}", "$description": "Text on the solid danger fill (dark)." },
+        "warning": { "$value": "{ops.palette.amber.400}", "$description": "Warning tag text (dark)." }
       },
       "bg": {
         "base": { "$value": "{ops.palette.neutral.900}", "$description": "Ant Design colorBgBase (dark)." },

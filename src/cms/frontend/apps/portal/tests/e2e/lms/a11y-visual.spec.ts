@@ -78,27 +78,13 @@ test.describe('@F055 @visual LMS — axe và visual regression (TC-UI-004, TC-UI
   for (const screen of SCREENS) {
     for (const appearance of APPEARANCES) {
       const title = `${screen.name} — ${appearance}`;
-      if (appearance === 'dark') {
-        // dark: the active tab, the "← Quay lại" link and the danger button text miss 4.5:1 on the dark background
-        // (dark admin tokens, design/admin-tokens) — finding of 2026-11-28 for the design-system owner; every other
-        // rule is enforced, color-contrast stays as a fixme until the tokens are fixed
-        test(`axe ${title} (rules other than color-contrast)`, async () => {
-          const page = await prepare(screen, appearance);
-          const v = (await axeViolations(page)).filter((f) => f.id !== 'color-contrast');
-          expect(v, describeFindings(v)).toEqual([]);
-        });
-        test.fixme(`axe ${title} color-contrast (dark admin tokens below 4.5:1)`, async () => {
-          const page = await prepare(screen, appearance);
-          const v = await axeViolations(page);
-          expect(v, describeFindings(v)).toEqual([]);
-        });
-      } else {
-        test(`axe ${title}`, async () => {
-          const page = await prepare(screen, appearance);
-          const v = await axeViolations(page);
-          expect(v, describeFindings(v)).toEqual([]);
-        });
-      }
+      // every rule in every appearance, color-contrast of the dark theme included (selected tab, "← Quay lại" link and
+      // danger button text: dark admin tokens of tokens@0.22.0 — ops.color.text.{accent,link,danger})
+      test(`axe ${title}`, async () => {
+        const page = await prepare(screen, appearance);
+        const v = await axeViolations(page);
+        expect(v, describeFindings(v)).toEqual([]);
+      });
       test(`visual ${title}`, async () => {
         const page = await prepare(screen, appearance);
         await expect(page).toHaveScreenshot(`${screen.name}--${appearance}.png`, { mask: screen.mask(page) });

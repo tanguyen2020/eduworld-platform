@@ -55,6 +55,7 @@
       "none": "No assignment due soon.",
       "item": "{{title}} — due {{due}}",
       "submitted": "{{submitted}}/{{total}}",
+      "progressLabel": "Submission progress of {{title}}: {{submitted}}/{{total}} submitted",
       "byGrade": "Completion by grade"
     },
     "weak": {

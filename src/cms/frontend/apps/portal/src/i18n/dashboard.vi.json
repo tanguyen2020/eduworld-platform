@@ -55,6 +55,7 @@
       "none": "Không có bài giao sắp hạn.",
       "item": "{{title}} — hạn {{due}}",
       "submitted": "{{submitted}}/{{total}}",
+      "progressLabel": "Tiến độ nộp bài {{title}}: {{submitted}}/{{total}} đã nộp",
       "byGrade": "Tỉ lệ nộp theo khối"
     },
     "weak": {

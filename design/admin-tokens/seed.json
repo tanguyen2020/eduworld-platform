@@ -176,6 +176,31 @@
           "$description": "Sidebar background (dark)."
         },
         "$description": "Deep brand-blue sidebar palette (DESIGN_SYSTEM §4.1, owner 2026-11-22, ADR-0098)."
+      },
+      "blue": {
+        "300": {
+          "$value": "#8AB4F8",
+          "$description": "Link, selected tab and ink bar text (dark)."
+        },
+        "$description": "Light blue of link and accent text on the dark surfaces (DESIGN_SYSTEM §4.1)."
+      },
+      "red": {
+        "300": {
+          "$value": "#F87171",
+          "$description": "Danger button text and fill (dark)."
+        },
+        "$description": "Light red of danger text on the dark surfaces (DESIGN_SYSTEM §4.1)."
+      },
+      "amber": {
+        "400": {
+          "$value": "#FBBF24",
+          "$description": "Warning tag text (dark)."
+        },
+        "800": {
+          "$value": "#92400E",
+          "$description": "Warning tag text (light)."
+        },
+        "$description": "Warning tag text (DESIGN_SYSTEM §4.1): the status orange #D97706 is 3:1 on the warning background, below AA for text."
       }
     },
     "size": {
@@ -348,6 +373,11 @@
       "$type": "color",
       "$value": "{ops.palette.status.info}",
       "$description": "Info."
+    },
+    "colorLink": {
+      "$type": "color",
+      "$value": "{ops.color.text.link}",
+      "$description": "Link seed (a, Typography.Link, Button type=\"link\"). A seed: darkAlgorithm derives the rendered link from it (about #789CD6, >= 5:1 on the dark card #282828 and the layout), instead of the blue derived from colorInfo (#2257CB, 2.3:1 — axe, F055 T043)."
     },
     "colorTextBase": {
       "$type": "color",
@@ -537,6 +567,42 @@
           "$type": "dimension",
           "$value": "{ops.size.font.14}",
           "$description": "KPI label."
+        }
+      },
+      "Tabs": {
+        "itemSelectedColor": {
+          "$type": "color",
+          "$value": "{ops.color.text.accent}",
+          "$description": "Selected tab text, exact (colorPrimary renders #305BCB in dark: 3.5:1 on the layout — axe, F055 T043)."
+        },
+        "inkBarColor": {
+          "$type": "color",
+          "$value": "{ops.color.text.accent}",
+          "$description": "Ink bar under the selected tab."
+        }
+      },
+      "Button": {
+        "colorError": {
+          "$type": "color",
+          "$value": "{ops.color.text.danger}",
+          "$description": "Danger button text (outlined, text, link) and solid danger fill, exact (component override, not derived): light keeps #DC2626, dark a light red (the derived #BE2323 is 2.4:1 on the dark button)."
+        },
+        "dangerColor": {
+          "$type": "color",
+          "$value": "{ops.color.text.on-danger}",
+          "$description": "Text of the solid danger button on the danger fill."
+        }
+      },
+      "Tag": {
+        "colorWarning": {
+          "$type": "color",
+          "$value": "{ops.color.text.warning}",
+          "$description": "Text of Tag color=\"warning\" (\"Tạm tính\", dashboard meta) at AA on its background."
+        },
+        "colorWarningBg": {
+          "$type": "color",
+          "$value": "{banner.warning.bg}",
+          "$description": "Background of Tag color=\"warning\" (declared so the contrast check covers the pair)."
         }
       }
     }
