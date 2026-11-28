@@ -156,7 +156,7 @@ Ký hiệu consumer: GAM = gamification, QST = quest, LR = learning_record, LA =
 
 | Event | Producer | Consumers | Payload chính |
 |---|---|---|---|
-| `user.provisioned` | identity | AUD, GAM (tạo GameProfile) | `user_id`, `user_type`, `source` (jit/sis/manual/platform_common — học sinh tenant chung do System Admin tạo, F010-AC-24) |
+| `user.provisioned` | identity | AUD, GAM (tạo GameProfile) | `user_id`, `user_type`, `source` (jit/sis/manual/platform_common — học sinh tenant chung do System Admin tạo, F010-AC-24; self_registration — học sinh tự đăng ký trong game, F135, ADR-0104) |
 | `user.activated` | identity | AUD, GAM | `user_id`, `external_identity_id` — lần đăng nhập đầu chuyển `pending → active` ([ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md)) |
 | `user.access_revoked` | identity | RT (đóng WS, close code 4403), AUD | `user_id`, `reason` (locked/deactivated/transferred/password_changed — đặt lại mật khẩu chỉ thu hồi phiên, không tắt user, [ACCOUNT_PROVISIONING §6d](../09-identity/ACCOUNT_PROVISIONING.md#6d-đặt-lại-mật-khẩu-học-sinh)) |
 | `user.access_restored` | identity | AUD, NTF | `user_id`, `reason` — mở khóa; Keycloak `enabled=true` |

@@ -1,6 +1,6 @@
 # Multi-tenancy
 
-> Trạng thái: Draft · Phiên bản: 0.6 · Owner: Solution Architect · Cập nhật: 2026-11-28 (§8.3: event của tenant `common` và School ảo do migration ghi vào outbox — F010) · 2026-11-17 (Áp ADR-0074: database theo module trên một cụm, ngữ cảnh tenant giữa module truyền trong tiến trình qua `src/backend/pkg/modcall`; áp ADR-0089: RLS chỉ lọc tenant, quy tắc interceptor theo mixin, ba loại scope, danh sách đóng `tenancy.Bypass`, bảng `infra` không RLS, role `_relay`/`_partition_admin`; làm rõ: mixin `TenantOptionalAppendOnly`, 10 reason kèm quyền DB, audit `cross_tenant.accessed`, hàm `identity.memberships_for_user`)
+> Trạng thái: Draft · Phiên bản: 0.6 · Owner: Solution Architect · Cập nhật: 2026-11-28 (§8.3: học sinh tự đăng ký trong game vào tenant `common` — ADR-0104) · 2026-11-28 (§8.3: event của tenant `common` và School ảo do migration ghi vào outbox — F010) · 2026-11-17 (Áp ADR-0074: database theo module trên một cụm, ngữ cảnh tenant giữa module truyền trong tiến trình qua `src/backend/pkg/modcall`; áp ADR-0089: RLS chỉ lọc tenant, quy tắc interceptor theo mixin, ba loại scope, danh sách đóng `tenancy.Bypass`, bảng `infra` không RLS, role `_relay`/`_partition_admin`; làm rõ: mixin `TenantOptionalAppendOnly`, 10 reason kèm quyền DB, audit `cross_tenant.accessed`, hàm `identity.memberships_for_user`)
 > Liên quan: [ADR-0005](../adr/ADR-0005-mo-hinh-multi-tenancy-shared-database-tenant-id-rls.md) · [ADR-0026](../adr/ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) · [ADR-0027](../adr/ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) · [ADR-0028](../adr/ADR-0028-chi-soft-delete-khong-hard-delete-mac-dinh-khong-doc-du-lieu.md) · [ADR-0029](../adr/ADR-0029-system-admin-gan-du-lieu-cho-tenant-va-clone-du-lieu-giua-te.md) · [DOMAIN_MODEL](DOMAIN_MODEL.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md)
 
 > [!IMPORTANT]
@@ -55,7 +55,7 @@ flowchart TD
 |---|---|---|---|
 | `school` | Đúng 1 | Trường độc lập ký hợp đồng trực tiếp | Tenant Admin ≈ quản trị trường |
 | `unit` | ≥ 1 | Sở/Phòng GD&ĐT, hệ thống trường | Dữ liệu mọi trường trong đơn vị cùng `tenant_id`; học sinh chuyển trường **trong** đơn vị không đổi tenant |
-| `common` | 1 (School ảo "EduWorld chung") | Học sinh do platform (System Admin) tạo/import có chủ đích (ADR-0063) | Duy nhất (`code = 'common'`); không có SIS; nội dung do System Admin gán [Confirmed] |
+| `common` | 1 (School ảo "EduWorld chung") | Học sinh do platform (System Admin) tạo/import có chủ đích (ADR-0063) hoặc tự đăng ký trong game ([ADR-0104](../adr/ADR-0104-hoc-sinh-tu-dang-ky-trong-game-vao-tenant-chung.md)) | Duy nhất (`code = 'common'`); không có SIS; nội dung do System Admin gán [Confirmed] |
 
 ## 3. Phân loại bảng
 
@@ -304,7 +304,7 @@ Tóm tắt: có claim `organization` thì tenant đó phải thuộc membership 
 | Hạng mục | Quy tắc | Nhãn |
 |---|---|---|
 | Ai vào | Chỉ tài khoản do platform (System Admin) **tạo/import có chủ đích** vào tenant chung, kèm khối (không có lớp ảo — ADR-0095; ADR-0063). Không có JIT tự đưa người dùng vào tenant chung; người không thuộc tenant chung và không thuộc tenant SIS nào bị từ chối `ACCOUNT_NOT_PROVISIONED` | [Confirmed] |
-| Cấu trúc | Tenant `common`, School ảo "EduWorld chung"; học sinh có khối do System Admin đặt khi tạo/import tài khoản; không có lớp ảo (9 lớp ảo `common-g1` … `common-g9` bị bỏ — ADR-0095) | [Confirmed] |
+| Cấu trúc | Tenant `common`, School ảo "EduWorld chung"; học sinh có khối do System Admin đặt khi tạo/import tài khoản hoặc do học sinh chọn khi tự đăng ký trong game ([ACCOUNT_PROVISIONING §3.5](../09-identity/ACCOUNT_PROVISIONING.md#35-học-sinh-tự-đăng-ký-trong-game-adr-0104)); không có lớp ảo (9 lớp ảo `common-g1` … `common-g9` bị bỏ — ADR-0095) | [Confirmed] |
 | Tạo và phát event | Tenant `common` và School ảo do migration identity tạo (`20261119000002_f010_seed`), không qua `createTenant`; migration `20270203000001_f010_system_rows_events` ghi `tenant.created`/`school.updated` của chúng vào outbox nên `ref.tenants`/`ref.schools` của learning, game, competition, chat có `common` (cần cho FK khi gán nội dung) và worker nối Keycloak Organization `common`. Quy tắc chung: [EVENT_DESIGN §3](../07-backend/EVENT_DESIGN.md#3-outbox--nats-jetstream-adr-0042) | [Confirmed — owner "chốt hết" 2026-11-28] |
 | Nội dung | Chỉ dữ liệu platform được System Admin gán cho `common` | [Confirmed] |
 | Chuyển sang tenant thật | Khi SIS của một tenant đồng bộ bản ghi khớp user → membership tenant đó → lần đăng nhập sau dùng tenant mới; lịch sử ở `common` giữ `tenant_id = common` | [Confirmed] |

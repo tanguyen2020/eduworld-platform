@@ -1,6 +1,6 @@
 # Performance Budget — Ngân sách hiệu năng client (máy tầm trung)
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-25 (ADR-0103/F068: ngân sách giữ nguyên với art direction mới, blob shadow trên Web) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-28 (F137: §8 âm thanh Ogg Vorbis + stream, §11 phần âm thanh của tải đầu Web và gói vùng — ADR-0106) · 2026-11-25 (ADR-0103/F068: ngân sách giữ nguyên với art direction mới, blob shadow trên Web) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-15
 > Liên quan: [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0013](../adr/ADR-0013-nen-tang-client-release-1-0-gom-windows-android-ios-web.md) · [ADR-0101](../adr/ADR-0101-bo-windows-khoi-nen-tang-client-release-1-0.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [ADR-0055](../adr/ADR-0055-cong-thuc-toan-vat-ly-hoa-hoc-mathjax-4-hien-thi-mathlive-nh.md) · [GODOT_ARCHITECTURE](GODOT_ARCHITECTURE.md) · [WORLD_RENDERING](WORLD_RENDERING.md) · [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [TEST_STRATEGY](../12-project/TEST_STRATEGY.md)
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Hạng thiết bị tham chiếu · 3. Mục tiêu khung hình · 4. Renderer theo nền tảng · 5. Preset chất lượng · 6. Tự phát hiện và độ phân giải động · 7. Ngân sách theo cảnh · 8. Ngân sách asset · 9. Ngân sách UI 2D · 10. Ngân sách mạng (10.1 phòng máy) · 11. Thời gian tải và dung lượng · 12. Pin và nhiệt · 13. Kỹ thuật tối ưu bắt buộc · 14. Web export · 15. Quy trình kiểm soát · 16. Tiêu chí nghiệm thu
@@ -127,7 +127,7 @@ Học sinh đổi preset và từng thiết lập trong Cài đặt; lựa chọ
 | Mặt đất/địa hình mỗi zone | ≤ 40k tổng | ≤ 4 lớp texture | |
 
 - **Nén texture theo nền tảng:** Android ETC2 + ASTC (VRAM compressed), iOS ASTC, Web: S3TC/ETC2 theo hỗ trợ WebGL 2 (xuất cả hai). Mipmap bật cho texture 3D; UI không mipmap.
-- **Âm thanh:** Ogg Vorbis; nhạc nền stream (không nạp toàn bộ vào RAM), 96–128 kbps; hiệu ứng ≤ 1 giây ở dạng nén nạp sẵn; tổng âm thanh nạp sẵn mỗi zone ≤ 16 MB.
+- **Âm thanh** ([ADR-0106](../adr/ADR-0106-am-thanh-game-phu-hop-giao-duc-va-nguon-cc0-mit.md), F137): mọi file Ogg Vorbis; nhạc nền và ambience stream (không nạp toàn bộ vào RAM), `audio_music_bitrate` (trong khoảng 96–128 kbps); hiệu ứng ≤ 1 giây ở dạng nén nạp sẵn, mono; tối đa `audio_sfx_max_voices` tiếng cùng lúc; tổng âm thanh nạp sẵn mỗi zone ≤ 16 MB. Phân bổ dung lượng ở §11.
 - **Video bài học:** Ogg Theora, 480p/720p theo preset (§5), bitrate ≤ 1,5 Mbps ở 720p.
 - **Atlas và material:** mỗi zone ưu tiên một material toon dùng palette texture chung; số material duy nhất trong cảnh Hub ≤ 40.
 - Asset vượt ngân sách bị **chặn ở bước import CI** (script kiểm tra số tam giác, kích thước texture, số xương) trừ khi có ngoại lệ ghi rõ.
@@ -186,8 +186,8 @@ Tham số `classroom_reference_bandwidth` (đường truyền tham chiếu), `of
 | Mở activity player | ≤ 2 giây (media đã preload) |
 | Bản cài Android (APK/AAB base) | ≤ 300 MB |
 | Bản cài iOS | ≤ 300 MB |
-| Web tải đầu (wasm + pck lõi, đã nén) | ≤ 40 MB; phần còn lại tải theo vùng |
-| Gói nội dung mỗi vùng (PCK) | ≤ 40 MB nén |
+| Web tải đầu (wasm + pck lõi, đã nén) | ≤ 40 MB; phần còn lại tải theo vùng. Âm thanh trong lõi (UI, phản hồi học tập, stinger, nhạc `menu` + `hub`) ≤ `audio_core_budget` |
+| Gói nội dung mỗi vùng (PCK) | ≤ 40 MB nén; trong đó nhạc + ambience của vùng ≤ `audio_zone_budget` |
 | Bộ nhớ cache nội dung trên thiết bị | ≤ 1,5 GB, xóa LRU theo vùng ít dùng |
 
 - Nội dung vùng tải **theo nhu cầu** qua CDN với hash bất biến ([WORLD_RENDERING](WORLD_RENDERING.md), [DEPLOYMENT](../11-operations/DEPLOYMENT.md)); vùng chưa tải hiển thị trạng thái "Đang chuẩn bị vùng đất" có tiến độ.

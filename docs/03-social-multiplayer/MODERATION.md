@@ -1,6 +1,6 @@
 # Moderation — Kiểm duyệt & an toàn giao tiếp
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Identity & Security Engineer + EdTech Specialist · Cập nhật: 2026-11-17 (ADR-0074: pipeline bất đồng bộ chạy trong profile `worker-chat`; ADR-0078: PII/grooming luôn chạy, giới hạn công tắc, tenant `common`)
+> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Identity & Security Engineer + EdTech Specialist · Cập nhật: 2026-11-28 (ADR-0105: nickname tự gõ qua pipeline `context = nickname` §2, báo cáo nickname §5, sanction `nickname_reset` §7 — F136) · 2026-11-17 (ADR-0074: pipeline bất đồng bộ chạy trong profile `worker-chat`; ADR-0078: PII/grooming luôn chạy, giới hạn công tắc, tenant `common`)
 > Liên quan: [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) · [ADR-0030](../adr/ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) · [CHAT_SYSTEM](CHAT_SYSTEM.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [OPEN_QUESTIONS OQ-09, OQ-12](../12-project/OPEN_QUESTIONS.md)
 
 > [!IMPORTANT]
@@ -26,7 +26,7 @@ Content Filtering, Profanity Filtering, Anti-spam, Anti-bullying, Personal Infor
 
 ## 2. Phạm vi áp dụng
 
-Pipeline kiểm duyệt áp dụng cho **mọi văn bản do học sinh nhập**: tin nhắn chat (mọi `kind`, kể cả tham số của quick message), tên party, tên đội, tên study group, nickname tự đặt (nếu cho phép), nội dung báo cáo (chỉ chuẩn hóa, không chặn). Nickname mặc định chọn từ danh sách sinh sẵn nên không cần lọc.
+Pipeline kiểm duyệt áp dụng cho **mọi văn bản do học sinh nhập**: tin nhắn chat (mọi `kind`, kể cả tham số của quick message), tên party, tên đội, tên study group, nickname tự gõ, nội dung báo cáo (chỉ chuẩn hóa, không chặn). **Nickname tự gõ** ([ADR-0105](../adr/ADR-0105-nickname-tu-go-qua-kiem-duyet.md), F136) đi qua pipeline bằng facade `moderateDisplayText` với `context = nickname` (cùng chuẩn hóa, danh mục, công tắc; bước PII/grooming luôn chạy; quyết định chỉ `allowed`/`blocked` — `hold_for_review` coi như `blocked`); quy tắc định dạng, chặn tên thật/tên trường và giới hạn lần thử ở [CHARACTER_SYSTEM §5.3](../01-game-design/CHARACTER_SYSTEM.md#53-nickname). Nickname chọn từ gợi ý sinh sẵn (bộ từ đã duyệt) không cần lọc lại.
 
 ### 2.1. Sửa, forward, quote, sticker/GIF (ADR-0034)
 
@@ -163,6 +163,7 @@ sequenceDiagram
 - API kiểm duyệt của Safety Team nằm dưới `/api/v1/admin/moderation/*` (chỉ gateway nội bộ, `azp = eduworld-portal`, role platform); học sinh chỉ có `POST /api/v1/chat/reports`. Snapshot lúc tạo report là **±10 tin** (nguồn duy nhất của con số này; DATABASE_DESIGN theo); khi channel còn, moderator xem thêm ±200 tin ngữ cảnh (§6.1).
 - `reason` (enum, chọn bằng icon cho lớp 1–5): `rude_language`, `bullying`, `asked_personal_info`, `spam`, `inappropriate_content`, `cheating`, `other`.
 - Báo cáo `asked_personal_info` hoặc dấu hiệu grooming → `p1` theo §6.2, kèm thông báo nhà trường theo §6.4 **[Confirmed]**.
+- **Báo cáo nickname** [Confirmed — owner 2026-11-28; cơ chế: Confirmed — owner "chốt hết", F136]: lựa chọn "Tên không phù hợp" trên thẻ người chơi gửi `target_type = user`, `reason = inappropriate_content`, `context.reported_field = nickname`; module chat chụp nickname **hiện tại** từ `ref.player_profiles` vào bằng chứng case (không nhận nickname từ client); gộp case như báo cáo người dùng. Xử lý: sanction `nickname_reset` (§7).
 - Lạm dụng báo cáo (nhiều báo cáo bị bác bỏ) → giảm trọng số, không phạt trẻ (chỉ nhắc nhở) **[Confirmed]**.
 - **Report từ trong trận/party:** chat gameplay luôn có (ADR-0020 mục 6), nên mỗi tin trong panel chat trận/party có menu nhanh **Tắt tiếng / Chặn / Báo cáo**; màn hình kết quả trận và lịch sử party có nút "Báo cáo người chơi". Report gắn `match_id`/`party_id` làm ngữ cảnh.
 - **Cửa sổ report cho chat gameplay:** học sinh báo cáo được tin trong trận/party cho đến khi channel bị purge, tức **ít nhất 3 ngày** sau khi trận kết thúc/party giải tán (`gameplay_chat_retention_days` ≥ 3, mặc định 7 — ADR-0033). Snapshot ngữ cảnh được chụp ngay lúc tạo report nên không bị mất khi purge.
@@ -252,6 +253,7 @@ Nhà trường không xử lý case nhưng là đầu mối liên hệ phụ huy
 | `restrict_multiplayer` | Không vào party/hub chung (chỉ học cá nhân) | `safety_moderator` (> 7 ngày cần trưởng ca) | 7 ngày |
 | `restrict_competition` | Không thi đấu ranked/giải | `safety_moderator` | theo vụ |
 | `account_lock` | Khóa tài khoản (phối hợp Keycloak + `user.status=locked`) | Trưởng ca Safety Team, `system_admin` | theo vụ |
+| `nickname_reset` | Đặt lại nickname về `NULL` (module game tiêu thụ `sanction.applied`; người khác thấy "Bạn mới", học sinh chọn lại ở bước Tên lần vào sau, không tính giới hạn đổi tháng — [CHARACTER_SYSTEM §5.3](../01-game-design/CHARACTER_SYSTEM.md#53-nickname), ADR-0105) | `safety_moderator`, `system_admin` | Tức thời (`ends_at = starts_at`, không có `lifted`) |
 
 - Sanction lưu `chat.sanctions` (`user_id`, `school_id`, `type`, `scope`, `reason`, `case_id`, `issued_by`, `starts_at`, `ends_at`, `revoked_at`); cache Valkey để pipeline kiểm tra nhanh.
 - Học sinh luôn thấy **lý do bằng ngôn ngữ phù hợp lứa tuổi** và thời hạn; nhà trường được thông báo (tóm tắt, §6.4) với sanction ≥ `restrict_multiplayer` để liên hệ phụ huynh **[Confirmed]**.

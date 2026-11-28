@@ -1,6 +1,6 @@
 # Product Vision — EduWorld
 
-> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Product Manager + Game Director · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (§8 phát hành theo pilot ưu tiên giáo dục — ADR-0073; KPI hiệu quả học tập là cổng thoát pilot — ADR-0080; mặc định an toàn — ADR-0078)
+> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Product Manager + Game Director · Cập nhật: 2026-11-28 (ADR-0104: học sinh được tự đăng ký trong game vào tenant chung) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (§8 phát hành theo pilot ưu tiên giáo dục — ADR-0073; KPI hiệu quả học tập là cổng thoát pilot — ADR-0080; mặc định an toàn — ADR-0078)
 > Liên quan: [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md) · [ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) · [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [GAME_DESIGN](../01-game-design/GAME_DESIGN.md) · [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) · [USER_PERSONAS](USER_PERSONAS.md) · [CONFIG_DEFAULTS](CONFIG_DEFAULTS.md) · [ROADMAP](../12-project/ROADMAP.md) · [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md)
 
 ## 1. Mục đích và phạm vi
@@ -26,7 +26,7 @@ Nguyên tắc: *Học sinh đến vì game, ở lại vì trải nghiệm, tiế
 | Tiến trình | Tách 5 loại số liệu: Learning Score, Mastery, Game Rating, XP, Competition Points ([PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md)) | Một điểm tổng; level game được coi là năng lực học tập |
 | Xã hội | Bạn bè, party, club, chat đầy đủ tính năng có kiểm duyệt ([SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md), [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md)) | Mạng xã hội mở cho trẻ em |
 | Khách hàng | Nhà trường / đơn vị giáo dục (B2B), multi-tenant [Confirmed — OQ-14] | Ứng dụng bán vật phẩm cho trẻ em |
-| Tài khoản | Do nhà trường cấp qua SIS + Keycloak SSO [Confirmed] | Học sinh tự đăng ký |
+| Tài khoản | Do nhà trường cấp qua SIS + Keycloak SSO [Confirmed]; học sinh chưa có trường tự đăng ký trong game vào tenant chung, có xác nhận của phụ huynh ([ADR-0104](../adr/ADR-0104-hoc-sinh-tu-dang-ky-trong-game-vao-tenant-chung.md)) [Confirmed — owner 2026-11-28] | Tự đăng ký trên portal, đăng ký bằng mạng xã hội, tài khoản không qua xác nhận của phụ huynh |
 
 **Đối tượng [Confirmed]:** học sinh lớp 1–9 (tự học), nhà trường (School Admin, Academic Manager), biên tập nội dung, game designer/live-ops, Platform Safety Team (`safety_moderator`), quản trị hệ thống; không có vai trò giáo viên (ADR-0072). Nhiều tenant (trường độc lập, đơn vị nhiều trường, tenant chung) — [ADR-0005](../adr/ADR-0005-mo-hinh-multi-tenancy-shared-database-tenant-id-rls.md). Chi tiết: [USER_PERSONAS](USER_PERSONAS.md).
 
@@ -120,7 +120,7 @@ Không làm trong Release 1.0: voice chat ([ADR-0051](../adr/ADR-0051-pham-vi-vo
 ## 9. Non-goals
 
 - Không MMO persistent world liên tục cho toàn hệ thống ([ADR-0012](../adr/ADR-0012-the-gioi-game-hybrid-hub-instance-private-instance-match-roo.md)).
-- Không cho học sinh tự đăng ký tài khoản [Confirmed].
+- Học sinh chỉ tự đăng ký trong game, chỉ vào tenant chung, có bước xác nhận của phụ huynh và không thu họ tên thật ([ADR-0104](../adr/ADR-0104-hoc-sinh-tu-dang-ky-trong-game-vao-tenant-chung.md)) [Confirmed — owner 2026-11-28]; nhân sự không tự đăng ký.
 - Không giao tiếp tự do không kiểm soát; không liên lạc giữa học sinh khác tenant ngoài sự kiện do platform tổ chức ([ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md)).
 - Không bán lợi thế, không loot box, không cơ chế đánh bạc, không quảng cáo, không bán dữ liệu [Confirmed].
 - Không dùng Game Rating hay level để đánh giá năng lực học tập ([ADR-0018](../adr/ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md)) [Confirmed].

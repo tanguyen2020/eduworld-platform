@@ -1,6 +1,6 @@
 # UX màn hình học sinh — Core (S01–S07)
 
-> Trạng thái: Draft · Phiên bản: 1.6 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-28 (F110: S06 §6b màn boss trong client — thẻ boss, arena 2D, đóng góp chỉ ✓/đồng hồ, kết quả) · 2026-11-27 (F102: S03 `PartyChip` = PartyHud, lời mời party dùng `InvitationToast`) · 2026-11-27 (F123: S03 §6c chuông có số chưa đọc, toast thông báo, hộp thông báo) · 2026-11-26 (F069: S03 §6b bảng XP + chip Xu + menu "Thêm", S06 §6a thử thách solo, S07 §6a thẻ ăn mừng gộp cấp) · 2026-11-26 (F097: S02 §6a sân khấu xem trước lớn + bàn xoay, mẫu là ô hình, màu là chấm tròn) · 2026-11-26 (F096 student UX pass 1: màn chờ/thông báo trước thế giới mang nhận diện EduWorld, S01 nút "Hủy" sau 10 s + thông điệp 503, S03 camera, nút HUD icon + chữ, Mây hướng dẫn lần đầu, thẻ "Việc tiếp theo", S04 bảng hình có icon + tên) · 2026-11-24 (S01: bố cục ba cột cụ thể của form, kích thước theo token, ngôn ngữ dạng chip VI/EN, hiện/ẩn mật khẩu bằng icon, thông báo có icon, Mây chào — owner báo giao diện vỡ) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (S01: màn "Tiếp tục là <nickname>?" khi tự vào lại, máy dùng chung, màn giờ giới nghiêm ADR-0078; bỏ đăng nhập QR/PIN — ADR-0076 Rejected) · 2026-11-16 (ADR-0083, ADR-0086)
+> Trạng thái: Draft · Phiên bản: 1.6 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-28 (F135: S01 nút "Tạo tài khoản", S01c đăng ký, S01d mã khôi phục, S01e quên mật khẩu — ADR-0104; F136: S02 bước Tên có ô gõ nickname + gợi ý — ADR-0105) · 2026-11-28 (F110: S06 §6b màn boss trong client — thẻ boss, arena 2D, đóng góp chỉ ✓/đồng hồ, kết quả) · 2026-11-27 (F102: S03 `PartyChip` = PartyHud, lời mời party dùng `InvitationToast`) · 2026-11-27 (F123: S03 §6c chuông có số chưa đọc, toast thông báo, hộp thông báo) · 2026-11-26 (F069: S03 §6b bảng XP + chip Xu + menu "Thêm", S06 §6a thử thách solo, S07 §6a thẻ ăn mừng gộp cấp) · 2026-11-26 (F097: S02 §6a sân khấu xem trước lớn + bàn xoay, mẫu là ô hình, màu là chấm tròn) · 2026-11-26 (F096 student UX pass 1: màn chờ/thông báo trước thế giới mang nhận diện EduWorld, S01 nút "Hủy" sau 10 s + thông điệp 503, S03 camera, nút HUD icon + chữ, Mây hướng dẫn lần đầu, thẻ "Việc tiếp theo", S04 bảng hình có icon + tên) · 2026-11-24 (S01: bố cục ba cột cụ thể của form, kích thước theo token, ngôn ngữ dạng chip VI/EN, hiện/ẩn mật khẩu bằng icon, thông báo có icon, Mây chào — owner báo giao diện vỡ) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-17 (S01: màn "Tiếp tục là <nickname>?" khi tự vào lại, máy dùng chung, màn giờ giới nghiêm ADR-0078; bỏ đăng nhập QR/PIN — ADR-0076 Rejected) · 2026-11-16 (ADR-0083, ADR-0086)
 > Liên quan: [STUDENT_GAME_UX (quy ước chung)](STUDENT_GAME_UX.md) · [ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md) · [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) · [DESIGN_SYSTEM §5](DESIGN_SYSTEM.md#5-game-design-system-godot-3d) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md)
 
 ## Mục đích và phạm vi
@@ -21,7 +21,7 @@ QR lớp + PIN, thẻ QR, mật khẩu hình ảnh **không làm** (ADR-0076 Rej
 
 **3. Điểm vào / ra.** Vào: mở ứng dụng khi không có phiên đã lưu (lần đầu, Web, máy dùng chung), sau khi bấm **Đăng xuất** (Cài đặt → Tài khoản, [STUDENT_GAME_UX_SOCIAL §10](STUDENT_GAME_UX_SOCIAL.md#10-cài-đặt)), phiên hết hạn/bị thu hồi (kể cả khi tự vào lại thất bại), bị đăng xuất do thiết bị khác. Mở ứng dụng khi còn phiên đã lưu → màn chờ "Đang vào lớp…" → màn **S01b "Tiếp tục là <nickname>?"** → S02/S03, không qua form. Ra: S02 (chưa có avatar) hoặc S03.
 
-Màn là **một form vẽ bằng Godot** (ADR-0068): logo, chọn ngôn ngữ, ô tên đăng nhập, ô mật khẩu (ẩn ký tự, nút hiện/ẩn), nút "Đăng nhập", ô "Nhớ tên đăng nhập trên máy này", dòng "Quên mật khẩu? Liên hệ nhà trường để đặt lại". Game gửi username/password tới `POST /api/v1/auth/game/login` của module identity (TLS); module identity xác thực với Keycloak. **Không** mở trình duyệt hệ thống, Custom Tabs, `ASWebAuthenticationSession`, WebView hay chuyển ứng dụng; không có trang Keycloak cho học sinh.
+Màn là **một form vẽ bằng Godot** (ADR-0068): logo, chọn ngôn ngữ, ô tên đăng nhập, ô mật khẩu (ẩn ký tự, nút hiện/ẩn), nút "Đăng nhập", ô "Nhớ tên đăng nhập trên máy này", dòng "Quên mật khẩu?" (mở lựa chọn: "Dùng mã khôi phục", "Gửi link cho phụ huynh" — cho tài khoản tự đăng ký; "Học sinh của trường: liên hệ nhà trường để đặt lại") và nút phụ **"Tạo tài khoản"** (chỉ khi `getRegistrationTerms.enabled`, [ADR-0104](../adr/ADR-0104-hoc-sinh-tu-dang-ky-trong-game-vao-tenant-chung.md)). Game gửi username/password tới `POST /api/v1/auth/game/login` của module identity (TLS); module identity xác thực với Keycloak. **Không** mở trình duyệt hệ thống, Custom Tabs, `ASWebAuthenticationSession`, WebView hay chuyển ứng dụng; không có trang Keycloak cho học sinh.
 
 Trạng thái con (khớp [GODOT_ARCHITECTURE §5](../08-game-client/GODOT_ARCHITECTURE.md#5-vòng-đời-ứng-dụng)): `CheckVersion` → `ResumingSession` (**chỉ khi** có phiên đã lưu: splash "Đang vào lớp…", gọi `refreshGameToken` `mode=resume`; thành công → `ResumeConfirm` (S01b "Tiếp tục là <nickname>?": "Tiếp tục" → `CreatingSession`; "Không phải tôi" → đăng xuất, xóa phiên đã lưu → `LoginForm`), thất bại xác định → `LoginForm` kèm thông báo, giờ giới nghiêm → `Curfew`) → `LoginForm` → `SigningIn` (đang gọi `/auth/game/login`, có thể xếp hàng) → `TenantChoice` (**chỉ khi** `TENANT_NOT_SELECTED`) → `CreatingSession` (gọi `createGameSession` ngay sau khi có token — đăng nhập không tự tạo phiên chơi, [ADR-0083](../adr/ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md)) → `ConfirmTakeover` (chỉ khi `createGameSession` trả 409) → vào game.
 
@@ -177,6 +177,10 @@ Ví dụ: `ui.login.forgot_password_hint` — vi "Quên mật khẩu? Liên hệ
 | AC-UX-0113 | S01b: bấm "Không phải tôi" → phiên Keycloak bị thu hồi, phiên đã lưu bị xóa, form trống không điền sẵn tên; mở lại game → form (TC-AUTH-091) |
 | AC-UX-0114 | ~~Game Windows cài mặc định: đăng nhập, thoát, mở lại → luôn hiện form; cài với "Máy cá nhân" → S01b (TC-AUTH-090)~~ — **không làm** (ADR-0101, 2026-11-24: bỏ bản Windows; Web luôn hiện form khi mở lại theo FR-AUTH-008); mã giữ để truy vết, không tái sử dụng |
 | AC-UX-0115 | Mở game trong giờ giới nghiêm → `CurfewNotice` với giờ mở lại, không hiện form; đang chơi lúc 21:20 → cảnh báo, 21:30 lưu tiến độ và về `CurfewNotice` (TC-AUTH-092) |
+| AC-UX-0116 | Bấm "Tạo tài khoản" → S01c: 5 bước có thanh tiến độ (khối bằng 9 ô hình lớn → ngày sinh bằng bánh xe ngày/tháng/năm → tên đăng nhập + mật khẩu + nhập lại, dòng "Đừng dùng tên thật của em" → bước phụ huynh: điều khoản, "Đọc to", ô "Tôi là phụ huynh và đồng ý" không đánh dấu sẵn, ô email phụ huynh **tùy chọn** → "Tạo tài khoản"); không có ô họ tên, trường, số điện thoại; ✕ Đóng đỏ về form và xóa mọi ô (F135) |
+| AC-UX-0117 | Tạo xong → S01d "Mã khôi phục của em": mã nhóm 4 ký tự cỡ lớn, "Phụ huynh hãy ghi lại hoặc chụp màn hình mã này", "Đọc to", ô "Đã ghi lại mã" bắt buộc trước "Vào game"; rồi tự đăng nhập và vào S02 (F135) |
+| AC-UX-0118 | S01e "Quên mật khẩu?": "Dùng mã khôi phục" (tên đăng nhập + mã + mật khẩu mới ×2 → mã mới hiện một lần như S01d), "Gửi link cho phụ huynh" (luôn báo "Nếu tài khoản có email phụ huynh đã xác nhận, phụ huynh sẽ nhận thư"); mọi lỗi là một câu chung; ô mật khẩu/mã xóa sau mỗi lần gửi (F135) |
+| AC-UX-0119 | Lỗi đăng ký thân thiện, cạnh ô, có icon + chữ: trùng tên "Tên đăng nhập đã có người dùng, em chọn tên khác nhé"; ngày sinh lệch khối "Ngày sinh chưa khớp với khối em chọn, em nhờ bố mẹ kiểm tra giúp nhé"; giới hạn thiết bị "Máy này đã tạo đủ tài khoản hôm nay"; bận "Nhiều bạn đang đăng ký, em thử lại sau ít phút nhé"; giờ giới nghiêm → `CurfewNotice` (F135) |
 
 ---
 
@@ -188,7 +192,7 @@ Ví dụ: `ui.login.forgot_password_hint` — vi "Quên mật khẩu? Liên hệ
 
 **3. Điểm vào / ra.** Vào: sau S01 khi bootstrap báo chưa có avatar. Ra: S03 (Chương 0 "Lời mời" — quest hướng dẫn đầu tiên với Mây).
 
-Các bước: (1) Chọn nhân vật mẫu → (2) Tùy chỉnh (dáng, màu da, tóc, màu tóc, trang phục mặc định) → (3) Chọn nickname → (4) Xem trước và xác nhận. `g1_3`: (1) → màu tóc → (3) → (4).
+Các bước: (1) Chọn nhân vật mẫu → (2) Tùy chỉnh (dáng, màu da, tóc, màu tóc, trang phục mặc định) → (3) Gõ nickname hoặc chạm một gợi ý → (4) Xem trước và xác nhận. `g1_3`: (1) → màu tóc → (3) → (4).
 
 **4. Bố cục Web/PC**
 
@@ -209,8 +213,9 @@ Các bước: (1) Chọn nhân vật mẫu → (2) Tùy chỉnh (dáng, màu da,
 │ [Quay lại]                                     [Bỏ qua tùy chỉnh] [Tiếp ▶] │
 └───────────────────────────────────────────────────────────────────────────┘
 
-Bước Tên:  Chọn tên của em  ( Cú Mèo Chăm Chỉ 27 )( Rồng Xanh Vui Vẻ 08 )( Mèo Mây 15 )
-           [↻ Gợi ý khác]   — không nhập tên tự do
+Bước Tên:  Tên của em  [ Siêu Nhân Sao Băng            ] 18/32
+           Đừng dùng tên thật của em
+           Gợi ý: ( Cú Mèo Chăm Chỉ 27 )( Rồng Xanh Vui Vẻ 08 )( Mèo Mây 15 )  [↻ Gợi ý khác]
 ```
 
 **5. Bố cục Mobile** (điện thoại ngang; tablet: panel phải rộng hơn, mẫu hiển thị 3×2)
@@ -228,25 +233,25 @@ Bước Tên:  Chọn tên của em  ( Cú Mèo Chăm Chỉ 27 )( Rồng Xanh Vu
 └──────────────────────────────────────────────────────────────┘
 ```
 
-**6. Thành phần.** `StepIndicator`, `AvatarPreview3D` (SubViewport), `PresetGrid`, `SwatchPicker`, `OptionCarousel`, `TabBar` (mobile), `NicknameChoiceChips`, `PrimaryButton`.
+**6. Thành phần.** `StepIndicator`, `AvatarPreview3D` (SubViewport), `PresetGrid`, `SwatchPicker`, `OptionCarousel`, `TabBar` (mobile), `NicknameChoiceChips`, `NicknameInput` (ô gõ, bộ đếm 32, dòng nhắc "Đừng dùng tên thật của em", thông báo lỗi), `PrimaryButton`.
 
 **6a. Bố cục đã chốt (F097, đóng F096-1) [Confirmed — owner "chốt hết", 2026-11-26].** Màn là một bảng (`ActivityBoard`) trên nền trời S01. **Sân khấu xem trước** (`Stage`: thẻ trắng bo tròn, nền trời `SkyBackdrop` sau nhân vật, SubViewport trong suốt, camera gần — nhân vật chibi chiếm gần hết khung) rộng hơn cột lựa chọn (≈ 55%) và cao hơn nửa màn. **Bàn xoay**: nhân vật tự quay chậm ở mọi bước (0,3 rad/s; bước xem lại 0,6 rad/s), dừng 3 s sau khi học sinh tự xoay (kéo hoặc nút "Xoay trái/phải" có icon), đứng yên khi "Giảm chuyển động". **Mẫu nhân vật** là ô hình (`PictureTile`): chân dung chibi vẽ vector theo màu da, màu tóc (token `avatar.*`) và màu trang phục (tint item; trang phục trắng dùng màu nhấn của ô) của mẫu, tên bên dưới; ô đang chọn = nền nhấn + dấu ✓ trên chân dung. **Màu da/tóc** là chấm tròn viền mực (`ColorDot`), có vòng trắng + ✓ khi chọn (dùng cả ở Tủ đồ). Dáng người, gợi ý tên là chip (`ChoiceChip`); ‹ › của kiểu tóc/trang phục là nút icon mũi tên. Mọi lựa chọn ≥ vùng chạm của khối; ô hình cao ≥ 1,5 × vùng chạm. Ảnh mẫu từ server (`thumbnail_asset_id`) là việc sau (F097 Ngoài phạm vi).
 
-**7. Dữ liệu & API.** Danh mục preset/màu/tóc/trang phục mặc định lấy từ content manifest (`getContentManifest`, item cosmetic mặc định) — không cần mạng cho từng lần đổi; danh sách nickname gợi ý: **đề xuất** `GET /api/v1/game/profile/nickname-suggestions` (`suggestNicknames`, trả 3–5 gợi ý theo ngôn ngữ hiện tại, server đảm bảo duy nhất trong tenant); xác nhận: `updateAvatar` (`PUT /game/profile/avatar`) + `updateGameProfile` (nickname). Event `avatar.created`.
+**7. Dữ liệu & API.** Danh mục preset/màu/tóc/trang phục mặc định lấy từ content manifest (`getContentManifest`, item cosmetic mặc định) — không cần mạng cho từng lần đổi; danh sách nickname gợi ý: **đề xuất** `GET /api/v1/game/profile/nickname-suggestions` (`suggestNicknames`, trả 3–5 gợi ý theo ngôn ngữ hiện tại, server đảm bảo duy nhất trong tenant); xác nhận: `updateAvatar` (`PUT /game/profile/avatar`) + `updateGameProfile` (`nickname` tự gõ hoặc `nickname_option_id` của gợi ý — [ADR-0105](../adr/ADR-0105-nickname-tu-go-qua-kiem-duyet.md)). Event `avatar.created`.
 
-**8. Trạng thái.** Đang tải mẫu: khung xám + nhân vật bóng mờ. Lỗi lưu: giữ lựa chọn, nút "Thử lại". Nickname vừa bị người khác chọn (409): tự làm mới gợi ý, thông báo nhẹ. Mất mạng ở bước xác nhận: giữ lựa chọn cục bộ, gửi lại khi có mạng (idempotency key).
+**8. Trạng thái.** Đang tải mẫu: khung xám + nhân vật bóng mờ. Lỗi lưu: giữ lựa chọn, nút "Thử lại". Nickname vừa bị người khác chọn (409): tự làm mới gợi ý, thông báo nhẹ. Nickname tự gõ bị từ chối (`422 NICKNAME_NOT_ALLOWED`): một câu chung "Tên này chưa dùng được, em thử tên khác hoặc chọn tên gợi ý nhé", giữ chuỗi để sửa, nổi nút "Gợi ý khác" — không nêu từ bị chặn; `503`: "Chưa kiểm tra được tên lúc này, em thử lại hoặc chọn tên gợi ý"; `429`: "Em nghỉ một chút rồi thử lại nhé". Mất mạng ở bước xác nhận: giữ lựa chọn cục bộ, gửi lại khi có mạng (idempotency key).
 
 **9. Tương tác & phản hồi.** Mỗi lựa chọn đổi xem trước ngay (≤ 100 ms, không gọi API). Hoàn tất: nhân vật vẫy tay, Mây chào bằng nickname mới, chuyển cảnh vào Quảng trường Tia Sáng. Âm thanh nhẹ khi đổi lựa chọn (tắt được).
 
-**10. Khác biệt theo grade band.** `g1_3`: 3 bước, nút ≥ 64 dp, đọc to hướng dẫn, nickname gợi ý kèm hình con vật; `g4_5`: đủ bước, có nút "Bỏ qua tùy chỉnh"; `g6_9`: đủ bước, thêm thanh trượt màu tóc trong bảng màu cố định.
+**10. Khác biệt theo grade band.** `g1_3`: 3 bước, nút ≥ 64 dp, đọc to hướng dẫn, nickname gợi ý kèm hình con vật (chạm là xong; ô gõ tùy chọn, cùng quy tắc mọi khối); `g4_5`: đủ bước, có nút "Bỏ qua tùy chỉnh"; `g6_9`: đủ bước, thêm thanh trượt màu tóc trong bảng màu cố định.
 
-**11. Song ngữ.** Khóa: `ui.avatar.title`, `ui.avatar.step_preset`, `ui.avatar.step_customize`, `ui.avatar.step_name`, `ui.avatar.step_done`, `ui.avatar.body_type`, `ui.avatar.skin_tone`, `ui.avatar.hair_style`, `ui.avatar.hair_color`, `ui.avatar.outfit`, `ui.avatar.skip_customize`, `ui.avatar.more_names`, `ui.avatar.confirm`. Nickname gợi ý sinh theo ngôn ngữ đang chọn (vi: "Cú Mèo Chăm Chỉ 27", en: "Busy Owl 27") và **giữ nguyên** khi đổi ngôn ngữ sau này (nickname là tên riêng). Chuỗi dài nhất: nickname vi (tối đa 24 ký tự [Confirmed]).
+**11. Song ngữ.** Khóa: `ui.avatar.title`, `ui.avatar.step_preset`, `ui.avatar.step_customize`, `ui.avatar.step_name`, `ui.avatar.step_done`, `ui.avatar.body_type`, `ui.avatar.skin_tone`, `ui.avatar.hair_style`, `ui.avatar.hair_color`, `ui.avatar.outfit`, `ui.avatar.skip_customize`, `ui.avatar.more_names`, `ui.avatar.confirm`, `ui.avatar.nickname.input`, `ui.avatar.nickname.hint_real_name`, `ui.avatar.nickname.not_allowed`, `ui.avatar.nickname.taken`, `ui.avatar.nickname.try_later`, `ui.avatar.nickname.unavailable`, `ui.avatar.nickname.reset_notice`. Nickname gợi ý sinh theo ngôn ngữ đang chọn (vi: "Cú Mèo Chăm Chỉ 27", en: "Busy Owl 27") và **giữ nguyên** khi đổi ngôn ngữ sau này (nickname là tên riêng). Chuỗi dài nhất: nickname tự gõ (tối đa 32 ký tự); gợi ý vi tối đa 24 ký tự [Confirmed].
 
 **12. Trợ năng.** Mỗi lựa chọn màu có tên đọc được ("Màu tóc nâu sẫm"); điều hướng bàn phím trên lưới; giảm chuyển động tắt xoay tự động.
 
 **13. Hiệu năng máy tầm trung.** Xem trước 3D dùng `SubViewport` 512×512 (preset Trung bình), 384×384 (Thấp), 30 FPS, một đèn, không bóng động; chỉ nạp mesh/texture của lựa chọn đang xem, nạp trước lựa chọn kế tiếp; thumbnail lựa chọn là ảnh 2D render sẵn (ADR-0047), không render 3D cho từng ô.
 
-**14. An toàn/riêng tư.** Không cho nhập tên tự do, không tải ảnh; không có tùy chọn ngoại hình người lớn, biểu tượng chính trị/tôn giáo.
+**14. An toàn/riêng tư.** Nickname tự gõ chỉ được lưu sau kiểm duyệt server ([CHARACTER_SYSTEM §5.3](../01-game-design/CHARACTER_SYSTEM.md#53-nickname)), có dòng nhắc "Đừng dùng tên thật của em", hiển thị văn bản thuần; không tải ảnh; không có tùy chọn ngoại hình người lớn, biểu tượng chính trị/tôn giáo.
 
 **15. AC.**
 
@@ -254,7 +259,7 @@ Bước Tên:  Chọn tên của em  ( Cú Mèo Chăm Chỉ 27 )( Rồng Xanh Vu
 |---|---|
 | AC-UX-0201 | Học sinh `g1_3` hoàn tất tạo avatar trong ≤ 3 bước, không cần gõ phím |
 | AC-UX-0202 | Đổi bất kỳ lựa chọn nào cập nhật xem trước ≤ 100 ms trên máy tầm trung, không gọi API |
-| AC-UX-0203 | Không có ô nhập tên tự do; "Gợi ý khác" trả nickname chưa dùng trong tenant |
+| AC-UX-0203 | Có ô gõ nickname (bộ đếm 32, dòng nhắc "Đừng dùng tên thật của em") và chip gợi ý; "Gợi ý khác" trả nickname chưa dùng trong tenant; nickname bị từ chối chỉ hiện một câu chung, không nêu từ bị chặn (ADR-0105) |
 | AC-UX-0204 | Xác nhận xong vào Quảng trường Tia Sáng và bắt đầu quest hướng dẫn Chương 0 |
 
 ---

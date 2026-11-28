@@ -1,9 +1,12 @@
 # ADR-0102 — Nguồn asset đồ họa theo license MIT (hoặc dễ dãi hơn), asset tự làm phát hành MIT
 
-> **Trạng thái:** Accepted · Superseded một phần bởi [ADR-0103](ADR-0103-art-direction-chibi-anime-cartoon-3d-thay-stylized-low-poly.md) (câu "phong cách stylized low-poly của OQ-16 giữ nguyên" ở mục 7) · thay phần "nguồn asset" của OQ-16 / [WORLD_DESIGN §11](../01-game-design/WORLD_DESIGN.md#11-art-direction) ("mua pack có license thương mại + tự làm nhân vật chính") · **Ngày:** 2026-11-24 · **OQ:** OQ-16 · **Tài liệu:** [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · Superseded một phần bởi [ADR-0103](ADR-0103-art-direction-chibi-anime-cartoon-3d-thay-stylized-low-poly.md) (câu "phong cách stylized low-poly của OQ-16 giữ nguyên" ở mục 7) và [ADR-0106](ADR-0106-am-thanh-game-phu-hop-giao-duc-va-nguon-cc0-mit.md) (câu "**Âm thanh**…" ở mục 5) · thay phần "nguồn asset" của OQ-16 / [WORLD_DESIGN §11](../01-game-design/WORLD_DESIGN.md#11-art-direction) ("mua pack có license thương mại + tự làm nhân vật chính") · **Ngày:** 2026-11-24 · **OQ:** OQ-16 · **Tài liệu:** [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Đã được thay một phần bởi ADR-0103 (2026-11-25).** Không còn hiệu lực: câu "phong cách stylized low-poly của OQ-16 giữ nguyên" ở mục 7 — phong cách hiện hành là "Chibi anime cartoon 3D". **Còn hiệu lực:** toàn bộ quy tắc license (mục 1–6) và phần còn lại của mục 7.
+
+> [!WARNING]
+> **Đã được thay một phần bởi ADR-0106 (2026-11-28).** Không còn hiệu lực: câu "**Âm thanh**: áp dụng cùng danh sách được phép cho tới khi owner quyết định khác" ở mục 5 — âm thanh chỉ nhận `CC0-1.0` hoặc `MIT` (không nhận `Public-Domain` không ghi CC0), có manifest sha256 + lint riêng. **Còn hiệu lực:** quy tắc license đồ họa (mục 1–4), font (mục 5, phần font), mục 6 (agent không tải asset), mục 7.
 
 ## Bối cảnh
 
@@ -43,3 +46,4 @@ Cách hiểu dưới đây do orchestrator ghi lại để owner sửa nếu ch�
 |---|---|---|
 | 2026-11-24 | Tạo ADR | Owner "làm theo hướng MIT License"; F067 |
 | 2026-11-25 | Superseded một phần bởi ADR-0103: câu về phong cách ở mục 7 (stylized low-poly → "Chibi anime cartoon 3D"); quy tắc license giữ nguyên | Owner 2026-11-25 "Chibi anime cartoon 3D"; F068 |
+| 2026-11-28 | Superseded một phần bởi ADR-0106: câu âm thanh ở mục 5 (chỉ CC0-1.0/MIT cho âm thanh) | Owner 2026-11-28; F137 |

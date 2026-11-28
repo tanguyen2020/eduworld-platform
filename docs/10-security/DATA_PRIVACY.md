@@ -1,6 +1,6 @@
 # Data Privacy
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Identity & Security Engineer + Product Manager · Cập nhật: 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-23 (§3.1: bỏ quy trình yêu cầu dữ liệu thủ công, owner) · 2026-11-16 (ADR-0086: phiên đăng nhập game)
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Identity & Security Engineer + Product Manager · Cập nhật: 2026-11-28 (§2: dữ liệu học sinh tự đăng ký — bằng chứng đồng ý, email phụ huynh, mã khôi phục — ADR-0104; ẩn danh nickname tự gõ — ADR-0105) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-23 (§3.1: bỏ quy trình yêu cầu dữ liệu thủ công, owner) · 2026-11-16 (ADR-0086: phiên đăng nhập game)
 > Liên quan: [SECURITY_ARCHITECTURE](SECURITY_ARCHITECTURE.md) · [CHILD_SAFETY](CHILD_SAFETY.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0082](../adr/ADR-0082-spec-driven-development-va-noi-dung-deferred.md) · [ADR-0028](../adr/ADR-0028-chi-soft-delete-khong-hard-delete-mac-dinh-khong-doc-du-lieu.md) · [ADR-0070](../adr/ADR-0070-release-1-khong-voice-chat-khong-xoa-vat-ly-khong-purge-analytics.md) · [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) · [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · OQ-13
 
 **Mục đích & phạm vi.** Nguồn duy nhất về **nguyên tắc kỹ thuật** bảo vệ dữ liệu cá nhân: inventory, mục đích, **retention**, yêu cầu về dữ liệu học sinh (xuất, ẩn danh hóa, khóa xử lý), xóa/ẩn danh hóa, luồng dữ liệu, kiểm soát kỹ thuật. An toàn trẻ em → [CHILD_SAFETY](CHILD_SAFETY.md); bảo mật kỹ thuật → [SECURITY_ARCHITECTURE](SECURITY_ARCHITECTURE.md).
@@ -17,7 +17,7 @@
 | Storage limitation | Retention theo bảng §2; job **ẩn danh hóa** tự động (ứng dụng chỉ soft-delete, không hard-delete — ADR-0028); Release 1.0 không xóa vật lý ([ADR-0070](../adr/ADR-0070-release-1-khong-voice-chat-khong-xoa-vat-ly-khong-purge-analytics.md)) |
 | Integrity & confidentiality | TLS, mã hóa at-rest, mã hóa cột nhạy cảm, backup mã hóa |
 | Accountability | Audit log; data inventory này được review mỗi quý |
-| Privacy by default | Hồ sơ ẩn với người ngoài lớp; chat default-deny (ADR-0020); nickname thay tên thật |
+| Privacy by default | Hồ sơ ẩn với người ngoài lớp; chat default-deny (ADR-0020); nickname thay tên thật (nickname tự gõ qua kiểm duyệt server và chặn họ tên/tên trường của chính học sinh — ADR-0105; học sinh tự đăng ký không bị thu họ tên — ADR-0104) |
 
 ## 2. Data inventory
 
@@ -25,6 +25,9 @@
 |---|---|---|---|---|---|
 | Định danh học sinh | `full_name`, `student_code`, `grade_level`, `school_id` | Đăng nhập, phân lớp, báo cáo cho nhà trường | `org.students`, Keycloak | Suốt thời gian học + 1 năm sau khi deactivated, sau đó anonymize | Học sinh (bản thân), School Admin, Academic Manager (scope trường/môn) |
 | Ngày sinh | `date_of_birth` (mã hóa cột) | Đối soát SIS, policy theo độ tuổi khi thiếu grade | `org.students` | Như trên | Hệ thống; School Admin |
+| Tự đăng ký: bằng chứng xác nhận của phụ huynh ([ADR-0104](../adr/ADR-0104-hoc-sinh-tu-dang-ky-trong-game-vao-tenant-chung.md)) | `identity.self_registrations`: `terms_version`, `consented_at`, HMAC `device_id` (khóa xoay vòng, không IP/user-agent thô), nền tảng, `client_version` | Chứng minh phụ huynh đã xác nhận khi tạo tài khoản | `identity.*` | Như định danh học sinh; khi ẩn danh hóa giữ `terms_version`/`consented_at`, xóa HMAC thiết bị | System Admin (xem có audit) |
+| Tự đăng ký: email phụ huynh (tùy chọn) | `parent_email_enc` (mã hóa cột) + HMAC, `parent_email_confirmed_at` | Xác nhận, gửi link đặt lại mật khẩu | `identity.self_registrations` | Như định danh học sinh; xóa khi ẩn danh hóa | Hệ thống; System Admin chỉ thấy dạng che |
+| Tự đăng ký: mã khôi phục, token link phụ huynh | Băm argon2id / SHA-256 (không lưu bản rõ); `identity.recovery_attempts` (HMAC tên đăng nhập, HMAC thiết bị) | Khôi phục mật khẩu, giới hạn thử | `identity.*` | Mã: tới khi dùng/xoay; lượt thử 30 ngày (`recovery_attempt_retention`) | Chỉ hệ thống |
 | Mã định danh học sinh (`national_student_id`, tùy chọn trong contract) | `national_id_hash` (HMAC, không lưu bản rõ) | Khớp chuyển trường | `org.students` | Như trên | Chỉ hệ thống reconciliation |
 | Thông tin nhân sự (`staff`: nhân sự trường và nhân sự platform, ADR-0081) | `full_name`, email công việc | Đăng nhập portal, phân quyền | `identity.users`, Keycloak | Suốt thời gian công tác + 1 năm | Tenant Admin, School Admin (trường mình) |
 | Định danh đăng nhập | `(issuer, subject)`, username, login events | Xác thực, bảo mật | `identity.*`, Keycloak | ExternalIdentity theo user; `identity.login_events` (nhật ký xác thực) 90 ngày (`login_events_retention`, tối thiểu hóa dữ liệu) [Confirmed — Technical Architect 2026-11-16] | Hệ thống, security team |
@@ -74,7 +77,7 @@ Mọi yêu cầu được ghi `audit` với mã yêu cầu (`dsr_id`).
 
 ## 4. Xóa & ẩn danh hóa
 
-- **Anonymize** (mặc định khi hết retention): `identity.users.display_name = NULL`, `org.students` xóa `full_name`, `date_of_birth`, `student_code`, `national_id_hash`; GameProfile nickname → `Người chơi #<hash>`; giữ `user_id` để thống kê tổng hợp không liên kết được người thật; xóa ExternalIdentity và Keycloak user.
+- **Anonymize** (mặc định khi hết retention): `identity.users.display_name = NULL`, `org.students` xóa `full_name`, `date_of_birth`, `student_code`, `national_id_hash`; GameProfile nickname → `Người chơi #<hash>` (cả giá trị cũ/mới trong lịch sử `game.nickname_changes`, vì nickname tự gõ có thể chứa dữ liệu cá nhân — ADR-0105); học sinh tự đăng ký: xóa email phụ huynh, HMAC thiết bị, vô hiệu mã khôi phục (ADR-0104); giữ `user_id` để thống kê tổng hợp không liên kết được người thật; xóa ExternalIdentity và Keycloak user.
 - **Ứng dụng không hard-delete (ADR-0028):** "xóa" trong ứng dụng là soft-delete (`deleted_at`) và dữ liệu đã xóa không hiển thị ở bất kỳ API nào (trừ Thùng rác của System Admin). Vì soft-delete vẫn giữ dữ liệu, yêu cầu xóa dữ liệu cá nhân được đáp ứng bằng **ẩn danh hóa** (ghi đè cột PII, giữ dòng).
 - **Erase** (theo yêu cầu): như anonymize + thay `student_id` trong learning events chi tiết bằng pseudonym không đảo ngược, ghi đè `response`; XP ledger, inventory được ẩn danh theo user. Release 1.0 không xóa vật lý (ADR-0070); đánh giá ẩn danh hóa có đủ theo luật hay không nằm ngoài version này ([RISKS](../12-project/RISKS.md) RISK-45).
 - **Thực hiện liên module:** anonymize/erase là **saga** do module identity điều phối: bước trong `eduworld_identity`, sau đó gọi facade `platform/users/{id}:anonymize` của learning, game, competition, chat trong tiến trình (mỗi module ẩn danh dữ liệu của mình và projection `ref_*`). Yêu cầu chỉ được đánh dấu hoàn tất khi mọi module trả `done`; bước lỗi thử lại và có alert `SagaStuck` ([ACCOUNT_PROVISIONING §7b](../09-identity/ACCOUNT_PROVISIONING.md)). Event `user.anonymized` giúp module nào chưa nhận lời gọi tự xử lý khi đọc event.

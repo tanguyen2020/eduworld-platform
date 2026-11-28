@@ -1,6 +1,6 @@
 # Learning Experience — Trải nghiệm học tập trong game
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: EdTech Specialist + UX/UI Designer · Cập nhật: 2026-11-16
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: EdTech Specialist + UX/UI Designer · Cập nhật: 2026-11-28 (F137: §9.1 âm thanh khi học và khi kiểm tra — ADR-0106) · 2026-11-16
 > Liên quan: [GAME_DESIGN](../01-game-design/GAME_DESIGN.md) · [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) · [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) · [ACTIVITY_ENGINE](ACTIVITY_ENGINE.md) · [EXAM_ENGINE](EXAM_ENGINE.md) · [LEARNING_ANALYTICS](LEARNING_ANALYTICS.md) · [CONTENT_MODEL](CONTENT_MODEL.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0016, ADR-0017](../adr/README.md)
 > Yêu cầu (mã [PRD](../00-overview/PRODUCT_REQUIREMENTS.md)): FR-EXR-003 (§4) · FR-CNT-019 (§5.1) · FR-EXR-014 (§5.2) · FR-EXR-013 (§6.1) · FR-PRG-004, FR-PRG-008 (§6.2) · FR-PRG-005 (§7) · FR-EXM-003 (§9) · NFR-A11Y-001, NFR-A11Y-002 (§10)
 
@@ -187,9 +187,18 @@ Tất cả UI câu hỏi là template chung cho 11 loại (QUESTION_BANK), skin 
 - Sau khi nộp: điểm + phân tích theo LO + danh sách câu sai có giải thích (khi `ResultRelease`/`FeedbackTiming` cho phép, [ACTIVITY_ENGINE §8.1](ACTIVITY_ENGINE.md#81-feedbacktiming-và-resultrelease)) + nút "Luyện LO này".
 - Không XP theo điểm thi chính thức; chỉ XP "hoàn thành" cố định để tránh áp lực điểm–thưởng [Confirmed].
 
+### 9.1. Âm thanh khi học và khi kiểm tra
+
+Nguồn quy tắc sư phạm về âm thanh ([ADR-0106](../adr/ADR-0106-am-thanh-game-phu-hop-giao-duc-va-nguon-cc0-mit.md)) [Confirmed — owner 2026-11-28]; bảng âm thanh theo màn ở [STUDENT_GAME_UX §8a](../05-ux/STUDENT_GAME_UX.md#8a-âm-thanh-trong-game):
+
+- **Bài kiểm tra, đề thi có giờ, activity/thử thách có `time_limit_seconds`:** nhạc nền và ambience **tắt** suốt thời gian làm bài; không có tiếng tích tắc, tiếng cảnh báo hết giờ hay âm thanh đúng/sai (bài kiểm tra không phản hồi đúng/sai); chỉ giữ âm thanh UI tối thiểu (chạm, đã lưu đáp án). Thông báo trong game không đổ chuông khi đang làm bài.
+- **Lồng tiếng đề bài, "Đọc to", thoại NPC, hướng dẫn của Mây:** nhạc giảm `audio_voice_duck_db` trong lúc giọng phát; **bài nghe/video:** nhạc tắt (§5.1, [AUDIO_LANGUAGE_LEARNING](AUDIO_LANGUAGE_LEARNING.md)).
+- **Luyện tập, quest, mini-game không giờ:** nhạc `learning` rất nhẹ hoặc nhạc vùng giảm; phản hồi đúng/sai bằng âm thanh ngắn, nhẹ, luôn kèm ✓/✗ và chữ (§4, §10); tiếng "thử lại" không trầm nặng, không mang nghĩa phạt.
+- Chuỗi đúng chỉ khen bằng một âm ngắn; không âm thanh tăng dần thúc giục làm nhanh hơn (không thưởng tốc độ bằng âm thanh).
+
 ## 10. Accessibility và hòa nhập
 
 - Chế độ chữ lớn, tương phản cao, giảm hiệu ứng chuyển động.
-- Không dùng màu duy nhất để báo đúng/sai (kèm biểu tượng ✓/✗ và âm thanh).
+- Không dùng màu duy nhất để báo đúng/sai (kèm biểu tượng ✓/✗ và âm thanh); không dùng âm thanh làm tín hiệu duy nhất (§9.1).
 - Thời gian mở rộng (x1.5) cho học sinh được nhà trường cấp quyền hỗ trợ đặc biệt (Assignment/Exam) [Confirmed].
 - Ngôn ngữ: song ngữ `vi-VN` (mặc định) / `en-US` theo lựa chọn của học sinh ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md)). Nội dung học tập hiển thị theo ngôn ngữ đã chọn nếu có bản dịch; nếu không, hiển thị ngôn ngữ gốc kèm nhãn **"Chưa có bản tiếng Anh"** / **"No Vietnamese version yet"** và không tính là lỗi. Hội thoại NPC, phản hồi, gợi ý trong game luôn có đủ hai ngôn ngữ. Ở khu Tiếng Anh, tên đồ vật và từ khóa có thể hiển thị song song Việt–Anh để hỗ trợ học từ vựng. Quy tắc dữ liệu: [CONTENT_MODEL §8](CONTENT_MODEL.md#8-ngôn-ngữ-nội-dung-và-bản-dịch-adr-0056).

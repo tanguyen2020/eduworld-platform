@@ -1,6 +1,6 @@
 # World Rendering — Kỹ thuật dựng thế giới 3D (Godot)
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-26 (F097: §5.1 ẩn marker gần camera) · 2026-11-25 (ADR-0103 / F068: mesh tròn mượt, cel shader, rig `kid_base`, blob shadow, Cây Tia Sáng theo cấp) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Senior Godot Developer + Technical Artist · Cập nhật: 2026-11-28 (F137: §8.1 âm thanh Ogg Vorbis + loudness theo loại, §8.4 nguồn/manifest/lint âm thanh — ADR-0106) · 2026-11-26 (F097: §5.1 ẩn marker gần camera) · 2026-11-25 (ADR-0103 / F068: mesh tròn mượt, cel shader, rig `kid_base`, blob shadow, Cây Tia Sáng theo cấp) · 2026-11-15
 > Liên quan: [ADR-0012, ADR-0013](../adr/README.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) · [GODOT_ARCHITECTURE](GODOT_ARCHITECTURE.md) · [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) · [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md)
 
 ## Mục đích và phạm vi
@@ -166,7 +166,7 @@ flowchart LR
 | Đặt tên node trong file | Hậu tố import Godot: `-col` (collision), `-colonly`, `-navmesh`; LOD thủ công `_LOD0/_LOD1` |
 | Ngân sách tam giác/texture/xương | Theo [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §8; CI chặn khi vượt |
 | Texture | Lũy thừa của 2; tên `<asset>_<map>.png` (`_albedo`, `_orm`, `_normal` — hạn chế normal map) |
-| Audio | `.ogg` cho nhạc/ambience, `.wav` ngắn cho SFX; loudness chuẩn hóa −16 LUFS |
+| Audio | Mọi file **Ogg Vorbis** (`.ogg`; không commit `.wav`/`.mp3`): SFX/UI mono, nhạc/ambience stereo; loudness chuẩn hóa theo `audio_loudness_targets` (theo loại); nguồn, manifest, lint ở §8.4 (ADR-0106) |
 | License | Mỗi file asset đồ họa có một dòng (glob đường dẫn, URL nguồn, tác giả, license, ngày) trong `src/game/assets/LICENSES.md` (= `res://assets/LICENSES.md`); chỉ MIT, CC0-1.0, public domain (font: OFL-1.1); asset tự làm phát hành MIT ([ADR-0102](../adr/ADR-0102-nguon-asset-do-hoa-theo-license-mit-hoac-de-dai-hon.md)); `src/game/tools/lint_art.gd` chặn file thiếu dòng hoặc license khác |
 | Asset tự làm bằng code | Công thức trong `src/game/tools/art/` (`*_art.gd`, builder `lowpoly_mesh.gd`) bake bằng `make godot-art-bake` ra `src/game/assets/models/<category>/<category>_<name>_<variant>.res`; mỗi mặt chỉ lưu **slot** của bảng màu token `art.palette.*` (UV.x = slot + 0,5; UV.y > 1 = `albedo` theo avatar), pháp tuyến mượt hàn hoàn toàn cho viền trong COLOR; `bake_art.gd --check` (CI) chặn mesh/clip lệch công thức. Vật thể lặp lưu `ScatterSet` (mesh + transform), vẽ bằng `ScatterInstance` (MultiMesh). **Hình khối "Stylized 3D Cartoon"** (ADR-0103, F068): builder làm mượt pháp tuyến trong góc 62° (trọng số diện tích), vát cạnh khối dày ≥ 0,035 m (Hub: ≥ 0,15 m) 20 % cạnh nhỏ nhất tối đa 0,09 m, bo vành trụ có nắp, tối thiểu 8 cạnh cho trụ/tiện, thêm một bậc chia cho khối cầu; vật thể lặp, xa và NPC giữ bậc chia gốc để đúng ngân sách. **Nhân vật**: thân và trang phục skinned theo `KidSkeleton` (BONES/WEIGHTS), mặt theo biểu cảm `chr_face_<biểu cảm>_a.res`, clip `anim_kid_<clip>_a.res` (công thức `character_anim.gd`); **Cây Tia Sáng** 5 cấp `veg_banyan_spark_s<0–4>_a.res` (`SparkTree` chỉ đổi mesh). **Vùng môn học** (F093): prefab vùng chung `zone_kit.gd` (bố cục điểm neo của seed, mặt đất gần, cảnh xa, rào biên, luật rải cây) + `zone_<môn>_art.gd` (`meshes()`, `SCATTER`, `placements()`, đăng ký `ArtCatalog.ZONES`) → `env_<môn>_{terrain,far}_a`, `bld_<môn>_*`, `prop_<môn>_*`, `env_<môn>_scatter_<loại>_a`; set piece là mesh riêng đặt cạnh điểm neo bằng transform của node; cảnh xa vẽ bằng `mat_toon_no_outline`, không đổ bóng; tấm mỏng (mái, lá) luôn là khối kín vì viền inverted hull tô đen mặt phẳng dày 0. **Sáu vùng còn lại** (F094): bố cục tùy biến của từng vùng (`LAYOUT`: quảng trường, lối đi, bệ dưới điểm neo; `clear_of()`/`scatter_in()`), đồ dùng chung `signpost()` (biển chỉ đường có biểu tượng hình tới mọi điểm neo và cổng gió về), `glow_ring()` (vòng sáng quanh bệ điểm neo), `pennant()`, `bunting()`, `balloons()`, `cairn()`, `crystal()`, `cone()`, cây thông `veg_pine_a`; marker `WorldAnchor` là viên đá Tia Sáng lớn có vòng hào quang. Mesh có viền **không** được chứa cặp tam giác trùng đỉnh ngược chiều (mặt hai mặt dày 0 — F093-3, test `test_outlined_meshes_have_no_two_sided_planes`): lá cau, cánh sen, thuyền thúng của Hub là khối kín |
 
@@ -185,6 +185,22 @@ flowchart LR
 - Kết quả lưu object storage (ADR-0044) theo khóa `media/<sha256>/...`, đăng ký `media_assets` với `kind = render_thumbnail | render_turntable`, gắn vào version tương ứng. Version cũ giữ thumbnail cũ.
 - CMS dùng các ảnh này như **dữ liệu nhận diện** trong danh sách, form chọn item/phần thưởng và thư viện (DESIGN_SYSTEM §7); giao diện CMS vẫn theo Admin/Ops UI.
 - Job chạy trong worker của module game (container có Godot headless + export template khóa phiên bản) và trong CI cho asset mới; render dùng renderer Forward+ với preset chất lượng cao cố định để ảnh nhất quán.
+
+### 8.4. Âm thanh: nguồn, manifest, lint (F137)
+
+Quyết định: [ADR-0106](../adr/ADR-0106-am-thanh-game-phu-hop-giao-duc-va-nguon-cc0-mit.md); triển khai [F137](../../specs/137-game-audio/spec.md); dùng trong game theo [GODOT_ARCHITECTURE §10.3](GODOT_ARCHITECTURE.md#103-âm-thanh-audiodirector-f137).
+
+| Hạng mục | Quy chuẩn |
+|---|---|
+| License | Chỉ `CC0-1.0` hoặc `MIT` (âm thanh tự làm/tổng hợp: `MIT`); không nhận `Public-Domain` không ghi CC0, CC-BY, `-SA`, `-NC`, `-ND`, GPL, pack trả phí |
+| Nguồn | Agent không tải asset (ADR-0102 mục 6): kế hoạch nguồn ([F137 research](../../specs/137-game-audio/research.md)) chỉ liệt kê ứng viên; người được owner giao tải, đọc trang license của **từng file**, lưu văn bản license gốc khi pack kèm theo (`src/game/assets/audio/licenses/<pack>.txt`) |
+| Thư mục | `src/game/assets/audio/{music,ambience,sfx,ui}/<category>_<name>_<variant>.ogg` (ví dụ `music_zone_math_a.ogg`, `sfx_correct_a.ogg`, `ui_tap_a.ogg`); nhạc/ambience của vùng đóng gói theo `bundle_id` của vùng (§8.2), âm thanh lõi trong client build |
+| Manifest | `src/game/assets/audio/audio_manifest.json`: mỗi file một bản ghi `path`, `source_url` (URL chính xác của file hoặc trang pack), `author`, `license`, `sha256` (của file `.ogg` đã chuẩn hóa trong repo), `source_sha256` (file gốc đã tải), `retrieved` (ngày), `kind` (`music`/`ambience`/`sfx`/`ui`/`stinger`), `loudness_lufs`, `true_peak_dbtp`, `duration_s`, `channels`. `src/game/assets/LICENSES.md` có một dòng glob `assets/audio/**` trỏ tới manifest để `lint_art.gd` (đã quét `.ogg`) vẫn đạt |
+| Chuẩn hóa | Script tái lập `src/game/tools/audio/normalize.sh` (ffmpeg trong image CI ghim phiên bản): `loudnorm` hai lượt theo `audio_loudness_targets` của `kind`, true peak ≤ −1 dBTP, mã hóa `libvorbis` (nhạc/ambience `audio_music_bitrate`, SFX/UI mono), cắt im lặng đầu/cuối SFX, điểm lặp nhạc không có tiếng "bụp"; ghi lại số đo vào manifest |
+| Lint (CI) | `src/game/tools/audio/lint_audio.mjs` (Node, chạy trong job `godot.yml`): mọi file âm thanh dưới `src/game/` (trừ `tests/`, `addons/`) có bản ghi manifest; license thuộc danh sách; `sha256` khớp; định dạng Ogg Vorbis (không `.wav`/`.mp3`); đo lại bằng ffmpeg `ebur128` lệch mục tiêu ≤ ±1 LU, true peak ≤ −1 dBTP; SFX ≤ 1 s (stinger ≤ 3 s); tổng dung lượng âm thanh lõi ≤ `audio_core_budget`, mỗi gói vùng ≤ `audio_zone_budget`. Vi phạm → exit 1 chỉ rõ file |
+| Catalog | `src/game/resources/audio/audio_catalog.json` ánh xạ id ngữ cảnh/sự kiện → file + `visual_cue` bắt buộc; lint kiểm mọi file catalog có trong manifest và mọi id dùng trong zone scene (`music_id`, `ambience_id`) có trong catalog |
+| Trang Giấy phép trong game | Mục "Âm thanh" liệt kê tác giả/pack/license từ manifest (sinh khi build, không gõ tay) cạnh mục đồ họa của F096 |
+
 
 ## 9. NPC
 

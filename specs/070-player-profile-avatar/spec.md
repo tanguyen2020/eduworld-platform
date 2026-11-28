@@ -38,6 +38,10 @@
 - Câu hỏi mở F070-1: `CharacterCatalog` chưa có tên vi/en của item tóc/trang phục/phụ kiện/emote; thêm `items[]` (tên, `equip_slot`) vào danh mục hay chờ `GET /game/inventory/catalog` của F075?
 - Câu hỏi mở F070-2: giá trị màu da/màu tóc nằm ở client (`resources/avatar/*.tres`, placeholder) hay trong danh mục / `design/game-tokens/art3d.json`?
 
+### Session 2026-11-28 (owner — ADR-0105)
+
+- F070-AC-10 ("không có đường đặt nickname bằng chuỗi tự do") **không còn hiệu lực** theo [ADR-0105](../../docs/adr/ADR-0105-nickname-tu-go-qua-kiem-duyet.md): nickname tự gõ qua kiểm duyệt server do [F136](../136-free-text-nickname/spec.md) triển khai; gợi ý sinh tự động (F070-AC-07…AC-09) giữ nguyên. Ẩn danh hóa nay thay cả nickname trong `game.nickname_changes` (F136). [Confirmed — owner 2026-11-28]
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo nhân vật lần đầu (Priority: P1)

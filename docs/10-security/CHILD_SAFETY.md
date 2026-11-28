@@ -1,6 +1,6 @@
 # Child Safety — An toàn trẻ em
 
-> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Product Manager + Identity & Security Engineer + Platform Safety Team · Cập nhật: 2026-11-20 (§4.2 cưỡng chế giới hạn chơi/ngày: module game cưỡng chế chính, module identity chặn đăng nhập bằng projection từ `game_session.ended`, mã `DAILY_PLAY_LIMIT_REACHED` — owner chốt OQ-17, F013/F014/F015) · 2026-11-17 (ADR-0078 Accepted: PII/grooming luôn chạy, giờ giới nghiêm platform, tenant `common`, preset quick message + emote)
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Product Manager + Identity & Security Engineer + Platform Safety Team · Cập nhật: 2026-11-28 (§2 nickname tự gõ qua kiểm duyệt — ADR-0105; §3.6 học sinh tự đăng ký vào tenant `common`, bằng chứng xác nhận của phụ huynh, rủi ro pháp lý — ADR-0104) · 2026-11-20 (§4.2 cưỡng chế giới hạn chơi/ngày: module game cưỡng chế chính, module identity chặn đăng nhập bằng projection từ `game_session.ended`, mã `DAILY_PLAY_LIMIT_REACHED` — owner chốt OQ-17, F013/F014/F015) · 2026-11-17 (ADR-0078 Accepted: PII/grooming luôn chạy, giờ giới nghiêm platform, tenant `common`, preset quick message + emote)
 > Liên quan: [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) · [ADR-0030](../adr/ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) · [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [MODERATION](../03-social-multiplayer/MODERATION.md) · [DATA_PRIVACY](DATA_PRIVACY.md) · [SECURITY_ARCHITECTURE](SECURITY_ARCHITECTURE.md) · OQ-09, OQ-12, OQ-17
 
 > [!IMPORTANT]
@@ -33,7 +33,7 @@
 
 | Quy tắc | Chi tiết | Nhãn |
 |---|---|---|
-| Nickname | Sinh tự động dạng `<Tính từ/Màu><Con vật><2 số>` (vd. "MèoXanh42") từ danh sách đã duyệt; học sinh được đổi bằng cách chọn lại từ bộ sinh, **không gõ tự do** | [Confirmed] |
+| Nickname | Học sinh tự gõ hoặc chọn gợi ý sinh tự động (`<Tính từ/Màu><Con vật><2 số>`, vd. "MèoXanh42"); nickname tự gõ chỉ được lưu sau kiểm duyệt server (danh mục từ nhạy cảm, PII luôn chạy, chặn họ tên/tên trường của chính em), người chơi báo cáo được; Safety Team và nhà trường đặt lại được ([CHARACTER_SYSTEM §5.3](../01-game-design/CHARACTER_SYSTEM.md#53-nickname), [ADR-0105](../adr/ADR-0105-nickname-tu-go-qua-kiem-duyet.md)) | [Confirmed — owner 2026-11-28] |
 | Tên thật | Chỉ hiển thị cho nhân sự nhà trường có quyền trong portal (`school_admin`, `academic_manager`); người chơi khác (kể cả cùng khối) chỉ thấy nickname + avatar — bỏ ngoại lệ "bạn cùng lớp" (ADR-0095) | [Confirmed] |
 | Avatar | Chỉ từ bộ customization; không upload ảnh | [Confirmed] |
 | Hồ sơ người chơi khác | Nickname, avatar, level, badge công khai; không trường, lớp, tuổi, ngày sinh | [Confirmed] |
@@ -149,7 +149,8 @@ Tenant `common` ([MULTITENANCY §8.3](../06-architecture/MULTITENANCY.md)) gom h
 | Channel còn lại | `area` chỉ quick message + emote; `match`/`team`/`party` luôn có theo ADR-0020 mục 6, qua pipeline đầy đủ |
 | Giờ giới nghiêm | Bắt buộc `platform_curfew` (§4.1), không có `school_admin` để siết thêm |
 | Kiểm duyệt | Platform Safety Team (ADR-0072); không có thông báo nhà trường, liên hệ theo [MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-confirmed) |
-| Consent | Platform thu trực tiếp (ADR-0077); pháp lý ngoài version này (ADR-0082) |
+| Consent | Platform thu trực tiếp (ADR-0077); pháp lý ngoài version này (ADR-0082). Học sinh **tự đăng ký** trong game có bước xác nhận của phụ huynh (ô "Tôi là phụ huynh và đồng ý" + bằng chứng: phiên bản điều khoản, thời điểm, HMAC thiết bị — [ACCOUNT_PROVISIONING §3.5](../09-identity/ACCOUNT_PROVISIONING.md#35-học-sinh-tự-đăng-ký-trong-game-adr-0104)) |
+| Học sinh tự đăng ký ([ADR-0104](../adr/ADR-0104-hoc-sinh-tu-dang-ky-trong-game-vao-tenant-chung.md)) | Cùng mọi mặc định ở bảng này, không hạn chế thêm, không nới; không thu họ tên; ngày sinh không hiển thị cho ai ngoài System Admin. **Rủi ro được ghi nhận:** đồng ý bằng ô đánh dấu không xác minh được người đánh dấu là phụ huynh hay tuổi của trẻ, có thể chưa đáp ứng yêu cầu pháp luật về sự đồng ý của cha mẹ/người giám hộ — khuyến nghị pháp chế rà soát văn bản và cách xác nhận trước khi mở rộng ngoài pilot (ADR-0104 mục 9). Phụ huynh muốn dừng: liên hệ hỗ trợ, System Admin khóa tài khoản |
 
 Bật lại DM, World và chat tự do ở Area của một tenant `common` (F120-AC-28): `putCommonTenantSocialOverride` (gateway nội bộ, System Admin, `reason` bắt buộc, audit `chat_policy.common_tenant_social_updated`), hiệu lực ngay trên mọi instance; role tenant bị từ chối (`403 PERMISSION_DENIED`). Bật lại kết bạn vẫn qua cài đặt identity (F095). Chi tiết: [CHAT_SYSTEM §3](../03-social-multiplayer/CHAT_SYSTEM.md#3-policy-resolution).
 

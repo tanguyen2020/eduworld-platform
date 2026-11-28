@@ -1,6 +1,6 @@
 # UX màn hình học sinh trong game — quy ước chung và chỉ mục
 
-> Trạng thái: Draft · Phiên bản: 1.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-26 (F113: §2 khóa ngang Android/iOS theo cảm biến, màn "Xoay ngang" khi cửa sổ dọc) · 2026-11-26 (F069: bảng XP dưới PlayerBadge, chip Xu + menu "Thêm" ở cột phải) · 2026-11-26 (F096: nút có icon kèm chữ ở mọi khối, thẻ "Việc tiếp theo", hướng dẫn lần đầu của Mây, không emoji/glyph ngoài font) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 1.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-28 (F137 spec Ready: §8a âm thanh trong game — quy tắc + bảng âm thanh theo màn S01–S18, ADR-0106) · 2026-11-26 (F113: §2 khóa ngang Android/iOS theo cảm biến, màn "Xoay ngang" khi cửa sổ dọc) · 2026-11-26 (F069: bảng XP dưới PlayerBadge, chip Xu + menu "Thêm" ở cột phải) · 2026-11-26 (F096: nút có icon kèm chữ ở mọi khối, thẻ "Việc tiếp theo", hướng dẫn lần đầu của Mây, không emoji/glyph ngoài font) · 2026-11-24 (ADR-0101: bỏ Windows, client chỉ Web/Android/iOS) · 2026-11-15
 > Liên quan: [DESIGN_SYSTEM](DESIGN_SYSTEM.md) · [ADR-0056 song ngữ](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057 máy tầm trung](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md)
 
 ## 1. Mục đích và phạm vi
@@ -156,11 +156,56 @@ Không dùng chữ "Thất bại" đỏ toàn màn, không đếm ngược gây 
 
 ## 8. Trợ năng
 
-- Tùy chọn: 3 mức cỡ chữ, tương phản cao, giảm chuyển động, phụ đề cho mọi âm thanh có lời, đọc to (TTS hai ngôn ngữ, [Confirmed]), bấm-để-đi.
+- Tùy chọn: 3 mức cỡ chữ, tương phản cao, giảm chuyển động (cũng làm dịu âm thanh sự kiện lớn — §8a), phụ đề cho mọi âm thanh có lời, đọc to (TTS hai ngôn ngữ, [Confirmed]), bấm-để-đi.
+- Mọi âm thanh có tín hiệu hình tương đương; tắt tiếng không làm mất thông tin (§8a).
 - Lớp 1–3 (`g1_3`): đề bài và hướng dẫn quest có **lồng tiếng tiếng Việt** phát tự động (PED-07, điều kiện publish do tài liệu nội dung sở hữu — [LEARNING_EXPERIENCE §8](../02-learning/LEARNING_EXPERIENCE.md#8-ux-học-tập-theo-grade-band)); luôn kèm phụ đề và icon minh họa để học sinh không có tai nghe vẫn làm được ([STUDENT_GAME_UX_LEARNING §7](STUDENT_GAME_UX_LEARNING.md#7-hỗ-trợ-lớp-13-lồng-tiếng-phụ-đề-và-icon)).
 - Điều hướng bàn phím trên PC: mọi nút có thể focus (Tab/Shift+Tab), focus hiển thị rõ; Enter/Space kích hoạt.
 - Không truyền thông tin chỉ bằng màu (đúng/sai kèm icon ✓/✗ và chữ).
 - Thời gian đọc thông báo tối thiểu 3 s; thông báo quan trọng không tự đóng.
+
+## 8a. Âm thanh trong game
+
+Nguồn quy tắc trải nghiệm âm thanh của mọi màn học sinh và bảng âm thanh theo màn ([ADR-0106](../adr/ADR-0106-am-thanh-game-phu-hop-giao-duc-va-nguon-cc0-mit.md), triển khai [F137](../../specs/137-game-audio/spec.md)). Quy tắc sư phạm giảm/tắt nhạc khi học và khi kiểm tra: [LEARNING_EXPERIENCE §9.1](../02-learning/LEARNING_EXPERIENCE.md#91-âm-thanh-khi-học-và-khi-kiểm-tra). Kỹ thuật: [GODOT_ARCHITECTURE §10.3](../08-game-client/GODOT_ARCHITECTURE.md#103-âm-thanh-audiodirector-f137).
+
+**Quy tắc chung** [Confirmed — owner 2026-11-28]:
+
+- Nhạc nhịp chậm (khoảng 70–100 BPM), **không lời**, nhạc cụ mộc/ấm (marimba, guitar mộc, sáo, đàn tranh, piano nhẹ); không âm thanh gắt, đáng sợ, còi, nhịp tim, tích tắc đồng hồ, tiếng "jackpot"; không tiếng nào lặp để gọi học sinh quay lại (AGENTS R19).
+- Thắng và thua trận đều kết bằng giai điệu nhẹ; thua kèm lời động viên ("Lần sau mình thử lại nhé!"), không âm "thất bại" trầm nặng.
+- Đổi vùng/màn: nhạc chuyển mượt (`audio_music_crossfade`); vào lại cùng vùng không phát lại từ đầu.
+- Lồng tiếng, "Đọc to", thoại NPC: nhạc giảm `audio_voice_duck_db`; bài nghe, bài kiểm tra có giờ, câu/thử thách có giờ: nhạc và ambience tắt.
+- Giảm chuyển động: stinger lớn dịu đi (`audio_reduced_motion_stinger_gain`), không có lớp fanfare dài.
+- Ba thanh Nhạc nền / Hiệu ứng / Giọng nói và tắt tiếng luôn có hiệu lực ngay ([STUDENT_GAME_UX_SOCIAL §10](STUDENT_GAME_UX_SOCIAL.md#10-cài-đặt)).
+- **Mọi âm thanh có tín hiệu hình tương đương** (cột "Tín hiệu hình" dưới đây) — học sinh không có tai nghe, phòng máy không loa, khiếm thính không mất thông tin (NFR-A11Y-001).
+- Chat không có âm thanh mặc định; thông báo trong hộp thư chỉ một tiếng chuông nhẹ một lần khi app đang mở, không trong bài kiểm tra, không nhắc lại [Confirmed — owner "chốt hết"].
+- Bước chân: chỉ của chính nhân vật, rất nhỏ, có công tắc trong Cài đặt → Âm thanh, mặc định **bật** ở preset Trung bình/Cao, **tắt** ở preset Thấp [Confirmed — owner "chốt hết"].
+
+**Âm thanh UI dùng chung:** chạm nút (tick mềm), mở cửa sổ (whoosh nhẹ lên), đóng cửa sổ (whoosh xuống), đổi tab (click nhỏ), lỗi (hai nốt trầm nhẹ, không buzzer), thành công/lưu (một nốt sáng), thông báo (chuông nhẹ một lần). Nút bị mờ không phát tiếng.
+
+**Bảng âm thanh theo màn** (id là ngữ cảnh/sự kiện của `AudioCatalog`, không phải tên file):
+
+| Màn | Nhạc nền | Ambience | Âm thanh sự kiện | Tín hiệu hình |
+|---|---|---|---|---|
+| S01 Đăng nhập (+ màn chờ) | `menu` nhẹ, bắt đầu sau chạm đầu tiên (Web chỉ phát âm thanh sau tương tác) | — | UI; lỗi đăng nhập dùng tiếng lỗi | Thông điệp lỗi, ô nhập viền |
+| S02 Tạo avatar | `menu` | — | UI; xác nhận nhân vật: một nốt vui | Nhân vật vẫy tay, toast |
+| S03 Main Hub HUD | `hub` | Chim, gió, tiếng làng xa | UI; mở cổng/đổi vùng: chime ngắn | Hiệu ứng cổng, màn tải |
+| S04 World map | Giữ nhạc vùng, giảm nhẹ | Giữ | Chọn vùng: click; vùng khóa: tiếng lỗi nhẹ | Ổ khóa + chữ "Chưa mở" |
+| S05 Quest journal | Giữ nhạc vùng | Giữ | Hoàn thành bước: nốt sáng; hoàn thành quest: stinger `quest_complete` | Dấu ✓, thẻ "Hoàn thành" |
+| S06 Challenge / Boss | `boss` (nhịp vừa, không dọa) | — | Đúng: `correct`; sai: `try_again`; boss trúng đòn: "bụp" mềm; boss bị hạ: stinger `boss_defeated` | Thanh HP, ✓/✗, hiệu ứng sao |
+| S07 Level-up | Nhạc giảm tạm | — | Stinger `level_up` ≤ 2 s | Hộp level-up, số level |
+| S08 Inventory / Shop | Giữ nhạc vùng | Giữ | Mặc đồ: sột soạt; mua: nốt xu nhẹ (không tiếng máy đánh bạc) | Item đổi trên nhân vật, số Xu |
+| S09 Achievement / Collection | Giữ | Giữ | Nhận huy hiệu: stinger `reward` | Huy hiệu sáng, toast |
+| S10 Party lobby | `hub` hoặc nhạc vùng | Giữ | Bạn vào/rời: pop nhỏ; sẵn sàng: tick | Thẻ thành viên, dấu ✓ |
+| S11 Bạn bè | Giữ | Giữ | Lời mời mới: chuông thông báo một lần | Badge số, toast |
+| S12 Chat | Giữ | Giữ | **Không** âm thanh tin mới (F112-AC-05); gửi tin: không tiếng | Badge, bong bóng tin |
+| S13 Competition Arena | `arena` vui, nhịp vừa | Tiếng khán đài rất nhỏ | Bắt đầu trận: `match_start` (không đếm ngược tích tắc); thắng: `match_win`; thua: `match_lose_gentle` | Màn đếm 3-2-1 bằng hình, màn kết quả + lời động viên |
+| S14 Event center | Giữ | Giữ | Nhận thưởng sự kiện: `reward` | Thẻ thưởng |
+| S15 Cài đặt | Giữ, theo thanh âm lượng ngay | Giữ | Kéo thanh: tiếng mẫu của bus tương ứng | Nhãn % |
+| S16 Learning activity player | `learning` rất nhẹ; tắt khi activity có giờ | — | Đúng: `correct`; sai: `try_again` (nhẹ, không trầm nặng); chuỗi đúng ≥ 3: `streak` | ✓/✗ + chữ, phản hồi thẻ |
+| S17 Video / exercise player | Tắt khi video/bài nghe phát; giảm khi "Đọc to" | — | Như S16 | Như S16, phụ đề |
+| S18 Kết quả học tập | Giữ `learning` | — | Hoàn thành: `reward` một lần; XP: tiếng đếm ngắn ≤ 1 s | Thanh XP, sao |
+| Bài kiểm tra có giờ ([STUDENT_GAME_UX_LEARNING §9](STUDENT_GAME_UX_LEARNING.md#9-bài-kiểm-tra-có-giờ)) | **Tắt** | **Tắt** | Chỉ UI tối thiểu (chạm, lưu đáp án); không tiếng cảnh báo hết giờ | Đồng hồ đổi màu nhẹ + toast một lần |
+
+Vùng đất ([WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md)): mỗi vùng có một bài `zone.<area_id>` và ambience riêng theo chủ đề (Vương quốc Số: nước cọn, chợ xa; Rừng Ngôn Ngữ: lá, suối; Đảo Khoa Học: sóng; Vương quốc Lịch Sử: chuông chùa xa; Thư viện Gió: gió nhẹ; Vườn Bạn Bè: chim; Đại dương Khám Phá: sóng ngầm; Núi Thử Thách: gió núi; Tháp Thử Thách: yên tĩnh, ambience rất nhỏ; Đấu trường: khán đài nhỏ). Vùng chưa có bài → dùng `hub` (không im lặng hẳn).
 
 ## 9. An toàn và riêng tư
 
