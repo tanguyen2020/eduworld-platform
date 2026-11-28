@@ -150,7 +150,7 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Danh hiệu cấp độ | `title_code` | Danh hiệu theo khoảng level (Tân binh, Nhà thám hiểm…) |
 | World progression | `world_area_unlock`, `exploration_progress` | Mở khóa khu, điểm khám phá, vật sưu tầm, hoàn thành bản đồ |
 | Challenge | `challenge`, `challenge_attempt` | Thử thách PvE có luật (time, perfect, survival…), 5 mức độ khó ([CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md)) |
-| Boss / Encounter | `boss_version`, `boss_encounter` | Boss nhiều phase; một lượt đánh boss solo hoặc party |
+| Boss / Encounter | `boss_version`, `boss_encounter` | Boss nhiều phase; một lượt đánh boss solo hoặc party. Giao diện học sinh gọi phase là "hiệp" ("Hiệp 1/2"; tiếng Anh "Round") |
 | Đóng góp tối thiểu | `min_contribution` | Phần mỗi thành viên phải tự làm để được tính tham gia và nhận thưởng nhóm |
 | Xu | `currency_code = xu` | Tiền trong game, kiếm bằng hoạt động, chỉ mua cosmetic; không mua bằng tiền thật (ADR-0049) |
 | Sổ cái (ledger) | `xp_ledger`, `currency_ledger`, `item_ledger` | Bảng append-only ghi mọi thay đổi XP, tiền, vật phẩm |

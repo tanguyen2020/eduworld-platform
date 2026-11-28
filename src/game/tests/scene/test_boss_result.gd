@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## T013 (F110-AC-08; CHALLENGE_BOSS_SYSTEM §3.5, STUDENT_GAME_UX_CORE S06 §8): `boss.encounter.ended` opens BossResult —
-## `defeated` says "Hạ {boss}!" with THIS student's rewards from `rewards`; `time_up` / `abandoned` say "Em đã tới phase
+## `defeated` says "Hạ {boss}!" with THIS student's rewards from `rewards`; `time_up` / `abandoned` say "Em đã tới hiệp
 ## n/total" with a review hint and never the word "Thất bại"; the level-up modal waits until the result is closed
 ## (`AppState.blocking_activity` = `boss`, back to "" after); a party boss goes back to the lobby once the party session
 ## ended (F102).

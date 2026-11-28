@@ -17,7 +17,7 @@
 | 2 | A tạo party với B (F102), chọn boss, cả hai Ready, Bắt đầu | Cả hai vào `BossArena`, `PartyReadyList` đổi ✓ | F110-AC-02 |
 | 3 | Phase 1 bắt đầu | Năng lượng có %, phase 1/2, đồng hồ khớp server; mỗi người câu hỏi riêng | F110-AC-03, F110-AC-04 |
 | 4 | A trả lời đúng, B trả lời sai | A thấy tia sáng, B thấy boss "phản đòn" + giải thích; màn A không biết B sai; năng lượng giảm trên cả hai ≤ 1 s | F110-AC-05, F110-AC-06 |
-| 5 | Để hết giờ phase 1 | Băng "Thử lại phase với câu hỏi mới", tiến độ phase trước giữ | F110-AC-07 |
+| 5 | Để hết giờ phase 1 | Băng "Thử lại hiệp này với câu hỏi mới", tiến độ phase trước giữ | F110-AC-07 |
 | 6 | Ngắt mạng B 30 s rồi bật lại; sau đó B đăng nhập trên thiết bị thứ ba | Màn A: B mờ + nhãn; B về đúng phase và câu đang mở | F110-AC-09 |
 | 7 | Hạ boss | "Hạ {boss}!" + phần thưởng của chính mình; quay về lobby khi phiên kết thúc; level-up (nếu có) hiện sau kết quả | F110-AC-08 |
 | 8 | Trận khác: B bấm Rời, xác nhận | B về lobby; A tiếp tục | F110-AC-10 |
@@ -67,10 +67,13 @@ Chạy trên máy local, Godot 4.7.2 (headless cho GdUnit4, Compatibility/OpenGL
 | F110-AC-19, AC-24, AC-26 | `tests/scene/test_friends_screen.gd` (8) |
 | F110-AC-27 | `tests/scene/test_f110_i18n_layout.gd` (3) |
 | F110-AC-28 | `tests/scene/test_f110_theme.gd` (3), `tests/scene/test_f110_band_matrix.gd` (4: 19 màn × 4 khối × 4 cửa sổ, probe vật lý 12/40 CSS px), `tests/scene/ui/test_window_close_button.gd` (thêm friends, boss_info, coop_step) |
+| F110-AC-02, AC-05, AC-06, AC-09, AC-16, AC-27, AC-28 (polish điện thoại) | `tests/scene/test_f110_compact_polish.gd` (8: thẻ thành viên gọn, câu yêu cầu chỉ ở nhóm, dải phản hồi, "Hiệp", tab bước `interdependent`, ma trận tiếng Anh 844×390/740×360) + `F110Matrix.answers_cut`/kiểm thẻ vai trong `test_f110_band_matrix.gd` |
 | F110-AC-29 | `tests/unit/test_f110_privacy_arch.gd` (5) |
 | F110-AC-30 | `tests/unit/test_f110_auth_errors.gd` (4) |
 | Contract | `tests/contract/test_f110_fixtures.gd` (5) |
 
 Ảnh review (`screenshots/`, 75 ảnh): mọi màn F110 ở 1280×720, 844×390, 740×360, `vi`, `g1_3`; mẫu `en` ở 1280×720 và 844×390 (`friends`, `friends_find`, `boss_info`, `boss_question`, `boss_result_time_up`, `coop_step`). Lệnh: `godot --path src/game --rendering-method gl_compatibility --rendering-driver opengl3 -s res://tools/capture_screens.gd -- --out=<dir> --screens=f110_… --sizes=1280x720,844x390,740x360 --locales=vi-VN --band=g1_3`.
+
+Ảnh polish điện thoại 2026-11-28 (`screenshots/*-polish-*`, 78 ảnh): 19 màn (trừ `hub_coop`, `game_menu` — không đổi) ở 1280×720, 844×390, 740×360 `vi` `g1_3` + mẫu `en` (`boss_question`, `boss_wrong`, `boss_result_time_up`, `boss_info`, `coop_step`, `friends`, `friends_find`) ở cả ba cỡ; Compatibility/OpenGL. Ảnh `-after-` cũ giữ để so sánh.
 
 Còn chờ: kịch bản §2 với backend thật và hai thiết bị (T035, T037), số đo FPS kịch bản 9 (SC-004).

@@ -6,7 +6,7 @@ extends Control
 ## - a light 2D arena over the suspended 3D world (QualityManager.suspend_world), a fixed stage — no camera, no joystick
 ##   on a phone — the drawn boss (BossFigure, particles ≤ 200 and none at Low) and the question panel as Controls
 ##   (F110-AC-11);
-## - the HUD: boss name, BossEnergyBar with the server %, "Phase n/total", PhaseTimer on the server clock (lớp 1–3 a bar
+## - the HUD: boss name, BossEnergyBar with the server %, "Hiệp n/total", PhaseTimer on the server clock (lớp 1–3 a bar
 ##   without seconds), "Rời" behind a confirmation (F110-AC-03, AC-10);
 ## - PartyReadyList in the lobby (✓ / clock), ContributionList during a phase (✓ "Đã đạt phần" or the clock, the
 ##   student's own right answers only — no ranking, AC-02, AC-06), faded members with words while reconnecting (AC-09);
@@ -44,6 +44,11 @@ var _timer: PhaseTimer = null
 var _leave: Button = null
 var _chat_button: Button = null
 var _members: ContributionList = null
+var _hud_col: VBoxContainer = null
+var _hud_top: HFlowContainer = null
+var _hud_second: HBoxContainer = null
+var _main: VBoxContainer = null
+var _board_box: VBoxContainer = null
 var _banner: Dictionary = {}
 var _figure: BossFigure = null
 var _line: Label = null
@@ -65,7 +70,10 @@ var _exit_target: String = ""
 func _ready() -> void:
 	visible = false
 	_build()
-	AppState.compact_changed.connect(func(_c: bool) -> void: _fit())
+	AppState.compact_changed.connect(func(_c: bool) -> void:
+		_fit()
+		if visible:
+			render())
 	EventBus.locale_changed.connect(func(_l: String) -> void:
 		if visible:
 			render())
@@ -345,7 +353,11 @@ func _on_answer_evaluated(result: Dictionary) -> void:
 	var text: String = tr("ui.boss.hit") if correct else tr("ui.boss.strike_back")
 	var explanation: String = L10n.pick(result.get("explanation", {}) as Dictionary)
 	if not correct and not explanation.is_empty():
-		text += "\n" + explanation
+		# Compact: the feedback is a wide strip under the HUD, so the explanation follows on the same line.
+		text += (" " if AppState.compact else "\n") + explanation
+	# Compact: the feedback takes the strip of the boss line, which has said its words (≤ 2 s) — never two strips.
+	if AppState.compact and not _banner_key.is_empty() and _banner_key == _line.text:
+		_set_banner("")
 	_feedback_label.text = text
 	_feedback.visible = true
 	if correct:
@@ -425,13 +437,16 @@ func _on_result_done() -> void:
 
 
 ## The boss line (≤ 2 s): a speech bubble above the boss; on the compact phone canvas the banner says it (the narrow
-## boss column would break the words), unless a banner of the server (retry, reconnecting) is on.
+## boss column would break the words), unless a banner of the server (retry, reconnecting) is on; there the start line
+## is skipped (the question arrives with it and keeps its room).
 func _show_line(key: String) -> void:
 	_line.text = tr(key).format({"boss": _boss_title()})
 	_line_left = LINE_SEC
 	if not AppState.compact:
 		_line_panel.visible = true
-	elif _banner_key.is_empty() and (client == null or not client.is_offline()):
+	# Compact: the start line would push the new question down — the question itself says "your turn"; the line of a
+	# cleared round (F110-AC-07) is said while the board waits for the next round.
+	elif key != "ui.boss.line.phase_start" and _banner_key.is_empty() and (client == null or not client.is_offline()):
 		ArenaUi.show_notice(_banner, _line.text, {}, "info")
 		_banner_key = _line.text
 		_banner_left = LINE_SEC
@@ -485,7 +500,43 @@ func _fit() -> void:
 	_figure.custom_minimum_size = Vector2(side, float(UiTokens.COMPONENT_COACH_SIZE) * 0.8)
 	_figure.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_chat_column.custom_minimum_size.x = float(UiTokens.SIZE_LAYOUT_280)
+	_layout_compact(AppState.compact)
 	UiBuild.size_buttons(self)
+
+
+## F110 compact polish (F125, STUDENT_GAME_UX_CORE S06 §6b): on the compact phone canvas the HUD is two short rows —
+## name · round · timer · energy bar with its % · Chat nhóm · Rời, then the member chips with the message strip beside
+## them (the boss line, a retry / reconnect banner or the answer feedback) — no strip of its own above the question and
+## no feedback block inside the board, so every answer tile stays on screen without scrolling.
+func _layout_compact(compact: bool) -> void:
+	if _hud_col == null:
+		return
+	var energy_parent: Control = _hud_top if compact else _hud_col
+	if _energy.get_parent() != energy_parent:
+		_energy.get_parent().remove_child(_energy)
+		energy_parent.add_child(_energy)
+	energy_parent.move_child(_energy, _timer.get_index() + 1 if compact else 1)
+	_energy.set_compact(compact)
+	_timer.set_compact(compact)
+	_energy.custom_minimum_size.x = 0.0
+	_energy.size_flags_vertical = Control.SIZE_SHRINK_CENTER if compact else Control.SIZE_FILL
+	_energy.size_flags_horizontal = Control.SIZE_FILL if compact else Control.SIZE_EXPAND_FILL
+	# Compact: the boss name stays on one line and takes the room left in the row (never broken into two short lines).
+	_title.autowrap_mode = TextServer.AUTOWRAP_OFF if compact else TextServer.AUTOWRAP_WORD_SMART
+	var banner: PanelContainer = _banner["panel"] as PanelContainer
+	_place(banner, _hud_second if compact else _main, 1)
+	_place(_feedback, _hud_second if compact else _board_box, 2 if compact else 0)
+	for strip: Control in [banner, _feedback]:
+		strip.size_flags_vertical = Control.SIZE_SHRINK_CENTER if compact else Control.SIZE_FILL
+		strip.size_flags_stretch_ratio = 1.5 if compact else 1.0
+		UiBuild.expand(strip)
+
+
+static func _place(node: Control, parent: Control, index: int) -> void:
+	if node.get_parent() != parent:
+		node.get_parent().remove_child(node)
+		parent.add_child(node)
+	parent.move_child(node, mini(index, parent.get_child_count() - 1))
 
 
 func _build() -> void:
@@ -511,6 +562,7 @@ func _build() -> void:
 	main.name = "Main"
 	UiBuild.expand(main, true, true)
 	page.add_child(main)
+	_main = main
 	main.add_child(_build_hud())
 	_banner = ArenaUi.notice()
 	(_banner["panel"] as PanelContainer).name = "Banner"
@@ -545,6 +597,7 @@ func _build() -> void:
 	var box: VBoxContainer = UiBuild.vbox(&"FormBox")
 	UiBuild.expand(box, true, true)
 	scroll.add_child(box)
+	_board_box = box
 	_feedback = UiBuild.panel(&"FeedbackCorrectPanel")
 	_feedback.name = "Feedback"
 	_feedback.visible = false
@@ -588,11 +641,13 @@ func _build_hud() -> Control:
 	hud.name = "BossHud"
 	var col: VBoxContainer = UiBuild.vbox()
 	hud.add_child(col)
+	_hud_col = col
 	# Row 1: the boss name, phase, timer and the buttons; row 2: the energy across the width; row 3: the members.
 	# A flow: on a phone with a long translation the buttons go to a second line instead of out of the view.
 	var row: HFlowContainer = HFlowContainer.new()
 	row.name = "Top"
 	col.add_child(row)
+	_hud_top = row
 	var fire: TextureRect = UiBuild.icon_rect("fire")
 	fire.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(fire)
@@ -619,8 +674,14 @@ func _build_hud() -> Control:
 	_leave.name = "Leave"
 	_leave.pressed.connect(ask_leave)
 	row.add_child(_leave)
+	# Row 3 (compact: row 2, the energy bar is in row 1, `_layout_compact`).
+	_hud_second = UiBuild.hbox(&"ToolbarBox")
+	_hud_second.name = "Second"
+	col.add_child(_hud_second)
 	_members = ContributionList.new()
-	col.add_child(_members)
+	_members.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	UiBuild.expand(_members)
+	_hud_second.add_child(_members)
 	return hud
 
 

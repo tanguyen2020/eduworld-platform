@@ -15,6 +15,9 @@ extends Control
 signal closed()
 
 const PARTY_SCREEN: StringName = &"party"
+## Compact tabs (F125 phone canvas): the student's role (+ the step and the team) or the shared board.
+const TAB_MINE: String = "mine"
+const TAB_BOARD: String = "board"
 
 var services: ServiceLocator = null
 var coop: CoopQuestService = null
@@ -32,6 +35,16 @@ var _assign: Button = null
 var _dialog: RoleAssignDialog = null
 var _cards: Dictionary = {}
 var _notice_left: float = 0.0
+## F110 compact polish: the parts the compact layout moves (`_apply_layout`) and the two tabs of the phone canvas.
+var _box: VBoxContainer = null
+var _head: VBoxContainer = null
+var _cols: HFlowContainer = null
+var _left: VBoxContainer = null
+var _mine_block: VBoxContainer = null
+var _team_block: VBoxContainer = null
+var _tab_row: HBoxContainer = null
+var _tabs: Dictionary = {}
+var _tab: String = TAB_MINE
 
 
 func _ready() -> void:
@@ -42,6 +55,7 @@ func _ready() -> void:
 	EventBus.locale_changed.connect(func(_l: String) -> void:
 		if visible:
 			render())
+	AppState.compact_changed.connect(func(_c: bool) -> void: _apply_layout())
 
 
 func _exit_tree() -> void:
@@ -55,6 +69,8 @@ func open(args: Dictionary = {}) -> void:
 	quest_id = String(args.get("quest_id", ""))
 	step_id = String(args.get("step_id", ""))
 	ArenaUi.show_notice(_notice, "")
+	_tab = TAB_MINE
+	_apply_layout()
 	show()
 	UiMotion.pop_in(_ui["window"] as Control, Settings.reduce_motion)
 	(_ui["close"] as Button).grab_focus.call_deferred(true)
@@ -150,6 +166,28 @@ func assign_button() -> Button:
 
 func assign_dialog() -> RoleAssignDialog:
 	return _dialog
+
+
+func tab_button(tab: String) -> Button:
+	return _tabs.get(tab) as Button
+
+
+func current_tab() -> String:
+	return _tab
+
+
+func actions_row() -> Control:
+	return _final.get_parent() as Control
+
+
+func scroll_box() -> ScrollContainer:
+	return _box.get_parent() as ScrollContainer
+
+
+## Compact: shows the tab `tab` (TAB_MINE / TAB_BOARD); on a big screen everything is shown at once.
+func select_tab(tab: String) -> void:
+	_tab = tab if tab == TAB_BOARD else TAB_MINE
+	_apply_layout()
 
 
 func notice_text() -> String:
@@ -272,6 +310,18 @@ func _build() -> void:
 	_ui = UiBuild.window(self, "ui.quest.coop.title", "emoji_handshake")
 	(_ui["close"] as Button).pressed.connect(close)
 	var body: VBoxContainer = _ui["body"] as VBoxContainer
+	# Compact tabs (hidden on a big screen, `_apply_layout`).
+	_tab_row = UiBuild.hbox(&"ToolbarBox")
+	_tab_row.name = "Tabs"
+	var group: ButtonGroup = ButtonGroup.new()
+	for spec: Array in [[TAB_MINE, "ui.quest.coop.my_role", "star"], [TAB_BOARD, "ui.quest.clue.board", "pin"]]:
+		var tb: Button = UiBuild.button(String(spec[1]), String(spec[2]), &"TabButton")
+		tb.name = "Tab_" + String(spec[0])
+		tb.toggle_mode = true
+		tb.button_group = group
+		tb.pressed.connect(select_tab.bind(String(spec[0])))
+		_tab_row.add_child(tb)
+		_tabs[spec[0]] = tb
 	_notice = ArenaUi.notice()
 	body.add_child(_notice["panel"] as PanelContainer)
 	var scroll: ScrollContainer = ScrollContainer.new()
@@ -282,25 +332,40 @@ func _build() -> void:
 	var box: VBoxContainer = UiBuild.vbox(&"FormBox")
 	UiBuild.expand(box)
 	scroll.add_child(box)
+	_box = box
+	_head = UiBuild.vbox(&"FormBox")
+	_head.name = "Head"
+	box.add_child(_head)
 	_step_title = UiBuild.keep_words(UiBuild.data_label("", &"HeadingLabel"))
 	_step_title.name = "StepTitle"
-	box.add_child(_step_title)
-	box.add_child(UiBuild.keep_words(UiBuild.label("ui.quest.coop.how", &"MutedLabel")))
+	_head.add_child(_step_title)
+	_head.add_child(UiBuild.keep_words(UiBuild.label("ui.quest.coop.how", &"MutedLabel")))
 	var cols: HFlowContainer = HFlowContainer.new()
 	cols.name = "Columns"
 	box.add_child(cols)
+	_cols = cols
 	var left: VBoxContainer = UiBuild.vbox(&"FormBox")
+	left.name = "Left"
 	left.custom_minimum_size.x = float(UiTokens.SIZE_LAYOUT_280)
 	UiBuild.expand(left)
 	cols.add_child(left)
-	left.add_child(FriendsUi.group_title("ui.quest.coop.my_role", "star"))
+	_left = left
+	_mine_block = UiBuild.vbox(&"FormBox")
+	_mine_block.name = "MineBlock"
+	_mine_block.custom_minimum_size.x = float(UiTokens.SIZE_LAYOUT_280)
+	UiBuild.expand(_mine_block)
+	left.add_child(_mine_block)
+	_mine_block.add_child(FriendsUi.group_title("ui.quest.coop.my_role", "star"))
 	_mine = UiBuild.vbox(&"FormBox")
 	_mine.name = "MyRoles"
-	left.add_child(_mine)
-	left.add_child(FriendsUi.group_title("ui.quest.coop.team", "group"))
+	_mine_block.add_child(_mine)
+	_team_block = UiBuild.vbox(&"FormBox")
+	_team_block.name = "TeamBlock"
+	left.add_child(_team_block)
+	_team_block.add_child(FriendsUi.group_title("ui.quest.coop.team", "group"))
 	_team = UiBuild.vbox()
 	_team.name = "Team"
-	left.add_child(_team)
+	_team_block.add_child(_team)
 	_board = SharedClueBoard.new()
 	_board.custom_minimum_size.x = float(UiTokens.SIZE_LAYOUT_280)
 	UiBuild.expand(_board)
@@ -308,6 +373,8 @@ func _build() -> void:
 	var actions: HFlowContainer = HFlowContainer.new()
 	actions.name = "Actions"
 	body.add_child(actions)
+	# Compact: the tabs share the action row (one row saved for the role card).
+	actions.add_child(_tab_row)
 	_final = UiBuild.button("ui.quest.clue.answer_final", "play_light")
 	_final.name = "AnswerFinal"
 	_final.pressed.connect(_on_final)
@@ -326,4 +393,44 @@ func _build() -> void:
 	_dialog.name = "RoleAssignDialog"
 	_dialog.assign_requested.connect(_on_assign_requested)
 	add_child(_dialog)
+	_apply_layout()
 	UiBuild.size_buttons(self)
+
+
+## F110 compact polish (F125, STUDENT_GAME_UX_CORE S06 §6b / QUEST_SYSTEM §3.2): on a big screen the step, the student's
+## role and the team are beside the shared board, all at once. On the compact phone canvas (≤ 540 logical px tall) that
+## stack was cut by its scroll box, so two tabs split it: "Vai của em" — the step and the team on the left, the
+## student's role card(s) whole on the right — and "Bảng chung của nhóm" — the shared cards. The tabs sit in the action
+## row beside "Trả lời câu cuối", under both.
+func _apply_layout() -> void:
+	if _cols == null:
+		return
+	var compact: bool = AppState.compact
+	_tab_row.visible = compact
+	if compact:
+		_place(_head, _left, 0)
+		_place(_team_block, _left, 1)
+		_place(_mine_block, _cols, 1)
+		# The tab already says "Vai của em".
+		_mine_block.get_child(0).visible = false
+		var board_tab: bool = _tab == TAB_BOARD
+		_left.visible = not board_tab
+		_mine_block.visible = not board_tab
+		_board.visible = board_tab
+		(_tabs[_tab] as Button).set_pressed_no_signal(true)
+	else:
+		_place(_head, _box, 0)
+		_place(_mine_block, _left, 0)
+		_place(_team_block, _left, 1)
+		_mine_block.get_child(0).visible = true
+		_left.visible = true
+		_mine_block.visible = true
+		_board.visible = true
+	_place(_board, _cols, _cols.get_child_count() - 1)
+
+
+static func _place(node: Control, parent: Control, index: int) -> void:
+	if node.get_parent() != parent:
+		node.get_parent().remove_child(node)
+		parent.add_child(node)
+	parent.move_child(node, index)

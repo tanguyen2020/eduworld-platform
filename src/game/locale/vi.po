@@ -4000,6 +4000,9 @@ msgstr "Cả nhóm đã hạ {boss}! Lần sau em trả lời thêm vài câu đ
 msgid "ui.boss.energy"
 msgstr "Năng lượng {pct}%"
 
+msgid "ui.boss.energy_short"
+msgstr "{pct}%"
+
 msgid "ui.boss.get_ready"
 msgstr "Chuẩn bị nhé, boss sắp xuất hiện!"
 
@@ -4070,7 +4073,7 @@ msgid "ui.boss.need_contribution"
 msgstr "Mỗi bạn trả lời đúng đủ phần của mình thì cả nhóm cùng nhận thưởng."
 
 msgid "ui.boss.next_phase_soon"
-msgstr "Giỏi lắm! Phần tiếp theo sắp bắt đầu…"
+msgstr "Giỏi lắm! Hiệp tiếp theo sắp bắt đầu…"
 
 msgid "ui.boss.none"
 msgstr "Vùng đất này chưa có boss nào cho em."
@@ -4079,13 +4082,13 @@ msgid "ui.boss.party_size"
 msgstr "Nhóm {min}–{max} bạn"
 
 msgid "ui.boss.phase"
-msgstr "Phase {n}/{total}"
+msgstr "Hiệp {n}/{total}"
 
 msgid "ui.boss.phase_count"
-msgstr "{n} phase"
+msgstr "{n} hiệp"
 
 msgid "ui.boss.reached_phase"
-msgstr "Em đã tới phase {n}/{total}. Cố lên, lần sau sẽ hạ được {boss}!"
+msgstr "Em đã tới hiệp {n}/{total}. Cố lên, lần sau sẽ hạ được {boss}!"
 
 msgid "ui.boss.reconnecting"
 msgstr "Đang kết nối lại… Em chờ một chút nhé."
@@ -4094,7 +4097,7 @@ msgid "ui.boss.result_title"
 msgstr "Kết quả trận boss"
 
 msgid "ui.boss.retry_phase"
-msgstr "Thử lại phase với câu hỏi mới"
+msgstr "Thử lại hiệp này với câu hỏi mới"
 
 msgid "ui.boss.review_hint"
 msgstr "Ôn lại bài một chút rồi thử lại nhé, em làm được mà!"
@@ -4115,7 +4118,7 @@ msgid "ui.boss.submit"
 msgstr "Gửi đáp án"
 
 msgid "ui.boss.time_left"
-msgstr "Thời gian còn lại của phase"
+msgstr "Thời gian còn lại của hiệp"
 
 msgid "ui.boss.waiting_party"
 msgstr "Đang chờ cả nhóm sẵn sàng…"
@@ -4127,7 +4130,7 @@ msgid "ui.error.BOSS_ENCOUNTER_FULL"
 msgstr "Trận boss này đã đủ người rồi."
 
 msgid "ui.error.BOSS_PHASE_CLOSED"
-msgstr "Phần này đã xong, câu hỏi mới sắp tới nhé."
+msgstr "Hiệp này đã xong, câu hỏi mới sắp tới nhé."
 
 msgid "ui.error.FRIEND_CODE_INVALID"
 msgstr "Mã không đúng hoặc đã hết hạn"

@@ -4000,6 +4000,9 @@ msgstr "The party defeated {boss}! Next time answer a few more to earn the rewar
 msgid "ui.boss.energy"
 msgstr "Energy {pct}%"
 
+msgid "ui.boss.energy_short"
+msgstr "{pct}%"
+
 msgid "ui.boss.get_ready"
 msgstr "Get ready, the boss is coming!"
 
@@ -4070,7 +4073,7 @@ msgid "ui.boss.need_contribution"
 msgstr "When each of you answers enough questions right, everyone gets the reward."
 
 msgid "ui.boss.next_phase_soon"
-msgstr "Well done! The next part starts soon…"
+msgstr "Well done! The next round starts soon…"
 
 msgid "ui.boss.none"
 msgstr "There is no boss for you in this land yet."
@@ -4079,13 +4082,13 @@ msgid "ui.boss.party_size"
 msgstr "Party of {min}–{max}"
 
 msgid "ui.boss.phase"
-msgstr "Phase {n}/{total}"
+msgstr "Round {n}/{total}"
 
 msgid "ui.boss.phase_count"
-msgstr "{n} phases"
+msgstr "{n} rounds"
 
 msgid "ui.boss.reached_phase"
-msgstr "You reached phase {n}/{total}. Keep going, next time you will beat {boss}!"
+msgstr "You reached round {n}/{total}. Keep going, next time you will beat {boss}!"
 
 msgid "ui.boss.reconnecting"
 msgstr "Reconnecting… Please wait a moment."
@@ -4094,7 +4097,7 @@ msgid "ui.boss.result_title"
 msgstr "Boss battle result"
 
 msgid "ui.boss.retry_phase"
-msgstr "Try the phase again with new questions"
+msgstr "Try this round again with new questions"
 
 msgid "ui.boss.review_hint"
 msgstr "Review a little and try again, you can do it!"
@@ -4115,7 +4118,7 @@ msgid "ui.boss.submit"
 msgstr "Send answer"
 
 msgid "ui.boss.time_left"
-msgstr "Time left in this phase"
+msgstr "Time left in this round"
 
 msgid "ui.boss.waiting_party"
 msgstr "Waiting for the party to be ready…"
@@ -4127,7 +4130,7 @@ msgid "ui.error.BOSS_ENCOUNTER_FULL"
 msgstr "This boss battle is full."
 
 msgid "ui.error.BOSS_PHASE_CLOSED"
-msgstr "This part is over, new questions are coming."
+msgstr "This round is over, new questions are coming."
 
 msgid "ui.error.FRIEND_CODE_INVALID"
 msgstr "The code is wrong or has expired"

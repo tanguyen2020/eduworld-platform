@@ -1,8 +1,8 @@
 class_name FriendsUi
 extends RefCounted
 ## Small builders shared by the tabs of the friends screen (F110 US4): a person card (2D portrait + nickname — nothing
-## else of another player, AGENTS R16) with a flow of action buttons / status words that wraps on a narrow phone
-## column, a group title with its icon, and an empty-state line with Mây. Styled only by the generated Theme (R32).
+## else of another player, AGENTS R16) with a flow of action buttons / status words at its right end that wraps on a
+## narrow phone column, a group title with its icon, and an empty-state line with Mây. Styled only by the generated Theme (R32).
 
 
 ## `{card, actions}`: a `PartyMemberCard` row with the portrait and the nickname; buttons go into `actions`.
@@ -25,9 +25,14 @@ static func person_card(nickname: String, avatar_config: Dictionary, card_name: 
 	var nick: Label = UiBuild.keep_words(UiBuild.data_label(nickname, &"HeadingLabel"))
 	nick.name = "Nickname"
 	texts.add_child(nick)
+	# F110 compact polish: the buttons / status sit at the right end of the row (like "Xem" of a friend row), so a card
+	# is one line and the next person shows on a short phone screen; on a narrow column the flow still wraps them.
 	var actions: HFlowContainer = HFlowContainer.new()
 	actions.name = "Actions"
-	texts.add_child(actions)
+	actions.alignment = FlowContainer.ALIGNMENT_END
+	actions.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	UiBuild.expand(actions)
+	row.add_child(actions)
 	return {"card": card, "actions": actions}
 
 

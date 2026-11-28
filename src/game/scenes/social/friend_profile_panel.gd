@@ -59,12 +59,18 @@ func _init() -> void:
 	texts.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	UiBuild.expand(texts)
 	head.add_child(texts)
-	_name = UiBuild.keep_words(UiBuild.data_label("", &"HeadingLabel"))
+	# The nickname and "Cấp n" share a line (it wraps on a narrow column), like a row of the list.
+	var top: HFlowContainer = HFlowContainer.new()
+	top.name = "NameRow"
+	texts.add_child(top)
+	# One line (≤ 32 characters, never cut): in a flow a wrapping label would get no width and break per letter.
+	_name = UiBuild.data_label("", &"HeadingLabel", false)
 	_name.name = "Nickname"
-	texts.add_child(_name)
-	_level = UiBuild.data_label("", &"MutedLabel")
+	top.add_child(_name)
+	_level = UiBuild.data_label("", &"MutedLabel", false)
 	_level.name = "Level"
-	texts.add_child(_level)
+	_level.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	top.add_child(_level)
 	_title = UiBuild.keep_words(UiBuild.data_label("", &"MutedLabel"))
 	_title.name = "Title"
 	texts.add_child(_title)
@@ -95,7 +101,8 @@ func show_friend(f: FriendModel, presence_unknown: bool) -> void:
 	_card.visible = f != null
 	if f == null:
 		return
-	var side: float = UiBuild.target() * 1.6
+	# Compact (F125 phone canvas): a smaller portrait so Tắt tiếng / Chặn / Báo cáo show without scrolling.
+	var side: float = UiBuild.target() * (1.0 if AppState.compact else 1.6)
 	_thumb.custom_minimum_size = Vector2(side, side)
 	var look: AvatarConfigModel = f.avatar()
 	_thumb.set_look(look if look != null else AvatarConfigModel.from_dict(PartyMemberCard.DEFAULT_AVATAR))

@@ -752,6 +752,9 @@ msgstr "[!! Ţĥë þáŕţý đëƒëáţëđ {boss}! Ñëxţ ţïɱë áñšŵ
 msgid "ui.boss.energy"
 msgstr "[!! Ẹñëŕğý {pct}% ~~~~~~ !!]"
 
+msgid "ui.boss.energy_short"
+msgstr "[!! {pct}% ~~~ !!]"
+
 msgid "ui.boss.get_ready"
 msgstr "[!! Ğëţ ŕëáđý, ţĥë ƀöšš ïš çöɱïñğ! ~~~~~~~~~~~~ !!]"
 
@@ -822,7 +825,7 @@ msgid "ui.boss.need_contribution"
 msgstr "[!! Ŵĥëñ ëáçĥ öƒ ýöü áñšŵëŕš ëñöüğĥ qüëšţïöñš ŕïğĥţ, ëvëŕýöñë ğëţš ţĥë ŕëŵáŕđ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.boss.next_phase_soon"
-msgstr "[!! Ŵëĺĺ đöñë! Ţĥë ñëxţ þáŕţ šţáŕţš šööñ… ~~~~~~~~~~~~~~~ !!]"
+msgstr "[!! Ŵëĺĺ đöñë! Ţĥë ñëxţ ŕöüñđ šţáŕţš šööñ… ~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.boss.none"
 msgstr "[!! Ţĥëŕë ïš ñö ƀöšš ƒöŕ ýöü ïñ ţĥïš ĺáñđ ýëţ. ~~~~~~~~~~~~~~~~~ !!]"
@@ -831,13 +834,13 @@ msgid "ui.boss.party_size"
 msgstr "[!! Páŕţý öƒ {min}–{max} ~~~~~~~~ !!]"
 
 msgid "ui.boss.phase"
-msgstr "[!! Pĥášë {n}/{total} ~~~~~~~ !!]"
+msgstr "[!! Ŕöüñđ {n}/{total} ~~~~~~~ !!]"
 
 msgid "ui.boss.phase_count"
-msgstr "[!! {n} þĥášëš ~~~~ !!]"
+msgstr "[!! {n} ŕöüñđš ~~~~ !!]"
 
 msgid "ui.boss.reached_phase"
-msgstr "[!! Ýöü ŕëáçĥëđ þĥášë {n}/{total}. Ķëëþ ğöïñğ, ñëxţ ţïɱë ýöü ŵïĺĺ ƀëáţ {boss}! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+msgstr "[!! Ýöü ŕëáçĥëđ ŕöüñđ {n}/{total}. Ķëëþ ğöïñğ, ñëxţ ţïɱë ýöü ŵïĺĺ ƀëáţ {boss}! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.boss.reconnecting"
 msgstr "[!! Ŕëçöññëçţïñğ… Pĺëášë ŵáïţ á ɱöɱëñţ. ~~~~~~~~~~~~~~ !!]"
@@ -846,7 +849,7 @@ msgid "ui.boss.result_title"
 msgstr "[!! Ɓöšš ƀáţţĺë ŕëšüĺţ ~~~~~~~~ !!]"
 
 msgid "ui.boss.retry_phase"
-msgstr "[!! Ţŕý ţĥë þĥášë áğáïñ ŵïţĥ ñëŵ qüëšţïöñš ~~~~~~~~~~~~~~~~ !!]"
+msgstr "[!! Ţŕý ţĥïš ŕöüñđ áğáïñ ŵïţĥ ñëŵ qüëšţïöñš ~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.boss.review_hint"
 msgstr "[!! Ŕëvïëŵ á ĺïţţĺë áñđ ţŕý áğáïñ, ýöü çáñ đö ïţ! ~~~~~~~~~~~~~~~~~~ !!]"
@@ -867,7 +870,7 @@ msgid "ui.boss.submit"
 msgstr "[!! Šëñđ áñšŵëŕ ~~~~~ !!]"
 
 msgid "ui.boss.time_left"
-msgstr "[!! Ţïɱë ĺëƒţ ïñ ţĥïš þĥášë ~~~~~~~~~~ !!]"
+msgstr "[!! Ţïɱë ĺëƒţ ïñ ţĥïš ŕöüñđ ~~~~~~~~~~ !!]"
 
 msgid "ui.boss.waiting_party"
 msgstr "[!! Ŵáïţïñğ ƒöŕ ţĥë þáŕţý ţö ƀë ŕëáđý… ~~~~~~~~~~~~~~ !!]"
@@ -1689,7 +1692,7 @@ msgid "ui.error.BOSS_ENCOUNTER_FULL"
 msgstr "[!! Ţĥïš ƀöšš ƀáţţĺë ïš ƒüĺĺ. ~~~~~~~~~~ !!]"
 
 msgid "ui.error.BOSS_PHASE_CLOSED"
-msgstr "[!! Ţĥïš þáŕţ ïš övëŕ, ñëŵ qüëšţïöñš áŕë çöɱïñğ. ~~~~~~~~~~~~~~~~~~ !!]"
+msgstr "[!! Ţĥïš ŕöüñđ ïš övëŕ, ñëŵ qüëšţïöñš áŕë çöɱïñğ. ~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.CHALLENGE_ATTEMPT_LIMIT"
 msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ ţŕïëš ţöđáý, çöɱë ƀáçķ ţöɱöŕŕöŵ! ~~~~~~~~~~~~~~~~~~~~~~ !!]"

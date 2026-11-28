@@ -252,6 +252,8 @@ func _render_friends() -> void:
 	_list.visible = not s.friends.is_empty()
 	_empty.visible = s.friends.is_empty() and s.friends_loaded
 	_profile_scroll.visible = not s.friends.is_empty()
+	# Compact: the profile gets half of the page, so two action buttons fit on a line (fewer lines to scroll).
+	_profile_scroll.size_flags_stretch_ratio = 1.0 if AppState.compact else 0.8
 	_profile.show_friend(s.friend(selected_id), s.presence_unknown)
 	var hidden: bool = services != null and services.presence != null and services.presence.hidden
 	_hidden_button.set_pressed_no_signal(hidden)

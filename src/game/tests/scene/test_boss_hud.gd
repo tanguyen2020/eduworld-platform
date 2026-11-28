@@ -2,8 +2,8 @@ extends GdUnitTestSuite
 ## T012 (F110-AC-02, F110-AC-03, F110-AC-06, F110-AC-07; CHALLENGE_BOSS_SYSTEM §3.5, STUDENT_GAME_UX_CORE S06):
 ## the lobby shows PartyReadyList (✓ / the clock); during a phase every other member shows only ✓ "Đã đạt phần" or the
 ## clock — never a count, never a ranking, nothing about who was wrong — and the student's own right answers only on
-## their own chip; the requirement is said in words; the energy has its % in words, "Phase n/total"; a retry shows "Thử
-## lại phase với câu hỏi mới" and keeps the progress of the phase before; a completed phase plays its transition in ≤ 2 s
+## their own chip; the requirement is said in words; the energy has its % in words, "Hiệp n/total"; a retry shows "Thử
+## lại hiệp này với câu hỏi mới" and keeps the progress of the phase before; a completed phase plays its transition in ≤ 2 s
 ## with the boss line.
 
 var s: F110SceneHarness = null

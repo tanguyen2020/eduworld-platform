@@ -29,6 +29,8 @@ func show_cards(cards: Array[ClueCardModel]) -> void:
 		seen[c.role] = true
 		var card: ClueCard = ClueCard.new()
 		card.custom_minimum_size.x = float(UiTokens.SIZE_LAYOUT_280)
+		# A card fills its line of the flow (no narrow card with its title broken into short lines).
+		UiBuild.expand(card)
 		card.show_card(c, false)
 		_cards.add_child(card)
 	_empty.visible = seen.is_empty()

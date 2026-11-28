@@ -741,6 +741,9 @@ msgstr ""
 msgid "ui.boss.energy"
 msgstr ""
 
+msgid "ui.boss.energy_short"
+msgstr ""
+
 msgid "ui.boss.get_ready"
 msgstr ""
 

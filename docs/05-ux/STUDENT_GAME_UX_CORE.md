@@ -510,7 +510,7 @@ Gồm 3 trạng thái màn: **(a) Chọn** (thông tin + độ khó) → **(b) �
 ┌───────────────────────────────────────────────────────────────────────────┐
 │ Rồng Phân Số · Boss Chương 1                                   [✕ Esc]     │
 ├──────────────────────────────┬────────────────────────────────────────────┤
-│ (thumbnail boss render sẵn)   │ Chủ đề: Phân số (Toán 4) · 3 phase         │
+│ (thumbnail boss render sẵn)   │ Chủ đề: Phân số (Toán 4) · 3 hiệp          │
 │                              │ Độ khó: (Dễ)(●Thường)(Khó)(Chuyên gia🔒)    │
 │                              │ Thời gian mỗi câu: 30 s · Lượt hôm nay 3/5  │
 │                              │ Phần thưởng: Huy hiệu Rồng, 200 XP, 50 Xu  │
@@ -520,7 +520,7 @@ Gồm 3 trạng thái màn: **(a) Chọn** (thông tin + độ khó) → **(b) �
 
 (b) Đang chơi — HUD boss
 ┌───────────────────────────────────────────────────────────────────────────┐
-│ Rồng Phân Số  [██████████░░░░░░░░░ năng lượng 52%]   Phase 2/3  ⏱ 01:45    │
+│ Rồng Phân Số  [██████████░░░░░░░░░ năng lượng 52%]   Hiệp 2/3  ⏱ 01:45     │
 │ Party: Cú ✓ · Mèo ✓ · Rồng … · cần mỗi bạn đạt phần đóng góp [Rời]          │
 │                         (thế giới 3D: boss + nhân vật)                     │
 │         ┌──────────── Câu hỏi (S16/S17, panel giữa-dưới) ─────────┐        │
@@ -528,7 +528,7 @@ Gồm 3 trạng thái màn: **(a) Chọn** (thông tin + độ khó) → **(b) �
 │         └─────────────────────────────────────────────────────────┘        │
 └───────────────────────────────────────────────────────────────────────────┘
 
-(c) Kết thúc: "Hạ Rồng Phân Số!" hoặc "Em đã tới phase 2/3" + phần thưởng + [Xem kết quả học tập] [Về vùng]
+(c) Kết thúc: "Hạ Rồng Phân Số!" hoặc "Em đã tới hiệp 2/3" + phần thưởng + [Xem kết quả học tập] [Về vùng]
 ```
 
 **5. Bố cục Mobile** (điện thoại ngang; tablet: như PC)
@@ -536,7 +536,7 @@ Gồm 3 trạng thái màn: **(a) Chọn** (thông tin + độ khó) → **(b) �
 ```text
 (b) Đang chơi
 ┌──────────────────────────────────────────────────────────────┐
-│ Rồng Phân Số [███████░░░░ 52%] P2/3 ⏱01:45            [Rời]  │
+│ Rồng Phân Số [███████░░░░ 52%] Hiệp 2/3 ⏱01:45        [Rời]  │
 │ Cú ✓  Mèo ✓  Rồng ✓ (đã đạt phần đóng góp)                    │
 │               (boss 3D, camera cố định)                       │
 │ ┌──────────────────────────────────────────────────────────┐ │
@@ -553,7 +553,7 @@ Trong lúc chơi trên mobile **ẩn joystick** (camera cố định kiểu sân
 
 **6a. Thử thách solo trong client (F069, [Confirmed — F069 Clarifications 2026-11-26]).** (a) Chọn: cửa sổ "Núi Thử Thách" — chip loại (từ dữ liệu), danh sách thẻ (tên, loại, "Còn n lượt hôm nay"), thẻ thông tin (mô tả, luật, thời gian, sức bền bằng tim, thưởng lần đầu); phần "Chọn độ khó" + nút "Vào" luôn hiện dưới phần chi tiết (không phải cuộn). Chỉ hiện mức server trả; mức khóa chỉ hiện khi có lý do của server (icon khóa + "Chuyên gia: Dành cho các anh chị lớp lớn hơn"); thử thách cần nhóm không có nút chơi một mình. Hết lượt: lời hết lượt + nút "Luyện tập" (Bản đồ); nghỉ chờ: "Nghỉ một chút nhé, thử lại sau mm:ss" theo đồng hồ server, "Vào" khóa. (b) Đang chơi: dải ngang trên cùng (`ChallengeHud`: tên, thanh thời gian — `g1_3` không số giây, lớp 4–9 thêm mm:ss — tim sức bền, "Đã làm n · Điểm", "Tiếp tục", "Dừng lại"); màn làm bài (S16) nằm dưới dải; "Dừng lại" luôn qua hộp xác nhận có Mây. (c) Kết thúc: Mây + "Hoàn thành thử thách!" hoặc "Em đã hoàn thành n hoạt động" + "Ôn lại một chút rồi thử lại nhé, em làm được mà!" (không chữ "Thất bại"), chip phần thưởng server đã cấp, nút "Núi Thử Thách" và "Tuyệt!". Boss (S06 boss) thuộc F110.
 
-**6b. Boss trong client (F110, [Confirmed — F110 Clarifications 2026-11-28]).** (a) Chọn: cửa sổ "Boss của vùng đất" (cổng/NPC `open_ui` `boss_info`): mỗi boss một thẻ — hình boss, tên, "n phase · Nhóm 2–4 bạn · Chơi một mình hoặc cùng bạn", nút "Chơi một mình" (chỉ khi server cho `solo`) và "Rủ bạn" (mở Nhóm S10); boss chỉ party chỉ có "Rủ bạn". (b) Đang chơi: màn `BossArena` 2D phủ thế giới tạm dừng (sân khấu cố định, không joystick/camera): dải HUD xanh đậm — tên boss, "Phase n/total", đồng hồ phase (lớp 1–3 chỉ thanh, lớp 4–9 thêm mm:ss), "Chat nhóm" (boss party), "Rời" (qua hộp xác nhận); hàng thanh năng lượng + "Năng lượng 52%"; hàng thẻ thành viên: trong lobby ✓ "Sẵn sàng"/đồng hồ "Đang chờ", trong phase ✓ "Đã đạt phần"/đồng hồ "Đang cố gắng" (không số, không xếp hạng), thẻ của em thêm "n câu đúng", bạn mất kết nối thẻ mờ + "Đang kết nối lại", câu yêu cầu đóng góp bằng lời. Dưới: boss vẽ bên trái (câu thoại ≤ 2 s; trên điện thoại nói qua băng thông báo), bảng câu hỏi bên phải (renderer S16, chạm là trả lời). Đúng: tia sáng bay vào boss + "Tia sáng trúng boss rồi!"; sai: boss lắc lư "phản đòn" + giải thích, không chữ "Sai". (c) Kết thúc: cửa sổ kết quả có Mây — "Hạ {boss}!" + chip phần thưởng của em, hoặc "Em đã tới phase n/total" + gợi ý ôn; nút "Về vùng đất"/"Về nhóm".
+**6b. Boss trong client (F110, [Confirmed — F110 Clarifications 2026-11-28]).** (a) Chọn: cửa sổ "Boss của vùng đất" (cổng/NPC `open_ui` `boss_info`): mỗi boss một thẻ — hình boss, tên, "n hiệp · Nhóm 2–4 bạn · Chơi một mình hoặc cùng bạn", nút "Chơi một mình" (chỉ khi server cho `solo`) và "Rủ bạn" (mở Nhóm S10); boss chỉ party chỉ có "Rủ bạn". (b) Đang chơi: màn `BossArena` 2D phủ thế giới tạm dừng (sân khấu cố định, không joystick/camera): dải HUD xanh đậm — tên boss, "Hiệp n/total", đồng hồ phase (lớp 1–3 chỉ thanh, lớp 4–9 thêm mm:ss), "Chat nhóm" (boss party), "Rời" (qua hộp xác nhận); hàng thanh năng lượng + "Năng lượng 52%"; hàng thẻ thành viên: trong lobby ✓ "Sẵn sàng"/đồng hồ "Đang chờ", trong phase ✓ "Đã đạt phần"/đồng hồ "Đang cố gắng" (không số, không xếp hạng), thẻ của em thêm "n câu đúng", bạn mất kết nối thẻ mờ + "Đang kết nối lại", câu yêu cầu đóng góp bằng lời. Dưới: boss vẽ bên trái (câu thoại ≤ 2 s; trên điện thoại nói qua băng thông báo), bảng câu hỏi bên phải (renderer S16, chạm là trả lời). Đúng: tia sáng bay vào boss + "Tia sáng trúng boss rồi!"; sai: boss lắc lư "phản đòn" + giải thích, không chữ "Sai". (c) Kết thúc: cửa sổ kết quả có Mây — "Hạ {boss}!" + chip phần thưởng của em, hoặc "Em đã tới hiệp n/total" + gợi ý ôn; nút "Về vùng đất"/"Về nhóm". (d) **Điện thoại (chế độ compact F125, cạnh ngắn < 500 dp) [Confirmed — F110 Clarifications 2026-11-28 (polish)]:** HUD chỉ hai hàng ngắn — hàng 1: tên boss · "Hiệp n/total" · đồng hồ · thanh năng lượng chỉ ghi "52%" (chữ "Năng lượng 52%" trong tooltip, biểu tượng lửa) · "Chat nhóm" · "Rời"; hàng 2: thẻ thành viên gọn = biểu tượng ✓/đồng hồ + nickname in đậm (+ "n câu đúng" trong viên riêng của em), chữ trạng thái nằm trong tooltip, riêng bạn mất kết nối luôn ghi "Đang kết nối lại". Câu yêu cầu đóng góp nói trong lobby nhóm (bảng câu hỏi đang trống), không chiếm chỗ trong hiệp; boss solo không bao giờ hiện câu này. Dải thông báo (câu thoại boss, "Thử lại hiệp này…", "Đang kết nối lại…") và phản hồi đúng/sai (thay chỗ câu thoại boss) nằm cạnh các thẻ ở hàng 2 của HUD, không thành dải riêng trên câu hỏi; câu thoại mở hiệp bỏ qua trên điện thoại (câu hỏi tới cùng lúc), câu thoại khi qua hiệp vẫn nói; nên mọi ô đáp án luôn nằm trọn trong màn hình, không phải cuộn (vi/en; kiểm bởi `F110Matrix.answers_cut`). Thuật ngữ hiển thị tiếng Việt của "phase" là **"hiệp"** ("Hiệp 1/2", "Thử lại hiệp này với câu hỏi mới", "Em đã tới hiệp n/total"); tiếng Anh "Round".
 
 **7. Dữ liệu & API.** Thử thách: `listGameChallenges`, `getGameChallenge`, `startGameChallenge`, `nextChallengeActivity`, `getGameChallengeAttempt`, `abandonGameChallengeAttempt`, WS `challenge.attempt.updated`. Boss: `listBosses`, `createBossEncounter`, `getBossEncounter`, `leaveBossEncounter`; WS lệnh `boss.encounter.ready`, `boss.answer.submit`; WS sự kiện `boss.encounter.updated`, `boss.phase.started`, `boss.phase.completed`, `boss.encounter.ended`. Chấm điểm do server ([ADR-0016](../adr/ADR-0016-server-authoritative-scoring-answer-key-khong-bao-gio-roi-se.md)); timer hiển thị theo `deadline_at` của server.
 
@@ -565,9 +565,9 @@ Trong lúc chơi trên mobile **ẩn joystick** (camera cố định kiểu sân
 | Cooldown sau thất bại (mức khó) | Đồng hồ đếm ngược nhẹ + gợi ý ôn LO |
 | Chờ party | Danh sách sẵn sàng; người chưa sẵn sàng có biểu tượng đồng hồ |
 | Trả lời sai | Boss "phản đòn" vui, giải thích ngắn; thanh năng lượng **không** tăng lại |
-| Hết giờ phase | "Thử lại phase với câu hỏi mới", giữ phase trước |
+| Hết giờ phase | "Thử lại hiệp này với câu hỏi mới", giữ phase trước |
 | Mất kết nối | "Đang kết nối lại…" trong thời gian grace của boss ([MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md)); về lại đúng phase |
-| Kết thúc chưa hạ boss | "Em đã tới phase 2/3" + LO nên ôn, không chữ "Thất bại" |
+| Kết thúc chưa hạ boss | "Em đã tới hiệp 2/3" + LO nên ôn, không chữ "Thất bại" |
 
 **9. Tương tác & phản hồi.** Đúng: hiệu ứng tia sáng bắn vào boss, thanh năng lượng giảm, rung nhẹ (mobile). Chuyển phase: boss đổi hình dạng ≤ 2 s, câu thoại song ngữ. Hạ boss: pháo hoa ngắn + phần thưởng. Không hiển thị bảng "ai kém nhất" trong party.
 

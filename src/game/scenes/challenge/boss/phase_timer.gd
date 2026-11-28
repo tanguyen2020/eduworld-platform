@@ -6,6 +6,8 @@ extends HBoxContainer
 ## UI only.
 
 const SECONDS_BANDS: PackedStringArray = ["g4_5", "g6_7", "g8_9"]
+## F110 compact polish: the bars of the first HUD row on the phone canvas (three `SIZE_SPACE_32`).
+const COMPACT_BAR: float = float(UiTokens.SIZE_SPACE_32 * 3)
 
 var _bar: ProgressBar = null
 var _clock: Label = null
@@ -42,6 +44,11 @@ func render(left_ms: int, band: String, phase_key: String) -> void:
 	_clock.visible = band in SECONDS_BANDS
 	_clock.text = ExamCountdown.clock_text(left_ms)
 	_bar.tooltip_text = tr("ui.boss.time_left")
+
+
+## Compact: a shorter bar (`COMPACT_BAR`).
+func set_compact(on: bool) -> void:
+	_bar.custom_minimum_size.x = COMPACT_BAR if on else float(UiTokens.SIZE_LAYOUT_120)
 
 
 func clock_text() -> String:
