@@ -6,7 +6,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { usePortalRuntime } from '../../../app/runtime';
 import { useSession } from '../../../session/SessionProvider';
 import type { components } from '../../../shared/api/schema.gen';
-import type { ItemRef } from '../release/useRelease';
+import { itemTenantHeaders, type ItemRef } from '../release/useRelease';
 import type { QuestionResponse } from './tryOutResponse';
 
 export type PreviewSession = components['schemas']['LearningPreviewSession'];
@@ -16,7 +16,7 @@ export type QuestionRender = components['schemas']['QuestionRender'];
 export type PreviewLang = 'vi' | 'en';
 export const LOCALE_OF: Record<PreviewLang, 'vi-VN' | 'en-US'> = { vi: 'vi-VN', en: 'en-US' };
 
-export const previewKey = (scope: string, r: ItemRef, version: number, lang: PreviewLang) => ['content-studio', 'preview', scope, r.contentType, r.contentId, version, lang] as const;
+export const previewKey = (scope: string, r: ItemRef, version: number, lang: PreviewLang) => ['content-studio', 'preview', scope, r.tenantId ?? null, r.contentType, r.contentId, version, lang] as const;
 
 export function usePreviewSession(r: ItemRef, version: number, lang: PreviewLang, enabled: boolean) {
   const { api } = usePortalRuntime();
@@ -25,7 +25,7 @@ export function usePreviewSession(r: ItemRef, version: number, lang: PreviewLang
     queryKey: previewKey(scopeKey, r, version, lang),
     queryFn: () =>
       api.call<PreviewSession>(
-        api.client.POST('/cms/learning/preview/sessions', { body: { content_type: r.contentType, content_id: r.contentId, version, display_language: LOCALE_OF[lang] } }),
+        api.client.POST('/cms/learning/preview/sessions', { body: { content_type: r.contentType, content_id: r.contentId, version, display_language: LOCALE_OF[lang] }, headers: itemTenantHeaders(r) as never }),
       ),
     enabled,
     staleTime: Infinity,

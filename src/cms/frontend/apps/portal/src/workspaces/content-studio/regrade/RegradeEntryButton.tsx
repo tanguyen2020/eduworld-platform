@@ -29,7 +29,8 @@ export function RegradeEntryButton({ scope, versionId, item }: { scope: RegradeS
       <List
         size="small"
         data-testid="regrade-history"
-        locale={{ emptyText: t('content_studio.regrade.noHistory') }}
+        // secondary text: the default empty text of antd List (colorTextDisabled) is below AA (axe color-contrast, F058 T057)
+        locale={{ emptyText: <Typography.Text type="secondary">{t('content_studio.regrade.noHistory')}</Typography.Text> }}
         dataSource={history.rows}
         loadMore={
           history.hasNextPage ? (

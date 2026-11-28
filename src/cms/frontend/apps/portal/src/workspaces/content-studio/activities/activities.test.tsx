@@ -46,6 +46,9 @@ describe('Activity Builder (F058)', () => {
     expect(within(step).getByRole('button', { name: 'Bài tập tương tác' })).toBeInTheDocument();
     expect(within(step).getByRole('button', { name: 'Bài học video' })).toBeInTheDocument();
     expect(within(step).queryByRole('button', { name: /Speaking|Minigame/i })).toBeNull();
+    // picking a type opens its editor on the same route (found by the E2E T040: it used to open /activities/new/new)
+    fireEvent.click(within(step).getByRole('button', { name: 'Bài học video' }));
+    expect(await screen.findByTestId('video-lesson-editor')).toBeInTheDocument();
   });
 
   it('AC-26: no create without learning_content.activity.write', async () => {

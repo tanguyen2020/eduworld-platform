@@ -10,6 +10,7 @@ import { usePortalRuntime } from '../../../app/runtime';
 import { useMe } from '../../../shared/api/hooks/useMe';
 import { ApiError } from '../../../shared/api/middleware/problem';
 import { problemOf } from '../../../shell/ProblemMessage';
+import { useContentAccess } from '../shared/access';
 import { CONTENT_REVIEW_BULK_MAX } from '../shared/config';
 import { bulkAllowed, taskKey, type ReviewTask } from './reviewRules';
 import { bulkIntent, decide } from './useReviewTasks';
@@ -25,6 +26,7 @@ export function BulkApproveDialog({ open, tasks, onClose }: { open: boolean; tas
   const [ack, setAck] = useState(false);
   const [running, setRunning] = useState(false);
   const [results, setResults] = useState<Record<string, ItemResult>>({});
+  const { platform } = useContentAccess();
   const needsAck = tasks.some((x) => x.audio_exempt_reason);
   const allowed = bulkAllowed(tasks.length);
 
@@ -39,7 +41,7 @@ export function BulkApproveDialog({ open, tasks, onClose }: { open: boolean; tas
       }
       setResults((r) => ({ ...r, [k]: { state: 'pending' } }));
       try {
-        await decide(api, { contentType: task.content_type, contentId: task.content_id, version: task.version, action: 'approve', audioExemptionAcknowledged: !!task.audio_exempt_reason && ack }, bulkIntent(runId, task));
+        await decide(api, { contentType: task.content_type, contentId: task.content_id, ...(platform && task.tenant_id ? { tenantId: task.tenant_id } : {}), version: task.version, action: 'approve', audioExemptionAcknowledged: !!task.audio_exempt_reason && ack }, bulkIntent(runId, task));
         setResults((r) => ({ ...r, [k]: { state: 'ok' } }));
       } catch (e) {
         const own = e instanceof ApiError && e.status === 403 && !!task.author_id && task.author_id === me.data?.user_id;

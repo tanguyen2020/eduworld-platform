@@ -13,16 +13,20 @@ export interface AxeFinding {
   targets: string[];
 }
 
-/** Runs axe on `selector` of the page and returns the serious/critical violations. */
-export async function axeViolations(page: Page, selector = 'body'): Promise<AxeFinding[]> {
+/**
+ * Runs axe on `selector` of the page and returns the serious/critical violations. `exclude`: regions left out of the
+ * run, each with its reason at the call site (e.g. the value of a DISABLED antd select — inactive controls are exempt
+ * from WCAG 1.4.3, but axe cannot tie the value span to the disabled input).
+ */
+export async function axeViolations(page: Page, selector = 'body', exclude: string[] = []): Promise<AxeFinding[]> {
   if (!(await page.evaluate(() => 'axe' in window))) await page.addScriptTag({ path: AXE_PATH });
-  return page.evaluate(async (sel) => {
+  return page.evaluate(async ([sel, ex]) => {
     const axe = (window as unknown as { axe: { run: (ctx: unknown, opts: unknown) => Promise<{ violations: { id: string; impact: string | null; nodes: { target: unknown[] }[] }[] }> } }).axe;
-    const r = await axe.run(sel, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] } });
+    const r = await axe.run(ex.length ? { include: [sel], exclude: ex } : sel, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] } });
     return r.violations
       .filter((v) => v.impact === 'serious' || v.impact === 'critical')
       .map((v) => ({ id: v.id, impact: v.impact ?? '', targets: v.nodes.slice(0, 5).map((n) => n.target.map(String).join(' ')) }));
-  }, selector);
+  }, [selector, exclude] as const);
 }
 
 /** One line per violation for an assertion message. */

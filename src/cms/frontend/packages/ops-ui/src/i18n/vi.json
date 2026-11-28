@@ -340,7 +340,7 @@
     },
     "error": {
       "rangeTooLarge": "Khoảng thời gian quá dài. Hãy thu hẹp khoảng thời gian.",
-      "queryTimeout": "Truy vấn mất quá nhiều thời gian. Hãy thu hẹp phạm vi (ví dụ chọn một lớp thay vì cả trường).",
+      "queryTimeout": "Truy vấn mất quá nhiều thời gian. Hãy thu hẹp phạm vi (ví dụ chọn một khối thay vì cả trường).",
       "busy": "Hệ thống đang bận. Số liệu sẽ được tải lại sau ít giây.",
       "generic": "Không tải được số liệu."
     },

@@ -283,7 +283,7 @@ function QuestionEditorForm({ questionId, server, etag, reload }: { questionId?:
             items={[
               { key: 'meta', label: t('content_studio.question.meta'), children: <QuestionMetaPanel value={state.meta} onChange={(meta) => change({ ...state, meta })} readOnly={readOnly} languageLocked={!!questionId} errors={errors} /> },
               { key: 'preview', label: t('content_studio.preview.title'), children: <StudentViewPreview draft={state.draft} contentLanguage={lang} saved={questionId && server ? { contentId: questionId, version: server.version } : undefined} dirty={autosave.dirty} /> },
-              ...(questionId && server?.content_version_id && status === 'published'
+              ...(questionId && server?.content_version_id && status === 'published' && access.activity.reEvaluate // no empty tab without learning_content.re_evaluate (F058-AC-24)
                 ? [{ key: 'regrade', label: t('content_studio.regrade.title'), children: <RegradeEntryButton scope="question_version" versionId={server.content_version_id} item={{ contentType: 'question', contentId: questionId }} /> }]
                 : []),
             ]}

@@ -11,7 +11,8 @@
         "accent": { "$value": "{ops.palette.blue.300}", "$description": "Selected tab text and ink bar (dark)." },
         "danger": { "$value": "{ops.palette.red.300}", "$description": "Danger button text and solid danger fill (dark)." },
         "on-danger": { "$value": "{ops.palette.neutral.900}", "$description": "Text on the solid danger fill (dark)." },
-        "warning": { "$value": "{ops.palette.amber.400}", "$description": "Warning tag text (dark)." }
+        "warning": { "$value": "{ops.palette.amber.400}", "$description": "Warning tag text (dark)." },
+        "success": { "$value": "{ops.palette.green.300}", "$description": "Success tag text (dark)." }
       },
       "bg": {
         "base": { "$value": "{ops.palette.neutral.900}", "$description": "Ant Design colorBgBase (dark)." },
@@ -30,6 +31,7 @@
       "banner": {
         "info": { "$value": "{ops.palette.banner.info-dark}", "$description": "Info banner (dark)." },
         "warning": { "$value": "{ops.palette.banner.warning-dark}", "$description": "Warning banner (dark)." },
+        "success": { "$value": "{ops.palette.banner.success-dark}", "$description": "Success tag background (dark)." },
         "error": { "$value": "{ops.palette.banner.error-dark}", "$description": "Error banner (dark)." }
       }
     }

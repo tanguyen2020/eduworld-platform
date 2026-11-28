@@ -7,7 +7,7 @@ import { Button, Flex, Switch, Tag, Typography } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Route, Routes, useNavigate, useParams } from 'react-router-dom';
+import { Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ActionGate } from '../../../permissions/ActionGate';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { ResponsiveTable } from '../../../shell/ResponsiveTable';
@@ -33,7 +33,8 @@ function ReviewQueue({ title }: { title: string }) {
   const [bulk, setBulk] = useState<ReviewTask[] | null>(null);
   const rows = (q.data?.pages ?? []).flatMap((p) => p.data);
   const now = new Date();
-  const open = (x: ReviewTask) => navigate(`${x.content_type}/${x.content_id}/${x.version}`);
+  // platform scope (System Admin): a task of lane `tenant` opens for its tenant (X-Tenant-Id of the reads and the decision)
+  const open = (x: ReviewTask) => navigate(`${x.content_type}/${x.content_id}/${x.version}${platform && x.tenant_id ? `?tenant=${x.tenant_id}` : ''}`);
 
   const columns: ColumnType<Row>[] = [
     {
@@ -122,9 +123,15 @@ function ReviewQueue({ title }: { title: string }) {
   );
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function TaskRoute() {
   const { contentType, contentId, version } = useParams();
-  return <ReviewTaskPage item={{ contentType: contentType as ContentType, contentId: contentId! }} version={Number(version)} />;
+  const [params] = useSearchParams();
+  const { platform } = useContentAccess();
+  const tenant = params.get('tenant') ?? '';
+  const item = { contentType: contentType as ContentType, contentId: contentId!, ...(platform && UUID.test(tenant) ? { tenantId: tenant } : {}) };
+  return <ReviewTaskPage item={item} version={Number(version)} />;
 }
 
 export function ReviewsScreen({ title }: { title: string }) {

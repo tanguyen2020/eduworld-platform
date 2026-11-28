@@ -120,6 +120,13 @@ func (q FeatureFlags) load(ctx context.Context) (string, []settings.CatalogItem,
 	return version, items, flags, nil
 }
 
+// flagCursor is the position after a flag key. Flags are keyed by their key only; the page codec refuses a cursor
+// without an id (keyset of other lists), so the id is derived from the key (stable, never read back) — without it the
+// second page answered 400 "invalid cursor" (found by the E2E F056 quickstart 22, 2026-11-28).
+func flagCursor(key string) page.Cursor {
+	return page.Cursor{Key: key, ID: uuid.NewSHA1(uuid.NameSpaceOID, []byte("feature_flag:"+key))}
+}
+
 // List is listFeatureFlags: feature flags with a row plus every menu/action of the catalog (no row =
 // enabled), filtered by kind, values for tenant_id when given, keyset paging by key.
 func (q FeatureFlags) List(ctx context.Context, kind string, tenant *uuid.UUID, limit int, cursor string) (out FeatureFlagPage, err error) {
@@ -158,7 +165,7 @@ func (q FeatureFlags) List(ctx context.Context, kind string, tenant *uuid.UUID, 
 			continue
 		}
 		if len(out.Data) == limit {
-			next := q.Cursors.Encode(page.Cursor{Key: out.Data[limit-1].FlagKey})
+			next := q.Cursors.Encode(flagCursor(out.Data[limit-1].FlagKey))
 			out.Page.HasMore, out.Page.NextCursor = true, &next
 			break
 		}

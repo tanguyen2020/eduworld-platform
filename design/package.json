@@ -1,6 +1,6 @@
 {
   "name": "@eduworld/design-tokens",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "private": true,
   "description": "EduWorld design tokens (shared, game, admin) and the theme pipeline (F005, ADR-0047).",
   "type": "module",

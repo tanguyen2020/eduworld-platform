@@ -10,7 +10,7 @@ import type { ApiClient } from '../../../shared/api/client';
 import { INTENT_HEADER } from '../../../shared/api/middleware/idempotency';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
-import { versionEtag, type ItemRef } from '../release/useRelease';
+import { itemTenantHeaders, versionEtag, type ItemRef } from '../release/useRelease';
 import type { ContentType } from '../shared/contentTypes';
 import type { FieldComment, ReviewTask } from './reviewRules';
 
@@ -63,7 +63,7 @@ export function decide(api: ApiClient, v: DecisionVars, intent: Record<string, s
           ...(v.action === 'reject' && v.fieldComments?.length ? { field_comments: v.fieldComments } : {}),
           ...(v.audioExemptionAcknowledged ? { audio_exemption_acknowledged: true } : {}),
         },
-        headers: { ...intent, ...(etag ? { 'If-Match': etag } : {}) } as never,
+        headers: { ...intent, ...(etag ? { 'If-Match': etag } : {}), ...itemTenantHeaders(v) } as never,
       }),
     ),
   );

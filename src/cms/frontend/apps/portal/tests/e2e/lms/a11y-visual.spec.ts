@@ -57,8 +57,9 @@ test.describe('@F055 @visual LMS — axe và visual regression (TC-UI-004, TC-UI
     s = await openSession(browser, 'ad.truong.a');
     const list = s.page.waitForResponse((r) => /\/api\/v1\/lms\/assignments(\?|$)/.test(r.url()) && r.request().method() === 'GET', { timeout: 60_000 });
     await spaGoto(s.page, '/school-lms/assignments');
-    const body = (await (await list).json()) as { data?: { assignment_id?: string }[] };
-    assignmentId = body.data?.find((a) => a.assignment_id)?.assignment_id;
+    const body = (await (await list).json()) as { data?: { assignment_id?: string; title?: string; status?: string }[] };
+    // an OPEN seeded assignment (the E2E suites add cancelled '[E2E] …' ones, whose detail has no action buttons)
+    assignmentId = body.data?.find((a) => a.assignment_id && a.status === 'open' && a.title?.startsWith('[DEV]'))?.assignment_id;
   });
   test.afterAll(async () => s?.close());
 

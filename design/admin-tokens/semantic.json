@@ -66,6 +66,20 @@
           "$extensions": { "eduworld": { "contrastWith": [
             { "token": "banner.warning.bg", "level": "normal" }
           ] } }
+        },
+        "success": {
+          "$value": "{ops.mode.text.success}",
+          "$description": "Text of the success tag (antd Tag colorSuccess, e.g. media \"Sẵn sàng\"): the status green is below 4.5:1 on its background (axe, F058 T057).",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "banner.success.bg", "level": "normal" }
+          ] } }
+        },
+        "info": {
+          "$value": "{ops.mode.text.link}",
+          "$description": "Text of the info/processing tag (antd Tag colorInfo, e.g. \"Gốc\" of a bilingual field): darkAlgorithm derives a blue below 4.5:1 on its dark background (axe, F058 T057).",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "banner.info.bg", "level": "normal" }
+          ] } }
         }
       },
       "bg": {
@@ -134,7 +148,8 @@
     "$description": "System warning banner (moderation off, maintenance, SIS incident — DESIGN_SYSTEM §4.2).",
     "info": { "bg": { "$value": "{ops.mode.banner.info}", "$description": "Info banner background." } },
     "warning": { "bg": { "$value": "{ops.mode.banner.warning}", "$description": "Warning banner background." } },
-    "error": { "bg": { "$value": "{ops.mode.banner.error}", "$description": "Error banner background." } }
+    "error": { "bg": { "$value": "{ops.mode.banner.error}", "$description": "Error banner background." } },
+    "success": { "bg": { "$value": "{ops.mode.banner.success}", "$description": "Success tag background (no success banner)." } }
   },
   "chart": {
     "categorical": {

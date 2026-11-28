@@ -1,12 +1,15 @@
 // VersionViewDrawer (F054-AC-02, AC-09, FR-CNT-010): one version read only (getContentVersion) — metadata, the
 // student preview of that version, and for a published / archived version only "Tạo bản nháp từ phiên bản này"
-// (create*Version, Idempotency-Key). There is no edit or delete action for a published version (ADR-0043, R11).
+// (create*Version, Idempotency-Key); for a question version also "Chấm lại hệ thống" of that version (F058-AC-22, found
+// by the E2E T047: the editor shows the latest version only). There is no edit or delete action for a published version
+// (ADR-0043, R11).
 import { Alert, App as AntApp, Button, Descriptions, Drawer, Flex, Skeleton, Typography } from 'antd';
 import { DomainTag } from '@eduworld/ops-ui';
 import { useTranslation } from 'react-i18next';
 import { ActionGate } from '../../../permissions/ActionGate';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { PreviewPanel } from '../preview/PreviewPanel';
+import { RegradeEntryButton } from '../regrade/RegradeEntryButton';
 import { CONTENT_TYPES } from '../shared/contentTypes';
 import { formatIct, isReadOnlyVersion } from './releaseOptions';
 import { canCreateVersion, useRelease, useVersionDetail, type ItemRef } from './useRelease';
@@ -69,6 +72,9 @@ export function VersionViewDrawer({ item, version, canWrite, assigned, onClose, 
             </ActionGate>
           )}
           {newDraft.error ? <ProblemMessage error={newDraft.error} /> : null}
+          {/* system re-evaluation of THIS version (F058-AC-22): the editor only shows the latest version, so a faulty
+              version replaced by a corrected one is re-evaluated from here; hidden without learning_content.re_evaluate */}
+          {item.contentType === 'question' && isReadOnlyVersion(v.status) && v.content_version_id ? <RegradeEntryButton scope="question_version" versionId={v.content_version_id} item={item} /> : null}
           <Typography.Title level={3}>{t('content_studio.preview.title')}</Typography.Title>
           <PreviewPanel item={item} version={v.version} contentLanguage={lang} />
         </Flex>

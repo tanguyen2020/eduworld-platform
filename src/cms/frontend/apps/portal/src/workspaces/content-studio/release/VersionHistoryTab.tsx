@@ -158,6 +158,9 @@ export function VersionHistoryTab({ item, assigned = false, onDraftCreated }: Ve
             : undefined
         }
         rowSelection={{
+          // two versions are compared: no "select all" (its header checkbox was also copied, focusable, into the
+          // aria-hidden measure row of the scrolling table — axe aria-hidden-focus, F058 T057)
+          hideSelectAll: true,
           selectedRowKeys: selected,
           onChange: (keys) => setSelected((keys as number[]).slice(-2)),
           getCheckboxProps: (v) => ({ 'aria-label': t('content_studio.release.select', { version: v.version }) }) as never,

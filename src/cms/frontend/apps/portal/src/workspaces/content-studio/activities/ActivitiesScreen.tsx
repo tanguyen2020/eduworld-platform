@@ -39,7 +39,8 @@ export function ActivityTypeStep() {
               hoverable
               role="button"
               aria-label={t(activityEditor(x.activity_type)!.labelKey)}
-              onClick={() => navigate(`new?type=${x.activity_type}`)}
+              // same route (`new`), only the query changes: a relative `new?type=` would open /activities/new/new (no screen)
+              onClick={() => navigate({ search: `?type=${x.activity_type}` })}
               title={t(activityEditor(x.activity_type)!.labelKey)}
               extra={x.status === 'preview' ? <Tag color="warning">{t('content_studio.activity.statusPreview')}</Tag> : null}
             >

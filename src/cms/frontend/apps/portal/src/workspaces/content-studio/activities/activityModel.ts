@@ -84,6 +84,21 @@ export function fromDefinition(d: ActivityDefinition): ActivityState {
 }
 
 /** ActivityDefinitionInput of the form (full body: updateCmsActivityDraft replaces the draft). */
+/**
+ * Config as sent to the API: the picked questions keep their `type` in the editor state (display, allowed-type check)
+ * but `questionRef` of the activity schemas has no such property — the backend refused every quiz/exercise with
+ * picked questions (422 ACTIVITY_CONFIG_INVALID "additional properties 'type' not allowed", E2E F058 T059).
+ */
+export function wireConfig(config: ActivityState['config']): ActivityState['config'] {
+  const content = config.content as { question_source?: { questions?: { type?: string }[] } } | undefined;
+  const questions = content?.question_source?.questions;
+  if (!questions?.some((q) => 'type' in q)) return config;
+  return {
+    ...config,
+    content: { ...content, question_source: { ...content!.question_source, questions: questions.map((q) => Object.fromEntries(Object.entries(q).filter(([k]) => k !== 'type'))) } },
+  };
+}
+
 export function toInput(s: ActivityState): ActivityDefinitionInput {
   const out: Record<string, unknown> = {
     activity_type: s.activity_type,
@@ -92,7 +107,7 @@ export function toInput(s: ActivityState): ActivityDefinitionInput {
     subject_id: s.subject_id,
     objective_ids: s.objective_ids,
     content_language: s.content_language,
-    config: s.config,
+    config: wireConfig(s.config),
     math_assets: s.math_assets,
   };
   if (nonEmpty(s.description)) out.description = nonEmpty(s.description);

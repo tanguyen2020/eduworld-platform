@@ -76,6 +76,24 @@ describe('Hàng đợi duyệt (F054 US2)', () => {
     expect(await screen.findByText('Câu 2')).toBeInTheDocument(); // back to the queue
   });
 
+  it('AC-13: a System Admin opens a tenant task for its tenant — reads and approval send the X-Tenant-Id of the task', async () => {
+    // found by the E2E F058 T040 on the real stack: in platform scope the task page read the version without a tenant
+    // and the backend answered 404 ("Không tìm thấy nội dung cần duyệt")
+    const perms = [...TENANT_CONTENT_PERMS, 'platform.cross_tenant.read'];
+    const base = contentAccount('sa.admin', null, perms, '0193a4d2-1111-7000-8000-000000000003');
+    const account = { ...base, perms: { ...base.perms, [A]: { workspaces: ['content_studio' as const], permissions: perms } } };
+    const { backend } = await renderPublishing('/content-studio/reviews', { account, setup: (m) => seed(m) });
+    fireEvent.click(await screen.findByRole('button', { name: 'Câu 1' }));
+    expect(await screen.findByTestId('review-task')).toBeInTheDocument();
+    const path = `/cms/learning/content/question/${P(101)}/versions/2`;
+    const reads = backend.calls('GET', path);
+    expect(reads.length).toBeGreaterThan(0);
+    expect(reads.every((r) => r.headers['x-tenant-id'] === A)).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Duyệt' }));
+    await waitFor(() => expect(backend.calls('POST', `${path}:transition`)).toHaveLength(1));
+    expect(backend.calls('POST', `${path}:transition`)[0]!.headers['x-tenant-id']).toBe(A);
+  });
+
   it('AC-13: the author of the version gets no decision buttons', async () => {
     await renderPublishing(`/content-studio/reviews/question/${P(103)}/2`, { account: tenantUser(), setup: (m) => seed(m) });
     expect(await screen.findByText('Bạn là tác giả của phiên bản này nên không thể duyệt.')).toBeInTheDocument();

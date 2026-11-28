@@ -84,6 +84,14 @@
           "$value": "#FFF2F0",
           "$description": "Error banner background (light)."
         },
+        "success-light": {
+          "$value": "#F6FFED",
+          "$description": "Success tag background (light)."
+        },
+        "success-dark": {
+          "$value": "#162312",
+          "$description": "Success tag background (dark)."
+        },
         "info-dark": {
           "$value": "#111A2C",
           "$description": "Info banner background (dark)."
@@ -201,6 +209,17 @@
           "$description": "Warning tag text (light)."
         },
         "$description": "Warning tag text (DESIGN_SYSTEM §4.1): the status orange #D97706 is 3:1 on the warning background, below AA for text."
+      },
+      "green": {
+        "300": {
+          "$value": "#86EFAC",
+          "$description": "Success tag text (dark)."
+        },
+        "800": {
+          "$value": "#166534",
+          "$description": "Success tag text (light)."
+        },
+        "$description": "Success tag text (DESIGN_SYSTEM §4.1): the status green is below AA for text on the success background (axe, F058 T057)."
       }
     },
     "size": {
@@ -594,6 +613,26 @@
         }
       },
       "Tag": {
+        "colorInfo": {
+          "$type": "color",
+          "$value": "{ops.color.text.info}",
+          "$description": "Text of Tag color=\"processing\" (\"Gốc\" of BilingualField, \"SIS\", \"Hệ thống\") at AA on its background."
+        },
+        "colorInfoBg": {
+          "$type": "color",
+          "$value": "{banner.info.bg}",
+          "$description": "Background of Tag color=\"processing\" (declared so the contrast check covers the pair)."
+        },
+        "colorSuccess": {
+          "$type": "color",
+          "$value": "{ops.color.text.success}",
+          "$description": "Text of Tag color=\"success\" (media \"Sẵn sàng\", statuses) at AA on its background."
+        },
+        "colorSuccessBg": {
+          "$type": "color",
+          "$value": "{banner.success.bg}",
+          "$description": "Background of Tag color=\"success\" (declared so the contrast check covers the pair)."
+        },
         "colorWarning": {
           "$type": "color",
           "$value": "{ops.color.text.warning}",

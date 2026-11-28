@@ -340,7 +340,7 @@
     },
     "error": {
       "rangeTooLarge": "The date range is too long. Please narrow it.",
-      "queryTimeout": "The query took too long. Please narrow the scope (e.g. one class instead of the whole school).",
+      "queryTimeout": "The query took too long. Please narrow the scope (e.g. one grade instead of the whole school).",
       "busy": "The system is busy. The data will reload in a few seconds.",
       "generic": "Could not load the data."
     },

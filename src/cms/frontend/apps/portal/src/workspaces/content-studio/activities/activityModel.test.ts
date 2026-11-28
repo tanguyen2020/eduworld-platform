@@ -39,6 +39,15 @@ describe('Activity Builder rules (F058)', () => {
     expect(body).toMatchObject({ activity_type: 'quiz', title: { vi: 'Luyện nhân' }, description: { vi: 'Ôn' }, instructions: { vi: 'Chọn' }, topic_id: QV, time_limit_seconds: 600, difficulty: 2, content_language: 'vi' });
   });
 
+  it('AC-02: the picked questions are sent as questionRef only (no editor-side `type`, refused by the schema)', () => {
+    const d = { activity_id: QV, activity_type: 'quiz', title: { vi: 'Luyện nhân' }, status: 'draft', version: 1, grade_levels: [3], objective_ids: [QV], subject_id: QV, content_language: 'vi', config: { content: { question_source: { kind: 'questions', questions: [{ question_version_id: QV, type: 'true_false' }] } } } } as never;
+    const state = fromDefinition(d);
+    const body = toInput(state) as unknown as { config: { content: { question_source: { questions: Record<string, unknown>[] } } } };
+    expect(body.config.content.question_source.questions).toEqual([{ question_version_id: QV }]);
+    // the editor state keeps the type (display, allowed-type check)
+    expect((state.config.content as { question_source: { questions: { type?: string }[] } }).question_source.questions[0]!.type).toBe('true_false');
+  });
+
   it('AC-03: question source — type outside allowed_question_types refused, duplicates, three kinds', () => {
     const src = { kind: 'questions' as const, questions: [{ question_version_id: QV, type: 'single_choice' }] };
     expect(canAddQuestion(src, { question_version_id: 'other', type: 'numeric' }, allowedTypesOf('quiz').defaults)).toBe('type');

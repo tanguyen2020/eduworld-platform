@@ -22,3 +22,15 @@ export async function openSelect(page: Page, label: string): Promise<void> {
 export function openOptions(page: Page) {
   return page.locator('.ant-select-dropdown:not(.ant-select-dropdown-hidden)').last().locator('.ant-select-item-option');
 }
+
+/** Selected item(s) shown by an antd select found by its accessible name. */
+export function selectedItem(page: Page, label: string) {
+  return page.getByRole('combobox', { name: label, exact: true }).locator('xpath=ancestor::div[contains(@class,"ant-select")][1]').locator('.ant-select-selection-item');
+}
+
+/** System Admin: narrows the topbar "Lọc tenant" to the one tenant matching `tenant` (single-tenant screens). */
+export async function pickTenantFilter(page: Page, tenant: RegExp): Promise<void> {
+  await openSelect(page, 'Lọc tenant');
+  await openOptions(page).filter({ hasText: tenant }).first().click();
+  await page.keyboard.press('Escape');
+}
