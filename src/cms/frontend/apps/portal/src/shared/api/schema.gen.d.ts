@@ -14469,10 +14469,9 @@ export interface components {
         };
         LearningPreviewSession: {
             expires_at: components["schemas"]["Timestamp"];
-            /** @description QuestionRender không đáp án; với activity là các câu cố định của version theo thứ tự (câu rút ngẫu nhiên lúc bắt đầu không được rút trong preview) */
+            /** @description QuestionRender không đáp án; render (ActivityRender, không nguồn câu hỏi/chấm/ngưỡng đạt) chỉ có khi content_type = activity; với activity items là các câu cố định của version theo thứ tự (câu rút ngẫu nhiên lúc bắt đầu không được rút trong preview) */
             items?: components["schemas"]["QuestionRender"][];
             preview_session_id: components["schemas"]["Uuid"];
-            /** @description Chỉ với content_type = activity — ActivityRender như học sinh nhận (không nguồn câu hỏi, chấm, ngưỡng đạt; F058-AC-10/11) */
             render?: components["schemas"]["ActivityRender"];
         };
         LearningProgress: {

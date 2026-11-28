@@ -27766,14 +27766,11 @@ components:
       required: [preview_session_id, expires_at]
       properties:
         preview_session_id: { $ref: '#/components/schemas/Uuid' }
-        render:
-          description: Chỉ với content_type = activity — ActivityRender như học sinh nhận (không nguồn câu hỏi, chấm, ngưỡng đạt; F058-AC-10/11)
-          allOf:
-            - $ref: '#/components/schemas/ActivityRender'
+        render: { $ref: '#/components/schemas/ActivityRender' }
         items:
           type: array
           maxItems: 200
-          description: QuestionRender không đáp án; với activity là các câu cố định của version theo thứ tự (câu rút ngẫu nhiên lúc bắt đầu không được rút trong preview)
+          description: QuestionRender không đáp án; render (ActivityRender, không nguồn câu hỏi/chấm/ngưỡng đạt) chỉ có khi content_type = activity; với activity items là các câu cố định của version theo thứ tự (câu rút ngẫu nhiên lúc bắt đầu không được rút trong preview)
           items: { $ref: '#/components/schemas/QuestionRender' }
         expires_at: { $ref: '#/components/schemas/Timestamp' }
     PreviewResponseRequest:
