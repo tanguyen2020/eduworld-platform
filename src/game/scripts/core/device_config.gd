@@ -57,10 +57,13 @@ static func valid_lan_cache_url(url: String) -> bool:
 
 
 func _read(cfg: ConfigFile) -> void:
-	var shared: Variant = cfg.get_value(SECTION, "shared_device", null)
+	# ConfigFile.get_value with a null default logs an engine error for each missing key: check the key first.
+	var shared: Variant = cfg.get_value(SECTION, "shared_device") if cfg.has_section_key(SECTION, "shared_device") \
+			else null
 	if shared is bool:
 		shared_device = shared as bool
-	var low: Variant = cfg.get_value(SECTION, "low_data_mode", null)
+	var low: Variant = cfg.get_value(SECTION, "low_data_mode") if cfg.has_section_key(SECTION, "low_data_mode") \
+			else null
 	if low is bool:
 		low_data_mode = low as bool
 	var lan: Variant = cfg.get_value(SECTION, "lan_cache_url", "")

@@ -75,7 +75,7 @@ func _scheduler(cfg_text: String) -> PrefetchScheduler:
 	var s: PrefetchScheduler = PrefetchScheduler.new(device, downloader, telemetry)
 	s.client_version = "1.2.3"
 	s.bundles_base_url = BASE
-	s.public_key = FileAccess.get_file_as_string(FIX.path_join("release_public.pem"))
+	s.public_key = FileAccess.get_file_as_string(FIX.path_join("release_public_key.txt"))
 	s.index_fetcher = _fetch_index
 	return s
 

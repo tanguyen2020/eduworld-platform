@@ -2,7 +2,9 @@
 // TEST-ONLY (AGENTS R17): writes the release fixtures of the F133 GdUnit tests (ManifestVerifier, Config, ContentDownloader,
 // PrefetchScheduler) with the real CI tools (scripts/godot/gen-config.mjs, sign-manifest.mjs), so the client is tested
 // against bytes signed by Node exactly like a release. The RSA-3072 key pair is generated in memory: only the PUBLIC key
-// and the signatures are written — the private key is discarded (nothing secret is committed, R4).
+// and the signatures are written — the private key is discarded (nothing secret is committed, R4). The public key goes to
+// `release_public_key.txt`, never `.pem`: the root .gitignore ignores `*.pem`, so a `.pem` fixture is not committed and
+// the suites fail on every fresh checkout (fixed 2026-11-28).
 //   node src/game/tests/fixtures/release/make_fixtures.mjs
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -18,7 +20,7 @@ const pub = publicKey.export({ type: 'spki', format: 'pem' });
 const write = (name, data) => fs.writeFileSync(path.join(here, name), data);
 const sign = (name, bytes) => { write(name, bytes); write(`${name}.sig`, signBytes(bytes, priv)); };
 
-write('release_public.pem', pub);
+write('release_public_key.txt', pub);
 const cfg = buildConfig('production', {
   EW_GAME_API_BASE_URL: 'https://api.eduworld.example/api/v1', EW_GAME_REALTIME_URL: 'wss://api.eduworld.example/realtime/v1',
   EW_GAME_CDN_BASE_URL: 'https://cdn.eduworld.example', EW_GAME_BUNDLES_BASE_URL: 'https://bundles.eduworld.example',

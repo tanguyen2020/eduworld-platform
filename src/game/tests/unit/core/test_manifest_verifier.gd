@@ -15,8 +15,20 @@ func _text(file_name: String) -> String:
 	return FileAccess.get_file_as_string(DIR.path_join(file_name))
 
 
+## The public key is a `.txt` fixture: the root .gitignore ignores `*.pem`, so a `.pem` fixture never reached git and
+## every fresh checkout failed these suites (2026-11-28).
 func _pem() -> String:
-	return _text("release_public.pem")
+	return _text("release_public_key.txt")
+
+
+## Guards the fixture set: the key file is tracked (not ignored), is a PEM public key and is the same key the signed
+## config fixture carries, so the signatures and the key cannot drift apart again.
+func test_release_key_fixture_is_present_and_matches_the_signed_config() -> void:
+	assert_bool(FileAccess.file_exists(DIR.path_join("release_public_key.txt"))).is_true()
+	assert_str(_pem()).starts_with("-----BEGIN PUBLIC KEY-----")
+	var cfg: Variant = JSON.parse_string(_text("config_production.json"))
+	assert_bool(cfg is Dictionary).is_true()
+	assert_str(String((cfg as Dictionary).get("manifest_public_key", ""))).is_equal(_pem())
 
 
 func test_node_signed_bundle_index_verifies_and_parses() -> void:
