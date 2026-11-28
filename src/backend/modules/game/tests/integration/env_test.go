@@ -506,6 +506,9 @@ func (e *env) payloads(ctx context.Context, t *testing.T, typ string) []map[stri
 		_ = json.Unmarshal(raw, &m)
 		out = append(out, m)
 	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
+	}
 	return out
 }
 

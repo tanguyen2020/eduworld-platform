@@ -195,14 +195,6 @@ func (e *tenv) tick() int {
 	return n
 }
 
-// mmTick runs the matchmaker (the ready checks past their deadline).
-func (e *tenv) mmTick() {
-	e.t.Helper()
-	if _, err := e.mm.Tick(jobCtx()); err != nil {
-		e.t.Fatalf("mm tick: %v", err)
-	}
-}
-
 // open prepares a tournament of the single elimination template with kids registered and confirmed, the bracket
 // generated, ready for the check-in (status scheduled).
 func (e *tenv) prepared(tpl uuid.UUID, admin string, kids []kid, edit func(b map[string]any)) string {
@@ -279,6 +271,9 @@ func (e *tenv) nodes(tid string) []nodeRow {
 			e.t.Fatal(err)
 		}
 		out = append(out, n)
+	}
+	if err := rows.Err(); err != nil {
+		e.t.Fatal(err)
 	}
 	return out
 }

@@ -37,7 +37,12 @@ func inbox(t *testing.T, vk valkey.Client, user uuid.UUID) <-chan rt.Envelope {
 	if err := dc.Do(context.Background(), dc.B().Subscribe().Channel(rt.UserChannel(user)).Build()).Error(); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { release(); <-wait })
+	t.Cleanup(func() {
+		release()
+		if err := <-wait; err != nil {
+			t.Logf("valkey subscription closed: %v", err)
+		}
+	})
 	return out
 }
 

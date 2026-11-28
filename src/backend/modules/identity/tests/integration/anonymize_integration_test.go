@@ -53,7 +53,7 @@ func TestUserAnonymize(t *testing.T) {
 	if _, err := e.platform.ExecContext(ctx, `UPDATE identity.users SET email = 'hs.an@example.invalid' WHERE user_id = $1`, old); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := e.platform.ExecContext(ctx, `UPDATE org.students SET student_code = 'HS-AN-01', national_id_hash = 'h', date_of_birth_enc = ''
+	if _, err := e.platform.ExecContext(ctx, `UPDATE org.students SET student_code = 'HS-AN-01', national_id_hash = 'h', date_of_birth_enc = '\x01'
 		WHERE student_id = $1`, old); err != nil {
 		t.Fatal(err)
 	}

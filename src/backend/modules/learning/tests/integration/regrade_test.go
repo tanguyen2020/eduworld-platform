@@ -62,7 +62,7 @@ func (c *curEnv) evaluations(ctx context.Context, t *testing.T, attemptID string
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var out []evalRow
 	for rows.Next() {
 		var e evalRow
@@ -70,6 +70,9 @@ func (c *curEnv) evaluations(ctx context.Context, t *testing.T, attemptID string
 			t.Fatal(err)
 		}
 		out = append(out, e)
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
 	}
 	return out
 }

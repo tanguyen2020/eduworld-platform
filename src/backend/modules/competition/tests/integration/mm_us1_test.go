@@ -325,7 +325,7 @@ func TestMMParallelMatchmakers(t *testing.T) {
 	}
 	m.clock.Add(time.Minute)
 	second := command.Matchmaking{UoW: m.uow, AfterCommit: entx.AfterCommit, Repo: persistence.Matchmaking{}, Directory: persistence.PartyDirectory{},
-		Parties: persistence.Parties{}, Events: m.parties.Events, Audit: m.parties.Audit, Store: m.store, Realtime: m.push, Presence: m.penv.online,
+		Parties: persistence.Parties{}, Events: m.parties.Events, Audit: m.parties.Audit, Store: m.store, Realtime: m.push, Presence: m.online,
 		Metrics: observability.Matchmaking{}, Settings: command.MatchmakingSettings{Owner: "worker-2", LockTTL: 5 * time.Second}, Now: m.clock.Now}
 	var wg sync.WaitGroup
 	for _, w := range []command.Matchmaking{m.mm, second} {

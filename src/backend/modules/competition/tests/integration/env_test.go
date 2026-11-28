@@ -307,7 +307,12 @@ func (e *env) channel(ch string) <-chan rt.Envelope {
 	if err := dc.Do(context.Background(), dc.B().Subscribe().Channel(ch).Build()).Error(); err != nil {
 		e.t.Fatal(err)
 	}
-	e.t.Cleanup(func() { release(); <-wait })
+	e.t.Cleanup(func() {
+		release()
+		if err := <-wait; err != nil {
+			e.t.Logf("valkey subscription closed: %v", err)
+		}
+	})
 	return out
 }
 

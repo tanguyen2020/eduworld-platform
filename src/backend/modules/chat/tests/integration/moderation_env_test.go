@@ -42,20 +42,25 @@ func defaultTerms() []catalog.Term {
 func (c *chatEnv) publishPlatform(terms ...catalog.Term) int64 {
 	c.t.Helper()
 	ctx := context.Background()
-	rows, err := c.su.QueryContext(ctx, `SELECT category_id, code, severity, default_action, enabled, allow_tenant_toggle
-		FROM chat.sensitive_term_categories WHERE deleted_at IS NULL ORDER BY code`)
-	if err != nil {
-		c.t.Fatal(err)
-	}
 	var cats []catalog.Category
-	for rows.Next() {
-		var k catalog.Category
-		if err := rows.Scan(&k.ID, &k.Code, &k.Severity, &k.DefaultAction, &k.Enabled, &k.AllowTenantToggle); err != nil {
+	func() {
+		rows, err := c.su.QueryContext(ctx, `SELECT category_id, code, severity, default_action, enabled, allow_tenant_toggle
+		FROM chat.sensitive_term_categories WHERE deleted_at IS NULL ORDER BY code`)
+		if err != nil {
 			c.t.Fatal(err)
 		}
-		cats = append(cats, k)
-	}
-	_ = rows.Close()
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var k catalog.Category
+			if err := rows.Scan(&k.ID, &k.Code, &k.Severity, &k.DefaultAction, &k.Enabled, &k.AllowTenantToggle); err != nil {
+				c.t.Fatal(err)
+			}
+			cats = append(cats, k)
+		}
+		if err := rows.Err(); err != nil {
+			c.t.Fatal(err)
+		}
+	}()
 	var v int64
 	if err := c.su.QueryRowContext(ctx, `SELECT coalesce(max(catalog_version), 0) + 1 FROM chat.sensitive_catalog_versions
 		WHERE tenant_id IS NULL`).Scan(&v); err != nil {

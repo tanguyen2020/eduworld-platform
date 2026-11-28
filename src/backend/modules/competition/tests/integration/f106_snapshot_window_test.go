@@ -55,31 +55,37 @@ func (r *renv) inTenant(tenant uuid.UUID, fn func(ctx context.Context) error) {
 func oldSnapshotView(ctx context.Context, tenant uuid.UUID, scope, period string, viewer *uuid.UUID, off, size, around int) (bool, int,
 	[]ldb.Ranked, *ldb.Ranked, []ldb.Ranked, error) {
 	t, _ := entx.Tx(ctx)
-	rows, err := t.QueryContext(ctx, `SELECT student_id, rank, value::float8, members FROM competition.leaderboard_snapshots WHERE tenant_id = $1
-		AND leaderboard_id = $2 AND scope_id = $3 AND period_key = $4 AND (rank IS NULL OR rank <= 100) ORDER BY rank NULLS FIRST LIMIT 101`,
-		tenant, lbArenaWeekly, scope, period)
-	if err != nil {
-		return false, 0, nil, nil, nil, err
-	}
 	var all []ldb.Ranked
 	found, total := false, 0
-	for rows.Next() {
-		found = true
-		var st uuid.NullUUID
-		var rank, members sql.NullInt64
-		var v float64
-		if err := rows.Scan(&st, &rank, &v, &members); err != nil {
-			return false, 0, nil, nil, nil, err
+	// The rows are closed before the next statement of the transaction (one statement at a time per connection).
+	if err := func() error {
+		rows, err := t.QueryContext(ctx, `SELECT student_id, rank, value::float8, members FROM competition.leaderboard_snapshots WHERE tenant_id = $1
+		AND leaderboard_id = $2 AND scope_id = $3 AND period_key = $4 AND (rank IS NULL OR rank <= 100) ORDER BY rank NULLS FIRST LIMIT 101`,
+			tenant, lbArenaWeekly, scope, period)
+		if err != nil {
+			return err
 		}
-		if !st.Valid || !rank.Valid {
-			continue
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			found = true
+			var st uuid.NullUUID
+			var rank, members sql.NullInt64
+			var v float64
+			if err := rows.Scan(&st, &rank, &v, &members); err != nil {
+				return err
+			}
+			if !st.Valid || !rank.Valid {
+				continue
+			}
+			all = append(all, ldb.Ranked{Student: st.UUID, Rank: int(rank.Int64), Value: v})
+			if members.Valid {
+				total = int(members.Int64)
+			}
 		}
-		all = append(all, ldb.Ranked{Student: st.UUID, Rank: int(rank.Int64), Value: v})
-		if members.Valid {
-			total = int(members.Int64)
-		}
+		return rows.Err()
+	}(); err != nil {
+		return false, 0, nil, nil, nil, err
 	}
-	_ = rows.Close()
 	if !found {
 		return false, 0, nil, nil, nil, nil
 	}

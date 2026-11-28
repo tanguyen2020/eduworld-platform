@@ -232,20 +232,25 @@ func TestDashboardReadModelRefresh(t *testing.T) {
 		t.Fatalf("school × grade 3 × V completion %d/%d", compNum, compDen)
 	}
 	reasons := map[uuid.UUID]string{}
-	rows, err := c.platform.QueryContext(ctx, `SELECT student_id, array_to_string(reasons, ',') FROM learning.rm_student_attention
+	func() {
+		rows, err := c.platform.QueryContext(ctx, `SELECT student_id, array_to_string(reasons, ',') FROM learning.rm_student_attention
 		WHERE tenant_id = $1`, A)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for rows.Next() {
-		var id uuid.UUID
-		var r string
-		if err := rows.Scan(&id, &r); err != nil {
+		if err != nil {
 			t.Fatal(err)
 		}
-		reasons[id] = r
-	}
-	_ = rows.Close()
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var id uuid.UUID
+			var r string
+			if err := rows.Scan(&id, &r); err != nil {
+				t.Fatal(err)
+			}
+			reasons[id] = r
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	// F043-AC-08: a1 three objectives at beginning; a2 rapid guesses ≥ 30 %; b1 two missed assignments in 14 days; c1 none.
 	if reasons[k.a1] != "beginning_objectives" || reasons[k.a2] != "rapid_guess" || reasons[k.b1] != "missed_assignments" || reasons[k.c1] != "" {
 		t.Fatalf("attention reasons %v", reasons)

@@ -151,6 +151,9 @@ func TestCompetitionTrashFacade(t *testing.T) {
 			}
 			n++
 		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
 		return n
 	}
 	if restored() != 1 {

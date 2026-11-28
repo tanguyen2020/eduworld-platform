@@ -75,6 +75,9 @@ func (c *chatEnv) messageIDs(ch uuid.UUID) []uuid.UUID {
 		}
 		out = append(out, id)
 	}
+	if err := rows.Err(); err != nil {
+		c.t.Fatal(err)
+	}
 	return out
 }
 
@@ -442,6 +445,9 @@ func TestPurgerPrivileges(t *testing.T) {
 		var v, role, obj, priv string
 		_ = rows.Scan(&v, &role, &obj, &priv)
 		t.Errorf("db-privileges violation: %s %s %s %s", v, role, obj, priv)
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
 	}
 	if n := c.count(`SELECT count(*) FROM information_schema.role_table_grants WHERE grantee = 'chat_purger' AND privilege_type = 'DELETE'`); n != 8 {
 		t.Fatalf("chat_purger DELETE grants: %d (want the 5 gameplay tables + revisions, reactions, pins of F118)", n)

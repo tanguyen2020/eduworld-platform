@@ -79,17 +79,22 @@ func TestContentAssignCloneTrash(t *testing.T) {
 		t.Fatalf("clone %s", cb.raw)
 	}
 	var items []string
-	rows, err := c.platform.QueryContext(ctx, `SELECT question_version_id FROM content.question_set_items WHERE question_set_id = $1 AND deleted_at IS NULL
+	func() {
+		rows, err := c.platform.QueryContext(ctx, `SELECT question_version_id FROM content.question_set_items WHERE question_set_id = $1 AND deleted_at IS NULL
 		ORDER BY position`, newSet)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for rows.Next() {
-		var s string
-		_ = rows.Scan(&s)
-		items = append(items, s)
-	}
-	_ = rows.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var s string
+			_ = rows.Scan(&s)
+			items = append(items, s)
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if len(items) != 2 || items[0] == aqv || items[1] != pqv {
 		t.Fatalf("items %v (A question %s, platform %s)", items, aqv, pqv)
 	}

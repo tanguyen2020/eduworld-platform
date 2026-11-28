@@ -46,7 +46,7 @@ func TestChatAssetsOptimisticConcurrency(t *testing.T) {
 	}
 	for _, typ := range []string{"sticker-packs", "gifs"} {
 		t.Run(typ, func(t *testing.T) {
-			first, second := map[string]any{}, map[string]any{}
+			var first, second map[string]any
 			if typ == "sticker-packs" {
 				first = map[string]any{"code": "dong-thoi-" + newKey()[:8], "name_vi": "Đồng thời", "stickers": []any{}}
 				second = map[string]any{"code": first["code"], "name_vi": "Đồng thời 2", "stickers": []any{}}

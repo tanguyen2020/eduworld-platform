@@ -116,20 +116,25 @@ func (c *curEnv) answerExam(t *testing.T, sub string, a resp, device string, rig
 // gradeExams hands the exam.submitted events of an attempt to the consumer learning.exam_grade (times each).
 func (c *curEnv) gradeExams(ctx context.Context, t *testing.T, attempt string, times int) {
 	t.Helper()
-	rows, err := c.relay.QueryContext(ctx, `SELECT envelope FROM infra.outbox_events WHERE event_type = 'exam.submitted'
-		AND envelope->'payload'->>'attempt_id' = $1`, attempt)
-	if err != nil {
-		t.Fatal(err)
-	}
 	var envs []outbox.Envelope
-	for rows.Next() {
-		var raw []byte
-		if err := rows.Scan(&raw); err != nil {
+	func() {
+		rows, err := c.relay.QueryContext(ctx, `SELECT envelope FROM infra.outbox_events WHERE event_type = 'exam.submitted'
+		AND envelope->'payload'->>'attempt_id' = $1`, attempt)
+		if err != nil {
 			t.Fatal(err)
 		}
-		envs = append(envs, decodeEnvelope(t, raw))
-	}
-	_ = rows.Close()
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var raw []byte
+			if err := rows.Scan(&raw); err != nil {
+				t.Fatal(err)
+			}
+			envs = append(envs, decodeEnvelope(t, raw))
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	h := consumer.ExamGrade{Grader: c.exams}
 	for _, e := range envs {
 		for range times {

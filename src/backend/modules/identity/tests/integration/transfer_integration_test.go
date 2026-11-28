@@ -112,17 +112,22 @@ func TestTransferStudent(t *testing.T) {
 		t.Fatal("student.placement_changed of the tenant transfer is published in the new tenant")
 	}
 	var ops []string
-	rows, err := e.relay.QueryContext(ctx, `SELECT envelope->'payload'->>'op' FROM infra.outbox_events
+	func() {
+		rows, err := e.relay.QueryContext(ctx, `SELECT envelope->'payload'->>'op' FROM infra.outbox_events
 		WHERE event_type = 'tenant_membership.changed' AND envelope->'payload'->>'user_id' = $1 ORDER BY envelope->>'recorded_at', event_id`, an.String())
-	if err != nil {
-		t.Fatal(err)
-	}
-	for rows.Next() {
-		var op string
-		_ = rows.Scan(&op)
-		ops = append(ops, op)
-	}
-	_ = rows.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var op string
+			_ = rows.Scan(&op)
+			ops = append(ops, op)
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if len(ops) != 2 || ops[0] != "removed" || ops[1] != "added" {
 		t.Fatalf("tenant_membership.changed ops = %v, want removed then added", ops)
 	}

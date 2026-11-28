@@ -78,6 +78,9 @@ func (c *chatEnv) outboxLeaks(terms ...string) {
 			}
 		}
 	}
+	if err := rows.Err(); err != nil {
+		c.t.Fatal(err)
+	}
 	if n == 0 {
 		c.t.Fatal("no outbox row checked")
 	}

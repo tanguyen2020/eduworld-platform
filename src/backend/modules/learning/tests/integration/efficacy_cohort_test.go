@@ -65,30 +65,35 @@ func TestEfficacyCohortBackfillConflict(t *testing.T) {
 	legacy(k.school, "comparison", 1)
 	legacy(k.school2, "comparison", 1) // school 2: one class → a clean cohort
 	exec(cohortBlock(t))
-	rows, err := tx.QueryContext(ctx, `SELECT school_id, conflict, COALESCE(arm, ''), grade_level FROM learning.efficacy_study_cohorts
-		WHERE study_id = $1 ORDER BY school_id`, study)
-	if err != nil {
-		t.Fatal(err)
-	}
 	got := map[uuid.UUID]string{}
-	for rows.Next() {
-		var school uuid.UUID
-		var conflict bool
-		var arm string
-		var grade int
-		if err := rows.Scan(&school, &conflict, &arm, &grade); err != nil {
+	func() {
+		rows, err := tx.QueryContext(ctx, `SELECT school_id, conflict, COALESCE(arm, ''), grade_level FROM learning.efficacy_study_cohorts
+		WHERE study_id = $1 ORDER BY school_id`, study)
+		if err != nil {
 			t.Fatal(err)
 		}
-		if grade != 3 {
-			t.Fatalf("grade of the cohort %d", grade)
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var school uuid.UUID
+			var conflict bool
+			var arm string
+			var grade int
+			if err := rows.Scan(&school, &conflict, &arm, &grade); err != nil {
+				t.Fatal(err)
+			}
+			if grade != 3 {
+				t.Fatalf("grade of the cohort %d", grade)
+			}
+			if conflict {
+				got[school] = "conflict:" + arm
+			} else {
+				got[school] = arm
+			}
 		}
-		if conflict {
-			got[school] = "conflict:" + arm
-		} else {
-			got[school] = arm
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
 		}
-	}
-	_ = rows.Close()
+	}()
 	if got[k.school] != "conflict:" || got[k.school2] != "comparison" || len(got) != 2 {
 		t.Fatalf("backfilled cohorts %v", got)
 	}

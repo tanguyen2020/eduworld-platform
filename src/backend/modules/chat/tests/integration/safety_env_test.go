@@ -227,6 +227,9 @@ func (s *safetyEnv) envelopes(typ string) []outbox.Envelope {
 		}
 		out = append(out, e)
 	}
+	if err := rows.Err(); err != nil {
+		s.t.Fatal(err)
+	}
 	return out
 }
 
@@ -248,6 +251,9 @@ func (s *safetyEnv) noContent(texts ...string) {
 				s.t.Fatalf("%s carries content %q: %s", typ, x, env)
 			}
 		}
+	}
+	if err := rows.Err(); err != nil {
+		s.t.Fatal(err)
 	}
 }
 

@@ -64,7 +64,7 @@ func (c *curEnv) validPayloads(ctx context.Context, t *testing.T, typ, assignmen
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var out []map[string]any
 	for rows.Next() {
 		var raw []byte
@@ -75,6 +75,9 @@ func (c *curEnv) validPayloads(ctx context.Context, t *testing.T, typ, assignmen
 			t.Fatalf("%s payload: %v (%s)", typ, err, raw)
 		}
 		out = append(out, v.(map[string]any))
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
 	}
 	return out
 }

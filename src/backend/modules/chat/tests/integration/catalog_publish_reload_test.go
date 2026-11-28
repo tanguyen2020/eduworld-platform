@@ -141,10 +141,7 @@ func TestCatalogPublishReload(t *testing.T) {
 
 	// Every listening instance applies the new version within moderation_config_propagation_max (pub/sub).
 	deadline := published.Add(moderation.PropagationMax)
-	for {
-		if view(t, c.pipe, c.tenantA).PlatformVersion == 3 && view(t, second, c.tenantB).PlatformVersion == 3 {
-			break
-		}
+	for view(t, c.pipe, c.tenantA).PlatformVersion != 3 || view(t, second, c.tenantB).PlatformVersion != 3 {
 		if time.Now().After(deadline) {
 			t.Fatalf("instances did not reload within %s", moderation.PropagationMax)
 		}

@@ -80,7 +80,7 @@ func (m *menv) sweep() int {
 // setOnline marks students online (presence of the realtime gateway, TEST DOUBLE).
 func (m *menv) setOnline(ks ...kid) {
 	for _, k := range ks {
-		m.penv.online.set(k.id, true)
+		m.online.set(k.id, true)
 	}
 }
 

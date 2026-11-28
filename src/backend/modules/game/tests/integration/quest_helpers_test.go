@@ -46,7 +46,6 @@ var (
 	questMainA  = questCh0A // main.ch0.awakening (chapter 0, first main quest)
 	questMainB  = questCh0Last
 	questMath3  = "0193a5f4-6c1e-7b2a-9d1f-000000072001" // math.g3.market_helper (grade 3, side, repeatable)
-	questDaily  = "0193a5f4-6c1e-7b2a-9d1f-000000072002" // daily.hub.lanterns (auto_daily)
 	testContent = "0193a5f4-6c1e-7b2a-9d1f-0000000c0001" // learning activity of the test learning quest
 )
 

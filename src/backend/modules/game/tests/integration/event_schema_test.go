@@ -49,36 +49,41 @@ func (e *env) checkEventSchemas(ctx context.Context, t *testing.T) map[string]in
 		if err != nil {
 			t.Fatal(err)
 		}
-		rows, err := e.relay.QueryContext(ctx, `SELECT envelope FROM infra.outbox_events WHERE event_type = $1`, typ)
-		if err != nil {
-			t.Fatal(err)
-		}
-		for rows.Next() {
-			var raw []byte
-			if err := rows.Scan(&raw); err != nil {
-				t.Fatal(err)
-			}
-			doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(raw))
+		func() {
+			rows, err := e.relay.QueryContext(ctx, `SELECT envelope FROM infra.outbox_events WHERE event_type = $1`, typ)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := envelope.Validate(doc); err != nil {
-				t.Errorf("%s envelope: %v", typ, err)
+			defer func() { _ = rows.Close() }()
+			for rows.Next() {
+				var raw []byte
+				if err := rows.Scan(&raw); err != nil {
+					t.Fatal(err)
+				}
+				doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(raw))
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := envelope.Validate(doc); err != nil {
+					t.Errorf("%s envelope: %v", typ, err)
+				}
+				var env struct {
+					Payload json.RawMessage `json:"payload"`
+				}
+				_ = json.Unmarshal(raw, &env)
+				pdoc, err := jsonschema.UnmarshalJSON(bytes.NewReader(env.Payload))
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := payload.Validate(pdoc); err != nil {
+					t.Errorf("%s payload: %v", typ, err)
+				}
+				seen[typ]++
 			}
-			var env struct {
-				Payload json.RawMessage `json:"payload"`
-			}
-			_ = json.Unmarshal(raw, &env)
-			pdoc, err := jsonschema.UnmarshalJSON(bytes.NewReader(env.Payload))
-			if err != nil {
+			if err := rows.Err(); err != nil {
 				t.Fatal(err)
 			}
-			if err := payload.Validate(pdoc); err != nil {
-				t.Errorf("%s payload: %v", typ, err)
-			}
-			seen[typ]++
-		}
-		_ = rows.Close()
+		}()
 	}
 	return seen
 }

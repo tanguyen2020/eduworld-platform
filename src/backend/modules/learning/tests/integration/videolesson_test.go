@@ -26,9 +26,10 @@ func (c *curEnv) videoAsset(ctx context.Context, t *testing.T, kind, status stri
 	id := ids.New()
 	sha := strings.ReplaceAll(id.String()+id.String(), "-", "")[:64]
 	mime := "video/mp4"
-	if kind == "document" {
+	switch kind {
+	case "document":
 		mime = "text/csv"
-	} else if kind == "audio" {
+	case "audio":
 		mime = "audio/mpeg"
 	}
 	// tenancyguard:ok TEST helper under learning_platform: the row of the media pipeline

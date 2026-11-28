@@ -42,7 +42,9 @@ func TestRolesConnectOnlyToOwnDatabase(t *testing.T) {
 		for _, db := range databases {
 			conn, err := pgx.Connect(ctx, c.DSN(r.name, db))
 			if err == nil {
-				conn.Close(ctx)
+				if cerr := conn.Close(ctx); cerr != nil {
+					t.Errorf("%s → %s: close: %v", r.name, db, cerr)
+				}
 			}
 			switch {
 			case db == r.ownDB && err != nil:
@@ -76,7 +78,9 @@ func TestAppRolesCannotDeleteOrTruncate(t *testing.T) {
 				t.Fatalf("%s.%s: create probe: %v", m, s, err)
 			}
 		}
-		mig.Close(ctx)
+		if err := mig.Close(ctx); err != nil {
+			t.Fatalf("%s: close migrator: %v", m, err)
+		}
 
 		for _, suffix := range []string{"app", "platform"} {
 			conn, err := pgx.Connect(ctx, c.ModuleDSN(m, suffix))
@@ -98,7 +102,9 @@ func TestAppRolesCannotDeleteOrTruncate(t *testing.T) {
 					}
 				}
 			}
-			conn.Close(ctx)
+			if err := conn.Close(ctx); err != nil {
+				t.Errorf("%s_%s: close: %v", m, suffix, err)
+			}
 		}
 	}
 }

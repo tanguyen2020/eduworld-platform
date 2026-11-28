@@ -137,7 +137,7 @@ func (c *curEnv) validateStoredEvents(ctx context.Context, t *testing.T, attempt
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	types := map[string]int{}
 	for rows.Next() {
 		var e portwrite.LearningEvent
@@ -170,6 +170,9 @@ func (c *curEnv) validateStoredEvents(ctx context.Context, t *testing.T, attempt
 			t.Errorf("stored %s: %v", e.Type, err)
 		}
 		types[e.Type]++
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
 	}
 	return types
 }

@@ -141,14 +141,22 @@ func TestQuestPeriodicGrantAndExpiry(t *testing.T) {
 	e.setGrade(ctx, t, em, 4)
 	e.sessionStarted(ctx, t, em, now)
 	var codes []string
-	rows, _ := e.platform.QueryContext(ctx, `SELECT v.code FROM game.quest_progress p JOIN game.quest_versions v ON v.quest_version_id = p.quest_version_id
+	func() {
+		rows, err := e.platform.QueryContext(ctx, `SELECT v.code FROM game.quest_progress p JOIN game.quest_versions v ON v.quest_version_id = p.quest_version_id
 		WHERE p.student_id = $1`, em.id)
-	for rows.Next() {
-		var c string
-		_ = rows.Scan(&c)
-		codes = append(codes, c)
-	}
-	_ = rows.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var c string
+			_ = rows.Scan(&c)
+			codes = append(codes, c)
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if len(codes) != 1 || codes[0] != "daily.hub.lanterns" {
 		t.Fatalf("grade 4 grants: %v", codes)
 	}
@@ -262,13 +270,21 @@ func TestQuestRepeatability(t *testing.T) {
 		t.Fatalf("max_completions: %d %s", r.status, r.raw)
 	}
 	var nos []int
-	rows, _ := e.platform.QueryContext(ctx, `SELECT completion_no FROM game.quest_progress WHERE student_id = $1 AND quest_id = $2 ORDER BY started_at`, an.id, questMath3)
-	for rows.Next() {
-		var n int
-		_ = rows.Scan(&n)
-		nos = append(nos, n)
-	}
-	_ = rows.Close()
+	func() {
+		rows, err := e.platform.QueryContext(ctx, `SELECT completion_no FROM game.quest_progress WHERE student_id = $1 AND quest_id = $2 ORDER BY started_at`, an.id, questMath3)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var n int
+			_ = rows.Scan(&n)
+			nos = append(nos, n)
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if len(nos) != 2 || nos[0] != 1 || nos[1] != 2 {
 		t.Fatalf("completion_no: %v", nos)
 	}

@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/presentation/consumer"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/ids"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
@@ -70,21 +69,26 @@ func (c *curEnv) openAsg(t *testing.T, k asgKit, extra map[string]any) string {
 // (in the transaction and event scope the outbox consumer opens); each event once unless twice.
 func (c *curEnv) deliverAttempts(ctx context.Context, t *testing.T, attemptID string, twice bool) {
 	t.Helper()
-	rows, err := c.relay.QueryContext(ctx, `SELECT envelope FROM infra.outbox_events WHERE event_type IN
+	var envs []outbox.Envelope
+	func() {
+		rows, err := c.relay.QueryContext(ctx, `SELECT envelope FROM infra.outbox_events WHERE event_type IN
 		('activity.started','activity.submitted','activity.graded','attempt.re_evaluated') AND envelope->'payload'->>'attempt_id' = $1
 		ORDER BY created_at, event_id`, attemptID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var envs []outbox.Envelope
-	for rows.Next() {
-		var raw []byte
-		if err := rows.Scan(&raw); err != nil {
+		if err != nil {
 			t.Fatal(err)
 		}
-		envs = append(envs, decodeEnvelope(t, raw))
-	}
-	_ = rows.Close()
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var raw []byte
+			if err := rows.Scan(&raw); err != nil {
+				t.Fatal(err)
+			}
+			envs = append(envs, decodeEnvelope(t, raw))
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	h := consumer.AssignmentSubmissions{Tracker: c.asg}
 	for _, e := range envs {
 		for i := 0; i < 1+map[bool]int{true: 1}[twice]; i++ {
@@ -92,17 +96,6 @@ func (c *curEnv) deliverAttempts(ctx context.Context, t *testing.T, attemptID st
 				t.Fatalf("%s: %v", e.EventType, err)
 			}
 		}
-	}
-}
-
-// enrollmentEvent hands an identity event to the consumer learning.assignment_enrollment.
-func (c *curEnv) enrollmentEvent(ctx context.Context, t *testing.T, typ string, payload []byte) {
-	t.Helper()
-	tenant := c.tenantA
-	e := outbox.Envelope{EventID: ids.New(), EventType: typ, TenantID: &tenant, OccurredAt: c.clk.Now(), Payload: payload}
-	h := consumer.AssignmentEnrollment{Tracker: c.asg}
-	if err := c.uow.Do(tenancy.WithScope(ctx, scopeOf(t, tenant)), func(ctx context.Context) error { return h.Handle(ctx, e) }); err != nil {
-		t.Fatalf("%s: %v", typ, err)
 	}
 }
 

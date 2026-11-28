@@ -251,14 +251,22 @@ func TestF107GenerateBracket(t *testing.T) {
 		t.Fatalf("8 slots: %d nodes, %d round-1, %d byes", len(nodes), r1, byes)
 	}
 	seeds := map[int]string{}
-	rows, _ := e.su.Query(`SELECT seed, entry_id FROM competition.tournament_entries WHERE tournament_id = $1 AND seed IS NOT NULL`, tid)
-	for rows.Next() {
-		var s int
-		var id string
-		_ = rows.Scan(&s, &id)
-		seeds[s] = id
-	}
-	_ = rows.Close()
+	func() {
+		rows, err := e.su.Query(`SELECT seed, entry_id FROM competition.tournament_entries WHERE tournament_id = $1 AND seed IS NOT NULL`, tid)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var s int
+			var id string
+			_ = rows.Scan(&s, &id)
+			seeds[s] = id
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	for _, n := range nodes {
 		if n.round == 1 && n.status == "bye" {
 			w := *n.winner

@@ -53,7 +53,12 @@ func TestWorkerProfileChecks(t *testing.T) {
 			case <-time.After(30 * time.Second):
 				t.Fatal("worker did not start")
 			}
-			defer func() { cancel(); <-done }()
+			defer func() {
+				cancel()
+				if err := <-done; err != nil {
+					t.Logf("worker stopped: %v", err)
+				}
+			}()
 
 			var body struct {
 				Status string                    `json:"status"`
@@ -66,7 +71,7 @@ func TestWorkerProfileChecks(t *testing.T) {
 					t.Fatal(err)
 				}
 				_ = json.NewDecoder(resp.Body).Decode(&body)
-				resp.Body.Close()
+				_ = resp.Body.Close()
 				if resp.StatusCode == http.StatusOK || time.Now().After(deadline) {
 					if resp.StatusCode != http.StatusOK {
 						t.Fatalf("readyz = %d %+v", resp.StatusCode, body)

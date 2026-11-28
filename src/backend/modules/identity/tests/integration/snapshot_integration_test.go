@@ -82,7 +82,7 @@ func TestListProjectionSnapshot(t *testing.T) {
 	}
 	deleted := 0
 	for _, it := range append(p1.Items, p2.Items...) {
-		if uuid.UUID(it.TenantId) != ta {
+		if it.TenantId != ta {
 			t.Fatalf("item of another tenant: %+v", it)
 		}
 		if it.Deleted {
@@ -134,7 +134,7 @@ func TestListProjectionSnapshot(t *testing.T) {
 	all := call("tenant", nil, nil, 1000)
 	seen := map[string]bool{}
 	for _, it := range all.Items {
-		seen[uuid.UUID(it.EntityId).String()] = true
+		seen[it.EntityId.String()] = true
 	}
 	if !seen[a.tenant] || !seen[b.tenant] || len(all.Items) < 3 {
 		t.Fatalf("platform snapshot of tenants = %d items", len(all.Items))

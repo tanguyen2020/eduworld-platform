@@ -61,7 +61,7 @@ func TestMMRoutesStaffDenied(t *testing.T) {
 		for role, tok := range tokens {
 			r := m.do(o.Method, mmPath(id, uuid.NewString()), tok, map[string]string{"X-Tenant-Id": m.tenantA.String(), "Idempotency-Key": key()},
 				mmBody(id, m.subject), "")
-			if r.status != http.StatusForbidden || (r.code() != "GAME_ACCESS_STUDENT_ONLY" && !(role == "system_admin" && r.code() == "TENANT_MISMATCH")) {
+			if r.status != http.StatusForbidden || (r.code() != "GAME_ACCESS_STUDENT_ONLY" && (role != "system_admin" || r.code() != "TENANT_MISMATCH")) {
 				t.Fatalf("%s by %s: %d %s", id, role, r.status, r.raw)
 			}
 		}

@@ -87,18 +87,23 @@ func (c *curEnv) events(ctx context.Context, t *testing.T, typ, versionID string
 // studentRows counts the rows of the student data schemas (attempts, evaluations, learning events: assessment, learning).
 func (c *curEnv) studentRows(ctx context.Context, t *testing.T) int {
 	t.Helper()
-	rows, err := c.migrator.QueryContext(ctx, `SELECT table_schema||'.'||table_name FROM information_schema.tables
-		WHERE table_schema IN ('assessment','learning') AND table_type = 'BASE TABLE'`)
-	if err != nil {
-		t.Fatal(err)
-	}
 	var tables []string
-	for rows.Next() {
-		var s string
-		_ = rows.Scan(&s)
-		tables = append(tables, s)
-	}
-	_ = rows.Close()
+	func() {
+		rows, err := c.migrator.QueryContext(ctx, `SELECT table_schema||'.'||table_name FROM information_schema.tables
+		WHERE table_schema IN ('assessment','learning') AND table_type = 'BASE TABLE'`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var s string
+			_ = rows.Scan(&s)
+			tables = append(tables, s)
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	n := 0
 	for _, tb := range tables {
 		// tenancyguard:ok TEST helper under learning_migrator: row count of a table listed by information_schema

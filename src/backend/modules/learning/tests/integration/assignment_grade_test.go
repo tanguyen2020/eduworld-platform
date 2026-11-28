@@ -40,7 +40,7 @@ func (c *curEnv) targeted(ctx context.Context, t *testing.T, assignment string) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := map[uuid.UUID][2]any{}
 	for rows.Next() {
 		var id uuid.UUID
@@ -50,6 +50,9 @@ func (c *curEnv) targeted(ctx context.Context, t *testing.T, assignment string) 
 			t.Fatal(err)
 		}
 		out[id] = [2]any{source, grade}
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
 	}
 	return out
 }

@@ -519,17 +519,22 @@ func TestPortalLoginIntegration(t *testing.T) {
 	}
 	// AC-28, AC-31: audit through the outbox, no username, password or token.
 	var payloads []string
-	rows, err := p.relay.QueryContext(ctx, `SELECT envelope::text FROM infra.outbox_events WHERE event_type = 'audit.recorded'
+	func() {
+		rows, err := p.relay.QueryContext(ctx, `SELECT envelope::text FROM infra.outbox_events WHERE event_type = 'audit.recorded'
 		AND envelope->'payload'->>'action' IN ('auth.portal_login', 'auth.portal_logout')`)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for rows.Next() {
-		var s string
-		_ = rows.Scan(&s)
-		payloads = append(payloads, s)
-	}
-	_ = rows.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var s string
+			_ = rows.Scan(&s)
+			payloads = append(payloads, s)
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if len(payloads) < 14 { // 2 logins, 3 credential failures, 5 + 3 refusals, 1 logout
 		t.Fatalf("portal audits = %d", len(payloads))
 	}

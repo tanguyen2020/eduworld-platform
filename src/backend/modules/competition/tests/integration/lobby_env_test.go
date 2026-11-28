@@ -253,36 +253,41 @@ func checkLobbyEventSchemas(t *testing.T, e *penv) map[string]int {
 		if err != nil {
 			t.Fatal(err)
 		}
-		rows, err := e.relay.QueryContext(context.Background(), `SELECT envelope FROM infra.outbox_events WHERE event_type = $1`, typ)
-		if err != nil {
-			t.Fatal(err)
-		}
-		for rows.Next() {
-			var b []byte
-			if err := rows.Scan(&b); err != nil {
-				t.Fatal(err)
-			}
-			doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(b))
+		func() {
+			rows, err := e.relay.QueryContext(context.Background(), `SELECT envelope FROM infra.outbox_events WHERE event_type = $1`, typ)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := envelope.Validate(doc); err != nil {
-				t.Errorf("%s envelope: %v", typ, err)
+			defer func() { _ = rows.Close() }()
+			for rows.Next() {
+				var b []byte
+				if err := rows.Scan(&b); err != nil {
+					t.Fatal(err)
+				}
+				doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(b))
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := envelope.Validate(doc); err != nil {
+					t.Errorf("%s envelope: %v", typ, err)
+				}
+				var env struct {
+					Payload json.RawMessage `json:"payload"`
+				}
+				_ = json.Unmarshal(b, &env)
+				pd, err := jsonschema.UnmarshalJSON(bytes.NewReader(env.Payload))
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := payload.Validate(pd); err != nil {
+					t.Errorf("%s payload: %v", typ, err)
+				}
+				seen[typ]++
 			}
-			var env struct {
-				Payload json.RawMessage `json:"payload"`
-			}
-			_ = json.Unmarshal(b, &env)
-			pd, err := jsonschema.UnmarshalJSON(bytes.NewReader(env.Payload))
-			if err != nil {
+			if err := rows.Err(); err != nil {
 				t.Fatal(err)
 			}
-			if err := payload.Validate(pd); err != nil {
-				t.Errorf("%s payload: %v", typ, err)
-			}
-			seen[typ]++
-		}
-		_ = rows.Close()
+		}()
 	}
 	return seen
 }

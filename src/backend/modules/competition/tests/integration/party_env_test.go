@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -517,6 +516,9 @@ func (e *penv) events(typ string) []map[string]any {
 		}
 		out = append(out, env.Payload)
 	}
+	if err := rows.Err(); err != nil {
+		e.t.Fatal(err)
+	}
 	return out
 }
 
@@ -552,42 +554,47 @@ func (e *penv) checkSchemasOf(types []string) map[string]int {
 	}
 	seen := map[string]int{}
 	for _, typ := range types {
-		rows, err := e.relay.QueryContext(context.Background(), `SELECT envelope FROM infra.outbox_events WHERE event_type = $1`, typ)
-		if err != nil {
-			e.t.Fatal(err)
-		}
-		for rows.Next() {
-			var raw []byte
-			if err := rows.Scan(&raw); err != nil {
-				e.t.Fatal(err)
-			}
-			doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(raw))
+		func() {
+			rows, err := e.relay.QueryContext(context.Background(), `SELECT envelope FROM infra.outbox_events WHERE event_type = $1`, typ)
 			if err != nil {
 				e.t.Fatal(err)
 			}
-			if err := envelope.Validate(doc); err != nil {
-				e.t.Errorf("%s envelope: %v", typ, err)
+			defer func() { _ = rows.Close() }()
+			for rows.Next() {
+				var raw []byte
+				if err := rows.Scan(&raw); err != nil {
+					e.t.Fatal(err)
+				}
+				doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(raw))
+				if err != nil {
+					e.t.Fatal(err)
+				}
+				if err := envelope.Validate(doc); err != nil {
+					e.t.Errorf("%s envelope: %v", typ, err)
+				}
+				var env struct {
+					SchemaVersion int             `json:"schema_version"`
+					Payload       json.RawMessage `json:"payload"`
+				}
+				_ = json.Unmarshal(raw, &env)
+				// the payload schema of the envelope version (party.created is v2 since ADR-0095)
+				payload, err := c.Compile(filepath.Join(root, "payloads", "competition", fmt.Sprintf("%s.v%d.schema.json", typ, env.SchemaVersion)))
+				if err != nil {
+					e.t.Fatal(err)
+				}
+				pd, err := jsonschema.UnmarshalJSON(bytes.NewReader(env.Payload))
+				if err != nil {
+					e.t.Fatal(err)
+				}
+				if err := payload.Validate(pd); err != nil {
+					e.t.Errorf("%s payload: %v", typ, err)
+				}
+				seen[typ]++
 			}
-			var env struct {
-				SchemaVersion int             `json:"schema_version"`
-				Payload       json.RawMessage `json:"payload"`
-			}
-			_ = json.Unmarshal(raw, &env)
-			// the payload schema of the envelope version (party.created is v2 since ADR-0095)
-			payload, err := c.Compile(filepath.Join(root, "payloads", "competition", fmt.Sprintf("%s.v%d.schema.json", typ, env.SchemaVersion)))
-			if err != nil {
+			if err := rows.Err(); err != nil {
 				e.t.Fatal(err)
 			}
-			pd, err := jsonschema.UnmarshalJSON(bytes.NewReader(env.Payload))
-			if err != nil {
-				e.t.Fatal(err)
-			}
-			if err := payload.Validate(pd); err != nil {
-				e.t.Errorf("%s payload: %v", typ, err)
-			}
-			seen[typ]++
-		}
-		_ = rows.Close()
+		}()
 	}
 	return seen
 }
@@ -609,6 +616,9 @@ func (e *penv) history(party string) []string {
 		}
 		out = append(out, s)
 	}
+	if err := rows.Err(); err != nil {
+		e.t.Fatal(err)
+	}
 	return out
 }
 
@@ -621,15 +631,4 @@ func noPII(t *testing.T, r presp) {
 			t.Fatalf("response leaks %s: %s", k, r.raw)
 		}
 	}
-}
-
-func sortedIDs(ms []map[string]any, k string) []string {
-	var out []string
-	for _, m := range ms {
-		if s, ok := m[k].(string); ok {
-			out = append(out, s)
-		}
-	}
-	sort.Strings(out)
-	return out
 }

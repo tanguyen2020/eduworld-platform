@@ -119,7 +119,7 @@ func TestNotificationCreate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	got := map[string][4]string{}
 	for rows.Next() {
 		var kind, code, params, action, ref string
@@ -133,6 +133,9 @@ func TestNotificationCreate(t *testing.T) {
 				t.Errorf("%s params %s contain %s", kind, params, bad)
 			}
 		}
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
 	}
 	want := map[string]string{"friend_request": "friend.request_received", "party_invitation": "party.invitation_received",
 		"level_reached": "progression.level_reached", "achievement_unlocked": "achievement.unlocked", "moderation_notice": "moderation.report_handled"}

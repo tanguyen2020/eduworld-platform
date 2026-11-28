@@ -156,7 +156,7 @@ func TestReleasePublish(t *testing.T) {
 	}
 	// AC-02: publish of a draft.
 	// AC-05: a new version is based on the release; a second open draft is refused.
-	r = must(t, c.do(t, http.MethodPost, "/cms/learning/questions/"+id+"/versions", qlcmA, idem(), map[string]any{"from_version": 1}),
+	must(t, c.do(t, http.MethodPost, "/cms/learning/questions/"+id+"/versions", qlcmA, idem(), map[string]any{"from_version": 1}),
 		http.StatusCreated, "new version")
 	if n := count(ctx, t, c.platform, `SELECT count(*) FROM content.question_versions WHERE question_id = $1 AND version_no = 2 AND based_on_version_id = $2`,
 		id, v1); n != 1 {
@@ -550,5 +550,8 @@ func (c *curEnv) runPointerConsumer(ctx context.Context, t *testing.T) {
 		if err := h.Handle(ctx, e); err != nil {
 			t.Fatal(err)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
 	}
 }

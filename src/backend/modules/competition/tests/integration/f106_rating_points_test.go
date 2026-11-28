@@ -249,6 +249,9 @@ func TestF106CompetitionPoints(t *testing.T) {
 			_ = rows.Scan(&n)
 			out = append(out, n)
 		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
 		return out
 	}
 	if got := amount(a); len(got) != 1 || got[0] != 10+15+10+5 {

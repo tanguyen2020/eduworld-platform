@@ -66,6 +66,9 @@ func (e *env) restoredEnvelopes(typ string) []map[string]any {
 		}
 		out = append(out, env)
 	}
+	if err := rows.Err(); err != nil {
+		e.t.Fatal(err)
+	}
 	return out
 }
 

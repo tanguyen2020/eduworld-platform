@@ -96,6 +96,9 @@ func auditActions(ctx context.Context, t *testing.T, e *env, action string) []ma
 			out = append(out, m)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
+	}
 	return out
 }
 

@@ -22,7 +22,7 @@ func columnsOf(ctx context.Context, t *testing.T, db *sql.DB, table string) []st
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var out []string
 	for rows.Next() {
 		var c string
@@ -30,6 +30,9 @@ func columnsOf(ctx context.Context, t *testing.T, db *sql.DB, table string) []st
 			t.Fatal(err)
 		}
 		out = append(out, c)
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
 	}
 	return out
 }

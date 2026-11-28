@@ -376,6 +376,9 @@ func (e *env) events(typ string) []map[string]any {
 		}
 		out = append(out, env.Payload)
 	}
+	if err := rows.Err(); err != nil {
+		e.t.Fatal(err)
+	}
 	return out
 }
 
@@ -418,36 +421,41 @@ func (e *env) checkEvents(types ...string) map[string]int {
 		if err != nil {
 			e.t.Fatal(err)
 		}
-		rows, err := e.relay.QueryContext(context.Background(), `SELECT envelope FROM infra.outbox_events WHERE event_type = $1`, typ)
-		if err != nil {
-			e.t.Fatal(err)
-		}
-		for rows.Next() {
-			var raw []byte
-			if err := rows.Scan(&raw); err != nil {
-				e.t.Fatal(err)
-			}
-			doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(raw))
+		func() {
+			rows, err := e.relay.QueryContext(context.Background(), `SELECT envelope FROM infra.outbox_events WHERE event_type = $1`, typ)
 			if err != nil {
 				e.t.Fatal(err)
 			}
-			if err := envelope.Validate(doc); err != nil {
-				e.t.Errorf("%s envelope: %v", typ, err)
+			defer func() { _ = rows.Close() }()
+			for rows.Next() {
+				var raw []byte
+				if err := rows.Scan(&raw); err != nil {
+					e.t.Fatal(err)
+				}
+				doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(raw))
+				if err != nil {
+					e.t.Fatal(err)
+				}
+				if err := envelope.Validate(doc); err != nil {
+					e.t.Errorf("%s envelope: %v", typ, err)
+				}
+				var env struct {
+					Payload json.RawMessage `json:"payload"`
+				}
+				_ = json.Unmarshal(raw, &env)
+				pd, err := jsonschema.UnmarshalJSON(bytes.NewReader(env.Payload))
+				if err != nil {
+					e.t.Fatal(err)
+				}
+				if err := payload.Validate(pd); err != nil {
+					e.t.Errorf("%s payload: %v", typ, err)
+				}
+				seen[typ]++
 			}
-			var env struct {
-				Payload json.RawMessage `json:"payload"`
-			}
-			_ = json.Unmarshal(raw, &env)
-			pd, err := jsonschema.UnmarshalJSON(bytes.NewReader(env.Payload))
-			if err != nil {
+			if err := rows.Err(); err != nil {
 				e.t.Fatal(err)
 			}
-			if err := payload.Validate(pd); err != nil {
-				e.t.Errorf("%s payload: %v", typ, err)
-			}
-			seen[typ]++
-		}
-		_ = rows.Close()
+		}()
 	}
 	return seen
 }

@@ -31,7 +31,6 @@ var (
 	questCh1A    = seedID(0x71100, 1*16+1)
 	questCh1B    = seedID(0x71100, 1*16+2)
 	questCh2A    = seedID(0x71100, 2*16+1)
-	questCh2B    = seedID(0x71100, 2*16+2)
 	questCh0A    = seedID(0x71100, 0*16+1)
 	levelMainHub = seedID(0x71200, 1)
 )

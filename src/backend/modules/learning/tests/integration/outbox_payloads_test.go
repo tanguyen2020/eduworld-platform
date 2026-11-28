@@ -23,7 +23,7 @@ func (c *curEnv) outboxPayloads(ctx context.Context, t *testing.T, typ, field, i
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	doc, err := jsonschema.UnmarshalJSON(f)
 	if err != nil {
 		t.Fatal(err)
@@ -37,7 +37,7 @@ func (c *curEnv) outboxPayloads(ctx context.Context, t *testing.T, typ, field, i
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer enumsFile.Close()
+	defer func() { _ = enumsFile.Close() }()
 	enums, err := jsonschema.UnmarshalJSON(enumsFile)
 	if err != nil {
 		t.Fatal(err)
@@ -54,7 +54,7 @@ func (c *curEnv) outboxPayloads(ctx context.Context, t *testing.T, typ, field, i
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var out []map[string]any
 	for rows.Next() {
 		var raw []byte
@@ -65,6 +65,9 @@ func (c *curEnv) outboxPayloads(ctx context.Context, t *testing.T, typ, field, i
 			t.Fatalf("%s payload: %v (%s)", typ, err, raw)
 		}
 		out = append(out, v.(map[string]any))
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
 	}
 	return out
 }

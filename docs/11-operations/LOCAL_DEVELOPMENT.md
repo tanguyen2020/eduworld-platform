@@ -425,7 +425,7 @@ postman collection run specs/postman/eduworld-api.postman_collection.json \
 | `make seed` / `make seed-check` | Nạp dữ liệu giả / kiểm tra projection đã đồng bộ |
 | `EW_SEED_PASSWORD=… make seed-content` | Sau `make up-app` + `make seed-check`: nội dung dev Toán khối 3 đã publish và gán (cùng `GDPT2018_SAMPLE`) cho `th-demo-a`, `pgd-demo` qua API (idempotent) |
 | `EW_SEED_PASSWORD=… make seed-game-content` | Sau `make seed-content`: 2 cấu hình mini-game + quest "Phiên chợ của bác Gấu Nâu" (`modules/game/seed/minigames`) qua Game Operations Console — tạo (`gd.thietke`) → gửi duyệt → duyệt (`cm.duyet`) → publish (`lo.vanhanh`, nguồn câu kiểm bằng `validateMinigameQuestionSource`) → gán `th-demo-a`, `pgd-demo`, `common` (`sa.admin`, `/admin/tenant-assignments`); chạy lại không publish thêm (F078) |
-| `make lint [MOD=<module>]` | gofmt, golangci-lint, go-arch-lint (tầng Clean Architecture), gdlint, eslint, spectral |
+| `make lint [MOD=<module>]` | gofmt, `go vet -tags integration`, golangci-lint (cấu hình chính chạy với `--build-tags integration` nên lint cả file integration test), go-arch-lint (tầng Clean Architecture), gdlint, eslint, spectral |
 | `make arch-check` | Ranh giới module trên toàn repository: không import `internal/` của module khác, chỉ import `src/backend/modules/<khác>/api` khi có trong `x-allowed-callers`, `src/backend/cmd/` chỉ nối module qua `Register` (ADR-0074 mục 1) |
 | `make test [MOD=<module>]` | Unit test |
 | `make test-latency [MOD=<module>]` | Test ngân sách độ trễ `Test*LatencyBudget` không `-race` (CI job `test (chat)`), xem [TEST_STRATEGY §3](../12-project/TEST_STRATEGY.md#3-tooling) |

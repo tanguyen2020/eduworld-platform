@@ -46,7 +46,12 @@ func startCoreAPI(t *testing.T, getenv func(string) string) (admin string, stop 
 	case <-time.After(30 * time.Second):
 		t.Fatal("core-api did not start")
 	}
-	return admin, func() { cancel(); <-done }
+	return admin, func() {
+		cancel()
+		if err := <-done; err != nil {
+			t.Logf("core-api stopped: %v", err)
+		}
+	}
 }
 
 func readyz(t *testing.T, admin string) (int, readiness) {
@@ -55,7 +60,7 @@ func readyz(t *testing.T, admin string) (int, readiness) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	var r readiness
 	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
 		t.Fatal(err)
@@ -69,7 +74,7 @@ func status(t *testing.T, url string) int {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	return resp.StatusCode
 }
 

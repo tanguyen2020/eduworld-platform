@@ -50,6 +50,9 @@ func TestCurrencyGrantInRewardTransaction(t *testing.T) {
 		}
 		after = append(after, b)
 	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
+	}
 	if len(after) != 2 || after[0] != 20 || after[1] != 40 {
 		t.Fatalf("balance_after %v", after)
 	}
@@ -74,17 +77,22 @@ func TestCurrencyDailyCapAndDiminishing(t *testing.T) {
 	}
 	var deltas []int64
 	var capped []bool
-	rows, err := e.platform.QueryContext(ctx, `SELECT delta, capped FROM gamification.currency_ledger WHERE student_id = $1 ORDER BY created_at`, an.id)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for rows.Next() {
-		var d int64
-		var c bool
-		_ = rows.Scan(&d, &c)
-		deltas, capped = append(deltas, d), append(capped, c)
-	}
-	_ = rows.Close()
+	func() {
+		rows, err := e.platform.QueryContext(ctx, `SELECT delta, capped FROM gamification.currency_ledger WHERE student_id = $1 ORDER BY created_at`, an.id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var d int64
+			var c bool
+			_ = rows.Scan(&d, &c)
+			deltas, capped = append(deltas, d), append(capped, c)
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if len(deltas) != 2 || deltas[0] != 200 || deltas[1] != 100 || capped[0] || !capped[1] || e.balanceOf(ctx, t, an) != 300 {
 		t.Fatalf("cap: %v %v balance %d", deltas, capped, e.balanceOf(ctx, t, an))
 	}

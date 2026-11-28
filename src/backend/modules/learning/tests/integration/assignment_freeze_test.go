@@ -102,26 +102,31 @@ func TestAssignmentClassTargetsFrozen(t *testing.T) {
 	exec(freezeBlock(t))
 	exec(`SELECT set_config('app.tenant_id', $1, true)`, c.tenantA.String())
 
-	rows, err := tx.QueryContext(ctx, `SELECT assignment_id, target_type, target_ref_id, array_to_string(student_ids, ',')
-		FROM lms.assignment_targets WHERE assignment_id = ANY($1::uuid[]) ORDER BY assignment_id, position`, "{"+pub.String()+","+draft.String()+"}")
-	if err != nil {
-		t.Fatal(err)
-	}
 	got := map[uuid.UUID][]string{}
-	for rows.Next() {
-		var asg, ref uuid.UUID
-		var typ, students string
-		if err := rows.Scan(&asg, &typ, &ref, &students); err != nil {
+	func() {
+		rows, err := tx.QueryContext(ctx, `SELECT assignment_id, target_type, target_ref_id, array_to_string(student_ids, ',')
+		FROM lms.assignment_targets WHERE assignment_id = ANY($1::uuid[]) ORDER BY assignment_id, position`, "{"+pub.String()+","+draft.String()+"}")
+		if err != nil {
 			t.Fatal(err)
 		}
-		if typ != "students" || (ref != k.class && ref != group) {
-			t.Fatalf("converted target: %s %s", typ, ref)
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var asg, ref uuid.UUID
+			var typ, students string
+			if err := rows.Scan(&asg, &typ, &ref, &students); err != nil {
+				t.Fatal(err)
+			}
+			if typ != "students" || (ref != k.class && ref != group) {
+				t.Fatalf("converted target: %s %s", typ, ref)
+			}
+			ids := strings.Split(students, ",")
+			sort.Strings(ids)
+			got[asg] = append(got[asg], strings.Join(ids, ","))
 		}
-		ids := strings.Split(students, ",")
-		sort.Strings(ids)
-		got[asg] = append(got[asg], strings.Join(ids, ","))
-	}
-	_ = rows.Close()
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	both := []string{an.String(), binh.String()}
 	sort.Strings(both)
 	want := []string{strings.Join(both, ","), binh.String()}

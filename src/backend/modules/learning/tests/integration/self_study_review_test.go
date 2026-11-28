@@ -36,7 +36,7 @@ func (c *curEnv) itemQuestions(ctx context.Context, t *testing.T, attemptID stri
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var out []uuid.UUID
 	for rows.Next() {
 		var id uuid.UUID
@@ -44,6 +44,9 @@ func (c *curEnv) itemQuestions(ctx context.Context, t *testing.T, attemptID stri
 			t.Fatal(err)
 		}
 		out = append(out, id)
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
 	}
 	return out
 }
@@ -143,17 +146,22 @@ func TestSelfStudyReviewInterleaveDiagnostic(t *testing.T) {
 	il := must(t, c.adhoc(t, hsAn, nil, map[string]any{"mode": "practice", "source": map[string]any{"kind": "selection", "interleave": true,
 		"topic_ids": []string{s.qc.topic, qc2.topic}, "question_count": 4}}), http.StatusCreated, "interleave")
 	var topics []string
-	rows, err := c.platform.QueryContext(ctx, `SELECT q.topic_id FROM assessment.attempt_items i JOIN content.question_versions q
+	func() {
+		rows, err := c.platform.QueryContext(ctx, `SELECT q.topic_id FROM assessment.attempt_items i JOIN content.question_versions q
 		ON q.question_version_id = i.question_version_id WHERE i.attempt_id = $1 ORDER BY i.position`, il.str("attempt_id"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	for rows.Next() {
-		var tp string
-		_ = rows.Scan(&tp)
-		topics = append(topics, tp)
-	}
-	rows.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var tp string
+			_ = rows.Scan(&tp)
+			topics = append(topics, tp)
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	if len(topics) != 4 {
 		t.Fatalf("interleave items: %v", topics)
 	}
