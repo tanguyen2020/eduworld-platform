@@ -76,6 +76,7 @@ var limits = social.Limits{MaxPending: 10, MaxPerDay: 20, MaxFriends: 100, DayLo
 // the F095 use cases behind the real pkg/httpx chain, and tenants A (school), B (school) and U (unit) with schools.
 type env struct {
 	t                          *testing.T
+	cl                         *testkit.Cluster // the isolated databases of the test (identity system events)
 	app, platform, relay       *sql.DB
 	purger                     *sql.DB // chat_purger (F117: gameplay-chat-purge only)
 	su                         *sql.DB // superuser of the test database: seeds and assertions across tenants (RLS FORCE)
@@ -125,7 +126,7 @@ func setup(t *testing.T, o envOpts) *env {
 	t.Helper()
 	ctx := context.Background()
 	cl := testkit.Isolated(ctx, t)
-	e := &env{t: t, app: open(t, cl.ModuleDSN("chat", "app")), platform: open(t, cl.ModuleDSN("chat", "platform")),
+	e := &env{t: t, cl: cl, app: open(t, cl.ModuleDSN("chat", "app")), platform: open(t, cl.ModuleDSN("chat", "platform")),
 		relay: open(t, cl.ModuleDSN("chat", "relay")), purger: open(t, cl.ModuleDSN("chat", "purger")), clock: &clock{now: time.Date(2026, 11, 21, 3, 0, 0, 0, time.UTC)},
 		tenantA: uuid.New(), tenantB: uuid.New(), tenantU: uuid.New(), schoolA: uuid.New(), schoolA2: uuid.New(), schoolB: uuid.New(),
 		schoolU1: uuid.New(), schoolU2: uuid.New()}

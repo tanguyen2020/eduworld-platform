@@ -1,4 +1,4 @@
-h1:OtGl33yDb5q+pIPQT2UaD20Lmubq4vQaCzG2gZFq02I=
+h1:fpPazglh0ud0khLsfRpApjM1s9/DEVWeNlRpsWq9u3g=
 00000000000001_baseline.sql h1:mL8cMl2vAGJa3QB6izUDIwZBpoiEr+YbpjQDl/fA6AM=
 20261118000001_infra.sql h1:V50K9lGOLvlg6QWneL/iztcTu/2epvp54pF/M+7Jym4=
 20261119000001_f010_org.sql h1:Tr5cc7N3NPEZRb0GCj1T6gb7+g8D1I7DcNZjRVdmgAk=
@@ -22,3 +22,4 @@ h1:OtGl33yDb5q+pIPQT2UaD20Lmubq4vQaCzG2gZFq02I=
 20261202000001_f124_account_locks_email.sql h1:+cbBGE/3Z9Cwg9NhX4T4fePYBLjJp/vOA1nMQXn7pm4=
 20270201000134_infra_reconcile_grants.sql h1:Qvi+kanzxKuaYgB7MAMAxSR3V/Wa09Atmp0KjNWcUM8=
 20270202000001_f112_chat_direct_policy.sql h1:04zAMlRW0xkdVD5IRYsGQ6TLSDh96Jh9yaD/8TnWk5I=
+20270203000001_f010_system_rows_events.sql h1:4KmZ8DphgxIEIunh/+9gpoS24jSKoWkGKTMrJPPZJcQ=

@@ -2,7 +2,9 @@
 // lớp 3 and the quest "Phiên chợ của bác Gấu Nâu" that plays them) through the Game Operations Console of the running
 // stack (F078, F073 handoff): create → submit_review → approve → publish, so the question sources are checked by
 // validateMinigameQuestionSource of module learning; then assigns them to the demo tenants through the System Admin API
-// (ADR-0029). Accounts: author gd.thietke (game_designer), reviewer cm.duyet (content_reviewer), publisher lo.vanhanh
+// (ADR-0029). The learning ids of the files (subject, objectives) are placeholders resolved by code through the CMS API
+// before anything is created (learning_refs.json), so the selection rules draw from the DEV pool of `make seed-content`.
+// Accounts: author gd.thietke (game_designer), reviewer cm.duyet (content_reviewer), publisher lo.vanhanh
 // (liveops), System Admin sa.admin for the assignments (demo users of the dev realm). Running it again
 // publishes nothing new. LOCAL_DEVELOPMENT §5: `make seed-game-content` after `make seed-content`.
 //
@@ -74,6 +76,9 @@ func load(dir string) ([]seedItem, map[string][]string, error) {
 		if err != nil {
 			return nil, nil, err
 		}
+		if e.Name() == learningRefsFile {
+			continue // placeholders resolved by learningRefs
+		}
 		if e.Name() == "assignments.v1.json" {
 			var f struct {
 				Assignments      []map[string]any `json:"assignments"`
@@ -143,8 +148,14 @@ func run(ctx context.Context, dir string) error {
 	if err != nil {
 		return err
 	}
+	// The learning ids of the files are placeholders: resolve them by code on the running stack (learning_refs.json).
+	resolve, err := learningRefs(ctx, hc, api, reviewer, dir)
+	if err != nil {
+		return err
+	}
 	published := 0
 	for _, it := range items {
+		it.payload = replaceIDs(it.payload, resolve).(map[string]any)
 		n, err := publishOne(ctx, hc, internal, roles{author: author, reviewer: reviewer, publisher: publisher}, it)
 		if err != nil {
 			return err
@@ -175,7 +186,8 @@ func run(ctx context.Context, dir string) error {
 			return err
 		}
 	}
-	slog.InfoContext(ctx, "game content seed done", "items", len(items), "published_now", published, "assigned", len(assignments))
+	slog.InfoContext(ctx, "game content seed done", "items", len(items), "learning_refs", len(resolve), "published_now", published,
+		"assigned", len(assignments))
 	return nil
 }
 
@@ -296,4 +308,130 @@ func do(ctx context.Context, hc *http.Client, base, token, method, path string, 
 		}
 	}
 	return res.Header.Get("ETag"), nil
+}
+
+// learningRefsFile maps the placeholder learning ids of the seed files to learning codes (subjects, objectives of one
+// curriculum).
+const learningRefsFile = "learning_refs.json"
+
+// learningRefs resolves learningRefsFile of dir through the public CMS API of module learning (every page): placeholder id
+// → id of the running stack. No file = nothing to resolve; a code that is not seeded is an error (run make seed-learning and
+// make seed-content first).
+func learningRefs(ctx context.Context, hc *http.Client, base, token, dir string) (map[string]string, error) {
+	b, err := os.ReadFile(filepath.Join(dir, learningRefsFile)) //nolint:gosec // seed file of the repository
+	if errors.Is(err, os.ErrNotExist) {
+		return map[string]string{}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	var f struct {
+		CurriculumCode string            `json:"curriculum_code"`
+		Subjects       map[string]string `json:"subjects"`
+		Objectives     map[string]string `json:"objectives"`
+	}
+	if err := json.Unmarshal(b, &f); err != nil {
+		return nil, fmt.Errorf("%s: %w", learningRefsFile, err)
+	}
+	byCode := func(path, idField string) (map[string]string, error) {
+		items, err := listAll(ctx, hc, base, token, path)
+		if err != nil {
+			return nil, err
+		}
+		out := map[string]string{}
+		for _, it := range items {
+			code, _ := it["code"].(string)
+			id, _ := it[idField].(string)
+			out[code] = id
+		}
+		return out, nil
+	}
+	curricula, err := listAll(ctx, hc, base, token, "/cms/learning/curricula")
+	if err != nil {
+		return nil, err
+	}
+	version := ""
+	for _, c := range curricula {
+		if cur, ok := c["current_version"].(map[string]any); ok && c["code"] == f.CurriculumCode {
+			version, _ = cur["curriculum_version_id"].(string)
+		}
+	}
+	if version == "" {
+		return nil, fmt.Errorf("curriculum %s has no published version: run make seed-learning first", f.CurriculumCode)
+	}
+	subjects, err := byCode("/cms/learning/subjects", "subject_id")
+	if err != nil {
+		return nil, err
+	}
+	objectives, err := byCode("/cms/learning/objectives?curriculum_version_id="+url.QueryEscape(version), "objective_id")
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]string{}
+	for placeholder, code := range f.Subjects {
+		if out[placeholder] = subjects[code]; out[placeholder] == "" {
+			return nil, fmt.Errorf("subject %s not found: run make seed-learning first", code)
+		}
+	}
+	for placeholder, code := range f.Objectives {
+		if out[placeholder] = objectives[code]; out[placeholder] == "" {
+			return nil, fmt.Errorf("objective %s not found in %s: run make seed-learning first", code, f.CurriculumCode)
+		}
+	}
+	return out, nil
+}
+
+// listAll reads every page of a list endpoint (page.next_cursor).
+func listAll(ctx context.Context, hc *http.Client, base, token, path string) ([]map[string]any, error) {
+	sep := "?"
+	if strings.Contains(path, "?") {
+		sep = "&"
+	}
+	var out []map[string]any
+	cursor := ""
+	for range 100 {
+		q := path + sep + "limit=100"
+		if cursor != "" {
+			q += "&cursor=" + url.QueryEscape(cursor)
+		}
+		var p struct {
+			Data []map[string]any `json:"data"`
+			Page struct {
+				NextCursor *string `json:"next_cursor"`
+				HasMore    bool    `json:"has_more"`
+			} `json:"page"`
+		}
+		if _, err := do(ctx, hc, base, token, http.MethodGet, q, nil, nil, &p); err != nil {
+			return nil, err
+		}
+		out = append(out, p.Data...)
+		if !p.Page.HasMore || p.Page.NextCursor == nil || *p.Page.NextCursor == "" {
+			return out, nil
+		}
+		cursor = *p.Page.NextCursor
+	}
+	return nil, fmt.Errorf("%s: too many pages", path)
+}
+
+// replaceIDs returns v with every string equal to a key of ids replaced by its value (JSON values of a seed payload).
+func replaceIDs(v any, ids map[string]string) any {
+	switch x := v.(type) {
+	case map[string]any:
+		out := make(map[string]any, len(x))
+		for k, e := range x {
+			out[k] = replaceIDs(e, ids)
+		}
+		return out
+	case []any:
+		out := make([]any, len(x))
+		for i, e := range x {
+			out[i] = replaceIDs(e, ids)
+		}
+		return out
+	case string:
+		if r, ok := ids[x]; ok {
+			return r
+		}
+	}
+	return v
 }

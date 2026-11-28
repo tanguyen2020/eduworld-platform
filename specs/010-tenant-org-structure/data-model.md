@@ -102,3 +102,5 @@ Hợp: học sinh (enrollment active → `tenant_id`) ∪ nhân sự (`identity.
 | `student.placement_changed` | Trường/khối/trạng thái hiệu lực của học sinh đổi (mọi nguồn; thay `enrollment.changed` — ADR-0095) | `specs/events/payloads/identity/student.placement_changed.v1.schema.json` — Có sẵn (áp 2026-11-21, WP-S); producer ở WP-I1 |
 | `tenant_membership.changed` | Học sinh đổi tenant | Có sẵn (áp 2026-11-17) |
 | `user.provisioned` | Tạo học sinh tenant chung | Có sẵn (áp 2026-11-17) |
+
+Dòng do migration tạo (tenant `common`, School ảo, danh mục tỉnh) không qua use case nên event của chúng do migration `20270203000001_f010_system_rows_events` ghi vào outbox một lần (`tenant.created`, `school.updated`, `province.updated`; `producer = identity/migration`, `actor.type = system`) — Clarifications 2026-11-28.

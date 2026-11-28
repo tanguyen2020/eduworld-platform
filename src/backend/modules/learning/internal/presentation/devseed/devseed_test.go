@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -29,6 +30,30 @@ func TestSeedFileValid(t *testing.T) {
 	}
 	if f.GradeLevel != 3 || f.SubjectCode != "math" || len(f.TenantCodes) == 0 || !strings.HasPrefix(f.QuestionSet.Title, "[DEV]") {
 		t.Fatalf("unexpected seed file %+v", f)
+	}
+	// The pool of the DEV mini-games (seed/minigames of module game): true_false_race draws 5 true_false of difficulty
+	// 1–3, multiplication_card_match 3 matching of difficulty 2–3; no pool question is also a question of the set.
+	types := map[string]int{}
+	for _, q := range f.PoolQuestions {
+		d, _ := q.Body["difficulty"].(float64)
+		switch q.Body["type"] {
+		case "true_false":
+			if d >= 1 && d <= 3 {
+				types["true_false"]++
+			}
+		case "matching":
+			if d >= 2 && d <= 3 {
+				types["matching"]++
+			}
+		}
+	}
+	if types["true_false"] < 5 || types["matching"] < 3 || !slices.Contains(f.TenantCodes, "common") {
+		t.Fatalf("mini-game pool %v, tenants %v", types, f.TenantCodes)
+	}
+	dup := f
+	dup.PoolQuestions = append(slices.Clone(f.PoolQuestions), f.Questions[0])
+	if dup.Validate() == nil {
+		t.Fatal("pool question key equal to a question key accepted")
 	}
 	f.Questions = append(f.Questions, f.Questions[0])
 	if f.Validate() == nil {

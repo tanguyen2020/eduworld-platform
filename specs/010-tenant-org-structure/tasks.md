@@ -138,6 +138,10 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 - [x] T050 Membership từ học sinh hiệu lực: migration `20261130000002_adr0095_membership_from_students` (view `tenant_memberships_v`, quyền `identity_membership_reader`, dữ liệu: học sinh không còn enrollment active → `inactive`, `sis_links` lớp/enrollment soft-delete, issue lớp đóng, `class_leaderboard_enabled` gỡ); `Principal.school_ids` từ `org.students`; `checkMemberships` bỏ `class_id`; bootstrap lấy khối từ học sinh, bỏ `class`; `NO_ACTIVE_ENROLLMENT` = không có trường/khối hiệu lực — test: `TestResolvePrincipal`, `TestGameLogin`, `TestLoginSync`, `TestTransferStudent`, `TestPlacementTracker`, `TestTransferStudentPlacement` (WP-I1)
 - [x] T051 `listTenantGradeStudents` thay 4 op lớp (`listClasses`, `listTenantSchoolClasses`, `listTenantClassStudents`, `listUnassignedStudents`); menu `menu.school_lms.students`; tenant isolation + authz — test: `TestSchoolScopedRoutes`, `TestOrgQueries`, `TestListTenantGradeStudentsScope` (WP-I1)
 
+## Dữ liệu do migration tạo (owner chốt 2026-11-28)
+
+- [x] T052 Migration `20270203000001_f010_system_rows_events`: `tenant.created` (tenant `common`), `school.updated` (School ảo), `province.updated` (danh mục tỉnh) vào outbox một lần, `NOT EXISTS`, UUIDv7 có thứ tự (Clarifications 2026-11-28) — test: `TestMigrationsAnnounceSystemRows`; projection nhận `common`: `TestProjectionReceivesIdentitySystemRows` (learning, game, chat, competition)
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T003–T009) → US1 → US2, US3 song song → US4 (cần T008, T016) → US5 (cần T008, T027) → Polish.

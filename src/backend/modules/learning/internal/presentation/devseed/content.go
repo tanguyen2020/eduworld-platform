@@ -23,18 +23,21 @@ import (
 
 // File is one seed file (seed/content/*.dev.json).
 type File struct {
-	CurriculumCode    string          `json:"curriculum_code"`
-	SubjectCode       string          `json:"subject_code"`
-	GradeLevel        int             `json:"grade_level"`
-	TopicCode         string          `json:"topic_code"`
-	ObjectiveCodes    []string        `json:"objective_codes"`
-	AudioExemptReason string          `json:"audio_exempt_reason"`
-	TenantCodes       []string        `json:"tenant_codes"`
-	Questions         []QuestionSeed  `json:"questions"`
-	QuestionSet       TitledSeed      `json:"question_set"`
-	Activity          ActivitySeed    `json:"activity"`
-	Lesson            LessonSeed      `json:"lesson"`
-	Comment           json.RawMessage `json:"$comment,omitempty"`
+	CurriculumCode    string         `json:"curriculum_code"`
+	SubjectCode       string         `json:"subject_code"`
+	GradeLevel        int            `json:"grade_level"`
+	TopicCode         string         `json:"topic_code"`
+	ObjectiveCodes    []string       `json:"objective_codes"`
+	AudioExemptReason string         `json:"audio_exempt_reason"`
+	TenantCodes       []string       `json:"tenant_codes"`
+	Questions         []QuestionSeed `json:"questions"`
+	// PoolQuestions are published and assigned like Questions but belong to no question set or activity: the pool the
+	// selection rules of the DEV mini-games of module game draw from (validateMinigameQuestionSource, F073).
+	PoolQuestions []QuestionSeed  `json:"pool_questions"`
+	QuestionSet   TitledSeed      `json:"question_set"`
+	Activity      ActivitySeed    `json:"activity"`
+	Lesson        LessonSeed      `json:"lesson"`
+	Comment       json.RawMessage `json:"$comment,omitempty"`
 }
 
 // QuestionSeed is a question body (QuestionAuthoringInput without the curriculum fields) and its seed tag.
@@ -75,7 +78,7 @@ func (f File) Validate() error {
 		return errors.New("devseed: questions, question_set, activity and lesson are required")
 	}
 	seen := map[string]bool{}
-	for _, q := range f.Questions {
+	for _, q := range append(slices.Clone(f.Questions), f.PoolQuestions...) {
 		if q.Key == "" || seen[q.Key] || q.Body["type"] == nil {
 			return fmt.Errorf("devseed: question %q: unique key and body.type required", q.Key)
 		}
@@ -104,8 +107,10 @@ type Client struct {
 // Result lists what the seed found or created.
 type Result struct {
 	CurriculumID uuid.UUID
-	SubjectID    string // subject of the curriculum seed (assignment subject, RunAssignments)
+	SubjectID    string   // subject of the curriculum seed (assignment subject, RunAssignments)
+	ObjectiveIDs []string // objectives of the seed (the mini-game selection rules of module game resolve to them)
 	Questions    []uuid.UUID
+	Pool         []uuid.UUID // pool_questions
 	QuestionSet  uuid.UUID
 	Activity     uuid.UUID
 	Lesson       uuid.UUID
@@ -124,6 +129,7 @@ func Run(ctx context.Context, c Client, a Assigner, f File) (Result, error) {
 	}
 	out.CurriculumID = refs.curriculum
 	out.SubjectID = refs.subject
+	out.ObjectiveIDs = refs.objectives
 	var versions []string
 	for _, q := range f.Questions {
 		id, vid, n, err := c.question(ctx, f, refs, q)
@@ -132,6 +138,14 @@ func Run(ctx context.Context, c Client, a Assigner, f File) (Result, error) {
 		}
 		out.Questions = append(out.Questions, id)
 		versions = append(versions, vid)
+		out.Published += n
+	}
+	for _, q := range f.PoolQuestions {
+		id, _, n, err := c.question(ctx, f, refs, q)
+		if err != nil {
+			return out, fmt.Errorf("pool question %s: %w", q.Key, err)
+		}
+		out.Pool = append(out.Pool, id)
 		out.Published += n
 	}
 	items := make([]any, len(versions))
@@ -178,7 +192,7 @@ func Run(ctx context.Context, c Client, a Assigner, f File) (Result, error) {
 		t  string
 		id uuid.UUID
 	}{{"curriculum", out.CurriculumID}, {"question_set", out.QuestionSet}, {"activity", out.Activity}, {"lesson", out.Lesson}}
-	for _, q := range out.Questions {
+	for _, q := range append(slices.Clone(out.Questions), out.Pool...) {
 		assign = append(assign, struct {
 			t  string
 			id uuid.UUID

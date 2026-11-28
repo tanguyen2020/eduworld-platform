@@ -41,6 +41,7 @@ func TestMain(m *testing.M) { os.Exit(testkit.RunWithSharedCluster(m)) }
 
 type env struct {
 	t                          *testing.T
+	cl                         *testkit.Cluster // the isolated databases of the test (identity system events)
 	app, platform, migrator    *sql.DB
 	su                         *sql.DB // superuser of the test database: seeds and assertions across tenants (RLS FORCE)
 	uow                        *entx.UnitOfWork
@@ -70,7 +71,7 @@ func setup(t *testing.T, o envOpts) *env {
 	t.Helper()
 	ctx := context.Background()
 	cl := testkit.Isolated(ctx, t)
-	e := &env{t: t, app: open(t, cl.ModuleDSN("competition", "app")), platform: open(t, cl.ModuleDSN("competition", "platform")),
+	e := &env{t: t, cl: cl, app: open(t, cl.ModuleDSN("competition", "app")), platform: open(t, cl.ModuleDSN("competition", "platform")),
 		migrator: open(t, cl.ModuleDSN("competition", "migrator")), tenantA: uuid.New(), tenantB: uuid.New(), schoolA: uuid.New(),
 		schoolA2: uuid.New(), schoolB: uuid.New(), opts: o}
 	var dbName string

@@ -1,12 +1,12 @@
 {
-  "$comment": "DEV SEED ONLY (LOCAL_DEVELOPMENT §5): published platform content for Toán khối 3 over GDPT2018_SAMPLE, loaded by `make seed-content` through the public CMS API (create → submit_review → approve → publish) and assigned to the demo tenants (ADR-0029). Fake data, not reviewed by EdTech. Never assigned to real tenants.",
+  "$comment": "DEV SEED ONLY (LOCAL_DEVELOPMENT §5): published platform content for Toán khối 3 over GDPT2018_SAMPLE, loaded by `make seed-content` through the public CMS API (create → submit_review → approve → publish) and assigned to the demo tenants (ADR-0029). pool_questions (8 true_false, 4 matching, tags devseed-mg3-tf*/devseed-mg3-m*) are published and assigned too but belong to no question set or activity: the question pool of the DEV mini-games of module game (seed/minigames). Fake data, not reviewed by EdTech. Never assigned to real tenants.",
   "curriculum_code": "GDPT2018_SAMPLE",
   "subject_code": "math",
   "grade_level": 3,
   "topic_code": "MATH.G3.T01",
   "objective_codes": ["MATH.G3.NUM.MUL_TABLE.2"],
   "audio_exempt_reason": "Dữ liệu dev: chưa thu giọng đọc",
-  "tenant_codes": ["th-demo-a", "pgd-demo"],
+  "tenant_codes": ["th-demo-a", "pgd-demo", "common"],
   "questions": [
     {
       "key": "devseed-mg3-q1",
@@ -73,6 +73,204 @@
         "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Mỗi hộp có 9 cái bút. Hỏi 6 hộp có bao nhiêu cái bút?" }] },
         "render_payload": { "keyboard": "numeric", "unit_label": "cái", "allow_fraction_input": false, "decimal_separator": "," },
         "answer_key": { "value": 54, "tolerance": { "type": "absolute", "value": 0 }, "accept_equivalent_forms": true },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    }
+  ],
+  "pool_questions": [
+    {
+      "key": "devseed-mg3-tf1",
+      "body": {
+        "type": "true_false",
+        "difficulty": 1,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Đúng hay sai: 6 × 7 = 42" }] },
+        "render_payload": { "labels": { "true": "Đúng", "false": "Sai" } },
+        "answer_key": { "value": true },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-tf2",
+      "body": {
+        "type": "true_false",
+        "difficulty": 1,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Đúng hay sai: 8 × 6 = 46" }] },
+        "render_payload": { "labels": { "true": "Đúng", "false": "Sai" } },
+        "answer_key": { "value": false },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-tf3",
+      "body": {
+        "type": "true_false",
+        "difficulty": 1,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Đúng hay sai: 7 × 6 = 43" }] },
+        "render_payload": { "labels": { "true": "Đúng", "false": "Sai" } },
+        "answer_key": { "value": false },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-tf4",
+      "body": {
+        "type": "true_false",
+        "difficulty": 2,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Đúng hay sai: 9 × 4 = 36" }] },
+        "render_payload": { "labels": { "true": "Đúng", "false": "Sai" } },
+        "answer_key": { "value": true },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-tf5",
+      "body": {
+        "type": "true_false",
+        "difficulty": 2,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Đúng hay sai: 7 × 7 = 47" }] },
+        "render_payload": { "labels": { "true": "Đúng", "false": "Sai" } },
+        "answer_key": { "value": false },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-tf6",
+      "body": {
+        "type": "true_false",
+        "difficulty": 2,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Đúng hay sai: 9 × 8 = 72" }] },
+        "render_payload": { "labels": { "true": "Đúng", "false": "Sai" } },
+        "answer_key": { "value": true },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-tf7",
+      "body": {
+        "type": "true_false",
+        "difficulty": 3,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Đúng hay sai: 6 × 9 = 56" }] },
+        "render_payload": { "labels": { "true": "Đúng", "false": "Sai" } },
+        "answer_key": { "value": false },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-tf8",
+      "body": {
+        "type": "true_false",
+        "difficulty": 3,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Đúng hay sai: 8 × 8 = 64" }] },
+        "render_payload": { "labels": { "true": "Đúng", "false": "Sai" } },
+        "answer_key": { "value": true },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-m1",
+      "body": {
+        "type": "matching",
+        "difficulty": 2,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Nối phép nhân với kết quả đúng (lượt 1)" }] },
+        "render_payload": {
+          "left": [
+            { "id": "l_1", "content": { "blocks": [{ "type": "paragraph", "text": "6 × 7" }] } },
+            { "id": "l_2", "content": { "blocks": [{ "type": "paragraph", "text": "7 × 8" }] } },
+            { "id": "l_3", "content": { "blocks": [{ "type": "paragraph", "text": "8 × 9" }] } }
+          ],
+          "right": [
+            { "id": "r_1", "content": { "blocks": [{ "type": "paragraph", "text": "42" }] } },
+            { "id": "r_2", "content": { "blocks": [{ "type": "paragraph", "text": "56" }] } },
+            { "id": "r_3", "content": { "blocks": [{ "type": "paragraph", "text": "72" }] } },
+            { "id": "r_4", "content": { "blocks": [{ "type": "paragraph", "text": "63" }] } }
+          ],
+          "shuffle": true
+        },
+        "answer_key": { "pairs": [["l_1", "r_1"], ["l_2", "r_2"], ["l_3", "r_3"]] },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-m2",
+      "body": {
+        "type": "matching",
+        "difficulty": 2,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Nối phép nhân với kết quả đúng (lượt 2)" }] },
+        "render_payload": {
+          "left": [
+            { "id": "l_1", "content": { "blocks": [{ "type": "paragraph", "text": "6 × 6" }] } },
+            { "id": "l_2", "content": { "blocks": [{ "type": "paragraph", "text": "7 × 9" }] } },
+            { "id": "l_3", "content": { "blocks": [{ "type": "paragraph", "text": "9 × 9" }] } }
+          ],
+          "right": [
+            { "id": "r_1", "content": { "blocks": [{ "type": "paragraph", "text": "36" }] } },
+            { "id": "r_2", "content": { "blocks": [{ "type": "paragraph", "text": "63" }] } },
+            { "id": "r_3", "content": { "blocks": [{ "type": "paragraph", "text": "81" }] } },
+            { "id": "r_4", "content": { "blocks": [{ "type": "paragraph", "text": "54" }] } }
+          ],
+          "shuffle": true
+        },
+        "answer_key": { "pairs": [["l_1", "r_1"], ["l_2", "r_2"], ["l_3", "r_3"]] },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-m3",
+      "body": {
+        "type": "matching",
+        "difficulty": 3,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Nối phép nhân với kết quả đúng (lượt 3)" }] },
+        "render_payload": {
+          "left": [
+            { "id": "l_1", "content": { "blocks": [{ "type": "paragraph", "text": "6 × 8" }] } },
+            { "id": "l_2", "content": { "blocks": [{ "type": "paragraph", "text": "8 × 8" }] } },
+            { "id": "l_3", "content": { "blocks": [{ "type": "paragraph", "text": "9 × 6" }] } }
+          ],
+          "right": [
+            { "id": "r_1", "content": { "blocks": [{ "type": "paragraph", "text": "48" }] } },
+            { "id": "r_2", "content": { "blocks": [{ "type": "paragraph", "text": "64" }] } },
+            { "id": "r_3", "content": { "blocks": [{ "type": "paragraph", "text": "54" }] } },
+            { "id": "r_4", "content": { "blocks": [{ "type": "paragraph", "text": "56" }] } }
+          ],
+          "shuffle": true
+        },
+        "answer_key": { "pairs": [["l_1", "r_1"], ["l_2", "r_2"], ["l_3", "r_3"]] },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-m4",
+      "body": {
+        "type": "matching",
+        "difficulty": 3,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Nối phép nhân với kết quả đúng (lượt 4)" }] },
+        "render_payload": {
+          "left": [
+            { "id": "l_1", "content": { "blocks": [{ "type": "paragraph", "text": "7 × 7" }] } },
+            { "id": "l_2", "content": { "blocks": [{ "type": "paragraph", "text": "9 × 7" }] } },
+            { "id": "l_3", "content": { "blocks": [{ "type": "paragraph", "text": "8 × 6" }] } }
+          ],
+          "right": [
+            { "id": "r_1", "content": { "blocks": [{ "type": "paragraph", "text": "49" }] } },
+            { "id": "r_2", "content": { "blocks": [{ "type": "paragraph", "text": "63" }] } },
+            { "id": "r_3", "content": { "blocks": [{ "type": "paragraph", "text": "48" }] } },
+            { "id": "r_4", "content": { "blocks": [{ "type": "paragraph", "text": "42" }] } }
+          ],
+          "shuffle": true
+        },
+        "answer_key": { "pairs": [["l_1", "r_1"], ["l_2", "r_2"], ["l_3", "r_3"]] },
         "scoring_rule": { "mode": "all_or_nothing" },
         "max_score": 1
       }

@@ -1,0 +1,11 @@
+{
+  "$comment": "DEV SEED ONLY (F073): the learning ids of the mini-game configs and their quest are placeholders of the spec examples; cmd/seed-content resolves them by code through the CMS API of the running stack (subjects, objectives of curriculum_code) before it creates the configs, so their selection rules draw from the pool of learning seed/content/math_g3.dev.json. Not read by cmd/seed nor TestMiniGameSeedFiles (*.v1.json only).",
+  "curriculum_code": "GDPT2018_SAMPLE",
+  "subjects": {
+    "01936b2e-0000-7000-8000-00000000a001": "math",
+    "0193a5f4-6c1e-7b2a-9d1f-0000000720f1": "math"
+  },
+  "objectives": {
+    "01936b2e-0000-7000-8000-00000000c311": "MATH.G3.NUM.MUL_TABLE.2"
+  }
+}
