@@ -88,9 +88,9 @@
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T035 [P] Integration headless 2 client: boss party 2 phase, quest co-op có bước `interdependent`, kết bạn bằng mã (TC-CHL-004, TC-CHL-005, TC-CHL-007, TC-PTY-007, TC-PTY-010, TC-SOC-001) — file: `src/game/tests/integration/test_boss_party_headless.gd`, `src/game/tests/integration/test_friends_headless.gd`
+- [ ] T035 [P] Integration headless 2 client (**còn chờ** 2026-11-28: cần backend + `EW_REALTIME_PUBLIC_URL`, như F102/F119): boss party 2 phase, quest co-op có bước `interdependent`, kết bạn bằng mã (TC-CHL-004, TC-CHL-005, TC-CHL-007, TC-PTY-007, TC-PTY-010, TC-SOC-001) — file: `src/game/tests/integration/test_boss_party_headless.gd`, `src/game/tests/integration/test_friends_headless.gd`
 - [x] T036 [P] Cập nhật STUDENT_GAME_UX_CORE S06 (đóng góp chỉ ✓, không số câu của bạn), GODOT_ARCHITECTURE §3 (`scenes/challenge/boss`, `scripts/social`, `scripts/quest`), CHANGELOG — file: `docs/05-ux/STUDENT_GAME_UX_CORE.md`, `docs/08-game-client/GODOT_ARCHITECTURE.md`, `CHANGELOG.md` — **xong 2026-11-28:** GODOT_ARCHITECTURE §3/§4/§6, GAME_NETWORKING §4.2, STUDENT_GAME_UX_CORE S06, STUDENT_GAME_UX_SOCIAL §6, CHANGELOG
-- [ ] T037 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
+- [ ] T037 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — 2026-11-28: phần tự động + ảnh ghi ở quickstart §5; kịch bản tay với backend thật + hai thiết bị **còn chờ**
 
 ## Dependencies & Execution Order
 
@@ -99,8 +99,8 @@
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F110-AC-* có test pass (ghi mã test/TC)
-- [ ] `make godot-test`, `make godot-export-check`, `make design-tokens-check` xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F110-AC-* có test pass (ghi mã test/TC) — bảng ở [quickstart §5](quickstart.md#5-bằng-chứng-2026-11-28-phần-godot-client) (fake + fixture contract; phần lab FPS và chạy thật hai client còn chờ)
+- [ ] `make godot-test`, `make godot-export-check`, `make design-tokens-check` xanh — 2026-11-28: GdUnit4 toàn bộ 1571 test: 1548 pass, 16 skip, 10 fail + 3 error chỉ ở `test_manifest_verifier`/`test_prefetch_scheduler` của F133 (lỗi sẵn có: cùng kết quả trên `origin/main` sạch); lint Godot xanh; export/design-tokens không chạy (không đổi token, không đổi preset export)
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — fake/fixture chỉ ở `tests/`
+- [x] Tài liệu sở hữu, CHANGELOG cập nhật nếu có thay đổi
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật

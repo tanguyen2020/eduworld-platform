@@ -48,7 +48,7 @@ make design-tokens-check
 
 ## 5. Bằng chứng 2026-11-28 (phần Godot client)
 
-Chạy trên máy local, Godot 4.7.2 (headless cho GdUnit4, Compatibility/OpenGL cho ảnh), FakeHttp + FakeWebSocketPeer + fixture contract (TEST-ONLY, AGENTS R17) — **chưa** chạy với backend thật.
+Chạy trên máy local, Godot 4.7.2 (headless cho GdUnit4, Compatibility/OpenGL cho ảnh), FakeHttp + FakeWebSocketPeer + fixture contract (TEST-ONLY, AGENTS R17) — **chưa** chạy với backend thật. GdUnit4 toàn bộ: 1571 test, 1548 pass, 16 skip; 13 lỗi chỉ ở `test_manifest_verifier`/`test_prefetch_scheduler` (F133, có sẵn trên `origin/main`). Lint Godot (check_typed, theme, layers, signals, art, bake_art, brand_assets, extract_pot, pseudo_locale, gen_fixtures, check_no_admin_ui) xanh.
 
 | Tiêu chí | Test (pass) |
 |---|---|
