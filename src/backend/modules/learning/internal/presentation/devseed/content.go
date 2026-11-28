@@ -102,6 +102,18 @@ type Client struct {
 	// ActivityReviewer reviews and publishes activities (learning_content.activity.review: content_admin or System Admin,
 	// ADMIN_PORTAL §2.3; content_reviewer has no activity review); empty = Reviewer.
 	ActivityReviewer string
+	// Headers are sent with every call (X-Tenant-Id of tenant content); OwnerScope is the owner of what the seed creates
+	// and finds again ("" = platform).
+	Headers    map[string]string
+	OwnerScope string
+}
+
+// owner returns the owner scope of the content of the client.
+func (c Client) owner() string {
+	if c.OwnerScope == "" {
+		return "platform"
+	}
+	return c.OwnerScope
 }
 
 // Result lists what the seed found or created.
@@ -115,6 +127,8 @@ type Result struct {
 	Activity     uuid.UUID
 	Lesson       uuid.UUID
 	Published    int // workflow publishes done by this run (0 on a second run)
+	// Activities are the activities of lesson files by key (AssignmentSeed.Content "activity:<key>").
+	Activities map[string]uuid.UUID
 }
 
 // Run seeds the content of f and assigns it (with the curriculum) through a.
@@ -132,7 +146,7 @@ func Run(ctx context.Context, c Client, a Assigner, f File) (Result, error) {
 	out.ObjectiveIDs = refs.objectives
 	var versions []string
 	for _, q := range f.Questions {
-		id, vid, n, err := c.question(ctx, f, refs, q)
+		id, vid, n, err := c.question(ctx, f.GradeLevel, f.AudioExemptReason, refs, q)
 		if err != nil {
 			return out, fmt.Errorf("question %s: %w", q.Key, err)
 		}
@@ -141,7 +155,7 @@ func Run(ctx context.Context, c Client, a Assigner, f File) (Result, error) {
 		out.Published += n
 	}
 	for _, q := range f.PoolQuestions {
-		id, _, n, err := c.question(ctx, f, refs, q)
+		id, _, n, err := c.question(ctx, f.GradeLevel, f.AudioExemptReason, refs, q)
 		if err != nil {
 			return out, fmt.Errorf("pool question %s: %w", q.Key, err)
 		}
@@ -268,27 +282,43 @@ func (c Client) curriculum(ctx context.Context, f File) (curriculumRefs, error) 
 
 // question finds the question tagged q.Key (or creates it) and publishes version 1; it returns the content id, the
 // published version id and the number of publishes done.
-func (c Client) question(ctx context.Context, f File, r curriculumRefs, q QuestionSeed) (uuid.UUID, string, int, error) {
-	stem := ""
-	if b, ok := q.Body["stem"].(map[string]any)["blocks"].([]any); ok && len(b) > 0 {
-		stem, _ = b[0].(map[string]any)["text"].(string)
-	}
-	var found page
-	qs := url.Values{"q": {stem}, "grade_level": {strconv.Itoa(f.GradeLevel)}, "limit": {"100"}}
-	if err := c.get(ctx, c.Author, "/cms/learning/questions?"+qs.Encode(), &found); err != nil {
-		return uuid.Nil, "", 0, err
-	}
+func (c Client) question(ctx context.Context, grade int, audioExempt string, r curriculumRefs, q QuestionSeed) (uuid.UUID, string, int, error) {
+	// Found again by its tag among the questions of the topic, type and grade (every page; no full-text search: the stem
+	// may hold characters the search ignores). Several matches (a duplicate of an interrupted run): the oldest (UUIDv7).
+	typ, _ := q.Body["type"].(string)
 	var item map[string]any
-	for _, it := range found.Data {
-		if tags, ok := it["tags"].([]any); ok && slices.Contains(tags, any(q.Key)) {
-			item = it
+	cursor := ""
+	for range 100 {
+		qs := url.Values{"topic_id": {r.topic}, "type": {typ}, "grade_level": {strconv.Itoa(grade)}, "limit": {"100"}}
+		if cursor != "" {
+			qs.Set("cursor", cursor)
 		}
+		var found struct {
+			Data []map[string]any `json:"data"`
+			Page struct {
+				NextCursor *string `json:"next_cursor"`
+				HasMore    bool    `json:"has_more"`
+			} `json:"page"`
+		}
+		if err := c.get(ctx, c.Author, "/cms/learning/questions?"+qs.Encode(), &found); err != nil {
+			return uuid.Nil, "", 0, err
+		}
+		for _, it := range found.Data {
+			if tags, ok := it["tags"].([]any); ok && slices.Contains(tags, any(q.Key)) && ownedBy(it, c.owner()) &&
+				(item == nil || str(it, "content_id") < str(item, "content_id")) {
+				item = it
+			}
+		}
+		if !found.Page.HasMore || found.Page.NextCursor == nil || *found.Page.NextCursor == "" {
+			break
+		}
+		cursor = *found.Page.NextCursor
 	}
 	if item == nil {
-		body := map[string]any{"owner_scope": "platform", "grade_levels": []int{f.GradeLevel}, "subject_id": r.subject, "topic_id": r.topic,
+		body := map[string]any{"owner_scope": c.owner(), "grade_levels": []int{grade}, "subject_id": r.subject, "topic_id": r.topic,
 			"curriculum_version_id": r.version, "objective_ids": r.objectives, "content_language": "vi", "tags": []string{q.Key}}
-		if f.AudioExemptReason != "" {
-			body["audio_exempt_reason"] = f.AudioExemptReason
+		if audioExempt != "" {
+			body["audio_exempt_reason"] = audioExempt
 		}
 		for k, v := range q.Body {
 			body[k] = v
@@ -313,7 +343,8 @@ func (c Client) doc(ctx context.Context, ctype, list, title string, body map[str
 	idKey := "content_id"
 	query := "?limit=100&q=" + url.QueryEscape(title)
 	if ctype == "activity" {
-		idKey, query = "activity_id", "?limit=100&activity_type=quiz"
+		typ, _ := body["activity_type"].(string)
+		idKey, query = "activity_id", "?limit=100&activity_type="+url.QueryEscape(typ)
 	}
 	var found page
 	if err := c.get(ctx, c.Author, list+query, &found); err != nil {
@@ -321,11 +352,12 @@ func (c Client) doc(ctx context.Context, ctype, list, title string, body map[str
 	}
 	var item map[string]any
 	for _, it := range found.Data {
-		if t, ok := it["title"].(map[string]any); ok && t["vi"] == title && str(it, "owner_scope") != "tenant" {
+		if t, ok := it["title"].(map[string]any); ok && t["vi"] == title && ownedBy(it, c.owner()) {
 			item = it
 		}
 	}
-	if item == nil {
+	created := item == nil
+	if created {
 		if err := c.send(ctx, c.Author, http.MethodPost, list, nil, body, &item); err != nil {
 			return uuid.Nil, err
 		}
@@ -334,9 +366,43 @@ func (c Client) doc(ctx context.Context, ctype, list, title string, body map[str
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("%s without %s: %w", ctype, idKey, err)
 	}
+	if !created && ctype == "activity" {
+		if err := c.refreshDraft(ctx, list, id.String(), body); err != nil {
+			return id, err
+		}
+	}
 	_, n, err := c.publish(ctx, ctype, id.String(), 1)
 	*published += n
 	return id, err
+}
+
+// refreshDraft brings an activity whose version 1 was never published (a run stopped by a refused publish) back to the
+// body of the seed file: approved/rejected → revise (author), then updateCmsActivityDraft. A published version is never
+// touched (R11: change the seed file with a new title instead).
+func (c Client) refreshDraft(ctx context.Context, list, id string, body map[string]any) error {
+	v, err := c.version(ctx, "activity", id, 1)
+	if err != nil || v == nil {
+		return err
+	}
+	path := "/cms/learning/content/activity/" + id + "/versions/1"
+	switch str(v, "status") {
+	case "approved", "rejected":
+		etag, err := c.getETag(ctx, c.Author, path, nil)
+		if err != nil {
+			return err
+		}
+		if err := c.send(ctx, c.Author, http.MethodPost, path+":transition", map[string]string{"If-Match": etag}, map[string]any{"action": "revise"}, nil); err != nil {
+			return err
+		}
+	case "draft":
+	default:
+		return nil
+	}
+	etag, err := c.getETag(ctx, c.Author, list+"/"+id, nil)
+	if err != nil {
+		return err
+	}
+	return c.send(ctx, c.Author, http.MethodPatch, list+"/"+id, map[string]string{"If-Match": etag}, body, nil)
 }
 
 // publish runs the missing steps draft → in_review → approved → published of a version (author submits, reviewer
@@ -400,9 +466,51 @@ func (c Client) send(ctx context.Context, token, method, path string, h map[stri
 	return err
 }
 
-// call sends one request (a fresh Idempotency-Key on every write) and decodes the JSON answer; it returns the ETag.
+// call sends one request (a fresh Idempotency-Key on every write, the client headers) and decodes the JSON answer; it
+// returns the ETag.
 func (c Client) call(ctx context.Context, token, method, path string, h map[string]string, body, out any) (string, error) {
+	if len(c.Headers) > 0 {
+		all := map[string]string{}
+		for k, v := range c.Headers {
+			all[k] = v
+		}
+		for k, v := range h {
+			all[k] = v
+		}
+		h = all
+	}
 	return Do(ctx, c.HTTP, c.BaseURL, token, method, path, h, body, out)
+}
+
+// ownedBy reports a listed item of the given owner scope (an item without owner_scope counts as platform).
+func ownedBy(it map[string]any, owner string) bool {
+	s := str(it, "owner_scope")
+	if s == "" {
+		s = "platform"
+	}
+	return s == owner
+}
+
+// HTTPError is a non-2xx answer of the API (problem code and detail, never the request body).
+type HTTPError struct {
+	Method, Path string
+	Status       int
+	Code, Detail string
+	Fields       []string // errors[].field + code of a validation problem
+}
+
+func (e *HTTPError) Error() string {
+	msg := fmt.Sprintf("%s %s: %d %s %s", e.Method, e.Path, e.Status, e.Code, e.Detail)
+	if len(e.Fields) > 0 {
+		msg += " [" + strings.Join(e.Fields, "; ") + "]"
+	}
+	return msg
+}
+
+// IsStatus reports an HTTPError with the given status.
+func IsStatus(err error, status int) bool {
+	var he *HTTPError
+	return errors.As(err, &he) && he.Status == status
 }
 
 // Do is the HTTP helper of the seed (also used by the System Admin assigner of cmd/seed-content).
@@ -444,12 +552,21 @@ func Do(ctx context.Context, hc *http.Client, base, token, method, path string, 
 		return "", err
 	}
 	if res.StatusCode >= 300 {
+		e := &HTTPError{Method: method, Path: path, Status: res.StatusCode}
 		var p struct {
 			Code   string `json:"code"`
 			Detail string `json:"detail"`
+			Errors []struct {
+				Field string `json:"field"`
+				Code  string `json:"code"`
+			} `json:"errors"`
 		}
 		_ = json.Unmarshal(raw, &p)
-		return "", fmt.Errorf("%s %s: %d %s %s", method, path, res.StatusCode, p.Code, p.Detail)
+		e.Code, e.Detail = p.Code, p.Detail
+		for _, fe := range p.Errors {
+			e.Fields = append(e.Fields, fe.Field+" "+fe.Code)
+		}
+		return "", e
 	}
 	if out != nil && len(raw) > 0 {
 		if err := json.Unmarshal(raw, out); err != nil {

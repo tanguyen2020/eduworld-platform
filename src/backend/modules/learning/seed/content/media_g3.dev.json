@@ -1,0 +1,526 @@
+{
+  "$comment": "DEV SEED ONLY (LOCAL_DEVELOPMENT §5): media lessons for Toán khối 3, TENANT content of th-demo-a (platform media cannot be assigned to a tenant yet — learning has no media handler for assignToTenants — so a student only plays the media of its own tenant), loaded by `make seed-media` (after `make seed-content`): author qlcm.truong.a, reviewer sa.admin (System Admin also uploads the media for th-demo-a: no seeded user of the tenant has media.upload). The video and the audio are SYNTHETIC clips (ffmpeg test pattern + sine tone) generated in a throwaway container of the media-tools image at seed time — never committed; the WebVTT subtitles are the small files of seed/media. Everything goes through the real media pipeline (presign → PUT → complete-upload → worker transcode to Theora ogv_480/ogv_720 + MP4/HLS, Ogg Vorbis — F027) and the CMS workflow. F065 T030/T041: video_lesson 3:20, 2 chapters, vi/en subtitles, required cue at 01:30. F066 T040/T051: audio_lesson with 2 plays; physics.lever simulation balanced by 2 kg at slot 2 against 1 kg at slot 4. Fake data, not reviewed by EdTech, never for real tenants.",
+  "curriculum_code": "GDPT2018_SAMPLE",
+  "subject_code": "math",
+  "grade_level": 3,
+  "audio_exempt_reason": "Dữ liệu dev: chưa thu giọng đọc",
+  "owner_tenant_code": "th-demo-a",
+  "media": [
+    {
+      "key": "video-main",
+      "kind": "video",
+      "filename": "devseed-g3-video-bang-nhan.mp4",
+      "mime_type": "video/mp4",
+      "license": "CC0 — dữ liệu dev tự sinh (ffmpeg testsrc2)",
+      "generate": {
+        "duration_s": 200,
+        "width": 640,
+        "height": 360,
+        "fps": 15,
+        "tone_hz": 440
+      },
+      "variants": [
+        "ogv_480",
+        "ogv_720"
+      ]
+    },
+    {
+      "key": "video-sub-vi",
+      "kind": "subtitle",
+      "filename": "devseed-g3-video-bang-nhan.vi.vtt",
+      "mime_type": "text/vtt",
+      "license": "CC0 — dữ liệu dev",
+      "file": "modules/learning/seed/media/devseed-g3-video-bang-nhan.vi.vtt",
+      "variants": [
+        "vtt"
+      ]
+    },
+    {
+      "key": "video-sub-en",
+      "kind": "subtitle",
+      "filename": "devseed-g3-video-bang-nhan.en.vtt",
+      "mime_type": "text/vtt",
+      "license": "CC0 — dữ liệu dev",
+      "file": "modules/learning/seed/media/devseed-g3-video-bang-nhan.en.vtt",
+      "variants": [
+        "vtt"
+      ]
+    },
+    {
+      "key": "audio-main",
+      "kind": "audio",
+      "filename": "devseed-g3-audio-dem-so.ogg",
+      "mime_type": "audio/ogg",
+      "license": "CC0 — dữ liệu dev tự sinh (ffmpeg sine)",
+      "generate": {
+        "duration_s": 45,
+        "tone_hz": 523
+      },
+      "variants": [
+        "ogg"
+      ]
+    },
+    {
+      "key": "audio-transcript",
+      "kind": "subtitle",
+      "filename": "devseed-g3-audio-dem-so.vi.vtt",
+      "mime_type": "text/vtt",
+      "license": "CC0 — dữ liệu dev",
+      "file": "modules/learning/seed/media/devseed-g3-audio-dem-so.vi.vtt",
+      "variants": [
+        "vtt"
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "key": "devseed-media-v-q1",
+      "topic_code": "MATH.G3.T01",
+      "objective_codes": [
+        "MATH.G3.NUM.MUL_TABLE.2"
+      ],
+      "body": {
+        "type": "single_choice",
+        "difficulty": 1,
+        "stem": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "[DEV] Câu chèn video: 3 × 4 = ?"
+            }
+          ]
+        },
+        "render_payload": {
+          "options": [
+            {
+              "id": "o_v1",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "12"
+                  }
+                ]
+              },
+              "feedback": "Đúng rồi: 3 × 4 = 12."
+            },
+            {
+              "id": "o_v2",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "7"
+                  }
+                ]
+              },
+              "feedback": "7 là 3 + 4. Em nhân nhé."
+            },
+            {
+              "id": "o_v3",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "9"
+                  }
+                ]
+              },
+              "feedback": "9 là 3 × 3."
+            }
+          ],
+          "shuffle_options": false
+        },
+        "answer_key": {
+          "correct_option_id": "o_v1"
+        },
+        "scoring_rule": {
+          "mode": "all_or_nothing"
+        },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-media-a-q1",
+      "topic_code": "MATH.G3.T01",
+      "objective_codes": [
+        "MATH.G3.NUM.MUL_TABLE.2"
+      ],
+      "body": {
+        "type": "single_choice",
+        "difficulty": 1,
+        "stem": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "[DEV] Bài nghe: bạn nhỏ đếm đến số mấy?"
+            }
+          ]
+        },
+        "render_payload": {
+          "options": [
+            {
+              "id": "o_a1",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "5"
+                  }
+                ]
+              },
+              "feedback": "Chưa đúng, em nghe lại nhé."
+            },
+            {
+              "id": "o_a2",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "10"
+                  }
+                ]
+              },
+              "feedback": "Đúng rồi."
+            },
+            {
+              "id": "o_a3",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "20"
+                  }
+                ]
+              },
+              "feedback": "Chưa đúng, em nghe lại nhé."
+            }
+          ],
+          "shuffle_options": false
+        },
+        "answer_key": {
+          "correct_option_id": "o_a2"
+        },
+        "scoring_rule": {
+          "mode": "all_or_nothing"
+        },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-media-a-q2",
+      "topic_code": "MATH.G3.T01",
+      "objective_codes": [
+        "MATH.G3.NUM.MUL_TABLE.2"
+      ],
+      "body": {
+        "type": "true_false",
+        "difficulty": 1,
+        "stem": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "[DEV] Bài nghe: Đúng hay sai — 2 × 5 = 10"
+            }
+          ]
+        },
+        "render_payload": {
+          "labels": {
+            "true": "Đúng",
+            "false": "Sai"
+          }
+        },
+        "answer_key": {
+          "value": true
+        },
+        "scoring_rule": {
+          "mode": "all_or_nothing"
+        },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-media-s-q1",
+      "topic_code": "MATH.G3.T01",
+      "objective_codes": [
+        "MATH.G3.NUM.MUL_TABLE.2"
+      ],
+      "body": {
+        "type": "single_choice",
+        "difficulty": 1,
+        "stem": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "[DEV] Mô phỏng: vật 2 kg ở ô 2 cân bằng với vật 1 kg ở ô mấy?"
+            }
+          ]
+        },
+        "render_payload": {
+          "options": [
+            {
+              "id": "o_s1",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "1"
+                  }
+                ]
+              },
+              "feedback": "Chưa cân: 2 × 2 = 4, còn 1 × 1 = 1."
+            },
+            {
+              "id": "o_s2",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "2"
+                  }
+                ]
+              },
+              "feedback": "Chưa cân: 1 × 2 = 2."
+            },
+            {
+              "id": "o_s3",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "4"
+                  }
+                ]
+              },
+              "feedback": "Đúng rồi: 2 × 2 = 1 × 4."
+            }
+          ],
+          "shuffle_options": false
+        },
+        "answer_key": {
+          "correct_option_id": "o_s3"
+        },
+        "scoring_rule": {
+          "mode": "all_or_nothing"
+        },
+        "max_score": 1
+      }
+    }
+  ],
+  "activities": [
+    {
+      "key": "video",
+      "activity_type": "video_lesson",
+      "topic_code": "MATH.G3.T01",
+      "objective_codes": [
+        "MATH.G3.NUM.MUL_TABLE.2"
+      ],
+      "title": "[DEV] Video bảng nhân (3:20)",
+      "difficulty": 1,
+      "description": "Video mẫu tự sinh (dữ liệu dev): 2 chương, phụ đề vi/en, câu chèn bắt buộc ở 01:30",
+      "instructions": "Xem video và trả lời câu hỏi khi video dừng",
+      "config": {
+        "content": {
+          "video_asset_id": "{{media:video-main}}",
+          "duration_ms": 200000,
+          "chapters": [
+            {
+              "chapter_id": "mo-dau",
+              "title": {
+                "vi": "Mở đầu"
+              },
+              "start_ms": 0,
+              "end_ms": 100000
+            },
+            {
+              "chapter_id": "luyen-tap",
+              "title": {
+                "vi": "Luyện tập"
+              },
+              "start_ms": 100000,
+              "end_ms": 200000
+            }
+          ],
+          "subtitles": [
+            {
+              "language": "vi",
+              "subtitle_asset_id": "{{media:video-sub-vi}}",
+              "is_default": true
+            },
+            {
+              "language": "en",
+              "subtitle_asset_id": "{{media:video-sub-en}}"
+            }
+          ],
+          "embedded_questions": [
+            {
+              "cue_id": "cue-0130",
+              "at_ms": 90000,
+              "question_version_id": "{{question:devseed-media-v-q1}}",
+              "pause": true,
+              "required": true,
+              "allow_skip_after_wrong": true
+            }
+          ]
+        },
+        "interaction": {
+          "allow_seek": "watched_only",
+          "playback_rates": [
+            1,
+            1.5
+          ],
+          "allow_subtitles_toggle": true,
+          "autoplay_next_chapter": true
+        },
+        "evaluation": {
+          "strategies": [
+            "completion",
+            "auto"
+          ],
+          "max_score": 1
+        },
+        "feedback": {
+          "timing": "immediate"
+        },
+        "completion_rule": {
+          "mode": "min_watched_ratio",
+          "min_watched_ratio": 0.9,
+          "require_required_cues": true
+        }
+      }
+    },
+    {
+      "key": "audio",
+      "activity_type": "audio_lesson",
+      "topic_code": "MATH.G3.T01",
+      "objective_codes": [
+        "MATH.G3.NUM.MUL_TABLE.2"
+      ],
+      "title": "[DEV] Bài nghe đếm số (0:45)",
+      "difficulty": 1,
+      "description": "Âm thanh mẫu tự sinh (dữ liệu dev), nghe tối đa 2 lần, lời thoại hiện sau khi xong",
+      "instructions": "Nghe rồi trả lời câu hỏi",
+      "config": {
+        "content": {
+          "audio_asset_id": "{{media:audio-main}}",
+          "transcript_asset_id": "{{media:audio-transcript}}",
+          "segments": [
+            {
+              "segment_id": "dem-1",
+              "title": {
+                "vi": "Đếm 1–5"
+              },
+              "start_ms": 0,
+              "end_ms": 20000
+            },
+            {
+              "segment_id": "dem-2",
+              "title": {
+                "vi": "Đếm 6–10"
+              },
+              "start_ms": 20000,
+              "end_ms": 45000
+            }
+          ],
+          "questions": [
+            {
+              "question_version_id": "{{question:devseed-media-a-q1}}"
+            },
+            {
+              "question_version_id": "{{question:devseed-media-a-q2}}",
+              "at_ms": 30000
+            }
+          ]
+        },
+        "interaction": {
+          "max_plays": 2,
+          "allow_speed_change": true,
+          "show_transcript": "after_complete"
+        },
+        "evaluation": {
+          "strategies": [
+            "completion",
+            "auto"
+          ],
+          "max_score": 2
+        },
+        "feedback": {
+          "timing": "immediate"
+        },
+        "completion_rule": {
+          "mode": "min_watched_ratio",
+          "min_watched_ratio": 0.9
+        }
+      }
+    },
+    {
+      "key": "simulation",
+      "activity_type": "simulation",
+      "topic_code": "MATH.G3.T01",
+      "objective_codes": [
+        "MATH.G3.NUM.MUL_TABLE.2"
+      ],
+      "title": "[DEV] Mô phỏng cân bằng đòn bẩy",
+      "difficulty": 2,
+      "description": "Template physics.lever v1 (dữ liệu dev): vật 2 kg và 1 kg",
+      "instructions": "Đặt hai vật để đòn bẩy cân bằng rồi thả",
+      "config": {
+        "content": {
+          "simulation_kind": "physics",
+          "template_code": "physics.lever",
+          "min_template_version": 1,
+          "parameters": {
+            "arm_length_m": 1,
+            "slots_per_side": 4,
+            "mass_1_kg": 2,
+            "mass_2_kg": 1
+          },
+          "goals": [
+            {
+              "goal_id": "balance",
+              "description": {
+                "vi": "Cân bằng đòn bẩy"
+              },
+              "check": {
+                "metric": "balanced",
+                "operator": "eq",
+                "value": 1
+              }
+            }
+          ],
+          "steps": [
+            {
+              "step_id": "place",
+              "instruction": {
+                "vi": "Đặt hai vật lên đòn bẩy"
+              }
+            }
+          ],
+          "questions": [
+            {
+              "question_version_id": "{{question:devseed-media-s-q1}}"
+            }
+          ],
+          "seed_policy": "fixed"
+        },
+        "interaction": {
+          "max_runs": 3,
+          "show_measurements": true
+        },
+        "evaluation": {
+          "strategies": [
+            "deterministic_check",
+            "auto"
+          ],
+          "max_score": 2
+        },
+        "feedback": {
+          "timing": "immediate"
+        },
+        "completion_rule": {
+          "mode": "goals_met"
+        }
+      }
+    }
+  ]
+}

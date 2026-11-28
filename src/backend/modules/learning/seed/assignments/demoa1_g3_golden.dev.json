@@ -1,0 +1,25 @@
+{
+  "$comment": "DEV SEED ONLY (LOCAL_DEVELOPMENT §5): school assignments of the golden dataset (seed/content/golden_g3.dev.json) for th-demo-a, DEMOA1, khối 3, one attempt each, created and published by ad.truong.a through the public LMS API by `make seed-attempts`; the students of seed/attempts/demoa1_g3_golden.dev.json do them. Fake data, never for real tenants.",
+  "tenant_code": "th-demo-a",
+  "school_code": "DEMOA1",
+  "author": "ad.truong.a",
+  "window_days": 365,
+  "assignments": [
+    {
+      "title": "[DEV] Phép chia có dư (golden)",
+      "instructions": "Dữ liệu dev: golden dataset của dashboard.",
+      "content": "activity:golden",
+      "mode": "practice",
+      "grade_level": 3,
+      "max_attempts": 1
+    },
+    {
+      "title": "[DEV] Chu vi hình vuông (chấm lại)",
+      "instructions": "Dữ liệu dev: câu hỏi có đáp án lỗi ở version 1.",
+      "content": "activity:regrade",
+      "mode": "practice",
+      "grade_level": 3,
+      "max_attempts": 1
+    }
+  ]
+}

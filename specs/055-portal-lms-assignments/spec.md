@@ -33,6 +33,10 @@
 - Q: Đề kiểm tra (ExamSession) do Portal tạo? → A: Portal không gọi `createExamSession` trực tiếp; phiên thi của bài `graded` + `assessment_blueprint` do module learning tạo khi publish bài giao, kế thừa `school_id` và target của bài (F042, ADR-0095).
 - Từ ngữ: mọi chuỗi UI dùng "khối", không "lớp"/"class" (ADR-0095 §1).
 
+### Session 2026-11-28 (dev seed cho T015 — [Confirmed — owner "chốt hết"])
+
+- Q: T015 "`hs.an.3a` thấy, `hs.chi.3b` không thấy" — hai học sinh khác khối? → A: [Confirmed] **Không**: trong seed identity cả hai là khối 3 của `DEMOA1` (`hs.chi.3b` = "3B" cũ). Sau ADR-0095 phân biệt hai em bằng `exclude_student_ids` (hoặc target `students`), không bằng khối. Các bài giao khối 3 của `make seed-content` (2 bài) và `make seed-attempts` (2 bài) giao cả hai em; 3 bài của `make seed-media` ("[DEV] Xem video bảng nhân", "[DEV] Nghe đếm số", "[DEV] Mô phỏng đòn bẩy") giao khối 3 **trừ `hs.chi.3b`** — `listMyAssignments` của `hs.an.3a` có, của `hs.chi.3b` không ([LOCAL_DEVELOPMENT §5.2](../../docs/11-operations/LOCAL_DEVELOPMENT.md#52-seed-mở-rộng-media-golden-dataset-make-seed-media-make-seed-attempts)). E2E T015 tự tạo bài qua wizard với khối 3 + loại `hs.chi.3b` (hoặc danh sách học sinh), không cần đổi khối của học sinh seed.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Wizard giao bài (Priority: P1) 🎯 MVP

@@ -29,6 +29,10 @@
 - Q: Công thức trong activity? → A: [Confirmed] Như Lesson Builder (F054): công thức `\( … \)` trong mô tả, hướng dẫn và chuỗi của config được render bằng MathJax trong trình duyệt khi lưu, gửi `math_assets` (`math_id` = sha256 của `inline:` + LaTeX); chưa có MathText preview riêng trong trang.
 - Q: Màn `menu.content_studio.regrade`? → A: [Confirmed] Màn tra cứu lịch sử theo mã version (câu hỏi/hoạt động) + trạng thái từng yêu cầu; tạo yêu cầu chỉ từ trang version (nút "Chấm lại hệ thống" trên trang câu hỏi/hoạt động đã xuất bản).
 
+### Session 2026-11-28 (dev seed cho T047 — [Confirmed — owner "chốt hết"])
+
+- Q: Seed cho E2E chấm lại (T047, US4)? → A: [Confirmed — owner "chốt hết"] `make seed-attempts` ([LOCAL_DEVELOPMENT §5.2](../../docs/11-operations/LOCAL_DEVELOPMENT.md#52-seed-mở-rộng-media-golden-dataset-make-seed-media-make-seed-attempts)) nạp câu platform `devseed-rg-q1` "[DEV] Chu vi hình vuông cạnh 4 cm là?" (`MATH.G3.GEO.PERIMETER`, gán `th-demo-a`): **version 1 cố ý sai đáp án** (`o_r2` = 8 cm) và được quiz "[DEV] Quiz chu vi (đáp án lỗi v1 — chấm lại)" ghim; **version 2 đã sửa** (`o_r1` = 16 cm) publish sẵn sau quiz (R11). Ba học sinh `hs.an.3a`, `hs.binh.3a`, `hs.chi.3b` đã làm qua bài giao "[DEV] Chu vi hình vuông (chấm lại)" (3 attempt graded, server chấm theo v1). E2E: `qlcm.truong.a` (tenant `th-demo-a`) mở version 1 → "Chấm lại hệ thống" → `use_new_key` + version 2 → `affected_attempts` = 3 → `completed`, `re_evaluated_attempts` = 3; `ad.truong.a` không thấy nút. Seed **không** tự tạo RegradeRequest; chạy E2E lần nữa cũng được (chỉ `409` khi một yêu cầu cùng version đang `queued`/`running`). Kịch bản "tạo v3 rồi mở v2" của US4 tương đương với v1/v2 của seed.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Soạn activity `quiz` và `interactive_exercise` (Priority: P1) 🎯 MVP

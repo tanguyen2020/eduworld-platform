@@ -101,7 +101,7 @@ build: ## Build every binary into ./bin with build metadata
 	  CGO_ENABLED=0 $(GO) build -trimpath -ldflags "$(LDFLAGS) -X $(GOPKG)/pkg/buildinfo.Binary=$$b" -o $(GOBIN)/$$b ./cmd/$$b; done
 
 # ---------- database ----------
-.PHONY: migrate migrate-diff migrate-lint seed seed-identity seed-learning seed-game seed-check seed-content db-privileges db-backup db-restore
+.PHONY: migrate migrate-diff migrate-lint seed seed-identity seed-learning seed-game seed-check seed-content seed-media seed-attempts db-privileges db-backup db-restore
 migrate: $(addprefix migrate-,$(MODULES)) ## Apply Atlas migrations to every module database
 
 migrate-%: ## Apply Atlas migrations of one module (role <module>_migrator)
@@ -130,6 +130,18 @@ seed-content: ## DEV published content Toán khối 3 + ADR-0029 assignment of i
 seed-game-content: ## DEV mini-game configs + their quest (seed/minigames) through the Game Operations Console (F078: create, review, publish, assign to the demo tenants; after make seed-content; EW_SEED_PASSWORD = demo password)
 	EW_ENV=local EW_SEED_API_URL=$${EW_SEED_API_URL:-http://localhost:9080/api/v1} EW_SEED_INTERNAL_API_URL=$${EW_SEED_INTERNAL_API_URL:-http://localhost:9180/api/v1} \
 	  $(GO) run ./modules/game/cmd/seed-content
+
+# Image with ffmpeg for the synthetic clips of make seed-media (the worker image is media-tools + the worker binary).
+SEED_MEDIA_IMAGE ?= eduworld/worker:local
+seed-media: ## DEV media lessons (seed/content/media_g3.dev.json): synthetic video/audio made by ffmpeg in a throwaway $(SEED_MEDIA_IMAGE) container, uploaded through the media pipeline (worker transcode, F027), video_lesson/audio_lesson/simulation published + given to DEMOA1 khối 3 except hs.chi.3b (after make seed-content; EW_SEED_PASSWORD = demo password)
+	EW_ENV=local EW_SEED_API_URL=$${EW_SEED_API_URL:-http://localhost:9080/api/v1} EW_SEED_INTERNAL_API_URL=$${EW_SEED_INTERNAL_API_URL:-http://localhost:9180/api/v1} \
+	  EW_SEED_MEDIA_IMAGE=$${EW_SEED_MEDIA_IMAGE:-$(SEED_MEDIA_IMAGE)} EW_SEED_S3_ADDR=$${EW_SEED_S3_ADDR:-localhost:4566} \
+	  $(GO) run ./modules/learning/cmd/seed-media
+
+seed-attempts: ## DEV golden dataset (seed/content/golden_g3.dev.json, seed/attempts): golden + regrade quizzes for DEMOA1 khối 3, student attempts through the attempt API (one login per student, none when already submitted); VERIFY=1 checks the dashboard golden values (after make seed-content; EW_SEED_PASSWORD = demo password)
+	EW_ENV=local EW_SEED_API_URL=$${EW_SEED_API_URL:-http://localhost:9080/api/v1} EW_SEED_INTERNAL_API_URL=$${EW_SEED_INTERNAL_API_URL:-http://localhost:9180/api/v1} \
+	  EW_SEED_CLIENT_VERSION=$${EW_SEED_CLIENT_VERSION:-0.1.0} \
+	  $(GO) run ./modules/learning/cmd/seed-attempts $(if $(VERIFY),-verify)
 
 seed-check: ## Wait until the worker projected every seeded student into ref.students of learning and game (after make up-app)
 	bash scripts/dev/seed-check.sh

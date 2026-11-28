@@ -1,0 +1,150 @@
+{
+  "$comment": "DEV SEED ONLY (LOCAL_DEVELOPMENT §5): student script of the golden dataset, run by `make seed-attempts` through the real attempt API (the server scores, R5). One login per student and run, skipped when listAssignmentSubmissions already shows the attempts submitted. Golden quiz (4 questions): hs.an.3a 4/4, hs.binh.3a 3/4, hs.chi.3b 2/4 with its first answer a rapid guess (answered at once). Regrade quiz (version 1, wrong key o_r2): hs.an.3a and hs.binh.3a choose the true answer o_r1 (scored wrong by v1), hs.chi.3b chooses o_r2 (scored right by v1) — regrade use_new_key v2 re-evaluates 3 attempts. Other answers wait answer_wait_ms (> min_response_ms 2000 × 1.5 for g1_3). expected = the golden values of getSchoolDashboard(grade_level 3) and of the heatmap rows of getGradeDashboard over the last 7 days (default range of the portal) on a stack where no other student of DEMOA1 khối 3 did anything (LOCAL_DEVELOPMENT §5.2): accuracy 9/14 (the rapid guess is left out), rapid_guess_ratio 1/15, 8 students in the grade. Fake data.",
+  "tenant_code": "th-demo-a",
+  "school_code": "DEMOA1",
+  "grade_level": 3,
+  "staff": "ad.truong.a",
+  "answer_wait_ms": 4000,
+  "students": [
+    {
+      "username": "hs.an.3a",
+      "attempts": [
+        {
+          "assignment": "[DEV] Phép chia có dư (golden)",
+          "answers": [
+            {
+              "question": "devseed-gd-q1",
+              "option": "o_g1a"
+            },
+            {
+              "question": "devseed-gd-q2",
+              "option": "o_g2b"
+            },
+            {
+              "question": "devseed-gd-q3",
+              "option": "o_g3a"
+            },
+            {
+              "question": "devseed-gd-q4",
+              "option": "o_g4c"
+            }
+          ]
+        },
+        {
+          "assignment": "[DEV] Chu vi hình vuông (chấm lại)",
+          "answers": [
+            {
+              "question": "devseed-rg-q1",
+              "option": "o_r1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "username": "hs.binh.3a",
+      "attempts": [
+        {
+          "assignment": "[DEV] Phép chia có dư (golden)",
+          "answers": [
+            {
+              "question": "devseed-gd-q1",
+              "option": "o_g1a"
+            },
+            {
+              "question": "devseed-gd-q2",
+              "option": "o_g2b"
+            },
+            {
+              "question": "devseed-gd-q3",
+              "option": "o_g3a"
+            },
+            {
+              "question": "devseed-gd-q4",
+              "option": "o_g4b"
+            }
+          ]
+        },
+        {
+          "assignment": "[DEV] Chu vi hình vuông (chấm lại)",
+          "answers": [
+            {
+              "question": "devseed-rg-q1",
+              "option": "o_r1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "username": "hs.chi.3b",
+      "attempts": [
+        {
+          "assignment": "[DEV] Phép chia có dư (golden)",
+          "answers": [
+            {
+              "question": "devseed-gd-q1",
+              "option": "o_g1a",
+              "rapid": true
+            },
+            {
+              "question": "devseed-gd-q2",
+              "option": "o_g2a"
+            },
+            {
+              "question": "devseed-gd-q3",
+              "option": "o_g3b"
+            },
+            {
+              "question": "devseed-gd-q4",
+              "option": "o_g4c"
+            }
+          ]
+        },
+        {
+          "assignment": "[DEV] Chu vi hình vuông (chấm lại)",
+          "answers": [
+            {
+              "question": "devseed-rg-q1",
+              "option": "o_r2"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "active_students": 3,
+    "accuracy": 0.643,
+    "rapid_guess_ratio": 0.067,
+    "assignments": {
+      "[DEV] Phép chia có dư (golden)": {
+        "submitted": 3,
+        "total": 8
+      },
+      "[DEV] Chu vi hình vuông (chấm lại)": {
+        "submitted": 3,
+        "total": 8
+      }
+    },
+    "objectives": {
+      "MATH.G3.NUM.DIV_REMAINDER": {
+        "students_with_evidence": 3,
+        "level_counts": {
+          "not_started": 5,
+          "beginning": 1,
+          "developing": 1,
+          "proficient": 1
+        }
+      },
+      "MATH.G3.GEO.PERIMETER": {
+        "students_with_evidence": 3,
+        "level_counts": {
+          "not_started": 5,
+          "beginning": 2,
+          "developing": 1
+        }
+      }
+    }
+  }
+}

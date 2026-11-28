@@ -1,0 +1,42 @@
+{
+  "$comment": "DEV SEED ONLY (LOCAL_DEVELOPMENT §5): school assignments of the media lessons (seed/content/media_g3.dev.json) for th-demo-a, DEMOA1, khối 3 — every student of the grade except hs.chi.3b (exclude_student_ids, ADR-0095 §3: the former 3A of the F065/F066 quickstarts; F055 T015: hs.an.3a sees them, hs.chi.3b does not), created and published by ad.truong.a through the public LMS API by `make seed-media`. Fake data, never for real tenants.",
+  "tenant_code": "th-demo-a",
+  "school_code": "DEMOA1",
+  "author": "ad.truong.a",
+  "window_days": 365,
+  "assignments": [
+    {
+      "title": "[DEV] Xem video bảng nhân",
+      "instructions": "Dữ liệu dev: xem video và trả lời câu chèn.",
+      "content": "activity:video",
+      "mode": "practice",
+      "grade_level": 3,
+      "max_attempts": 3,
+      "exclude_usernames": [
+        "hs.chi.3b"
+      ]
+    },
+    {
+      "title": "[DEV] Nghe đếm số",
+      "instructions": "Dữ liệu dev: nghe và trả lời.",
+      "content": "activity:audio",
+      "mode": "practice",
+      "grade_level": 3,
+      "max_attempts": 3,
+      "exclude_usernames": [
+        "hs.chi.3b"
+      ]
+    },
+    {
+      "title": "[DEV] Mô phỏng đòn bẩy",
+      "instructions": "Dữ liệu dev: cân bằng đòn bẩy.",
+      "content": "activity:simulation",
+      "mode": "practice",
+      "grade_level": 3,
+      "max_attempts": 3,
+      "exclude_usernames": [
+        "hs.chi.3b"
+      ]
+    }
+  ]
+}

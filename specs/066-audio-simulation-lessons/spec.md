@@ -37,6 +37,10 @@
 - Q: Màn `menu.content_studio.simulations` (plan: menu feature hiện thực) hiển thị gì? → A: [Confirmed] Danh mục template đóng gói (`listSimulationTemplates`): mã, version, loại, trạng thái, bộ kiểm tra server, tham số, đại lượng — chỉ đọc (template đi cùng mã, ADR-0052, không tải script). Trong editor, danh sách template theo action `action.content_studio.simulations.view`; action/menu tắt → thông báo "Tính năng đang tắt", không gọi API.
 - Q: Thời lượng audio cho kiểm tra mốc thời gian? → A: [Confirmed] Lấy `duration_ms` của asset (`getMediaAsset`) để hiện lỗi trong editor; khóa Gửi duyệt chỉ dùng quy tắc tương đối (thứ tự, chồng lấn, trùng mã, thiếu audio/transcript) vì trang chưa có thời lượng lúc tính — module learning vẫn kiểm đầy đủ (`ACTIVITY_CONFIG_INVALID`).
 
+### Session 2026-11-28 (dev seed cho T040/T051 — [Confirmed — owner "chốt hết"])
+
+- Q: Dữ liệu cho T040/T051? → A: [Confirmed — owner "chốt hết"] `make seed-media` ([LOCAL_DEVELOPMENT §5.2](../../docs/11-operations/LOCAL_DEVELOPMENT.md#52-seed-mở-rộng-media-golden-dataset-make-seed-media-make-seed-attempts)): `audio_lesson` "[DEV] Bài nghe đếm số (0:45)" (âm thanh **tổng hợp** sine 523 Hz sinh lúc seed, qua pipeline F027 thật → `ogg`/`mp3`; `max_plays` 2; 2 đoạn; 1 câu sau bài + 1 câu `at_ms` 30 s; không transcript — `show_transcript: never`) và `simulation` "[DEV] Mô phỏng cân bằng đòn bẩy" (template có sẵn `physics.lever` v1, `arm_length_m` 1, 4 ô mỗi bên, vật 2 kg + 1 kg, `seed_policy: fixed`, `max_runs` 3, mục tiêu `balanced = 1`, 1 câu kết luận) — khớp hành động của test T040 (vật 0 ô 2 trái, vật 1 ô 4 phải). Cả hai là nội dung tenant `th-demo-a` (media platform chưa gán được cho tenant — xem Clarifications 2026-11-28 của [F065](../065-video-lesson/spec.md)), giao cho `DEMOA1` khối 3 trừ `hs.chi.3b`; `hs.an.3a` làm được cả hai. `publish` audio_lesson đòi `transcript_asset_id` → seed có transcript WebVTT, `show_transcript: after_complete`. Phát audio thật trong Godot ở local vướng CDN local `403` như F065.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Server phục vụ và chấm bài nghe (Priority: P1) 🎯 MVP

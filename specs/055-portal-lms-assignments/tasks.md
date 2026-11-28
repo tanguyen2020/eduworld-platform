@@ -32,7 +32,7 @@
 - [x] T012 [P] [US1] Test F055-AC-05: double click và retry dùng cùng `Idempotency-Key`, `publishAssignment` gửi `If-Match` — file: `…/__tests__/AssignmentWizard.test.tsx` — **2026-11-21:** `wizard.test.tsx` › double click / network retry
 - [x] T013 [P] [US1] Test F055-AC-06: ánh xạ `errors[]` về trường, thông điệp theo `code` + `trace_id` — file: `…/__tests__/AssignmentWizard.errors.test.tsx` — **2026-11-21:** `wizard.test.tsx` › 422 / CONTENT_NOT_PUBLISHED
 - [x] T014 [P] [US1] Test F055-AC-07: System Admin bắt buộc tenant đích, header `X-Tenant-Id` = tenant đích — file: `…/__tests__/AssignmentWizard.sysadmin.test.tsx` — **2026-11-21:** `wizard.test.tsx` › System Admin
-- [ ] T015 [US1] E2E giao bài `ad.truong.a` → `hs.an.3a` thấy, `hs.chi.3b` không thấy (TC-LMS-001) — file: `src/cms/frontend/apps/portal/e2e/lms/assign.spec.ts`
+- [ ] T015 [US1] E2E giao bài `ad.truong.a` → `hs.an.3a` thấy, `hs.chi.3b` không thấy (TC-LMS-001) — file: `src/cms/frontend/apps/portal/e2e/lms/assign.spec.ts` — **2026-11-28 seed sẵn sàng** ([LOCAL_DEVELOPMENT §5.2](../../docs/11-operations/LOCAL_DEVELOPMENT.md#52-seed-mở-rộng-media-golden-dataset-make-seed-media-make-seed-attempts)): `hs.chi.3b` cùng khối 3 với `hs.an.3a` (không phải khác khối); 3 bài giao của `make seed-media` nhắm khối 3 **trừ `hs.chi.3b`** (`exclude_student_ids`, `student_count` 7, `listAssignmentSubmissions` có `hs.an.3a`, không có `hs.chi.3b`) — E2E chưa chạy
 
 ### Implementation cho User Story 1
 

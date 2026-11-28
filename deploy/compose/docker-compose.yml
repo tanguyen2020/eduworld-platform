@@ -159,7 +159,7 @@ services:
     image: nginx:1.27-alpine
     ports: ["8090:8090"]
     environment:
-      EW_CDN_SIGNING_KEY: ${EW_CDN_SIGNING_KEY:-local-dev-cdn-signing-key}   # local/CI only; real key from the secret store
+      EW_CDN_SIGNING_KEY: ${EW_CDN_SIGNING_KEY:-change-me-local}   # local/CI only, same default as core-api/worker (docker-compose.app.yml); real key from the secret store
     volumes:
       - ../cdn/nginx.conf:/etc/nginx/templates/default.conf.template:ro
     depends_on:

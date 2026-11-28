@@ -1,0 +1,493 @@
+{
+  "$comment": "DEV SEED ONLY (LOCAL_DEVELOPMENT §5): the golden dataset content of `make seed-attempts` (F043/F056 dashboard, F058 regrade), platform content assigned to th-demo-a only. Quiz 'golden': 4 single_choice on MATH.G3.NUM.DIV_REMAINDER (min_response_ms 2000). Quiz 'regrade': 1 single_choice on MATH.G3.GEO.PERIMETER whose version 1 has a WRONG answer key on purpose (o_r2 = 8 cm) and pins that version; version 2 (corrected key o_r1 = 16 cm) is published after the activity (R11: a correction is a new version) so qlcm.truong.a can trigger regrade use_new_key v1 → v2 (F058 US4). Both topics are used by no other seed or test, so the heatmap rows of the grade stay golden. Fake data, not reviewed by EdTech, never for real tenants.",
+  "curriculum_code": "GDPT2018_SAMPLE",
+  "subject_code": "math",
+  "grade_level": 3,
+  "audio_exempt_reason": "Dữ liệu dev: chưa thu giọng đọc",
+  "tenant_codes": [
+    "th-demo-a"
+  ],
+  "questions": [
+    {
+      "key": "devseed-gd-q1",
+      "topic_code": "MATH.G3.T02",
+      "objective_codes": [
+        "MATH.G3.NUM.DIV_REMAINDER"
+      ],
+      "body": {
+        "type": "single_choice",
+        "difficulty": 2,
+        "stem": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "[DEV] 17 : 5 = ? (dư ?)"
+            }
+          ]
+        },
+        "min_response_ms": 2000,
+        "render_payload": {
+          "options": [
+            {
+              "id": "o_g1a",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "3 dư 2"
+                  }
+                ]
+              },
+              "feedback": "Đúng rồi: 5 × 3 = 15, 17 − 15 = 2."
+            },
+            {
+              "id": "o_g1b",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "3 dư 1"
+                  }
+                ]
+              },
+              "feedback": "Chưa đúng: 17 − 15 = 2."
+            },
+            {
+              "id": "o_g1c",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "2 dư 7"
+                  }
+                ]
+              },
+              "feedback": "Số dư phải bé hơn số chia."
+            }
+          ],
+          "shuffle_options": false
+        },
+        "answer_key": {
+          "correct_option_id": "o_g1a"
+        },
+        "scoring_rule": {
+          "mode": "all_or_nothing"
+        },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-gd-q2",
+      "topic_code": "MATH.G3.T02",
+      "objective_codes": [
+        "MATH.G3.NUM.DIV_REMAINDER"
+      ],
+      "body": {
+        "type": "single_choice",
+        "difficulty": 2,
+        "stem": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "[DEV] 23 : 4 = ? (dư ?)"
+            }
+          ]
+        },
+        "min_response_ms": 2000,
+        "render_payload": {
+          "options": [
+            {
+              "id": "o_g2a",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "6 dư 1"
+                  }
+                ]
+              },
+              "feedback": "Chưa đúng: 4 × 6 = 24 lớn hơn 23."
+            },
+            {
+              "id": "o_g2b",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "5 dư 3"
+                  }
+                ]
+              },
+              "feedback": "Đúng rồi: 4 × 5 = 20, 23 − 20 = 3."
+            },
+            {
+              "id": "o_g2c",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "5 dư 4"
+                  }
+                ]
+              },
+              "feedback": "Số dư phải bé hơn số chia."
+            }
+          ],
+          "shuffle_options": false
+        },
+        "answer_key": {
+          "correct_option_id": "o_g2b"
+        },
+        "scoring_rule": {
+          "mode": "all_or_nothing"
+        },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-gd-q3",
+      "topic_code": "MATH.G3.T02",
+      "objective_codes": [
+        "MATH.G3.NUM.DIV_REMAINDER"
+      ],
+      "body": {
+        "type": "single_choice",
+        "difficulty": 2,
+        "stem": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "[DEV] 29 : 6 = ? (dư ?)"
+            }
+          ]
+        },
+        "min_response_ms": 2000,
+        "render_payload": {
+          "options": [
+            {
+              "id": "o_g3a",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "4 dư 5"
+                  }
+                ]
+              },
+              "feedback": "Đúng rồi: 6 × 4 = 24, 29 − 24 = 5."
+            },
+            {
+              "id": "o_g3b",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "5 dư 1"
+                  }
+                ]
+              },
+              "feedback": "Chưa đúng: 6 × 5 = 30 lớn hơn 29."
+            },
+            {
+              "id": "o_g3c",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "4 dư 3"
+                  }
+                ]
+              },
+              "feedback": "Chưa đúng: 29 − 24 = 5."
+            }
+          ],
+          "shuffle_options": false
+        },
+        "answer_key": {
+          "correct_option_id": "o_g3a"
+        },
+        "scoring_rule": {
+          "mode": "all_or_nothing"
+        },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-gd-q4",
+      "topic_code": "MATH.G3.T02",
+      "objective_codes": [
+        "MATH.G3.NUM.DIV_REMAINDER"
+      ],
+      "body": {
+        "type": "single_choice",
+        "difficulty": 2,
+        "stem": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "[DEV] Số dư của 31 : 7 là?"
+            }
+          ]
+        },
+        "min_response_ms": 2000,
+        "render_payload": {
+          "options": [
+            {
+              "id": "o_g4a",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "4"
+                  }
+                ]
+              },
+              "feedback": "Chưa đúng: 4 là thương."
+            },
+            {
+              "id": "o_g4b",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "2"
+                  }
+                ]
+              },
+              "feedback": "Chưa đúng: 31 − 28 = 3."
+            },
+            {
+              "id": "o_g4c",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "3"
+                  }
+                ]
+              },
+              "feedback": "Đúng rồi: 7 × 4 = 28, 31 − 28 = 3."
+            }
+          ],
+          "shuffle_options": false
+        },
+        "answer_key": {
+          "correct_option_id": "o_g4c"
+        },
+        "scoring_rule": {
+          "mode": "all_or_nothing"
+        },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-rg-q1",
+      "topic_code": "MATH.G3.T03",
+      "objective_codes": [
+        "MATH.G3.GEO.PERIMETER"
+      ],
+      "body": {
+        "type": "single_choice",
+        "difficulty": 2,
+        "stem": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "[DEV] Chu vi hình vuông cạnh 4 cm là?"
+            }
+          ]
+        },
+        "min_response_ms": 2000,
+        "render_payload": {
+          "options": [
+            {
+              "id": "o_r1",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "16 cm"
+                  }
+                ]
+              },
+              "feedback": "Chu vi hình vuông = cạnh × 4 = 16 cm."
+            },
+            {
+              "id": "o_r2",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "8 cm"
+                  }
+                ]
+              },
+              "feedback": "Đáp án (lỗi dev) của version 1."
+            },
+            {
+              "id": "o_r3",
+              "content": {
+                "blocks": [
+                  {
+                    "type": "paragraph",
+                    "text": "12 cm"
+                  }
+                ]
+              },
+              "feedback": "12 cm là cạnh × 3."
+            }
+          ],
+          "shuffle_options": false
+        },
+        "answer_key": {
+          "correct_option_id": "o_r2"
+        },
+        "scoring_rule": {
+          "mode": "all_or_nothing"
+        },
+        "max_score": 1
+      },
+      "versions": [
+        {
+          "answer_key": {
+            "correct_option_id": "o_r1"
+          },
+          "render_payload": {
+            "options": [
+              {
+                "id": "o_r1",
+                "content": {
+                  "blocks": [
+                    {
+                      "type": "paragraph",
+                      "text": "16 cm"
+                    }
+                  ]
+                },
+                "feedback": "Đúng rồi: chu vi hình vuông = cạnh × 4 = 16 cm."
+              },
+              {
+                "id": "o_r2",
+                "content": {
+                  "blocks": [
+                    {
+                      "type": "paragraph",
+                      "text": "8 cm"
+                    }
+                  ]
+                },
+                "feedback": "Chưa đúng: 8 cm là cạnh × 2."
+              },
+              {
+                "id": "o_r3",
+                "content": {
+                  "blocks": [
+                    {
+                      "type": "paragraph",
+                      "text": "12 cm"
+                    }
+                  ]
+                },
+                "feedback": "Chưa đúng: 12 cm là cạnh × 3."
+              }
+            ],
+            "shuffle_options": false
+          }
+        }
+      ]
+    }
+  ],
+  "activities": [
+    {
+      "key": "golden",
+      "activity_type": "quiz",
+      "topic_code": "MATH.G3.T02",
+      "objective_codes": [
+        "MATH.G3.NUM.DIV_REMAINDER"
+      ],
+      "title": "[DEV] Quiz phép chia có dư (golden)",
+      "difficulty": 2,
+      "description": "Golden dataset của dashboard (dữ liệu dev)",
+      "instructions": "Chọn đáp án đúng",
+      "config": {
+        "content": {
+          "question_source": {
+            "kind": "questions",
+            "questions": [
+              {
+                "question_version_id": "{{question:devseed-gd-q1}}"
+              },
+              {
+                "question_version_id": "{{question:devseed-gd-q2}}"
+              },
+              {
+                "question_version_id": "{{question:devseed-gd-q3}}"
+              },
+              {
+                "question_version_id": "{{question:devseed-gd-q4}}"
+              }
+            ]
+          }
+        },
+        "interaction": {
+          "shuffle_items": false,
+          "shuffle_options": false
+        },
+        "evaluation": {
+          "strategies": [
+            "auto"
+          ],
+          "max_score": 4,
+          "pass_threshold": 0.5
+        },
+        "feedback": {
+          "timing": "immediate"
+        },
+        "completion_rule": {
+          "mode": "submit"
+        }
+      }
+    },
+    {
+      "key": "regrade",
+      "activity_type": "quiz",
+      "topic_code": "MATH.G3.T03",
+      "objective_codes": [
+        "MATH.G3.GEO.PERIMETER"
+      ],
+      "title": "[DEV] Quiz chu vi (đáp án lỗi v1 — chấm lại)",
+      "difficulty": 2,
+      "description": "Câu hỏi version 1 có đáp án sai cố ý để thử chấm lại hệ thống (dữ liệu dev)",
+      "instructions": "Chọn đáp án đúng",
+      "config": {
+        "content": {
+          "question_source": {
+            "kind": "questions",
+            "questions": [
+              {
+                "question_version_id": "{{question:devseed-rg-q1}}"
+              }
+            ]
+          }
+        },
+        "interaction": {
+          "shuffle_items": false,
+          "shuffle_options": false
+        },
+        "evaluation": {
+          "strategies": [
+            "auto"
+          ],
+          "max_score": 1,
+          "pass_threshold": 0.5
+        },
+        "feedback": {
+          "timing": "immediate"
+        },
+        "completion_rule": {
+          "mode": "submit"
+        }
+      }
+    }
+  ]
+}
