@@ -94,6 +94,22 @@ func (h UpsertProjection) Student(ctx context.Context, envTenant *uuid.UUID, r w
 	})
 }
 
+// Placement applies student.placement_changed (owner F010, ADR-0095): the school, grade level and effective status of a
+// student created or moved by any source (SIS, tenant chung, saga, lifecycle), not only by student.synced.
+func (h UpsertProjection) Placement(ctx context.Context, envTenant *uuid.UUID, r write.RefPlacement) (bool, error) {
+	return run(ctx, "Placement", func(ctx context.Context) (bool, error) {
+		t, err := sameTenant(envTenant, r.TenantID)
+		if err != nil {
+			return false, err
+		}
+		r.TenantID = t
+		if err := h.owned(ctx, t, write.RefStudents, r.StudentID); err != nil {
+			return false, err
+		}
+		return h.Refs.UpsertPlacement(ctx, r)
+	})
+}
+
 // StudentStatus applies user.status_changed of a user that is a projected student (tenant nil: platform event,
 // every tenant of the student).
 func (h UpsertProjection) StudentStatus(ctx context.Context, envTenant *uuid.UUID, student uuid.UUID, status string) (bool, error) {

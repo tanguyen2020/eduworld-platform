@@ -44,6 +44,12 @@
 - OQ F027-10 → biến cấu hình ghi trong quickstart; `.env.example` do người có quyền sửa file `.env*` cập nhật (không phải câu hỏi mở).
 - Mọi OQ F027 khác giữ [Confirmed]; route/consumer đã nối binary 2026-11-20.
 
+### Session 2026-11-28 (owner chốt — [Confirmed — owner "chốt hết"])
+
+- Q: Media platform gán cho tenant được không (`assignToTenants` của learning trả `422 resource_type` cho `media`)? → A: [Confirmed — owner "chốt hết"] Được, **gán tường minh từng asset** (`resource_type = media`, ADR-0029; không tự gán theo activity). `content.media_assets` vốn là bảng H `resource_type = media` (OQ F027-7) nên chỉ cần đăng ký media là loại **chỉ gán** (`port.Registry.RegisterAssignable` + `command.MediaResource`: asset platform còn sống, không `rejected`); Thùng rác/clone media vẫn để F045 như trên. Chi tiết và test: Clarifications 2026-11-28 "owner chốt" của [F065](../065-video-lesson/spec.md), [CONTENT_MODEL §7](../../docs/02-learning/CONTENT_MODEL.md#7-media-asset-pipeline-adr-0044).
+- OQ F027-2 → **Đã làm** 2026-11-28 ([F002 T059](../002-platform-kit-core/tasks.md)): `media.upload` cho `tenant_admin`, `school_admin`, `academic_manager`, `content_admin`.
+- OQ F027-12 (CDN thật kiểm ở quickstart bước 7) → CDN local nay kiểm được: `deploy/cdn/nginx.conf` + `s3_origin.js` (origin ký SigV4 cho `ew-media-private`), bucket policy công khai chỉ cho `ew-media-public`/`ew-game-bundles` ([LOCAL_DEVELOPMENT §3.1](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Upload media an toàn (Priority: P1)

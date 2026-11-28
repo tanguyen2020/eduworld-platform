@@ -162,7 +162,7 @@ func (h CheckReference) Handle(ctx context.Context, rt contentmodel.ResourceType
 	if _, ok := tenancy.ScopeFrom(ctx); !ok {
 		return problem.New(problem.Unauthenticated, "")
 	}
-	handler, ok := h.Resources.Get(rt)
+	handler, ok := h.Resources.Assignable(rt)
 	if !ok {
 		return problem.Invalid("resource_type", problem.SubInvalid, "resource type cannot be referenced yet")
 	}

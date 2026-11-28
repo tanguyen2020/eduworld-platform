@@ -76,8 +76,8 @@ func run(ctx context.Context, lessonsPath, assignmentsPath string, wait time.Dur
 	if err != nil {
 		return err
 	}
-	// Media is uploaded by System Admin: the only seeded user with media.upload (content_admin, academic_manager and
-	// school_admin have none). It is made ready first — the worker may take minutes, longer than a portal access token
+	// Media is uploaded by System Admin (one uploader for platform and tenant targets; content_admin, academic_manager,
+	// school_admin and tenant_admin hold media.upload too since 2026-11-28, OQ F027-2). It is made ready first — the worker may take minutes, longer than a portal access token
 	// lives — then the content staff sign in.
 	admin, err := login("sa.admin")
 	if err != nil {

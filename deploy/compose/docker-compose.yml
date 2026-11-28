@@ -150,6 +150,16 @@ services:
         for b in ew-media-public ew-media-private ew-game-bundles; do
           $$S3 s3api put-bucket-versioning --bucket "$$b" --versioning-configuration Status=Enabled
         done
+        # Public buckets (ADR-0044 §2, DEPLOYMENT §9): anonymous read of objects through the CDN, nothing else. floci,
+        # like S3, blocks public policies by default, so only the policy part of the block is lifted on these two
+        # buckets; ew-media-private, ew-media-quarantine, ew-exports, ew-sis-imports keep the full block (the CDN reads
+        # ew-media-private with a signed origin request, deploy/cdn/s3_origin.js).
+        for b in ew-media-public ew-game-bundles; do
+          $$S3 s3api put-public-access-block --bucket "$$b" \
+            --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=false,RestrictPublicBuckets=false
+          $$S3 s3api put-bucket-policy --bucket "$$b" --policy \
+            "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"CdnPublicRead\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::$$b/*\"}]}"
+        done
         echo "buckets ready"
     depends_on:
       floci: { condition: service_healthy }
@@ -160,7 +170,13 @@ services:
     ports: ["8090:8090"]
     environment:
       EW_CDN_SIGNING_KEY: ${EW_CDN_SIGNING_KEY:-change-me-local}   # local/CI only, same default as core-api/worker (docker-compose.app.yml); real key from the secret store
+      # Origin credential of the signed ew-media-private reads (local/CI floci account, same as s3-init/core-api).
+      EW_S3_REGION: us-east-1
+      EW_S3_ACCESS_KEY: ${EW_S3_ACCESS_KEY:-test}
+      EW_S3_SECRET_KEY: ${EW_S3_SECRET_KEY:-test}
     volumes:
+      - ../cdn/nginx-main.conf:/etc/nginx/nginx.conf:ro
+      - ../cdn/s3_origin.js:/etc/nginx/njs/s3_origin.js:ro
       - ../cdn/nginx.conf:/etc/nginx/templates/default.conf.template:ro
     depends_on:
       floci: { condition: service_healthy }

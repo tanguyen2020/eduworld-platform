@@ -21,9 +21,9 @@ import (
 // placeholders — "{{media:<key>}}" (asset id), "{{question:<key>}}" (version 1 id), "{{question:<key>@<n>}}" (version n
 // id). Everything goes through the public CMS API with the same workflow as seed/content/math_g3.dev.json (author ≠
 // reviewer) and is either platform content assigned to TenantCodes (ADR-0029) or, with OwnerTenantCode, tenant content
-// of that tenant (media lessons: platform media cannot be assigned to a tenant yet, so a student only plays the media
-// of its own tenant). Running it again creates nothing: media is found by file name, questions by tag, activities by
-// type and title.
+// of that tenant (the media lessons are tenant content; since 2026-11-28 platform media is assigned like the rest —
+// resource_type media — so such a file may also be platform content with TenantCodes). Running it again creates
+// nothing: media is found by file name, questions by tag, activities by type and title.
 type LessonFile struct {
 	Comment           json.RawMessage  `json:"$comment,omitempty"`
 	CurriculumCode    string           `json:"curriculum_code"`

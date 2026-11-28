@@ -338,6 +338,10 @@ func build(r *module.Registry) (*wiring, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Platform media is assigned to tenants like the content that uses it (ADR-0029; no trash/clone of media yet).
+	if err := resources.RegisterAssignable(command.MediaResource{Store: write.MediaRepo{}}); err != nil {
+		return nil, err
+	}
 	schema, err := qbschema.New()
 	if err != nil {
 		return nil, err

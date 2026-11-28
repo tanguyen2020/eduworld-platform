@@ -87,6 +87,9 @@ func (c IdentityProjection) Handle(ctx context.Context, e outbox.Envelope) error
 	case "student.synced":
 		ok, err := c.student(ctx, e)
 		return classify("students", e, ok, err)
+	case "student.placement_changed":
+		ok, err := c.placement(ctx, e)
+		return classify("students", e, ok, err)
 	case "user.status_changed":
 		var p struct {
 			UserID uuid.UUID `json:"user_id"`
@@ -289,6 +292,32 @@ func (c IdentityProjection) student(ctx context.Context, e outbox.Envelope) (boo
 		status = &s
 	}
 	return c.P.Student(ctx, tenant, p.StudentID, p.SchoolID, p.GradeLevel, status, version(p.SourceVersion, e))
+}
+
+// placement applies student.placement_changed (owner F010, ADR-0095) to ref.students: school and grade level of a
+// student of any source (SIS, tenant chung, saga, lifecycle), status active/inactive. Tolerant of fields it does not use.
+func (c IdentityProjection) placement(ctx context.Context, e outbox.Envelope) (bool, error) {
+	var p struct {
+		StudentID     uuid.UUID `json:"student_id"`
+		TenantID      uuid.UUID `json:"tenant_id"`
+		SchoolID      uuid.UUID `json:"school_id"`
+		GradeLevel    int       `json:"grade_level"`
+		Status        string    `json:"status"`
+		SourceVersion *int64    `json:"source_version"`
+	}
+	if err := decode(e, &p); err != nil {
+		return false, err
+	}
+	tenant, err := envTenant(e)
+	switch {
+	case err != nil:
+		return false, err
+	case p.StudentID == uuid.Nil || p.SchoolID == uuid.Nil || p.TenantID != tenant:
+		return false, invalid(e.EventType, "student_id, school_id and tenant_id")
+	case p.GradeLevel < 1 || p.GradeLevel > 9, p.Status != "active" && p.Status != "inactive":
+		return false, invalid(e.EventType, "grade_level/status")
+	}
+	return c.P.Placement(ctx, tenant, p.StudentID, p.SchoolID, p.GradeLevel, p.Status == "active", version(p.SourceVersion, e))
 }
 
 // GameProjection is the consumer chat.projection_game: ref.player_profiles from game_profile.updated (nickname, avatar,

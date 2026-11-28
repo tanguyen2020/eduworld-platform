@@ -130,6 +130,10 @@ type ProjectionWriter interface {
 	Student(ctx context.Context, student, tenant, school uuid.UUID, grade *int, status *string, version int64) (bool, error)
 	StudentStatus(ctx context.Context, student uuid.UUID, tenant *uuid.UUID, status string) (bool, error)
 	StudentDeleted(ctx context.Context, student, tenant uuid.UUID, deleted bool, at time.Time) (bool, error)
+	// Placement applies student.placement_changed (ADR-0095): school and grade always; inactive sets status inactive, active
+	// only revives a row a placement left inactive (an account status of user.status_changed stays). Newer source_version
+	// only, never another tenant.
+	Placement(ctx context.Context, student, tenant, school uuid.UUID, grade int, active bool, version int64) (bool, error)
 	PlayerProfile(ctx context.Context, student, tenant uuid.UUID, nickname *string, level int, avatar []byte, version int64) (bool, error)
 	// PlayerLevel raises the level of a projected profile to level (never lowers it) and sets the level title when title
 	// is not nil (level.reached, delta F095); false when the profile is not projected yet or already at a higher level.

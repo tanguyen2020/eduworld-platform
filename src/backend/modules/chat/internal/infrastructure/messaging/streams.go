@@ -26,7 +26,8 @@ const ProjectionIdentityName = "chat.projection_identity"
 
 // ProjectionIdentityEvents are the identity events it projects.
 var ProjectionIdentityEvents = []string{"tenant.created", "tenant.updated", "student.synced", "user.status_changed",
-	"student.cleaned_up", "student.restored", "school.synced", "school.updated", "platform_settings.changed"}
+	"student.cleaned_up", "student.restored", "school.synced", "school.updated", "platform_settings.changed",
+	"student.placement_changed"} // school, grade and effective status of students of every source (ADR-0095, EVENT_DESIGN §4)
 
 // ProjectionGameName keeps ref.player_profiles (nickname, avatar, level of PlayerCard, F095-AC-11; level and title from
 // level.reached, delta F095).

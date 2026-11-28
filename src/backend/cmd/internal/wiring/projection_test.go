@@ -31,7 +31,7 @@ func set(types ...string) map[string]bool {
 
 // F003-AC-39, F003 Clarifications 2026-11-28: each listProjectionSnapshot item becomes the projection events it stands for,
 // in the tenant of the item, with its source_version; a soft-deleted source row never projects as active; the student
-// event follows what the consumer subscribes (placement for learning/competition, student.synced for game/chat), then
+// event follows what the consumer subscribes (placement when the consumer has it — every module since 2026-11-28 —, student.synced otherwise), then
 // cleaned_up at deleted_at (deleted) or restored at the read time (live).
 func TestSnapshotEnvelopes(t *testing.T) {
 	tenant, school, student := uuid.New(), uuid.New(), uuid.New()

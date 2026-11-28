@@ -93,6 +93,20 @@ func (RefRepo) UpsertStudent(ctx context.Context, r write.RefStudent) (bool, err
 		r.StudentID, r.TenantID, r.SchoolID, r.GradeLevel, r.Status, r.SourceVersion, r.SISConnectionID)
 }
 
+// UpsertPlacement implements write.ProjectionWriter (student.placement_changed, ADR-0095; same rule as modules learning
+// and competition): school and grade always; inactive → status inactive; active only revives a row a placement left
+// inactive (an account status of user.status_changed stays); sis_connection_id is kept.
+func (RefRepo) UpsertPlacement(ctx context.Context, r write.RefPlacement) (bool, error) {
+	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); deleted_at mirrors the source (cleanup)
+	return exec(ctx, `INSERT INTO ref.students AS st (student_id, tenant_id, school_id, grade_level, status, source_version)
+		VALUES ($1, $2, $3, $4::smallint, CASE WHEN $5::boolean THEN 'active' ELSE 'inactive' END, $6)
+		ON CONFLICT (student_id) DO UPDATE SET school_id = $3, grade_level = $4::smallint,
+			status = CASE WHEN NOT $5::boolean THEN 'inactive' WHEN st.status = 'inactive' THEN 'active' ELSE st.status END,
+			source_version = $6
+		WHERE st.source_version < $6 AND st.tenant_id = $2`,
+		r.StudentID, r.TenantID, r.SchoolID, r.GradeLevel, r.Active, r.SourceVersion)
+}
+
 // SetStudentStatus implements write.ProjectionWriter.
 func (RefRepo) SetStudentStatus(ctx context.Context, student uuid.UUID, tenant *uuid.UUID, status string) (bool, error) {
 	// The event scope is one tenant (RLS) or the platform scope of a platform event (this one student, every tenant).

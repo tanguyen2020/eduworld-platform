@@ -224,7 +224,12 @@ func TestMediaAuthorizationAndTenants(t *testing.T) {
 	must(t, c.presign(t, hsAn, "image", "image/png", []byte("p"), nil), http.StatusForbidden, "game token")
 	must(t, c.do(t, http.MethodGet, "/cms/media/"+id, hsAn, nil, nil), http.StatusForbidden, "game token read")
 	must(t, c.presign(t, noRoleA, "image", "image/png", []byte("p"), nil), http.StatusForbidden, "no role")
-	must(t, c.presign(t, cmNoidung, "image", "image/png", []byte("p"), nil), http.StatusForbidden, "content_admin without media.upload")
+	// OQ F027-2 (F002 T059): the roles writing content upload media (content_admin, academic_manager); a reviewer does not.
+	must(t, c.presign(t, cmDuyet, "image", "image/png", []byte("p"), nil), http.StatusForbidden, "content_reviewer without media.upload")
+	if r := must(t, c.presign(t, cmNoidung, "image", "image/png", []byte("cm"), nil), http.StatusCreated, "content_admin"); r.str("status") != "quarantined" {
+		t.Fatalf("content_admin presign: %s", r.raw)
+	}
+	must(t, c.presign(t, qlcmA, "image", "image/png", []byte("am"), nil), http.StatusCreated, "academic_manager")
 	must(t, c.do(t, http.MethodGet, "/cms/media/"+id, noRoleA, nil, nil), http.StatusForbidden, "no role read")
 	// System Admin: a tenant asset needs the target tenant (tenant_id); the asset belongs to it.
 	sa := must(t, c.presign(t, saAdmin, "image", "image/png", []byte("sa"), map[string]any{"tenant_id": c.tenantB.String()}), http.StatusCreated, "SA tenant")

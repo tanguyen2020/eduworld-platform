@@ -63,6 +63,20 @@ func (p Projection) Student(ctx context.Context, tenant, student, school uuid.UU
 	return ok, err
 }
 
+// Placement applies student.placement_changed (owner F010, ADR-0095): school and grade level of a student of any source;
+// a student no longer placed (inactive) gets its pending requests cancelled like a deactivated one.
+func (p Projection) Placement(ctx context.Context, tenant, student, school uuid.UUID, grade int, active bool, version int64) (bool, error) {
+	if err := p.owned(ctx, tenant, "students", student); err != nil {
+		return false, err
+	}
+	ok, err := p.Refs.Placement(ctx, student, tenant, school, grade, active, version)
+	if err != nil || !ok || active {
+		return ok, err
+	}
+	_, err = p.Social.CancelOfStudent(ctx, tenant, student, p.now())
+	return ok, err
+}
+
 // StudentStatus applies user.status_changed.
 func (p Projection) StudentStatus(ctx context.Context, tenant *uuid.UUID, student uuid.UUID, status string) (bool, error) {
 	return p.Refs.StudentStatus(ctx, student, tenant, status)

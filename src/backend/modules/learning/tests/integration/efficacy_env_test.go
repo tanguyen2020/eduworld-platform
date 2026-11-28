@@ -152,11 +152,14 @@ func sessionOfCohort(t *testing.T, w resp, school uuid.UUID) string {
 	return ""
 }
 
-// realRegistry is the resource registry of module.go (questions, documents, curriculum).
+// realRegistry is the resource registry of module.go (questions, documents, curriculum; media assign-only).
 func (c *curEnv) realRegistry(t *testing.T) *port.Registry {
 	t.Helper()
 	reg, err := port.NewRegistry(append([]port.ResourceHandler{command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
 		command.QuestionResource{Store: write.QuestionRepo{}}}, command.DocResources(write.DocRepo{}, write.QuestionRepo{})...)...)
+	if err == nil {
+		err = reg.RegisterAssignable(command.MediaResource{Store: write.MediaRepo{}})
+	}
 	if err != nil {
 		t.Fatal(err)
 	}

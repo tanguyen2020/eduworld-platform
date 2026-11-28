@@ -39,6 +39,22 @@ func TestSystemRolesValid(t *testing.T) {
 			t.Fatalf("%s must hold tenant.school.read", r)
 		}
 	}
+	// OQ F027-2 (F002 T059): every system role that writes learning content uploads its media; the reviewers do not.
+	for _, r := range authz.SystemRoles() {
+		if r.Has(authz.PermLearningContentWrite) != r.Has(authz.PermMediaUpload) {
+			t.Fatalf("%s: media.upload must follow learning_content.write", r.Name)
+		}
+	}
+	for _, r := range []string{"tenant_admin", "school_admin", "academic_manager", "content_admin", "tenant_content_editor", "system_admin"} {
+		if !got[r].Has(authz.PermMediaUpload) {
+			t.Fatalf("%s must hold media.upload", r)
+		}
+	}
+	for _, r := range []string{"tenant_content_reviewer", "content_reviewer", "game_designer", "safety_moderator"} {
+		if got[r].Has(authz.PermMediaUpload) {
+			t.Fatalf("%s must not hold media.upload", r)
+		}
+	}
 	if got["game_designer"].Has(authz.PermGameContentPublish) || got["game_designer"].Has(authz.PermGameEconomyAdjust) ||
 		!got["game_designer"].Has(authz.PermGameQuestWrite) {
 		t.Fatal("game_designer: game.* except content.publish and economy.adjust")

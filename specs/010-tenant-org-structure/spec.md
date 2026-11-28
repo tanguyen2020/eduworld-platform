@@ -94,6 +94,10 @@
 
 - Q: Rebuild `ref.students` từ `listProjectionSnapshot` cần thời điểm soft-delete để dựng `deleted_at` idempotent (chạy lại không dời mốc)? → A: [Confirmed — owner "chốt hết"] `ProjectionSnapshotItem` thêm trường tùy chọn `deleted_at` (date-time, null khi còn sống; bổ sung, oasdiff 0 breaking), đọc từ `deleted_at` của bảng nguồn; không thêm khóa nào vào `data` (vẫn ⊆ payload event, F010-AC-27). Cách dùng ở rebuild: [F003 Clarifications 2026-11-28](../003-platform-kit-data/spec.md). Test: `TestListProjectionSnapshot`.
 
+### Session 2026-11-28 (consumer `student.placement_changed` của game và chat — [Confirmed — owner "chốt hết"])
+
+- Q: `game.projection_identity` và `chat.projection_identity` không đăng ký `student.placement_changed`, nên học sinh tạo/chuyển ngoài SIS (tenant chung, saga, tự đăng ký sắp tới) chỉ tới `ref.students` của hai module này qua `worker projection rebuild`? → A: [Confirmed — owner "chốt hết"] Hai consumer đăng ký thêm event này (EVENT_DESIGN §4, DATABASE_DESIGN §2.17 vốn đã ghi game và chat là consumer) và áp **cùng quy tắc** với competition: `school_id`, `grade_level` luôn theo bản mới hơn (`source_version`); `inactive` → `status = inactive`; `active` chỉ hồi phục dòng do placement để `inactive` (trạng thái tài khoản của `user.status_changed` như `locked` giữ nguyên); game giữ `sis_connection_id`; chat hủy lời mời kết bạn đang chờ của học sinh `inactive` (như `deactivate`). Payload khác tenant envelope, học sinh của tenant khác, khối/trạng thái sai → DLQ ngay. Filter subject của durable consumer cập nhật khi khởi động (`CreateOrUpdateConsumer`); event cũ trước khi đổi không phát lại — dùng `worker projection rebuild` (nay chọn `student.placement_changed` cho cả bốn module khi biết khối). Test: `TestProjectionIdentityPlacement` (game, qua NATS), `TestProjectionPlacement` (chat).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — System Admin tạo và quản lý tenant (Priority: P1)

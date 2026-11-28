@@ -48,6 +48,17 @@ type RefStudent struct {
 	SourceVersion   int64
 }
 
+// RefPlacement is student.placement_changed applied to ref.students: the school, grade level and effective status of
+// the student (ADR-0095 mục 2).
+type RefPlacement struct {
+	StudentID     uuid.UUID
+	TenantID      uuid.UUID
+	SchoolID      uuid.UUID
+	GradeLevel    int
+	Active        bool
+	SourceVersion int64
+}
+
 // ProjectionWriter writes the ref.* projections of module identity (DATABASE_DESIGN §2.17). Only the command
 // UpsertProjection, called by the consumer game.projection_identity, uses it (rule 4). Every upsert applies the
 // row only when its source_version is newer than the stored one (applied = false otherwise).
@@ -57,6 +68,10 @@ type ProjectionWriter interface {
 	UpsertTenant(ctx context.Context, r RefTenant) (bool, error)
 	UpsertSchool(ctx context.Context, r RefSchool) (bool, error)
 	UpsertStudent(ctx context.Context, r RefStudent) (bool, error)
+	// UpsertPlacement applies student.placement_changed (owner F010, ADR-0095): school and grade always; an inactive
+	// placement sets status inactive, an active one only revives a row left inactive by a placement (an account status
+	// of user.status_changed is kept); the SIS connection is kept. Newer source_version only, never another tenant.
+	UpsertPlacement(ctx context.Context, r RefPlacement) (bool, error)
 	// SetStudentStatus applies user.status_changed to a projected student of the transaction scope (tenant nil:
 	// every tenant). It keeps source_version (the version of student.synced), so a later student.synced still applies.
 	SetStudentStatus(ctx context.Context, student uuid.UUID, tenant *uuid.UUID, status string) (bool, error)

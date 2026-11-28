@@ -139,7 +139,7 @@ func (h ApplyTenantAssignments) Handle(ctx context.Context, in AssignmentsInput)
 		return nil, err
 	}
 	rt, _ := resourceType(in.ResourceType)
-	handler, ok := h.Resources.Get(rt)
+	handler, ok := h.Resources.Assignable(rt)
 	if !ok {
 		return nil, problem.Invalid("resource_type", problem.SubInvalid, "resource type cannot be assigned yet")
 	}

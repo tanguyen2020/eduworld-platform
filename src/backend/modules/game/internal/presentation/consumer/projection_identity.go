@@ -115,6 +115,9 @@ func (c IdentityProjection) dispatch(ctx context.Context, e outbox.Envelope) (st
 	case "student.synced":
 		applied, err = c.student(ctx, e)
 		return when(applied, "students"), err
+	case "student.placement_changed":
+		applied, err = c.placement(ctx, e)
+		return when(applied, "students"), err
 	case "user.status_changed":
 		applied, err = c.status(ctx, e)
 		return when(applied, "students"), err
@@ -214,6 +217,35 @@ func (c IdentityProjection) student(ctx context.Context, e outbox.Envelope) (boo
 	}
 	return c.Upsert.Student(ctx, e.TenantID, write.RefStudent{StudentID: p.StudentID, SchoolID: p.SchoolID, GradeLevel: p.GradeLevel,
 		Status: status, SISConnectionID: p.SISConnection, SourceVersion: version(p.SourceVersion, e)})
+}
+
+// placementPayload is student.placement_changed.v1 (ADR-0095 mục 2): the fields the projection uses (tolerant of the others).
+type placementPayload struct {
+	StudentID     uuid.UUID `json:"student_id"`
+	TenantID      uuid.UUID `json:"tenant_id"`
+	SchoolID      uuid.UUID `json:"school_id"`
+	GradeLevel    int       `json:"grade_level"`
+	Status        string    `json:"status"`
+	SourceVersion *int64    `json:"source_version"`
+}
+
+// placement applies student.placement_changed to ref.students (school, grade level, active/inactive), so a student
+// created or moved outside the SIS sync reaches the game projection too (the grade transition is game.grade_transition).
+func (c IdentityProjection) placement(ctx context.Context, e outbox.Envelope) (bool, error) {
+	var p placementPayload
+	if err := decode(e, &p); err != nil {
+		return false, err
+	}
+	switch {
+	case p.StudentID == uuid.Nil || p.SchoolID == uuid.Nil || p.TenantID == uuid.Nil:
+		return false, invalid(e.EventType, "student_id, tenant_id and school_id are required")
+	case p.GradeLevel < 1 || p.GradeLevel > 9:
+		return false, invalid(e.EventType, "grade_level")
+	case p.Status != "active" && p.Status != "inactive":
+		return false, invalid(e.EventType, "status")
+	}
+	return c.Upsert.Placement(ctx, e.TenantID, write.RefPlacement{StudentID: p.StudentID, TenantID: p.TenantID, SchoolID: p.SchoolID,
+		GradeLevel: p.GradeLevel, Active: p.Status == "active", SourceVersion: version(p.SourceVersion, e)})
 }
 
 type statusPayload struct {

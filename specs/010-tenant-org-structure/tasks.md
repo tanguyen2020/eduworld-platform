@@ -146,6 +146,10 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 
 - [x] T053 `ProjectionSnapshotItem.deleted_at` (spec internal identity, bổ sung) đọc từ `deleted_at` của bảng nguồn — file: `specs/openapi/modules/identity.internal.v1.yaml`, `src/backend/modules/identity/internal/infrastructure/persistence/read/snapshot.go` — kiểm: `TestListProjectionSnapshot` — **xong 2026-11-28**
 
+## Việc bổ sung 2026-11-28 (Clarifications "consumer `student.placement_changed` của game và chat")
+
+- [x] T054 `student.placement_changed` vào `game.projection_identity` và `chat.projection_identity` (`ref.students`: trường, khối, hiệu lực; cùng quy tắc competition) — file: `src/backend/modules/{game,chat}/internal/infrastructure/messaging/streams.go`, `…/presentation/consumer/`, `…/persistence/` — kiểm: `TestProjectionIdentityPlacement` (game), `TestProjectionPlacement` (chat) — **xong 2026-11-28**
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T003–T009) → US1 → US2, US3 song song → US4 (cần T008, T016) → US5 (cần T008, T027) → Polish.

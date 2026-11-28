@@ -62,6 +62,19 @@ func (Refs) Student(ctx context.Context, student, tenant, school uuid.UUID, grad
 		WHERE st.source_version < $6 AND st.tenant_id = $2`, student, tenant, school, grade, status, version)
 }
 
+// Placement upserts ref.students from student.placement_changed (ADR-0095; same rule as modules learning, game and
+// competition): school and grade always; inactive → status inactive; active only revives a row a placement left
+// inactive (an account status of user.status_changed stays); newer source_version only, never another tenant.
+func (Refs) Placement(ctx context.Context, student, tenant, school uuid.UUID, grade int, active bool, version int64) (bool, error) {
+	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); deleted_at mirrors the source (cleanup)
+	return changed(ctx, `INSERT INTO ref.students AS st (student_id, tenant_id, school_id, grade_level, status, source_version)
+		VALUES ($1, $2, $3, $4::smallint, CASE WHEN $5::boolean THEN 'active' ELSE 'inactive' END, $6)
+		ON CONFLICT (student_id) DO UPDATE SET school_id = $3, grade_level = $4::smallint,
+			status = CASE WHEN NOT $5::boolean THEN 'inactive' WHEN st.status = 'inactive' THEN 'active' ELSE st.status END,
+			source_version = $6
+		WHERE st.source_version < $6 AND st.tenant_id = $2`, student, tenant, school, grade, active, version)
+}
+
 // StudentStatus applies user.status_changed (tenant nil: platform event, every tenant of that student).
 func (Refs) StudentStatus(ctx context.Context, student uuid.UUID, tenant *uuid.UUID, status string) (bool, error) {
 	// tenancyguard:ok projection of user.status_changed; deleted_at is the projected source state

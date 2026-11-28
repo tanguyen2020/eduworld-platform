@@ -72,11 +72,22 @@ type CloneInput struct {
 	IDMap        map[uuid.UUID]uuid.UUID // ids cloned by earlier steps (cross-module references)
 }
 
+// Assignable is the part of a ResourceHandler that tenant assignment (ADR-0029) and the reference check need: the type
+// and the owners of the ids visible to the scope of ctx. A type that is assigned but has no trash or clone of its own
+// yet (media: trash belongs to F045, F027 spec) registers only this, through Registry.RegisterAssignable.
+type Assignable interface {
+	// ResourceType is the type handled.
+	ResourceType() contentmodel.ResourceType
+	// Owners returns the owner of each id visible to the scope of ctx; invisible or deleted ids are absent.
+	Owners(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]contentmodel.Owner, error)
+}
+
 // Registry holds the handlers by resource type. Modules register at composition time; lookups are safe for
 // concurrent use.
 type Registry struct {
-	mu       sync.RWMutex
-	handlers map[contentmodel.ResourceType]ResourceHandler
+	mu          sync.RWMutex
+	handlers    map[contentmodel.ResourceType]ResourceHandler
+	assignables map[contentmodel.ResourceType]Assignable
 }
 
 // NewRegistry registers handlers; a type registered twice is an error.
@@ -104,11 +115,50 @@ func (r *Registry) Register(h ResourceHandler) error {
 	if r.handlers == nil {
 		r.handlers = map[contentmodel.ResourceType]ResourceHandler{}
 	}
-	if _, dup := r.handlers[rt]; dup {
+	_, assignOnly := r.assignables[rt]
+	if _, dup := r.handlers[rt]; dup || assignOnly {
 		return fmt.Errorf("port: resource type %q registered twice", rt)
 	}
 	r.handlers[rt] = h
 	return nil
+}
+
+// RegisterAssignable adds a type that is assigned to tenants (and referenced) without trash or clone: Get and Types do
+// not return it, Assignable does.
+func (r *Registry) RegisterAssignable(a Assignable) error {
+	if a == nil {
+		return errors.New("port: nil assignable resource")
+	}
+	rt := a.ResourceType()
+	if _, err := contentmodel.ParseResourceType(string(rt)); err != nil {
+		return fmt.Errorf("port: register %q: %w", rt, err)
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.assignables == nil {
+		r.assignables = map[contentmodel.ResourceType]Assignable{}
+	}
+	_, full := r.handlers[rt]
+	if _, dup := r.assignables[rt]; dup || full {
+		return fmt.Errorf("port: resource type %q registered twice", rt)
+	}
+	r.assignables[rt] = a
+	return nil
+}
+
+// Assignable returns what assignment and the reference check use for rt: its full handler, or the assignable
+// registered with RegisterAssignable.
+func (r *Registry) Assignable(rt contentmodel.ResourceType) (Assignable, bool) {
+	if r == nil {
+		return nil, false
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if h, ok := r.handlers[rt]; ok {
+		return h, true
+	}
+	a, ok := r.assignables[rt]
+	return a, ok
 }
 
 // Get returns the handler of rt.

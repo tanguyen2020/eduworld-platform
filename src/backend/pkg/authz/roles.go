@@ -61,26 +61,27 @@ func expand(patterns []string, exclude ...Permission) []Permission {
 // 2026-11-21: listTenantSchools keeps a school-limited grant to its schools); every tenant role reads the
 // curriculum (curriculum.read, ADMIN_PORTAL §2.2 "read mọi role"); school_admin reads the tenant roles it assigns
 // (tenant.role.read, F012 Clarifications 2026-11-22, read-only, grant counts of its schools only); tenant_admin does not hold learning_content.re_evaluate (§2.4 matrix);
-// content_reviewer also holds learning_content.read.
+// content_reviewer also holds learning_content.read; media.upload goes to every system role holding learning_content.write
+// (tenant_admin, school_admin, academic_manager, content_admin, tenant_content_editor — OQ F027-2, F002 T059).
 func SystemRoles() []RoleDef {
 	return []RoleDef{
 		{Name: "tenant_admin", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
 			"tenant.*", "school.*", "lms.student.read", "lms.assignment.read", "lms.report.read", "lms.school_event.write",
 			"lms.student.password_reset", "learning_content.*", "curriculum.read", "analytics.tenant.read",
 			"moderation.school_notification.read", "moderation.school_notification.acknowledge", "chat.sensitive_terms.read",
-			"report.export",
+			"report.export", "media.upload",
 		}, PermLearningContentReEvaluate)},
 		{Name: "school_admin", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
 			"school.*", "tenant.user.read", "tenant.user.lock", "tenant.school.read", "tenant.role.read", "tenant.user_role.write", "lms.*", "curriculum.read",
 			"learning_content.read",
 			"learning_content.write", "learning_content.review", "learning_content.publish", "analytics.school.read",
 			"moderation.school_notification.read", "moderation.school_notification.acknowledge",
-			"tenant.sis.import", "social.club.approve", "tenant.audit.read", "report.export",
+			"tenant.sis.import", "social.club.approve", "tenant.audit.read", "report.export", "media.upload",
 		})},
 		{Name: "academic_manager", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
 			"curriculum.*", "learning_content.*", "tenant.school.read", "lms.student.read",
 			"lms.assignment.*", "lms.result.release", "lms.report.read",
-			"lms.student_activity.read", "analytics.*", "report.export",
+			"lms.student_activity.read", "analytics.*", "report.export", "media.upload",
 		})},
 		{Name: "tenant_content_editor", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
 			"curriculum.read", "learning_content.read", "learning_content.write", "learning_content.import",
@@ -91,7 +92,7 @@ func SystemRoles() []RoleDef {
 			"learning_content.activity.review",
 		})},
 		{Name: "system_admin", ScopeKind: RoleScopePlatform, Permissions: expand([]string{"*"})},
-		{Name: "content_admin", ScopeKind: RoleScopePlatform, Permissions: expand([]string{"learning_content.*", "curriculum.*"})},
+		{Name: "content_admin", ScopeKind: RoleScopePlatform, Permissions: expand([]string{"learning_content.*", "curriculum.*", "media.upload"})},
 		{Name: "content_reviewer", ScopeKind: RoleScopePlatform, Permissions: expand([]string{
 			"learning_content.read", "learning_content.review", "learning_content.publish", "game.content.review",
 		})},
