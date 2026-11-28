@@ -64,6 +64,7 @@ var _dialogs: ChatDialogs = null
 var _pending: Dictionary = {}
 var _clubs: FriendsClubs = null
 var _club_open_id: String = ""
+var _tab_row: Control = null
 
 
 func _ready() -> void:
@@ -72,11 +73,14 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_build()
 	EventBus.locale_changed.connect(_on_locale_changed)
+	AppState.compact_changed.connect(_on_compact_changed)
 	EventBus.friend_request_received.connect(_on_friend_request)
 
 
 func _exit_tree() -> void:
 	_unbind()
+	if AppState.compact_changed.is_connected(_on_compact_changed):
+		AppState.compact_changed.disconnect(_on_compact_changed)
 
 
 ## WorldRoot: `ui_requested("friends", {tab})`.
@@ -86,6 +90,8 @@ func open(args: Dictionary = {}) -> void:
 	_bind(services.social if services != null else null)
 	_clubs.bind(services.clubs if services != null else null)
 	_club_open_id = String(args.get("id", "")) if String(args.get("tab", "")) == TAB_CLUBS else ""
+	UiBuild.fit_window(_ui["window"] as Control)
+	set_sub_page(false)
 	show()
 	UiMotion.pop_in(_ui["window"] as Control, Settings.reduce_motion)
 	select_tab(String(args.get("tab", TAB_FRIENDS)))
@@ -132,6 +138,8 @@ func select_tab(next: String) -> void:
 		b.set_pressed_no_signal(id == tab)
 	for id: String in _pages.keys():
 		(_pages[id] as Control).visible = id == tab
+	if tab != TAB_CLUBS:
+		set_sub_page(false)
 	if tab == TAB_BLOCKED and social != null and visible:
 		social.load_relations()
 	if tab == TAB_FIND and social != null and visible:
@@ -472,6 +480,23 @@ func _on_locale_changed(_locale: String) -> void:
 		render()
 
 
+## F111 compact polish: the window frame and the compact layouts follow the mode (a phone turned, a window resized).
+func _on_compact_changed(_compact: bool) -> void:
+	UiBuild.fit_window(_ui["window"] as Control)
+	if visible:
+		render()
+
+
+## F111 compact polish (F125 compact mode): while a sub-page is open (a club's page, which has its own "Quay lại"), the
+## tab row is hidden on a compact phone so the page's content shows without scrolling; it comes back with the lists.
+func set_sub_page(open: bool) -> void:
+	_tab_row.visible = not (open and AppState.compact)
+
+
+func tab_row_visible() -> bool:
+	return _tab_row.visible
+
+
 func _on_add_requested(user_id: String) -> void:
 	if social != null:
 		await social.send_friend_request(user_id)
@@ -517,6 +542,7 @@ func _on_friend_request(_request_id: String) -> void:
 
 func _build() -> void:
 	_ui = UiBuild.window(self, "ui.friends.title", "group")
+	UiBuild.fit_window(_ui["window"] as Control)
 	(_ui["close"] as Button).pressed.connect(close)
 	var body: VBoxContainer = _ui["body"] as VBoxContainer
 	var tabs: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
@@ -530,7 +556,8 @@ func _build() -> void:
 		b.pressed.connect(select_tab.bind(String(spec[0])))
 		tabs.add_child(b)
 		_tabs[spec[0]] = b
-	body.add_child(UiBuild.chip_scroller(tabs))
+	_tab_row = UiBuild.chip_scroller(tabs)
+	body.add_child(_tab_row)
 	_notice = UiBuild.panel(&"InfoBannerPanel")
 	_notice.name = "Notice"
 	_notice.visible = false

@@ -17,7 +17,8 @@ const TAB_SEASON: String = "season"
 ## [id, label key, icon, icon on the selected (blue) tab].
 const TABS: Array = [
 	[TAB_TODAY, "ui.events.tab.today", "emoji_sun", "emoji_sun"],
-	[TAB_WEEK, "ui.events.tab.week", "journal", "journal"],
+	# A coloured emoji (like "Hôm nay"): a blue line icon would vanish on the blue selected tab.
+	[TAB_WEEK, "ui.events.tab.week", "emoji_book", "emoji_book"],
 	[TAB_EVENTS, "ui.events.tab.events", "star", "star"],
 	[TAB_SEASON, "ui.events.tab.season", "medal", "medal"],
 ]
@@ -47,6 +48,7 @@ var _week: QuestDayTab = null
 var _season: SeasonTab = null
 var season_service: SeasonTrackService = null
 var _render_queued: bool = false
+var _tab_row: Control = null
 
 
 func _ready() -> void:
@@ -55,10 +57,13 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_build()
 	EventBus.locale_changed.connect(_on_locale_changed)
+	AppState.compact_changed.connect(_on_compact_changed)
 
 
 func _exit_tree() -> void:
 	_unbind()
+	if AppState.compact_changed.is_connected(_on_compact_changed):
+		AppState.compact_changed.disconnect(_on_compact_changed)
 	QualityManager.resume_world(SUSPEND_REASON)
 
 
@@ -67,6 +72,7 @@ func open(args: Dictionary = {}) -> void:
 	if services == null and AppState.services != null:
 		services = AppState.get_services()
 	_bind()
+	UiBuild.fit_window(_ui["window"] as Control)
 	show()
 	QualityManager.suspend_world(SUSPEND_REASON)
 	UiMotion.pop_in(_ui["window"] as Control, Settings.reduce_motion)
@@ -284,6 +290,9 @@ func _render_events() -> void:
 	var e: LiveEventModel = live.store.event(detail_id) if not detail_id.is_empty() else null
 	_detail.visible = e != null
 	_events_scroll.visible = e == null
+	# F111 compact polish: an event's detail (with its own "Quay lại") hides the tab row on a compact phone, so its points
+	# and first quest show without scrolling; the tabs come back with the list.
+	_tab_row.visible = not (AppState.compact and e != null and tab == TAB_EVENTS)
 	if e != null:
 		_detail.show_event(e, now, UiBuild.band(), _quest_names())
 		return
@@ -380,16 +389,29 @@ func _on_locale_changed(_locale: String) -> void:
 		render()
 
 
+## F111 compact polish: the window frame and the compact layouts follow the mode (a phone turned, a window resized).
+func _on_compact_changed(_compact: bool) -> void:
+	UiBuild.fit_window(_ui["window"] as Control)
+	if visible:
+		render()
+
+
+func tab_row_visible() -> bool:
+	return _tab_row.visible
+
+
 # ---------- build ----------
 
 func _build() -> void:
 	_ui = UiBuild.window(self, "ui.events.title", "calendar")
+	UiBuild.fit_window(_ui["window"] as Control)
 	(_ui["close"] as Button).pressed.connect(close)
 	var body: VBoxContainer = _ui["body"] as VBoxContainer
 	var tabs: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
 	tabs.name = "Tabs"
 	var group: ButtonGroup = ButtonGroup.new()
-	body.add_child(UiBuild.chip_scroller(tabs))
+	_tab_row = UiBuild.chip_scroller(tabs)
+	body.add_child(_tab_row)
 	_notice = UiBuild.panel(&"InfoBannerPanel")
 	_notice.name = "Notice"
 	_notice.visible = false

@@ -6,6 +6,10 @@ extends RefCounted
 ## touch target from the grade-band density (`UiTokens.DENSITY_BUTTON_MIN_HEIGHT`: g1_3 ≥ 64 dp, NFR-A11Y-001).
 
 const ICONS: String = "res://resources/ui/icons/%s.svg"
+## Anchors [left, top, right, bottom] of a standard window, and on a compact phone (F111 compact polish: the full height
+## but a thin edge, so a window with a header, tabs and a sub-page header still shows its content).
+const WINDOW_EDGES: Array = [0.05, 0.06, 0.95, 0.95]
+const WINDOW_EDGES_COMPACT: Array = [0.03, 0.02, 0.97, 0.98]
 
 
 static func band() -> String:
@@ -163,10 +167,10 @@ static func window(root: Control, title_key: String, title_icon: String) -> Dict
 	var win: PanelContainer = panel()
 	win.name = "Window"
 	win.set_anchors_preset(Control.PRESET_FULL_RECT)
-	win.anchor_left = 0.05
-	win.anchor_top = 0.06
-	win.anchor_right = 0.95
-	win.anchor_bottom = 0.95
+	win.anchor_left = float(WINDOW_EDGES[0])
+	win.anchor_top = float(WINDOW_EDGES[1])
+	win.anchor_right = float(WINDOW_EDGES[2])
+	win.anchor_bottom = float(WINDOW_EDGES[3])
 	win.offset_left = 0.0
 	win.offset_top = 0.0
 	win.offset_right = 0.0
@@ -179,6 +183,25 @@ static func window(root: Control, title_key: String, title_icon: String) -> Dict
 	box.add_child(bar["bar"] as Control)
 	return {"window": win, "body": box, "title": bar["title"], "close": bar["close"], "header": bar["row"],
 		"icon": bar["icon"]}
+
+
+## F111 compact polish (STUDENT_GAME_UX §2 compact): on a compact phone the window `win` takes the full height of the
+## screen but a thin edge (`WINDOW_EDGES_COMPACT`), so the rows of its header leave room for its content; outside
+## compact mode the usual centred frame. The screen calls it again when the mode changes (`AppState.compact_changed`).
+static func fit_window(win: Control) -> void:
+	var edges: Array = WINDOW_EDGES_COMPACT if AppState.compact else WINDOW_EDGES
+	win.anchor_left = float(edges[0])
+	win.anchor_top = float(edges[1])
+	win.anchor_right = float(edges[2])
+	win.anchor_bottom = float(edges[3])
+
+
+## F111 compact polish: on a compact phone `b` shows its icon alone — its words (`key`) stay as tooltip and accessible
+## name — so a header of actions is one line; outside compact mode icon + words (F096-AC-09).
+static func icon_only(b: Button, key: String, on: bool) -> void:
+	b.text = "" if on else key
+	b.tooltip_text = key if on else ""
+	b.accessibility_name = b.tr(key) if on else ""
 
 
 ## F125 (F114-3, DESIGN_SYSTEM §5.1): the title bar of every window — tier 1 blue `WindowTitleBar`, the window icon, an

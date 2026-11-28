@@ -76,6 +76,7 @@ func render() -> void:
 	var store: ClubStore = clubs.store
 	var open: bool = store.page != null
 	tab.show_page_mode(open)
+	screen.set_sub_page(open and screen.tab == FriendsScreen.TAB_CLUBS)
 	if open:
 		tab.page.show_page(store, clubs.requests_denied, screen.services != null and screen.services.chat != null)
 	else:

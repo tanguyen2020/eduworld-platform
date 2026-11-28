@@ -39,6 +39,8 @@ func open_form(needs_approval: bool) -> void:
 	_note.visible = needs_approval
 	# Added hidden during the screen's build: take the whole screen now (anchors alone kept a zero size).
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# F111 compact polish: nearly the full height on a phone (the form / the list show more without scrolling).
+	UiBuild.fit_window(_ui["window"] as Control)
 	_error.visible = false
 	_busy = false
 	show()

@@ -21,12 +21,15 @@ var _hint: Label = null
 var _cards: Dictionary = {}
 var _adds: Dictionary = {}
 var _portraits: Dictionary = {}
+var _title_row: HBoxContainer = null
 
 
 func _init() -> void:
 	name = "SuggestionGroup"
 	theme_type_variation = &"FormBox"
-	add_child(FriendsUi.group_title("ui.friends.suggest.title", "history"))
+	_title_row = FriendsUi.group_title("ui.friends.suggest.title", "history")
+	_title_row.name = "TitleRow"
+	add_child(_title_row)
 	_hint = UiBuild.keep_words(UiBuild.label("ui.friends.suggest.tap_hint", &"MutedLabel"))
 	_hint.name = "TapHint"
 	add_child(_hint)
@@ -57,12 +60,20 @@ func set_suggestions(list: Array[FriendSuggestionModel], pending: Dictionary, fa
 		_list.add_child(card)
 	_hint.visible = big and not list.is_empty()
 	_empty.visible = list.is_empty()
+	# F111 compact polish: on a compact phone the tap hint sits on the line of the title, so the tiles show whole.
+	var hint_parent: Node = _title_row if AppState.compact else self
+	if _hint.get_parent() != hint_parent:
+		_hint.reparent(hint_parent, false)
+		if hint_parent == self:
+			move_child(_hint, _title_row.get_index() + 1)
+	_hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	FriendsUi.title_shares_line(_title_row, AppState.compact)
 	UiBuild.size_buttons(self)
 	var side: float = UiBuild.target() * (BIG_PORTRAIT_COMPACT if AppState.compact else BIG_PORTRAIT)
 	for b: Button in _portraits.values():
 		b.custom_minimum_size = Vector2(side, side)
 	for c: Control in _cards.values():
-		if c.name == "Suggestion" and big:
+		if c.name == "Suggestion" and big and not AppState.compact:
 			c.custom_minimum_size.x = side * TILE_WIDTH
 
 
@@ -122,9 +133,16 @@ func _row(s: FriendSuggestionModel, pending: bool) -> Control:
 func _tile(s: FriendSuggestionModel, pending: bool) -> Control:
 	var tile: PanelContainer = UiBuild.panel(&"PartyMemberCard")
 	tile.name = "Suggestion"
+	# F111 compact polish: on a compact phone the tile is a row — the big portrait beside its words — so the tiles show
+	# whole under "Vừa chơi cùng" when the tab opens; otherwise a column with the words under the portrait.
+	var row: HBoxContainer = UiBuild.hbox(&"ToolbarBox") if AppState.compact else null
 	var box: VBoxContainer = UiBuild.vbox()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	tile.add_child(box)
+	if row != null:
+		tile.add_child(row)
+		row.add_child(box)
+	else:
+		tile.add_child(box)
 	var portrait: Button = Button.new()
 	portrait.name = "Portrait"
 	portrait.theme_type_variation = &"SecondaryButton"
@@ -140,17 +158,39 @@ func _tile(s: FriendSuggestionModel, pending: bool) -> Control:
 	thumb.set_look(look if look != null else AvatarConfigModel.from_dict(PartyMemberCard.DEFAULT_AVATAR))
 	portrait.add_child(thumb)
 	portrait.pressed.connect(_on_add.bind(s.user_id(), portrait))
-	box.add_child(portrait)
 	_portraits[s.user_id()] = portrait
+	if row != null:
+		portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(portrait)
+		row.move_child(portrait, 0)
+		box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		UiBuild.expand(box)
+	else:
+		box.add_child(portrait)
 	var nick: Label = UiBuild.data_label(s.player.nickname, &"HeadingLabel", false)
 	nick.name = "Nickname"
 	nick.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(nick)
-	_add_details(box, s)
+	if row != null:
+		# Compact row: the nickname and "Cấp n" on one line, the context under them (two lines beside the portrait).
+		var line: HBoxContainer = UiBuild.hbox()
+		line.name = "NameLine"
+		box.add_child(line)
+		nick.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		line.add_child(nick)
+		_add_details(box, s)
+		var level: Node = box.find_child("Level", false, false)
+		if level != null:
+			(level as Label).size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			level.reparent(line, false)
+	else:
+		box.add_child(nick)
+		_add_details(box, s)
 	if pending:
 		box.add_child(FriendsUi.status("ui.friends.request_pending", "clock"))
-	# Centred under the portrait.
+	# Centred under the portrait (the compact row keeps its words at the start, beside it).
 	for node: Node in box.get_children():
+		if row != null:
+			break
 		if node is Label:
 			(node as Label).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		elif node is HBoxContainer:

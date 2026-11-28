@@ -12,12 +12,19 @@ var code_widget: FriendCodeWidget = null
 var _suggestions: SuggestionGroup = null
 var _nearby: VBoxContainer = null
 var _buttons: Dictionary = {}
+var _nearby_title: HBoxContainer = null
+var _nearby_none: Label = null
 
 
 func _init() -> void:
 	name = "FindFriendsTab"
 	theme_type_variation = &"FormBox"
-	add_child(FriendsUi.group_title("ui.friends.find.nearby", "area_social"))
+	_nearby_title = FriendsUi.group_title("ui.friends.find.nearby", "area_social")
+	_nearby_title.name = "NearbyTitle"
+	add_child(_nearby_title)
+	_nearby_none = UiBuild.keep_words(UiBuild.label("ui.friends.find.nearby_none", &"MutedLabel"))
+	_nearby_none.name = "NearbyNone"
+	_nearby_none.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_nearby = UiBuild.vbox(&"FormBox")
 	_nearby.name = "Nearby"
 	add_child(_nearby)
@@ -31,6 +38,8 @@ func _init() -> void:
 ## `players`: `{user_id, nickname, avatar_config}` of the hub instance (never the student, never a friend already);
 ## `pending`: ids with a request this student sent ("Đang chờ").
 func set_nearby(players: Array[Dictionary], pending: Dictionary) -> void:
+	if _nearby_none.get_parent() != null:
+		_nearby_none.get_parent().remove_child(_nearby_none)
 	UiBuild.clear(_nearby)
 	_buttons.clear()
 	for p: Dictionary in players:
@@ -49,8 +58,13 @@ func set_nearby(players: Array[Dictionary], pending: Dictionary) -> void:
 			actions.add_child(add)
 			_buttons[id] = add
 		_nearby.add_child(ui["card"] as Control)
+	# F111 compact polish: on a compact phone "Chưa có bạn nào ở gần em." sits on the line of its title, so "Vừa chơi cùng"
+	# shows whole when the tab opens.
 	if players.is_empty():
-		_nearby.add_child(UiBuild.keep_words(UiBuild.label("ui.friends.find.nearby_none", &"MutedLabel")))
+		(_nearby_title if AppState.compact else _nearby).add_child(_nearby_none)
+	FriendsUi.title_shares_line(_nearby_title, players.is_empty() and AppState.compact)
+	# The empty list box would still cost a gap of the column.
+	_nearby.visible = not (players.is_empty() and AppState.compact)
 	UiBuild.size_buttons(self)
 
 

@@ -35,6 +35,8 @@ func open_for(id: String, friends: Array[FriendModel]) -> void:
 	club_id = id
 	# Added hidden during the screen's build: take the whole screen now (anchors alone kept a zero size).
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# F111 compact polish: nearly the full height on a phone (the form / the list show more without scrolling).
+	UiBuild.fit_window(_ui["window"] as Control)
 	_picked.clear()
 	_results.clear()
 	UiBuild.clear(_list)

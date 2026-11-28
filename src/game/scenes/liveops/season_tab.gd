@@ -88,6 +88,10 @@ func show_track(store: SeasonTrackStore, _band: String) -> void:
 		_ends.text = tr("ui.season.ends").format({"date": LiveOpsTime.ict_date(ends)}) if ends > 0 else ""
 		_ends.visible = ends > 0
 		_track.show_tiers(t.tiers)
+		# F111 compact polish: on a compact phone the strip comes right under the season line and the note after it, so
+		# the tiers show when the tab opens; outside compact mode the note first.
+		if AppState.compact != (_note.get_index() > _track.get_index()):
+			_season_box.move_child(_note, _track.get_index())
 		if _shown_id != t.season_id:
 			_shown_id = t.season_id
 			_track.scroll_to.call_deferred(maxi(1, t.tier))

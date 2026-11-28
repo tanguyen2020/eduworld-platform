@@ -31,6 +31,10 @@ var _milestones: VBoxContainer = null
 var _goal: CommunityGoalBar = null
 var _claims: Dictionary = {}
 var _busy: bool = false
+var _titles: VBoxContainer = null
+var _title_line: HFlowContainer = null
+var _time_row: HBoxContainer = null
+var _points_row: HFlowContainer = null
 
 
 func _init() -> void:
@@ -48,11 +52,21 @@ func _init() -> void:
 	UiBuild.expand(titles)
 	titles.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(titles)
+	_titles = titles
+	# F111 compact polish: on a compact phone the name, the time left and the points share this one line.
+	_title_line = HFlowContainer.new()
+	_title_line.name = "TitleLine"
+	_title_line.visible = false
+	titles.add_child(_title_line)
 	_name = UiBuild.keep_words(UiBuild.data_label("", &"HeadingLabel"))
 	_name.name = "EventName"
+	_name.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	titles.add_child(_name)
 	var tl: HBoxContainer = UiBuild.hbox()
+	tl.name = "TimeRow"
+	tl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	titles.add_child(tl)
+	_time_row = tl
 	var clock: TextureRect = UiBuild.icon_rect("clock", 0.7)
 	clock.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	tl.add_child(clock)
@@ -74,6 +88,7 @@ func _init() -> void:
 	var points: HFlowContainer = HFlowContainer.new()
 	points.name = "PointsRow"
 	add_child(points)
+	_points_row = points
 	_points = UiBuild.data_label("", &"SectionTag", false)
 	_points.name = "Points"
 	_points.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -137,6 +152,27 @@ func show_event(e: LiveEventModel, now_unix: int, band: String, quests: Dictiona
 	if e.community_goal != null:
 		_goal.show_goal(e.community_goal, band)
 	UiBuild.size_buttons(self)
+	# F111 compact polish: on a compact phone "Quay lại" shows its arrow alone (the words stay as tooltip and accessible
+	# name), so the points and the first quest show without scrolling.
+	UiBuild.icon_only(_back, "ui.events.back", AppState.compact)
+	_apply_compact()
+
+
+## F111 compact polish: the name, the time left and the points tag on one line of the header (compact phone), else the
+## name over the time left and the points under the description.
+func _apply_compact() -> void:
+	var on: bool = AppState.compact
+	var order: Array[Control] = [_name, _time_row, _points]
+	for i: int in order.size():
+		var node: Control = order[i]
+		var parent: Node = _title_line if on else (_points_row if node == _points else _titles)
+		if node.get_parent() != parent:
+			node.reparent(parent, false)
+		if on:
+			_title_line.move_child(node, i)
+	_name.autowrap_mode = TextServer.AUTOWRAP_OFF if on else TextServer.AUTOWRAP_WORD_SMART
+	_title_line.visible = on
+	_points_row.visible = not on
 
 
 func set_busy(busy: bool) -> void:

@@ -25,6 +25,8 @@ const ACTIONS: Array = [
 ]
 ## F111-AC-32: members shown a page at a time ("Xem thêm thành viên" adds the next page) — a 50-member club stays light.
 const MEMBERS_PAGE: int = 20
+## F111 compact polish: member cards per row on a compact phone.
+const COMPACT_MEMBER_COLUMNS: int = 2
 const SECTION_MEMBERS: String = "members"
 const SECTION_GOALS: String = "goals"
 const SECTION_EVENTS: String = "events"
@@ -52,6 +54,10 @@ var _requests: Dictionary = {}
 var _store: ClubStore = null
 var _members_shown: int = MEMBERS_PAGE
 var _chip_icons: Dictionary = {}
+var _back: Button = null
+var _titles: VBoxContainer = null
+var _line: HFlowContainer = null
+var _actions: HFlowContainer = null
 
 
 func _init() -> void:
@@ -61,37 +67,41 @@ func _init() -> void:
 	var head: HFlowContainer = HFlowContainer.new()
 	head.name = "Head"
 	add_child(head)
-	var back: Button = UiBuild.button("ui.club.back", "arrow_left", &"SecondaryButton")
-	back.name = "Back"
-	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	back.pressed.connect(func() -> void: back_requested.emit())
-	head.add_child(back)
+	_back = UiBuild.button("ui.club.back", "arrow_left", &"SecondaryButton")
+	_back.name = "Back"
+	_back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_back.pressed.connect(func() -> void: back_requested.emit())
+	head.add_child(_back)
 	_icon = UiBuild.icon_rect("flag", 1.3)
 	_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(UiBuild.icon_badge(_icon))
-	var titles: VBoxContainer = UiBuild.vbox()
-	UiBuild.expand(titles)
-	titles.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	head.add_child(titles)
+	_titles = UiBuild.vbox()
+	_titles.name = "Titles"
+	UiBuild.expand(_titles)
+	_titles.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(_titles)
 	_name = UiBuild.keep_words(UiBuild.data_label("", &"HeadingLabel"))
 	_name.name = "ClubName"
-	titles.add_child(_name)
-	var line: HFlowContainer = HFlowContainer.new()
-	titles.add_child(line)
+	_name.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_titles.add_child(_name)
+	_line = HFlowContainer.new()
+	_line.name = "Line"
+	_titles.add_child(_line)
 	_meta = UiBuild.label("", &"MutedLabel", false)
 	_meta.name = "ClubType"
-	line.add_child(_meta)
+	_meta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_line.add_child(_meta)
 	_count = UiBuild.data_label("", &"SectionTag", false)
 	_count.name = "Members"
 	_count.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	line.add_child(_count)
+	_line.add_child(_count)
 	_role = UiBuild.label("", &"SectionTag", false)
 	_role.name = "MyRole"
 	_role.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	line.add_child(_role)
+	_line.add_child(_role)
 	_state = UiBuild.hbox()
 	_state.name = "State"
-	titles.add_child(_state)
+	_titles.add_child(_state)
 	_read_only = UiBuild.panel(&"WarningBannerPanel")
 	_read_only.name = "ReadOnly"
 	_read_only.add_child(UiBuild.keep_words(UiBuild.label("ui.club.read_only", &"WarningBannerLabel")))
@@ -104,6 +114,7 @@ func _init() -> void:
 	actions.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	UiBuild.expand(actions)
 	head.add_child(actions)
+	_actions = actions
 	for spec: Array in ACTIONS:
 		var b: Button = UiBuild.button(String(spec[1]), String(spec[2]), spec[3] as StringName)
 		b.name = String(spec[0]).capitalize()
@@ -166,6 +177,34 @@ func show_page(store: ClubStore, requests_denied: bool, chat_available: bool) ->
 	UiBuild.mark_chips(_chips.values(), _chip_icons)
 	_render_section()
 	UiBuild.size_buttons(self)
+	apply_compact()
+
+
+## F111 compact polish (F125 compact mode, STUDENT_GAME_UX §2): on a compact phone the header is ONE line — "Quay lại"
+## and the actions show their icon alone (the words stay as tooltip and accessible name), the club name sits on the line
+## of its tags and the club type is hidden — so the section's content (≥ 3 members) shows without scrolling; outside
+## compact mode the full header. Called on every render and when the mode changes.
+func apply_compact() -> void:
+	var on: bool = AppState.compact
+	UiBuild.icon_only(_back, "ui.club.back", on)
+	for spec: Array in ACTIONS:
+		UiBuild.icon_only(_buttons[spec[0]] as Button, String(spec[1]), on)
+	_meta.visible = not on and not _meta.text.is_empty()
+	# Compact: the icon buttons stay side by side at their own width, the name and its tags take the rest of the line.
+	_actions.size_flags_horizontal = Control.SIZE_SHRINK_END if on else Control.SIZE_EXPAND_FILL
+	var width: float = 0.0
+	if on:
+		var gap: float = float(_actions.get_theme_constant(&"h_separation"))
+		for b: Button in _buttons.values():
+			if b.visible:
+				width += b.get_combined_minimum_size().x + (gap if width > 0.0 else 0.0)
+	_actions.custom_minimum_size.x = width
+	# The name: its own wrapping line over the tags, or (compact) one line at the head of the tags.
+	var parent: Node = _line if on else _titles
+	if _name.get_parent() != parent:
+		_name.reparent(parent, false)
+		parent.move_child(_name, 0)
+	_name.autowrap_mode = TextServer.AUTOWRAP_OFF if on else TextServer.AUTOWRAP_WORD_SMART
 
 
 func select_section(id: String) -> void:
@@ -224,8 +263,19 @@ func _render_section() -> void:
 		return
 	match section:
 		SECTION_MEMBERS:
+			# F111 compact polish: on a compact phone (a wide, short screen) the member cards sit two to a row, so at least
+			# three members show without scrolling.
+			var rows: Container = _content
+			if AppState.compact:
+				var grid: GridContainer = GridContainer.new()
+				grid.name = "MemberGrid"
+				grid.columns = COMPACT_MEMBER_COLUMNS
+				_content.add_child(grid)
+				rows = grid
 			for i: int in mini(_members_shown, _store.members.size()):
-				_content.add_child(_member_row(_store.members[i]))
+				var row: Control = _member_row(_store.members[i])
+				UiBuild.expand(row)
+				rows.add_child(row)
 			if _store.members.size() > _members_shown:
 				var more: Button = UiBuild.button("ui.club.members_more", "arrow_down", &"SecondaryButton")
 				more.name = "MoreMembers"

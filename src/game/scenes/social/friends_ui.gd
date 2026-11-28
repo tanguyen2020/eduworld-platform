@@ -62,6 +62,19 @@ static func group_title(key: String, icon_name: String) -> HBoxContainer:
 	return h
 
 
+## F111 compact polish: a group title row that also holds a short line after its title (`shared`) lets that line take
+## the rest of the row (the title keeps its own width); alone, the title takes the row.
+static func title_shares_line(row: HBoxContainer, shared: bool) -> void:
+	var title: Label = row.find_child("GroupTitle", false, false) as Label
+	if title != null:
+		title.size_flags_horizontal = Control.SIZE_FILL if shared else Control.SIZE_EXPAND_FILL
+		# Shared: the title on one line at its own width (a wrapping label at its minimum width would break per word).
+		title.autowrap_mode = TextServer.AUTOWRAP_OFF if shared else TextServer.AUTOWRAP_WORD_SMART
+	for node: Node in row.get_children():
+		if node != title and node is Label:
+			(node as Label).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+
 ## Mây with a short line (empty lists): happy, never sad (NFR-SAFE-003).
 static func empty_line(key: String, line_name: String = "Empty") -> Control:
 	var coach: Dictionary = UiBuild.coach(CloudyMascot.Mood.HAPPY)
