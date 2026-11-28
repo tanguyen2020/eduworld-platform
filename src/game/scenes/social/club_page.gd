@@ -18,7 +18,7 @@ const ACT_JOIN: StringName = &"join"
 const ACT_LEAVE: StringName = &"leave"
 ## [action, label key, icon, variation].
 const ACTIONS: Array = [
-	[ACT_CHAT, "ui.club.chat", "chat", &""],
+	[ACT_CHAT, "ui.club.chat", "chat", &"SecondaryButton"],
 	[ACT_INVITE, "ui.club.invite", "invite_light", &""],
 	[ACT_JOIN, "ui.club.join_request", "invite_light", &""],
 	[ACT_LEAVE, "ui.club.leave", "exit", &"SecondaryButton"],
@@ -51,6 +51,7 @@ var _content: VBoxContainer = null
 var _requests: Dictionary = {}
 var _store: ClubStore = null
 var _members_shown: int = MEMBERS_PAGE
+var _chip_icons: Dictionary = {}
 
 
 func _init() -> void:
@@ -94,9 +95,14 @@ func _init() -> void:
 	_read_only.name = "ReadOnly"
 	_read_only.add_child(UiBuild.keep_words(UiBuild.label("ui.club.read_only", &"WarningBannerLabel")))
 	add_child(_read_only)
+	# The actions sit at the right end of the header (a flow that wraps on a narrow window) so the sections and their
+	# content start higher on a phone (F125 compact).
 	var actions: HFlowContainer = HFlowContainer.new()
 	actions.name = "Actions"
-	add_child(actions)
+	actions.alignment = FlowContainer.ALIGNMENT_END
+	actions.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	UiBuild.expand(actions)
+	head.add_child(actions)
 	for spec: Array in ACTIONS:
 		var b: Button = UiBuild.button(String(spec[1]), String(spec[2]), spec[3] as StringName)
 		b.name = String(spec[0]).capitalize()
@@ -111,6 +117,7 @@ func _init() -> void:
 		var c: Button = UiBuild.chip(String(spec[1]), group)
 		c.name = "Section_" + String(spec[0])
 		c.icon = UiBuild.icon(String(spec[2]))
+		_chip_icons[c] = c.icon
 		c.pressed.connect(select_section.bind(String(spec[0])))
 		chips.add_child(c)
 		_chips[spec[0]] = c
@@ -155,7 +162,7 @@ func show_page(store: ClubStore, requests_denied: bool, chat_available: bool) ->
 		section = SECTION_MEMBERS
 	for id: String in _chips.keys():
 		(_chips[id] as Button).set_pressed_no_signal(id == section)
-	UiBuild.mark_chips(_chips.values())
+	UiBuild.mark_chips(_chips.values(), _chip_icons)
 	_render_section()
 	UiBuild.size_buttons(self)
 
@@ -164,7 +171,7 @@ func select_section(id: String) -> void:
 	section = id
 	for k: String in _chips.keys():
 		(_chips[k] as Button).set_pressed_no_signal(k == section)
-	UiBuild.mark_chips(_chips.values())
+	UiBuild.mark_chips(_chips.values(), _chip_icons)
 	_render_section()
 
 

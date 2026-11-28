@@ -122,9 +122,22 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_layout_left_column)
 	_currency.pressed.connect(shop_pressed.emit)
 	_menu.pressed.connect(menu_pressed.emit)
+	# F111: the calendar button shares the row of "Thêm" (one more side-bar row would push "Nhóm" under the emote button
+	# on a phone).
 	_events = EventCenterButton.new()
-	_menu.get_parent().add_child(_events)
-	_menu.get_parent().move_child(_events, _menu.get_index() + 1)
+	var side: Node = _menu.get_parent()
+	var row: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
+	row.name = "MenuRow"
+	row.size_flags_horizontal = Control.SIZE_SHRINK_END
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	side.add_child(row)
+	side.move_child(row, _menu.get_index())
+	side.remove_child(_menu)
+	row.add_child(_events)
+	row.add_child(_menu)
+	# Owned by the HUD scene again so find_child / unique names still reach the moved button.
+	row.owner = self
+	_menu.owner = self
 	_events.bind_store(AppState.services.live_events.store if AppState.services != null else null)
 	_party.party_pressed.connect(_on_party_pressed)
 	_invite_toast.open_requested.connect(party_requested.emit)

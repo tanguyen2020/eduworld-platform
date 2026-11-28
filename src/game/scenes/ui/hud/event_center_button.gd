@@ -49,8 +49,8 @@ func _on_new(has_new: bool) -> void:
 	_place_dot()
 
 
-## The dot sits on the top-right corner of the button (a third of the icon size).
+## The dot sits inside the top-right corner of the button (half the icon size).
 func _place_dot() -> void:
-	var side: float = float(UiTokens.COMPONENT_ICON_SIZE) * 0.4
+	var side: float = float(UiTokens.COMPONENT_ICON_SIZE) * 0.5
 	_dot.size = Vector2(side, side)
-	_dot.position = Vector2(size.x - side * 1.2, side * 0.2)
+	_dot.position = Vector2(size.x - side * 1.3, side * 0.3)

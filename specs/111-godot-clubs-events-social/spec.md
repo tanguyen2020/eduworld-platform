@@ -1,6 +1,6 @@
 # Feature Specification: F111 — Godot — club trong game, Event center, nhóm "Vừa chơi cùng", nút "Tham gia bạn"
 
-**Feature Branch**: `111-godot-clubs-events-social` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M5 · **Phụ thuộc**: F077, F110, F120 (và F071 `SceneRouter.request_area`, F072 `QuestService`, F091/F092 `hub.instance.join`/`HubSync`, F095 bạn bè, F119 `ChatDock`, F123 deep link thông báo)
+**Feature Branch**: `111-godot-clubs-events-social` · **Created**: 2026-11-16 · **Status**: In progress · **Module**: `src/game/` · **Mốc**: M5 · **Phụ thuộc**: F077, F110, F120 (và F071 `SceneRouter.request_area`, F072 `QuestService`, F091/F092 `hub.instance.join`/`HubSync`, F095 bạn bè, F119 `ChatDock`, F123 deep link thông báo)
 **Input**: Học sinh "Tham gia bạn" đang ở khu công khai; tìm bạn qua nhóm "Vừa chơi cùng" (không tìm kiếm tự do, không có nhóm "Bạn cùng lớp" — ADR-0095); mở Event center xem sự kiện live-ops, mục tiêu cộng đồng, nhiệm vụ ngày/tuần và season track miễn phí, nhận thưởng mốc; xem, xin vào, nhận lời mời và tạo club theo chính sách `student_club_creation` của trường. Màn S11 (phần Tìm bạn, Club, Tham gia bạn) và S14 của [STUDENT_GAME_UX](../../docs/05-ux/STUDENT_GAME_UX.md). FR nguồn (phía client): FR-SOC-001…004, FR-MP-002, FR-MP-003, FR-EVT-001, FR-EVT-003…008, FR-GAM-001, FR-GAME-010.
 
 ## Clarifications
@@ -24,6 +24,24 @@
 - Q: Có ngoại lệ hiển thị tên thật cho bạn cùng lớp? → A: Không còn: mọi người chơi khác chỉ thấy nickname + avatar (R16, ADR-0095 §5); thẻ người chơi không hiện tên thật, trường, khối.
 - Q: Event center hiển thị đóng góp theo lớp? → A: Không. `CommunityGoalProgress.by_class` thay bằng `by_grade[] {grade_level, progress}` (chỉ khi sự kiện trường bật `show_grade_contributions`; khối có < 5 học sinh đóng góp bị ẩn, không tên, không xếp hạng) — contract **đã áp 2026-11-21 (WP-S)**. Sự kiện trường nhắm đối tượng theo khối (`audience.grade_levels`, không còn `class_ids`); server lọc, client không tự lọc. F111-AC-09, F111-AC-13 viết lại.
 - Q: Club còn study group hay "thêm cả lớp"? → A: Không (ADR-0095 §5); client vẫn bỏ qua club `study_group` nếu dữ liệu cũ còn trả về.
+
+### Session 2026-11-28 (triển khai client — [Confirmed — owner "chốt hết"])
+
+Các điểm `[Proposed]`/khoảng trống gặp khi code được chốt theo phương án an toàn nhất:
+
+- Q: Nút "Tham gia bạn" đặt ở đâu trên điện thoại? → A: Chỉ trong `FriendProfilePanel` (hồ sơ luôn hiện cạnh danh sách ở mọi cửa sổ theo bố cục F110), không thêm vào `FriendRow`; xám kèm lý do bằng chữ (8 lý do `ui.friends.join_unavailable.*`, thêm `in_activity` khi bạn đang học). Câu kết quả là thông báo hub ngắn (`show_hub_notice`), không popup chặn.
+- Q: `403 AREA_LOCKED` khi đổi khu để tham gia bạn hiển thị thế nào? → A: Dùng nguyên banner điều kiện mở khóa của F071 (`SceneRouter.area_change_failed` → WorldRoot); `JoinFriendService` chỉ mở khóa nút, không gửi `hub.instance.join`.
+- Q: Ảnh banner sự kiện, ảnh thành viên club? → A: Không tải ảnh từ URL (an toàn, nhẹ — NFR-COMP-001): thẻ sự kiện dùng biểu tượng theo `event_kind` trên thẻ theo Theme; thành viên club dùng chân dung 2D mặc định (`ClubMember` chỉ có `avatar_thumbnail_url`). Bổ sung khi có cache ảnh dùng chung.
+- Q: Thư viện biểu tượng club? → A: Danh mục id phía client `club_icon_*` (8 biểu tượng của `design/icons/game`, chỉ là tài nguyên hiển thị); server lưu `icon_id` (chuỗi ≤ 64); id lạ hiện cờ mặc định.
+- Q: Biểu tượng lịch trên HUD? → A: Nút "Sự kiện" có icon lịch mới (`design/icons/game/calendar.svg`) ở cột phải HUD cùng hàng với "Thêm" (thêm một hàng sẽ đẩy "Nhóm" xuống dưới nút biểu cảm trên điện thoại), cộng ô "Sự kiện" trong menu "Thêm"; chấm tĩnh = có sự kiện live/sắp diễn ra em chưa xem trong phiên, tắt khi mở Event center.
+- Q: Màn "club" riêng hay tab? → A: Tab "Club" của cửa sổ Bạn bè; deep link `open_club` → `ui_requested("friends", {tab: "clubs", id})`; `open_event` → `ui_requested("event_center", {tab: "events", id})`. "Chat club" mở cửa sổ có `ChatDock` (F119) trên channel `team` của club (`show_club`).
+- Q: Query `status = live,upcoming` gửi dạng nào? → A: Dạng mặc định OpenAPI (form, explode): `status=live&status=upcoming` (`ApiClient` hỗ trợ giá trị mảng).
+- Q: Telemetry `join_friend`, `event_center_open`… của plan? → A: Chưa gửi — danh mục sự kiện telemetry sản phẩm (F080) chưa có các khóa này; chỉ `client_bug` của `GameApiService`. Không thêm loại sự kiện ngoài contract.
+- Q: Chủ club có nút "Rời club"? → A: Không (server trả `409`); sau `403` ở thao tác duyệt yêu cầu, mục "Yêu cầu" ẩn và trang được đọc lại.
+- Q: Danh sách thành viên dài? → A: 20 người mỗi lần + "Xem thêm thành viên" (AC-32); Event center tạm dừng thế giới 3D khi mở và vẽ cập nhật gộp một lần mỗi khung; màn Bạn bè (F110) giữ nguyên.
+- Q: "Mục tiêu tuần: học 4/7 ngày"? → A: Hiện đúng số bước `step_states` của server ("4/7 bước"); không đếm ngày ở client.
+- Q: Lớp 1–3 ở "Vừa chơi cùng"? → A: Ô chân dung lớn (1,5 × vùng chạm), chạm chân dung = gửi lời mời kết bạn, kèm dòng "Chạm vào bạn để kết bạn".
+- Q: Fixture `tests/fixtures/{club,liveops,social_suggestions}` của plan? → A: Một nguồn: `tests/fixtures/contract` sinh bởi `gen_fixtures.mjs` + giá trị mẫu trong `tests/fakes/f111_fixtures.gd` (TEST-ONLY).
 
 ## User Scenarios & Testing *(bắt buộc)*
 

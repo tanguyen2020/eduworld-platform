@@ -82,7 +82,7 @@ func _init() -> void:
 	_daily.name = "DailyLeft"
 	# Its own line under the points tag: in a flow a wrapping label gets no width and cuts its words.
 	add_child(_daily)
-	_join = UiBuild.button("ui.events.join", "check")
+	_join = UiBuild.button("ui.events.join", "play_light")
 	_join.name = "Join"
 	_join.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_join.pressed.connect(func() -> void: join_requested.emit(event_id))
@@ -211,7 +211,7 @@ func _quest_row(quest_id: String, q: QuestModel) -> Control:
 	UiBuild.expand(title)
 	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(title)
-	var go: Button = UiBuild.button("ui.events.go", "arrow_right")
+	var go: Button = UiBuild.button("ui.events.go", "next_light")
 	go.name = "Go"
 	go.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	go.pressed.connect(func() -> void: go_requested.emit(quest_id))
@@ -247,7 +247,7 @@ func _milestone_row(m: EventMilestoneModel, claims_open: bool) -> Control:
 		badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(badge)
 	if m.claimed:
-		row.add_child(FriendsUi.status("ui.events.claimed", "check"))
+		row.add_child(FriendsUi.status("ui.events.claimed", "verdict_correct"))
 	elif m.reached and claims_open:
 		var claim: Button = UiBuild.button("ui.events.claim", "gift")
 		claim.name = "Claim"

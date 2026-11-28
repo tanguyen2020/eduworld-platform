@@ -27,7 +27,7 @@ const TABS: Array = [
 	[TAB_FRIENDS, "ui.friends.tab.friends", "group", "group"],
 	[TAB_REQUESTS, "ui.friends.tab.requests", "invite", "invite_light"],
 	[TAB_FIND, "ui.friends.tab.find", "search", "search_light"],
-	[TAB_CLUBS, "ui.friends.tab.clubs", "flag", "flag"],
+	[TAB_CLUBS, "ui.friends.tab.clubs", "flag", "flag_light"],
 	[TAB_BLOCKED, "ui.friends.tab.blocked", "block", "block"],
 ]
 const NOTICE_SEC: float = 4.0

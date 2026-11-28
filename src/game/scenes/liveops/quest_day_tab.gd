@@ -11,7 +11,7 @@ extends VBoxContainer
 signal go_requested(quest_id: String)
 
 ## quest status → icon.
-const STATUS_ICONS: Dictionary = {"available": "play", "active": "clock", "completed": "check", "expired": "moon"}
+const STATUS_ICONS: Dictionary = {"available": "play", "active": "clock", "completed": "verdict_correct", "expired": "moon"}
 
 var quest_type: String = "daily"
 var _reset: Label = null
@@ -139,7 +139,7 @@ func _row(q: QuestModel, all_done: bool) -> Control:
 		progress.name = "QuestSteps"
 		line.add_child(progress)
 	if not all_done and (q.status == QuestModel.STATUS_AVAILABLE or q.status == QuestModel.STATUS_ACTIVE):
-		var go: Button = UiBuild.button("ui.events.go", "arrow_right")
+		var go: Button = UiBuild.button("ui.events.go", "next_light")
 		go.name = "Go"
 		go.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		go.pressed.connect(func() -> void: go_requested.emit(q.quest_id))

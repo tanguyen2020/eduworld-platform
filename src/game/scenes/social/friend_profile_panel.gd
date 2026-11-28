@@ -150,6 +150,7 @@ func join_reason_text() -> String:
 func _apply_join() -> void:
 	var b: Button = _buttons[ACT_JOIN] as Button
 	b.disabled = _busy or _join_state != &""
+	b.icon = UiBuild.icon("forward" if b.disabled else "forward_light")
 	_join_reason.text = JoinAvailability.reason_key(_join_state) if _join_state != &"" else ""
 	_join_reason.visible = _join_state != &""
 	b.tooltip_text = _join_reason.text

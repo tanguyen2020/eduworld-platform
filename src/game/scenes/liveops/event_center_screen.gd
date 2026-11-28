@@ -237,11 +237,9 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
+		# F125-AC-06: Esc / Back closes the window like its red close ("Quay lại" leaves an event's detail).
 		get_viewport().set_input_as_handled()
-		if not detail_id.is_empty():
-			close_detail()
-		else:
-			close()
+		close()
 
 
 # ---------- binding ----------
@@ -385,7 +383,7 @@ func _on_locale_changed(_locale: String) -> void:
 # ---------- build ----------
 
 func _build() -> void:
-	_ui = UiBuild.window(self, "ui.events.title", "star")
+	_ui = UiBuild.window(self, "ui.events.title", "calendar")
 	(_ui["close"] as Button).pressed.connect(close)
 	var body: VBoxContainer = _ui["body"] as VBoxContainer
 	var tabs: HBoxContainer = UiBuild.hbox(&"ToolbarBox")

@@ -69,7 +69,7 @@ func show_event(e: LiveEventModel, now_unix: int) -> void:
 	_tagline.text = e.display_tagline()
 	_tagline.visible = not _tagline.text.is_empty()
 	_status.text = e.time_left_text(now_unix)
-	_status_icon.texture = UiBuild.icon("pause" if e.is_suspended() else ("check" if e.is_ended() else "clock"))
+	_status_icon.texture = UiBuild.icon("pause" if e.is_suspended() else ("verdict_correct" if e.is_ended() else "clock"))
 	_points.text = tr("ui.events.points").format({"points": LocaleFormat.number(e.event_points)})
 	_points.visible = e.joined and not e.is_scheduled()
 	accessibility_name = "%s, %s" % [_name.text, _status.text]

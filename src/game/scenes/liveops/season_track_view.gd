@@ -151,7 +151,7 @@ func _bind(node: PanelContainer, t: SeasonTierModel) -> void:
 	rewards.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(rewards)
 	if t.claimed:
-		box.add_child(FriendsUi.status("ui.events.claimed", "check"))
+		box.add_child(FriendsUi.status("ui.events.claimed", "verdict_correct"))
 	elif t.reached:
 		var claim: Button = UiBuild.button("ui.events.claim", "gift")
 		claim.name = "Claim"

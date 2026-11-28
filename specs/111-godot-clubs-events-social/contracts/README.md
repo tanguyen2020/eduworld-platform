@@ -85,7 +85,7 @@ F111 không sở hữu contract. Delta do owner backend thực hiện (task theo
 | `Notification.kind` `club_invitation`, `club_join_request`, `club_approved`; deep link `open_club`, `open_event` | F123/F120 | **Làm 2026-11-28** | Enum chung REST/WS/CHECK; event mới `club.invitation_sent`, `club.join_requested`; consumer `chat.notify_club`. `open_event` chỉ dành sẵn (Release 1.0 không có thông báo sự kiện). Test `TestF111ClubNotifications` |
 | `event.community_goal.updated` theo `community_goal_progress_flush_seconds`; `joinGameEvent` `428` | F077 | Đã có | AsyncAPI `event.community_goal.updated`; `game.v1` `joinGameEvent` `428`; `command/liveops_player.go` |
 | `CommunityGoalProgress.by_grade`, `audience.grade_levels` | F077 | Đã có (WP-S 2026-11-21) | `game.v1` `by_grade` |
-| Fixture Godot `src/game/tests/fixtures/{club,liveops,social_suggestions}` | Agent Godot | **Chưa** (không thuộc lượt server) | Sinh lại từ example sau khi merge |
+| Fixture Godot (contract) | Agent Godot | **Làm 2026-11-28** | `src/game/tests/fixtures/contract/{openapi,asyncapi}` (gen_fixtures.mjs: 18 schema F111, 3 response example, mẫu tất định `event.*`/`season.track.updated`); giá trị mẫu trong `tests/fakes/f111_fixtures.gd`; test `tests/contract/test_f111_fixtures.gd` |
 
 - Fixture `src/game/tests/fixtures/{club,liveops,social_suggestions}/*.json` sinh lại từ example sau khi delta merge; test contract parse mọi example ([GODOT_ARCHITECTURE §12](../../../docs/08-game-client/GODOT_ARCHITECTURE.md)).
 - Kiểm (owner backend): `make specs-lint`, `make specs-breaking`, `make gen MOD=chat`, `make gen MOD=game`, `make gen MOD=identity`, `make test-contract`.

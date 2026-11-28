@@ -86,6 +86,7 @@ static func _friends(view: String, parent: Control, services: ServiceLocator, ht
 	await _frames(screen, 16)
 	match view:
 		"friends_join":
+			services.join_friend.self_state = func() -> Dictionary: return {"offline": false}
 			services.presence.handle_message("presence.friend.updated", F110Fixtures.ws("presence.friend.updated",
 				{"user_id": F111Fixtures.FRIEND_ONLINE, "status": "in_match", "activity": "battle", "area_id": "arena"}))
 			services.social.store.flush(Time.get_ticks_msec() + 5000)

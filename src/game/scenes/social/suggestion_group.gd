@@ -11,6 +11,9 @@ signal add_requested(user_id: String)
 
 ## Portrait side of a lớp 1–3 tile in touch-target units.
 const BIG_PORTRAIT: float = 1.5
+## On the compact phone canvas the tiles are a little smaller (three fit above the fold); tile width in portrait sides.
+const BIG_PORTRAIT_COMPACT: float = 1.25
+const TILE_WIDTH: float = 1.9
 
 var _list: Container = null
 var _empty: Control = null
@@ -55,9 +58,12 @@ func set_suggestions(list: Array[FriendSuggestionModel], pending: Dictionary, fa
 	_hint.visible = big and not list.is_empty()
 	_empty.visible = list.is_empty()
 	UiBuild.size_buttons(self)
+	var side: float = UiBuild.target() * (BIG_PORTRAIT_COMPACT if AppState.compact else BIG_PORTRAIT)
 	for b: Button in _portraits.values():
-		var side: float = UiBuild.target() * BIG_PORTRAIT
 		b.custom_minimum_size = Vector2(side, side)
+	for c: Control in _cards.values():
+		if c.name == "Suggestion" and big:
+			c.custom_minimum_size.x = side * TILE_WIDTH
 
 
 func count() -> int:
@@ -143,6 +149,12 @@ func _tile(s: FriendSuggestionModel, pending: bool) -> Control:
 	_add_details(box, s)
 	if pending:
 		box.add_child(FriendsUi.status("ui.friends.request_pending", "clock"))
+	# Centred under the portrait.
+	for node: Node in box.get_children():
+		if node is Label:
+			(node as Label).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		elif node is HBoxContainer:
+			(node as HBoxContainer).alignment = BoxContainer.ALIGNMENT_CENTER
 	return tile
 
 
