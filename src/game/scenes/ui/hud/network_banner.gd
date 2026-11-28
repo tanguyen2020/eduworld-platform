@@ -12,6 +12,8 @@ const KEY_DEGRADED: String = "ui.realtime.degraded"
 
 var client: GameRealtimeClient = null
 var notice_key: String = ""
+## F111: format args of the notice ("Em đã đến chỗ {nickname}").
+var notice_args: Dictionary = {}
 var _notice_left: float = 0.0
 
 @onready var _status: Label = %NetworkStatus
@@ -36,8 +38,9 @@ func bind(realtime: GameRealtimeClient) -> void:
 	_render()
 
 
-func show_hub_notice(key: String) -> void:
+func show_hub_notice(key: String, args: Dictionary = {}) -> void:
 	notice_key = key
+	notice_args = args
 	_notice_left = NOTICE_SEC
 	_render()
 
@@ -66,7 +69,7 @@ func _render() -> void:
 	var key: String = status_key()
 	_status.text = key
 	_status.visible = not key.is_empty()
-	_notice.text = notice_key
+	_notice.text = tr(notice_key).format(notice_args) if not notice_args.is_empty() else notice_key
 	_notice.visible = not notice_key.is_empty()
 	visible = _status.visible or _notice.visible
 

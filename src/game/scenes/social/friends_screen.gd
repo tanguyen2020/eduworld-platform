@@ -239,6 +239,8 @@ func _pairs() -> Array:
 		[social.refreshed_after_gone, _on_gone]]
 	if services != null and services.presence != null:
 		out.append([services.presence.hidden_changed, _on_hidden_changed])
+	if services != null and services.join_friend != null:
+		out.append([services.join_friend.busy_changed, _on_join_busy])
 	return out
 
 
@@ -255,10 +257,19 @@ func _render_friends() -> void:
 	# Compact: the profile gets half of the page, so two action buttons fit on a line (fewer lines to scroll).
 	_profile_scroll.size_flags_stretch_ratio = 1.0 if AppState.compact else 0.8
 	_profile.show_friend(s.friend(selected_id), s.presence_unknown)
+	_render_join()
 	var hidden: bool = services != null and services.presence != null and services.presence.hidden
 	_hidden_button.set_pressed_no_signal(hidden)
 	_hidden_button.icon = UiBuild.icon("eye_off" if hidden else "eye")
 	_hidden_state.text = "ui.friends.hidden_on" if hidden else "ui.friends.hidden_off"
+
+
+## F111-AC-02: "Tham gia bạn" of the friend on screen — grey with its reason when the friend cannot be joined now.
+func _render_join() -> void:
+	var join: JoinFriendService = services.join_friend if services != null else null
+	_profile.button(FriendProfilePanel.ACT_JOIN).visible = join != null
+	if join != null and not selected_id.is_empty():
+		_profile.set_join_state(join.availability(selected_id))
 
 
 func _render_find() -> void:
@@ -291,6 +302,10 @@ func _on_profile_action(action: StringName, user_id: String) -> void:
 	if f == null:
 		return
 	match action:
+		FriendProfilePanel.ACT_JOIN:
+			# F111-AC-01: the world takes over (zone change / hub join); the screen closes so the student sees it.
+			if services != null and services.join_friend != null and await services.join_friend.join(user_id):
+				close()
 		FriendProfilePanel.ACT_INVITE:
 			await social.invite_to_party(user_id)
 		FriendProfilePanel.ACT_REPORT:
@@ -363,6 +378,11 @@ func _on_hidden_toggled(on: bool) -> void:
 	if not await services.presence.set_hidden(on):
 		show_notice("ui.friends.offline")
 	_render_friends()
+
+
+func _on_join_busy(_busy: bool) -> void:
+	if visible:
+		_render_join()
 
 
 func _on_hidden_changed(_hidden: bool) -> void:

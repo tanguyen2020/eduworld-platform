@@ -4959,3 +4959,6 @@ msgstr "Cấp {tier}/{max}"
 
 msgid "ui.season.tier_label"
 msgstr "Cấp {tier}"
+
+msgid "ui.friends.join_unavailable.in_activity"
+msgstr "Bạn đang làm bài học, chờ chút nhé"

@@ -227,8 +227,8 @@ func show_banner(key: String, args: Dictionary = {}) -> void:
 
 
 ## F092: short hub notice (join refused, emote limits) under the network banner.
-func show_hub_notice(key: String) -> void:
-	_network.call("show_hub_notice", key)
+func show_hub_notice(key: String, args: Dictionary = {}) -> void:
+	_network.call("show_hub_notice", key, args)
 
 
 ## F096-AC-18: every button of the HUD whose touch target follows the grade band.

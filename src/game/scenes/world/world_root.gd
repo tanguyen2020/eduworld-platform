@@ -91,6 +91,8 @@ func _ready() -> void:
 	services.notifications.load_unread()
 	_bind_party(services)
 	_bind_arena(services)
+	# F111: the "Tham gia bạn" sentences (arrived next to the friend, area full, not now) as a short hub notice.
+	services.join_friend.notice_requested.connect(_on_join_notice)
 	_start_hub(services)
 	_benchmark.connect("finished", _on_benchmark_finished)
 	_start_quality()
@@ -101,6 +103,9 @@ func _exit_tree() -> void:
 	_unbind_party()
 	_unbind_arena()
 	_unbind_progression()
+	var locator_f111: ServiceLocator = AppState.services
+	if locator_f111 != null and locator_f111.join_friend.notice_requested.is_connected(_on_join_notice):
+		locator_f111.join_friend.notice_requested.disconnect(_on_join_notice)
 	for pair: Array in [[SceneRouter.area_entered, _on_area_entered], [SceneRouter.area_change_failed, _on_area_change_failed]]:
 		if (pair[0] as Signal).is_connected(pair[1] as Callable):
 			(pair[0] as Signal).disconnect(pair[1] as Callable)
@@ -371,6 +376,10 @@ func _on_position_corrected(position: Vector3) -> void:
 
 func _on_join_failed(code: String) -> void:
 	_hud.call("show_hub_notice", HubSync.join_notice_key(code))
+
+
+func _on_join_notice(key: String, args: Dictionary) -> void:
+	_hud.call("show_hub_notice", key, args)
 
 
 func _on_emote_failed(code: String) -> void:

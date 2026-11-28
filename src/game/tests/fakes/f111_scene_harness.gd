@@ -4,12 +4,13 @@ extends F110SceneHarness
 ## RealtimeHarness) plus the F111 routes of F111Fixtures and the F111 services rebuilt on the realtime harness:
 ## HubSync + JoinFriendService ("Tham gia bạn"; the zone change is a scripted `area_requester`), LiveEventService and
 ## SeasonTrackService (`event.*`, `season.track.updated`). `areas` records the zone changes asked; `area_result` is the
-## answer of the next one (OK, or FAILED with `area_code` like SceneRouter emitting `area_change_failed`).
+## answer of the next one (OK, or FAILED: the requester returns `area_code` like SceneRouter emitting `area_change_failed`).
 
 var now_sec: int = 0
 var areas: Array[Dictionary] = []
 var area_result: Error = OK
-var area_code: String = ""
+## Code of a refused zone change (SceneRouter `area_change_failed`).
+var area_code: String = "AREA_LOCKED"
 ## Area the world shows (the current zone of JoinFriendService).
 var current_area: String = "main_hub"
 
@@ -32,14 +33,14 @@ func start(band: String = "g1_3", online: bool = true) -> void:
 
 ## Scripted SceneRouter.request_area: records the call; OK → the world joins the hub of the new area with the follow id
 ## (as WorldRoot does on `area_entered`).
-func _request_area(area_id: String, args: Dictionary) -> Error:
+func _request_area(area_id: String, args: Dictionary) -> String:
 	areas.append({"area_id": area_id, "args": args.duplicate()})
 	await (Engine.get_main_loop() as SceneTree).process_frame
 	if area_result != OK:
-		return area_result
+		return area_code
 	current_area = area_id
 	services.hub.enter_area(area_id, "", String(args.get("follow_user_id", "")))
-	return OK
+	return ""
 
 
 ## Delivers a realtime message (AsyncAPI shape) as the dispatcher would; `hub.*` / `system.*` go through the client.

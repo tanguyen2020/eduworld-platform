@@ -4959,3 +4959,6 @@ msgstr "Tier {tier}/{max}"
 
 msgid "ui.season.tier_label"
 msgstr "Tier {tier}"
+
+msgid "ui.friends.join_unavailable.in_activity"
+msgstr "Your friend is in a lesson, wait a little"

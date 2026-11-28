@@ -5,9 +5,12 @@ extends PanelContainer
 ## grade or a learning result (AGENTS R16, ADR-0095) — and the big action buttons: "Mời party", "Tắt tiếng", "Chặn",
 ## "Báo cáo" (hidden without the F119 report sheet), "Hủy kết bạn". Each safety action is one tap here + one confirmation
 ## (≤ 2 taps, STUDENT_GAME_UX §9). UI only: the friends screen acts on `action_requested` (AGENTS R1).
+## F111-AC-02 (T015): "Tham gia bạn" first — grey with the reason in words under the buttons when the friend cannot be
+## joined (`set_join_state`, JoinAvailability; never colour alone).
 
 signal action_requested(action: StringName, user_id: String)
 
+const ACT_JOIN: StringName = &"join"
 const ACT_INVITE: StringName = &"invite"
 const ACT_MUTE: StringName = &"mute"
 const ACT_BLOCK: StringName = &"block"
@@ -15,6 +18,7 @@ const ACT_REPORT: StringName = &"report"
 const ACT_REMOVE: StringName = &"remove"
 ## [action, label key, icon, variation].
 const ACTIONS: Array = [
+	[ACT_JOIN, "ui.friends.join_friend", "forward_light", &""],
 	[ACT_INVITE, "ui.friends.invite_party", "party", &""],
 	[ACT_MUTE, "ui.friends.mute", "sound_off", &"SecondaryButton"],
 	[ACT_BLOCK, "ui.friends.block", "block", &"SecondaryButton"],
@@ -33,6 +37,9 @@ var _presence_icon: TextureRect = null
 var _empty: Control = null
 var _card: VBoxContainer = null
 var _buttons: Dictionary = {}
+var _join_reason: Label = null
+var _join_state: StringName = &""
+var _busy: bool = false
 
 
 func _init() -> void:
@@ -83,6 +90,10 @@ func _init() -> void:
 	_presence.name = "Presence"
 	UiBuild.expand(_presence)
 	presence.add_child(_presence)
+	_join_reason = UiBuild.keep_words(UiBuild.label("", &"MutedLabel"))
+	_join_reason.name = "JoinReason"
+	_join_reason.visible = false
+	_card.add_child(_join_reason)
 	var actions: HFlowContainer = HFlowContainer.new()
 	actions.name = "Actions"
 	_card.add_child(actions)
@@ -120,8 +131,28 @@ func show_friend(f: FriendModel, presence_unknown: bool) -> void:
 
 
 func set_busy(busy: bool) -> void:
+	_busy = busy
 	for b: Button in _buttons.values():
 		b.disabled = busy
+	_apply_join()
+
+
+## F111-AC-02: &"" = "Tham gia bạn" may be pressed; else the button is grey and the reason is said in words.
+func set_join_state(reason: StringName) -> void:
+	_join_state = reason
+	_apply_join()
+
+
+func join_reason_text() -> String:
+	return tr(_join_reason.text) if _join_reason.visible else ""
+
+
+func _apply_join() -> void:
+	var b: Button = _buttons[ACT_JOIN] as Button
+	b.disabled = _busy or _join_state != &""
+	_join_reason.text = JoinAvailability.reason_key(_join_state) if _join_state != &"" else ""
+	_join_reason.visible = _join_state != &""
+	b.tooltip_text = _join_reason.text
 
 
 func button(action: StringName) -> Button:

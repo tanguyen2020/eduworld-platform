@@ -228,6 +228,10 @@ func _clear_f110() -> void:
 ## F111 services (GODOT_ARCHITECTURE §4): built with the ApiClient / RealtimeClient; session refusals go to F061.
 func _init_f111(rest: RestApiClient) -> void:
 	join_friend = JoinFriendService.new(hub, social)
+	# F111-AC-02: the student cannot join while offline or in an exam / boss / challenge (AppState.blocking_activity).
+	join_friend.self_state = func() -> Dictionary:
+		return {"offline": social.is_offline() or realtime == null or not realtime.is_online(),
+			"blocking": AppState.blocking_activity, "exam": exam.in_progress()}
 	clubs = ClubService.new(rest, telemetry)
 	clubs.access_denied.connect(_on_access_denied)
 	live_events = LiveEventService.new(rest, realtime, telemetry)
