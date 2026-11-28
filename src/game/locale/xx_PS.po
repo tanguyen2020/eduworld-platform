@@ -1514,6 +1514,9 @@ msgstr "[!! Ŵĥöĺë ɱáţçĥ ~~~~~ !!]"
 msgid "ui.chat.tab.team"
 msgstr "[!! Ţëáɱ ~~ !!]"
 
+msgid "ui.chat.title.club"
+msgstr "[!! Çĺüƀ çĥáţ ~~~~ !!]"
+
 msgid "ui.chat.title.direct"
 msgstr "[!! Pŕïváţë ɱëššáğëš ~~~~~~~ !!]"
 
@@ -1540,6 +1543,231 @@ msgstr "[!! 99+ ~~ !!]"
 
 msgid "ui.chat.you"
 msgstr "[!! {nickname} (ýöü) ~~~~~~~ !!]"
+
+msgid "ui.club.accept"
+msgstr "[!! Åççëþţ ~~~ !!]"
+
+msgid "ui.club.back"
+msgstr "[!! Ɓáçķ ~~ !!]"
+
+msgid "ui.club.chat"
+msgstr "[!! Çĺüƀ çĥáţ ~~~~ !!]"
+
+msgid "ui.club.create"
+msgstr "[!! Çŕëáţë á çĺüƀ ~~~~~~ !!]"
+
+msgid "ui.club.created_pending"
+msgstr "[!! Ýöüŕ çĺüƀ ïš ŵáïţïñğ ƒöŕ ţĥë šçĥööĺ ţö áþþŕövë ïţ ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.decline"
+msgstr "[!! Đëçĺïñë ~~~ !!]"
+
+msgid "ui.club.discover"
+msgstr "[!! Šüğğëšţëđ çĺüƀš ~~~~~~ !!]"
+
+msgid "ui.club.discover_none"
+msgstr "[!! Ñö çĺüƀ ţö ĵöïñ ŕïğĥţ ñöŵ. ~~~~~~~~~~~ !!]"
+
+msgid "ui.club.event_when"
+msgstr "[!! {date} áţ {time} ~~~~~~~ !!]"
+
+msgid "ui.club.events_none"
+msgstr "[!! Ñöţĥïñğ öñ ţĥë çáĺëñđáŕ ýëţ. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.form.approval_note"
+msgstr "[!! Ţĥë šçĥööĺ áþþŕövëš ţĥë çĺüƀ ƀëƒöŕë ïţ öþëñš. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.form.blocked"
+msgstr "[!! Ţĥë ñáɱë öŕ ţĥë ţëxţ ïš ñöţ öķáý. Pĺëášë çĥáñğë ïţ. ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.form.counter"
+msgstr "[!! {n}/{max} ~~~~ !!]"
+
+msgid "ui.club.form.description"
+msgstr "[!! Åƀöüţ (öþţïöñáĺ) ~~~~~~~ !!]"
+
+msgid "ui.club.form.icon"
+msgstr "[!! Ïçöñ ~~ !!]"
+
+msgid "ui.club.form.name"
+msgstr "[!! Çĺüƀ ñáɱë ~~~~ !!]"
+
+msgid "ui.club.form.name_hint"
+msgstr "[!! 2 ţö 64 çĥáŕáçţëŕš ~~~~~~~~ !!]"
+
+msgid "ui.club.form.name_short"
+msgstr "[!! Ţĥë ñáɱë ñëëđš áţ ĺëášţ 2 çĥáŕáçţëŕš ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.form.submit"
+msgstr "[!! Çŕëáţë ~~~ !!]"
+
+msgid "ui.club.form.title"
+msgstr "[!! Ñëŵ çĺüƀ ~~~~ !!]"
+
+msgid "ui.club.form.type"
+msgstr "[!! Çĺüƀ ţýþë ~~~~ !!]"
+
+msgid "ui.club.goal.metric.activities_completed"
+msgstr "[!! Åçţïvïţïëš ţĥë çĺüƀ çöɱþĺëţëđ ~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.goal.metric.boss_defeated"
+msgstr "[!! Ɓöššëš ţĥë çĺüƀ đëƒëáţëđ ~~~~~~~~~~ !!]"
+
+msgid "ui.club.goal.metric.discoveries_found"
+msgstr "[!! Đïšçövëŕïëš ţĥë çĺüƀ ƒöüñđ ~~~~~~~~~~~ !!]"
+
+msgid "ui.club.goal.metric.minutes_learning"
+msgstr "[!! Mïñüţëš ţĥë çĺüƀ ĺëáŕñëđ ~~~~~~~~~~ !!]"
+
+msgid "ui.club.goal.metric.quests_completed"
+msgstr "[!! Qüëšţš ţĥë çĺüƀ çöɱþĺëţëđ ~~~~~~~~~~ !!]"
+
+msgid "ui.club.goal.mine"
+msgstr "[!! Ýöü áđđëđ {n} ~~~~~~ !!]"
+
+msgid "ui.club.goal.progress"
+msgstr "[!! {progress}/{target} ~~~~~~~~ !!]"
+
+msgid "ui.club.goals_none"
+msgstr "[!! Ñö ğöáĺ ţĥïš ŵëëķ ýëţ. ~~~~~~~~~ !!]"
+
+msgid "ui.club.gone"
+msgstr "[!! Ţĥïš çĺüƀ ïš ñö ĺöñğëŕ ĥëŕë. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.invitation_line"
+msgstr "[!! {nickname} ïñvïţëđ ýöü ţö {club} ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.invitations"
+msgstr "[!! Çĺüƀ ïñvïţáţïöñš ~~~~~~~ !!]"
+
+msgid "ui.club.invite"
+msgstr "[!! Ïñvïţë ƒŕïëñđš ~~~~~~ !!]"
+
+msgid "ui.club.invite_done"
+msgstr "[!! Ïñvïţëđ ~~~ !!]"
+
+msgid "ui.club.invite_failed"
+msgstr "[!! Ñöţ ïñvïţëđ ~~~~~ !!]"
+
+msgid "ui.club.invite_none"
+msgstr "[!! Ýöü ĥávë ñö ƒŕïëñđš ţö ïñvïţë ýëţ. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.invite_picked"
+msgstr "[!! Pïçķëđ {count}/{max} ~~~~~~~~ !!]"
+
+msgid "ui.club.invite_send"
+msgstr "[!! Šëñđ ïñvïţáţïöñš ~~~~~~~ !!]"
+
+msgid "ui.club.invite_sent_count"
+msgstr "[!! Ïñvïţáţïöñš šëñţ ţö {count} ƒŕïëñđš ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.invite_title"
+msgstr "[!! Ïñvïţë ƒŕïëñđš ţö ţĥë çĺüƀ ~~~~~~~~~~~ !!]"
+
+msgid "ui.club.join_request"
+msgstr "[!! Åšķ ţö ĵöïñ ~~~~~ !!]"
+
+msgid "ui.club.joined"
+msgstr "[!! Ŵëĺçöɱë ţö {club}! ~~~~~~~~ !!]"
+
+msgid "ui.club.leave"
+msgstr "[!! Ĺëávë çĺüƀ ~~~~ !!]"
+
+msgid "ui.club.leave_confirm"
+msgstr "[!! Ĺëávë {club}? ~~~~~~ !!]"
+
+msgid "ui.club.leave_hint"
+msgstr "[!! Ýöü çáñ ášķ ţö ĵöïñ áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.left"
+msgstr "[!! Ýöü ĺëƒţ ţĥë çĺüƀ. ~~~~~~~~ !!]"
+
+msgid "ui.club.members_count"
+msgstr "[!! {count}/{max} ɱëɱƀëŕš ~~~~~~~~~ !!]"
+
+msgid "ui.club.members_more"
+msgstr "[!! Šĥöŵ ɱöŕë ɱëɱƀëŕš ~~~~~~~ !!]"
+
+msgid "ui.club.mine"
+msgstr "[!! Mý çĺüƀš ~~~~ !!]"
+
+msgid "ui.club.mine_none"
+msgstr "[!! Ýöü áŕë ñöţ ïñ á çĺüƀ ýëţ. ~~~~~~~~~~~ !!]"
+
+msgid "ui.club.not_enabled"
+msgstr "[!! Ýöüŕ šçĥööĺ ĥáš ñöţ öþëñëđ çĺüƀ çŕëáţïöñ ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.open"
+msgstr "[!! Öþëñ ~~ !!]"
+
+msgid "ui.club.pending_approval"
+msgstr "[!! Ŵáïţïñğ ƒöŕ ţĥë šçĥööĺ ţö áþþŕövë ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.read_only"
+msgstr "[!! Ţĥïš çĺüƀ ïš ĺöçķëđ ƒöŕ ñöŵ. Ýöü çáñ šţïĺĺ ĺööķ áţ ïţ. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.request_accept"
+msgstr "[!! Åççëþţ ~~~ !!]"
+
+msgid "ui.club.request_line"
+msgstr "[!! {nickname} ŵáñţš ţö ĵöïñ ~~~~~~~~~~ !!]"
+
+msgid "ui.club.request_pending"
+msgstr "[!! Ŵáïţïñğ ƒöŕ áþþŕöváĺ ~~~~~~~~ !!]"
+
+msgid "ui.club.request_reject"
+msgstr "[!! Đëçĺïñë ~~~ !!]"
+
+msgid "ui.club.request_sent"
+msgstr "[!! Ŕëqüëšţ šëñţ. Pĺëášë ŵáïţ ƒöŕ áþþŕöváĺ! ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.requests"
+msgstr "[!! Ŕëqüëšţš ~~~~ !!]"
+
+msgid "ui.club.requests_none"
+msgstr "[!! Ñö ŕëqüëšţš ýëţ. ~~~~~~~ !!]"
+
+msgid "ui.club.role.member"
+msgstr "[!! Mëɱƀëŕ ~~~ !!]"
+
+msgid "ui.club.role.officer"
+msgstr "[!! Öƒƒïçëŕ ~~~ !!]"
+
+msgid "ui.club.role.owner"
+msgstr "[!! Öŵñëŕ ~~ !!]"
+
+msgid "ui.club.section.events"
+msgstr "[!! Çáĺëñđáŕ ~~~~ !!]"
+
+msgid "ui.club.section.goals"
+msgstr "[!! Ğöáĺš ~~ !!]"
+
+msgid "ui.club.section.members"
+msgstr "[!! Mëɱƀëŕš ~~~ !!]"
+
+msgid "ui.club.status.active"
+msgstr "[!! Åçţïvë ~~~ !!]"
+
+msgid "ui.club.status.archived"
+msgstr "[!! Åŕçĥïvëđ, vïëŵ öñĺý ~~~~~~~~ !!]"
+
+msgid "ui.club.status.locked"
+msgstr "[!! Ĺöçķëđ, vïëŵ öñĺý ~~~~~~~ !!]"
+
+msgid "ui.club.status.pending_approval"
+msgstr "[!! Ŵáïţïñğ ƒöŕ ţĥë šçĥööĺ ţö áþþŕövë ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.club.type.competition_team"
+msgstr "[!! Çöɱþëţïţïöñ ţëáɱ ~~~~~~~ !!]"
+
+msgid "ui.club.type.interest_group"
+msgstr "[!! Ïñţëŕëšţ ğŕöüþ ~~~~~~ !!]"
+
+msgid "ui.club.type.school_club"
+msgstr "[!! Šçĥööĺ çĺüƀ ~~~~~ !!]"
+
+msgid "ui.club.type.subject_club"
+msgstr "[!! Šüƀĵëçţ çĺüƀ ~~~~~ !!]"
 
 msgid "ui.collection.back"
 msgstr "[!! Åĺĺ çöĺĺëçţïöñš ~~~~~~ !!]"
@@ -1700,8 +1928,20 @@ msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ ţŕïëš ţöđáý, çö�
 msgid "ui.error.CHALLENGE_NOT_ELIGIBLE"
 msgstr "[!! Ţĥïš çĥáĺĺëñğë ïš ñöţ öþëñ ƒöŕ ýöü ŕïğĥţ ñöŵ. ~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.CHAT_CONTENT_BLOCKED"
+msgstr "[!! Ţĥïš ţëxţ ïš ñöţ öķáý. Pĺëášë çĥáñğë ïţ. ~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.CLIENT_VERSION_UNSUPPORTED"
 msgstr "[!! Ţĥë ğáɱë ñëëđš ţö ƀë üþđáţëđ ţö á ñëŵ vëŕšïöñ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.CLUB_FULL"
+msgstr "[!! Ţĥïš çĺüƀ ïš ƒüĺĺ. ~~~~~~~~ !!]"
+
+msgid "ui.error.CLUB_LIMIT_REACHED"
+msgstr "[!! Ýöü áŕë áĺŕëáđý ïñ áš ɱáñý çĺüƀš áš ýöü çáñ ƀë. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.CLUB_NOT_APPROVED"
+msgstr "[!! Ţĥïš çĺüƀ ïš ñöţ áþþŕövëđ ýëţ. ~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.CONFLICT"
 msgstr "[!! Šöɱëţĥïñğ çĥáñğëđ, þĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~ !!]"
@@ -1711,6 +1951,15 @@ msgstr "[!! Ïţ ïš ŕëšţ ţïɱë. ẸđüŴöŕĺđ ŵïĺĺ öþëñ á�
 
 msgid "ui.error.EQUIP_SLOT_INVALID"
 msgstr "[!! Ţĥïš ïţëɱ çáñ'ţ ğö ţĥëŕë. Pĺëášë ţŕý áñöţĥëŕ ŵáý. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.EVENT_ENDED"
+msgstr "[!! Ţĥïš ëvëñţ ĥáš ëñđëđ. ~~~~~~~~~ !!]"
+
+msgid "ui.error.EVENT_MILESTONE_NOT_REACHED"
+msgstr "[!! Ñöţ ëñöüğĥ þöïñţš ƒöŕ ţĥïš ɱïĺëšţöñë ýëţ. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.EVENT_NOT_AVAILABLE"
+msgstr "[!! Ţĥïš ëvëñţ ïš ñöţ áváïĺáƀĺë áñý ɱöŕë. ~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.EXAM_ACTIVE_ON_OTHER_DEVICE"
 msgstr "[!! Ţĥïš ţëšţ ïš öþëñ öñ áñöţĥëŕ đëvïçë. ~~~~~~~~~~~~~~~ !!]"
@@ -1817,6 +2066,9 @@ msgstr "[!! Ýöüŕ šëššïöñ ĥáš ëñđëđ, þĺëášë šïğñ ï�
 msgid "ui.error.ROOM_NOT_MEMBER"
 msgstr "[!! Ýöü áŕë ñö ĺöñğëŕ ïñ ţĥïš ƀáţţĺë. ~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.SEASON_TIER_NOT_REACHED"
+msgstr "[!! Ýöü ĥávë ñöţ ŕëáçĥëđ ţĥïš ţïëŕ ýëţ. ~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.error.SHOP_ITEM_UNAVAILABLE"
 msgstr "[!! Ţĥïš ïţëɱ ŵïĺĺ ƀë ƀáçķ ñëxţ šëášöñ. ~~~~~~~~~~~~~~ !!]"
 
@@ -1855,6 +2107,162 @@ msgstr "[!! Šöɱë ïñƒöŕɱáţïöñ ïš ñöţ váĺïđ. Pĺëášë �
 
 msgid "ui.error.generic"
 msgstr "[!! Šöɱëţĥïñğ ŵëñţ ŵŕöñğ. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.events.all_done"
+msgstr "[!! Ğŕëáţ! Ýöü ƒïñïšĥëđ ţöđáý'š qüëšţš. Ţïɱë ƒöŕ á ĺïţţĺë ŕëšţ ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.events.back"
+msgstr "[!! Ɓáçķ ~~ !!]"
+
+msgid "ui.events.by_grade"
+msgstr "[!! Ğŕáđëš ĥëĺþïñğ ~~~~~~ !!]"
+
+msgid "ui.events.claim"
+msgstr "[!! Çĺáïɱ ~~ !!]"
+
+msgid "ui.events.claim_until"
+msgstr "[!! Çĺáïɱ ŕëŵáŕđš ƀëƒöŕë {date} ~~~~~~~~~~~ !!]"
+
+msgid "ui.events.claimed"
+msgstr "[!! Çĺáïɱëđ ~~~ !!]"
+
+msgid "ui.events.community_goal.platform"
+msgstr "[!! Ẹvëŕýöñë'š ğöáĺ ~~~~~~ !!]"
+
+msgid "ui.events.community_goal.school"
+msgstr "[!! Ŵĥöĺë-šçĥööĺ ğöáĺ ~~~~~~~ !!]"
+
+msgid "ui.events.community_goal.tenant"
+msgstr "[!! Šĥáŕëđ ğöáĺ ~~~~~ !!]"
+
+msgid "ui.events.contributed"
+msgstr "[!! Ýöü ĥëĺþëđ ~~~~ !!]"
+
+msgid "ui.events.daily_full"
+msgstr "[!! Ýöü ĥávë ëáŕñëđ ţöđáý'š ëvëñţ þöïñţš. ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.events.daily_remaining"
+msgstr "[!! Ýöü çáñ šţïĺĺ ëáŕñ {points} þöïñţš ţöđáý ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.events.ended"
+msgstr "[!! Ẹñđëđ ~~ !!]"
+
+msgid "ui.events.ended_auto_grant"
+msgstr "[!! Ŕëŵáŕđš ýöü ĥávë ñöţ çĺáïɱëđ ŵïĺĺ ƀë šëñţ áüţöɱáţïçáĺĺý ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.events.go"
+msgstr "[!! Ğö ~ !!]"
+
+msgid "ui.events.goal_mark"
+msgstr "[!! {pct}% ~~~ !!]"
+
+msgid "ui.events.goal_progress"
+msgstr "[!! {progress}/{target} ~~~~~~~~ !!]"
+
+msgid "ui.events.grade"
+msgstr "[!! Ğŕáđë {grade} ~~~~~~ !!]"
+
+msgid "ui.events.hud"
+msgstr "[!! Ẹvëñţš ~~~ !!]"
+
+msgid "ui.events.hud.tooltip"
+msgstr "[!! Ẹvëñţš, đáïĺý qüëšţš áñđ ţĥë šëášöñ ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.events.join"
+msgstr "[!! Ĵöïñ ~~ !!]"
+
+msgid "ui.events.join_done"
+msgstr "[!! Ýöü ĵöïñëđ ţĥë ëvëñţ! ~~~~~~~~~ !!]"
+
+msgid "ui.events.joined"
+msgstr "[!! Ýöü ĵöïñëđ ~~~~ !!]"
+
+msgid "ui.events.just_reached"
+msgstr "[!! Ĵüšţ ŕëáçĥëđ! ~~~~~~ !!]"
+
+msgid "ui.events.last_day"
+msgstr "[!! Ţöđáý ïš ţĥë ĺášţ đáý ~~~~~~~~~ !!]"
+
+msgid "ui.events.milestone_points"
+msgstr "[!! {points} þöïñţš ~~~~~~ !!]"
+
+msgid "ui.events.milestones"
+msgstr "[!! Mïĺëšţöñëš ~~~~ !!]"
+
+msgid "ui.events.new_dot"
+msgstr "[!! Šöɱëţĥïñğ ñëŵ ~~~~~~ !!]"
+
+msgid "ui.events.none"
+msgstr "[!! Ñö ëvëñţš ŕïğĥţ ñöŵ. Çöɱë ƀáçķ ĺáţëŕ! ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.events.not_contributed"
+msgstr "[!! Đö áñ ëvëñţ qüëšţ ţö ĥëĺþ ~~~~~~~~~~ !!]"
+
+msgid "ui.events.not_reached"
+msgstr "[!! Ñöţ ýëţ ~~~ !!]"
+
+msgid "ui.events.points"
+msgstr "[!! Ẹvëñţ þöïñţš: {points} ~~~~~~~~~ !!]"
+
+msgid "ui.events.quest_generic"
+msgstr "[!! Ẹvëñţ qüëšţ ~~~~~ !!]"
+
+msgid "ui.events.quest_status.active"
+msgstr "[!! Ïñ þŕöğŕëšš ~~~~~ !!]"
+
+msgid "ui.events.quest_status.available"
+msgstr "[!! Ñöţ šţáŕţëđ ~~~~~ !!]"
+
+msgid "ui.events.quest_status.completed"
+msgstr "[!! Đöñë ~~ !!]"
+
+msgid "ui.events.quest_status.expired"
+msgstr "[!! Ẹxþïŕëđ ~~~ !!]"
+
+msgid "ui.events.quest_steps"
+msgstr "[!! {done}/{total} šţëþš ~~~~~~~~ !!]"
+
+msgid "ui.events.quests"
+msgstr "[!! Ẹvëñţ qüëšţš ~~~~~ !!]"
+
+msgid "ui.events.quests_none"
+msgstr "[!! Ñö qüëšţš ýëţ. ~~~~~~ !!]"
+
+msgid "ui.events.reset_time"
+msgstr "[!! Ŕëšëţš áţ {time} öñ {date} ~~~~~~~~~~~ !!]"
+
+msgid "ui.events.reward_got"
+msgstr "[!! Ýöü ğöţ: {rewards} ~~~~~~~~ !!]"
+
+msgid "ui.events.suspended"
+msgstr "[!! Ẹvëñţ þáüšëđ ~~~~~ !!]"
+
+msgid "ui.events.tab.events"
+msgstr "[!! Ẹvëñţš ~~~ !!]"
+
+msgid "ui.events.tab.season"
+msgstr "[!! Šëášöñ ~~~ !!]"
+
+msgid "ui.events.tab.today"
+msgstr "[!! Ţöđáý ~~ !!]"
+
+msgid "ui.events.tab.week"
+msgstr "[!! Ţĥïš ŵëëķ ~~~~ !!]"
+
+msgid "ui.events.time_left_days"
+msgstr "[!! {days} đáýš ĺëƒţ ~~~~~~~ !!]"
+
+msgid "ui.events.title"
+msgstr "[!! Ẹvëñţš ~~~ !!]"
+
+msgid "ui.events.upcoming"
+msgstr "[!! Çöɱïñğ šööñ ~~~~~ !!]"
+
+msgid "ui.events.view"
+msgstr "[!! Vïëŵ ~~ !!]"
+
+msgid "ui.events.week_done"
+msgstr "[!! Ğŕëáţ! Ýöü ƒïñïšĥëđ ţĥïš ŵëëķ'š qüëšţš. ~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.exam.auto_submitted"
 msgstr "[!! Ţïɱë ïš üþ — ýöüŕ ţëšţ ŵáš šüƀɱïţţëđ áüţöɱáţïçáĺĺý ~~~~~~~~~~~~~~~~~~~~ !!]"
@@ -2174,6 +2582,42 @@ msgstr "[!! Ĥïđë ɱý šţáţüš ~~~~~~ !!]"
 msgid "ui.friends.invite_party"
 msgstr "[!! Ïñvïţë ţö þáŕţý ~~~~~~ !!]"
 
+msgid "ui.friends.join_friend"
+msgstr "[!! Ĵöïñ ƒŕïëñđ ~~~~~ !!]"
+
+msgid "ui.friends.join_not_now"
+msgstr "[!! Ýöü çáñ'ţ ĵöïñ ýöüŕ ƒŕïëñđ ŕïğĥţ ñöŵ ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.join_pending"
+msgstr "[!! Ğöïñğ ţö ýöüŕ ƒŕïëñđ… ~~~~~~~~~ !!]"
+
+msgid "ui.friends.join_room_full"
+msgstr "[!! Ýöüŕ ƒŕïëñđ'š áŕëá ïš ƒüĺĺ ~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.join_unavailable.busy"
+msgstr "[!! Ýöü áŕë ïñ ţĥë ɱïđđĺë öƒ áñ áçţïvïţý ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.join_unavailable.exam"
+msgstr "[!! Ýöüŕ ƒŕïëñđ ïš ţáķïñğ á ţëšţ ~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.join_unavailable.in_activity"
+msgstr "[!! Ýöüŕ ƒŕïëñđ ïš ïñ á ĺëššöñ, ŵáïţ á ĺïţţĺë ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.join_unavailable.in_match"
+msgstr "[!! Ýöüŕ ƒŕïëñđ ïš ïñ á ɱáţçĥ, ŵáïţ á ĺïţţĺë ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.join_unavailable.no_area"
+msgstr "[!! Ýöüŕ ƒŕïëñđ ïš ñöţ ïñ áñ áŕëá ŕïğĥţ ñöŵ ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.join_unavailable.offline"
+msgstr "[!! Ýöüŕ ƒŕïëñđ ïš ñöţ öñĺïñë ~~~~~~~~~~ !!]"
+
+msgid "ui.friends.join_unavailable.self_offline"
+msgstr "[!! Ýöü áŕë öƒƒĺïñë ~~~~~~ !!]"
+
+msgid "ui.friends.joined"
+msgstr "[!! Ýöü áŕë ñëxţ ţö {nickname} ~~~~~~~~~~~ !!]"
+
 msgid "ui.friends.level"
 msgstr "[!! Ĺëvëĺ {level} ~~~~~~ !!]"
 
@@ -2261,8 +2705,32 @@ msgstr "[!! Ýöü ĥávë ñöţ šëñţ áñý ŕëqüëšţš. ~~~~~~~~~~~~~
 msgid "ui.friends.requests.outgoing"
 msgstr "[!! Ýöü šëñţ ~~~~ !!]"
 
+msgid "ui.friends.suggest.context.club"
+msgstr "[!! Šáɱë çĺüƀ ~~~~ !!]"
+
+msgid "ui.friends.suggest.context.coop"
+msgstr "[!! Qüëšţ ţöğëţĥëŕ ~~~~~~ !!]"
+
+msgid "ui.friends.suggest.context.match"
+msgstr "[!! Šáɱë ɱáţçĥ ~~~~ !!]"
+
+msgid "ui.friends.suggest.context.party"
+msgstr "[!! Šáɱë þáŕţý ~~~~ !!]"
+
+msgid "ui.friends.suggest.empty"
+msgstr "[!! Ñöƀöđý þĺáýëđ ŵïţĥ ýöü ŕëçëñţĺý. Ţŕý á ƒŕïëñđ çöđë! ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.suggest.tap_hint"
+msgstr "[!! Ţáþ á þĺáýëŕ ţö šëñđ á ƒŕïëñđ ŕëqüëšţ ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.friends.suggest.title"
+msgstr "[!! Pĺáýëđ ţöğëţĥëŕ ŕëçëñţĺý ~~~~~~~~~~ !!]"
+
 msgid "ui.friends.tab.blocked"
 msgstr "[!! Ɓĺöçķëđ ~~~ !!]"
+
+msgid "ui.friends.tab.clubs"
+msgstr "[!! Çĺüƀš ~~ !!]"
 
 msgid "ui.friends.tab.find"
 msgstr "[!! Fïñđ ƒŕïëñđš ~~~~~ !!]"
@@ -2380,6 +2848,9 @@ msgstr "[!! Fŕöɱ šçĥööĺ ~~~~~ !!]"
 
 msgid "ui.hub.assignments_count"
 msgstr "[!! Fŕöɱ šçĥööĺ ({count}) ~~~~~~~~~ !!]"
+
+msgid "ui.hub.board.events"
+msgstr "[!! Ẹvëñţ ƀöáŕđ ~~~~~ !!]"
 
 msgid "ui.hub.board.exam_sessions"
 msgstr "[!! Ẹxáɱ Ŕööɱ ~~~~ !!]"
@@ -2927,6 +3398,9 @@ msgstr "[!! Åŕëñá ~~ !!]"
 msgid "ui.menu.challenges"
 msgstr "[!! Çĥáĺĺëñğë Möüñţáïñ ~~~~~~~~ !!]"
 
+msgid "ui.menu.events"
+msgstr "[!! Ẹvëñţš ~~~ !!]"
+
 msgid "ui.menu.friends"
 msgstr "[!! Fŕïëñđš ~~~ !!]"
 
@@ -3016,6 +3490,15 @@ msgstr "[!! Ñöţïƒïçáţïöñš ~~~~~~ !!]"
 
 msgid "ui.notification.bell_unread"
 msgstr "[!! Ýöü ĥávë {count} ñëŵ ñöţïƒïçáţïöñš ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.club.approved"
+msgstr "[!! Ýöüŕ çĺüƀ ŵáš áþþŕövëđ ƀý ţĥë šçĥööĺ! ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.club.invitation_received"
+msgstr "[!! {nickname} ïñvïţëđ ýöü ţö á çĺüƀ ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.club.join_request_received"
+msgstr "[!! {nickname} ŵáñţš ţö ĵöïñ ýöüŕ çĺüƀ ~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.notification.friend.request_received"
 msgstr "[!! {nickname} ŵáñţš ţö ƀë ýöüŕ ƒŕïëñđ ~~~~~~~~~~~~~~ !!]"
@@ -3871,6 +4354,45 @@ msgstr "[!! Ýöüŕ ğáɱë ïš ŵáïţïñğ. Ţüŕñ šïđëŵáýš ţ�
 
 msgid "ui.rotate.title"
 msgstr "[!! Ţüŕñ ýöüŕ þĥöñë šïđëŵáýš ţö þĺáý! ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.season.auto_grant"
+msgstr "[!! Ŕëŵáŕđš ýöü ĥávë ñöţ çĺáïɱëđ áŕë šëñţ ŵĥëñ ţĥë šëášöñ ëñđš ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.season.daily_remaining"
+msgstr "[!! Ýöü çáñ šţïĺĺ ëáŕñ {points} šëášöñ þöïñţš ţöđáý ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.season.ends"
+msgstr "[!! Ţĥë šëášöñ ëñđš öñ {date} ~~~~~~~~~~ !!]"
+
+msgid "ui.season.free"
+msgstr "[!! Fŕëë ƒöŕ ëvëŕýöñë ~~~~~~~ !!]"
+
+msgid "ui.season.history"
+msgstr "[!! Pášţ šëášöñš ~~~~~ !!]"
+
+msgid "ui.season.history_auto"
+msgstr "[!! Ŕëŵáŕđš öƒ ţïëŕ {tiers} ŵëŕë šëñţ áüţöɱáţïçáĺĺý ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.season.history_line"
+msgstr "[!! {season}: ţïëŕ {tier} ~~~~~~~~~ !!]"
+
+msgid "ui.season.history_none"
+msgstr "[!! Ñö þášţ šëášöñ ýëţ. ~~~~~~~~ !!]"
+
+msgid "ui.season.milestone"
+msgstr "[!! Mïĺëšţöñë ţïëŕ ~~~~~~ !!]"
+
+msgid "ui.season.no_season"
+msgstr "[!! Å ñëŵ šëášöñ šţáŕţš šööñ ~~~~~~~~~~ !!]"
+
+msgid "ui.season.points"
+msgstr "[!! {points} šëášöñ þöïñţš ~~~~~~~~~ !!]"
+
+msgid "ui.season.tier"
+msgstr "[!! Ţïëŕ {tier}/{max} ~~~~~~~ !!]"
+
+msgid "ui.season.tier_label"
+msgstr "[!! Ţïëŕ {tier} ~~~~~ !!]"
 
 msgid "ui.settings.about"
 msgstr "[!! Åƀöüţ ~~ !!]"

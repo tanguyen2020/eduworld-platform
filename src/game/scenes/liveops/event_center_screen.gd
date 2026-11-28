@@ -24,6 +24,8 @@ const TABS: Array = [
 ## Lớp 1–3: only these tabs (STUDENT_GAME_UX_SOCIAL §9).
 const G1_3_TABS: PackedStringArray = [TAB_TODAY, TAB_EVENTS]
 const NOTICE_SEC: float = 4.0
+## F111-AC-32: the 3D world behind is suspended while the Event center is open (a still, blurred snapshot — QualityManager).
+const SUSPEND_REASON: StringName = &"event_center"
 
 var services: ServiceLocator = null
 var live: LiveEventService = null
@@ -44,6 +46,7 @@ var _today: QuestDayTab = null
 var _week: QuestDayTab = null
 var _season: SeasonTab = null
 var season_service: SeasonTrackService = null
+var _render_queued: bool = false
 
 
 func _ready() -> void:
@@ -56,6 +59,7 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	_unbind()
+	QualityManager.resume_world(SUSPEND_REASON)
 
 
 ## WorldRoot: `ui_requested("event_center", {tab, id})`.
@@ -64,6 +68,7 @@ func open(args: Dictionary = {}) -> void:
 		services = AppState.get_services()
 	_bind()
 	show()
+	QualityManager.suspend_world(SUSPEND_REASON)
 	UiMotion.pop_in(_ui["window"] as Control, Settings.reduce_motion)
 	var wanted: String = String(args.get("tab", ""))
 	var id: String = String(args.get("id", ""))
@@ -79,6 +84,7 @@ func open(args: Dictionary = {}) -> void:
 func close() -> void:
 	hide()
 	_unbind()
+	QualityManager.resume_world(SUSPEND_REASON)
 	closed.emit()
 
 
@@ -261,11 +267,11 @@ func _unbind() -> void:
 
 
 func _pairs() -> Array:
-	var out: Array = [[live.store.events_changed, render], [live.store.detail_changed, _on_detail_changed],
+	var out: Array = [[live.store.events_changed, _queue_render], [live.store.detail_changed, _on_detail_changed],
 		[live.notice_requested, show_notice], [live.detail_closed, _on_detail_closed], [live.reward_claimed, _on_rewards],
 		[live.busy_changed, _on_busy]]
 	if season_service != null:
-		out.append_array([[season_service.store.track_changed, _render_season], [season_service.store.history_changed, _render_season],
+		out.append_array([[season_service.store.track_changed, _queue_render], [season_service.store.history_changed, _queue_render],
 			[season_service.notice_requested, show_notice], [season_service.reward_claimed, _on_rewards],
 			[season_service.busy_changed, _on_season_busy]])
 	return out
@@ -307,7 +313,22 @@ func _quest_names() -> Dictionary:
 
 func _on_detail_changed(event_id: String) -> void:
 	if visible and event_id == detail_id:
-		_render_events()
+		_queue_render()
+
+
+## F111-AC-32: store updates (realtime points, a season update…) are drawn once at the end of the frame, however many
+## arrive in it — the handler of a server message stays cheap.
+func _queue_render() -> void:
+	if _render_queued:
+		return
+	_render_queued = true
+	_flush_render.call_deferred()
+
+
+func _flush_render() -> void:
+	_render_queued = false
+	if visible:
+		render()
 
 
 func _on_detail_closed(event_id: String, _key: String) -> void:

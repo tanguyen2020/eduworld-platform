@@ -33,9 +33,6 @@ func _init() -> void:
 
 func show_tiers(tiers: Array[SeasonTierModel]) -> void:
 	_tiers = tiers
-	for t: int in _items.keys():
-		_release(t)
-	_items.clear()
 	var tile: Vector2 = _tile_size()
 	_strip.custom_minimum_size = Vector2(tile.x * float(_tiers.size()), tile.y)
 	custom_minimum_size.y = tile.y + float(UiTokens.COMPONENT_ICON_SIZE) * 0.5
@@ -108,6 +105,8 @@ func _layout() -> void:
 			node.visible = true
 			_bind(node, _tiers[i])
 			_items[t] = node
+		elif String(node.get_meta("state", "")) != _state_of(_tiers[i]):
+			_bind(node, _tiers[i])
 		node.position = Vector2(tile.x * float(i), 0.0)
 		node.size = Vector2(tile.x - float(UiTokens.COMPONENT_ICON_SIZE) * 0.25, tile.y)
 
@@ -121,8 +120,14 @@ func _release(t: int) -> void:
 	_pool.append(node)
 
 
+## What a tile shows (re-bound only when it changed).
+static func _state_of(t: SeasonTierModel) -> String:
+	return "%d|%s|%s|%d" % [t.tier, t.reached, t.claimed, t.rewards.size()]
+
+
 func _bind(node: PanelContainer, t: SeasonTierModel) -> void:
 	UiBuild.clear(node)
+	node.set_meta("state", _state_of(t))
 	node.name = "Tier%d" % t.tier
 	node.theme_type_variation = &"QuestCard" if t.milestone else &"PartyMemberCard"
 	var box: VBoxContainer = UiBuild.vbox()

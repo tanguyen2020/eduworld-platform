@@ -1503,6 +1503,9 @@ msgstr ""
 msgid "ui.chat.tab.team"
 msgstr ""
 
+msgid "ui.chat.title.club"
+msgstr ""
+
 msgid "ui.chat.title.direct"
 msgstr ""
 
@@ -1528,6 +1531,183 @@ msgid "ui.chat.unread_many"
 msgstr ""
 
 msgid "ui.chat.you"
+msgstr ""
+
+msgid "ui.club.accept"
+msgstr ""
+
+msgid "ui.club.back"
+msgstr ""
+
+msgid "ui.club.chat"
+msgstr ""
+
+msgid "ui.club.create"
+msgstr ""
+
+msgid "ui.club.created_pending"
+msgstr ""
+
+msgid "ui.club.decline"
+msgstr ""
+
+msgid "ui.club.discover"
+msgstr ""
+
+msgid "ui.club.discover_none"
+msgstr ""
+
+msgid "ui.club.event_when"
+msgstr ""
+
+msgid "ui.club.events_none"
+msgstr ""
+
+msgid "ui.club.form.approval_note"
+msgstr ""
+
+msgid "ui.club.form.blocked"
+msgstr ""
+
+msgid "ui.club.form.counter"
+msgstr ""
+
+msgid "ui.club.form.description"
+msgstr ""
+
+msgid "ui.club.form.icon"
+msgstr ""
+
+msgid "ui.club.form.name"
+msgstr ""
+
+msgid "ui.club.form.name_hint"
+msgstr ""
+
+msgid "ui.club.form.name_short"
+msgstr ""
+
+msgid "ui.club.form.submit"
+msgstr ""
+
+msgid "ui.club.form.title"
+msgstr ""
+
+msgid "ui.club.form.type"
+msgstr ""
+
+msgid "ui.club.goal.mine"
+msgstr ""
+
+msgid "ui.club.goal.progress"
+msgstr ""
+
+msgid "ui.club.goals_none"
+msgstr ""
+
+msgid "ui.club.gone"
+msgstr ""
+
+msgid "ui.club.invitation_line"
+msgstr ""
+
+msgid "ui.club.invitations"
+msgstr ""
+
+msgid "ui.club.invite"
+msgstr ""
+
+msgid "ui.club.invite_done"
+msgstr ""
+
+msgid "ui.club.invite_failed"
+msgstr ""
+
+msgid "ui.club.invite_none"
+msgstr ""
+
+msgid "ui.club.invite_picked"
+msgstr ""
+
+msgid "ui.club.invite_send"
+msgstr ""
+
+msgid "ui.club.invite_sent_count"
+msgstr ""
+
+msgid "ui.club.invite_title"
+msgstr ""
+
+msgid "ui.club.join_request"
+msgstr ""
+
+msgid "ui.club.joined"
+msgstr ""
+
+msgid "ui.club.leave"
+msgstr ""
+
+msgid "ui.club.leave_confirm"
+msgstr ""
+
+msgid "ui.club.leave_hint"
+msgstr ""
+
+msgid "ui.club.left"
+msgstr ""
+
+msgid "ui.club.members_count"
+msgstr ""
+
+msgid "ui.club.members_more"
+msgstr ""
+
+msgid "ui.club.mine"
+msgstr ""
+
+msgid "ui.club.mine_none"
+msgstr ""
+
+msgid "ui.club.not_enabled"
+msgstr ""
+
+msgid "ui.club.open"
+msgstr ""
+
+msgid "ui.club.read_only"
+msgstr ""
+
+msgid "ui.club.request_accept"
+msgstr ""
+
+msgid "ui.club.request_line"
+msgstr ""
+
+msgid "ui.club.request_pending"
+msgstr ""
+
+msgid "ui.club.request_reject"
+msgstr ""
+
+msgid "ui.club.request_sent"
+msgstr ""
+
+msgid "ui.club.requests"
+msgstr ""
+
+msgid "ui.club.requests_none"
+msgstr ""
+
+msgid "ui.club.section.events"
+msgstr ""
+
+msgid "ui.club.section.goals"
+msgstr ""
+
+msgid "ui.club.section.members"
+msgstr ""
+
+msgid "ui.club.status.pending_approval"
 msgstr ""
 
 msgid "ui.collection.back"
@@ -1701,6 +1881,9 @@ msgstr ""
 msgid "ui.error.EQUIP_SLOT_INVALID"
 msgstr ""
 
+msgid "ui.error.EVENT_NOT_AVAILABLE"
+msgstr ""
+
 msgid "ui.error.EXAM_ACTIVE_ON_OTHER_DEVICE"
 msgstr ""
 
@@ -1843,6 +2026,141 @@ msgid "ui.error.VALIDATION_FAILED"
 msgstr ""
 
 msgid "ui.error.generic"
+msgstr ""
+
+msgid "ui.events.all_done"
+msgstr ""
+
+msgid "ui.events.back"
+msgstr ""
+
+msgid "ui.events.by_grade"
+msgstr ""
+
+msgid "ui.events.claim"
+msgstr ""
+
+msgid "ui.events.claim_until"
+msgstr ""
+
+msgid "ui.events.claimed"
+msgstr ""
+
+msgid "ui.events.contributed"
+msgstr ""
+
+msgid "ui.events.daily_full"
+msgstr ""
+
+msgid "ui.events.daily_remaining"
+msgstr ""
+
+msgid "ui.events.ended"
+msgstr ""
+
+msgid "ui.events.ended_auto_grant"
+msgstr ""
+
+msgid "ui.events.go"
+msgstr ""
+
+msgid "ui.events.goal_mark"
+msgstr ""
+
+msgid "ui.events.goal_progress"
+msgstr ""
+
+msgid "ui.events.grade"
+msgstr ""
+
+msgid "ui.events.hud"
+msgstr ""
+
+msgid "ui.events.hud.tooltip"
+msgstr ""
+
+msgid "ui.events.join"
+msgstr ""
+
+msgid "ui.events.join_done"
+msgstr ""
+
+msgid "ui.events.just_reached"
+msgstr ""
+
+msgid "ui.events.last_day"
+msgstr ""
+
+msgid "ui.events.milestone_points"
+msgstr ""
+
+msgid "ui.events.milestones"
+msgstr ""
+
+msgid "ui.events.new_dot"
+msgstr ""
+
+msgid "ui.events.none"
+msgstr ""
+
+msgid "ui.events.not_contributed"
+msgstr ""
+
+msgid "ui.events.not_reached"
+msgstr ""
+
+msgid "ui.events.points"
+msgstr ""
+
+msgid "ui.events.quest_generic"
+msgstr ""
+
+msgid "ui.events.quest_status.available"
+msgstr ""
+
+msgid "ui.events.quest_steps"
+msgstr ""
+
+msgid "ui.events.quests"
+msgstr ""
+
+msgid "ui.events.quests_none"
+msgstr ""
+
+msgid "ui.events.reset_time"
+msgstr ""
+
+msgid "ui.events.reward_got"
+msgstr ""
+
+msgid "ui.events.suspended"
+msgstr ""
+
+msgid "ui.events.tab.events"
+msgstr ""
+
+msgid "ui.events.tab.season"
+msgstr ""
+
+msgid "ui.events.tab.today"
+msgstr ""
+
+msgid "ui.events.tab.week"
+msgstr ""
+
+msgid "ui.events.time_left_days"
+msgstr ""
+
+msgid "ui.events.title"
+msgstr ""
+
+msgid "ui.events.upcoming"
+msgstr ""
+
+msgid "ui.events.view"
+msgstr ""
+
+msgid "ui.events.week_done"
 msgstr ""
 
 msgid "ui.exam.auto_submitted"
@@ -2163,6 +2481,21 @@ msgstr ""
 msgid "ui.friends.invite_party"
 msgstr ""
 
+msgid "ui.friends.join_friend"
+msgstr ""
+
+msgid "ui.friends.join_not_now"
+msgstr ""
+
+msgid "ui.friends.join_pending"
+msgstr ""
+
+msgid "ui.friends.join_room_full"
+msgstr ""
+
+msgid "ui.friends.joined"
+msgstr ""
+
 msgid "ui.friends.level"
 msgstr ""
 
@@ -2250,7 +2583,31 @@ msgstr ""
 msgid "ui.friends.requests.outgoing"
 msgstr ""
 
+msgid "ui.friends.suggest.context.club"
+msgstr ""
+
+msgid "ui.friends.suggest.context.coop"
+msgstr ""
+
+msgid "ui.friends.suggest.context.match"
+msgstr ""
+
+msgid "ui.friends.suggest.context.party"
+msgstr ""
+
+msgid "ui.friends.suggest.empty"
+msgstr ""
+
+msgid "ui.friends.suggest.tap_hint"
+msgstr ""
+
+msgid "ui.friends.suggest.title"
+msgstr ""
+
 msgid "ui.friends.tab.blocked"
+msgstr ""
+
+msgid "ui.friends.tab.clubs"
 msgstr ""
 
 msgid "ui.friends.tab.find"
@@ -2368,6 +2725,9 @@ msgid "ui.hub.assignments"
 msgstr ""
 
 msgid "ui.hub.assignments_count"
+msgstr ""
+
+msgid "ui.hub.board.events"
 msgstr ""
 
 msgid "ui.hub.board.exam_sessions"
@@ -2914,6 +3274,9 @@ msgid "ui.menu.arena"
 msgstr ""
 
 msgid "ui.menu.challenges"
+msgstr ""
+
+msgid "ui.menu.events"
 msgstr ""
 
 msgid "ui.menu.friends"
@@ -3832,6 +4195,42 @@ msgid "ui.rotate.hint"
 msgstr ""
 
 msgid "ui.rotate.title"
+msgstr ""
+
+msgid "ui.season.auto_grant"
+msgstr ""
+
+msgid "ui.season.daily_remaining"
+msgstr ""
+
+msgid "ui.season.ends"
+msgstr ""
+
+msgid "ui.season.free"
+msgstr ""
+
+msgid "ui.season.history"
+msgstr ""
+
+msgid "ui.season.history_auto"
+msgstr ""
+
+msgid "ui.season.history_line"
+msgstr ""
+
+msgid "ui.season.milestone"
+msgstr ""
+
+msgid "ui.season.no_season"
+msgstr ""
+
+msgid "ui.season.points"
+msgstr ""
+
+msgid "ui.season.tier"
+msgstr ""
+
+msgid "ui.season.tier_label"
 msgstr ""
 
 msgid "ui.settings.about"

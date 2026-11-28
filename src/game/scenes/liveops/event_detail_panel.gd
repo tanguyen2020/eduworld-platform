@@ -80,8 +80,8 @@ func _init() -> void:
 	points.add_child(_points)
 	_daily = UiBuild.keep_words(UiBuild.data_label("", &"MutedLabel"))
 	_daily.name = "DailyLeft"
-	_daily.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	points.add_child(_daily)
+	# Its own line under the points tag: in a flow a wrapping label gets no width and cuts its words.
+	add_child(_daily)
 	_join = UiBuild.button("ui.events.join", "check")
 	_join.name = "Join"
 	_join.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN

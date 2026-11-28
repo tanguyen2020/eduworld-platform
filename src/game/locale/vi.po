@@ -4604,7 +4604,7 @@ msgid "ui.club.pending_approval"
 msgstr "Đang chờ nhà trường duyệt"
 
 msgid "ui.club.read_only"
-msgstr "Club đang tạm khóa. Em chỉ xem được thôi."
+msgstr "Club đang tạm khóa. Em vẫn xem được club nhé."
 
 msgid "ui.club.request_accept"
 msgstr "Chấp nhận"
@@ -4962,3 +4962,6 @@ msgstr "Cấp {tier}"
 
 msgid "ui.friends.join_unavailable.in_activity"
 msgstr "Bạn đang làm bài học, chờ chút nhé"
+
+msgid "ui.club.members_more"
+msgstr "Xem thêm thành viên"

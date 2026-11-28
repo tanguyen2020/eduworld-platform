@@ -19,6 +19,7 @@ var _history_title: Control = null
 var _history: VBoxContainer = null
 var _season_box: VBoxContainer = null
 var _shown_id: String = ""
+var _shown_history: Array[SeasonHistoryItemModel] = []
 
 
 func _init() -> void:
@@ -90,6 +91,9 @@ func show_track(store: SeasonTrackStore, _band: String) -> void:
 		if _shown_id != t.season_id:
 			_shown_id = t.season_id
 			_track.scroll_to.call_deferred(maxi(1, t.tier))
+	if store.history == _shown_history and _history.get_child_count() > 0:
+		return
+	_shown_history = store.history
 	UiBuild.clear(_history)
 	for h: SeasonHistoryItemModel in store.history:
 		var row: PanelContainer = UiBuild.panel(&"PartyMemberCard")

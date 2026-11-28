@@ -37,6 +37,8 @@ func open_form(needs_approval: bool) -> void:
 	club_type = ClubModel.STUDENT_TYPES[0]
 	icon_id = "club_icon_star"
 	_note.visible = needs_approval
+	# Added hidden during the screen's build: take the whole screen now (anchors alone kept a zero size).
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_error.visible = false
 	_busy = false
 	show()

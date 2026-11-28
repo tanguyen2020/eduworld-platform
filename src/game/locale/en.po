@@ -4604,7 +4604,7 @@ msgid "ui.club.pending_approval"
 msgstr "Waiting for the school to approve"
 
 msgid "ui.club.read_only"
-msgstr "This club is locked. You can only look."
+msgstr "This club is locked for now. You can still look at it."
 
 msgid "ui.club.request_accept"
 msgstr "Accept"
@@ -4962,3 +4962,6 @@ msgstr "Tier {tier}"
 
 msgid "ui.friends.join_unavailable.in_activity"
 msgstr "Your friend is in a lesson, wait a little"
+
+msgid "ui.club.members_more"
+msgstr "Show more members"

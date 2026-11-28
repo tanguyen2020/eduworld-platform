@@ -23,6 +23,8 @@ const ACTIONS: Array = [
 	[ACT_JOIN, "ui.club.join_request", "invite_light", &""],
 	[ACT_LEAVE, "ui.club.leave", "exit", &"SecondaryButton"],
 ]
+## F111-AC-32: members shown a page at a time ("Xem thêm thành viên" adds the next page) — a 50-member club stays light.
+const MEMBERS_PAGE: int = 20
 const SECTION_MEMBERS: String = "members"
 const SECTION_GOALS: String = "goals"
 const SECTION_EVENTS: String = "events"
@@ -48,6 +50,7 @@ var _chips: Dictionary = {}
 var _content: VBoxContainer = null
 var _requests: Dictionary = {}
 var _store: ClubStore = null
+var _members_shown: int = MEMBERS_PAGE
 
 
 func _init() -> void:
@@ -122,6 +125,8 @@ func show_page(store: ClubStore, requests_denied: bool, chat_available: bool) ->
 	var c: ClubModel = store.page
 	if c == null:
 		return
+	if club_id != c.club_id:
+		_members_shown = MEMBERS_PAGE
 	club_id = c.club_id
 	_icon.texture = UiBuild.icon(c.icon_name())
 	_name.text = c.name
@@ -211,8 +216,16 @@ func _render_section() -> void:
 		return
 	match section:
 		SECTION_MEMBERS:
-			for m: ClubMemberModel in _store.members:
-				_content.add_child(_member_row(m))
+			for i: int in mini(_members_shown, _store.members.size()):
+				_content.add_child(_member_row(_store.members[i]))
+			if _store.members.size() > _members_shown:
+				var more: Button = UiBuild.button("ui.club.members_more", "arrow_down", &"SecondaryButton")
+				more.name = "MoreMembers"
+				more.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+				more.pressed.connect(func() -> void:
+					_members_shown += MEMBERS_PAGE
+					_render_section())
+				_content.add_child(more)
 		SECTION_GOALS:
 			for g: ClubGoalModel in _store.goals:
 				_content.add_child(_goal_card(g))

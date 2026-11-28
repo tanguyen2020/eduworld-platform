@@ -215,6 +215,7 @@ func _open_chat(club: ClubModel) -> void:
 		(ui["body"] as VBoxContainer).add_child(chat_dock)
 		chat_dock.bind_services(screen.services.chat, screen.services.social, screen.services.reports)
 	chat_window.visible = true
+	chat_window.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	chat_dock.show_club(club.club_id, club.chat_channel_id)
 	chat_dock.expand()
 
