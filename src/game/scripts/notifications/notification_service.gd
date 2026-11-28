@@ -58,12 +58,16 @@ const ACTION_SCREENS: Dictionary = {
 	"open_profile": [&"journey", {}],
 	"open_friend_requests": [&"friends", {"tab": "requests"}],
 	"open_party_invitation": [&"party", {"view": "invitations"}],
+	# F111 (F123 deep link, contracts §6): a club invitation / join request / approval opens the club tab of Bạn bè on
+	# that club; `open_event` (reserved, no event notification in Release 1.0) opens the Event center on that event.
+	"open_club": [&"friends", {"tab": "clubs"}],
+	"open_event": [&"event_center", {"tab": "events"}],
 }
 ## F109-AC-26: kinds that open a screen without an `action` — the screen gets the `ref_id` as `tournament_id`
 ## (`ref_type = tournament`).
 const KIND_SCREENS: Dictionary = {"tournament_update": [&"arena", {"tab": "tournaments"}]}
 ## Actions whose target screen needs the action id (F102: the invitation to show, or "Lời mời đã hết hạn").
-const ACTION_WITH_ID: PackedStringArray = ["open_party_invitation"]
+const ACTION_WITH_ID: PackedStringArray = ["open_party_invitation", "open_club", "open_event"]
 
 var realtime: GameRealtimeClient = null
 ## Settings autoload (or a test stub) holding the local popup switch `notification_popups` (spec Assumptions:

@@ -154,6 +154,11 @@ func _url(req: ApiRequest) -> String:
 	if not req.query.is_empty():
 		var parts: PackedStringArray = []
 		for key: Variant in req.query.keys():
+			# F111: an array value is the OpenAPI default form style (explode): `status=live&status=upcoming`.
+			if req.query[key] is Array or req.query[key] is PackedStringArray:
+				for item: Variant in req.query[key]:
+					parts.append("%s=%s" % [String(key).uri_encode(), str(item).uri_encode()])
+				continue
 			parts.append("%s=%s" % [String(key).uri_encode(), str(req.query[key]).uri_encode()])
 		url += "?" + "&".join(parts)
 	return url

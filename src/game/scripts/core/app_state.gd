@@ -44,6 +44,8 @@ var mock_badge: CanvasLayer = null
 ## F069 (data-model §2): the timed activity running now (`challenge` in Starting…Result, `exam` in the runner, `boss`
 ## phase in F110); "" = none. LevelUpQueue keeps S07 waiting while it is set (F069-AC-03, AC-UX-0701).
 var blocking_activity: StringName = &""
+## F111: `policies.social` of the bootstrap, display only ("Tạo club" shown or not); absent → club creation disabled.
+var social_policy: SocialPolicyModel = SocialPolicyModel.from_policies({})
 var _blockers: Array[StringName] = []
 
 
@@ -75,6 +77,7 @@ func set_player(value: Dictionary) -> void:
 	player = value
 	feature_flags = value.get("feature_flags", feature_flags) as Dictionary
 	school_policies = value.get("policies", school_policies) as Dictionary
+	social_policy = SocialPolicyModel.from_policies(school_policies)
 	get_services().start_session(value)
 	player_changed.emit(player)
 	set_grade_band(String(value.get("grade_band", "")))
@@ -114,6 +117,7 @@ func set_game_profile(display: Dictionary) -> void:
 func clear_player() -> void:
 	player = {}
 	school_policies = {}
+	social_policy = SocialPolicyModel.from_policies({})
 	feature_flags = {}
 	spawn_point_id = ""
 	if services != null:

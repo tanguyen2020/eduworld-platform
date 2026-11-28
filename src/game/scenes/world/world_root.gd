@@ -308,7 +308,8 @@ func _on_avatar_saved(config: AvatarConfigModel) -> void:
 
 # ---------- F092 hub multiplayer ----------
 
-func _start_hub(services: ServiceLocator) -> void:
+## F111: `follow_user_id` (a "Tham gia bạn" zone change) makes the first join of the zone ask for the friend's instance.
+func _start_hub(services: ServiceLocator, follow_user_id: String = "") -> void:
 	hub = services.hub
 	remote_players = RemotePlayerSync.new()
 	remote_players.name = "RemotePlayers"
@@ -322,7 +323,7 @@ func _start_hub(services: ServiceLocator) -> void:
 	hub.position_corrected.connect(_on_position_corrected)
 	hub.join_failed.connect(_on_join_failed)
 	hub.emote_failed.connect(_on_emote_failed)
-	hub.enter_area(zone.area_id, AppState.spawn_point_id)
+	hub.enter_area(zone.area_id, AppState.spawn_point_id, follow_user_id)
 
 
 func _stop_hub() -> void:
@@ -504,7 +505,7 @@ func _on_area_entered(area_id: String, scene_ref: String, _spawn_point_id: Strin
 	_emotes.anim_driver = (zone.player as PlayerController).anim_driver if zone.player is PlayerController else null
 	if not bool(enter.get("party_session", false)):
 		SceneRouter.leave_party_session()
-	_start_hub(services)
+	_start_hub(services, SceneRouter.follow_of(enter))
 	ZoneLoader.check_budget(area_id if not area_id.is_empty() else zone.area_id, Time.get_ticks_msec() - _area_started_ms)
 
 

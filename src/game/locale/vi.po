@@ -4443,3 +4443,519 @@ msgstr "Cùng nhóm giải"
 
 msgid "ui.friends.view"
 msgstr "Xem"
+
+msgid "ui.chat.title.club"
+msgstr "Chat club"
+
+msgid "ui.club.accept"
+msgstr "Đồng ý"
+
+msgid "ui.club.back"
+msgstr "Quay lại"
+
+msgid "ui.club.chat"
+msgstr "Chat club"
+
+msgid "ui.club.create"
+msgstr "Tạo club"
+
+msgid "ui.club.created_pending"
+msgstr "Club đang chờ nhà trường duyệt"
+
+msgid "ui.club.decline"
+msgstr "Từ chối"
+
+msgid "ui.club.discover"
+msgstr "Club đề xuất"
+
+msgid "ui.club.discover_none"
+msgstr "Chưa có club nào để xin vào."
+
+msgid "ui.club.event_when"
+msgstr "Ngày {date}, lúc {time}"
+
+msgid "ui.club.events_none"
+msgstr "Chưa có lịch nào."
+
+msgid "ui.club.form.approval_note"
+msgstr "Club sẽ chờ nhà trường duyệt trước khi mở."
+
+msgid "ui.club.form.blocked"
+msgstr "Tên hoặc lời giới thiệu chưa phù hợp. Em sửa lại nhé."
+
+msgid "ui.club.form.counter"
+msgstr "{n}/{max}"
+
+msgid "ui.club.form.description"
+msgstr "Giới thiệu (không bắt buộc)"
+
+msgid "ui.club.form.icon"
+msgstr "Biểu tượng"
+
+msgid "ui.club.form.name"
+msgstr "Tên club"
+
+msgid "ui.club.form.name_hint"
+msgstr "Từ 2 đến 64 ký tự"
+
+msgid "ui.club.form.name_short"
+msgstr "Tên club cần ít nhất 2 ký tự"
+
+msgid "ui.club.form.submit"
+msgstr "Tạo club"
+
+msgid "ui.club.form.title"
+msgstr "Tạo club mới"
+
+msgid "ui.club.form.type"
+msgstr "Loại club"
+
+msgid "ui.club.goal.metric.activities_completed"
+msgstr "Cả club hoàn thành bài học"
+
+msgid "ui.club.goal.metric.boss_defeated"
+msgstr "Boss cả club đã hạ"
+
+msgid "ui.club.goal.metric.discoveries_found"
+msgstr "Khám phá của cả club"
+
+msgid "ui.club.goal.metric.minutes_learning"
+msgstr "Phút học của cả club"
+
+msgid "ui.club.goal.metric.quests_completed"
+msgstr "Cả club hoàn thành nhiệm vụ"
+
+msgid "ui.club.goal.mine"
+msgstr "Em đã góp {n}"
+
+msgid "ui.club.goal.progress"
+msgstr "{progress}/{target}"
+
+msgid "ui.club.goals_none"
+msgstr "Club chưa có mục tiêu tuần này."
+
+msgid "ui.club.gone"
+msgstr "Club này không còn nữa."
+
+msgid "ui.club.invitation_line"
+msgstr "{nickname} mời em vào {club}"
+
+msgid "ui.club.invitations"
+msgstr "Lời mời vào club"
+
+msgid "ui.club.invite"
+msgstr "Mời bạn"
+
+msgid "ui.club.invite_done"
+msgstr "Đã mời"
+
+msgid "ui.club.invite_failed"
+msgstr "Chưa mời được"
+
+msgid "ui.club.invite_none"
+msgstr "Em chưa có bạn bè để mời."
+
+msgid "ui.club.invite_picked"
+msgstr "Đã chọn {count}/{max}"
+
+msgid "ui.club.invite_send"
+msgstr "Gửi lời mời"
+
+msgid "ui.club.invite_sent_count"
+msgstr "Đã gửi lời mời cho {count} bạn"
+
+msgid "ui.club.invite_title"
+msgstr "Mời bạn vào club"
+
+msgid "ui.club.join_request"
+msgstr "Xin vào"
+
+msgid "ui.club.joined"
+msgstr "Chào mừng em vào {club}!"
+
+msgid "ui.club.leave"
+msgstr "Rời club"
+
+msgid "ui.club.leave_confirm"
+msgstr "Rời {club}?"
+
+msgid "ui.club.leave_hint"
+msgstr "Em có thể xin vào lại sau."
+
+msgid "ui.club.left"
+msgstr "Em đã rời club."
+
+msgid "ui.club.members_count"
+msgstr "{count}/{max} thành viên"
+
+msgid "ui.club.mine"
+msgstr "Club của em"
+
+msgid "ui.club.mine_none"
+msgstr "Em chưa ở club nào."
+
+msgid "ui.club.not_enabled"
+msgstr "Trường em chưa mở tạo club"
+
+msgid "ui.club.open"
+msgstr "Xem"
+
+msgid "ui.club.pending_approval"
+msgstr "Đang chờ nhà trường duyệt"
+
+msgid "ui.club.read_only"
+msgstr "Club đang tạm khóa. Em chỉ xem được thôi."
+
+msgid "ui.club.request_accept"
+msgstr "Chấp nhận"
+
+msgid "ui.club.request_line"
+msgstr "{nickname} muốn vào club"
+
+msgid "ui.club.request_pending"
+msgstr "Đang chờ duyệt"
+
+msgid "ui.club.request_reject"
+msgstr "Từ chối"
+
+msgid "ui.club.request_sent"
+msgstr "Em đã xin vào club. Chờ duyệt nhé!"
+
+msgid "ui.club.requests"
+msgstr "Yêu cầu"
+
+msgid "ui.club.requests_none"
+msgstr "Chưa có yêu cầu nào."
+
+msgid "ui.club.role.member"
+msgstr "Thành viên"
+
+msgid "ui.club.role.officer"
+msgstr "Phó club"
+
+msgid "ui.club.role.owner"
+msgstr "Chủ club"
+
+msgid "ui.club.section.events"
+msgstr "Lịch"
+
+msgid "ui.club.section.goals"
+msgstr "Mục tiêu"
+
+msgid "ui.club.section.members"
+msgstr "Thành viên"
+
+msgid "ui.club.status.active"
+msgstr "Đang hoạt động"
+
+msgid "ui.club.status.archived"
+msgstr "Đã lưu trữ, chỉ xem"
+
+msgid "ui.club.status.locked"
+msgstr "Tạm khóa, chỉ xem"
+
+msgid "ui.club.status.pending_approval"
+msgstr "Đang chờ nhà trường duyệt"
+
+msgid "ui.club.type.competition_team"
+msgstr "Đội thi đấu"
+
+msgid "ui.club.type.interest_group"
+msgstr "Nhóm sở thích"
+
+msgid "ui.club.type.school_club"
+msgstr "Club của trường"
+
+msgid "ui.club.type.subject_club"
+msgstr "Club môn học"
+
+msgid "ui.error.CHAT_CONTENT_BLOCKED"
+msgstr "Nội dung này chưa phù hợp. Em sửa lại nhé."
+
+msgid "ui.error.CLUB_FULL"
+msgstr "Club đã đủ thành viên rồi."
+
+msgid "ui.error.CLUB_LIMIT_REACHED"
+msgstr "Em đã ở đủ số club tối đa rồi."
+
+msgid "ui.error.CLUB_NOT_APPROVED"
+msgstr "Club này chưa được nhà trường duyệt."
+
+msgid "ui.error.EVENT_ENDED"
+msgstr "Sự kiện đã kết thúc."
+
+msgid "ui.error.EVENT_MILESTONE_NOT_REACHED"
+msgstr "Em chưa đủ điểm để nhận mốc này."
+
+msgid "ui.error.EVENT_NOT_AVAILABLE"
+msgstr "Sự kiện này không còn nữa."
+
+msgid "ui.error.SEASON_TIER_NOT_REACHED"
+msgstr "Em chưa đạt cấp này."
+
+msgid "ui.events.all_done"
+msgstr "Tuyệt! Em đã xong nhiệm vụ hôm nay. Nghỉ ngơi chút nhé"
+
+msgid "ui.events.back"
+msgstr "Quay lại"
+
+msgid "ui.events.by_grade"
+msgstr "Các khối cùng góp sức"
+
+msgid "ui.events.claim"
+msgstr "Nhận"
+
+msgid "ui.events.claim_until"
+msgstr "Nhận thưởng trước ngày {date}"
+
+msgid "ui.events.claimed"
+msgstr "Đã nhận"
+
+msgid "ui.events.community_goal.platform"
+msgstr "Mục tiêu của mọi bạn"
+
+msgid "ui.events.community_goal.school"
+msgstr "Mục tiêu cả trường"
+
+msgid "ui.events.community_goal.tenant"
+msgstr "Mục tiêu chung"
+
+msgid "ui.events.contributed"
+msgstr "Em đã góp sức"
+
+msgid "ui.events.daily_full"
+msgstr "Hôm nay em đã nhận đủ điểm sự kiện."
+
+msgid "ui.events.daily_remaining"
+msgstr "Hôm nay em còn nhận được {points} điểm"
+
+msgid "ui.events.ended"
+msgstr "Đã kết thúc"
+
+msgid "ui.events.ended_auto_grant"
+msgstr "Phần thưởng chưa nhận sẽ được gửi tự động"
+
+msgid "ui.events.go"
+msgstr "Đi"
+
+msgid "ui.events.goal_mark"
+msgstr "{pct}%"
+
+msgid "ui.events.goal_progress"
+msgstr "{progress}/{target}"
+
+msgid "ui.events.grade"
+msgstr "Khối {grade}"
+
+msgid "ui.events.hud"
+msgstr "Sự kiện"
+
+msgid "ui.events.hud.tooltip"
+msgstr "Sự kiện, nhiệm vụ ngày và mùa"
+
+msgid "ui.events.join"
+msgstr "Tham gia"
+
+msgid "ui.events.join_done"
+msgstr "Em đã tham gia sự kiện!"
+
+msgid "ui.events.joined"
+msgstr "Em đã tham gia"
+
+msgid "ui.events.just_reached"
+msgstr "Mới đạt!"
+
+msgid "ui.events.last_day"
+msgstr "Hôm nay là ngày cuối"
+
+msgid "ui.events.milestone_points"
+msgstr "{points} điểm"
+
+msgid "ui.events.milestones"
+msgstr "Mốc thưởng"
+
+msgid "ui.events.new_dot"
+msgstr "Có nội dung mới"
+
+msgid "ui.events.none"
+msgstr "Hiện chưa có sự kiện nào. Quay lại sau nhé!"
+
+msgid "ui.events.not_contributed"
+msgstr "Làm nhiệm vụ sự kiện để góp sức nhé"
+
+msgid "ui.events.not_reached"
+msgstr "Chưa đạt"
+
+msgid "ui.events.points"
+msgstr "Điểm sự kiện: {points}"
+
+msgid "ui.events.quest_generic"
+msgstr "Nhiệm vụ sự kiện"
+
+msgid "ui.events.quest_status.active"
+msgstr "Đang làm"
+
+msgid "ui.events.quest_status.available"
+msgstr "Chưa nhận"
+
+msgid "ui.events.quest_status.completed"
+msgstr "Xong rồi"
+
+msgid "ui.events.quest_status.expired"
+msgstr "Đã hết hạn"
+
+msgid "ui.events.quest_steps"
+msgstr "{done}/{total} bước"
+
+msgid "ui.events.quests"
+msgstr "Nhiệm vụ sự kiện"
+
+msgid "ui.events.quests_none"
+msgstr "Chưa có nhiệm vụ nào."
+
+msgid "ui.events.reset_time"
+msgstr "Làm mới lúc {time}, ngày {date}"
+
+msgid "ui.events.reward_got"
+msgstr "Em nhận được: {rewards}"
+
+msgid "ui.events.suspended"
+msgstr "Sự kiện tạm dừng"
+
+msgid "ui.events.tab.events"
+msgstr "Sự kiện"
+
+msgid "ui.events.tab.season"
+msgstr "Mùa"
+
+msgid "ui.events.tab.today"
+msgstr "Hôm nay"
+
+msgid "ui.events.tab.week"
+msgstr "Tuần này"
+
+msgid "ui.events.time_left_days"
+msgstr "Còn {days} ngày"
+
+msgid "ui.events.title"
+msgstr "Sự kiện"
+
+msgid "ui.events.upcoming"
+msgstr "Sắp diễn ra"
+
+msgid "ui.events.view"
+msgstr "Xem"
+
+msgid "ui.events.week_done"
+msgstr "Tuyệt! Em đã xong nhiệm vụ tuần này."
+
+msgid "ui.friends.join_friend"
+msgstr "Tham gia bạn"
+
+msgid "ui.friends.join_not_now"
+msgstr "Chưa thể tham gia bạn lúc này"
+
+msgid "ui.friends.join_pending"
+msgstr "Đang đến chỗ bạn…"
+
+msgid "ui.friends.join_room_full"
+msgstr "Khu vực của bạn đã đầy"
+
+msgid "ui.friends.join_unavailable.busy"
+msgstr "Em đang làm dở một hoạt động"
+
+msgid "ui.friends.join_unavailable.exam"
+msgstr "Bạn đang làm bài kiểm tra"
+
+msgid "ui.friends.join_unavailable.in_match"
+msgstr "Bạn đang trong trận, chờ chút nhé"
+
+msgid "ui.friends.join_unavailable.no_area"
+msgstr "Chưa thấy bạn ở khu nào"
+
+msgid "ui.friends.join_unavailable.offline"
+msgstr "Bạn đang không trực tuyến"
+
+msgid "ui.friends.join_unavailable.self_offline"
+msgstr "Em đang mất mạng"
+
+msgid "ui.friends.joined"
+msgstr "Em đã đến chỗ {nickname}"
+
+msgid "ui.friends.suggest.context.club"
+msgstr "Cùng club"
+
+msgid "ui.friends.suggest.context.coop"
+msgstr "Cùng làm nhiệm vụ"
+
+msgid "ui.friends.suggest.context.match"
+msgstr "Cùng trận"
+
+msgid "ui.friends.suggest.context.party"
+msgstr "Cùng nhóm"
+
+msgid "ui.friends.suggest.empty"
+msgstr "Chưa có bạn nào vừa chơi cùng em. Thử Mã bạn bè nhé!"
+
+msgid "ui.friends.suggest.tap_hint"
+msgstr "Chạm vào bạn để kết bạn"
+
+msgid "ui.friends.suggest.title"
+msgstr "Vừa chơi cùng"
+
+msgid "ui.friends.tab.clubs"
+msgstr "Club"
+
+msgid "ui.hub.board.events"
+msgstr "Bảng tin sự kiện"
+
+msgid "ui.menu.events"
+msgstr "Sự kiện"
+
+msgid "ui.notification.club.approved"
+msgstr "Club của em đã được nhà trường duyệt!"
+
+msgid "ui.notification.club.invitation_received"
+msgstr "{nickname} mời em vào club"
+
+msgid "ui.notification.club.join_request_received"
+msgstr "{nickname} muốn vào club của em"
+
+msgid "ui.season.auto_grant"
+msgstr "Phần thưởng chưa nhận sẽ tự gửi khi hết mùa"
+
+msgid "ui.season.daily_remaining"
+msgstr "Hôm nay em còn nhận được {points} điểm mùa"
+
+msgid "ui.season.ends"
+msgstr "Mùa kết thúc ngày {date}"
+
+msgid "ui.season.free"
+msgstr "Miễn phí cho mọi bạn"
+
+msgid "ui.season.history"
+msgstr "Mùa trước"
+
+msgid "ui.season.history_auto"
+msgstr "Đã tự gửi thưởng cấp {tiers}"
+
+msgid "ui.season.history_line"
+msgstr "{season}: đạt cấp {tier}"
+
+msgid "ui.season.history_none"
+msgstr "Chưa có mùa trước."
+
+msgid "ui.season.milestone"
+msgstr "Cấp mốc"
+
+msgid "ui.season.no_season"
+msgstr "Mùa mới sắp bắt đầu"
+
+msgid "ui.season.points"
+msgstr "{points} điểm mùa"
+
+msgid "ui.season.tier"
+msgstr "Cấp {tier}/{max}"
+
+msgid "ui.season.tier_label"
+msgstr "Cấp {tier}"

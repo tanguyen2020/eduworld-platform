@@ -84,7 +84,9 @@ func is_changing_area() -> bool:
 
 ## Coroutine (F071-AC-12): `enterWorldArea` through WorldService → `ensure_bundle` → `area_entered`. Returns OK when the
 ## zone may be swapped; the refusal goes to `area_change_failed` (the HUD explains it, never the scene).
-func request_area(area_id: String, portal_id: String = "", world: WorldService = null) -> Error:
+## F111 ("Tham gia bạn" in another area): `args.follow_user_id` is handed to the world in the `enter` of `area_entered`, so
+## the hub join of the new zone asks for the friend's instance (F111-AC-01); without args nothing changes.
+func request_area(area_id: String, portal_id: String = "", world: WorldService = null, args: Dictionary = {}) -> Error:
 	if not _area_pending.is_empty():
 		return ERR_BUSY
 	if world == null:
@@ -108,12 +110,21 @@ func request_area(area_id: String, portal_id: String = "", world: WorldService =
 		_area_pending = ""
 		area_change_failed.emit(area_id, CODE_BUNDLE_MISSING, [])
 		return ERR_FILE_NOT_FOUND
-	var enter: Dictionary = result.body()
+	var enter: Dictionary = result.body().duplicate()
+	var follow_id: String = follow_of(args)
+	if not follow_id.is_empty():
+		enter["follow_user_id"] = follow_id
 	AppState.current_zone = area_id
 	AppState.spawn_point_id = String(enter.get("spawn_point_id", ""))
 	_area_pending = ""
 	area_entered.emit(area_id, scene_ref, AppState.spawn_point_id, enter)
 	return OK
+
+
+## F111: the friend id of `args` when it is a valid UUID, else "".
+static func follow_of(args: Dictionary) -> String:
+	var id: String = String(args.get("follow_user_id", ""))
+	return id if Uuid.is_valid(id) else ""
 
 
 ## The zone scene of a level bundle is loadable. PLACEHOLDER (R17, OQ-16): the greybox zones of M2 ship inside the

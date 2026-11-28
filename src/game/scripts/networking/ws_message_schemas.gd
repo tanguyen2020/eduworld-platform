@@ -142,6 +142,15 @@ const SCHEMAS: Dictionary = {
 	"quest.progress.updated": {"quest_id": "s64", "status": "s32", "?step_id": "s64", "?step_status": "s32",
 		"?party_progress": "obj"},
 	"presence.friend.updated": {"user_id": "s64", "status": "s32", "?activity": "s64", "?area_id": "s64"},
+	# F111: live-ops events (status, own points, community goal) and the free season track — the values replace the shown
+	# ones (ADR-0016); the models check the rest.
+	"event.status.changed": {"event_id": "s64", "event_run_id": "s64", "status": "s32", "?name": "obj"},
+	"event.progress.updated": {"event_id": "s64", "event_run_id": "s64", "event_points": "int", "?delta": "int",
+		"?daily_points_remaining": "int", "?milestones_reached": "arr"},
+	"event.community_goal.updated": {"goal_id": "s64", "target": "int", "progress": "int", "?event_run_id": "s64",
+		"?scope": "s32", "?milestone_reached": "int"},
+	"season.track.updated": {"season_id": "s64", "points": "int", "tier": "int", "?delta": "int", "?tier_reached": "bool",
+		"?daily_points_remaining": "int"},
 }
 
 

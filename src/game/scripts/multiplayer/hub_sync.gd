@@ -10,6 +10,10 @@ extends RefCounted
 ## - snapshots → SnapshotBuffer + Interpolator (F092-AC-12); joined/left/removed, emotes, appearance (AC-13/15/16);
 ## - `hub.instance.migrated` → new room id without reloading the scene; join errors → `join_failed(code)` (AC-17).
 ## Other players carry only nickname and avatar (PublicPlayerModel, R16).
+## F111 "Tham gia bạn": `enter_area(area_id, spawn_point, follow_user_id)` (after a zone change) or `follow(user_id)` (same
+## area) sends ONE `hub.instance.join` with `follow_user_id` (SOCIAL_SYSTEM §4.2, F091-AC-05) — the next join of the area
+## is ordinary again; a refused follow (ROOM_FULL, PERMISSION_DENIED, NOT_FOUND) is `follow_failed(code)`, never the
+## generic hub notice (JoinFriendService explains it without telling where the friend is, R16).
 
 signal room_assigned(room: HubRoomState)
 signal remote_player_joined(eid: int, player: PublicPlayerModel, state: SnapshotSample)
@@ -19,6 +23,8 @@ signal remote_player_emoted(eid: int, emote_id: String)
 signal position_corrected(position: Vector3)
 signal room_migrated(room_id: String)
 signal join_failed(code: String)
+## F111: the server refused the join next to a friend (`hub.instance.join` with `follow_user_id`).
+signal follow_failed(code: String)
 signal emote_failed(code: String)
 
 const PREFIX: String = "hub"
@@ -52,6 +58,8 @@ var interpolator: Interpolator = Interpolator.new()
 ## Area the world is showing (joined again after a fresh connection or a resync).
 var desired_area: String = ""
 var desired_spawn: String = ""
+## F111: friend to join next to on the next `hub.instance.join` only ("" = an ordinary join).
+var desired_follow: String = ""
 var client_seq: int = 0
 ## Moves sent (tests and bandwidth estimate).
 var moves_sent: int = 0
@@ -84,18 +92,32 @@ func is_frozen() -> bool:
 
 
 ## The world entered `area_id`: joins it (now when Online, else once the connection is up).
-func enter_area(area_id: String, spawn_point: String = "") -> void:
+## F111: `follow_user_id` (a friend) makes that first join a "Tham gia bạn" one.
+func enter_area(area_id: String, spawn_point: String = "", follow_user_id: String = "") -> void:
 	if area_id.is_empty() or area_id.length() > ID_MAX_LENGTH or spawn_point.length() > ID_MAX_LENGTH:
 		return
 	desired_area = area_id
 	desired_spawn = spawn_point
+	desired_follow = follow_user_id if Uuid.is_valid(follow_user_id) else ""
 	if realtime != null and realtime.is_online():
 		join()
+
+
+## F111: joins the instance of friend `user_id` in the area already shown ("Tham gia bạn", same area). False when
+## nothing was sent (bad id, no area, offline, a join already on its way); the outcome comes as `room_assigned` or
+## `follow_failed`.
+func follow(user_id: String) -> bool:
+	if not Uuid.is_valid(user_id) or desired_area.is_empty() or _joining or realtime == null or not realtime.is_online():
+		return false
+	desired_follow = user_id
+	join()
+	return true
 
 
 ## Leaves the hub view (logout, scene change): forgets the room and the other players.
 func leave_area() -> void:
 	desired_area = ""
+	desired_follow = ""
 	_reset_room()
 
 
@@ -107,11 +129,19 @@ func join() -> CommandResult:
 	var payload: Dictionary = {"area_id": desired_area}
 	if not desired_spawn.is_empty():
 		payload["spawn_point"] = desired_spawn
+	# F111: the follow id is spent by this join (a fresh connection / resync later joins the area normally).
+	var follow_id: String = desired_follow
+	desired_follow = ""
+	if not follow_id.is_empty():
+		payload["follow_user_id"] = follow_id
 	var result: CommandResult = await realtime.send_command(TYPE_JOIN, payload)
 	_joining = false
 	if not result.ok and result.code != CommandResult.CODE_OFFLINE:
-		Log.info("hub_join_failed", {"code": result.code, "area_id": desired_area})
-		join_failed.emit(result.code)
+		Log.info("hub_join_failed", {"code": result.code, "area_id": desired_area, "follow": not follow_id.is_empty()})
+		if follow_id.is_empty():
+			join_failed.emit(result.code)
+		else:
+			follow_failed.emit(result.code)
 	return result
 
 

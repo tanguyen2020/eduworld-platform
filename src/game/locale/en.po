@@ -4443,3 +4443,519 @@ msgstr "Solve together"
 
 msgid "ui.friends.view"
 msgstr "View"
+
+msgid "ui.chat.title.club"
+msgstr "Club chat"
+
+msgid "ui.club.accept"
+msgstr "Accept"
+
+msgid "ui.club.back"
+msgstr "Back"
+
+msgid "ui.club.chat"
+msgstr "Club chat"
+
+msgid "ui.club.create"
+msgstr "Create a club"
+
+msgid "ui.club.created_pending"
+msgstr "Your club is waiting for the school to approve it"
+
+msgid "ui.club.decline"
+msgstr "Decline"
+
+msgid "ui.club.discover"
+msgstr "Suggested clubs"
+
+msgid "ui.club.discover_none"
+msgstr "No club to join right now."
+
+msgid "ui.club.event_when"
+msgstr "{date} at {time}"
+
+msgid "ui.club.events_none"
+msgstr "Nothing on the calendar yet."
+
+msgid "ui.club.form.approval_note"
+msgstr "The school approves the club before it opens."
+
+msgid "ui.club.form.blocked"
+msgstr "The name or the text is not okay. Please change it."
+
+msgid "ui.club.form.counter"
+msgstr "{n}/{max}"
+
+msgid "ui.club.form.description"
+msgstr "About (optional)"
+
+msgid "ui.club.form.icon"
+msgstr "Icon"
+
+msgid "ui.club.form.name"
+msgstr "Club name"
+
+msgid "ui.club.form.name_hint"
+msgstr "2 to 64 characters"
+
+msgid "ui.club.form.name_short"
+msgstr "The name needs at least 2 characters"
+
+msgid "ui.club.form.submit"
+msgstr "Create"
+
+msgid "ui.club.form.title"
+msgstr "New club"
+
+msgid "ui.club.form.type"
+msgstr "Club type"
+
+msgid "ui.club.goal.metric.activities_completed"
+msgstr "Activities the club completed"
+
+msgid "ui.club.goal.metric.boss_defeated"
+msgstr "Bosses the club defeated"
+
+msgid "ui.club.goal.metric.discoveries_found"
+msgstr "Discoveries the club found"
+
+msgid "ui.club.goal.metric.minutes_learning"
+msgstr "Minutes the club learned"
+
+msgid "ui.club.goal.metric.quests_completed"
+msgstr "Quests the club completed"
+
+msgid "ui.club.goal.mine"
+msgstr "You added {n}"
+
+msgid "ui.club.goal.progress"
+msgstr "{progress}/{target}"
+
+msgid "ui.club.goals_none"
+msgstr "No goal this week yet."
+
+msgid "ui.club.gone"
+msgstr "This club is no longer here."
+
+msgid "ui.club.invitation_line"
+msgstr "{nickname} invited you to {club}"
+
+msgid "ui.club.invitations"
+msgstr "Club invitations"
+
+msgid "ui.club.invite"
+msgstr "Invite friends"
+
+msgid "ui.club.invite_done"
+msgstr "Invited"
+
+msgid "ui.club.invite_failed"
+msgstr "Not invited"
+
+msgid "ui.club.invite_none"
+msgstr "You have no friends to invite yet."
+
+msgid "ui.club.invite_picked"
+msgstr "Picked {count}/{max}"
+
+msgid "ui.club.invite_send"
+msgstr "Send invitations"
+
+msgid "ui.club.invite_sent_count"
+msgstr "Invitations sent to {count} friends"
+
+msgid "ui.club.invite_title"
+msgstr "Invite friends to the club"
+
+msgid "ui.club.join_request"
+msgstr "Ask to join"
+
+msgid "ui.club.joined"
+msgstr "Welcome to {club}!"
+
+msgid "ui.club.leave"
+msgstr "Leave club"
+
+msgid "ui.club.leave_confirm"
+msgstr "Leave {club}?"
+
+msgid "ui.club.leave_hint"
+msgstr "You can ask to join again later."
+
+msgid "ui.club.left"
+msgstr "You left the club."
+
+msgid "ui.club.members_count"
+msgstr "{count}/{max} members"
+
+msgid "ui.club.mine"
+msgstr "My clubs"
+
+msgid "ui.club.mine_none"
+msgstr "You are not in a club yet."
+
+msgid "ui.club.not_enabled"
+msgstr "Your school has not opened club creation"
+
+msgid "ui.club.open"
+msgstr "Open"
+
+msgid "ui.club.pending_approval"
+msgstr "Waiting for the school to approve"
+
+msgid "ui.club.read_only"
+msgstr "This club is locked. You can only look."
+
+msgid "ui.club.request_accept"
+msgstr "Accept"
+
+msgid "ui.club.request_line"
+msgstr "{nickname} wants to join"
+
+msgid "ui.club.request_pending"
+msgstr "Waiting for approval"
+
+msgid "ui.club.request_reject"
+msgstr "Decline"
+
+msgid "ui.club.request_sent"
+msgstr "Request sent. Please wait for approval!"
+
+msgid "ui.club.requests"
+msgstr "Requests"
+
+msgid "ui.club.requests_none"
+msgstr "No requests yet."
+
+msgid "ui.club.role.member"
+msgstr "Member"
+
+msgid "ui.club.role.officer"
+msgstr "Officer"
+
+msgid "ui.club.role.owner"
+msgstr "Owner"
+
+msgid "ui.club.section.events"
+msgstr "Calendar"
+
+msgid "ui.club.section.goals"
+msgstr "Goals"
+
+msgid "ui.club.section.members"
+msgstr "Members"
+
+msgid "ui.club.status.active"
+msgstr "Active"
+
+msgid "ui.club.status.archived"
+msgstr "Archived, view only"
+
+msgid "ui.club.status.locked"
+msgstr "Locked, view only"
+
+msgid "ui.club.status.pending_approval"
+msgstr "Waiting for the school to approve"
+
+msgid "ui.club.type.competition_team"
+msgstr "Competition team"
+
+msgid "ui.club.type.interest_group"
+msgstr "Interest group"
+
+msgid "ui.club.type.school_club"
+msgstr "School club"
+
+msgid "ui.club.type.subject_club"
+msgstr "Subject club"
+
+msgid "ui.error.CHAT_CONTENT_BLOCKED"
+msgstr "This text is not okay. Please change it."
+
+msgid "ui.error.CLUB_FULL"
+msgstr "This club is full."
+
+msgid "ui.error.CLUB_LIMIT_REACHED"
+msgstr "You are already in as many clubs as you can be."
+
+msgid "ui.error.CLUB_NOT_APPROVED"
+msgstr "This club is not approved yet."
+
+msgid "ui.error.EVENT_ENDED"
+msgstr "This event has ended."
+
+msgid "ui.error.EVENT_MILESTONE_NOT_REACHED"
+msgstr "Not enough points for this milestone yet."
+
+msgid "ui.error.EVENT_NOT_AVAILABLE"
+msgstr "This event is not available any more."
+
+msgid "ui.error.SEASON_TIER_NOT_REACHED"
+msgstr "You have not reached this tier yet."
+
+msgid "ui.events.all_done"
+msgstr "Great! You finished today's quests. Time for a little rest"
+
+msgid "ui.events.back"
+msgstr "Back"
+
+msgid "ui.events.by_grade"
+msgstr "Grades helping"
+
+msgid "ui.events.claim"
+msgstr "Claim"
+
+msgid "ui.events.claim_until"
+msgstr "Claim rewards before {date}"
+
+msgid "ui.events.claimed"
+msgstr "Claimed"
+
+msgid "ui.events.community_goal.platform"
+msgstr "Everyone's goal"
+
+msgid "ui.events.community_goal.school"
+msgstr "Whole-school goal"
+
+msgid "ui.events.community_goal.tenant"
+msgstr "Shared goal"
+
+msgid "ui.events.contributed"
+msgstr "You helped"
+
+msgid "ui.events.daily_full"
+msgstr "You have earned today's event points."
+
+msgid "ui.events.daily_remaining"
+msgstr "You can still earn {points} points today"
+
+msgid "ui.events.ended"
+msgstr "Ended"
+
+msgid "ui.events.ended_auto_grant"
+msgstr "Rewards you have not claimed will be sent automatically"
+
+msgid "ui.events.go"
+msgstr "Go"
+
+msgid "ui.events.goal_mark"
+msgstr "{pct}%"
+
+msgid "ui.events.goal_progress"
+msgstr "{progress}/{target}"
+
+msgid "ui.events.grade"
+msgstr "Grade {grade}"
+
+msgid "ui.events.hud"
+msgstr "Events"
+
+msgid "ui.events.hud.tooltip"
+msgstr "Events, daily quests and the season"
+
+msgid "ui.events.join"
+msgstr "Join"
+
+msgid "ui.events.join_done"
+msgstr "You joined the event!"
+
+msgid "ui.events.joined"
+msgstr "You joined"
+
+msgid "ui.events.just_reached"
+msgstr "Just reached!"
+
+msgid "ui.events.last_day"
+msgstr "Today is the last day"
+
+msgid "ui.events.milestone_points"
+msgstr "{points} points"
+
+msgid "ui.events.milestones"
+msgstr "Milestones"
+
+msgid "ui.events.new_dot"
+msgstr "Something new"
+
+msgid "ui.events.none"
+msgstr "No events right now. Come back later!"
+
+msgid "ui.events.not_contributed"
+msgstr "Do an event quest to help"
+
+msgid "ui.events.not_reached"
+msgstr "Not yet"
+
+msgid "ui.events.points"
+msgstr "Event points: {points}"
+
+msgid "ui.events.quest_generic"
+msgstr "Event quest"
+
+msgid "ui.events.quest_status.active"
+msgstr "In progress"
+
+msgid "ui.events.quest_status.available"
+msgstr "Not started"
+
+msgid "ui.events.quest_status.completed"
+msgstr "Done"
+
+msgid "ui.events.quest_status.expired"
+msgstr "Expired"
+
+msgid "ui.events.quest_steps"
+msgstr "{done}/{total} steps"
+
+msgid "ui.events.quests"
+msgstr "Event quests"
+
+msgid "ui.events.quests_none"
+msgstr "No quests yet."
+
+msgid "ui.events.reset_time"
+msgstr "Resets at {time} on {date}"
+
+msgid "ui.events.reward_got"
+msgstr "You got: {rewards}"
+
+msgid "ui.events.suspended"
+msgstr "Event paused"
+
+msgid "ui.events.tab.events"
+msgstr "Events"
+
+msgid "ui.events.tab.season"
+msgstr "Season"
+
+msgid "ui.events.tab.today"
+msgstr "Today"
+
+msgid "ui.events.tab.week"
+msgstr "This week"
+
+msgid "ui.events.time_left_days"
+msgstr "{days} days left"
+
+msgid "ui.events.title"
+msgstr "Events"
+
+msgid "ui.events.upcoming"
+msgstr "Coming soon"
+
+msgid "ui.events.view"
+msgstr "View"
+
+msgid "ui.events.week_done"
+msgstr "Great! You finished this week's quests."
+
+msgid "ui.friends.join_friend"
+msgstr "Join friend"
+
+msgid "ui.friends.join_not_now"
+msgstr "You can't join your friend right now"
+
+msgid "ui.friends.join_pending"
+msgstr "Going to your friend…"
+
+msgid "ui.friends.join_room_full"
+msgstr "Your friend's area is full"
+
+msgid "ui.friends.join_unavailable.busy"
+msgstr "You are in the middle of an activity"
+
+msgid "ui.friends.join_unavailable.exam"
+msgstr "Your friend is taking a test"
+
+msgid "ui.friends.join_unavailable.in_match"
+msgstr "Your friend is in a match, wait a little"
+
+msgid "ui.friends.join_unavailable.no_area"
+msgstr "Your friend is not in an area right now"
+
+msgid "ui.friends.join_unavailable.offline"
+msgstr "Your friend is not online"
+
+msgid "ui.friends.join_unavailable.self_offline"
+msgstr "You are offline"
+
+msgid "ui.friends.joined"
+msgstr "You are next to {nickname}"
+
+msgid "ui.friends.suggest.context.club"
+msgstr "Same club"
+
+msgid "ui.friends.suggest.context.coop"
+msgstr "Quest together"
+
+msgid "ui.friends.suggest.context.match"
+msgstr "Same match"
+
+msgid "ui.friends.suggest.context.party"
+msgstr "Same party"
+
+msgid "ui.friends.suggest.empty"
+msgstr "Nobody played with you recently. Try a friend code!"
+
+msgid "ui.friends.suggest.tap_hint"
+msgstr "Tap a player to send a friend request"
+
+msgid "ui.friends.suggest.title"
+msgstr "Played together recently"
+
+msgid "ui.friends.tab.clubs"
+msgstr "Clubs"
+
+msgid "ui.hub.board.events"
+msgstr "Event board"
+
+msgid "ui.menu.events"
+msgstr "Events"
+
+msgid "ui.notification.club.approved"
+msgstr "Your club was approved by the school!"
+
+msgid "ui.notification.club.invitation_received"
+msgstr "{nickname} invited you to a club"
+
+msgid "ui.notification.club.join_request_received"
+msgstr "{nickname} wants to join your club"
+
+msgid "ui.season.auto_grant"
+msgstr "Rewards you have not claimed are sent when the season ends"
+
+msgid "ui.season.daily_remaining"
+msgstr "You can still earn {points} season points today"
+
+msgid "ui.season.ends"
+msgstr "The season ends on {date}"
+
+msgid "ui.season.free"
+msgstr "Free for everyone"
+
+msgid "ui.season.history"
+msgstr "Past seasons"
+
+msgid "ui.season.history_auto"
+msgstr "Rewards of tier {tiers} were sent automatically"
+
+msgid "ui.season.history_line"
+msgstr "{season}: tier {tier}"
+
+msgid "ui.season.history_none"
+msgstr "No past season yet."
+
+msgid "ui.season.milestone"
+msgstr "Milestone tier"
+
+msgid "ui.season.no_season"
+msgstr "A new season starts soon"
+
+msgid "ui.season.points"
+msgstr "{points} season points"
+
+msgid "ui.season.tier"
+msgstr "Tier {tier}/{max}"
+
+msgid "ui.season.tier_label"
+msgstr "Tier {tier}"

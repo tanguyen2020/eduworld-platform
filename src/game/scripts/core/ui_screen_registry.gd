@@ -15,6 +15,8 @@ extends RefCounted
 ## `boss_info` (the boss card of a gate / NPC `open_ui` — args `{area_id}` or `{boss_id}`), `boss_arena` (the boss
 ## screen — args `{encounter_id, mode, visual_ref}`), `coop_step` (the roles + clue cards of an `interdependent` step —
 ## args `{quest_id, step_id}`).
+## F111: `event_center` (Sự kiện: HUD calendar button / "Thêm" / the event board of Quảng trường Tia Sáng / an
+## `open_event` notification — args `{tab, id}`); the club tab is `friends` with `{tab: "clubs", id}`.
 
 const SCREENS: Dictionary = {
 	&"achievements": "res://scenes/achievement/AchievementCollectionScreen.tscn",
@@ -24,6 +26,7 @@ const SCREENS: Dictionary = {
 	&"boss_arena": "res://scenes/challenge/boss/BossArena.tscn",
 	&"boss_info": "res://scenes/challenge/boss/BossInfoCard.tscn",
 	&"coop_step": "res://scenes/quest/InterdependentStepPanel.tscn",
+	&"event_center": "res://scenes/liveops/EventCenterScreen.tscn",
 	&"friends": "res://scenes/social/FriendsScreen.tscn",
 	&"challenge_board": "res://scenes/challenge/ChallengeBoard.tscn",
 	&"challenge_result": "res://scenes/challenge/ChallengeResult.tscn",

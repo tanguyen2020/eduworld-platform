@@ -29,6 +29,8 @@ var steps: Array[Dictionary] = []
 var step_states: Dictionary = {}
 ## F110: `QuestProgress.party_progress` of a party quest session (`QuestPartyStepProgress` rows: group share + own part).
 var party_progress: Array = []
+## F111: end of the daily / weekly period (`QuestSummary.available_until`, RFC 3339) — the "Làm mới lúc …" words.
+var available_until: String = ""
 
 
 static func from_dict(d: Variant) -> QuestModel:
@@ -57,6 +59,8 @@ func apply(m: Dictionary) -> void:
 	locked_reason = String(m.get("locked_reason", ""))
 	area_id = String(m.get("area_id", area_id))
 	giver_npc_id = String(m.get("giver_npc_id", giver_npc_id))
+	if m.get("available_until") is String:
+		available_until = String(m["available_until"]).left(32)
 	if m.get("steps") is Array:
 		steps.clear()
 		for s: Variant in m["steps"] as Array:
