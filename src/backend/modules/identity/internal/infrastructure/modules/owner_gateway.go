@@ -66,6 +66,11 @@ type ChatAssignmentOps interface {
 	ListResourceAssignments(ctx context.Context, req chatapi.ListResourceAssignmentsRequestObject) (chatapi.ListResourceAssignmentsResponseObject, error)
 }
 
+// ChatMergeOps is mergeUserData of module chat (F115 T042, OQ F016-2, F045-3).
+type ChatMergeOps interface {
+	MergeUserData(ctx context.Context, req chatapi.MergeUserDataRequestObject) (chatapi.MergeUserDataResponseObject, error)
+}
+
 // GameMergeOps is mergeUserData of module game (F070 T039, OQ F016-2, F045-3).
 type GameMergeOps interface {
 	MergeUserData(ctx context.Context, req gameapi.MergeUserDataRequestObject) (gameapi.MergeUserDataResponseObject, error)
@@ -74,8 +79,8 @@ type GameMergeOps interface {
 // Gateway implements port.OwnerServiceGateway. A nil facade means the module is not wired in this binary:
 // every call to it is 503 UNAVAILABLE, never a silent success (F045-AC-25). Module learning has every adapter; module game
 // serves mergeUserData (F070), its assignments (F078) and its trash (F057); competition serves mergeUserData (F100), the
-// template assignments (F107) and their trash (F057); chat serves the sticker pack assignments (F082 T040) and their trash
-// (F057). A trash listing names one resource_type (required by the public API), so each page comes from exactly one owner
+// template assignments (F107) and their trash (F057); chat serves mergeUserData (F115 T042), the sticker pack assignments
+// (F082 T040) and their trash (F057). A trash listing names one resource_type (required by the public API), so each page comes from exactly one owner
 // with its own keyset cursor: there is nothing to merge across modules.
 type Gateway struct {
 	Learning      LearningPlatformOps
@@ -87,6 +92,8 @@ type Gateway struct {
 	CompetitionMerge CompetitionMergeOps
 	// CompetitionAssign assigns the tournament and challenge templates of module competition (F107).
 	CompetitionAssign CompetitionAssignmentOps
+	// ChatMerge is mergeUserData of module chat (F115 T042).
+	ChatMerge ChatMergeOps
 	// ChatAssign assigns the sticker packs of module chat (F082 T040).
 	ChatAssign ChatAssignmentOps
 	// GameTrash, CompetitionTrash and ChatTrash list and restore the soft-deleted resources of those modules (F057).
@@ -536,6 +543,9 @@ func (g Gateway) MergeUserData(ctx context.Context, module string, from uuid.UUI
 	if module == "competition" {
 		return g.competitionMerge(ctx, from, req)
 	}
+	if module == "chat" {
+		return g.chatMerge(ctx, from, req)
+	}
 	if module != "learning" || g.LearningMerge == nil {
 		return port.MergeUserDataResult{}, notWired(module, "mergeUserData")
 	}
@@ -597,6 +607,28 @@ func (g Gateway) competitionMerge(ctx context.Context, from uuid.UUID, req port.
 	r, ok := res.(competitionapi.MergeUserData200JSONResponse)
 	if !ok {
 		return port.MergeUserDataResult{}, unexpected("competition", "mergeUserData", res)
+	}
+	out := port.MergeUserDataResult{Status: string(r.Status)}
+	if r.BlockedReason != nil {
+		out.BlockedReason = *r.BlockedReason
+	}
+	return out, nil
+}
+
+func (g Gateway) chatMerge(ctx context.Context, from uuid.UUID, req port.MergeUserDataRequest) (port.MergeUserDataResult, error) {
+	if g.ChatMerge == nil {
+		return port.MergeUserDataResult{}, notWired("chat", "mergeUserData")
+	}
+	res, err := call(ctx, g.chatOp("mergeUserData", modcall.Saga), func(ctx context.Context) (chatapi.MergeUserDataResponseObject, error) {
+		return g.ChatMerge.MergeUserData(ctx, chatapi.MergeUserDataRequestObject{UserId: from,
+			Body: &chatapi.MergeUserDataJSONRequestBody{MergeId: req.MergeID, TargetUserId: req.Into, Reason: req.Reason}})
+	})
+	if err != nil {
+		return port.MergeUserDataResult{}, err
+	}
+	r, ok := res.(chatapi.MergeUserData200JSONResponse)
+	if !ok {
+		return port.MergeUserDataResult{}, unexpected("chat", "mergeUserData", res)
 	}
 	out := port.MergeUserDataResult{Status: string(r.Status)}
 	if r.BlockedReason != nil {

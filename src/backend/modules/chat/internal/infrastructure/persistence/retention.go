@@ -124,6 +124,13 @@ const persistentColumns = `m.message_id, m.channel_id, m.seq, m.sender_id, m.sch
 
 // CopyEvidence implements port.RetentionStore.
 func (Retention) CopyEvidence(ctx context.Context, tenant uuid.UUID, messages []uuid.UUID, contextN int, at time.Time) (int, error) {
+	return copyEvidence(ctx, tenant, messages, contextN, at, "persistent-chat-retention")
+}
+
+// copyEvidence copies the referenced messages (±contextN) into chat.moderation_evidence before an anonymisation; source
+// names the caller in the snapshot context. The evidence id is one per case and message whatever the source, so the
+// retention job and the anonymisation of a user (F115 T042) never copy the same message twice.
+func copyEvidence(ctx context.Context, tenant uuid.UUID, messages []uuid.UUID, contextN int, at time.Time, source string) (int, error) {
 	t, err := tx(ctx)
 	if err != nil {
 		return 0, err
@@ -147,7 +154,7 @@ func (Retention) CopyEvidence(ctx context.Context, tenant uuid.UUID, messages []
 		if target == nil {
 			return copied, fmt.Errorf("chat: referenced message %s not found", r.message)
 		}
-		ctxMap := map[string]string{"case_id": r.caseID.String(), "source": "persistent-chat-retention"}
+		ctxMap := map[string]string{"case_id": r.caseID.String(), "source": source}
 		if r.report != nil {
 			ctxMap["report_id"] = r.report.String()
 		}
@@ -266,6 +273,17 @@ func (Retention) RecordRun(ctx context.Context, r port.RetentionRun) error {
 		r.ID, r.TenantID, r.StartedAt, r.FinishedAt, r.Channels, r.Anonymized, r.EvidenceCopied, r.Status, code)
 	if err != nil {
 		return fmt.Errorf("chat: retention run: %w", err)
+	}
+	return nil
+}
+
+// clearReplyQuotes clears the quote of the replies to anonymised messages (the quote carries a part of the quoted text;
+// used by the anonymisation of a user, F115 T042). UPDATE only, the reply itself is kept.
+func clearReplyQuotes(ctx context.Context, tenant uuid.UUID, messages []uuid.UUID) error {
+	// tenancyguard:ok chat.messages of the session tenant (anonymisation, never DELETE — R21)
+	if _, err := exec(ctx, `UPDATE chat.messages SET quote = NULL WHERE tenant_id = $1 AND reply_to_message_id = ANY($2::uuid[])
+		AND quote IS NOT NULL`, tenant, idStrings(messages)); err != nil {
+		return fmt.Errorf("chat: anonymize quotes: %w", err)
 	}
 	return nil
 }

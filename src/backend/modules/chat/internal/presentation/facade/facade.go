@@ -69,6 +69,9 @@ type Facade struct {
 	Assignments Assignments
 	// Trash serves listTrash and restoreTrashItem of the sticker packs (ADR-0028, F057); zero = 503 UNAVAILABLE.
 	Trash
+	// Lifecycle serves cleanupStudentData, restoreStudentData, anonymizeUserData and mergeUserData of the identity sagas
+	// (F115 T042); nil = 503 UNAVAILABLE.
+	Lifecycle Lifecycle
 }
 
 // ModerateDisplayText implements chatapi.StrictServerInterface (x-allowed-callers: competition, x-context-required:

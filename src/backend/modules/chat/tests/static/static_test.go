@@ -89,7 +89,8 @@ func TestOnlyPersisterWritesMessages(t *testing.T) {
 	backend := filepath.Join(root, "..", "..")
 	write := regexp.MustCompile(`(?is)(INSERT\s+INTO|UPDATE)\s+chat\.(messages|gameplay_messages)\b`)
 	owner := filepath.Join("internal", "infrastructure", "persistence", "messages.go")
-	// F120-AC-24: persistent-chat-retention only anonymises (UPDATE body/body_display/anonymized_at), never inserts.
+	// F120-AC-24: persistent-chat-retention (and the anonymisation of a user, F115 T042) only anonymises (UPDATE
+	// body/body_display/quote/anonymized_at), never inserts.
 	retention := filepath.Join("internal", "infrastructure", "persistence", "retention.go")
 	insert := regexp.MustCompile(`(?is)INSERT\s+INTO\s+chat\.(messages|gameplay_messages)\b`)
 	found := false

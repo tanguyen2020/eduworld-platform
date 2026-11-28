@@ -108,8 +108,9 @@ type CompetitionFacade interface {
 }
 
 // Imports are the facades of the other modules called by the sagas and platform operations of identity.
-// Chat serves the sticker pack assignments (F082 T040); nil (a binary without its use cases): its steps answer 503
-// UNAVAILABLE. Competition nil: its merge step answers 503 and the lifecycle sagas skip it.
+// Chat serves the sticker pack assignments (F082 T040) and the lifecycle and merge steps (F115 T042). Competition or chat
+// nil (a binary without their use cases): their merge and platform steps answer 503 UNAVAILABLE and the lifecycle sagas
+// skip them.
 type Imports struct {
 	Learning    LearningFacade
 	Game        GameFacade
@@ -117,10 +118,14 @@ type Imports struct {
 	Chat        ChatFacade
 }
 
-// ChatFacade is what module identity calls on module chat (x-allowed-callers: identity, F082 T040).
+// ChatFacade is what module identity calls on module chat (x-allowed-callers: identity, F082 T040, F115 T042).
 type ChatFacade interface {
 	modules.ChatAssignmentOps
 	modules.ChatTrashOps // F057: trash of the sticker packs
+	// F115 T042: the student lifecycle and user merge steps of the sagas.
+	participants.ChatFacade
+	participants.ChatAnonymizer
+	modules.ChatMergeOps
 }
 
 // build constructs every use case of module identity on the real adapters and declares its entry points.
@@ -188,18 +193,22 @@ func build(r *module.Registry, m *Module, in Imports) error {
 			Memberships: query.CheckMemberships{Model: principals}}}
 
 	// Facades of learning and game (sagas F016, platform operations F045); mergeUserData is served by learning
-	// (F030), game (F070) and competition (F100); game, competition and chat serve their assignments (F078, F107, F082) and
-	// their trash (F057); clone is served by learning only (the other owners answer 503 UNAVAILABLE).
+	// (F030), game (F070), competition (F100) and chat (F115 T042); game, competition and chat serve their assignments
+	// (F078, F107, F082) and their trash (F057); clone is served by learning only (the other owners answer 503
+	// UNAVAILABLE).
 	gw := modules.Gateway{Learning: in.Learning, LearningMerge: in.Learning, GameMerge: in.Game, GameAssign: in.Game, GameTrash: in.Game}
 	studentParts := []port.StudentDataParticipant{participants.Game{F: in.Game}, participants.Learning{F: in.Learning}}
 	anonymizers := []port.UserDataAnonymizer{participants.GameAnonymize{F: in.Game}, participants.LearningAnonymize{F: in.Learning}}
-	if in.Chat != nil {
-		gw.ChatAssign, gw.ChatTrash = in.Chat, in.Chat
-	}
 	if in.Competition != nil {
 		gw.CompetitionMerge, gw.CompetitionAssign, gw.CompetitionTrash = in.Competition, in.Competition, in.Competition
 		studentParts = append(studentParts, participants.Competition{F: in.Competition})
 		anonymizers = append(anonymizers, participants.CompetitionAnonymize{F: in.Competition})
+	}
+	if in.Chat != nil {
+		gw.ChatAssign, gw.ChatTrash, gw.ChatMerge = in.Chat, in.Chat, in.Chat
+		// F115 T042: the chat steps of the student lifecycle and anonymisation sagas.
+		studentParts = append(studentParts, participants.Chat{F: in.Chat})
+		anonymizers = append(anonymizers, participants.ChatAnonymize{F: in.Chat})
 	}
 
 	lm, err := lifecyclemetrics.New(reg)

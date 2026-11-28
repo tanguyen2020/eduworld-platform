@@ -345,6 +345,17 @@ Quy trình job `gameplay-chat-purge` (profile `worker-chat` của module chat, k
 
 Phía người chơi: màn hình lịch sử trận/party ghi rõ "Tin nhắn trong trận được giữ N ngày", sau thời hạn chỉ còn kết quả trận, không còn tin nhắn.
 
+### 6.2. Dữ liệu chat trong saga vòng đời tài khoản (F115 T042)
+
+Module chat là một bước của các saga do module identity điều phối ([ACCOUNT_PROVISIONING §6b, §7, §7b](../09-identity/ACCOUNT_PROVISIONING.md)), gọi trong tiến trình qua facade `chat.internal.v1.yaml` (`x-allowed-callers: [identity]`, cần `tenant_scope` + `Idempotency-Key`). Mọi bước chỉ soft-delete/UPDATE (không `DELETE`, R21), chạy trong TenantScope của bước (R8), idempotent (gọi lại → `nothing_to_do`) và ghi một audit chỉ có id/số đếm (R14) **[Confirmed — owner "chốt hết" 2026-11-28]**:
+
+| Operation | Hành vi của module chat | Audit |
+|---|---|---|
+| `cleanupStudentData` (dọn học sinh, ADR-0032) | Có moderation case chưa giải quyết (`open`, `in_review`, `escalated`, `reopened`) mà học sinh là `subject_user_ids` hoặc đích `user` → `blocked`, `blocked_reason = open_moderation_case`, không đổi gì (saga bù các bước đã `done`). Ngược lại: soft-delete mọi membership đang hoạt động (`delete_reason = inactive_cleanup`). Tin nhắn giữ nguyên (lịch sử của người khác, bằng chứng) | `chat.student.cleaned_up` |
+| `restoreStudentData` | Khôi phục membership bị dọn (dòng mới nhất mỗi channel) trong channel bền vững còn sống, chưa đóng, khi cặp chưa có dòng live; channel gameplay là tạm thời nên không khôi phục | `chat.student.restored` |
+| `anonymizeUserData` | Theo lô (`EW_CHAT_PERSISTENT_RETENTION_BATCH`), mỗi lô một transaction: sao bằng chứng tin được report/case/case action tham chiếu (±`evidence_context`, `snapshot.kind = persistent_retention`, `context.source = user-anonymize`, id tất định theo (case, tin) nên không trùng với job retention) → ghi đè `body`, `body_display`, `quote`, revision, đặt `anonymized_at` cho mọi tin của user trong `chat.messages` (kể cả tin đã xóa mềm) và xóa `quote` của tin trả lời các tin đó; sau cùng xóa nickname/avatar/danh hiệu trong bản chiếu `ref.player_profiles` (giữ `source_version` để `game_profile.updated` mới hơn vẫn áp dụng) và soft-delete membership (`anonymized`). Tin gameplay (`chat.gameplay_messages`) không sửa: chỉ job `gameplay-chat-purge` xóa trong hạn §6.1 (ADR-0033) | `chat.user.anonymized` |
+| `mergeUserData` (gộp tài khoản, `platform.user.merge` của System Admin đã duyệt) | Membership đang hoạt động của user nguồn trong channel bền vững (trừ channel `team` cố định của club — đi theo `social.club_members`, F120 — và channel gameplay — đi theo event của module sở hữu, vd. `party.member_joined via merge`) chuyển sang user đích (giữ `role`, `joined_at` sớm nhất, con trỏ đọc) trừ khi đích đã là thành viên; dòng nguồn soft-delete (`user_merge`). Block/mute còn hiệu lực của nguồn (cả hai chiều) được mang sang đích (block cũng gỡ kết bạn và lời mời chờ như `blockUser`; phát `user.blocked`/`user.muted`), sanction còn hiệu lực được sao cho đích (cùng loại, phạm vi, case, `reason_code`, hạn; `issued_by_kind = system`; phát `sanction.applied`; id tất định theo (merge, sanction)) — gộp tài khoản không bao giờ gỡ một lớp bảo vệ hay sanction. Tin nhắn giữ `sender_id` gốc. Nguồn = đích → `blocked` | `chat.user.merged` |
+
 ## 7. Tính năng tin nhắn (ADR-0034)
 
 ### 7.1. Ma trận tính năng × loại channel (mặc định platform)

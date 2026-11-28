@@ -57,7 +57,8 @@ const Name = "chat"
 // Facade is the part of the chat facade (api.StrictServerInterface, specs/openapi/modules/chat.internal.v1.yaml)
 // implemented: moderateDisplayText (F116, x-allowed-callers: competition — party and team names) and screenText (F077,
 // x-allowed-callers: game — school event texts), the sticker pack assignments (F082) and the trash of the sticker packs
-// (listTrash, restoreTrashItem — F057; x-allowed-callers: identity).
+// (listTrash, restoreTrashItem — F057; x-allowed-callers: identity) and the student lifecycle and user merge steps of the
+// identity sagas (F115 T042; x-allowed-callers: identity).
 type Facade interface {
 	// listOutboxEventIds / listProcessedEventIds (worker reconcile, F134).
 	ListOutboxEventIds(ctx context.Context, req chatapi.ListOutboxEventIdsRequestObject) (chatapi.ListOutboxEventIdsResponseObject, error)
@@ -71,6 +72,12 @@ type Facade interface {
 	// F057: the trash of the sticker packs (x-allowed-callers: identity, ADR-0028).
 	ListTrash(ctx context.Context, req chatapi.ListTrashRequestObject) (chatapi.ListTrashResponseObject, error)
 	RestoreTrashItem(ctx context.Context, req chatapi.RestoreTrashItemRequestObject) (chatapi.RestoreTrashItemResponseObject, error)
+	// F115 T042 (OQ F016-2, F045-3): the student lifecycle and user merge operations of the identity sagas
+	// (x-allowed-callers: identity).
+	CleanupStudentData(ctx context.Context, req chatapi.CleanupStudentDataRequestObject) (chatapi.CleanupStudentDataResponseObject, error)
+	RestoreStudentData(ctx context.Context, req chatapi.RestoreStudentDataRequestObject) (chatapi.RestoreStudentDataResponseObject, error)
+	AnonymizeUserData(ctx context.Context, req chatapi.AnonymizeUserDataRequestObject) (chatapi.AnonymizeUserDataResponseObject, error)
+	MergeUserData(ctx context.Context, req chatapi.MergeUserDataRequestObject) (chatapi.MergeUserDataResponseObject, error)
 }
 
 // Module is the registered module; Facade() serves the facade operations of module chat.
@@ -156,6 +163,10 @@ func Register(r *module.Registry) (*Module, error) {
 	if err != nil {
 		return nil, fmt.Errorf("chat: %w", err)
 	}
+	purgeCfg, err := chatconfig.PurgeFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("chat: %w", err)
+	}
 	recent := cache.Recent{C: vk, Size: chatCfg.RecentBuffer, TTL: chatCfg.RecentTTL}
 	factsCache := cache.Facts{C: vk, StaleTTL: chatCfg.StaleTTL, OnStale: observability.StaleFacts}
 	// NFR-SAFE-001, F115-AC-06, F116: the send path (core-api) and worker-chat refuse to start without a real
@@ -226,6 +237,14 @@ func Register(r *module.Registry) (*Module, error) {
 		BreakGlassMetrics: observability.SafetyOps{}}
 	safetyReads := query.Safety{Read: core.ReadSession, Reader: persistence.Safety{}, Audit: core.Recorder}
 	opsReads := query.SafetyOps{Read: core.ReadSession, Oncall: persistence.SafetyOps{}, Grants: persistence.SafetyOps{}}
+	// F115 T042 (OQ F016-2, F045-3): the chat part of the identity sagas — cleanup/restore of a student, anonymisation and
+	// merge of a user (soft-delete and UPDATE only, evidence copied before anonymisation, blocks and sanctions carried by
+	// a merge). Served in every binary that builds the use cases: the cleanup saga runs in worker jobs, the restore on
+	// login and the merge in core-api.
+	lifecycle := command.UserLifecycle{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: persistence.Lifecycle{},
+		Audit: persistence.Auditor{R: core.Recorder}, Facts: facts, Social: social, Safety: safetyCmd,
+		EvidenceContext: purgeCfg.EvidenceContext, Batch: persistentCfg.RetentionBatch}
+	mod.facade = chatfacade.Facade{Ops: r.ReconcileSource(Name), Moderation: pipe.Validator, Lifecycle: lifecycle}
 
 	if r.ServesHTTP() {
 		// The compiled catalogue must be loaded before the instance takes traffic (F116 edge case).
@@ -244,7 +263,8 @@ func Register(r *module.Registry) (*Module, error) {
 			// F057: the trash of the sticker packs (soft-deleted platform library rows, restore under tenancy.Bypass(trash)).
 			Trash: chatfacade.Trash{TrashList: query.Trash{Read: core.ReadSession, Reader: persistence.Trash{}, Cursors: cursors},
 				TrashRestore: command.RestoreTrash{UoW: core.UoW, Store: persistence.Trash{}, Events: persistence.Publisher{W: core.Writer},
-					Audit: persistence.Auditor{R: core.Recorder}}, Idempotency: core.Idempotency}}
+					Audit: persistence.Auditor{R: core.Recorder}}, Idempotency: core.Idempotency},
+			Lifecycle: lifecycle}
 		var js jetstream.JetStream
 		if r.NATS() != nil {
 			if js, err = r.JetStream(); err != nil {
@@ -396,10 +416,6 @@ func Register(r *module.Registry) (*Module, error) {
 		}
 		return w.Run(ctx)
 	})
-	purgeCfg, err := chatconfig.PurgeFrom(r.Config())
-	if err != nil {
-		return nil, fmt.Errorf("chat: %w", err)
-	}
 	observability.RegisterGameplay(r.Metrics())
 	// gameplay-chat-purge + chat-partition-maintainer (worker-chat, also worker all; ADR-0033, F117 US4): the ONLY physical
 	// delete of the platform, on the pool of the role chat_purger (EW_DB_CHAT_PURGER_DSN / _URL_FILE), never in another
