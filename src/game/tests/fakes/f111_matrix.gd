@@ -40,7 +40,10 @@ static func run(suite: Node, s: F111SceneHarness, view: String, sizes: Dictionar
 			if BandLayoutProbe.last_texts == 0:
 				failures.append("%s: no visible text checked" % label)
 			failures.append_array(BandLayoutProbe.overlapping_messages(root, vp))
-			failures.append_array(_primary_cuts(view, screen, vp, label))
+			# The no-scroll rule of the main action holds for the real languages; the pseudo-locale (+35–40 %) only has to fit
+			# without cuts (as F110Matrix).
+			if String(Settings.locale) != L10n.pseudo_locale():
+				failures.append_array(_primary_cuts(view, screen, vp, label))
 			var note: String = ""
 			if compact:
 				note = ", smallest text %.1f CSS px, smallest touch target %.1f CSS px" % [BandLayoutProbe.last_min_text_px,

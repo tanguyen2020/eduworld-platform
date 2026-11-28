@@ -57,7 +57,8 @@ var _chip_icons: Dictionary = {}
 func _init() -> void:
 	name = "ClubPage"
 	theme_type_variation = &"FormBox"
-	var head: HBoxContainer = UiBuild.hbox(&"ToolbarBox")
+	# A flow: on a narrow phone window or a long translation the actions move under the title instead of widening it.
+	var head: HFlowContainer = HFlowContainer.new()
 	head.name = "Head"
 	add_child(head)
 	var back: Button = UiBuild.button("ui.club.back", "arrow_left", &"SecondaryButton")
