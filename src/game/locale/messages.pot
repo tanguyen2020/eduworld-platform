@@ -2274,6 +2274,9 @@ msgstr ""
 msgid "ui.friends.unmute"
 msgstr ""
 
+msgid "ui.friends.view"
+msgstr ""
+
 msgid "ui.gallery.button.hint"
 msgstr ""
 

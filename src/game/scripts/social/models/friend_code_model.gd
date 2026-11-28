@@ -4,6 +4,7 @@ extends RefCounted
 ## server `expires_at` (the countdown follows it; `friend_code_ttl` is the server's).
 
 const PATTERN: String = "^[A-Z0-9]{6,12}$"
+const MIN_LENGTH: int = 6
 const MAX_LENGTH: int = 12
 
 var code: String = ""
@@ -23,8 +24,9 @@ static func from_dict(data: Variant) -> FriendCodeModel:
 	return m
 
 
+## `PATTERN`, checked by characters (no regular expression in the social / chat scripts — the F119 boundary rule).
 static func is_valid(text: String) -> bool:
-	return RegEx.create_from_string(PATTERN).search(text) != null
+	return text.length() >= MIN_LENGTH and text.length() <= MAX_LENGTH and normalize(text) == text
 
 
 ## What the code field keeps of a typed text: upper case, only A-Z and 0-9, at most 12 characters (F110-AC-23).

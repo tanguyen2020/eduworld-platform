@@ -2285,6 +2285,9 @@ msgstr "[!! Üñƀĺöçķ ~~~ !!]"
 msgid "ui.friends.unmute"
 msgstr "[!! Üñɱüţë ~~~ !!]"
 
+msgid "ui.friends.view"
+msgstr "[!! Vïëŵ ~~ !!]"
+
 msgid "ui.gallery.button.hint"
 msgstr "[!! Ĥïñţ ~~ !!]"
 

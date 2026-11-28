@@ -122,6 +122,26 @@ const SCHEMAS: Dictionary = {
 	"tournament.match.scheduled": {"tournament_id": "s64", "node_id": "s64", "scheduled_at": "int", "notice_minutes": "int",
 		"?opponents": "arr"},
 	"tournament.bracket.updated": {"tournament_id": "s64", "node_id": "s64", "status": "s32"},
+	# F110: boss encounter (members / questions / rewards checked again by the boss models), the party quest session and
+	# the presence of a friend.
+	"boss.encounter.updated": {"encounter_id": "s64", "status": "s32", "state_version": "int", "?current_phase": "int",
+		"?phase_id": "s64", "?energy_remaining_pct": "num", "?phase_progress": "num", "?phase_deadline_at": "s64",
+		"?members": "arr"},
+	"boss.phase.started": {"encounter_id": "s64", "phase_id": "s64", "phase_index": "int", "deadline_at": "s64",
+		"?retry": "bool", "?presentation_ref": "s128"},
+	"boss.phase.completed": {"encounter_id": "s64", "phase_id": "s64", "phase_index": "int", "energy_remaining_pct": "num"},
+	"boss.encounter.ended": {"encounter_id": "s64", "outcome": "s32", "?phases_cleared": "int", "?phase_count": "int",
+		"?eligible": "bool", "?rewards": "arr"},
+	"boss.question.assigned": {"encounter_id": "s64", "phase_id": "s64", "requirement_id": "s64", "questions": "arr",
+		"deadline_at": "s64"},
+	"boss.answer.evaluated": {"encounter_id": "s64", "question_instance_id": "s64", "is_correct": "bool", "?counted": "bool",
+		"?explanation": "obj"},
+	"quest.roles.assigned": {"quest_id": "s64", "step_id": "s64", "assignments": "arr", "?my_roles": "arr",
+		"?pending_leader": "bool"},
+	"quest.clue.shared": {"quest_id": "s64", "step_id": "s64", "role": "s32", "?shared_by_nickname": "s32"},
+	"quest.progress.updated": {"quest_id": "s64", "status": "s32", "?step_id": "s64", "?step_status": "s32",
+		"?party_progress": "obj"},
+	"presence.friend.updated": {"user_id": "s64", "status": "s32", "?activity": "s64", "?area_id": "s64"},
 }
 
 

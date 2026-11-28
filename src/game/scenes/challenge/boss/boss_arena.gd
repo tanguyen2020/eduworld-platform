@@ -559,7 +559,7 @@ func _build() -> void:
 	box.add_child(_feedback)
 	_panel = QuestionPanelHost.new()
 	UiBuild.expand(_panel, true, true)
-	_panel.answer_ready.connect(_on_answer_ready)
+	_panel.answer_prepared.connect(_on_answer_ready)
 	box.add_child(_panel)
 	_chat_column = UiBuild.vbox()
 	_chat_column.name = "ChatColumn"

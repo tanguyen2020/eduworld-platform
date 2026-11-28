@@ -5,9 +5,9 @@ extends VBoxContainer
 ## payload has no answer key, ADR-0016). One tap on a tile answers a one-step question (F098); the other types use
 ## "Gửi đáp án". While the answer is on its way (`sending`) the question is locked so it cannot be sent twice; an
 ## answer that could not be sent unlocks it again (same question). Emits `EventBus.question_shown` / `question_hidden`
-## so the chat dock shrinks to its strip (F119-AC-03). UI only: BossArena forwards `answer_ready` to BossClient.
+## so the chat dock shrinks to its strip (F119-AC-03). UI only: BossArena forwards `answer_prepared` to BossClient.
 
-signal answer_ready(response: Dictionary)
+signal answer_prepared(response: Dictionary)
 
 ## One-step question types answered by a single tap (F098 tap-to-answer).
 const INSTANT_TYPES: PackedStringArray = ["single_choice", "true_false"]
@@ -70,7 +70,7 @@ func show_question(q: BossQuestionModel, ctx: RendererContext, waiting_key: Stri
 				if renderer != null:
 					renderer.commit())
 		renderer.answer_changed.connect(func(complete: bool) -> void: _submit.disabled = not complete)
-		renderer.response_prepared.connect(func(_position: int, response: Dictionary) -> void: answer_ready.emit(response))
+		renderer.response_prepared.connect(func(_position: int, response: Dictionary) -> void: answer_prepared.emit(response))
 		_submit.visible = not instant
 		_submit.disabled = true
 	set_sending(q.state == BossQuestionModel.STATE_SENDING)

@@ -7,7 +7,7 @@ extends GdUnitTestSuite
 const FIXTURES: String = "res://tests/fixtures/contract/asyncapi"
 const CLIENT_TYPES: PackedStringArray = [
 	"hub.instance.join", "hub.player.move", "hub.player.emote", "presence.status.set", "system.session.resume",
-	"notification.item.mark_read",
+	"notification.item.mark_read", "boss.encounter.ready", "boss.answer.submit",
 ]
 
 
