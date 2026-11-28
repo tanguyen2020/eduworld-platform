@@ -130,3 +130,30 @@ func test_without_equipped_emotes_nothing_opens() -> void:
 	wheel.open()
 	assert_bool(wheel.is_open()).is_false()
 	assert_bool(wheel.touch_button().disabled).is_true()
+
+
+## Owner request 2026-11-28: the HUD emote button is a square ICON-ONLY button (no "Biểu cảm" word on it, the tooltip
+## `ui.emote.open.tooltip` and the accessible name `ui.emote.open` stay), at the band touch target — on a compact phone
+## at least 40 CSS px — like the other HUD icon buttons (the bell).
+func test_touch_button_is_a_square_icon_only_button_with_a_name() -> void:
+	for compact: bool in [false, true]:
+		AppState.set_compact(compact)
+		AppState.set_grade_band("g4_5")
+		var r: Array = await _setup()
+		var wheel: EmoteWheel = r[1] as EmoteWheel
+		wheel.set_emotes(_equipped())
+		await get_tree().process_frame
+		var b: Button = wheel.touch_button()
+		assert_str(b.text).is_empty()
+		assert_object(b.icon).is_not_null()
+		assert_str(b.tooltip_text).is_equal("ui.emote.open.tooltip")
+		assert_str(b.accessibility_name).is_equal(TranslationServer.translate("ui.emote.open"))
+		var target: float = UiBuild.target_for("g4_5")
+		var size: Vector2 = b.get_combined_minimum_size()
+		assert_float(size.y).is_greater_equal(target)
+		assert_float(size.x).is_equal_approx(size.y, 0.5)
+		if compact:
+			for window: String in ["844x390", "740x360"]:
+				assert_float(size.y * BandLayoutProbe.css_scale_of(window)).override_failure_message(window) \
+						.is_greater_equal(BandLayoutProbe.MIN_TOUCH_CSS_PX)
+	AppState.set_compact(false)

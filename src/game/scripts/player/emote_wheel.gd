@@ -30,13 +30,20 @@ func _ready() -> void:
 	_touch.pressed.connect(toggle)
 	_close.pressed.connect(close)
 	AppState.grade_band_changed.connect(_on_band_changed)
+	AppState.compact_changed.connect(_on_compact_changed)
+	EventBus.locale_changed.connect(_on_locale_changed)
 	_on_band_changed(AppState.grade_band)
+	_name_touch()
 	_refresh_touch()
 
 
 func _exit_tree() -> void:
 	if AppState.grade_band_changed.is_connected(_on_band_changed):
 		AppState.grade_band_changed.disconnect(_on_band_changed)
+	if AppState.compact_changed.is_connected(_on_compact_changed):
+		AppState.compact_changed.disconnect(_on_compact_changed)
+	if EventBus.locale_changed.is_connected(_on_locale_changed):
+		EventBus.locale_changed.disconnect(_on_locale_changed)
 
 
 ## Equipped emotes from the profile (`avatar_config.emote_slots`); blank codes are skipped, the list is capped.
@@ -149,10 +156,27 @@ func _refresh_touch() -> void:
 	_touch.disabled = _emotes.is_empty()
 
 
+## Owner request 2026-11-28: the HUD button is icon-only (square, like the bell) — its words "Biểu cảm" are the
+## accessible name (screen readers, tests) and the tooltip `ui.emote.open.tooltip` stays.
+func _name_touch() -> void:
+	_touch.text = ""
+	_touch.accessibility_name = tr("ui.emote.open")
+
+
+func _on_locale_changed(_locale: String) -> void:
+	_name_touch()
+
+
+func _on_compact_changed(_compact: bool) -> void:
+	_on_band_changed(AppState.grade_band)
+
+
 func _on_band_changed(band: String) -> void:
 	var valid: String = band if ThemeService.is_valid_band(band) else ThemeService.default_band()
 	_target = UiBuild.target_for(valid)
 	_touch.custom_minimum_size = Vector2(_target, _target)
+	# Square: the theme padding may make the icon-only button a pixel taller than the target.
+	_touch.custom_minimum_size.x = maxf(_target, ceilf(_touch.get_combined_minimum_size().y))
 	_close.custom_minimum_size = Vector2(_target, _target)
 	_ring.custom_minimum_size = Vector2(_target, _target) * (RADIUS_FACTOR * 2.0 + 1.0)
 	for b: Button in _buttons:

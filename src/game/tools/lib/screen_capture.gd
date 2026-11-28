@@ -56,6 +56,7 @@ const SCREENS: PackedStringArray = [
 const SAMPLE_AVATAR: Dictionary = {
 	"body_type": "kid_a", "skin_tone": "tone_03", "hair": {"item_id": "hair_bob_01", "color": "hair_col_02"},
 	"outfit": {"item_id": "outfit_school_01"}, "accessories": [{"slot": "back", "item_id": "acc_backpack_owl"}],
+	"emote_slots": ["emote_wave", "emote_clap"],
 }
 
 var _harness: AuthHarness = null
@@ -253,6 +254,10 @@ func _world(onboarding: bool = false) -> Node:
 		var rig: AvatarBuilder = zone.player.get_node_or_null("AvatarRig") as AvatarBuilder
 		if rig != null:
 			rig.apply(AvatarConfigModel.from_dict(SAMPLE_AVATAR))
+	# The equipped emotes of the sample look (the HUD emote button is enabled as for a student with emotes).
+	var wheel: EmoteWheel = world.find_child("EmoteWheel", true, false) as EmoteWheel
+	if wheel != null:
+		wheel.set_emotes(AvatarConfigModel.from_dict(SAMPLE_AVATAR).emote_slots)
 	return world
 
 
