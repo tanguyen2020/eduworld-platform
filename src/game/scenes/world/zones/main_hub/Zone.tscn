@@ -259,6 +259,34 @@ billboard = 1
 text = "ui.hub.board.exam_sessions"
 pixel_size = 0.01
 
+[node name="EventBoard" type="Area3D" parent="Interactables"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -5)
+script = ExtResource("4_interactable")
+interactable_id = "board.events"
+kind = "event_board"
+prompt_key = "ui.hub.action.read"
+
+[node name="Trigger" type="CollisionShape3D" parent="Interactables/EventBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_board_area")
+
+[node name="Board" type="StaticBody3D" parent="Interactables/EventBoard"]
+
+[node name="Collision" type="CollisionShape3D" parent="Interactables/EventBoard/Board"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -1.2)
+shape = SubResource("BoxShape3D_board")
+
+[node name="Mesh" type="MeshInstance3D" parent="Interactables/EventBoard/Board"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -1.2)
+material_override = ExtResource("9_toon")
+mesh = ExtResource("15_board")
+
+[node name="Title" type="Label3D" parent="Interactables/EventBoard/Board"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.55, -1.2)
+billboard = 1
+text = "ui.hub.board.events"
+pixel_size = 0.01
+
 [node name="Portals" type="Node3D" parent="."]
 
 [node name="Players" type="Node3D" parent="."]

@@ -16,6 +16,8 @@ const TILES: Array = [
 	[&"arena", {"tab": "leaderboard"}, "ui.menu.leaderboard", "podium"],
 	# F110: Bạn bè (also F).
 	[&"friends", {}, "ui.menu.friends", "group"],
+	# F111: the Event center (also the calendar button of the HUD and the event board of the square).
+	[&"event_center", {}, "ui.menu.events", "calendar"],
 ]
 
 var _grid: GridContainer = null

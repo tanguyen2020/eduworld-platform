@@ -18,9 +18,10 @@ signal quest_object_requested(interactable_id: String)
 ## Screen opened by each Interactable kind (data, not logic: the screen decides what to show).
 ## `exam_board`: the Exam Zone greybox entry of the Main Hub (F064 T015; the full `exam_zone` scene is F071).
 const QUEST_MARKER_SCENE: PackedScene = preload("res://scenes/quest/QuestMarker3D.tscn")
-const KIND_SCREENS: Dictionary = {"quest_board": &"quest_journal", "exam_board": &"exam_lobby"}
+## F111: `event_board` — the event board of Quảng trường Tia Sáng opens the Event center on its "Sự kiện" tab.
+const KIND_SCREENS: Dictionary = {"quest_board": &"quest_journal", "exam_board": &"exam_lobby", "event_board": &"event_center"}
 ## Arguments per interactable id (the school assignments board opens the "Nhà trường giao" tab).
-const INTERACTABLE_ARGS: Dictionary = {"board.school_assignments": {"tab": "assigned"}}
+const INTERACTABLE_ARGS: Dictionary = {"board.school_assignments": {"tab": "assigned"}, "board.events": {"tab": "events"}}
 const SCREEN_QUEST_JOURNAL: StringName = &"quest_journal"
 ## Falling off the greybox below this height puts the player back on the default spawn.
 const KILL_Y: float = -30.0

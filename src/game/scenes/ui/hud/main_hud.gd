@@ -85,6 +85,8 @@ var banner_args: Dictionary = {}
 ## F125 polish: controls of other layers on the right edge the invitation popup must not cover (WorldRoot sets the emote
 ## button) — the popup ends left of them and of the side bar.
 var keep_clear: Array[Control] = []
+## F111: the calendar button of the Event center (side bar, under "Thêm") with its static "new" dot.
+var _events: EventCenterButton = null
 
 ## F096: the current "Việc tiếp theo" suggestion (NextStepHint.for_assignments).
 var next_step: Dictionary = {}
@@ -120,6 +122,10 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_layout_left_column)
 	_currency.pressed.connect(shop_pressed.emit)
 	_menu.pressed.connect(menu_pressed.emit)
+	_events = EventCenterButton.new()
+	_menu.get_parent().add_child(_events)
+	_menu.get_parent().move_child(_events, _menu.get_index() + 1)
+	_events.bind_store(AppState.services.live_events.store if AppState.services != null else null)
 	_party.party_pressed.connect(_on_party_pressed)
 	_invite_toast.open_requested.connect(party_requested.emit)
 	EventBus.party_invitation_received.connect(_on_party_invitation)
@@ -140,6 +146,7 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	bind_notifications(null)
 	bind_party(null)
+	_events.bind_store(null)
 	if EventBus.party_invitation_received.is_connected(_on_party_invitation):
 		EventBus.party_invitation_received.disconnect(_on_party_invitation)
 	bind_progression(null, null)
@@ -235,7 +242,7 @@ func show_hub_notice(key: String, args: Dictionary = {}) -> void:
 func touch_buttons() -> Array[Button]:
 	return [_assignments_chip, _journal, _bell, _settings, _wardrobe, _map, _home, _context_action, _next_step_button,
 		_onboarding.find_child("Skip", true, false) as Button, _onboarding.find_child("Next", true, false) as Button,
-		_currency, _menu, _party.button()]
+		_currency, _menu, _events, _party.button()]
 
 
 ## F096-AC-10: opens Mây's guide (the owner decides when: first entry on the device or right after S02).
@@ -260,6 +267,7 @@ func _render() -> void:
 		return
 	# F098: the SideBar buttons keep their label whole (wrap only past a long translation, never letter by letter).
 	UiBuild.fit_wrapping(_menu, float(UiTokens.SIZE_LAYOUT_280))
+	UiBuild.fit_wrapping(_events, float(UiTokens.SIZE_LAYOUT_280))
 	if _currency.visible:
 		UiBuild.fit_wrapping(_currency, float(UiTokens.SIZE_LAYOUT_280))
 	var nickname: String = LoginFormModel.nickname_of(AppState.player)
@@ -356,6 +364,11 @@ func bind_progression(progression: ProgressionStore, wallet: WalletStore) -> voi
 	if progression != null and not progression.progression_changed.is_connected(_on_progression_changed):
 		progression.progression_changed.connect(_on_progression_changed)
 	_on_progression_changed(progression.progression if progression != null else null)
+
+
+## F111: the Event center button of the side bar.
+func event_center_button() -> EventCenterButton:
+	return _events
 
 
 func xp_bar() -> XpBar:

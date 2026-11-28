@@ -11,6 +11,8 @@ signal player_exited(interactable_id: String)
 
 const KINDS: PackedStringArray = [
 	"npc", "quest_board", "portal", "quest_object", "discovery", "collectible", "info_sign", "minigame_station", "seat", "exam_board",
+	# F111: the event board of Quảng trường Tia Sáng (opens the Event center).
+	"event_board",
 ]
 ## Group of the local player's body (PlayerController).
 const PLAYER_GROUP: StringName = &"local_player"
