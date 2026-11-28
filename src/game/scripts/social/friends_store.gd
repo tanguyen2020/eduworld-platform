@@ -10,6 +10,8 @@ signal friends_changed()
 signal requests_changed()
 signal relations_changed()
 signal code_changed()
+## F111: the "Vừa chơi cùng" suggestions changed (loaded, next page, failed, cleared).
+signal suggestions_changed()
 
 ## The list redraw at most once a second.
 const COALESCE_MS: int = 1000
@@ -23,6 +25,12 @@ var mutes: Array[RelationModel] = []
 var code: FriendCodeModel = null
 ## No network: the presence of every friend reads "—" (F110-AC-20).
 var presence_unknown: bool = false
+## F111 (US2): "Vừa chơi cùng" of listFriendSuggestions in the server order; the cursor of the next page; a failing list
+## (the group is hidden, F111-AC-08).
+var suggestions: Array[FriendSuggestionModel] = []
+var suggestions_cursor: String = ""
+var suggestions_loaded: bool = false
+var suggestions_failed: bool = false
 ## Redraws of the list (tests).
 var emits: int = 0
 var _dirty: bool = false
@@ -137,6 +145,31 @@ func remove_relation(kind: String, user_id: String) -> void:
 	relations_changed.emit()
 
 
+func set_suggestions(list: Array[FriendSuggestionModel], append: bool, next_cursor: String) -> void:
+	if append:
+		var known: Dictionary = {}
+		for s: FriendSuggestionModel in suggestions:
+			known[s.user_id()] = true
+		for s: FriendSuggestionModel in list:
+			if not known.has(s.user_id()):
+				suggestions.append(s)
+	else:
+		suggestions = list
+	suggestions_cursor = next_cursor
+	suggestions_loaded = true
+	suggestions_failed = false
+	suggestions_changed.emit()
+
+
+func fail_suggestions() -> void:
+	suggestions_failed = true
+	suggestions_changed.emit()
+
+
+func suggestions_more() -> bool:
+	return not suggestions_cursor.is_empty()
+
+
 func set_code(value: FriendCodeModel) -> void:
 	code = value
 	code_changed.emit()
@@ -151,11 +184,16 @@ func clear() -> void:
 	mutes = []
 	code = null
 	presence_unknown = false
+	suggestions = []
+	suggestions_cursor = ""
+	suggestions_loaded = false
+	suggestions_failed = false
 	_dirty = false
 	_emit_friends()
 	requests_changed.emit()
 	relations_changed.emit()
 	code_changed.emit()
+	suggestions_changed.emit()
 
 
 func _emit_friends() -> void:

@@ -104,6 +104,13 @@ func refresh() -> void:
 		await social.load_relations()
 
 
+## F111 (US2): "Vừa chơi cùng" + the block / mute lists (the client also hides those players, F111-AC-07).
+func _load_find() -> void:
+	await social.list_suggestions()
+	if visible and social != null:
+		await social.load_relations()
+
+
 func select_tab(next: String) -> void:
 	tab = next if _pages.has(next) else TAB_FRIENDS
 	for spec: Array in TABS:
@@ -116,6 +123,8 @@ func select_tab(next: String) -> void:
 		(_pages[id] as Control).visible = id == tab
 	if tab == TAB_BLOCKED and social != null and visible:
 		social.load_relations()
+	if tab == TAB_FIND and social != null and visible:
+		_load_find()
 	render()
 
 
@@ -235,7 +244,7 @@ func _unbind() -> void:
 func _pairs() -> Array:
 	var s: FriendsStore = social.store
 	var out: Array = [[s.friends_changed, render], [s.requests_changed, render], [s.relations_changed, render],
-		[s.code_changed, _on_code_changed], [social.notice_requested, show_notice], [social.busy_changed, _on_busy],
+		[s.code_changed, _on_code_changed], [s.suggestions_changed, render], [social.notice_requested, show_notice], [social.busy_changed, _on_busy],
 		[social.refreshed_after_gone, _on_gone]]
 	if services != null and services.presence != null:
 		out.append([services.presence.hidden_changed, _on_hidden_changed])
@@ -287,6 +296,7 @@ func _render_find() -> void:
 			if pp != null and not friends.has(pp.user_id) and players.size() < 20:
 				players.append({"user_id": pp.user_id, "nickname": pp.nickname, "avatar_config": pp.avatar_config})
 	_find.set_nearby(players, _pending)
+	_find.set_suggestions(social.visible_suggestions(), _pending, social.store.suggestions_failed, UiBuild.band() == "g1_3")
 
 
 func show_notice(key: String, args: Dictionary = {}) -> void:

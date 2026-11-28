@@ -38,6 +38,9 @@ const PATH_ACCEPT: String = "/social/friend-requests/%s:accept"
 const PATH_REJECT: String = "/social/friend-requests/%s:reject"
 const PATH_CODES: String = "/social/friend-codes"
 const PATH_REDEEM: String = "/social/friend-codes:redeem"
+const PATH_SUGGESTIONS: String = "/social/friend-suggestions"
+## F111: one page of suggestions (contract maxItems 100; the group shows a short list).
+const SUGGESTION_PAGE: int = 20
 const MSG_NOTIFICATION: String = "notification.item.created"
 const KIND_FRIEND_REQUEST: String = "friend_request"
 const CODE_CODE_INVALID: String = "FRIEND_CODE_INVALID"
@@ -134,6 +137,43 @@ func reject(request: FriendRequestModel) -> ApiResult:
 	if result.ok:
 		store.remove_request(request.request_id)
 	return result
+
+
+# ---------- F111: "Vừa chơi cùng" ----------
+
+## Coroutine (F111-AC-06): one page of `listFriendSuggestions` (`source` is only `recently_played` — no classmates source,
+## ADR-0095; no free search, FR-SOC-002). `cursor` empty = the first page (replaces the list), else the next page.
+func list_suggestions(source: String = FriendSuggestionModel.SOURCE_RECENTLY_PLAYED, cursor: String = "") -> ApiResult:
+	if source != FriendSuggestionModel.SOURCE_RECENTLY_PLAYED:
+		return ApiResult.failure("VALIDATION_FAILED")
+	var query: Dictionary = {"source": source, "limit": SUGGESTION_PAGE}
+	if not cursor.is_empty():
+		query["cursor"] = cursor
+	var result: ApiResult = await send_request(ApiRequest.make_get(PATH_SUGGESTIONS, query), "listFriendSuggestions")
+	if result.ok:
+		store.set_suggestions(FriendSuggestionModel.list_from(result.body().get("data")), not cursor.is_empty(),
+				next_cursor(result.body()))
+	elif cursor.is_empty():
+		store.fail_suggestions()
+	return result
+
+
+## F111-AC-07: the suggestions to show — the server already filtered; the client also hides friends, players with a
+## request waiting either way and blocked / muted players of this student (data-model §3).
+func visible_suggestions() -> Array[FriendSuggestionModel]:
+	var hidden: Dictionary = {}
+	for f: FriendModel in store.friends:
+		hidden[f.user_id] = true
+	for r: FriendRequestModel in store.incoming + store.outgoing:
+		if r.other != null:
+			hidden[r.other.user_id] = true
+	for r: RelationModel in store.blocks + store.mutes:
+		hidden[r.user_id] = true
+	var out: Array[FriendSuggestionModel] = []
+	for s: FriendSuggestionModel in store.suggestions:
+		if not hidden.has(s.user_id()):
+			out.append(s)
+	return out
 
 
 # ---------- friend code ----------
